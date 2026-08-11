@@ -204,7 +204,7 @@ private struct TodayTasksEntryView: View {
         Image(systemName: "arrow.clockwise.circle")
           .font(.title2)
           .foregroundStyle(.secondary)
-        Text("Open TaskNotes to refresh")
+        Text("Open Facet to refresh")
           .font(.caption)
           .multilineTextAlignment(.center)
           .foregroundStyle(.secondary)

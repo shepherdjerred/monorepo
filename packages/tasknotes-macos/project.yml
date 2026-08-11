@@ -115,6 +115,8 @@ targets:
           - "Info.plist"
           # Consumed via CODE_SIGN_ENTITLEMENTS, never bundled.
           - "*.entitlements"
+      - path: Resources/AppIcon.icns
+        buildPhase: resources
 
     dependencies:
       - package: TaskNotesPackage
@@ -169,8 +171,9 @@ targets:
     info:
       path: App/Info.plist
       properties:
-        CFBundleName: TaskNotes
-        CFBundleDisplayName: TaskNotes
+        CFBundleName: Facet
+        CFBundleDisplayName: Facet
+        CFBundleIconFile: AppIcon
         CFBundlePackageType: APPL
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"

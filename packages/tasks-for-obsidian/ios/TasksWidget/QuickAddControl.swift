@@ -12,7 +12,7 @@ struct QuickAddTaskControl: ControlWidget {
       }
     }
     .displayName("Quick Add Task")
-    .description("Add a new task to Tasks for Obsidian.")
+    .description("Add a new task to Facet.")
   }
 }
 

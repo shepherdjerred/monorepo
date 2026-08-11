@@ -174,7 +174,7 @@ public struct TaskNotesCommands: Commands {
         }
 
         CommandGroup(replacing: .help) {
-            Button("TaskNotes Help") {}
+            Button("Facet Help") {}
                 .disabled(true)
         }
     }
