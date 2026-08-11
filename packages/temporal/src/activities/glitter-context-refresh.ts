@@ -17,6 +17,7 @@ import {
   glitterContextRefreshRelationshipProposals,
   glitterContextRefreshRunsTotal,
 } from "#observability/metrics-glitter.ts";
+import { parsePorcelainPaths } from "#shared/porcelain.ts";
 import { rootInstallWithoutHooks } from "./bot-clone.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
@@ -48,10 +49,7 @@ import {
 } from "./glitter-context-refresh-paths.ts";
 import { selectStyleRefreshCandidates } from "./glitter-context-refresh-selection.ts";
 import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
-import {
-  openSeasonRefreshPr,
-  parsePorcelainPaths,
-} from "./scout-season-refresh-git.ts";
+import { openSeasonRefreshPr } from "./scout-season-refresh-git.ts";
 import {
   glitterContextProposalChecksum,
   glitterContextRunIdentity,

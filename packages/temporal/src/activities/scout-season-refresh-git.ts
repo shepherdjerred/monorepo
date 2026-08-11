@@ -1,9 +1,15 @@
+import { parsePorcelainPaths } from "#shared/porcelain.ts";
 import { disarmGitHooks } from "./bot-clone.ts";
 
 export type GitRunOptions = {
   cwd: string;
   env?: Record<string, string | undefined>;
   redactOutput?: boolean;
+  // Trailing-whitespace trimming is on by default because nearly every caller
+  // wants a bare value (a sha, a branch name, a URL). `git status --porcelain`
+  // is the exception: its first line can legitimately begin with a space, so
+  // porcelain readers MUST opt out. Mirrors data-dragon-shell.ts's runCommand.
+  trimStdout?: boolean;
 };
 
 export async function runCommand(
@@ -49,7 +55,7 @@ export async function runCommand(
       `Command failed (${command[0] ?? "?"}): exit ${String(exitCode)} ${output}`,
     );
   }
-  return stdout.trim();
+  return options.trimStdout === false ? stdout : stdout.trim();
 }
 
 export type GitCommandRunner = typeof runCommand;
@@ -71,24 +77,17 @@ export async function writeGitAskpass(tempDir: string): Promise<string> {
   return path;
 }
 
-// Porcelain v1 lines are `XY<space>PATH` — a 2-char status field plus one
-// space, so the path always starts at index 3. Do NOT trim first: a
-// worktree-modified file is ` M path` (leading space), and trimming would
-// shift the slice one character into the path.
-export function parsePorcelainPaths(status: string): string[] {
-  return status
-    .split("\n")
-    .filter((line) => line.trim() !== "")
-    .map((line) => line.slice(3));
-}
-
 export async function changedFilesInPaths(
   repoDir: string,
   paths: readonly string[],
 ): Promise<string[]> {
   const status = await runCommand(
     ["git", "status", "--porcelain", "--", ...paths],
-    { cwd: repoDir },
+    // trimStdout: false so porcelain v1's leading-space status code survives —
+    // without it the FIRST path comes back missing its first character, which
+    // silently broke every `files[0] === CONSTANT` / `files.includes(CONSTANT)`
+    // check downstream. See shared/porcelain.ts.
+    { cwd: repoDir, trimStdout: false },
   );
   return parsePorcelainPaths(status);
 }

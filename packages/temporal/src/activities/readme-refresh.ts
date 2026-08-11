@@ -1,6 +1,7 @@
 import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import { parsePorcelainPaths } from "#shared/porcelain.ts";
 import { rootInstallWithoutHooks } from "./bot-clone.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import { openSeasonRefreshPr } from "./scout-season-refresh-git.ts";
@@ -35,19 +36,6 @@ export type ReadmeRefreshActivities = typeof readmeRefreshActivities;
 // not be staged.
 function isReadmeRefreshPath(path: string): boolean {
   return COG_TARGETS.includes(path) || path.endsWith("/_summary.md");
-}
-
-// Parse `git status --porcelain` (v1). Columns 0-1 are the status code and
-// column 2 is a space, so the path starts at index 3. We deliberately do NOT
-// trim the whole output before splitting — an unstaged-only change is ` M path`
-// (with a leading space) and a whole-string `.trim()` would strip that space
-// from the first line, making `slice(3)` mis-parse it into a mangled filename.
-// We split on "\n" directly and drop only empty trailing lines.
-export function parsePorcelainPaths(status: string): string[] {
-  return status
-    .split("\n")
-    .filter((line) => line.length > 3)
-    .map((line) => line.slice(3).trim());
 }
 
 export const readmeRefreshActivities = {
