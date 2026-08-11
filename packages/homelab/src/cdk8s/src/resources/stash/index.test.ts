@@ -13,6 +13,26 @@ const ManifestSchema = z
   })
   .loose();
 
+const VALID_HASH = `$2a$10$${"a".repeat(53)}`;
+
+// Runs the real init script so the credential guards are proven, not just matched
+// as text. Every case here fails before the script reaches /state, so no test
+// touches the filesystem.
+async function runAuthInitScript(
+  env: Record<string, string>,
+): Promise<{ exitCode: number; stderr: string }> {
+  const proc = Bun.spawn(["sh", "-c", STASH_AUTH_INIT_SCRIPT], {
+    env: { PATH: Bun.env["PATH"] ?? "", ...env },
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const [exitCode, stderr] = await Promise.all([
+    proc.exited,
+    new Response(proc.stderr).text(),
+  ]);
+  return { exitCode, stderr };
+}
+
 function synthesize(): unknown[] {
   const app = new App();
   createStashChart(app);
@@ -221,6 +241,28 @@ describe("Stash chart", () => {
       requests: { cpu: "250m", memory: "512Mi" },
     });
   });
+
+  it.each([
+    ["username holding a newline", "admin\nevil_key: injected", VALID_HASH],
+    [
+      "username smuggling a closing quote",
+      'admin\n": 1\nevil_key: "x',
+      VALID_HASH,
+    ],
+    ["username holding a carriage return", "admin\radmin2", VALID_HASH],
+    ["username holding a tab", "ad\tmin", VALID_HASH],
+    ["hash holding a newline", "admin", `${VALID_HASH}\nevil_key: injected`],
+  ])(
+    "refuses to write config.yml when the %s",
+    async (_case, username, passwordHash) => {
+      const { exitCode, stderr } = await runAuthInitScript({
+        STASH_USERNAME: username,
+        STASH_PASSWORD_HASH: passwordHash,
+      });
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain("must not contain control characters");
+    },
+  );
 
   it("keeps ingress on Tailscale and restricts traffic to required paths", () => {
     const manifests = synthesize();

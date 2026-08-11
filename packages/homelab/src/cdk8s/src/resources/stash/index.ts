@@ -30,8 +30,19 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 const PORT = 9999;
 const LABELS = { app: "stash" };
 
+// grep is line-oriented, so an anchored pattern matches when any single line of a
+// multiline value matches. Reject control characters first, or the unvalidated
+// remainder of such a value is interpolated straight into config.yml as YAML.
 export const STASH_AUTH_INIT_SCRIPT = String.raw`set -eu
 umask 077
+reject_control_chars() {
+  if test "$(printf '%s' "$2" | tr -cd '[:cntrl:]' | wc -c)" -ne 0; then
+    echo "stash auth: $1 must not contain control characters" >&2
+    exit 1
+  fi
+}
+reject_control_chars STASH_USERNAME "$STASH_USERNAME"
+reject_control_chars STASH_PASSWORD_HASH "$STASH_PASSWORD_HASH"
 printf '%s\n' "$STASH_USERNAME" | grep -Eq '^[A-Za-z0-9._-]+$'
 printf '%s\n' "$STASH_PASSWORD_HASH" | grep -Eq '^[$]2[aby][$]10[$][./A-Za-z0-9]{53}$'
 mkdir -p /state
