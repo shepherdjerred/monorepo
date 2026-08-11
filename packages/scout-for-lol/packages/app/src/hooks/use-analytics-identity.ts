@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { identifyUser, resetIdentity } from "#src/lib/analytics.ts";
+import { syncAnalyticsIdentity } from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 /**
@@ -13,27 +13,23 @@ import { useTRPC } from "#src/lib/trpc.ts";
  * never renders, so their events stayed attributed to the previous account and
  * signing in as someone else merged the two people.
  *
- * `identifyUser` is idempotent per id and `resetIdentity` no-ops unless PostHog
- * still holds an identity, so running this on every route is cheap and does not
- * churn an anonymous visitor's distinct id.
+ * This hook only reports what the session query says; every decision about what
+ * to do with that lives in `syncAnalyticsIdentity`, which is where the rules are
+ * documented and tested.
  */
 export function useAnalyticsIdentity(): void {
   const trpc = useTRPC();
   // Same query key as the session guard, so React Query serves both from one
   // request rather than asking the server twice per navigation.
-  const { data, isLoading } = useQuery(
+  const { data, isSuccess } = useQuery(
     trpc.auth.sessionState.queryOptions(undefined, { retry: false }),
   );
 
+  // `isSuccess` — not `!isLoading`. It is the only flag that means the server
+  // actually answered: a failed query also stops loading, and with retries off
+  // that failure would otherwise read as a confirmed signed-out session.
   const analyticsUserId = data?.user?.analyticsUserId;
   useEffect(() => {
-    // In flight the id is undefined but unknown, not anonymous; resetting here
-    // would fire on every cold page load.
-    if (isLoading) return;
-    if (analyticsUserId === undefined) {
-      resetIdentity();
-      return;
-    }
-    identifyUser(analyticsUserId);
-  }, [analyticsUserId, isLoading]);
+    syncAnalyticsIdentity({ sessionResolved: isSuccess, analyticsUserId });
+  }, [analyticsUserId, isSuccess]);
 }

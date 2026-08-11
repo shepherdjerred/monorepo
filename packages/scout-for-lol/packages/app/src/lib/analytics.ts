@@ -152,6 +152,8 @@ type AnalyticsClient = {
   reset: () => void;
   /** Whether PostHog currently holds an identified (not anonymous) person. */
   isIdentified: () => boolean;
+  /** The distinct id PostHog currently holds, identified or anonymous. */
+  getDistinctId: () => string;
   register: (properties: PostHogProperties) => void;
   registerForSession: (properties: PostHogProperties) => void;
   unregisterForSession: (property: string) => void;
@@ -160,10 +162,15 @@ type AnalyticsClient = {
 /** Super property carrying the active Discord guild. */
 const GUILD_PROPERTY = "guild_id";
 
+// Deliberately no module-level "who is identified" variable. PostHog's own
+// persisted state is the single source of truth, because it is the only one
+// that survives a full-page navigation — the OAuth round trip, a hard reload,
+// a restored tab. A module variable is always empty on the next page load
+// while PostHog still holds the previous person, and every identity bug in
+// this file has been some version of those two disagreeing.
 let config = readConfig();
 let client: AnalyticsClient | undefined;
 let initialized = false;
-let identifiedUser: string | undefined;
 
 /** Inject a deterministic client/config in unit tests without module mocking. */
 export function setAnalyticsForTesting(
@@ -173,7 +180,6 @@ export function setAnalyticsForTesting(
   client = testClient;
   config = testConfig;
   initialized = false;
-  identifiedUser = undefined;
 }
 
 export function analyticsPrivacySettings(activeConfig: AnalyticsConfig): {
@@ -253,6 +259,7 @@ export function initAnalytics(): void {
       posthog.reset();
     },
     isIdentified: () => posthog._isIdentified(),
+    getDistinctId: () => posthog.get_distinct_id(),
     register: (properties) => {
       posthog.register(properties);
     },
@@ -266,9 +273,19 @@ export function initAnalytics(): void {
 }
 
 /**
- * Bind the session to the signed-in user. Idempotent per id: PostHog merges the
- * pre-login anonymous person into this one on the first call, and repeating it
- * on every render would emit redundant `$identify` events.
+ * Bind the session to the signed-in user, deciding entirely from the identity
+ * PostHog has persisted.
+ *
+ * Three cases, and the middle one is the reason this reads persisted state:
+ *
+ * - Already this person: do nothing, so repeated renders emit no redundant
+ *   `$identify`.
+ * - A **different** person: reset first. Switching accounts does not require a
+ *   logout — signing in again from `/login` while an old session is still valid
+ *   just overwrites the cookie — and after that full-page return, identifying
+ *   straight over the top would alias the two accounts into one person.
+ * - Anonymous: identify, which is the merge that gives a signed-in person their
+ *   pre-login activity.
  *
  * Takes the server's opaque `analyticsUserId`, never a Discord snowflake. The
  * distinct id is the durable join key for a person's events and recordings, so
@@ -276,9 +293,13 @@ export function initAnalytics(): void {
  * the analytics registry forbids sending Discord user ids in the first place.
  */
 export function identifyUser(analyticsUserId: string): void {
-  if (client === undefined || identifiedUser === analyticsUserId) return;
-  identifiedUser = analyticsUserId;
-  client.identify(analyticsUserId);
+  const activeClient = client;
+  if (activeClient === undefined) return;
+  if (activeClient.isIdentified()) {
+    if (activeClient.getDistinctId() === analyticsUserId) return;
+    activeClient.reset();
+  }
+  activeClient.identify(analyticsUserId);
 }
 
 /**
@@ -292,9 +313,30 @@ export function identifyUser(analyticsUserId: string): void {
  * unique-visitor regression durable persistence exists to prevent.
  */
 export function resetIdentity(): void {
-  identifiedUser = undefined;
   const activeClient = client;
   if (activeClient?.isIdentified() === true) activeClient.reset();
+}
+
+/**
+ * Reconcile PostHog's identity with what the server says about this visitor.
+ * This is the single place that decides, so every route goes through one rule.
+ *
+ * `sessionResolved` must be true **only** for a successful session response.
+ * Loading and failure are both "we do not know yet", and neither is anonymous:
+ * session queries run with retries disabled, so treating a transient error as
+ * a signed-out answer would reset a live identity and leave the rest of the
+ * visit anonymous even though the cookie is still valid.
+ */
+export function syncAnalyticsIdentity(session: {
+  sessionResolved: boolean;
+  analyticsUserId: string | undefined;
+}): void {
+  if (!session.sessionResolved) return;
+  if (session.analyticsUserId === undefined) {
+    resetIdentity();
+    return;
+  }
+  identifyUser(session.analyticsUserId);
 }
 
 /**

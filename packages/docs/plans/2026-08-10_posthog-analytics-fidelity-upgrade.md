@@ -96,6 +96,20 @@ fixed rather than deferred:
   ran only for people who still had a session — never for the expired-cookie
   visitor the reset exists for. `router-analytics-identity.test.ts` fails if a
   route is ever moved out from under the layout.
+- **The module-level identity cache was removed**, which is the root the
+  preceding fixes kept circling. `identifiedUser` was the module's answer to
+  "who is identified", but the durable answer lives in PostHog and a full-page
+  navigation is the normal case here (OAuth round trip, hard reload, restored
+  tab). Whenever the two disagreed a bug appeared: a stale identity surviving an
+  expired cookie, then an account switch aliasing two people because `identify`
+  ran with no reset. `identifyUser` now decides from `_isIdentified()` and
+  `get_distinct_id()` alone — same person, do nothing; different person, reset
+  first; anonymous, identify.
+- Session status is read from `isSuccess`, never `!isLoading`. With retries
+  disabled a transient failure looked identical to a confirmed signed-out
+  answer, so it reset a live identity for the rest of the visit. The decision
+  moved into `syncAnalyticsIdentity`, one tested function, so the hook no longer
+  encodes any rule of its own.
 - `privacy.mdx` now discloses that website measurement and bot data are joined
   through `guild_id`, replacing the claim that they were separate and that the
   website could not reveal which server added Scout. The join is intended (see

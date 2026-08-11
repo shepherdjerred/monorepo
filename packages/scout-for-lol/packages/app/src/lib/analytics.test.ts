@@ -8,6 +8,7 @@ import {
   resetIdentity,
   setAnalyticsForTesting,
   setGuildContext,
+  syncAnalyticsIdentity,
   track,
   trackAndFlush,
   trackMutationMeta,
@@ -44,9 +45,12 @@ const TEST_CONFIG: AnalyticsConfig = {
 /** Identity calls from the most recent `installClient`/`installDisabledClient`. */
 let identityCalls: IdentityCall[] = [];
 
-// Mirrors the user state PostHog persists across page loads, so `resetIdentity`
-// is exercised against a real signal instead of a stub that always agrees.
+// Mirrors the identity PostHog persists across page loads. The module under
+// test keeps no identity state of its own, so this stand-in is the whole
+// picture — and it is what lets a test reproduce a full-page navigation, where
+// PostHog remembers a person the freshly-loaded module never saw.
 let identified = false;
+let distinctId = "anonymous-0";
 
 // Takes `config` positionally with no default: a default parameter would treat
 // `install(undefined)` as "use TEST_CONFIG" and silently enable the client the
@@ -55,20 +59,26 @@ function install(config: AnalyticsConfig | undefined): CapturedEvent[] {
   const calls: CapturedEvent[] = [];
   identityCalls = [];
   identified = false;
+  distinctId = "anonymous-0";
   setAnalyticsForTesting(
     {
       capture(event, properties, options) {
         calls.push({ event, properties, options });
       },
-      identify(distinctId) {
+      identify(id) {
         identified = true;
-        identityCalls.push({ kind: "identify", distinctId });
+        distinctId = id;
+        identityCalls.push({ kind: "identify", distinctId: id });
       },
       reset() {
         identified = false;
+        // PostHog mints a fresh anonymous id on reset; the new person must not
+        // inherit the old one.
+        distinctId = "anonymous-after-reset";
         identityCalls.push({ kind: "reset" });
       },
       isIdentified: () => identified,
+      getDistinctId: () => distinctId,
       register(properties) {
         identityCalls.push({ kind: "register", properties });
       },
@@ -187,6 +197,17 @@ describe("privacy settings", () => {
 // id is the durable join key for a person's events and recordings.
 const ANALYTICS_USER_ID = "7316395a-b815-49d8-9794-9b56b3ce81c0";
 
+/**
+ * Reproduce a full-page navigation: PostHog still holds `id` from before, while
+ * the module has no memory of it. Every identity bug in this file has lived in
+ * that gap, so the tests have to be able to open it.
+ */
+function persistIdentity(id: string): void {
+  identified = true;
+  distinctId = id;
+  identityCalls = [];
+}
+
 describe("identity", () => {
   test("identifies once per analytics user id", () => {
     installClient();
@@ -238,9 +259,33 @@ describe("identity", () => {
   // PostHog still holds the previous person.
   test("resets an identity persisted from an earlier page load", () => {
     installClient();
-    identified = true;
+    persistIdentity(ANALYTICS_USER_ID);
     resetIdentity();
     expect(identityCalls).toEqual([{ kind: "reset" }]);
+  });
+
+  // Switching accounts needs no logout: /login stays reachable while an old
+  // session is valid, and the OAuth callback overwrites the cookie. After that
+  // full-page return the module is fresh but PostHog still holds account A, so
+  // identifying B straight over the top would alias the two into one person.
+  test("resets before identifying a different person", () => {
+    installClient();
+    persistIdentity("account-a");
+    identifyUser("account-b");
+    expect(identityCalls).toEqual([
+      { kind: "reset" },
+      { kind: "identify", distinctId: "account-b" },
+    ]);
+  });
+
+  // The mirror case: after a plain reload the module has no memory, but PostHog
+  // already holds this exact person, so re-identifying would be a redundant
+  // `$identify` on every cold load.
+  test("does not re-identify the person PostHog already holds", () => {
+    installClient();
+    persistIdentity(ANALYTICS_USER_ID);
+    identifyUser(ANALYTICS_USER_ID);
+    expect(identityCalls).toEqual([]);
   });
 
   test("stays inert when PostHog never initialized", () => {
@@ -250,6 +295,45 @@ describe("identity", () => {
     resetIdentity();
     setGuildContext("123456789012345678");
     expect(identityCalls).toEqual([]);
+  });
+});
+
+describe("syncAnalyticsIdentity", () => {
+  // Session queries run with retries disabled, so a single transient failure
+  // is permanent for the visit. Treating "no answer" as "signed out" would
+  // reset a live identity and leave the rest of the visit anonymous while the
+  // cookie is still perfectly valid.
+  test("leaves a live identity alone when the session query has not succeeded", () => {
+    installClient();
+    persistIdentity(ANALYTICS_USER_ID);
+    // A failed query and an in-flight one are indistinguishable here, and both
+    // must be inert.
+    syncAnalyticsIdentity({
+      sessionResolved: false,
+      analyticsUserId: undefined,
+    });
+    expect(identityCalls).toEqual([]);
+  });
+
+  test("resets only on a successful signed-out answer", () => {
+    installClient();
+    persistIdentity(ANALYTICS_USER_ID);
+    syncAnalyticsIdentity({
+      sessionResolved: true,
+      analyticsUserId: undefined,
+    });
+    expect(identityCalls).toEqual([{ kind: "reset" }]);
+  });
+
+  test("identifies on a successful signed-in answer", () => {
+    installClient();
+    syncAnalyticsIdentity({
+      sessionResolved: true,
+      analyticsUserId: ANALYTICS_USER_ID,
+    });
+    expect(identityCalls).toEqual([
+      { kind: "identify", distinctId: ANALYTICS_USER_ID },
+    ]);
   });
 });
 

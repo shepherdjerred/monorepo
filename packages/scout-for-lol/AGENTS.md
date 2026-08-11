@@ -729,6 +729,21 @@ messaging real people.
   session: exactly the people who do not need resetting. Putting it there left
   the login page, the one screen a signed-out person actually sees, attributed
   to the previous account. `router-analytics-identity.test.ts` pins this.
+- **PostHog's persisted state is the only source of truth for who is
+  identified.** `analytics.ts` deliberately keeps no module-level "current user"
+  variable, and `identifyUser` decides from `_isIdentified()` +
+  `get_distinct_id()`. Module state is empty on every fresh page load while
+  PostHog still holds the previous person, and a full-page navigation is the
+  normal case here — the OAuth round trip, a hard reload, a restored tab. Every
+  identity bug this file has had was those two disagreeing: a stale identity
+  surviving an expired cookie, and an account switch aliasing two people because
+  `identify` ran without a reset. Do not reintroduce a cache of the current user.
+- **Only a successful session response is an answer.** `syncAnalyticsIdentity`
+  acts on `isSuccess`, never on `!isLoading`. A failed query also stops loading,
+  and the session query runs with retries disabled, so reading failure as
+  "signed out" resets a live identity and strands the rest of the visit as
+  anonymous while the cookie is still valid. Loading and failure are both
+  "unknown", and unknown means do nothing.
 - Scout's replay masks every text node (`maskTextSelector: "*"`), not just form
   values. `person_profiles: "always"` associates each recording with an
   identified person, and the workspace renders guild names, Discord display
