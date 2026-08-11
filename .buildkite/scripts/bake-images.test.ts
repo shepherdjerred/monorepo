@@ -226,6 +226,18 @@ test("preserves exhausted GHCR transport and server failures as transient", asyn
       attempts: 1,
     }),
   ).rejects.toBeInstanceOf(TransientError);
+
+  const invalidTokenFetcher = Object.assign(
+    async () => new Response("truncated-token-json", { status: 200 }),
+    { preconnect: fetch.preconnect },
+  );
+  await expect(
+    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"e".repeat(64)}`, {
+      fetcher: invalidTokenFetcher,
+      sleeper: async (milliseconds) => milliseconds,
+      attempts: 1,
+    }),
+  ).rejects.toBeInstanceOf(TransientError);
 });
 
 test("expands the infra group into invokable targets", () => {

@@ -46,6 +46,22 @@ async function ghcrRequest(
   }
 }
 
+async function anonymousToken(response: Response): Promise<string> {
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch (error) {
+    throw new TransientError("GHCR anonymous token response body failed", {
+      cause: error,
+    });
+  }
+  const token = asRecord(body)?.["token"];
+  if (typeof token !== "string" || token.length === 0) {
+    throw new TransientError("GHCR anonymous token response omitted token");
+  }
+  return token;
+}
+
 export async function ensureAnonymousGhcrPull(
   name: string,
   reference: string,
@@ -72,10 +88,7 @@ export async function ensureAnonymousGhcrPull(
       if (!tokenResponse.ok) {
         throw responseFailure("token", tokenResponse.status);
       }
-      const token = asRecord(await tokenResponse.json())?.["token"];
-      if (typeof token !== "string" || token.length === 0) {
-        throw new TransientError("GHCR anonymous token response omitted token");
-      }
+      const token = await anonymousToken(tokenResponse);
       const manifestResponse = await ghcrRequest(
         fetcher,
         manifestUrl,
