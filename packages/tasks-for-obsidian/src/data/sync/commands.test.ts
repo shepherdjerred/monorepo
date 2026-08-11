@@ -14,12 +14,12 @@ import {
   type CreateCommand,
   applyCommand,
   classify,
+  commandId,
   commandTarget,
   isTempId,
-  makeCommandIdFactory,
-  makeTempId,
   materializeCreate,
   remapTaskId,
+  tempTaskId,
 } from "./commands";
 
 function makeTask(overrides: Partial<Task> = {}): Task {
@@ -59,15 +59,30 @@ function createCmd(over: Partial<CreateCommand> = {}): CreateCommand {
 
 describe("id helpers", () => {
   test("temp ids are detectable", () => {
-    expect(isTempId(makeTempId(() => 1))).toBe(true);
+    expect(isTempId(tempTaskId(1, 1))).toBe(true);
     expect(isTempId(taskId("TaskNotes/real.md"))).toBe(false);
   });
 
   test("command ids are unique across the same clock tick", () => {
-    const next = makeCommandIdFactory(() => 42);
-    const ids = new Set([next(), next(), next(), next()]);
+    // The counter alone separates them — the id is a pure function, so a fixed
+    // random suffix must not collapse two ids minted in the same millisecond.
+    const ids = new Set([1, 2, 3, 4].map((n) => commandId(42, n, 0.5)));
     expect(ids.size).toBe(4);
     for (const id of ids) expect(id.startsWith("42-")).toBe(true);
+  });
+
+  test("the random suffix is bounded and zero-padded", () => {
+    // Matches the Rust core's `command_id`, which scales an integer
+    // parts-per-million draw by 0xffffff; the two must agree byte for byte.
+    expect(commandId(42, 1, 0)).toBe("42-1-0000");
+    expect(commandId(42, 1, 0.5)).toBe(`42-1-${(0x7f_ff_ff).toString(36)}`);
+    expect(commandId(42, 1, 1)).toBe(`42-1-${(0xff_ff_ff).toString(36)}`);
+  });
+
+  test("temp ids encode the minting instant and counter", () => {
+    expect(String(tempTaskId(1_750_000_000_000, 7))).toBe(
+      "tmp-1750000000000-7",
+    );
   });
 });
 

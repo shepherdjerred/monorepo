@@ -1,0 +1,79 @@
+{
+  "id": "dead-letter-retry-re-enqueues",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "dead-letter review",
+  "name": "retry re-enqueues and syncs; discard drops it for good",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_seed",
+      "tasks": [{}]
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "update",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "payload": {
+          "title": "Flaky"
+        }
+      }
+    },
+    {
+      "kind": "server_fail_next",
+      "method": "updateTask",
+      "error": {
+        "kind": "api",
+        "message": "invalid",
+        "status": 422
+      }
+    },
+    {
+      "kind": "sync_now"
+    },
+    {
+      "kind": "snapshot",
+      "as": "afterDeadLetter"
+    },
+    {
+      "kind": "retry_dead_letter",
+      "index": 0
+    },
+    {
+      "kind": "sync_now",
+      "as": "result"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "dead_letter_count",
+      "at": "afterDeadLetter",
+      "equals": 1
+    },
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": true
+    },
+    {
+      "kind": "task_field",
+      "source": "server",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "title",
+      "equals": "Flaky"
+    },
+    {
+      "kind": "dead_letter_count",
+      "equals": 0
+    }
+  ]
+}

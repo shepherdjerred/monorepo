@@ -7,11 +7,7 @@ import {
 import { TaskIdSchema } from "../../domain/types";
 import { TaskStatusSchema } from "../../domain/schemas";
 import { localTodayYmd } from "../../domain/recurrence";
-import {
-  type Command,
-  makeCommandIdFactory,
-  makeTempId,
-} from "../sync/commands";
+import { type Command, commandId, tempTaskId } from "../sync/commands";
 import { TypedStorage } from "./storage";
 
 /**
@@ -70,9 +66,15 @@ function ymdOf(timestampMs: number): string {
   return localTodayYmd(new Date(timestampMs));
 }
 
-/** Convert one v1 mutation to a v2 command, or null to drop it. */
-function convert(m: V1Mutation, nextId: () => string): Command | null {
-  const base = { id: nextId(), createdAt: m.timestamp };
+/**
+ * Convert one v1 mutation to a v2 command, or null to drop it.
+ *
+ * `counter` is the migration's own running ordinal, reused for the temp id —
+ * safe because the migration writes the v2 queue exactly once, and because
+ * `TaskStore` declines to mint any id the restored queue already holds.
+ */
+function convert(m: V1Mutation, id: string, counter: number): Command | null {
+  const base = { id, createdAt: m.timestamp };
   switch (m.type) {
     case "create":
       // Nothing referenced the old optimistic task (it was never persisted),
@@ -80,7 +82,7 @@ function convert(m: V1Mutation, nextId: () => string): Command | null {
       return {
         ...base,
         type: "create",
-        tempId: makeTempId(() => m.timestamp),
+        tempId: tempTaskId(m.timestamp, counter),
         payload: m.payload,
       };
     case "update":
@@ -133,6 +135,7 @@ const defaultStorage: MigrationStorage = {
 export async function runMigrations(
   storage: MigrationStorage = defaultStorage,
   clock: () => number = Date.now,
+  random: () => number = Math.random,
 ): Promise<void> {
   const version = await storage.getSchemaVersion();
   if (version >= CURRENT_SCHEMA_VERSION) return;
@@ -141,7 +144,7 @@ export async function runMigrations(
   const existingV2 = await storage.getQueueV2();
   if (existingV2 === null) {
     const legacy = await storage.getLegacyQueue();
-    const commands = migrateV1Queue(legacy, clock);
+    const commands = migrateV1Queue(legacy, clock, random);
     if (commands.length > 0) {
       await storage.setQueueV2(JSON.stringify(commands));
     }
@@ -154,6 +157,7 @@ export async function runMigrations(
 export function migrateV1Queue(
   legacy: string | null,
   clock: () => number = Date.now,
+  random: () => number = Math.random,
 ): Command[] {
   if (!legacy) return [];
   let parsed: unknown;
@@ -163,12 +167,17 @@ export function migrateV1Queue(
     return [];
   }
   if (!Array.isArray(parsed)) return [];
-  const nextId = makeCommandIdFactory(clock);
   const commands: Command[] = [];
+  let counter = 0;
   for (const item of parsed) {
     const result = V1MutationSchema.safeParse(item);
     if (!result.success) continue; // drop unparseable entries (matches v1)
-    const command = convert(result.data, nextId);
+    counter += 1;
+    const command = convert(
+      result.data,
+      commandId(clock(), counter, random()),
+      counter,
+    );
     if (command !== null) commands.push(command);
   }
   return commands;

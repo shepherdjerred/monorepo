@@ -1,0 +1,74 @@
+{
+  "id": "fake-server-mutation-id-replay-dedup",
+  "source": "src/data/sync/__tests__/harness.test.ts",
+  "describe": "FakeServer",
+  "name": "a replayed X-Mutation-Id returns the stored response without re-applying",
+  "doc": "Mirrors the real server's idempotency middleware: called twice, applied once.",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "client_call",
+      "as": "first",
+      "call": {
+        "method": "createTask",
+        "request": {
+          "title": "Once"
+        },
+        "mutationId": "mut-1"
+      }
+    },
+    {
+      "kind": "client_call",
+      "as": "replay",
+      "call": {
+        "method": "createTask",
+        "request": {
+          "title": "Once"
+        },
+        "mutationId": "mut-1"
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "first",
+      "ok": true
+    },
+    {
+      "kind": "result",
+      "ref": "replay",
+      "ok": true
+    },
+    {
+      "kind": "results_field_equal",
+      "refs": ["replay", "first"],
+      "path": "value.id"
+    },
+    {
+      "kind": "task_count",
+      "source": "server",
+      "equals": {
+        "kind": "literal",
+        "value": 1
+      }
+    },
+    {
+      "kind": "call_count",
+      "method": "createTask",
+      "equals": 2
+    },
+    {
+      "kind": "call_count",
+      "method": "createTask",
+      "applied": true,
+      "equals": 1
+    },
+    {
+      "kind": "call_log",
+      "index": 1,
+      "field": "replayed",
+      "equals": true
+    }
+  ]
+}

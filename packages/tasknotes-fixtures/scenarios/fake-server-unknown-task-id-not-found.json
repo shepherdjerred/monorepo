@@ -1,0 +1,31 @@
+{
+  "id": "fake-server-unknown-task-id-not-found",
+  "source": "src/data/sync/__tests__/harness.test.ts",
+  "describe": "FakeServer",
+  "name": "unknown task ids return NotFoundError",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "client_call",
+      "as": "result",
+      "call": {
+        "method": "updateTask",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/nope.md"
+        },
+        "request": {
+          "title": "x"
+        }
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": false,
+      "errorKind": "not_found"
+    }
+  ]
+}

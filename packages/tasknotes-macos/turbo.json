@@ -1,0 +1,34 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // `lint` is the only task this package contributes to the root verify
+    // graph, and that is a deliberate consequence of the plan's testing
+    // strategy rather than an omission.
+    //
+    // SwiftLint ships a static Linux binary (the CI toolchain image already
+    // installs it for the iOS app's `lint:swift`), so the semantic gate runs on
+    // every PR. `swift build`, `swift test`, `swift-format`, and `xcodebuild`
+    // all need a Swift toolchain or Xcode, which the Linux CI image does not
+    // have and should not grow — macOS work follows the existing iOS
+    // precedent: Buildkite owns what runs on Linux, and anything needing a Mac
+    // is a local pre-merge step (`bun run mac:verify`).
+    //
+    // No `outputs`: swiftlint produces none, and the win here is turbo's cached
+    // log/exit replay keyed on the source hash.
+    "lint": {
+      "inputs": [
+        "Sources/**",
+        "Tests/**",
+        "App/**",
+        "Package.swift",
+        "project.yml",
+        ".swiftlint.yml",
+        "Tests/.swiftlint.yml",
+        "ci/no-suppressions.sh",
+        "!.build/**"
+      ],
+      "outputs": []
+    }
+  }
+}

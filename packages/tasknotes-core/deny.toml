@@ -1,0 +1,102 @@
+# cargo-deny configuration for the TaskNotes core workspace.
+#
+# This replaces cargo-audit (subsumed by [advisories]), cargo-vet, and
+# cargo-outdated. Run it with `cargo deny --all-features check`.
+
+[graph]
+all-features = true
+# The core is Linux-testable and ships to macOS and Windows. Anything outside
+# these targets is not part of the shipped graph and should not be audited.
+targets = [
+  "aarch64-apple-darwin",
+  "x86_64-apple-darwin",
+  "aarch64-pc-windows-msvc",
+  "x86_64-pc-windows-msvc",
+  "aarch64-unknown-linux-gnu",
+  "x86_64-unknown-linux-gnu",
+]
+
+[advisories]
+version = 2
+# No blanket ignores. An advisory that genuinely does not apply gets its own
+# entry here with a comment naming why, not a wildcard.
+ignore = []
+
+[licenses]
+version = 2
+# Allow-list only: this crate ships inside a signed, notarized, closed-source
+# macOS app and a Windows app, so a copyleft dependency is a distribution
+# problem, not a style problem. GPL-*, AGPL-*, LGPL-* and OpenSSL are excluded
+# by being absent — cargo-deny's `version = 2` license config has no `deny`
+# list, and an allow-list is the stronger formulation anyway (a new copyleft
+# licence nobody has heard of is rejected by default).
+allow = [
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "BSL-1.0",
+  "CC0-1.0",
+  "ISC",
+  "MIT",
+  "MIT-0",
+  "MPL-2.0",
+  "Unicode-3.0",
+  "Unlicense",
+  "Zlib",
+]
+confidence-threshold = 0.93
+exceptions = []
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# The intra-workspace `tasknotes-core` path dependency has no version because
+# nothing here is published. Wildcards on *registry* crates stay denied.
+allow-wildcard-paths = true
+deny = []
+skip = []
+skip-tree = []
+
+[bans.build]
+# A build script is arbitrary code executed on every developer machine and
+# every CI agent, with full filesystem and network access, before a single
+# line of the project compiles. Enumerating them turns "a transitive dep grew
+# a build.rs" from invisible into a review conversation.
+#
+# Regenerate with:
+#   cargo metadata --format-version 1 --all-features \
+#     | jq -r '.packages[] | select(any(.targets[]; .kind == ["custom-build"])) | .name' \
+#     | sort -u
+allow-build-scripts = [
+  { name = "anyhow" },
+  { name = "camino" },
+  { name = "fs-err" },
+  { name = "getrandom" },
+  { name = "iana-time-zone-haiku" },
+  { name = "libc" },
+  { name = "num-traits" },
+  { name = "proc-macro2" },
+  { name = "quote" },
+  { name = "rustix" },
+  { name = "rustversion" },
+  { name = "serde" },
+  { name = "serde_core" },
+  { name = "serde_json" },
+  { name = "thiserror" },
+  { name = "wasm-bindgen" },
+  { name = "wasm-bindgen-shared" },
+  { name = "wit-bindgen" },
+  { name = "zerocopy" },
+  { name = "zmij" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+# Deliberately empty. Note for the Windows phase: uniffi-bindgen-cs is
+# git-install-only (never published to crates.io). It is a *tool*, not a
+# dependency of this graph, so it must stay out of Cargo.toml rather than be
+# allow-listed here.
+allow-git = []

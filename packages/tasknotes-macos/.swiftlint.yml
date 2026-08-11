@@ -1,0 +1,230 @@
+# SwiftLint owns semantics. `swift-format` owns every byte of whitespace.
+#
+# That split is not a preference — it is scar tissue. `sandbox/archive/glance`
+# fought SwiftLint's layout rules against a formatter for long enough to leave
+# four commented-out rules and a note on each explaining which formatter flag it
+# lost to. Not one layout rule is enabled here, and none should be added:
+# `.swift-format` decides indentation, line breaks, and commas, and it is the
+# only thing that does.
+#
+# Two more deliberate absences:
+#
+#   * **No `baseline:`.** A baseline file is a suppression list with better
+#     branding — it takes today's violations and makes them permanently
+#     invisible. If a rule is worth enabling, its existing violations are worth
+#     fixing; if they are not, the rule is not worth enabling.
+#   * **No `analyzer_rules:` here.** They need a full compiler log, so they live
+#     in `.swiftlint-analyzer.yml` and run through `bun run mac:analyze` — a
+#     separate, slower, macOS-only step.
+
+strict: true
+
+# The only two default rules that contradict `swift-format`, disabled with the
+# evidence rather than pre-emptively. Both were found by formatting the tree and
+# then running `swiftlint --strict`; that is the procedure to follow if a future
+# rule starts fighting the formatter, rather than reaching for a suppression
+# comment or a baseline.
+disabled_rules:
+  # `swift-format`'s `multiElementCollectionTrailingCommas` *adds* the trailing
+  # comma this rule removes. Two tools, one file, opposite opinions — this is
+  # precisely the fight that left four commented-out rules behind in
+  # `sandbox/archive/glance/.swiftlint.yml`.
+  - trailing_comma
+  # `swift-format` moves closure parameters to the next line when the signature
+  # does not fit in `lineLength`; this rule requires them on the brace line.
+  - closure_parameter_position
+
+# A run that lints nothing must fail rather than pass. Otherwise a bad
+# `excluded:` entry, a moved directory, or a wrong working directory turns the
+# whole gate into a silent no-op that reports success forever.
+allow_zero_lintable_files: false
+
+excluded:
+  # SwiftPM and Xcode scratch.
+  - .build
+  - .swiftpm
+  - TaskNotes.xcodeproj
+  # Generated code is exempt; authored code is maximal.
+  #
+  # `Sources/TaskNotesUniFFI` re-exports the machine-generated UniFFI bindings.
+  # The bindings themselves live in `packages/tasknotes-core/bindings`, are
+  # never hand-edited, and are guarded by `cargo xtask check-bindings` — a
+  # committed snapshot plus `git diff --exit-code`, which catches the failure
+  # that actually matters there (silent `Record` reordering) and that no lint
+  # would ever catch. Keep this list in sync with the SwiftPM target that is
+  # exempt in `Package.swift`.
+  - Sources/TaskNotesUniFFI
+  - "**/*.generated.swift"
+
+# ── Opt-in rules ────────────────────────────────────────────────────────────
+# `swiftlint --strict` with no config runs only the ~100 default rules, and
+# every rule that encodes one of this repository's principles is opt-in and off.
+# These are those rules.
+#
+# Deliberately NOT enabled, with reasons, so nobody re-litigates them:
+#   explicit_type_interface   fires on `case let` bindings that cannot be annotated
+#   explicit_acl              noise; access level is already visible where it matters
+#   no_magic_numbers          fires on every frame, spacing, and duration in SwiftUI
+#   strict_fileprivate        `fileprivate` is the correct tool for extension-local state
+#   one_declaration_per_file  fights small, cohesive files
+#   sorted_enum_cases         source order is the ABI for anything crossing UniFFI
+# Every low-value rule enabled makes the high-value ones easier to ignore, which
+# is precisely how a no-suppressions policy dies.
+opt_in_rules:
+  # "No type assertions" / "strong static typing"
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - discouraged_optional_boolean
+  - discouraged_optional_collection
+  - raw_value_for_camel_cased_codable_enum
+  # "Fail loudly" — a trap must say why, and an assert must not be the
+  # mechanism (it compiles out of release builds).
+  - fatal_error_message
+  - discouraged_assert
+  - unhandled_throwing_task
+  # "Let contract violations fail loudly" — an untyped `catch` erases which
+  # error was thrown, which is how a typed error surface rots into `Error`.
+  - untyped_error_in_catch
+  # Shadowing turns "which value is this?" into a reading-comprehension test.
+  - variable_shadowing
+
+# Left on from the default set and worth stating: `superfluous_disable_command`
+# turns a disable comment that no longer suppresses anything into an error, so
+# stale suppressions cannot accumulate. It pairs with `banned_disable_comment`
+# below, which bans them outright.
+
+# `file_length` and `type_body_length` are about bounding *complexity*, and
+# prose is not complexity. This package documents the reasoning behind decisions
+# in the source rather than in a wiki that goes stale, so several files are more
+# than half comment — `TaskNotesStore.swift` is 405 lines of which 405-code is
+# documentation. Counting that against a code-length budget makes the rule
+# punish the thing it should reward, so it measures code only.
+#
+# `type_body_length` already excludes comments and whitespace by construction,
+# so it needs no equivalent and is left at its default.
+file_length:
+  ignore_comment_only_lines: true
+
+implicitly_unwrapped_optional:
+  # `weakExceptIBOutlets` (the default) exists for Interface Builder, which this
+  # app does not use. An IUO is an unchecked promise the compiler stops
+  # checking, which is exactly the shape of assertion the principles ban.
+  mode: all
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  excluded:
+    - id
+    - db
+    - x
+    - y
+
+# ── Custom rules ────────────────────────────────────────────────────────────
+# Five things this repository's principles require have no built-in rule at all.
+# Each regex below was verified to actually fire against a scratch file before
+# being committed — a custom rule that never matches is worse than no rule,
+# because it reads like coverage.
+custom_rules:
+  # The highest-leverage rule here. The compiler permits `default:` in a switch
+  # over a closed enum, and it then silently absorbs every case added later —
+  # turning "the compiler tells you everywhere you must handle the new state"
+  # into "the new state quietly behaves like the old ones". Exhaustive matching
+  # is the Swift half of the Rust `match` gate.
+  #
+  # `@unknown default:` is explicitly still allowed: it is *required* for
+  # non-frozen enums from system frameworks, and it means the opposite thing —
+  # "this is the future-proofing branch", not "I could not be bothered".
+  banned_switch_default:
+    name: "Non-exhaustive switch"
+    regex: '(?<![\w.])(?<!unknown )default\s*:'
+    message: >-
+      `default:` silently absorbs enum cases added later. Match every case
+      explicitly. `@unknown default:` is allowed, and only for non-frozen
+      enums from system frameworks.
+    severity: error
+    # `keyword` rather than an exclusion list. A regex alone cannot tell a
+    # `switch` case from the *argument label* `default:` — Phase 9c hit exactly
+    # that on `KeyboardShortcuts.Name(_:default:)`, where the library's one
+    # documented way to declare an initial binding tripped a rule about
+    # exhaustive switches, with no spelling available to dodge it.
+    # SourceKit does know the difference: it classifies the switch keyword as
+    # `keyword` and an argument label as `identifier`, wherever on the line it
+    # sits. Verified against both, plus `@unknown default:`, a one-line
+    # `default: return x`, and a line-leading argument label inside a
+    # multi-line call. This also subsumes the comment/doccomment/string
+    # exclusions this rule used to carry.
+    match_kinds:
+      - keyword
+
+  # `print` is not logging: it is unstructured, unfiltered, invisible in a
+  # release build's console, and impossible to correlate. Diagnostics go through
+  # the unified logging system.
+  banned_print:
+    name: "print()"
+    regex: '(?<![\w.])print\s*\('
+    message: >-
+      `print` is not logging. Use `Logger` from `os` so output is structured,
+      filterable, and visible in Console.app and sysdiagnose.
+    severity: error
+    excluded_match_kinds:
+      - comment
+      - doccomment
+      - doccomment.field
+      - string
+
+  # "No suppressions", enforced in the linter itself. Note the hole: a
+  # `// swiftlint:disable all` disables this rule too, which is why
+  # `ci/no-suppressions.sh` greps for the same string outside SwiftLint. Two
+  # mechanisms, because either one alone has a gap.
+  banned_disable_comment:
+    name: "SwiftLint suppression"
+    regex: "swiftlint:disable"
+    message: >-
+      Suppressions are banned. Fix the violation, or change the rule in
+      .swiftlint.yml where the decision is reviewable.
+    severity: error
+
+  # `try?` converts a typed, described failure into `nil` — the silent fallback
+  # the engineering principles exist to prevent. `try` and `do/catch` keep the
+  # error; `try!` at least traps loudly.
+  banned_optional_try:
+    name: "Silent error discard"
+    regex: '(?<![\w])try\?'
+    message: >-
+      `try?` discards the error and returns nil. Propagate with `try`, or
+      handle it in a `catch` that names the error type.
+    severity: error
+    excluded_match_kinds:
+      - comment
+      - doccomment
+      - doccomment.field
+      - string
+
+  # The real Swift analogues of TypeScript's `as`.
+  #
+  # `as!` is NOT one of them — it is a runtime-checked downcast that traps, a
+  # loud crash rather than a silent lie, and `as?` *is* the runtime validation
+  # the principles ask for. These four are the constructs that assert something
+  # to the compiler with no check at all.
+  banned_unsafe_escape:
+    name: "Unchecked type escape"
+    # Two alternatives with different lookbehinds, and that is deliberate.
+    # `unsafeBitCast` and `unsafeDowncast` are free functions, so a preceding
+    # `.` means it is somebody's *method* and not the thing being banned.
+    # `assumingMemoryBound` is only ever reached through a `.`, so the same
+    # lookbehind would make the rule match nothing — which is exactly what a
+    # first draft of this rule did, and why every regex here was probed against
+    # a scratch file before being committed.
+    regex: '(?<![\w.])(unsafeBitCast|unsafeDowncast|@unchecked\s+Sendable)|(?<![\w])assumingMemoryBound'
+    message: >-
+      This asserts a type or a concurrency property with no check. Use a
+      checked conversion, a validating initializer, or an actual `Sendable`
+      conformance.
+    severity: error
+    excluded_match_kinds:
+      - comment
+      - doccomment
+      - doccomment.field
+      - string

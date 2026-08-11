@@ -12,6 +12,7 @@ const KEYS = {
   DEAD_LETTER: "dead_letter",
   ID_ALIASES: "id_aliases",
   ACKNOWLEDGED_COMPLETION_RESTORES: "acknowledged_completion_restores",
+  ID_COUNTERS: "id_counters",
   SCHEMA_VERSION: "storage_schema_version",
   LAST_SYNC: "last_sync_time",
 } as const;
@@ -115,6 +116,20 @@ export const TypedStorage = {
 
   async setAcknowledgedCompletionRestores(data: string): Promise<void> {
     await AsyncStorage.setItem(KEYS.ACKNOWLEDGED_COMPLETION_RESTORES, data);
+  },
+
+  /**
+   * The command-id and temp-id counters. Absent on a fresh install and on any
+   * install that predates this key — both mean "start at zero", which
+   * `TaskStore` handles without a migration because it also refuses to mint an
+   * id the restored queue already holds.
+   */
+  async getIdCounters(): Promise<string | null> {
+    return AsyncStorage.getItem(KEYS.ID_COUNTERS);
+  },
+
+  async setIdCounters(data: string): Promise<void> {
+    await AsyncStorage.setItem(KEYS.ID_COUNTERS, data);
   },
 
   async getSchemaVersion(): Promise<number> {

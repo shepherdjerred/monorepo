@@ -1,0 +1,24 @@
+{
+  "name": "tasknotes-macos",
+  "private": true,
+  "description": "Turbo shim over the native macOS TaskNotes app. Only `lint` participates in the repository's Linux verify graph — SwiftLint ships a static Linux binary, so it runs in CI, while every `mac:` script needs a Swift toolchain or Xcode and is a local pre-merge step, by the same rule the iOS app already follows. Every script that compiles Swift runs `mac:preflight` first: the committed bindings are generated source and the XCFramework they link against is a gitignored artifact, so regenerating one without rebuilding the other produces `Undefined symbol: _uniffi_…` that reads as somebody else's broken edit rather than a stale build.",
+  "scripts": {
+    "lint": "swiftlint lint --strict --quiet && ./ci/no-suppressions.sh",
+    "mac:generate": "xcodegen generate",
+    "mac:preflight": "cd ../tasknotes-core && cargo run --quiet --package xtask -- check-xcframework",
+    "mac:build": "bun run mac:preflight && swift build",
+    "mac:test": "bun run mac:preflight && swift test",
+    "mac:snapshots": "bun run mac:preflight && swift test --filter TaskNotesMacTests",
+    "mac:typecheck": "bun run mac:preflight && swift build --build-tests",
+    "mac:format": "xcrun swift-format format --in-place --parallel --recursive Sources Tests App UITests Package.swift",
+    "mac:format:check": "xcrun swift-format lint --strict --parallel --recursive Sources Tests App UITests Package.swift",
+    "mac:analyze": "xcodebuild -project TaskNotes.xcodeproj -scheme TaskNotes -configuration Debug -derivedDataPath .build/xcode clean build > .build/xcodebuild.log && swiftlint analyze --strict --quiet --config .swiftlint-analyzer.yml --compiler-log-path .build/xcodebuild.log",
+    "mac:app": "xcodebuild -project TaskNotes.xcodeproj -scheme TaskNotes -configuration Debug -derivedDataPath .build/xcode build",
+    "mac:app:release": "xcodebuild -project TaskNotes.xcodeproj -scheme TaskNotes -configuration Release -derivedDataPath .build/xcode build",
+    "mac:smoke": "bun run mac:app:release && bun run scripts/verify-launch.ts",
+    "mac:e2e": "bun run mac:generate && xcodebuild test -project TaskNotes.xcodeproj -scheme TaskNotes -configuration Debug -derivedDataPath .build/xcode -destination 'platform=macOS' -only-testing:TaskNotesUITests",
+    "mac:run": "bun run mac:app && open .build/xcode/Build/Products/Debug/TaskNotes.app",
+    "mac:release": "bun run scripts/release.ts",
+    "mac:verify": "bun run mac:generate && bun run mac:build && bun run mac:test && bun run lint && bun run mac:format:check && bun run mac:app && bun run mac:smoke"
+  }
+}

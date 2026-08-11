@@ -1,0 +1,148 @@
+{
+  "id": "retry-backoff-grows-and-caps",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "retry classification",
+  "name": "backoff delay grows exponentially and is capped",
+  "doc": "The injected randomness is pinned to 0.5, so the jitter factor is exactly 1 and the delays are the bare schedule.",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_offline"
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "delete",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/a.md"
+        }
+      }
+    },
+    {
+      "kind": "sync_now"
+    },
+    {
+      "kind": "snapshot",
+      "as": "attempt1"
+    },
+    {
+      "kind": "scheduler_fire_next"
+    },
+    {
+      "kind": "sync_now"
+    },
+    {
+      "kind": "snapshot",
+      "as": "attempt2"
+    },
+    {
+      "kind": "scheduler_fire_next"
+    },
+    {
+      "kind": "sync_now"
+    },
+    {
+      "kind": "snapshot",
+      "as": "attempt3"
+    },
+    {
+      "kind": "scheduler_fire_next"
+    },
+    {
+      "kind": "sync_now"
+    },
+    {
+      "kind": "snapshot",
+      "as": "attempt4"
+    },
+    {
+      "kind": "scheduler_fire_next"
+    },
+    {
+      "kind": "sync_now"
+    },
+    {
+      "kind": "snapshot",
+      "as": "attempt5"
+    },
+    {
+      "kind": "scheduler_fire_next"
+    },
+    {
+      "kind": "sync_now"
+    },
+    {
+      "kind": "snapshot",
+      "as": "attempt6"
+    },
+    {
+      "kind": "scheduler_fire_next"
+    },
+    {
+      "kind": "sync_now"
+    },
+    {
+      "kind": "snapshot",
+      "as": "attempt7"
+    },
+    {
+      "kind": "scheduler_fire_next"
+    },
+    {
+      "kind": "sync_now"
+    },
+    {
+      "kind": "snapshot",
+      "as": "attempt8"
+    },
+    {
+      "kind": "scheduler_fire_next"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "scheduler_pending",
+      "at": "attempt1",
+      "delays": [1000]
+    },
+    {
+      "kind": "scheduler_pending",
+      "at": "attempt2",
+      "delays": [2000]
+    },
+    {
+      "kind": "scheduler_pending",
+      "at": "attempt3",
+      "delays": [4000]
+    },
+    {
+      "kind": "scheduler_pending",
+      "at": "attempt4",
+      "delays": [8000]
+    },
+    {
+      "kind": "scheduler_pending",
+      "at": "attempt5",
+      "delays": [16000]
+    },
+    {
+      "kind": "scheduler_pending",
+      "at": "attempt6",
+      "delays": [32000]
+    },
+    {
+      "kind": "scheduler_pending",
+      "at": "attempt7",
+      "delays": [60000]
+    },
+    {
+      "kind": "scheduler_pending",
+      "at": "attempt8",
+      "delays": [60000]
+    }
+  ]
+}

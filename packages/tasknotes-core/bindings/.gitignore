@@ -1,0 +1,8 @@
+# The XCFramework is a build artifact of `cargo xtask build-xcframework`, not a
+# committed binding. Everything else in this directory IS committed on purpose —
+# see README.md.
+artifacts/
+
+# SwiftPM scratch, created when the package is built in place.
+.build/
+.swiftpm/

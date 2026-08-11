@@ -1,0 +1,46 @@
+[package]
+name = "tasknotes-core-ffi"
+description = "UniFFI scaffolding over tasknotes-core. Contains no logic — only the FFI surface."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+# `staticlib` is what the Apple XCFramework links (a static archive is never a
+# nested signed item, so the whole notarization failure class does not apply);
+# `cdylib` is what the Windows/C# binding will load; `lib` keeps the crate
+# usable from Rust integration tests and from xtask.
+crate-type = ["staticlib", "cdylib", "lib"]
+
+# `uniffi-bindgen-swift` is NOT a binary the `uniffi` crate ships: upstream
+# gates it behind `required-features = ["cli"]`, so a plain dependency on
+# `uniffi` never builds it. Rather than `cargo install`ing a second, separately
+# versioned copy of the generator — the exact drift that pinning `=0.31.2`
+# exists to prevent — the binary is re-declared here and enabled by this
+# feature, so the generator and the runtime are always the same source tree.
+#
+# The feature is deliberately off by default: turning it on drags `clap`,
+# `camino`, and the whole of `uniffi_bindgen` into a crate whose real output is
+# a static library for an app bundle.
+[features]
+cli = ["uniffi/cli"]
+
+[[bin]]
+name = "uniffi-bindgen-swift"
+path = "src/bin/uniffi-bindgen-swift.rs"
+required-features = ["cli"]
+
+[dependencies]
+# Naive dates cross this boundary as ISO `YYYY-MM-DD` strings, so the FFI layer
+# has to parse and render them to call the core's `NaiveDate` APIs. Same
+# workspace pin as the core; no new dependency enters the lockfile.
+chrono = { workspace = true }
+serde_json = { workspace = true }
+tasknotes-core = { path = "../tasknotes-core" }
+thiserror = { workspace = true }
+uniffi = { workspace = true }
+
+[lints]
+workspace = true

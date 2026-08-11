@@ -1,0 +1,64 @@
+{
+  "id": "retry-404-delete-succeeds-update-dead-letters",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "retry classification",
+  "name": "404 on delete counts as success; 404 on update dead-letters",
+  "doc": "Deleting an already-gone task has reached its goal state. Updating a vanished one is parked for review, never silently dropped.",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "delete",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/deleted-in-obsidian.md"
+        }
+      }
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "update",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/also-gone.md"
+        },
+        "payload": {
+          "title": "x"
+        }
+      }
+    },
+    {
+      "kind": "sync_now",
+      "as": "result"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": true
+    },
+    {
+      "kind": "dead_letter_count",
+      "equals": 1
+    },
+    {
+      "kind": "dead_letter_field",
+      "index": 0,
+      "path": "command.type",
+      "equals": "update"
+    },
+    {
+      "kind": "pending_count",
+      "equals": {
+        "kind": "literal",
+        "value": 0
+      }
+    }
+  ]
+}

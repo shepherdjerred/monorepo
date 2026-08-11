@@ -1,0 +1,105 @@
+{
+  "id": "crash-between-ack-and-dequeue-dedup",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "crash between server ack and client dequeue",
+  "name": "the replayed X-Mutation-Id is deduped — no duplicate task",
+  "doc": "The relaunch here uses a DELIBERATELY STALE snapshot, captured before the sync that the crash lost. The queue comes back holding a command the server already applied.",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "create",
+        "payload": {
+          "title": "Exactly once"
+        }
+      }
+    },
+    {
+      "kind": "snapshot",
+      "as": "beforeSync"
+    },
+    {
+      "kind": "sync_now",
+      "as": "result"
+    },
+    {
+      "kind": "snapshot",
+      "as": "afterSync"
+    },
+    {
+      "kind": "relaunch",
+      "from": "beforeSync"
+    },
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "snapshot",
+      "as": "afterRelaunch"
+    },
+    {
+      "kind": "sync_now",
+      "as": "replay"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": true
+    },
+    {
+      "kind": "task_count",
+      "at": "afterSync",
+      "source": "server",
+      "equals": {
+        "kind": "literal",
+        "value": 1
+      }
+    },
+    {
+      "kind": "pending_count",
+      "at": "afterRelaunch",
+      "equals": {
+        "kind": "literal",
+        "value": 1
+      }
+    },
+    {
+      "kind": "result",
+      "ref": "replay",
+      "ok": true
+    },
+    {
+      "kind": "task_count",
+      "source": "server",
+      "equals": {
+        "kind": "literal",
+        "value": 1
+      }
+    },
+    {
+      "kind": "call_count",
+      "method": "createTask",
+      "applied": true,
+      "equals": 1
+    },
+    {
+      "kind": "call_count",
+      "method": "createTask",
+      "equals": 2
+    },
+    {
+      "kind": "task_count",
+      "source": "store",
+      "equals": {
+        "kind": "literal",
+        "value": 1
+      }
+    }
+  ]
+}

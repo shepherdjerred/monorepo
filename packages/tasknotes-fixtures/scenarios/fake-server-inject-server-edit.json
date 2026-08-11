@@ -1,0 +1,47 @@
+{
+  "id": "fake-server-inject-server-edit",
+  "source": "src/data/sync/__tests__/harness.test.ts",
+  "describe": "FakeServer",
+  "name": "injectServerEdit simulates a concurrent Obsidian edit",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "server_seed",
+      "tasks": [
+        {
+          "title": "Original"
+        }
+      ]
+    },
+    {
+      "kind": "server_inject_edit",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "patch": {
+        "title": "Edited in Obsidian"
+      }
+    },
+    {
+      "kind": "client_call",
+      "as": "list",
+      "call": {
+        "method": "listTasks"
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "list",
+      "ok": true
+    },
+    {
+      "kind": "result_field",
+      "ref": "list",
+      "path": "value.0.title",
+      "equals": "Edited in Obsidian"
+    }
+  ]
+}

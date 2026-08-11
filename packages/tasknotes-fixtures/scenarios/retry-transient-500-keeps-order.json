@@ -1,0 +1,116 @@
+{
+  "id": "retry-transient-500-keeps-order",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "retry classification",
+  "name": "transient 500 stops the drain, keeps order, and retries",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_seed",
+      "tasks": [{}]
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "update",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "payload": {
+          "title": "First"
+        }
+      }
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "set_status",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "status": "done"
+      }
+    },
+    {
+      "kind": "server_fail_next",
+      "method": "updateTask",
+      "error": {
+        "kind": "api",
+        "message": "boom",
+        "status": 500
+      }
+    },
+    {
+      "kind": "sync_now",
+      "as": "attempt"
+    },
+    {
+      "kind": "snapshot",
+      "as": "afterFailure"
+    },
+    {
+      "kind": "scheduler_fire_next"
+    },
+    {
+      "kind": "sync_now",
+      "as": "retried"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "attempt",
+      "ok": false
+    },
+    {
+      "kind": "pending_count",
+      "at": "afterFailure",
+      "equals": {
+        "kind": "literal",
+        "value": 2
+      }
+    },
+    {
+      "kind": "engine_state",
+      "at": "afterFailure",
+      "equals": "backoff"
+    },
+    {
+      "kind": "result",
+      "ref": "retried",
+      "ok": true
+    },
+    {
+      "kind": "pending_count",
+      "equals": {
+        "kind": "literal",
+        "value": 0
+      }
+    },
+    {
+      "kind": "task_field",
+      "source": "server",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "title",
+      "equals": "First"
+    },
+    {
+      "kind": "task_field",
+      "source": "server",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "status",
+      "equals": "done"
+    }
+  ]
+}

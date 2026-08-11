@@ -1,0 +1,2395 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "source": {
+      "type": "string"
+    },
+    "describe": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "doc": {
+      "type": "string"
+    },
+    "setup": {
+      "type": "object",
+      "properties": {
+        "clock": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "epoch_ms"
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": ["kind", "value"],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "local_naive"
+                },
+                "value": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+                }
+              },
+              "required": ["kind", "value"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "autoSync": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "store_restore"
+              }
+            },
+            "required": ["kind"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "server_seed"
+              },
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "open",
+                        "in-progress",
+                        "done",
+                        "cancelled",
+                        "waiting",
+                        "delegated"
+                      ]
+                    },
+                    "priority": {
+                      "type": "string",
+                      "enum": [
+                        "highest",
+                        "high",
+                        "medium",
+                        "normal",
+                        "low",
+                        "none"
+                      ]
+                    },
+                    "due": {
+                      "type": "string"
+                    },
+                    "scheduled": {
+                      "type": "string"
+                    },
+                    "recurrence": {
+                      "type": "string"
+                    },
+                    "completeInstances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "skippedInstances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "contexts": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "projects": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "tags": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "archived": {
+                      "type": "boolean"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": ["kind", "tasks"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "server_offline"
+              }
+            },
+            "required": ["kind"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "server_online"
+              }
+            },
+            "required": ["kind"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "server_fail_next"
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "createTask",
+                  "updateTask",
+                  "deleteTask",
+                  "toggleTaskStatus",
+                  "completeRecurringInstance",
+                  "listTasks"
+                ]
+              },
+              "error": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "network"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["kind", "message"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "api"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": ["kind", "message", "status"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "validation"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["kind", "message"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "not_found"
+                      },
+                      "message": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "number",
+                        "const": 404
+                      }
+                    },
+                    "required": ["kind", "message", "status"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "connection"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["kind", "message"],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "required": ["kind", "method", "error"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "server_inject_edit"
+              },
+              "task": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "id"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "ref"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "resolved_ref"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "title"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "patch": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "open",
+                      "in-progress",
+                      "done",
+                      "cancelled",
+                      "waiting",
+                      "delegated"
+                    ]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "highest",
+                      "high",
+                      "medium",
+                      "normal",
+                      "low",
+                      "none"
+                    ]
+                  },
+                  "due": {
+                    "type": "string"
+                  },
+                  "scheduled": {
+                    "type": "string"
+                  },
+                  "recurrence": {
+                    "type": "string"
+                  },
+                  "completeInstances": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "skippedInstances": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "contexts": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "projects": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "archived": {
+                    "type": "boolean"
+                  },
+                  "details": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": ["kind", "task", "patch"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "clock_set"
+              },
+              "at": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "epoch_ms"
+                      },
+                      "value": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": ["kind", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "local_naive"
+                      },
+                      "value": {
+                        "type": "string",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+                      }
+                    },
+                    "required": ["kind", "value"],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "required": ["kind", "at"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "dispatch"
+              },
+              "input": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "create"
+                      },
+                      "payload": {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "details": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "open",
+                              "in-progress",
+                              "done",
+                              "cancelled",
+                              "waiting",
+                              "delegated"
+                            ]
+                          },
+                          "priority": {
+                            "type": "string",
+                            "enum": [
+                              "highest",
+                              "high",
+                              "medium",
+                              "normal",
+                              "low",
+                              "none"
+                            ]
+                          },
+                          "due": {
+                            "type": "string"
+                          },
+                          "scheduled": {
+                            "type": "string"
+                          },
+                          "contexts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "projects": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "tags": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "recurrence": {
+                            "type": "string"
+                          },
+                          "recurrenceAnchor": {
+                            "type": "string",
+                            "enum": ["scheduled", "completion"]
+                          },
+                          "timeEstimate": {
+                            "type": "number"
+                          },
+                          "extraFields": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string"
+                            },
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": ["title"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": ["type", "payload"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "update"
+                      },
+                      "task": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "id"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "resolved_ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "title"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "payload": {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "details": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "open",
+                              "in-progress",
+                              "done",
+                              "cancelled",
+                              "waiting",
+                              "delegated"
+                            ]
+                          },
+                          "priority": {
+                            "type": "string",
+                            "enum": [
+                              "highest",
+                              "high",
+                              "medium",
+                              "normal",
+                              "low",
+                              "none"
+                            ]
+                          },
+                          "due": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "scheduled": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "contexts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "projects": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "tags": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "recurrence": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "recurrenceAnchor": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": ["scheduled", "completion"]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "timeEstimate": {
+                            "anyOf": [
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "extraFields": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string"
+                            },
+                            "additionalProperties": {}
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": ["type", "task", "payload"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "delete"
+                      },
+                      "task": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "id"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "resolved_ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "title"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "required": ["type", "task"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "set_status"
+                      },
+                      "task": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "id"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "resolved_ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "title"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "open",
+                          "in-progress",
+                          "done",
+                          "cancelled",
+                          "waiting",
+                          "delegated"
+                        ]
+                      }
+                    },
+                    "required": ["type", "task", "status"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "set_instance_complete"
+                      },
+                      "task": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "id"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "resolved_ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "title"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "date": {
+                        "type": "string"
+                      },
+                      "completed": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": ["type", "task", "date", "completed"],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "as": {
+                "type": "string"
+              }
+            },
+            "required": ["kind", "input"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "sync_now"
+              },
+              "as": {
+                "type": "string"
+              }
+            },
+            "required": ["kind"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "request_sync"
+              }
+            },
+            "required": ["kind"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "scheduler_fire_next"
+              }
+            },
+            "required": ["kind"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "engine_dispose"
+              }
+            },
+            "required": ["kind"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "retry_dead_letter"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": ["kind", "index"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "client_call"
+              },
+              "call": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "method": {
+                        "type": "string",
+                        "const": "listTasks"
+                      }
+                    },
+                    "required": ["method"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "method": {
+                        "type": "string",
+                        "const": "createTask"
+                      },
+                      "request": {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "details": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "open",
+                              "in-progress",
+                              "done",
+                              "cancelled",
+                              "waiting",
+                              "delegated"
+                            ]
+                          },
+                          "priority": {
+                            "type": "string",
+                            "enum": [
+                              "highest",
+                              "high",
+                              "medium",
+                              "normal",
+                              "low",
+                              "none"
+                            ]
+                          },
+                          "due": {
+                            "type": "string"
+                          },
+                          "scheduled": {
+                            "type": "string"
+                          },
+                          "contexts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "projects": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "tags": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "recurrence": {
+                            "type": "string"
+                          },
+                          "recurrenceAnchor": {
+                            "type": "string",
+                            "enum": ["scheduled", "completion"]
+                          },
+                          "timeEstimate": {
+                            "type": "number"
+                          },
+                          "extraFields": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string"
+                            },
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": ["title"],
+                        "additionalProperties": false
+                      },
+                      "mutationId": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["method", "request"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "method": {
+                        "type": "string",
+                        "const": "updateTask"
+                      },
+                      "task": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "id"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "resolved_ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "title"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "request": {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "details": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "open",
+                              "in-progress",
+                              "done",
+                              "cancelled",
+                              "waiting",
+                              "delegated"
+                            ]
+                          },
+                          "priority": {
+                            "type": "string",
+                            "enum": [
+                              "highest",
+                              "high",
+                              "medium",
+                              "normal",
+                              "low",
+                              "none"
+                            ]
+                          },
+                          "due": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "scheduled": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "contexts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "projects": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "tags": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "recurrence": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "recurrenceAnchor": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": ["scheduled", "completion"]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "timeEstimate": {
+                            "anyOf": [
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "extraFields": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string"
+                            },
+                            "additionalProperties": {}
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "mutationId": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["method", "task", "request"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "method": {
+                        "type": "string",
+                        "const": "deleteTask"
+                      },
+                      "task": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "id"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "resolved_ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "title"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "mutationId": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["method", "task"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "method": {
+                        "type": "string",
+                        "const": "toggleTaskStatus"
+                      },
+                      "task": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "id"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "resolved_ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "title"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "open",
+                          "in-progress",
+                          "done",
+                          "cancelled",
+                          "waiting",
+                          "delegated"
+                        ]
+                      },
+                      "mutationId": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["method", "task", "status"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "method": {
+                        "type": "string",
+                        "const": "completeRecurringInstance"
+                      },
+                      "task": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "id"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "resolved_ref"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "by": {
+                                "type": "string",
+                                "const": "title"
+                              },
+                              "value": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["by", "value"],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "instance": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string"
+                              },
+                              "completed": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["date", "completed"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "mutationId": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["method", "task", "instance"],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "as": {
+                "type": "string"
+              }
+            },
+            "required": ["kind", "call"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "snapshot"
+              },
+              "as": {
+                "type": "string"
+              }
+            },
+            "required": ["kind", "as"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "relaunch"
+              },
+              "from": {
+                "type": "string"
+              }
+            },
+            "required": ["kind", "from"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "settle"
+              }
+            },
+            "required": ["kind"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "assertions": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "result"
+              },
+              "ref": {
+                "type": "string"
+              },
+              "ok": {
+                "type": "boolean"
+              },
+              "errorKind": {
+                "type": "string",
+                "enum": [
+                  "network",
+                  "api",
+                  "validation",
+                  "not_found",
+                  "connection"
+                ]
+              }
+            },
+            "required": ["kind", "ref", "ok"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "result_field"
+              },
+              "ref": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "equals": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "required": ["kind", "ref", "path", "equals"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "results_field_equal"
+              },
+              "refs": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "path": {
+                "type": "string"
+              }
+            },
+            "required": ["kind", "refs", "path"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "pending_count"
+              },
+              "at": {
+                "type": "string"
+              },
+              "equals": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "literal"
+                      },
+                      "value": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": ["kind", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "snapshot"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["kind", "name"],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "required": ["kind", "equals"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "queue_pending_equals"
+              },
+              "at": {
+                "type": "string"
+              }
+            },
+            "required": ["kind", "at"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "task_count"
+              },
+              "at": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string",
+                "enum": ["store", "server"]
+              },
+              "equals": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "literal"
+                      },
+                      "value": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": ["kind", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "snapshot"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["kind", "name"],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "required": ["kind", "source", "equals"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "task_field"
+              },
+              "at": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string",
+                "enum": ["store", "server"]
+              },
+              "task": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "id"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "ref"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "resolved_ref"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "title"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "path": {
+                "type": "string"
+              },
+              "equals": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "required": ["kind", "source", "task", "path", "equals"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "task_exists"
+              },
+              "at": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string",
+                "enum": ["store", "server"]
+              },
+              "task": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "id"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "ref"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "resolved_ref"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "title"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "exists": {
+                "type": "boolean"
+              }
+            },
+            "required": ["kind", "source", "task", "exists"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "dead_letter_count"
+              },
+              "at": {
+                "type": "string"
+              },
+              "equals": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": ["kind", "equals"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "dead_letter_field"
+              },
+              "at": {
+                "type": "string"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "path": {
+                "type": "string"
+              },
+              "equals": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "required": ["kind", "index", "path", "equals"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "last_sync_time"
+              },
+              "at": {
+                "type": "string"
+              },
+              "equals": {
+                "anyOf": [
+                  {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "epoch_ms"
+                          },
+                          "value": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": ["kind", "value"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "local_naive"
+                          },
+                          "value": {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+                          }
+                        },
+                        "required": ["kind", "value"],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": ["kind", "equals"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "engine_state"
+              },
+              "at": {
+                "type": "string"
+              },
+              "equals": {
+                "type": "string",
+                "enum": [
+                  "idle",
+                  "syncing",
+                  "backoff",
+                  "auth_error",
+                  "unconfigured"
+                ]
+              }
+            },
+            "required": ["kind", "equals"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "scheduler_pending"
+              },
+              "at": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "delays": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              }
+            },
+            "required": ["kind"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "call_count"
+              },
+              "at": {
+                "type": "string"
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "createTask",
+                  "updateTask",
+                  "deleteTask",
+                  "toggleTaskStatus",
+                  "completeRecurringInstance",
+                  "listTasks"
+                ]
+              },
+              "applied": {
+                "type": "boolean"
+              },
+              "equals": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": ["kind", "method", "equals"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "call_log"
+              },
+              "at": {
+                "type": "string"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "field": {
+                "type": "string",
+                "enum": ["method", "id", "mutationId", "replayed", "applied"]
+              },
+              "equals": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "required": ["kind", "field", "equals"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "task_id_is_temp"
+              },
+              "task": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "id"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "ref"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "resolved_ref"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "by": {
+                        "type": "string",
+                        "const": "title"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["by", "value"],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "equals": {
+                "type": "boolean"
+              }
+            },
+            "required": ["kind", "task", "equals"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "deterministic_end_state"
+              }
+            },
+            "required": ["kind"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "id",
+    "source",
+    "describe",
+    "name",
+    "setup",
+    "actions",
+    "assertions"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      ]
+    }
+  }
+}

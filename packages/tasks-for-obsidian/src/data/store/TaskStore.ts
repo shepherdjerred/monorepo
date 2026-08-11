@@ -1,8 +1,5 @@
-import { z } from "zod";
-
 import { TypedStorage } from "../cache/storage";
 import type { Task, TaskId } from "../../domain/types";
-import { taskId } from "../../domain/types";
 import type { RecurringCompletionRestore } from "tasknotes-types/v2";
 import type { CommandQueue, DeadLetterEntry } from "../sync/CommandQueue";
 import {
@@ -11,8 +8,6 @@ import {
   type CommandInput,
   applyCommand,
   commandTarget,
-  makeCommandIdFactory,
-  makeTempId,
 } from "../sync/commands";
 import { localTodayYmd } from "../../domain/recurrence";
 import {
@@ -27,6 +22,8 @@ import {
   serializeAcknowledgedCompletionRestores,
   taskAfterCommands,
 } from "./acknowledged-completion-restores";
+import { parseAliases, serializeAliases } from "./id-aliases";
+import { IdSequence } from "./id-sequence";
 
 /**
  * The single source of truth the UI reads.
@@ -53,6 +50,8 @@ export type TaskStoreStorage = {
   setIdAliases: (data: string) => Promise<void>;
   getAcknowledgedCompletionRestores: () => Promise<string | null>;
   setAcknowledgedCompletionRestores: (data: string) => Promise<void>;
+  getIdCounters: () => Promise<string | null>;
+  setIdCounters: (data: string) => Promise<void>;
   getLastSyncTime: () => Promise<number | null>;
   setLastSyncTime: (time: number) => Promise<void>;
 };
@@ -66,11 +65,11 @@ const defaultStorage: TaskStoreStorage = {
     TypedStorage.getAcknowledgedCompletionRestores(),
   setAcknowledgedCompletionRestores: (data) =>
     TypedStorage.setAcknowledgedCompletionRestores(data),
+  getIdCounters: () => TypedStorage.getIdCounters(),
+  setIdCounters: (data) => TypedStorage.setIdCounters(data),
   getLastSyncTime: () => TypedStorage.getLastSyncTime(),
   setLastSyncTime: (time) => TypedStorage.setLastSyncTime(time),
 };
-
-const AliasesSchema = z.record(z.string(), z.string());
 
 export class TaskStore {
   private base = new Map<TaskId, Task>();
@@ -82,9 +81,9 @@ export class TaskStore {
   private lastSyncTime: number | null = null;
   private snapshot: TaskStoreSnapshot;
   private readonly listeners = new Set<() => void>();
-  private readonly nextCommandId: () => string;
   private operationLocked = false;
   private readonly operationWaiters: (() => void)[] = [];
+  private readonly ids: IdSequence;
 
   /** Wired to SyncEngine.requestSync — fired after every dispatch. */
   onDispatch: (() => void) | null = null;
@@ -160,21 +159,33 @@ export class TaskStore {
     private readonly queue: CommandQueue,
     private readonly storage: TaskStoreStorage = defaultStorage,
     private readonly clock: Clock = Date.now,
+    /** Injectable so the id encoding is reproducible in the simulation harness. */
+    random: () => number = Math.random,
   ) {
-    this.nextCommandId = makeCommandIdFactory(clock);
+    this.ids = new IdSequence(random);
     this.snapshot = this.buildSnapshot();
   }
-  /** Load queue + cached base + aliases. Call once at startup, after migrations. */
+
+  /**
+   * Load queue + cached base + aliases + id counters. Call once at startup,
+   * after migrations.
+   */
   async restore(): Promise<void> {
     await this.enqueueOperation(async () => {
       await this.queue.restore();
-      const [tasks, rawAliases, rawAcknowledgedRestores, lastSync] =
-        await Promise.all([
-          this.storage.getTasks(),
-          this.storage.getIdAliases(),
-          this.storage.getAcknowledgedCompletionRestores(),
-          this.storage.getLastSyncTime(),
-        ]);
+      const [
+        tasks,
+        rawAliases,
+        rawAcknowledgedRestores,
+        rawCounters,
+        lastSync,
+      ] = await Promise.all([
+        this.storage.getTasks(),
+        this.storage.getIdAliases(),
+        this.storage.getAcknowledgedCompletionRestores(),
+        this.storage.getIdCounters(),
+        this.storage.getLastSyncTime(),
+      ]);
       this.base = new Map(tasks.map((t) => [t.id, t]));
       this.aliases = parseAliases(rawAliases);
       const nextAcknowledgedCompletionRestores = pruneCompletionRestores(
@@ -188,6 +199,7 @@ export class TaskStore {
         ),
       );
       this.acknowledgedCompletionRestores = nextAcknowledgedCompletionRestores;
+      this.ids.restore(rawCounters);
       this.lastSyncTime = lastSync;
       this.recompute();
     });
@@ -221,6 +233,11 @@ export class TaskStore {
         if (!this.snapshot.tasks.has(target)) return;
       }
       const command = this.buildCommand(input);
+      // Counters first, queue second, and never the other way round: the id has
+      // to be durably spent before the command carrying it can reach the wire.
+      // Crashing after this write only burns id values, which is free; crashing
+      // between the enqueue and this write would hand the id back out.
+      await this.persistIdCounters();
       await this.queue.enqueue(command);
       let nextAcknowledgedCompletionRestores =
         this.acknowledgedCompletionRestores;
@@ -282,7 +299,7 @@ export class TaskStore {
         nextAliases = new Map(this.aliases);
         nextAliases.set(command.tempId, serverTask.id);
         await this.queue.remapTaskId(command.tempId, serverTask.id);
-        await this.persistAliases(nextAliases);
+        await this.storage.setIdAliases(serializeAliases(nextAliases));
       }
 
       const nextBase = new Map(this.base);
@@ -303,6 +320,20 @@ export class TaskStore {
         nextAcknowledgedCompletionRestores = invalidateCompletionRestores(
           nextAcknowledgedCompletionRestores,
           command.taskId,
+        );
+        // Invalidation first, base second — the ordering `replaceBase` uses,
+        // for the same reason: the write that invalidates a snapshot has to be
+        // durable before the write that makes it stale. Here a replay cannot
+        // repair the miss, which is what makes it its own write. Whether an ack
+        // invalidates is decided by comparing its payload against the durable
+        // base, so a crash after that base learned the edit leaves the resent
+        // command reading as touching nothing: the stale snapshot survives, and
+        // the next uncompletion asks the server to rewind to a schedule the
+        // user already replaced.
+        await this.storage.setAcknowledgedCompletionRestores(
+          serializeAcknowledgedCompletionRestores(
+            nextAcknowledgedCompletionRestores,
+          ),
         );
       }
       if (
@@ -389,7 +420,7 @@ export class TaskStore {
         ),
       );
       await this.persistBase(nextBase);
-      await this.persistAliases(nextAliases);
+      await this.storage.setIdAliases(serializeAliases(nextAliases));
       await this.storage.setLastSyncTime(syncedAt);
 
       this.base = nextBase;
@@ -400,11 +431,23 @@ export class TaskStore {
     });
   }
 
+  /**
+   * The only place in the stack a command id or a temp id is minted, so the
+   * two counters cannot drift out of step with what gets persisted.
+   */
   private buildCommand(input: CommandInput): Command {
-    const base = { id: this.nextCommandId(), createdAt: this.clock() };
+    const createdAt = this.clock();
+    const base = {
+      id: this.ids.nextCommandId(createdAt, this.queue),
+      createdAt,
+    };
     switch (input.type) {
       case "create":
-        return { ...base, ...input, tempId: makeTempId(this.clock) };
+        return {
+          ...base,
+          ...input,
+          tempId: this.ids.nextTempId(createdAt, this.base, this.queue),
+        };
       case "update":
       case "delete":
       case "set_status":
@@ -462,16 +505,6 @@ export class TaskStore {
     await this.storage.setTasks([...base.values()]);
   }
 
-  private async persistAliases(
-    aliases: ReadonlyMap<TaskId, TaskId>,
-  ): Promise<void> {
-    const record: Record<string, string> = {};
-    for (const [from, to] of aliases) {
-      record[String(from)] = String(to);
-    }
-    await this.storage.setIdAliases(JSON.stringify(record));
-  }
-
   private async enqueueOperation<Value>(
     operation: () => Promise<Value>,
   ): Promise<Value> {
@@ -501,20 +534,8 @@ export class TaskStore {
     }
     next();
   }
-}
 
-function parseAliases(raw: string | null): Map<TaskId, TaskId> {
-  if (!raw) return new Map();
-  try {
-    const result = AliasesSchema.safeParse(JSON.parse(raw));
-    if (!result.success) return new Map();
-    return new Map(
-      Object.entries(result.data).map(([from, to]) => [
-        taskId(from),
-        taskId(to),
-      ]),
-    );
-  } catch {
-    return new Map();
+  private async persistIdCounters(): Promise<void> {
+    await this.storage.setIdCounters(this.ids.serialize());
   }
 }

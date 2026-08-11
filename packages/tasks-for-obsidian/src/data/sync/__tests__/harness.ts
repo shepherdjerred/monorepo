@@ -10,15 +10,17 @@ import type {
 } from "../../../domain/types";
 import { taskId } from "../../../domain/types";
 import type { TaskStatus } from "../../../domain/status";
-import { CommandQueue, type CommandQueueStorage } from "../CommandQueue";
+import { CommandQueue } from "../CommandQueue";
 import type { CommandClient, MutationOptions, SyncStatus } from "../SyncEngine";
 import { SyncEngine } from "../SyncEngine";
-import { TaskStore, type TaskStoreStorage } from "../../store/TaskStore";
+import { TaskStore } from "../../store/TaskStore";
 import type { CompleteInstanceRequest } from "tasknotes-types/v2";
 import {
   applyFakeRecurringCompletion,
   restoreErrorFor,
 } from "./fake-recurring-completion";
+import type { MemoryQueueStorage, MemoryStoreStorage } from "./harness-storage";
+import { memoryQueueStorage, memoryStoreStorage } from "./harness-storage";
 
 /**
  * Deterministic simulation harness for the offline-first sync stack.
@@ -47,79 +49,6 @@ export function makeClock(startMs = 1_750_000_000_000): ManualClock {
     set: (ms) => {
       current = ms;
     },
-  };
-}
-
-export type MemoryQueueStorage = CommandQueueStorage & {
-  clone: () => MemoryQueueStorage;
-};
-
-export function memoryQueueStorage(
-  initial: { queue?: string | null; dead?: string | null } = {},
-): MemoryQueueStorage {
-  let queue = initial.queue ?? null;
-  let dead = initial.dead ?? null;
-  return {
-    readQueue: () => Promise.resolve(queue),
-    writeQueue: (d) => {
-      queue = d;
-      return Promise.resolve();
-    },
-    readDeadLetter: () => Promise.resolve(dead),
-    writeDeadLetter: (d) => {
-      dead = d;
-      return Promise.resolve();
-    },
-    clone: () => memoryQueueStorage({ queue, dead }),
-  };
-}
-
-export type MemoryStoreStorage = TaskStoreStorage & {
-  clone: () => MemoryStoreStorage;
-};
-
-export function memoryStoreStorage(
-  initial: {
-    tasks?: Task[];
-    aliases?: string | null;
-    acknowledgedCompletionRestores?: string | null;
-    lastSync?: number | null;
-  } = {},
-): MemoryStoreStorage {
-  let tasks = initial.tasks ?? [];
-  let aliases = initial.aliases ?? null;
-  let acknowledgedCompletionRestores =
-    initial.acknowledgedCompletionRestores ?? null;
-  let lastSync = initial.lastSync ?? null;
-  return {
-    getTasks: () => Promise.resolve(tasks),
-    setTasks: (t) => {
-      tasks = t;
-      return Promise.resolve();
-    },
-    getIdAliases: () => Promise.resolve(aliases),
-    setIdAliases: (d) => {
-      aliases = d;
-      return Promise.resolve();
-    },
-    getAcknowledgedCompletionRestores: () =>
-      Promise.resolve(acknowledgedCompletionRestores),
-    setAcknowledgedCompletionRestores: (d) => {
-      acknowledgedCompletionRestores = d;
-      return Promise.resolve();
-    },
-    getLastSyncTime: () => Promise.resolve(lastSync),
-    setLastSyncTime: (t) => {
-      lastSync = t;
-      return Promise.resolve();
-    },
-    clone: () =>
-      memoryStoreStorage({
-        tasks,
-        aliases,
-        acknowledgedCompletionRestores,
-        lastSync,
-      }),
   };
 }
 
@@ -513,7 +442,11 @@ export function makeHarness(
   const storeStorage = options.storeStorage ?? memoryStoreStorage();
   const scheduler = makeScheduler();
   const queue = new CommandQueue(queueStorage, clock.now);
-  const store = new TaskStore(queue, storeStorage, clock.now);
+  // The store's randomness is pinned exactly like the engine's. Without that,
+  // `Math.random()` in the id suffix would paper over id collisions with luck
+  // and no scenario could pin the behaviour; the Rust runner pins the same
+  // value (`HalfUnitRandomness`), so both implementations mint the same ids.
+  const store = new TaskStore(queue, storeStorage, clock.now, () => 0.5);
   const statusLog: SyncStatus[] = [];
   const engine = new SyncEngine(server, queue, store, {
     clock: clock.now,

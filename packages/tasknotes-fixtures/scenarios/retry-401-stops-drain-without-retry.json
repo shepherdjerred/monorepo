@@ -1,0 +1,88 @@
+{
+  "id": "retry-401-stops-drain-without-retry",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "retry classification",
+  "name": "401 stops the drain with auth status and schedules no retry",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_seed",
+      "tasks": [{}]
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "set_status",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "status": "done"
+      }
+    },
+    {
+      "kind": "server_fail_next",
+      "method": "toggleTaskStatus",
+      "error": {
+        "kind": "api",
+        "message": "unauthorized",
+        "status": 401
+      }
+    },
+    {
+      "kind": "sync_now",
+      "as": "result"
+    },
+    {
+      "kind": "snapshot",
+      "as": "afterAuthFailure"
+    },
+    {
+      "kind": "sync_now",
+      "as": "recovered"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": false
+    },
+    {
+      "kind": "engine_state",
+      "at": "afterAuthFailure",
+      "equals": "auth_error"
+    },
+    {
+      "kind": "scheduler_pending",
+      "at": "afterAuthFailure",
+      "count": 0
+    },
+    {
+      "kind": "pending_count",
+      "at": "afterAuthFailure",
+      "equals": {
+        "kind": "literal",
+        "value": 1
+      }
+    },
+    {
+      "kind": "result",
+      "ref": "recovered",
+      "ok": true
+    },
+    {
+      "kind": "task_field",
+      "source": "server",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "status",
+      "equals": "done"
+    }
+  ]
+}

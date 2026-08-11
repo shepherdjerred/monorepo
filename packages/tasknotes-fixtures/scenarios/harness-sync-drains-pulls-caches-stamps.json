@@ -1,0 +1,85 @@
+{
+  "id": "harness-sync-drains-pulls-caches-stamps",
+  "source": "src/data/sync/__tests__/harness.test.ts",
+  "describe": "sync over the harness",
+  "name": "drains the queue, pulls, caches, and stamps lastSyncTime from the clock",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_seed",
+      "tasks": [{}]
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "update",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "payload": {
+          "priority": "high"
+        }
+      }
+    },
+    {
+      "kind": "clock_set",
+      "at": {
+        "kind": "epoch_ms",
+        "value": 1750000123000
+      }
+    },
+    {
+      "kind": "sync_now",
+      "as": "result"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": true
+    },
+    {
+      "kind": "call_count",
+      "method": "updateTask",
+      "equals": 1
+    },
+    {
+      "kind": "call_count",
+      "method": "listTasks",
+      "equals": 1
+    },
+    {
+      "kind": "pending_count",
+      "equals": {
+        "kind": "literal",
+        "value": 0
+      }
+    },
+    {
+      "kind": "task_field",
+      "source": "store",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "priority",
+      "equals": "high"
+    },
+    {
+      "kind": "last_sync_time",
+      "equals": {
+        "kind": "epoch_ms",
+        "value": 1750000123000
+      }
+    },
+    {
+      "kind": "engine_state",
+      "equals": "idle"
+    }
+  ]
+}

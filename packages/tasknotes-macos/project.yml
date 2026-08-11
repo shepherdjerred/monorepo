@@ -1,0 +1,284 @@
+# XcodeGen spec for the TaskNotes macOS app.
+#
+# The `.xcodeproj` is generated and gitignored: an Xcode project file is a
+# 3,000-line pbxproj that no one reviews, merges badly, and silently accumulates
+# settings nobody chose. This file is the reviewable source of truth. Run
+# `bun run xcodegen` (or `xcodegen generate`) after changing it.
+#
+# Division of labour with `Package.swift`:
+#
+#   * `Package.swift` owns every setting for the three library targets, which is
+#     where all the code is.
+#   * This file owns the application bundle — the `@main` entry point in `App/`,
+#     Info.plist, entitlements, signing, and the dSYM.
+#
+# The Swift build settings below are restated here rather than inherited,
+# because Xcode targets do not read a SwiftPM manifest. Keeping them literally
+# identical to `authoredSwiftSettings` in `Package.swift` is the point.
+
+name: TaskNotes
+
+options:
+  bundleIdPrefix: red.sjer.tasknotes
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "15.0"
+  # Older XcodeGen versions silently ignore settings they do not understand,
+  # which for a file whose entire job is build settings is the worst possible
+  # failure mode.
+  minimumXcodeGenVersion: "2.46.0"
+  generateEmptyDirectories: true
+
+packages:
+  # The local SwiftPM package in this same directory. The app target links its
+  # `TaskNotesMac` product; the transitive `TaskNotesKit`, `TaskNotesUniFFI`,
+  # and the Rust static archive come with it.
+  TaskNotesPackage:
+    path: .
+
+# ─── Project-wide ────────────────────────────────────────────────────────────
+# Everything here applies to every target. Per-target overrides are below and
+# are deliberately few.
+settings:
+  base:
+    # ⚠️ Xcode 27's application template still emits SWIFT_VERSION = 5.0. A
+    # fresh project is *not* in Swift 6 mode; it has to be said explicitly.
+    SWIFT_VERSION: "6"
+
+    # Warnings are errors, in both compilers. The GCC_ setting is not
+    # decorative: it covers the C side, which is where the UniFFI-generated
+    # headers are compiled.
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+    GCC_TREAT_WARNINGS_AS_ERRORS: YES
+
+    # Implied by Swift 6 mode, stated anyway so that a future downgrade of
+    # SWIFT_VERSION cannot quietly take strict concurrency with it.
+    SWIFT_STRICT_CONCURRENCY: complete
+
+    # Umbrella over the approachable-concurrency upcoming features. Unlike
+    # naming its members individually — which is what `Package.swift` has to do,
+    # and which errors on the members Swift 6 already implies — the umbrella
+    # only passes the flags that still apply to the current language mode.
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+
+    # The "no type assertions" gate. Unsafe constructs must be spelled `unsafe`.
+    SWIFT_STRICT_MEMORY_SAFETY: YES
+
+    SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY: YES
+    SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
+    SWIFT_UPCOMING_FEATURE_INTERNAL_IMPORTS_BY_DEFAULT: YES
+
+    # Project default. Only the application target overrides this, and only to
+    # MainActor. `TaskNotesUniFFI` *must* stay nonisolated — uniffi-rs#2818
+    # makes the generated bindings uncompilable under MainActor isolation once a
+    # callback interface has a throwing method.
+    SWIFT_DEFAULT_ACTOR_ISOLATION: nonisolated
+
+    ALWAYS_SEARCH_USER_PATHS: NO
+    CLANG_ENABLE_OBJC_WEAK: YES
+    DEAD_CODE_STRIPPING: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    GCC_NO_COMMON_BLOCKS: YES
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+  configs:
+    Debug:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+      ONLY_ACTIVE_ARCH: YES
+    Release:
+      SWIFT_COMPILATION_MODE: wholemodule
+      # This is where `dsymutil` belongs, and the only place it can run.
+      #
+      # The Rust side ships a **static** archive, and `dsymutil` refuses one
+      # outright ("not recognized as a valid object file"): a `.a` is an archive
+      # of relocatable objects with no link map, so there is nothing to relocate
+      # debug info against. Once the archive is linked into the app's Mach-O
+      # executable there is, and `dwarf-with-dsym` is Xcode's first-class way to
+      # ask for it — a build phase shelling out to `dsymutil` would just be a
+      # worse copy of what this setting already does. The resulting
+      # `TaskNotes.app.dSYM` is what makes a Rust frame in a user's crash report
+      # readable.
+      DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+      ONLY_ACTIVE_ARCH: NO
+
+targets:
+  TaskNotes:
+    type: application
+    platform: macOS
+
+    sources:
+      - path: App
+        excludes:
+          # Generated from `info:` below; not a compiled or copied resource.
+          - "Info.plist"
+          # Consumed via CODE_SIGN_ENTITLEMENTS, never bundled.
+          - "*.entitlements"
+
+    dependencies:
+      - package: TaskNotesPackage
+        product: TaskNotesMac
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: red.sjer.tasknotes.mac
+        PRODUCT_NAME: TaskNotes
+        INFOPLIST_KEY_NSHumanReadableCopyright: ""
+
+        # The one target that is MainActor by default. Its entire content is
+        # SwiftUI scene and view code, which is MainActor anyway; making it the
+        # default removes the annotation noise without weakening anything.
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+
+        CODE_SIGN_ENTITLEMENTS: App/TaskNotes.entitlements
+        # Ad-hoc signing so a clean checkout builds and launches with no
+        # developer account. Developer ID signing and notarization are release
+        # concerns and are configured in the release lane, not here — putting a
+        # team identifier in a committed file is how CI ends up depending on one
+        # person's keychain.
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        DEVELOPMENT_TEAM: ""
+        # ⚠️ **Off here, and turned on by the release lane.** It was set to YES
+        # with the comment "required for notarization later, and free now". It
+        # is required, and it is not free: hardened runtime enforces **library
+        # validation**, which demands that every loaded library share the main
+        # executable's Team ID. Ad-hoc signing has no Team ID, so a locally
+        # built Release bundle refuses to load its own embedded
+        # `TaskNotesCore.framework` and dies at launch with *"different Team
+        # IDs"*.
+        #
+        # Debug hides this: Xcode adds `com.apple.security.get-task-allow` for
+        # debugging, and that entitlement disables library validation as a side
+        # effect. So Debug launched, Release crashed, and `xcodebuild` reported
+        # BUILD SUCCEEDED for both — a bundle that cannot start is still a
+        # bundle that built.
+        #
+        # `bun run mac:release` passes `ENABLE_HARDENED_RUNTIME=YES` on the
+        # archive, where the Developer ID identity that makes library validation
+        # satisfiable is also supplied. The two belong together; separating them
+        # is what produced an unlaunchable app.
+        ENABLE_HARDENED_RUNTIME: NO
+
+        COMBINE_HIDPI_IMAGES: YES
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/../Frameworks"
+
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleName: TaskNotes
+        CFBundleDisplayName: TaskNotes
+        CFBundlePackageType: APPL
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
+        LSApplicationCategoryType: public.app-category.productivity
+        # Real windows, real menu bar — never an agent/accessory app.
+        LSUIElement: false
+        NSSupportsAutomaticTermination: true
+        NSSupportsSuddenTermination: false
+        # `tasknotes://`. The scheme is claimed here and parsed in
+        # `TaskNotesKit.TaskNotesURL`; the two must agree, which is why the
+        # parser reads its scheme from a single constant.
+        CFBundleURLTypes:
+          - CFBundleURLName: red.sjer.tasknotes.mac
+            CFBundleTypeRole: Editor
+            CFBundleURLSchemes:
+              - tasknotes
+
+  # ─── End-to-end UI tests ────────────────────────────────────────────────────
+  #
+  # XCUITest cannot run from SwiftPM — it needs a test *bundle* hosted by a real
+  # application, which only an Xcode project can express. That is the whole
+  # reason this target lives here and not in `Package.swift`.
+  #
+  # It links `TaskNotesKit` for one reason: `AccessibilityIdentifier`. The UI
+  # test looks elements up by identifier, and a renamed identifier has to be a
+  # compile error here rather than a query that silently matches nothing and
+  # then silently asserts nothing. Duplicating the strings would defeat the
+  # entire point of that module.
+  TaskNotesUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: TaskNotes
+      - package: TaskNotesPackage
+        product: TaskNotesKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: red.sjer.tasknotes.mac.uitests
+        # ⚠️ Inherits the project's `nonisolated` default, and must.
+        # `XCTestCase` is a nonisolated Objective-C class, so defaulting this
+        # target to `MainActor` makes every override — `setUp()`, and all three
+        # inherited initialisers — a "different actor isolation from nonisolated
+        # overridden declaration" error. Measured, not assumed: it was set to
+        # MainActor first and produced exactly that, seven times.
+        # ⚠️ The runner is deliberately **not** sandboxed. It spawns a real
+        # `tasknotes-server` over a temporary vault so a flow can assert on the
+        # markdown bytes a user would open in Obsidian, and it inspects
+        # `NSWorkspace.frontmostApplication` to prove the quick-add panel does
+        # not steal activation. Both are outside what the shipped app's own
+        # entitlements permit — correctly, since neither is something the app
+        # does.
+        CODE_SIGN_ENTITLEMENTS: ""
+        # ⚠️ Ad-hoc by default, overridable to a real identity — and the two
+        # hotkey flows only work with the override.
+        #
+        # `CGEvent.post(tap: .cghidEventTap)` is silently dropped unless the
+        # posting process holds Accessibility trust, and TCC keys that grant on
+        # the runner's **code signature**. An ad-hoc signature is a fresh hash
+        # on every build, so a grant approved once evaporates on the next
+        # rebuild and the flows fail as "the hotkey did not open the panel".
+        # Measured: `AXIsProcessTrusted()` inside the runner returns `false`.
+        #
+        # Any stable signature fixes that, but the identity is per-operator and
+        # must not be committed — hence the indirection. The default keeps a
+        # clean checkout building with no account; an operator who wants the
+        # flows to run passes the identity, and because only this target reads
+        # the variable, passing it on the `xcodebuild` command line cannot leak
+        # onto the SwiftPM package targets the way a bare `DEVELOPMENT_TEAM=`
+        # does (that produces "No Account for Team").
+        #
+        #   xcodebuild test … TASKNOTES_UITEST_IDENTITY="<sha1 of the identity>"
+        #
+        # ⚠️ It must be an **Apple Development** identity, not the Developer ID
+        # one the release lane uses. Developer ID is a *distribution* identity,
+        # and `testmanagerd` refuses to drive a runner signed with one: all four
+        # previously-green flows failed with *"Not authorized for performing UI
+        # testing actions"* until this was changed back. Measured, not assumed.
+        #
+        # See AGENTS.md › Running the end-to-end tests.
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "$(TASKNOTES_UITEST_IDENTITY:default=-)"
+    info:
+      path: UITests/Info.plist
+      properties:
+        CFBundleName: TaskNotesUITests
+        CFBundlePackageType: BNDL
+
+schemes:
+  TaskNotes:
+    build:
+      targets:
+        TaskNotes: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - TaskNotesUITests
+      # A UI test that needs a retry to pass is a UI test that is lying about
+      # something. The plan's cap of 6–10 flows exists so each one can be made
+      # deterministic rather than tolerated.
+      gatherCoverageData: false
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

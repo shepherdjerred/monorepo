@@ -1,0 +1,492 @@
+import AppKit
+import SwiftUI
+import TaskNotesKit
+import TaskNotesUniFFI
+import Testing
+
+@testable import TaskNotesMac
+
+/// The four list screens and their pieces, rendered to PNG for human review.
+///
+/// This is the plan's "Image snapshot — SwiftUI — `.image` via `NSHostingView`"
+/// row. It is deliberately **not** a regression gate yet: nothing is compared
+/// against a committed golden, because committing binaries before anybody has
+/// agreed the screen looks right would freeze an unreviewed design and turn
+/// every subsequent improvement into a "failing" test. What it does today is
+/// produce the images, at a fixed size, a fixed scale, a fixed instant and both
+/// system appearances, and prove they are not blank.
+///
+/// Every case renders offscreen inside `swift test`. See ``OffscreenSnapshot``
+/// for the three mechanisms that guarantee it, and for why a window exists at
+/// all.
+///
+/// `.serialized` because they all share one `NSApplication` and one main
+/// run loop, and because a render that has to spin the run loop cannot do so
+/// while another one is spinning it.
+@Suite("The list screens, rendered offscreen", .serialized)
+@MainActor
+struct ListSnapshotTests {
+    /// Every screen, over one vault.
+    ///
+    /// Rendered from the **same** `SnapshotFixtures.tasks` on purpose. The four
+    /// screens are partitions of one corpus, so the thing most worth looking at
+    /// across the four images is not any one of them — it is whether each task
+    /// turned up on exactly the screen it should, and nowhere else. Four
+    /// separate fixtures would have made that unreviewable.
+    @Test(
+        "a populated list screen",
+        arguments: SidebarSection.allCases, SnapshotAppearance.allCases
+    )
+    func populated(section: SidebarSection, appearance: SnapshotAppearance) throws {
+        let seeded = try SnapshotFixtures.populated()
+        try record(
+            TaskListView(section: section, store: seeded.store),
+            named: "list-\(section.rawValue)",
+            size: Self.screenSize,
+            appearance: appearance
+        )
+    }
+
+    /// Every screen with nothing on it, in the reading a fresh launch gets.
+    ///
+    /// "Nothing due today", not "All clear": the celebration is only honest
+    /// after the viewer has actually finished something on this screen, and
+    /// `hasInteracted` is false for a store nobody has touched. Each screen
+    /// says its own sentence, because "there is nothing to triage" and "nothing
+    /// is due today" are different pieces of news.
+    @Test(
+        "an empty list screen",
+        arguments: SidebarSection.allCases, SnapshotAppearance.allCases
+    )
+    func empty(section: SidebarSection, appearance: SnapshotAppearance) throws {
+        let seeded = try SnapshotFixtures.empty()
+        try record(
+            TaskListView(section: section, store: seeded.store),
+            named: "empty-\(section.rawValue)",
+            size: Self.screenSize,
+            appearance: appearance
+        )
+    }
+
+    /// The inline compose row, empty and mid-typing.
+    ///
+    /// The one control on these screens with no visual coverage until now, and
+    /// the one most likely to break silently: it is an `NSTextField` reached
+    /// through `NSViewRepresentable`, so a sizing or presentation mistake
+    /// renders as a blank strip rather than as a compiler error. Both states are
+    /// drawn because the placeholder — which is where the natural-language
+    /// syntax is actually taught — only exists in one of them.
+    @Test("the compose row", arguments: SnapshotAppearance.allCases)
+    func composeRow(appearance: SnapshotAppearance) throws {
+        try record(
+            VStack(spacing: 0) {
+                ComposeRowHarness(text: "")
+                Divider()
+                ComposeRowHarness(text: "pay rent tomorrow !high #home")
+                Divider()
+                Spacer()
+            },
+            named: "compose-row",
+            size: Self.composeSize,
+            appearance: appearance
+        )
+    }
+
+    /// One row per state the row view actually branches on.
+    ///
+    /// Rendered inside a `List` rather than bare, because the row's appearance
+    /// is half `List`'s: the inset style supplies the row's insets, its
+    /// separators, and its background, and a row drawn outside one would be a
+    /// picture of something the app never shows.
+    @Test(
+        "a task row",
+        arguments: RowVariant.allCases, SnapshotAppearance.allCases
+    )
+    func taskRow(variant: RowVariant, appearance: SnapshotAppearance) throws {
+        let row = try variant.row()
+        try record(
+            List {
+                TaskRowView(
+                    row: row,
+                    onToggle: {},
+                    onDelete: {},
+                    onSchedule: { _ in },
+                    onScheduleDate: { _ in }
+                )
+            }
+            .listStyle(.inset),
+            named: "row-\(variant.rawValue)",
+            size: Self.rowSize,
+            appearance: appearance
+        )
+    }
+
+    /// The query surface, which no whole-screen snapshot can show.
+    ///
+    /// `.toolbar` content is drawn by the window's toolbar, and these images are
+    /// rendered from a bare `NSHostingView` with no toolbar to draw into — so
+    /// the filter, sort and search controls are invisible in every screen shot
+    /// above. Rendered here in a strip instead, in both states the filter glyph
+    /// has, because "is a filter on?" is the one thing the toolbar has to say at
+    /// a glance and a hollow-versus-filled circle is the whole of how it says
+    /// it.
+    @Test("the toolbar's query controls", arguments: SnapshotAppearance.allCases)
+    func queryControls(appearance: SnapshotAppearance) throws {
+        @MainActor
+        func strip(_ query: TaskListQuery) -> some View {
+            let binding = Binding.constant(query)
+            return HStack(spacing: 12) {
+                FilterMenu(query: binding, facets: Self.facets)
+                SortMenu(query: binding)
+                SearchField(text: .constant(query.search), prompt: "Search")
+                    .frame(width: 180)
+            }
+            .fixedSize()
+        }
+
+        try record(
+            VStack(alignment: .leading, spacing: 20) {
+                strip(TaskListQuery(section: .browse))
+                // Search only, no structured facet set. Reads `Filter (1)`,
+                // because the core counts a non-empty query as a dimension of
+                // `FilterConfig` — which is the right question answered: the
+                // badge says *why this list is shorter than the vault*, and a
+                // `(0)` over a list that a search had emptied would be
+                // answering a different one.
+                strip(Self.unmatchable)
+                strip(Self.narrowed)
+                Spacer()
+            }
+            .padding(20),
+            named: "query-controls",
+            size: Self.toolbarSize,
+            appearance: appearance
+        )
+    }
+
+    /// A screen narrowed by a search that matches nothing.
+    ///
+    /// The most valuable empty state in the app and the one most easily got
+    /// wrong: there are eight tasks on this screen and the reader hid all of
+    /// them. A message reading "Inbox is empty" here would send somebody
+    /// looking for missing data, so this one says so and offers the only
+    /// remedy that works.
+    @Test("a list narrowed to nothing", arguments: SnapshotAppearance.allCases)
+    func narrowedToNothing(appearance: SnapshotAppearance) throws {
+        let seeded = try SnapshotFixtures.populated()
+        try record(
+            TaskListView(section: .browse, store: seeded.store, query: Self.unmatchable),
+            named: "list-no-matches",
+            size: Self.screenSize,
+            appearance: appearance
+        )
+    }
+
+    /// The same screen in a window too narrow for its longest title.
+    ///
+    /// The row hangs two marks off the end of the title, so the question this
+    /// answers is what happens when the title has no end to hang them off:
+    /// SwiftUI compresses a flexible `Text` before a fixed-size `Image`, which
+    /// *should* mean the title truncates and the marks survive. "Should" is not
+    /// evidence, and a priority flag that silently disappears at narrow widths
+    /// is exactly the kind of thing that ships.
+    @Test(
+        "the Today screen, too narrow for its longest title", arguments: SnapshotAppearance.allCases
+    )
+    func todayNarrow(appearance: SnapshotAppearance) throws {
+        let seeded = try SnapshotFixtures.populated()
+        try record(
+            TaskListView(section: .today, store: seeded.store),
+            named: "list-narrow",
+            size: Self.narrowSize,
+            appearance: appearance
+        )
+    }
+
+    /// All six priorities, in rank order, in one image.
+    ///
+    /// **A ramp is only reviewable as a ramp.** The previous one — red, red,
+    /// blue, orange, grey, grey — was not obviously broken in any single row;
+    /// it was obviously broken the moment the six were stacked, because the top
+    /// two ranks were the same red and `normal` shouted louder than `medium`.
+    /// One image per rank could not have caught that, so this renders the whole
+    /// sequence and the reviewer's job is to read down it and see it descend.
+    @Test("the priority ramp, in rank order", arguments: SnapshotAppearance.allCases)
+    func priorityRamp(appearance: SnapshotAppearance) throws {
+        let rows = try priorityAll().map { priority in
+            try TaskRowState(
+                task: coreTask(
+                    id: "Tasks/\(priorityLabel(priority: priority)).md",
+                    title: priorityLabel(priority: priority),
+                    priority: priority,
+                    due: SnapshotFixtures.today
+                ),
+                isPending: false,
+                calendar: SnapshotFixtures.calendar,
+                text: TaskDateText(locale: Locale(identifier: "en_US"))
+            )
+        }
+        try record(
+            List(rows) { row in
+                TaskRowView(
+                    row: row,
+                    onToggle: {},
+                    onDelete: {},
+                    onSchedule: { _ in },
+                    onScheduleDate: { _ in }
+                )
+            }
+            .listStyle(.inset),
+            named: "priority-ramp",
+            size: Self.rampSize,
+            appearance: appearance
+        )
+    }
+
+    /// The connection banner, in each state it has something to say.
+    @Test(
+        "the sync banner",
+        arguments: BannerVariant.allCases, SnapshotAppearance.allCases
+    )
+    func syncBanner(variant: BannerVariant, appearance: SnapshotAppearance) throws {
+        let message = try #require(variant.message(), "\(variant.rawValue) produced no banner")
+        try record(
+            VStack(spacing: 0) {
+                SyncBannerView(message: message, onRetry: {})
+                Divider()
+                Spacer()
+            },
+            named: "banner-\(variant.rawValue)",
+            size: Self.bannerSize,
+            appearance: appearance
+        )
+    }
+
+    /// Settings ▸ Parked, which is where a permanently-refused change goes to
+    /// be seen instead of disappearing.
+    ///
+    /// The rows are built from real ``ParkedChange`` values so the wording under
+    /// review is the wording the app derives from a dead-letter entry.
+    @Test("the parked changes pane", arguments: SnapshotAppearance.allCases)
+    func parkedChanges(appearance: SnapshotAppearance) throws {
+        try record(
+            Form {
+                ForEach(Self.parked) { change in
+                    ParkedChangeRow(change: change, onRetry: {}, onDiscard: {})
+                }
+            }
+            .formStyle(.grouped),
+            named: "settings-parked",
+            size: Self.settingsSize,
+            appearance: appearance
+        )
+    }
+
+    private static var parked: [ParkedChange] {
+        ParkedChange.all([
+            DeadLetterEntry(
+                command: .update(
+                    id: "cmd-18", createdAt: 1, taskId: "Tasks/Projects/Renew passport.md",
+                    payload: UpdateTaskRequest.settingPriority(.high)),
+                error: DeadLetterError(
+                    name: "ApiError", message: "recurrence is not a valid RRULE", status: 422),
+                failedAt: 2),
+            DeadLetterEntry(
+                command: .delete(
+                    id: "cmd-9", createdAt: 1, taskId: "Tasks/Water the plants.md"),
+                error: DeadLetterError(
+                    name: "ApiError", message: "the vault is read-only", status: 400),
+                failedAt: 1),
+        ])
+    }
+
+    /// The Settings window's own frame, so the pane is reviewed at the width it
+    /// actually gets rather than at a list's.
+    private static let settingsSize = CGSize(width: 480, height: 240)
+
+    /// A window-sized canvas. Wide enough that a long title truncates rather
+    /// than wrapping the layout into a shape the app never has.
+    private static let screenSize = CGSize(width: 780, height: 560)
+
+    private static let toolbarSize = CGSize(width: 560, height: 190)
+    private static let composeSize = CGSize(width: 560, height: 120)
+
+    /// A search no fixture title, project, context or tag contains.
+    private static let unmatchable = TaskListQuery(search: "xyzzy")
+
+    /// A query with something set in every channel the toolbar reflects.
+    private static var narrowed: TaskListQuery {
+        var query = TaskListQuery(search: "release", sort: nil)
+        query.filter.toggleStatus(.open)
+        query.sort = SortConfig(field: .priority, direction: .desc)
+        return query
+    }
+
+    /// The values the filter menu would offer over the fixture vault.
+    private static var facets: TaskListFacets {
+        let derived = TaskListModel.of(
+            section: .browse,
+            tasks: SnapshotFixtures.tasks,
+            pendingTaskIds: [],
+            calendar: SnapshotFixtures.calendar,
+            text: TaskDateText(locale: Locale(identifier: "en_US"))
+        )
+        switch derived {
+        case .success(let model): return model.facets
+        case .failure: return .empty
+        }
+    }
+
+    /// Narrow enough that the longest fixture title cannot fit.
+    private static let narrowSize = CGSize(width: 420, height: 460)
+    private static let rowSize = CGSize(width: 560, height: 76)
+    private static let rampSize = CGSize(width: 560, height: 320)
+    private static let bannerSize = CGSize(width: 560, height: 76)
+}
+
+/// The row states worth looking at.
+///
+/// Each one is a branch `TaskRowView` genuinely takes: the strikethrough and
+/// the dimmed tint, the red overdue badge, the recurrence's per-occurrence
+/// checkbox, and the waiting-to-sync glyph.
+///
+/// The three added last are about the two things a single row cannot show.
+/// `priorityHighest`/`priorityHigh`/`priorityLow` exist because the priority
+/// ramp is only reviewable as a *sequence* — the old one put the top two ranks
+/// in the same red, and no single image could have revealed that. And
+/// `recurringOverdue` is the case that motivated printing the occurrence at
+/// all: a repeating task with no due date, sitting on an occurrence that has
+/// already passed.
+enum RowVariant: String, CaseIterable, Sendable {
+    case normal
+    case completed
+    case overdue
+    case recurring
+    case recurringOverdue
+    case pending
+    case priorityHighest
+    case priorityHigh
+    case priorityLow
+
+    /// The row this variant renders, derived exactly as the screen derives it.
+    ///
+    /// Through `TaskRowState` rather than by hand: `isCompleted`,
+    /// `completionTarget` and the due badge are all core answers, and a fixture
+    /// that set them directly would be a picture of a state the app cannot
+    /// reach.
+    @MainActor
+    func row() throws(CoreError) -> TaskRowState {
+        try TaskRowState(
+            task: task,
+            isPending: self == .pending,
+            calendar: SnapshotFixtures.calendar,
+            text: TaskDateText(locale: Locale(identifier: "en_US"))
+        )
+    }
+
+    @MainActor
+    private var task: CoreTask {
+        switch self {
+        case .normal:
+            coreTask(
+                id: "Tasks/Ship the release notes.md",
+                title: "Ship the release notes",
+                priority: .normal,
+                due: SnapshotFixtures.today,
+                projects: ["[[Website]]"],
+                contexts: ["work"]
+            )
+        case .completed:
+            coreTask(
+                id: "Tasks/Book the flights.md",
+                title: "Book the flights",
+                status: .done,
+                priority: .normal,
+                due: SnapshotFixtures.today
+            )
+        case .overdue:
+            coreTask(
+                id: "Tasks/Renew passport.md",
+                title: "Renew passport",
+                priority: .highest,
+                due: "2026-06-30",
+                projects: ["[[Admin]]"]
+            )
+        case .recurring:
+            coreTask(
+                id: "Tasks/Stand-up.md",
+                title: "Stand-up",
+                priority: .medium,
+                scheduled: SnapshotFixtures.today,
+                recurrence: "FREQ=DAILY",
+                contexts: ["work"]
+            )
+        case .recurringOverdue:
+            // No due date, and its occurrence is three weeks gone: the row that
+            // used to print nothing at all in the date column.
+            coreTask(
+                id: "Tasks/Pay rent.md",
+                title: "Pay rent",
+                priority: .high,
+                scheduled: "2026-07-01",
+                recurrence: "FREQ=MONTHLY;BYMONTHDAY=1",
+                projects: ["[[Admin]]"]
+            )
+        case .pending:
+            coreTask(
+                id: "Tasks/Water the plants.md",
+                title: "Water the plants",
+                priority: .low,
+                due: SnapshotFixtures.today,
+                contexts: ["home"]
+            )
+        case .priorityHighest:
+            coreTask(
+                id: "Tasks/File the tax return.md",
+                title: "File the tax return",
+                priority: .highest,
+                due: SnapshotFixtures.today
+            )
+        case .priorityHigh:
+            coreTask(
+                id: "Tasks/Call the plumber.md",
+                title: "Call the plumber",
+                priority: .high,
+                due: SnapshotFixtures.today
+            )
+        case .priorityLow:
+            coreTask(
+                id: "Tasks/Sort the bookshelf.md",
+                title: "Sort the bookshelf",
+                priority: .low,
+                due: SnapshotFixtures.today
+            )
+        }
+    }
+}
+
+/// A compose row with somewhere to put its focus.
+///
+/// `TaskComposeRow` takes a `FocusState<Bool>.Binding`, which only a `View` can
+/// vend — there is no way to construct one from a test function. This is the
+/// smallest wrapper that owns one, and it exists for that reason alone.
+private struct ComposeRowHarness: View {
+    let text: String
+
+    @State private var edited: String
+    @FocusState private var isFocused: Bool
+
+    init(text: String) {
+        self.text = text
+        _edited = State(initialValue: text)
+    }
+
+    var body: some View {
+        TaskComposeRow(
+            text: $edited,
+            focus: $isFocused,
+            onSubmit: {},
+            onCancel: {}
+        )
+    }
+}

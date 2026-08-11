@@ -1,0 +1,119 @@
+{
+  "id": "temp-id-chain-lands-on-real-task",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "temp-ID chain",
+  "name": "offline create + edits on the temp id all land on the real task",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_offline"
+    },
+    {
+      "kind": "dispatch",
+      "as": "optimistic",
+      "input": {
+        "type": "create",
+        "payload": {
+          "title": "Chained"
+        }
+      }
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "update",
+        "task": {
+          "by": "ref",
+          "value": "optimistic"
+        },
+        "payload": {
+          "priority": "high"
+        }
+      }
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "set_status",
+        "task": {
+          "by": "ref",
+          "value": "optimistic"
+        },
+        "status": "done"
+      }
+    },
+    {
+      "kind": "server_online"
+    },
+    {
+      "kind": "sync_now",
+      "as": "result"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": true
+    },
+    {
+      "kind": "task_count",
+      "source": "server",
+      "equals": {
+        "kind": "literal",
+        "value": 1
+      }
+    },
+    {
+      "kind": "task_field",
+      "source": "server",
+      "task": {
+        "by": "title",
+        "value": "Chained"
+      },
+      "path": "title",
+      "equals": "Chained"
+    },
+    {
+      "kind": "task_field",
+      "source": "server",
+      "task": {
+        "by": "title",
+        "value": "Chained"
+      },
+      "path": "priority",
+      "equals": "high"
+    },
+    {
+      "kind": "task_field",
+      "source": "server",
+      "task": {
+        "by": "title",
+        "value": "Chained"
+      },
+      "path": "status",
+      "equals": "done"
+    },
+    {
+      "kind": "task_id_is_temp",
+      "task": {
+        "by": "resolved_ref",
+        "value": "optimistic"
+      },
+      "equals": false
+    },
+    {
+      "kind": "task_field",
+      "source": "store",
+      "task": {
+        "by": "resolved_ref",
+        "value": "optimistic"
+      },
+      "path": "status",
+      "equals": "done"
+    }
+  ]
+}

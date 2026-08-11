@@ -1,0 +1,185 @@
+{
+  "id": "subway-mode-relaunch-and-converge",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "subway mode (fully offline session)",
+  "name": "offline dispatches survive a relaunch and converge once online",
+  "doc": "A full offline session, killed underground and reopened, converges once the network returns. The relaunch takes a FRESH snapshot — nothing has happened since it was captured.",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_seed",
+      "tasks": [{}]
+    },
+    {
+      "kind": "sync_now",
+      "as": "initial"
+    },
+    {
+      "kind": "server_offline"
+    },
+    {
+      "kind": "dispatch",
+      "as": "optimistic",
+      "input": {
+        "type": "create",
+        "payload": {
+          "title": "Written underground"
+        }
+      }
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "update",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "payload": {
+          "title": "Renamed offline"
+        }
+      }
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "set_status",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "status": "done"
+      }
+    },
+    {
+      "kind": "sync_now",
+      "as": "attempt"
+    },
+    {
+      "kind": "snapshot",
+      "as": "beforeCrash"
+    },
+    {
+      "kind": "relaunch",
+      "from": "beforeCrash"
+    },
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "snapshot",
+      "as": "afterRelaunch"
+    },
+    {
+      "kind": "server_online"
+    },
+    {
+      "kind": "sync_now",
+      "as": "result"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "initial",
+      "ok": true
+    },
+    {
+      "kind": "result",
+      "ref": "attempt",
+      "ok": false
+    },
+    {
+      "kind": "task_field",
+      "at": "beforeCrash",
+      "source": "store",
+      "task": {
+        "by": "ref",
+        "value": "optimistic"
+      },
+      "path": "title",
+      "equals": "Written underground"
+    },
+    {
+      "kind": "task_field",
+      "at": "beforeCrash",
+      "source": "store",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "status",
+      "equals": "done"
+    },
+    {
+      "kind": "pending_count",
+      "at": "afterRelaunch",
+      "equals": {
+        "kind": "snapshot",
+        "name": "beforeCrash"
+      }
+    },
+    {
+      "kind": "task_count",
+      "at": "afterRelaunch",
+      "source": "store",
+      "equals": {
+        "kind": "snapshot",
+        "name": "beforeCrash"
+      }
+    },
+    {
+      "kind": "task_field",
+      "at": "afterRelaunch",
+      "source": "store",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "title",
+      "equals": "Renamed offline"
+    },
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": true
+    },
+    {
+      "kind": "pending_count",
+      "equals": {
+        "kind": "literal",
+        "value": 0
+      }
+    },
+    {
+      "kind": "task_count",
+      "source": "server",
+      "equals": {
+        "kind": "literal",
+        "value": 2
+      }
+    },
+    {
+      "kind": "task_exists",
+      "source": "server",
+      "task": {
+        "by": "title",
+        "value": "Written underground"
+      },
+      "exists": true
+    },
+    {
+      "kind": "task_field",
+      "source": "server",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "status",
+      "equals": "done"
+    }
+  ]
+}

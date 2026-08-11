@@ -1,0 +1,98 @@
+{
+  "id": "fake-server-complete-recurring-absolute-set",
+  "source": "src/data/sync/__tests__/harness.test.ts",
+  "describe": "FakeServer",
+  "name": "completeRecurringInstance with a body sets absolute state (P1 contract)",
+  "doc": "Setting the same state twice is a no-op, not a toggle — that is what makes a replayed command safe.",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "server_seed",
+      "tasks": [
+        {
+          "recurrence": "FREQ=DAILY"
+        }
+      ]
+    },
+    {
+      "kind": "client_call",
+      "as": "set",
+      "call": {
+        "method": "completeRecurringInstance",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "instance": {
+          "date": "2026-07-01",
+          "completed": true
+        }
+      }
+    },
+    {
+      "kind": "client_call",
+      "as": "again",
+      "call": {
+        "method": "completeRecurringInstance",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "instance": {
+          "date": "2026-07-01",
+          "completed": true
+        }
+      }
+    },
+    {
+      "kind": "client_call",
+      "as": "unset",
+      "call": {
+        "method": "completeRecurringInstance",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "instance": {
+          "date": "2026-07-01",
+          "completed": false
+        }
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "set",
+      "ok": true
+    },
+    {
+      "kind": "result_field",
+      "ref": "set",
+      "path": "value.completeInstances",
+      "equals": ["2026-07-01"]
+    },
+    {
+      "kind": "result",
+      "ref": "again",
+      "ok": true
+    },
+    {
+      "kind": "result_field",
+      "ref": "again",
+      "path": "value.completeInstances",
+      "equals": ["2026-07-01"]
+    },
+    {
+      "kind": "result",
+      "ref": "unset",
+      "ok": true
+    },
+    {
+      "kind": "result_field",
+      "ref": "unset",
+      "path": "value.completeInstances",
+      "equals": []
+    }
+  ]
+}

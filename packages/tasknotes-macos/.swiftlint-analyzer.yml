@@ -1,0 +1,23 @@
+# Analyzer rules, split out because they are a different kind of check.
+#
+# Analyzer rules need a full compiler log, so they cannot participate in the
+# fast `swiftlint lint` pass that CI runs on Linux. They live here and run
+# through `bun run mac:analyze`, which builds first. Never with `--fix`: the
+# autocorrection edits based on a single build's log, and a
+# conditionally-compiled import it did not see is one it will happily delete.
+parent_config: .swiftlint.yml
+
+analyzer_rules:
+  - unused_declaration
+
+# ⚠️ `unused_import` is deliberately NOT enabled, and this was measured rather
+# than assumed.
+#
+# It cannot see through `@_exported import`. `Sources/TaskNotesUniFFI` re-exports
+# the generated bindings module, so every file that calls into the Rust core
+# through the shim gets reported as having an unused import — while deleting
+# that import fails the build with `cannot find 'coreVersion' in scope`
+# (verified). A rule whose only findings are false is worse than no rule: its
+# noise has to be answered with suppressions, and suppressions are banned here.
+#
+# Re-evaluate if the re-export ever goes away.

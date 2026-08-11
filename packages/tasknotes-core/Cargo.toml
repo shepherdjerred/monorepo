@@ -1,0 +1,106 @@
+[workspace]
+resolver = "3"
+members = ["crates/tasknotes-core", "crates/tasknotes-core-ffi", "xtask"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90"
+license = "MIT"
+publish = false
+
+# ── Dependency pins ────────────────────────────────────────────────────────
+# `uniffi` is pinned exactly: UNIFFI_CONTRACT_VERSION is 30 across all 0.31.x,
+# but the bindings generator and the runtime must agree byte-for-byte, and
+# uniffi-bindgen-react-native pins =0.31.0. Any bump is a deliberate, verified
+# migration, never a caret range.
+#
+# `chrono` (not jiff) because the TypeScript parity surface is naive-date
+# arithmetic that chrono models directly.
+#
+# `serde_json/preserve_order` + IndexMap: serialized output must round-trip in
+# source order — HashMap iteration order would corrupt vault markdown diffs.
+#
+# `imbl` (not `im`): `im` is unmaintained; `imbl` is the maintained fork.
+[workspace.dependencies]
+chrono = { version = "0.4.45", features = ["serde"] }
+imbl = "6"
+indexmap = { version = "2", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+thiserror = "2"
+uniffi = "=0.31.2"
+
+# Dev-only. `rand_chacha::ChaCha8Rng` is the only RNG allowed in this
+# workspace (see clippy.toml): `StdRng` is explicitly not reproducible across
+# releases, which would make a failing proptest seed unreplayable.
+insta = { version = "1", features = ["json"] }
+proptest = "1"
+proptest-state-machine = "0.5"
+rand_chacha = "0.9"
+
+# ── Lints ──────────────────────────────────────────────────────────────────
+# Every member crate opts in with `[lints] workspace = true`; ci/no-suppressions.sh
+# fails the build if one does not.
+#
+# `pedantic` wholesale is deliberate. `restriction` and `nursery` wholesale are
+# deliberately NOT enabled: every low-value lint enabled here makes the
+# high-value ones easier to ignore, which is exactly how a no-suppressions
+# policy dies.
+[workspace.lints.rust]
+# tasknotes-core upgrades this to `#![forbid(unsafe_code)]`, which cannot be
+# re-enabled from inside the crate. tasknotes-core-ffi keeps plain `deny`; see
+# the module docs there for why UniFFI's `unsafe extern "C"` scaffolding does
+# not need (and must not have) an `#[expect]`.
+unsafe_code = "deny"
+# Makes `#[expect(...)]` self-expiring: an expectation that stops firing is an
+# error, so a suppression cannot outlive the problem it documents.
+unfulfilled_lint_expectations = "deny"
+missing_docs = "deny"
+
+[workspace.lints.clippy]
+pedantic = { level = "deny", priority = -1 }
+
+# "No suppressions" as a compiler invariant. `#[allow]` is banned outright, so
+# the only escape hatch is `#[expect(..., reason = "...")]`, which must carry a
+# reason and must expire on its own.
+allow_attributes = "deny"
+allow_attributes_without_reason = "deny"
+
+# "Fail loudly" behind an FFI means a typed error, never a panic: UniFFI's
+# catch_unwind turns a panic into an untyped internal error, can poison a
+# Mutex, and leaves the engine in an unknown state.
+expect_used = "deny"
+indexing_slicing = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+unwrap_used = "deny"
+
+# "No type assertions", translated. `as` is Rust's silent-truncation operator;
+# pedantic's cast_* lints cover the numeric cases and `as_conversions` covers
+# the rest.
+as_conversions = "deny"
+
+# Iteration order of a HashMap/HashSet is unspecified and differs run to run,
+# which breaks the cross-platform determinism hash.
+iter_over_hash_type = "deny"
+
+# ── Profiles ───────────────────────────────────────────────────────────────
+[profile.release]
+# NEVER set `panic = "abort"`. UniFFI wraps every exported call in
+# `catch_unwind` so a Rust panic surfaces to Swift/C# as an error instead of
+# killing the host process. `abort` removes the unwinder, so `catch_unwind`
+# cannot catch anything and every contract violation becomes a SIGABRT inside
+# the user's app — an uninspectable crash instead of a reported error.
+panic = "unwind"
+lto = "thin"
+codegen-units = 1
+
+# Optimized build that is still debuggable: release codegen with full DWARF
+# retained, for profiling the core and for `dsymutil` on the Apple XCFramework.
+[profile.reldbg]
+inherits = "release"
+opt-level = 3
+debug = "full"
+strip = "none"

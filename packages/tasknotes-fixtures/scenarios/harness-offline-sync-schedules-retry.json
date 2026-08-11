@@ -1,0 +1,51 @@
+{
+  "id": "harness-offline-sync-schedules-retry",
+  "source": "src/data/sync/__tests__/harness.test.ts",
+  "describe": "sync over the harness",
+  "name": "offline sync fails, leaves the queue intact, and schedules a retry",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_offline"
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "delete",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/a.md"
+        }
+      }
+    },
+    {
+      "kind": "sync_now",
+      "as": "result"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": false
+    },
+    {
+      "kind": "pending_count",
+      "equals": {
+        "kind": "literal",
+        "value": 1
+      }
+    },
+    {
+      "kind": "engine_state",
+      "equals": "backoff"
+    },
+    {
+      "kind": "scheduler_pending",
+      "count": 1
+    }
+  ]
+}

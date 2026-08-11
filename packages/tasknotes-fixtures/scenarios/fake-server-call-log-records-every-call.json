@@ -1,0 +1,54 @@
+{
+  "id": "fake-server-call-log-records-every-call",
+  "source": "src/data/sync/__tests__/harness.test.ts",
+  "describe": "FakeServer",
+  "name": "call log records every call including failed and offline ones",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "server_offline"
+    },
+    {
+      "kind": "client_call",
+      "call": {
+        "method": "listTasks"
+      }
+    },
+    {
+      "kind": "server_online"
+    },
+    {
+      "kind": "client_call",
+      "call": {
+        "method": "createTask",
+        "request": {
+          "title": "a"
+        },
+        "mutationId": "m1"
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "call_count",
+      "method": "listTasks",
+      "equals": 1
+    },
+    {
+      "kind": "call_count",
+      "method": "createTask",
+      "equals": 1
+    },
+    {
+      "kind": "call_log",
+      "field": "method",
+      "equals": ["listTasks", "createTask"]
+    },
+    {
+      "kind": "call_log",
+      "index": 1,
+      "field": "mutationId",
+      "equals": "m1"
+    }
+  ]
+}

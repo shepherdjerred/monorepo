@@ -48,6 +48,23 @@
     "test:contract": {
       "dependsOn": ["tasknotes-server#typecheck"],
       "inputs": ["contract-tests/**", "src/data/**", "src/domain/**"]
+    },
+    // The sync suite is driven by the shared JSON scenario corpus in
+    // packages/tasknotes-fixtures, which the Rust core runs too. It is read
+    // off disk rather than imported, so nothing in the module graph tells
+    // turbo about it — $TURBO_ROOT$ reaches out to it explicitly, and
+    // $TURBO_DEFAULT$ keeps the normal package files in the hash.
+    "test": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/**"
+      ]
+    },
+    "test:ci": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/tasknotes-fixtures/**"
+      ]
     }
   }
 }

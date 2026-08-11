@@ -1,0 +1,6 @@
+{
+  "name": "@tasknotes/fixtures",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Language-neutral fixtures shared by the TypeScript sync engine and the Rust core"
+}

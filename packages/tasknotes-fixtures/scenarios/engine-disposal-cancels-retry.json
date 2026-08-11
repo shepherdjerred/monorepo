@@ -1,0 +1,72 @@
+{
+  "id": "engine-disposal-cancels-retry",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "engine disposal (API client swapped in Settings)",
+  "name": "a disposed engine cancels its retry and ignores new triggers",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_offline"
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "delete",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/a.md"
+        }
+      }
+    },
+    {
+      "kind": "sync_now"
+    },
+    {
+      "kind": "snapshot",
+      "as": "beforeDispose"
+    },
+    {
+      "kind": "engine_dispose"
+    },
+    {
+      "kind": "snapshot",
+      "as": "afterDispose"
+    },
+    {
+      "kind": "server_online"
+    },
+    {
+      "kind": "request_sync"
+    },
+    {
+      "kind": "settle"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "scheduler_pending",
+      "at": "beforeDispose",
+      "count": 1
+    },
+    {
+      "kind": "scheduler_pending",
+      "at": "afterDispose",
+      "count": 0
+    },
+    {
+      "kind": "call_count",
+      "method": "deleteTask",
+      "equals": 1
+    },
+    {
+      "kind": "pending_count",
+      "equals": {
+        "kind": "literal",
+        "value": 1
+      }
+    }
+  ]
+}
