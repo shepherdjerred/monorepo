@@ -1,0 +1,46 @@
+{
+  "fill": {
+    "solid": "srgb:0.00000,0.00000,0.00000,0.00000"
+  },
+  "groups": [
+    {
+      "blur-material": 0.35,
+      "layers": [
+        {
+          "image-name": "brim-wave.svg",
+          "name": "Quota Wave",
+          "fill": {
+            "solid": "srgb:0.94902,0.75294,0.35294,1.00000"
+          }
+        },
+        {
+          "image-name": "brim-ring.svg",
+          "name": "Brim Ring",
+          "fill": {
+            "solid": "srgb:1.00000,1.00000,1.00000,1.00000"
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.45
+      },
+      "specular": true,
+      "translucency": {
+        "enabled": true,
+        "value": 0.35
+      }
+    },
+    {
+      "layers": [
+        {
+          "image-name": "brim-background.svg",
+          "name": "Brim Background"
+        }
+      ]
+    }
+  ],
+  "supported-platforms": {
+    "squares": ["macOS"]
+  }
+}

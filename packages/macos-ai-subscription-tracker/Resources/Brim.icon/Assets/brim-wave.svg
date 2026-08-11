@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <clipPath id="brim-wave-clip">
+      <circle cx="512" cy="512" r="243" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#brim-wave-clip)" transform="translate(154 154) scale(7.16)">
+    <path d="M 0 34.88 C 18 30.38 32 39.38 50 34.88 C 68 30.38 82 39.38 100 34.88 L 100 100 L 0 100 Z" fill="#f2c05a" />
+  </g>
+</svg>

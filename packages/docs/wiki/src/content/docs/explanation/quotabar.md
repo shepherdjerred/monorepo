@@ -94,6 +94,13 @@ failures instead of storing a hopeful boolean.
 The controls are defined by [SettingsView](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBar/SettingsView.swift)
 and the [launch-at-login controller](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/LaunchAtLogin.swift).
 
+Brim's app icon is a committed Icon Composer document with separate background,
+ring, and quota-wave layers. Xcode uses the document for native macOS icon
+rendering across appearance modes; the manual SwiftPM bundle renders its
+Default appearance into `Brim.icns` with Icon Composer's `ictool` for older
+macOS compatibility. The menu-bar status glyphs remain separate template
+assets because they communicate live quota state rather than app identity.
+
 ## Release boundary
 
 The root Linux verification graph runs strict SwiftLint. Native build, test,

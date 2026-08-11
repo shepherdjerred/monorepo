@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="brim-background" x1="0.13" y1="0" x2="0.87" y2="1">
+      <stop offset="0" stop-color="#4a5aa8" />
+      <stop offset="1" stop-color="#26265c" />
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#brim-background)" />
+</svg>

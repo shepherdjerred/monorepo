@@ -9,7 +9,9 @@
   <key>CFBundleExecutable</key>
   <string>QuotaBar</string>
   <key>CFBundleIconFile</key>
-  <string>AppIcon</string>
+  <string>Brim</string>
+  <key>CFBundleIconName</key>
+  <string>Brim</string>
   <key>CFBundleIdentifier</key>
   <string>com.sjerred.QuotaBar</string>
   <key>CFBundleInfoDictionaryVersion</key>

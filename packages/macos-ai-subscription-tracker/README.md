@@ -34,6 +34,20 @@ replaces the exact target `/Applications/QuotaBar.app` and launches it. Launch
 at login requires this real app bundle; it does not claim success for a
 `swift run` executable.
 
+## App icon
+
+`Resources/Brim.icon` is the app icon source of truth. It contains separate
+background, quota-wave, and ring layers for Icon Composer's native macOS
+rendering, including Default, Dark, and Mono appearances. The Xcode target uses
+this document directly. The SwiftPM bundle path renders its Default macOS
+appearance through Icon Composer's bundled `ictool` and creates `Brim.icns` as
+the compatibility icon for older macOS releases.
+
+Icon Composer is bundled with the selected Xcode installation and requires
+macOS Tahoe 26.4 or later to edit. The app itself continues to target macOS
+15.0; modern systems use the native `.icon` rendering while older systems use
+the generated ICNS fallback.
+
 ## Xcode signing and notarization
 
 The checked-in `project.yml` generates a native Xcode application project that

@@ -67,9 +67,11 @@ workspace. Buildkite's Linux graph runs only strict SwiftLint through
 and `verify:macos`. No macOS CI lane is added in this pass.
 
 `bundle:macos` creates `dist/QuotaBar.app` with identifier
-`com.sjerred.QuotaBar`, `LSUIElement`, a generated `.icns`, the SwiftPM resource
-bundle, and ad-hoc or optional Developer ID signing. `install:macos` explicitly
-targets `/Applications/QuotaBar.app`. Launch at login reads
+`com.sjerred.QuotaBar`, `LSUIElement`, a `Brim.icns` compatibility rendering
+from the committed `Resources/Brim.icon` document, the SwiftPM resource bundle,
+and ad-hoc or optional Developer ID signing. The Xcode target consumes the
+same Icon Composer document directly for native macOS icon appearances.
+`install:macos` explicitly targets `/Applications/QuotaBar.app`. Launch at login reads
 `SMAppService.mainApp.status`; failed registration rolls back visibly and
 approval-required state links to Login Items settings.
 

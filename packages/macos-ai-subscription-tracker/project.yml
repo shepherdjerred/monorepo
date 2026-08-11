@@ -28,7 +28,7 @@ targets:
           - Resources
       - path: Sources/QuotaBar/Resources
         buildPhase: resources
-      - path: Resources/AppIcon.icns
+      - path: Resources/Brim.icon
         buildPhase: resources
     dependencies:
       - package: QuotaBarPackage
@@ -37,10 +37,12 @@ targets:
       base:
         CODE_SIGN_STYLE: Automatic
         COMBINE_HIDPI_IMAGES: true
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
         ENABLE_HARDENED_RUNTIME: true
         ENABLE_USER_SCRIPT_SANDBOXING: true
         GENERATE_INFOPLIST_FILE: false
         INFOPLIST_FILE: Resources/Info.plist
+        INFOPLIST_KEY_CFBundleIconName: Brim
         LM_ENABLE_LINK_GENERATION: false
         LM_FILTER_WARNINGS: true
         OTHER_SWIFT_FLAGS: >-
