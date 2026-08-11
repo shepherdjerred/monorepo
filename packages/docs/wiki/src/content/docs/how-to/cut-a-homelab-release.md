@@ -19,9 +19,8 @@ failed stage means.
 | 2     | Publish the `2.0.0-build` chart set to ChartMuseum, immutably           |
 | 3     | Apply the exact child Application specs, still suspended                |
 | 4     | Reconcile child workloads to their exact chart revisions                |
-| 5     | Sync the exact root revision with verified pruning                      |
-| 6     | Finalize the applied async operation                                    |
-| 7     | Require every child `Synced` and `Healthy`                              |
+| 5     | Sync and safely finalize the exact root revision with verified pruning  |
+| 6     | Require every release-scoped child to be `Synced` and `Healthy`         |
 
 Stage 3 is deliberately separate from stage 5. New child-level safety settings
 must exist before those children sync, but enabling floating auto-sync before
@@ -72,12 +71,27 @@ pin.
 ## If the release will not start
 
 A previous root operation stuck in `Running` blocks the next ordered release.
-Stage 6 exists to prevent that: `finalize-async-sync` refuses failed or
-mismatched operations and terminates the health wait once the requested sync
-result is fully applied.
+Stage 5 prevents that in the normal pipeline. One process submits the sync,
+waits for its exact request ID and revision, verifies the complete applied
+result, terminates the aggregate health wait, and waits for termination.
 
-A release blocked here usually means that finalize did not run or rejected the
-operation — check the root Application's operation state before retrying.
+Buildkite retries reuse the build UUID. The command adopts the operation only
+when both UUID and revision match. An unrelated active operation remains a hard
+failure.
+
+A release blocked here means the current operation must be inspected before
+retrying. If it is a fully applied operation from an interrupted older client,
+recover it with both values from the live operation:
+
+```bash
+bun packages/homelab/scripts/argocd.ts finalize-async-sync apps \
+  --revision <exact-revision> \
+  --request-id <exact-request-id> \
+  --timeout 300
+```
+
+The recovery command polls for that exact operation. Missing state, a different
+identity, an apply failure, or an incomplete result fails without termination.
 
 ## Where it lives
 

@@ -19,6 +19,19 @@ const ApplicationOperationSchema = z.object({
     .optional(),
 });
 
+const OperationInfoSchema = z
+  .object({
+    info: z
+      .array(
+        z.object({
+          name: z.string(),
+          value: z.string(),
+        }),
+      )
+      .optional(),
+  })
+  .loose();
+
 export type SyncOperationResource = {
   group: string;
   kind: string;
@@ -121,4 +134,35 @@ export function completedOperationIdentity(
     return null;
   }
   return canonicalJson(operation);
+}
+
+function operationRequestId(operation: Record<string, unknown>): string | null {
+  const matches = (OperationInfoSchema.parse(operation).info ?? []).filter(
+    ({ name }) => name === SYNC_REQUEST_ID_INFO_NAME,
+  );
+  if (matches.length > 1) {
+    throw new Error("Argo operation has multiple CI request IDs");
+  }
+  return matches[0]?.value ?? null;
+}
+
+export function requestedOperationRequestId(application: unknown): string {
+  const operation = ApplicationOperationSchema.parse(application).operation;
+  if (operation === undefined) {
+    throw new Error("Argo sync response is missing the requested operation");
+  }
+  const requestId = operationRequestId(operation);
+  if (requestId === null) {
+    throw new Error("Argo sync response is missing the CI request ID");
+  }
+  return requestId;
+}
+
+export function completedOperationRequestId(
+  application: unknown,
+): string | null {
+  const operation =
+    ApplicationOperationSchema.parse(application).status?.operationState
+      ?.operation;
+  return operation === undefined ? null : operationRequestId(operation);
 }

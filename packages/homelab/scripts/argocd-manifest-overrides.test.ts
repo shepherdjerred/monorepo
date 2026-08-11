@@ -3,7 +3,9 @@ import { describe, expect, test } from "bun:test";
 import {
   batchManifestOverrides,
   completedOperationIdentity,
+  completedOperationRequestId,
   requestedOperationIdentity,
+  requestedOperationRequestId,
   type ManifestOverride,
 } from "./argocd-manifest-overrides.ts";
 
@@ -108,6 +110,8 @@ describe("Argo operation identity", () => {
     expect(completedOperationIdentity(previous)).not.toBe(
       requestedOperationIdentity(requested),
     );
+    expect(requestedOperationRequestId(requested)).toBe("current");
+    expect(completedOperationRequestId(previous)).toBe("previous");
   });
 
   test("returns null before an Application has an operation state", () => {
@@ -118,5 +122,24 @@ describe("Argo operation identity", () => {
     expect(() => requestedOperationIdentity({})).toThrow(
       "sync response is missing the requested operation",
     );
+  });
+
+  test("fails when a requested operation omits its CI request ID", () => {
+    expect(() => requestedOperationRequestId({ operation: {} })).toThrow(
+      "missing the CI request ID",
+    );
+  });
+
+  test("fails when an operation has duplicate CI request IDs", () => {
+    expect(() =>
+      requestedOperationRequestId({
+        operation: {
+          info: [
+            { name: "ci.sjer.red/request-id", value: "one" },
+            { name: "ci.sjer.red/request-id", value: "two" },
+          ],
+        },
+      }),
+    ).toThrow("multiple CI request IDs");
   });
 });
