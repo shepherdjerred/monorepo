@@ -18,6 +18,33 @@ type ReleaseValidationOptions = {
   readonly stepBlocks: ReadonlyMap<string, string>;
 };
 
+const ATOMIC_ROOT_SYNC_COMMAND =
+  'sync apps --revision "$$apps_revision" --prune --terminate-after-applied --request-id "$BUILDKITE_BUILD_ID" --timeout 300';
+
+export function validateAtomicRootSyncLifecycle(
+  argocdSync: string | undefined,
+): void {
+  requireIncludes(
+    argocdSync,
+    ATOMIC_ROOT_SYNC_COMMAND,
+    "argocd-sync is missing the atomic identity-bound root sync",
+  );
+  const hasAsyncRootSync =
+    argocdSync
+      ?.split("\n")
+      .some(
+        (line) =>
+          /\bsync\s+apps(?:\s|$)/.test(line) &&
+          /(?:^|\s)--async(?:\s|$)/.test(line),
+      ) === true;
+  if (
+    hasAsyncRootSync ||
+    argocdSync?.includes("finalize-async-sync apps") === true
+  ) {
+    fail("argocd-sync restored the racy split async/finalize lifecycle");
+  }
+}
+
 function validateReleaseSteps({
   prDryrun,
   stepBlocks,
@@ -68,8 +95,6 @@ function validateReleaseSteps({
         'artifact download "argocd-release-expected.json"',
         'suspend-auto-sync apps --revision "$$apps_revision"',
         "reconcile-release argocd-release-expected.json",
-        'sync apps --revision "$$apps_revision" --prune --async',
-        "finalize-async-sync apps",
         "release-health-wait argocd-release-expected.json",
       ],
     ],
@@ -114,6 +139,8 @@ function validateReleaseSteps({
       );
     }
   }
+  const argocdSync = stepBlocks.get("argocd-sync");
+  validateAtomicRootSyncLifecycle(argocdSync);
 
   for (const dependency of [
     '"packages/astro-opengraph-images/**"',

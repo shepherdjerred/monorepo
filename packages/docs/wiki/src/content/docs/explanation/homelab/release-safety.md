@@ -23,7 +23,7 @@ sequenceDiagram
   BK->>Root: apply exact child specs, still suspended
   BK->>Child: reconcile exact chart revisions
   BK->>Root: sync exact revision with verified pruning
-  BK->>Root: finalize applied async operation
+  BK->>Root: retain identity through apply and termination
   BK->>Child: require Synced and Healthy
 ```
 
@@ -78,21 +78,52 @@ This is the same principle the repo applies elsewhere: do not validate a
 replacement against the unreliable signal it replaces. The desired state is the
 rendered revision, not ArgoCD's opinion about it.
 
-## Why the final root sync is asynchronous
+## Why the final root sync ends after apply
 
 The root app also tracks child Applications that may be deferred or
 independently unhealthy. Waiting synchronously on the root would mean waiting on
 every one of them, and a single permanently unhealthy child would hold the
 release open forever.
 
-So the controller applies the exact revision and then waits on health
-separately. `finalize-async-sync` verifies that the requested operation's sync
-result is fully applied, refuses failed or mismatched operations, and terminates
-the health wait.
+So the [main release pipeline](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml)
+separates root application from release-scoped health. One
+[atomic Argo command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
+retains the exact Buildkite request identity while ArgoCD applies the root
+revision. It terminates the aggregate health wait only after the complete sync
+result is applied. The command compares reported group, kind, and name
+identities with every resource rendered from the exact revision. An applied
+early sync wave cannot hide later-wave work that ArgoCD has not reported yet.
+It also carries the validated prune candidates into this boundary and requires
+each candidate to appear as `Pruned` before termination.
 
-Without that finalize step, a root operation stuck in `Running` would block the
-next ordered release indefinitely — the asynchronous sync solves one problem and
-would create another if nothing closed it out.
+The identity boundary matters because ArgoCD publishes operation state
+asynchronously. A second process can read before the accepted operation appears.
+Keeping submission and finalization together lets the command poll through that
+gap and distinguish stale state from its own operation.
+
+Buildkite retries reuse the build UUID. The
+[operation identity implementation](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
+adopts only the same request ID and revision. It refuses any unrelated active
+operation. A generated per-operation UUID binds the top-level live operation
+to its completed status. This lets a retry accept a stable, fully applied
+result while rejecting stale status from an earlier POST with the same
+Buildkite identity. The standalone finalizer remains a recovery tool, not part
+of the normal release path. It recognizes the retired client's pre-UUID
+operation only when both live and completed state share the exact request ID
+and revision. Both must omit an operation UUID. Atomic operations never use
+that compatibility case.
+
+After termination, the top-level live operation is authoritative. Its absence
+means the health wait is gone even if `status.operationState` still says
+`Running` or `Terminating`; a different operation UUID in live or completed
+state still proves replacement and fails the release. Natural success uses the
+[same boundary](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts):
+a `Succeeded` status does not finish the command until the live operation
+clears.
+
+Without this atomic boundary, a root operation stuck in `Running` blocks the
+next ordered release indefinitely. Treating missing operation state as success
+is therefore unsafe even when every manifest was applied.
 
 ## Why image selection looks complicated
 

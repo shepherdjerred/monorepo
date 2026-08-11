@@ -95,6 +95,7 @@ function commandForStep(
         "x",
         "--no-install",
         "vitest",
+        "run",
         ...step.args,
         "--reporter=default",
         "--reporter=junit",

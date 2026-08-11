@@ -97,10 +97,11 @@ common:
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
   # Verify's pod uses the larger memory request needed by its full install.
-  # full-root install + turbo scratch put ~6Gi into the memory-backed workspace
-  # (node_modules 3.75Gi alone). Recent main builds reached the old 14Gi limit,
-  # so retain the measured request and burst margin from main. It has no DinD
-  # sidecar; image work uses remote BuildKit instead.
+  # Build 8944 measured 9.42Gi of tmpfs plus 11.59Gi of anonymous memory while
+  # six cold tasks overlapped and hit the old 20Gi limit. Four-way graph
+  # concurrency plus an 18Gi reservation and 24Gi burst limit preserves every
+  # check without allowing several cold verify pods to overcommit the 80Gi
+  # Buildkite quota. It has no DinD sidecar; image work uses remote BuildKit.
   # Only verify pays this; other lanes use their measured complete-pod sizing.
   - pod_verify: &pod_verify
       kubernetes: &pod_verify_kubernetes
@@ -118,8 +119,8 @@ common:
                 - name: BUILDKITE_SHELL
                   value: "/bin/bash -e -c"
               resources:
-                requests: { cpu: "1", memory: "14Gi", ephemeral-storage: "2Gi" }
-                limits: { cpu: "7", memory: "20Gi", ephemeral-storage: "40Gi" }
+                requests: { cpu: "1", memory: "18Gi", ephemeral-storage: "2Gi" }
+                limits: { cpu: "7", memory: "24Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
                 # Mirror-backed checkouts: see the base pod anchor above.
                 - name: buildkite-git-mirrors
@@ -314,7 +315,7 @@ steps:
       # local-only caching by default to avoid large transfers on weak Wi-Fi.
       export TURBO_CACHE="local:rw,remote:rw"
       set +e
-      bun --no-install run verify -- --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=6 --output-logs=errors-only --summarize
+      bun --no-install run verify -- --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=4 --output-logs=errors-only --summarize
       verify_status=$?
       set -e
       set +e
@@ -1543,14 +1544,12 @@ steps:
       # children to a partially published release.
       bun --no-install packages/homelab/scripts/argocd.ts suspend-auto-sync apps --revision "$$apps_revision" --timeout 300
       bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --timeout 300
-      # The root app owns every repository Application, so Argo's synchronous
-      # health wait would block on unrelated stale children. The scoped
-      # release-health-wait below is the authoritative gate for this release.
-      bun --no-install packages/homelab/scripts/argocd.ts sync apps --revision "$$apps_revision" --prune --async
-      # The expected release set includes the root app itself. Finalize its
-      # applied async operation before the health gate so the root cannot wait
-      # on its own deferred child health forever.
-      bun --no-install packages/homelab/scripts/argocd.ts finalize-async-sync apps --revision "$$apps_revision" --timeout 300
+      # The root app owns every repository Application, so waiting for its
+      # aggregate health would block on unrelated stale children. Keep the
+      # exact Buildkite identity through apply and termination in one process;
+      # retries may adopt only this build's exact revision.
+      bun --no-install packages/homelab/scripts/argocd.ts sync apps --revision "$$apps_revision" --prune --terminate-after-applied --request-id "$BUILDKITE_BUILD_ID" --timeout 300
+      # The scoped release health below remains authoritative for this release.
       bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300
     retry: *retry
     plugins:

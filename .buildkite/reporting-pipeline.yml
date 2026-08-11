@@ -78,7 +78,7 @@ steps:
       export TURBO_CACHE="local:rw,remote:rw"
       set +e
       bun --no-install x turbo run test:report \
-        --continue --concurrency=6 --output-logs=errors-only --summarize
+        --continue --concurrency=4 --output-logs=errors-only --summarize
       test_status=$?
       bun --no-install run script-coverage
       script_coverage_status=$?
@@ -136,9 +136,9 @@ steps:
                     value: "/bin/bash -e -c"
                 resources:
                   requests:
-                    { cpu: "1", memory: "14Gi", ephemeral-storage: "2Gi" }
+                    { cpu: "1", memory: "18Gi", ephemeral-storage: "2Gi" }
                   limits:
-                    { cpu: "7", memory: "20Gi", ephemeral-storage: "40Gi" }
+                    { cpu: "7", memory: "24Gi", ephemeral-storage: "40Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors

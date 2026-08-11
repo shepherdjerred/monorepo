@@ -10,7 +10,10 @@
  *
  * Usage:
  *   bun packages/homelab/scripts/argocd.ts sync <app> [--revision <v>]
- *       [--prune] [--async] [--timeout <s>] [--dry-run]
+ *       [--prune] [--async | --terminate-after-applied]
+ *       [--request-id <uuid>] [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts finalize-async-sync <app> \
+ *       --revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts delete-application <app> \
  *       --project <project> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts health-wait <app> [--timeout <s>] [--dry-run]
@@ -24,6 +27,7 @@
  * Env:
  *   ARGOCD_TOKEN     — ArgoCD API bearer token (required unless --dry-run)
  *   ARGOCD_SERVER_URL — optional, defaults to https://argocd.sjer.red
+ *   ARGOCD_POLL_INTERVAL_MS — optional polling interval override for tests
  */
 
 import { requireEnv, optionalEnv } from "../../../scripts/lib/run.ts";
@@ -40,9 +44,14 @@ import {
   REPOSITORY_CHART_URLS,
 } from "../src/cdk8s/src/application-release-policy.ts";
 import {
+  activeOperationId,
+  activeOperationRequestId,
   batchManifestOverrides,
-  completedOperationIdentity,
-  requestedOperationIdentity,
+  completedOperationId,
+  completedOperationRequestId,
+  requestedOperationId,
+  requestedOperationRequestId,
+  SYNC_OPERATION_ID_INFO_NAME,
   SYNC_REQUEST_ID_INFO_NAME,
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
@@ -60,6 +69,10 @@ const CHARTMUSEUM_REQUEST_TIMEOUT_MS = 10_000;
 const CHARTMUSEUM_RETRY_BASE_DELAY_MS = 100;
 
 const BuildRevisionSchema = z.string().regex(/^2\.0\.0-\d+$/);
+const SyncRequestIdSchema = z.uuid();
+const SyncOperationIdSchema = z.uuid();
+const OperationStartedAtSchema = z.iso.datetime({ offset: true }).optional();
+const PollIntervalSchema = z.coerce.number().int().positive();
 
 const ExpectedApplicationsSchema = z.array(
   z.object({
@@ -96,6 +109,12 @@ const RenderedObjectSchema = z
     kind: z.string(),
   })
   .passthrough();
+
+const RenderedResourceSchema = z.object({
+  apiVersion: z.string().min(1),
+  kind: z.string().min(1),
+  metadata: z.object({ name: z.string().min(1) }).passthrough(),
+});
 
 const RootDeploymentHistorySchema = z.object({
   status: z.object({
@@ -208,6 +227,59 @@ async function getApplicationManifests(
     );
   }
   return ManifestResponseSchema.parse(await response.json()).manifests;
+}
+
+function resourceIdentity(group: string, kind: string, name: string): string {
+  return JSON.stringify([group, kind, name]);
+}
+
+function renderedResourceIdentity(manifestSource: string): string {
+  const resource = RenderedResourceSchema.parse(JSON.parse(manifestSource));
+  const separator = resource.apiVersion.indexOf("/");
+  const group = separator === -1 ? "" : resource.apiVersion.slice(0, separator);
+  return resourceIdentity(group, resource.kind, resource.metadata.name);
+}
+
+function renderedResourceIdentities(
+  manifests: readonly string[],
+): ReadonlySet<string> {
+  const identities = manifests.map(renderedResourceIdentity);
+  if (identities.length === 0) {
+    throw new Error("Rendered sync source contains no resources");
+  }
+  const unique = new Set(identities);
+  if (unique.size !== identities.length) {
+    throw new Error(
+      "Rendered sync source contains duplicate group/kind/name identities",
+    );
+  }
+  return unique;
+}
+
+async function getRenderedResourceIdentities(
+  appName: string,
+  revision: string,
+  token: string,
+): Promise<ReadonlySet<string>> {
+  return renderedResourceIdentities(
+    await getApplicationManifests(appName, revision, token),
+  );
+}
+
+type ExpectedSyncResultIdentities = {
+  readonly desired: ReadonlySet<string>;
+  readonly pruned: ReadonlySet<string>;
+};
+
+async function getExpectedSyncResultIdentities(
+  appName: string,
+  revision: string,
+  token: string,
+): Promise<ExpectedSyncResultIdentities> {
+  return {
+    desired: await getRenderedResourceIdentities(appName, revision, token),
+    pruned: new Set(),
+  };
 }
 
 async function suspendRepositoryAutoSync(
@@ -381,37 +453,43 @@ async function fetchChartMuseumInventory(
 async function assertRootPruneSafe(
   token: string,
   revision: string,
-): Promise<void> {
+): Promise<ExpectedSyncResultIdentities> {
   const exactRevision = BuildRevisionSchema.parse(revision);
+  const manifests = await getApplicationManifests("apps", exactRevision, token);
+  const desiredResources = renderedResourceIdentities(manifests);
   const desiredChildren = new Set(
-    (await getApplicationManifests("apps", exactRevision, token)).flatMap(
-      (manifestSource) => {
-        const parsed = RenderedObjectSchema.parse(JSON.parse(manifestSource));
-        if (parsed.kind !== "Application") {
-          return [];
-        }
-        return [RenderedApplicationSchema.parse(parsed).metadata.name];
-      },
-    ),
+    manifests.flatMap((manifestSource) => {
+      const parsed = RenderedObjectSchema.parse(JSON.parse(manifestSource));
+      if (parsed.kind !== "Application") {
+        return [];
+      }
+      return [RenderedApplicationSchema.parse(parsed).metadata.name];
+    }),
   );
   const root = await getApplication("apps", token);
   const status = isRecord(root["status"]) ? root["status"] : {};
   const resources = Array.isArray(status["resources"])
     ? status["resources"]
     : [];
-  const candidates = resources.flatMap((resource: unknown) => {
+  const candidates = new Map<string, string>();
+  for (const resource of resources) {
     if (
       !isRecord(resource) ||
       resource["kind"] !== "Application" ||
+      (resource["group"] !== undefined &&
+        resource["group"] !== "argoproj.io") ||
       typeof resource["name"] !== "string" ||
       resource["name"] === "apps" ||
       desiredChildren.has(resource["name"])
     ) {
-      return [];
+      continue;
     }
-    return [resource["name"]];
-  });
-  for (const childName of candidates) {
+    candidates.set(
+      resource["name"],
+      resourceIdentity("argoproj.io", "Application", resource["name"]),
+    );
+  }
+  for (const childName of candidates.keys()) {
     const child = await getApplication(childName, token);
     const metadata = isRecord(child["metadata"]) ? child["metadata"] : {};
     const annotations = isRecord(metadata["annotations"])
@@ -432,11 +510,15 @@ async function assertRootPruneSafe(
       );
     }
   }
+  return {
+    desired: desiredResources,
+    pruned: new Set(candidates.values()),
+  };
 }
 
 /**
- * Trigger an ArgoCD sync for an application and wait for the sync OPERATION to
- * reach a terminal phase, failing on anything but Succeeded.
+ * Trigger an ArgoCD sync and retain its identity through the requested
+ * completion boundary.
  *
  * The POST only starts the operation; its result lands asynchronously in
  * `status.operationState`. Returning on POST success let a failed operation
@@ -448,6 +530,8 @@ async function assertRootPruneSafe(
  */
 type SyncOptions = {
   prune: boolean;
+  requestId?: string;
+  terminateAfterApplied?: boolean;
   waitForCompletion?: boolean;
   revision?: string;
   manifests?: readonly string[];
@@ -470,76 +554,151 @@ async function sync(
     return;
   }
   const token = requireEnv("ARGOCD_TOKEN");
+  let expectedResourceIdentities: ExpectedSyncResultIdentities | undefined;
   if (appName === "apps" && options.prune) {
     if (options.revision === undefined) {
       throw new Error(
         "Root Application pruning requires an exact --revision so prune candidates can be verified against the rendered source",
       );
     }
-    await assertRootPruneSafe(token, options.revision);
-  }
-  const requestId = crypto.randomUUID();
-  const url = `${serverUrl()}/api/v1/applications/${appName}/sync`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      prune: options.prune,
-      infos: [{ name: SYNC_REQUEST_ID_INFO_NAME, value: requestId }],
-      ...(options.revision === undefined ? {} : { revision: options.revision }),
-      ...(options.manifests === undefined
-        ? {}
-        : { manifests: options.manifests }),
-      ...(options.resources === undefined
-        ? {}
-        : { resources: options.resources }),
-    }),
-  });
-  if (!res.ok) {
-    const body = (await res.text()).slice(0, 1024);
-    throw new Error(
-      `Sync failed: HTTP ${res.status.toString()} ${res.statusText}\n${body}`,
+    expectedResourceIdentities = await assertRootPruneSafe(
+      token,
+      options.revision,
     );
   }
-  const operationIdentity = requestedOperationIdentity(await res.json());
-  console.log(`sync operation started: ${appName}`);
+  if (
+    options.terminateAfterApplied === true &&
+    options.revision === undefined
+  ) {
+    throw new Error("--terminate-after-applied requires an exact --revision");
+  }
+  if (
+    options.terminateAfterApplied === true &&
+    options.revision !== undefined &&
+    expectedResourceIdentities === undefined
+  ) {
+    expectedResourceIdentities = await getExpectedSyncResultIdentities(
+      appName,
+      options.revision,
+      token,
+    );
+  }
+  const requestId = SyncRequestIdSchema.parse(
+    options.requestId ?? crypto.randomUUID(),
+  );
+  let operationId: string = crypto.randomUUID();
+  const retryable =
+    options.requestId !== undefined || options.terminateAfterApplied === true;
+  let baseline: OperationObservation | undefined;
+  let adopted = false;
+
+  if (retryable) {
+    baseline = observeOperation(await getApplication(appName, token));
+    assertMatchingRevision(baseline, requestId, options.revision, appName);
+    assertMatchingLiveRevision(baseline, requestId, options.revision, appName);
+    if (baseline.hasLiveOperation) {
+      if (!liveOperationMatches(baseline, requestId, options.revision)) {
+        throw new Error(
+          `Refusing to replace active ${appName} operation ${liveOperationDescription(baseline)}; expected request ${requestId}`,
+        );
+      }
+      operationId = requireLiveOperationId(baseline, appName);
+      const completedOperationMatches = operationMatches(
+        baseline,
+        requestId,
+        options.revision,
+        operationId,
+      );
+      if (completedOperationMatches && baseline.phase === "Terminating") {
+        if (
+          options.terminateAfterApplied === true &&
+          options.revision !== undefined &&
+          syncResultApplied(
+            baseline.state,
+            options.revision,
+            expectedResourceIdentities,
+          )
+        ) {
+          await waitForOperationToClear(
+            appName,
+            token,
+            requestId,
+            options.revision,
+            operationId,
+            baseline.startedAt,
+            timeoutSeconds,
+          );
+          console.log(`sync operation already finalized: ${appName}`);
+          return;
+        }
+        throw new Error(
+          `Matching ${appName} operation is already Terminating before its result was accepted`,
+        );
+      }
+      adopted = true;
+      console.log(`adopted active sync operation: ${appName}`);
+    }
+  }
+
+  if (!adopted) {
+    const url = `${serverUrl()}/api/v1/applications/${appName}/sync`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prune: options.prune,
+        infos: [
+          { name: SYNC_REQUEST_ID_INFO_NAME, value: requestId },
+          { name: SYNC_OPERATION_ID_INFO_NAME, value: operationId },
+        ],
+        ...(options.revision === undefined
+          ? {}
+          : { revision: options.revision }),
+        ...(options.manifests === undefined
+          ? {}
+          : { manifests: options.manifests }),
+        ...(options.resources === undefined
+          ? {}
+          : { resources: options.resources }),
+      }),
+    });
+    if (!res.ok) {
+      const body = (await res.text()).slice(0, 1024);
+      throw new Error(
+        `Sync failed: HTTP ${res.status.toString()} ${res.statusText}\n${body}`,
+      );
+    }
+    const responseBody: unknown = await res.json();
+    const responseRequestId = requestedOperationRequestId(responseBody);
+    if (responseRequestId !== requestId) {
+      throw new Error(
+        `Argo sync response returned request ${responseRequestId}; expected ${requestId}`,
+      );
+    }
+    const responseOperationId = requestedOperationId(responseBody);
+    if (responseOperationId !== operationId) {
+      throw new Error(
+        `Argo sync response returned operation ${responseOperationId}; expected ${operationId}`,
+      );
+    }
+    console.log(`sync operation started: ${appName}`);
+  }
   if (options.waitForCompletion === false) {
     return;
   }
-
-  const deadline = Date.now() + timeoutSeconds * 1000;
-  let elapsed = 0;
-  while (Date.now() < deadline) {
-    const app = await getApplication(appName, token);
-    const status = isRecord(app["status"]) ? app["status"] : {};
-    const op = isRecord(status["operationState"])
-      ? status["operationState"]
-      : {};
-    const phase = typeof op["phase"] === "string" ? op["phase"] : "";
-    const isOurs = completedOperationIdentity(app) === operationIdentity;
-    console.log(
-      `Operation: ${phase || "(pending)"}${isOurs ? "" : " [previous op]"} ` +
-        `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
-    );
-    if (isOurs && phase === "Succeeded") {
-      console.log(`synced: ${appName}`);
-      return;
-    }
-    if (isOurs && (phase === "Failed" || phase === "Error")) {
-      const message = typeof op["message"] === "string" ? op["message"] : "";
-      throw new Error(
-        `Sync operation ${phase} for ${appName}: ${message.slice(0, 1024)}`,
-      );
-    }
-    await Bun.sleep(POLL_INTERVAL_MS);
-    elapsed += POLL_INTERVAL_MS / 1000;
-  }
-  throw new Error(
-    `Timeout: sync operation for ${appName} did not complete within ${timeoutSeconds.toString()}s`,
-  );
+  await waitForIdentifiedOperation({
+    appName,
+    token,
+    requestId,
+    operationId,
+    expectedResourceIdentities,
+    revision: options.revision,
+    timeoutSeconds,
+    terminateAfterApplied: options.terminateAfterApplied === true,
+  });
 }
 
 function operationState(app: Record<string, unknown>): Record<string, unknown> {
@@ -555,6 +714,167 @@ function operationRevision(
   return typeof revision === "string" ? revision : undefined;
 }
 
+type OperationObservation = {
+  readonly hasLiveOperation: boolean;
+  readonly liveOperationId: string | null;
+  readonly liveRequestId: string | null;
+  readonly liveRevision: string | undefined;
+  readonly operationId: string | null;
+  readonly phase: string;
+  readonly requestId: string | null;
+  readonly revision: string | undefined;
+  readonly startedAt: string | undefined;
+  readonly state: Record<string, unknown>;
+};
+
+function observeOperation(app: Record<string, unknown>): OperationObservation {
+  const state = operationState(app);
+  const completedOperation = isRecord(state["operation"])
+    ? state["operation"]
+    : undefined;
+  const liveOperation = isRecord(app["operation"])
+    ? app["operation"]
+    : undefined;
+  const phase = state["phase"];
+  return {
+    hasLiveOperation: liveOperation !== undefined,
+    liveOperationId:
+      liveOperation === undefined ? null : activeOperationId(app),
+    liveRequestId:
+      liveOperation === undefined ? null : activeOperationRequestId(app),
+    liveRevision:
+      liveOperation === undefined
+        ? undefined
+        : operationRevision(liveOperation),
+    phase: typeof phase === "string" ? phase : "",
+    operationId: completedOperationId(app),
+    requestId: completedOperationRequestId(app),
+    revision:
+      completedOperation === undefined
+        ? undefined
+        : operationRevision(completedOperation),
+    startedAt: OperationStartedAtSchema.parse(state["startedAt"]),
+    state,
+  };
+}
+
+function liveOperationMatches(
+  operation: OperationObservation,
+  requestId: string,
+  revision: string | undefined,
+  operationId?: string | null,
+): boolean {
+  return (
+    operation.hasLiveOperation &&
+    operation.liveRequestId === requestId &&
+    (revision === undefined || operation.liveRevision === revision) &&
+    (operationId === undefined || operation.liveOperationId === operationId)
+  );
+}
+
+function operationMatches(
+  operation: OperationObservation,
+  requestId: string,
+  revision: string | undefined,
+  operationId?: string | null,
+): boolean {
+  return (
+    operation.requestId === requestId &&
+    (revision === undefined || operation.revision === revision) &&
+    (operationId === undefined || operation.operationId === operationId)
+  );
+}
+
+function assertMatchingRevision(
+  operation: OperationObservation,
+  requestId: string,
+  revision: string | undefined,
+  appName: string,
+): void {
+  if (
+    operation.requestId === requestId &&
+    revision !== undefined &&
+    operation.revision !== revision
+  ) {
+    throw new Error(
+      `Refusing ${appName} operation for request ${requestId} at ${operation.revision ?? "unknown revision"}; expected ${revision}`,
+    );
+  }
+}
+
+function assertMatchingLiveRevision(
+  operation: OperationObservation,
+  requestId: string,
+  revision: string | undefined,
+  appName: string,
+): void {
+  if (
+    operation.liveRequestId === requestId &&
+    revision !== undefined &&
+    operation.liveRevision !== revision
+  ) {
+    throw new Error(
+      `Refusing active ${appName} operation for request ${requestId} at ${operation.liveRevision ?? "unknown revision"}; expected ${revision}`,
+    );
+  }
+}
+
+function operationDescription(operation: OperationObservation): string {
+  return `${operation.requestId ?? "without a request ID"} at ${operation.revision ?? "unknown revision"} (${operation.operationId ?? "without an operation ID"})`;
+}
+
+function liveOperationDescription(operation: OperationObservation): string {
+  return `${operation.liveRequestId ?? "without a request ID"} at ${operation.liveRevision ?? "unknown revision"} (${operation.liveOperationId ?? "without an operation ID"})`;
+}
+
+function requireLiveOperationId(
+  operation: OperationObservation,
+  appName: string,
+): string {
+  if (operation.liveOperationId === null) {
+    throw new Error(
+      `Refusing active ${appName} operation without a CI operation ID`,
+    );
+  }
+  return SyncOperationIdSchema.parse(operation.liveOperationId);
+}
+
+function recoveryLiveOperationId(
+  operation: OperationObservation,
+): string | null | undefined {
+  if (!operation.hasLiveOperation) {
+    return undefined;
+  }
+  return operation.liveOperationId === null
+    ? null
+    : SyncOperationIdSchema.parse(operation.liveOperationId);
+}
+
+function operationStartedAfter(
+  operation: OperationObservation,
+  startedAt: string | undefined,
+): boolean {
+  return (
+    operation.startedAt !== undefined &&
+    startedAt !== undefined &&
+    Date.parse(operation.startedAt) > Date.parse(startedAt)
+  );
+}
+
+function operationPollIntervalMs(): number {
+  const configured = optionalEnv("ARGOCD_POLL_INTERVAL_MS");
+  return configured === undefined
+    ? POLL_INTERVAL_MS
+    : PollIntervalSchema.parse(configured);
+}
+
+async function sleepUntilNextOperationPoll(deadline: number): Promise<void> {
+  const remaining = deadline - Date.now();
+  if (remaining > 0) {
+    await Bun.sleep(Math.min(operationPollIntervalMs(), remaining));
+  }
+}
+
 function syncResultRevision(
   operationStateValue: Record<string, unknown>,
 ): string | undefined {
@@ -568,6 +888,7 @@ function syncResultRevision(
 function syncResultApplied(
   operationStateValue: Record<string, unknown>,
   revision: string,
+  expectedResourceIdentities: ExpectedSyncResultIdentities | undefined,
 ): boolean {
   if (syncResultRevision(operationStateValue) !== revision) {
     return false;
@@ -579,99 +900,203 @@ function syncResultApplied(
   if (!Array.isArray(resources) || resources.length === 0) {
     return false;
   }
-  return resources.every((resource: unknown) => {
+  const appliedResourceIdentities = new Set<string>();
+  const prunedResourceIdentities = new Set<string>();
+  const everyReportedResourceApplied = resources.every((resource: unknown) => {
     if (!isRecord(resource)) {
       return false;
     }
     const status = resource["status"];
     const hookPhase = resource["hookPhase"];
+    const group = resource["group"];
+    const kind = resource["kind"];
+    const name = resource["name"];
+    if (
+      (group !== undefined && typeof group !== "string") ||
+      typeof kind !== "string" ||
+      typeof name !== "string"
+    ) {
+      return false;
+    }
+    const identity = resourceIdentity(group ?? "", kind, name);
+    appliedResourceIdentities.add(identity);
+    if (status === "Pruned") {
+      prunedResourceIdentities.add(identity);
+    }
     return (
       (status === "Synced" || status === "Pruned" || status === "Skipped") &&
       hookPhase !== "Failed" &&
       hookPhase !== "Error"
     );
   });
+  return (
+    everyReportedResourceApplied &&
+    (expectedResourceIdentities === undefined ||
+      ([...expectedResourceIdentities.desired].every((identity) =>
+        appliedResourceIdentities.has(identity),
+      ) &&
+        [...expectedResourceIdentities.pruned].every((identity) =>
+          prunedResourceIdentities.has(identity),
+        )))
+  );
 }
 
-/**
- * Finish a root sync started with `--async` after its manifests are applied.
- *
- * ArgoCD's async flag only changes client-side waiting: the controller keeps
- * the operation Running until every resource is Healthy. The root app owns
- * Applications that are intentionally deferred or independently unhealthy, so
- * that health wait can outlive the release. Before terminating, require the
- * exact requested revision and a complete successful sync result; a failed or
- * mismatched operation remains a hard failure instead of being hidden.
- */
-async function finalizeAsyncSync(
-  appName: string,
-  revision: string,
-  timeoutSeconds: number,
-  dryRun: boolean,
-): Promise<void> {
-  const exactRevision = BuildRevisionSchema.parse(revision);
-  console.log(
-    `--- argocd finalize-async-sync: ${appName} at ${exactRevision}${dryRun ? " (dry run)" : ""}`,
-  );
-  if (dryRun) {
-    console.log(
-      `DRYRUN: would terminate the applied Running operation for ${appName} at ${exactRevision}`,
-    );
-    return;
-  }
+type WaitForIdentifiedOperationOptions = {
+  readonly appName: string;
+  readonly expectedResourceIdentities: ExpectedSyncResultIdentities | undefined;
+  readonly operationId: string;
+  readonly requestId: string;
+  readonly revision: string | undefined;
+  readonly terminateAfterApplied: boolean;
+  readonly timeoutSeconds: number;
+  readonly token: string;
+};
 
-  const token = requireEnv("ARGOCD_TOKEN");
+async function waitForIdentifiedOperation({
+  appName,
+  expectedResourceIdentities,
+  operationId,
+  requestId,
+  revision,
+  terminateAfterApplied,
+  timeoutSeconds,
+  token,
+}: WaitForIdentifiedOperationOptions): Promise<void> {
   const deadline = Date.now() + timeoutSeconds * 1000;
-  let elapsed = 0;
+  let exactOperationSeen = false;
   while (Date.now() < deadline) {
-    const app = await getApplication(appName, token);
-    const currentOperation = operationState(app);
-    const phase = currentOperation["phase"];
-    const operation = isRecord(currentOperation["operation"])
-      ? currentOperation["operation"]
-      : undefined;
-    if (operation === undefined) {
-      console.log(`no Running operation to finalize: ${appName}`);
-      return;
-    }
-    const currentRevision = operationRevision(operation);
-    if (currentRevision !== exactRevision) {
+    const current = observeOperation(await getApplication(appName, token));
+    assertMatchingRevision(current, requestId, revision, appName);
+    assertMatchingLiveRevision(current, requestId, revision, appName);
+    const isExpected = operationMatches(
+      current,
+      requestId,
+      revision,
+      operationId,
+    );
+    const isExpectedLiveOperation = liveOperationMatches(
+      current,
+      requestId,
+      revision,
+      operationId,
+    );
+    if (current.hasLiveOperation && !isExpectedLiveOperation) {
       throw new Error(
-        `Refusing to terminate ${appName} operation at ${currentRevision ?? "unknown revision"}; expected ${exactRevision}`,
+        `Active ${appName} operation changed to ${liveOperationDescription(current)} while waiting for request ${requestId}`,
       );
     }
-    if (phase === "Failed" || phase === "Error") {
-      const message =
-        typeof currentOperation["message"] === "string"
-          ? currentOperation["message"]
-          : "";
-      throw new Error(
-        `Async sync operation ${phase} for ${appName} at ${exactRevision}: ${message.slice(0, 1024)}`,
-      );
+    if (!exactOperationSeen && isExpected) {
+      exactOperationSeen = true;
     }
-    if (phase !== "Running" && phase !== "Terminating") {
-      console.log(`async sync operation already finalized: ${appName}`);
-      return;
-    }
+    const elapsed = Math.floor(
+      (timeoutSeconds * 1000 - (deadline - Date.now())) / 1000,
+    );
     console.log(
-      `Operation: ${String(phase)}; applied=${syncResultApplied(currentOperation, exactRevision).toString()} ` +
+      `Operation: ${current.phase || "(pending)"}${exactOperationSeen && isExpected ? "" : " [previous op]"} ` +
         `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
     );
-    if (
-      phase === "Running" &&
-      syncResultApplied(currentOperation, exactRevision)
-    ) {
-      break;
+    if (exactOperationSeen && isExpected) {
+      if (current.phase === "Succeeded") {
+        if (current.hasLiveOperation) {
+          await waitForOperationToClear(
+            appName,
+            token,
+            requestId,
+            revision,
+            operationId,
+            current.startedAt,
+            timeoutSeconds,
+          );
+        }
+        console.log(`synced: ${appName}`);
+        return;
+      }
+      if (current.phase === "Failed" || current.phase === "Error") {
+        const message = current.state["message"];
+        throw new Error(
+          `Sync operation ${current.phase} for ${appName}: ${typeof message === "string" ? message.slice(0, 1024) : ""}`,
+        );
+      }
+      if (current.phase === "Terminating") {
+        throw new Error(
+          `Sync operation for ${appName} entered Terminating before this command finalized it`,
+        );
+      }
+      if (
+        terminateAfterApplied &&
+        revision !== undefined &&
+        isExpectedLiveOperation &&
+        current.phase === "Running" &&
+        syncResultApplied(current.state, revision, expectedResourceIdentities)
+      ) {
+        await terminateAppliedOperation(
+          appName,
+          token,
+          requestId,
+          revision,
+          operationId,
+          current.startedAt,
+          timeoutSeconds,
+        );
+        return;
+      }
     }
-    await Bun.sleep(POLL_INTERVAL_MS);
-    elapsed += POLL_INTERVAL_MS / 1000;
+    await sleepUntilNextOperationPoll(deadline);
   }
-  if (Date.now() >= deadline) {
-    throw new Error(
-      `Timeout: ${appName} operation at ${exactRevision} was not fully applied within ${timeoutSeconds.toString()}s`,
-    );
-  }
+  throw new Error(
+    `Timeout: sync operation for ${appName} did not complete within ${timeoutSeconds.toString()}s`,
+  );
+}
 
+async function waitForOperationToClear(
+  appName: string,
+  token: string,
+  requestId: string,
+  revision: string | undefined,
+  operationId: string | null,
+  startedAt: string | undefined,
+  timeoutSeconds: number,
+): Promise<void> {
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  while (Date.now() < deadline) {
+    const current = observeOperation(await getApplication(appName, token));
+    assertMatchingRevision(current, requestId, revision, appName);
+    assertMatchingLiveRevision(current, requestId, revision, appName);
+    const isExpectedLiveOperation = liveOperationMatches(
+      current,
+      requestId,
+      revision,
+      operationId,
+    );
+    if (current.hasLiveOperation && !isExpectedLiveOperation) {
+      throw new Error(
+        `${appName} operation changed to ${liveOperationDescription(current)} while waiting for request ${requestId} to clear`,
+      );
+    }
+    if (!current.hasLiveOperation) {
+      if (operationStartedAfter(current, startedAt)) {
+        throw new Error(
+          `${appName} operation changed to ${operationDescription(current)} while waiting for request ${requestId} to clear`,
+        );
+      }
+      return;
+    }
+    await sleepUntilNextOperationPoll(deadline);
+  }
+  throw new Error(
+    `Timeout: ${appName} operation for request ${requestId} did not clear within ${timeoutSeconds.toString()}s`,
+  );
+}
+
+async function terminateAppliedOperation(
+  appName: string,
+  token: string,
+  requestId: string,
+  revision: string,
+  operationId: string | null,
+  startedAt: string | undefined,
+  timeoutSeconds: number,
+): Promise<void> {
   const url = new URL(
     `/api/v1/applications/${encodeURIComponent(appName)}/operation`,
     serverUrl(),
@@ -689,18 +1114,155 @@ async function finalizeAsyncSync(
       `Async sync termination failed: HTTP ${response.status.toString()} ${response.statusText}\n${body}`,
     );
   }
-  console.log(`terminated applied async sync operation: ${appName}`);
+  console.log(`terminated applied sync operation: ${appName}`);
+  await waitForOperationToClear(
+    appName,
+    token,
+    requestId,
+    revision,
+    operationId,
+    startedAt,
+    timeoutSeconds,
+  );
+}
 
+/**
+ * Recover a root sync started by an earlier process after its manifests apply.
+ *
+ * ArgoCD's async flag only changes client-side waiting: the controller keeps
+ * the operation Running until every resource is Healthy. The root app owns
+ * Applications that are intentionally deferred or independently unhealthy, so
+ * that health wait can outlive the release. Before terminating, require the
+ * exact request ID, exact requested revision, and a complete successful sync
+ * result; a missing, failed, or mismatched operation remains a hard failure.
+ */
+async function finalizeAsyncSync(
+  appName: string,
+  revision: string,
+  requestId: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
+  const exactRevision = BuildRevisionSchema.parse(revision);
+  const exactRequestId = SyncRequestIdSchema.parse(requestId);
+  console.log(
+    `--- argocd finalize-async-sync: ${appName} at ${exactRevision} for request ${exactRequestId}${dryRun ? " (dry run)" : ""}`,
+  );
+  if (dryRun) {
+    console.log(
+      `DRYRUN: would terminate the applied Running operation for ${appName} at ${exactRevision} for request ${exactRequestId}`,
+    );
+    return;
+  }
+
+  const token = requireEnv("ARGOCD_TOKEN");
+  const expectedResourceIdentities =
+    appName === "apps"
+      ? await assertRootPruneSafe(token, exactRevision)
+      : await getExpectedSyncResultIdentities(appName, exactRevision, token);
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  let elapsed = 0;
   while (Date.now() < deadline) {
-    const current = operationState(await getApplication(appName, token));
-    const phase = current["phase"];
-    if (phase !== "Running" && phase !== "Terminating") {
+    const current = observeOperation(await getApplication(appName, token));
+    assertMatchingRevision(current, exactRequestId, exactRevision, appName);
+    assertMatchingLiveRevision(current, exactRequestId, exactRevision, appName);
+    const isExpectedLogicalOperation = operationMatches(
+      current,
+      exactRequestId,
+      exactRevision,
+    );
+    const isExpectedLogicalLiveOperation = liveOperationMatches(
+      current,
+      exactRequestId,
+      exactRevision,
+    );
+    if (current.hasLiveOperation && !isExpectedLogicalLiveOperation) {
+      throw new Error(
+        `Refusing to terminate active ${appName} operation ${liveOperationDescription(current)}; expected request ${exactRequestId} at ${exactRevision}`,
+      );
+    }
+    if (
+      isExpectedLogicalOperation &&
+      !current.hasLiveOperation &&
+      (current.phase === "Failed" || current.phase === "Error")
+    ) {
+      const message = current.state["message"];
+      throw new Error(
+        `Async sync operation ${current.phase} for ${appName} at ${exactRevision}: ${typeof message === "string" ? message.slice(0, 1024) : ""}`,
+      );
+    }
+    if (
+      isExpectedLogicalOperation &&
+      !current.hasLiveOperation &&
+      current.phase === "Succeeded"
+    ) {
+      console.log(`async sync operation already finalized: ${appName}`);
       return;
     }
-    await Bun.sleep(POLL_INTERVAL_MS);
+    const liveOperationId = recoveryLiveOperationId(current);
+    const isExpectedOperation =
+      liveOperationId !== undefined &&
+      operationMatches(current, exactRequestId, exactRevision, liveOperationId);
+    console.log(
+      `Operation: ${current.phase || "(pending)"}${isExpectedOperation ? "" : " [previous op]"}; ` +
+        `applied=${isExpectedOperation && syncResultApplied(current.state, exactRevision, expectedResourceIdentities) ? "true" : "false"} ` +
+        `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
+    );
+    if (
+      liveOperationId !== undefined &&
+      isExpectedOperation &&
+      current.phase === "Terminating"
+    ) {
+      if (
+        !syncResultApplied(
+          current.state,
+          exactRevision,
+          expectedResourceIdentities,
+        )
+      ) {
+        throw new Error(
+          `Matching ${appName} operation entered Terminating before its result was fully applied`,
+        );
+      }
+      await waitForOperationToClear(
+        appName,
+        token,
+        exactRequestId,
+        exactRevision,
+        liveOperationId,
+        current.startedAt,
+        timeoutSeconds,
+      );
+      return;
+    }
+    if (
+      liveOperationId !== undefined &&
+      isExpectedOperation &&
+      current.phase === "Running" &&
+      syncResultApplied(
+        current.state,
+        exactRevision,
+        expectedResourceIdentities,
+      )
+    ) {
+      await terminateAppliedOperation(
+        appName,
+        token,
+        exactRequestId,
+        exactRevision,
+        liveOperationId,
+        current.startedAt,
+        timeoutSeconds,
+      );
+      return;
+    }
+    await sleepUntilNextOperationPoll(deadline);
+    elapsed = Math.floor(
+      (timeoutSeconds * 1000 - (deadline - Date.now())) / 1000,
+    );
   }
   throw new Error(
-    `Timeout: terminated ${appName} operation did not leave Running/Terminating state within ${timeoutSeconds.toString()}s`,
+    `Timeout: ${appName} operation for request ${exactRequestId} at ${exactRevision} was not fully applied within ${timeoutSeconds.toString()}s`,
   );
 }
 
@@ -734,8 +1296,9 @@ async function reconcileRelease(
     timeoutSeconds,
   );
   const token = requireEnv("ARGOCD_TOKEN");
-  // The release step submits the root Application sync asynchronously. Waiting
-  // here would make every release depend on unrelated child Application health.
+  // The release step handles the root Application with the subsequent atomic
+  // sync. Waiting for it here would make every release depend on unrelated
+  // child Application health.
   for (const wanted of expected) {
     if (wanted.name === "apps" || deferredApps.has(wanted.name)) {
       continue;
@@ -1030,7 +1593,8 @@ function usage(): never {
   console.error(
     "Usage:\n" +
       "  bun packages/homelab/scripts/argocd.ts sync <app> " +
-      "[--revision <v>] [--prune] [--async] [--timeout <s>] [--dry-run]\n" +
+      "[--revision <v>] [--prune] [--async | --terminate-after-applied] " +
+      "[--request-id <uuid>] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts delete-application <app> " +
       "--project <project> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts health-wait <app> " +
@@ -1043,7 +1607,7 @@ function usage(): never {
       "[--defer-apps <app,...>] [--skip-health-wait] " +
       "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts finalize-async-sync <app> " +
-      "--revision <v> [--timeout <s>] [--dry-run]\n" +
+      "--revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> " +
       "[--revision <v>] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts wait-deletion <app> " +
@@ -1103,10 +1667,35 @@ async function main(): Promise<void> {
   switch (subcommand) {
     case "sync": {
       const revision = flag(argv, "revision");
+      const requestId = flag(argv, "request-id");
+      const asyncSync = argv.includes("--async");
+      const terminateAfterApplied = argv.includes("--terminate-after-applied");
+      if (asyncSync && terminateAfterApplied) {
+        console.error(
+          "--async and --terminate-after-applied cannot be combined.",
+        );
+        usage();
+      }
+      if (terminateAfterApplied && revision === undefined) {
+        console.error(
+          "--terminate-after-applied requires an exact --revision.",
+        );
+        usage();
+      }
+      if (requestId !== undefined && revision === undefined) {
+        console.error("--request-id requires an exact --revision.");
+        usage();
+      }
+      const exactRequestId =
+        requestId === undefined
+          ? undefined
+          : SyncRequestIdSchema.parse(requestId);
       await sync(app, timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S, dryRun, {
         prune: argv.includes("--prune"),
-        waitForCompletion: !argv.includes("--async"),
+        waitForCompletion: !asyncSync,
+        terminateAfterApplied,
         ...(revision === undefined ? {} : { revision }),
+        ...(exactRequestId === undefined ? {} : { requestId: exactRequestId }),
       });
       return;
     }
@@ -1158,13 +1747,17 @@ async function main(): Promise<void> {
       return;
     case "finalize-async-sync": {
       const revision = flag(argv, "revision");
-      if (revision === undefined) {
-        console.error("--revision is required for finalize-async-sync.");
+      const requestId = flag(argv, "request-id");
+      if (revision === undefined || requestId === undefined) {
+        console.error(
+          "--revision and --request-id are required for finalize-async-sync.",
+        );
         usage();
       }
       await finalizeAsyncSync(
         app,
         revision,
+        requestId,
         timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
         dryRun,
       );
