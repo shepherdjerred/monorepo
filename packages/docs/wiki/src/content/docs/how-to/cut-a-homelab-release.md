@@ -108,7 +108,10 @@ UUID.
 
 ## Where it lives
 
-`.buildkite/pipeline.yml` and `packages/homelab/scripts/argocd.ts`.
+The workflow is defined by the
+[main release pipeline](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml)
+and the
+[Argo operator command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts).
 
 ## Related
 

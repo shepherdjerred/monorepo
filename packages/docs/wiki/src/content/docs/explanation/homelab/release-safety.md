@@ -85,11 +85,13 @@ independently unhealthy. Waiting synchronously on the root would mean waiting on
 every one of them, and a single permanently unhealthy child would hold the
 release open forever.
 
-So Buildkite separates root application from release-scoped health. One command
+So the [main release pipeline](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml)
+separates root application from release-scoped health. One
+[atomic Argo command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
 retains the exact Buildkite request identity while ArgoCD applies the root
 revision. It terminates the aggregate health wait only after the complete sync
 result is applied. The command compares reported group, kind, and name
-identities with every resource rendered from the exact revision, so an applied
+identities with every resource rendered from the exact revision. An applied
 early sync wave cannot hide later-wave work that ArgoCD has not reported yet.
 It also carries the validated prune candidates into this boundary and requires
 each candidate to appear as `Pruned` before termination.
@@ -99,16 +101,17 @@ asynchronously. A second process can read before the accepted operation appears.
 Keeping submission and finalization together lets the command poll through that
 gap and distinguish stale state from its own operation.
 
-Buildkite retries reuse the build UUID. A retry adopts only the same request ID
-and revision; it refuses any unrelated active operation. A generated
-per-operation UUID then binds the top-level live operation to its completed
-status. This lets a retry accept a stable, fully applied result while rejecting
-stale status from an earlier POST that used the same Buildkite identity. The
-standalone finalizer remains a recovery tool, not part of the normal release
-path. It recognizes the retired client's pre-UUID operation only when both the
-live operation and completed status share the exact request ID and revision and
-both omit an operation UUID; atomic operations never use that compatibility
-case.
+Buildkite retries reuse the build UUID. The
+[operation identity implementation](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
+adopts only the same request ID and revision. It refuses any unrelated active
+operation. A generated per-operation UUID binds the top-level live operation
+to its completed status. This lets a retry accept a stable, fully applied
+result while rejecting stale status from an earlier POST with the same
+Buildkite identity. The standalone finalizer remains a recovery tool, not part
+of the normal release path. It recognizes the retired client's pre-UUID
+operation only when both live and completed state share the exact request ID
+and revision. Both must omit an operation UUID. Atomic operations never use
+that compatibility case.
 
 After termination, the top-level live operation is authoritative. Its absence
 means the health wait is gone even if `status.operationState` still says
