@@ -1,1 +1,0 @@
-This Python scraper gathers Frankie and Jo’s flavor articles by crawling the site’s news listings and retrieving article text. It uses `requests`, `re`, and `BeautifulSoup` in `src/main.py` to fetch pages and parse the flavor content. The crawler iterates through ten news pages set by `LAST_NEWS_PAGE` to collect flavor URLs with a regex before extracting the article body.

@@ -564,3 +564,19 @@ Here are some similar libraries using Satori and Astro. I haven't done a feature
 - https://github.com/cijiugechu/astro-satori (Possibly dead, hasn't been updated in a year)
 - https://github.com/kevinzunigacuellar/astro-satori (Possibly dead, hasn't been updated in a year)
 - https://github.com/rumaan/astro-vercel-og (Possibly dead, hasn't been updated in a year)
+
+## Maintainers
+
+This README is hand-maintained; edit it directly.
+
+- **Tests** — `bun run test` (runs `vitest src`).
+- **Preset example images** — build the preset example site first, then render
+  the PNGs from the package root:
+
+  ```bash
+  cd examples/preset && bun install && bun run build && cd ../..
+  bun run src/presets/render-examples.ts   # writes assets/presets/<name>.png
+  ```
+
+- **Publish** — `bun run publish:npm` (wraps `scripts/publish-npm.ts` at the
+  repo root).

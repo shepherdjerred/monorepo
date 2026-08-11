@@ -6,6 +6,38 @@ Luckily Skill Capped provides a manifest of all their video data embeded right i
 
 ![Screenshot of the website](assets/screenshot.png)
 
+## Commands
+
+```bash
+cd packages/better-skill-capped
+bun run start       # Vite dev server (--host)
+bun run build       # production build to dist/
+bun run test        # bun test
+bun run lint        # eslint src
+bun run typecheck   # tsc --noEmit
+bun run deploy      # bun ../../scripts/deploy-site.ts better-skill-capped
+```
+
+`deploy` syncs `dist/` to the `better-skill-capped` SeaweedFS bucket serving
+<https://better-skill-capped.com>. The deploy excludes `data/*`: a Temporal
+workflow refreshes `data/manifest.json` daily, and the SPA fetches it at
+runtime.
+
+## Architecture
+
+Data flows manifest → parser → UI, with localStorage-backed datastores:
+
+- `src/manifest-loader.ts` fetches `/data/manifest.json`, validates it with a
+  Zod schema (`src/parser/manifest.ts`), and caches it in localStorage via
+  `LocalStorageManifestDatastore`, refetching when stale.
+- `src/parser/parser.ts` transforms the raw manifest into the app's domain
+  model (`src/model/`): videos, courses, and commentaries with display titles
+  and URLs.
+- `src/datastore/` holds datastore interfaces plus localStorage
+  implementations for the manifest cache, bookmarks, and watch status, so
+  user state persists across sessions without a backend.
+- `src/components/` renders search (fuse.js), browsing, and the video views.
+
 ## Sponsors
 
 A special thanks to [Sentry](https://sentry.io/) for sponsoring this project. Check them out!

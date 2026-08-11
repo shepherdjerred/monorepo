@@ -1,1 +1,0 @@
-@shepherdjerred/toolkit is a Bun and TypeScript CLI that fetches and formats operational data from Alerts, Bugsink, Grafana, Discord, GitHub, and the homelab deployment pipeline. Zod validates service responses at the boundary, and command handlers keep each operational surface isolated.

@@ -1,1 +1,0 @@
-bevy-experiment renders a 2D tile-based scene and controllable sprite using the Bevy game engine. It uses Rust with Bevy 0.4, the bevy_tiled_prototype tiled-map plugin, and Bevy diagnostic plugins for frame-time reporting. Startup systems load the TMX world and sprite assets while runtime systems handle keyboard-driven character motion and zoomable camera control.

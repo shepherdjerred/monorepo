@@ -51,6 +51,22 @@ document back to `in-progress` in the same audited Markdown update.
 Physical or privileged prerequisites use `verification: operator` on a separate
 blocked item so they are not mislabeled as acceptance testing.
 
+## CLIs
+
+- `src/cli/check-docs.ts` — the repo-wide docs gate, run as `bun run
+check-todos` from the repository root (or `bun run --cwd packages/docs-board
+check-docs`). Validates canonical frontmatter, semantic headings, workflow
+  sections, IDs, archival rules, and the source-marker → TODO invariant.
+- `src/cli/migrate-docs.ts` — normalizes workflow documents to the canonical
+  model and moves completed ones into `packages/docs/archive/completed/`.
+  `--dry-run` lists what would change; `--check` does the same and exits
+  non-zero when anything would change. Run as `bun run --cwd
+packages/docs-board migrate-docs`.
+
+Archival moves on the board itself go through
+`src/server/document-archive.ts`, which renames the file into the archive and
+rewrites inbound Markdown links to the moved path in the same operation.
+
 ## Verification
 
 ```bash

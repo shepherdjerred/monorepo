@@ -1,80 +1,99 @@
 # Starlight Karma Bot
 
-A Discord bot for tracking karma points, built with Bun.
+A Discord bot for tracking karma points, built with Bun, discord.js v14, and Prisma (SQLite via the libSQL adapter).
 
 ## Requirements
 
-- [Bun](https://bun.sh/) v1.0 or higher
-- [mise](https://mise.jdx.dev/) (recommended for tool version management)
+- [Bun](https://bun.sh/)
 - Discord Bot Token
 - Discord Application ID
 
 ## Setup
 
-1. Install dependencies:
+1. Install dependencies (from the monorepo root):
 
-```bash
-bun install
-```
+   ```bash
+   bun install
+   ```
 
-1. Create a `.env` file with the following variables:
+2. Create a `.env` file with the following variables:
 
-```env
-VERSION=1.0.0
-ENVIRONMENT=dev
-GIT_SHA=local
-SENTRY_DSN=https://fb2f07bfb3544bd2bd279a1ce5f1e247@bugsink.sjer.red/5
-PORT=8000
-DISCORD_TOKEN=your_discord_token_here
-APPLICATION_ID=your_application_id_here
-DATABASE_PATH=./data/karma.db
-```
+   ```env
+   VERSION=1.0.0
+   ENVIRONMENT=dev
+   GIT_SHA=local
+   SENTRY_DSN=https://fb2f07bfb3544bd2bd279a1ce5f1e247@bugsink.sjer.red/5
+   PORT=8000
+   DISCORD_TOKEN=your_discord_token_here
+   APPLICATION_ID=your_application_id_here
+   DATABASE_PATH=./data/karma.db
+   ```
 
-1. Create the data directory:
+3. Create the data directory:
 
-```bash
-mkdir -p ./data
-```
+   ```bash
+   mkdir -p ./data
+   ```
 
 ## Development
 
 ```bash
-# Type check
-bun run typecheck
-
-# Lint
+bun run generate   # generate the Prisma client (scripts/generate-prisma.ts)
+bun run migrate    # deploy database migrations (scripts/migrate.ts)
+bun run typecheck  # generates first, then tsc
 bun run lint
-
-# Format check
-bun run format
-
-# Auto-format
-bun run prettier
+bun test
+bun run format     # prettier --check
+bun run prettier   # prettier --write
 ```
 
 ## Running
 
-Start the bot:
-
 ```bash
-bun start
+bun start          # generates the Prisma client, then starts the bot
+bun run health     # health check against a running instance
 ```
 
-Run health check:
+## Commands
 
-```bash
-bun run health
-```
+Everything lives under one `/karma` slash command (defined in `src/karma/command-definitions.ts`):
+
+| Subcommand    | Description                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------ |
+| `give`        | Give karma to someone, with an optional reason (max 200 chars) and amount (1, 2, or 3; default 1)      |
+| `leaderboard` | Server rankings, with `type` (received / most generous) and `period` (all time, this year, this month) |
+| `check`       | See how much karma someone has (defaults to you)                                                       |
+| `stats`       | A karma profile: totals, rank, and who gives you most                                                  |
+| `why`         | See what someone earned their karma for                                                                |
+| `search`      | Search karma reasons for a word or phrase                                                              |
+| `undo`        | Take back the karma you just gave                                                                      |
+| `config`      | Configure the scheduled recap: channel, enabled, and a UTC cron expression (requires Manage Server)    |
+| `history`     | View recent changes to a person's karma                                                                |
+
+Karma can also be given by reacting with the karma emoji (`KARMA_EMOJI`, default a star) or via **Apps → Give Karma** on any message.
+
+## Scheduled recap
+
+The bot posts a periodic recap (leaderboard top 5, most generous, and a slice of the reason archive) without anyone typing a command. `src/karma/recap.ts` polls for due guilds once a minute and advances the next-fire timestamp even when posting fails, so a deleted channel is not retried forever. The schedule is a per-guild cron expression evaluated in UTC (`src/karma/recap-schedule.ts`, default `0 17 * * 5` — Fridays 17:00 UTC), configured with `/karma config`.
+
+## Milestones and reason filters
+
+- **Milestones** (`src/karma/milestones.ts`) — crossing 10, 25, 50, 100, 250, or 500 total karma triggers a one-time announcement; a single give that vaults past two thresholds announces the higher one.
+- **Reason filters** (`src/karma/reason-filters.ts`) — reason-oriented surfaces (`why`, `search`, recaps) only show positive, human-authored reasons; reaction awards and synthetic legacy-import rows are excluded.
 
 ## Docker
 
-Build the Docker image with version information:
+Build the image (the build context is the monorepo root — the Dockerfile needs the workspace lockfile):
 
 ```bash
-docker build \
-  --build-arg VERSION=1.0.0 \
-  --build-arg GIT_SHA=$(git rev-parse HEAD) \
-  -t starlight-karma-bot .
+bun run docker:build
+# equivalent to: docker buildx build ... --load -t starlight-karma-bot:dev -f Dockerfile ../..
+```
+
+Smoke-test the built image (boots with dummy creds and asserts the bot reaches Discord login):
+
+```bash
+bun run smoke
 ```
 
 Run the container:
@@ -88,7 +107,7 @@ docker run -d \
   -e ENVIRONMENT=prod \
   -v $(pwd)/data:/app/data \
   -p 8000:8000 \
-  starlight-karma-bot
+  starlight-karma-bot:dev
 ```
 
 Required runtime environment variables:
@@ -109,27 +128,9 @@ Optional environment variables:
 - `KARMA_EMOJI`: emoji that awards karma when reacted with (default `⭐`). A
   unicode character matches by name; a custom guild emoji matches by its id.
 
-## Features
+## Health endpoints
 
-- Give karma by reacting with the karma emoji, via **Apps → Give Karma** on any
-  message, or with `/karma give @user [reason] [amount]` (1-3)
-- View karma leaderboard with `/karma leaderboard`
-- Check karma history with `/karma history @user`
-- **Multi-server support** - karma is tracked separately for each Discord server
-- Persistent SQLite database
-- Automatic one-shot import from the legacy TypeORM database on first boot
-- Health endpoints at `/live` and `/ready` (used by the Kubernetes probes)
-
-## Tech Stack
-
-- **Runtime:** Bun
-- **Discord:** discord.js v14
-- **Database:** Prisma with SQLite (libSQL adapter)
-- **Monitoring:** Sentry
-- **Linting:** ESLint with strict TypeScript rules
-- **Formatting:** Prettier
-- **CI/CD:** Buildkite with Docker builds
-- **Container Registry:** GitHub Container Registry (GHCR)
+`/live` and `/ready` are served on `PORT` and used by the Kubernetes probes.
 
 ## Migrating from the legacy TypeORM database
 

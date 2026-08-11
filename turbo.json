@@ -131,7 +131,6 @@
         "scripts/migration-core.ts",
         "scripts/**/*.test.ts",
         ".buildkite/scripts/**/*.ts",
-        "packages/astro-opengraph-images/generate-readme*.ts",
         "packages/discord-plays-mario-kart/scripts/**/*.ts",
         "packages/discord-plays-pokemon/scripts/**/*.ts",
         "packages/dotfiles/bin/executable_git_cleanup.ts",
@@ -141,7 +140,7 @@
         "packages/scout-for-lol/scripts/**/*.ts",
         "packages/tasks-for-obsidian/scripts/**/*.ts",
         "packages/toolkit/scripts/**/*.ts",
-        "packages/{astro-opengraph-images,discord-plays-mario-kart,discord-plays-pokemon,dotfiles,homelab,llm-observability,scout-for-lol,tasks-for-obsidian,toolkit}/package.json"
+        "packages/{discord-plays-mario-kart,discord-plays-pokemon,dotfiles,homelab,llm-observability,scout-for-lol,tasks-for-obsidian,toolkit}/package.json"
       ]
     },
     "//#markdownlint": {

@@ -1,121 +1,73 @@
 # Scout for LoL Scripts
 
+Automation for the Scout package. The selective test runner is documented in
+detail below; the rest of the directory is indexed here.
+
+## Script Index
+
+| Script                    | Purpose                                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------------------- |
+| `audit-unsafe-code.ts`    | Scans the codebase for patterns that can cause runtime issues                                   |
+| `build-bucket.ts`         | Merged Astro site + Vite SPA build for the `scout-for-lol.com` deploy bucket                    |
+| `check-asset-sizes.ts`    | Enforces size limits on committed assets (`bun run check:assets`)                               |
+| `check-duplication.ts`    | Runs jscpd with per-file and aggregate duplication thresholds (`bun run duplication-check`)     |
+| `check-suppressions.ts`   | Fails when new lint- or type-error-suppression comments are added                               |
+| `contract-hash.ts`        | Deterministic hash of the sources defining the frontend ↔ backend tRPC contract                 |
+| `create-minimal-png.ts`   | Writes minimal placeholder Tauri icon PNGs                                                      |
+| `dev-web.ts`              | Local backend + web SPA dev environment (`bun run dev:web`, secrets via `op run`)               |
+| `find-dependent-tests.ts` | Finds test files affected by changed source files (see below)                                   |
+| `install-pkgs.ts`         | Workspace install helper: `bun install` plus Prisma client regeneration when the schema drifted |
+| `migration-core.ts`       | Shared helpers for the scripts above (secret checks, minimal PNG bytes, file comparison)        |
+| `run-relevant-tests.ts`   | Finds and runs the affected tests (see below)                                                   |
+| `update-lint-cache.ts`    | Regenerates `.knip-cache.json` and `.jscpd-cache.json`                                          |
+
+`*.test.ts` files are the tests for these scripts (`bun test ./scripts` from
+the Scout package root).
+
 ## Selective Test Running
 
-This directory contains scripts for running only relevant tests based on changed files, using TypeScript's Compiler API for accurate dependency resolution.
+`find-dependent-tests.ts` and `run-relevant-tests.ts` run only the tests
+relevant to a set of changed files, using TypeScript's Compiler API for
+accurate dependency resolution.
 
-### Scripts
+These are standalone tools invoked manually; they are **not** wired into git
+hooks. Repo-wide pre-commit checks come from the root `lefthook.yml`
+(staged-file formatting and safety checks), and CI runs the full test graph
+through Turbo on Buildkite.
 
-#### `find-dependent-tests.ts`
+### `find-dependent-tests.ts`
 
-Analyzes the TypeScript dependency graph to find all test files that should run based on changed source files.
-
-**How it works:**
+Analyzes the TypeScript dependency graph to find all test files that should
+run based on changed source files:
 
 1. Loads the TypeScript compiler program for the package
 2. Builds a reverse dependency map (which files import which)
 3. Finds all files that transitively depend on the changed files
 4. Returns the test files for all affected files
 
-**Features:**
-
-- Uses TypeScript's Compiler API for accurate module resolution
-- Respects `tsconfig.json` settings (path aliases, etc.)
-- Handles `import`, `export`, and dynamic `import()` statements
-- Finds transitive dependencies (if A imports B and B imports C, changing C runs tests for A, B, and C)
-
-**Usage:**
+It uses TypeScript's own module resolution, so it respects `tsconfig.json`
+settings and handles `import`, `export`, and dynamic `import()` statements,
+including transitive dependencies.
 
 ```bash
 bun ./scripts/find-dependent-tests.ts <package-dir> <changed-files...>
-```
-
-**Example:**
-
-```bash
+# e.g.
 bun ./scripts/find-dependent-tests.ts packages/backend packages/backend/src/utils/helper.ts
 ```
 
-**Output:**
+Outputs absolute paths to test files (one per line) on stdout; diagnostics go
+to stderr.
 
-Outputs absolute paths to test files (one per line) to stdout. Diagnostics are written to stderr.
+### `run-relevant-tests.ts`
 
-#### `run-relevant-tests.ts`
-
-Wrapper script that finds and runs relevant tests.
-
-**Usage:**
+Wrapper that calls `find-dependent-tests.ts` and runs the resulting tests:
 
 ```bash
 bun ./scripts/run-relevant-tests.ts <package-dir> <changed-files...>
 ```
 
-**Example:**
-
-```bash
-bun ./scripts/run-relevant-tests.ts packages/backend packages/backend/src/utils/helper.ts
-```
-
-### Integration with lint-staged
-
-These scripts are integrated into the pre-commit workflow via `lint-staged` in `package.json`:
-
-```json
-{
-  "lint-staged": {
-    "packages/backend/**/*.{ts,tsx}": [
-      "bash -c 'cd packages/backend && bun run typecheck'",
-      "bash -c 'cd packages/backend && bunx eslint --cache --fix'",
-      "bun ./scripts/run-relevant-tests.ts packages/backend"
-    ]
-  }
-}
-```
-
-When you commit TypeScript files, only the tests affected by your changes will run, significantly speeding up the pre-commit process.
-
-### Benefits
-
-**Before:**
-
-- Changing any file in a package ran ALL tests in that package
-- Slow pre-commit times for large packages (e.g., backend has 143 files)
-
-**After:**
-
-- Only runs tests for the specific files you changed
-- Automatically includes tests for files that import your changed files
-- Handles transitive dependencies correctly
-- Typical pre-commit runs 5-15 tests instead of 100+
-
-### Example Scenario
-
-If you change `packages/backend/src/utils/champion.ts`:
-
-1. Runs `champion.test.ts` (direct test)
-2. Finds all files that import `champion.ts`
-3. Runs tests for those files too
-4. Continues transitively up the dependency chain
-
-In practice, this means changing a utility file might run ~9 tests instead of ~100.
-
-### Technical Details
-
-**Why TypeScript Compiler API instead of regex?**
-
-- Accurately resolves module paths (relative imports, path aliases, index files)
-- Understands TypeScript's module resolution algorithm
-- Respects `tsconfig.json` settings
-- Handles edge cases (barrel exports, re-exports, etc.)
-
-**Performance:**
-
-- First run (cold): ~2-3 seconds to analyze dependency graph
-- Subsequent runs use TypeScript's incremental compilation features
-- Overall pre-commit time reduced by 60-90% for typical changes
-
-**Limitations:**
+### Limitations
 
 - Only analyzes files included in the TypeScript program
 - Doesn't detect runtime-only dependencies (e.g., dynamic string-based imports)
-- Requires valid `tsconfig.json` in each package
+- Requires a valid `tsconfig.json` in the target package

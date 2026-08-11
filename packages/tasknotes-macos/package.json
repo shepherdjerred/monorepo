@@ -1,7 +1,7 @@
 {
   "name": "tasknotes-macos",
   "private": true,
-  "description": "Turbo shim over the native macOS TaskNotes app. Only `lint` participates in the repository's Linux verify graph — SwiftLint ships a static Linux binary, so it runs in CI, while every `mac:` script needs a Swift toolchain or Xcode and is a local pre-merge step, by the same rule the iOS app already follows. Every script that compiles Swift runs `mac:preflight` first: the committed bindings are generated source and the XCFramework they link against is a gitignored artifact, so regenerating one without rebuilding the other produces `Undefined symbol: _uniffi_…` that reads as somebody else's broken edit rather than a stale build.",
+  "description": "Native macOS TaskNotes app (SwiftUI over the shared Rust core); see README.md for the CI/local split and the mac:preflight rationale.",
   "scripts": {
     "lint": "swiftlint lint --strict --quiet && ./ci/no-suppressions.sh",
     "mac:generate": "xcodegen generate",

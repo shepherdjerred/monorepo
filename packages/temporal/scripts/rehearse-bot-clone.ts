@@ -29,15 +29,12 @@
  *                byte-stably, and a bot-style `git commit` of a scout file
  *                succeeds without any pre-commit hook running
  *                (scout-season-refresh-weekly).
- *  4. cog      — the readme-refresh COG_TARGETS exist, still contain `[[[cog`
- *                blocks, and the `cog` binary is present (readme-refresh-weekly).
- *  5. crd-imports — the cdk8s bin resolves from the cdk8s package's
+ *  4. crd-imports — the cdk8s bin resolves from the cdk8s package's
  *                cdk8s-cli devDependency after the hook-free install, and the
  *                update-imports script exists (homelab-crd-imports-daily).
  *
- * Deliberately NOT rehearsed: asset downloads, Claude/Codex calls, and the
- * full `cog -r` regeneration (needs blobless git history + Codex for new
- * packages) — those never broke; the environment around them did.
+ * Deliberately NOT rehearsed: asset downloads and Claude/Codex calls — those
+ * never broke; the environment around them did.
  *
  * Usage: bun run scripts/rehearse-bot-clone.ts
  *   --repo=/abs/path/to/monorepo
@@ -55,7 +52,6 @@ import {
 } from "#activities/bot-clone.ts";
 import { isAllowedGlitterContextRefreshPath } from "#activities/glitter-context-refresh-paths.ts";
 import { runCommand } from "#activities/data-dragon-shell.ts";
-import { COG_TARGETS } from "#activities/readme-refresh.ts";
 import { z } from "zod";
 import {
   CHANGELOG_FILE,
@@ -284,7 +280,7 @@ async function rehearseHookFreeCommit(repoDir: string): Promise<void> {
   console.error("[rehearsal] hooks: no git hooks armed");
 
   // Simulate an agentic Claude/Codex step (which runs between the pre-install
-  // and the final commit in scout-season-refresh.ts / readme-refresh.ts)
+  // and the final commit in scout-season-refresh.ts)
   // deciding on its own to run a plain `bun install`. In the 2026-07-12
   // scout-season-refresh-weekly failure this armed lefthook via the root
   // `prepare` script; that script is gone, so today the install must arm
@@ -409,27 +405,6 @@ async function rehearseQueueWindowsEnvironment(repoDir: string): Promise<void> {
   console.error("[rehearsal] queue-windows: environment OK");
 }
 
-async function rehearseCogTargets(repoDir: string): Promise<void> {
-  console.error("[rehearsal] cog: verifying binary + targets");
-  // cogapp has no --version long flag; -v prints the version.
-  await runCommand(["cog", "-v"], { cwd: repoDir });
-  for (const target of COG_TARGETS) {
-    const file = Bun.file(`${repoDir}/${target}`);
-    if (!(await file.exists())) {
-      throw new Error(
-        `COG_TARGETS entry does not exist in the tree: ${target} — ` +
-          "readme-refresh-weekly would fail with FileNotFoundError " +
-          "(this is exactly how the June 2026 sandbox/ move broke it).",
-      );
-    }
-    const content = await file.text();
-    if (!content.includes("[[[cog")) {
-      throw new Error(`COG_TARGETS entry has no [[[cog block: ${target}`);
-    }
-  }
-  console.error(`[rehearsal] cog: ${String(COG_TARGETS.length)} targets OK`);
-}
-
 async function rehearsePokeemeraldDataEnvironment(
   repoDir: string,
 ): Promise<void> {
@@ -515,7 +490,6 @@ async function main(): Promise<void> {
   await rehearseGlitterContextRefresh(repoDir);
   await rehearseSnapshotRefresh(repoDir);
   await rehearseHookFreeCommit(repoDir);
-  await rehearseCogTargets(repoDir);
   await rehearseCrdImportsEnvironment(repoDir);
   await rehearseQueueWindowsEnvironment(repoDir);
   await rehearsePokeemeraldDataEnvironment(repoDir);

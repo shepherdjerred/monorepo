@@ -3,6 +3,10 @@
 Brim is a personal macOS menu-bar app for monitoring AI subscription
 quotas. It currently targets Claude Code, Codex, Kimi Code, and Grok.
 
+Brim is the product name; QuotaBar is the Xcode target, bundle id
+(`com.sjerred.QuotaBar`), and workspace package id
+(`@shepherdjerred/quotabar`).
+
 The menu bar also shows the configured personal subscription spend: $200/month
 for Claude Code, $200/month for Codex, $40/month for Kimi Code, and $30/month
 for Grok ($470/month total). This is a reminder, not provider billing data.

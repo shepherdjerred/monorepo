@@ -32,6 +32,15 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   are sent over Socket.IO and applied per-player each frame. Players navigate the
   in-game menus themselves (character/track/mode select, including 4-player VS).
 
+The tracing/metrics wiring, loopback audio transport, Go-Live streamer base
+class, web server, and bot entrypoint are shared with discord-plays-pokemon via
+[`@shepherdjerred/discord-plays-core`](../discord-plays-core) (source-only,
+subpath imports). This backend supplies the MK64-specific pieces: the N64
+emulator, the game driver, seats/leaderboard/name overlay, the richer
+ffmpeg/send-path metrics, and the socket dispatch.
+
+See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes.
+
 > **Stay in the voice channel while you play.** The session ends 30 seconds after
 > the last human leaves voice — the bot counts voice membership, not stream
 > viewers, so watching the driver feed instead of the Discord stream is fine but
@@ -85,19 +94,25 @@ is covered at three levels:
 | WASM host        | the production Emscripten glue initializes inside a Bun Worker, exposes the required runtime API, and needs no ROM                                                                         | [`backend/scripts/smoke-wasm-host.ts`](./packages/backend/scripts/smoke-wasm-host.ts)         | ✅        |
 | Game effect      | input actually advances the running game (boots the real emulator + ROM; holding START moves the title screen → GAME SELECT menu)                                                          | [`backend/scripts/e2e-input.ts`](./packages/backend/scripts/e2e-input.ts)                     | ⛔ manual |
 
-Run the automated tests:
+Run the automated tests from the repo root:
 
 ```bash
-bun run --filter '*' test    # from packages/discord-plays-mario-kart
+bunx turbo run test --filter='@discord-plays-mario-kart/*'
 ```
+
+(Don't use `bun run --filter '*' test` from this directory — the package root
+is itself the `discord-plays-mario-kart-scripts` workspace, so `'*'` pulls in
+that and other monorepo workspaces, not just backend/common/frontend.)
 
 ### Manual harness (needs a ROM + a built core)
 
 These boot the real emulator and need local assets (the ROM is copyright and
 not committed; build the core with `scripts/build-wasm.ts`). The **ROM is
 resolved** from, in order: an explicit `--rom`/positional arg → `MK64_ROM` env →
-`~/syncthing/Sync/roms/mariokart64.z64` (the canonical Syncthing copy — see
-[Deployment](#one-time-provisioning)). All three failing prints where to put it.
+`~/syncthing/Sync/roms/mariokart64.z64` → `~/Sync/Sync/roms/mariokart64.z64`
+(both Syncthing spellings are checked because the root differs by machine; the
+canonical copy lives in Syncthing — see
+[Deployment](#one-time-provisioning)). All four failing prints where to put it.
 
 ```bash
 cd packages/backend
@@ -116,6 +131,15 @@ bun run e2e:scenario 1p --names Me,Bot     # override the burned-in names
 bun run e2e:input:check ~/syncthing/Sync/roms/mariokart64.z64
                                # baseline vs START, asserts the frame changes
 bun run e2e:race "" 6000 start-mash  # stream raw RDRAM globals (validate the address map)
+
+# Performance / media / deployment harnesses:
+bun run e2e:perf              # 1p/4p × idle/spam server-loop scenarios, hard metric thresholds
+bun run e2e:perf:browser      # 4 PinchTab Chromium tabs through the full input pipeline
+bun run e2e:audio             # Go-Live audio: synthetic sine by default; --rom for real end-to-end
+bun run e2e:driver-feed       # driver-feed chain vs real ffmpeg (synthetic frames; --rom for real)
+bun run e2e:driver-feed:glass # + built frontend in a real Chrome tab; reports glass latency
+bun run e2e:viewer-stats      # receive-side WebRTC stats from a PinchTab Discord viewer tab
+bun run smoke                 # run the real container entrypoint (CI image smoke)
 ```
 
 The reusable primitives live in [`backend/scripts/lib/`](./packages/backend/scripts/lib/)

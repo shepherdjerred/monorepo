@@ -1,88 +1,76 @@
 # Homelab
 
-[![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovatebot.com/)
+[![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://docs.renovatebot.com/)
 ![ArgoCD badge](https://argocd.tailnet-1a49.ts.net/api/badge?name=apps)
 
-This repository contains resources related to my homelab. The server is named
-`torvalds` - I give each of my servers a unique name so that I can keep track of
-them over time. Services are deployed across multiple namespaces (media, home,
-postal, etc.) using an app-of-apps pattern in ArgoCD.
+This package contains everything that runs my homelab. The cluster has two
+Talos Linux nodes: `torvalds` (control plane, all production workloads) and
+`liskov` (CI-only worker). Services are deployed across multiple namespaces
+(media, home, postal, etc.) using an app-of-apps pattern in ArgoCD.
 
-## Tracker Tracker
+See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes, cluster
+topology details, the 1Password secret linter, and operator runbooks
+(including Tracker Tracker bootstrap/export).
 
-Tracker Tracker runs at the private Tailscale hostname `tracker-tracker` and
-collects the PrivateHD, AvistaZ, and AnimeZ account metrics alongside the
-existing qBittorrent instance. Its Kubernetes Deployment receives only
-runtime/database configuration from the `tracker-tracker-secrets` 1Password
-item. Tracker and qBittorrent credentials are configured through Tracker
-Tracker's authenticated API and persisted in its database; they are not
-Deployment environment variables.
+## Layout
 
-Use the checked-in reference template with `op run` to inject the operator-only
-bootstrap configuration, then run the idempotent bootstrap:
-
-```bash
-cd packages/homelab
-op run --env-file tracker-tracker.env.example -- bun run tracker-tracker:bootstrap
-```
-
-The template contains only `op://` references and public service URLs. Populate
-the referenced fields in the dedicated `tracker-tracker-secrets` item with the
-Tracker Tracker login and each tracker's cookies, User-Agent, and username. It
-references the existing qBittorrent item's `username` and `password` fields.
-The dedicated item fields are `TRACKER_TRACKER_USERNAME`,
-`TRACKER_TRACKER_PASSWORD`, and the corresponding
-`PRIVATEHD_*`, `AVISTAZ_*`, and `ANIMEZ_*` `USERNAME`, `COOKIES`, and
-`USER_AGENT` fields. Its built-in `password` field remains the Kubernetes
-`SESSION_SECRET`.
-
-TOTP is entered interactively if Tracker Tracker requests it; it is not logged
-or persisted by the bootstrap command. Export collected data as JSON by
-default. Set `TRACKER_TRACKER_OUTPUT_FORMAT=jsonl` to emit JSONL instead:
-
-```bash
-cd packages/homelab
-op run --env-file tracker-tracker.env.example -- bun run tracker-tracker:export
-```
-
-Currently my server is managed with Kubernetes. I've used Docker, Ansible, and
-bash scripts in the past. Kubernetes has been an interesting experiment and I
-think it's overall worthwhile since the ecosystem is so rich.
+| Directory        | Contents                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `src/cdk8s`      | All Kubernetes manifests as TypeScript ([cdk8s](https://cdk8s.io/)) — see its [README](src/cdk8s/README.md)  |
+| `src/talos`      | Talos machine config patches per node plus static pods — see its [README](src/talos/README.md)               |
+| `src/tofu`       | OpenTofu stacks (Cloudflare, GitHub, Tailscale, ArgoCD, SeaweedFS, …) — see its [README](src/tofu/README.md) |
+| `src/helm-types` | Generator for type-safe Helm chart value interfaces                                                          |
+| `mac-ci`         | Bootstrap for a macOS Buildkite agent (currently dormant) — see its [README](mac-ci/README.md)               |
+| `images`         | Custom Docker images (bindery, caddy-s3proxy, mcp-gateway, obsidian-headless, redlib, shelfbridge)           |
+| `scripts`        | Release/automation scripts: helm push, ArgoCD reconcile, tofu stack wrapper, Velero, Tracker Tracker         |
 
 ## Details
 
 I've spent a _lot_ of time making this project pleasant to work with. Here are
 some things I'm proud of:
 
-- Close to zero host setup
-  - It's just a few commands to deploy my entire cluster
-
+- Close to zero host setup — a few commands deploy the entire cluster
 - Entirely written in TypeScript built with [cdk8s](https://cdk8s.io/) and
   [Bun](https://bun.sh/)
 - Automated backups
 - HTTPS ingress with [Tailscale](https://tailscale.com/)
 - All secrets managed with [1Password](https://1password.com/)
-- Declarative deployment via ArgoCD (manifests applied manually since the CI pipeline was removed)
+- Declarative GitOps deployment via ArgoCD, driven by CI (see below)
+- Automated dependency updates for Docker images (with pinned SHAs), Helm
+  charts, and Bun dependencies —
+  [my approach](src/cdk8s/src/versions.ts) keeps every dependency pinned and
+  regularly updated
+- Static typing for
+  [Kubernetes resources including CRDs](src/cdk8s/scripts/update-imports.ts)
+  and [Helm chart parameters](src/helm-types)
 
-- Automated dependency updates
-  - For Docker images (w/ pinned SHAs)
-  - For Helm charts
-  - For Bun dependencies
-  - [My approach](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/versions.ts)
-    allows all of my dependencies to be pinned and updated regularly
+## Deployment
 
-- Static typing for:
-  - [Kubernetes resources including CRDs](src/cdk8s/scripts/update-imports.ts)
-  - [Helm chart parameters](src/helm-types)
+Deploys are driven by the static Buildkite pipeline
+([`.buildkite/pipeline.yml`](../../.buildkite/pipeline.yml)):
+
+- **Every PR** runs the root `bun run verify` graph (which includes homelab's
+  `check:talos`, `lint:helm`, and `check:1password` tasks) plus change-gated
+  `tofu plan`s for the affected stacks and dry-run rehearsals of the helm push
+  and ArgoCD reconcile.
+- **On merge to main**, the pipeline applies the tofu stacks (infra, github,
+  cloudflare), pushes the versioned Helm chart
+  (`scripts/helm-push.ts`), and syncs + waits on ArgoCD
+  (`scripts/argocd.ts`).
+
+Never apply manifests directly with `kubectl apply` — all changes go through
+ArgoCD, which reverts direct mutations.
 
 ## Installation
 
 ### Talos
 
-1. Create `secrets.yaml`
-2. Create the configuration file:
+1. Create `secrets.yaml`.
+2. From `src/talos`, generate the machine configuration (create
+   `torvalds/patches/tailscale.yaml` from `tailscale.example.yaml` first — the
+   real file holds the auth key and is never committed):
 
-```bash {"interpreter":""}
+```bash
 talosctl gen config \
   --with-secrets secrets.yaml \
   --config-patch-control-plane @torvalds/patches/scheduling.yaml \
@@ -92,18 +80,22 @@ talosctl gen config \
   --config-patch @torvalds/patches/dns.yaml \
   --config-patch @torvalds/patches/kubelet.yaml \
   --config-patch @torvalds/patches/sysctls.yaml \
+  --config-patch @torvalds/patches/watchdog.yaml \
   --config-patch @torvalds/patches/zfs.yaml \
   --config-patch @torvalds/patches/interface.yaml \
   torvalds https://192.168.1.81:6443 --force
-
 ```
+
+`watchdog.yaml` arms the iTCO hardware watchdog — the primary auto-recovery
+mechanism for the CI-freeze failure mode; see
+[`src/talos/README.md`](src/talos/README.md) for what each patch does.
 
 The generated control-plane endpoint is an internal cluster identity. Keep it
 on the stable LAN address unless every control-plane component is deliberately
 migrated together. It does not determine the endpoint used by external
 `talosctl` or `kubectl` clients.
 
-1. Configure the normal `talosconfig` endpoint and node with the Torvalds
+3. Configure the normal `talosconfig` endpoint and node with the Torvalds
    Tailscale FQDN:
    - `endpoints: ["torvalds.tailnet-1a49.ts.net"]` — only control-plane nodes
      are endpoints.
@@ -114,50 +106,35 @@ migrated together. It does not determine the endpoint used by external
    tailnet policy permits the Torvalds control-plane proxy to reach Liskov on
    TCP/50000; a worker cannot be used as its own Talos proxy endpoint.
 
-2. Move the talosconfig:
-
-- This allows commands to be run without the `--talosconfig` argument
+4. Move the talosconfig so commands run without the `--talosconfig` argument:
 
 ```bash
 mv talosconfig ~/.talos/config
-
 ```
 
-1. Apply the configuration:
+5. Apply the configuration:
 
 ```bash
 MAINTENANCE_IP=<ip-from-the-Talos-console>
 talosctl apply-config --insecure --nodes "$MAINTENANCE_IP" --file controlplane.yaml
-
 ```
 
-1. If needed, update:
+To update an already-configured node:
 
 ```bash
 talosctl apply-config --nodes torvalds.tailnet-1a49.ts.net --file controlplane.yaml
-
 ```
 
-Upgrade:
-
-```bash
-talosctl upgrade --nodes torvalds.tailnet-1a49.ts.net --image <image>
-talosctl upgrade-k8s
-
-```
-
-1. Bootstrap the Kubernetes cluster:
+6. Bootstrap the Kubernetes cluster:
 
 ```bash
 talosctl bootstrap --nodes torvalds.tailnet-1a49.ts.net
-
 ```
 
-1. Create a Kubernetes configuration:
+7. Create a Kubernetes configuration:
 
 ```bash
 talosctl kubeconfig --nodes torvalds.tailnet-1a49.ts.net
-
 ```
 
 ### Kubernetes
@@ -166,70 +143,54 @@ talosctl kubeconfig --nodes torvalds.tailnet-1a49.ts.net
 
 ```bash
 brew install helm
-
 ```
 
-1. Install Argo CD manually:
-
-> [!NOTE] This will be imported into Argo CD itself as part of the CDK8s
-> manifest
+2. Install Argo CD manually (it is imported into Argo CD itself as part of the
+   cdk8s manifest):
 
 ```bash
 kubectl create namespace argocd
 helm repo add argo https://argoproj.github.io/argo-helm
 helm install argocd argo/argo-cd --namespace argocd
-
 ```
 
-1. Set the credentials in the `secrets` directory:
-
-- Be sure not to commit any changes to these files so that secrets don't
-  leak.
-- These should be the only credentials that are manually set. Everything else
-  can be retrieved from 1Password.
-- Annoyingly, the credential in `1password-secret.yaml` _must_ be base64
-  encoded.
+3. Set the 1Password credentials in `src/cdk8s/secrets/` — copy the
+   `*.example` files (`1password-secret.yaml.example`,
+   `1password-token.yaml.example`) and fill them in. Never commit the filled
+   files. These are the only manually-set credentials; everything else syncs
+   from 1Password. The credential in `1password-secret.yaml` must be base64
+   encoded:
 
 ```bash
 cat 1password-credentials.json | base64 -w 0
-
 ```
 
 ```bash
 kubectl create namespace 1password
-kubectl apply -f secrets/1password-secret.yaml
-kubectl apply -f secrets/1password-token.yaml
-
+kubectl apply -f src/cdk8s/secrets/1password-secret.yaml
+kubectl apply -f src/cdk8s/secrets/1password-token.yaml
 ```
 
-1. Build and deploy the manifests in this repo:
+4. Build the manifests from `src/cdk8s` (`bun run build`); ArgoCD deploys them
+   from the pushed Helm chart from then on.
 
-```bash
-cd cdk8s
-
-```
-
-1. Get the initial Argo CD `admin` password:
+5. Get the initial Argo CD `admin` password, then change it:
 
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-
 ```
-
-1. Change Argo CD the `admin` password.
 
 ### ZFS
 
 Adapted from <https://www.roosmaa.net/blog/2024/setting-up-zfs-on-talos/>
 
-1. Create a shell with `pods/shell.yaml`:
+1. Create a shell with the maintenance pod:
 
 ```bash
-kubectl apply -f pods/shell.yaml
-
+kubectl apply -f src/talos/pods/shell.yaml
 ```
 
-1. Create a ZFS pool:
+2. Create a ZFS pool:
 
 ```bash
 # for nvme storage
@@ -248,14 +209,13 @@ kubectl exec pod/shell -n maintenance -- \
   /dev/sde \
   /dev/sdf \
   /dev/sdg
-
 ```
 
 ## Upgrade
 
 ### Upgrade Talos
 
-```bash {"interpreter":"/opt/homebrew/bin/bash"}
+```bash
 VERSION=v1.13.8
 # Upgrade the CI worker first. The short MagicDNS name is a direct worker
 # endpoint; a worker cannot proxy its own Talos request. Use the Torvalds
@@ -276,7 +236,7 @@ talosctl --nodes torvalds.tailnet-1a49.ts.net version
 
 ### Upgrade Kubernetes
 
-```bash {"interpreter":"/opt/homebrew/bin/bash"}
+```bash
 VERSION=1.36.3
 
 # `upgrade-k8s` discovers liskov by raw Tailscale IP, which does not match

@@ -4,7 +4,7 @@
  *
  * The rehearsal (`scripts/rehearse-bot-clone.ts`) drives the SAME
  * `bot-clone.ts` helpers the scheduled PR-creating activities run in
- * production, plus canaries for the cog targets and the hook-free commit path.
+ * production, plus a canary for the hook-free commit path.
  * It is destructive (git init/add/commit, `bun install`, prettier --write,
  * data-dragon snapshot refresh), so it must never run against the live
  * checkout.
@@ -15,19 +15,13 @@
  *
  *  1. Copy only Git-tracked files to a temp dir, without source-control
  *     metadata or local artifacts.
- *  2. Ensure the `cog` (cogapp) CLI is on PATH — the worker image bakes in
- *     cogapp system-wide; locally we shim `uvx --from cogapp==<pinned> cog`
- *     when a bare `cog` isn't already present.
- *  3. Run `rehearse-bot-clone.ts --repo=<copy>`.
+ *  2. Run `rehearse-bot-clone.ts --repo=<copy>`.
  *
  * Fail-fast: a non-zero exit from any leg throws.
  */
-import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-
-// Keep in lockstep with the worker image's baked cogapp (old CI: COGAPP_VERSION).
-const COGAPP_VERSION = "3.6.0";
 
 const REPO_ROOT = path.resolve(import.meta.dir, "../../..");
 const REHEARSAL_SCRIPT = path.resolve(import.meta.dir, "rehearse-bot-clone.ts");
@@ -120,33 +114,9 @@ async function copyRepoTree(
   );
 }
 
-/**
- * Return a PATH prefix that makes a bare `cog` resolve. If cogapp is already
- * installed as `cog`, no shim is needed. Otherwise write a tiny shim that execs
- * `uvx --from cogapp==<pinned> cog "$@"` and return its directory to prepend.
- */
-async function ensureCogOnPath(shimDir: string): Promise<string | undefined> {
-  if (await commandExists("cog")) return undefined;
-  if (!(await commandExists("uvx"))) {
-    throw new Error(
-      "neither `cog` nor `uvx` is available — install cogapp " +
-        `(uvx --from cogapp==${COGAPP_VERSION} cog) or a system cog.`,
-    );
-  }
-  await mkdir(shimDir, { recursive: true });
-  const shimPath = path.join(shimDir, "cog");
-  await writeFile(
-    shimPath,
-    `#!/bin/sh\nexec uvx --from cogapp==${COGAPP_VERSION} cog "$@"\n`,
-  );
-  await chmod(shimPath, 0o755);
-  return shimDir;
-}
-
 async function main(): Promise<void> {
   const workDir = await mkdtemp(path.join(tmpdir(), "schedule-rehearsal-"));
   const repoCopy = path.join(workDir, "monorepo");
-  const shimDir = path.join(workDir, "shim");
   const bunCacheDir = path.join(workDir, "bun-cache");
   const trackedFilesManifest = path.join(workDir, "tracked-files.txt");
   await mkdir(repoCopy, { recursive: true });
@@ -156,12 +126,6 @@ async function main(): Promise<void> {
     await writeTrackedFilesManifest(trackedFilesManifest);
     console.error(`[check:rehearsal] copying repo tree → ${repoCopy}`);
     await copyRepoTree(repoCopy, trackedFilesManifest);
-
-    const cogShim = await ensureCogOnPath(shimDir);
-    const pathEnv =
-      cogShim === undefined
-        ? Bun.env["PATH"]
-        : `${cogShim}:${Bun.env["PATH"] ?? ""}`;
 
     console.error("[check:rehearsal] running rehearse-bot-clone.ts");
     // Point every install the rehearsal performs (its scratch-clone plain
@@ -174,9 +138,6 @@ async function main(): Promise<void> {
     const rehearsalEnv: Record<string, string> = {
       BUN_INSTALL_CACHE_DIR: bunCacheDir,
     };
-    if (pathEnv !== undefined) {
-      rehearsalEnv["PATH"] = pathEnv;
-    }
     await run(
       [
         "bun",

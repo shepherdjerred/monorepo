@@ -1,1 +1,0 @@
-This project runs a RaspaStat web service that serves a dashboard and REST endpoints for reading and updating thermostat status data. It is built with Spark Java routing, Thymeleaf templating, Log4j2 logging, Apache Commons Lang, and Redis access via Jedis. The router centralizes route setup while a shared JedisPool wrapper provides Redis-backed state for the API handlers.

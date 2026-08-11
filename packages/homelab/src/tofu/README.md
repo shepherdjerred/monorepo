@@ -1,69 +1,55 @@
 # OpenTofu Infrastructure
 
-Manages external cloud resources (Cloudflare DNS, GitHub repo settings, SeaweedFS S3 buckets) with [OpenTofu](https://opentofu.org/).
+Manages external resources (Cloudflare DNS, GitHub repo settings, SeaweedFS S3 buckets, the Tailscale ACL policy, Buildkite, the \*arr apps, PagerDuty, and an ArgoCD CI token) with [OpenTofu](https://opentofu.org/).
 
 ## Structure
 
 ```text
 tofu/
-├── cloudflare/          # DNS zones, bot management, email security
-│   ├── backend.tf       # S3 state backend (SeaweedFS)
-│   ├── providers.tf     # Cloudflare provider ~> 4.0
-│   ├── variables.tf     # Input variables
-│   └── *.tf             # One file per domain
-├── github/              # Repository configuration
-│   ├── backend.tf       # S3 state backend (SeaweedFS)
-│   ├── providers.tf     # GitHub provider ~> 6.0
-│   ├── variables.tf     # Input variables
-│   ├── repos.tf         # Repository definitions
-│   └── rulesets.tf      # Branch protection rulesets
-├── seaweedfs/           # SeaweedFS S3 bucket management
-│   ├── backend.tf       # S3 state backend (SeaweedFS)
-│   ├── providers.tf     # AWS provider ~> 5.0 (custom S3 endpoint)
-│   ├── variables.tf     # Input variables
-│   └── buckets.tf       # S3 bucket definitions
+├── argocd/              # ArgoCD account token for Buildkite, stored in 1Password
+├── arr/                 # Radarr/Sonarr/Prowlarr config, imported from the live instances
+├── buildkite/           # Buildkite cluster + monorepo pipeline settings
+├── cloudflare/          # DNS zones, bot management, email security (one .tf per domain)
+├── github/              # Repository settings and branch rulesets
+├── pagerduty/           # On-call config, imported from the live account
+├── seaweedfs/           # SeaweedFS S3 bucket management (AWS provider, custom endpoint)
 └── tailscale/           # Tailnet ACL policy (deny-by-default access control)
-    ├── backend.tf       # S3 state backend (SeaweedFS)
-    ├── providers.tf     # Tailscale provider ~> 0.17 (OAuth via env)
-    ├── variables.tf     # Input variables
-    └── acl.tf           # tailscale_acl: tagOwners, ACLs, ssh, tests
 ```
 
-Each subdirectory is an independent root module with its own state.
+Each subdirectory is an independent root module with its own `backend.tf` (S3 state on SeaweedFS), `providers.tf`, and `variables.tf`.
 
 ## Prerequisites
 
-- OpenTofu >= 1.6.0 (`mise` manages this automatically)
-- Environment variables:
-  - `CLOUDFLARE_API_TOKEN` - Cloudflare API token
-  - `TF_VAR_github_token` - GitHub token for repository and ruleset management; accepts fine-grained PATs, classic PATs, GitHub App installation tokens, or GitHub App user tokens
-  - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` - S3 credentials for SeaweedFS state backend
-  - `TF_VAR_cloudflare_account_id` - Cloudflare account ID
-  - `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` - Tailscale OAuth client (scope `acl`) for the `tailscale` module
+- OpenTofu (`mise` manages the version)
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — SeaweedFS credentials for the state backend (needed by every stack's `init`)
+- Per-stack credentials:
+  - `cloudflare` — `CLOUDFLARE_API_TOKEN`, `TF_VAR_cloudflare_account_id`
+  - `github` — `TF_VAR_github_token` (fine-grained PAT, classic PAT, or GitHub App token)
+  - `tailscale` — `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` (scope `acl`)
+  - `buildkite` — `TF_VAR_buildkite_api_token`
+  - `pagerduty` — `TF_VAR_pagerduty_token` (deliberately not `PAGERDUTY_TOKEN`, which is used elsewhere)
+  - `argocd` — ArgoCD admin credentials plus `OP_CONNECT_TOKEN` for the 1Password provider
+  - `arr` — Radarr/Sonarr/Prowlarr API credentials (see `arr/providers.tf`)
+
+To validate `.tf` without state access: `tofu -chdir=<stack> init -backend=false && tofu -chdir=<stack> validate`.
 
 ## Usage
 
 ```bash
-# Initialize providers and backend
 tofu -chdir=cloudflare init
-tofu -chdir=github init
-tofu -chdir=seaweedfs init
-
-# Preview changes
 tofu -chdir=cloudflare plan
-tofu -chdir=github plan
-tofu -chdir=seaweedfs plan
-
-# Apply changes
 tofu -chdir=cloudflare apply
-tofu -chdir=github apply
-tofu -chdir=seaweedfs apply
 ```
+
+Same pattern for every stack.
 
 ## CI/CD
 
-There is no CI for these stacks (the Dagger/Buildkite pipeline was removed
-2026-07). Run `tofu plan` / `tofu apply` manually per module.
+The static Buildkite pipeline ([`.buildkite/pipeline.yml`](../../../../.buildkite/pipeline.yml)) drives these stacks via `packages/homelab/scripts/tofu-stack.ts`:
+
+- **Every PR** (when tofu inputs change): `tofu plan` for `seaweedfs`, `tailscale`, `buildkite`, `arr`, `github`, and `cloudflare`.
+- **On merge to main**: applies `seaweedfs`, `tailscale`, `buildkite`, and `arr` (`tofu-apply` step); `github` in its own no-retry step (GitHub API mutations are not idempotent on partial failure); and `cloudflare` after the ArgoCD sync step's TunnelBinding deletion gate.
+- The `argocd` and `pagerduty` stacks are operator-run only — they are not in the CI plan/apply loops.
 
 ## What's Managed
 
@@ -104,7 +90,21 @@ The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores sta
 
 The tailnet ACL policy (`tailscale_acl`): `tagOwners`, access rules, Tailscale SSH, and policy `tests`. Moves the tailnet from implicit allow-all (every device trusted) to deny-by-default — the account owner keeps full access, non-admin humans get only the published `*.ts.net` apps, and tagged/untrusted devices are denied by default.
 
-> **Not yet wired into CI drift.** `tailscale` is intentionally absent from `TOFU_STACKS` (`scripts/ci/src/catalog.ts`) until a Tailscale OAuth client + the `TAILSCALE_OAUTH_CLIENT_ID`/`TAILSCALE_OAUTH_CLIENT_SECRET` CI secrets exist — otherwise the plan/apply steps fail with no credentials. First apply also requires reconciling the existing admin-console policy. See `packages/docs/guides/2026-06-06_tailscale-acls-runbook.md` for the full enablement (including the exact CI wiring diff).
+### Buildkite
+
+The Buildkite cluster and the `monorepo` pipeline's Buildkite-side settings (repo, branch rules, visibility kept private, upload step). The committed `.buildkite/pipeline.yml` remains the pipeline definition.
+
+### \*arr
+
+Radarr/Sonarr/Prowlarr configuration imported from the live instances. Quality profiles and custom formats are owned by Recyclarr, and Radarr/Sonarr indexers by Prowlarr's application sync — neither is in this stack.
+
+### PagerDuty
+
+On-call configuration (escalation policy, service, Events-v2 integration) imported from the live account.
+
+### ArgoCD
+
+Mints the `buildkite` ArgoCD account token and writes it to 1Password for the CI sync steps.
 
 ## Adding a New Domain
 
@@ -117,8 +117,4 @@ To import existing Cloudflare records into state, use [`cf-terraforming`](https:
 
 ## State Backend
 
-State is stored in a self-hosted SeaweedFS S3 bucket (`homelab-tofu-state`), split by module:
-
-- `cloudflare/terraform.tfstate`
-- `github/terraform.tfstate`
-- `seaweedfs/terraform.tfstate`
+State is stored in a self-hosted SeaweedFS S3 bucket (`homelab-tofu-state`), split by module — each stack keeps its own `<stack>/terraform.tfstate` key.

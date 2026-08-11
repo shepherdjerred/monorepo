@@ -20,7 +20,6 @@ Cron times are `America/Los_Angeles` wall-clock. Source:
 | ------------------- | ----------- | ------------- | ------------ |
 | fetcher             | daily 05:00 | deterministic | S3 overwrite |
 | deps-summary        | Mon 09:00   | LLM summary   | email        |
-| readme-refresh      | Mon 08:00   | deterministic | PR           |
 | llm-catalog-refresh | Mon 09:00   | deterministic | PR           |
 | homelab-crd-imports | daily 05:30 | deterministic | PR           |
 | pokeemerald-data    | daily 04:30 | deterministic | PR           |

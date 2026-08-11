@@ -1,8 +1,8 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://cdn.rawgit.com/shepherdjerred/webring/main/assets/logo-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://cdn.rawgit.com/shepherdjerred/webring/main/assets/logo-light.png">
-    <img alt="webring logo" src="https://cdn.rawgit.com/shepherdjerred/webring/main/assets/logo-light.png" height=150>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/shepherdjerred/monorepo/main/packages/webring/assets/logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/shepherdjerred/monorepo/main/packages/webring/assets/logo-light.png">
+    <img alt="webring logo" src="https://raw.githubusercontent.com/shepherdjerred/monorepo/main/packages/webring/assets/logo-light.png" height=150>
   </picture>
 
 [![webring](https://img.shields.io/npm/v/webring.svg)](https://www.npmjs.com/package/webring)
@@ -27,7 +27,7 @@ npm i webring
 
 ## Quick Start
 
-This library is intended to be used with a static site generator. I use this with [Astro](https://astro.build/) on my [personal website](https://github.com/shepherdjerred/monorepo/blob/1220ebef2e43956ba385402ed8529870e9084de8/src/components/BlogWebring.astro#L17-L22).
+This library is intended to be used with a static site generator. I use it with [Astro](https://astro.build/) on my personal website — see [`packages/sjer.red/src/webring.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/sjer.red/src/webring.ts) for a real consumer.
 
 ```typescript
 import { run } from "webring";
@@ -80,13 +80,23 @@ console.log(result);
 
 ## Configuration
 
-`webring` is configured by passing in a `Configuration` object into the `run` method.
+`webring` is configured by passing a `Configuration` object into `run`. The object is validated with Zod; everything except `sources` has a default.
 
-All possible configuration values can be seen by looking at the [`typedoc` site](https://shepherdjerred.github.io/webring/types/Configuration.html).
+| Key                            | Type                     | Default        | Description                                                             |
+| ------------------------------ | ------------------------ | -------------- | ----------------------------------------------------------------------- |
+| `sources`                      | `Source[]`               | required       | Feeds to fetch. Each has a `url`, a `title`, and an optional `filter`   |
+| `number`                       | `number`                 | `3`            | Return the n latest updates across all sources                          |
+| `truncate`                     | `number`                 | `300`          | Preview length in characters, applied after HTML sanitization           |
+| `cache`                        | `CacheConfiguration`     | none           | Enable caching by providing this object                                 |
+| `cache.cache_file`             | `string`                 | `"cache.json"` | File used as the cache                                                  |
+| `cache.cache_duration_minutes` | `number`                 | `60`           | How long a cached result is reused                                      |
+| `shuffle`                      | `boolean`                | `false`        | Randomize the output order                                              |
+
+Full generated API documentation: [webring.sjer.red](https://webring.sjer.red) (e.g. [`Configuration`](https://webring.sjer.red/types/Configuration.html)).
 
 ## Example
 
-An example of using this project with Astro is located in `example`. The relevant file is [`src/pages/blog/[...slug].astro`](https://github.com/shepherdjerred/monorepo/blob/main/packages/webring/example/src/pages/blog/%5B...slug%5D.astro#L18).
+An example of using this project with Astro is located in `example`. The relevant file is [`src/pages/blog/[...slug].astro`](https://github.com/shepherdjerred/monorepo/blob/main/packages/webring/example/src/pages/blog/%5B...slug%5D.astro).
 
 ```typescript
 ---

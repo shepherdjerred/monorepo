@@ -38,7 +38,6 @@
     "**/Pods/**",
     "**/test-results/**",
     "**/playwright-report/**",
-    "**/_summary.md",
     "**/ai_dev_log/**",
     "**/CHANGELOG.md",
     "packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/**",

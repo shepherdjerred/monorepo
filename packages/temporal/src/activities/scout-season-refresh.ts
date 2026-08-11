@@ -365,7 +365,7 @@ async function run(
     let files = await changedFilesInPaths(workdir.repoDir, SEASON_PATHS);
     if (files.includes(CHANGELOG_FILE)) {
       // The prettier gate covers changelog.tsx, so normalize Claude's edit or
-      // the PR fails CI. Mirrors the prettier step in readme-refresh.ts. Only
+      // the PR fails CI (same pattern as llm-catalog-refresh.ts). Only
       // runs on the rare new-season drift, so the frozen install is negligible.
       // Hook-free: a plain root install would run `lefthook install` and arm
       // the dev pre-commit suite for the later bot commit (the June/July 2026

@@ -30,6 +30,11 @@ export const DELETED_SCHEDULE_IDS = [
   // of reconciled weekly). The workflow type was removed from the bundle, so
   // this schedule must be deleted or it would keep firing a missing workflow.
   "helm-types-weekly-refresh",
+  // The weekly cog-based README project-listing regeneration was removed
+  // entirely (the READMEs are hand-maintained now). The workflow type
+  // (`runReadmeRefresh`) is no longer in the bundle, so this schedule must be
+  // deleted or it would keep firing a missing workflow.
+  "readme-refresh-weekly",
   // Alert-remediation workflow removed entirely: in ~1 month it opened 0 PRs
   // (metrics: ~564 `failed`, ~2 `report-only`, 0 `pr-created`). Most PagerDuty/
   // Bugsink alerts (absence signals, infra flaps, capacity) aren't fixable by a

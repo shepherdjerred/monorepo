@@ -34,6 +34,11 @@ file). The ISC text and original copyright are retained in [`LICENSE`](./LICENSE
 `prepareStream` / `playStream` keep their upstream public behavior; the rawvideo bots
 (`discord-plays-*`) use them unchanged.
 
+Of the `src/media` exports, `StreamObserver.ts`, `letterbox.ts`, `videoGraph.ts`, and
+`player.ts` are fork-local additions (they do not exist in upstream `6.0.0`);
+`LibavDemuxer.ts`, `newApi.ts`, and the `encoders/` presets (`nvenc`, `vaapi`, `software`,
+`merge`) come from upstream.
+
 ## Consumption
 
 Consumed as TypeScript source via bun (`exports.default` → `src/index.ts`); `tsc` consumers read

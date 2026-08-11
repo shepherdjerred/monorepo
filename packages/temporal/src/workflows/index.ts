@@ -30,8 +30,6 @@ import type {
   DataDragonUpdateResult,
   DataDragonWorkflowInput,
 } from "#activities/data-dragon.ts";
-import { runReadmeRefresh as _runReadmeRefresh } from "./readme-refresh.ts";
-import type { ReadmeRefreshResult } from "#activities/readme-refresh.ts";
 import { runLlmCatalogRefresh as _runLlmCatalogRefresh } from "./llm-catalog-refresh.ts";
 import type { LlmCatalogRefreshResult } from "#activities/llm-catalog-refresh.ts";
 import { runHomelabCrdImportsRefresh as _runHomelabCrdImportsRefresh } from "./homelab-crd-imports-refresh.ts";
@@ -198,10 +196,6 @@ export async function runScoutDataDragonWeeklyRefresh(
   input: DataDragonWorkflowInput,
 ): Promise<DataDragonUpdateResult | undefined> {
   return _runScoutDataDragonUpdate("weekly-refresh", input);
-}
-
-export async function runReadmeRefresh(): Promise<ReadmeRefreshResult> {
-  return _runReadmeRefresh();
 }
 
 export async function runLlmCatalogRefresh(): Promise<LlmCatalogRefreshResult> {

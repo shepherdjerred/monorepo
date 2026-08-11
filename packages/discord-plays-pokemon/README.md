@@ -32,9 +32,18 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   `[bot.notifications.events]` in `config.toml` (`mode = "log"` for a
   detect-only shadow mode; `"send"` to post).
 
+The tracing/metrics wiring, loopback audio transport, Go-Live streamer base
+class, web server, and bot entrypoint are shared with discord-plays-mario-kart
+via [`@shepherdjerred/discord-plays-core`](../discord-plays-core) (source-only,
+subpath imports). This backend supplies the Pokémon-specific pieces: the
+emulator, the game driver, the goal system, game-event/notification metrics,
+and the socket dispatch.
+
 The WASM is **built from source** (ottohg pinned at `OTTOHG_SHA` +
 our export patch) by `scripts/build-wasm.ts`. It is not committed; Renovate
 advances the upstream pin. See `wasm-src/PATCHES.md`.
+
+See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes.
 
 The Docker build runs the real-WASM observation ABI integration test before the
 tested artifact can enter the runtime image. This is deliberately mandatory:
@@ -65,17 +74,31 @@ All source revisions are pinned in `knowledge/sources.json`, and each record
 exposes a non-empty `sources` array with every contributing revision and
 license. Composite species evolution facts therefore cite both PokeAPI and
 pokeemerald-wasm. Regenerate the checked-in data with
-`bun run generate:knowledge`. Five focused skills under
-`.agents/skills/pokemon-*` teach the agent when to search each domain without
+`bun run generate:knowledge`. Six focused skills under
+`.agents/skills/pokemon-*` (battle, goal-benchmark, items, progression,
+species, world) teach the agent when to search each domain without
 putting the encyclopedia in every prompt. Knowledge is advisory; live
 `pokemonctl observe` state and action outcomes remain authoritative.
+
+## Goal-agent benchmark
+
+`packages/backend` exposes the operator-only `bun run benchmark:goal` harness
+for repeatable real-model catch measurements. It requires an immutable
+131,072-byte Emerald flash save (`--save`), a built `pokeemerald.wasm`
+(`--wasm`), and a nonexistent output directory (`--output`); it refuses dirty
+Git worktrees and never overwrites existing results. See
+[AGENTS.md](AGENTS.md) and the `pokemon-goal-benchmark` skill for the complete
+workflow.
 
 ## Deployment
 
 Runs on the homelab Kubernetes cluster via ArgoCD
-(`packages/homelab/src/cdk8s/src/resources/pokemon.ts`). Image builds and
-pushes are manual (the CI pipeline was removed 2026-07); configuration is a
-mounted `config.toml` — see `config.example.toml`.
+(`packages/homelab/src/cdk8s/src/resources/pokemon.ts`). CI builds and smokes
+the image on every affected PR and pushes it on merge to `main` (the
+`discord-plays-pokemon` target in
+[`.buildkite/scripts/image-targets.ts`](../../.buildkite/scripts/image-targets.ts),
+driven by `.buildkite/pipeline.yml`). Configuration is a mounted `config.toml`
+— see `config.example.toml`.
 
 ## Disclaimer
 

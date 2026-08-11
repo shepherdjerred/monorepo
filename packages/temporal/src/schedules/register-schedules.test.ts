@@ -96,7 +96,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "agentTaskWorkflow",
   "runScoutDataDragonVersionCheck",
   "runScoutDataDragonWeeklyRefresh",
-  "runReadmeRefresh",
   // Clones the monorepo, runs the deterministic catalog cross-check, opens a
   // PR on drift. No long sleeps of its own — the single refreshLlmCatalog
   // activity carries its own startToCloseTimeout + retry budget.

@@ -1,17 +1,16 @@
 # @shepherdjerred/home-assistant
 
-TypeScript client for the [Home Assistant](https://www.home-assistant.io/) REST and WebSocket APIs. Zod-validated responses, works under both Bun and Node.js. Ships a `ha-codegen` CLI that generates an instance-specific schema so consumers get compile-time type safety on entity IDs, service calls, and event types — all optional; unparameterized clients keep the original loose behavior.
+TypeScript client for the [Home Assistant](https://www.home-assistant.io/) REST and WebSocket APIs. Zod-validated responses, works under both Bun and Node.js (standard global `fetch` and `WebSocket`). Workspace-internal package — consumed by other packages in this monorepo via `"@shepherdjerred/home-assistant": "workspace:*"`; not published to npm.
 
-## Install
+## Quick start
 
-```bash
-bun add @shepherdjerred/home-assistant
-```
-
-## REST client
+Everything exports from `src/index.ts`:
 
 ```ts
-import { HomeAssistantRestClient } from "@shepherdjerred/home-assistant";
+import {
+  HomeAssistantRestClient,
+  HomeAssistantEventClient,
+} from "@shepherdjerred/home-assistant";
 
 const client = new HomeAssistantRestClient({
   baseUrl: "http://homeassistant.local:8123",
@@ -19,63 +18,30 @@ const client = new HomeAssistantRestClient({
 });
 
 const state = await client.getState("light.kitchen");
-
 await client.callService("light", "turn_on", {
   entity_id: "light.kitchen",
   brightness: 200,
 });
 ```
 
-## WebSocket event client
+`HomeAssistantEventClient` covers the WebSocket API (`connect`, `subscribeEvents`, `subscribeTrigger`, `callService`, `getStates`). Error types `HaApiError`, `HaAuthError`, and `HaWebSocketError` are also exported.
 
-```ts
-import { HomeAssistantEventClient } from "@shepherdjerred/home-assistant";
+## Type-safe mode (`ha-codegen`)
 
-const events = new HomeAssistantEventClient({
-  baseUrl: "http://homeassistant.local:8123",
-  token: process.env.HA_TOKEN,
-});
-
-await events.connect();
-
-const unsubscribe = await events.subscribeEvents("state_changed", (event) => {
-  console.log("State changed:", event.data);
-});
-
-// later
-unsubscribe();
-await events.close();
-```
-
-## Type-safe mode (ha-codegen)
-
-Point the codegen CLI at a live Home Assistant instance to produce a schema module, then parameterize the clients with that schema's type:
+The package ships a `ha-codegen` bin that introspects a live Home Assistant instance and emits a schema module. Parameterize either client with the generated schema type to get compile-time checking of entity IDs, domains, services, and event types; unparameterized clients keep the loose default behavior.
 
 ```bash
-bunx ha-codegen \
-  --url "$HA_URL" --token "$HA_TOKEN" \
-  --out src/generated/ha-schema.ts \
-  --name MySchema
+bunx ha-codegen --url "$HA_URL" --token "$HA_TOKEN" --out src/generated/ha-schema.ts --name MySchema
 ```
 
-```ts
-import { HomeAssistantRestClient } from "@shepherdjerred/home-assistant";
-import type { MySchema } from "./generated/ha-schema.ts";
+The output contains instance-specific entity IDs and service definitions — gitignore it and regenerate at build time.
 
-const ha = new HomeAssistantRestClient<MySchema>({ baseUrl, token });
+## Commands
 
-await ha.callService("light", "turn_on", {
-  entity_id: "light.kitchen",
-  brightness: 200,
-});
-// Compile errors for unknown entities/domains/services:
-// ha.callService("light", "turn_on", { entity_id: "media_player.bedroom" }); ❌ not a light
-// ha.callService("lite", "turn_on", { entity_id: "light.kitchen" });         ❌ no such domain
-// ha.getState("light.kitcen");                                                ❌ typo
+```bash
+bun run typecheck
+bun run lint
+bun test
 ```
 
-The generated file contains entity IDs and service definitions from the live instance — **do not commit it**. Add the output path to `.gitignore` and regenerate it as part of your build.
-
-## License
-
-GPL-3.0-only.
+See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes.
