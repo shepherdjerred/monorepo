@@ -4,6 +4,7 @@ import {
   requireNonePresent,
 } from "./validate-pipeline-lib.ts";
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
+import { assertMonorepoSourceLabel } from "./docker-source-label.ts";
 import { asRecord } from "../../scripts/lib/json.ts";
 
 type SmokePort = {
@@ -90,59 +91,6 @@ export function assertWikiManifestInDockerContext(dockerignore: string): void {
         `.dockerignore is missing wiki workspace manifest context rule ${required}`,
       );
     }
-  }
-}
-
-export function assertMonorepoSourceLabel(
-  dockerfile: string,
-  image: string,
-  publishedStage: string,
-): void {
-  const stages: {
-    readonly name: string | undefined;
-    sourceLabel: boolean;
-  }[] = [];
-  let currentStage:
-    | {
-        readonly name: string | undefined;
-        sourceLabel: boolean;
-      }
-    | undefined;
-  for (const line of dockerfile.split("\n")) {
-    const instruction = line.trim();
-    if (instruction.startsWith("#")) continue;
-    const from = /^FROM\s+(\S+)(?:\s+AS\s+(\S+))?\s*$/iu.exec(instruction);
-    if (from !== null) {
-      const base = from[1];
-      const name = from[2];
-      const inherited = stages.findLast(
-        (stage) =>
-          base !== undefined &&
-          stage.name?.toLowerCase() === base.toLowerCase(),
-      );
-      currentStage = { name, sourceLabel: inherited?.sourceLabel ?? false };
-      stages.push(currentStage);
-      continue;
-    }
-    if (
-      currentStage !== undefined &&
-      /^LABEL\s+org\.opencontainers\.image\.source=/u.test(instruction)
-    ) {
-      currentStage.sourceLabel =
-        instruction ===
-        'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"';
-    }
-  }
-  const published = stages.findLast(
-    (stage) => stage.name?.toLowerCase() === publishedStage.toLowerCase(),
-  );
-  if (published === undefined) {
-    fail(`${image} Dockerfile has no published ${publishedStage} stage`);
-  }
-  if (!published.sourceLabel) {
-    fail(
-      `${image} published ${publishedStage} stage must link its GHCR package to the public monorepo`,
-    );
   }
 }
 

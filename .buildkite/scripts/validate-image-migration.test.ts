@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
+import { assertMonorepoSourceLabel } from "./docker-source-label.ts";
 
 import {
   applicationSmokePort,
   assertDeterministicBinderyIdentity,
-  assertMonorepoSourceLabel,
   assertWikiManifestInDockerContext,
   assertWorkspaceInstallContexts,
   assertUniqueSmokePorts,
@@ -181,7 +181,47 @@ describe("GHCR package provenance", () => {
     ).not.toThrow();
     expect(() =>
       assertMonorepoSourceLabel(
+        'FROM runtime AS image\nLABEL vendor=example org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+        "example",
+        "image",
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM runtime AS image\nLABEL description="mentions org.opencontainers.image.source=https://github.com/shepherdjerred/monorepo"',
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM runtime AS image\nLABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo" vendor=example org.opencontainers.image.source="https://github.com/somewhere/else"',
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
         'FROM runtime AS image\nLABEL org.opencontainers.image.source="https://github.com/somewhere/else"',
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM base AS runtime",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          "FROM runtime AS image",
+          `LABEL vendor=example ${String.fromCodePoint(92)}`,
+          '  org.opencontainers.image.source="https://github.com/somewhere/else"',
+        ].join("\n"),
         "example",
         "image",
       ),
