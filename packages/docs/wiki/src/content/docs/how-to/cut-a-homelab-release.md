@@ -32,6 +32,14 @@ child operations without racing ArgoCD. Stage 5 restores the exact auto-sync
 policies and prunes only after reconciliation. Stage 6 is the single
 authoritative scoped health gate.
 
+The
+[release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)
+stages repository-chart Applications with explicit auto-sync state. The
+[artifact-level chart test](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/helm-template.test.ts)
+requires every published automated policy to have a boolean `enabled`. If the
+final root apply reports that `spec.syncPolicy.automated` became invalid
+`null`, do not retry. Regenerate the chart with explicit state.
+
 ## If a child stays out of sync
 
 Child reconciliation retries a failed operation recorded against the current

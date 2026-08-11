@@ -31,7 +31,7 @@ export function createBlackboxExporterApp(chart: Chart) {
         namespace: "prometheus",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

@@ -19,7 +19,7 @@ export function createFreshrssApp(chart: Chart) {
         namespace: "freshrss",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
       },
     },
   });

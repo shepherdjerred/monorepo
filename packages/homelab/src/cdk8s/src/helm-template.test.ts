@@ -3,6 +3,8 @@ import { Glob } from "bun";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { parseAllDocuments } from "yaml";
+import { z } from "zod";
 
 /**
  * Helm Template Rendering Tests
@@ -28,6 +30,112 @@ const DIST_DIR = path.join(import.meta.dir, "../dist");
 // call but never got the same timeout bump. Shared here so both describe
 // blocks stay consistent.
 const HELM_TEMPLATE_TIMEOUT_MS = 60_000;
+
+const ApplicationAutoSyncSchema = z
+  .object({
+    kind: z.literal("Application"),
+    metadata: z.object({ name: z.string() }).loose(),
+    spec: z
+      .object({
+        syncPolicy: z
+          .object({
+            automated: z
+              .object({ enabled: z.boolean().optional() })
+              .loose()
+              .optional(),
+          })
+          .loose()
+          .optional(),
+      })
+      .loose(),
+  })
+  .loose();
+
+const KubernetesResourceSchema = z
+  .object({ kind: z.string().optional() })
+  .loose();
+
+const KubernetesListSchema = z
+  .object({
+    kind: z.literal("List"),
+    items: z.array(z.unknown()).optional(),
+  })
+  .loose();
+
+function resourceObjects(manifest: unknown, source: string): unknown[] {
+  if (
+    manifest === null ||
+    typeof manifest !== "object" ||
+    Array.isArray(manifest)
+  ) {
+    return [];
+  }
+  const resourceResult = KubernetesResourceSchema.safeParse(manifest);
+  if (!resourceResult.success) {
+    throw new Error(
+      `Could not inspect ${source}: ${z.prettifyError(resourceResult.error)}`,
+    );
+  }
+  if (resourceResult.data.kind !== "List") {
+    return [manifest];
+  }
+  const listResult = KubernetesListSchema.safeParse(manifest);
+  if (!listResult.success) {
+    throw new Error(
+      `Could not inspect ${source}: ${z.prettifyError(listResult.error)}`,
+    );
+  }
+  return listResult.data.items ?? [];
+}
+
+function implicitAutoSyncApplications(content: string, entry: string) {
+  const implicitAutoSync: string[] = [];
+  for (const [documentIndex, document] of parseAllDocuments(
+    content,
+  ).entries()) {
+    if (document.errors.length > 0) {
+      throw new Error(
+        `Could not parse ${entry} document ${documentIndex.toString()}: ${document.errors
+          .map((error) => error.message)
+          .join("; ")}`,
+      );
+    }
+    const source = `${entry} document ${documentIndex.toString()}`;
+    for (const [resourceIndex, manifest] of resourceObjects(
+      document.toJS(),
+      source,
+    ).entries()) {
+      if (
+        manifest === null ||
+        typeof manifest !== "object" ||
+        Array.isArray(manifest)
+      ) {
+        continue;
+      }
+      const resourceResult = KubernetesResourceSchema.safeParse(manifest);
+      if (!resourceResult.success) {
+        throw new Error(
+          `Could not inspect ${source} resource ${resourceIndex.toString()}: ${z.prettifyError(resourceResult.error)}`,
+        );
+      }
+      if (resourceResult.data.kind !== "Application") {
+        continue;
+      }
+      const applicationResult = ApplicationAutoSyncSchema.safeParse(manifest);
+      if (!applicationResult.success) {
+        throw new Error(
+          `Could not inspect ${source} resource ${resourceIndex.toString()}: ${z.prettifyError(applicationResult.error)}`,
+        );
+      }
+      const application = applicationResult.data;
+      const automated = application.spec.syncPolicy?.automated;
+      if (automated !== undefined && automated.enabled === undefined) {
+        implicitAutoSync.push(`${entry}:${application.metadata.name}`);
+      }
+    }
+  }
+  return implicitAutoSync;
+}
 
 /**
  * Check that no unescaped {{ sequences exist in YAML content.
@@ -136,6 +244,45 @@ describe("Helm Escaping - Denylist Check (dist/)", () => {
     ).text();
     const escapedCount = (appsContent.match(/\{\{ "\{\{" \}\}/g) ?? []).length;
     expect(escapedCount).toBeGreaterThan(0);
+  });
+
+  it("declares automated sync state explicitly for every Application", async () => {
+    const implicitAutoSync: string[] = [];
+    const glob = new Glob("*.k8s.yaml");
+    for await (const entry of glob.scan(DIST_DIR)) {
+      const content = await Bun.file(path.join(DIST_DIR, entry)).text();
+      implicitAutoSync.push(...implicitAutoSyncApplications(content, entry));
+    }
+
+    expect(implicitAutoSync).toEqual([]);
+  });
+
+  it("inspects Applications nested in Kubernetes Lists", () => {
+    const content = `---
+scalar document
+---
+- array document
+---
+kind: List
+items:
+  - kind: Application
+    metadata:
+      name: implicit-list-application
+    spec:
+      syncPolicy:
+        automated: {}
+  - kind: Application
+    metadata:
+      name: explicit-list-application
+    spec:
+      syncPolicy:
+        automated:
+          enabled: true
+`;
+
+    expect(implicitAutoSyncApplications(content, "fixture.k8s.yaml")).toEqual([
+      "fixture.k8s.yaml:implicit-list-application",
+    ]);
   });
 });
 

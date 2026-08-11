@@ -64,6 +64,10 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   and prune the exact root tree before one scoped release-health gate. Reject
   the old split lifecycle, child-only staging, eager duplicate gates,
   shell-wrapped commands, and unsafe ordering in pipeline validation.
+  Serialize every desired automated sync policy with an explicit `enabled`
+  boolean. Restoring `enabled: false` to an empty object makes Argo's patch
+  encode `automated: null`, which the Application CRD rejects; validate the
+  synthesized chart corpus so that implicit policy cannot return.
 
 ## Verification
 

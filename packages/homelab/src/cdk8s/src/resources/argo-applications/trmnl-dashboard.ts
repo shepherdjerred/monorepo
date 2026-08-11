@@ -19,7 +19,7 @@ export function createTrmnlDashboardApp(chart: Chart) {
         namespace: "trmnl-dashboard",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

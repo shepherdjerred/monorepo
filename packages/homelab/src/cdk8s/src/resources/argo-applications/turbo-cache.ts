@@ -27,7 +27,7 @@ export function createTurboCacheApp(chart: Chart) {
         // dropped by the write-reduction cutover) orphans forever: the app
         // reports OutOfSync on every reconcile and the argocd-sync step's
         // tree-health-wait times out on every main build (build 6322).
-        automated: { prune: true },
+        automated: { enabled: true, prune: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

@@ -44,7 +44,7 @@ export function createNfdApp(chart: Chart) {
         namespace: "node-feature-discovery",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

@@ -470,7 +470,7 @@ overrides:
         namespace: "buildkite",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
       },
     },

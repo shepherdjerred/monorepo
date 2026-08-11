@@ -18,7 +18,10 @@ export function createAlertDashboardApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "alert-dashboard",
       },
-      syncPolicy: { automated: {}, syncOptions: ["CreateNamespace=true"] },
+      syncPolicy: {
+        automated: { enabled: true },
+        syncOptions: ["CreateNamespace=true"],
+      },
     },
   });
 }

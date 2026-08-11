@@ -264,7 +264,7 @@ return hs`,
         namespace: "argocd",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

@@ -19,7 +19,7 @@ export function createRedlibApp(chart: Chart) {
         namespace: "redlib",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

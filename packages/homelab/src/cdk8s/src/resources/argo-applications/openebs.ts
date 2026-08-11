@@ -79,7 +79,7 @@ export function createOpenEBSApp(chart: Chart) {
         namespace: "openebs",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

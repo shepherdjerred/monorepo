@@ -469,7 +469,7 @@ export async function createPrometheusApp(chart: Chart) {
         namespace: "prometheus",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
       },
       ignoreDifferences: [

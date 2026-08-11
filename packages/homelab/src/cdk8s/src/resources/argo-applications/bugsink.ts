@@ -19,7 +19,7 @@ export function createBugsinkApp(chart: Chart) {
         namespace: "bugsink",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

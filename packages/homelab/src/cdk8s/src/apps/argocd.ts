@@ -118,7 +118,7 @@ export function createArgoCdApp(chart: Chart) {
         namespace: "argocd",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

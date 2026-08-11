@@ -62,7 +62,7 @@ export class Redis extends Construct {
           namespace: props.namespace,
         },
         syncPolicy: {
-          automated: {},
+          automated: { enabled: true },
         },
       },
     });

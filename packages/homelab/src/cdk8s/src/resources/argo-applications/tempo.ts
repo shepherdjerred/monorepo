@@ -113,7 +113,7 @@ export function createTempoApp(chart: Chart) {
         namespace: "tempo",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true", "Replace=true"],
       },
     },

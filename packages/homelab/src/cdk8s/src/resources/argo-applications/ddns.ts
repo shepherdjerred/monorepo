@@ -29,7 +29,7 @@ export function createDdnsApp(chart: Chart) {
         namespace: "ddns",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

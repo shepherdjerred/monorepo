@@ -19,7 +19,7 @@ export function createTemporalApp(chart: Chart) {
         namespace: "temporal",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

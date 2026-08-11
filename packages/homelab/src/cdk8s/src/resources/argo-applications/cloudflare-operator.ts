@@ -42,7 +42,7 @@ export function createCloudflareOperatorApp(chart: Chart) {
         namespace: "cloudflare-operator-system",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
       },
     },
   });

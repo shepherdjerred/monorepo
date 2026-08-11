@@ -19,7 +19,7 @@ export function createS3StaticSitesApp(chart: Chart) {
         namespace: "s3-static-sites",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

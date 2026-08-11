@@ -19,7 +19,7 @@ export function createTrackerTrackerApp(chart: Chart) {
         namespace: "tracker-tracker",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

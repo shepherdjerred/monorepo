@@ -41,7 +41,7 @@ export function createOnePasswordApp(chart: Chart) {
         namespace: "1password",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

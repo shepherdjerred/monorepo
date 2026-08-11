@@ -156,7 +156,7 @@ collation-server = utf8mb4_unicode_ci
           namespace: props.namespace,
         },
         syncPolicy: {
-          automated: {},
+          automated: { enabled: true },
           syncOptions: ["CreateNamespace=true"],
         },
       },

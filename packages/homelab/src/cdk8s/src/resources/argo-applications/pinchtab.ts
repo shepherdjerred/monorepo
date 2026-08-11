@@ -19,7 +19,7 @@ export function createPinchtabApp(chart: Chart) {
         namespace: "pinchtab",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
       },
     },
   });

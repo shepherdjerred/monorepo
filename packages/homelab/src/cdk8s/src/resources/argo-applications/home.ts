@@ -19,7 +19,7 @@ export function createHomeApp(chart: Chart) {
         namespace: "home",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
       },
     },
   });

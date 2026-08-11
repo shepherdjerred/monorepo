@@ -31,7 +31,7 @@ export function createGolinkApp(chart: Chart) {
         },
       ],
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: [
           "ApplyOutOfSyncOnly=true",
           "RespectIgnoreDifferences=true",

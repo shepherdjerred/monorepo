@@ -19,7 +19,7 @@ export function createCloudflareTunnelApp(chart: Chart) {
         namespace: "cloudflare-tunnel",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

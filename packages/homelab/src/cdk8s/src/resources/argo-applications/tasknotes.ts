@@ -19,7 +19,7 @@ export function createTasknotesApp(chart: Chart) {
         namespace: "tasknotes",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

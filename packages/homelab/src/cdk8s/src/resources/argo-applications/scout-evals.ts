@@ -19,7 +19,7 @@ export function createScoutEvalsApp(chart: Chart) {
         namespace: "scout-evals",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

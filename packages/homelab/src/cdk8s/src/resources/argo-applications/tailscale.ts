@@ -78,7 +78,7 @@ export function createTailscaleApp(chart: Chart) {
         namespace: "tailscale",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

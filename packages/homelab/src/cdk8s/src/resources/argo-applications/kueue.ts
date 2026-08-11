@@ -148,7 +148,7 @@ export function createKueueApp(chart: Chart) {
         namespace: "kueue-system",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
       },
     },

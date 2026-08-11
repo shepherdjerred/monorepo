@@ -19,7 +19,7 @@ export function createGrafanaDbApp(chart: Chart) {
         namespace: "prometheus",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
       },
     },
   });

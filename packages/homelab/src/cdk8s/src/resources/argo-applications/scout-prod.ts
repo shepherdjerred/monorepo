@@ -19,7 +19,7 @@ export function createScoutProdApp(chart: Chart) {
         namespace: "scout-prod",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

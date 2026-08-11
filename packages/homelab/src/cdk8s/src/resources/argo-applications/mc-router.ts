@@ -76,7 +76,7 @@ export function createMcRouterApp(chart: Chart) {
         namespace: "mc-router",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

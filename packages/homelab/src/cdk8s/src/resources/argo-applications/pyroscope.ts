@@ -65,7 +65,7 @@ export function createPyroscopeApp(chart: Chart) {
         namespace: "pyroscope",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
       },
     },
