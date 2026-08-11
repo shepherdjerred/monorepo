@@ -1,0 +1,1438 @@
+{
+  "$schema": "./version-catalog.schema.json",
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "name": "stashapp/stash",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v0.31.1@sha256:df744af5a0c976e2ec671052ecc1f8a9aa757fa12b8f9930b59910b7295f0da6"
+    },
+    {
+      "name": "jordanlambrecht/tracker-tracker",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "2.8.9@sha256:27b93eb839812c7ccaf03b1024f31d23b5981f8fcc13257447e2082100b7a71c"
+    },
+    {
+      "name": "connect",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://1password.github.io/connect-helm-charts/",
+        "versioning": "semver"
+      },
+      "value": "2.4.1"
+    },
+    {
+      "name": "argo-cd",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://argoproj.github.io/argo-helm",
+        "versioning": "semver"
+      },
+      "value": "10.2.1"
+    },
+    {
+      "name": "cert-manager",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://charts.jetstack.io",
+        "versioning": "semver-coerced"
+      },
+      "value": "v1.21.0"
+    },
+    {
+      "name": "intel-device-plugins-operator",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://intel.github.io/helm-charts/",
+        "versioning": "semver"
+      },
+      "value": "0.36.0"
+    },
+    {
+      "name": "node-feature-discovery",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://kubernetes-sigs.github.io/node-feature-discovery/charts",
+        "versioning": "semver"
+      },
+      "value": "0.19.0"
+    },
+    {
+      "name": "kube-prometheus-stack",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://prometheus-community.github.io/helm-charts",
+        "versioning": "semver"
+      },
+      "value": "87.21.0"
+    },
+    {
+      "name": "prometheus-adapter",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://prometheus-community.github.io/helm-charts",
+        "versioning": "semver"
+      },
+      "value": "5.3.0"
+    },
+    {
+      "name": "prometheus-blackbox-exporter",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://prometheus-community.github.io/helm-charts",
+        "versioning": "semver"
+      },
+      "value": "11.16.0"
+    },
+    {
+      "name": "tailscale-operator",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://pkgs.tailscale.com/helmcharts",
+        "versioning": "semver"
+      },
+      "value": "1.98.9"
+    },
+    {
+      "name": "adyanth/cloudflare-operator",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver"
+      },
+      "value": "v0.13.1"
+    },
+    {
+      "name": "shepherdjerred/streambot",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9108@sha256:52a337cd20075746b096357c4a2a5700e1f4618f8889765ba4696cf7fc9bf0d0",
+      "notes": [
+        "not managed by renovate \u2014 built from packages/streambot; CI's version commit-back fills the",
+        "real tag@digest after the first image push. Seed digest is a placeholder until then."
+      ]
+    },
+    {
+      "name": "shepherdjerred/redlib",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-6673@sha256:d7ee40afb22c6447aab6b370bde0b1b1aafa0a6dae5486b2cfd678ddafa8f335",
+      "notes": [
+        "not managed by renovate \u2014 built from upstream redlib's glibc Dockerfile.ubuntu",
+        "at REDLIB_SOURCE_REF (pinned in the since-removed CI pipeline). The published image is",
+        "musl/Alpine, which Reddit blocks during OAuth (redlib-org/redlib#551 \u2014",
+        "\"Failed to create OAuth client: 401 Unauthorized\"); the glibc build works.",
+        "CI's version commit-back fills the real tag@digest after the first image",
+        "push; the seed digest below is a placeholder until then."
+      ]
+    },
+    {
+      "name": "shepherdjerred/shelfbridge",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-6673@sha256:87072a935d3f9967641e1e67c15a922d89aff4c06fb066a368c8e9e795d664b7",
+      "notes": [
+        "not managed by renovate \u2014 built from upstream selmant/shelfbridge at",
+        "SHELFBRIDGE_SOURCE_REF (packages/homelab/images/shelfbridge/Dockerfile);",
+        "upstream publishes goreleaser binaries only, no container image.",
+        "CI's version commit-back fills the real tag@digest after the first image",
+        "push; the seed digest below is a placeholder until then."
+      ]
+    },
+    {
+      "name": "itzg/minecraft-server",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "2026.7.2-java25@sha256:6ec1110e4d9236d00ae9436a3e4a5929583e5b19cc94b756a7c603f7cf647a77",
+      "notes": [
+        "java25 variant: Paper 26.1.2 (pinned below) requires Java 25+; the java21",
+        "image crashes every server at startup (\"Minecraft 26.1 and newer requires",
+        "running the server with Java 25 or above\"). Keep this Java major in sync",
+        "with the paper pin."
+      ]
+    },
+    {
+      "name": "plexinc/pms-docker",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "loose"
+      },
+      "value": "1.43.3.10828-00f62d37d-amd64@sha256:f6748983db1054b571b57b4a40f07f53af6c4bfb9edd1fa455f5ebb6e16449bc"
+    },
+    {
+      "name": "linuxserver/tautulli",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "docker"
+      },
+      "value": "2.17.2@sha256:ef7f4329e5029f83bc93a6fef9a06e67b97652573ce3d62402645ba0d933a0be"
+    },
+    {
+      "name": "linuxserver/bazarr",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "1.6.0@sha256:ab401a0f361cfad328e444838b13d5b334b189d0f556fc91a3623eb581df36df"
+    },
+    {
+      "name": "seerr-team/seerr",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "v3.4.0@sha256:d206d9e4056bb90178297df58047791196e7721e6dc19384579b0530702fe086"
+    },
+    {
+      "name": "kometateam/kometa",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v2.4.5@sha256:a376a1818196cde159b5a4d5a6ad55411415f7b5bc38d8a27e8c718bae7f0ddd"
+    },
+    {
+      "name": "linuxserver/prowlarr",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "2.5.2@sha256:2f3d31307beba3ba2dd226d191f5f5c14ee3b4d8b49277c64683f5ed97083179"
+    },
+    {
+      "name": "qdm12/gluetun",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver-coerced"
+      },
+      "value": "v3.41.1@sha256:1a5bf4b4820a879cdf8d93d7ef0d2d963af56670c9ebff8981860b6804ebc8ab"
+    },
+    {
+      "name": "linuxserver/qbittorrent",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "docker"
+      },
+      "value": "5.2.0@sha256:8bff8880f4e056c068ac6359de4cbcf44fb4811493cf15d83c1341fa05a515c0",
+      "notes": [
+        "Keep this on qBittorrent app versions only. LinuxServer also publishes",
+        "stale OS-style tags like 20.04.1 that resolve to old app builds."
+      ]
+    },
+    {
+      "name": "linuxserver/radarr",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "6.3.0@sha256:e35056574cdc695a9ee745aa1ecda9eab3842450bf4b7b8471b023790fa3861d"
+    },
+    {
+      "name": "linuxserver/sonarr",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "4.0.19@sha256:24acea2956a0ccb11f103877d9f4f8576600fb34bff34820ed749c2256dab89f"
+    },
+    {
+      "name": "shepherdjerred/bindery",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-6874@sha256:2833a75913988f67adfdf2eb92f0e63c1fa1cc81f503f156fb1474272b0b5472",
+      "notes": [
+        "not managed by renovate \u2014 updated by version commit-back",
+        "Self-built from pinned upstream source with the Chinese Google Books patch."
+      ]
+    },
+    {
+      "name": "crocodilestick/calibre-web-automated",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v4.0.6@sha256:c31a738b6d5ec6982c050063dd3f063b6943eb1051fc81144789f840d9093a8d",
+      "notes": [
+        "Calibre-Web Automated \u2014 library + ingest + Send-to-Kindle path"
+      ]
+    },
+    {
+      "name": "timothyjmiller/cloudflare-ddns",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "latest@sha256:e78ef9df27d82edafbcce232681be398e6faf7c1f158b80b091b8c6a5b1b8879"
+    },
+    {
+      "name": "cloudflare/cloudflared",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "2026.7.3@sha256:e39ee8da81ad5e05d77f38d2f51c60ca51bf2a8450ac3abab50c17fdb91d91bf"
+    },
+    {
+      "name": "tailscale/golink",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "main@sha256:dc62e0d38bd2633d3090e6ca1de327471c376afe0457d397c4f111e5a98d8a88",
+      "notes": [
+        "not managed by renovate (upstream tailscale/golink ships a rolling `main` tag)"
+      ]
+    },
+    {
+      "name": "home-assistant/home-assistant",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "docker"
+      },
+      "value": "2026.7.4@sha256:5a531753cea96444200158fc2b0ac7ccd739291ec50414877b396de6e0bb29b3"
+    },
+    {
+      "name": "bropat/eufy-security-ws",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "3.1.0@sha256:d41169205f4e20e1e7e173283aaf8bb2d68e2abecb42bc1500a5fac5bb7a8750"
+    },
+    {
+      "name": "zwavejs/zwave-js-ui",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "11.22.0@sha256:f24115c115f98a1cd69fea620bf20180be17889e9ae3c58ceabf5df1bc56c2a8"
+    },
+    {
+      "name": "koush/scrypted",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "docker"
+      },
+      "value": "v0.144.1-noble-full@sha256:25440767192b0d4a0709f50388d14cdf365ba6bff59d04e40a41ca2b7b9a6b70"
+    },
+    {
+      "name": "fuatakgun/eufy_security",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver"
+      },
+      "value": "v8.2.4"
+    },
+    {
+      "name": "basnijholt/adaptive-lighting",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver"
+      },
+      "value": "v1.31.0"
+    },
+    {
+      "name": "JeffSteinbok/hass-dreo",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver"
+      },
+      "value": "v1.10.9"
+    },
+    {
+      "name": "magico13/ha-emporia-vue",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver"
+      },
+      "value": "v0.12.2"
+    },
+    {
+      "name": "dlarrick/hass-kumo",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver"
+      },
+      "value": "v0.4.6"
+    },
+    {
+      "name": "kgelinas/Mysa_HA",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver"
+      },
+      "value": "v0.9.2"
+    },
+    {
+      "name": "jjjonesjr33/petlibro",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver"
+      },
+      "value": "v1.2.32"
+    },
+    {
+      "name": "AlexxIT/SonoffLAN",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver"
+      },
+      "value": "v3.12.2"
+    },
+    {
+      "name": "elax46/custom-brand-icons",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver"
+      },
+      "value": "2026.07.0"
+    },
+    {
+      "name": "linuxserver/syncthing",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "2.1.2@sha256:ae909bee7c41f516be03fd7de72317a44f4a043bcba76884de941b99407b6957"
+    },
+    {
+      "name": "dotdc/grafana-dashboards-kubernetes",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver-coerced"
+      },
+      "value": "v3.0.6"
+    },
+    {
+      "name": "chartmuseum",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://chartmuseum.github.io/charts",
+        "versioning": "semver"
+      },
+      "value": "3.10.4"
+    },
+    {
+      "name": "minecraft",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://itzg.github.io/minecraft-server-charts",
+        "versioning": "semver"
+      },
+      "value": "5.1.3"
+    },
+    {
+      "name": "mc-router",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://itzg.github.io/minecraft-server-charts",
+        "versioning": "semver"
+      },
+      "value": "1.5.0"
+    },
+    {
+      "name": "jorenn92/maintainerr",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "docker"
+      },
+      "value": "2.19.0@sha256:bee84707edaf589cda3d18b6813cbfe3a137b52786210c3a28190e10910c1240"
+    },
+    {
+      "name": "loki",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://grafana.github.io/helm-charts",
+        "versioning": "semver"
+      },
+      "value": "7.1.0"
+    },
+    {
+      "name": "promtail",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://grafana.github.io/helm-charts",
+        "versioning": "semver"
+      },
+      "value": "6.17.1"
+    },
+    {
+      "name": "tempo",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://grafana.github.io/helm-charts",
+        "versioning": "semver"
+      },
+      "value": "1.24.4"
+    },
+    {
+      "name": "pyroscope",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://grafana.github.io/helm-charts",
+        "versioning": "semver"
+      },
+      "value": "2.2.0"
+    },
+    {
+      "name": "alloy",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://grafana.github.io/helm-charts",
+        "versioning": "semver"
+      },
+      "value": "1.11.0"
+    },
+    {
+      "name": "openebs",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://openebs.github.io/openebs",
+        "versioning": "semver"
+      },
+      "value": "4.5.1"
+    },
+    {
+      "name": "shepherdjerred/scout-for-lol/beta",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9108@sha256:bb2a170ae26681e5bb763616d53f11fc1d09f4257c4996820384a51a084a86a3",
+      "notes": [
+        "not managed by renovate \u2014 beta updated by version-commit-back"
+      ]
+    },
+    {
+      "name": "shepherdjerred/scout-for-lol/prod",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver",
+        "packageName": "shepherdjerred/scout-for-lol"
+      },
+      "value": "2.0.0-8810@sha256:d0783d718761e852b2f5798a234170e6f720be921aa59ee37cc86b1b8e53c6a2",
+      "notes": [
+        "Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>",
+        "tag is minted by the scout-tag-release CI step only after site version",
+        "<n> is archived, pointing at the backend digest beta serves it against \u2014",
+        "so every tag Renovate can offer is a complete backend+site pair. The",
+        "scout-prod-reconcile step derives the prod site version from this pin's",
+        "tag portion. Only ever pin a minted tag (semver caveat: if the release",
+        "base moves off 2.0.0-, this pin needs one manual edit)."
+      ]
+    },
+    {
+      "name": "shepherdjerred/starlight-karma-bot/beta",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9108@sha256:ccc4027b33c59bf663002aea7a6caec3ad8be9b8eafc8c4e609206882052ee21",
+      "notes": [
+        "not managed by renovate \u2014 beta updated by version-commit-back"
+      ]
+    },
+    {
+      "name": "shepherdjerred/starlight-karma-bot/prod",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver",
+        "packageName": "shepherdjerred/starlight-karma-bot"
+      },
+      "value": "2.0.0-8772@sha256:bb187d4427d4cda30e559d249e7b717fcda7f6e459c6b7141461fd8df14390bc"
+    },
+    {
+      "name": "shepherdjerred/birmel",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9108@sha256:0ff6b6159794663d3550c5d974f5265c7c5eae3f6cc926fdaf46fae89d70e777",
+      "notes": ["not managed by renovate"]
+    },
+    {
+      "name": "shepherdjerred/alert-dashboard",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9108@sha256:d5e426fa577132d89fc75a4b2db27ba6ab2fa1325a0e697288e20c371c7f7142",
+      "notes": [
+        "not managed by renovate \u2014 CI version-commit-back replaces this after each",
+        "image push."
+      ]
+    },
+    {
+      "name": "shepherdjerred/scout-evals",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9108@sha256:923b4fcbd08190610b06d81d388c95e4d3bc71cceebf087655a68da7a2ae688f",
+      "notes": [
+        "not managed by renovate \u2014 placeholder digest; CI version-commit-back fills",
+        "the real digest after the first successful scout-evals image push."
+      ]
+    },
+    {
+      "name": "shepherdjerred/discord-plays-pokemon",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9108@sha256:eb3e4fea4eb62f5bb88c0ac698f71e7e186bea10167d72aad7dd2dec48bd133c",
+      "notes": ["not managed by renovate"]
+    },
+    {
+      "name": "shepherdjerred/discord-plays-mario-kart",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9108@sha256:faf52a2f79d992ecc98387a39ea5ca0cdcbe87c2946e368b07310fe982b0d173",
+      "notes": [
+        "not managed by renovate \u2014 placeholder digest; CI version-commit-back fills",
+        "the real digest after the first successful image push."
+      ]
+    },
+    {
+      "name": "freshrss/freshrss",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "1.29.1@sha256:ab6b363102ccdbc39f6a62db926f567c61a5289bf25ba460f1c34423d8cc1a4d"
+    },
+    {
+      "name": "pinchtab/pinchtab",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "0.15.0@sha256:a4d5ac974eb093adf0211389257179f4f4ca16369f91479be67bd881c376e716"
+    },
+    {
+      "name": "agent-stack-k8s",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io/buildkite/helm",
+        "versioning": "semver",
+        "packageName": "agent-stack-k8s"
+      },
+      "value": "0.46.3@sha256:30742cb7d592ab48ac223b1e12004dc759eaf3a18f2e5f96eaf54b6123f944d4"
+    },
+    {
+      "name": "ducktors/turborepo-remote-cache",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "2.11.5@sha256:dfd1ce24cc4bdd59113e3ba68c881269fda5dd5929e58e2ea95010c51c09056d",
+      "notes": [
+        "Self-hosted Turborepo remote cache (backs the workspace task-graph",
+        "replatform \u2014 packages/docs/plans/2026-07-12_workspace-taskgraph-replatform.md)."
+      ]
+    },
+    {
+      "name": "kueue",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://registry.k8s.io",
+        "versioning": "semver",
+        "packageName": "kueue/charts/kueue"
+      },
+      "value": "0.18.2@sha256:156fbc8c6752b08cf66a2324fed33e269e0a64e54dd8d70d51118065bca651af"
+    },
+    {
+      "name": "moby/buildkit",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "v0.31.2@sha256:2f5adac4ecd194d9f8c10b7b5d7bceb5186853db1b26e5abd3a657af0b7e26ec",
+      "notes": [
+        "Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a",
+        "compressed ZFS PVC, replacing the per-run throwaway builder inside dind \u2014",
+        "moves the build-layer write storm off the xfs /var system disk)."
+      ]
+    },
+    {
+      "name": "library/python",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "3.14-alpine@sha256:26730869004e2b9c4b9ad09cab8625e81d256d1ce97e72df5520e806b1709f92"
+    },
+    {
+      "name": "bitnamilegacy/kubectl",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "1.33.4@sha256:ed0b31a0508da84ee655c5c6e01bd3897fc56ad6cf69debb27fa1893a06d2246"
+    },
+    {
+      "name": "velero",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://vmware-tanzu.github.io/helm-charts",
+        "versioning": "semver"
+      },
+      "value": "12.1.0"
+    },
+    {
+      "name": "velero/velero-plugin-for-aws",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v1.14.0@sha256:7e82f717f44e89671212e0dfce7e061321c386ea84a33bca64a671670ca6c278",
+      "notes": [
+        "PINNED to v1.14.0 (last release that works on Cloudflare R2). The plugin always sets an",
+        "(often empty) `Tagging` field on PutObject; v1.14.1's dependency bump pulled a newer",
+        "aws-sdk-go-v2 that started emitting an empty `x-amz-tagging` header on the wire, which R2",
+        "rejects with `501 NotImplemented` (\"Header 'x-amz-tagging' with value '' not implemented\").",
+        "That fails Velero's backup-metadata upload, so every backup since the v1.14.1 deploy",
+        "(2026-06-21, PR #1307) is marked Failed and leaves orphaned ZFS snapshots + R2 data behind",
+        "(PagerDuty #5860, #5849). v1.14.2 is NOT a fix \u2014 it still sets Tagging unconditionally; the",
+        "upstream guard (velero-io/velero-plugin-for-aws#299) is on main, not in any release yet.",
+        "Renovate is blocked to <1.14.1 in renovate.json until a release contains #299 and is",
+        "verified on R2. See packages/docs/todos/velero-aws-plugin-r2-tagging.md."
+      ]
+    },
+    {
+      "name": "openebs/velero-plugin",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "3.6.0@sha256:9ea3331d891e436a7239e37e68ca4c8888500cb122be7cdc9d8400f345555c76"
+    },
+    {
+      "name": "kubernetes/kubernetes",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver"
+      },
+      "value": "v1.36.3"
+    },
+    {
+      "name": "paper",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "custom.papermc",
+        "versioning": "semver-coerced"
+      },
+      "value": "26.1.2",
+      "notes": [
+        "The papermc datasource lists both 2-part families (e.g. \"26.2\") and 3-part",
+        "builds (e.g. \"26.1.2\"); strict semver drops the 2-part ones, so it never",
+        "surfaced \"26.2\". semver-coerced compares them all, and the datasource",
+        "transform now filters pre-releases (-rc/-pre) so only stable builds appear."
+      ]
+    },
+    {
+      "name": "recyclarr",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io/recyclarr",
+        "versioning": "docker"
+      },
+      "value": "8.7.0@sha256:2d6107f758d882a59fe9d646aa54fa8a5a4fb7a40995125fade575652a3f7871"
+    },
+    {
+      "name": "siderolabs/talos",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": true,
+        "datasource": "github-releases",
+        "versioning": "semver"
+      },
+      "value": "1.13.8"
+    },
+    {
+      "name": "postgres-operator",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://opensource.zalando.com/postgres-operator/charts/postgres-operator",
+        "versioning": "semver"
+      },
+      "value": "2.0.0"
+    },
+    {
+      "name": "cooperspencer/gickup",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "0.10.45@sha256:b4a84f04163099d9f41c648e78a8402d8e6dfe1ece07ccdb3d439543aec5f378"
+    },
+    {
+      "name": "esanchezm/prometheus-qbittorrent-exporter",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "v1.7.0@sha256:02dbf86bd2850dcb94e7df5684159b954386e978e20f6b473f92efa62335f552"
+    },
+    {
+      "name": "jsclayton/prometheus-plex-exporter",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "main@sha256:18ef1b2197efbcb75bd7276380955760995f10a9fbe55106809a6fcff91c2940"
+    },
+    {
+      "name": "resmoio/kubernetes-event-exporter",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "v1.7@sha256:8abb52b66557d3333f9e473e0eff2951309abfd018bd8d7fcfd86c4ecce6b9cf"
+    },
+    {
+      "name": "redis",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://charts.bitnami.com/bitnami",
+        "versioning": "semver"
+      },
+      "value": "27.0.18"
+    },
+    {
+      "name": "seaweedfs",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://seaweedfs.github.io/seaweedfs/helm",
+        "versioning": "semver"
+      },
+      "value": "4.40.0"
+    },
+    {
+      "name": "mariadb",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://charts.bitnami.com/bitnami",
+        "versioning": "semver"
+      },
+      "value": "26.2.0"
+    },
+    {
+      "name": "bitnami/mariadb",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "latest@sha256:991b66aa2a16e9cf518bc6c36b32d21fcad14b5f199b5a1a8bcf4637fcae03bb"
+    },
+    {
+      "name": "bitnami/mysqld-exporter",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "latest@sha256:52e63f43bc03a4e6fb173864826845c81ec5002d5a4184ed69e073417dc6470b"
+    },
+    {
+      "name": "postalserver/postal",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "3.3.7@sha256:e54b4a7eb106ee15eda5664311c4b9415546d4196f5c4336d23a78d6ce57b819"
+    },
+    {
+      "name": "library/mariadb",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "11.8@sha256:efb4959ef2c835cd735dbc388eb9ad6aab0c78dd64febcd51bc17481111890c4"
+    },
+    {
+      "name": "boky/postfix",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "latest@sha256:aafc772384232497bed875e1eb66b4d3e54ba1ebc86e2e185a6dc1dbc48182ef"
+    },
+    {
+      "name": "library/busybox",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "latest@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d"
+    },
+    {
+      "name": "mikefarah/yq",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "latest@sha256:11a1f0b604b13dbbdc662260d8db6f644b22d8553122a25c1b5b2e8713ca6977",
+      "notes": [
+        "Alpine-based image bundling yq + busybox coreutils (sh/find/cmp/diff/cp);",
+        "used by the Minecraft config-drift init container for semantic YAML/JSON",
+        "comparison (see misc/minecraft-drift-check.ts)."
+      ]
+    },
+    {
+      "name": "library/alpine",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b"
+    },
+    {
+      "name": "library/haproxy",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "3.4.2-alpine@sha256:0878b11eb64c433be1b0f578a584b8aca12f6caaa64c8f239b8b556c0dd5eeeb"
+    },
+    {
+      "name": "mccloud/bazarr-openai-whisperbridge",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "latest@sha256:10212b643245b97d0369d1be3448cc35e61f7df78b4861cf7df90608e9c803d3"
+    },
+    {
+      "name": "library/debian",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818"
+    },
+    {
+      "name": "library/nginx",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "1.29.1-alpine@sha256:42a516af16b852e33b7682d5ef8acbd5d13fe08fecadc7ed98605ba5e3b26ab8"
+    },
+    {
+      "name": "tbxark/mcp-proxy",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "v0.43.2@sha256:70c0e02d39c4c0898e610b3a30954f7930628fa6f4fb447bad14c32382a25879"
+    },
+    {
+      "name": "@r-huijts/canvas-mcp",
+      "category": "upstream",
+      "artifactType": "package",
+      "management": {
+        "managed": true,
+        "datasource": "npm",
+        "versioning": "npm"
+      },
+      "value": "1.3.0",
+      "notes": [
+        "mcp-gateway downstream npm MCP servers. Pinned + Renovate-tracked so cold",
+        "starts are reproducible instead of `npx -y` grabbing latest. Substituted",
+        "into mcp-gateway/config.json at synth time."
+      ]
+    },
+    {
+      "name": "@automatearmy/email-reader-mcp",
+      "category": "upstream",
+      "artifactType": "package",
+      "management": {
+        "managed": true,
+        "datasource": "npm",
+        "versioning": "npm"
+      },
+      "value": "1.0.3"
+    },
+    {
+      "name": "bugsink/bugsink",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "2.5.0@sha256:b697016950d8aa7d94020def15bc2727e8fc40148f079884ae4cdacf7ea1e9a3"
+    },
+    {
+      "name": "relay-server",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "v0.9.2@sha256:815222bd2dc167ee0a5b702d2dcd3d9eb681985b9eb5e6e761adf3933554a11f",
+      "notes": [
+        "Relay Server - self-hosted Obsidian real-time collaboration backend (y-sweet fork)",
+        "not managed by renovate (docker.system3.md is a private relay.md registry; bump manually on upgrade)"
+      ]
+    },
+    {
+      "name": "shepherdjerred/caddy-s3proxy",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-5690@sha256:57ac1e5b9a9106d006f66015f80da7c1835214687e3cd968f457cc820335438c",
+      "notes": [
+        "Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3",
+        "not managed by renovate"
+      ]
+    },
+    {
+      "name": "shepherdjerred/tasknotes-server",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9108@sha256:c7ff7bfe644c30b7682e84198029a3283ec655f5345cdbe8b06314cb83aaa93c",
+      "notes": [
+        "Custom tasknotes-server image - TaskNotes API server for mobile app",
+        "not managed by renovate"
+      ]
+    },
+    {
+      "name": "shepherdjerred/obsidian-headless",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-6529@sha256:fd1e89af7747c0b0ad2c650c6eab0c60452464e83dfcfb3bedbf967f15e7e645",
+      "notes": [
+        "Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync",
+        "not managed by renovate"
+      ]
+    },
+    {
+      "name": "shepherdjerred/mcp-gateway",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-6690@sha256:719ad2ddcf05af01be975f984cb2ef8a3139302724e6d2cb01111cb50b348aa9",
+      "notes": [
+        "Custom mcp-gateway image - tbxark/mcp-proxy + prebuilt edstem-mcp (rob-9/edstem-mcp)",
+        "not managed by renovate"
+      ]
+    },
+    {
+      "name": "temporalio/auto-setup",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "1.29.7@sha256:f14912b699cf73015ad5c4fc18d522d4b014db90e794039214dfb7c022c2644f"
+    },
+    {
+      "name": "temporalio/ui",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "2.52.1@sha256:b839b5c798770896c78058db1647d325a19b3acef7fa1fbd9a23fabb1dd7feb2"
+    },
+    {
+      "name": "temporalio/admin-tools",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "1.31.2@sha256:dbc5fcd6ee8f0f4d808bf765af9a87dea9d8a283abfdcfbd2fc148496ba66107"
+    },
+    {
+      "name": "shepherdjerred/temporal-worker",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9108@sha256:8309f6874b124fd3c21e50d336a32ea01fe2508dac64e11a8c3dbed18b694eea",
+      "notes": [
+        "Custom temporal-worker image - updated by CI pipeline",
+        "not managed by renovate"
+      ]
+    },
+    {
+      "name": "shepherdjerred/trmnl-dashboard",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-9108@sha256:3788039cd7774ec14f05d2ca333278b1fa2b411363cb93e24cd33346a8a89e80",
+      "notes": [
+        "Custom TRMNL dashboard image - updated by CI pipeline",
+        "not managed by renovate"
+      ]
+    }
+  ]
+}

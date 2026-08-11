@@ -8,7 +8,7 @@ disposition: blocked
 origin: packages/docs/archive/superseded/agent-task-workflow-broken.md
 ---
 
-# Verify homelab-audit agent tasks in production
+# Verify generic agent tasks in production
 
 The historical timeout and JSON-schema invocation defects produced PD issues
 and #7024, #7026, #7033, #7035, #7040, #7047, #7050, and #7058. The durable fix is
@@ -54,12 +54,13 @@ worker-task health signals rather than an aggregate timeout pager.
       the deployed worker supplies its configured `CLAUDE_CODE_OAUTH_TOKEN`.
       Record workflow ID, run ID, successful parser outcome, and the tagged
       `[agent-task-canary]` email.
-- [ ] Record seven consecutive `homelab-audit-daily` terminal outcomes as
-      `COMPLETED`, with successful structured parsing, one Postal delivery per
-      run, and no duplicate timeout incidents.
-- [ ] Confirm the queue-health alerts remain inactive during the bake window;
-      if one fires, inspect poller/schedule-to-start evidence before changing
-      replicas or concurrency.
+- [ ] Observe the `agent-task` queue for seven days after the canary. Record all
+      naturally occurring v2 executions and require successful structured
+      parsing, one accepted report per run, and no duplicate delivery.
+- [ ] Confirm the queue-health alerts remain inactive during that independent
+      bake window; if one fires, inspect poller/schedule-to-start evidence before
+      changing replicas or concurrency. The deterministic daily homelab report
+      is tracked by report freshness and does not count as agent-contract proof.
 
 ## Operator-only post-deploy canary
 
@@ -112,3 +113,10 @@ Record the workflow ID, run ID, successful structured parsing, and the tagged
   `2.1.175`; build/deploy of the `2.1.220` image is therefore still required.
 - The local workspace has no production Temporal endpoint override or cluster
   access, so the tagged canary was not run.
+
+### 2026-08-10 — homelab audit moved out of the generic agent boundary
+
+- `homelab-audit-daily` now uses deterministic collectors and shared report
+  delivery. This TODO remains open for the independent structured-output canary
+  and seven-day agent-task queue bake; homelab heartbeats are no longer parser
+  acceptance evidence.

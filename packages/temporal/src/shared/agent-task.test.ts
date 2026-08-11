@@ -6,12 +6,16 @@ import {
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
   AgentTaskOutputContractError,
   AgentTaskInputSchema,
-  agentTaskScheduleId,
-  agentTaskWorkflowId,
-  parseClaudeAgentTaskResult,
-  parseAgentTaskResultPayload,
   stripClaudeSchemaAnnotations,
 } from "./agent-task.ts";
+import {
+  agentTaskScheduleId,
+  agentTaskWorkflowId,
+} from "./agent-task-identifiers.ts";
+import {
+  parseAgentTaskResultPayload,
+  parseClaudeAgentTaskResult,
+} from "./agent-task-output.ts";
 import { z } from "zod/v4";
 
 const baseInput = {

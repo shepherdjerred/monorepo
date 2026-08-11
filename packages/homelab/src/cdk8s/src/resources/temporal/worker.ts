@@ -64,6 +64,9 @@ function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
     BUGSINK_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
     BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
     BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),
+    PROMETHEUS_URL: EnvValue.fromValue(
+      "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
+    ),
     ...requiredSecretEnv(secret, [
       "BUGSINK_TOKEN",
       "GRAFANA_URL",
@@ -406,9 +409,9 @@ export function createTemporalWorkerDeployment(
         AWS_DEFAULT_REGION: EnvValue.fromValue("us-east-1"),
         S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
         ...llmArchiveEnvVars(),
-        // Homelab-audit S3 archiving is unused — the active audit runs via
-        // agentTaskWorkflow (email only) and never calls the archive activity.
-        // No HOMELAB_AUDIT_ARCHIVE_* env wired (no dead optional secret).
+        // The deterministic homelab audit stores typed report state and email
+        // acceptance receipts through the shared report sender. Legacy audit
+        // archive variables remain intentionally unwired for history replay.
         AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
           secret,
           key: "AWS_ACCESS_KEY_ID",
@@ -440,7 +443,7 @@ export function createTemporalWorkerDeployment(
           key: "GITHUB_WEBHOOK_SECRET",
         }),
         // Claude Code subscription OAuth token — sole auth for every `claude -p`
-        // subprocess (homelab-audit, generic agent-task, scout-season-refresh).
+        // subprocess (homelab synthesis, generic agent-task, Scout season).
         // All work bills against the subscription; ANTHROPIC_API_KEY is
         // deliberately absent so a leaked key can't start direct-API billing.
         CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({

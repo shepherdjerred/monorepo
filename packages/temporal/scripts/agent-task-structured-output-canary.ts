@@ -10,7 +10,7 @@ import { Client, Connection } from "@temporalio/client";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import {
-  AgentTaskInputSchema,
+  AgentTaskInputV2Schema,
   type AgentTaskStartResult,
 } from "#shared/agent-task.ts";
 
@@ -43,18 +43,27 @@ function workflowResultOrThrow(result: AgentTaskStartResult): {
 async function main(): Promise<void> {
   requireProductionInvocation();
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_TEMPORAL_ADDRESS;
-  const input = AgentTaskInputSchema.parse({
+  const input = AgentTaskInputV2Schema.parse({
+    contractVersion: 2,
     title: "Agent-task structured-output canary",
     prompt:
-      "Do not use tools. Return a short report confirming that the structured-output canary reached the Claude parser. Include exactly one sentence in markdown.",
+      "Use Bash to run `printf 'agent-task-canary-ok\\n'`. Report the declared check exactly once and cite that Bash tool-use receipt ID. Return no synthesis.",
     provider: "claude",
     mode: "report-only",
     repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
+    checks: [
+      {
+        id: "structured-output",
+        label: "Structured output and evidence",
+        required: true,
+        evidenceRequirement:
+          "A successful Bash receipt containing agent-task-canary-ok.",
+      },
+    ],
     maxTurns: 2,
     agentTimeoutMinutes: 10,
     idempotencyKey: `agent-task-structured-output-canary-${crypto.randomUUID()}`,
     emailSubjectPrefix: "[agent-task-canary]",
-    allowSelfCancel: false,
   });
 
   const connection = await Connection.connect(

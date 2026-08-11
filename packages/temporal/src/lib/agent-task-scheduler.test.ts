@@ -9,9 +9,9 @@ import {
 import { startOrScheduleAgentTask } from "./agent-task-scheduler.ts";
 import {
   AgentTaskInputSchema,
-  agentTaskWorkflowId,
   type AgentTaskInput,
 } from "#shared/agent-task.ts";
+import { agentTaskWorkflowId } from "#shared/agent-task-identifiers.ts";
 
 // Captured start/create payloads so assertions can inspect the exact options the
 // scheduler handed to Temporal.

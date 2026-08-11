@@ -1,0 +1,20 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`ReportEnvelopeV1 keeps compact HTML and plain-text snapshots stable 1`] = `"<!doctype html><html><body><h1>[OK] Dependency summary</h1><p><strong>No dependency changes were found in the verified window.</strong></p><h2>Checks</h2><table><thead><tr><th>Coverage</th><th>Check</th><th>Status</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>required</td><td>Catalog diff</td><td>passed</td><td>Both catalog endpoints were read successfully.</td><td><code>git-diff</code></td></tr></tbody></table><h2>Provenance</h2><ul><li>Report run: dependency-summary:run-1</li><li>Workflow: deps-summary-weekly-2026-08-10</li><li>Run: run-1</li><li>Repository SHA: abc123</li><li>Window start: 2026-08-03T16:00:00.000Z</li><li>Window end: 2026-08-10T16:00:00.000Z</li></ul></body></html>"`;
+
+exports[`ReportEnvelopeV1 keeps compact HTML and plain-text snapshots stable 2`] = `
+"[OK] Dependency summary
+No dependency changes were found in the verified window.
+
+Checks
+- [passed] Catalog diff (required): Both catalog endpoints were read successfully. [evidence: git-diff]
+
+Provenance
+- Report run: dependency-summary:run-1
+- Workflow: deps-summary-weekly-2026-08-10
+- Run: run-1
+- Repository SHA: abc123
+- Window start: 2026-08-03T16:00:00.000Z
+- Window end: 2026-08-10T16:00:00.000Z
+"
+`;

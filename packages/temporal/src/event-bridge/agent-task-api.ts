@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/bun";
 import { Hono } from "hono";
 import { ZodError } from "zod/v4";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
-import { AgentTaskInputSchema } from "#shared/agent-task.ts";
+import { AgentTaskInputV2Schema } from "#shared/agent-task.ts";
 
 const COMPONENT = "agent-task-api";
 const DEFAULT_PORT = 9467;
@@ -81,7 +81,7 @@ export function buildAgentTaskApiApp(
 
     let input;
     try {
-      input = AgentTaskInputSchema.parse(body);
+      input = AgentTaskInputV2Schema.parse(body);
     } catch (error: unknown) {
       if (error instanceof ZodError) {
         return c.json({ error: "bad payload", issues: error.issues }, 400);

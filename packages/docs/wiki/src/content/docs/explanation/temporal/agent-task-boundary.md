@@ -14,7 +14,7 @@ about because the comfortable version would be misleading.
 ```mermaid
 flowchart TD
   accTitle: Agent task lifecycle
-  accDescr: A doc block via the operator CLI, or the authenticated HTTP API, submits a task to one dispatcher, which either upserts a cron schedule or starts a one-off workflow. The workflow runs the agent read-only over a repo clone, emails the report, and may dispatch one follow-up.
+  accDescr: A doc block via the operator CLI, or the authenticated HTTP API, submits a task to one dispatcher, which either upserts a cron schedule or starts a one-off workflow. The workflow investigates over a repo clone, captures redacted evidence receipts, finalizes only from that catalog, sends a shared report, and may dispatch one follow-up.
 
   B[Doc block] --> CLI[Operator CLI]
   CLI --> DIS[Dispatcher]
@@ -22,8 +22,10 @@ flowchart TD
   DIS -->|cron| SCH[Temporal schedule]
   DIS -->|runAt| WF[Workflow run]
   SCH --> WF
-  WF --> R[Agent runs read-only<br>over a repo clone]
-  R --> E[Email report]
+  WF --> I[Investigation agent<br>over a repo clone]
+  I --> R[Redacted evidence<br>receipt catalog]
+  R --> FNL[Receipt-only<br>finalization agent]
+  FNL --> E[Shared email report]
   E -.-> F[Optional follow-up task]
 ```
 
@@ -46,25 +48,29 @@ write.
 
 ## Why it is built this way anyway
 
-The flagship consumer is the daily homelab audit, and it needs credentials to do
-its job. Checking cluster, DNS, backup, and alert state means actually querying
-those systems. So Grafana, PagerDuty, ArgoCD, Bugsink, Cloudflare, Postal, and
-the mounted service-account token are all readable.
+Novel operational investigations need credentials to inspect their declared
+evidence sources. Grafana, Alerts, ArgoCD, Bugsink, Cloudflare, and the mounted
+service-account token can therefore be readable when they are present in the
+worker environment. Stable recurring checks, including the daily homelab audit,
+use deterministic collectors instead of this generic boundary.
 
 An agent scoped tightly enough to be provably harmless would also be scoped too
 tightly to audit anything.
 
-The GitHub App key is stripped and replaced with a fresh installation token, and
-for Claude the Anthropic API key is dropped so the run bills the subscription.
-But the rest of the worker environment is inherited.
+The GitHub App key is stripped and replaced with a fresh installation token. For
+Claude, the Anthropic API key is dropped so the run bills the subscription.
+Postal sender/recipient credentials and authenticated ingress tokens are always
+stripped; only the shared report sender can deliver operational email. Other
+operational credentials are inherited so declared evidence can be collected.
 
 ## The blast radius, stated plainly
 
 A deviating or prompt-injected run's blast radius is those credentials.
 
-The containment is that the pod is ephemeral and non-root, the clone is
-throwaway, and the run cannot persist anything beyond its report. It is real
-containment, and it is not a sandbox.
+The containment is that the pod is ephemeral and non-root and the clone is
+throwaway. Those controls reduce local persistence, but an agent that violates
+policy could still use inherited credentials against an external API. It is a
+meaningful reduction in blast radius, and it is not a sandbox.
 
 Anything that genuinely must change the repo is a
 [deterministic scheduled workflow](/reference/temporal-schedules/) instead —
@@ -72,9 +78,9 @@ code, reviewed in a PR, not an agent asked nicely.
 
 ## Why the output contract is strict
 
-Claude's output is treated as a versioned provider contract. The worker sends a
-draft-07 schema inline and accepts **only** the CLI result message's
-`structured_output` field, validated with Zod.
+Claude and Codex outputs are treated as versioned provider contracts. The worker
+sends each provider its supported schema dialect and validates the structured
+result with Zod.
 
 A successful process without that field is a failure. Prose and fenced JSON are
 not fallback formats.
@@ -83,6 +89,17 @@ Accepting a fallback would mean a model that ignored the schema still appears to
 succeed, and the report quietly degrades from structured findings to
 free-writing. Failing loudly is the only way an unattended run can tell you its
 contract broke.
+
+Contract validity alone does not establish truth. A v2 run first captures and
+redacts provider tool events as evidence receipts. Finalization receives only
+that catalog and a preliminary assessment. Unknown receipt IDs, failed evidence,
+unsupported findings, missing checks, or skipped required checks force a partial
+or failed report; they can never produce a clean verdict.
+
+The model has no verdict or subject field. After evidence validation, the
+reporter maps check state and finding severity to a domain verdict, then maps
+execution state and verdict to the email subject. A model can describe what it
+found, but cannot label its own run clean.
 
 Contract failures log a bounded redacted excerpt, the result subtype and keys,
 and the schema fingerprint. The Prometheus counter uses bounded reason labels

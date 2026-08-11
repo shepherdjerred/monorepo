@@ -246,30 +246,13 @@ state, rule evaluation duration and failures, the added Prometheus series
 count, and the 24-hour Prometheus PVC used-byte delta. Missing or unhealthy
 observability evidence keeps the result inconclusive.
 
-The recurring report-only task below starts checking daily. It must keep the
-schedule active after the 24-hour report, and self-cancel only after the
-seven-day/100-build completion report is delivered.
-
-<!-- temporal-agent-task
-{
-  "title": "Measure CI I/O optimization impact",
-  "provider": "codex",
-  "mode": "report-only",
-  "cron": "0 9 * * *",
-  "scheduleId": "ci-io-post-merge-impact",
-  "allowSelfCancel": true,
-  "agentTimeoutMinutes": 45,
-  "maxTurns": 40,
-  "repo": {
-    "fullName": "shepherdjerred/monorepo",
-    "ref": "main"
-  },
-  "source": {
-    "docPath": "packages/docs/plans/2026-07-19_ci-io-optimization.md"
-  },
-  "prompt": "Find CI I/O optimization PR #1602 and its merge time. If it is not merged, report pending and keep this schedule active. Once 24 hours have elapsed, use the repository's typed CI I/O reporter with read-only Prometheus and Buildkite access to compare the frozen pre-change cohort against a workload-normalized post-merge cohort by branch and stable step key, including canceled builds. Run the primary report in strict raw mode and at least one completed known build in strict --metrics-source recording mode. Save exact query windows and collect dashboard logical and physical writes, pod and node pressure, disk latency, and queue-depth diagnostics. Verify PodMonitor discovery, all Buildkite rule evaluations, raw versus by-job series coverage, controller monitor_up, panel and alert state, rule duration and failures, added series count, and the 24-hour Prometheus PVC used-byte delta against the documented budgets. Report pod-parent writes, coverage, duration, network diagnostics, lane presence, and acceptance-gate results; treat node physical writes and node placement as diagnostics only. Keep the schedule active after the 24-hour report. Once at least seven days have elapsed and at least 100 post-merge builds exist, deliver the final comparison, identify any regressions or missing telemetry, and set cancelCron=true only if the completion report is conclusive."
-}
--->
+The source-defined `ci-io-post-merge-impact` schedule runs daily. Its
+deterministic workflow fixes the pre-change cohort, selects exact completed
+`CI_IO_FIXED_CORPUS=true` main builds, executes the schema-v4 reporter in strict
+raw mode and a strict recording-rule canary, and evaluates the documented
+integrity, performance, and observability checks. Pending windows still email a
+heartbeat. After seven days and 100 builds it emits a retirement recommendation,
+but the schedule remains active until a human pauses or removes it.
 
 ## Explicit Exclusions
 

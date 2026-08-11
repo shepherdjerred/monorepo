@@ -46,6 +46,10 @@ import type {
   ScoutSeasonRefreshResult,
 } from "#activities/scout-season-refresh.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
+import { runProtobufWatch as _runProtobufWatch } from "./protobuf-watch.ts";
+import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
+import { monitorReportFreshness as _monitorReportFreshness } from "./report-freshness.ts";
+import { runCiIoImpact as _runCiIoImpact } from "./ci-io-impact.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
 import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
@@ -228,6 +232,22 @@ export async function runHomelabAuditWorkflow(
   input: RunHomelabAuditWorkflowInput = {},
 ): Promise<void> {
   return _runHomelabAuditWorkflow(input);
+}
+
+export async function runProtobufWatch(): Promise<void> {
+  return _runProtobufWatch();
+}
+
+export async function runTasknotesCanary(): Promise<void> {
+  return _runTasknotesCanary();
+}
+
+export async function monitorReportFreshness(): Promise<void> {
+  return _monitorReportFreshness();
+}
+
+export async function runCiIoImpact(): Promise<void> {
+  return _runCiIoImpact();
 }
 
 export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {

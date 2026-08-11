@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
-import { hasSuppressionPattern } from "./check-suppressions.ts";
+import {
+  hasSuppressionPattern,
+  isPostalBoundaryViolation,
+} from "./check-suppressions.ts";
 
 describe("hasSuppressionPattern", () => {
   test("detects ESLint comment directives", () => {
@@ -17,5 +20,31 @@ describe("hasSuppressionPattern", () => {
   test("continues to detect non-ESLint suppressions", () => {
     expect(hasSuppressionPattern("// @ts-expect-error")).toBe(true);
     expect(hasSuppressionPattern("command || true")).toBe(true);
+  });
+});
+
+describe("isPostalBoundaryViolation", () => {
+  test("rejects direct high-level sends outside the report sender", () => {
+    expect(
+      isPostalBoundaryViolation(
+        "packages/temporal/src/activities/other.ts",
+        "sendPostalEmail({})",
+      ),
+    ).toBe(true);
+  });
+
+  test("permits the shared sender and Postal adapter tests", () => {
+    expect(
+      isPostalBoundaryViolation(
+        "packages/temporal/src/activities/report-delivery.ts",
+        "sendPostalEmail({})",
+      ),
+    ).toBe(false);
+    expect(
+      isPostalBoundaryViolation(
+        "packages/temporal/src/shared/postal.test.ts",
+        "sendPostalEmail({})",
+      ),
+    ).toBe(false);
   });
 });

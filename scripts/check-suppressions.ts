@@ -116,13 +116,44 @@ export function hasSuppressionPattern(line: string): boolean {
   return SUPPRESSION_PATTERNS.some((pattern) => pattern.test(line));
 }
 
+const POSTAL_BOUNDARY_FILES = new Set([
+  "packages/temporal/src/activities/report-delivery.ts",
+  "packages/temporal/src/shared/postal.test.ts",
+  "packages/temporal/src/shared/postal.ts",
+]);
+
+export function isPostalBoundaryViolation(
+  path: string,
+  contents: string,
+): boolean {
+  return (
+    contents.includes("sendPostalEmail") && !POSTAL_BOUNDARY_FILES.has(path)
+  );
+}
+
+async function checkPostalBoundary(): Promise<void> {
+  const violations: string[] = [];
+  const glob = new Bun.Glob("packages/temporal/src/**/*.ts");
+  for await (const path of glob.scan({ cwd: ".", onlyFiles: true })) {
+    if (isPostalBoundaryViolation(path, await Bun.file(path).text())) {
+      violations.push(path);
+    }
+  }
+  if (violations.length > 0) {
+    throw new Error(
+      `Direct Postal delivery is restricted to the shared report sender: ${violations.join(", ")}`,
+    );
+  }
+}
+
 async function main(): Promise<void> {
   console.log("Checking for new code quality suppressions...\n");
+  await checkPostalBoundary();
 
   // In CI mode, skip staged-diff check (quality-ratchet enforces total counts)
   if (process.argv.includes("--ci")) {
     console.log(
-      "CI mode: skipping staged-diff check (quality-ratchet covers this)",
+      "Postal boundary passed; staged suppression diff is covered elsewhere in CI",
     );
     return;
   }

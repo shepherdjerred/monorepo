@@ -44,10 +44,13 @@ afterAll(async () => {
   await testEnvironment.teardown();
 });
 
-async function runWithFailingUpdate(
-  updateError: Error,
-): Promise<{ recorded: RecordFailureInput[]; failure: unknown }> {
+async function runWithFailingUpdate(updateError: Error): Promise<{
+  recorded: RecordFailureInput[];
+  reports: unknown[];
+  failure: unknown;
+}> {
   const recorded: RecordFailureInput[] = [];
+  const reports: unknown[] = [];
   const worker = await Worker.create({
     connection: testEnvironment.nativeConnection,
     taskQueue: TASK_QUEUE,
@@ -59,6 +62,10 @@ async function runWithFailingUpdate(
       },
       recordDataDragonFailure: (input: RecordFailureInput): void => {
         recorded.push(input);
+      },
+      deliverActivityReport: (input: unknown) => {
+        reports.push(input);
+        return { accepted: true, duplicate: false, reportRunId: "report-1" };
       },
     },
   });
@@ -75,12 +82,12 @@ async function runWithFailingUpdate(
   } catch (error: unknown) {
     failure = error;
   }
-  return { recorded, failure };
+  return { recorded, reports, failure };
 }
 
 describe("runScoutDataDragonWeeklyRefresh terminal-failure recording", () => {
   test("records the granular reason from the activity cause chain and re-throws", async () => {
-    const { recorded, failure } = await runWithFailingUpdate(
+    const { recorded, reports, failure } = await runWithFailingUpdate(
       new Error(
         "Command failed (gh pr create --repo shepherdjerred/monorepo): exit 1 <redacted>",
       ),
@@ -92,6 +99,11 @@ describe("runScoutDataDragonWeeklyRefresh terminal-failure recording", () => {
       reason: "pr-create-failed",
       currentVersion: VERSION_STATE.currentVersion,
       latestVersion: VERSION_STATE.latestVersion,
+    });
+    expect(reports).toHaveLength(1);
+    expect(reports[0]).toMatchObject({
+      execution: "failed",
+      verdict: "inconclusive",
     });
 
     // The workflow re-throws after recording, so the execution still fails

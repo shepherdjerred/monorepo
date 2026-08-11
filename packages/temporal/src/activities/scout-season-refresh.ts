@@ -1,5 +1,8 @@
 import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import nodePath from "node:path";
 import { simpleGit } from "simple-git";
 import {
   scoutSeasonRefreshDurationSeconds,
@@ -20,6 +23,10 @@ import {
   openSeasonRefreshPr,
   runCommand,
 } from "./scout-season-refresh-git.ts";
+import {
+  assessSeasonEvidence,
+  type SeasonEvidenceAssessment,
+} from "./scout-season-evidence.ts";
 
 const COMPONENT = "scout-season-refresh";
 
@@ -30,16 +37,12 @@ export const SEASONS_FILE =
   "packages/scout-for-lol/packages/data/src/seasons.ts";
 const SEASONS_TEST_FILE =
   "packages/scout-for-lol/packages/data/src/seasons.test.ts";
-// Marketing "What's New" changelog — Claude prepends an entry here when it adds
-// a brand-new season/act. Listing it in SEASON_PATHS wires it into staging,
-// change-detection, and the diff (all keyed off SEASON_PATHS).
+// Keep marketing changelog edits inside the same staged change set.
 export const CHANGELOG_FILE =
   "packages/scout-for-lol/packages/frontend/src/data/changelog.tsx";
 const SEASON_PATHS = [SEASONS_FILE, SEASONS_TEST_FILE, CHANGELOG_FILE] as const;
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
-const DEFAULT_MODEL = "claude-opus-5";
-const DEFAULT_MAX_TURNS = 40;
 
 const NO_DRIFT_SENTINEL = "NO_DRIFT";
 const DRIFTED_SENTINEL = "DRIFTED";
@@ -55,6 +58,7 @@ export type ScoutSeasonRefreshOutcome =
   | "no-drift"
   | "pr-created"
   | "pr-skipped-dry-run"
+  | "partial"
   | "failed";
 
 export type ScoutSeasonRefreshResult = {
@@ -68,6 +72,10 @@ export type ScoutSeasonRefreshResult = {
   durationSeconds: number;
   costUsd: number | undefined;
   numTurns: number | undefined;
+  sourceUrls: string[];
+  sourceEvidenceComplete: boolean;
+  sentinelAgreement: boolean;
+  validationPassed: boolean;
 };
 
 function jsonLog(
@@ -150,6 +158,7 @@ function logSentinelDisagreement(
 function noDriftResult(
   claude: ClaudeRunResult,
   durationSeconds: number,
+  assessment: SeasonEvidenceAssessment,
 ): ScoutSeasonRefreshResult {
   scoutSeasonRefreshRunsTotal.inc({ outcome: "no-drift" });
   scoutSeasonRefreshDurationSeconds.observe(
@@ -172,6 +181,10 @@ function noDriftResult(
     durationSeconds,
     costUsd: claude.costUsd,
     numTurns: claude.numTurns,
+    sourceUrls: assessment.sourceUrls,
+    sourceEvidenceComplete: assessment.sourceEvidenceComplete,
+    sentinelAgreement: assessment.sentinelAgreement,
+    validationPassed: assessment.validationPassed,
   };
 }
 
@@ -181,8 +194,9 @@ async function dryRunResult(args: {
   diff: string;
   id: string;
   durationSeconds: number;
+  assessment: SeasonEvidenceAssessment;
 }): Promise<ScoutSeasonRefreshResult> {
-  const { claude, files, diff, id, durationSeconds } = args;
+  const { claude, files, diff, id, durationSeconds, assessment } = args;
   scoutSeasonRefreshRunsTotal.inc({ outcome: "pr-created" });
   scoutSeasonRefreshDurationSeconds.observe(
     { outcome: "pr-created" },
@@ -206,6 +220,10 @@ async function dryRunResult(args: {
     durationSeconds,
     costUsd: claude.costUsd,
     numTurns: claude.numTurns,
+    sourceUrls: assessment.sourceUrls,
+    sourceEvidenceComplete: assessment.sourceEvidenceComplete,
+    sentinelAgreement: assessment.sentinelAgreement,
+    validationPassed: assessment.validationPassed,
   };
 }
 
@@ -219,6 +237,7 @@ async function realPrResult(args: {
   tempDir: string;
   ghToken: string;
   sentinelText: string;
+  assessment: SeasonEvidenceAssessment;
 }): Promise<ScoutSeasonRefreshResult> {
   const branch = branchNameFor(args.id);
   const title = "chore(scout-for-lol): refresh LoL season dates";
@@ -269,6 +288,40 @@ async function realPrResult(args: {
     durationSeconds: args.durationSeconds,
     costUsd: args.claude.costUsd,
     numTurns: args.claude.numTurns,
+    sourceUrls: args.assessment.sourceUrls,
+    sourceEvidenceComplete: args.assessment.sourceEvidenceComplete,
+    sentinelAgreement: args.assessment.sentinelAgreement,
+    validationPassed: args.assessment.validationPassed,
+  };
+}
+
+function partialResult(args: {
+  claude: ClaudeRunResult;
+  files: string[];
+  diff: string;
+  durationSeconds: number;
+  assessment: SeasonEvidenceAssessment;
+}): ScoutSeasonRefreshResult {
+  scoutSeasonRefreshRunsTotal.inc({ outcome: "partial" });
+  scoutSeasonRefreshDurationSeconds.observe(
+    { outcome: "partial" },
+    args.durationSeconds,
+  );
+  return {
+    outcome: "partial",
+    reason: args.assessment.reason ?? "incomplete evidence",
+    changedFiles: args.files,
+    branchName: undefined,
+    commitHash: undefined,
+    prUrl: undefined,
+    diff: args.diff === "" ? undefined : args.diff,
+    durationSeconds: args.durationSeconds,
+    costUsd: args.claude.costUsd,
+    numTurns: args.claude.numTurns,
+    sourceUrls: args.assessment.sourceUrls,
+    sourceEvidenceComplete: args.assessment.sourceEvidenceComplete,
+    sentinelAgreement: args.assessment.sentinelAgreement,
+    validationPassed: args.assessment.validationPassed,
   };
 }
 
@@ -280,10 +333,10 @@ async function prepareWorkdir(input: ScoutSeasonRefreshInput): Promise<{
   if (input.workdir !== undefined) {
     return { tempDir: input.workdir, repoDir: input.workdir, ownedByUs: false };
   }
-  const id = crypto.randomUUID();
-  const tempDir = `/tmp/scout-season-refresh-${id}`;
+  const tempDir = await mkdtemp(
+    nodePath.join(tmpdir(), "scout-season-refresh-"),
+  );
   const repoDir = `${tempDir}/monorepo`;
-  await runCommand(["mkdir", "-p", tempDir], { cwd: "/tmp" });
   await simpleGit().clone(REPO_URL, repoDir, [
     "--branch",
     MAIN_BRANCH,
@@ -310,9 +363,17 @@ async function dispatchOutcome(args: {
   dryRun: boolean;
   ghToken: string;
   sentinelText: string;
+  assessment: SeasonEvidenceAssessment;
 }): Promise<ScoutSeasonRefreshResult> {
+  if (
+    !args.assessment.sourceEvidenceComplete ||
+    !args.assessment.sentinelAgreement ||
+    !args.assessment.validationPassed
+  ) {
+    return partialResult(args);
+  }
   if (args.files.length === 0) {
-    return noDriftResult(args.claude, args.durationSeconds);
+    return noDriftResult(args.claude, args.durationSeconds, args.assessment);
   }
   if (args.dryRun) {
     return await dryRunResult({
@@ -321,6 +382,7 @@ async function dispatchOutcome(args: {
       diff: args.diff,
       id: args.id,
       durationSeconds: args.durationSeconds,
+      assessment: args.assessment,
     });
   }
   return await realPrResult({
@@ -333,6 +395,7 @@ async function dispatchOutcome(args: {
     tempDir: args.tempDir,
     ghToken: args.ghToken,
     sentinelText: args.sentinelText,
+    assessment: args.assessment,
   });
 }
 
@@ -352,8 +415,8 @@ async function run(
   try {
     const claude = await runClaude({
       workdir: workdir.repoDir,
-      model: input.model ?? DEFAULT_MODEL,
-      maxTurns: input.maxTurns ?? DEFAULT_MAX_TURNS,
+      model: input.model ?? "claude-opus-5",
+      maxTurns: input.maxTurns ?? 40,
       seasonsFile: SEASONS_FILE,
       seasonsTestFile: SEASONS_TEST_FILE,
       changelogFile: CHANGELOG_FILE,
@@ -383,6 +446,11 @@ async function run(
     const durationSeconds = (Date.now() - start) / 1000;
 
     logSentinelDisagreement(files.length, sentinelText);
+    const assessment = await assessSeasonEvidence({
+      resultText: sentinelText,
+      filesChanged: files.length,
+      repoDir: workdir.repoDir,
+    });
     const tokenResult =
       dryRun || files.length === 0
         ? undefined
@@ -400,6 +468,7 @@ async function run(
       dryRun,
       ghToken,
       sentinelText,
+      assessment,
     });
   } catch (error) {
     const durationSeconds = (Date.now() - start) / 1000;
@@ -418,7 +487,7 @@ async function run(
     clearInterval(envHeartbeat);
     if (workdir.ownedByUs) {
       try {
-        await Bun.$`rm -rf ${workdir.tempDir}`.quiet();
+        await rm(workdir.tempDir, { recursive: true, force: true });
       } catch (cleanupError) {
         jsonLog("warning", "Failed to clean up workdir", {
           tempDir: workdir.tempDir,

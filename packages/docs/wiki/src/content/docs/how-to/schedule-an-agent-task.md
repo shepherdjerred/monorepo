@@ -20,11 +20,15 @@ context stay together.
 ```md
 <!-- temporal-agent-task
 {
+  "contractVersion": 2,
   "title": "Recheck Birmel post-deploy metrics",
   "provider": "claude",
   "mode": "report-only",
   "runAt": "2026-05-31T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "checks": [
+    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Current query results for every metric in the source section." }
+  ],
   "source": {
     "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
   },
@@ -39,8 +43,10 @@ For a recurring check, replace `runAt` with `cron` and add a stable
 A document may contain multiple blocks when a rollout needs checks at distinct
 times. Keep each block next to the checkpoint it describes.
 
-Write the prompt so the report is useful without the reader opening anything:
-say what to look at, and what a green and a red answer each look like.
+Declare every check separately. Mark it required only when a clean verdict is
+impossible without it, and make `evidenceRequirement` name the command, API
+response, or other current observation that proves the result. The agent must
+reference provider-captured receipt IDs; prose alone cannot pass a check.
 
 ## 2. Dispatch it
 
@@ -50,16 +56,18 @@ TEMPORAL_ADDRESS=localhost:7233 \
   bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/<doc>.md
 ```
 
-The CLI validates every block before connecting, then schedules them in
-document order. It also takes `--json` and `--stdin` for a single task.
+The CLI validates every block as contract v2 before connecting, then schedules
+them in document order. It also takes `--json` and `--stdin` for a single task.
 
 A `cron` input upserts a Temporal schedule. A `runAt` input starts a one-off
 workflow whose ID is a content hash, deferred with `startDelay`.
 
 ## 3. Confirm it landed
 
-Check the Temporal Web UI for the schedule or the pending execution. The report
-arrives by email when it runs.
+Check the Temporal Web UI for the schedule or the pending execution. One report
+arrives by email for every run, including clear, changed, partial, and failed
+outcomes. The subject and status come from the validated report; the model
+cannot choose them.
 
 :::caution
 Resubmitting is not a silent no-op. An active or already-succeeded task ID is
@@ -74,6 +82,9 @@ input if you genuinely want a second run.
 scheduling ingress — the Temporal server itself is never exposed.
 
 Do not build a general-purpose public scheduling path around it.
+
+The HTTP body must also be contract v2 with declared checks. Old v1 payloads
+are accepted only when replaying existing Temporal histories.
 
 ## Related
 

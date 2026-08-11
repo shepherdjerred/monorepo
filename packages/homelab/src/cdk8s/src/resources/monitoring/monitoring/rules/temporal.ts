@@ -429,6 +429,22 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         ...buildAgentTaskWorkerHealthRules(),
+        {
+          alert: "TemporalReportHeartbeatStale",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Temporal report heartbeat is not fresh for {{ $labels.schedule_id }}",
+            ),
+            description: escapePrometheusTemplate(
+              "The report freshness monitor recorded state {{ $value }} for {{ $labels.schedule_id }}. State 0 is stale or missing and -1 is an absent, paused, or unregistered schedule. Inspect accepted S3 receipts and deployed Temporal schedules; do not disable the schedule.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "temporal_report_freshness_state < 1",
+          ),
+          for: "15m",
+          labels: { severity: "warning" },
+        },
       ],
     },
     {

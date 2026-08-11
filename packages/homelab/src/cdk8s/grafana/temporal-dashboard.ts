@@ -393,6 +393,49 @@ export function createTemporalDashboard() {
         h: 8,
       }),
       ...createGlitterContextPanels(),
+      statPanel({
+        id: 408,
+        title: "Report Heartbeats Fresh",
+        description:
+          "Minimum registry heartbeat state. 1 is fresh; 0 is stale/missing; -1 is absent, paused, or unregistered.",
+        expr: "min(temporal_report_freshness_state) or on() vector(-1)",
+        legend: "minimum state",
+        x: 0,
+        y: 104,
+        w: 8,
+        h: 4,
+      }),
+      timeseriesPanel({
+        id: 409,
+        title: "Report Freshness by Schedule",
+        description: "Every source-defined report schedule's freshness state.",
+        targets: [
+          {
+            expr: "temporal_report_freshness_state",
+            legend: "{{schedule_id}}",
+          },
+        ],
+        x: 8,
+        y: 104,
+        w: 16,
+        h: 4,
+      }),
+      timeseriesPanel({
+        id: 410,
+        title: "Report Delivery Outcomes",
+        description:
+          "Accepted, deduplicated, and failed shared report deliveries.",
+        targets: [
+          {
+            expr: "sum by (report_type, outcome) (increase(temporal_report_delivery_total[24h])) or on() vector(0)",
+            legend: "{{report_type}} {{outcome}}",
+          },
+        ],
+        x: 0,
+        y: 108,
+        w: 24,
+        h: 6,
+      }),
     ],
   };
 }

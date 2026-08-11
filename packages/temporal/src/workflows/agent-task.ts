@@ -1,4 +1,4 @@
-import { proxyActivities, sleep } from "@temporalio/workflow";
+import { patched, proxyActivities, sleep } from "@temporalio/workflow";
 import type {
   AgentTaskActivities,
   RunAgentTaskResult,
@@ -29,13 +29,32 @@ export function agentActivityRetryFor(
 
 function agentActivitiesFor(
   input: AgentTaskInput,
-): Pick<AgentTaskActivities, "runAgentTask"> {
+): Pick<
+  AgentTaskActivities,
+  "runAgentTask" | "investigateAgentTask" | "finalizeAgentTask"
+> {
   const timeoutMinutes = input.agentTimeoutMinutes ?? 90;
   return proxyActivities<AgentTaskActivities>({
     startToCloseTimeout: timeoutMinutes * 60 * 1000,
     heartbeatTimeout: "60 seconds",
     retry: agentActivityRetryFor(input),
   });
+}
+
+async function executeAgentTask(
+  input: AgentTaskInput,
+  workdir: string,
+  twoPhaseV2: boolean,
+): Promise<RunAgentTaskResult> {
+  const activities = agentActivitiesFor(input);
+  if (!twoPhaseV2 || input.contractVersion !== 2) {
+    return activities.runAgentTask({ input, workdir });
+  }
+  const investigation = await activities.investigateAgentTask({
+    input,
+    workdir,
+  });
+  return activities.finalizeAgentTask({ input, workdir, investigation });
 }
 
 const emailActivities = proxyActivities<AgentTaskActivities>({
@@ -63,40 +82,67 @@ async function waitUntilRunAt(runAt: string | undefined): Promise<void> {
 async function dispatchFollowUp(
   input: AgentTaskInput,
   result: RunAgentTaskResult,
+  allowLegacySelfCancel: boolean,
 ): Promise<void> {
-  if (result.followUp !== undefined) {
+  const payload = result.payload;
+  if (payload.followUp !== undefined) {
     await workdirActivities.scheduleAgentTaskFollowUp({
       parent: input,
-      followUp: result.followUp,
+      followUp: payload.followUp,
     });
   }
 
   if (
-    result.cancelCron === true &&
+    allowLegacySelfCancel &&
+    result.contractVersion === 1 &&
+    "cancelCron" in payload &&
+    payload.cancelCron === true &&
     input.allowSelfCancel &&
     input.scheduleId !== undefined
   ) {
     await workdirActivities.pauseAgentTaskSchedule({
       scheduleId: input.scheduleId,
       reason:
-        result.cancelReason ??
+        payload.cancelReason ??
         `Agent task "${input.title}" requested schedule pause`,
     });
   }
 }
 
 export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
+  const v2Reporting = patched("agent-task-report-v2");
+  const twoPhaseV2 = patched("agent-task-two-phase-v2");
+  const requireV2 = patched("agent-task-require-v2");
   await waitUntilRunAt(input.runAt);
-  const workdir = await workdirActivities.prepareAgentTaskWorkdir({ input });
+  const startedAt = new Date().toISOString();
+  let workdir:
+    | Awaited<ReturnType<AgentTaskActivities["prepareAgentTaskWorkdir"]>>
+    | undefined;
+  let reportAttempted = false;
 
   try {
-    const result = await agentActivitiesFor(input).runAgentTask({
-      input,
-      workdir: workdir.workdir,
-    });
+    if (requireV2 && input.contractVersion !== 2) {
+      throw new Error(
+        "New agent task executions require contractVersion 2; v1 is replay-only",
+      );
+    }
+    workdir = await workdirActivities.prepareAgentTaskWorkdir({ input });
+    const result = await executeAgentTask(input, workdir.workdir, twoPhaseV2);
+    reportAttempted = true;
     await emailActivities.sendAgentTaskEmail({ input, result });
-    await dispatchFollowUp(input, result);
+    await dispatchFollowUp(input, result, !v2Reporting);
+  } catch (error: unknown) {
+    if (v2Reporting && !reportAttempted) {
+      await emailActivities.sendAgentTaskFailureReport({
+        input,
+        startedAt,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    throw error;
   } finally {
-    await workdirActivities.cleanupAgentTaskWorkdir(workdir);
+    if (workdir !== undefined) {
+      await workdirActivities.cleanupAgentTaskWorkdir(workdir);
+    }
   }
 }

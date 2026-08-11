@@ -41,6 +41,13 @@
       ],
       "outputs": ["dist/**"]
     },
+    "generate": {
+      "inputs": [
+        "scripts/generate-version-map-schema.ts",
+        "src/version-catalog.json"
+      ],
+      "outputs": ["src/version-map.generated.ts"]
+    },
     "typecheck": {
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/config/analytics-sites.json"]
     },

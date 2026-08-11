@@ -11,6 +11,13 @@ board: false
 
 Verify that the deployed Temporal changes are doing what we intended after several days of production bake time. Use this as a pass/fail checklist, not a general audit. Every checked item should have evidence: command output, dashboard link, workflow ID, email timestamp, PR number, Bugsink issue, or alert link.
 
+> The results and checked items below are a point-in-time record from May 2026.
+> The current `homelab-audit-daily` schedule uses six deterministic collectors
+> on the default queue and shared report delivery; it is no longer an
+> `agentTaskWorkflow`. For a current rollout, use the shared-report canaries,
+> accepted-receipt freshness metrics, and source/live schedule inventory
+> documented in the Temporal package operator guide.
+
 ## Scope
 
 - Generic `agentTaskWorkflow` and authenticated `/agent-tasks` ingress.
@@ -32,7 +39,7 @@ Overall result: **not green**. The platform is healthy and several intended depl
 - Temporal platform health: `kubectl get pods -n temporal` showed server, UI, worker, Postgres, and Redis pods `Running`; `temporal operator cluster health` returned `SERVING`.
 - ArgoCD deployment health: `argocd app get temporal -o json` reported `status.sync.status=Synced`, `status.health.status=Healthy`, revision `2.0.0-2647`, with current worker image `ghcr.io/shepherdjerred/temporal-worker:2.0.0-2635@sha256:b8ae933b9e584e973f089b48089fe505ef672985bdb44231f1e2657df10e9ae9`.
 - Agent-task ingress auth: unauthenticated `POST https://temporal-agent-tasks.sjer.red/agent-tasks` returned `HTTP/2 401` and body `unauthorized`.
-- Schedule shape: `homelab-audit-daily` is registered as `agentTaskWorkflow` on task queue `agent-task`, timezone `America/Los_Angeles`, overlap policy `Skip`, timeout `2h`, `Paused=false`, and `allowSelfCancel=false` in the decoded input.
+- Schedule shape at the time: `homelab-audit-daily` was registered as `agentTaskWorkflow` on task queue `agent-task`, timezone `America/Los_Angeles`, overlap policy `Skip`, timeout `2h`, and `Paused=false`.
 - PR review lifecycle comments exist: PR #864 had a successful `<!-- pr-review-bot-status -->` no-findings comment; PR #865 had a visible failed status comment pointing to workflow `pr-review-pipeline-shepherdjerred-monorepo-865-bcb13499a860b18e754234acf5629539753b8ea2`.
 - PR summary path works on normal-sized PRs: PR #864 got SDK summary comment `<!-- pr-summary-sdk -->`, and worker logs show `Posted PR summary` with `durationMs=9775`, `costUsd=0.01756`, `inputTokens=14020`, `outputTokens=708`.
 - Data Dragon cadence is intact: `scout-data-dragon-version-check` is Sunday-Friday at 06:00 PT, `scout-data-dragon-weekly-refresh` is Saturday at 06:00 PT, and `runScoutDataDragonVersionCheck` completed at `2026-05-22T13:00:00Z`.
@@ -151,10 +158,10 @@ Overall result: **not green**. The platform is healthy and several intended depl
   - Pass: request returns a workflow/schedule identifier, Temporal shows `agentTaskWorkflow`, and Postal sends one email.
   - Evidence: not exercised during this run.
 
-- [x] Follow-up scheduling and cron self-pause behavior are not accidentally enabled for the daily audit.
-  - Check the `homelab-audit-daily` input.
-  - Pass: `allowSelfCancel: false`; no unexpected follow-up schedules were created by daily audits.
-  - Evidence: `homelab-audit-daily` input has `allowSelfCancel:false`; schedule `Paused=false`; no unexpected follow-up schedule was observed in the schedule output.
+- [x] The daily audit did not mutate its own schedule.
+  - Check the `homelab-audit-daily` schedule state and neighboring schedules.
+  - Pass: the audit cannot pause, cancel, or delete its schedule; no unexpected follow-up schedules were created.
+  - Evidence: the schedule remained unpaused and no unexpected follow-up schedule was observed.
 
 ## PR Review And Summary Bot
 

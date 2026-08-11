@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it } from "bun:test";
 import {
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE,
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
+  AgentTaskInputV2Schema,
+  AgentTaskResultPayloadV2Schema,
 } from "#shared/agent-task.ts";
 import {
   buildAgentTaskCommand,
@@ -133,5 +135,66 @@ describe("buildAgentTaskCommand", () => {
     );
     expect(command.args).toContain("--verbose");
     expect(command.args).not.toContain("--output-schema");
+  });
+
+  it("disables Claude tools and supplies captured receipts during v2 finalization", async () => {
+    Bun.env["CLAUDE_CODE_OAUTH_TOKEN"] = "test-claude-token";
+    const workdir = await mkdtemp(
+      path.join(os.tmpdir(), "agent-task-command-"),
+    );
+    temporaryDirectories.push(workdir);
+    const input = AgentTaskInputV2Schema.parse({
+      contractVersion: 2,
+      title: "Service report",
+      prompt: "Check service health.",
+      checks: [
+        {
+          id: "service-health",
+          label: "Service health",
+          required: true,
+          evidenceRequirement: "A successful health command.",
+        },
+      ],
+      provider: "claude",
+      mode: "report-only",
+      repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
+      allowSelfCancel: false,
+    });
+    const preliminary = AgentTaskResultPayloadV2Schema.parse({
+      headline: "Preliminary healthy result.",
+      checks: [
+        {
+          id: "service-health",
+          status: "passed",
+          summary: "Health command passed.",
+          evidenceReceiptIds: ["tool-1"],
+        },
+      ],
+      findings: [],
+      limitations: [],
+      actions: [],
+    });
+
+    const command = await buildAgentTaskCommand(input, workdir, {
+      kind: "finalization",
+      evidence: [
+        {
+          id: "tool-1",
+          source: "Bash",
+          observedAt: "2026-08-10T17:00:00.000Z",
+          status: "success",
+          command: "service-health --json",
+          excerpt: '{"healthy":true}',
+        },
+      ],
+      preliminary,
+    });
+
+    expect(command.args).toContain("--tools");
+    expect(command.args[command.args.indexOf("--tools") + 1]).toBe("");
+    expect(command.args).not.toContain("--allowed-tools");
+    expect(command.prompt).toContain("Finalization phase:");
+    expect(command.prompt).toContain('"id": "tool-1"');
+    expect(command.prompt).toContain("Do not invoke tools");
   });
 });

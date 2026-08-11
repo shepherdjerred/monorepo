@@ -16,24 +16,26 @@ Cron times are `America/Los_Angeles` wall-clock. Source:
 
 ## Repo upkeep
 
-| Workflow            | Trigger     | Brain         | Output       |
-| ------------------- | ----------- | ------------- | ------------ |
-| fetcher             | daily 05:00 | deterministic | S3 overwrite |
-| deps-summary        | Mon 09:00   | LLM summary   | email        |
-| llm-catalog-refresh | Mon 09:00   | deterministic | PR           |
-| homelab-crd-imports | daily 05:30 | deterministic | PR           |
-| pokeemerald-data    | daily 04:30 | deterministic | PR           |
+| Workflow            | Trigger     | Brain                            | Output          |
+| ------------------- | ----------- | -------------------------------- | --------------- |
+| fetcher             | daily 05:00 | deterministic                    | S3 overwrite    |
+| deps-summary        | Mon 09:00   | deterministic + optional summary | heartbeat email |
+| llm-catalog-refresh | Mon 09:00   | deterministic                    | PR              |
+| homelab-crd-imports | daily 05:30 | deterministic                    | PR              |
+| pokeemerald-data    | daily 04:30 | deterministic                    | PR              |
+| CI I/O impact       | daily 09:00 | deterministic                    | heartbeat email |
+| protobufjs v8 watch | Mon 09:00   | deterministic                    | heartbeat email |
 
 ## Scout
 
-| Workflow                   | Trigger       | Brain                    | Output                        |
-| -------------------------- | ------------- | ------------------------ | ----------------------------- |
-| data-dragon version check  | 06:00 Sun–Fri | deterministic            | **auto-merge PR**             |
-| data-dragon weekly refresh | Sat 06:00     | deterministic            | **auto-merge PR**             |
-| season-refresh             | Mon 07:00     | **agent** (web research) | PR                            |
-| showcase-refresh           | Mon 10:00     | deterministic            | PR                            |
-| queue-windows              | daily 06:45   | deterministic            | PR (auto-merge if reversible) |
-| image-gc                   | daily 04:00   | deterministic            | S3 deletions                  |
+| Workflow                   | Trigger       | Brain                  | Output                        |
+| -------------------------- | ------------- | ---------------------- | ----------------------------- |
+| data-dragon version check  | 06:00 Sun–Fri | deterministic          | heartbeat + **auto-merge PR** |
+| data-dragon weekly refresh | Sat 06:00     | deterministic          | heartbeat + **auto-merge PR** |
+| season-refresh             | Mon 07:00     | agent research + gates | heartbeat + PR                |
+| showcase-refresh           | Mon 10:00     | deterministic          | PR                            |
+| queue-windows              | daily 06:45   | deterministic          | heartbeat + gated PR          |
+| image-gc                   | daily 04:00   | deterministic          | S3 deletions                  |
 
 ## Glitter
 
@@ -50,18 +52,20 @@ Only corpus capture and context-refresh are scheduled.
 
 ## Homelab maintenance
 
-| Workflow                        | Trigger       | Brain         | Output                 |
-| ------------------------------- | ------------- | ------------- | ---------------------- |
-| zfs-maintenance                 | Sun 03:00     | deterministic | scrub + autotrim       |
-| buildkite-uv-cache-prune-weekly | Sun 03:15     | deterministic | uv cache prune         |
-| bugsink-housekeeping            | daily 03:00   | deterministic | DB cleanup             |
-| velero-orphan-audit             | daily 03:30   | deterministic | metrics only           |
-| kometa-daily                    | daily 04:30   | deterministic | Plex metadata sync     |
-| buildkite-bun-cache-gc          | every 5 min   | deterministic | Bun cache GC           |
-| buildkite-trivy-db-refresh      | every 6 hours | deterministic | Trivy database refresh |
-| dns-audit                       | daily 06:00   | deterministic | logs                   |
-| golink-sync                     | daily 05:00   | deterministic | golink reconcile       |
-| temporal-failure-watch          | every 5 min   | deterministic | PagerDuty page         |
+| Workflow                        | Trigger       | Brain         | Output                   |
+| ------------------------------- | ------------- | ------------- | ------------------------ |
+| zfs-maintenance                 | Sun 03:00     | deterministic | scrub + autotrim         |
+| buildkite-uv-cache-prune-weekly | Sun 03:15     | deterministic | uv cache prune           |
+| bugsink-housekeeping            | daily 03:00   | deterministic | DB cleanup               |
+| velero-orphan-audit             | daily 03:30   | deterministic | metrics only             |
+| kometa-daily                    | daily 04:30   | deterministic | Plex metadata sync       |
+| buildkite-bun-cache-gc          | every 5 min   | deterministic | Bun cache GC             |
+| buildkite-trivy-db-refresh      | every 6 hours | deterministic | Trivy database refresh   |
+| dns-audit                       | daily 06:00   | deterministic | logs                     |
+| golink-sync                     | daily 05:00   | deterministic | golink reconcile         |
+| temporal-failure-watch          | every 5 min   | deterministic | durable alert occurrence |
+| report-freshness-monitor        | every 15 min  | deterministic | metrics + durable alert  |
+| TaskNotes canary                | daily 09:00   | deterministic | heartbeat email          |
 
 ## Home automation
 
@@ -89,11 +93,15 @@ Parameters for the sleep and morning routines are in
 
 ## Agent tasks
 
-| Workflow                 | Trigger               | Brain                 | Output         |
-| ------------------------ | --------------------- | --------------------- | -------------- |
-| agent-task               | doc block / CLI / API | **agent** (read-only) | emailed report |
-| homelab-audit-daily      | daily 06:30           | **agent** (read-only) | emailed report |
-| homelab-audit (operator) | operator CLI          | **agent** (read-only) | emailed report |
+| Workflow                 | Trigger               | Brain                             | Output          |
+| ------------------------ | --------------------- | --------------------------------- | --------------- |
+| agent-task               | doc block / CLI / API | **agent** investigation           | heartbeat email |
+| homelab-audit-daily      | daily 06:30           | collectors + optional LLM summary | heartbeat email |
+| homelab-audit (operator) | operator CLI          | same deterministic implementation | heartbeat email |
+
+All heartbeat emails use one validated report envelope. A clear status requires
+successful evidence for every required check; partial and failed runs still
+send. Models cannot select the status or subject.
 
 ## Related
 

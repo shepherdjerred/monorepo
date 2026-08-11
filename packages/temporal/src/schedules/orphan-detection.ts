@@ -1,5 +1,5 @@
 import type { Client } from "@temporalio/client";
-import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task.ts";
+import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
 import { scheduleOrphans } from "#observability/metrics.ts";
 
 // Gauge value written when `scheduleClient.list()` itself fails. Distinct from

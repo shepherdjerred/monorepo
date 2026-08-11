@@ -97,11 +97,17 @@ and cannot substitute for the operator API check.
 
 <!-- temporal-agent-task
 {
+  "contractVersion": 2,
   "title": "Check PagerDuty retention-audit eligibility",
   "provider": "claude",
   "mode": "report-only",
   "runAt": "2026-09-07T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "checks": [
+    { "id": "cutover-timestamp", "label": "Production cutover timestamp", "required": true, "evidenceRequirement": "A durable source containing the production cutover timestamp." },
+    { "id": "retention-window", "label": "Thirty-day retention window", "required": true, "evidenceRequirement": "Deterministic elapsed-time calculation from the sourced timestamp." },
+    { "id": "credential-consumers", "label": "Remaining PagerDuty consumers", "required": true, "evidenceRequirement": "Current repository and live workload credential-reference evidence." }
+  ],
   "source": {
     "docPath": "packages/docs/todos/pagerduty-migration.md"
   },

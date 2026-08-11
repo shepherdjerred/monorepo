@@ -10,12 +10,14 @@ import type { Duration } from "@temporalio/common";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   AgentTaskInputSchema,
-  DYNAMIC_AGENT_TASK_MEMO_KEY,
-  agentTaskScheduleId,
-  agentTaskWorkflowId,
   type AgentTaskInput,
   type AgentTaskStartResult,
 } from "#shared/agent-task.ts";
+import {
+  DYNAMIC_AGENT_TASK_MEMO_KEY,
+  agentTaskScheduleId,
+  agentTaskWorkflowId,
+} from "#shared/agent-task-identifiers.ts";
 
 const DEFAULT_WORKFLOW_TIMEOUT: Duration = "2 hours";
 export const AGENT_TASK_SCHEDULE_TIMEZONE = "America/Los_Angeles";

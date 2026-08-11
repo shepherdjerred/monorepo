@@ -1,5 +1,5 @@
 import {
-  AgentTaskInputSchema,
+  AgentTaskInputV2Schema,
   type AgentTaskInput,
 } from "#shared/agent-task.ts";
 
@@ -32,6 +32,6 @@ export function parseAgentTaskInputsFromMarkdown(
   markdown: string,
 ): AgentTaskInput[] {
   return extractBlocks(markdown).map((block) =>
-    AgentTaskInputSchema.parse(JSON.parse(block)),
+    AgentTaskInputV2Schema.parse(JSON.parse(block)),
   );
 }

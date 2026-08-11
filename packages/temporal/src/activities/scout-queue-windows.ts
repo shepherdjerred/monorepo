@@ -1,3 +1,10 @@
+import {
+  GetObjectCommand,
+  NoSuchKey,
+  PutObjectCommand,
+  S3Client,
+  S3ServiceException,
+} from "@aws-sdk/client-s3";
 import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
@@ -9,7 +16,6 @@ import {
   openSeasonRefreshPr,
   runCommand,
 } from "./scout-season-refresh-git.ts";
-import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const REPO_SLUG = "shepherdjerred/monorepo";
@@ -25,6 +31,7 @@ const BUCKET = "scout-prod";
 // CLOSE_MIN_ELIGIBLE_RUNS in queue-window-drift.ts.
 const LOOKBACK_DAYS = 28;
 const PROPOSAL_BRANCH = "chore/scout-queue-windows";
+const WARNING_STATE_KEY = "reports/state/scout-queue-windows.json";
 const AutoMergeStateSchema = z.enum(["true", "false"]);
 
 const ReportEditSchema = z.object({
@@ -52,6 +59,17 @@ const ReportSchema = z.object({
   patchNotes: ReportPatchNotesSchema,
 });
 type Report = z.infer<typeof ReportSchema>;
+const WarningStateSchema = z.object({
+  schemaVersion: z.literal(1),
+  fingerprint: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .nullable(),
+  consecutiveRuns: z.number().int().nonnegative(),
+  // Optional so state written before retry-aware counting remains readable.
+  lastWorkflowRunId: z.string().min(1).optional(),
+});
+type WarningState = z.infer<typeof WarningStateSchema>;
 
 export type ScoutQueueWindowsResult = {
   changedFiles: string[];
@@ -59,8 +77,13 @@ export type ScoutQueueWindowsResult = {
   commitHash: string | undefined;
   prUrl: string | undefined;
   autoMergeRequested: boolean;
+  autoMergeConfigured: boolean | undefined;
   editCount: number;
   warningCount: number;
+  warningSummaries: string[];
+  warningFingerprint: string | undefined;
+  warningConsecutiveRuns: number;
+  editSummaries: string[];
   outcome: "pr-created" | "no-diff" | "no-diff-warned";
 };
 
@@ -128,18 +151,139 @@ function buildPrBody(report: Report, autoMerge: boolean): string {
   return lines.join("\n");
 }
 
-function buildWarningEmailHtml(report: Report): string {
-  const items = report.warnings
-    .map(
-      (warning) =>
-        `<li><strong>${warning.kind}</strong>: ${warning.message}</li>`,
-    )
+function warningStateStore(
+  endpoint: string,
+  region: string,
+): {
+  client: S3Client;
+  bucket: string;
+} {
+  return {
+    client: new S3Client({ endpoint, region, forcePathStyle: true }),
+    bucket:
+      Bun.env["REPORT_RECEIPT_BUCKET"] ??
+      Bun.env["REVIEW_SIGNAL_ARCHIVE_BUCKET"] ??
+      "llm-archive",
+  };
+}
+
+async function readWarningState(
+  client: S3Client,
+  bucket: string,
+): Promise<WarningState | undefined> {
+  try {
+    const result = await client.send(
+      new GetObjectCommand({ Bucket: bucket, Key: WARNING_STATE_KEY }),
+    );
+    if (result.Body === undefined) {
+      throw new Error("queue warning state has no body");
+    }
+    return WarningStateSchema.parse(
+      JSON.parse(await result.Body.transformToString()),
+    );
+  } catch (error: unknown) {
+    if (
+      error instanceof NoSuchKey ||
+      (error instanceof S3ServiceException &&
+        error.$metadata.httpStatusCode === 404)
+    ) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+export function nextWarningState(
+  prior: WarningState | undefined,
+  fingerprint: string | undefined,
+  workflowRunId: string,
+): WarningState {
+  const consecutiveRuns =
+    fingerprint === undefined
+      ? 0
+      : prior?.fingerprint === fingerprint
+        ? prior.lastWorkflowRunId === workflowRunId
+          ? prior.consecutiveRuns
+          : prior.consecutiveRuns + 1
+        : 1;
+  return WarningStateSchema.parse({
+    schemaVersion: 1,
+    fingerprint: fingerprint ?? null,
+    consecutiveRuns,
+    lastWorkflowRunId: workflowRunId,
+  });
+}
+
+async function warningFingerprint(
+  warnings: Report["warnings"],
+): Promise<string | undefined> {
+  if (warnings.length === 0) return undefined;
+  const canonical = warnings
+    .map((warning) => `${warning.kind}\0${warning.message}`)
+    .sort()
+    .join("\n");
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(canonical),
+  );
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
-  return [
-    "<p>The scout queue-windows watcher found no window edits to make, but",
-    "surfaced warnings worth a human look:</p>",
-    `<ul>${items}</ul>`,
-  ].join("\n");
+}
+
+async function updateWarningState(
+  endpoint: string,
+  region: string,
+  warnings: Report["warnings"],
+): Promise<{ fingerprint: string | undefined; consecutiveRuns: number }> {
+  const store = warningStateStore(endpoint, region);
+  const [prior, fingerprint] = await Promise.all([
+    readWarningState(store.client, store.bucket),
+    warningFingerprint(warnings),
+  ]);
+  const workflowExecution = Context.current().info.workflowExecution;
+  if (workflowExecution === undefined) {
+    throw new Error("Scout queue warning state requires a workflow execution");
+  }
+  const state = nextWarningState(prior, fingerprint, workflowExecution.runId);
+  await store.client.send(
+    new PutObjectCommand({
+      Bucket: store.bucket,
+      Key: WARNING_STATE_KEY,
+      Body: JSON.stringify(state, null, 2),
+      ContentType: "application/json; charset=utf-8",
+    }),
+  );
+  return {
+    fingerprint: state.fingerprint ?? undefined,
+    consecutiveRuns: state.consecutiveRuns,
+  };
+}
+
+function resultDetails(
+  report: Report,
+  warningState: { fingerprint: string | undefined; consecutiveRuns: number },
+): Pick<
+  ScoutQueueWindowsResult,
+  | "editCount"
+  | "warningCount"
+  | "warningSummaries"
+  | "warningFingerprint"
+  | "warningConsecutiveRuns"
+  | "editSummaries"
+> {
+  return {
+    editCount: report.edits.length,
+    warningCount: report.warnings.length,
+    warningSummaries: report.warnings.map(
+      (warning) => `${warning.kind}: ${warning.message}`,
+    ),
+    warningFingerprint: warningState.fingerprint,
+    warningConsecutiveRuns: warningState.consecutiveRuns,
+    editSummaries: report.edits.map(
+      (edit) => `${edit.queue}: ${edit.kind} ${edit.date} — ${edit.message}`,
+    ),
+  };
 }
 
 export type ScoutQueueWindowsActivities = typeof scoutQueueWindowsActivities;
@@ -218,6 +362,12 @@ export const scoutQueueWindowsActivities = {
 
       const rawReport: unknown = await Bun.file(reportPath).json();
       const report = ReportSchema.parse(rawReport);
+      const warningState = await updateWarningState(
+        s3Endpoint,
+        region,
+        report.warnings,
+      );
+      const details = resultDetails(report, warningState);
 
       const files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
       if (files.length === 0) {
@@ -233,22 +383,14 @@ export const scoutQueueWindowsActivities = {
             "Closing this automated proposal because the latest scout-prod evidence produces no queue-window drift. A future drift run will open a fresh proposal.",
         });
         if (report.warnings.length > 0) {
-          const { recipient, sender } = resolvePostalAddresses();
-          await sendPostalEmail({
-            to: recipient,
-            from: sender,
-            subject: "Scout queue-windows watcher: warnings (no edits)",
-            htmlBody: buildWarningEmailHtml(report),
-            tag: "scout-queue-windows",
-          });
           return {
             changedFiles: [],
             branchName: undefined,
             commitHash: undefined,
             prUrl: undefined,
             autoMergeRequested: false,
-            editCount: 0,
-            warningCount: report.warnings.length,
+            autoMergeConfigured: undefined,
+            ...details,
             outcome: "no-diff-warned",
           };
         }
@@ -258,13 +400,14 @@ export const scoutQueueWindowsActivities = {
           commitHash: undefined,
           prUrl: undefined,
           autoMergeRequested: false,
-          editCount: 0,
-          warningCount: 0,
+          autoMergeConfigured: undefined,
+          ...details,
           outcome: "no-diff",
         };
       }
 
       const autoMerge = canAutoMerge(report.edits);
+      let autoMergeConfigured: boolean | undefined;
       // All daily runs reuse one proposal branch. A close proposal needs human
       // review and may outlive a schedule interval; reopening it updates the
       // same PR rather than generating a duplicate each day. The shared Git
@@ -305,11 +448,13 @@ export const scoutQueueWindowsActivities = {
               redactOutput: true,
             },
           );
+          autoMergeConfigured = true;
         } catch (error: unknown) {
           // Non-fatal: the PR still exists and can be merged manually.
           console.error(
             `scout queue-windows PR auto-merge setup failed: ${error instanceof Error ? error.message : String(error)}`,
           );
+          autoMergeConfigured = false;
         }
       } else {
         // A shared proposal may previously have contained only additive edits
@@ -347,6 +492,7 @@ export const scoutQueueWindowsActivities = {
             },
           );
         }
+        autoMergeConfigured = true;
       }
 
       return {
@@ -355,8 +501,8 @@ export const scoutQueueWindowsActivities = {
         commitHash,
         prUrl,
         autoMergeRequested: autoMerge,
-        editCount: report.edits.length,
-        warningCount: report.warnings.length,
+        autoMergeConfigured,
+        ...details,
         outcome: "pr-created",
       };
     } finally {

@@ -47,11 +47,18 @@ TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
 
 <!-- temporal-agent-task
 {
+  "contractVersion": 2,
   "title": "Capture homelab capacity deployment baseline",
   "provider": "codex",
   "mode": "report-only",
   "runAt": "2026-08-12T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "checks": [
+    { "id": "deployed-revision", "label": "Deployed revision", "required": true, "evidenceRequirement": "Current ArgoCD and Git revision evidence." },
+    { "id": "capacity-runtime", "label": "Capacity and runtime health", "required": true, "evidenceRequirement": "Current Buildkite, Kubernetes, Kueue, and Temporal evidence." },
+    { "id": "observability", "label": "Metrics and dashboards", "required": true, "evidenceRequirement": "Successful Prometheus queries and a zero-error dashboard audit." },
+    { "id": "storage-thermals", "label": "Storage and thermals", "required": true, "evidenceRequirement": "Current PVC, ZFS, disk-health, I/O, and thermal evidence." }
+  ],
   "source": {
     "docPath": "packages/docs/todos/homelab-capacity-rollout-acceptance.md"
   },
@@ -61,11 +68,18 @@ TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
 
 <!-- temporal-agent-task
 {
+  "contractVersion": 2,
   "title": "Check homelab capacity rollout after 24 hours",
   "provider": "codex",
   "mode": "report-only",
   "runAt": "2026-08-13T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "checks": [
+    { "id": "deployed-revision", "label": "Deployed revision and window", "required": true, "evidenceRequirement": "Current ArgoCD revision and exact 24-hour query window." },
+    { "id": "capacity-runtime", "label": "Capacity and runtime gates", "required": true, "evidenceRequirement": "Buildkite, Kubernetes, Kueue, and limiter evidence for every documented gate." },
+    { "id": "observability", "label": "Metrics and dashboards", "required": true, "evidenceRequirement": "Successful Prometheus queries and a zero-error dashboard audit." },
+    { "id": "storage-thermals", "label": "Storage and thermals", "required": true, "evidenceRequirement": "PVC, disk, write, I/O, and thermal evidence for the full window." }
+  ],
   "source": {
     "docPath": "packages/docs/todos/homelab-capacity-rollout-acceptance.md"
   },
@@ -75,11 +89,18 @@ TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
 
 <!-- temporal-agent-task
 {
+  "contractVersion": 2,
   "title": "Check homelab capacity rollout after seven days",
   "provider": "codex",
   "mode": "report-only",
   "runAt": "2026-08-19T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "checks": [
+    { "id": "deployed-revision", "label": "Deployed revision and soak window", "required": true, "evidenceRequirement": "Current ArgoCD revision and exact seven-day query window." },
+    { "id": "capacity-runtime", "label": "Capacity and runtime gates", "required": true, "evidenceRequirement": "Buildkite, Kubernetes, Kueue, and limiter evidence for every documented gate." },
+    { "id": "observability", "label": "Metrics and dashboards", "required": true, "evidenceRequirement": "Successful Prometheus queries and a zero-error dashboard audit." },
+    { "id": "storage-thermals", "label": "Storage and thermals", "required": true, "evidenceRequirement": "PVC, disk, lifetime-write, I/O, and thermal evidence for the full soak." }
+  ],
   "source": {
     "docPath": "packages/docs/todos/homelab-capacity-rollout-acceptance.md"
   },

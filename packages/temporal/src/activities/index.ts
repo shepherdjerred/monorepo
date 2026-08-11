@@ -4,6 +4,7 @@ import { dnsAuditActivities } from "./dns-audit.ts";
 import { golinkSyncActivities } from "./golink-sync.ts";
 import { haActivities } from "./ha.ts";
 import { homelabAuditActivities } from "./homelab-audit.ts";
+import { homelabAuditCollectorActivities } from "./homelab-audit-collectors.ts";
 import { agentTaskActivities } from "./agent-task.ts";
 import { zfsMaintenanceActivities } from "./zfs-maintenance.ts";
 import { bugsinkHousekeepingActivities } from "./bugsink.ts";
@@ -25,6 +26,11 @@ import { glitterContextRefreshActivities } from "./glitter-context-refresh.ts";
 import { weatherActivities } from "./weather.ts";
 import { workflowFailureWatchActivities } from "./workflow-failure-watch-activity.ts";
 import { maintenanceActivities } from "./maintenance.ts";
+import { reportDeliveryActivities } from "./report-delivery.ts";
+import { protobufWatchActivities } from "./protobuf-watch.ts";
+import { tasknotesCanaryActivities } from "./tasknotes-canary.ts";
+import { reportFreshnessActivities } from "./report-freshness.ts";
+import { ciIoImpactActivities } from "./ci-io-impact.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -33,6 +39,7 @@ export const activities = {
   ...golinkSyncActivities,
   ...haActivities,
   ...homelabAuditActivities,
+  ...homelabAuditCollectorActivities,
   ...agentTaskActivities,
   ...zfsMaintenanceActivities,
   ...bugsinkHousekeepingActivities,
@@ -54,4 +61,9 @@ export const activities = {
   ...weatherActivities,
   ...workflowFailureWatchActivities,
   ...maintenanceActivities,
+  ...reportDeliveryActivities,
+  ...protobufWatchActivities,
+  ...tasknotesCanaryActivities,
+  ...reportFreshnessActivities,
+  ...ciIoImpactActivities,
 };

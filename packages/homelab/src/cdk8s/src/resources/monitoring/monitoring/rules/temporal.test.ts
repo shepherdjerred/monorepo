@@ -97,6 +97,17 @@ describe("Temporal workflow outcome rules", () => {
       throw new Error("Missing TemporalWorkerMetricsDown alert");
     }
     expect(workerMetricsDown.for).toBe("5m");
+
+    const reportHeartbeat = failuresGroup.rules.find(
+      (rule) => rule.alert === "TemporalReportHeartbeatStale",
+    );
+    if (reportHeartbeat === undefined) {
+      throw new Error("Missing TemporalReportHeartbeatStale alert");
+    }
+    expect(reportHeartbeat.expr.value).toContain(
+      "temporal_report_freshness_state < 1",
+    );
+    expect(reportHeartbeat.for).toBe("15m");
   });
 
   test("does not emit the removed aggregate agent-task timeout alerts", () => {

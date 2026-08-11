@@ -1,9 +1,15 @@
 import {
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE,
+  AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE_V2,
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
-  reportOnlyPrompt,
+  AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX_V2,
   type AgentTaskInput,
 } from "#shared/agent-task.ts";
+import {
+  reportOnlyPrompt,
+  SINGLE_AGENT_TASK_PROMPT_PHASE,
+  type AgentTaskPromptPhase,
+} from "#shared/agent-task-prompt.ts";
 
 const DEFAULT_CLAUDE_MODEL = "claude-opus-5";
 const DEFAULT_CODEX_MODEL = "gpt-5.6-sol";
@@ -24,11 +30,11 @@ export type AgentTaskCommand = {
   prompt: string;
 };
 
-async function writeOutputSchema(path: string): Promise<void> {
-  await Bun.write(
-    path,
-    JSON.stringify(AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX, null, 2),
-  );
+async function writeOutputSchema(
+  path: string,
+  schema: Record<string, unknown>,
+): Promise<void> {
+  await Bun.write(path, JSON.stringify(schema, null, 2));
 }
 
 // `--json-schema` MUST be the inline schema JSON, never a file path: claude
@@ -39,6 +45,7 @@ async function writeOutputSchema(path: string): Promise<void> {
 function claudeCommand(
   input: AgentTaskInput,
   workdir: string,
+  phase: AgentTaskPromptPhase,
 ): AgentTaskCommand {
   const token = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
   if (token === undefined || token === "") {
@@ -48,7 +55,11 @@ function claudeCommand(
   }
   const model = input.model ?? DEFAULT_CLAUDE_MODEL;
   const maxTurns = input.maxTurns ?? DEFAULT_MAX_TURNS;
-  const prompt = reportOnlyPrompt(input, workdir);
+  const prompt = reportOnlyPrompt(input, workdir, phase);
+  const outputSchema =
+    input.contractVersion === 2
+      ? AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE_V2
+      : AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE;
   return {
     args: [
       "claude",
@@ -58,9 +69,10 @@ function claudeCommand(
       "stream-json",
       "--verbose",
       "--json-schema",
-      JSON.stringify(AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE),
-      "--allowed-tools",
-      CLAUDE_ALLOWED_TOOLS,
+      JSON.stringify(outputSchema),
+      ...(phase.kind === "finalization"
+        ? ["--tools", ""]
+        : ["--allowed-tools", CLAUDE_ALLOWED_TOOLS]),
       "--permission-mode",
       "acceptEdits",
       "--dangerously-skip-permissions",
@@ -80,6 +92,7 @@ function claudeCommand(
 async function codexCommand(
   input: AgentTaskInput,
   workdir: string,
+  phase: AgentTaskPromptPhase,
 ): Promise<AgentTaskCommand> {
   const apiKey = Bun.env["CODEX_API_KEY"] ?? Bun.env["OPENAI_API_KEY"];
   if (apiKey === undefined || apiKey === "") {
@@ -87,11 +100,17 @@ async function codexCommand(
       "CODEX_API_KEY or OPENAI_API_KEY is required for Codex agent tasks",
     );
   }
-  const schemaPath = `${workdir}/agent-task-output.schema.json`;
-  const outputPath = `${workdir}/agent-task-output.json`;
-  await writeOutputSchema(schemaPath);
+  const phaseSuffix = phase.kind === "single" ? "output" : phase.kind;
+  const schemaPath = `${workdir}/agent-task-${phaseSuffix}.schema.json`;
+  const outputPath = `${workdir}/agent-task-${phaseSuffix}.json`;
+  await writeOutputSchema(
+    schemaPath,
+    input.contractVersion === 2
+      ? AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX_V2
+      : AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
+  );
   const model = input.model ?? DEFAULT_CODEX_MODEL;
-  const prompt = reportOnlyPrompt(input, workdir);
+  const prompt = reportOnlyPrompt(input, workdir, phase);
   return {
     args: [
       "codex",
@@ -129,8 +148,9 @@ async function codexCommand(
 export async function buildAgentTaskCommand(
   input: AgentTaskInput,
   workdir: string,
+  phase: AgentTaskPromptPhase = SINGLE_AGENT_TASK_PROMPT_PHASE,
 ): Promise<AgentTaskCommand> {
   return input.provider === "claude"
-    ? claudeCommand(input, workdir)
-    : await codexCommand(input, workdir);
+    ? claudeCommand(input, workdir, phase)
+    : await codexCommand(input, workdir, phase);
 }

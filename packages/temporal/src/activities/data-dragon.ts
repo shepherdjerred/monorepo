@@ -2,10 +2,8 @@ import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
-import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import {
   DATA_DRAGON_GENERATED_PATHS,
-  buildImageOnlySkipEmailContent,
   dataDragonDisallowedChangePaths,
   nonSuppressibleDataDragonPrChanges,
   parseGitStatusLine,
@@ -81,6 +79,7 @@ export type DataDragonUpdateResult = DataDragonUpdateInput & {
   reason: "pr-created" | "no-diff" | "image-only-diff" | "pr-already-open";
   emailSent?: boolean;
   emailMessageId?: string;
+  autoMergeConfigured?: boolean;
 };
 
 function jsonLog(
@@ -165,12 +164,13 @@ async function ensurePrAutoMerge(
   githubToken: string,
   mode: DataDragonUpdateMode,
   logContext: Record<string, unknown>,
-): Promise<void> {
+): Promise<boolean> {
   try {
     await runCommand(
       ["gh", "pr", "merge", "--repo", REPO_SLUG, "--auto", "--merge", prUrl],
       { cwd: "/tmp", env: { GH_TOKEN: githubToken }, redactOutput: true },
     );
+    return true;
   } catch (error: unknown) {
     recordAutoMergeFailure(mode);
     jsonLog("warning", "Data Dragon PR auto-merge setup failed", {
@@ -178,6 +178,7 @@ async function ensurePrAutoMerge(
       prUrl,
       error: error instanceof Error ? error.message : String(error),
     });
+    return false;
   }
 }
 
@@ -293,10 +294,15 @@ export const dataDragonActivities = {
         // Finish the setup idempotently so the retry doesn't leave the PR
         // stuck (and so an auto-merge failure surfaces via its own alert)
         // before treating the dedup skip as complete.
-        await ensurePrAutoMerge(existingPrUrl, githubToken, input.mode, {
-          ...input,
-          reason: "pr-already-open",
-        });
+        const autoMergeConfigured = await ensurePrAutoMerge(
+          existingPrUrl,
+          githubToken,
+          input.mode,
+          {
+            ...input,
+            reason: "pr-already-open",
+          },
+        );
         const durationSeconds = (Date.now() - start) / 1000;
         recordRun({
           mode: input.mode,
@@ -319,6 +325,7 @@ export const dataDragonActivities = {
           prUrl: existingPrUrl,
           outcome: "skipped",
           reason: "pr-already-open",
+          autoMergeConfigured,
         };
       }
 
@@ -403,17 +410,6 @@ export const dataDragonActivities = {
       }
 
       if (!shouldCreateDataDragonPr(changes)) {
-        const { recipient, sender } = resolvePostalAddresses();
-        const emailContent = buildImageOnlySkipEmailContent(
-          input,
-          files.length,
-        );
-        const emailResult = await sendPostalEmail({
-          to: recipient,
-          from: sender,
-          ...emailContent,
-        });
-
         recordRun({
           mode: input.mode,
           outcome: "success",
@@ -427,7 +423,6 @@ export const dataDragonActivities = {
           ...input,
           changedFiles: files.length,
           durationSeconds,
-          emailMessageId: emailResult.messageId,
         });
         return {
           ...input,
@@ -437,8 +432,6 @@ export const dataDragonActivities = {
           prUrl: undefined,
           outcome: "skipped",
           reason: "image-only-diff",
-          emailSent: true,
-          emailMessageId: emailResult.messageId,
         };
       }
 
@@ -504,10 +497,15 @@ export const dataDragonActivities = {
         version: input.latestVersion,
         token: githubToken,
       });
-      await ensurePrAutoMerge(prUrl, githubToken, input.mode, {
-        ...input,
-        branch,
-      });
+      const autoMergeConfigured = await ensurePrAutoMerge(
+        prUrl,
+        githubToken,
+        input.mode,
+        {
+          ...input,
+          branch,
+        },
+      );
 
       recordRun({
         mode: input.mode,
@@ -542,6 +540,7 @@ export const dataDragonActivities = {
         prUrl,
         outcome: recovered ? "skipped" : "success",
         reason: recovered ? "pr-already-open" : "pr-created",
+        autoMergeConfigured,
       };
     } catch (error) {
       const durationSeconds = (Date.now() - start) / 1000;

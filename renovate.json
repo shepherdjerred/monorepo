@@ -9,11 +9,13 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update versions.ts",
-      "managerFilePatterns": ["**/versions.ts", "**/lib-versions.ts"],
+      "description": "Update structured homelab version catalog and legacy TypeScript version files",
+      "managerFilePatterns": [
+        "packages/homelab/src/cdk8s/src/version-catalog.json",
+        "**/lib-versions.ts"
+      ],
       "matchStrings": [
-        "\\/\\/ renovate: datasource=(?<datasource>[0-9a-z-\\.]+?)?(?: registryUrl=(?<registryUrl>.*?)?)?(?: versioning=(?<versioning>[a-z-]+?)?)?(?: packageName=(?<packageName>[^\\s]+?))?\\s*\"(?<depName>.+?)\":\\s*\"(?<currentValue>.+?)?(?:@(?<currentDigest>.+?))?\"",
-        "\\/\\/ renovate: datasource=(?<datasource>[0-9a-z-\\.]+?)?(?: registryUrl=(?<registryUrl>.*?)?)?(?: versioning=(?<versioning>[a-z-]+?)?)?(?: packageName=(?<packageName>[^\\s]+?))?\\s*(?<depName>[a-zA-Z0-9_-]+):\\s*\"(?<currentValue>.+?)?(?:@(?<currentDigest>.+?))?\""
+        "\"name\":\\s*\"(?<depName>[^\"]+)\",[\\s\\S]{0,240}?\"management\":\\s*\\{\\s*\"managed\":\\s*true,\\s*\"datasource\":\\s*\"(?<datasource>[^\"]+)\"(?:,\\s*\"registryUrl\":\\s*\"(?<registryUrl>[^\"]+)\")?,\\s*\"versioning\":\\s*\"(?<versioning>[^\"]+)\"(?:,\\s*\"packageName\":\\s*\"(?<packageName>[^\"]+)\")?\\s*\\},\\s*\"value\":\\s*\"(?<currentValue>[^\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?\""
       ]
     },
     {

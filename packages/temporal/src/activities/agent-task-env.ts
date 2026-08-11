@@ -4,6 +4,17 @@ const MOUNTED_SECRET_PATHS = [
   "/var/run/secrets/kubernetes.io/serviceaccount/token",
   "/etc/talos/config",
 ] as const;
+const AGENT_TASK_BOUNDARY_ENVIRONMENT = new Set([
+  "RECIPIENT_EMAIL",
+  "SENDER_EMAIL",
+  "AGENT_TASK_API_TOKEN",
+  "GITHUB_WEBHOOK_SECRET",
+  "XCODE_CLOUD_WEBHOOK_TOKEN",
+]);
+
+export function isAgentTaskBoundaryEnvironmentKey(key: string): boolean {
+  return key.startsWith("POSTAL_") || AGENT_TASK_BOUNDARY_ENVIRONMENT.has(key);
+}
 
 function secretFragments(value: string): readonly string[] {
   // Kubernetes and PEM credentials are often passed through env files with
@@ -180,19 +191,12 @@ export async function refreshAgentTaskSecretTokenStateInBackground(
 // Build the subprocess environment for an agent-task provider run.
 //
 // ACCEPTED-RISK NOTE (owner decision, see PR #1860 Codex threads A & B):
-// This forwards the FULL worker environment to the provider subprocess (minus
-// the GitHub credentials it re-mints below). That includes the worker's
-// operational secrets — GRAFANA_URL/GRAFANA_API_KEY, ALERT_DASHBOARD_URL,
-// ARGOCD_SERVER/ARGOCD_AUTH_TOKEN, BUGSINK_URL/BUGSINK_TOKEN,
-// CLOUDFLARE_API_TOKEN, POSTAL_*, etc. This is deliberate: the daily
-// `homelab-audit-daily` schedule runs as a report-only agent task
-// (`HOMELAB_AUDIT_AGENT_TASK`, provider "claude") through this exact path and
-// its runbook performs LIVE Grafana/Prometheus, Alerts, ArgoCD, Bugsink, and
-// Cloudflare-`tofu plan` checks — it needs those credentials to produce a
-// complete report. A minimal-env allowlist was tried and reverted precisely
-// because it broke that audit; do not reintroduce one without also giving the
-// audit task a way to keep its read-only credentials, or its report silently
-// degrades.
+// This forwards the worker's operational environment to the provider
+// subprocess, minus credentials owned by another boundary. Read-only reports
+// can still use Grafana, Alerts, ArgoCD, Bugsink, Cloudflare, and other evidence
+// APIs. Postal delivery credentials are always stripped: only the shared
+// report-delivery activity may send operational email. GitHub credentials are
+// replaced with the scoped installation token below.
 //
 // The tradeoff being accepted: there is no OS-level sandbox around the run
 // (Codex's `--sandbox` needs bwrap to create a Linux namespace, which the
@@ -217,6 +221,9 @@ export function envForProvider(
     // Claude billing: strip ANTHROPIC_API_KEY so `claude -p` bills the
     // subscription (CLAUDE_CODE_OAUTH_TOKEN), not direct-API credits.
     if (provider === "claude" && key === "ANTHROPIC_API_KEY") {
+      continue;
+    }
+    if (isAgentTaskBoundaryEnvironmentKey(key)) {
       continue;
     }
     // Never inherit the worker's GitHub credentials — GH_TOKEN is re-minted as a

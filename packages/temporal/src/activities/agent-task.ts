@@ -2,13 +2,11 @@ import { agentSubprocessFailure } from "#activities/agent-task-failures.ts";
 import {
   agentSubprocessIdleSeconds,
   agentSubprocessSoftKillsTotal,
-  agentTaskOutputContractFailuresTotal,
   agentTaskRunsTotal,
   agentTaskSubprocessDurationSeconds,
   agentTaskSubprocessExitTotal,
 } from "#observability/metrics.ts";
 import { withSpan } from "#observability/tracing.ts";
-import { provisionWorkdir } from "#lib/pr-review-workdir.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import {
@@ -20,15 +18,18 @@ import {
 } from "#activities/agent-task-env.ts";
 import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
 import { summarizeClaudeStreamLine } from "#shared/claude-result.ts";
+import type { AgentTaskPromptPhase } from "#shared/agent-task-prompt.ts";
 import {
   AgentTaskInputSchema,
-  parseAgentTaskResultPayload,
-  parseClaudeAgentTaskResult,
-  AgentTaskOutputContractError,
   type AgentTaskInput,
   type AgentTaskProvider,
   type AgentTaskResultPayload,
+  AgentTaskResultPayloadSchema,
+  AgentTaskResultPayloadV2Schema,
+  type AgentTaskResultPayloadV2,
 } from "#shared/agent-task.ts";
+import { extractAgentTaskEvidenceReceipts } from "#shared/agent-task-evidence.ts";
+import type { ReportEvidenceReceiptV1 } from "#shared/report.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import {
   startAgentTaskLlmTrace,
@@ -43,40 +44,47 @@ import {
   safeHeartbeat,
   startToCloseTimeoutMsOrUndefined,
   throwIfAgentTaskSecretRedactionFailed,
-  workflowId,
 } from "#activities/agent-task-runtime.ts";
+import { decodeAgentTaskPayload } from "#activities/agent-task-result.ts";
+import { prepareAgentTaskWorkdir } from "#activities/agent-task-workdir.ts";
 import {
   cleanup,
   pauseSchedule,
   scheduleFollowUp,
   sendEmail,
+  sendFailureReport,
 } from "./agent-task-side-activities.ts";
 const HEARTBEAT_INTERVAL_MS = 10_000;
 const MOUNTED_SECRET_REFRESH_INTERVAL_MS = 10_000;
 
-export type PrepareAgentTaskWorkdirInput = {
-  input: AgentTaskInput;
-};
-export type PrepareAgentTaskWorkdirResult = {
-  workdir: string;
-};
 export type RunAgentTaskInput = {
   input: AgentTaskInput;
   workdir: string;
+  phase?: AgentTaskPromptPhase;
+  recordSuccess?: boolean;
 };
-export type RunAgentTaskResult = AgentTaskResultPayload & {
+type RunAgentTaskResultBase = {
   provider: AgentTaskProvider;
   model: string;
   durationMs: number;
+  startedAt: string;
+  evidence: ReportEvidenceReceiptV1[];
 };
-function splitRepo(fullName: string): { owner: string; repo: string } {
-  const [owner, repo, extra] = fullName.split("/");
-  if (owner === undefined || repo === undefined || extra !== undefined) {
-    throw new Error(`Invalid repo fullName: ${fullName}`);
-  }
-  return { owner, repo };
-}
-
+export type RunAgentTaskResultV2 = RunAgentTaskResultBase & {
+  contractVersion: 2;
+  payload: AgentTaskResultPayloadV2;
+};
+export type RunAgentTaskResult = RunAgentTaskResultBase &
+  (
+    | ({
+        contractVersion: 1;
+        payload: AgentTaskResultPayload;
+      } & AgentTaskResultPayload)
+    | RunAgentTaskResultV2
+  );
+export type FinalizeAgentTaskInput = RunAgentTaskInput & {
+  investigation: RunAgentTaskResultV2;
+};
 function enforceAgentTaskSecretRedactionHealth(input: {
   llmTrace: Pick<AgentTaskLlmTrace, "recordMetadataOnly">;
   failure: AgentTaskSecretRedactionError | undefined;
@@ -104,7 +112,8 @@ async function runAgent(
 ): Promise<RunAgentTaskResult> {
   const parsed = AgentTaskInputSchema.parse(input.input);
   const provider = parsed.provider;
-  const command = await commandBuilder(parsed, input.workdir);
+  const phase = input.phase ?? { kind: "single" };
+  const command = await commandBuilder(parsed, input.workdir, phase);
   const workflowType = currentWorkflowType();
   return withSpan(
     "agent-task.run-agent",
@@ -115,6 +124,7 @@ async function runAgent(
       "agent.workdir": input.workdir,
       "agent.timeout_minutes": parsed.agentTimeoutMinutes ?? 0,
       "agent.max_turns": parsed.maxTurns ?? 0,
+      "agent.phase": phase.kind,
     },
     async (span) => {
       jsonLog("info", "Invoking agent task", {
@@ -363,99 +373,120 @@ async function runAgent(
         throw error;
       }
 
-      let payload: AgentTaskResultPayload;
-      try {
-        if (provider === "claude") {
-          payload = parseClaudeAgentTaskResult(result.stdout, (excerpt) =>
-            redactSecrets(excerpt, secretTokens),
-          );
-        } else {
-          if (command.outputPath === undefined) {
-            throw new Error(
-              "Codex agent task completed without an output path",
-            );
-          }
-          payload = parseAgentTaskResultPayload(
-            await Bun.file(command.outputPath).text(),
-            provider,
-          );
-        }
-      } catch (error: unknown) {
-        agentTaskRunsTotal.inc({ provider, outcome: "parse_failed" });
-        const contractDiagnostics =
-          error instanceof AgentTaskOutputContractError
-            ? error.diagnostics
-            : undefined;
-        if (error instanceof AgentTaskOutputContractError) {
-          agentTaskOutputContractFailuresTotal.inc({
-            provider,
-            reason: error.reason,
-          });
-          jsonLog("warning", "Agent task output contract failed", {
-            provider,
-            outputContractReason: error.reason,
-            ...error.diagnostics,
-          });
-        }
-        captureWithContext(error, {
-          provider,
-          durationMs: result.durationMs,
-          phase: "parse-output",
-          schemaFingerprint: contractDiagnostics?.schemaFingerprint,
-          outputContractReason:
-            error instanceof AgentTaskOutputContractError
-              ? error.reason
-              : undefined,
-          resultSubtype: contractDiagnostics?.resultSubtype,
-          resultMessageKeys: contractDiagnostics?.resultMessageKeys,
-          finalTextExcerpt: contractDiagnostics?.finalTextExcerpt,
-        });
-        throw error;
+      const contractVersion = parsed.contractVersion === 2 ? 2 : 1;
+      const decodedPayload = await decodeAgentTaskPayload({
+        provider,
+        stdout: result.stdout,
+        outputPath: command.outputPath,
+        contractVersion,
+        durationMs: result.durationMs,
+        redact: (excerpt) => redactSecrets(excerpt, secretTokens),
+      });
+      if (input.recordSuccess !== false) {
+        agentTaskRunsTotal.inc({ provider, outcome: "success" });
       }
-      agentTaskRunsTotal.inc({ provider, outcome: "success" });
+
+      const evidence = extractAgentTaskEvidenceReceipts(
+        result.stdout,
+        provider,
+        new Date().toISOString(),
+        (value) => redactSecrets(value, secretTokens),
+      );
 
       jsonLog("info", "Agent task completed", {
         provider,
         title: parsed.title,
         durationMs: result.durationMs,
-        markdownLength: payload.markdown.length,
-        requestedFollowUp: payload.followUp !== undefined,
-        requestedCancelCron: payload.cancelCron === true,
+        contractVersion,
+        evidenceReceiptCount: evidence.length,
       });
 
-      return {
-        ...payload,
+      const base = {
         provider,
         model: command.model,
         durationMs: result.durationMs,
+        startedAt: new Date(llmStartMs).toISOString(),
+        evidence,
+      };
+      if (contractVersion === 2) {
+        return {
+          ...base,
+          contractVersion: 2,
+          payload: AgentTaskResultPayloadV2Schema.parse(decodedPayload),
+        };
+      }
+      const payload = AgentTaskResultPayloadSchema.parse(decodedPayload);
+      return {
+        ...base,
+        ...payload,
+        contractVersion: 1,
+        payload,
       };
     },
   );
 }
 
-async function prepareWorkdir(
-  input: PrepareAgentTaskWorkdirInput,
-): Promise<PrepareAgentTaskWorkdirResult> {
-  const parsed = AgentTaskInputSchema.parse(input.input);
-  const { owner, repo } = splitRepo(parsed.repo.fullName);
-  const tokenResult = await createGitHubAppInstallationToken();
-  const workdir = await provisionWorkdir({
-    workflowId: workflowId(),
-    owner,
-    repo,
-    ref: parsed.repo.ref ?? "main",
-    env: { GH_TOKEN: tokenResult.token },
-  });
-  return { workdir };
+function requireV2Result(result: RunAgentTaskResult): RunAgentTaskResultV2 {
+  if (result.contractVersion !== 2) {
+    throw new Error("two-phase execution requires agent task contract v2");
+  }
+  return result;
+}
+
+async function investigateAgentTask(
+  input: RunAgentTaskInput,
+  commandBuilder: typeof buildAgentTaskCommand,
+): Promise<RunAgentTaskResultV2> {
+  return requireV2Result(
+    await runAgent(
+      {
+        ...input,
+        phase: { kind: "investigation" },
+        recordSuccess: false,
+      },
+      commandBuilder,
+    ),
+  );
+}
+
+async function finalizeAgentTask(
+  input: FinalizeAgentTaskInput,
+  commandBuilder: typeof buildAgentTaskCommand,
+): Promise<RunAgentTaskResultV2> {
+  const finalized = requireV2Result(
+    await runAgent(
+      {
+        input: input.input,
+        workdir: input.workdir,
+        phase: {
+          kind: "finalization",
+          evidence: input.investigation.evidence,
+          preliminary: input.investigation.payload,
+        },
+      },
+      commandBuilder,
+    ),
+  );
+  return {
+    ...finalized,
+    durationMs: input.investigation.durationMs + finalized.durationMs,
+    startedAt: input.investigation.startedAt,
+    evidence: input.investigation.evidence,
+  };
 }
 
 export function createAgentTaskActivities(
   commandBuilder: typeof buildAgentTaskCommand = buildAgentTaskCommand,
 ) {
   return {
-    prepareAgentTaskWorkdir: prepareWorkdir,
+    prepareAgentTaskWorkdir,
     runAgentTask: (input: RunAgentTaskInput) => runAgent(input, commandBuilder),
+    investigateAgentTask: (input: RunAgentTaskInput) =>
+      investigateAgentTask(input, commandBuilder),
+    finalizeAgentTask: (input: FinalizeAgentTaskInput) =>
+      finalizeAgentTask(input, commandBuilder),
     sendAgentTaskEmail: sendEmail,
+    sendAgentTaskFailureReport: sendFailureReport,
     scheduleAgentTaskFollowUp: scheduleFollowUp,
     pauseAgentTaskSchedule: pauseSchedule,
     cleanupAgentTaskWorkdir: cleanup,

@@ -1,7 +1,7 @@
 import { describe, test, expect, it } from "bun:test";
 import type { Duration } from "@temporalio/common";
 import { DataDragonWorkflowInputSchema } from "#activities/data-dragon.ts";
-import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task.ts";
+import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
 import {
   DELETED_SCHEDULE_IDS,
   buildSchedulePolicies,
@@ -90,7 +90,11 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runUvCachePruneWorkflow",
   "runTrivyDbRefreshWorkflow",
   "runTurboCacheCleanWorkflow",
+  "monitorReportFreshness",
   "generateDependencySummary",
+  "runProtobufWatch",
+  "runTasknotesCanary",
+  "runCiIoImpact",
   "runDnsAudit",
   "runHomelabAuditWorkflow",
   "agentTaskWorkflow",
@@ -321,7 +325,7 @@ describe("Glitter context refresh schedule", () => {
 });
 
 describe("homelab daily audit schedule config", () => {
-  test("uses a bounded daily report input and timeout", () => {
+  test("uses deterministic collectors with a bounded timeout", () => {
     const schedule = SCHEDULES.find(
       (candidate) => candidate.id === "homelab-audit-daily",
     );
@@ -329,11 +333,7 @@ describe("homelab daily audit schedule config", () => {
       throw new Error("Missing homelab-audit-daily schedule");
     }
     expect(schedule.workflowExecutionTimeout).toBe("50 minutes");
-    expect(schedule.args[0]).toMatchObject({
-      maxTurns: 40,
-      agentTimeoutMinutes: 45,
-    });
-    expect(JSON.stringify(schedule.args[0])).toContain("Ignore Bugsink");
+    expect(schedule.args).toEqual([{}]);
   });
 });
 
@@ -442,13 +442,13 @@ describe("orphan schedule detection", () => {
 
   test("a declared agent-task schedule removed from SCHEDULES is still flagged", () => {
     // Regression guard: a *declared*, source-controlled schedule that runs
-    // agentTaskWorkflow (homelab-audit-daily) must NOT be silently exempted just
-    // because of its workflow type. If it were removed from SCHEDULES without
-    // being added to DELETED_SCHEDULE_IDS — and it carries no `agent-task-`
-    // prefix and no dynamic memo marker — the orphan gauge must catch it.
+    // agentTaskWorkflow must NOT be silently exempted merely because of its
+    // workflow type. If removed from SCHEDULES without being added to
+    // DELETED_SCHEDULE_IDS — and it has neither the generated prefix nor the
+    // dynamic memo marker — the orphan gauge must catch it.
     expect(
       isOrphanSchedule(
-        "homelab-audit-daily",
+        "declared-report-investigation",
         undefined,
         new Set<string>(),
         new Set<string>(),

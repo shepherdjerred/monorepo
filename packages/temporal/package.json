@@ -11,7 +11,8 @@
     "#generated/*": "./src/generated/*",
     "#observability/*": "./src/observability/*",
     "#lib/*": "./src/lib/*",
-    "#db/*": "./src/db/*"
+    "#db/*": "./src/db/*",
+    "#schedules/*": "./src/schedules/*"
   },
   "scripts": {
     "start": "bun run src/worker.ts",
@@ -23,6 +24,8 @@
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/temporal-worker:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t temporal-worker:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
     "canary:agent-task": "bun run scripts/agent-task-structured-output-canary.ts --production-only",
+    "canary:report-reliability": "bun run scripts/report-reliability-canary.ts --production-only",
+    "inventory:report-schedules": "bun run scripts/inventory-report-schedules.ts",
     "check:rehearsal": "bun run scripts/check-schedule-rehearsal.ts",
     "glitter:import-seed": "bun run scripts/import-glitter-seed.ts",
     "glitter:operate": "bun run scripts/operate-glitter-corpus.ts",
