@@ -94,8 +94,8 @@ updates:
 - Kept Kubernetes, Talos, and Talos installer pins unchanged for the separate
   hardware-coordinated rollout.
 - Verified all 195 affected repository tasks plus frozen installation, Helm 4
-  generation/linting, Compose rendering, and the custom Bindery, Shelfbridge,
-  Redlib, Mario Kart WASM, and CI base-image builds.
+  generation/linting, Compose rendering, and the custom Redlib, Mario Kart WASM,
+  and CI base-image builds.
 
 ## Acceptance Criteria
 

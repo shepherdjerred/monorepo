@@ -19,11 +19,12 @@ Mirror of the approved plan-mode plan. Diagnosis: prior analysis.
    `api_error_status: z.number().optional()`; the CLI's success payload includes
    `"api_error_status": null`, which `.optional()` rejects → `parseClaudeResult()` returns null →
    the exit-0 branch throws. A test fixture that omitted the field let it ship green.
-2. **`argocd-sync`** — the `media` app can't sync because the live `media-qbittorrent`
-   `shelfbridge-relay` container has `httpGet` probes while main synthesizes `tcpSocket`.
-   ArgoCD's default strategic-merge apply adds the new handler without removing the old →
-   apiserver rejects (`may not specify more than 1 handler type`). Source is already correct;
-   only the live object is wedged, so no code change can heal it — the live object must be replaced.
+2. **`argocd-sync`** — the `media` app can't sync because the live qBittorrent
+   deployment has `httpGet` probes while main synthesizes `tcpSocket`. ArgoCD's
+   default strategic-merge apply adds the new handler without removing the old →
+   the apiserver rejects (`may not specify more than 1 handler type`). Source is
+   already correct; only the live object is wedged, so no code change can heal it
+   — the live object must be replaced.
 
 Decisions (confirmed with user): ArgoCD fix = **one-time operator replace** (no permanent code
 annotation); scope = **two fixes + durable docs** (do not build the drift gate now).
@@ -48,9 +49,9 @@ argocd app sync media --replace
 # fallback (selfHeal:false → must resync): kubectl -n media delete deploy media-qbittorrent && argocd app sync media
 ```
 
-`media` has no `Replace` syncOption and `argocd.ts sync()` can't pass `--replace`, so
+The app has no `Replace` syncOption and `argocd.ts sync()` can't pass `--replace`, so
 **`argocd-sync` stays red on every main build — including after the Part 1 PR merges — until this
-one-time replace runs.** Verify: `shelfbridge-relay` probes are `tcpSocket`-only and `media` is
+one-time replace runs.** Verify: the probes are `tcpSocket`-only and `media` is
 Synced/Healthy.
 
 ## Part 3 — durable docs

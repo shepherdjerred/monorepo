@@ -15,12 +15,10 @@ const applicationTargets = [
 ] as const;
 
 const infrastructureTargets = [
-  "bindery",
   "caddy-s3proxy",
   "obsidian-headless",
   "mcp-gateway",
   "redlib",
-  "shelfbridge",
 ] as const;
 
 export const knownImageTargets = [...applicationTargets, "infra"].sort();

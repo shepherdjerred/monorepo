@@ -5,7 +5,6 @@ import {
 } from "./validate-pipeline-lib.ts";
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
 import { assertMonorepoSourceLabel } from "./docker-source-label.ts";
-import { hclNamedBlock } from "./hcl-source.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { asRecord } from "../../scripts/lib/json.ts";
 
@@ -169,35 +168,6 @@ function smokeStage(dockerfile: string, image: string): string {
   const remainder = dockerfile.slice(marker.index + marker[0].length);
   const nextStage = remainder.search(/^FROM /m);
   return nextStage === -1 ? remainder : remainder.slice(0, nextStage);
-}
-
-export function assertDeterministicBinderyIdentity(
-  dockerBake: string,
-  dockerfile: string,
-): void {
-  const binderyTarget = hclNamedBlock(dockerBake, "target", "bindery");
-  if (/\b(?:VERSION|GIT_SHA)\b/.test(binderyTarget)) {
-    fail("bindery bake target must not consume per-build VERSION or GIT_SHA");
-  }
-  if (/^ARG (?:VERSION|COMMIT|BUILD_DATE)(?:=|$)/m.test(dockerfile)) {
-    fail(
-      "bindery Dockerfile must not declare dynamic VERSION, COMMIT, or BUILD_DATE arguments",
-    );
-  }
-  requireAllPresent(
-    dockerfile,
-    [
-      'source_ref="$(printf \'%.12s\' "${BINDERY_SOURCE_REF}")"',
-      'patch_ref="$(sha256sum /tmp/0001-gb-author-synthetic.patch | cut -c1-12)"',
-      "main.version=sha-${source_ref}-patch-${patch_ref}",
-      "main.commit=${BINDERY_SOURCE_REF}",
-      "main.date=",
-      '"\\"version\\":\\"sha-${source_ref}-patch-${patch_ref}\\""',
-      '"\\"commit\\":\\"${BINDERY_SOURCE_REF}\\""',
-    ],
-    (required) =>
-      `bindery deterministic runtime identity is missing contract ${required}`,
-  );
 }
 
 export function explicitSmokePort(
@@ -368,32 +338,9 @@ export async function validateImageMigrationContracts(
     (required) => `Caddy in-image smoke is missing contract ${required}`,
   );
 
-  const [binderyDockerfile, shelfbridgeDockerfile, redlibDockerfile] =
-    await Promise.all([
-      Bun.file("packages/homelab/images/bindery/Dockerfile").text(),
-      Bun.file("packages/homelab/images/shelfbridge/Dockerfile").text(),
-      Bun.file("packages/homelab/images/redlib/Dockerfile").text(),
-    ]);
-  assertDeterministicBinderyIdentity(dockerBake, binderyDockerfile);
-  const binderyPort = explicitSmokePort(
-    binderyDockerfile,
-    "bindery",
-    "BINDERY_PORT",
-  );
-  const shelfbridgePort = explicitSmokePort(
-    shelfbridgeDockerfile,
-    "shelfbridge",
-    "LISTEN_ADDR",
-  );
-  requireAllPresent(
-    smokeStage(shelfbridgeDockerfile, "shelfbridge"),
-    [
-      `http://127.0.0.1:${shelfbridgePort.port.toString()}/torznab/api`,
-      `http://127.0.0.1:${shelfbridgePort.port.toString()}/health`,
-    ],
-    (required) =>
-      `shelfbridge smoke listener and probe disagree: missing ${required}`,
-  );
+  const redlibDockerfile = await Bun.file(
+    "packages/homelab/images/redlib/Dockerfile",
+  ).text();
   const applicationSmoke = await Bun.file(
     ".buildkite/scripts/smoke-app-in-image.ts",
   ).text();
@@ -410,8 +357,6 @@ export async function validateImageMigrationContracts(
       `trmnl-dashboard smoke listener and readiness check disagree: missing ${required}`,
   );
   assertUniqueSmokePorts([
-    binderyPort,
-    shelfbridgePort,
     httpSmokePort(redlibDockerfile, "redlib"),
     tasknotesPort,
     trmnlPort,

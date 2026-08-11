@@ -43,7 +43,7 @@ scratch files) and needs a full local bake of each app target to validate.
 ### C. Housekeeping (no PR)
 
 - **Worktree sweep**: 42 worktrees exist under `.claude/worktrees/`, many for
-  long-merged PRs (`pr-1643-bindery-fork-chinese`, `pr-1629-liskov-join`,
+  long-merged PRs (`pr-1643-image-fork-chinese`, `pr-1629-liskov-join`,
   `pr-1514-s3-drop`, …). Squash-merges hide ancestry, so the safe sweep is:
   per worktree, look up its PR state via `gh`, and `git worktree remove` +
   delete branch only when the PR is merged AND the tree is clean; report the

@@ -3,9 +3,6 @@ import { Chart, Size, Testing } from "cdk8s";
 import { PersistentVolumeClaim } from "cdk8s-plus-31";
 import { z } from "zod";
 import { createQBitTorrentDeployment } from "./qbittorrent.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-
-const HAPROXY_IMAGE = `docker.io/library/haproxy:${versions["library/haproxy"]}`;
 
 const EnvSchema = z
   .object({
@@ -102,12 +99,6 @@ const DeploymentSchema = z
           spec: z
             .object({
               containers: z.array(ContainerSchema),
-              hostAliases: z.array(
-                z.object({
-                  hostnames: z.array(z.string()),
-                  ip: z.string(),
-                }),
-              ),
               volumes: z.array(
                 z
                   .object({
@@ -125,21 +116,6 @@ const DeploymentSchema = z
         }),
       })
       .loose(),
-  })
-  .loose();
-
-const ConfigMapSchema = z
-  .object({
-    apiVersion: z.literal("v1"),
-    kind: z.literal("ConfigMap"),
-    metadata: z
-      .object({
-        name: z.literal("qbittorrent-shelfbridge-relay-config"),
-      })
-      .loose(),
-    data: z.object({
-      "haproxy.cfg": z.string(),
-    }),
   })
   .loose();
 
@@ -195,9 +171,6 @@ function findManifest(kind: string, name: string): unknown {
 const deployment = DeploymentSchema.parse(
   findManifest("Deployment", "media-qbittorrent"),
 );
-const relayConfigMap = ConfigMapSchema.parse(
-  findManifest("ConfigMap", "qbittorrent-shelfbridge-relay-config"),
-);
 const qbittorrentService = ServiceSchema.parse(
   findManifest("Service", "media-qbittorrent-service"),
 );
@@ -213,16 +186,7 @@ function getContainer(name: string): z.infer<typeof ContainerSchema> {
   );
 }
 
-function getEnvValue(
-  container: z.infer<typeof ContainerSchema>,
-  name: string,
-): string {
-  return z
-    .string()
-    .parse(container.env?.find((variable) => variable.name === name)?.value);
-}
-
-describe("qBittorrent ShelfBridge relay", () => {
+describe("qBittorrent deployment", () => {
   it("uses the audited resource reservations", () => {
     expect(getContainer("gluetun").resources).toEqual({
       requests: { cpu: "25m", memory: "128Mi" },
@@ -238,90 +202,6 @@ describe("qBittorrent ShelfBridge relay", () => {
 
   it("labels qBittorrent pods for the dedicated tracker policy", () => {
     expect(deployment.spec.template.metadata.labels.app).toBe("qbittorrent");
-  });
-
-  it("routes the ShelfBridge hostname to the WireGuard-side relay", () => {
-    expect(deployment.spec.template.spec.hostAliases).toEqual([
-      {
-        hostnames: ["media-shelfbridge-service"],
-        ip: "10.154.174.240",
-      },
-    ]);
-
-    const gluetun = getContainer("gluetun");
-    expect(getEnvValue(gluetun, "WIREGUARD_ADDRESSES")).toBe(
-      "10.154.174.240/32,fd7d:76ee:e68f:a993:af57:e79c:b39d:9dde/128",
-    );
-    expect(getEnvValue(gluetun, "FIREWALL_OUTBOUND_SUBNETS")).toBe(
-      "10.96.0.0/12",
-    );
-  });
-
-  it("runs a pinned and hardened HAProxy sidecar", () => {
-    const relay = getContainer("shelfbridge-relay");
-
-    expect(relay.image).toBe(HAPROXY_IMAGE);
-    expect(relay.ports).toEqual([
-      { containerPort: 8787, name: "webseed-relay", protocol: "TCP" },
-      { containerPort: 8404, name: "relay-health", protocol: "TCP" },
-    ]);
-    expect(relay.resources).toEqual({
-      limits: { cpu: "100m", memory: "64Mi" },
-      requests: { cpu: "10m", memory: "32Mi" },
-    });
-    expect(relay.securityContext).toEqual({
-      allowPrivilegeEscalation: false,
-      capabilities: { drop: ["ALL"] },
-      privileged: false,
-      readOnlyRootFilesystem: true,
-      runAsGroup: 99,
-      runAsNonRoot: true,
-      runAsUser: 99,
-      seccompProfile: { type: "RuntimeDefault" },
-    });
-    expect(relay.volumeMounts).toEqual([
-      {
-        mountPath: "/usr/local/etc/haproxy/haproxy.cfg",
-        name: "configmap-qbittorrent-shelfbridge-relay-config",
-        subPath: "haproxy.cfg",
-      },
-    ]);
-    expect(deployment.spec.template.spec.volumes).toContainEqual({
-      configMap: { name: "qbittorrent-shelfbridge-relay-config" },
-      name: "configmap-qbittorrent-shelfbridge-relay-config",
-    });
-  });
-
-  it("keeps relay readiness independent from ShelfBridge backend health", () => {
-    const relay = getContainer("shelfbridge-relay");
-
-    expect(relay.startupProbe).toEqual({
-      failureThreshold: 30,
-      periodSeconds: 5,
-      tcpSocket: { port: 8404 },
-    });
-    expect(relay.livenessProbe).toEqual({
-      failureThreshold: 3,
-      periodSeconds: 30,
-      tcpSocket: { port: 8404 },
-    });
-    expect(relay.readinessProbe).toEqual({
-      failureThreshold: 3,
-      periodSeconds: 10,
-      tcpSocket: { port: 8404 },
-    });
-
-    const config = relayConfigMap.data["haproxy.cfg"];
-    expect(config).toContain("frontend shelfbridge_webseed\n  bind :8787");
-    expect(config).toContain(
-      "server shelfbridge 10.109.78.226:8787 check inter 5s fall 3 rise 2",
-    );
-    expect(config).toContain(
-      "monitor fail if { nbsrv(shelfbridge_backend) lt 1 }",
-    );
-    expect(config).toContain("monitor-uri /health");
-    expect(config.match(/^\s*server\s+/gm)).toHaveLength(1);
-    expect(config).not.toContain("server-template");
   });
 
   it("gates WebUI traffic on qBittorrent readiness while keeping metrics discoverable", () => {
@@ -347,7 +227,7 @@ describe("qBittorrent ShelfBridge relay", () => {
     ).toEqual([17_871]);
   });
 
-  it("does not expose either relay port through a Kubernetes Service", () => {
+  it("exposes only the qBittorrent WebUI and metrics services", () => {
     const exposedPorts = manifests.flatMap((manifest) => {
       const service = ServiceSchema.safeParse(manifest);
       return service.success
