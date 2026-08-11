@@ -8,7 +8,7 @@ const stagedRootRelease = argocdCommand(
   'stage-root-release apps --revision "$$apps_revision" --timeout 300',
 );
 const atomicRootSync = argocdCommand(
-  'sync apps --revision "$$apps_revision" --prune --terminate-after-applied --request-id "$BUILDKITE_BUILD_ID" --timeout 300',
+  'finalize-root-release apps --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --timeout 300',
 );
 const deferredReleaseHealth = argocdCommand(
   "reconcile-release argocd-release-expected.json --skip-health-wait --timeout 300",
@@ -61,6 +61,21 @@ describe("atomic ArgoCD root sync pipeline contract", () => {
         ),
       ),
     ).toThrow(
+      "argocd-sync must contain exactly one atomic identity-bound root sync",
+    );
+  });
+
+  test("rejects the full-source final sync that can stall before later waves", () => {
+    const legacyFinalSync = [
+      stagedRootRelease,
+      deferredReleaseHealth,
+      argocdCommand(
+        'sync apps --revision "$$apps_revision" --prune --terminate-after-applied --request-id "$BUILDKITE_BUILD_ID" --timeout 300',
+      ),
+      scopedReleaseHealth,
+    ].join("\n");
+
+    expect(() => validateAtomicRootSyncLifecycle(legacyFinalSync)).toThrow(
       "argocd-sync must contain exactly one atomic identity-bound root sync",
     );
   });

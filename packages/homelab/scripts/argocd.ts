@@ -22,6 +22,8 @@
  *       [--revision <v>] [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts stage-root-release <root-app> \
  *       --revision <v> [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts finalize-root-release apps \
+ *       --revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts wait-deletion <app> \
  *       --group <g> --version <v> --kind <k> --namespace <ns> \
  *       [--timeout <s>] [--dry-run]
@@ -52,6 +54,7 @@ import {
   completedOperationId,
   completedOperationRequestId,
   operationRevision,
+  ROOT_FINALIZER_PHASE_INFO_NAME,
   requestedOperationId,
   requestedOperationRequestId,
   requestedOperationRevision,
@@ -77,8 +80,11 @@ const CHARTMUSEUM_RETRY_BASE_DELAY_MS = 100;
 const BuildRevisionSchema = z.string().regex(/^2\.0\.0-\d+$/);
 const SyncRequestIdSchema = z.uuid();
 const SyncOperationIdSchema = z.uuid();
+const RootFinalizerPhaseSchema = z.enum(["batch", "prune"]);
 const OperationStartedAtSchema = z.iso.datetime({ offset: true }).optional();
 const PollIntervalSchema = z.coerce.number().int().positive();
+
+type RootFinalizerPhase = z.infer<typeof RootFinalizerPhaseSchema>;
 
 const ExpectedApplicationsSchema = z.array(
   z.object({
@@ -126,6 +132,18 @@ const RenderedResourceSchema = z.object({
     })
     .passthrough(),
 });
+
+const ActiveOperationResourceSchema = z.object({
+  group: z.string().optional(),
+  kind: z.string().min(1),
+  name: z.string().min(1),
+});
+
+const OperationInfoEntriesSchema = z
+  .object({
+    info: z.array(z.object({ name: z.string(), value: z.string() })).optional(),
+  })
+  .loose();
 
 const RootDeploymentHistorySchema = z.object({
   status: z.object({
@@ -267,6 +285,99 @@ function renderedResourceIdentities(
   return unique;
 }
 
+function operationResourceIdentities(
+  resources: readonly SyncOperationResource[],
+): ReadonlySet<string> {
+  const identities = resources.map(({ group, kind, name }) =>
+    resourceIdentity(group, kind, name),
+  );
+  const unique = new Set(identities);
+  if (unique.size !== identities.length) {
+    throw new Error(
+      "Sync operation contains duplicate group/kind/name identities",
+    );
+  }
+  return unique;
+}
+
+function activeOperationResourceIdentities(
+  app: Record<string, unknown>,
+): ReadonlySet<string> | null {
+  const operation = app["operation"];
+  if (!isRecord(operation)) {
+    throw new Error("Cannot inspect resources for a missing live operation");
+  }
+  const sync = operation["sync"];
+  if (!isRecord(sync)) {
+    throw new Error("Active Argo operation is missing its sync request");
+  }
+  const resources = sync["resources"];
+  if (resources === undefined) {
+    return null;
+  }
+  const parsedResources = z
+    .array(ActiveOperationResourceSchema)
+    .parse(resources);
+  if (parsedResources.length === 0) {
+    return null;
+  }
+  return operationResourceIdentities(
+    parsedResources.map(({ group, kind, name }) => ({
+      group: group ?? "",
+      kind,
+      name,
+    })),
+  );
+}
+
+function operationRootFinalizerPhase(
+  operation: Record<string, unknown>,
+): RootFinalizerPhase | undefined {
+  const matches = (OperationInfoEntriesSchema.parse(operation).info ?? [])
+    .filter(({ name }) => name === ROOT_FINALIZER_PHASE_INFO_NAME)
+    .map(({ value }) => value);
+  if (matches.length > 1) {
+    throw new Error("Argo operation has multiple root finalizer phases");
+  }
+  const phase = matches[0];
+  return phase === undefined
+    ? undefined
+    : RootFinalizerPhaseSchema.parse(phase);
+}
+
+function activeOperationPrunes(app: Record<string, unknown>): boolean {
+  const operation = app["operation"];
+  if (!isRecord(operation)) {
+    throw new Error("Cannot inspect pruning for a missing live operation");
+  }
+  const sync = operation["sync"];
+  if (!isRecord(sync)) {
+    throw new Error("Active Argo operation is missing its sync request");
+  }
+  return sync["prune"] === true;
+}
+
+function requestedOperationRootFinalizerPhase(
+  application: unknown,
+): RootFinalizerPhase | undefined {
+  const parsed = z.record(z.string(), z.unknown()).parse(application);
+  const operation = parsed["operation"];
+  if (!isRecord(operation)) {
+    throw new Error("Argo sync response is missing the requested operation");
+  }
+  return operationRootFinalizerPhase(operation);
+}
+
+function resourceIdentitySetsEqual(
+  left: ReadonlySet<string>,
+  right: ReadonlySet<string>,
+): boolean {
+  return (
+    left.size === right.size &&
+    [...left].every((identity) => right.has(identity))
+  );
+}
+
 async function getRenderedResourceIdentities(
   appName: string,
   revision: string,
@@ -298,25 +409,47 @@ type PreparedManifestOverride = {
   readonly suspendedApplication: string | null;
 };
 
+type PreparedFinalRootManifest = {
+  readonly deferredDesiredIdentity: string | null;
+  readonly override: ManifestOverride;
+};
+
+type ParsedRootManifest = {
+  readonly parsed: unknown;
+  readonly override: ManifestOverride;
+};
+
+function parseRootManifest(manifestSource: string): ParsedRootManifest {
+  const parsed: unknown = JSON.parse(manifestSource);
+  const renderedResource = RenderedResourceSchema.parse(parsed);
+  const separator = renderedResource.apiVersion.indexOf("/");
+  return {
+    parsed,
+    override: {
+      manifest: manifestSource,
+      resource: {
+        group:
+          separator === -1
+            ? ""
+            : renderedResource.apiVersion.slice(0, separator),
+        kind: renderedResource.kind,
+        name: renderedResource.metadata.name,
+        ...(renderedResource.metadata.namespace === undefined
+          ? {}
+          : { namespace: renderedResource.metadata.namespace }),
+      },
+    },
+  };
+}
+
 function prepareRootManifestOverride(
   manifestSource: string,
   suspendAllApplications: boolean,
 ): PreparedManifestOverride {
-  const parsed: unknown = JSON.parse(manifestSource);
-  const renderedResource = RenderedResourceSchema.parse(parsed);
-  const separator = renderedResource.apiVersion.indexOf("/");
-  const resource: SyncOperationResource = {
-    group:
-      separator === -1 ? "" : renderedResource.apiVersion.slice(0, separator),
-    kind: renderedResource.kind,
-    name: renderedResource.metadata.name,
-    ...(renderedResource.metadata.namespace === undefined
-      ? {}
-      : { namespace: renderedResource.metadata.namespace }),
-  };
-  if (renderedResource.kind !== "Application") {
+  const { parsed, override } = parseRootManifest(manifestSource);
+  if (override.resource.kind !== "Application") {
     return {
-      override: { manifest: manifestSource, resource },
+      override,
       suspendedApplication: null,
     };
   }
@@ -326,7 +459,7 @@ function prepareRootManifestOverride(
     !Object.hasOwn(application.spec.syncPolicy, "automated")
   ) {
     return {
-      override: { manifest: manifestSource, resource },
+      override,
       suspendedApplication: null,
     };
   }
@@ -335,14 +468,14 @@ function prepareRootManifestOverride(
     REPOSITORY_CHART_URLS.has(application.spec.source.repoURL);
   if (!suspendAllApplications && !isRepositoryApplication) {
     return {
-      override: { manifest: manifestSource, resource },
+      override,
       suspendedApplication: null,
     };
   }
   const automated = application.spec.syncPolicy["automated"];
   if (!isRecord(automated)) {
     return {
-      override: { manifest: manifestSource, resource },
+      override,
       suspendedApplication: null,
     };
   }
@@ -358,9 +491,38 @@ function prepareRootManifestOverride(
           },
         },
       }),
-      resource,
+      resource: override.resource,
     },
     suspendedApplication: application.metadata.name,
+  };
+}
+
+function prepareFinalRootManifestOverride(
+  manifestSource: string,
+  rootAppName: string,
+): PreparedFinalRootManifest {
+  const parsed = parseRootManifest(manifestSource);
+  if (
+    parsed.override.resource.group !== "argoproj.io" ||
+    parsed.override.resource.kind !== "Application" ||
+    parsed.override.resource.name !== rootAppName
+  ) {
+    return {
+      deferredDesiredIdentity: null,
+      override: parsed.override,
+    };
+  }
+  const prepared = prepareRootManifestOverride(manifestSource, true);
+  return {
+    deferredDesiredIdentity:
+      prepared.suspendedApplication === null
+        ? null
+        : resourceIdentity(
+            prepared.override.resource.group,
+            prepared.override.resource.kind,
+            prepared.override.resource.name,
+          ),
+    override: prepared.override,
   };
 }
 
@@ -464,6 +626,167 @@ async function stageRootRelease(
       resources: batch.resources,
     });
   }
+}
+
+async function finalizeRootRelease(
+  rootAppName: string,
+  revision: string,
+  requestId: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
+  const exactRevision = BuildRevisionSchema.parse(revision);
+  const exactRequestId = SyncRequestIdSchema.parse(requestId);
+  if (rootAppName !== "apps") {
+    throw new Error("finalize-root-release only supports the apps root");
+  }
+  console.log(
+    `--- argocd finalize-root-release: ${rootAppName} at ${exactRevision} for request ${exactRequestId}${dryRun ? " (dry run)" : ""}`,
+  );
+  if (dryRun) {
+    return;
+  }
+  await assertExpectedAppsRevisionIsLatest(exactRevision, timeoutSeconds);
+  const token = requireEnv("ARGOCD_TOKEN");
+  const manifests = await getApplicationManifests(
+    rootAppName,
+    exactRevision,
+    token,
+  );
+  if (manifests.length === 0) {
+    throw new Error("Rendered root release contains no resources");
+  }
+  const preparedManifests = manifests.map((manifestSource) =>
+    prepareFinalRootManifestOverride(manifestSource, rootAppName),
+  );
+  const allDesiredIdentities = operationResourceIdentities(
+    preparedManifests.map(({ override }) => override.resource),
+  );
+  const deferredDesiredIdentities = new Set(
+    preparedManifests.flatMap(({ deferredDesiredIdentity }) =>
+      deferredDesiredIdentity === null ? [] : [deferredDesiredIdentity],
+    ),
+  );
+  const verifiedRootDesiredIdentities = new Set(
+    [...allDesiredIdentities].filter(
+      (identity) => !deferredDesiredIdentities.has(identity),
+    ),
+  );
+  const batches = batchManifestOverrides(
+    preparedManifests.map(({ override }) => override),
+    { revision: exactRevision, rootFinalizerPhase: "batch" },
+  );
+
+  let nextBatchIndex = 0;
+  const initialApplication = await getApplication(rootAppName, token);
+  const initialOperation = observeOperation(initialApplication);
+  assertMatchingRevision(
+    initialOperation,
+    exactRequestId,
+    exactRevision,
+    rootAppName,
+  );
+  assertMatchingLiveRevision(
+    initialOperation,
+    exactRequestId,
+    exactRevision,
+    rootAppName,
+  );
+  if (initialOperation.hasLiveOperation) {
+    if (
+      !liveOperationMatches(initialOperation, exactRequestId, exactRevision)
+    ) {
+      throw new Error(
+        `Refusing to replace active ${rootAppName} operation ${liveOperationDescription(initialOperation)}; expected request ${exactRequestId}`,
+      );
+    }
+    const activeResources =
+      activeOperationResourceIdentities(initialApplication);
+    if (activeResources === null) {
+      if (
+        initialOperation.liveRootFinalizerPhase !== "prune" ||
+        !activeOperationPrunes(initialApplication)
+      ) {
+        throw new Error(
+          `Active ${rootAppName} full-source operation is not the marked final root prune`,
+        );
+      }
+      console.log(`adopting active final root prune: ${rootAppName}`);
+      await sync(rootAppName, timeoutSeconds, false, {
+        prune: true,
+        requestId: exactRequestId,
+        revision: exactRevision,
+        rootFinalizerPhase: "prune",
+        terminateAfterApplied: true,
+        verifiedRootDesiredIdentities,
+      });
+      return;
+    }
+    if (
+      initialOperation.liveRootFinalizerPhase !== "batch" ||
+      activeOperationPrunes(initialApplication)
+    ) {
+      throw new Error(
+        `Active ${rootAppName} selective operation is not a marked root batch`,
+      );
+    }
+    const activeBatchIndex = batches.findIndex((batch) =>
+      resourceIdentitySetsEqual(
+        activeResources,
+        operationResourceIdentities(batch.resources),
+      ),
+    );
+    if (activeBatchIndex === -1) {
+      throw new Error(
+        `Active ${rootAppName} operation for request ${exactRequestId} does not match an exact root batch`,
+      );
+    }
+    const activeBatch = batches[activeBatchIndex];
+    if (activeBatch === undefined) {
+      throw new Error("Matched root batch is missing");
+    }
+    console.log(
+      `adopting exact root batch ${(activeBatchIndex + 1).toString()}/${batches.length.toString()} (${activeBatch.manifests.length.toString()} resources)`,
+    );
+    await sync(rootAppName, timeoutSeconds, false, {
+      prune: false,
+      manifests: activeBatch.manifests,
+      requestId: exactRequestId,
+      resources: activeBatch.resources,
+      revision: exactRevision,
+      rootFinalizerPhase: "batch",
+      terminateAfterApplied: true,
+    });
+    nextBatchIndex = activeBatchIndex + 1;
+  }
+
+  for (let index = nextBatchIndex; index < batches.length; index += 1) {
+    const batch = batches[index];
+    if (batch === undefined) {
+      throw new Error(`Exact root batch ${index.toString()} is missing`);
+    }
+    console.log(
+      `syncing exact root batch ${(index + 1).toString()}/${batches.length.toString()} (${batch.manifests.length.toString()} resources)`,
+    );
+    await sync(rootAppName, timeoutSeconds, false, {
+      prune: false,
+      manifests: batch.manifests,
+      requestId: exactRequestId,
+      resources: batch.resources,
+      revision: exactRevision,
+      rootFinalizerPhase: "batch",
+      terminateAfterApplied: true,
+    });
+  }
+
+  await sync(rootAppName, timeoutSeconds, false, {
+    prune: true,
+    requestId: exactRequestId,
+    revision: exactRevision,
+    rootFinalizerPhase: "prune",
+    terminateAfterApplied: true,
+    verifiedRootDesiredIdentities,
+  });
 }
 
 function latestSuccessfulRevision(
@@ -633,7 +956,9 @@ async function assertRootPruneSafe(
 type SyncOptions = {
   prune: boolean;
   requestId?: string;
+  rootFinalizerPhase?: RootFinalizerPhase;
   terminateAfterApplied?: boolean;
+  verifiedRootDesiredIdentities?: ReadonlySet<string>;
   waitForCompletion?: boolean;
   revision?: string;
   manifests?: readonly string[];
@@ -656,6 +981,30 @@ async function sync(
     return;
   }
   const token = requireEnv("ARGOCD_TOKEN");
+  const verifiedRootDesiredIdentities = options.verifiedRootDesiredIdentities;
+  if (
+    options.rootFinalizerPhase !== undefined &&
+    (appName !== "apps" ||
+      options.requestId === undefined ||
+      options.revision === undefined ||
+      options.terminateAfterApplied !== true ||
+      (options.rootFinalizerPhase === "prune") !== options.prune)
+  ) {
+    throw new Error(
+      "Root finalizer phases require an identity-bound atomic apps batch or prune",
+    );
+  }
+  if (
+    verifiedRootDesiredIdentities !== undefined &&
+    (appName !== "apps" ||
+      !options.prune ||
+      options.rootFinalizerPhase !== "prune" ||
+      options.terminateAfterApplied !== true)
+  ) {
+    throw new Error(
+      "Verified root desired state can only narrow an applied-result boundary for atomic apps pruning",
+    );
+  }
   let expectedResourceIdentities: ExpectedSyncResultIdentities | undefined;
   if (appName === "apps" && options.prune) {
     if (options.revision === undefined) {
@@ -663,10 +1012,29 @@ async function sync(
         "Root Application pruning requires an exact --revision so prune candidates can be verified against the rendered source",
       );
     }
-    expectedResourceIdentities = await assertRootPruneSafe(
+    const rootExpectedResourceIdentities = await assertRootPruneSafe(
       token,
       options.revision,
     );
+    if (verifiedRootDesiredIdentities === undefined) {
+      expectedResourceIdentities = rootExpectedResourceIdentities;
+    } else {
+      for (const identity of verifiedRootDesiredIdentities) {
+        if (!rootExpectedResourceIdentities.desired.has(identity)) {
+          throw new Error(
+            `Verified root desired identity ${identity} is absent from the exact rendered revision`,
+          );
+        }
+      }
+      expectedResourceIdentities = {
+        desired: new Set(
+          [...rootExpectedResourceIdentities.desired].filter(
+            (identity) => !verifiedRootDesiredIdentities.has(identity),
+          ),
+        ),
+        pruned: rootExpectedResourceIdentities.pruned,
+      };
+    }
   }
   if (
     options.terminateAfterApplied === true &&
@@ -720,7 +1088,15 @@ async function sync(
     assertMatchingRevision(baseline, requestId, options.revision, appName);
     assertMatchingLiveRevision(baseline, requestId, options.revision, appName);
     if (baseline.hasLiveOperation) {
-      if (!liveOperationMatches(baseline, requestId, options.revision)) {
+      if (
+        !liveOperationMatches(
+          baseline,
+          requestId,
+          options.revision,
+          undefined,
+          options.rootFinalizerPhase,
+        )
+      ) {
         throw new Error(
           `Refusing to replace active ${appName} operation ${liveOperationDescription(baseline)}; expected request ${requestId}`,
         );
@@ -731,6 +1107,7 @@ async function sync(
         requestId,
         options.revision,
         operationId,
+        options.rootFinalizerPhase,
       );
       if (completedOperationMatches && baseline.phase === "Terminating") {
         if (
@@ -779,6 +1156,14 @@ async function sync(
           ...(options.revision === undefined
             ? []
             : [{ name: SYNC_REVISION_INFO_NAME, value: options.revision }]),
+          ...(options.rootFinalizerPhase === undefined
+            ? []
+            : [
+                {
+                  name: ROOT_FINALIZER_PHASE_INFO_NAME,
+                  value: options.rootFinalizerPhase,
+                },
+              ]),
         ],
         ...(options.revision === undefined
           ? {}
@@ -818,6 +1203,14 @@ async function sync(
         `Argo sync response returned a different CI revision; expected ${options.revision}`,
       );
     }
+    if (
+      requestedOperationRootFinalizerPhase(responseBody) !==
+      options.rootFinalizerPhase
+    ) {
+      throw new Error(
+        `Argo sync response returned a different root finalizer phase; expected ${options.rootFinalizerPhase ?? "none"}`,
+      );
+    }
     console.log(`sync operation started: ${appName}`);
   }
   if (options.waitForCompletion === false) {
@@ -828,6 +1221,7 @@ async function sync(
     token,
     requestId,
     operationId,
+    rootFinalizerPhase: options.rootFinalizerPhase,
     expectedResourceIdentities,
     revision: options.revision,
     timeoutSeconds,
@@ -845,10 +1239,12 @@ type OperationObservation = {
   readonly liveOperationId: string | null;
   readonly liveRequestId: string | null;
   readonly liveRevision: string | undefined;
+  readonly liveRootFinalizerPhase: RootFinalizerPhase | undefined;
   readonly operationId: string | null;
   readonly phase: string;
   readonly requestId: string | null;
   readonly revision: string | undefined;
+  readonly rootFinalizerPhase: RootFinalizerPhase | undefined;
   readonly startedAt: string | undefined;
   readonly state: Record<string, unknown>;
 };
@@ -872,6 +1268,10 @@ function observeOperation(app: Record<string, unknown>): OperationObservation {
       liveOperation === undefined
         ? undefined
         : operationRevision(liveOperation),
+    liveRootFinalizerPhase:
+      liveOperation === undefined
+        ? undefined
+        : operationRootFinalizerPhase(liveOperation),
     phase: typeof phase === "string" ? phase : "",
     operationId: completedOperationId(app),
     requestId: completedOperationRequestId(app),
@@ -879,6 +1279,10 @@ function observeOperation(app: Record<string, unknown>): OperationObservation {
       completedOperation === undefined
         ? undefined
         : operationRevision(completedOperation),
+    rootFinalizerPhase:
+      completedOperation === undefined
+        ? undefined
+        : operationRootFinalizerPhase(completedOperation),
     startedAt: OperationStartedAtSchema.parse(state["startedAt"]),
     state,
   };
@@ -889,12 +1293,15 @@ function liveOperationMatches(
   requestId: string,
   revision: string | undefined,
   operationId?: string | null,
+  rootFinalizerPhase?: RootFinalizerPhase,
 ): boolean {
   return (
     operation.hasLiveOperation &&
     operation.liveRequestId === requestId &&
     (revision === undefined || operation.liveRevision === revision) &&
-    (operationId === undefined || operation.liveOperationId === operationId)
+    (operationId === undefined || operation.liveOperationId === operationId) &&
+    (rootFinalizerPhase === undefined ||
+      operation.liveRootFinalizerPhase === rootFinalizerPhase)
   );
 }
 
@@ -903,11 +1310,14 @@ function operationMatches(
   requestId: string,
   revision: string | undefined,
   operationId?: string | null,
+  rootFinalizerPhase?: RootFinalizerPhase,
 ): boolean {
   return (
     operation.requestId === requestId &&
     (revision === undefined || operation.revision === revision) &&
-    (operationId === undefined || operation.operationId === operationId)
+    (operationId === undefined || operation.operationId === operationId) &&
+    (rootFinalizerPhase === undefined ||
+      operation.rootFinalizerPhase === rootFinalizerPhase)
   );
 }
 
@@ -1084,6 +1494,7 @@ type WaitForIdentifiedOperationOptions = {
   readonly operationId: string;
   readonly requestId: string;
   readonly revision: string | undefined;
+  readonly rootFinalizerPhase: RootFinalizerPhase | undefined;
   readonly terminateAfterApplied: boolean;
   readonly timeoutSeconds: number;
   readonly token: string;
@@ -1095,6 +1506,7 @@ async function waitForIdentifiedOperation({
   operationId,
   requestId,
   revision,
+  rootFinalizerPhase,
   terminateAfterApplied,
   timeoutSeconds,
   token,
@@ -1110,12 +1522,14 @@ async function waitForIdentifiedOperation({
       requestId,
       revision,
       operationId,
+      rootFinalizerPhase,
     );
     const isExpectedLiveOperation = liveOperationMatches(
       current,
       requestId,
       revision,
       operationId,
+      rootFinalizerPhase,
     );
     if (current.hasLiveOperation && !isExpectedLiveOperation) {
       throw new Error(
@@ -1749,6 +2163,8 @@ function usage(): never {
       "[--revision <v>] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts stage-root-release <root-app> " +
       "--revision <v> [--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts finalize-root-release apps " +
+      "--revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts wait-deletion <app> " +
       "--group <g> --version <v> --kind <k> --namespace <ns> " +
       "[--timeout <s>] [--dry-run]",
@@ -1919,6 +2335,24 @@ async function main(): Promise<void> {
       await stageRootRelease(
         app,
         revision,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
+        dryRun,
+      );
+      return;
+    }
+    case "finalize-root-release": {
+      const revision = flag(argv, "revision");
+      const requestId = flag(argv, "request-id");
+      if (revision === undefined || requestId === undefined) {
+        console.error(
+          "--revision and --request-id are required for finalize-root-release.",
+        );
+        usage();
+      }
+      await finalizeRootRelease(
+        app,
+        revision,
+        requestId,
         timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
         dryRun,
       );

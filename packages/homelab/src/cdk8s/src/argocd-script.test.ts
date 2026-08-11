@@ -82,7 +82,9 @@ const StagedRepositoryApplication = JSON.stringify({
       chart: "worker",
       targetRevision: "2.0.0-43",
     },
-    syncPolicy: { automated: { prune: true, selfHeal: true } },
+    syncPolicy: {
+      automated: { enabled: false, prune: true, selfHeal: true },
+    },
   },
 });
 
@@ -106,7 +108,7 @@ const StagedExternalApplication = JSON.stringify({
       chart: "external",
       targetRevision: "1.0.0",
     },
-    syncPolicy: { automated: {} },
+    syncPolicy: { automated: { enabled: true } },
   },
 });
 
@@ -346,6 +348,9 @@ test("Argo CD CLI usage documents atomic sync and recovery identity", async () =
   );
   expect(stderr).toContain(
     "stage-root-release <root-app> --revision <v> [--timeout <s>]",
+  );
+  expect(stderr).toContain(
+    "finalize-root-release apps --revision <v> --request-id <uuid>",
   );
   expect(stderr).toContain(
     "finalize-async-sync <app> --revision <v> --request-id <uuid>",

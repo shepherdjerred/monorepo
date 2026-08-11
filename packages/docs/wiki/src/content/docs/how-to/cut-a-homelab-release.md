@@ -26,11 +26,14 @@ Stage 3 is deliberately separate from stage 5. New child-level safety settings
 must exist before those children sync, but enabling floating auto-sync before
 every chart is published could expose a partially published release.
 
-Stage 3 also applies root-owned prerequisites such as admission policies, but
-keeps every child Application's auto-sync disabled. This lets stage 4 explicitly own
-child operations without racing ArgoCD. Stage 5 restores the exact auto-sync
-policies and prunes only after reconciliation. Stage 6 is the single
-authoritative scoped health gate.
+Stage 3 also applies root-owned prerequisites such as admission policies. It
+keeps every child Application's auto-sync disabled, so stage 4 owns child
+operations without racing ArgoCD. In stage 5, the
+[root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
+reapplies every exact sync wave before running the verified prune. It keeps the
+self-managed root Application's auto-sync disabled between batches; the final
+prune restores that one policy. Stage 6 is the single authoritative scoped
+health gate.
 
 The
 [release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)
@@ -85,18 +88,25 @@ pin.
 ## If the release will not start
 
 A previous root operation stuck in `Running` blocks the next ordered release.
-Stage 5 prevents that in the normal pipeline. One process submits the sync,
-waits for its exact request ID and revision, verifies the complete applied
-result, terminates the aggregate health wait, and waits for termination.
-Completeness means every resource in the exact rendered root revision has a
-successful result and every validated prune candidate has a `Pruned` result; a
-fully applied early sync or prune wave is not enough.
+Stage 5 prevents that in the normal pipeline. One process owns every desired
+wave and the final prune. It waits for the exact request ID, revision, and
+per-operation UUID; verifies each selected batch; terminates its aggregate
+health wait; and waits for termination before starting the next operation.
+After every resource in the exact rendered revision has a successful batch
+result, except for the intentionally suspended root auto-sync policy, the
+full-source operation must report the restored root Application as `Synced` and
+every validated prune candidate as `Pruned`. A fully applied early batch or
+prune wave is not enough.
 
-Buildkite retries reuse the build UUID. The command adopts the operation only
-when both UUID and revision match. An unrelated active operation remains a hard
-failure. Each POST also receives an internal operation UUID; adoption requires
-the live operation and its status to share that UUID before a stable applied
-result can be finalized.
+Buildkite retries reuse the build UUID. The command adopts an operation only
+when the UUID and revision match and its selected resources are exactly one
+desired batch, or when it is the unselected final prune. An unrelated active
+operation or an unexpected selection remains a hard failure. The operation must
+also carry the finalizer's explicit `batch` or `prune` marker; prune adoption
+requires Argo's prune flag. This prevents an interrupted legacy full-source sync
+from impersonating the post-batch prune. Each POST also receives an internal
+operation UUID; adoption requires the live operation and its status to share
+that UUID before a stable applied result can be finalized.
 
 For manifest-override staging operations, inspect the
 `ci.sjer.red/revision` operation-info entry. Argo does not retain

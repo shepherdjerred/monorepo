@@ -23,7 +23,7 @@ const ARGOCD_COMMAND_PREFIX =
 const STAGED_ROOT_RELEASE_SUBCOMMAND =
   'stage-root-release apps --revision "$$apps_revision" --timeout 300';
 const ATOMIC_ROOT_SYNC_SUBCOMMAND =
-  'sync apps --revision "$$apps_revision" --prune --terminate-after-applied --request-id "$BUILDKITE_BUILD_ID" --timeout 300';
+  'finalize-root-release apps --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --timeout 300';
 const DEFERRED_RELEASE_HEALTH_SUBCOMMAND =
   "reconcile-release argocd-release-expected.json --skip-health-wait --timeout 300";
 const SCOPED_RELEASE_HEALTH_SUBCOMMAND =
@@ -47,7 +47,7 @@ export function validateAtomicRootSyncLifecycle(
         .map((command) => command.trim()),
     );
   const rootSyncCommands = executableCommands.filter((line) =>
-    /^sync\s+apps(?:\s|$)/.test(line),
+    /^(?:sync|finalize-root-release)\s+apps(?:\s|$)/.test(line),
   );
   const hasAsyncRootSync = rootSyncCommands.some((line) =>
     /(?:^|\s)--async(?:\s|$)/.test(line),
@@ -166,6 +166,7 @@ function validateReleaseSteps({
         'artifact download "argocd-release-expected.json"',
         'stage-root-release apps --revision "$$apps_revision"',
         "reconcile-release argocd-release-expected.json --skip-health-wait",
+        'finalize-root-release apps --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID"',
         "release-health-wait argocd-release-expected.json",
       ],
     ],

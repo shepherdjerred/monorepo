@@ -62,9 +62,23 @@ release command also persists the exact revision in the operation info list
 beside its request and operation UUIDs. Either representation can prove the
 revision, but disagreement between them is a hard identity failure.
 
-After explicit child reconciliation completes, the full root apply restores
-the exact auto-sync policies and performs verified pruning. Aggregate child
-health is deferred until both the child and final root applies have completed.
+After explicit child reconciliation completes, the
+[root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
+reapplies the exact desired tree in isolated wave batches. This restores every
+child auto-sync policy without letting an unhealthy earlier wave hide a later
+one. The self-managed root Application stays suspended so it cannot launch an
+unowned full-source operation between batches. Only then does the owned
+full-source operation restore the root policy and perform verified pruning.
+That final operation must report the root Application and every prune
+candidate; other desired-resource coverage comes from the completed batches.
+Aggregate child health remains deferred to the scoped release gate.
+
+This split proof is deliberate. The root chart contains its own Application,
+and ordinary child Applications can be degraded. Argo waits for their health
+before exposing later waves, even after the current wave and all prunes apply.
+Weakening generic sync completeness would risk skipping a genuinely unapplied
+later wave. Proving each desired wave first keeps that safety boundary intact.
+
 Every desired automated policy includes an explicit `enabled` boolean. The
 [release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)
 stages repository charts with `enabled: false`. An empty object also means
@@ -123,12 +137,16 @@ So the [main release pipeline](https://github.com/shepherdjerred/monorepo/blob/m
 separates root application from release-scoped health. One
 [atomic Argo command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
 retains the exact Buildkite request identity while ArgoCD applies the root
-revision. It terminates the aggregate health wait only after the complete sync
-result is applied. The command compares reported group, kind, and name
-identities with every resource rendered from the exact revision. An applied
-early sync wave cannot hide later-wave work that ArgoCD has not reported yet.
-It also carries the validated prune candidates into this boundary and requires
-each candidate to appear as `Pruned` before termination.
+revision. It sends every desired wave as bounded manifest-override batches,
+compares each batch's reported group, kind, and name identities with its exact
+selection, and terminates that batch only after all selected resources apply.
+The self-managed root is the deliberate exception: its batch override keeps
+auto-sync disabled. Only after all desired batches complete does the finalizer
+start a full-source prune. That operation must report the restored root and
+carries the independently validated candidates into its completion boundary,
+requiring each candidate to appear as `Pruned` before termination.
+The generic atomic sync path remains stricter: without prior desired-batch
+proof, it still requires every rendered desired identity in the same result.
 
 The identity boundary matters because ArgoCD publishes operation state
 asynchronously. A second process can read before the accepted operation appears.
@@ -138,14 +156,19 @@ gap and distinguish stale state from its own operation.
 Buildkite retries reuse the build UUID. The
 [operation identity implementation](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
 adopts only the same request ID and revision. It refuses any unrelated active
-operation. A generated per-operation UUID binds the top-level live operation
-to its completed status. This lets a retry accept a stable, fully applied
-result while rejecting stale status from an earlier POST with the same
-Buildkite identity. The standalone finalizer remains a recovery tool, not part
-of the normal release path. It recognizes the retired client's pre-UUID
-operation only when both live and completed state share the exact request ID
-and revision. Both must omit an operation UUID. Atomic operations never use
-that compatibility case.
+operation. For the root workflow, the active resource selection must also equal
+one exact desired batch or the unselected final prune. Each owned operation
+also persists a `batch` or `prune` phase marker. An unselected operation is
+adoptable as the final prune only when that marker says `prune` and Argo's prune
+flag is true, so an older full-source operation cannot borrow prior-batch proof.
+A generated per-operation UUID binds the top-level live operation to its
+completed status. This lets a retry accept a stable, fully applied result while
+rejecting stale status from an earlier POST with the same Buildkite identity.
+The standalone finalizer remains a recovery tool, not part of the normal
+release path. It recognizes the retired client's pre-UUID operation only when
+both live and completed state share the exact request ID and revision. Both
+must omit an operation UUID. Atomic operations never use that compatibility
+case.
 
 After termination, the top-level live operation is authoritative. Its absence
 means the health wait is gone even if `status.operationState` still says

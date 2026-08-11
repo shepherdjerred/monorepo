@@ -61,9 +61,26 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   Argo omits `operation.sync.revision` for manifest-override operations; when
   both representations exist, require them to agree.
   Reconcile children with aggregate health deferred, then atomically restore
-  and prune the exact root tree before one scoped release-health gate. Reject
-  the old split lifecycle, child-only staging, eager duplicate gates,
-  shell-wrapped commands, and unsafe ordering in pipeline validation.
+  and prune the exact root tree before one scoped release-health gate. The
+  finalizer reapplies the exact desired tree in the same isolated wave batches
+  before starting the full-source prune, except that the self-managed root
+  Application stays auto-sync suspended across every batch. Restoring it early
+  could start an unowned full-source operation between batches. The final prune
+  restores that policy and therefore still requires the root Application's
+  applied result alongside every validated prune candidate. The separate batch
+  proof is necessary
+  because Argo can withhold later-wave results forever while a self-referential
+  or degraded ordinary Application remains unhealthy in an earlier wave. Once
+  every desired batch is applied, the prune operation needs to prove every
+  validated prune candidate rather than repeat desired-resource coverage that
+  Argo cannot publish across the blocked wave. A retry adopts only the exact
+  active desired batch or final prune selected by the same request and revision
+  and carrying the finalizer's explicit `batch` or `prune` operation marker.
+  Prune adoption also requires `operation.sync.prune: true`; a matching but
+  unmarked full-source operation is not evidence that the desired batches ran.
+  Reject the old full-source final sync, split lifecycle, child-only staging,
+  eager duplicate gates, shell-wrapped commands, and unsafe ordering in
+  pipeline validation.
   Serialize every desired automated sync policy with an explicit `enabled`
   boolean. Restoring `enabled: false` to an empty object makes Argo's patch
   encode `automated: null`, which the Application CRD rejects; validate the
@@ -73,8 +90,8 @@ only an exact retry; and keep the scoped release-health gate authoritative.
 
 - Cover delayed visibility, stale state, exact retry adoption, identity and
   revision mismatches, natural success, failed phases, timeouts, applied-result
-  termination, partial sync and prune waves, legacy recovery,
-  post-termination waiting, and interference.
+  termination, partial sync and prune waves, active desired-batch and final
+  prune adoption, legacy recovery, post-termination waiting, and interference.
 - Exercise the live result shape: 255 synced resources, two pruned resources,
   and five child Applications still in a running health phase.
 - Run focused Bun tests, homelab typecheck and lint, pipeline validation, staged
