@@ -101,17 +101,24 @@ func (r *systemResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	var config systemResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	plan.ID = types.StringValue("system")
 
-	resp.Diagnostics.Append(r.applySystem(ctx, &plan, nil)...)
+	resp.Diagnostics.Append(r.applySystem(ctx, &plan, &config, nil)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Optional+Computed attributes the config omitted are still Unknown after
-	// applySystem (it only writes/tracks values the plan actually set).
-	// Terraform requires every attribute to be known after apply, so read the
-	// router back to resolve them to their real (or null) value.
+	// applySystem (it only writes values the config set or that actually
+	// changed). Terraform requires every attribute to be known after apply, so
+	// read the router back to resolve them to their real (or null) value.
 	resp.Diagnostics.Append(r.readSystem(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -151,9 +158,16 @@ func (r *systemResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
+	var config systemResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	plan.ID = types.StringValue("system")
 
-	resp.Diagnostics.Append(r.applySystem(ctx, &plan, &priorState)...)
+	resp.Diagnostics.Append(r.applySystem(ctx, &plan, &config, &priorState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -241,18 +255,24 @@ func readOptionalString(target *types.String, result map[string]string, key stri
 // systemNvramMapping maps a model field to its NVRAM key and the rc_service that
 // must run for the change to take effect (empty = no restart needed). prior is
 // the same field's previous state value, used to skip restarting a service for
-// a field that is merely present in the plan, not actually changing.
+// a field that is merely present in the plan, not actually changing. configured
+// records whether the operator set the field in configuration at all, which the
+// planned value alone cannot express: an omitted Optional+Computed attribute is
+// filled from prior state during planning and so looks identical to one the
+// operator pinned to that same value.
 type systemNvramMapping struct {
-	value    types.String
-	prior    types.String
-	nvramKey string
-	service  string
+	value      types.String
+	prior      types.String
+	configured bool
+	nvramKey   string
+	service    string
 }
 
-// buildSystemMappings pairs each system field's planned value with its prior
-// state value (for Update change-detection; zero-valued when prior is nil) and
-// its NVRAM key/restart service.
-func buildSystemMappings(plan, prior *systemResourceModel) []systemNvramMapping {
+// buildSystemMappings pairs each system field's planned value with the config
+// value the operator supplied (to tell "omitted" from "set"), its prior state
+// value (for Update change-detection; zero-valued when prior is nil), and its
+// NVRAM key/restart service.
+func buildSystemMappings(plan, config, prior *systemResourceModel) []systemNvramMapping {
 	var priorHostname, priorTimezone, priorNTPServer0, priorNTPServer1 types.String
 	if prior != nil {
 		priorHostname, priorTimezone = prior.Hostname, prior.Timezone
@@ -261,19 +281,53 @@ func buildSystemMappings(plan, prior *systemResourceModel) []systemNvramMapping 
 
 	return []systemNvramMapping{
 		// lan_hostname is the router host name (the LAN page restarts net_and_phy).
-		{value: plan.Hostname, prior: priorHostname, nvramKey: "lan_hostname", service: client.ServiceNetAndPhy},
-		{value: plan.Timezone, prior: priorTimezone, nvramKey: "time_zone", service: client.ServiceTime},
-		{value: plan.NTPServer0, prior: priorNTPServer0, nvramKey: "ntp_server0", service: client.ServiceTime},
-		{value: plan.NTPServer1, prior: priorNTPServer1, nvramKey: "ntp_server1", service: client.ServiceTime},
+		{
+			value:      plan.Hostname,
+			prior:      priorHostname,
+			configured: !config.Hostname.IsNull(),
+			nvramKey:   "lan_hostname",
+			service:    client.ServiceNetAndPhy,
+		},
+		{
+			value:      plan.Timezone,
+			prior:      priorTimezone,
+			configured: !config.Timezone.IsNull(),
+			nvramKey:   "time_zone",
+			service:    client.ServiceTime,
+		},
+		{
+			value:      plan.NTPServer0,
+			prior:      priorNTPServer0,
+			configured: !config.NTPServer0.IsNull(),
+			nvramKey:   "ntp_server0",
+			service:    client.ServiceTime,
+		},
+		{
+			value:      plan.NTPServer1,
+			prior:      priorNTPServer1,
+			configured: !config.NTPServer1.IsNull(),
+			nvramKey:   "ntp_server1",
+			service:    client.ServiceTime,
+		},
 	}
 }
 
 // collectSystemChanges walks the mappings, returning the NVRAM values to
-// write and the deduplicated services to restart. hasPrior distinguishes
-// Create (every present field is new, so always restart-worthy) from Update
-// (only a field whose value actually changed should trigger its restart —
-// otherwise, e.g., a timezone-only update would needlessly restart
-// net_and_phy for an unchanged hostname).
+// write and the deduplicated services to restart.
+//
+// A field is written only when the operator configured it, or when its planned
+// value actually differs from prior state. An unconfigured Optional+Computed
+// field is populated from the router by refresh and then carried into the plan,
+// so writing every known planned value would push that snapshot back to the
+// router: with a saved plan or -refresh=false the snapshot is stale, and
+// changing one managed setting would silently revert a newer out-of-band
+// hostname/timezone/NTP value. Skipping it leaves the router's own value alone,
+// and a later refreshed plan still reports the drift.
+//
+// hasPrior distinguishes Create (every present field is new, so always
+// restart-worthy) from Update (only a field whose value actually changed should
+// trigger its restart — otherwise, e.g., a timezone-only update would
+// needlessly restart net_and_phy for an unchanged hostname).
 func collectSystemChanges(mappings []systemNvramMapping, hasPrior bool) (values map[string]string, services []string) {
 	values = map[string]string{}
 	seen := map[string]bool{}
@@ -283,9 +337,13 @@ func collectSystemChanges(mappings []systemNvramMapping, hasPrior bool) (values 
 			continue
 		}
 
+		changed := !hasPrior || !m.value.Equal(m.prior)
+		if !m.configured && !changed {
+			continue
+		}
+
 		values[m.nvramKey] = m.value.ValueString()
 
-		changed := !hasPrior || !m.value.Equal(m.prior)
 		if !changed || m.service == "" || seen[m.service] {
 			continue
 		}
@@ -300,12 +358,15 @@ func collectSystemChanges(mappings []systemNvramMapping, hasPrior bool) (values 
 
 // applySystem writes the system NVRAM values and triggers the union of the
 // required service restarts (semicolon-joined, matching how the web UI issues
-// multiple services in one apply). prior is the pre-Update state (nil on
-// Create).
-func (r *systemResource) applySystem(ctx context.Context, plan, prior *systemResourceModel) diag.Diagnostics {
+// multiple services in one apply). config is the operator's configuration and
+// prior is the pre-Update state (nil on Create).
+func (r *systemResource) applySystem(
+	ctx context.Context,
+	plan, config, prior *systemResourceModel,
+) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	values, services := collectSystemChanges(buildSystemMappings(plan, prior), prior != nil)
+	values, services := collectSystemChanges(buildSystemMappings(plan, config, prior), prior != nil)
 	if len(values) == 0 {
 		return diags
 	}

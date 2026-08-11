@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"reflect"
 	"strconv"
 	"testing"
 
@@ -749,5 +750,110 @@ func TestPackedDelimiterCorruptsList(t *testing.T) {
 
 	if reparsed[0].ExternalPort == entries[0].ExternalPort {
 		t.Error("expected the following fields to shift; the corruption this validator prevents did not occur")
+	}
+}
+
+// TestCollectSystemChanges pins the write-map rule. An omitted Optional+Computed
+// system field is filled from the router by refresh and carried into the plan,
+// so it is indistinguishable from a configured one by value alone. Writing every
+// known planned value would push that snapshot back to the router and, with a
+// saved plan or -refresh=false, revert a newer out-of-band value.
+func TestCollectSystemChanges(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		plan         systemResourceModel
+		config       systemResourceModel
+		prior        *systemResourceModel
+		wantValues   map[string]string
+		wantServices []string
+	}{
+		{
+			name: "update leaves an unconfigured refreshed field alone",
+			plan: systemResourceModel{
+				Hostname: types.StringValue("SetOutOfBand"),
+				Timezone: types.StringValue("UTC"),
+			},
+			config: systemResourceModel{Timezone: types.StringValue("UTC")},
+			prior: &systemResourceModel{
+				Hostname: types.StringValue("SetOutOfBand"),
+				Timezone: types.StringValue("EST5EDT,M3.2.0,M11.1.0"),
+			},
+			wantValues:   map[string]string{"time_zone": "UTC"},
+			wantServices: []string{client.ServiceTime},
+		},
+		{
+			name: "update with nothing configured or changed writes nothing",
+			plan: systemResourceModel{
+				Hostname: types.StringValue("SetOutOfBand"),
+				Timezone: types.StringValue("UTC"),
+			},
+			config: systemResourceModel{},
+			prior: &systemResourceModel{
+				Hostname: types.StringValue("SetOutOfBand"),
+				Timezone: types.StringValue("UTC"),
+			},
+			wantValues:   map[string]string{},
+			wantServices: nil,
+		},
+		{
+			name:       "update reasserts a configured but unchanged field without restarting",
+			plan:       systemResourceModel{Hostname: types.StringValue("MyRouter")},
+			config:     systemResourceModel{Hostname: types.StringValue("MyRouter")},
+			prior:      &systemResourceModel{Hostname: types.StringValue("MyRouter")},
+			wantValues: map[string]string{"lan_hostname": "MyRouter"},
+			// Same value as prior state, so no service restart is warranted.
+			wantServices: nil,
+		},
+		{
+			name: "update restarts each affected service once",
+			plan: systemResourceModel{
+				NTPServer0: types.StringValue("pool.ntp.org"),
+				NTPServer1: types.StringValue("time.cloudflare.com"),
+			},
+			config: systemResourceModel{
+				NTPServer0: types.StringValue("pool.ntp.org"),
+				NTPServer1: types.StringValue("time.cloudflare.com"),
+			},
+			prior: &systemResourceModel{
+				NTPServer0: types.StringValue("old0"),
+				NTPServer1: types.StringValue("old1"),
+			},
+			wantValues: map[string]string{
+				"ntp_server0": "pool.ntp.org",
+				"ntp_server1": "time.cloudflare.com",
+			},
+			wantServices: []string{client.ServiceTime},
+		},
+		{
+			name: "create writes the configured field and skips unresolved ones",
+			plan: systemResourceModel{
+				Hostname: types.StringValue("MyRouter"),
+				Timezone: types.StringUnknown(),
+			},
+			config:       systemResourceModel{Hostname: types.StringValue("MyRouter")},
+			prior:        nil,
+			wantValues:   map[string]string{"lan_hostname": "MyRouter"},
+			wantServices: []string{client.ServiceNetAndPhy},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			mappings := buildSystemMappings(&tt.plan, &tt.config, tt.prior)
+
+			values, services := collectSystemChanges(mappings, tt.prior != nil)
+
+			if !reflect.DeepEqual(values, tt.wantValues) {
+				t.Errorf("values = %v, want %v", values, tt.wantValues)
+			}
+
+			if !reflect.DeepEqual(services, tt.wantServices) {
+				t.Errorf("services = %v, want %v", services, tt.wantServices)
+			}
+		})
 	}
 }
