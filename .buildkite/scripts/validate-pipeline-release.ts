@@ -237,6 +237,19 @@ function validateReleaseSteps({
   }
 }
 
+const VERSION_COMMIT_BACK_INSTALL =
+  ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@homelab/cdk8s' --production";
+
+export function validateVersionCommitBackInstall(
+  stepBlock: string | undefined,
+): void {
+  if (!hasTrimmedLine(stepBlock, VERSION_COMMIT_BACK_INSTALL)) {
+    fail(
+      `version commit-back is missing exact isolated-linker install ${VERSION_COMMIT_BACK_INSTALL}`,
+    );
+  }
+}
+
 function validatePublishing(stepBlocks: ReadonlyMap<string, string>): void {
   const publish = stepBlocks.get("publish");
   if (
@@ -260,11 +273,7 @@ function validatePublishing(stepBlocks: ReadonlyMap<string, string>): void {
     );
   }
 
-  requireIncludes(
-    stepBlocks.get("version-commit-back"),
-    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
-    "version commit-back is missing its Zod-owning filtered install",
-  );
+  validateVersionCommitBackInstall(stepBlocks.get("version-commit-back"));
 }
 
 async function validateSelectorAndUpload({
