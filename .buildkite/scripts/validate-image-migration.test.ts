@@ -7,6 +7,7 @@ import {
   assertWikiManifestInDockerContext,
   assertWorkspaceInstallContexts,
   assertUniqueSmokePorts,
+  effectivePublishedStage,
   explicitWorkspaceManifests,
   explicitSmokePort,
   hclNamedBlock,
@@ -159,6 +160,21 @@ packages/docs/wiki/*
 });
 
 describe("GHCR package provenance", () => {
+  test("uses a per-image Bake stage override before the shared default", () => {
+    expect(
+      effectivePublishedStage(
+        'target "example" {\n  dockerfile = "Dockerfile"\n}',
+        "image",
+      ),
+    ).toBe("image");
+    expect(
+      effectivePublishedStage(
+        'target "example" {\n  target = "release"\n}',
+        "image",
+      ),
+    ).toBe("release");
+  });
+
   test("requires the published image stage to link its source repository", () => {
     expect(() =>
       assertMonorepoSourceLabel(

@@ -98,10 +98,10 @@ async function assertApplicationSourceLabels(
   dockerBake: string,
 ): Promise<void> {
   const appDefaults = hclNamedBlock(dockerBake, "target", "_app");
-  const publishedStage = /^\s*target\s*=\s*"([^"]+)"\s*$/mu.exec(
+  const defaultPublishedStage = /^\s*target\s*=\s*"([^"]+)"\s*$/mu.exec(
     appDefaults,
   )?.[1];
-  if (publishedStage === undefined) {
+  if (defaultPublishedStage === undefined) {
     fail("docker-bake.hcl application defaults have no published stage");
   }
   for (const image of APPLICATION_IMAGE_TARGETS) {
@@ -112,12 +112,25 @@ async function assertApplicationSourceLabels(
     if (dockerfilePath === undefined) {
       fail(`docker-bake.hcl target ${image} has no Dockerfile`);
     }
+    const publishedStage = effectivePublishedStage(
+      target,
+      defaultPublishedStage,
+    );
     assertMonorepoSourceLabel(
       await Bun.file(dockerfilePath).text(),
       image,
       publishedStage,
     );
   }
+}
+
+export function effectivePublishedStage(
+  bakeTarget: string,
+  defaultStage: string,
+): string {
+  return (
+    /^\s*target\s*=\s*"([^"]+)"\s*$/mu.exec(bakeTarget)?.[1] ?? defaultStage
+  );
 }
 
 function smokeStage(dockerfile: string, image: string): string {
