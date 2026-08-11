@@ -20,11 +20,8 @@ publish = false
 #
 # `serde_json/preserve_order` + IndexMap: serialized output must round-trip in
 # source order — HashMap iteration order would corrupt vault markdown diffs.
-#
-# `imbl` (not `im`): `im` is unmaintained; `imbl` is the maintained fork.
 [workspace.dependencies]
 chrono = { version = "0.4.45", features = ["serde"] }
-imbl = "6"
 indexmap = { version = "2", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
