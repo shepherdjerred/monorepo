@@ -229,12 +229,19 @@ export function outcomeIcon(outcome: string): string {
   return outcome === "passed" ? ":white_check_mark:" : ":x:";
 }
 
+// The handoff helpers are global because they are the seam between the image
+// lane that writes the digests and the Helm, ArgoCD, Scout, and version steps
+// that execute them. A commit touching only one side would otherwise select
+// neither, so a repair to the handoff could land without any lane exercising
+// the release path it repairs.
 export const globalPaths = [
   ".buildkite/main-bootstrap.yml",
   ".buildkite/pipeline.yml",
+  ".buildkite/scripts/buildkite-handoff.ts",
   ".buildkite/scripts/ci-changed.ts",
   ".buildkite/scripts/migration-core.ts",
   ".buildkite/scripts/prepare-ci-changed-base.ts",
+  ".buildkite/scripts/read-buildkite-handoff.ts",
   ".buildkite/scripts/select-main-pipeline.ts",
   ".buildkite/scripts/upload-pipeline.sh",
 ] as const;

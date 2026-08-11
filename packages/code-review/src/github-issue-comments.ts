@@ -30,13 +30,38 @@ export async function fetchLatestProviderIssueComment(input: {
   provider: ReviewProvider;
   since?: string | undefined;
 }): Promise<ReviewIssueComment | null> {
-  if (input.provider.completion.kind !== "issue-comment") return null;
+  const { review } = await fetchProviderIssueComments(input);
+  return review;
+}
+
+/**
+ * The provider's latest review comment and latest re-review acknowledgement,
+ * from one pass over the PR's issue comments.
+ */
+export async function fetchProviderIssueComments(input: {
+  repo: string;
+  number: number;
+  token: string;
+  provider: ReviewProvider;
+  since?: string | undefined;
+}): Promise<ProviderIssueComments> {
+  if (input.provider.completion.kind !== "issue-comment") {
+    return { review: null, acknowledgement: null };
+  }
   if (input.since !== undefined) {
     const recent = await scanProviderIssueComments(input, input.since);
-    if (recent !== null) return recent;
+    // The acknowledgement for this head cannot predate its push, so a narrowed
+    // scan that found the review comment already holds every acknowledgement
+    // that could bind it.
+    if (recent.review !== null) return recent;
   }
   return scanProviderIssueComments(input, undefined);
 }
+
+type ProviderIssueComments = {
+  review: ReviewIssueComment | null;
+  acknowledgement: ReviewIssueComment | null;
+};
 
 async function scanProviderIssueComments(
   input: {
@@ -46,14 +71,17 @@ async function scanProviderIssueComments(
     provider: ReviewProvider;
   },
   since: string | undefined,
-): Promise<ReviewIssueComment | null> {
-  if (input.provider.completion.kind !== "issue-comment") return null;
+): Promise<ProviderIssueComments> {
+  const { completion } = input.provider;
+  if (completion.kind !== "issue-comment") {
+    return { review: null, acknowledgement: null };
+  }
   const query = new URLSearchParams({ per_page: "100" });
   if (since !== undefined) query.set("since", since);
   let url: string | null =
     `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/comments?${query.toString()}`;
-  let latest: ReviewIssueComment | null = null;
-  let latestScore = Number.NEGATIVE_INFINITY;
+  const review = new LatestComment();
+  const acknowledgement = new LatestComment();
   while (url !== null) {
     const { payload, linkNext } = await getJsonWithLink(url, input.token);
     if (!Array.isArray(payload)) {
@@ -70,25 +98,35 @@ async function scanProviderIssueComments(
       const login = user === null ? null : stringField(user, "login");
       if (!isProviderAuthor(input.provider, login)) continue;
       const body = stringField(item, "body");
-      if (body?.includes(input.provider.completion.marker) !== true) continue;
+      if (body === null) continue;
       const updatedAt =
         stringField(item, "updated_at") ?? stringField(item, "created_at");
-      const score = Date.parse(updatedAt ?? "");
-      const normalized = Number.isFinite(score)
-        ? score
-        : Number.NEGATIVE_INFINITY;
-      if (latest === null || normalized >= latestScore) {
-        latest = {
-          body,
-          updatedAt,
-          url: stringField(item, "html_url"),
-        };
-        latestScore = normalized;
+      const comment = { body, updatedAt, url: stringField(item, "html_url") };
+      // An acknowledgement quotes the review comment's title, so classify it
+      // first: only a comment that is not an acknowledgement can be the review.
+      if (body.includes(completion.acknowledgement.marker)) {
+        acknowledgement.offer(comment);
+      } else if (body.includes(completion.marker)) {
+        review.offer(comment);
       }
     }
     url = linkNext;
   }
-  return latest;
+  return { review: review.value, acknowledgement: acknowledgement.value };
+}
+
+/** The most recently updated comment offered to it. */
+class LatestComment {
+  value: ReviewIssueComment | null = null;
+  #score = Number.NEGATIVE_INFINITY;
+
+  offer(comment: ReviewIssueComment): void {
+    const parsed = Date.parse(comment.updatedAt ?? "");
+    const score = Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
+    if (this.value !== null && score < this.#score) return;
+    this.value = comment;
+    this.#score = score;
+  }
 }
 
 const COMMIT_SHA_PATTERN = /\b[0-9a-f]{40}\b/gu;
@@ -102,8 +140,14 @@ const COMMIT_SHA_PATTERN = /\b[0-9a-f]{40}\b/gu;
  * does not by itself mean "reviewed this head", and accepting it would let the
  * gate pass on a review of superseded code.
  *
- * Qodo anchors its evidence and code links to the commit it reviewed, so when
- * the body names any commit those links identify the reviewed head exactly.
+ * An acknowledgement settles it outright. The provider posts one only after it
+ * has read a commit, and names that commit, so it answers the question the
+ * review comment cannot: the review comment's own links are rewritten to the
+ * new head within seconds of a push, before the code is re-read.
+ *
+ * Without one, fall back to the commits the body names. Those links are the
+ * best remaining evidence of which code was read, and requiring the head among
+ * them keeps a comment left over from an earlier commit out.
  *
  * Only a comment reporting no findings may fall back to the timestamp. A
  * clean review has nothing to link, so it can name no commit and the push-time
@@ -118,13 +162,23 @@ export function reviewCommentBoundToHead(input: {
   head: string;
   headPushedAt: string | null;
   reportsFindings: boolean;
+  acknowledgement: ReviewIssueComment | null;
 }): boolean {
-  const referenced = new Set(
-    [...input.body.matchAll(COMMIT_SHA_PATTERN)].map((match) => match[0]),
-  );
+  // An acknowledgement is the provider's own statement that it finished reading
+  // a named commit, so once it uses them it is the only trustworthy answer:
+  // preferring it both admits a review whose findings link no commit and
+  // refuses a findings comment merely relinked to the new head.
+  if (input.acknowledgement !== null) {
+    return commitsNamedBy(input.acknowledgement.body).has(input.head);
+  }
+  const referenced = commitsNamedBy(input.body);
   if (referenced.size > 0) return referenced.has(input.head);
   if (input.reportsFindings) return false;
   return reactionBoundToHead(input.updatedAt, input.headPushedAt);
+}
+
+function commitsNamedBy(body: string): Set<string> {
+  return new Set([...body.matchAll(COMMIT_SHA_PATTERN)].map(([sha]) => sha));
 }
 
 /** Resolve a persistent issue-comment review against the current head. */
@@ -136,15 +190,17 @@ export async function resolveIssueCommentReview(input: {
   token: string;
   headPushedAt: string | null;
 }): Promise<ReviewStateResult> {
-  const comment = await fetchLatestProviderIssueComment({
-    repo: input.repo,
-    number: input.prNumber,
-    token: input.token,
-    provider: input.provider,
-    // A review of this head cannot predate its push, so start from there and
-    // let the helper widen the scan if nothing has been touched since.
-    since: input.headPushedAt ?? undefined,
-  });
+  const { review: comment, acknowledgement } = await fetchProviderIssueComments(
+    {
+      repo: input.repo,
+      number: input.prNumber,
+      token: input.token,
+      provider: input.provider,
+      // A review of this head cannot predate its push, so start from there and
+      // let the helper widen the scan if nothing has been touched since.
+      since: input.headPushedAt ?? undefined,
+    },
+  );
   const reportsFindings =
     comment === null
       ? false
@@ -157,6 +213,7 @@ export async function resolveIssueCommentReview(input: {
       head: input.head,
       headPushedAt: input.headPushedAt,
       reportsFindings,
+      acknowledgement,
     })
   ) {
     return {

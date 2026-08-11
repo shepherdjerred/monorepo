@@ -76,7 +76,19 @@ export type ReviewIssueComment = {
 export type CompletionStrategy =
   | { kind: "check-run"; namePattern: RegExp }
   | { kind: "review-at-head"; cleanSignal: "thumbsup-reaction" }
-  | { kind: "issue-comment"; marker: string };
+  | {
+      kind: "issue-comment";
+      marker: string;
+      /**
+       * A second provider-authored comment, posted only once a re-review of a
+       * named commit has finished. The review comment itself cannot carry that
+       * signal: providers rewrite its links to the new head within seconds of a
+       * push, long before re-reading the code, and providers whose links are
+       * PR-relative name no commit at all. Comments containing this marker are
+       * read for the commit they name and never for findings.
+       */
+      acknowledgement: { marker: string };
+    };
 
 /**
  * How a provider signals it deliberately skipped review (no reviewable files,

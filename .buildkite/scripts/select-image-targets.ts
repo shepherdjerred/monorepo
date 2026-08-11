@@ -57,6 +57,9 @@ const GLOBAL_IMAGE_INPUTS = [
   ".buildkite/scripts/bake-images.ts",
   ".buildkite/scripts/bake-retry.ts",
   ".buildkite/scripts/buildkit-env.ts",
+  // The image lane writes the digest handoff every downstream release step
+  // reads, so a change to the producer must rebuild every target once.
+  ".buildkite/scripts/buildkite-handoff.ts",
   ".buildkite/scripts/ghcr-public-access.ts",
   ".buildkite/scripts/image-targets.ts",
   ".buildkite/scripts/migration-core.ts",

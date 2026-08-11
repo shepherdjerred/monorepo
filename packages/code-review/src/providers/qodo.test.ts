@@ -35,6 +35,7 @@ describe("qodoProvider", () => {
     expect(qodoProvider.completion).toEqual({
       kind: "issue-comment",
       marker: "<h3>Code Review by Qodo</h3>",
+      acknowledgement: { marker: "was updated up to the latest commit" },
     });
     expect(qodoProvider.requestReview?.buildComment("marker")).toBe(
       "/review\n\nmarker",
@@ -117,7 +118,9 @@ describe("qodoProvider", () => {
       }),
     ).toHaveLength(3);
   });
+});
 
+describe("qodo layout guards", () => {
   test("fails closed when the header declares no recognized category", () => {
     expect(() =>
       parseQodoIssueComment({
@@ -151,6 +154,21 @@ describe("qodoProvider", () => {
     ).toThrow('severity section "Action required" has no parseable findings');
   });
 
+  test("fails closed when only some findings in a section parse", () => {
+    // Dropping one finding's closing tag leaves its neighbour parseable, so the
+    // section still opens a numbered finding and still yields an active one.
+    // Only counting the openers catches that the section lost a finding.
+    expect(() =>
+      parseQodoIssueComment({
+        ...comment,
+        body: comment.body.replace(
+          "<summary>  2. Stale wording <code>📝 Documentation</code></summary>",
+          "<summary>  2. Stale wording <code>📝 Documentation</code>",
+        ),
+      }),
+    ).toThrow("Qodo P2 section opens 2 finding(s) but 1 parsed");
+  });
+
   test("fails closed when a declared review parses no active findings", () => {
     expect(() =>
       parseQodoIssueComment({
@@ -159,7 +177,9 @@ describe("qodoProvider", () => {
       }),
     ).toThrow("declares 2 active finding(s) but none were parsed");
   });
+});
 
+describe("qodo re-review copies", () => {
   test("collapses the copies Qodo re-appends on each re-review", () => {
     // Qodo re-appends every finding on re-review and reflows the copy's
     // blockquote indentation, so identity must ignore whitespace alone.

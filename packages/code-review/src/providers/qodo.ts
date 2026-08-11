@@ -16,6 +16,10 @@ const QODO_AUTHOR_LOGINS = [
   "qodo-free-for-open-source-projects",
 ] as const;
 const QODO_REVIEW_MARKER = "<h3>Code Review by Qodo</h3>";
+// Qodo posts this as its own comment once a re-review finishes, naming the
+// commit it just read: "[Code review](…) by qodo was updated up to the latest
+// commit https://github.com/<repo>/commit/<sha>".
+const QODO_ACKNOWLEDGEMENT_MARKER = "was updated up to the latest commit";
 const QODO_DIVIDER_ALT = "Grey Divider";
 const QODO_FINDING_COUNT_LABELS = [
   "Bugs",
@@ -152,6 +156,19 @@ function parseSeveritySection(
       },
     });
   }
+  // Count the findings this section opens, not just whether it opens any. The
+  // section-level guard is satisfied by a single numbered finding, so without
+  // this a finding whose summary markup changed shape parses to nothing while
+  // its neighbours keep every other check green, and the gate passes having
+  // never seen it. Counting openers stays inside the document: it never
+  // reconciles against Qodo's header, which counts its own re-appended copies.
+  const opened = countNumberedFindings(section);
+  if (findings.length !== opened) {
+    throw new Error(
+      `Qodo P${String(priority)} section opens ${String(opened)} finding(s) ` +
+        `but ${String(findings.length)} parsed`,
+    );
+  }
   return findings;
 }
 
@@ -186,8 +203,15 @@ function dedupeRenderedFindings(
   return [...byIdentity.values()];
 }
 
+/** Qodo opens each finding with a numbered summary. */
+const NUMBERED_FINDING_OPENER = /<summary>\s*\d+\./giu;
+
+function countNumberedFindings(section: string): number {
+  return [...section.matchAll(NUMBERED_FINDING_OPENER)].length;
+}
+
 function hasNumberedFinding(section: string): boolean {
-  return /<summary>\s*\d+\./iu.test(section);
+  return countNumberedFindings(section) > 0;
 }
 
 /**
@@ -295,7 +319,11 @@ export const qodoProvider: ReviewProvider = {
   botAuthoredPullRequestPolicy: "skip",
   authorLogins: QODO_AUTHOR_LOGINS,
   parseSeverity: parseQodoSeverity,
-  completion: { kind: "issue-comment", marker: QODO_REVIEW_MARKER },
+  completion: {
+    kind: "issue-comment",
+    marker: QODO_REVIEW_MARKER,
+    acknowledgement: { marker: QODO_ACKNOWLEDGEMENT_MARKER },
+  },
   parseIssueComment: parseQodoIssueComment,
   detectSkip: null,
   requestReview: {
