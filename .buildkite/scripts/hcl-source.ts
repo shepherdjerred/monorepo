@@ -85,6 +85,65 @@ export function hclStringAttribute(
   return undefined;
 }
 
+function isHclWhitespace(character: string): boolean {
+  return (
+    character === " " ||
+    character === "\t" ||
+    character === "\n" ||
+    character === "\r"
+  );
+}
+
+type HclBlockStart = {
+  readonly markerIndex: number;
+  readonly openIndex: number;
+};
+
+function skipHclWhitespace(document: string, start: number): number {
+  let cursor = start;
+  while (isHclWhitespace(document.charAt(cursor))) cursor += 1;
+  return cursor;
+}
+
+function blockStartAtLine(
+  document: string,
+  lineStart: number,
+  blockType: string,
+  label: string,
+): HclBlockStart | undefined {
+  let cursor = lineStart;
+  while (document.charAt(cursor) === " " || document.charAt(cursor) === "\t") {
+    cursor += 1;
+  }
+  const markerIndex = cursor;
+  if (!document.startsWith(blockType, cursor)) return undefined;
+  cursor += blockType.length;
+  if (!isHclWhitespace(document.charAt(cursor))) return undefined;
+  cursor = skipHclWhitespace(document, cursor);
+  if (!document.startsWith(label, cursor)) return undefined;
+  cursor = skipHclWhitespace(document, cursor + label.length);
+  return document.charAt(cursor) === "{"
+    ? { markerIndex, openIndex: cursor }
+    : undefined;
+}
+
+function namedBlockStart(
+  document: string,
+  blockType: string,
+  name: string,
+): HclBlockStart | undefined {
+  const label = `"${name}"`;
+  let lineStart = 0;
+  while (lineStart < document.length) {
+    const blockStart = blockStartAtLine(document, lineStart, blockType, label);
+    if (blockStart !== undefined) return blockStart;
+    const nextLine = document.indexOf("\n", lineStart);
+    if (nextLine === -1) break;
+    lineStart = nextLine + 1;
+  }
+  return undefined;
+}
+
 export function hclNamedBlock(
   document: string,
   blockType: string,
@@ -98,16 +157,11 @@ export function hclNamedBlock(
   }
   const uncommented = withoutHclComments(document);
   const marker = `${blockType} "${name}"`;
-  const blockStart = new RegExp(
-    String.raw`^\s*${blockType}\s+"${name}"\s*\{`,
-    "mu",
-  ).exec(uncommented);
-  if (blockStart?.index === undefined) {
+  const blockStart = namedBlockStart(uncommented, blockType, name);
+  if (blockStart === undefined) {
     fail(`docker-bake.hcl has no ${marker}`);
   }
-  const markerOffset = blockStart[0].indexOf(blockType);
-  const markerIndex = blockStart.index + markerOffset;
-  const openIndex = blockStart.index + blockStart[0].lastIndexOf("{");
+  const { markerIndex, openIndex } = blockStart;
 
   let depth = 0;
   let quoted = false;
