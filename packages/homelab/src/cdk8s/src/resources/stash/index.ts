@@ -1,11 +1,13 @@
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import {
+  Capability,
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
   Probe,
+  SeccompProfileType,
   Secret,
   Service,
   Volume,
@@ -141,6 +143,8 @@ export function createStashDeployment(chart: Chart) {
         readOnlyRootFilesystem: true,
         allowPrivilegeEscalation: false,
         privileged: false,
+        capabilities: { drop: [Capability.ALL] },
+        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
       },
       volumeMounts: [{ path: "/state", volume: stateVolume }],
     }),
@@ -150,6 +154,7 @@ export function createStashDeployment(chart: Chart) {
     withCommonProps({
       name: "stash",
       image: `stashapp/stash:${versions["stashapp/stash"]}`,
+      command: ["stash"],
       args: ["--nobrowser"],
       ports: [{ number: PORT, name: "http" }],
       startup: Probe.fromHttpGet("/healthz", {
@@ -188,6 +193,8 @@ export function createStashDeployment(chart: Chart) {
         readOnlyRootFilesystem: true,
         allowPrivilegeEscalation: false,
         privileged: false,
+        capabilities: { drop: [Capability.ALL] },
+        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
       },
       volumeMounts: [
         { path: "/state", volume: stateVolume },

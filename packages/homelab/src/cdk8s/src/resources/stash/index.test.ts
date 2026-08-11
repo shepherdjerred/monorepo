@@ -52,6 +52,7 @@ const ContainerSchema = z
   .object({
     name: z.string(),
     image: z.string(),
+    command: z.array(z.string()).optional(),
     args: z.array(z.string()).optional(),
     env: z.array(EnvSchema),
     startupProbe: z.unknown().optional(),
@@ -63,6 +64,8 @@ const ContainerSchema = z
         allowPrivilegeEscalation: z.literal(false),
         privileged: z.literal(false),
         readOnlyRootFilesystem: z.literal(true),
+        capabilities: z.object({ drop: z.tuple([z.literal("ALL")]) }),
+        seccompProfile: z.object({ type: z.literal("RuntimeDefault") }),
       })
       .loose(),
     volumeMounts: z.array(
@@ -171,6 +174,7 @@ describe("Stash chart", () => {
     expect(appContainer.image).toBe(
       "stashapp/stash:v0.31.1@sha256:df744af5a0c976e2ec671052ecc1f8a9aa757fa12b8f9930b59910b7295f0da6",
     );
+    expect(appContainer.command).toEqual(["stash"]);
     expect(appContainer.args).toEqual(["--nobrowser"]);
     expect(
       appContainer.env.every(({ valueFrom }) => valueFrom === undefined),
