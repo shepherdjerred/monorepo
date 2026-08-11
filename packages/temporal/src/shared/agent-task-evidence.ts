@@ -223,21 +223,6 @@ type NormalizedCheck = {
   limitations: string[];
 };
 
-function skippedDeclaredCheck(declared: DeclaredCheckV2): NormalizedCheck {
-  return {
-    check: {
-      id: declared.id,
-      label: declared.label,
-      required: declared.required,
-      status: "skipped",
-      summary: "The agent did not return this declared check.",
-      evidenceReceiptIds: [],
-    },
-    evidenceIntegrityComplete: true,
-    limitations: [],
-  };
-}
-
 function expectedCollectorReceiptIds(declared: DeclaredCheckV2): string[] {
   return (declared.evidenceCollectors ?? []).map((collector) =>
     agentTaskCollectorReceiptId(declared.id, collector.id),
@@ -249,25 +234,30 @@ function normalizeDeclaredCheck(
   result: PayloadCheckV2 | undefined,
   evidenceById: ReadonlyMap<string, ReportEvidenceReceiptV1>,
 ): NormalizedCheck {
-  if (result === undefined) return skippedDeclaredCheck(declared);
-
   const limitations: string[] = [];
   let evidenceIntegrityComplete = true;
-  const knownReceipts = result.evidenceReceiptIds.filter((id) =>
+  const expectedCollectorIds = expectedCollectorReceiptIds(declared);
+  const normalizedResult: PayloadCheckV2 = result ?? {
+    id: declared.id,
+    status: "skipped",
+    summary: "The agent did not return this declared check.",
+    evidenceReceiptIds: expectedCollectorIds,
+  };
+  const knownReceipts = normalizedResult.evidenceReceiptIds.filter((id) =>
     evidenceById.has(id),
   );
   const capturedReceipts = knownReceipts.flatMap((id) => {
     const receipt = evidenceById.get(id);
     return receipt === undefined ? [] : [receipt];
   });
-  if (knownReceipts.length !== result.evidenceReceiptIds.length) {
+  if (knownReceipts.length !== normalizedResult.evidenceReceiptIds.length) {
     limitations.push(
       `Check ${declared.id} referenced evidence that was not captured by the provider transcript.`,
     );
     evidenceIntegrityComplete = false;
   }
   if (
-    result.evidenceReceiptIds.length === 0 ||
+    normalizedResult.evidenceReceiptIds.length === 0 ||
     capturedReceipts.some((receipt) => receipt.status !== "success")
   ) {
     limitations.push(
@@ -277,7 +267,6 @@ function normalizeDeclaredCheck(
   }
 
   const collectors = declared.evidenceCollectors;
-  const expectedCollectorIds = expectedCollectorReceiptIds(declared);
   const missingCollectorIds = expectedCollectorIds.filter((id) => {
     const receipt = evidenceById.get(id);
     return receipt?.origin !== "declared-collector";
@@ -305,7 +294,7 @@ function normalizeDeclaredCheck(
     );
   });
   const uncitedCollectorIds = expectedCollectorIds.filter(
-    (id) => !result.evidenceReceiptIds.includes(id),
+    (id) => !normalizedResult.evidenceReceiptIds.includes(id),
   );
 
   if (collectors === undefined) {
@@ -342,15 +331,15 @@ function normalizeDeclaredCheck(
   const semanticPredicatesPassed = adverseSemanticStatusIds.length === 0;
   const status =
     !semanticPredicatesPassed ||
-    (!evidenceIntegrityComplete && result.status === "passed")
+    (!evidenceIntegrityComplete && normalizedResult.status === "passed")
       ? "failed"
-      : result.status;
+      : normalizedResult.status;
   const summary =
-    !evidenceIntegrityComplete && result.status === "passed"
-      ? `${result.summary} Evidence validation failed.`
-      : !semanticPredicatesPassed && result.status !== "failed"
-        ? `${result.summary} Source-defined collector predicates failed: ${adverseSemanticStatusIds.join(", ")}.`
-        : result.summary;
+    !evidenceIntegrityComplete && normalizedResult.status === "passed"
+      ? `${normalizedResult.summary} Evidence validation failed.`
+      : !semanticPredicatesPassed && normalizedResult.status !== "failed"
+        ? `${normalizedResult.summary} Source-defined collector predicates failed: ${adverseSemanticStatusIds.join(", ")}.`
+        : normalizedResult.summary;
   return {
     check: {
       id: declared.id,

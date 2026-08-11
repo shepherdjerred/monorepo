@@ -403,6 +403,71 @@ describe("agent task semantic predicate normalization", () => {
       "Source-defined collector predicates failed",
     );
   });
+
+  test("does not let an omitted claim hide an adverse predicate", () => {
+    const baseInput = v2Input();
+    const secondaryReceiptId = agentTaskCollectorReceiptId(
+      "deployment-version",
+      "deployment-version-endpoint",
+    );
+    const input: AgentTaskInput = {
+      ...baseInput,
+      checks: [
+        ...(baseInput.checks ?? []),
+        {
+          id: "deployment-version",
+          label: "Deployment version",
+          required: true,
+          evidenceRequirement: "A successful version endpoint response.",
+          evidenceCollectors: [
+            {
+              id: "deployment-version-endpoint",
+              kind: "command",
+              argv: ["curl", "-fsS", "https://example.com/version"],
+              output: "non-empty",
+              expectation: { kind: "exit-code", passedExitCodes: [0] },
+            },
+          ],
+        },
+      ],
+    };
+    const payload = v2Payload([secondaryReceiptId]);
+    const reportedCheck = payload.checks[0];
+    if (reportedCheck === undefined) throw new Error("missing payload check");
+    reportedCheck.id = "deployment-version";
+    reportedCheck.summary = "The version endpoint returned successfully.";
+
+    const normalized = normalizeAgentTaskV2Result(input, payload, [
+      {
+        id: COLLECTOR_RECEIPT_ID,
+        source: "prometheus:service-health-endpoint",
+        origin: "declared-collector",
+        observedAt: OBSERVED_AT,
+        status: "success",
+        semanticStatus: "failed",
+        excerpt: '{"status":"success","data":{"result":[0]}}',
+      },
+      {
+        id: secondaryReceiptId,
+        source: "declared-command:deployment-version-endpoint",
+        origin: "declared-collector",
+        observedAt: OBSERVED_AT,
+        status: "success",
+        semanticStatus: "passed",
+        excerpt: '{"version":"2026.08.11"}',
+      },
+    ]);
+
+    expect(normalized.execution).toBe("complete");
+    expect(normalized.verdict).toBe("attention");
+    expect(normalized.checks[0]?.status).toBe("failed");
+    expect(normalized.checks[0]?.evidenceReceiptIds).toEqual([
+      COLLECTOR_RECEIPT_ID,
+    ]);
+    expect(normalized.checks[0]?.summary).toContain(
+      "Source-defined collector predicates failed",
+    );
+  });
 });
 
 describe("agent task deterministic verdicts", () => {
