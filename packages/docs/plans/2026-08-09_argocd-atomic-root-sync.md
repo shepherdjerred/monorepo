@@ -51,11 +51,16 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   This makes root-owned prerequisites available before child reconciliation
   without racing an automatic child operation. Bound each override request to
   750 kB because ArgoCD's operation-state update carries both the requested and
-  completed operation inside its 2 MiB controller message ceiling. Reconcile
-  children with aggregate health deferred, then atomically restore and prune
-  the exact root tree before one scoped release-health gate. Reject the old
-  split lifecycle, child-only staging, eager duplicate gates, shell-wrapped
-  commands, and unsafe ordering in pipeline validation.
+  completed operation inside its 2 MiB controller message ceiling. Keep each
+  request within one numeric Argo sync wave and submit waves in ascending order,
+  so health waiting in one wave cannot leave later-wave prerequisites unapplied.
+  Terminate each exact staged wave after all selected resources apply; a
+  degraded ordinary resource is deferred to the scoped health gate, while a
+  failed resource carrying an actual Argo hook type remains a hard failure.
+  Reconcile children with aggregate health deferred, then atomically restore
+  and prune the exact root tree before one scoped release-health gate. Reject
+  the old split lifecycle, child-only staging, eager duplicate gates,
+  shell-wrapped commands, and unsafe ordering in pipeline validation.
 
 ## Verification
 

@@ -11,12 +11,21 @@ import {
   type ManifestOverride,
 } from "./argocd-manifest-overrides.ts";
 
-function override(name: string, payloadLength: number): ManifestOverride {
+function override(
+  name: string,
+  payloadLength: number,
+  syncWave?: string,
+): ManifestOverride {
   return {
     manifest: JSON.stringify({
       apiVersion: "argoproj.io/v1alpha1",
       kind: "Application",
-      metadata: { name },
+      metadata: {
+        name,
+        ...(syncWave === undefined
+          ? {}
+          : { annotations: { "argocd.argoproj.io/sync-wave": syncWave } }),
+      },
       spec: { payload: "x".repeat(payloadLength) },
     }),
     resource: {
@@ -67,6 +76,28 @@ describe("manifest override batching", () => {
       "one",
       "two",
     ]);
+  });
+
+  test("keeps sync waves in separate requests and Argo application order", () => {
+    const batches = batchManifestOverrides(
+      [
+        override("later", 100, "3"),
+        override("default-one", 100),
+        override("earlier", 100, "-2"),
+        override("default-two", 100, "0"),
+      ],
+      5000,
+    );
+
+    expect(
+      batches.map(({ resources }) => resources.map(({ name }) => name)),
+    ).toEqual([["earlier"], ["default-one", "default-two"], ["later"]]);
+  });
+
+  test("fails loudly for an invalid sync wave", () => {
+    expect(() =>
+      batchManifestOverrides([override("bad", 100, "next")]),
+    ).toThrow('Application/bad has invalid Argo CD sync wave "next"');
   });
 
   test("fails when one manifest cannot fit", () => {

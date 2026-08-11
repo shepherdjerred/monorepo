@@ -20,6 +20,7 @@ const SyncRequestSchema = z.object({
     }),
   ),
   manifests: z.array(z.string()),
+  revision: z.string().optional(),
   resources: z.array(
     z.object({
       group: z.string(),
@@ -66,7 +67,45 @@ const WorkerApplicationResource = {
   name: "worker",
 };
 
-function operationForSyncRequest(request: unknown): unknown {
+const StagedRepositoryApplication = JSON.stringify({
+  apiVersion: "argoproj.io/v1alpha1",
+  kind: "Application",
+  metadata: { name: "worker" },
+  spec: {
+    source: {
+      repoURL: "https://chartmuseum.sjer.red",
+      chart: "worker",
+      targetRevision: "2.0.0-43",
+    },
+    syncPolicy: { automated: { prune: true, selfHeal: true } },
+  },
+});
+
+const StagedAdmissionPolicy = JSON.stringify({
+  apiVersion: "admissionregistration.k8s.io/v1",
+  kind: "ValidatingAdmissionPolicy",
+  metadata: {
+    name: "pvc-backup-policy.sjer.red",
+    annotations: { "argocd.argoproj.io/sync-wave": "1" },
+  },
+  spec: { failurePolicy: "Fail" },
+});
+
+const StagedExternalApplication = JSON.stringify({
+  apiVersion: "argoproj.io/v1alpha1",
+  kind: "Application",
+  metadata: { name: "external" },
+  spec: {
+    source: {
+      repoURL: "https://charts.example.com",
+      chart: "external",
+      targetRevision: "1.0.0",
+    },
+    syncPolicy: { automated: {} },
+  },
+});
+
+function operationForSyncRequest(request: unknown): Record<string, unknown> {
   const syncRequest = SyncRequestSchema.parse(request);
   return {
     info: syncRequest.infos,
@@ -74,6 +113,9 @@ function operationForSyncRequest(request: unknown): unknown {
     sync: {
       manifests: syncRequest.manifests,
       resources: syncRequest.resources,
+      ...(syncRequest.revision === undefined
+        ? {}
+        : { revision: syncRequest.revision }),
     },
   };
 }
@@ -612,40 +654,8 @@ describe("Argo CD root release staging", () => {
   test("stages root prerequisites while child auto-sync remains suspended", async () => {
     const syncBodies: unknown[] = [];
     let requestedOperation: unknown;
-    const repositoryApplication = JSON.stringify({
-      apiVersion: "argoproj.io/v1alpha1",
-      kind: "Application",
-      metadata: { name: "worker" },
-      spec: {
-        source: {
-          repoURL: "https://chartmuseum.sjer.red",
-          chart: "worker",
-          targetRevision: "2.0.0-43",
-        },
-        syncPolicy: {
-          automated: { prune: true, selfHeal: true },
-        },
-      },
-    });
-    const admissionPolicy = JSON.stringify({
-      apiVersion: "admissionregistration.k8s.io/v1",
-      kind: "ValidatingAdmissionPolicy",
-      metadata: { name: "pvc-backup-policy.sjer.red" },
-      spec: { failurePolicy: "Fail" },
-    });
-    const externalApplication = JSON.stringify({
-      apiVersion: "argoproj.io/v1alpha1",
-      kind: "Application",
-      metadata: { name: "external" },
-      spec: {
-        source: {
-          repoURL: "https://charts.example.com",
-          chart: "external",
-          targetRevision: "1.0.0",
-        },
-        syncPolicy: { automated: {} },
-      },
-    });
+    let activeSyncRequest: z.infer<typeof SyncRequestSchema> | undefined;
+    let deleteRequests = 0;
     const server = Bun.serve({
       hostname: "127.0.0.1",
       port: 0,
@@ -667,9 +677,9 @@ describe("Argo CD root release staging", () => {
           expect(url.searchParams.get("revision")).toBe("2.0.0-43");
           return Response.json({
             manifests: [
-              repositoryApplication,
-              externalApplication,
-              admissionPolicy,
+              StagedRepositoryApplication,
+              StagedExternalApplication,
+              StagedAdmissionPolicy,
             ],
           });
         }
@@ -679,6 +689,7 @@ describe("Argo CD root release staging", () => {
         ) {
           const body = await request.json();
           syncBodies.push(body);
+          activeSyncRequest = SyncRequestSchema.parse(body);
           requestedOperation = operationForSyncRequest(body);
           return Response.json({ operation: requestedOperation });
         }
@@ -686,15 +697,41 @@ describe("Argo CD root release staging", () => {
           request.method === "GET" &&
           url.pathname === "/api/v1/applications/apps"
         ) {
+          if (
+            requestedOperation === undefined ||
+            activeSyncRequest === undefined
+          ) {
+            return Response.json({ status: {} });
+          }
           return Response.json({
+            operation: requestedOperation,
             status: {
               operationState: {
-                phase: "Succeeded",
+                phase: "Running",
                 startedAt: new Date().toISOString(),
                 operation: requestedOperation,
+                syncResult: {
+                  revision: activeSyncRequest.revision,
+                  resources: activeSyncRequest.resources.map((resource) => ({
+                    ...resource,
+                    status: "Synced",
+                    ...(resource.name === "worker"
+                      ? { hookPhase: "Failed" }
+                      : {}),
+                  })),
+                },
               },
             },
           });
+        }
+        if (
+          request.method === "DELETE" &&
+          url.pathname === "/api/v1/applications/apps/operation"
+        ) {
+          deleteRequests++;
+          requestedOperation = undefined;
+          activeSyncRequest = undefined;
+          return Response.json({});
         }
         return new Response("not found", { status: 404 });
       },
@@ -735,28 +772,35 @@ describe("Argo CD root release staging", () => {
       expect(stderr).toBe("");
       expect(stdout).toContain("stage-root-release: apps at 2.0.0-43");
       expect(stdout).toContain("suspending auto-sync: worker");
-      expect(syncBodies).toHaveLength(1);
-      const stagedRequest = SyncRequestSchema.parse(syncBodies[0]);
-      expect(stagedRequest.resources).toEqual([
+      expect(stdout).toContain("terminated applied sync operation: apps");
+      expect(syncBodies).toHaveLength(2);
+      expect(deleteRequests).toBe(2);
+      const applicationRequest = SyncRequestSchema.parse(syncBodies[0]);
+      expect(applicationRequest.revision).toBe("2.0.0-43");
+      expect(applicationRequest.resources).toEqual([
         WorkerApplicationResource,
         {
           group: "argoproj.io",
           kind: "Application",
           name: "external",
         },
+      ]);
+      const policyRequest = SyncRequestSchema.parse(syncBodies[1]);
+      expect(policyRequest.revision).toBe("2.0.0-43");
+      expect(policyRequest.resources).toEqual([
         {
           group: "admissionregistration.k8s.io",
           kind: "ValidatingAdmissionPolicy",
           name: "pvc-backup-policy.sjer.red",
         },
       ]);
-      expect(JSON.parse(stagedRequest.manifests[0] ?? "")).toMatchObject({
+      expect(JSON.parse(applicationRequest.manifests[0] ?? "")).toMatchObject({
         spec: { syncPolicy: { automated: { enabled: false } } },
       });
-      expect(JSON.parse(stagedRequest.manifests[1] ?? "")).toMatchObject({
+      expect(JSON.parse(applicationRequest.manifests[1] ?? "")).toMatchObject({
         spec: { syncPolicy: { automated: { enabled: false } } },
       });
-      expect(stagedRequest.manifests[2]).toBe(admissionPolicy);
+      expect(policyRequest.manifests[0]).toBe(StagedAdmissionPolicy);
     } finally {
       await server.stop(true);
     }

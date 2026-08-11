@@ -22,6 +22,7 @@ const RootSyncRequestSchema = z.object({
 type OperationResource = {
   readonly group?: string;
   readonly hookPhase?: string;
+  readonly hookType?: string;
   readonly kind?: string;
   readonly name?: string;
   readonly status: string;
@@ -500,6 +501,49 @@ test("atomic Argo sync adopts the exact active operation without another POST", 
     expect(result.stdout).toContain("adopted active sync operation: apps");
     expect(lifecycle.observations.syncPosts).toBe(0);
     expect(lifecycle.observations.deleteRequests).toBe(1);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("atomic Argo sync can finalize an applied degraded non-hook resource", async () => {
+  const lifecycle = serveLifecycle([
+    { status: {} },
+    applicationOperation({
+      phase: "Running",
+      requestId: CURRENT_REQUEST_ID,
+      resources: [{ status: "Synced", hookPhase: "Failed" }],
+    }),
+  ]);
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("terminated applied sync operation: apps");
+    expect(lifecycle.observations.deleteRequests).toBe(1);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("atomic Argo sync never finalizes a failed Argo hook", async () => {
+  const lifecycle = serveLifecycle([
+    { status: {} },
+    applicationOperation({
+      phase: "Running",
+      requestId: CURRENT_REQUEST_ID,
+      resources: [{ status: "Synced", hookPhase: "Failed", hookType: "Sync" }],
+    }),
+  ]);
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("did not complete within 1s");
+    expect(lifecycle.observations.deleteRequests).toBe(0);
   } finally {
     await lifecycle.server.stop(true);
   }

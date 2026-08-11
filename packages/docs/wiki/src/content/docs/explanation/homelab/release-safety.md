@@ -49,6 +49,14 @@ copies the original request into status. In this cluster, a request near the
 observed 2 MiB controller message ceiling can therefore be accepted but never
 acquire visible operation state, matching
 [upstream reports of oversized operation-state patches](https://github.com/argoproj/argo-cd/issues/14224#issuecomment-1636337124).
+The batcher also keeps each request within one numeric Argo sync wave and sends
+waves in ascending order. Argo applies all targets in a wave before waiting for
+their health; separating waves prevents a degraded child Application in an
+earlier wave from leaving root-owned prerequisites in a later wave unapplied.
+Once every selected resource in a staged wave is applied, the release command
+terminates that exact operation instead of waiting for aggregate health. A
+failed resource with an actual Argo hook type still blocks termination; health
+for ordinary child Applications remains the final scoped release gate's job.
 
 After explicit child reconciliation completes, the full root apply restores
 the exact auto-sync policies and performs verified pruning. Aggregate child

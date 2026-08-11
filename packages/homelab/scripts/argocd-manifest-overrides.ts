@@ -4,6 +4,8 @@ import { canonicalJson } from "./canonical-json.ts";
 const DEFAULT_MAX_REQUEST_BYTES = 750_000;
 const SERIALIZED_REQUEST_ID = "00000000-0000-0000-0000-000000000000";
 const SERIALIZED_OPERATION_ID = "00000000-0000-0000-0000-000000000000";
+const SYNC_WAVE_ANNOTATION = "argocd.argoproj.io/sync-wave";
+const SYNC_WAVE_PATTERN = /^[+-]?\d+$/;
 
 export const SYNC_REQUEST_ID_INFO_NAME = "ci.sjer.red/request-id";
 export const SYNC_OPERATION_ID_INFO_NAME = "ci.sjer.red/operation-id";
@@ -33,6 +35,12 @@ const OperationInfoSchema = z
       .optional(),
   })
   .loose();
+
+const SyncWaveManifestSchema = z.object({
+  metadata: z.object({
+    annotations: z.record(z.string(), z.string()).optional(),
+  }),
+});
 
 export type SyncOperationResource = {
   group: string;
@@ -81,23 +89,28 @@ function appendOverride(
   };
 }
 
-/**
- * Keep manifest-override operations comfortably below Argo CD's 2 MiB gRPC
- * message ceiling. The application-controller's operation-state update
- * includes both the requested and completed operation, so the manifest
- * payload can appear twice in that message. A 750 kB request budget leaves
- * almost 600 kB for the rest of the Application while staying below 2 MiB.
- * The request is measured after JSON serialization so escaping and resource
- * selectors are included instead of estimated.
- */
-export function batchManifestOverrides(
-  overrides: readonly ManifestOverride[],
-  maxRequestBytes = DEFAULT_MAX_REQUEST_BYTES,
-): ManifestOverrideBatch[] {
-  if (!Number.isSafeInteger(maxRequestBytes) || maxRequestBytes <= 0) {
-    throw new Error("maxRequestBytes must be a positive safe integer");
+function manifestSyncWave(override: ManifestOverride): number {
+  const parsed: unknown = JSON.parse(override.manifest);
+  const annotation =
+    SyncWaveManifestSchema.parse(parsed).metadata.annotations?.[
+      SYNC_WAVE_ANNOTATION
+    ];
+  if (annotation === undefined) {
+    return 0;
   }
+  const wave = Number(annotation);
+  if (!SYNC_WAVE_PATTERN.test(annotation) || !Number.isSafeInteger(wave)) {
+    throw new Error(
+      `manifest override for ${override.resource.kind}/${override.resource.name} has invalid Argo CD sync wave ${JSON.stringify(annotation)}`,
+    );
+  }
+  return wave;
+}
 
+function batchSingleSyncWave(
+  overrides: readonly ManifestOverride[],
+  maxRequestBytes: number,
+): ManifestOverrideBatch[] {
   const batches: ManifestOverrideBatch[] = [];
   let current: ManifestOverrideBatch = { manifests: [], resources: [] };
 
@@ -124,6 +137,40 @@ export function batchManifestOverrides(
     batches.push(current);
   }
   return batches;
+}
+
+/**
+ * Keep manifest-override operations comfortably below Argo CD's 2 MiB gRPC
+ * message ceiling. The application-controller's operation-state update
+ * includes both the requested and completed operation, so the manifest
+ * payload can appear twice in that message. A 750 kB request budget leaves
+ * almost 600 kB for the rest of the Application while staying below 2 MiB.
+ * The request is measured after JSON serialization so escaping and resource
+ * selectors are included instead of estimated. Each request also contains
+ * exactly one Argo CD sync wave. Argo applies every target in a wave before it
+ * waits for health, so a degraded resource cannot strand later-wave targets
+ * inside the same manifest-override operation.
+ */
+export function batchManifestOverrides(
+  overrides: readonly ManifestOverride[],
+  maxRequestBytes = DEFAULT_MAX_REQUEST_BYTES,
+): ManifestOverrideBatch[] {
+  if (!Number.isSafeInteger(maxRequestBytes) || maxRequestBytes <= 0) {
+    throw new Error("maxRequestBytes must be a positive safe integer");
+  }
+
+  const overridesBySyncWave = new Map<number, ManifestOverride[]>();
+  for (const override of overrides) {
+    const wave = manifestSyncWave(override);
+    const waveOverrides = overridesBySyncWave.get(wave) ?? [];
+    waveOverrides.push(override);
+    overridesBySyncWave.set(wave, waveOverrides);
+  }
+  return [...overridesBySyncWave.entries()]
+    .sort(([leftWave], [rightWave]) => leftWave - rightWave)
+    .flatMap(([, waveOverrides]) =>
+      batchSingleSyncWave(waveOverrides, maxRequestBytes),
+    );
 }
 
 export function requestedOperationIdentity(application: unknown): string {

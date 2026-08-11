@@ -454,6 +454,8 @@ async function stageRootRelease(
     );
     await sync(rootAppName, timeoutSeconds, false, {
       prune: false,
+      revision: exactRevision,
+      terminateAfterApplied: true,
       manifests: batch.manifests,
       resources: batch.resources,
     });
@@ -673,11 +675,32 @@ async function sync(
     options.revision !== undefined &&
     expectedResourceIdentities === undefined
   ) {
-    expectedResourceIdentities = await getExpectedSyncResultIdentities(
-      appName,
-      options.revision,
-      token,
-    );
+    if (options.resources === undefined) {
+      expectedResourceIdentities = await getExpectedSyncResultIdentities(
+        appName,
+        options.revision,
+        token,
+      );
+    } else {
+      const identities = options.resources.map(({ group, kind, name }) =>
+        resourceIdentity(group, kind, name),
+      );
+      if (identities.length === 0) {
+        throw new Error(
+          "Manifest-override termination requires at least one selected resource",
+        );
+      }
+      const unique = new Set(identities);
+      if (unique.size !== identities.length) {
+        throw new Error(
+          "Manifest-override termination received duplicate group/kind/name identities",
+        );
+      }
+      expectedResourceIdentities = {
+        desired: unique,
+        pruned: new Set(),
+      };
+    }
   }
   const requestId = SyncRequestIdSchema.parse(
     options.requestId ?? crypto.randomUUID(),
@@ -1003,6 +1026,7 @@ function syncResultApplied(
       return false;
     }
     const status = resource["status"];
+    const hookType = resource["hookType"];
     const hookPhase = resource["hookPhase"];
     const group = resource["group"];
     const kind = resource["kind"];
@@ -1014,6 +1038,13 @@ function syncResultApplied(
     ) {
       return false;
     }
+    if (
+      hookType !== undefined &&
+      hookType !== null &&
+      typeof hookType !== "string"
+    ) {
+      return false;
+    }
     const identity = resourceIdentity(group ?? "", kind, name);
     appliedResourceIdentities.add(identity);
     if (status === "Pruned") {
@@ -1021,8 +1052,11 @@ function syncResultApplied(
     }
     return (
       (status === "Synced" || status === "Pruned" || status === "Skipped") &&
-      hookPhase !== "Failed" &&
-      hookPhase !== "Error"
+      !(
+        hookType !== undefined &&
+        hookType !== null &&
+        (hookPhase === "Failed" || hookPhase === "Error")
+      )
     );
   });
   return (
