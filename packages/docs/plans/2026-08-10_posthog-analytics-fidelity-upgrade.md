@@ -36,9 +36,14 @@ favour of analytical fidelity.
   and the browser super properties. PostHog **group** analytics is rejected: it
   is a paid add-on whose billing applies to every identified event across all
   eight sites sharing this project. No speculative `groups` plumbing was added.
-- GeoIP enabled: project-level IP collection on, and the backend's three
-  GeoIP suppressions removed.
-- Session replay, heatmaps, dead clicks, and web vitals on every site.
+  The browser property is session-scoped and registered only after the server
+  validates guild access; see the review-follow-up notes below.
+- GeoIP enabled for browser events via project-level IP collection, and left
+  **disabled** on the backend: those captures carry no end-user `$ip`, so the
+  only location PostHog could resolve is the backend's own egress.
+- Session replay, heatmaps, dead clicks, and web vitals on every site. Sites
+  that render a signed-in Discord identity as text mask every text node, since
+  `maskAllInputs` covers form values only.
 - Ad-blocker resilience via PostHog's **managed** reverse proxy (free on Cloud,
   Cloudflare-backed), one proxy hostname per registrable domain.
 
@@ -53,15 +58,36 @@ Restores ingestion on the six dead sites and raises fidelity everywhere.
   discarded campaign query strings. Added heatmaps, dead clicks, web vitals,
   replay, `person_profiles: "always"`, `capture_pageview: "history_change"`.
 - Scout web app: widened the injected client seam from a bare capture function
-  to `{ capture, identify, reset, register, unregister }`; `identifyUser` in
+  to one carrying `capture`, `identify`, `reset`, `isIdentified`, `register`,
+  `registerForSession`, and `unregisterForSession`; `identifyUser` in
   `require-session.tsx`, `resetIdentity` in `user-menu.tsx`, and the `guild_id`
   super property in `guild-workspace.tsx`.
-- Scout backend: GeoIP on, `$process_person_profile: false` removed, `guild_id`
-  added to all five lifecycle events via `AnalyticsInstallation.serverId`.
+- Scout backend: `$process_person_profile: false` removed, `guild_id` added to
+  all five lifecycle events via `AnalyticsInstallation.serverId`.
 - `scripts/check-analytics-sites.ts` rewritten to assert the new posture, plus
-  a forbidden-key check: `cookieless_mode`, `persistence:`, and `before_send`
+  a forbidden-key check: `cookieless_mode`, `persistence`, and `before_send`
   must be **absent**, because each degrades collection silently rather than
-  failing loudly.
+  failing loudly. Matched by regex on the key plus `:` or `(` rather than a
+  fixed substring, so `persistence : "memory"` cannot slip through.
+
+### Review follow-ups — shipped
+
+Durable persistence made four latent identity issues load-bearing, so each was
+fixed rather than deferred:
+
+- `require-session.tsx` resets identity whenever the session resolves anonymous,
+  not only on the sign-out menu path: an expired or revoked cookie runs no
+  handler, and the login page would otherwise stay attributed to the previous
+  Discord user. `resetIdentity` is guarded by `posthog._isIdentified()` so an
+  ordinary anonymous visitor keeps their distinct id.
+- `guild_id` is registered with `register_for_session`, and only once
+  `usePermissions` confirms access. A durable property outlived the visit; an
+  eagerly registered route param let any signed-in visitor deep-link
+  `/g/<anything>` and stamp an arbitrary, unbounded value onto every event.
+- Mario Kart and Pokémon set `maskTextSelector: "*"`; the Scout web app marks
+  its username elements `ph-mask`. `maskAllInputs` masks form values, so replay
+  was recording Discord usernames as ordinary text.
+- Backend `disableGeoip: true`, because those events carry no end-user `$ip`.
 
 ## Phase 2 — blocked on operator steps
 

@@ -74,7 +74,7 @@ describe("Scout product analytics adapter", () => {
       distinctId:
         "scout-beta:guild-install:7316395a-b815-49d8-9794-9b56b3ce81c0",
       event: "core_output_delivered",
-      disableGeoip: false,
+      disableGeoip: true,
       properties: {
         output_kind: "postmatch",
         guild_id: "1310000000000000001",

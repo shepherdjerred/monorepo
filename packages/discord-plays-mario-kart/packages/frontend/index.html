@@ -78,7 +78,11 @@
             capture_performance: { web_vitals: true, network_timing: true },
             respect_dnt: true,
             person_profiles: "always",
-            session_recording: { maskAllInputs: true },
+            // The seat picker renders each occupant's Discord-derived name as
+            // ordinary text, which maskAllInputs does not cover — it masks form
+            // values only. Masking every text node keeps replay useful for
+            // layout and interaction without recording who is playing.
+            session_recording: { maskAllInputs: true, maskTextSelector: "*" },
             disable_session_recording: false,
             loaded: function (posthog) {
               posthog.register({

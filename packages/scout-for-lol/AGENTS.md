@@ -710,14 +710,24 @@ messaging real people.
   rotates on reinstall so install-level funnels restart cleanly, while
   `guild_id` is stable for the guild's whole history. The browser SPA registers
   the same `guild_id` as a super property, which is what lets a web session be
-  joined to a guild installation.
+  joined to a guild installation. Register it only once `usePermissions`
+  confirms the viewer may access that guild — before that it is an unvalidated
+  route parameter, and a deep link to `/g/<anything>` would stamp an
+  attacker-supplied value onto every event — and register it for the session,
+  not durably: the workspace clears it from a React effect cleanup that a hard
+  navigation or a closed tab never runs.
 - Keep the event/property registry closed and bounded. Beyond `guild_id`, never
   send Discord user or channel IDs, guild names, Riot IDs, command options,
   message content, URLs, or error messages.
-- Person profiles and GeoIP are ON. Do not reintroduce
-  `$process_person_profile: false`, `$geoip_disable`, or `disableGeoip: true` —
-  install-level retention and the country breakdown depend on them being off.
-  PostHog _group_ analytics is a paid add-on and is deliberately NOT used; guild
+- Person profiles are ON. Do not reintroduce `$process_person_profile: false` or
+  `$geoip_disable` — install-level retention depends on them being off.
+- GeoIP is ON for browser events and OFF for these server events
+  (`disableGeoip: true`). These captures come from Discord gateway events and
+  background database/delivery workflows with no end-user `$ip`, so PostHog
+  would resolve the backend's own egress location — one datacenter, identical on
+  every event — and present it as the guild's. Do not turn it on for a country
+  breakdown: the breakdown it produces is wrong, not merely coarse.
+- PostHog _group_ analytics is a paid add-on and is deliberately NOT used; guild
   analysis goes through the `guild_id` property.
 - Capture first subscription only after the web or Discord transaction commits,
   and claim `firstSubscriptionAt` atomically (like `firstCoreOutputAt` below)

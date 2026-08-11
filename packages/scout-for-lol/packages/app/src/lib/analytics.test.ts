@@ -26,7 +26,11 @@ type IdentityCall =
   | { kind: "identify"; distinctId: string }
   | { kind: "reset" }
   | { kind: "register"; properties: Record<string, string | number | boolean> }
-  | { kind: "unregister"; property: string };
+  | {
+      kind: "register_for_session";
+      properties: Record<string, string | number | boolean>;
+    }
+  | { kind: "unregister_for_session"; property: string };
 
 const TEST_CONFIG: AnalyticsConfig = {
   projectToken: "phc_test",
@@ -40,28 +44,39 @@ const TEST_CONFIG: AnalyticsConfig = {
 /** Identity calls from the most recent `installClient`/`installDisabledClient`. */
 let identityCalls: IdentityCall[] = [];
 
+// Mirrors the user state PostHog persists across page loads, so `resetIdentity`
+// is exercised against a real signal instead of a stub that always agrees.
+let identified = false;
+
 // Takes `config` positionally with no default: a default parameter would treat
 // `install(undefined)` as "use TEST_CONFIG" and silently enable the client the
 // disabled-path tests rely on being off.
 function install(config: AnalyticsConfig | undefined): CapturedEvent[] {
   const calls: CapturedEvent[] = [];
   identityCalls = [];
+  identified = false;
   setAnalyticsForTesting(
     {
       capture(event, properties, options) {
         calls.push({ event, properties, options });
       },
       identify(distinctId) {
+        identified = true;
         identityCalls.push({ kind: "identify", distinctId });
       },
       reset() {
+        identified = false;
         identityCalls.push({ kind: "reset" });
       },
+      isIdentified: () => identified,
       register(properties) {
         identityCalls.push({ kind: "register", properties });
       },
-      unregister(property) {
-        identityCalls.push({ kind: "unregister", property });
+      registerForSession(properties) {
+        identityCalls.push({ kind: "register_for_session", properties });
+      },
+      unregisterForSession(property) {
+        identityCalls.push({ kind: "unregister_for_session", property });
       },
     },
     config,
@@ -190,14 +205,38 @@ describe("identity", () => {
     ]);
   });
 
-  test("registers and clears the guild super property", () => {
+  // Session-scoped, not durable: the workspace clears this from a React effect
+  // cleanup that a closed tab never runs, so a durable super property would
+  // outlive the visit in localStorage and mis-attribute the next one.
+  test("scopes the guild super property to the session", () => {
     installClient();
     setGuildContext("123456789012345678");
     setGuildContext(undefined);
     expect(identityCalls).toEqual([
-      { kind: "register", properties: { guild_id: "123456789012345678" } },
-      { kind: "unregister", property: "guild_id" },
+      {
+        kind: "register_for_session",
+        properties: { guild_id: "123456789012345678" },
+      },
+      { kind: "unregister_for_session", property: "guild_id" },
     ]);
+  });
+
+  // An anonymous visitor's distinct id must survive: resetting it on every
+  // logged-out render is the unique-visitor regression this PR exists to fix.
+  test("leaves an anonymous visitor's distinct id alone", () => {
+    installClient();
+    resetIdentity();
+    expect(identityCalls).toEqual([]);
+  });
+
+  // The sign-out menu is only one way a session ends. An expired or revoked
+  // cookie runs no handler, and after the reload module state is fresh while
+  // PostHog still holds the previous person.
+  test("resets an identity persisted from an earlier page load", () => {
+    installClient();
+    identified = true;
+    resetIdentity();
+    expect(identityCalls).toEqual([{ kind: "reset" }]);
   });
 
   test("stays inert when PostHog never initialized", () => {

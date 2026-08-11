@@ -93,9 +93,12 @@ function createPostHogTransport(
 ): ProductAnalyticsTransport {
   const client = new PostHog(analyticsConfiguration.projectToken, {
     host: analyticsConfiguration.apiHost,
-    // GeoIP enrichment is what gives the lifecycle events a country breakdown;
-    // the SDK suppresses it unless this is explicitly false.
-    disableGeoip: false,
+    // These captures originate from Discord gateway events and background
+    // database/delivery workflows, never from an end-user request, and the
+    // transport supplies no `$ip`. GeoIP would therefore describe this
+    // backend's own egress location — one datacenter, identical on every
+    // event — and label it as the guild's, which is worse than no geography.
+    disableGeoip: true,
     enableExceptionAutocapture: false,
     flushAt: 20,
     flushInterval: 10_000,
@@ -144,7 +147,7 @@ export function createProductAnalytics(options: {
         transport.capture({
           distinctId,
           event: event.event,
-          disableGeoip: false,
+          disableGeoip: true,
           properties: {
             ...event.properties,
             guild_id: installation.serverId,

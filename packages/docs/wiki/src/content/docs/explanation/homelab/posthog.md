@@ -23,7 +23,14 @@ stays at the standard setting. Leave _Cookieless server hash mode_ **disabled**.
 All eight sites use PostHog's default persistence (a first-party cookie plus
 `localStorage`), create person profiles, and capture autocapture, heatmaps, dead
 clicks, web vitals, and session replay with inputs masked. Every site respects
-Do Not Track, so a DNT browser sends nothing at all. See PostHog's
+Do Not Track, so a DNT browser sends nothing at all.
+
+Input masking is not sufficient everywhere. `maskAllInputs` masks form values,
+not arbitrary text nodes, so the sites that render a signed-in Discord identity
+as ordinary text mask every text node instead: Mario Kart's seat picker and the
+Pokémon profile card set `maskTextSelector: "*"`, and the Scout web app marks
+its username elements `ph-mask`. An element-level allowlist was rejected because
+it fails open the first time a new component renders a name. See PostHog's
 [JavaScript configuration](https://posthog.com/docs/libraries/js/config) and
 [privacy controls](https://posthog.com/docs/privacy/data-collection).
 
@@ -60,13 +67,19 @@ id. The two identifiers are not interchangeable: the installation UUID rotates
 on reinstall so install-level funnels restart cleanly, while `guild_id` is
 stable for a server's whole history. The web app registers the same `guild_id`
 as a super property, which is what lets a browser session be joined to a guild
-installation.
+installation. It registers only after the server confirms the viewer may access
+that guild — until then the id is an unvalidated route parameter — and it is
+scoped to the session rather than persisted, because the workspace clears it
+from a React effect cleanup that a closed tab never runs.
 
-Person profiles and GeoIP are enabled, so installations support retention
-analysis and a country breakdown. PostHog _group_ analytics is deliberately not
-used: it is a paid add-on that reprices every identified event across all eight
-sites, and the `guild_id` property answers the same questions through breakdowns
-and filters.
+Person profiles are enabled, so installations support retention analysis. GeoIP
+enrichment is enabled for browser events and **disabled** for backend events:
+those captures come from Discord gateway events and background jobs that carry
+no end-user `$ip`, so GeoIP would resolve the backend's own egress location and
+label it as the guild's. PostHog _group_ analytics is deliberately not used: it
+is a paid add-on that reprices every identified event across all eight sites,
+and the `guild_id` property answers the same questions through breakdowns and
+filters.
 
 The backend still never sends user or channel IDs, guild names, Riot IDs,
 command inputs, message content, URLs, or error text. Deployed values come from
@@ -104,14 +117,20 @@ is precisely how the cookieless outage went unnoticed.
   profile exists for that anonymous visitor.
 - Navigate through the Scout web app and confirm recorded URLs still template
   dynamic identifiers (`/g/:guildId`, `/players/:alias`).
-- Confirm `$geoip_country_name` is populated on both browser and backend events.
+- Confirm `$geoip_country_name` is populated on browser events and absent on
+  backend events.
 - Confirm session recordings appear for all eight hosts with input masking
-  active.
+  active, and that no Discord username is legible in a Mario Kart, Pokémon, or
+  Scout recording.
 - Repeat with Do Not Track enabled and confirm the browser sends no PostHog
   events.
 - Sign into Scout and confirm the pre-login anonymous person merges into the
   identified person, that `guild_id` is attached to events inside a guild
   workspace, and that signing out starts a new anonymous distinct ID.
+- Expire or clear the Scout session cookie and reload: confirm the login page
+  emits events as a new anonymous person rather than the previous Discord user.
+- Deep-link `/app/g/<not-a-guild>` while signed in and confirm the events the
+  unauthorized view emits carry no `guild_id`.
 - With controlled beta and production guilds, verify install, web and Discord
   first-subscription, core-output, removal, and reinstall events in Live Events,
   and that a reinstall rotates the installation UUID while `guild_id` holds.

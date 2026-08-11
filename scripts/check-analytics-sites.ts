@@ -17,26 +17,72 @@ const RegistrySchema = z.object({
   ),
 });
 
+// `masksAllText` marks the sites that render a signed-in Discord identity as
+// ordinary DOM text. `maskAllInputs` only masks form values, so replay on those
+// sites would otherwise record usernames verbatim. An element-level allowlist
+// would fail open the first time a new component renders a name, so those sites
+// mask every text node instead.
 const staticTrackers = [
   {
     path: "packages/sjer.red/src/layouts/BaseLayout.astro",
     hostname: "sjer.red",
+    masksAllText: false,
   },
-  { path: "packages/resume/index.html", hostname: "resume.sjer.red" },
-  { path: "packages/webring/posthog.js", hostname: "webring.sjer.red" },
+  {
+    path: "packages/resume/index.html",
+    hostname: "resume.sjer.red",
+    masksAllText: false,
+  },
+  {
+    path: "packages/webring/posthog.js",
+    hostname: "webring.sjer.red",
+    masksAllText: false,
+  },
   {
     path: "packages/better-skill-capped/index.html",
     hostname: "better-skill-capped.com",
+    masksAllText: false,
   },
   {
     path: "packages/discord-plays-mario-kart/packages/frontend/index.html",
     hostname: "mariokart.sjer.red",
+    masksAllText: true,
   },
   {
     path: "packages/discord-plays-pokemon/packages/frontend/index.html",
     hostname: "pokebot.sjer.red",
+    masksAllText: true,
   },
 ] as const;
+
+// These three keys are load-bearing by their ABSENCE, and each one silently
+// degrades collection rather than failing loudly:
+//   cookieless_mode — PostHog's ingestion drops cookieless events unless the
+//     project enables cookieless server hash mode; capture still returns 200.
+//   persistence     — an override to "memory" resets the distinct id on every
+//     page load, so unique visitors collapse into page loads.
+//   before_send     — the old hook rewrote $current_url to origin+pathname,
+//     discarding the campaign query strings attribution depends on.
+// Matched as the key followed by a colon or an open paren (method shorthand)
+// with optional whitespace between. A fixed `"persistence:"` substring search
+// misses `persistence : "memory"`, which is valid JavaScript, so the gate would
+// pass while the regression it exists to catch shipped.
+const FORBIDDEN_SETTINGS: readonly { key: string; pattern: RegExp }[] = [
+  { key: "cookieless_mode", pattern: /\bcookieless_mode\s*[:(]/ },
+  { key: "persistence", pattern: /\bpersistence\s*[:(]/ },
+  { key: "before_send", pattern: /\bbefore_send\s*[:(]/ },
+];
+
+function forbiddenSettingIn(source: string): string | undefined {
+  return FORBIDDEN_SETTINGS.find((setting) => setting.pattern.test(source))
+    ?.key;
+}
+
+function sessionRecordingSetting(masksAllText: boolean): string {
+  return masksAllText
+    ? 'session_recording: { maskAllInputs: true, maskTextSelector: "*" }'
+    : "session_recording: { maskAllInputs: true }";
+}
 
 const registry = RegistrySchema.parse(
   JSON.parse(await Bun.file(registryPath).text()) as unknown,
@@ -113,7 +159,7 @@ for (const tracker of staticTrackers) {
     "capture_heatmaps: true",
     "capture_dead_clicks: true",
     "capture_performance: { web_vitals: true, network_timing: true }",
-    "session_recording: { maskAllInputs: true }",
+    sessionRecordingSetting(tracker.masksAllText),
   ]) {
     if (!source.includes(captureSetting)) {
       throw new Error(
@@ -131,18 +177,9 @@ for (const tracker of staticTrackers) {
       );
     }
   }
-  // These three keys are load-bearing by their ABSENCE, and each one silently
-  // degrades collection rather than failing loudly:
-  //   cookieless_mode — PostHog's ingestion drops cookieless events unless the
-  //     project enables cookieless server hash mode; capture still returns 200.
-  //   persistence     — an override to "memory" resets the distinct id on every
-  //     page load, so unique visitors collapse into page loads.
-  //   before_send     — the old hook rewrote $current_url to origin+pathname,
-  //     discarding the campaign query strings attribution depends on.
-  for (const forbidden of ["cookieless_mode", "persistence:", "before_send"]) {
-    if (source.includes(forbidden)) {
-      throw new Error(`${tracker.path} must not set ${forbidden}`);
-    }
+  const forbidden = forbiddenSettingIn(source);
+  if (forbidden !== undefined) {
+    throw new Error(`${tracker.path} must not set ${forbidden}`);
   }
   if (
     !source.includes("e.__SV") ||
@@ -177,10 +214,11 @@ for (const requiredSetting of [
     );
   }
 }
-for (const forbidden of ["cookieless_mode", "persistence:", "before_send"]) {
-  if (scoutBootstrap.includes(forbidden)) {
-    throw new Error(`${scoutBootstrapPath} must not set ${forbidden}`);
-  }
+const forbiddenScoutSetting = forbiddenSettingIn(scoutBootstrap);
+if (forbiddenScoutSetting !== undefined) {
+  throw new Error(
+    `${scoutBootstrapPath} must not set ${forbiddenScoutSetting}`,
+  );
 }
 
 if (registry.projectToken === "phc_REPLACEWITHEXISTINGPROJECTTOKEN") {

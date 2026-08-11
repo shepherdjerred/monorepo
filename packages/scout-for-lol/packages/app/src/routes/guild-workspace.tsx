@@ -76,12 +76,20 @@ export function GuildWorkspace() {
   // This is the only component mounted for every `/g/:guildId/*` route, so it
   // owns the guild super property: every subsequent event — autocapture and
   // pageviews included — carries the guild, and leaving the workspace clears it.
+  //
+  // `guildId` is an unvalidated route param until `usePermissions` resolves, so
+  // registering it eagerly would let any signed-in visitor deep-link
+  // `/g/<anything>` and stamp an arbitrary value onto every event the
+  // unauthorized view emits — attacker-controlled and unbounded in cardinality.
+  // Wait for the server to confirm access; the property stays cleared on
+  // validation or authorization failure.
+  const analyticsGuildId = !isLoading && hasAccess ? guildId : undefined;
   useEffect(() => {
-    setGuildContext(guildId);
+    setGuildContext(analyticsGuildId);
     return () => {
       setGuildContext(undefined);
     };
-  }, [guildId]);
+  }, [analyticsGuildId]);
 
   if (guildId === undefined) {
     return (

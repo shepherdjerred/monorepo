@@ -150,8 +150,11 @@ type AnalyticsClient = {
   capture: CaptureEvent;
   identify: (distinctId: string) => void;
   reset: () => void;
+  /** Whether PostHog currently holds an identified (not anonymous) person. */
+  isIdentified: () => boolean;
   register: (properties: PostHogProperties) => void;
-  unregister: (property: string) => void;
+  registerForSession: (properties: PostHogProperties) => void;
+  unregisterForSession: (property: string) => void;
 };
 
 /** Super property carrying the active Discord guild. */
@@ -240,11 +243,15 @@ export function initAnalytics(): void {
     reset: () => {
       posthog.reset();
     },
+    isIdentified: () => posthog._isIdentified(),
     register: (properties) => {
       posthog.register(properties);
     },
-    unregister: (property) => {
-      posthog.unregister(property);
+    registerForSession: (properties) => {
+      posthog.register_for_session(properties);
+    },
+    unregisterForSession: (property) => {
+      posthog.unregister_for_session(property);
     },
   };
 }
@@ -260,24 +267,39 @@ export function identifyUser(discordId: string): void {
   client.identify(discordId);
 }
 
-/** Drop the identified person so a shared browser never merges two users. */
+/**
+ * Drop the identified person so a shared browser never merges two users.
+ *
+ * Safe to call on every anonymous render: `_isIdentified` reads PostHog's
+ * persisted user state, so this resets exactly when a Discord identity is still
+ * attached — after an explicit sign-out and equally after an expired or revoked
+ * cookie, where no logout handler ever runs. Resetting unconditionally would
+ * mint a fresh distinct id for ordinary anonymous visitors, which is the
+ * unique-visitor regression durable persistence exists to prevent.
+ */
 export function resetIdentity(): void {
   identifiedUser = undefined;
-  client?.reset();
+  const activeClient = client;
+  if (activeClient?.isIdentified() === true) activeClient.reset();
 }
 
 /**
  * Attach the active guild to every subsequent event, autocapture and pageviews
  * included. Registered as a super property rather than passed per event because
  * `AnalyticsProperty` is a deliberately low-cardinality allowlist.
+ *
+ * Session-scoped, not durable: the clearing side of this lives in a React
+ * effect cleanup, which a hard navigation or a closed tab never runs. A durable
+ * super property would then survive in localStorage and attribute a later,
+ * unrelated visit to the guild the user happened to leave open.
  */
 export function setGuildContext(guildId: string | undefined): void {
   if (client === undefined) return;
   if (guildId === undefined) {
-    client.unregister(GUILD_PROPERTY);
+    client.unregisterForSession(GUILD_PROPERTY);
     return;
   }
-  client.register({ [GUILD_PROPERTY]: guildId });
+  client.registerForSession({ [GUILD_PROPERTY]: guildId });
 }
 
 /**
