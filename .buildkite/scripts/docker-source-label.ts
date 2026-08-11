@@ -78,9 +78,11 @@ function instructionHeredocs(instruction: string): Heredoc[] {
   return heredocs;
 }
 
-function dockerfileInstructions(dockerfile: string): string[] {
+function dockerfileInstructions(
+  dockerfile: string,
+  escape: "\\" | "`",
+): string[] {
   const instructions: string[] = [];
-  const escape = dockerfileEscape(dockerfile);
   let heredocs: Heredoc[] = [];
   let pending = "";
   for (const rawLine of dockerfile.split("\n")) {
@@ -111,7 +113,7 @@ function dockerfileInstructions(dockerfile: string): string[] {
   return instructions;
 }
 
-function labelWords(body: string): string[] {
+function labelWords(body: string, escapeCharacter: "\\" | "`"): string[] {
   const words: string[] = [];
   let current = "";
   let quote: "'" | '"' | undefined;
@@ -122,7 +124,7 @@ function labelWords(body: string): string[] {
       escaped = false;
       continue;
     }
-    if (character === "\\" && quote !== "'") {
+    if (character === escapeCharacter && quote !== "'") {
       escaped = true;
       continue;
     }
@@ -142,15 +144,15 @@ function labelWords(body: string): string[] {
       current += character;
     }
   }
-  if (escaped) current += "\\";
+  if (escaped) current += escapeCharacter;
   if (current.length > 0) words.push(current);
   return words;
 }
 
-function sourceLabelValues(instruction: string): string[] {
+function sourceLabelValues(instruction: string, escape: "\\" | "`"): string[] {
   const prefix = "LABEL ";
   if (!instruction.toUpperCase().startsWith(prefix)) return [];
-  const words = labelWords(instruction.slice(prefix.length));
+  const words = labelWords(instruction.slice(prefix.length), escape);
   const values = words.flatMap((word) => {
     const separator = word.indexOf("=");
     return separator !== -1 && word.slice(0, separator) === sourceLabel
@@ -159,6 +161,30 @@ function sourceLabelValues(instruction: string): string[] {
   });
   if (values.length > 0) return values;
   return words[0] === sourceLabel ? [words.slice(1).join(" ")] : [];
+}
+
+function fromStage(
+  instruction: string,
+): { readonly base: string; readonly name: string | undefined } | undefined {
+  const words = instruction.trim().split(/\s+/u);
+  if (words[0]?.toUpperCase() !== "FROM") return undefined;
+
+  let cursor = 1;
+  while (words[cursor]?.startsWith("--") === true) cursor += 1;
+  const base = words[cursor];
+  if (base === undefined)
+    fail(`cannot parse Dockerfile instruction: ${instruction}`);
+  cursor += 1;
+
+  let name: string | undefined;
+  if (words[cursor]?.toUpperCase() === "AS") {
+    name = words[cursor + 1];
+    cursor += 2;
+  }
+  if (cursor !== words.length) {
+    fail(`cannot parse Dockerfile instruction: ${instruction}`);
+  }
+  return { base, name };
 }
 
 export function assertMonorepoSourceLabel(
@@ -176,21 +202,19 @@ export function assertMonorepoSourceLabel(
         sourceLabel: boolean;
       }
     | undefined;
-  for (const instruction of dockerfileInstructions(dockerfile)) {
-    const from = /^FROM\s+(\S+)(?:\s+AS\s+(\S+))?\s*$/iu.exec(instruction);
-    if (from !== null) {
-      const base = from[1];
-      const name = from[2];
+  const escape = dockerfileEscape(dockerfile);
+  for (const instruction of dockerfileInstructions(dockerfile, escape)) {
+    const from = fromStage(instruction);
+    if (from !== undefined) {
+      const { base, name } = from;
       const inherited = stages.findLast(
-        (stage) =>
-          base !== undefined &&
-          stage.name?.toLowerCase() === base.toLowerCase(),
+        (stage) => stage.name?.toLowerCase() === base.toLowerCase(),
       );
       currentStage = { name, sourceLabel: inherited?.sourceLabel ?? false };
       stages.push(currentStage);
       continue;
     }
-    for (const value of sourceLabelValues(instruction)) {
+    for (const value of sourceLabelValues(instruction, escape)) {
       if (currentStage !== undefined) {
         currentStage.sourceLabel = value === monorepoSource;
       }
