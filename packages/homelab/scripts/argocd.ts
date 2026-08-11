@@ -500,6 +500,7 @@ async function sync(
     options.requestId !== undefined || options.terminateAfterApplied === true;
   let baseline: OperationObservation | undefined;
   let adopted = false;
+  let adoptedStatusSeen = false;
 
   if (retryable) {
     baseline = observeOperation(await getApplication(appName, token));
@@ -516,6 +517,7 @@ async function sync(
         requestId,
         options.revision,
       );
+      adoptedStatusSeen = completedOperationMatches;
       if (completedOperationMatches && baseline.phase === "Terminating") {
         if (
           options.terminateAfterApplied === true &&
@@ -587,8 +589,7 @@ async function sync(
     revision: options.revision,
     timeoutSeconds,
     baseline: adopted ? undefined : baseline,
-    exactOperationSeen:
-      adopted && operationMatches(baseline, requestId, options.revision),
+    exactOperationSeen: adoptedStatusSeen,
     terminateAfterApplied: options.terminateAfterApplied === true,
   });
 }
