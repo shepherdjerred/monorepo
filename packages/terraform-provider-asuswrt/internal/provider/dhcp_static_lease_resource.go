@@ -195,6 +195,16 @@ func (r *dhcpStaticLeaseResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// hostname is Optional+Computed: when omitted, refresh fills it from the
+	// router and planning carries that value forward, so the planned value alone
+	// cannot say whether the operator configured it. Only the config can.
+	var config dhcpStaticLeaseResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	mac := strings.ToUpper(plan.MAC.ValueString())
 
 	// Serialize the whole read-modify-write against dhcp_staticlist so a
@@ -210,16 +220,9 @@ func (r *dhcpStaticLeaseResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	hostname := ""
-	if !plan.Hostname.IsNull() {
-		hostname = plan.Hostname.ValueString()
-	}
-
 	for i := range entries {
 		if strings.EqualFold(entries[i].MAC, mac) {
-			// Preserve field 3 (DNS); update IP and hostname.
-			entries[i].IP = plan.IP.ValueString()
-			entries[i].Hostname = hostname
+			applyLeasePlan(&entries[i], &plan, &config)
 
 			break
 		}
@@ -277,6 +280,23 @@ func (r *dhcpStaticLeaseResource) Delete(ctx context.Context, req resource.Delet
 // populates the IP and hostname from the router.
 func (r *dhcpStaticLeaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("mac"), strings.ToUpper(strings.TrimSpace(req.ID)))...)
+}
+
+// applyLeasePlan updates a freshly-read lease entry from the plan, leaving
+// field 3 (DNS) untouched because this provider does not model it.
+//
+// The hostname is written only when the operator configured one. It is
+// Optional+Computed, so when omitted refresh fills it from the router and
+// planning carries that value forward — writing it back would push a possibly
+// stale snapshot, and with a saved plan or -refresh=false an IP-only change
+// would revert a newer out-of-band hostname (or clear it when state was null).
+// Leaving it alone keeps the router's value; a later refreshed plan converges.
+func applyLeasePlan(entry *client.DHCPStaticEntry, plan, config *dhcpStaticLeaseResourceModel) {
+	entry.IP = plan.IP.ValueString()
+
+	if !config.Hostname.IsNull() && !plan.Hostname.IsUnknown() {
+		entry.Hostname = plan.Hostname.ValueString()
+	}
 }
 
 func (r *dhcpStaticLeaseResource) readLeases(ctx context.Context) ([]client.DHCPStaticEntry, error) {

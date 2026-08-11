@@ -753,6 +753,145 @@ func TestPackedDelimiterCorruptsList(t *testing.T) {
 	}
 }
 
+// TestApplyLeasePlanPreservesOmittedHostname covers the same rule as
+// TestCollectSystemChanges for DHCP leases: an omitted Optional+Computed
+// hostname is carried into the plan by refresh, and an IP-only update must not
+// push that snapshot back over whatever the router currently holds.
+func TestApplyLeasePlanPreservesOmittedHostname(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		plan         dhcpStaticLeaseResourceModel
+		config       dhcpStaticLeaseResourceModel
+		wantHostname string
+	}{
+		{
+			name: "omitted hostname leaves the router value alone",
+			plan: dhcpStaticLeaseResourceModel{
+				IP:       types.StringValue("192.168.1.60"),
+				Hostname: types.StringValue("stale-from-state"),
+			},
+			config:       dhcpStaticLeaseResourceModel{IP: types.StringValue("192.168.1.60")},
+			wantHostname: "set-out-of-band",
+		},
+		{
+			name: "configured hostname is written",
+			plan: dhcpStaticLeaseResourceModel{
+				IP:       types.StringValue("192.168.1.60"),
+				Hostname: types.StringValue("desktop"),
+			},
+			config: dhcpStaticLeaseResourceModel{
+				IP:       types.StringValue("192.168.1.60"),
+				Hostname: types.StringValue("desktop"),
+			},
+			wantHostname: "desktop",
+		},
+		{
+			name: "explicitly configured empty hostname clears it",
+			plan: dhcpStaticLeaseResourceModel{
+				IP:       types.StringValue("192.168.1.60"),
+				Hostname: types.StringValue(""),
+			},
+			config: dhcpStaticLeaseResourceModel{
+				IP:       types.StringValue("192.168.1.60"),
+				Hostname: types.StringValue(""),
+			},
+			wantHostname: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			entry := client.DHCPStaticEntry{
+				MAC:      "AA:BB:CC:DD:EE:FF",
+				IP:       "192.168.1.50",
+				DNS:      "192.168.1.1",
+				Hostname: "set-out-of-band",
+			}
+
+			applyLeasePlan(&entry, &tt.plan, &tt.config)
+
+			if entry.Hostname != tt.wantHostname {
+				t.Errorf("hostname = %q, want %q", entry.Hostname, tt.wantHostname)
+			}
+
+			if entry.IP != "192.168.1.60" {
+				t.Errorf("ip = %q, want the planned 192.168.1.60", entry.IP)
+			}
+
+			if entry.DNS != "192.168.1.1" {
+				t.Errorf("DNS = %q, want it preserved; this provider does not model it", entry.DNS)
+			}
+		})
+	}
+}
+
+// TestSetConfiguredWirelessValues covers the same rule for the wireless
+// resource's Optional+Computed crypto and hidden attributes.
+func TestSetConfiguredWirelessValues(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		plan   wirelessNetworkResourceModel
+		config wirelessNetworkResourceModel
+		want   map[string]string
+	}{
+		{
+			name: "omitted crypto and hidden are not written",
+			plan: wirelessNetworkResourceModel{
+				Crypto: types.StringValue("aes"),
+				Hidden: types.BoolValue(true),
+			},
+			config: wirelessNetworkResourceModel{},
+			want:   map[string]string{},
+		},
+		{
+			name: "configured crypto and hidden are written",
+			plan: wirelessNetworkResourceModel{
+				Crypto: types.StringValue("aes"),
+				Hidden: types.BoolValue(true),
+			},
+			config: wirelessNetworkResourceModel{
+				Crypto: types.StringValue("aes"),
+				Hidden: types.BoolValue(true),
+			},
+			want: map[string]string{"wl0_crypto": "aes", "wl0_closed": "1"},
+		},
+		{
+			name: "hidden false is written when configured",
+			plan: wirelessNetworkResourceModel{Hidden: types.BoolValue(false)},
+			config: wirelessNetworkResourceModel{
+				Hidden: types.BoolValue(false),
+			},
+			want: map[string]string{"wl0_closed": "0"},
+		},
+		{
+			name:   "passphrase needs no config gate",
+			plan:   wirelessNetworkResourceModel{WPAPassphrase: types.StringValue("hunter2")},
+			config: wirelessNetworkResourceModel{WPAPassphrase: types.StringValue("hunter2")},
+			want:   map[string]string{"wl0_wpa_psk": "hunter2"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			values := map[string]string{}
+
+			setConfiguredWirelessValues(values, "wl0_", &tt.plan, &tt.config)
+
+			if !reflect.DeepEqual(values, tt.want) {
+				t.Errorf("values = %v, want %v", values, tt.want)
+			}
+		})
+	}
+}
+
 // TestCollectSystemChanges pins the write-map rule. An omitted Optional+Computed
 // system field is filled from the router by refresh and carried into the plan,
 // so it is indistinguishable from a configured one by value alone. Writing every

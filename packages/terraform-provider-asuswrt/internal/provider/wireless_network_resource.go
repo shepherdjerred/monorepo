@@ -127,9 +127,9 @@ func (r *wirelessNetworkResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	// The config channel (null when the user omitted it) gates the chanspec
-	// write; the plan value is Computed and would be non-null after refresh even
-	// when unconfigured. See applyWireless.
+	// The config (null for every attribute the user omitted) gates which
+	// Optional+Computed attributes are written; the plan values are Computed and
+	// would be non-null after refresh even when unconfigured. See applyWireless.
 	var config wirelessNetworkResourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -140,7 +140,7 @@ func (r *wirelessNetworkResource) Create(ctx context.Context, req resource.Creat
 	band := int(plan.Band.ValueInt64())
 	plan.ID = types.StringValue(fmt.Sprintf("wl%d", band))
 
-	if err := r.applyWireless(ctx, band, &plan, config.Channel, config.Bandwidth); err != nil {
+	if err := r.applyWireless(ctx, band, &plan, &config); err != nil {
 		resp.Diagnostics.AddError("Failed to configure wireless", err.Error())
 
 		return
@@ -184,9 +184,10 @@ func (r *wirelessNetworkResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	// The config channel (null when the user omitted it) gates the chanspec
-	// write, so an update that changes only e.g. ssid does not rewrite the
-	// channel from the Computed-refreshed plan value. See applyWireless.
+	// The config (null for every attribute the user omitted) gates which
+	// Optional+Computed attributes are written, so an update that changes only
+	// e.g. ssid does not rewrite the channel, crypto, or hidden flag from the
+	// Computed-refreshed plan values. See applyWireless.
 	var config wirelessNetworkResourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -197,7 +198,7 @@ func (r *wirelessNetworkResource) Update(ctx context.Context, req resource.Updat
 	band := int(plan.Band.ValueInt64())
 	plan.ID = types.StringValue(fmt.Sprintf("wl%d", band))
 
-	if err := r.applyWireless(ctx, band, &plan, config.Channel, config.Bandwidth); err != nil {
+	if err := r.applyWireless(ctx, band, &plan, &config); err != nil {
 		resp.Diagnostics.AddError("Failed to configure wireless", err.Error())
 
 		return
@@ -285,35 +286,35 @@ func (r *wirelessNetworkResource) ImportState(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), fmt.Sprintf("wl%d", band))...)
 }
 
-// applyWireless writes per-band wireless NVRAM. NOTE: the write path is
-// firmware-dependent and not verified against real hardware — reads/imports are
-// reliable, but applies are not. On 3006 the UI writes band-named keys
-// (2g1_*/5g1_*) rather than wl<band>_*, wl_bw codes differ across firmwares, and
-// SAE/WPA3 needs wl_mfp. See docs/todos/asuswrt-wireless-write-path.md before
-// relying on wireless apply.
-func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, plan *wirelessNetworkResourceModel, configuredChannel, configuredBandwidth types.Int64) error {
+// applyWireless writes per-band wireless NVRAM. Every Optional+Computed
+// attribute is gated on config rather than on the plan: refresh populates those
+// attributes from the router and planning carries them forward, so writing the
+// planned value would push a possibly stale snapshot back and revert an
+// out-of-band change made since the last refresh.
+//
+// NOTE: the write path is firmware-dependent and not verified against real
+// hardware — reads/imports are reliable, but applies are not. On 3006 the UI
+// writes band-named keys (2g1_*/5g1_*) rather than wl<band>_*, wl_bw codes
+// differ across firmwares, and SAE/WPA3 needs wl_mfp. See
+// docs/todos/asuswrt-wireless-write-path.md before relying on wireless apply.
+func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, plan, config *wirelessNetworkResourceModel) error {
 	prefix := fmt.Sprintf("wl%d_", band)
 	values := map[string]string{
 		prefix + "ssid":        plan.SSID.ValueString(),
 		prefix + "auth_mode_x": plan.AuthMode.ValueString(),
 	}
 
-	setOptionalString(values, prefix+"crypto", plan.Crypto)
-	setOptionalString(values, prefix+"wpa_psk", plan.WPAPassphrase)
+	setConfiguredWirelessValues(values, prefix, plan, config)
 
-	if err := r.setChanspec(ctx, values, band, prefix, configuredChannel, configuredBandwidth); err != nil {
+	if err := r.setChanspec(ctx, values, band, prefix, config.Channel, config.Bandwidth); err != nil {
 		return err
 	}
 
 	// wl_bw is written only when bandwidth is configured; setChanspec keeps
 	// wl_chanspec consistent with it (or with the router's current width when
 	// bandwidth is omitted).
-	if !configuredBandwidth.IsNull() && !configuredBandwidth.IsUnknown() {
-		values[prefix+"bw"] = strconv.FormatInt(configuredBandwidth.ValueInt64(), 10)
-	}
-
-	if !plan.Hidden.IsNull() && !plan.Hidden.IsUnknown() {
-		values[prefix+"closed"] = boolToFlag(plan.Hidden.ValueBool())
+	if !config.Bandwidth.IsNull() && !config.Bandwidth.IsUnknown() {
+		values[prefix+"bw"] = strconv.FormatInt(config.Bandwidth.ValueInt64(), 10)
 	}
 
 	if err := r.client.NvramSet(ctx, values, client.ServiceWireless); err != nil {
@@ -425,6 +426,29 @@ func (r *wirelessNetworkResource) resolveBandwidthCode(ctx context.Context, band
 	}
 
 	return code, nil
+}
+
+// setConfiguredWirelessValues adds the non-chanspec optional wireless
+// attributes to values.
+//
+// crypto and hidden are Optional+Computed: when omitted, refresh fills them
+// from the router and planning carries them forward, so the planned value alone
+// cannot say whether the operator configured them. Gating on config means an
+// update that changes only e.g. ssid never rewrites them, which with a saved
+// plan or -refresh=false would otherwise revert a newer out-of-band value.
+//
+// wpa_passphrase is Optional but not Computed and is never read back, so its
+// planned value is always the configured one and needs no gate.
+func setConfiguredWirelessValues(values map[string]string, prefix string, plan, config *wirelessNetworkResourceModel) {
+	if !config.Crypto.IsNull() {
+		setOptionalString(values, prefix+"crypto", plan.Crypto)
+	}
+
+	setOptionalString(values, prefix+"wpa_psk", plan.WPAPassphrase)
+
+	if !config.Hidden.IsNull() && !plan.Hidden.IsUnknown() {
+		values[prefix+"closed"] = boolToFlag(plan.Hidden.ValueBool())
+	}
 }
 
 // setOptionalString adds a string attribute to the values map if it is set.
