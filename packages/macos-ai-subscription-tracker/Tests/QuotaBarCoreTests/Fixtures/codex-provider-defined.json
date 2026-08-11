@@ -1,0 +1,11 @@
+{
+  "rate_limit": {
+    "primary_window": {
+      "used_percent": 25,
+      "reset_at": 1786312800
+    },
+    "burst_window": {
+      "reset_at": 1786316400
+    }
+  }
+}

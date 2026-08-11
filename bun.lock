@@ -881,6 +881,10 @@
         "openai",
       ],
     },
+    "packages/macos-ai-subscription-tracker": {
+      "name": "@shepherdjerred/quotabar",
+      "version": "1.0.0",
+    },
     "packages/monarch": {
       "name": "@shepherdjerred/monarch",
       "version": "0.1.0",
@@ -3499,6 +3503,8 @@
     "@shepherdjerred/pr-fleet-controller": ["@shepherdjerred/pr-fleet-controller@workspace:packages/pr-fleet-controller"],
 
     "@shepherdjerred/pr-fleet-web": ["@shepherdjerred/pr-fleet-web@workspace:packages/pr-fleet-controller/packages/web"],
+
+    "@shepherdjerred/quotabar": ["@shepherdjerred/quotabar@workspace:packages/macos-ai-subscription-tracker"],
 
     "@shepherdjerred/release-tools": ["@shepherdjerred/release-tools@workspace:packages/release-tools"],
 

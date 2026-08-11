@@ -1,0 +1,20 @@
+{
+  "plan_type": "pro",
+  "rate_limit": {
+    "primary_window": {
+      "used_percent": 37,
+      "limit_window_seconds": 18000,
+      "reset_at": 1786312800
+    },
+    "secondary_window": {
+      "used_percent": 61,
+      "limit_window_seconds": 604800,
+      "reset_at": 1786665600
+    },
+    "monthly_window": {
+      "used_percent": 15,
+      "window_seconds": 2592000,
+      "reset_at": 1788307200
+    }
+  }
+}

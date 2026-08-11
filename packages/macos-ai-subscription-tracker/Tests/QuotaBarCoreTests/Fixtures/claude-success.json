@@ -1,0 +1,28 @@
+{
+  "five_hour": {
+    "utilization": 28,
+    "resets_at": "2026-08-09T22:00:00Z"
+  },
+  "seven_day": {
+    "utilization": 52,
+    "resets_at": "2026-08-14T00:00:00Z"
+  },
+  "seven_day_fable": {
+    "utilization": 16,
+    "resets_at": "2026-08-14T00:00:00Z"
+  },
+  "seven_day_opus": null,
+  "nimbus_quill": {
+    "utilization": 0,
+    "resets_at": null
+  },
+  "extra_usage": {
+    "is_enabled": false,
+    "utilization": null
+  },
+  "spend": {
+    "percent": 0,
+    "enabled": false
+  },
+  "member_dashboard_available": false
+}

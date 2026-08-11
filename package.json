@@ -76,6 +76,7 @@
     "packages/leetcode",
     "packages/llm-models",
     "packages/llm-observability",
+    "packages/macos-ai-subscription-tracker",
     "packages/monarch",
     "packages/pr-fleet-controller",
     "packages/pr-fleet-controller/packages/web",

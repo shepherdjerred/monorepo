@@ -1,0 +1,66 @@
+name: QuotaBar
+
+options:
+  bundleIdPrefix: com.sjerred
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "15.0"
+  xcodeVersion: "27.0"
+
+packages:
+  QuotaBarPackage:
+    path: .
+    group: ""
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: 63ZAG7X889
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    SWIFT_VERSION: "6.0"
+
+targets:
+  QuotaBar:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/QuotaBar
+        excludes:
+          - Resources
+      - path: Sources/QuotaBar/Resources
+        buildPhase: resources
+      - path: Resources/AppIcon.icns
+        buildPhase: resources
+    dependencies:
+      - package: QuotaBarPackage
+        product: QuotaBarCore
+    settings:
+      base:
+        CODE_SIGN_STYLE: Automatic
+        COMBINE_HIDPI_IMAGES: true
+        ENABLE_HARDENED_RUNTIME: true
+        ENABLE_USER_SCRIPT_SANDBOXING: true
+        GENERATE_INFOPLIST_FILE: false
+        INFOPLIST_FILE: Resources/Info.plist
+        LM_ENABLE_LINK_GENERATION: false
+        LM_FILTER_WARNINGS: true
+        OTHER_SWIFT_FLAGS: >-
+          $(inherited)
+          -enable-upcoming-feature ExistentialAny
+          -enable-upcoming-feature InternalImportsByDefault
+        PRODUCT_BUNDLE_IDENTIFIER: com.sjerred.QuotaBar
+        PRODUCT_NAME: QuotaBar
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: true
+
+schemes:
+  QuotaBar:
+    build:
+      targets:
+        QuotaBar: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

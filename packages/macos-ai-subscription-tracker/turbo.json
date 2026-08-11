@@ -1,0 +1,28 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "lint:swift": {
+      "inputs": [
+        "Package.swift",
+        ".swiftlint.yml",
+        "Sources/**/*.swift",
+        "Tests/**/*.swift"
+      ]
+    },
+    "build:macos": {
+      "outputs": [".build/**"]
+    },
+    "test:macos": {
+      "dependsOn": ["build:macos"],
+      "outputs": [".build/**"]
+    },
+    "bundle:macos": {
+      "dependsOn": ["build:macos"],
+      "outputs": ["dist/**"]
+    },
+    "verify:macos": {
+      "cache": false
+    }
+  }
+}

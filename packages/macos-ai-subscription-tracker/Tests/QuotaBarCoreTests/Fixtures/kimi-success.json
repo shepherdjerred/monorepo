@@ -1,0 +1,34 @@
+{
+  "usage": {
+    "limit": "1000",
+    "used": "250",
+    "remaining": "750",
+    "resetTime": "2026-09-01T00:00:00Z"
+  },
+  "limits": [
+    {
+      "window": { "duration": 300, "timeUnit": "TIME_UNIT_MINUTE" },
+      "detail": {
+        "limit": "500",
+        "remaining": "400",
+        "resetTime": "2026-08-09T22:00:00Z"
+      }
+    },
+    {
+      "window": { "duration": 7, "timeUnit": "TIME_UNIT_DAY" },
+      "detail": {
+        "limit": "2000",
+        "used": "800",
+        "resetTime": "2026-08-14T00:00:00Z"
+      }
+    },
+    {
+      "window": { "duration": 30, "timeUnit": "DAY" },
+      "detail": {
+        "limit": 4000,
+        "remaining": 1000,
+        "resetTime": "2026-09-01T00:00:00Z"
+      }
+    }
+  ]
+}

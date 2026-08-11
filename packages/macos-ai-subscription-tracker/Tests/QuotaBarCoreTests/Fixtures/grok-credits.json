@@ -1,0 +1,14 @@
+{
+  "config": {
+    "creditUsagePercent": 42,
+    "currentPeriod": {
+      "type": "weekly",
+      "end": "2026-08-16T00:00:00Z"
+    },
+    "productUsage": {
+      "chat": { "creditUsagePercent": 18 },
+      "imagine": { "limit": 100, "remaining": 55 }
+    },
+    "extraCredits": { "limit": 50, "used": 5 }
+  }
+}

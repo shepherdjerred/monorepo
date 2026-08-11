@@ -1,0 +1,10 @@
+{
+  "data": {
+    "usage": {
+      "limit": 100,
+      "remaining": 80,
+      "resetTime": "2026-09-01T00:00:00Z"
+    },
+    "limits": []
+  }
+}
