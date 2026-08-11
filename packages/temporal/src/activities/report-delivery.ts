@@ -75,10 +75,15 @@ export type ReportStateV1 = z.infer<typeof ReportStateV1Schema>;
 
 export type ReportDeliveryBackend = {
   readReceipt: (key: string) => Promise<ReportDeliveryReceiptV1 | undefined>;
+  /**
+   * Create-only. Resolves false when a receipt already exists, which is how
+   * at-most-one recorded delivery is enforced: the storage layer picks the
+   * winner atomically instead of an attempt checking and then writing.
+   */
   writeReceipt: (
     key: string,
     receipt: ReportDeliveryReceiptV1,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   readState: (key: string) => Promise<ReportStateV1 | undefined>;
   writeState: (key: string, state: ReportStateV1) => Promise<void>;
 } & ReportSendClaimBackend;
@@ -224,13 +229,40 @@ async function writeJson(
   );
 }
 
+/**
+ * Runs a conditional put, reporting a lost race rather than throwing. 412 is
+ * the conditional-write rejection; 409 is what S3 returns when two conditional
+ * writes race. Both mean another attempt won, which is a normal outcome here
+ * rather than a storage failure.
+ */
+async function conditionalWrite(write: () => Promise<void>): Promise<boolean> {
+  try {
+    await write();
+    return true;
+  } catch (error: unknown) {
+    if (
+      error instanceof S3ServiceException &&
+      (error.$metadata.httpStatusCode === 412 ||
+        error.$metadata.httpStatusCode === 409)
+    ) {
+      return false;
+    }
+    throw error;
+  }
+}
+
 function deliveryBackend(store: ReportReceiptStore): ReportDeliveryBackend {
   return {
     readReceipt: async (key) => {
       const stored = await readJson(store, key, ReportDeliveryReceiptV1Schema);
       return stored?.value;
     },
-    writeReceipt: (key, receipt) => writeJson(store, key, receipt),
+    writeReceipt: (key, receipt) =>
+      conditionalWrite(() =>
+        writeJson(store, key, receipt, {
+          expectedEtag: undefined,
+        }),
+      ),
     readState: async (key) => {
       const stored = await readJson(store, key, ReportStateV1Schema);
       return stored?.value;
@@ -243,26 +275,12 @@ function deliveryBackend(store: ReportReceiptStore): ReportDeliveryBackend {
         ? undefined
         : { claim: held.value, etag: held.etag };
     },
-    writeSendClaim: async (key, claim, expectedEtag) => {
-      try {
-        await writeJson(store, key, ReportSendClaimV1Schema.parse(claim), {
+    writeSendClaim: (key, claim, expectedEtag) =>
+      conditionalWrite(() =>
+        writeJson(store, key, ReportSendClaimV1Schema.parse(claim), {
           expectedEtag,
-        });
-        return true;
-      } catch (error: unknown) {
-        // 412 is the conditional-write rejection; 409 is what S3 returns when
-        // two conditional writes race. Both mean another attempt owns the send,
-        // which is a normal outcome here rather than a storage failure.
-        if (
-          error instanceof S3ServiceException &&
-          (error.$metadata.httpStatusCode === 412 ||
-            error.$metadata.httpStatusCode === 409)
-        ) {
-          return false;
-        }
-        throw error;
-      }
-    },
+        }),
+      ),
   };
 }
 
@@ -370,6 +388,8 @@ export async function deliverReportWithDependencies(
   const existingState = await dependencies.backend.readState(stateKey);
   if (existingState?.delivery.status === "accepted") {
     const receipt = existingState.delivery.receipt;
+    // Losing this race is the desired end state: some attempt published a
+    // receipt for this report, which is all this branch was restoring.
     await dependencies.backend.writeReceipt(receiptKey, receipt);
     reportDeliveryTotal.inc({
       ...metricLabels(report),
@@ -482,7 +502,20 @@ export async function deliverReportWithDependencies(
         },
       }),
     );
-    await dependencies.backend.writeReceipt(receiptKey, receipt);
+    // The arbiter. Create-only, so if a successor already recorded this
+    // report the storage layer rejects this write rather than this attempt
+    // deciding from a stale read — the ownership check above narrows the race
+    // but cannot close it, because a takeover can land between checking and
+    // writing. Exactly one attempt can own the recorded delivery.
+    const recorded = await dependencies.backend.writeReceipt(
+      receiptKey,
+      receipt,
+    );
+    if (!recorded) {
+      throw new Error(
+        `Report ${report.reportRunId} was recorded by another attempt while this one persisted; this message is a duplicate and its receipt was discarded`,
+      );
+    }
     reportDeliveryTotal.inc({ ...metricLabels(report), outcome: "accepted" });
     recordAccepted(report, receipt.acceptedAt);
     return { ...receipt, receiptKey, deduplicated: false };

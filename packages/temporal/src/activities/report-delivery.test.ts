@@ -11,6 +11,7 @@ import {
   deliverReportWithDependencies,
   type ReportDeliveryBackend,
   type ReportDeliveryReceiptV1,
+  reportReceiptKey,
   reportStateKey,
   type ReportStateV1,
 } from "./report-delivery.ts";
@@ -116,7 +117,9 @@ describe("report delivery", () => {
           failReceiptWrite = false;
           throw new Error("receipt store unavailable");
         }
+        if (receipts.has(key)) return false;
         receipts.set(key, receipt);
+        return true;
       },
       readState: async (key) => states.get(key),
       writeState: async (key, state) => {
@@ -172,7 +175,9 @@ function scenario(claims: Map<string, StoredClaim>) {
   const backend: ReportDeliveryBackend = {
     readReceipt: async (key) => receipts.get(key),
     writeReceipt: async (key, receipt) => {
+      if (receipts.has(key)) return false;
       receipts.set(key, receipt);
+      return true;
     },
     readState: async (key) => states.get(key),
     writeState: async (key, state) => {
@@ -305,9 +310,7 @@ describe("report send ownership", () => {
     let clock = NOW;
     const backend: ReportDeliveryBackend = {
       readReceipt: async () => receipts.get("unused"),
-      writeReceipt: async () => {
-        // no receipt is written: the attempt never reaches its send
-      },
+      writeReceipt: async () => true,
       readState: async () => states.get("unused"),
       writeState: async () => {
         clock = new Date(
@@ -399,6 +402,57 @@ describe("report send ownership", () => {
 
     expect(sent).toHaveLength(1);
     expect([...states.values()][0]?.delivery.status).toBe("pending");
+  });
+
+  test("lets only one attempt record the delivery when both get past the check", async () => {
+    // The ownership check narrows the window but cannot close it: a takeover
+    // can land between checking and writing. The create-only receipt write is
+    // what actually decides, so an attempt that loses that race must not
+    // report success even though its own send was accepted.
+    const claims = heldBy("workflow/run-1/activity-1/1", NOW);
+    const { sent, dependencies } = scenario(claims);
+    const claimKey = reportSendClaimKey(reportStateKey(report()));
+    const receiptKey = reportReceiptKey(report());
+
+    const owner = dependencies("workflow/run-1/activity-1/1", NOW);
+    const racing: typeof owner = {
+      ...owner,
+      send: async (input: PostalSendInput) => {
+        const result = await owner.send(input);
+        // The successor takes the lease AND records its delivery after this
+        // attempt's ownership check has already passed.
+        claims.set(claimKey, {
+          claim: {
+            schemaVersion: 1 as const,
+            reportRunId: report().reportRunId,
+            owner: "workflow/run-1/activity-1/2",
+            claimedAt: NOW,
+          },
+          etag: "etag-successor",
+        });
+        await owner.backend.writeReceipt(receiptKey, {
+          schemaVersion: 1,
+          reportRunId: report().reportRunId,
+          reportType: report().reportType,
+          scheduleId: report().scheduleId,
+          subject: "[OK] Test report",
+          messageId: "postal-successor",
+          recipientId: 42,
+          acceptedAt: NOW,
+          reportStateKey: reportStateKey(report()),
+        });
+        return result;
+      },
+    };
+
+    await expect(
+      deliverReportWithDependencies(report(), racing),
+    ).rejects.toThrow();
+
+    // The successor's receipt survived; the loser's was discarded.
+    const stored = await owner.backend.readReceipt(receiptKey);
+    expect(stored?.messageId).toBe("postal-successor");
+    expect(sent).toHaveLength(1);
   });
 
   test("resumes its own lease after a retry of the same attempt identity", async () => {

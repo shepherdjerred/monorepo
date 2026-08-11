@@ -388,13 +388,24 @@ never budgets. Two rules keep that true:
 Recording a delivery cannot be fenced into the send: the receipt only exists
 once Postal answers, so the accepted-state and receipt writes necessarily land
 after it. `REPORT_SEND_PERSIST_BUDGET_MS` is the window the owner has to
-persist inside its own lease, and `assertReportSendStillOwned` re-checks
-ownership before those writes so a displaced owner cannot overwrite the
-successor's record — and fails loudly, which is what makes a duplicate visible
-instead of recorded as one clean delivery.
+persist inside its own lease.
+
+**The receipt write is the arbiter, not the ownership check.**
+`assertReportSendStillOwned` runs before persisting, but it is only a
+narrowing: a takeover can land between checking and writing, so a check can
+never decide this on its own. The receipt object is written create-only, so
+storage picks exactly one winner atomically. An attempt that loses that write
+fails instead of reporting success — its message was a duplicate and its
+receipt is discarded. Do not relax the receipt write to an unconditional put,
+and do not replace the create-only write with a read-then-write; that is the
+bug this shape exists to prevent. S3 conditions apply to the object being
+written, so the state object cannot be conditioned on the claim; the receipt
+is authoritative and the read path checks it first, which is why a displaced
+owner's stale `accepted` state cannot mislead a later reader.
 
 **What this design does and does not guarantee.** It guarantees at-most-one
-_recorded_ delivery and no lost report. It does not guarantee at-most-one
+_recorded_ delivery — enforced by that create-only write, not by a check — and
+no lost report. It does not guarantee at-most-one
 _email_. Two paths reach a duplicate and neither is closable here:
 
 - Postal accepts a message whose response never reaches the owner, so no
