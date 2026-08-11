@@ -327,6 +327,7 @@ COPY --parents \
   packages/home-assistant \
   packages/llm-models \
   packages/llm-observability \
+  packages/llm-runtime \
   ./
 
 # Built artifacts from the build stage.

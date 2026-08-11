@@ -78,6 +78,7 @@ COPY --parents \
   packages/scout-for-lol/packages/report \
   packages/llm-models \
   packages/llm-observability \
+  packages/llm-runtime \
   ./
 # Bake the Prisma engines into the production tree. prod-deps installs
 # without lifecycle scripts, so @prisma/engines ships empty and the CLI

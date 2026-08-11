@@ -37,8 +37,13 @@ COPY --parents \
   tsconfig.base.json \
   packages/birmel \
   packages/glitter-context \
+  packages/llm-models \
   ./
 RUN cd packages/glitter-context && bun run build
+# llm-models' package `main`/`exports` resolve to a gitignored `dist/`, so the
+# llm-runtime closure Birmel imports at startup crashes with `Cannot find
+# module '@shepherdjerred/llm-models'` unless the catalog is compiled first.
+RUN cd packages/llm-models && bun run build
 RUN cd packages/birmel && bun run generate
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
@@ -107,7 +112,9 @@ RUN set -e; \
 COPY --parents \
   tsconfig.base.json \
   packages/birmel \
+  packages/llm-models \
   packages/llm-observability \
+  packages/llm-runtime \
   ./
 # Bake Prisma's migration engines into the production dependency tree. Bun's
 # production install omits lifecycle scripts, so the CLI otherwise downloads
@@ -117,6 +124,7 @@ COPY --parents \
 RUN cd packages/birmel && bunx --trust prisma generate
 COPY --from=build /app/packages/birmel/generated packages/birmel/generated
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
+COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown
