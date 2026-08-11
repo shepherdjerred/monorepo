@@ -29,19 +29,27 @@ Tailscale limits network reachability to enrolled devices. It does not prove
 that the person using an unlocked device should see this service.
 
 Stash's credentials add an application session boundary. An
-[init container](https://github.com/shepherdjerred/monorepo/blob/308f68a33ce0e6afe26606c5d2fb13c1b82ef1f2/packages/homelab/src/cdk8s/src/resources/stash/index.ts#L33-L45)
+[init container](https://github.com/shepherdjerred/monorepo/blob/1411519de79ea54045b15146892a24a1d461490b/packages/homelab/src/cdk8s/src/resources/stash/index.ts#L36-L56)
 writes the username and bcrypt hash into `/state/config.yml` before Stash
 starts, so there is no first-run window without authentication.
 
-The [Stash container](https://github.com/shepherdjerred/monorepo/blob/308f68a33ce0e6afe26606c5d2fb13c1b82ef1f2/packages/homelab/src/cdk8s/src/resources/stash/index.ts#L182-L205)
+The [Stash container](https://github.com/shepherdjerred/monorepo/blob/1411519de79ea54045b15146892a24a1d461490b/packages/homelab/src/cdk8s/src/resources/stash/index.ts#L193-L216)
 mounts that same `/state` volume and points `STASH_CONFIG_FILE` at that file. It
 therefore reads both credential fields; it must, to verify a login.
 
-What it never receives is the plaintext password or the Kubernetes Secret. The
-plaintext stays in 1Password for operator access and is never written to disk.
-Only the init container reads the Secret, and only its `username` and
-`password_hash` fields. A cost-10 bcrypt hash is not a reusable credential, so
-its presence on the state volume is a far weaker exposure than the password.
+Neither container receives the plaintext password, but it is not confined to
+1Password. The
+[`OnePasswordItem`](https://github.com/shepherdjerred/monorepo/blob/1411519de79ea54045b15146892a24a1d461490b/packages/homelab/src/cdk8s/src/resources/stash/index.ts#L74-L83)
+syncs the whole Login item into a Kubernetes Secret, so the plaintext lands in
+cluster state and, by default, in etcd. The two
+[`secretKeyRef`s](https://github.com/shepherdjerred/monorepo/blob/1411519de79ea54045b15146892a24a1d461490b/packages/homelab/src/cdk8s/src/resources/stash/index.ts#L138-L147)
+only narrow what the init container reads: `username` and `password_hash`.
+
+So the boundary is that no container reads the plaintext into its environment or
+filesystem, not that the plaintext never left 1Password. Anything able to read
+Secrets in the `stash` namespace can still recover it. A cost-10 bcrypt hash is
+not a reusable credential, so the hash on the state volume stays a far weaker
+exposure.
 
 ## Why storage is isolated
 
