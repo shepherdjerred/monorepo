@@ -28,6 +28,17 @@ const ManifestSchema = z.object({
   }),
 });
 
+const OperatorPostgresqlSchema = z.object({
+  kind: z.literal("postgresql"),
+  metadata: z.object({
+    name: z.string(),
+    namespace: z.string(),
+  }),
+  spec: z.object({
+    numberOfInstances: z.number().int().positive(),
+  }),
+});
+
 const MutatingAdmissionPolicySchema = z.object({
   kind: z.literal("MutatingAdmissionPolicy"),
   spec: z.object({
@@ -65,21 +76,21 @@ afterEach(async () => {
 });
 
 describe("PVC backup policy", () => {
-  it("classifies 46 included and 23 excluded PVCs without duplicates", () => {
+  it("classifies 47 included and 23 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(69);
-    expect(new Set(keys).size).toBe(69);
+    expect(keys).toHaveLength(70);
+    expect(new Set(keys).size).toBe(70);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-    ).toHaveLength(46);
+    ).toHaveLength(47);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
     ).toHaveLength(23);
   });
 
-  it("classifies and labels every synthesized PVC", async () => {
+  it("classifies every synthesized and operator-managed PVC", async () => {
     const outdir = await mkdtemp(
       path.join(tmpdir(), "pvc-backup-policy-synth-"),
     );
@@ -89,6 +100,7 @@ describe("PVC backup policy", () => {
     app.synth();
 
     let pvcCount = 0;
+    let operatorManagedPvcCount = 0;
     const admissionKinds = new Map<string, number>();
     for (const filename of await readdir(outdir)) {
       if (!filename.endsWith(".yaml")) {
@@ -96,7 +108,8 @@ describe("PVC backup policy", () => {
       }
       const rendered = await Bun.file(path.join(outdir, filename)).text();
       for (const document of parseAllDocuments(rendered)) {
-        const parsed = ManifestSchema.safeParse(document.toJS());
+        const manifest = document.toJS();
+        const parsed = ManifestSchema.safeParse(manifest);
         if (!parsed.success) {
           continue;
         }
@@ -104,13 +117,25 @@ describe("PVC backup policy", () => {
         admissionKinds.set(parsed.data.kind, currentCount + 1);
         if (parsed.data.kind === "MutatingAdmissionPolicy") {
           expect(
-            MutatingAdmissionPolicySchema.parse(document.toJS()).spec
-              .matchConstraints,
+            MutatingAdmissionPolicySchema.parse(manifest).spec.matchConstraints,
           ).toEqual({
             matchPolicy: "Equivalent",
             namespaceSelector: {},
             objectSelector: {},
           });
+        }
+        const operatorPostgresql = OperatorPostgresqlSchema.safeParse(manifest);
+        if (operatorPostgresql.success) {
+          const { metadata, spec } = operatorPostgresql.data;
+          for (let index = 0; index < spec.numberOfInstances; index += 1) {
+            const name = `pgdata-${metadata.name}-${index.toString()}`;
+            const policy = getPvcBackupPolicy(metadata.namespace, name);
+            expect(policy).toMatchObject({
+              namespace: metadata.namespace,
+              name,
+            });
+            operatorManagedPvcCount += 1;
+          }
         }
         if (parsed.data.kind !== "PersistentVolumeClaim") {
           continue;
@@ -130,6 +155,7 @@ describe("PVC backup policy", () => {
     }
 
     expect(pvcCount).toBeGreaterThan(0);
+    expect(operatorManagedPvcCount).toBeGreaterThan(0);
     expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(2);
     expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(2);
     expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(1);
