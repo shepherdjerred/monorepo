@@ -62,7 +62,6 @@ test("protobuf watch timeout covers collection and both delivery paths", () => {
 });
 
 test.each([
-  ["readme-refresh-weekly", "75 minutes", 55],
   ["scout-season-refresh-weekly", "90 minutes", 78],
   ["scout-queue-windows-daily", "90 minutes", 75],
 ] as const)(
