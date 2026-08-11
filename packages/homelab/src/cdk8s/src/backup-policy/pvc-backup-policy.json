@@ -1,5 +1,11 @@
 [
   {
+    "namespace": "alert-dashboard",
+    "name": "pgdata-alert-dashboard-postgresql-0",
+    "backup": "enabled",
+    "reason": "Alert dashboard PostgreSQL database"
+  },
+  {
     "namespace": "birmel",
     "name": "birmel-pvc",
     "backup": "enabled",
