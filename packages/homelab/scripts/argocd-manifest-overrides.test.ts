@@ -56,6 +56,19 @@ describe("manifest override batching", () => {
     ]);
   });
 
+  test("leaves room for Argo's duplicated operation-state envelope", () => {
+    const batches = batchManifestOverrides([
+      override("one", 500_000),
+      override("two", 500_000),
+    ]);
+
+    expect(batches).toHaveLength(2);
+    expect(batches.map(({ resources }) => resources[0]?.name)).toEqual([
+      "one",
+      "two",
+    ]);
+  });
+
   test("fails when one manifest cannot fit", () => {
     expect(() => batchManifestOverrides([override("huge", 2000)], 500)).toThrow(
       "Application/huge exceeds the request budget",

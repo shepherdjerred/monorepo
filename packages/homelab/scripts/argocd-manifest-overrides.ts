@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { canonicalJson } from "./canonical-json.ts";
 
-const DEFAULT_MAX_REQUEST_BYTES = 1_500_000;
+const DEFAULT_MAX_REQUEST_BYTES = 750_000;
 const SERIALIZED_REQUEST_ID = "00000000-0000-0000-0000-000000000000";
 const SERIALIZED_OPERATION_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -83,8 +83,12 @@ function appendOverride(
 
 /**
  * Keep manifest-override operations comfortably below Argo CD's 2 MiB gRPC
- * message ceiling. The request is measured after JSON serialization so
- * escaping and resource selectors are included instead of estimated.
+ * message ceiling. The application-controller's operation-state update
+ * includes both the requested and completed operation, so the manifest
+ * payload can appear twice in that message. A 750 kB request budget leaves
+ * almost 600 kB for the rest of the Application while staying below 2 MiB.
+ * The request is measured after JSON serialization so escaping and resource
+ * selectors are included instead of estimated.
  */
 export function batchManifestOverrides(
   overrides: readonly ManifestOverride[],

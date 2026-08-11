@@ -47,13 +47,15 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   carries an internal ID.
 - Wire the main Buildkite release to the atomic command with
   `BUILDKITE_BUILD_ID`. First stage every rendered root resource through
-  manifest overrides that keep every child Application's auto-sync disabled. This makes
-  root-owned prerequisites available before child reconciliation without
-  racing an automatic child operation. Reconcile children with aggregate
-  health deferred, then atomically restore and prune the exact root tree before
-  one scoped release-health gate. Reject the old split lifecycle, child-only
-  staging, eager duplicate gates, shell-wrapped commands, and unsafe ordering
-  in pipeline validation.
+  manifest overrides that keep every child Application's auto-sync disabled.
+  This makes root-owned prerequisites available before child reconciliation
+  without racing an automatic child operation. Bound each override request to
+  750 kB because ArgoCD's operation-state update carries both the requested and
+  completed operation inside its 2 MiB controller message ceiling. Reconcile
+  children with aggregate health deferred, then atomically restore and prune
+  the exact root tree before one scoped release-health gate. Reject the old
+  split lifecycle, child-only staging, eager duplicate gates, shell-wrapped
+  commands, and unsafe ordering in pipeline validation.
 
 ## Verification
 
