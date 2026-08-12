@@ -69,9 +69,10 @@ export type ReviewIssueComment = {
  *   mode leave no artifact on a clean PR, so `cleanSignal` says how to detect
  *   "reviewed, nothing to flag" — currently a 👍 reaction from the provider
  *   (Codex).
- * - `issue-comment`: the provider maintains a review issue comment and updates
- *   it for each head. The provider binds the comment's `updated_at` to the
- *   current head and may parse findings from the comment body (Qodo).
+ * - `issue-comment`: the provider maintains findings in a review issue comment
+ *   and posts an independent acknowledgement naming each reviewed head. A
+ *   clean review with no acknowledgement falls back to the comment's
+ *   `updated_at`, bound against the head's push time (Qodo).
  */
 export type CompletionStrategy =
   | { kind: "check-run"; namePattern: RegExp }

@@ -1,5 +1,9 @@
-import { describe, expect, test } from "bun:test";
-import { reviewCommentBoundToHead } from "./github-issue-comments.ts";
+import { describe, expect, spyOn, test } from "bun:test";
+import {
+  resolveIssueCommentReview,
+  reviewCommentBoundToHead,
+} from "./github-issue-comments.ts";
+import type { ReviewProvider } from "./types.ts";
 
 const HEAD = "fd6e655bd1a2f2234218a0d6ed466728abdc5dab";
 const OLDER = "7cc7e40c6434dee17b20c34eea454e92095c8620";
@@ -15,7 +19,7 @@ function acknowledging(sha: string) {
 }
 
 describe("reviewCommentBoundToHead", () => {
-  test("binds when the comment names the head commit", () => {
+  test("rejects a finding-bearing comment that names the head without an acknowledgement", () => {
     expect(
       reviewCommentBoundToHead({
         body: `evidence: https://github.com/o/r/blob/${HEAD}/file.ts#L1`,
@@ -25,7 +29,7 @@ describe("reviewCommentBoundToHead", () => {
         reportsFindings: true,
         acknowledgement: null,
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   test("rejects a post-push edit that still names only the superseded commit", () => {
@@ -95,7 +99,7 @@ describe("reviewCommentBoundToHead", () => {
     ).not.toThrow();
   });
 
-  test("binds when the head appears alongside other commits", () => {
+  test("rejects a finding-bearing comment that names the head among other commits", () => {
     expect(
       reviewCommentBoundToHead({
         body: `old ${OLDER} and current ${HEAD}`,
@@ -105,7 +109,7 @@ describe("reviewCommentBoundToHead", () => {
         reportsFindings: true,
         acknowledgement: null,
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   test("binds PR-relative findings once the provider acknowledges the head", () => {
@@ -153,4 +157,75 @@ describe("reviewCommentBoundToHead", () => {
       }),
     ).toBe(false);
   });
+});
+
+const issueCommentProvider: ReviewProvider = {
+  id: "issue-comment-fixture",
+  displayName: "Issue comment fixture",
+  botAuthoredPullRequestPolicy: "review",
+  authorLogins: ["review-bot"],
+  parseSeverity: () => null,
+  parseIssueComment: () => [
+    {
+      authorLogin: "review-bot",
+      isResolved: false,
+      isOutdated: false,
+      path: "src/example.ts",
+      line: 1,
+      url: null,
+      priority: 1,
+    },
+  ],
+  completion: {
+    kind: "issue-comment",
+    marker: "review-marker",
+    acknowledgement: { marker: "ack-marker" },
+  },
+  detectSkip: null,
+  requestReview: null,
+};
+
+test("records the acknowledgement time as issue-comment completion", async () => {
+  const reviewUpdatedAt = "2026-08-10T06:51:00Z";
+  const acknowledgementUpdatedAt = "2026-08-10T06:52:00Z";
+  const fetchImplementation = Object.assign(
+    async () =>
+      Response.json([
+        {
+          body: "review-marker with findings",
+          updated_at: reviewUpdatedAt,
+          html_url: "https://github.com/o/r/issues/1#issuecomment-review",
+          user: { login: "review-bot" },
+        },
+        {
+          body: `ack-marker ${HEAD}`,
+          updated_at: acknowledgementUpdatedAt,
+          html_url: "https://github.com/o/r/issues/1#issuecomment-ack",
+          user: { login: "review-bot" },
+        },
+      ]),
+    { preconnect: globalThis.fetch.preconnect },
+  );
+  const fetchSpy = spyOn(globalThis, "fetch").mockImplementation(
+    fetchImplementation,
+  );
+  try {
+    await expect(
+      resolveIssueCommentReview({
+        provider: issueCommentProvider,
+        repo: "o/r",
+        head: HEAD,
+        prNumber: 1,
+        token: "token",
+        headPushedAt,
+      }),
+    ).resolves.toMatchObject({
+      state: "reviewed",
+      completionSignal: "issue-comment",
+      reviewedCommit: HEAD,
+      reviewedAt: acknowledgementUpdatedAt,
+    });
+  } finally {
+    fetchSpy.mockRestore();
+  }
 });

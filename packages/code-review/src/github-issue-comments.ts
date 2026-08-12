@@ -145,16 +145,13 @@ const COMMIT_SHA_PATTERN = /\b[0-9a-f]{40}\b/gu;
  * review comment cannot: the review comment's own links are rewritten to the
  * new head within seconds of a push, before the code is re-read.
  *
- * Without one, fall back to the commits the body names. Those links are the
- * best remaining evidence of which code was read, and requiring the head among
- * them keeps a comment left over from an earlier commit out.
+ * Without one, a finding-bearing review cannot be trusted. Providers can
+ * rewrite the persistent comment's links to the new head before re-reading the
+ * code, so even a head SHA in that mutable body is not a completion signal.
  *
- * Only a comment reporting no findings may fall back to the timestamp. A
- * clean review has nothing to link, so it can name no commit and the push-time
- * comparison is all there is. A comment that reports findings and still names
- * no commit says nothing about which code it read — and the edit that bumped
- * its timestamp may have done no more than strike an older finding — so it
- * cannot stand as a review of this head.
+ * Only a comment reporting no findings may fall back to the timestamp. A clean
+ * review has no finding-bearing acknowledgement to wait for, so the push-time
+ * comparison is the provider's remaining completion signal.
  */
 export function reviewCommentBoundToHead(input: {
   body: string;
@@ -171,8 +168,6 @@ export function reviewCommentBoundToHead(input: {
   if (input.acknowledgement !== null) {
     return commitsNamedBy(input.acknowledgement.body).has(input.head);
   }
-  const referenced = commitsNamedBy(input.body);
-  if (referenced.size > 0) return referenced.has(input.head);
   if (input.reportsFindings) return false;
   return reactionBoundToHead(input.updatedAt, input.headPushedAt);
 }
@@ -220,7 +215,13 @@ export async function resolveIssueCommentReview(input: {
       state: "reviewed",
       completionSignal: "issue-comment",
       reviewedCommit: input.head,
-      reviewedAt: comment.updatedAt,
+      // A finding-bearing review becomes current only when the independent
+      // acknowledgement arrives. Preserve a missing acknowledgement timestamp
+      // as unknown rather than reporting the earlier mutable-comment edit.
+      reviewedAt:
+        acknowledgement === null
+          ? comment.updatedAt
+          : acknowledgement.updatedAt,
       staleReaction: false,
       skipReason: null,
       issueComment: comment,

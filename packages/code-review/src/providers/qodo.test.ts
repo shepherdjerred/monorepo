@@ -169,13 +169,29 @@ describe("qodo layout guards", () => {
     ).toThrow("Qodo P2 section opens 2 finding(s) but 1 parsed");
   });
 
+  test("fails closed when changed markup hides one active finding", () => {
+    // Replacing both summary tags removes the numbered opener as well as the
+    // parsed finding. The neighbouring resolved finding keeps the section
+    // structurally valid, so the declared active count is the independent
+    // lower bound that exposes the omission.
+    expect(() =>
+      parseQodoIssueComment({
+        ...comment,
+        body: comment.body.replace(
+          "<summary>  2. Stale wording <code>📝 Documentation</code></summary>",
+          "<strong>  2. Stale wording <code>📝 Documentation</code></strong>",
+        ),
+      }),
+    ).toThrow("declares 2 active finding(s) but only 1 were parsed");
+  });
+
   test("fails closed when a declared review parses no active findings", () => {
     expect(() =>
       parseQodoIssueComment({
         ...comment,
         body: comment.body.replaceAll("</summary>", " ☑</summary>"),
       }),
-    ).toThrow("declares 2 active finding(s) but none were parsed");
+    ).toThrow("declares 2 active finding(s) but only 0 were parsed");
   });
 });
 

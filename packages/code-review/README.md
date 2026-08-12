@@ -25,6 +25,9 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
     `commit_id === head`; because a clean PR leaves no review artifact,
     `cleanSignal: "thumbsup-reaction"` detects "reviewed, nothing to flag"
     (Codex).
+  - `issue-comment`: the provider maintains findings in a persistent issue
+    comment and posts a separate acknowledgement naming each reviewed head
+    (Qodo). Consumers reuse that same comment snapshot when parsing findings.
 - **`parseSeverity`** — parses a P0–P3 badge from a review comment body into a
   numeric priority (0 = most severe), or `null` when unbadged.
 - **`detectSkip: SkipStrategy | null`** — how a deliberate skip ("no
@@ -50,9 +53,9 @@ gate rather than being trusted.
 ## Providers
 
 Registered in `src/providers/registry.ts`: **`codex`** (the default,
-`DEFAULT_PROVIDER_ID`) and **`greptile`**. `resolveProvider(id)` throws on an
-unknown id — a typo'd `REVIEW_PROVIDER` env var fails loudly instead of gating
-against the wrong bot.
+`DEFAULT_PROVIDER_ID`), **`greptile`**, and **`qodo`**. `resolveProvider(id)`
+throws on an unknown id — a typo'd `REVIEW_PROVIDER` env var fails loudly
+instead of gating against the wrong bot.
 
 ## Entry points
 
@@ -80,10 +83,10 @@ const number = 1234;
 const head = "0123456789abcdef0123456789abcdef01234567";
 const token = Bun.env["GH_TOKEN"] ?? "";
 
-// Only `review-at-head` providers need the push time; it binds a commit-less
-// 👍 clean-review reaction to this head.
+// `review-at-head` and `issue-comment` providers need the push time. It binds
+// commit-less clean-review signals to this head.
 const headPushedAt =
-  provider.completion.kind === "review-at-head"
+  provider.completion.kind !== "check-run"
     ? await fetchHeadPushedAt({ repo, sha: head, prNumber: number, token })
     : null;
 
@@ -97,7 +100,13 @@ const state = await resolveReviewState({
   token,
   headPushedAt,
 });
-const { threads } = await fetchReviewThreads({ repo, number, token, provider });
+const { threads } = await fetchReviewThreads({
+  repo,
+  number,
+  token,
+  provider,
+  issueComment: state.issueComment,
+});
 
 const decision = evaluateGate({
   head,

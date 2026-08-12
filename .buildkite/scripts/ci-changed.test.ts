@@ -49,6 +49,10 @@ test("other lanes retain global CI inputs", () => {
   expect(helmPaths).toContain(".buildkite/main-bootstrap.yml");
   expect(helmPaths).toContain(".buildkite/scripts/select-main-pipeline.ts");
   expect(globalPaths).toContain(".buildkite/pipeline.yml");
+  expect(globalPaths).toContain(".buildkite/scripts/buildkite-handoff.ts");
+  expect(globalPaths).toContain(".buildkite/scripts/read-buildkite-handoff.ts");
+  expect(helmPaths).toContain(".buildkite/scripts/buildkite-handoff.ts");
+  expect(helmPaths).toContain(".buildkite/scripts/read-buildkite-handoff.ts");
   expect(selectorPathsForLane("unknown")).toBeUndefined();
 });
 

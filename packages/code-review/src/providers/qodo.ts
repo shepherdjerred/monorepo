@@ -248,15 +248,17 @@ function assertParsedLayout(input: {
   const activeFindings = input.findings.filter(
     (finding) => !finding.isResolved,
   ).length;
-  // Never let a declared-but-unparseable review read as clean.
-  if (activeFindings === 0 && input.expectedActiveFindings > 0) {
-    throw new Error(
-      `Qodo review comment declares ${input.expectedActiveFindings.toString()} active finding(s) ` +
-        "but none were parsed",
-    );
-  }
   const reviewBody = input.body.slice(input.body.indexOf(QODO_DIVIDER_ALT));
   assertSectionsAreModelled(reviewBody);
+  // Qodo may re-append copies, so rendered active findings can exceed the
+  // header count. They must never fall below it: that means at least one
+  // declared active finding disappeared during parsing.
+  if (activeFindings < input.expectedActiveFindings) {
+    throw new Error(
+      `Qodo review comment declares ${input.expectedActiveFindings.toString()} active finding(s) ` +
+        `but only ${activeFindings.toString()} were parsed`,
+    );
+  }
   if (
     input.findings.length === 0 &&
     (input.expectedActiveFindings !== 0 ||
