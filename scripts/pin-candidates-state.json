@@ -7,9 +7,9 @@
       "buildNumber": 9157
     },
     "shepherdjerred/birmel": {
-      "version": "2.0.0-9157",
-      "digest": "sha256:9c63ee6fb839bc9c163d4159644ddee1fb09581e34c56b244cbcde73eb9c5d98",
-      "buildNumber": 9157
+      "buildNumber": 9183,
+      "version": "2.0.0-9183",
+      "digest": "sha256:21fe77cab0c2996352b4422ff3b612896fd5a4d782132ccf1606146fea50cb35"
     },
     "shepherdjerred/discord-plays-mario-kart": {
       "version": "2.0.0-9157",
@@ -27,9 +27,9 @@
       "buildNumber": 9157
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 9180,
       "version": "2.0.0-9180",
-      "digest": "sha256:7a9c3a06fab1777b1138152b4b85eebe85345fe049706c4fedc3c0f07eb7383c"
+      "digest": "sha256:7a9c3a06fab1777b1138152b4b85eebe85345fe049706c4fedc3c0f07eb7383c",
+      "buildNumber": 9180
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-9157",
