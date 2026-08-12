@@ -278,12 +278,17 @@ export function createLokiApp(chart: Chart) {
       resources: {
         requests: { cpu: "10m", memory: "64Mi" },
       },
-      // The chart pins gateway pods with REQUIRED hostname anti-affinity, and
-      // torvalds is the only prod node: a RollingUpdate surge pod can never
-      // schedule next to the live one, deadlocking every rollout (the stuck
-      // ReplicaSet held loki Degraded for 20h on 2026-08-11). Recreate
-      // terminates first, so the replacement always schedules.
-      deploymentStrategy: { type: "Recreate" },
+      // The chart defaults gateway pods to REQUIRED hostname anti-affinity,
+      // and torvalds is the only prod node: a RollingUpdate surge pod can
+      // never schedule next to the live one, deadlocking every rollout (the
+      // stuck ReplicaSet held loki Degraded for 20h on 2026-08-11). Helm
+      // replaces lists on merge, so an empty rule list clears the constraint
+      // and rollouts co-schedule. (Recreate was rejected live: the existing
+      // Deployment keeps API-defaulted rollingUpdate params, which Recreate
+      // forbids; a null override is stripped by cdk8s synthesis.)
+      affinity: {
+        podAntiAffinity: { requiredDuringSchedulingIgnoredDuringExecution: [] },
+      },
     },
     sidecar: {
       resources: {
