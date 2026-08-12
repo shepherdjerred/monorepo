@@ -1581,8 +1581,12 @@ steps:
       fi
       if [ -z "$$scout_candidate" ] && ! $$scout_source_changed; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
+      # scout-site-release imports the catalog parser from @homelab/cdk8s.
+      # With Bun's isolated linker, zod must be installed for that workspace;
+      # the root-scripts copy cannot satisfy an import resolved from cdk8s.
       .buildkite/scripts/bun-install.sh --frozen-lockfile \
         --filter '@shepherdjerred/root-scripts' \
+        --filter '@homelab/cdk8s' \
         --filter '@scout-for-lol/frontend' \
         --filter '@scout-for-lol/app' \
         --filter '@scout-for-lol/docs-site' \
@@ -1625,7 +1629,9 @@ steps:
       scout_state=$$(buildkite-agent meta-data get scout-release-state --default "")
       if [ -z "$$scout_state" ]; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
+      # scout-site-release imports the catalog parser from @homelab/cdk8s
+      # (isolated linker: zod must be installed for that workspace).
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@homelab/cdk8s' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       printf '%s' "$$GH_TOKEN" | docker login ghcr.io -u shepherdjerred --password-stdin
       bun --no-install scripts/scout-site-release.ts tag-release --state "$$scout_state"
@@ -1653,7 +1659,9 @@ steps:
     command: |
       if ! bun --no-install .buildkite/scripts/ci-changed.ts scout-reconcile; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
+      # scout-site-release imports the catalog parser from @homelab/cdk8s
+      # (isolated linker: zod must be installed for that workspace).
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@homelab/cdk8s' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       prod_pin=$$(bun --no-install scripts/scout-site-release.ts resolve-prod-pin)
       bun --no-install scripts/scout-site-release.ts reconcile-prod-pin --prod-pin "$$prod_pin"
