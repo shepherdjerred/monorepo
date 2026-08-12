@@ -12,6 +12,7 @@ import {
   resolveGuildContext,
   resolvedAnalyticsContextRoute,
   startAnalyticsCapture,
+  stopAnalyticsCapture,
   syncAnalyticsIdentity,
   track,
   trackAndFlush,
@@ -391,6 +392,19 @@ describe("capture gate", () => {
     persistIdentity("account-a");
     resetIdentity();
     expect(identityCalls).toEqual([{ kind: "reset" }]);
+  });
+
+  test("closes while context is unresolved and reopens after it settles", () => {
+    installClient();
+    startAnalyticsCapture();
+    stopAnalyticsCapture();
+    stopAnalyticsCapture();
+    startAnalyticsCapture();
+    expect(identityCalls).toEqual([
+      { kind: "opt_in" },
+      { kind: "opt_out" },
+      { kind: "opt_in" },
+    ]);
   });
 });
 

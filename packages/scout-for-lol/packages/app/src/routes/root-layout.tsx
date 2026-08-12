@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useSyncExternalStore } from "react";
 import { Outlet, useLocation } from "react-router";
 import {
   ContractMismatchBanner,
@@ -9,6 +9,7 @@ import {
   normalizePath,
   resolvedAnalyticsContextRoute,
   startAnalyticsCapture,
+  stopAnalyticsCapture,
   subscribeAnalyticsContext,
   trackPageview,
 } from "#src/lib/analytics.ts";
@@ -41,6 +42,13 @@ export function RootLayout() {
     sessionResolved &&
     (requiredContextRoute === undefined ||
       requiredContextRoute === settledContextRoute);
+
+  // Close before the browser can deliver mutation/replay observations for a
+  // newly rendered unresolved route. Opening stays in the passive effect below
+  // so the identity reconciliation effect always runs first.
+  useLayoutEffect(() => {
+    if (!ready) stopAnalyticsCapture();
+  }, [ready]);
 
   // Report a templated pageview on initial load and every client-side
   // navigation. Dynamic segments collapse to route shapes so analytics never

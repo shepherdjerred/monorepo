@@ -249,6 +249,10 @@ export function initAnalytics(): void {
       posthog.unregister_for_session(property);
     },
   };
+  // `register_for_session` survives a full-page navigation in the same tab.
+  // React never gets to run the previous workspace's cleanup in that case, so
+  // clear the old guild before any context-free route can reopen capture.
+  client.unregisterForSession(GUILD_PROPERTY);
   // Close the gate explicitly, every initialisation.
   //
   // `opt_out_capturing_by_default` is consulted only when the browser has no
@@ -413,6 +417,13 @@ export function startAnalyticsCapture(): void {
   if (client === undefined || captureEnabled) return;
   captureEnabled = true;
   client.optInCapturing();
+}
+
+/** Close the gate while session or route context is unresolved. */
+export function stopAnalyticsCapture(): void {
+  if (client === undefined || !captureEnabled) return;
+  captureEnabled = false;
+  client.optOutCapturing();
 }
 
 /**
