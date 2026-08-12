@@ -165,8 +165,8 @@ inheriting the worker environment.
 The trusted, source-controlled agents are the exception. The homelab audit and
 the Scout season refresh do inherit the worker's operational credentials,
 because their prompts are code rather than user input; even there the bot's own
-GitHub credentials, every report-delivery credential, and every direct
-inference-provider key are removed.
+GitHub credentials, every report-delivery credential, and every inference
+credential other than their own provider's are removed.
 
 This lets generic investigations query the public repository, read-only
 Kubernetes API, Prometheus, and alert ledger without crossing the delivery or

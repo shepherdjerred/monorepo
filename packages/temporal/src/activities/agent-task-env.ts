@@ -33,8 +33,7 @@ const REPORT_DELIVERY_BOUNDARY_ENVIRONMENT = new Set([
   "XCODE_CLOUD_WEBHOOK_TOKEN",
 ]);
 
-// Native agent SDKs authenticate with their own subscription credential.
-// No agent may inherit a direct inference-provider key from the worker.
+// Direct inference-provider keys. No agent may inherit one from the worker.
 const DIRECT_PROVIDER_CREDENTIAL_KEYS = new Set([
   "ANTHROPIC_API_KEY",
   "CODEX_API_KEY",
@@ -46,8 +45,23 @@ const DIRECT_PROVIDER_CREDENTIAL_KEYS = new Set([
   "XAI_API_KEY",
 ]);
 
-export function isDirectProviderCredentialKey(key: string): boolean {
-  return DIRECT_PROVIDER_CREDENTIAL_KEYS.has(key);
+// The subscription credential each native agent SDK authenticates with.
+const PROVIDER_CREDENTIAL_KEYS: Record<AgentTaskProvider, string> = {
+  claude: "CLAUDE_CODE_OAUTH_TOKEN",
+  codex: "CODEX_ACCESS_TOKEN",
+};
+const AGENT_SUBSCRIPTION_CREDENTIAL_KEYS = new Set<string>(
+  Object.values(PROVIDER_CREDENTIAL_KEYS),
+);
+
+// Every inference credential the worker holds, direct or subscription. An
+// agent is given exactly one of these explicitly; it must never inherit
+// another provider's credential just because the worker also holds it.
+function isProviderCredentialKey(key: string): boolean {
+  return (
+    DIRECT_PROVIDER_CREDENTIAL_KEYS.has(key) ||
+    AGENT_SUBSCRIPTION_CREDENTIAL_KEYS.has(key)
+  );
 }
 
 export function isReportDeliveryBoundaryEnvironmentKey(key: string): boolean {
@@ -235,11 +249,6 @@ export async function refreshAgentTaskSecretTokenStateInBackground(
   }
 }
 
-const PROVIDER_CREDENTIAL_KEYS: Record<AgentTaskProvider, string> = {
-  claude: "CLAUDE_CODE_OAUTH_TOKEN",
-  codex: "CODEX_ACCESS_TOKEN",
-};
-
 // Build the deliberately small environment for a native agent SDK run. The SDK
 // child process inherits nothing by default: only basic process/TLS settings,
 // non-secret evidence endpoints, the dedicated read-only Kubernetes identity,
@@ -275,8 +284,11 @@ export function envForProvider(
 // needs the worker's operational credentials. Unlike envForProvider this is a
 // denylist, but the three categories it removes are the ones an agent must
 // never hold: the bot's own GitHub credentials (callers re-mint a short-lived
-// installation token), report-delivery credentials, and any direct
-// inference-provider key.
+// installation token), report-delivery credentials, and every inference
+// credential. That last category covers the other SDK's subscription token as
+// well as direct API keys — these agents have Bash, so leaving an unrelated
+// provider credential in reach is exfiltratable. Callers pass the one
+// credential their own provider needs through `overrides`.
 export function envForTrustedAgent(
   overrides: Readonly<Record<string, string>>,
   sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
@@ -290,7 +302,7 @@ export function envForTrustedAgent(
       key === "GH_TOKEN" ||
       key === "GITHUB_PERSONAL_ACCESS_TOKEN" ||
       key.startsWith("GITHUB_APP_") ||
-      isDirectProviderCredentialKey(key) ||
+      isProviderCredentialKey(key) ||
       isReportDeliveryBoundaryEnvironmentKey(key)
     ) {
       continue;

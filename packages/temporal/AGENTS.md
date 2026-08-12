@@ -347,7 +347,10 @@ so a prompt-injected agent has nothing to exfiltrate from its own environment.
 Trusted, source-controlled agents (homelab audit, Scout season refresh) use
 `envForTrustedAgent` instead, which keeps the operational read-only credentials
 they need but still strips the bot's GitHub credentials, every report-delivery
-credential, and every direct inference-provider key.
+credential, and **every** inference credential — direct API keys and the other
+SDK's subscription token alike. These agents have Bash, so an unrelated
+provider credential left in reach would be exfiltratable; each receives only
+its own provider's credential, passed explicitly through `overrides`.
 
 Native SDK agent runs execute as the worker's own uid, so the uid-1001
 isolation still applies only to the deterministic evidence collectors, which

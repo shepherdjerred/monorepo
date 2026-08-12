@@ -117,8 +117,9 @@ The trusted, source-controlled agents are the exception that proves the rule.
 The homelab audit and the Scout season refresh do inherit the worker's
 operational credentials, because their prompts are code rather than user input.
 Even there the same three categories are removed: the bot's own GitHub
-credentials, every report-delivery credential, and every direct
-inference-provider key.
+credentials, every report-delivery credential, and every inference credential
+other than the one their own provider needs — a Claude agent never sees the
+Codex subscription token, and vice versa.
 
 ## The blast radius, stated plainly
 

@@ -18,6 +18,7 @@ import {
   agentTaskSecretTokens,
   envForEvidenceCollector,
   envForProvider,
+  envForTrustedAgent,
   readAgentTaskMountedSecretTokens,
 } from "./agent-task-env.ts";
 
@@ -509,6 +510,61 @@ describe("agent task environment boundary", () => {
     expect(environment).not.toHaveProperty("GITHUB_WEBHOOK_SECRET");
     expect(environment).not.toHaveProperty("BUGSINK_TOKEN");
     expect(environment).not.toHaveProperty("GRAFANA_API_KEY");
+  });
+
+  it("gives a trusted agent its operational credentials but only its own provider credential", () => {
+    const environment = envForTrustedAgent(
+      { CLAUDE_CODE_OAUTH_TOKEN: "claude-credential", GH_TOKEN: "minted" },
+      {
+        PATH: "/usr/bin",
+        // The audit genuinely needs these to inspect live state.
+        GRAFANA_API_KEY: "grafana-secret",
+        ARGOCD_AUTH_TOKEN: "argocd-secret",
+        BUGSINK_TOKEN: "bugsink-secret",
+        TALOSCONFIG: "/etc/talos/config",
+        // An unrelated provider credential the worker happens to hold. A
+        // trusted agent has Bash, so inheriting this would make it
+        // exfiltratable by a mistaken or injected command.
+        CODEX_ACCESS_TOKEN: "codex-credential",
+        OPENROUTER_API_KEY: "openrouter-key",
+        ANTHROPIC_API_KEY: "anthropic-key",
+        // Replaced by the minted installation token.
+        GH_TOKEN: "worker-token",
+        GITHUB_APP_PRIVATE_KEY: "private-key",
+        // Delivery stays in the parent.
+        POSTAL_API_KEY: "postal-secret",
+        RECIPIENT_EMAIL: "recipient@example.test",
+      },
+    );
+
+    expect(environment).toEqual({
+      PATH: "/usr/bin",
+      GRAFANA_API_KEY: "grafana-secret",
+      ARGOCD_AUTH_TOKEN: "argocd-secret",
+      BUGSINK_TOKEN: "bugsink-secret",
+      TALOSCONFIG: "/etc/talos/config",
+      CLAUDE_CODE_OAUTH_TOKEN: "claude-credential",
+      GH_TOKEN: "minted",
+    });
+    expect(environment).not.toHaveProperty("CODEX_ACCESS_TOKEN");
+    expect(environment).not.toHaveProperty("OPENROUTER_API_KEY");
+    expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
+    expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
+    expect(environment).not.toHaveProperty("POSTAL_API_KEY");
+    expect(environment).not.toHaveProperty("RECIPIENT_EMAIL");
+  });
+
+  it("gives a trusted Codex agent no Claude subscription credential", () => {
+    expect(
+      envForTrustedAgent(
+        { CODEX_ACCESS_TOKEN: "codex-credential" },
+        {
+          PATH: "/usr/bin",
+          CLAUDE_CODE_OAUTH_TOKEN: "claude-credential",
+          CODEX_ACCESS_TOKEN: "worker-codex-credential",
+        },
+      ),
+    ).toEqual({ PATH: "/usr/bin", CODEX_ACCESS_TOKEN: "codex-credential" });
   });
 
   it("fails fast when the provider's subscription credential is missing", () => {
