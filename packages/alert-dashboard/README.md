@@ -30,6 +30,10 @@ bun run migrate:deploy   # create the SQLite schema
 bun run dev
 ```
 
+The package-local `data/` directory is ignored, including the primary database
+and SQLite's `-wal` and `-shm` companions, so this workflow does not leave
+retained alert data in the repository status.
+
 Required configuration is validated at startup: `DATABASE_URL` (a SQLite
 `file:` URL),
 `ALERTMANAGER_URL`, `ALERT_DASHBOARD_WEBHOOK_TOKEN`, `GRAFANA_URL`, and

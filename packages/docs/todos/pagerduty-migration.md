@@ -46,7 +46,7 @@ operations.
 - [x] Migrate the Temporal audit and TRMNL consumers, remove the `toolkit pd`
       command, and remove runtime PagerDuty credentials from active source.
 - [ ] Deploy the activation and cutover branches, then verify the SQLite PVC
-      migration, snapshot bootstrap, UI, REST, previews, reconciliation
+      creation, snapshot bootstrap, UI, REST, previews, reconciliation
       freshness, probes, consumers, and live routing.
 - [ ] Decide whether to export the live PostgreSQL ledger into SQLite or
       explicitly discard that history; do not remove the PostgreSQL PVC or

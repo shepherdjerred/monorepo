@@ -60,6 +60,10 @@ not auto-rotate: replacing a trust root safely needs an overlap period in which
 both the old and new roots are trusted, so unattended single-secret replacement
 would turn routine renewal into an outage risk.
 
+The predecessor PostgreSQL database contained no application tables at the
+migration audit, so the SQLite ledger began empty. Its retained PVC is outside
+this persistence boundary and requires a separate teardown decision.
+
 ## Operator workflow after activation
 
 The UI provides active, suppressed, and historical occurrence views. The CLI
