@@ -38,6 +38,9 @@ export function createReviewWorkbenchClients(apiKey: string): {
         const route = requireOpenRouterRoute(params.model, "language");
         const result = await generateText({
           model: provider.chat(route.modelId, settings(false)),
+          // parseOpenRouterMetadata reads the raw response body for routing and
+          // token detail, which the AI SDK only retains when asked for it.
+          include: { responseBody: true },
           ...(params.systemPrompt === undefined
             ? {}
             : { system: params.systemPrompt }),
