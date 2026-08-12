@@ -16,6 +16,7 @@ import {
   type SyntheticTtsClient,
 } from "@shepherdjerred/streambot/voice/corpus-generator.ts";
 import { verifyVoiceCorpus } from "@shepherdjerred/streambot/voice/corpus-io.ts";
+import { cloneDiscordOpusPackets } from "@shepherdjerred/streambot/voice/corpus-evaluator.ts";
 
 describe("Discord Opus fixture container", () => {
   test("round-trips length-prefixed 20ms packets", () => {
@@ -26,6 +27,17 @@ describe("Discord Opus fixture container", () => {
       packets,
       durationMs: 40,
     });
+  });
+
+  test("clones packet payloads independently for destructive evaluators", () => {
+    const original = [new Uint8Array([1, 2, 3])];
+    const first = cloneDiscordOpusPackets(original);
+    const second = cloneDiscordOpusPackets(original);
+    const firstPacket = first[0];
+    if (firstPacket === undefined) throw new Error("expected a cloned packet");
+    firstPacket.fill(0);
+    expect(original[0]).toEqual(new Uint8Array([1, 2, 3]));
+    expect(second[0]).toEqual(new Uint8Array([1, 2, 3]));
   });
 
   test("rejects truncation and trailing bytes", () => {

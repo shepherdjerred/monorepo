@@ -224,7 +224,7 @@ export class CommandHandler {
         await this.handleSources(interaction);
         return true;
       case "help":
-        await interaction.reply(helpText());
+        await interaction.reply(helpText(this.deps.config.voice.enabled));
         return true;
       default:
         return false;

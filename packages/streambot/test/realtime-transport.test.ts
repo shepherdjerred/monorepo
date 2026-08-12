@@ -27,16 +27,20 @@ const USER = UserIdSchema.parse("100000000000000001");
 
 class DiscardAudio implements AssistantAudioSink {
   readonly chunks: Uint8Array[] = [];
+  finishCount = 0;
+  cancelCount = 0;
 
   enqueue(pcm24k: Uint8Array): void {
     this.chunks.push(pcm24k);
   }
 
   finish(): Promise<void> {
+    this.finishCount += 1;
     return Promise.resolve();
   }
 
   cancel(): Promise<void> {
+    this.cancelCount += 1;
     return Promise.resolve();
   }
 }
@@ -569,6 +573,13 @@ describe("local Realtime probe", () => {
     const production = buildRealtimeSessionConfig(config);
     const harness = buildRealtimeSessionConfig(config);
     expect(JSON.stringify(harness)).toBe(JSON.stringify(production));
+  });
+
+  test("cancels assistant audio when the transcript rejects the wake prefix", async () => {
+    const context = await runLocal([], "Ich bin Gott.");
+    expect(context.result.wakeVerified).toBe(false);
+    expect(context.assistantAudio.cancelCount).toBe(1);
+    expect(context.assistantAudio.finishCount).toBe(0);
   });
 
   test("records no command for ambiguous speech", async () => {

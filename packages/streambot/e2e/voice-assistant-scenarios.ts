@@ -11,6 +11,7 @@ import {
   assertAcceptedCascade,
   delta,
   metricSnapshot,
+  paceCloudVerification,
   runLiveTurn,
   speakFixture,
   speakRawFile,
@@ -19,7 +20,6 @@ import {
   waitUntil,
   type Speaker,
 } from "./voice-assistant-support.ts";
-
 export type VoiceAcceptanceContext = {
   readonly config: Config;
   readonly sessions: SessionManager;
@@ -394,9 +394,10 @@ export async function runOverlappingSpeakers(
     const replyStart = context.speakerOne.packetsFrom(
       context.firstAssistantId,
     ).length;
+    await paceCloudVerification(context.speakerOne);
     await Promise.all([
-      speakFixture(context.speakerOne, "clean-positive-014"),
-      speakFixture(context.speakerTwo, "clean-positive-005"),
+      speakFixture(context.speakerOne, "clean-positive-014", false),
+      speakFixture(context.speakerTwo, "clean-positive-005", false),
     ]);
     await waitUntil("overlapping speaker wake", async () => {
       const current = await metricSnapshot();

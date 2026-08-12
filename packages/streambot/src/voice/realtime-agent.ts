@@ -377,6 +377,7 @@ export async function runRealtimeCommandTurn(
     if (verified === null) {
       voiceTranscriptVerificationsTotal.inc({ outcome: "rejected" });
       voiceTurnsTotal.inc({ outcome: "transcript-rejected" });
+      await input.assistantAudio.cancel();
       return {
         transcript: transcriptionResult.transcript,
         wakeVerified: false,

@@ -3,7 +3,10 @@ import { rm } from "node:fs/promises";
 import { z } from "zod";
 import { DiscordOpusEncoder } from "@shepherdjerred/discord-video-stream";
 import { atomicWrite } from "@shepherdjerred/streambot/voice/corpus-io.ts";
-import { evaluateDiscordOpusPackets } from "@shepherdjerred/streambot/voice/corpus-evaluator.ts";
+import {
+  cloneDiscordOpusPackets,
+  evaluateDiscordOpusPackets,
+} from "@shepherdjerred/streambot/voice/corpus-evaluator.ts";
 import { initializeLocalVoiceModelsForRuntime } from "@shepherdjerred/streambot/voice/local-models.ts";
 
 const ClipSchema = z.strictObject({
@@ -111,10 +114,20 @@ for (const speaker of manifest.speakers) {
       absolute,
       Bun.env["FFMPEG_PATH"] ?? "ffmpeg",
     );
-    const [nativeResult, wasmResult] = await Promise.all([
-      evaluateDiscordOpusPackets(native, packets),
-      evaluateDiscordOpusPackets(wasm, packets),
-    ]);
+    const nativePackets = cloneDiscordOpusPackets(packets);
+    const wasmPackets = cloneDiscordOpusPackets(packets);
+    const [nativeResult, wasmResult] = await (async () => {
+      try {
+        return await Promise.all([
+          evaluateDiscordOpusPackets(native, nativePackets),
+          evaluateDiscordOpusPackets(wasm, wasmPackets),
+        ]);
+      } finally {
+        for (const packet of packets) packet.fill(0);
+        for (const packet of nativePackets) packet.fill(0);
+        for (const packet of wasmPackets) packet.fill(0);
+      }
+    })();
     identical &&= nativeResult.activated === wasmResult.activated;
     if (clip.category === "positive" && nativeResult.activated)
       positivePasses += 1;

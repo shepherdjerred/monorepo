@@ -115,7 +115,7 @@ export class Streamer {
 
         voiceConn.setTokens(d.endpoint, d.token);
       });
-      this.signalVideo(false, options.receiveAudio ?? false);
+      this.signalVideo(false);
     });
   }
 
@@ -211,9 +211,13 @@ export class Streamer {
     this._gatewayEmitter.removeAllListeners("VOICE_SERVER_UPDATE");
   }
 
-  public signalVideo(video_enabled: boolean, receiveAudio = false): void {
+  public signalVideo(video_enabled: boolean): void {
     if (!this.voiceConnection) return;
-    const { guildId: guild_id, channelId: channel_id } = this.voiceConnection;
+    const {
+      guildId: guild_id,
+      channelId: channel_id,
+      receiveAudio,
+    } = this.voiceConnection;
     this.sendOpcode(GatewayOpCodes.VOICE_STATE_UPDATE, {
       guild_id: guild_id,
       channel_id,

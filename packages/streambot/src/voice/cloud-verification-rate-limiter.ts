@@ -1,5 +1,5 @@
-const WINDOW_MS = 60_000;
-const MAX_ATTEMPTS = 5;
+export const CLOUD_VERIFICATION_WINDOW_MS = 60_000;
+export const CLOUD_VERIFICATION_MAX_ATTEMPTS = 5;
 const BURST_CAPACITY = 2;
 const REJECTION_COOLDOWN_MS = 3000;
 
@@ -27,15 +27,17 @@ export class CloudVerificationRateLimiter {
       return { allowed: false, reason: "cooldown" };
     }
     this.attempts = this.attempts.filter(
-      (attemptMs) => nowMs - attemptMs < WINDOW_MS,
+      (attemptMs) => nowMs - attemptMs < CLOUD_VERIFICATION_WINDOW_MS,
     );
-    if (this.attempts.length >= MAX_ATTEMPTS) {
+    if (this.attempts.length >= CLOUD_VERIFICATION_MAX_ATTEMPTS) {
       return { allowed: false, reason: "minute" };
     }
     const elapsedMs = Math.max(0, nowMs - this.lastRefillMs);
     this.tokens = Math.min(
       BURST_CAPACITY,
-      this.tokens + (elapsedMs / WINDOW_MS) * MAX_ATTEMPTS,
+      this.tokens +
+        (elapsedMs / CLOUD_VERIFICATION_WINDOW_MS) *
+          CLOUD_VERIFICATION_MAX_ATTEMPTS,
     );
     this.lastRefillMs = nowMs;
     if (this.tokens < 1) return { allowed: false, reason: "burst" };

@@ -11,25 +11,42 @@ import type { ChannelId } from "@shepherdjerred/streambot/types/ids.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { loadVoiceCorpusManifest } from "@shepherdjerred/streambot/voice/corpus-io.ts";
 import { decodeDiscordOpusContainer } from "@shepherdjerred/streambot/voice/discord-opus-container.ts";
-
+import {
+  CLOUD_VERIFICATION_MAX_ATTEMPTS,
+  CLOUD_VERIFICATION_WINDOW_MS,
+} from "@shepherdjerred/streambot/voice/cloud-verification-rate-limiter.ts";
 export const BASELINE_CLIP = "/tmp/streambot-voice-assistant-baseline.mp4";
 export const LOCAL_CLIP = "/tmp/streambot-voice-assistant-local.mp4";
 export const CORPUS_DIR = path.resolve(
   import.meta.dir,
   "../test/fixtures/voice-corpus",
 );
-
+const CLOUD_VERIFICATION_PACING_MS =
+  Math.ceil(CLOUD_VERIFICATION_WINDOW_MS / CLOUD_VERIFICATION_MAX_ATTEMPTS) +
+  100;
+const nextCloudVerificationAt = new Map<string, number>();
 type WebRtcConnection = Awaited<ReturnType<Streamer["joinVoice"]>>;
-
 export type Speaker = {
   readonly client: Client;
   readonly streamer: Streamer;
   readonly connection: WebRtcConnection;
   readonly packetsFrom: (userId: string) => readonly Uint8Array[];
   readonly moveTo: (guildId: string, channelId: ChannelId) => Promise<void>;
+  readonly voiceSessionKey: string;
   readonly userId: string;
 };
-
+export async function paceCloudVerification(speaker: Speaker): Promise<void> {
+  const nowMs = Date.now();
+  const reservedAtMs = Math.max(
+    nowMs,
+    nextCloudVerificationAt.get(speaker.voiceSessionKey) ?? nowMs,
+  );
+  nextCloudVerificationAt.set(
+    speaker.voiceSessionKey,
+    reservedAtMs + CLOUD_VERIFICATION_PACING_MS,
+  );
+  if (reservedAtMs > nowMs) await Bun.sleep(reservedAtMs - nowMs);
+}
 export type VoiceMetricSnapshot = {
   readonly candidates: number;
   readonly localAccepted: number;
@@ -277,6 +294,7 @@ export async function connectSpeaker(
   await ready;
   const streamer = new Streamer(client);
   const packetsByUser = new Map<string, Uint8Array[]>();
+  let voiceSessionKey = `${guildId}/${channelId}`;
   let connection = await streamer.joinVoice(guildId, channelId, {
     receiveAudio: true,
   });
@@ -303,15 +321,19 @@ export async function connectSpeaker(
       connection = await streamer.joinVoice(nextGuildId, nextChannelId, {
         receiveAudio: true,
       });
+      voiceSessionKey = `${nextGuildId}/${nextChannelId}`;
       capturePackets();
+    },
+    get voiceSessionKey() {
+      return voiceSessionKey;
     },
     userId,
   };
 }
-
 export async function speakFixture(
   speaker: Speaker,
   fixtureId: string,
+  paceCloud = true,
 ): Promise<void> {
   const manifest = await loadVoiceCorpusManifest(CORPUS_DIR);
   const entry = manifest.entries.find(
@@ -319,6 +341,9 @@ export async function speakFixture(
   );
   if (entry === undefined)
     throw new Error(`Missing voice corpus fixture ${fixtureId}`);
+  if (paceCloud && entry.expected === "wake") {
+    await paceCloudVerification(speaker);
+  }
   const container = decodeDiscordOpusContainer(
     new Uint8Array(
       await Bun.file(path.join(CORPUS_DIR, entry.file)).arrayBuffer(),
@@ -340,6 +365,7 @@ export async function speakRawFile(
   rawFile: string,
   ffmpegPath: string,
 ): Promise<void> {
+  await paceCloudVerification(speaker);
   const child = Bun.spawn(
     [
       ffmpegPath,

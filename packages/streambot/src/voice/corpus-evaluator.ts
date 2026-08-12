@@ -62,6 +62,12 @@ export type VoiceCorpusEvaluationReport = {
   readonly passed: boolean;
 };
 
+export function cloneDiscordOpusPackets(
+  packets: readonly Uint8Array[],
+): Uint8Array[] {
+  return packets.map((packet) => Uint8Array.from(packet));
+}
+
 function audio(opus: Uint8Array, index: number): ReceivedVoiceAudio {
   return { userId: "synthetic-speaker", ssrc: 1000 + index, opus };
 }
@@ -194,7 +200,8 @@ async function negativeSoak(
       const fixture = decoded[fixtureIndex % decoded.length];
       if (fixture === undefined)
         throw new Error("Negative fixture selection failed");
-      for (const [packetIndex, packet] of fixture.container.packets.entries()) {
+      const packets = cloneDiscordOpusPackets(fixture.container.packets);
+      for (const [packetIndex, packet] of packets.entries()) {
         lifecycle.accept(audio(packet, packetIndex));
         elapsedMs += 20;
         if (elapsedMs >= targetMs) break;
