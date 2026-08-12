@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import rawCatalog from "./version-catalog.json";
-import { parseVersionCatalog } from "./version-catalog.ts";
+import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
+import { parseVersionCatalog } from "@shepherdjerred/version-catalog";
 import { VersionMapSchema } from "./version-map.generated.ts";
 import versions from "./versions.ts";
 

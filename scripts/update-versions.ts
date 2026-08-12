@@ -23,8 +23,7 @@ import { runMain } from "./lib/transient.ts";
 const MONOREPO_REPO = "shepherdjerred/monorepo";
 const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
 const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
-const VERSION_CATALOG_FILE_REL =
-  "packages/homelab/src/cdk8s/src/version-catalog.json";
+const VERSION_CATALOG_FILE_REL = "packages/version-catalog/src/catalog.json";
 const PIN_STATE_FILE_REL = "scripts/pin-candidates-state.json";
 const MAX_LEASE_ATTEMPTS = 3;
 

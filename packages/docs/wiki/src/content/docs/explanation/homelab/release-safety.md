@@ -12,7 +12,7 @@ GitOps release can go wrong.
 ```mermaid
 sequenceDiagram
   accTitle: Homelab release sequence
-  accDescr: Buildkite suspends floating auto-sync, publishes an immutable chart set, stages exact child specifications and root prerequisites while children remain suspended, reconciles child workloads, restores the exact root tree with safe pruning, and checks scoped health.
+  accDescr: One Buildkite release command suspends floating auto-sync, publishes an immutable chart set, stages exact child specifications and root prerequisites while children remain suspended, preflights and reconciles child workloads, restores the exact root tree with safe pruning, and checks scoped health.
   participant BK as Buildkite
   participant CM as ChartMuseum
   participant Root as apps Application
@@ -21,16 +21,22 @@ sequenceDiagram
   BK->>Root: suspend current repository auto-sync
   BK->>CM: publish 2.0.0-build charts
   BK->>Root: stage child specs and prerequisites, still suspended
+  BK->>Child: read-only apply-safety preflight
   BK->>Child: reconcile every desired child in root wave order
   BK->>Root: restore exact revision with verified pruning
   BK->>Root: retain identity through apply and termination
   BK->>Child: require Synced and Healthy
 ```
 
-## Why the root is applied twice
+## Why `release-root` stages and restores the root
 
 The second suspended root apply is the part people delete when simplifying, and
 it is the part that matters.
+
+The public pipeline surface is nevertheless one command. `release-root` owns
+the entire identity-bound sequence in one process, so there is no handoff gap
+between staging, reconciliation, final pruning, and scoped health. The bounded
+operations underneath it remain separate because they prove different things.
 
 New child-level safety settings have to exist _before_ those children sync.
 But enabling floating auto-sync before every chart is published would let a
@@ -64,6 +70,13 @@ Argo omits `operation.sync.revision` from manifest-override operations, so the
 release command also persists the exact revision in the operation info list
 beside its request and operation UUIDs. Either representation can prove the
 revision, but disagreement between them is a hard identity failure.
+
+The waves are an architecture contract, not incident-specific ordering.
+Admission policy objects land first, followed by the 1Password controller and
+items, infrastructure providers, certificate resources, the root Application,
+Kueue, dependent configuration, Buildkite, and leaf workloads. This also makes
+an ordinary manual global sync safe: all members of a wave apply before ArgoCD
+waits on health, and no prerequisite is hidden behind a leaf workload.
 
 Disabling every child creates a second ordering obligation: Buildkite must
 explicitly reconcile external children as well as charts published by this
@@ -130,6 +143,44 @@ and ordinary child Applications can be degraded. Argo waits for their health
 before exposing later waves, even after the current wave and all prunes apply.
 Weakening generic sync completeness would risk skipping a genuinely unapplied
 later wave. Proving each desired wave first keeps that safety boundary intact.
+
+Application health is evaluated by an ArgoCD Lua customization exercised with
+ArgoCD's own executable health-test command. Active operations and unresolved
+terminal failures remain `Progressing` or `Degraded`, while a current
+`Synced`/`Healthy` state wins over stale failed operation history. Only the
+recursive `apps` Application carries `IgnoreHealthCheck=true`; child
+Application health remains an ordering and acceptance signal.
+
+## Why manual global sync preserves child options
+
+ArgoCD records a manual sync request in an Application's
+`operation.sync.syncOptions`. A broad request can otherwise omit an option that
+the child declares in `spec.syncPolicy.syncOptions`, turning a routine global
+sync into behavior different from the checked-in Application contract.
+
+A Kubernetes mutating admission policy selects managed child Applications and
+merges the declared options into the requested operation. Options are compared
+by the key before `=`, and the declared value wins. The recursive root is
+excluded to avoid mutating its self-operation. This is why starting a normal
+global sync is supported; the safety setting belongs to the Application, not
+to operator memory.
+
+A separate validating policy protects deletion. `apps` and `argocd` are
+retained, while another managed child can be deleted only when it carries both
+the cascade lifecycle annotation and Argo resources finalizer. The script still
+renders the exact desired revision to classify prune candidates; admission is
+an independent last line of defense, not a replacement for that proof.
+
+## Why apply safety is a preflight
+
+Immutable selector, service, volume-claim-template, and PVC field changes, plus
+mutually exclusive probe-handler swaps, are discoverable from ArgoCD's live and
+target resource states before a child sync starts. `release-root` hard-refreshes
+comparison and performs that read-only analysis. Any finding fails the release
+before submitting the child operation, so the operator sees the exact resource
+and field instead of a partially applied sync. The preflight does not invent a
+fallback or silently replace resources; remediation remains an explicit source
+or operator decision.
 
 Every desired automated policy includes an explicit `enabled` boolean. The
 [release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)
@@ -220,11 +271,10 @@ flag is true, so an older full-source operation cannot borrow prior-batch proof.
 A generated per-operation UUID binds the top-level live operation to its
 completed status. This lets a retry accept a stable, fully applied result while
 rejecting stale status from an earlier POST with the same Buildkite identity.
-The standalone finalizer remains a recovery tool, not part of the normal
-release path. It recognizes the retired client's pre-UUID operation only when
-both live and completed state share the exact request ID and revision. Both
-must omit an operation UUID. Atomic operations never use that compatibility
-case.
+Recovery is the same `release-root` command with the same Buildkite UUID, not a
+second public finalizer command. It recognizes only operations whose request
+identity, exact revision, selected resources, phase marker, and prune mode fit
+the expected step. An unrelated operation remains a hard failure.
 
 After termination, the top-level live operation is authoritative. Its absence
 means the health wait is gone even if `status.operationState` still says
@@ -267,8 +317,9 @@ Application image selection uses the newest `main` commit whose `images` and
 `version-commit-back` jobs both passed as its comparison base.
 
 The image publisher reads current comparison digests and commit-back keys from
-the structured `version-catalog.json` source of truth. The generated
-`versions.ts` module is a runtime projection, not a writable pin corpus. The
+the structured `packages/version-catalog/src/catalog.json` source of truth.
+`@shepherdjerred/version-catalog` owns its language-neutral JSON Schema plus the
+shared parser and serializer; CDK8s owns only its typed runtime projection. The
 image tests resolve every real bake target against the structured catalog so a
 representation migration cannot finish a production push and only then discover
 that it has no pin to update.

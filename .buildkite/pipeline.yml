@@ -1168,7 +1168,8 @@ steps:
       bun --no-install scripts/scout-site-release.ts tag-release --state "$$scout_state" --dry-run
       bun --no-install scripts/scout-site-release.ts resolve-prod-pin
       bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
-      bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --dry-run
+      apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
+      bun --no-install packages/homelab/scripts/argocd.ts release-root apps argocd-release-expected.json --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --dry-run
       pin_candidates=$$(jq -cn --arg build "$BUILDKITE_BUILD_NUMBER" \
         '{schema:"pin-candidates/v1",buildNumber:($$build|tonumber),candidates:{}}')
       bun --no-install scripts/update-versions.ts --commit-back --candidates "$$pin_candidates" --dry-run
@@ -1576,19 +1577,9 @@ steps:
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       buildkite-agent artifact download "argocd-release-expected.json" . --step helm-push
       apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
-      # Stage every exact root resource while keeping every child Application
-      # auto-sync disabled. Root-owned admission and cluster policies land
-      # before children can depend on them, without starting child operations.
-      bun --no-install packages/homelab/scripts/argocd.ts stage-root-release apps --revision "$$apps_revision" --timeout 300
-      bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --skip-health-wait --timeout 300
-      # Restore the exact tree in isolated sync waves while the self-managed
-      # root stays suspended, then restore it and prune after every other
-      # desired resource has applied-result proof. Keep the Buildkite identity
-      # through batches and termination so retries adopt only this revision
-      # and phase.
-      bun --no-install packages/homelab/scripts/argocd.ts finalize-root-release apps --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --timeout 300
-      # The scoped release health below remains authoritative for this release.
-      bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300
+      # One identity-bound process stages root prerequisites, reconciles exact
+      # child revisions, restores/prunes the root, and owns scoped health.
+      bun --no-install packages/homelab/scripts/argocd.ts release-root apps argocd-release-expected.json --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --timeout 300
     retry: *retry
     plugins:
       - kubernetes:
@@ -1617,12 +1608,9 @@ steps:
       fi
       if [ -z "$$scout_candidate" ] && ! $$scout_source_changed; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      # scout-site-release imports the catalog parser from @homelab/cdk8s.
-      # With Bun's isolated linker, zod must be installed for that workspace;
-      # the root-scripts copy cannot satisfy an import resolved from cdk8s.
+      # The release script owns a workspace dependency on the shared catalog.
       .buildkite/scripts/bun-install.sh --frozen-lockfile \
         --filter '@shepherdjerred/root-scripts' \
-        --filter '@homelab/cdk8s' \
         --filter '@scout-for-lol/frontend' \
         --filter '@scout-for-lol/app' \
         --filter '@scout-for-lol/docs-site' \
@@ -1666,9 +1654,7 @@ steps:
       scout_state=$$(buildkite-agent meta-data get scout-release-state --default "")
       if [ -z "$$scout_state" ]; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      # scout-site-release imports the catalog parser from @homelab/cdk8s
-      # (isolated linker: zod must be installed for that workspace).
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@homelab/cdk8s' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       printf '%s' "$$GH_TOKEN" | docker login ghcr.io -u shepherdjerred --password-stdin
       bun --no-install scripts/scout-site-release.ts tag-release --state "$$scout_state"
@@ -1697,9 +1683,7 @@ steps:
     command: |
       if ! bun --no-install .buildkite/scripts/ci-changed.ts scout-reconcile; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      # scout-site-release imports the catalog parser from @homelab/cdk8s
-      # (isolated linker: zod must be installed for that workspace).
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@homelab/cdk8s' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       prod_pin=$$(bun --no-install scripts/scout-site-release.ts resolve-prod-pin)
       bun --no-install scripts/scout-site-release.ts reconcile-prod-pin --prod-pin "$$prod_pin"
@@ -1787,10 +1771,7 @@ steps:
     concurrency_group: monorepo/version-commit-back
     command: |
       . .buildkite/scripts/toolchain.sh
-      # update-versions imports the catalog validator from @homelab/cdk8s.
-      # With Bun's isolated linker, zod must be installed for that workspace;
-      # the root-scripts copy cannot satisfy an import resolved from cdk8s.
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@homelab/cdk8s' --production
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       bun --no-install scripts/update-versions.ts --commit-back --candidates "$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts pin-candidates)"
     # Safe to retry: the bump branch is force-updated and the PR lookup is
     # find-or-create; transient gh/git failures exit 34 via transient.ts.

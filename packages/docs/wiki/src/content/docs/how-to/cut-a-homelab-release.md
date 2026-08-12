@@ -6,7 +6,8 @@ sidebar:
 ---
 
 The main Buildkite pipeline is the only writer for repository-backed homelab
-releases. You do not run these steps by hand — merging to `main` runs them.
+releases. You do not run these steps by hand — merging to `main` runs one
+`release-root` command that owns the complete sequence.
 
 This page is for reading the pipeline while it works, and for knowing what a
 failed stage means.
@@ -110,7 +111,7 @@ pin.
 
 If the image push finishes but candidate classification reports that no managed
 pin exists, do not retry the push. The comparison digest and commit-back key
-come from `packages/homelab/src/cdk8s/src/version-catalog.json`; verify that the
+come from `packages/version-catalog/src/catalog.json`; verify that the
 real bake target has an exact image entry there and that the publisher is
 reading that structured catalog rather than the generated runtime projection.
 
@@ -156,7 +157,7 @@ full-source operation must report the restored root Application as `Synced` and
 every validated prune candidate as `Pruned`. A fully applied early batch or
 prune wave is not enough.
 
-Buildkite retries reuse the build UUID. The command adopts an operation only
+Buildkite retries reuse the build UUID. `release-root` adopts an operation only
 when the UUID and revision match and its selected resources are exactly one
 desired batch, or when it is the unselected final prune. An unrelated active
 operation or an unexpected selection remains a hard failure. The operation must
@@ -174,26 +175,30 @@ Unchanged resources use source-selective operations and retain the revision in
 Argo's ordinary sync request as well as the identity metadata.
 
 A release blocked here means the current operation must be inspected before
-retrying. If it is a fully applied operation from an interrupted older client,
-recover it with both values from the live operation:
+retrying. Confirm the operation's request ID, revision, selected resources,
+phase marker, and prune flag in ArgoCD. Do not terminate it based on revision
+alone. Once the observed operation belongs to the same Buildkite build, retry
+the failed Buildkite job; the same command and build UUID adopt only that exact
+operation and continue the release.
 
 ```bash
-bun packages/homelab/scripts/argocd.ts finalize-async-sync apps \
-  --revision <exact-revision> \
-  --request-id <exact-request-id> \
-  --timeout 300
+argocd app get apps --show-operation
 ```
 
-The recovery command polls for that exact operation and discovers its internal
-operation UUID from the live state. It terminates only when the completed status
-has the same UUID. Missing state, a different identity, an apply failure, or an
-incomplete result fails without termination.
+## If you start a global sync manually
 
-An operation created by the retired split pipeline predates internal operation
-UUIDs. The recovery command accepts that legacy shape only when both the live
-operation and completed status have the exact request ID and revision and both
-omit the internal UUID. New atomic operations always require their internal
-UUID.
+An ordinary global sync of `apps` is supported. Use ArgoCD's normal sync action;
+do not copy child sync options into the request by hand. Admission merges each
+managed child Application's declared options into the manual operation, and
+the declared value wins if the request contains the same option key.
+
+The global sync follows the chart's deterministic waves. Only the recursive
+`apps` Application ignores health; degraded child Applications remain visible
+and block progression where their wave is a dependency boundary. If a global
+sync reports an immutable-field or mutually-exclusive-probe-handler failure,
+stop and inspect that resource. The automated `release-root` path runs its
+read-only preflight before submitting child operations, but a manual ArgoCD UI
+sync does not run that client-side check.
 
 ## Where it lives
 

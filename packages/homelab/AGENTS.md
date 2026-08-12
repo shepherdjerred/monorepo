@@ -178,7 +178,7 @@ synced secret's data keys are consumed via `secretKeyRef`/`envFrom`/volume mount
 A linter guarantees that **every referenced item and field actually exists in 1Password**,
 so a typo'd field name or a missing/renamed item is caught before deploy instead of failing
 the operator sync (or crashing the pod) at runtime. It runs offline as the `check:1password`
-turbo task (wired into `bun run verify`, so the `pre-push` hook and CI both enforce it) — by
+turbo task (wired into `bun run verify`, so Buildkite enforces it) — by
 checking the synthesized references against a committed snapshot of vault
 structure — `src/cdk8s/onepassword-vault-snapshot.json`, which holds **only sha256 hashes**
 of item ids/titles/field keys (no values, no plaintext names).
@@ -234,7 +234,8 @@ github.com/1Password/connect-helm-charts#272.
 
 ## Testing Notes
 
-(The `pre-push` hook and CI run `bun run verify`, which includes these tests; run them locally too so you catch failures before pushing.)
+Buildkite runs `bun run verify`, which includes these tests. There is no
+`pre-push` hook; run focused package checks locally while iterating.
 
 ### Run tests from the CDK8s workspace
 
@@ -275,7 +276,7 @@ expected. Run locally with `HELM_RENDER_TEST=1 bun test src/argocd-helm-render.t
 
 ## Git Workflow
 
-- Use conventional commit messages (`type(scope): description`); the `commit-msg` lefthook validates them (`scripts/validate-commit-msg.ts`, scope must be a package name or `root`/`deps`/`ci`/etc.), and the `pre-commit`/`pre-push` hooks run lint/typecheck/verify
+- Use conventional commit messages (`type(scope): description`); the `commit-msg` lefthook validates them (`scripts/validate-commit-msg.ts`, scope must be a package name or `root`/`deps`/`ci`/etc.). The staged-only `pre-commit` hook does not replace Buildkite's full `bun run verify` graph.
 
 ## Version Management
 

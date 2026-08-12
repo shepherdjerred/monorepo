@@ -14,8 +14,7 @@ import {
   synthesizeDependencyChanges,
 } from "./deps-summary-release-notes.ts";
 
-const VERSION_CATALOG_PATH =
-  "packages/homelab/src/cdk8s/src/version-catalog.json";
+const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 const LEGACY_VERSIONS_PATH = "packages/homelab/src/cdk8s/src/versions.ts";
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const CHECKPOINT_KEY = "reports/state/deps-summary-weekly.json";

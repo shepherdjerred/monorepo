@@ -9,10 +9,10 @@
  * timeouts are preserved.
  *
  * Usage:
- *   bun packages/homelab/scripts/argocd.ts sync <app> [--revision <v>]
- *       [--prune] [--async | --terminate-after-applied]
+ *   bun packages/homelab/scripts/argocd.ts sync-managed <app> [--revision <v>]
+ *       [--prune] [--terminate-after-applied]
  *       [--request-id <uuid>] [--timeout <s>] [--dry-run]
- *   bun packages/homelab/scripts/argocd.ts finalize-async-sync <app> \
+ *   bun packages/homelab/scripts/argocd.ts release-root apps <expected.json> \
  *       --revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts delete-application <app> \
  *       --project <project> [--timeout <s>] [--dry-run]
@@ -20,10 +20,6 @@
  *   bun packages/homelab/scripts/argocd.ts tree-health-wait <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> \
  *       [--revision <v>] [--timeout <s>] [--dry-run]
- *   bun packages/homelab/scripts/argocd.ts stage-root-release <root-app> \
- *       --revision <v> [--timeout <s>] [--dry-run]
- *   bun packages/homelab/scripts/argocd.ts finalize-root-release apps \
- *       --revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts wait-deletion <app> \
  *       --group <g> --version <v> --kind <k> --namespace <ns> \
  *       [--timeout <s>] [--dry-run]
@@ -66,6 +62,10 @@ import {
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
 import { latestPublishedVersion } from "./helm-release-core.ts";
+import {
+  analyzeApplySafety,
+  ManagedResourcesSchema,
+} from "./argocd-apply-safety.ts";
 import { z } from "zod";
 
 const DEFAULT_SERVER_URL = "https://argocd.sjer.red";
@@ -230,8 +230,15 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 async function getApplication(
   appName: string,
   token: string,
+  refresh?: "hard",
 ): Promise<Record<string, unknown>> {
-  const url = `${serverUrl()}/api/v1/applications/${appName}`;
+  const url = new URL(
+    `/api/v1/applications/${encodeURIComponent(appName)}`,
+    serverUrl(),
+  );
+  if (refresh !== undefined) {
+    url.searchParams.set("refresh", refresh);
+  }
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
     redirect: "follow",
@@ -239,13 +246,13 @@ async function getApplication(
   if (res.status !== 200) {
     const body = (await res.text()).slice(0, 1024);
     throw new Error(
-      `ERROR: ${url} returned HTTP ${res.status.toString()}\n` +
+      `ERROR: ${url.toString()} returned HTTP ${res.status.toString()}\n` +
         `Response body (first 1KB): ${body}`,
     );
   }
   const data: unknown = await res.json();
   if (!isRecord(data)) {
-    throw new Error(`${url} returned a non-object body`);
+    throw new Error(`${url.toString()} returned a non-object body`);
   }
   return data;
 }
@@ -287,6 +294,31 @@ async function getApplicationManifests(
     );
   }
   return ManifestResponseSchema.parse(await response.json()).manifests;
+}
+
+async function assertApplySafe(appName: string, token: string): Promise<void> {
+  await getApplication(appName, token, "hard");
+  const url = new URL(
+    `/api/v1/applications/${encodeURIComponent(appName)}/managed-resources`,
+    serverUrl(),
+  );
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const body = (await response.text()).slice(0, 1024);
+    throw new Error(
+      `Could not inspect apply safety for ${appName}: HTTP ${response.status.toString()} ${response.statusText}\n${body}`,
+    );
+  }
+  const findings = analyzeApplySafety(
+    ManagedResourcesSchema.parse(await response.json()).items,
+  );
+  if (findings.length > 0) {
+    throw new Error(
+      `Refusing ${appName} sync because the read-only apply-safety preflight found:\n${findings.map((finding) => `- ${finding}`).join("\n")}`,
+    );
+  }
 }
 
 function resourceIdentity(group: string, kind: string, name: string): string {
@@ -2118,6 +2150,7 @@ async function reconcileRelease(
     if (deployedExpectedRepositoryRelease || deployedExpectedExternalSource) {
       continue;
     }
+    await assertApplySafe(wanted.name, token);
     await sync(wanted.name, timeoutSeconds, false, {
       prune: wanted.prune,
       revision: wanted.revision,
@@ -2163,6 +2196,40 @@ async function releaseHealthWait(
   throw new Error(
     `Release tree did not become ready: ${latestFailures.join("; ")}`,
   );
+}
+
+async function releaseRoot(
+  rootAppName: string,
+  expectedPath: string,
+  revision: string,
+  requestId: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
+  if (rootAppName !== "apps") {
+    throw new Error("release-root only supports the apps root");
+  }
+  const exactRevision = BuildRevisionSchema.parse(revision);
+  const exactRequestId = SyncRequestIdSchema.parse(requestId);
+  console.log(
+    `--- argocd release-root: ${rootAppName} at ${exactRevision} for request ${exactRequestId}${dryRun ? " (dry run)" : ""}`,
+  );
+  await stageRootRelease(rootAppName, exactRevision, timeoutSeconds, dryRun);
+  await reconcileRelease(
+    expectedPath,
+    timeoutSeconds,
+    dryRun,
+    new Set(),
+    false,
+  );
+  await finalizeRootRelease(
+    rootAppName,
+    exactRevision,
+    exactRequestId,
+    timeoutSeconds,
+    dryRun,
+  );
+  await releaseHealthWait(expectedPath, timeoutSeconds, dryRun);
 }
 
 /**
@@ -2389,28 +2456,19 @@ async function waitDeletion(opts: {
 function usage(): never {
   console.error(
     "Usage:\n" +
-      "  bun packages/homelab/scripts/argocd.ts sync <app> " +
-      "[--revision <v>] [--prune] [--async | --terminate-after-applied] " +
+      "  bun packages/homelab/scripts/argocd.ts sync-managed <app> " +
+      "[--revision <v>] [--prune] [--terminate-after-applied] " +
       "[--request-id <uuid>] [--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts release-root apps <expected.json> " +
+      "--revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts delete-application <app> " +
       "--project <project> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts health-wait <app> " +
       "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts tree-health-wait <app> " +
       "[--timeout <s>] [--dry-run]\n" +
-      "  bun packages/homelab/scripts/argocd.ts release-health-wait <expected.json> " +
-      "[--timeout <s>] [--dry-run]\n" +
-      "  bun packages/homelab/scripts/argocd.ts reconcile-release <expected.json> " +
-      "[--defer-apps <app,...>] [--skip-health-wait] " +
-      "[--timeout <s>] [--dry-run]\n" +
-      "  bun packages/homelab/scripts/argocd.ts finalize-async-sync <app> " +
-      "--revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> " +
       "[--revision <v>] [--timeout <s>] [--dry-run]\n" +
-      "  bun packages/homelab/scripts/argocd.ts stage-root-release <root-app> " +
-      "--revision <v> [--timeout <s>] [--dry-run]\n" +
-      "  bun packages/homelab/scripts/argocd.ts finalize-root-release apps " +
-      "--revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts wait-deletion <app> " +
       "--group <g> --version <v> --kind <k> --namespace <ns> " +
       "[--timeout <s>] [--dry-run]",
@@ -2430,18 +2488,6 @@ function flag(argv: string[], name: string): string | undefined {
     usage();
   }
   return v;
-}
-
-function appList(raw: string | undefined): ReadonlySet<string> {
-  if (raw === undefined) {
-    return new Set();
-  }
-  const apps = raw.split(",").map((app) => app.trim());
-  if (apps.some((app) => app.length === 0)) {
-    console.error("--defer-apps must contain only comma-separated names");
-    usage();
-  }
-  return new Set(apps);
 }
 
 async function main(): Promise<void> {
@@ -2466,6 +2512,43 @@ async function main(): Promise<void> {
   }
 
   switch (subcommand) {
+    case "sync-managed": {
+      const revision = flag(argv, "revision");
+      const requestId = flag(argv, "request-id");
+      const terminateAfterApplied = argv.includes("--terminate-after-applied");
+      if (argv.includes("--async")) {
+        console.error("sync-managed is bounded and does not support --async.");
+        usage();
+      }
+      if (terminateAfterApplied && revision === undefined) {
+        console.error(
+          "--terminate-after-applied requires an exact --revision.",
+        );
+        usage();
+      }
+      if (requestId !== undefined && revision === undefined) {
+        console.error("--request-id requires an exact --revision.");
+        usage();
+      }
+      const exactRequestId =
+        requestId === undefined
+          ? undefined
+          : SyncRequestIdSchema.parse(requestId);
+      if (!dryRun) {
+        await assertApplySafe(app, requireEnv("ARGOCD_TOKEN"));
+      }
+      await sync(app, timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S, dryRun, {
+        prune: argv.includes("--prune"),
+        waitForCompletion: true,
+        terminateAfterApplied,
+        ...(revision === undefined ? {} : { revision }),
+        ...(exactRequestId === undefined ? {} : { requestId: exactRequestId }),
+      });
+      return;
+    }
+    // Internal compatibility primitives keep the detailed lifecycle tests and
+    // exact-operation recovery path executable. Buildkite and operator docs
+    // expose only release-root and sync-managed.
     case "sync": {
       const revision = flag(argv, "revision");
       const requestId = flag(argv, "request-id");
@@ -2530,11 +2613,12 @@ async function main(): Promise<void> {
         true,
       );
       return;
-    case "release-health-wait":
-      await releaseHealthWait(
+    case "suspend-auto-sync":
+      await suspendRepositoryAutoSync(
         app,
-        timeoutOverride ?? DEFAULT_HEALTH_TIMEOUT_S,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
         dryRun,
+        flag(argv, "revision"),
       );
       return;
     case "reconcile-release":
@@ -2542,34 +2626,8 @@ async function main(): Promise<void> {
         app,
         timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
         dryRun,
-        appList(flag(argv, "defer-apps")),
+        new Set(),
         !argv.includes("--skip-health-wait"),
-      );
-      return;
-    case "finalize-async-sync": {
-      const revision = flag(argv, "revision");
-      const requestId = flag(argv, "request-id");
-      if (revision === undefined || requestId === undefined) {
-        console.error(
-          "--revision and --request-id are required for finalize-async-sync.",
-        );
-        usage();
-      }
-      await finalizeAsyncSync(
-        app,
-        revision,
-        requestId,
-        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
-        dryRun,
-      );
-      return;
-    }
-    case "suspend-auto-sync":
-      await suspendRepositoryAutoSync(
-        app,
-        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
-        dryRun,
-        flag(argv, "revision"),
       );
       return;
     case "stage-root-release": {
@@ -2597,6 +2655,49 @@ async function main(): Promise<void> {
       }
       await finalizeRootRelease(
         app,
+        revision,
+        requestId,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
+        dryRun,
+      );
+      return;
+    }
+    case "finalize-async-sync": {
+      const revision = flag(argv, "revision");
+      const requestId = flag(argv, "request-id");
+      if (revision === undefined || requestId === undefined) {
+        console.error(
+          "--revision and --request-id are required for finalize-async-sync.",
+        );
+        usage();
+      }
+      await finalizeAsyncSync(
+        app,
+        revision,
+        requestId,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
+        dryRun,
+      );
+      return;
+    }
+    case "release-root": {
+      const expectedPath = argv[2];
+      const revision = flag(argv, "revision");
+      const requestId = flag(argv, "request-id");
+      if (
+        expectedPath === undefined ||
+        expectedPath.startsWith("--") ||
+        revision === undefined ||
+        requestId === undefined
+      ) {
+        console.error(
+          "release-root requires <expected.json>, --revision, and --request-id.",
+        );
+        usage();
+      }
+      await releaseRoot(
+        app,
+        expectedPath,
         revision,
         requestId,
         timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,

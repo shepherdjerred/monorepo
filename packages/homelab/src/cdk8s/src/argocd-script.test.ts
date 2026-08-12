@@ -334,7 +334,7 @@ test("Argo CD root pruning requires an exact revision", async () => {
   );
 });
 
-test("Argo CD CLI usage documents atomic sync and recovery identity", async () => {
+test("Argo CD CLI usage exposes one root release command", async () => {
   const process = Bun.spawn(["bun", "--no-install", "scripts/argocd.ts"], {
     cwd: path.resolve(import.meta.dir, "../../.."),
     stderr: "pipe",
@@ -347,21 +347,174 @@ test("Argo CD CLI usage documents atomic sync and recovery identity", async () =
 
   expect(exitCode).not.toBe(0);
   expect(stderr).toContain(
-    "sync <app> [--revision <v>] [--prune] [--async | --terminate-after-applied]",
+    "sync-managed <app> [--revision <v>] [--prune] [--terminate-after-applied]",
   );
   expect(stderr).toContain("[--request-id <uuid>]");
   expect(stderr).toContain(
+    "release-root apps <expected.json> --revision <v> --request-id <uuid>",
+  );
+  expect(stderr).toContain(
     "suspend-auto-sync <root-app> [--revision <v>] [--timeout <s>]",
   );
-  expect(stderr).toContain(
-    "stage-root-release <root-app> --revision <v> [--timeout <s>]",
+  expect(stderr).not.toContain("stage-root-release <root-app>");
+  expect(stderr).not.toContain("finalize-root-release apps");
+  expect(stderr).not.toContain("finalize-async-sync <app>");
+});
+
+test("sync-managed rejects detached operations", async () => {
+  const process = Bun.spawn(
+    [
+      "bun",
+      "--no-install",
+      "scripts/argocd.ts",
+      "sync-managed",
+      "worker",
+      "--async",
+    ],
+    {
+      cwd: path.resolve(import.meta.dir, "../../.."),
+      stderr: "pipe",
+      stdout: "pipe",
+    },
   );
+  const [exitCode, stderr] = await Promise.all([
+    process.exited,
+    new Response(process.stderr).text(),
+  ]);
+
+  expect(exitCode).not.toBe(0);
   expect(stderr).toContain(
-    "finalize-root-release apps --revision <v> --request-id <uuid>",
+    "sync-managed is bounded and does not support --async",
   );
-  expect(stderr).toContain(
-    "finalize-async-sync <app> --revision <v> --request-id <uuid>",
+});
+
+test("sync-managed preflights immutable changes before submitting", async () => {
+  let syncPosts = 0;
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request) {
+      const url = new URL(request.url);
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/worker" &&
+        url.searchParams.get("refresh") === "hard"
+      ) {
+        return Response.json({ status: {} });
+      }
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/worker/managed-resources"
+      ) {
+        return Response.json({
+          items: [
+            {
+              group: "apps",
+              kind: "Deployment",
+              namespace: "worker",
+              name: "worker",
+              liveState: JSON.stringify({
+                spec: { selector: { matchLabels: { app: "worker" } } },
+              }),
+              targetState: JSON.stringify({
+                spec: { selector: { matchLabels: { app: "api" } } },
+              }),
+            },
+          ],
+        });
+      }
+      if (
+        request.method === "POST" &&
+        url.pathname === "/api/v1/applications/worker/sync"
+      ) {
+        syncPosts += 1;
+      }
+      return new Response("not found", { status: 404 });
+    },
+  });
+
+  try {
+    const process = Bun.spawn(
+      [
+        "bun",
+        "--no-install",
+        "scripts/argocd.ts",
+        "sync-managed",
+        "worker",
+        "--timeout",
+        "1",
+      ],
+      {
+        cwd: path.resolve(import.meta.dir, "../../.."),
+        env: {
+          ...Bun.env,
+          ARGOCD_SERVER_URL: server.url.origin,
+          ARGOCD_TOKEN: "test-token",
+        },
+        stderr: "pipe",
+        stdout: "pipe",
+      },
+    );
+    const [exitCode, stderr] = await Promise.all([
+      process.exited,
+      new Response(process.stderr).text(),
+    ]);
+
+    expect(exitCode).not.toBe(0);
+    expect(stderr).toContain(
+      "apps/Deployment worker/worker changes immutable /spec/selector",
+    );
+    expect(syncPosts).toBe(0);
+  } finally {
+    await server.stop(true);
+  }
+});
+
+test("release-root owns the complete dry-run lifecycle", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-root-"));
+  const expectedPath = path.join(directory, "expected.json");
+  await Bun.write(
+    expectedPath,
+    JSON.stringify([{ name: "apps", revision: "2.0.0-42" }]),
   );
+
+  try {
+    const process = Bun.spawn(
+      [
+        "bun",
+        "--no-install",
+        "scripts/argocd.ts",
+        "release-root",
+        "apps",
+        expectedPath,
+        "--revision",
+        "2.0.0-42",
+        "--request-id",
+        "11111111-1111-4111-8111-111111111111",
+        "--dry-run",
+      ],
+      {
+        cwd: path.resolve(import.meta.dir, "../../.."),
+        stderr: "pipe",
+        stdout: "pipe",
+      },
+    );
+    const [exitCode, stdout, stderr] = await Promise.all([
+      process.exited,
+      new Response(process.stdout).text(),
+      new Response(process.stderr).text(),
+    ]);
+
+    expect(exitCode).toBe(0);
+    expect(stderr).toBe("");
+    expect(stdout).toContain("argocd release-root: apps at 2.0.0-42");
+    expect(stdout).toContain("argocd stage-root-release: apps at 2.0.0-42");
+    expect(stdout).toContain("would reconcile 1 expected Application(s)");
+    expect(stdout).toContain("argocd finalize-root-release: apps at 2.0.0-42");
+    expect(stdout).toContain("argocd release-health-wait: 1 expected");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 describe("Argo CD root prune safety", () => {
@@ -628,6 +781,12 @@ describe("Argo CD release gating", () => {
           return Response.json({
             manifests: [repositoryApplication, externalApplication, configMap],
           });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/worker/managed-resources"
+        ) {
+          return Response.json({ items: [] });
         }
         if (
           request.method === "POST" &&
@@ -977,6 +1136,12 @@ describe("Argo CD stale release protection", () => {
             await request.json(),
           );
           return Response.json({ operation: requestedOperation });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/worker/managed-resources"
+        ) {
+          return Response.json({ items: [] });
         }
         if (
           request.method === "GET" &&

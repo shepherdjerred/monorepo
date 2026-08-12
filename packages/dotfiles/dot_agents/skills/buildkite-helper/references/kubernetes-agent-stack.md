@@ -99,8 +99,8 @@ Never write tokens to files or embed in URLs. Use `--token` flags or your CI sys
 ### Admission control — Kueue
 
 The `buildkite` namespace is explicitly managed by Kueue. Buildkite's
-`max-in-flight=20` remains the count cap, while the Kueue `ClusterQueue`
-limits requests to `24 CPU / 80Gi memory / 20 pods / 100Gi ephemeral-storage`.
+`max-in-flight=24` remains the count cap, while the Kueue `ClusterQueue`
+limits requests to `24 CPU / 80Gi memory / 24 pods / 100Gi ephemeral-storage`.
 New Jobs receive the `default` LocalQueue automatically. If requests do not
 fit, Kueue suspends the Job until quota is available; that is expected and is
 different from a rejected Job or a FailedCreate storm.

@@ -9,71 +9,99 @@ description: >-
 
 ## Overview
 
-`src/cdk8s/src/versions.ts` is the single source of truth for all versions in the homelab. It uses Renovate annotations for automated dependency updates.
+`packages/version-catalog/src/catalog.json` is the language-neutral source of
+truth for homelab and release-script versions. Its adjacent JSON Schema is the
+portable contract, and `@shepherdjerred/version-catalog` provides the shared
+Zod parser and canonical serializer. CDK8s consumes that package from
+`src/cdk8s/src/versions.ts` and adds only its generated exact-key type boundary
+plus build-time image overrides.
 
 ## File Structure
 
-```typescript
-const versions = {
-  // Helm charts
-  // renovate: datasource=helm registryUrl=https://argoproj.github.io/argo-helm versioning=semver
-  "argo-cd": "9.2.0",
-
-  // Docker images with digests
-  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
-  "linuxserver/sonarr":
-    "4.0.16@sha256:8b9f2138ec50fc9e521960868f79d2ad0d529bc610aef19031ea8ff80b54c5e0",
-
-  // Custom images (not managed by Renovate)
-  // not managed by renovate
-  "shepherdjerred/temporal-worker": "latest",
-};
-
-export default versions;
+```json
+{
+  "$schema": "./schema.json",
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "name": "argo-cd",
+      "value": "10.2.1",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://argoproj.github.io/argo-helm",
+        "versioning": "semver"
+      }
+    }
+  ]
+}
 ```
 
 ## Adding a New Version
 
 ### Helm Chart
 
-```typescript
-// renovate: datasource=helm registryUrl=https://charts.example.com versioning=semver
-"mychart": "1.2.3",
+```json
+{
+  "name": "mychart",
+  "value": "1.2.3",
+  "category": "upstream",
+  "artifactType": "helm-chart",
+  "management": {
+    "managed": true,
+    "datasource": "helm",
+    "registryUrl": "https://charts.example.com",
+    "versioning": "semver"
+  }
+}
 ```
 
 ### Docker Image (with digest)
 
-```typescript
-// renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
-"org/image": "1.0.0@sha256:abc123def456...",
+```json
+{
+  "name": "org/image",
+  "value": "1.0.0@sha256:abc123def456...",
+  "category": "upstream",
+  "artifactType": "image",
+  "management": {
+    "managed": true,
+    "datasource": "docker",
+    "registryUrl": "https://ghcr.io",
+    "versioning": "docker"
+  }
+}
 ```
 
 ### Docker Hub Image
 
-```typescript
-// renovate: datasource=docker registryUrl=https://docker.io versioning=docker
-"library/nginx": "1.25.0@sha256:...",
-```
+Use the Docker-image shape above with `registryUrl` set to
+`https://docker.io`.
 
 ### GitHub Release
 
-```typescript
-// renovate: datasource=github-releases versioning=semver
-"owner/repo": "v1.2.3",
-```
+Use `artifactType: "source"`, `datasource: "github-releases"`, and the
+repository name in `name` or `packageName`.
 
 ### Custom/Manually-Managed (No Renovate)
 
-```typescript
-// not managed by renovate
-"myorg/custom-image": "latest",
+```json
+{
+  "name": "myorg/custom-image",
+  "value": "latest",
+  "category": "internal-image",
+  "artifactType": "image",
+  "management": { "managed": false }
+}
 ```
 
 ## Renovate Annotation Format
 
-```text
-// renovate: datasource={source} registryUrl={url} versioning={scheme}
-```
+Renovate's custom manager reads `management.datasource`, `versioning`, optional
+`registryUrl`, and optional `packageName` directly from each JSON entry. Do not
+add TypeScript Renovate comments or edit the generated CDK8s projection.
 
 ### Datasources
 
@@ -218,13 +246,13 @@ deploys.
 
 The project uses Renovate for automated updates:
 
-1. Renovate parses `versions.ts` looking for annotations
+1. Renovate's custom manager parses structured entries in `catalog.json`
 2. Creates PRs for version bumps
 3. PRs run `bun run verify` (affected-scoped) on the static Buildkite pipeline (`.buildkite/pipeline.yml`) — check the `buildkite/monorepo/pr` status before merging
 
 ### Digest/pin updates bypass `minimumReleaseAge`
 
-`minimumReleaseAge` + `internalChecksFilter: strict` only hold back **major/minor/patch** PRs (Dependency Dashboard "Pending Status Checks"); they do **not** apply to `digest` / `pinDigest` / `pin` updates, which open immediately and would otherwise merge before the window. The Buildkite stability guard that used to block these (`renovateStabilityPending()` in the CI generator) was removed with the pipeline 2026-07 — check the `renovate/stability-days` status yourself before merging a digest/pin PR. Escape hatch for a fast-moving digest: a `minimumReleaseAge: "0 days"` packageRule. (`renovate-config-validator` segfaults under Bun — run via `npx --yes --package renovate -- renovate-config-validator renovate.json`.)
+`minimumReleaseAge` + `internalChecksFilter: strict` only hold back **major/minor/patch** PRs (Dependency Dashboard "Pending Status Checks"); they do **not** apply to `digest` / `pinDigest` / `pin` updates, which open immediately and would otherwise merge before the window. The Buildkite stability guard that used to block these (`renovateStabilityPending()` in the CI generator) was removed with the pipeline 2026-07 — check the `renovate/stability-days` status yourself before merging a digest/pin PR. Escape hatch for a fast-moving digest: a `minimumReleaseAge: "0 days"` packageRule. Validate configuration with `bunx --package renovate renovate-config-validator renovate.json`.
 
 ### Never silence upstream-blocked items
 
@@ -232,7 +260,7 @@ Do **not** add `packageRules` with `enabled: false` to `renovate.json` to suppre
 
 ## Best Practices
 
-1. **Always use annotations** for external dependencies
+1. **Declare management metadata** for external dependencies
 2. **Include SHA256 digests** for container images
 3. **Use semantic versioning** when possible
 4. **Mark internal images** as "not managed by renovate"
@@ -242,23 +270,19 @@ Do **not** add `packageRules` with `enabled: false` to `renovate.json` to suppre
 
 ### Multiple Images from Same Org
 
-```typescript
-// renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
-"linuxserver/sonarr": "4.0.16@sha256:...",
-// renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
-"linuxserver/radarr": "5.2.6@sha256:...",
-// renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
-"linuxserver/bazarr": "1.4.0@sha256:...",
-```
+Use one structured catalog entry per image with the same `datasource`,
+`registryUrl`, and `versioning`. Renovate grouping remains in `renovate.json`;
+do not collapse multiple artifacts into one catalog entry.
 
 ### Helm Chart with Custom Registry
 
-```typescript
-// renovate: datasource=helm registryUrl=https://charts.gitlab.io versioning=semver
-"gitlab": "7.8.0",
-```
+Use a managed `helm-chart` entry with
+`registryUrl: "https://charts.gitlab.io"` and `versioning: "semver"`.
 
 ## Key Files
 
-- `src/cdk8s/src/versions.ts` - Version registry
-- `renovate.json` - Renovate configuration
+- `packages/version-catalog/src/catalog.json` - writable version registry
+- `packages/version-catalog/src/schema.json` - language-neutral contract
+- `packages/version-catalog/src/index.ts` - shared parser and serializer
+- `packages/homelab/src/cdk8s/src/versions.ts` - CDK8s runtime projection
+- `renovate.json` - Renovate custom-manager configuration

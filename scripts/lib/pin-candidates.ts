@@ -4,7 +4,7 @@ import {
   parseVersionCatalogText,
   serializeVersionCatalog,
   type VersionCatalog,
-} from "../../packages/homelab/src/cdk8s/src/version-catalog.ts";
+} from "@shepherdjerred/version-catalog";
 
 const DigestSchema = z
   .string()

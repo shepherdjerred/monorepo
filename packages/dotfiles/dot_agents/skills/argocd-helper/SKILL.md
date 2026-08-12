@@ -24,25 +24,28 @@ This agent helps you work with ArgoCD for GitOps-based Kubernetes deployments, a
 
 ## shepherdjerred monorepo root releases
 
-The main Buildkite release owns the root `apps` lifecycle. It stages the exact
-chart with child auto-sync disabled, reconciles selected children, then runs:
+The main Buildkite release owns the root `apps` lifecycle through one public
+command:
 
 ```bash
-bun packages/homelab/scripts/argocd.ts finalize-root-release apps \
+bun packages/homelab/scripts/argocd.ts release-root apps argocd-release-expected.json \
   --revision "$apps_revision" \
   --request-id "$BUILDKITE_BUILD_ID" \
   --timeout 300
 ```
 
-The finalizer reapplies every exact sync wave before pruning, while keeping the
-self-managed root Application auto-sync suspended between batches. The final
-full-source operation restores that policy and proves both the root result and
-validated prunes. Do not replace it with one full-source
-`sync --prune --terminate-after-applied`: an unhealthy earlier wave can prevent
-ArgoCD from ever reporting later desired resources. Recovery may adopt only the
-exact request ID, revision, resource selection, and `batch` or `prune` phase
-marker; prune adoption also requires Argo's prune flag. Never terminate a root
-operation by revision alone.
+That process stages the exact root with child auto-sync disabled, performs the
+read-only immutable/handler preflight, reconciles exact child sources, restores
+every deterministic wave, verifies prune candidates, and owns scoped health.
+Retries may adopt only the exact request ID, revision, resource selection, and
+`batch` or `prune` phase marker. Never terminate a root operation by revision
+alone.
+
+An ordinary global sync from ArgoCD remains supported: admission merges every
+managed child Application's declared sync options into the manual operation,
+and the declared value wins by key. Deterministic waves express controller and
+custom-resource dependencies. Only the recursive `apps` Application ignores
+health; child health remains authoritative.
 
 ## Auto-Approved Commands
 

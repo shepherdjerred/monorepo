@@ -428,6 +428,11 @@
       "steps": [{ "runner": "bun" }]
     },
     {
+      "package": "@shepherdjerred/version-catalog",
+      "directory": "packages/version-catalog",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
       "package": "webring",
       "directory": "packages/webring",
       "steps": [

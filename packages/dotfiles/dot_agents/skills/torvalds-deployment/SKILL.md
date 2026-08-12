@@ -151,14 +151,12 @@ export function createYourServiceDeployment(
 
 ### Step 2: Add Version
 
-Edit `src/cdk8s/src/versions.ts`:
+Add the entry to `packages/version-catalog/src/catalog.json` and regenerate the
+CDK8s catalog types. Do not hand-edit `src/cdk8s/src/versions.ts`:
 
-```typescript
-const versions = {
-  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
-  "linuxserver/yourservice": "1.0.0@sha256:abc123...",
-  // ... other versions
-};
+```bash
+cd packages/homelab/src/cdk8s
+bun run generate-version-catalog-types
 ```
 
 ### Step 3: Register in Appropriate Chart

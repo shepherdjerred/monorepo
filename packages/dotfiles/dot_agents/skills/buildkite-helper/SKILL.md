@@ -9,7 +9,7 @@ description: |
 
 # BuildKite Helper
 
-> **⚠️ Partially stale.** The monorepo runs a **static** Buildkite pipeline (`.buildkite/pipeline.yml`, replatformed 2026-07 — the Dagger module and dynamic generator are gone) on the homelab agent-stack (`buildkite` namespace). CI runs on the dedicated `liskov` node; `BUILDKITE_MAX_IN_FLIGHT=20` remains the count cap and Kueue provides the resource-aware `80Gi / 24 CPU / 20 pods / 100Gi` admission layer. Dagger/dynamic-pipeline notes below are historical; the general Buildkite reference material remains valid.
+> **Current monorepo shape.** The repo runs a **static** Buildkite pipeline (`.buildkite/pipeline.yml`, replatformed 2026-07) on the homelab agent-stack in the `buildkite` namespace. CI runs on the dedicated `liskov` node. `BUILDKITE_MAX_IN_FLIGHT=24` is the count cap, and Kueue provides the resource-aware `80Gi / 24 CPU / 24 pods / 100Gi` admission layer. The explicitly marked Dagger/dynamic-pipeline section below is historical; the general Buildkite reference material remains valid.
 
 ## Overview
 

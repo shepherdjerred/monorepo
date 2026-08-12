@@ -263,11 +263,6 @@ overrides:
   new Application(chart, "buildkite-app", {
     metadata: {
       name: "buildkite",
-      // Start the agent stack only after the Kueue controller and queue
-      // resources have become Healthy in the parent ArgoCD application.
-      annotations: {
-        "argocd.argoproj.io/sync-wave": "3",
-      },
     },
     spec: {
       revisionHistoryLimit: 5,

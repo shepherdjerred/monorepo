@@ -127,6 +127,7 @@
     "packages/terraform-provider-asuswrt",
     "packages/toolkit",
     "packages/trmnl-dashboard",
+    "packages/version-catalog",
     "packages/webring",
     "scripts"
   ],

@@ -45,6 +45,7 @@ packages/
 ├── terraform-provider-asuswrt/ # Terraform provider for AsusWRT
 ├── toolkit/                    # CLI developer tools (pr, pd, bugsink, grafana)
 ├── trmnl-dashboard/            # TRMNL e-ink dashboard
+├── version-catalog/             # Language-neutral image/chart version catalog
 ├── webring/                    # Webring component (npm)
 scripts/                        # Repo automation (setup-free): checks, deploys, release, hooks
 .buildkite/pipeline.yml         # Canonical Buildkite CI pipeline (main selects a subset of these steps)
@@ -83,17 +84,21 @@ resources finalizer. Do not classify candidates from `OutOfSync` or
 `requiresPruning` alone: the selective manifest-override sync temporarily
 marks unselected retained children as requiring prune.
 
-Main release finalization must use `argocd.ts finalize-root-release` with the
-exact apps revision and Buildkite request UUID. It reapplies every desired
-sync wave through bounded manifest overrides before the full-source prune, so
-an unhealthy earlier Application cannot hide an unapplied later wave. Only the
-self-managed root Application remains auto-sync suspended across those batches
-so it cannot start an unowned operation between them. The final prune restores
-that policy and must report the root Application plus every validated prune
-candidate. Every operation carries an explicit `batch` or `prune` phase marker;
-retry adoption requires that marker and the expected prune mode as well as the
-request UUID, revision, and batch selection. Generic atomic syncs still require
-every rendered identity.
+Main releases must use `argocd.ts release-root` with the exact apps revision,
+release inventory, and Buildkite request UUID. One process owns root staging,
+child preflight and reconciliation, exact-wave restoration, verified pruning,
+and scoped health. Its bounded internal operations retain the request UUID,
+revision, resource selection, and `batch` or `prune` phase marker, so a retry
+cannot adopt unrelated work. Only the self-managed root Application remains
+auto-sync suspended while those operations run.
+
+Ordinary manual or UI root syncs are supported. Admission merges each managed
+child Application's declared sync options into the requested operation, with
+the declared value winning by key, and deterministic waves put admission,
+secret controllers, providers, certificates, queues, and workloads in
+dependency order. Only the recursive `apps` Application ignores child health.
+Deleting a managed Application is admission-protected by the retain-or-cascade
+lifecycle contract.
 
 ## Code Review Rules
 

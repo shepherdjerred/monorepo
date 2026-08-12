@@ -70,7 +70,7 @@ export function createMyAppApp(chart: Chart) {
         namespace: "myapp",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },
@@ -80,13 +80,13 @@ export function createMyAppApp(chart: Chart) {
 
 ### Step 2: Add Version
 
-Edit `src/cdk8s/src/versions.ts`:
+Add the language-neutral entry to
+`packages/version-catalog/src/catalog.json`, then regenerate the CDK8s runtime
+projection. Do not hand-edit `src/cdk8s/src/versions.ts`.
 
-```typescript
-const versions = {
-  // renovate: datasource=helm registryUrl=https://charts.example.com versioning=semver
-  myapp: "1.2.3",
-};
+```bash
+cd packages/homelab/src/cdk8s
+bun run scripts/generate-version-map-schema.ts
 ```
 
 ### Step 3: Register in Apps Chart
@@ -113,7 +113,7 @@ export async function createAppsChart(app: App) {
 
 ```typescript
 syncPolicy: {
-  automated: {},
+  automated: { enabled: true },
   syncOptions: ["CreateNamespace=true"],
 }
 ```
@@ -123,6 +123,7 @@ syncPolicy: {
 ```typescript
 syncPolicy: {
   automated: {
+    enabled: true,
     prune: true,      // Delete removed resources
     selfHeal: true,   // Revert manual changes
   },
@@ -140,11 +141,20 @@ annotation and Argo's resources finalizer. Do not classify candidates from
 `OutOfSync` or `requiresPruning` alone: the selective manifest-override sync
 temporarily marks unselected retained children as requiring prune.
 
+Every managed child Application is labeled by the root release policy. A
+Kubernetes mutating admission policy merges its declared
+`spec.syncPolicy.syncOptions` into manual `operation.sync.syncOptions`; declared
+values win when the request supplies the same option key. This makes ordinary
+global syncs safe without asking operators to reproduce per-child options. The
+recursive `apps` Application is deliberately excluded from operation mutation.
+A validating admission policy separately enforces the retain-or-cascade
+deletion contract.
+
 ### Server-Side Apply (Large Configs)
 
 ```typescript
 syncPolicy: {
-  automated: {},
+  automated: { enabled: true },
   syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
 }
 ```

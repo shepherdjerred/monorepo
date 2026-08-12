@@ -450,14 +450,14 @@ async function main(): Promise<void> {
       const index = args.indexOf("--candidate-digest");
       const candidate = index === -1 ? null : (args[index + 1] ?? "");
       const source = await Bun.file(
-        `${repoRoot()}/packages/homelab/src/cdk8s/src/version-catalog.json`,
+        `${repoRoot()}/packages/version-catalog/src/catalog.json`,
       ).text();
       process.stdout.write(`${resolveBackendDigest(candidate, source)}\n`);
       break;
     }
     case "resolve-prod-pin": {
       const source = await Bun.file(
-        `${repoRoot()}/packages/homelab/src/cdk8s/src/version-catalog.json`,
+        `${repoRoot()}/packages/version-catalog/src/catalog.json`,
       ).text();
       process.stdout.write(`${resolveProdPin(source)}\n`);
       break;

@@ -100,6 +100,12 @@ describe("Argo CD staged external release reconciliation", () => {
             ],
           });
         }
+        if (
+          request.method === "GET" &&
+          url.pathname.endsWith("/managed-resources")
+        ) {
+          return Response.json({ items: [] });
+        }
         const syncMatch = /^\/api\/v1\/applications\/([^/]+)\/sync$/.exec(
           url.pathname,
         );

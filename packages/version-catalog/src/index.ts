@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { type VersionMap, VersionMapSchema } from "./version-map.generated.ts";
 
 export const VersionCatalogManagementSchema = z.discriminatedUnion("managed", [
   z
@@ -84,11 +83,7 @@ function canonicalManagement(management: VersionCatalogEntry["management"]) {
   };
 }
 
-/**
- * Serialize the catalog in the field order consumed by Renovate's regex
- * manager. Zod parsing intentionally normalizes values, so writers must not
- * rely on the parsed object's insertion order.
- */
+/** Serialize in the field order consumed by Renovate's regex manager. */
 export function serializeVersionCatalog(catalog: VersionCatalog): string {
   const canonical = {
     $schema: catalog.$schema,
@@ -108,10 +103,10 @@ export function serializeVersionCatalog(catalog: VersionCatalog): string {
   return `${JSON.stringify(canonical, null, 2)}\n`;
 }
 
-export function versionMap(catalog: VersionCatalog): VersionMap {
-  return VersionMapSchema.parse(
-    Object.fromEntries(
-      catalog.entries.map((entry) => [entry.name, entry.value]),
-    ),
+export function versionCatalogMap(
+  catalog: VersionCatalog,
+): Record<string, string> {
+  return Object.fromEntries(
+    catalog.entries.map((entry) => [entry.name, entry.value]),
   );
 }

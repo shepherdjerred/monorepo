@@ -1,7 +1,11 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { Testing } from "cdk8s";
+import { stringify } from "yaml";
 import { z } from "zod";
-import { createArgoCdApp } from "./argocd.ts";
+import { ARGO_APPLICATION_HEALTH_LUA, createArgoCdApp } from "./argocd.ts";
 
 const ApplicationSchema = z
   .object({
@@ -41,6 +45,70 @@ function synthArgoCdApplication() {
   return ApplicationSchema.parse(application);
 }
 
+const temporaryDirectories: string[] = [];
+
+afterEach(async () => {
+  await Promise.all(
+    temporaryDirectories
+      .splice(0)
+      .map((directory) => rm(directory, { force: true, recursive: true })),
+  );
+});
+
+async function evaluateApplicationHealth(status: unknown): Promise<string> {
+  const directory = await mkdtemp(
+    path.join(tmpdir(), "argocd-application-health-"),
+  );
+  temporaryDirectories.push(directory);
+  const configPath = path.join(directory, "argocd-cm.yaml");
+  const resourcePath = path.join(directory, "application.yaml");
+  await Promise.all([
+    Bun.write(
+      configPath,
+      stringify({
+        apiVersion: "v1",
+        kind: "ConfigMap",
+        metadata: { name: "argocd-cm", namespace: "argocd" },
+        data: {
+          "resource.customizations.health.argoproj.io_Application":
+            ARGO_APPLICATION_HEALTH_LUA,
+        },
+      }),
+    ),
+    Bun.write(
+      resourcePath,
+      stringify({
+        apiVersion: "argoproj.io/v1alpha1",
+        kind: "Application",
+        metadata: { name: "fixture", namespace: "argocd" },
+        status,
+      }),
+    ),
+  ]);
+  const process = Bun.spawn(
+    [
+      "argocd",
+      "admin",
+      "settings",
+      "resource-overrides",
+      "health",
+      resourcePath,
+      "--argocd-cm-path",
+      configPath,
+    ],
+    { stdout: "pipe", stderr: "pipe" },
+  );
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(process.stdout).text(),
+    new Response(process.stderr).text(),
+    process.exited,
+  ]);
+  if (exitCode !== 0) {
+    throw new Error(`ArgoCD Lua health evaluation failed: ${stderr}`);
+  }
+  return stdout;
+}
+
 describe("ArgoCD application", () => {
   it("grants the Buildkite release step only its required application access", () => {
     const application = synthArgoCdApplication();
@@ -56,22 +124,98 @@ describe("ArgoCD application", () => {
     ]);
   });
 
-  it("ignores only stale terminal operation failures in child health", () => {
+  it("installs the executable Application health customization", () => {
     const application = synthArgoCdApplication();
-    const customization =
+    expect(
       application.spec.source.helm.valuesObject.configs.cm[
         "resource.customizations.health.argoproj.io_Application"
-      ];
+      ],
+    ).toBe(ARGO_APPLICATION_HEALTH_LUA);
+  });
 
-    expect(customization).toContain(
-      "obj.status.operationState.syncResult.revision ~= obj.status.sync.revision",
-    );
-    expect(customization).toContain(
-      'if (phase == "Failed" or phase == "Error") and',
-    );
-    expect(customization).toContain(
-      'hs.message = "Application operation is " .. obj.status.operationState.phase',
-    );
+  it("evaluates child state with current health and terminal failures", async () => {
+    const fixtures = [
+      {
+        name: "active operation",
+        expected: "Progressing",
+        status: {
+          sync: { status: "Synced", revision: "new" },
+          health: { status: "Healthy" },
+          operationState: { phase: "Running", syncResult: { revision: "new" } },
+        },
+      },
+      {
+        name: "terminating operation",
+        expected: "Progressing",
+        status: {
+          sync: { status: "Synced", revision: "new" },
+          health: { status: "Healthy" },
+          operationState: {
+            phase: "Terminating",
+            syncResult: { revision: "new" },
+          },
+        },
+      },
+      {
+        name: "unresolved failed operation",
+        expected: "Degraded",
+        status: {
+          sync: { status: "OutOfSync", revision: "new" },
+          health: { status: "Healthy" },
+          operationState: { phase: "Failed", syncResult: { revision: "new" } },
+        },
+      },
+      {
+        name: "resolved stale failure",
+        expected: "Healthy",
+        status: {
+          sync: { status: "Synced", revision: "new" },
+          health: { status: "Healthy" },
+          operationState: { phase: "Failed", syncResult: { revision: "old" } },
+        },
+      },
+      {
+        name: "resolved same-revision failure",
+        expected: "Healthy",
+        status: {
+          sync: { status: "Synced", revision: "new" },
+          health: { status: "Healthy" },
+          operationState: { phase: "Failed", syncResult: { revision: "new" } },
+        },
+      },
+      {
+        name: "comparison error",
+        expected: "Degraded",
+        status: {
+          sync: { status: "Unknown" },
+          health: { status: "Healthy" },
+          conditions: [
+            { type: "ComparisonError", message: "manifest generation failed" },
+          ],
+        },
+      },
+      {
+        name: "ordinary drift",
+        expected: "Progressing",
+        status: {
+          sync: { status: "OutOfSync", revision: "new" },
+          health: { status: "Degraded" },
+        },
+      },
+      {
+        name: "synced unhealthy child",
+        expected: "Degraded",
+        status: {
+          sync: { status: "Synced", revision: "new" },
+          health: { status: "Degraded", message: "workload failed" },
+        },
+      },
+    ];
+
+    for (const fixture of fixtures) {
+      const output = await evaluateApplicationHealth(fixture.status);
+      expect(output, fixture.name).toContain(fixture.expected);
+    }
   });
 
   it("ignores terminal operation failures on applications that have converged", () => {

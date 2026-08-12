@@ -1,9 +1,13 @@
-import rawCatalog from "./version-catalog.json";
-import { parseVersionCatalog, versionMap } from "./version-catalog.ts";
+import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
+import {
+  parseVersionCatalog,
+  versionCatalogMap,
+} from "@shepherdjerred/version-catalog";
+import { VersionMapSchema } from "./version-map.generated.ts";
 import { applyCurrentBuildImageOverrides } from "./release-configuration.ts";
 
 export const versionCatalog = parseVersionCatalog(rawCatalog);
-const versions = versionMap(versionCatalog);
+const versions = VersionMapSchema.parse(versionCatalogMap(versionCatalog));
 
 applyCurrentBuildImageOverrides(versions);
 

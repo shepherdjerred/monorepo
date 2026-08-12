@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { z } from "zod";
-import { parseVersionCatalog } from "../packages/homelab/src/cdk8s/src/version-catalog.ts";
+import { parseVersionCatalog } from "@shepherdjerred/version-catalog";
 
 const RegexManagerSchema = z.object({
   description: z.string(),
@@ -34,7 +34,7 @@ test("extracts every managed structured version-catalog field", async () => {
   );
   const manager = config.customManagers.find((candidate) =>
     candidate.managerFilePatterns.includes(
-      "packages/homelab/src/cdk8s/src/version-catalog.json",
+      "packages/version-catalog/src/catalog.json",
     ),
   );
   if (manager === undefined) {
@@ -44,7 +44,7 @@ test("extracts every managed structured version-catalog field", async () => {
   if (expression === undefined) {
     throw new Error("Structured version-catalog matcher is missing");
   }
-  const catalogPath = `${root}/packages/homelab/src/cdk8s/src/version-catalog.json`;
+  const catalogPath = `${root}/packages/version-catalog/src/catalog.json`;
   const source = await Bun.file(catalogPath).text();
   const catalog = parseVersionCatalog(JSON.parse(source));
   const actual = [...source.matchAll(new RegExp(expression, "g"))].map(

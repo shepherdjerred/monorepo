@@ -18,14 +18,8 @@ type ReleaseValidationOptions = {
 
 const ARGOCD_COMMAND_PREFIX =
   "bun --no-install packages/homelab/scripts/argocd.ts ";
-const STAGED_ROOT_RELEASE_SUBCOMMAND =
-  'stage-root-release apps --revision "$$apps_revision" --timeout 300';
-const ATOMIC_ROOT_SYNC_SUBCOMMAND =
-  'finalize-root-release apps --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --timeout 300';
-const DEFERRED_RELEASE_HEALTH_SUBCOMMAND =
-  "reconcile-release argocd-release-expected.json --skip-health-wait --timeout 300";
-const SCOPED_RELEASE_HEALTH_SUBCOMMAND =
-  "release-health-wait argocd-release-expected.json --timeout 300";
+const RELEASE_ROOT_SUBCOMMAND =
+  'release-root apps argocd-release-expected.json --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --timeout 300';
 
 export function validateAtomicRootSyncLifecycle(
   argocdSync: string | undefined,
@@ -44,72 +38,17 @@ export function validateAtomicRootSyncLifecycle(
         .slice(1)
         .map((command) => command.trim()),
     );
-  const rootSyncCommands = executableCommands.filter((line) =>
-    /^(?:sync|finalize-root-release)\s+apps(?:\s|$)/.test(line),
+  const releaseRootCommands = executableCommands.filter((line) =>
+    /^(?:release-root|stage-root-release|reconcile-release|finalize-root-release|release-health-wait|finalize-async-sync|sync(?:-managed)?)\s+/.test(
+      line,
+    ),
   );
-  const hasAsyncRootSync = rootSyncCommands.some((line) =>
-    /(?:^|\s)--async(?:\s|$)/.test(line),
-  );
-  const hasAsyncFinalizer = executableCommands.some((line) =>
-    /^finalize-async-sync\s+apps(?:\s|$)/.test(line),
-  );
-  if (hasAsyncRootSync || hasAsyncFinalizer) {
-    fail("argocd-sync restored the racy split async/finalize lifecycle");
-  }
   if (
-    rootSyncCommands.length !== 1 ||
-    rootSyncCommands[0] !== ATOMIC_ROOT_SYNC_SUBCOMMAND
+    releaseRootCommands.length !== 1 ||
+    releaseRootCommands[0] !== RELEASE_ROOT_SUBCOMMAND
   ) {
     fail(
-      "argocd-sync must contain exactly one atomic identity-bound root sync",
-    );
-  }
-  const stagedRootCommands = executableCommands.filter((line) =>
-    /^(?:stage-root-release|suspend-auto-sync)\s+apps(?:\s|$)/.test(line),
-  );
-  if (
-    stagedRootCommands.length !== 1 ||
-    stagedRootCommands[0] !== STAGED_ROOT_RELEASE_SUBCOMMAND
-  ) {
-    fail(
-      "argocd-sync must contain exactly one root staging command with child auto-sync suspended",
-    );
-  }
-  const reconciliationCommands = executableCommands.filter((line) =>
-    /^reconcile-release\s+argocd-release-expected\.json(?:\s|$)/.test(line),
-  );
-  if (
-    reconciliationCommands.length !== 1 ||
-    reconciliationCommands[0] !== DEFERRED_RELEASE_HEALTH_SUBCOMMAND
-  ) {
-    fail("argocd-sync must contain exactly one deferred child reconciliation");
-  }
-  const scopedHealthCommands = executableCommands.filter((line) =>
-    /^release-health-wait\s+argocd-release-expected\.json(?:\s|$)/.test(line),
-  );
-  if (
-    scopedHealthCommands.length !== 1 ||
-    scopedHealthCommands[0] !== SCOPED_RELEASE_HEALTH_SUBCOMMAND
-  ) {
-    fail("argocd-sync must contain exactly one scoped release health gate");
-  }
-  const stageIndex = executableCommands.indexOf(STAGED_ROOT_RELEASE_SUBCOMMAND);
-  const reconcileIndex = executableCommands.indexOf(
-    DEFERRED_RELEASE_HEALTH_SUBCOMMAND,
-  );
-  const rootSyncIndex = executableCommands.indexOf(ATOMIC_ROOT_SYNC_SUBCOMMAND);
-  const healthIndex = executableCommands.indexOf(
-    SCOPED_RELEASE_HEALTH_SUBCOMMAND,
-  );
-  if (
-    !(
-      stageIndex < reconcileIndex &&
-      reconcileIndex < rootSyncIndex &&
-      rootSyncIndex < healthIndex
-    )
-  ) {
-    fail(
-      "argocd-sync must stage root, reconcile children, restore root, then run scoped health",
+      "argocd-sync must contain exactly one identity-bound release-root command",
     );
   }
 }
@@ -162,10 +101,7 @@ function validateReleaseSteps({
         "--filter homelab --filter '@homelab/cdk8s'",
         "concurrency_group: monorepo/homelab-release",
         'artifact download "argocd-release-expected.json"',
-        'stage-root-release apps --revision "$$apps_revision"',
-        "reconcile-release argocd-release-expected.json --skip-health-wait",
-        'finalize-root-release apps --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID"',
-        "release-health-wait argocd-release-expected.json",
+        'release-root apps argocd-release-expected.json --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID"',
       ],
     ],
     [
@@ -236,7 +172,7 @@ function validateReleaseSteps({
 }
 
 const VERSION_COMMIT_BACK_INSTALL =
-  ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@homelab/cdk8s' --production";
+  ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production";
 
 export function validateVersionCommitBackInstall(
   stepBlock: string | undefined,

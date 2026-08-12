@@ -20,16 +20,20 @@ const POLICY_KEY_EXPRESSION =
   "object.metadata.namespace + '/' + object.metadata.name";
 const INCLUDED_EXPRESSION = `${toCelList(INCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey)`;
 const EXCLUDED_EXPRESSION = `${toCelList(EXCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey)`;
-export const PVC_BACKUP_ADMISSION_SYNC_WAVE = "-1";
+export const PVC_BACKUP_ADMISSION_POLICY_SYNC_WAVE = "-30";
+export const PVC_BACKUP_ADMISSION_BINDING_SYNC_WAVE = "-29";
 
-function admissionPolicyMetadata(name: string): {
+function admissionPolicyMetadata(
+  name: string,
+  wave: string,
+): {
   name: string;
   annotations: Record<string, string>;
 } {
   return {
     name,
     annotations: {
-      "argocd.argoproj.io/sync-wave": PVC_BACKUP_ADMISSION_SYNC_WAVE,
+      "argocd.argoproj.io/sync-wave": wave,
     },
   };
 }
@@ -58,7 +62,10 @@ function createMutationPolicy(
   new ApiObject(chart, `pvc-backup-${disposition}-mutation-policy`, {
     apiVersion: "admissionregistration.k8s.io/v1",
     kind: "MutatingAdmissionPolicy",
-    metadata: admissionPolicyMetadata(policyName),
+    metadata: admissionPolicyMetadata(
+      policyName,
+      PVC_BACKUP_ADMISSION_POLICY_SYNC_WAVE,
+    ),
     spec: {
       failurePolicy: "Fail",
       reinvocationPolicy: "IfNeeded",
@@ -91,7 +98,10 @@ function createMutationPolicy(
   new ApiObject(chart, `pvc-backup-${disposition}-mutation-binding`, {
     apiVersion: "admissionregistration.k8s.io/v1",
     kind: "MutatingAdmissionPolicyBinding",
-    metadata: admissionPolicyMetadata(policyName),
+    metadata: admissionPolicyMetadata(
+      policyName,
+      PVC_BACKUP_ADMISSION_BINDING_SYNC_WAVE,
+    ),
     spec: {
       policyName,
     },
@@ -106,7 +116,10 @@ export function createPvcBackupAdmissionPolicies(chart: Chart): void {
   new ApiObject(chart, "pvc-backup-validation-policy", {
     apiVersion: "admissionregistration.k8s.io/v1",
     kind: "ValidatingAdmissionPolicy",
-    metadata: admissionPolicyMetadata(policyName),
+    metadata: admissionPolicyMetadata(
+      policyName,
+      PVC_BACKUP_ADMISSION_POLICY_SYNC_WAVE,
+    ),
     spec: {
       failurePolicy: "Fail",
       matchConstraints: PVC_MATCH_CONSTRAINTS,
@@ -161,7 +174,10 @@ export function createPvcBackupAdmissionPolicies(chart: Chart): void {
   new ApiObject(chart, "pvc-backup-validation-binding", {
     apiVersion: "admissionregistration.k8s.io/v1",
     kind: "ValidatingAdmissionPolicyBinding",
-    metadata: admissionPolicyMetadata(policyName),
+    metadata: admissionPolicyMetadata(
+      policyName,
+      PVC_BACKUP_ADMISSION_BINDING_SYNC_WAVE,
+    ),
     spec: {
       policyName,
       validationActions: ["Deny"],

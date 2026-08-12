@@ -11,7 +11,7 @@
       "customType": "regex",
       "description": "Update structured homelab version catalog and legacy TypeScript version files",
       "managerFilePatterns": [
-        "packages/homelab/src/cdk8s/src/version-catalog.json",
+        "packages/version-catalog/src/catalog.json",
         "**/lib-versions.ts"
       ],
       "matchStrings": [
