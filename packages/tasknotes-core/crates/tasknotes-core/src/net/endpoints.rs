@@ -9,6 +9,21 @@ use crate::domain::TaskId;
 /// The collection endpoint.
 pub const TASKS: &str = "/api/tasks";
 
+/// The aggregate time-report endpoint.
+pub const TIME_SUMMARY: &str = "/api/time/summary";
+
+/// Start a server-backed pomodoro interval.
+pub const POMODORO_START: &str = "/api/pomodoro/start";
+
+/// Stop the current server-backed pomodoro interval.
+pub const POMODORO_STOP: &str = "/api/pomodoro/stop";
+
+/// Toggle the current server-backed pomodoro between running and paused.
+pub const POMODORO_PAUSE: &str = "/api/pomodoro/pause";
+
+/// Read the current server-backed pomodoro interval.
+pub const POMODORO_STATUS: &str = "/api/pomodoro/status";
+
 /// The largest page the `/v2` list endpoint will answer with.
 ///
 /// The server caps `limit` here, so asking for more silently gets this and the
@@ -34,6 +49,30 @@ pub fn task_complete_instance(id: &TaskId) -> String {
         "{TASKS}/{}/complete-instance",
         encode_component(id.as_str())
     )
+}
+
+/// Start tracking time against one task.
+#[must_use]
+pub fn task_time_start(id: &TaskId) -> String {
+    format!("{TASKS}/{}/time/start", encode_component(id.as_str()))
+}
+
+/// Stop tracking time against one task.
+#[must_use]
+pub fn task_time_stop(id: &TaskId) -> String {
+    format!("{TASKS}/{}/time/stop", encode_component(id.as_str()))
+}
+
+/// Read tracked-time totals for one task.
+#[must_use]
+pub fn task_time(id: &TaskId) -> String {
+    format!("{TASKS}/{}/time", encode_component(id.as_str()))
+}
+
+/// Build the aggregate time-report query.
+#[must_use]
+pub fn time_summary(period: &str) -> String {
+    format!("{TIME_SUMMARY}?period={}", encode_component(period))
 }
 
 /// Percent-encode a value for use as **one** URL path component.
@@ -102,7 +141,8 @@ const fn hex_upper(byte: u8) -> char {
 #[cfg(test)]
 mod tests {
     use super::{
-        LIST_PAGE_LIMIT, TASKS, encode_component, task, task_complete_instance, tasks_page_query,
+        LIST_PAGE_LIMIT, TASKS, encode_component, task, task_complete_instance, task_time,
+        task_time_start, task_time_stop, tasks_page_query, time_summary,
     };
     use crate::domain::TaskId;
 
@@ -121,6 +161,19 @@ mod tests {
         assert_eq!(
             task_complete_instance(&id("Tasks/a.md")),
             "/api/tasks/Tasks%2Fa.md/complete-instance"
+        );
+        assert_eq!(
+            task_time_start(&id("Tasks/a.md")),
+            "/api/tasks/Tasks%2Fa.md/time/start"
+        );
+        assert_eq!(
+            task_time_stop(&id("Tasks/a.md")),
+            "/api/tasks/Tasks%2Fa.md/time/stop"
+        );
+        assert_eq!(task_time(&id("Tasks/a.md")), "/api/tasks/Tasks%2Fa.md/time");
+        assert_eq!(
+            time_summary("this week"),
+            "/api/time/summary?period=this%20week"
         );
     }
 

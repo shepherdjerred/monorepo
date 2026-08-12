@@ -1,0 +1,356 @@
+{
+  "schemaVersion": 1,
+  "features": [
+    {
+      "id": "navigation.fixed-destinations",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Main NavigationView",
+      "interaction": "Inbox, Today, Upcoming, Browse, Board, and Settings navigation items",
+      "tests": ["navigation-query"],
+      "assertions": ["navigation.fixed"]
+    },
+    {
+      "id": "navigation.dynamic-destinations",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "NavigationView dynamic groups",
+      "interaction": "Saved views, projects, contexts, and tags open scoped task lists",
+      "tests": ["navigation-query", "deep-links-entities"],
+      "assertions": ["activation.entities"]
+    },
+    {
+      "id": "tasks.search-filter-sort-group",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Task list command bar",
+      "interaction": "Search, filters, sorting, grouping, clearing, and completed-task visibility",
+      "tests": ["navigation-query"],
+      "assertions": ["query.search", "query.sort-group"]
+    },
+    {
+      "id": "tasks.completed-search",
+      "sources": ["ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Browse completed filter",
+      "interaction": "Search completed tasks and reopen or delete them",
+      "tests": ["navigation-query", "task-edit-delete"],
+      "assertions": ["query.search", "tasks.deleted-markdown"]
+    },
+    {
+      "id": "tasks.quick-add",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Quick Add dialog and overlay",
+      "interaction": "Natural-language preview, contextual defaults, Save, and Save & Add Another",
+      "tests": ["quick-add-create", "global-quick-add"],
+      "assertions": ["quick-add.preview", "hotkey.invoke-cancel"]
+    },
+    {
+      "id": "tasks.create",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Task list and Quick Add commands",
+      "interaction": "Create a task through the Rust NLP and command APIs",
+      "tests": ["quick-add-create"],
+      "assertions": ["tasks.created-markdown"]
+    },
+    {
+      "id": "tasks.detail-edit",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Task inspector",
+      "interaction": "Edit title, Markdown details, status, priority, dates, recurrence, anchor, taxonomy, and estimate",
+      "tests": ["task-edit-delete"],
+      "assertions": ["editor.all-fields-markdown"]
+    },
+    {
+      "id": "tasks.dependencies",
+      "sources": ["ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Task inspector dependency section",
+      "interaction": "Show blocking and blocked-by state without duplicating dependency rules",
+      "tests": ["task-edit-delete"],
+      "assertions": ["editor.all-fields-markdown"]
+    },
+    {
+      "id": "tasks.delete-and-unsaved-guard",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Task inspector",
+      "interaction": "Confirm deletion and protect unsaved edits during selection or navigation changes",
+      "tests": ["task-edit-delete"],
+      "assertions": ["editor.validation-unsaved", "tasks.deleted-markdown"]
+    },
+    {
+      "id": "tasks.completion",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Task rows and inspector",
+      "interaction": "Set absolute completion state and reopen tasks",
+      "tests": ["completion-recurrence-undo"],
+      "assertions": ["completion.plain-undo"]
+    },
+    {
+      "id": "tasks.recurring-occurrence",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Task rows and inspector",
+      "interaction": "Complete and restore one recurring occurrence through the core",
+      "tests": ["completion-recurrence-undo"],
+      "assertions": ["completion.recurring-undo"]
+    },
+    {
+      "id": "tasks.completion-undo",
+      "sources": ["ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Transient InfoBar action",
+      "interaction": "LIFO completion undo with one grouped entry for bulk completion",
+      "tests": ["completion-recurrence-undo", "bulk-actions"],
+      "assertions": [
+        "completion.plain-undo",
+        "completion.recurring-undo",
+        "bulk.complete-undo"
+      ]
+    },
+    {
+      "id": "tasks.bulk-actions",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Selection command bar and context menu",
+      "interaction": "Bulk complete, schedule, priority, and delete",
+      "tests": ["bulk-actions"],
+      "assertions": ["bulk.complete-undo", "bulk.schedule-priority-delete"]
+    },
+    {
+      "id": "saved-views.query",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Saved-view editor",
+      "interaction": "Create from the current query and edit every core filter, sort, and group dimension",
+      "tests": ["saved-views"],
+      "assertions": ["saved-view.query"]
+    },
+    {
+      "id": "saved-views.lifecycle",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Saved Views navigation group",
+      "interaction": "Rename, duplicate, favorite, reorder, delete, restore defaults, and survive restart",
+      "tests": ["saved-views", "package-persistence"],
+      "assertions": ["saved-view.lifecycle-persistence", "package.restart"]
+    },
+    {
+      "id": "board.kanban",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Board destination",
+      "interaction": "Status columns with drag/drop, keyboard, and context-menu moves",
+      "tests": ["kanban"],
+      "assertions": [
+        "kanban.columns",
+        "kanban.move-persisted",
+        "kanban.failure-visible"
+      ]
+    },
+    {
+      "id": "timing.task-tracking",
+      "sources": ["ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Task inspector timing section",
+      "interaction": "Start and stop server-backed task timing and show active state",
+      "tests": ["time-tracking-report"],
+      "assertions": ["timing.task-server", "timing.markdown"]
+    },
+    {
+      "id": "timing.report",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Time Report window",
+      "interaction": "Show server-computed totals and top-task rows",
+      "tests": ["time-tracking-report"],
+      "assertions": ["timing.report-ui"]
+    },
+    {
+      "id": "timing.pomodoro",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Pomodoro window",
+      "interaction": "Start, pause or resume, stop, refresh, and reopen the server-backed interval",
+      "tests": ["pomodoro"],
+      "assertions": ["pomodoro.server-lifecycle", "window.pomodoro-singleton"]
+    },
+    {
+      "id": "settings.server-and-token",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Settings destination",
+      "interaction": "Validate and save URL separately from the Credential Locker token",
+      "tests": ["onboarding-auth", "settings-credentials"],
+      "assertions": [
+        "settings.invalid-url",
+        "settings.authentication",
+        "settings.connected",
+        "credentials.token-separation"
+      ]
+    },
+    {
+      "id": "sync.cached-startup",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "All task destinations",
+      "interaction": "Render durable cached tasks before attempting live synchronization",
+      "tests": ["cached-offline-recovery"],
+      "assertions": ["sync.cached-restart"]
+    },
+    {
+      "id": "sync.offline-replay",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "All mutation surfaces",
+      "interaction": "Queue offline work, survive process termination, replay, and recover",
+      "tests": ["cached-offline-recovery"],
+      "assertions": ["sync.offline", "sync.replayed-markdown"]
+    },
+    {
+      "id": "sync.errors-and-parked",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Connection banner and Settings parked list",
+      "interaction": "Expose authentication, transient, permanent, retry, and discard states",
+      "tests": ["onboarding-auth", "parked-errors"],
+      "assertions": [
+        "settings.authentication",
+        "sync.parked",
+        "sync.retry-discard"
+      ]
+    },
+    {
+      "id": "activation.deep-links",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "MSIX protocol activation",
+      "interaction": "Route fixed, entity, task, saved-view, Quick Add, Settings, Board, Pomodoro, and Time Report links",
+      "tests": ["deep-links-entities"],
+      "assertions": [
+        "activation.fixed",
+        "activation.entities",
+        "activation.search"
+      ]
+    },
+    {
+      "id": "activation.global-quick-add",
+      "sources": ["macos"],
+      "disposition": "applicable",
+      "windowsSurface": "Global hotkey overlay",
+      "interaction": "Open over another foreground app, submit or cancel, rebind, clear, and report collisions",
+      "tests": ["global-quick-add"],
+      "assertions": ["hotkey.invoke-cancel", "hotkey.rebind-collision"]
+    },
+    {
+      "id": "windowing.auxiliary",
+      "sources": ["macos"],
+      "disposition": "applicable",
+      "windowsSurface": "Singleton auxiliary AppWindows",
+      "interaction": "Open and reactivate Quick Add, Pomodoro, and Time Report windows",
+      "tests": ["pomodoro", "time-tracking-report", "global-quick-add"],
+      "assertions": [
+        "window.pomodoro-singleton",
+        "timing.report-ui",
+        "hotkey.invoke-cancel"
+      ]
+    },
+    {
+      "id": "windowing.persistence",
+      "sources": ["macos"],
+      "disposition": "applicable",
+      "windowsSurface": "Application settings",
+      "interaction": "Restore main-window geometry, destination, inspector visibility, and shell preferences",
+      "tests": ["package-persistence"],
+      "assertions": ["window.state-restored"]
+    },
+    {
+      "id": "commands.keyboard",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Keyboard accelerators and focus navigation",
+      "interaction": "Invoke creation, refresh, search, navigation, inspector, board, and timing commands without a pointer",
+      "tests": ["accessibility-keyboard"],
+      "assertions": ["keyboard.search-focus"]
+    },
+    {
+      "id": "accessibility.automation",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "WinUI automation tree",
+      "interaction": "Expose stable IDs, names, roles, values, focus order, and live status announcements",
+      "tests": ["accessibility-keyboard"],
+      "assertions": [
+        "accessibility.names-roles-values",
+        "accessibility.live-status"
+      ]
+    },
+    {
+      "id": "accessibility.visual-modes",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Theme resources and adaptive layout",
+      "interaction": "Remain usable at 100 and 200 percent scaling in light, dark, and high contrast",
+      "tests": ["visual-modes"],
+      "assertions": [
+        "visual.profile-match",
+        "visual.usable-bounds",
+        "visual.screenshot"
+      ]
+    },
+    {
+      "id": "packaging.msix-launch",
+      "sources": ["macos", "ios"],
+      "disposition": "applicable",
+      "windowsSurface": "Packaged application lifecycle",
+      "interaction": "Install, cold launch, terminate, relaunch, and retain isolated state",
+      "tests": ["package-persistence"],
+      "assertions": ["package.cold-launch", "package.restart"]
+    },
+    {
+      "id": "apple.widgets",
+      "sources": ["ios"],
+      "disposition": "excluded",
+      "reason": "Apple widget and Control Center extension points do not exist on Windows.",
+      "tests": [],
+      "assertions": []
+    },
+    {
+      "id": "apple.live-activities",
+      "sources": ["ios"],
+      "disposition": "excluded",
+      "reason": "Live Activities and Dynamic Island are Apple-only surfaces.",
+      "tests": [],
+      "assertions": []
+    },
+    {
+      "id": "apple.siri-intents",
+      "sources": ["ios"],
+      "disposition": "excluded",
+      "reason": "Siri and App Intents are Apple-only integration points.",
+      "tests": [],
+      "assertions": []
+    },
+    {
+      "id": "apple.haptics",
+      "sources": ["ios"],
+      "disposition": "excluded",
+      "reason": "The Windows desktop interaction model has no equivalent requirement for mobile haptic feedback.",
+      "tests": [],
+      "assertions": []
+    },
+    {
+      "id": "apple.lifecycle",
+      "sources": ["macos", "ios"],
+      "disposition": "excluded",
+      "reason": "Apple scene and application lifecycle behavior is replaced by packaged WinUI activation and AppWindow behavior.",
+      "tests": [],
+      "assertions": []
+    }
+  ]
+}

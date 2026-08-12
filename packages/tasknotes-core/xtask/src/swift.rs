@@ -55,8 +55,8 @@ use crate::process;
 /// The crate whose scaffolding is exported.
 const FFI_CRATE: &str = "tasknotes-core-ffi";
 
-/// The static library cargo emits for [`FFI_CRATE`].
-const LIBRARY_FILE: &str = "libtasknotes_core_ffi.a";
+/// The Apple static library cargo emits for [`FFI_CRATE`].
+const APPLE_LIBRARY_FILE: &str = "libtasknotes_core_ffi.a";
 
 /// The UniFFI namespace, and so the high-level Swift module name.
 ///
@@ -325,7 +325,7 @@ pub fn build_xcframework(profile: &str, platforms: &[Platform]) -> Result<String
 
         let slice_directory = staging.join(platform.name());
         create_directory(&slice_directory)?;
-        let fat = slice_directory.join(LIBRARY_FILE);
+        let fat = slice_directory.join(APPLE_LIBRARY_FILE);
 
         // One `lipo` per platform. Never one across platforms: macOS arm64 and
         // iOS-Simulator arm64 are the same architecture, and `lipo` rejects a
@@ -1202,13 +1202,13 @@ func smokeSync() throws -> TaskStoreSnapshot {
 
     // 13. Disposal cancels the armed timer through the Swift scheduler, and
     //     abandons anything still in flight before it takes the lock.
-    try engine.dispose()
-    guard try engine.isDisposed() else { throw Failure("dispose() did not take") }
+    try engine.shutdown()
+    guard try engine.isDisposed() else { throw Failure("shutdown() did not take") }
     guard host.state.withLock({ !$0.cancelledTimers.isEmpty }) else {
-        throw Failure("dispose() did not cancel the armed retry timer")
+        throw Failure("shutdown() did not cancel the armed retry timer")
     }
     guard server.state.withLock({ $0.cancels }) == 2 else {
-        throw Failure("dispose() did not abandon in-flight requests")
+        throw Failure("shutdown() did not abandon in-flight requests")
     }
 
     return snapshot
@@ -1289,10 +1289,10 @@ fn build_bindgen(root: &Path, profile: &str) -> Result<PathBuf, String> {
     Ok(root
         .join("target")
         .join(profile_directory(profile))
-        .join("uniffi-bindgen-swift"))
+        .join(executable_file("uniffi-bindgen-swift")))
 }
 
-/// Build the host static library UniFFI reads metadata from.
+/// Build the host dynamic library UniFFI reads metadata from.
 ///
 /// Built *after* the generator on purpose. Both write
 /// `target/<profile>/libtasknotes_core_ffi.a`, and the generator's build turns
@@ -1319,7 +1319,12 @@ fn build_library(root: &Path, profile: &str, target: Option<&str>) -> Result<Pat
     if let Some(target) = target {
         path = path.join(target);
     }
-    Ok(path.join(profile_directory(profile)).join(LIBRARY_FILE))
+    let library_file = if target.is_some() {
+        APPLE_LIBRARY_FILE
+    } else {
+        host_dynamic_library_file()
+    };
+    Ok(path.join(profile_directory(profile)).join(library_file))
 }
 
 /// Build one architecture of one platform slice.
@@ -1348,7 +1353,7 @@ fn build_library_for_platform(
         .join("target")
         .join(target)
         .join(profile_directory(profile))
-        .join(LIBRARY_FILE))
+        .join(APPLE_LIBRARY_FILE))
 }
 
 // ── Paths and filesystem ───────────────────────────────────────────────────
@@ -1375,6 +1380,26 @@ fn profile_directory(profile: &str) -> &str {
         "dev" | "test" => "debug",
         "bench" => "release",
         other => other,
+    }
+}
+
+/// Add the platform executable suffix when Cargo emitted one.
+fn executable_file(name: &str) -> String {
+    if cfg!(target_os = "windows") {
+        format!("{name}.exe")
+    } else {
+        name.to_owned()
+    }
+}
+
+/// The host `cdylib` whose symbol table carries UniFFI metadata.
+fn host_dynamic_library_file() -> &'static str {
+    if cfg!(target_os = "windows") {
+        "tasknotes_core_ffi.dll"
+    } else if cfg!(target_os = "macos") {
+        "libtasknotes_core_ffi.dylib"
+    } else {
+        "libtasknotes_core_ffi.so"
     }
 }
 

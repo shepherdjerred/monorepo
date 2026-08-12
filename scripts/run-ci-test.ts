@@ -19,7 +19,10 @@ if (process.argv.slice(2).length > 0) {
 const manifest = TestManifestSchema.parse(
   await Bun.file(path.join(import.meta.dir, "ci-test-manifest.json")).json(),
 );
-const workspaceDirectory = path.relative(repositoryRoot, process.cwd());
+const workspaceDirectory = path
+  .relative(repositoryRoot, process.cwd())
+  .split(path.sep)
+  .join("/");
 const workspaceEntry = manifest.workspaces.find(
   (entry) => entry.directory === workspaceDirectory,
 );
@@ -41,6 +44,44 @@ await Bun.$`mkdir -p ${outputDirectory}`;
 
 const environment = { ...Bun.env };
 applyDefaultEnvironment(environment, workspace.defaultEnv ?? {});
+let cachedDotnetExecutable: string | undefined;
+
+async function pinnedDotnetExecutable(): Promise<string> {
+  if (cachedDotnetExecutable !== undefined) {
+    return cachedDotnetExecutable;
+  }
+  const wingetMise = path.join(
+    Bun.env["LOCALAPPDATA"] ?? "",
+    "Microsoft",
+    "WinGet",
+    "Links",
+    "mise.exe",
+  );
+  const mise =
+    process.platform === "win32" && (await Bun.file(wingetMise).exists())
+      ? wingetMise
+      : "mise";
+  const result = Bun.spawnSync([mise, "where", "dotnet"], {
+    cwd: repositoryRoot,
+    stdout: "pipe",
+    stderr: "inherit",
+  });
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `mise where dotnet exited with status ${String(result.exitCode)}; run mise install.`,
+    );
+  }
+  const dotnetRoot = new TextDecoder().decode(result.stdout).trim();
+  const executable = path.join(
+    dotnetRoot,
+    process.platform === "win32" ? "dotnet.exe" : "dotnet",
+  );
+  if (!(await Bun.file(executable).exists())) {
+    throw new Error(`mise resolved a .NET installation without ${executable}.`);
+  }
+  cachedDotnetExecutable = executable;
+  return executable;
+}
 
 function coverageDirectory(step: TestStep, index: number): string {
   return path.join(
@@ -64,11 +105,11 @@ function vitestCoverageArguments(rawCoverageDirectory: string): string[] {
     : [];
 }
 
-function commandForStep(
+async function commandForStep(
   step: TestStep,
   reportPath: string,
   rawCoverageDirectory: string,
-): string[] {
+): Promise<string[]> {
   switch (step.runner) {
     case "bun":
       return [
@@ -119,6 +160,21 @@ function commandForStep(
       ];
     case "cargo":
       return ["cargo", "test", ...step.args, "--", "--format", "pretty"];
+    case "dotnet": {
+      const [project, ...argumentsList] = step.args;
+      if (project === undefined) {
+        throw new Error("A .NET test project is required.");
+      }
+      return [
+        await pinnedDotnetExecutable(),
+        "test",
+        path.resolve(process.cwd(), project),
+        ...argumentsList,
+        "--report-junit",
+        "--report-junit-filename",
+        reportPath,
+      ];
+    }
     case "command":
       return step.command;
   }
@@ -135,6 +191,7 @@ function expectedCoveragePath(
     case "go":
       return path.join(rawCoverageDirectory, "coverage.out");
     case "cargo":
+    case "dotnet":
     case "command":
       return undefined;
   }
@@ -151,7 +208,12 @@ for (const [index, step] of workspace.steps.entries()) {
   const reportPath = path.resolve(outputDirectory, `${name}.xml`);
   await removeExistingReport(reportPath);
   const rawCoverageDirectory = coverageDirectory(step, index);
-  if (coverageEnabled && step.runner !== "cargo" && step.runner !== "command") {
+  if (
+    coverageEnabled &&
+    step.runner !== "cargo" &&
+    step.runner !== "dotnet" &&
+    step.runner !== "command"
+  ) {
     await Bun.$`mkdir -p ${rawCoverageDirectory}`;
   }
   const fallbackCoveragePath = fallbackBunCoveragePath(step);
@@ -162,13 +224,21 @@ for (const [index, step] of workspace.steps.entries()) {
     await Bun.file(fallbackCoveragePath).delete();
   }
   const startedAt = performance.now();
-  const command = commandForStep(step, reportPath, rawCoverageDirectory);
+  const command = await commandForStep(step, reportPath, rawCoverageDirectory);
+  const stepEnvironment =
+    step.runner === "dotnet"
+      ? {
+          ...environment,
+          DOTNET_MULTILEVEL_LOOKUP: "0",
+          DOTNET_ROOT: path.dirname(command[0] ?? ""),
+        }
+      : environment;
   let exitCode: number;
   let reportingError: Error | undefined;
   if (step.runner === "cargo") {
     const child = Bun.spawn(command, {
       cwd: process.cwd(),
-      env: environment,
+      env: stepEnvironment,
       stdin: "inherit",
       stdout: "pipe",
       stderr: "pipe",
@@ -205,7 +275,7 @@ for (const [index, step] of workspace.steps.entries()) {
   } else {
     const child = Bun.spawn(command, {
       cwd: process.cwd(),
-      env: environment,
+      env: stepEnvironment,
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",

@@ -1,0 +1,120 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "inputs": [
+        "src/**",
+        "tests/**",
+        "Directory.Build.props",
+        "Directory.Build.targets",
+        "Directory.Packages.props",
+        "projects.json",
+        "coverage-baseline.json",
+        "coverage.settings.xml",
+        "stryker-config.json",
+        ".config/dotnet-tools.json",
+        "TaskNotes.Windows.Portable.slnx",
+        "**/packages.lock.json",
+        "!**/bin/**",
+        "!**/obj/**"
+      ],
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["build", "^build", "generate"],
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "outputs": []
+    },
+    "lint": {
+      "dependsOn": ["typecheck", "^build", "generate"],
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["lint", "^build", "generate"],
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "outputs": []
+    },
+    "test:ci": {
+      "dependsOn": ["lint", "^build", "generate"],
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "outputs": []
+    },
+    "test:report": {
+      "dependsOn": ["lint", "^build", "generate"],
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "outputs": []
+    },
+    "coverage:portable": {
+      "dependsOn": ["lint", "^build", "generate"],
+      "cache": false,
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "outputs": []
+    }
+  }
+}

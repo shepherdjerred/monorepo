@@ -39,10 +39,11 @@ use super::{
 use crate::{
     Error, Result,
     domain::{
-        CreateTaskRequest, Task, TaskId, TaskStatus, UpdateTaskRequest,
+        CreateTaskRequest, PomodoroStatus, Task, TaskId, TaskStatus, TaskTime, TimeSummary,
+        UpdateTaskRequest,
         wire::{
-            WireDeleteResponse, WireTask, WireTaskList, create_task_body, unwrap_envelope,
-            update_task_body,
+            WireDeleteResponse, WireTask, WireTaskList, WireTaskTime, WireTimeSummary,
+            create_task_body, unwrap_envelope, update_task_body,
         },
     },
 };
@@ -331,6 +332,128 @@ impl TaskNotesClient {
             Error::validation(format!("the server did not answer with a task: {error}"))
         })?;
         Task::try_from(wire)
+    }
+
+    /// Start tracking time against one task and return the updated task.
+    ///
+    /// This is intentionally a live request rather than a queued engine
+    /// mutation: the server owns the active-session clock, and replaying a
+    /// start after an arbitrary offline interval would create a false entry.
+    ///
+    /// # Errors
+    ///
+    /// Propagates transport, HTTP, envelope, and task-validation failures.
+    pub fn start_time_tracking(&self, id: &TaskId) -> Result<Task> {
+        Self::task(self.request(
+            HttpMethod::Post,
+            &endpoints::task_time_start(id),
+            None,
+            None,
+        )?)
+    }
+
+    /// Stop tracking time against one task and return the updated task.
+    ///
+    /// # Errors
+    ///
+    /// Propagates transport, HTTP, envelope, and task-validation failures.
+    pub fn stop_time_tracking(&self, id: &TaskId) -> Result<Task> {
+        Self::task(self.request(HttpMethod::Post, &endpoints::task_time_stop(id), None, None)?)
+    }
+
+    /// Read the server-computed time totals for one task.
+    ///
+    /// # Errors
+    ///
+    /// Propagates transport, HTTP, envelope, and schema failures.
+    pub fn task_time(&self, id: &TaskId) -> Result<TaskTime> {
+        let payload = self.request(HttpMethod::Get, &endpoints::task_time(id), None, None)?;
+        let wire: WireTaskTime = serde_json::from_value(payload).map_err(|error| {
+            Error::validation(format!(
+                "the task time response did not match the schema: {error}"
+            ))
+        })?;
+        Ok(TaskTime::from(wire))
+    }
+
+    /// Read the server-computed aggregate time report for one named period.
+    ///
+    /// # Errors
+    ///
+    /// Propagates transport, HTTP, envelope, and schema failures.
+    pub fn time_summary(&self, period: &str) -> Result<TimeSummary> {
+        let payload = self.request(
+            HttpMethod::Get,
+            &endpoints::time_summary(period),
+            None,
+            None,
+        )?;
+        let wire: WireTimeSummary = serde_json::from_value(payload).map_err(|error| {
+            Error::validation(format!(
+                "the time summary response did not match the schema: {error}"
+            ))
+        })?;
+        TimeSummary::try_from(wire)
+    }
+
+    /// Start a server-backed focus interval, optionally assigned to a task.
+    ///
+    /// # Errors
+    ///
+    /// Propagates transport, HTTP, envelope, and schema failures.
+    pub fn start_pomodoro(&self, task_id: Option<&TaskId>) -> Result<PomodoroStatus> {
+        let body = task_id.map(|id| {
+            let mut fields = Map::new();
+            fields.insert("taskId".to_owned(), Value::String(id.as_str().to_owned()));
+            fields
+        });
+        let payload = self.request(HttpMethod::Post, endpoints::POMODORO_START, body, None)?;
+        serde_json::from_value(payload).map_err(|error| {
+            Error::validation(format!(
+                "the pomodoro start response did not match the schema: {error}"
+            ))
+        })
+    }
+
+    /// Toggle the current server-backed interval between running and paused.
+    ///
+    /// # Errors
+    ///
+    /// Propagates transport, HTTP, envelope, and schema failures.
+    pub fn pause_pomodoro(&self) -> Result<PomodoroStatus> {
+        self.pomodoro_mutation(endpoints::POMODORO_PAUSE, "pause")
+    }
+
+    /// Stop the current server-backed interval.
+    ///
+    /// # Errors
+    ///
+    /// Propagates transport, HTTP, envelope, and schema failures.
+    pub fn stop_pomodoro(&self) -> Result<PomodoroStatus> {
+        self.pomodoro_mutation(endpoints::POMODORO_STOP, "stop")
+    }
+
+    /// Read the current server-backed interval.
+    ///
+    /// # Errors
+    ///
+    /// Propagates transport, HTTP, envelope, and schema failures.
+    pub fn pomodoro_status(&self) -> Result<PomodoroStatus> {
+        let payload = self.request(HttpMethod::Get, endpoints::POMODORO_STATUS, None, None)?;
+        serde_json::from_value(payload).map_err(|error| {
+            Error::validation(format!(
+                "the pomodoro status response did not match the schema: {error}"
+            ))
+        })
+    }
+
+    fn pomodoro_mutation(&self, path: &str, operation: &str) -> Result<PomodoroStatus> {
+        let payload = self.request(HttpMethod::Post, path, None, None)?;
+        serde_json::from_value(payload).map_err(|error| {
+            Error::validation(format!(
+                "the pomodoro {operation} response did not match the schema: {error}"
+            ))
+        })
     }
 }
 
@@ -770,6 +893,99 @@ mod tests {
                 },
             })
         );
+    }
+
+    #[test]
+    fn timing_requests_keep_the_server_contract_inside_the_core() {
+        let recorder = Recorder::new(vec![
+            Ok(Recorder::ok(&wire_task())),
+            Ok(Recorder::ok(&wire_task())),
+            Ok(Recorder::ok(&json!({
+                "summary": { "totalMinutes": 7, "activeSessions": 1 }
+            }))),
+            Ok(Recorder::ok(&json!({
+                "period": "all",
+                "summary": { "totalMinutes": 42 },
+                "topTasks": [{
+                    "task": "TaskNotes/a.md",
+                    "title": "Write the plan",
+                    "minutes": 42
+                }]
+            }))),
+        ]);
+        let client = client(&recorder);
+        let task_id = id("TaskNotes/a.md");
+
+        client.start_time_tracking(&task_id).unwrap();
+        client.stop_time_tracking(&task_id).unwrap();
+        let task_time = client.task_time(&task_id).unwrap();
+        let summary = client.time_summary("all").unwrap();
+
+        assert_eq!(task_time.total_time, 7);
+        assert!(task_time.has_active_session);
+        assert_eq!(summary.total_time, 42);
+        assert_eq!(summary.top_tasks[0].task_id.as_str(), "TaskNotes/a.md");
+
+        let sent = recorder.requests();
+        assert_eq!(
+            sent.iter()
+                .map(|request| request.method.as_str())
+                .collect::<Vec<_>>(),
+            ["POST", "POST", "GET", "GET"]
+        );
+        assert_eq!(
+            sent.iter()
+                .map(|request| request.url.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "http://vault.test:8080/api/tasks/TaskNotes%2Fa.md/time/start",
+                "http://vault.test:8080/api/tasks/TaskNotes%2Fa.md/time/stop",
+                "http://vault.test:8080/api/tasks/TaskNotes%2Fa.md/time",
+                "http://vault.test:8080/api/time/summary?period=all",
+            ]
+        );
+        assert!(sent.iter().all(|request| request.body.is_none()));
+    }
+
+    #[test]
+    fn pomodoro_requests_preserve_optional_body_and_return_every_status_shape() {
+        let running = json!({
+            "active": true,
+            "taskId": "TaskNotes/a.md",
+            "timeRemaining": 1_500,
+            "type": "work"
+        });
+        let recorder = Recorder::new(vec![
+            Ok(Recorder::ok(&running)),
+            Ok(Recorder::ok(&running)),
+            Ok(Recorder::ok(&running)),
+            Ok(Recorder::ok(&json!({ "active": false }))),
+            Ok(Recorder::ok(&json!({ "active": true, "type": "break" }))),
+        ]);
+        let client = client(&recorder);
+
+        let started = client.start_pomodoro(Some(&id("TaskNotes/a.md"))).unwrap();
+        client.start_pomodoro(None).unwrap();
+        client.pause_pomodoro().unwrap();
+        let stopped = client.stop_pomodoro().unwrap();
+        let status = client.pomodoro_status().unwrap();
+
+        assert!(started.active);
+        assert_eq!(
+            started.task_id.as_ref().map(TaskId::as_str),
+            Some("TaskNotes/a.md")
+        );
+        assert!(!stopped.active);
+        assert_eq!(status.phase, Some(crate::domain::PomodoroPhase::Break));
+
+        let sent = recorder.requests();
+        assert_eq!(sent[0].url, "http://vault.test:8080/api/pomodoro/start");
+        assert_eq!(body_of(&sent[0]), json!({ "taskId": "TaskNotes/a.md" }));
+        assert_eq!(sent[1].body, None, "an unassigned start has no body");
+        assert_eq!(sent[2].url, "http://vault.test:8080/api/pomodoro/pause");
+        assert_eq!(sent[3].url, "http://vault.test:8080/api/pomodoro/stop");
+        assert_eq!(sent[4].url, "http://vault.test:8080/api/pomodoro/status");
+        assert_eq!(sent[4].method.as_str(), "GET");
     }
 
     #[test]

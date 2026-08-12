@@ -1,0 +1,16 @@
+{
+  "extends": [
+    "@tsconfig/strictest/tsconfig.json",
+    "@tsconfig/node-lts/tsconfig.json",
+    "@tsconfig/recommended/tsconfig.json"
+  ],
+  "compilerOptions": {
+    "types": ["@types/bun"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "es2024",
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["scripts", "e2e", "eslint.config.ts"]
+}

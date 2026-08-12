@@ -37,6 +37,7 @@
 
 use std::sync::Arc;
 
+use tasknotes_core::domain::{PomodoroStatus, Task, TaskId, TaskTime, TimeSummary};
 use tasknotes_core::net::{
     HttpClient as CoreHttpClient, HttpHeader, HttpMethod, HttpRequest, HttpResponse,
     TaskNotesClient, TransportError as CoreTransportError, TransportErrorKind,
@@ -281,9 +282,90 @@ impl TaskNotesApi {
         self.inner.base_url().to_owned()
     }
 
+    /// Start tracking time against a task through the core-owned wire client.
+    ///
+    /// # Errors
+    ///
+    /// Propagates the core's transport, HTTP, and response-validation failure.
+    pub fn start_time_tracking(&self, task_id: &TaskId) -> Result<Task, CoreError> {
+        self.inner
+            .start_time_tracking(task_id)
+            .map_err(CoreError::from)
+    }
+
+    /// Stop tracking time against a task through the core-owned wire client.
+    ///
+    /// # Errors
+    ///
+    /// Propagates the core's transport, HTTP, and response-validation failure.
+    pub fn stop_time_tracking(&self, task_id: &TaskId) -> Result<Task, CoreError> {
+        self.inner
+            .stop_time_tracking(task_id)
+            .map_err(CoreError::from)
+    }
+
+    /// Read tracked-time totals for one task.
+    ///
+    /// # Errors
+    ///
+    /// Propagates the core's transport, HTTP, and response-validation failure.
+    pub fn task_time(&self, task_id: &TaskId) -> Result<TaskTime, CoreError> {
+        self.inner.task_time(task_id).map_err(CoreError::from)
+    }
+
+    /// Read the aggregate time report for a named server period.
+    ///
+    /// # Errors
+    ///
+    /// Propagates the core's transport, HTTP, and response-validation failure.
+    pub fn time_summary(&self, period: &str) -> Result<TimeSummary, CoreError> {
+        self.inner.time_summary(period).map_err(CoreError::from)
+    }
+
+    /// Start a server-backed focus interval, optionally assigned to a task.
+    ///
+    /// # Errors
+    ///
+    /// Propagates the core's transport, HTTP, and response-validation failure.
+    pub fn start_pomodoro(&self, task_id: Option<TaskId>) -> Result<PomodoroStatus, CoreError> {
+        task_id
+            .map_or_else(
+                || self.inner.start_pomodoro(None),
+                |task_id| self.inner.start_pomodoro(Some(&task_id)),
+            )
+            .map_err(CoreError::from)
+    }
+
+    /// Toggle the current interval between running and paused.
+    ///
+    /// # Errors
+    ///
+    /// Propagates the core's transport, HTTP, and response-validation failure.
+    pub fn pause_pomodoro(&self) -> Result<PomodoroStatus, CoreError> {
+        self.inner.pause_pomodoro().map_err(CoreError::from)
+    }
+
+    /// Stop the current server-backed focus interval.
+    ///
+    /// # Errors
+    ///
+    /// Propagates the core's transport, HTTP, and response-validation failure.
+    pub fn stop_pomodoro(&self) -> Result<PomodoroStatus, CoreError> {
+        self.inner.stop_pomodoro().map_err(CoreError::from)
+    }
+
+    /// Read the current server-backed focus interval.
+    ///
+    /// # Errors
+    ///
+    /// Propagates the core's transport, HTTP, and response-validation failure.
+    pub fn pomodoro_status(&self) -> Result<PomodoroStatus, CoreError> {
+        self.inner.pomodoro_status().map_err(CoreError::from)
+    }
+
     /// Abandon every request currently in flight.
     ///
-    /// Takes no engine lock on purpose. The engine's own `dispose()` has to
+    /// Takes no engine lock on purpose. The engine's own `shutdown()` has to
     /// take one, and the lock is held for the whole of a blocking drain — so a
     /// cancel routed through the engine could only ever run once the request it
     /// meant to cancel had already finished. This is the path that works while
@@ -305,8 +387,12 @@ pub fn api_default_timeout_millis() -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::{Arc, Mutex};
+    use std::{
+        collections::VecDeque,
+        sync::{Arc, Mutex},
+    };
 
+    use tasknotes_core::domain::{PomodoroPhase, TaskId};
     use tasknotes_core::net::{
         HttpHeader, HttpRequest, HttpResponse, TaskApi, TransportError as CoreTransportError,
         TransportErrorKind,
@@ -318,14 +404,14 @@ mod tests {
     /// A transport that answers one scripted response and records the request.
     struct Scripted {
         seen: Mutex<Vec<HttpRequest>>,
-        answer: Mutex<Option<Result<HttpResponse, TransportError>>>,
+        answers: Mutex<VecDeque<Result<HttpResponse, TransportError>>>,
         cancels: Mutex<u32>,
     }
 
     impl HttpClient for Scripted {
         fn send(&self, request: HttpRequest) -> Result<HttpResponse, TransportError> {
             self.seen.lock().unwrap().push(request);
-            self.answer.lock().unwrap().take().unwrap_or_else(|| {
+            self.answers.lock().unwrap().pop_front().unwrap_or_else(|| {
                 Err(TransportError::Other {
                     message: "exhausted".to_owned(),
                 })
@@ -338,11 +424,25 @@ mod tests {
     }
 
     fn scripted(answer: Result<HttpResponse, TransportError>) -> Arc<Scripted> {
+        scripted_many([answer])
+    }
+
+    fn scripted_many(
+        answers: impl IntoIterator<Item = Result<HttpResponse, TransportError>>,
+    ) -> Arc<Scripted> {
         Arc::new(Scripted {
             seen: Mutex::new(Vec::new()),
-            answer: Mutex::new(Some(answer)),
+            answers: Mutex::new(answers.into_iter().collect()),
             cancels: Mutex::new(0),
         })
+    }
+
+    fn response(body: &str) -> HttpResponse {
+        HttpResponse {
+            status: 200,
+            headers: Vec::new(),
+            body: body.as_bytes().to_vec(),
+        }
     }
 
     #[test]
@@ -432,5 +532,45 @@ mod tests {
         let api = TaskNotesApi::new(host, "http://vault.test", 1_000).unwrap();
         api.cancel_all();
         assert_eq!(*transport.cancels.lock().unwrap(), 1);
+    }
+
+    #[test]
+    fn timing_and_pomodoro_methods_cross_the_exported_api_wrapper() {
+        let wire_task =
+            r#"{"path":"TaskNotes/a.md","title":"Alpha","status":"open","priority":"normal"}"#;
+        let running =
+            r#"{"active":true,"taskId":"TaskNotes/a.md","timeRemaining":1500,"type":"work"}"#;
+        let transport = scripted_many([
+            Ok(response(wire_task)),
+            Ok(response(wire_task)),
+            Ok(response(
+                r#"{"summary":{"totalMinutes":7,"activeSessions":1}}"#,
+            )),
+            Ok(response(
+                r#"{"period":"all","summary":{"totalMinutes":42},"topTasks":[{"task":"TaskNotes/a.md","title":"Alpha","minutes":42}]}"#,
+            )),
+            Ok(response(running)),
+            Ok(response(running)),
+            Ok(response(running)),
+            Ok(response(r#"{"active":false}"#)),
+            Ok(response(r#"{"active":true,"type":"break"}"#)),
+        ]);
+        let host: Arc<dyn HttpClient> = Arc::<Scripted>::clone(&transport);
+        let api = TaskNotesApi::new(host, "http://vault.test", 1_000).unwrap();
+        let task_id = TaskId::parse("TaskNotes/a.md").unwrap();
+
+        assert_eq!(api.start_time_tracking(&task_id).unwrap().id, task_id);
+        assert_eq!(api.stop_time_tracking(&task_id).unwrap().id, task_id);
+        assert_eq!(api.task_time(&task_id).unwrap().total_time, 7);
+        assert_eq!(api.time_summary("all").unwrap().total_time, 42);
+        assert!(api.start_pomodoro(Some(task_id.clone())).unwrap().active);
+        assert!(api.start_pomodoro(None).unwrap().active);
+        assert!(api.pause_pomodoro().unwrap().active);
+        assert!(!api.stop_pomodoro().unwrap().active);
+        assert_eq!(
+            api.pomodoro_status().unwrap().phase,
+            Some(PomodoroPhase::Break)
+        );
+        assert_eq!(transport.seen.lock().unwrap().len(), 9);
     }
 }

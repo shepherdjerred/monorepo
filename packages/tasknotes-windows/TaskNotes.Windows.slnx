@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TaskNotes.Core.Bindings/TaskNotes.Core.Bindings.csproj" />
+    <Project Path="src/TaskNotes.Windows.App/TaskNotes.Windows.App.csproj" />
+    <Project Path="src/TaskNotes.Windows.Host/TaskNotes.Windows.Host.csproj" />
+    <Project Path="src/TaskNotes.Windows.Presentation/TaskNotes.Windows.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TaskNotes.Windows.E2E/TaskNotes.Windows.E2E.csproj" />
+    <Project Path="tests/TaskNotes.Windows.App.Tests/TaskNotes.Windows.App.Tests.csproj" />
+    <Project Path="tests/TaskNotes.Windows.IntegrationTests/TaskNotes.Windows.IntegrationTests.csproj" />
+    <Project Path="tests/TaskNotes.Windows.Tests/TaskNotes.Windows.Tests.csproj" />
+  </Folder>
+</Solution>

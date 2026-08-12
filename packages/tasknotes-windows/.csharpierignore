@@ -1,0 +1,4 @@
+**/bin/**
+**/obj/**
+src/TaskNotes.Core.Bindings/**
+**/*.xaml

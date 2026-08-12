@@ -1,0 +1,32 @@
+root = true
+
+[*.cs]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+# Compiler/analyzer defaults come from latest-recommended. Formatting and style
+# are enforced by CSharpier instead of promoting every hidden IDE suggestion.
+dotnet_diagnostic.IDE0005.severity = warning
+dotnet_diagnostic.CA1307.severity = warning
+dotnet_diagnostic.CA1308.severity = warning
+dotnet_diagnostic.CA5392.severity = warning
+
+[src/TaskNotes.Windows.Host/**/*.cs]
+dotnet_diagnostic.CA2007.severity = warning
+
+[src/TaskNotes.Windows.Presentation/**/*.cs]
+# Presentation commands intentionally resume on their captured UI context.
+dotnet_diagnostic.CA2007.severity = none
+
+[src/TaskNotes.Windows.App/**/*.cs]
+# WinUI event and activation continuations require the dispatcher context.
+dotnet_diagnostic.CA2007.severity = none
+
+[tests/**/*.cs]
+# Test continuations use MSTest and, for UI tests, WinUI synchronization contexts.
+dotnet_diagnostic.CA2007.severity = none
+
+[TaskNotesCore.cs]
+generated_code = true

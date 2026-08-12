@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="TaskNotes.Windows.App.Views.QuickAddView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <StackPanel Spacing="12">
+        <TextBox
+            x:Name="InputTextBox"
+            AutomationProperties.AutomationId="TaskNotes.QuickAdd.Input"
+            AutomationProperties.Name="Quick Add task description"
+            PlaceholderText="Describe the task naturally"
+            Text="{x:Bind ViewModel.Input, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            TextChanged="Input_TextChanged" />
+        <TextBlock
+            AutomationProperties.AutomationId="TaskNotes.QuickAdd.Preview"
+            AutomationProperties.LiveSetting="Polite"
+            AutomationProperties.Name="Quick Add parsed fields"
+            Text="{x:Bind ViewModel.PreviewDescription, Mode=OneWay}"
+            TextWrapping="Wrap" />
+    </StackPanel>
+</UserControl>

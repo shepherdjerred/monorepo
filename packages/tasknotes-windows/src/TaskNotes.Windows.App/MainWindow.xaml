@@ -1,0 +1,181 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    x:Class="TaskNotes.Windows.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="using:TaskNotes.Windows.App.Views"
+    Title="TaskNotes"
+    mc:Ignorable="d">
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="RootGrid">
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator
+                Key="N"
+                Invoked="NewAccelerator_Invoked"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="R"
+                Invoked="RefreshAccelerator_Invoked"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="F"
+                Invoked="SearchAccelerator_Invoked"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="Z"
+                Invoked="UndoAccelerator_Invoked"
+                Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="P"
+                Invoked="PomodoroAccelerator_Invoked"
+                Modifiers="Control,Shift" />
+            <KeyboardAccelerator
+                Key="T"
+                Invoked="TimeReportAccelerator_Invoked"
+                Modifiers="Control,Shift" />
+        </Grid.KeyboardAccelerators>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TitleBar x:Name="AppTitleBar" Title="TaskNotes">
+            <TitleBar.IconSource>
+                <ImageIconSource ImageSource="Assets/AppIcon.ico" />
+            </TitleBar.IconSource>
+        </TitleBar>
+
+        <NavigationView
+            x:Name="Navigation"
+            Grid.Row="1"
+            AutomationProperties.AutomationId="TaskNotes.Navigation"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False"
+            ItemInvoked="Navigation_ItemInvoked"
+            PaneDisplayMode="LeftCompact">
+            <NavigationView.MenuItems>
+                <NavigationViewItem
+                    x:Name="InboxNavigationItem"
+                    Content="Inbox"
+                    Tag="inbox">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Mail" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem
+                    x:Name="TodayNavigationItem"
+                    Content="Today"
+                    IsSelected="True"
+                    Tag="today">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="CalendarDay" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem
+                    x:Name="UpcomingNavigationItem"
+                    Content="Upcoming"
+                    Tag="upcoming">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Calendar" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem
+                    x:Name="BrowseNavigationItem"
+                    Content="Browse"
+                    Tag="browse">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="AllApps" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem
+                    x:Name="CompletedNavigationItem"
+                    Content="Completed"
+                    Tag="completed">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Accept" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem
+                    x:Name="BoardNavigationItem"
+                    Content="Board"
+                    Tag="board">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="View" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItemSeparator />
+                <NavigationViewItem
+                    x:Name="SavedViewsNavigationItem"
+                    Content="Saved views"
+                    SelectsOnInvoked="False">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Favorite" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem
+                    x:Name="ProjectsNavigationItem"
+                    Content="Projects"
+                    SelectsOnInvoked="False">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Folder" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem
+                    x:Name="ContextsNavigationItem"
+                    Content="Contexts"
+                    SelectsOnInvoked="False">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Contact" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem
+                    x:Name="TagsNavigationItem"
+                    Content="Tags"
+                    SelectsOnInvoked="False">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Tag" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem Content="Pomodoro" Tag="pomodoro">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Clock" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Time Report" Tag="time-report">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Document" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Settings" Tag="settings">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Setting" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
+            <NavigationView.Content>
+                <Grid Padding="24,18">
+                    <views:TaskListWorkspaceView
+                        x:Name="TaskWorkspace"
+                        EditorViewModel="{x:Bind _taskEditor, Mode=OneWay}"
+                        ViewModel="{x:Bind ViewModel, Mode=OneWay}" />
+                    <views:BoardView
+                        x:Name="BoardDestination"
+                        ViewModel="{x:Bind ViewModel, Mode=OneWay}"
+                        Visibility="Collapsed" />
+                    <views:SettingsView
+                        x:Name="SettingsDestination"
+                        ShellViewModel="{x:Bind ViewModel, Mode=OneWay}"
+                        ViewModel="{x:Bind _settingsViewModel, Mode=OneWay}"
+                        Visibility="Collapsed" />
+                </Grid>
+            </NavigationView.Content>
+        </NavigationView>
+    </Grid>
+</Window>

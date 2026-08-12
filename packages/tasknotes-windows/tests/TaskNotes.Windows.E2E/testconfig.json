@@ -1,0 +1,25 @@
+{
+  "platformOptions": {
+    "exitProcessOnUnhandledException": true
+  },
+  "mstest": {
+    "parallelism": {
+      "enabled": false,
+      "scope": "method"
+    },
+    "timeout": {
+      "test": 300000,
+      "testInitialize": 120000,
+      "testCleanup": 120000,
+      "useCooperativeCancellation": true
+    },
+    "execution": {
+      "mapInconclusiveToFailed": true,
+      "mapNotRunnableToFailed": true,
+      "randomizeTestOrder": true,
+      "randomTestOrderSeed": 20260811,
+      "treatClassAndAssemblyCleanupWarningsAsErrors": true,
+      "treatDiscoveryWarningsAsErrors": true
+    }
+  }
+}
