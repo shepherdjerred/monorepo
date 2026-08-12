@@ -63,8 +63,21 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   operation info alongside both UUIDs because Argo omits
   `operation.sync.revision` for manifest-override operations; when both
   representations exist, require them to agree.
-  Reconcile children with aggregate health deferred, then atomically restore
-  and prune the exact root tree before one scoped release-health gate. The
+  Reconcile children with aggregate health deferred. Child reconciliation
+  renders the exact root revision and follows its numeric
+  Application sync waves. Repository children use the immutable release
+  inventory revision; external children use their exact root-manifest pin.
+  Require a repository child's latest deployed revision, or an external
+  child's complete latest deployed source, to match before skipping it, because
+  comparison can report a newly staged revision as Synced before that revision
+  is deployed. Preserve every nested source field in the staging override so
+  Helm values cannot fall back to chart defaults. Keep unrelated same-source
+  external drift outside the scoped release gate. Reject inventory/root
+  mismatches in either direction.
+  This closes the ordering gap where staging disabled an external controller's
+  auto-sync but a dependent repository child ran before the final root restore.
+  Then atomically restore and prune the exact root tree before one scoped
+  release-health gate. The
   finalizer reapplies the exact desired tree in the same isolated wave batches
   before starting the full-source prune. Unchanged resources use source-selective
   syncs; only the self-managed root Application uses a manifest override so it

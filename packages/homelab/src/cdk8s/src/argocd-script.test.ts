@@ -107,6 +107,7 @@ const StagedExternalApplication = JSON.stringify({
       repoURL: "https://charts.example.com",
       chart: "external",
       targetRevision: "1.0.0",
+      helm: { valuesObject: { storage: { size: "10Gi" } } },
     },
     syncPolicy: { automated: { enabled: true } },
   },
@@ -893,7 +894,12 @@ describe("Argo CD root release staging", () => {
         spec: { syncPolicy: { automated: { enabled: false } } },
       });
       expect(JSON.parse(applicationManifests[1] ?? "")).toMatchObject({
-        spec: { syncPolicy: { automated: { enabled: false } } },
+        spec: {
+          source: {
+            helm: { valuesObject: { storage: { size: "10Gi" } } },
+          },
+          syncPolicy: { automated: { enabled: false } },
+        },
       });
       expect(policyRequest.manifests).toBeUndefined();
     } finally {
@@ -929,6 +935,28 @@ describe("Argo CD stale release protection", () => {
             await request.json(),
           );
           return Response.json({ operation: requestedOperation });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps/manifests"
+        ) {
+          expect(url.searchParams.get("revision")).toBe("2.0.0-42");
+          return Response.json({
+            manifests: [
+              JSON.stringify({
+                apiVersion: "argoproj.io/v1alpha1",
+                kind: "Application",
+                metadata: { name: "worker" },
+                spec: {
+                  source: {
+                    repoURL: "https://chartmuseum.sjer.red",
+                    chart: "worker",
+                    targetRevision: "~2.0.0-0",
+                  },
+                },
+              }),
+            ],
+          });
         }
         if (
           request.method === "GET" &&
@@ -1005,7 +1033,9 @@ describe("Argo CD stale release protection", () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+});
 
+describe("Argo CD stale release rejection", () => {
   test("rejects an Argo reconcile after a newer apps chart is published", async () => {
     let argoRequests = 0;
     const server = Bun.serve({

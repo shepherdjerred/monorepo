@@ -21,7 +21,7 @@ sequenceDiagram
   BK->>Root: suspend current repository auto-sync
   BK->>CM: publish 2.0.0-build charts
   BK->>Root: stage child specs and prerequisites, still suspended
-  BK->>Child: reconcile exact chart revisions
+  BK->>Child: reconcile every desired child in root wave order
   BK->>Root: restore exact revision with verified pruning
   BK->>Root: retain identity through apply and termination
   BK->>Child: require Synced and Healthy
@@ -64,6 +64,35 @@ Argo omits `operation.sync.revision` from manifest-override operations, so the
 release command also persists the exact revision in the operation info list
 beside its request and operation UUIDs. Either representation can prove the
 revision, but disagreement between them is a hard identity failure.
+
+Disabling every child creates a second ordering obligation: Buildkite must
+explicitly reconcile external children as well as charts published by this
+repository. The release renders the exact root revision again, orders its
+Application manifests by numeric sync wave, and combines two revision sources.
+Repository charts use the immutable revision inventory produced by the publish
+step; external charts and Git sources use their complete root-manifest source,
+including Helm values. The staging parser preserves that nested source object;
+dropping fields there can rewrite every external Application to chart defaults.
+This lets a controller upgrade such as cert-manager finish before a later
+repository workload depends on it. It also fences the inventories in both
+directions so a published child cannot disappear from the root and a
+repository child cannot silently fall back to its semver range.
+
+ArgoCD's comparison status is not deployment proof during this transition. A
+staged Application can report `Synced` at its new comparison revision while
+its latest deployment history still names the old source. For an external
+child, the complete history entry source must match the complete rendered root
+source before reconciliation skips it. A Git tag may resolve to a commit SHA,
+so comparing only the history revision to the root's tag would create a
+permanent mismatch; comparing only the source target would miss changed Helm
+values at the same chart version.
+
+Once that exact source has been deployed, ordinary same-source drift remains
+the external Application's responsibility after auto-sync is restored; it does
+not broaden the release-scoped gate. Repository-published children keep the
+stricter boundary: sync status, exact resolved revision, latest deployment
+history, and terminal operation state must agree. This prevents the brief
+post-stage comparison window from skipping a changed external prerequisite.
 
 Certificate waves still use resource health as their ordering barrier. The
 [cert-manager Certificate condition contract](https://github.com/cert-manager/cert-manager/blob/b8f325e36f49626ba72d7efbe138c01a5e661d96/pkg/apis/certmanager/v1/types_certificate.go#L717-L777)
@@ -121,8 +150,10 @@ from a complete one.
 
 ## Why a Synced-and-Healthy child still gets retried
 
-Child reconciliation retries a failed operation recorded against the current
-chart revision even when ArgoCD already reports Synced and Healthy.
+Repository-child reconciliation retries a failed operation recorded against
+the current chart revision even when ArgoCD already reports Synced and Healthy.
+External-child reconciliation runs when the complete rendered root source is
+absent from the latest deployment history.
 
 That reads like a bug and is not. A child-level safety setting can make the same
 immutable chart revision safe to retry after a previous apply failed. Without
