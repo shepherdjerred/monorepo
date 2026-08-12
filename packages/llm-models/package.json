@@ -6,7 +6,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "imports": {
-    "#src/*": "./src/*"
+    "#src/*": "./src/*",
+    "#scripts/*": "./scripts/*"
   },
   "exports": {
     ".": {

@@ -1,0 +1,260 @@
+import { describe, expect, test } from "bun:test";
+import {
+  contextRejection,
+  indexLiteLlm,
+  indexModelsDev,
+  priceRejection,
+  providerKey,
+  reconcile,
+} from "#scripts/sync-from-upstreams.ts";
+import { CatalogSchema, type ModelEntry } from "#src/index.ts";
+
+/**
+ * A models.dev shape reproducing the exact collisions that poisoned the catalog
+ * in PR #2102. Provider iteration order matters: the first-party entry comes
+ * FIRST and the reseller LAST, which is what made a last-writer-wins flat index
+ * pick the reseller every time.
+ *
+ * Values are the real ones observed on models.dev.
+ */
+const MODELS_DEV_FIXTURE = {
+  anthropic: {
+    models: {
+      "claude-opus-5": {
+        cost: { input: 5, output: 25 },
+        limit: { context: 1_000_000 },
+      },
+      "claude-haiku-4-5-20251001": {
+        cost: { input: 1, output: 5 },
+        limit: { context: 200_000 },
+      },
+    },
+  },
+  openai: {
+    models: {
+      "gpt-5.6-sol": {
+        cost: { input: 5, output: 30 },
+        limit: { context: 1_050_000 },
+      },
+    },
+  },
+  // Resellers, listed after the first parties exactly as models.dev orders them.
+  cortecs: {
+    models: {
+      "claude-opus-5": {
+        cost: { input: 5.5, output: 27.498 },
+        limit: { context: 1_000_000 },
+      },
+      "gpt-5.6-sol": {
+        cost: { input: 5.5, output: 32.998 },
+        limit: { context: 1_050_000 },
+      },
+    },
+  },
+  jiekou: {
+    models: {
+      "claude-haiku-4-5-20251001": {
+        cost: { input: 0.9, output: 4.5 },
+        limit: { context: 20_000 },
+      },
+    },
+  },
+};
+
+function entry(overrides: Record<string, unknown>): ModelEntry {
+  const catalog = CatalogSchema.parse({
+    subject: {
+      id: "subject",
+      provider: "anthropic",
+      displayName: "Subject",
+      pricing: { modality: "text", input: 5, output: 25 },
+      contextWindow: 200_000,
+      capabilities: { supportsTemperature: false, supportsTopP: false },
+      status: "current",
+      ...overrides,
+    },
+  });
+  const parsed = catalog["subject"];
+  if (parsed === undefined) {
+    throw new Error("fixture did not parse");
+  }
+  return parsed;
+}
+
+describe("indexModelsDev provider scoping", () => {
+  const index = indexModelsDev(MODELS_DEV_FIXTURE);
+
+  test("keys every model by provider, so resellers cannot overwrite first parties", () => {
+    expect(index.get(providerKey("anthropic", "claude-opus-5"))).toEqual({
+      input: 5,
+      output: 25,
+      contextWindow: 1_000_000,
+    });
+    // The reseller's entry still exists — under ITS OWN key, where a lookup
+    // for the anthropic model will never find it.
+    expect(index.get(providerKey("cortecs", "claude-opus-5"))).toEqual({
+      input: 5.5,
+      output: 27.498,
+      contextWindow: 1_000_000,
+    });
+  });
+
+  test("a bare model id resolves to nothing", () => {
+    // The old flat index made this the lookup key, and it returned whichever
+    // provider happened to come last.
+    expect(index.get("claude-opus-5")).toBeUndefined();
+    expect(index.get("gpt-5.6-sol")).toBeUndefined();
+  });
+});
+
+describe("indexLiteLlm provider scoping", () => {
+  const index = indexLiteLlm({
+    "openai/gpt-5.5": {
+      input_cost_per_token: 0.000005,
+      output_cost_per_token: 0.00003,
+      max_input_tokens: 400_000,
+    },
+    "bedrock/anthropic.claude-opus-5": {
+      input_cost_per_token: 0.000006,
+      output_cost_per_token: 0.00003,
+      max_input_tokens: 200_000,
+    },
+    // Unattributable: no vendor prefix at all.
+    "some-random-model": {
+      input_cost_per_token: 0.000001,
+      output_cost_per_token: 0.000002,
+    },
+    // Unknown vendor — must not be attributed to one of our providers.
+    "sagemaker/claude-opus-5": {
+      input_cost_per_token: 0.000009,
+      output_cost_per_token: 0.00009,
+    },
+  });
+
+  test("keeps dots that belong to the model id", () => {
+    expect(index.get(providerKey("openai", "gpt-5.5"))?.input).toBeCloseTo(
+      5,
+      9,
+    );
+  });
+
+  test("does not adopt a gateway's price as the direct provider's", () => {
+    // Bedrock resells Anthropic weights at AWS's price. Treating that as
+    // "anthropic" is the same mistake as trusting cortecs — we buy direct.
+    expect(
+      index.get(providerKey("anthropic", "claude-opus-5")),
+    ).toBeUndefined();
+    expect(index.get(providerKey("openai", "claude-opus-5"))).toBeUndefined();
+  });
+
+  test("skips keys it cannot attribute rather than guessing", () => {
+    // The old code stripped every prefix and indexed the bare remainder, so
+    // these could bind to one of our clean ids non-deterministically.
+    expect(
+      index.get(providerKey("anthropic", "some-random-model")),
+    ).toBeUndefined();
+    expect(index.get("some-random-model")).toBeUndefined();
+    expect(index.get(providerKey("anthropic", "sagemaker"))).toBeUndefined();
+  });
+});
+
+describe("plausibility guards", () => {
+  test("rejects prices with more than two decimal places", () => {
+    // The #2102 tell: reseller markups produce 32.998 / 4.982 / 0.996.
+    expect(priceRejection(30, 32.998)).toContain("decimal places");
+    expect(priceRejection(5, 4.982)).toContain("decimal places");
+    expect(priceRejection(1, 0.996)).toContain("decimal places");
+  });
+
+  test("accepts ordinary round prices within the change bound", () => {
+    expect(priceRejection(5, 5.5)).toBeUndefined();
+    expect(priceRejection(3, 2.5)).toBeUndefined();
+    expect(priceRejection(0.075, 0.08)).toBeUndefined();
+  });
+
+  test("rejects a change larger than 25%", () => {
+    expect(priceRejection(10, 3)).toContain("70% change");
+    expect(priceRejection(5, 1.5)).toContain("70% change");
+    expect(priceRejection(15, 5.55)).toContain("change");
+  });
+
+  test("rejects any context-window shrink and allows growth", () => {
+    expect(contextRejection(200_000, 20_000)).toContain("shrinks");
+    expect(contextRejection(1_000_000, 200_000)).toContain("shrinks");
+    expect(contextRejection(400_000, 1_050_000)).toBeUndefined();
+    expect(contextRejection(200_000, 200_000)).toBeUndefined();
+  });
+});
+
+describe("reconcile applies plausible drift and withholds the rest", () => {
+  test("applies a modest, round price change", () => {
+    const subject = entry({});
+    const result = reconcile(
+      "subject",
+      subject,
+      { input: 5.5, output: 27 },
+      "models.dev",
+    );
+    expect(result.rejected).toHaveLength(0);
+    expect(result.applied).toHaveLength(2);
+    expect(subject.pricing).toMatchObject({ input: 5.5, output: 27 });
+  });
+
+  test("withholds the #2102 edits and leaves the catalog untouched", () => {
+    const subject = entry({});
+    const result = reconcile(
+      "subject",
+      subject,
+      // Fable-5-style repricing plus Haiku's context cut.
+      { input: 1.5, output: 27.498, contextWindow: 20_000 },
+      "models.dev",
+    );
+
+    expect(result.applied).toHaveLength(0);
+    expect(result.rejected).toHaveLength(3);
+    // The entry must be byte-for-byte what it was.
+    expect(subject.pricing).toMatchObject({ input: 5, output: 25 });
+    expect(subject.contextWindow).toBe(200_000);
+  });
+
+  test("a withheld edit names the field and the reason", () => {
+    const subject = entry({});
+    const result = reconcile(
+      "subject",
+      subject,
+      { contextWindow: 20_000 },
+      "models.dev",
+    );
+    expect(result.rejected[0]).toContain("subject.contextWindow");
+    expect(result.rejected[0]).toContain("shrinks");
+    expect(result.rejected[0]).toContain("models.dev");
+  });
+
+  test("still honours pinnedContextWindow", () => {
+    const subject = entry({ pinnedContextWindow: true });
+    const result = reconcile(
+      "subject",
+      subject,
+      { contextWindow: 1_000_000 },
+      "models.dev",
+    );
+    expect(result.applied).toHaveLength(0);
+    expect(result.rejected).toHaveLength(0);
+    expect(subject.contextWindow).toBe(200_000);
+  });
+
+  test("ignores image models entirely", () => {
+    const subject = entry({
+      pricing: { modality: "image", perImage: 0.134 },
+      contextWindow: undefined,
+    });
+    const result = reconcile(
+      "subject",
+      subject,
+      { input: 99, output: 99 },
+      "models.dev",
+    );
+    expect(result.applied).toHaveLength(0);
+    expect(result.rejected).toHaveLength(0);
+  });
+});
