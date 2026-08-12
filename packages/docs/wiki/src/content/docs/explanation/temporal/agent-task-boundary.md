@@ -74,7 +74,10 @@ labels for every workload. This does not make the containers privileged: their
 security contexts still drop all capabilities and add only the two named above,
 with privilege escalation disabled. The synthesized namespace labels and both
 container capability sets are tested together so the admission contract cannot
-drift away from the runtime boundary.
+drift away from the runtime boundary. The enforcement value is also copied to
+the agent Deployment's pod-template annotation. Changing that admission
+contract therefore starts a fresh ReplicaSet after the Namespace update rather
+than retaining a rollout failure created under the old policy.
 
 So local filesystem writes are still possible. A sufficiently confused or
 prompt-injected run can corrupt only its disposable workdir; it does not receive
