@@ -633,7 +633,33 @@ real objects in the `scout-prod` bucket. Never hand-edit the outputs.
 - **GC protection**: `scout-image-gc-daily` exempts every key the manifest
   references (it fetches the manifest from `main` before pruning), so curated
   sources outlive the 30-day image window. Consequence: manifest edits on a
-  branch don't protect new keys until merged.
+  branch don't protect new keys until merged. It only prunes `.png`/`.svg`
+  under `games/` and `prematch/`, so `leaderboards/**` snapshots are never
+  collected and need no exemption.
+- **Per-entry `bucket` override**: an entry may pin its own source bucket.
+  Both buckets sit behind one SeaweedFS endpoint, so only the bucket name
+  swaps, not the client. The competition graph uses it to source `scout-beta`,
+  whose competitions have ~28 players against prod's richest at 3. `discover`
+  treats an entry carrying an explicit `bucket` as pinned and leaves it alone —
+  without that it would rebuild the entry from the run's `--bucket` and
+  silently revert the pin.
+- **Player names are pseudonymous in the charts.** `showcase/anonymize.ts` maps
+  a stable non-display identity (`playerId` / `puuid`) to a curated handle,
+  deterministically — the weekly job commits these PNGs, so a pseudonym that
+  moved between runs would open a junk PR every Monday. Assign handles to the
+  players you will actually render (slice, then anonymize): the report graph
+  aggregates ~120 participants but draws ten, and anonymizing before the slice
+  exhausts the pool into a numbered fallback. **Known gap:** `s3-image` and
+  `discord-screenshot` entries are byte copies of prod-rendered PNGs, so the
+  names in those are baked into the pixels and are still real.
+- **Discovery finds rare modes.** `wantedCombos` is derived from the full
+  `variantSpecs()` set, split by state, and is the scan's loop terminator —
+  it was once hard-coded to `{solo:1, flex:1}`, which stopped the walk after a
+  few dozen objects and left every rarer variant carried forward from `--prev`
+  indefinitely. Combos verified absent (flex 4/5) are excluded so the loop can
+  still terminate early. A mode with no post-match payload (League Classic —
+  Riot exposes none) declares `states: ["prematch"]` rather than emitting a
+  variant that can only ever resolve to a miss.
 - **Re-curation runbook** (after a renderer redesign, or if the weekly job
   fails NoSuchKey): from `packages/backend`,
   `AWS_PROFILE=seaweedfs bun run scripts/discover-marketing-showcase.ts
@@ -641,6 +667,18 @@ real objects in the `scout-prod` bucket. Never hand-edit the outputs.
 --prev ../../showcase/marketing-showcase.manifest.json`, then run
   `scripts/generate-marketing-showcase.ts` with the standard flags (see the
   Temporal activity for the exact invocation) and commit manifest + outputs.
+  Let the `seaweedfs` AWS profile supply the endpoint; passing `--endpoint-url`
+  by hand overrides it. Expect roughly 30s — the post-match scan uses its full
+  head budget because ARAM Mayhem has no post-match object to find.
+- **Adding or renaming a variant** touches four places: the spec in
+  `discover-marketing-showcase.ts`, `REQUIRED_SHOWCASE_VARIANT_IDS` in
+  `src/showcase/manifest.ts`, `showcasePreviews` in the frontend's
+  `index.astro` (`requireShowcaseAsset` **throws** on a missing id, so a stale
+  reference breaks the marketing build), and the committed PNGs. The
+  `discord-screenshot` templates in `src/showcase/discord-templates.ts` are an
+  independent `(queue, playerCount)` lookup — leaving one at a player count the
+  bucket no longer produces pins it to a stale object while everything else
+  refreshes.
 
 ## Pre-commit gates
 
