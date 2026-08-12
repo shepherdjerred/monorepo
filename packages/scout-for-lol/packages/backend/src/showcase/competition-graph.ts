@@ -8,6 +8,7 @@ import {
   competitionChartToImage,
   type CompetitionChartProps,
 } from "@scout-for-lol/report";
+import type { PlayerAnonymizer } from "#src/showcase/anonymize.ts";
 import type { ShowcaseEntry } from "#src/showcase/manifest.ts";
 import { readS3Json } from "#src/showcase/s3.ts";
 import {
@@ -48,6 +49,7 @@ function latestSnapshot(snapshots: CachedLeaderboard[]): CachedLeaderboard {
 function competitionLineChartProps(params: {
   entry: CompetitionGraphEntry;
   snapshots: CachedLeaderboard[];
+  anonymizePlayer: PlayerAnonymizer;
 }): CompetitionChartProps {
   const sorted = params.snapshots.toSorted(
     (left, right) =>
@@ -78,7 +80,10 @@ function competitionLineChartProps(params: {
     startDate: new Date(first.calculatedAt),
     endDate: new Date(last.calculatedAt),
     series: topEntries.map((entry) => ({
-      playerName: entry.playerName,
+      playerName: params.anonymizePlayer(
+        String(entry.playerId),
+        entry.playerName,
+      ),
       points: sorted.map((snapshot) => {
         const snapshotEntry = snapshot.entries.find(
           (candidate) => candidate.playerId === entry.playerId,
@@ -98,6 +103,7 @@ function competitionLineChartProps(params: {
 function competitionBarChartProps(params: {
   entry: CompetitionGraphEntry;
   snapshots: CachedLeaderboard[];
+  anonymizePlayer: PlayerAnonymizer;
 }): CompetitionChartProps {
   const latest = latestSnapshot(params.snapshots);
   return {
@@ -108,7 +114,10 @@ function competitionBarChartProps(params: {
       : { subtitle: params.entry.description }),
     yAxisLabel: params.entry.yAxisLabel,
     bars: latest.entries.slice(0, 10).map((entry) => ({
-      playerName: entry.playerName,
+      playerName: params.anonymizePlayer(
+        String(entry.playerId),
+        entry.playerName,
+      ),
       value: leaderboardScoreToNumber(entry.score),
     })),
   };
@@ -130,8 +139,16 @@ export async function generateCompetitionGraph(
 
   const props =
     entry.chartType === "line"
-      ? competitionLineChartProps({ entry, snapshots })
-      : competitionBarChartProps({ entry, snapshots });
+      ? competitionLineChartProps({
+          entry,
+          snapshots,
+          anonymizePlayer: ctx.anonymizePlayer,
+        })
+      : competitionBarChartProps({
+          entry,
+          snapshots,
+          anonymizePlayer: ctx.anonymizePlayer,
+        });
   const bytes = await competitionChartToImage(props);
   return {
     fileName: safeFileName(entry.id, "png"),

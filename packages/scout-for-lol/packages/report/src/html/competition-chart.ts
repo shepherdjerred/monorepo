@@ -201,11 +201,20 @@ function buildLineOption(
         color: palette.grey[1],
         fontSize: 22,
         fontFamily: BODY_FONT,
-        hideOverlap: false,
+        // Must stay true. ECharts' time axis emits labels at different
+        // granularity levels, so a tick landing on a month boundary renders at
+        // the `month` level ("Mar") right next to a neighbouring `day`-level
+        // tick ("Mar 5"). With overlap-hiding off both paint, which is what
+        // produced the overprinted "Mar Mar 5" / "May May 3" in the committed
+        // competition chart. analytics-chart.ts has always used true.
+        hideOverlap: true,
         margin: 16,
+        // One format for every level: a month-boundary tick and a mid-month
+        // tick then read identically ("Mar 1" / "Mar 5") instead of collapsing
+        // to a bare month that duplicates its neighbour.
         formatter: {
-          year: "{yyyy}",
-          month: "{MMM}",
+          year: "{MMM} {d}",
+          month: "{MMM} {d}",
           day: "{MMM} {d}",
           hour: "",
           minute: "",

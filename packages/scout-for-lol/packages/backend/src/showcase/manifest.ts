@@ -15,6 +15,15 @@ const BaseEntrySchema = z.strictObject({
   state: ShowcaseStateSchema.optional(),
   queue: QueueTypeSchema.optional(),
   playerCount: z.number().int().positive().max(10).optional(),
+  // Source bucket override. Defaults to the run's `--bucket`. Both buckets live
+  // behind the same SeaweedFS endpoint, so this swaps the bucket name only, not
+  // the client. Needed because prod's competitions are thin (the best one has 3
+  // players across its whole range) while beta has competitions with 28 — and a
+  // leaderboard chart is only interesting with real players on it. Safe for
+  // leaderboards specifically: scout-image-gc only prunes .png/.svg under
+  // games/ and prematch/, so `leaderboards/**` snapshots are never collected in
+  // either bucket and need no manifest exemption to survive.
+  bucket: z.string().min(1).optional(),
 });
 
 const DiscordChatMessageSchema = z.strictObject({

@@ -1,4 +1,5 @@
 export { matchToImage, matchToSvg, svgToPng } from "./html/index.tsx";
+export { fnv1a } from "./html/shared/pick-design.ts";
 export {
   competitionChartToImage,
   competitionChartToSvg,

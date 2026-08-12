@@ -506,6 +506,9 @@ toolkit pr asset <PR_NUMBER> ./before.png ./flow.mp4 ./demo.cast ./demo-site --p
 - Uses the standard AWS toolchain (`@aws-sdk/client-s3`, path-style): credentials,
   `endpoint_url`, and region come from `~/.aws/credentials` / `~/.aws/config`.
   Select the profile with `--profile <name>` or `AWS_PROFILE` (the `seaweedfs`
-  profile points at `https://seaweedfs.sjer.red`).
+  profile points at `https://seaweedfs-s3.tailnet-1a49.ts.net`). SeaweedFS is
+  tailnet-only — let the profile supply `endpoint_url` rather than passing
+  `--endpoint-url` by hand, and do not use the retired `seaweedfs.sjer.red`
+  name.
 - Objects under `pr/assets/` expire after 365 days; the homelab must be up for
   the artifacts to load.

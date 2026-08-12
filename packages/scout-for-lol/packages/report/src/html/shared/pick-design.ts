@@ -5,8 +5,12 @@ export type RankedDesign = "banner" | "square";
 /**
  * FNV-1a 32-bit hash. Deterministic and dependency-free; we only need a
  * cheap stable hash of a few strings to pick a design.
+ *
+ * NOT a security primitive — it is unkeyed and trivially brute-forced over a
+ * small input space. Use it for stable bucketing only, never for anything that
+ * needs to resist reversal.
  */
-function fnv1a(input: string): number {
+export function fnv1a(input: string): number {
   let hash = 0x81_1c_9d_c5;
   for (const char of input) {
     hash ^= char.codePointAt(0) ?? 0;
