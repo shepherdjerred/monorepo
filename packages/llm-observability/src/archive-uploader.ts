@@ -1,5 +1,5 @@
 import { createHash, createHmac } from "node:crypto";
-import { gzipSync } from "node:zlib";
+import { gunzipSync, gzipSync } from "node:zlib";
 
 export type ArchiveConfig = {
   bucket: string;
@@ -101,6 +101,27 @@ export async function archiveObjectExists(
   );
 }
 
+/**
+ * Download and decompress an archived object.
+ *
+ * Like {@link archiveObjectExists} this is a control-plane read, so a missing
+ * object returns undefined while authentication and storage failures throw —
+ * a caller must never mistake an unavailable archive for an absent one.
+ */
+export async function readArchiveObject(
+  config: ArchiveConfig,
+  key: string,
+): Promise<string | undefined> {
+  const response = await signedS3Request(config, key, "GET");
+  if (response.status === 404) return undefined;
+  if (!response.ok) {
+    throw new Error(
+      `S3 archive read failed (${String(response.status)}): ${response.statusText}`,
+    );
+  }
+  return gunzipSync(Buffer.from(await response.arrayBuffer())).toString("utf8");
+}
+
 function sha256Hex(value: string | Uint8Array): string {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -150,7 +171,7 @@ async function putS3Object(
 async function signedS3Request(
   config: ArchiveConfig,
   key: string,
-  method: "HEAD" | "PUT",
+  method: "GET" | "HEAD" | "PUT",
   body?: Buffer,
 ): Promise<Response> {
   const url = buildS3Url(config, key);

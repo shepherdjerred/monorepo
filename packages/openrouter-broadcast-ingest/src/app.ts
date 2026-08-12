@@ -45,6 +45,8 @@ class BroadcastProcessingError extends Error {
   }
 }
 
+const DeliveryReceiptSchema = z.object({ payloadKey: z.string().min(1) });
+
 type DeliveryResult = {
   digest: string;
   duplicate: boolean;
@@ -199,12 +201,21 @@ function createDeliveryProcessor(
   ): Promise<DeliveryResult> => {
     const keys = archiveKeys(config.archive.prefix, digest, now());
     try {
-      if (await dependencies.archive.exists(keys.receiptKey)) {
+      const receipt = await dependencies.archive.get(keys.receiptKey);
+      if (receipt !== undefined) {
         dependencies.metrics.operationsTotal.inc({
           operation: "duplicate",
           outcome: "detected",
         });
-        return { digest, duplicate: true, payloadKey: keys.payloadKey };
+        // The receipt is date-independent but the payload is partitioned by
+        // UTC date, so a retry after midnight must report the key the original
+        // delivery archived rather than one recomputed from today's date.
+        return {
+          digest,
+          duplicate: true,
+          payloadKey: DeliveryReceiptSchema.parse(JSON.parse(receipt))
+            .payloadKey,
+        };
       }
       if (!(await dependencies.archive.exists(keys.payloadKey))) {
         await dependencies.archive.put(keys.payloadKey, redactedJson);

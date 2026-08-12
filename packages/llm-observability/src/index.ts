@@ -17,6 +17,7 @@ import {
 import {
   archiveObjectExists as innerArchiveObjectExists,
   buildArchiveKey as innerBuildArchiveKey,
+  readArchiveObject as innerReadArchiveObject,
   uploadArchive as innerUploadArchive,
   type ArchiveConfig as InnerArchiveConfig,
   type ArchiveRef as InnerArchiveRef,
@@ -97,6 +98,11 @@ export function archiveObjectExists(
   ...args: Parameters<typeof innerArchiveObjectExists>
 ): ReturnType<typeof innerArchiveObjectExists> {
   return innerArchiveObjectExists(...args);
+}
+export function readArchiveObject(
+  ...args: Parameters<typeof innerReadArchiveObject>
+): ReturnType<typeof innerReadArchiveObject> {
+  return innerReadArchiveObject(...args);
 }
 export type ArchiveConfig = Identity<InnerArchiveConfig>;
 export type ArchiveRef = Identity<InnerArchiveRef>;

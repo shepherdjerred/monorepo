@@ -10,12 +10,18 @@ repository's existing observability boundary:
    SeaweedFS bucket;
 4. strip prompt, response, tool, content, and credential attributes;
 5. forward the correlated slim payload to Tempo;
-6. write a digest receipt and return `204` only after every step succeeds.
+6. write a digest receipt and return `204`.
 
 The digest receipt is independent of the payload's UTC date partition, so an
-OpenRouter retry remains idempotent across midnight. A failed Tempo forward
-keeps the archived payload but no receipt; the subsequent delivery retries only
-the forward and receipt steps.
+OpenRouter retry remains idempotent across midnight, and a duplicate reports
+the payload key recorded in that receipt rather than one recomputed from the
+retry's date. A failed Tempo forward keeps the archived payload but no receipt;
+the subsequent delivery retries only the forward and receipt steps.
+
+A receipt write that fails _after_ a successful forward does not fail the
+request. Tempo already holds the payload, so answering `502` would make
+OpenRouter retry and forward it twice; the run is accepted with an archive
+error metric and a warning, and only deduplication for that digest is lost.
 
 ## Configuration
 

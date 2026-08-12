@@ -79,9 +79,14 @@ type HarnessOptions = {
 function createHarness(options: HarnessOptions = {}) {
   const objects = new Map<string, string>();
   const forwarded: string[] = [];
-  const logs: { level: string; message: string }[] = [];
+  const logs: {
+    level: string;
+    message: string;
+    fields: Record<string, unknown>;
+  }[] = [];
   const archive: BroadcastArchiveStore = options.archive ?? {
     exists: (key) => Promise.resolve(objects.has(key)),
+    get: (key) => Promise.resolve(objects.get(key)),
     put: (key, value) => {
       objects.set(key, value);
       return Promise.resolve();
@@ -94,9 +99,12 @@ function createHarness(options: HarnessOptions = {}) {
     },
   };
   const logger: BroadcastLogger = {
-    error: (message) => logs.push({ level: "error", message }),
-    info: (message) => logs.push({ level: "info", message }),
-    warn: (message) => logs.push({ level: "warn", message }),
+    error: (message, fields = {}) =>
+      logs.push({ level: "error", message, fields }),
+    info: (message, fields = {}) =>
+      logs.push({ level: "info", message, fields }),
+    warn: (message, fields = {}) =>
+      logs.push({ level: "warn", message, fields }),
   };
   const register = new Registry();
   const app = createBroadcastApp(
@@ -179,11 +187,23 @@ describe("OpenRouter Broadcast ingest", () => {
     const harness = createHarness({ now: () => now });
     const firstResponse = await request(harness.app);
     expect(firstResponse.status).toBe(204);
+    const archivedPayloadKey = [...harness.objects.keys()].find((key) =>
+      key.includes("/payloads/"),
+    );
+    expect(archivedPayloadKey).toContain("/2026/08/09/");
+
     now = new Date("2026-08-10T00:00:01.000Z");
     const secondResponse = await request(harness.app);
     expect(secondResponse.status).toBe(204);
     expect(harness.forwarded).toHaveLength(1);
     expect(harness.objects.size).toBe(2);
+    // The duplicate must report the partition the payload actually lives in,
+    // not one recomputed from the retry's date.
+    expect(
+      harness.logs.findLast(
+        (entry) => entry.message === "Accepted Broadcast delivery",
+      )?.fields["archiveKey"],
+    ).toBe(archivedPayloadKey);
   });
 
   test("does not forward when archival fails", async () => {
@@ -191,6 +211,7 @@ describe("OpenRouter Broadcast ingest", () => {
     const { app } = createHarness({
       archive: {
         exists: () => Promise.reject(new Error("archive unavailable")),
+        get: () => Promise.reject(new Error("archive unavailable")),
         put: () => Promise.resolve(),
       },
       forwarder: {
@@ -211,6 +232,7 @@ describe("OpenRouter Broadcast ingest", () => {
     let forwardCount = 0;
     const archive: BroadcastArchiveStore = {
       exists: (key) => Promise.resolve(objects.has(key)),
+      get: (key) => Promise.resolve(objects.get(key)),
       put: (key, value) => {
         objects.set(key, value);
         return Promise.resolve();
@@ -249,6 +271,7 @@ describe("OpenRouter Broadcast ingest", () => {
     let forwardCount = 0;
     const archive: BroadcastArchiveStore = {
       exists: (key) => Promise.resolve(objects.has(key)),
+      get: (key) => Promise.resolve(objects.get(key)),
       put: (key, value) => {
         if (key.includes("/receipts/")) {
           return Promise.reject(new Error("SeaweedFS unavailable"));
