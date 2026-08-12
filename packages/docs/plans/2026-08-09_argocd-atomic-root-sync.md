@@ -116,6 +116,11 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   fixes that regression. Keep the Alert Dashboard CA non-renewing and repair
   the controller rather than weakening the deliberate CA trust-migration
   boundary.
+- Carry the Temporal agent worker's Namespace Pod Security enforcement value
+  on its Deployment pod template as well. A release that changes the admission
+  contract then creates a fresh ReplicaSet after the Namespace is updated,
+  instead of letting Argo inherit a `ProgressDeadlineExceeded` condition from
+  pods rejected under the previous policy.
 - Treat anonymous image access as part of the release handoff. Every
   application image links its GHCR package to the public monorepo through the
   OCI source label. A new package still requires an explicit one-time public
@@ -148,6 +153,8 @@ only an exact retry; and keep the scoped release-health gate authoritative.
 - Cover the cert-manager health override in the synthesized ArgoCD Application
   and prove initial Secret issuance is distinct from terminal Certificate
   failure.
+- Prove the Temporal agent Namespace enforcement label and pod-template rollout
+  annotation carry the same value.
 - Recover the stranded operation only after its live identity and complete
   applied result are revalidated.
 - Require an exact-head PR build and then a fresh successful build of the

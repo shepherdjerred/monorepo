@@ -12,6 +12,7 @@ import { createTemporalUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/re
 import { createTemporalNamespaceInitJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/namespace-init.ts";
 import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker.ts";
 import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker-network-policy.ts";
+import { TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker.ts";
 
 export function createTemporalChart(app: App) {
   const chart = new Chart(app, "temporal", {
@@ -29,7 +30,8 @@ export function createTemporalChart(app: App) {
         // pod-scoped exception, so enforcement must permit those explicit
         // capabilities at the namespace boundary while audit/warn retain the
         // baseline signal for every workload.
-        "pod-security.kubernetes.io/enforce": "privileged",
+        "pod-security.kubernetes.io/enforce":
+          TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT,
         "pod-security.kubernetes.io/audit": "baseline",
         "pod-security.kubernetes.io/warn": "baseline",
       },

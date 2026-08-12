@@ -26,6 +26,8 @@ type CreateTemporalAgentWorkerProps = {
 const AGENT_WORKER_UID = 1000;
 const AGENT_PROVIDER_UID = 1001;
 
+export const TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT = "privileged";
+
 /**
  * Run provider-controlled report-only subprocesses outside the core worker.
  *
@@ -57,6 +59,10 @@ export function createTemporalAgentWorker(
       fsGroup: AGENT_WORKER_UID,
     },
     podMetadata: {
+      annotations: {
+        "ci.sjer.red/pod-security-enforcement":
+          TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT,
+      },
       labels: {
         app: "temporal-agent-worker",
         component: "agent-worker",

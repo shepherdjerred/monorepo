@@ -25,7 +25,10 @@ const DeploymentSchema = z.object({
   metadata: z.object({ name: z.string() }),
   spec: z.object({
     template: z.object({
-      metadata: z.object({ labels: z.record(z.string(), z.string()) }),
+      metadata: z.object({
+        annotations: z.record(z.string(), z.string()),
+        labels: z.record(z.string(), z.string()),
+      }),
       spec: z.object({
         containers: z.array(ContainerSchema),
         initContainers: z.array(ContainerSchema),
@@ -95,6 +98,34 @@ describe("Temporal agent provider network boundary", () => {
       "pod-security.kubernetes.io/audit": "baseline",
       "pod-security.kubernetes.io/warn": "baseline",
     });
+  });
+
+  test("rolls the agent worker when its admission contract changes", () => {
+    const synthesized = resources();
+    const namespace = synthesized.flatMap((resource) => {
+      const parsed = NamespaceSchema.safeParse(resource);
+      return parsed.success && parsed.data.metadata.name === "temporal"
+        ? [parsed.data]
+        : [];
+    })[0];
+    const deployment = synthesized.flatMap((resource) => {
+      const parsed = DeploymentSchema.safeParse(resource);
+      return parsed.success &&
+        parsed.data.metadata.name === "temporal-temporal-agent-worker"
+        ? [parsed.data]
+        : [];
+    })[0];
+    if (namespace === undefined || deployment === undefined) {
+      throw new Error(
+        "Temporal Namespace and agent worker Deployment must be synthesized",
+      );
+    }
+
+    expect(
+      deployment.spec.template.metadata.annotations[
+        "ci.sjer.red/pod-security-enforcement"
+      ],
+    ).toBe(namespace.metadata.labels["pod-security.kubernetes.io/enforce"]);
   });
 
   test("runs provider commands under a firewalled uid distinct from the poller", () => {
