@@ -10,6 +10,11 @@ const REPOSITORY_CHART_URLS = new Set([
   "https://chartmuseum.tailnet-1a49.ts.net",
   "https://chartmuseum.sjer.red",
 ]);
+const PRUNED_RELEASE_CHARTS = new Set([
+  "media",
+  "service-probes",
+  "turbo-cache",
+]);
 
 const ChartMuseumEntrySchema = z.object({
   version: z.string(),
@@ -49,6 +54,10 @@ export type HelmReleasePlan = {
   readonly skipped: readonly ChartPlanEntry[];
   readonly publishOrder: readonly string[];
 };
+
+export function releasePrunesChart(chartName: string): boolean {
+  return PRUNED_RELEASE_CHARTS.has(chartName);
+}
 
 const KubernetesResourceSchema = z.looseObject({
   kind: z.string().optional(),

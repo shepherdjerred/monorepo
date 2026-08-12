@@ -11,9 +11,17 @@ import {
   latestPublishedVersion,
   planCharts,
   plannedChartRevision,
+  releasePrunesChart,
   verifyArchiveDigest,
   type ChartInput,
 } from "./helm-release-core.ts";
+
+test("release pruning is limited to charts with intentional resource removal", () => {
+  expect(
+    ["media", "service-probes", "turbo-cache"].filter(releasePrunesChart),
+  ).toEqual(["media", "service-probes", "turbo-cache"]);
+  expect(releasePrunesChart("apps")).toBe(false);
+});
 
 describe("activeArgoApplicationNames", () => {
   test("returns only active Argo Applications from a multi-document manifest", () => {
