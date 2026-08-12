@@ -244,6 +244,44 @@ describe("OpenRouter Broadcast ingest", () => {
     ).toHaveLength(1);
   });
 
+  test("accepts the delivery when only the post-forward receipt write fails", async () => {
+    const objects = new Map<string, string>();
+    let forwardCount = 0;
+    const archive: BroadcastArchiveStore = {
+      exists: (key) => Promise.resolve(objects.has(key)),
+      put: (key, value) => {
+        if (key.includes("/receipts/")) {
+          return Promise.reject(new Error("SeaweedFS unavailable"));
+        }
+        objects.set(key, value);
+        return Promise.resolve();
+      },
+    };
+    const forwarder: TempoForwarder = {
+      forward: () => {
+        forwardCount += 1;
+        return Promise.resolve();
+      },
+    };
+    const { app, logs } = createHarness({ archive, forwarder });
+
+    // Tempo already has the payload, so answering 502 would make the sender
+    // retry and forward it twice.
+    const response = await request(app);
+    expect(response.status).toBe(204);
+    expect(forwardCount).toBe(1);
+    expect(
+      [...objects.keys()].filter((key) => key.includes("/receipts/")),
+    ).toHaveLength(0);
+    expect(
+      logs.filter(
+        (entry) =>
+          entry.level === "warn" &&
+          entry.message === "Broadcast receipt write failed after forward",
+      ),
+    ).toHaveLength(1);
+  });
+
   test("rejects oversized and malformed payloads", async () => {
     const { app } = createHarness({ maxBodyBytes: 32 });
     const oversizedResponse = await request(app);

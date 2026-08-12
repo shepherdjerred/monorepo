@@ -252,7 +252,15 @@ function createDeliveryProcessor(
         operation: "archive",
         outcome: "error",
       });
-      processingError("archive", error);
+      // The forward already succeeded. Reporting this as a delivery failure
+      // would make the sender retry a payload Tempo has, and the retry would
+      // forward it a second time. The receipt only suppresses later duplicates,
+      // so a lost receipt costs deduplication for this digest, never delivery.
+      dependencies.logger.warn("Broadcast receipt write failed after forward", {
+        digest,
+        error: error instanceof Error ? error.message : String(error),
+        receiptKey: keys.receiptKey,
+      });
     }
     return { digest, duplicate: false, payloadKey: keys.payloadKey };
   };
