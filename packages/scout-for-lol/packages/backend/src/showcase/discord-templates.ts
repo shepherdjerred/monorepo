@@ -46,7 +46,11 @@ export const DISCORD_SHOWCASE_TEMPLATES: DiscordShowcaseTemplate[] = [
     description:
       "Discord message preview for a generated Arena post-match report.",
     queue: "arena",
-    playerCount: 3,
+    // Four, matching the arena-4 variant. This is an independent candidate
+    // lookup, so leaving it at three pinned it to a June object via `--prev`
+    // while every other entry refreshed — three-tracked-player Arena has not
+    // appeared in prod for months.
+    playerCount: 4,
     timestamp: "5:23 AM",
     botMessage: "posted an Arena recap",
     chatMessagesBeforeEmbed: [
