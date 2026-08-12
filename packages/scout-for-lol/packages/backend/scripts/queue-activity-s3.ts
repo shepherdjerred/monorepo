@@ -116,6 +116,28 @@ export function matchDateString(match: RawMatch): string {
 }
 
 /**
+ * Fold one match into the running counts.
+ *
+ * This is the single classification rule, shared by the pure aggregator and the
+ * live S3 walk. They used to be two copies of the same loop, and only the pure
+ * one had tests — so every assertion about custom-game exclusion and UTC date
+ * derivation was made against code that never runs in production.
+ */
+function accumulateMatch(counts: QueueActivityCounts, match: RawMatch): void {
+  // Custom lobbies reuse queue ids from real modes (observed: queueId 3130
+  // with gameType CUSTOM_GAME) — they say nothing about a mode being live,
+  // so they must not feed availability windows.
+  if (match.info.gameType.toUpperCase().startsWith("CUSTOM")) {
+    return;
+  }
+  const queueId = match.info.queueId.toString();
+  const date = matchDateString(match);
+  const byDate = counts[queueId] ?? {};
+  byDate[date] = (byDate[date] ?? 0) + 1;
+  counts[queueId] = byDate;
+}
+
+/**
  * Pure aggregation of RawMatch records into per-queue, per-day counts. Split
  * from the S3 walk so it can be unit-tested against fixtures with no live S3.
  */
@@ -124,17 +146,7 @@ export function aggregateQueueActivity(
 ): QueueActivityCounts {
   const counts: QueueActivityCounts = {};
   for (const match of matches) {
-    // Custom lobbies reuse queue ids from real modes (observed: queueId 3130
-    // with gameType CUSTOM_GAME) — they say nothing about a mode being live,
-    // so they must not feed availability windows.
-    if (match.info.gameType.toUpperCase().startsWith("CUSTOM")) {
-      continue;
-    }
-    const queueId = match.info.queueId.toString();
-    const date = matchDateString(match);
-    const byDate = counts[queueId] ?? {};
-    byDate[date] = (byDate[date] ?? 0) + 1;
-    counts[queueId] = byDate;
+    accumulateMatch(counts, match);
   }
   return counts;
 }
@@ -154,15 +166,11 @@ export async function collectQueueActivity(
   for (const prefix of datePrefixes(config.startDate, config.endDate)) {
     const keys = await listMatchKeysForPrefix(client, config.bucket, prefix);
     for (const key of keys) {
-      const match = await fetchMatch(client, config.bucket, key);
-      if (match.info.gameType.toUpperCase().startsWith("CUSTOM")) {
-        continue;
-      }
-      const queueId = match.info.queueId.toString();
-      const date = matchDateString(match);
-      const byDate = counts[queueId] ?? {};
-      byDate[date] = (byDate[date] ?? 0) + 1;
-      counts[queueId] = byDate;
+      // Streamed one at a time rather than collected and handed to
+      // `aggregateQueueActivity`: a 28-day lookback is tens of thousands of
+      // matches and buffering them all just to fold them is pointless. The
+      // classification itself is shared, which is the part that must not drift.
+      accumulateMatch(counts, await fetchMatch(client, config.bucket, key));
     }
   }
 
