@@ -140,6 +140,21 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
       name: "homeassistant-availability",
       rules: [
         {
+          alert: "HomeAssistantMasterBathroomTemperatureUnavailable",
+          annotations: {
+            description:
+              "The Mysa master bathroom temperature sensor has been unavailable for 15 minutes. Floor-heat decisions are degraded; the morning wake routine will continue without climate actions.",
+            summary: "Master bathroom temperature unavailable",
+            runbook_url:
+              "https://homeassistant.tailnet-1a49.ts.net/history?entity_id=sensor.master_bathroom_temperature",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'homeassistant_entity_available{entity="sensor.master_bathroom_temperature"} == 0',
+          ),
+          for: "15m",
+          labels: { severity: "warning" },
+        },
+        {
           alert: "HomeAssistantEntitiesUnavailable",
           annotations: {
             description: `{{ "{{" }} $value {{ "}}" }} Home Assistant entities are unavailable or unknown:\n{{ "{{" }} with query "${escapedUnavailableEntitiesAnnotationQuery}" {{ "}}" }}{{ "{{" }} range sortByLabel "friendly_name" . {{ "}}" }}\n- {{ "{{" }} .Labels.friendly_name {{ "}}" }} ({{ "{{" }} .Labels.entity {{ "}}" }}){{ "{{" }} end {{ "}}" }}{{ "{{" }} end {{ "}}" }}`,

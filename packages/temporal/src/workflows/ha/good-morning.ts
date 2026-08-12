@@ -31,19 +31,18 @@ const BEDROOM_BRIGHT = "scene.bedroom_bright" as const;
 const MASTER_BATHROOM_HEAT = "climate.master_bathroom" as const;
 const MASTER_BATHROOM_AIR_TEMP = "sensor.master_bathroom_temperature" as const;
 const HOME_ZONE = "zone.home" as const;
-// The INF-V1 floor heater's true max is 40°C. Upstream kgelinas/Mysa_HA capped
-// it at 30°C (issue #16); the fix (PR #18) was closed unmerged and upstream is
-// stale, so HA runs our fork shepherdjerred/Mysa_HA@v0.9.3 (via HACS), which
-// exposes the real device limit. See
-// packages/docs/plans/2026-05-05_mysa-max-temp-cap.md. The morning target is
-// now 30°C (was 40°C until 2026-07) — warm feet without the multi-hour 40°C
-// preheat, and only on cold mornings (see shouldHeatFloor).
+// The INF-V1 floor heater's true max is 40°C. The GitOps-managed Mysa
+// integration carries a checked-in setpoint-limit patch so the device's real
+// range is exposed. The morning target is now 30°C (was 40°C until 2026-07) —
+// warm feet without the multi-hour 40°C preheat, and only on cold mornings
+// (see shouldHeatFloor).
 const MORNING_HEAT_TEMP_C = 30;
 // Cold-morning thresholds (user-tuned 2026-07): heat when the bathroom air is
 // at/below 20°C OR the outdoor temperature is at/below 15°C.
 const HEAT_INDOOR_THRESHOLD_C = 20;
 const HEAT_OUTDOOR_THRESHOLD_C = 15;
 const CONDITIONAL_FLOOR_HEAT_PATCH = "good-morning-conditional-floor-heat-v1";
+const DEGRADED_WAKE_SENSOR_PATCH = "good-morning-degraded-sensor-wake-v1";
 const LEGACY_MORNING_HEAT_TEMP_C = 40;
 const MORNING_HEAT_DURATION = "60 minutes" as const;
 // The floor ramps ~8.3°C/hour (measured 2026-07-09: 22.3→30.6°C in the 60-min
@@ -191,18 +190,34 @@ export async function goodMorningWakeUp(): Promise<void> {
   // or paused). On warm mornings the heat stays off; the rest of the wake
   // routine (notification, media, lights) is unconditional.
   let heat = true;
+  let sensorUnavailable = false;
   if (patched(CONDITIONAL_FLOOR_HEAT_PATCH)) {
-    const decision = await floorHeatDecision();
-    heat = decision.heat;
-    if (heat) {
-      await callServiceUnchecked("climate", "set_temperature", {
-        entity_id: MASTER_BATHROOM_HEAT,
-        temperature: MORNING_HEAT_TEMP_C,
-        hvac_mode: "heat",
-      });
-    } else {
+    try {
+      const decision = await floorHeatDecision();
+      heat = decision.heat;
+      if (heat) {
+        await callServiceUnchecked("climate", "set_temperature", {
+          entity_id: MASTER_BATHROOM_HEAT,
+          temperature: MORNING_HEAT_TEMP_C,
+          hvac_mode: "heat",
+        });
+      } else {
+        console.warn(
+          `good_morning_wake_up: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), heat stays off`,
+        );
+      }
+    } catch (error: unknown) {
+      if (
+        !patched(DEGRADED_WAKE_SENSOR_PATCH) ||
+        !(error instanceof ApplicationFailure) ||
+        error.type !== "TemperatureSensorStateError"
+      ) {
+        throw error;
+      }
+      sensorUnavailable = true;
+      heat = false;
       console.warn(
-        `good_morning_wake_up: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), heat stays off`,
+        "good_morning_wake_up: bathroom temperature unavailable, skipping climate actions and continuing wake routine",
       );
     }
   } else {
@@ -239,17 +254,22 @@ export async function goodMorningWakeUp(): Promise<void> {
     transition: 3,
   });
 
-  // Wait through the heat window, then always turn the thermostat off. The
-  // unconditional cleanup recovers a preheat run that set the thermostat but
-  // failed or was cancelled before its own backstop, even if this second
-  // temperature reading is now warm.
+  // Wait through the heat window, then turn the thermostat off when the
+  // temperature decision succeeded. If the sensor is unavailable, preheat
+  // remains responsible for its own turn-off backstop.
   await sleep(MORNING_HEAT_DURATION);
-  await callServiceUnchecked("climate", "turn_off", {
-    entity_id: MASTER_BATHROOM_HEAT,
-  });
+  if (!sensorUnavailable) {
+    await callServiceUnchecked("climate", "turn_off", {
+      entity_id: MASTER_BATHROOM_HEAT,
+    });
+  }
   await setOutcome(
     "executed",
-    heat ? "wake-routine-complete" : "wake-routine-complete-no-heat",
+    sensorUnavailable
+      ? "wake-routine-complete-temperature-unavailable"
+      : heat
+        ? "wake-routine-complete"
+        : "wake-routine-complete-no-heat",
   );
 }
 

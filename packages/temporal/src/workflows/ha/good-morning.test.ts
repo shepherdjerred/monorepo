@@ -38,6 +38,7 @@ type ServiceCall = {
 
 type Scenario = {
   indoorC: number;
+  indoorState: string;
   outdoorC: number;
   zoneAttributes: Record<string, unknown>;
   serviceCalls: ServiceCall[];
@@ -51,6 +52,7 @@ function makeScenario(
 ): Scenario {
   return {
     indoorC: temps.indoorC,
+    indoorState: String(temps.indoorC),
     outdoorC: temps.outdoorC,
     zoneAttributes,
     serviceCalls: [],
@@ -77,7 +79,7 @@ function makeActivities(scenario: Scenario) {
           return Promise.resolve(entityState(entityId, "not_home"));
         case "sensor.master_bathroom_temperature":
           return Promise.resolve(
-            entityState(entityId, String(scenario.indoorC), {
+            entityState(entityId, scenario.indoorState, {
               unit_of_measurement: "°C",
             }),
           );
@@ -269,6 +271,59 @@ describe("goodMorningPreheat", () => {
 });
 
 describe("goodMorningWakeUp", () => {
+  test(
+    "continues notification and media without climate actions when temperature is unavailable",
+    async () => {
+      const scenario = makeScenario({ indoorC: 18, outdoorC: 5 });
+      scenario.indoorState = "unavailable";
+
+      await runWorker(
+        scenario,
+        goodMorningWakeUp,
+        "wake-temperature-unavailable-" + crypto.randomUUID(),
+      );
+
+      expect(climateCalls(scenario)).toEqual([]);
+      expect(scenario.notifications).toEqual(["Good Morning"]);
+      expect(
+        scenario.serviceCalls.some(
+          (call) =>
+            call.domain === "media_player" && call.service === "play_media",
+        ),
+      ).toBe(true);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningWakeUp",
+          outcome: "executed",
+          reason: "wake-routine-complete-temperature-unavailable",
+        },
+      ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
+  test(
+    "fails non-retryably for unrelated climate decision failures",
+    async () => {
+      const scenario = makeScenario(
+        { indoorC: 18, outdoorC: 5 },
+        { latitude: "47.6", longitude: -122.3 },
+      );
+      await expectNonRetryableApplicationFailure(
+        runWorker(
+          scenario,
+          goodMorningWakeUp,
+          `wake-invalid-zone-${crypto.randomUUID()}`,
+        ),
+        "HomeZoneAttributesError",
+        "Home Assistant zone.home attributes must include numeric latitude and longitude",
+      );
+      expect(scenario.notifications).toEqual([]);
+      expect(climateCalls(scenario)).toEqual([]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
   test(
     "runs the wake routine without heat on a warm morning",
     async () => {
