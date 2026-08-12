@@ -204,8 +204,10 @@ const REQUIRED_SHOWCASE_VARIANT_IDS = [
   "ranked-flex-4-postmatch",
   "ranked-flex-5-prematch",
   "ranked-flex-5-postmatch",
-  "arena-3-prematch",
-  "arena-3-postmatch",
+  "arena-4-prematch",
+  "arena-4-postmatch",
+  // Pre-match only — Riot exposes no post-game payload for League Classic.
+  "classic-prematch",
   "arena-discord",
   "ranked-solo-discord",
   "aram-prematch",

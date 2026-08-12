@@ -291,17 +291,23 @@ function buildEntries(params: {
   prevById: Map<string, ShowcaseEntry>;
 }): ShowcaseEntry[] {
   return params.specs.map((spec) => {
+    // These two short-circuit before the candidate lookup and before the
+    // `--prev` fallback, so they are permanent rather than budget-dependent.
+    // Say so: the generic miss reason below means "not found within the head
+    // budget", which invites someone to raise the budget and rerun. Re-scanning
+    // will not help here — a survey of prod found no four- or five-tracked-player
+    // Flex objects at all.
     if (spec.id.includes("ranked-flex-4")) {
       return unsupportedEntry(
         spec,
-        "Ranked Flex does not normally allow four-player parties, and no real supported payload was found.",
+        "Ranked Flex does not form four-player premades in this data set; no such payload exists in S3, so this is not a scan-budget miss.",
       );
     }
 
     if (spec.id.includes("ranked-flex-5")) {
       return unsupportedEntry(
         spec,
-        "No real supported five-player Ranked Flex payload was found in S3.",
+        "No five-tracked-player Ranked Flex payload exists in S3; this is a permanent gap, not a scan-budget miss.",
       );
     }
 
@@ -408,8 +414,18 @@ function singleQueueSpec(params: {
   group: string;
   queue: QueueType;
   playerCount: number;
+  /**
+   * Which states this mode can actually produce. Defaults to both.
+   *
+   * Some rotating modes only ever yield a pre-match loading screen: Riot's
+   * Match-V5 exposes no post-game payload for them, so no amount of scanning
+   * will find a report. Declaring that here keeps the mode out of the spec set
+   * entirely, rather than emitting a variant that can only ever resolve to an
+   * "not found within the head budget" miss which the next run re-searches.
+   */
+  states?: readonly ("prematch" | "postmatch")[];
 }): VariantSpec[] {
-  return SHOWCASE_STATES.map((state) => ({
+  return (params.states ?? SHOWCASE_STATES).map((state) => ({
     id: `${params.id}-${state}`,
     title: `${params.title} ${state === "prematch" ? "Pre-Match" : "Post-Match"}`,
     group: params.group,
@@ -446,12 +462,29 @@ function variantSpecs(): VariantSpec[] {
         playerCount,
       }),
     ),
+    // Four tracked players, not three. A survey of a week of prod reports found
+    // arena at tracked-player counts 1, 2 and 4 but never 3, and a four-player
+    // subteam renders a wider, denser card.
     ...singleQueueSpec({
-      id: "arena-3",
+      id: "arena-4",
       title: "Arena",
       group: "Arena",
       queue: "arena",
-      playerCount: 3,
+      playerCount: 4,
+    }),
+    // League Classic is pre-match only: Riot's API exposes no post-game payload
+    // for it. Verified against prod — zero `classic` reports across 1,078
+    // post-match objects spanning its launch window, against 8 loading screens
+    // in the same period. It also has its own loading-screen renderer
+    // (report/src/html/loading-screen/classic-layout.tsx), so it is worth
+    // showing.
+    ...singleQueueSpec({
+      id: "classic",
+      title: "League Classic",
+      group: "League Classic",
+      queue: "classic",
+      playerCount: 1,
+      states: ["prematch"],
     }),
     ...singleQueueSpec({
       id: "aram",
@@ -528,6 +561,20 @@ async function competitionGraphEntry(params: {
   keys: string[];
   prevById: Map<string, ShowcaseEntry>;
 }): Promise<ShowcaseEntry> {
+  // An entry that pins its own `bucket` was curated by hand against a source
+  // this scan cannot even see — discover only ever lists the run's `--bucket`.
+  // Without this, a re-curation silently reverts that choice: the fresh entry
+  // below is built from scratch with no `bucket` field, so generate would fall
+  // back to the run bucket and render a different competition (or fail on
+  // NoSuchKey). The `--prev` fallback at the bottom cannot save it either,
+  // because it is only reached when NO competition in the run bucket qualifies.
+  const pinned = params.prevById.get("competition-graph");
+  if (pinned !== undefined && pinned.kind !== "unsupported") {
+    if (pinned.bucket !== undefined) {
+      return pinned;
+    }
+  }
+
   // Prefer the competition with the most snapshots whose *latest* snapshot is
   // actually populated — a dead/cleared leaderboard has snapshots but no
   // entries, which renders as an empty chart.
@@ -618,22 +665,46 @@ const maxHead = z.coerce
   .catch(DEFAULT_MAX_HEAD)
   .parse(values["max-head"] ?? DEFAULT_MAX_HEAD);
 
-// Stop scanning once these reliably-frequent combos are seen (single tracked
-// player in Ranked Solo + Flex appear within the newest few dozen reports).
-// Everything else — multi-player parties, Arena, ARAM, rotating modes — is
-// best-effort within the budget and otherwise preserved from the previous
-// manifest, so the scan stays in the newest objects instead of the whole
-// bucket. This is what keeps discover fast (seconds, not minutes).
-const wantedCombos = new Set(
-  variantSpecs()
-    .filter(
-      (spec) =>
-        spec.state === "postmatch" &&
-        spec.playerCount === 1 &&
-        (spec.queue === "solo" || spec.queue === "flex"),
-    )
-    .map((spec) => comboKey(spec.queue, spec.playerCount)),
-);
+/**
+ * Combos verified not to exist in the bucket, excluded so the scan can still
+ * terminate early.
+ *
+ * `remaining` empties only when EVERY wanted combo has been seen, so a single
+ * unobtainable combo pins both scans to the full head budget. These two are
+ * also hard-coded unsupported in `buildEntries`, so scanning for them buys
+ * nothing: Ranked Flex does not form four- or five-player premades in this
+ * data set.
+ */
+const KNOWN_ABSENT_COMBOS = new Set([comboKey("flex", 4), comboKey("flex", 5)]);
+
+/**
+ * What each scan is looking for, derived from the spec set rather than a
+ * hand-maintained shortlist.
+ *
+ * This was previously hard-coded to `{solo:1, flex:1}` — the two combos that
+ * turn up within the newest few dozen objects. Because the set is the loop
+ * terminator, the scan stopped almost immediately, and every rarer variant
+ * (Arena, ARAM Mayhem, multi-player parties, and now League Classic) was found
+ * only by luck and otherwise carried forward from `--prev` indefinitely. That
+ * is why the committed manifest still referenced May and June objects.
+ *
+ * Split by state because availability differs: League Classic has pre-match
+ * loading screens but no post-match report at all, so a shared set would leave
+ * the post-match scan hunting for something that cannot exist.
+ *
+ * Cost: the scan now walks back until every reachable combo is satisfied or
+ * `--max-head` is hit, so expect it to read materially more object metadata
+ * than before. That is the intended trade — a stale showcase is worse than a
+ * slower re-curation, and this runs weekly at most.
+ */
+function wantedCombosForState(state: "prematch" | "postmatch"): Set<string> {
+  return new Set(
+    variantSpecs()
+      .filter((spec) => spec.state === state)
+      .map((spec) => comboKey(spec.queue, spec.playerCount))
+      .filter((key) => !KNOWN_ABSENT_COMBOS.has(key)),
+  );
+}
 
 const prevById = await loadPrevEntries(values.prev);
 
@@ -643,7 +714,7 @@ const [postmatch, prematch, leaderboardKeys] = await Promise.all([
     bucket,
     prefix: postPrefix,
     imageSuffix: "/report.png",
-    wantedCombos,
+    wantedCombos: wantedCombosForState("postmatch"),
     maxHead,
   }),
   discoverImageCandidates({
@@ -651,7 +722,7 @@ const [postmatch, prematch, leaderboardKeys] = await Promise.all([
     bucket,
     prefix: prematchPrefix,
     imageSuffix: "/loading-screen.png",
-    wantedCombos,
+    wantedCombos: wantedCombosForState("prematch"),
     maxHead,
   }),
   listKeys({ client, bucket, prefix: leaderboardPrefix }),
