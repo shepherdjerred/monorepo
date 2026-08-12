@@ -67,6 +67,15 @@ so this pod-local firewall is the enforcement mechanism. The separate
 agent-worker `NetworkPolicy` documents the same narrower topology for a future
 policy-capable CNI; it is not counted as an active control today.
 
+Pod Security Admission has no pod-scoped capability exception. The `temporal`
+namespace therefore enforces the `privileged` profile so this explicit
+`NET_ADMIN`/`SETUID` design can start, while retaining `baseline` audit and warn
+labels for every workload. This does not make the containers privileged: their
+security contexts still drop all capabilities and add only the two named above,
+with privilege escalation disabled. The synthesized namespace labels and both
+container capability sets are tested together so the admission contract cannot
+drift away from the runtime boundary.
+
 So local filesystem writes are still possible. A sufficiently confused or
 prompt-injected run can corrupt only its disposable workdir; it does not receive
 credentials that can publish that change or mutate the operational APIs.

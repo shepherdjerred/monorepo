@@ -18,7 +18,7 @@ failed stage means.
 | 1     | Suspend the current repository auto-sync on the root `apps` Application   |
 | 2     | Publish the `2.0.0-build` chart set to ChartMuseum, immutably             |
 | 3     | Stage exact child specs and root prerequisites, with children suspended   |
-| 4     | Reconcile child workloads to their exact chart revisions                  |
+| 4     | Reconcile every desired child in root sync-wave order                     |
 | 5     | Restore and safely finalize the exact root revision with verified pruning |
 | 6     | Require every release-scoped child to be `Synced` and `Healthy`           |
 
@@ -38,6 +38,16 @@ uses a local override to keep auto-sync disabled between batches; the final
 prune restores that one policy. Stage 6 is the single authoritative scoped
 health gate.
 
+Stage 4 renders the same exact root revision and walks its child Applications
+in numeric sync-wave order. Repository-published children take their immutable
+revision from the release inventory. External children, such as cert-manager,
+take the complete source pinned in the root manifest, including chart or Git
+revision and Helm values. This matters because stage 3 disabled their auto-sync
+too: waiting until stage 5 to restore
+that policy would let a repository child run against an older external
+controller. A release-inventory child missing from the exact root, or a
+repository child missing from the release inventory, is a hard failure.
+
 The
 [release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)
 stages repository-chart Applications with explicit auto-sync state. The
@@ -53,6 +63,16 @@ chart revision, **even when ArgoCD already reports the application Synced and
 Healthy**. That is intentional: it clears a failed apply after a new
 child-level safety setting made the same immutable chart revision safe to
 retry.
+
+It also checks the most recent deployment history. Immediately after stage 3,
+ArgoCD can compare a newly pinned external source and report the new revision
+as `Synced` before that source has been deployed. The comparison revision alone
+is not release evidence; stage 4 syncs again unless the latest history entry's
+source is semantically identical to the complete rendered source. Comparing
+only the target revision would miss a Helm-values change at the same chart
+version. External applications already deployed from that exact source are
+left to their restored auto-sync policy instead of pulling unrelated
+same-source drift into this release.
 
 So a stuck child usually clears on the next release rather than needing a hand
 sync.

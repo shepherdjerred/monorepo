@@ -34,6 +34,14 @@ const DeploymentSchema = z.object({
   }),
 });
 
+const NamespaceSchema = z.object({
+  kind: z.literal("Namespace"),
+  metadata: z.object({
+    name: z.string(),
+    labels: z.record(z.string(), z.string()),
+  }),
+});
+
 const NetworkPolicySchema = z.object({
   kind: z.literal("NetworkPolicy"),
   metadata: z.object({ name: z.string() }),
@@ -70,6 +78,25 @@ function resources(): unknown[] {
 }
 
 describe("Temporal agent provider network boundary", () => {
+  test("permits the explicit firewall capabilities while auditing baseline", () => {
+    const namespaces = resources().flatMap((resource) => {
+      const parsed = NamespaceSchema.safeParse(resource);
+      return parsed.success ? [parsed.data] : [];
+    });
+    const namespace = namespaces.find(
+      (candidate) => candidate.metadata.name === "temporal",
+    );
+    if (namespace === undefined) {
+      throw new Error("Temporal Namespace was not synthesized");
+    }
+
+    expect(namespace.metadata.labels).toMatchObject({
+      "pod-security.kubernetes.io/enforce": "privileged",
+      "pod-security.kubernetes.io/audit": "baseline",
+      "pod-security.kubernetes.io/warn": "baseline",
+    });
+  });
+
   test("runs provider commands under a firewalled uid distinct from the poller", () => {
     const deployments = resources().flatMap((resource) => {
       const parsed = DeploymentSchema.safeParse(resource);

@@ -22,6 +22,17 @@ export function createTemporalChart(app: App) {
   new Namespace(chart, "temporal-namespace", {
     metadata: {
       name: "temporal",
+      labels: {
+        // The report-only agent worker deliberately uses a short-lived
+        // NET_ADMIN init container for its uid-owned egress firewall and
+        // SETUID in the poller for the provider uid transition. PSA has no
+        // pod-scoped exception, so enforcement must permit those explicit
+        // capabilities at the namespace boundary while audit/warn retain the
+        // baseline signal for every workload.
+        "pod-security.kubernetes.io/enforce": "privileged",
+        "pod-security.kubernetes.io/audit": "baseline",
+        "pod-security.kubernetes.io/warn": "baseline",
+      },
     },
   });
 

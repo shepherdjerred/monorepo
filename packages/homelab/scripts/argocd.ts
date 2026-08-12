@@ -99,18 +99,27 @@ const ManifestResponseSchema = z.object({
   manifests: z.array(z.string()),
 });
 
+const ApplicationSourceSchema = z
+  .object({
+    repoURL: z.string(),
+    chart: z.string().optional(),
+    targetRevision: z.string().min(1),
+  })
+  .loose();
+
 const RenderedApplicationSchema = z
   .object({
     apiVersion: z.string(),
     kind: z.literal("Application"),
-    metadata: z.object({ name: z.string() }).passthrough(),
+    metadata: z
+      .object({
+        name: z.string(),
+        annotations: z.record(z.string(), z.string()).optional(),
+      })
+      .passthrough(),
     spec: z
       .object({
-        source: z.object({
-          repoURL: z.string(),
-          chart: z.string().optional(),
-          targetRevision: z.string().min(1),
-        }),
+        source: ApplicationSourceSchema,
         syncPolicy: z.record(z.string(), z.unknown()).optional(),
       })
       .passthrough(),
@@ -162,6 +171,15 @@ const RootDeploymentHistorySchema = z.object({
 const ReconcileApplicationSchema = z.object({
   status: z
     .object({
+      history: z
+        .array(
+          z.object({
+            id: z.number().int().nonnegative(),
+            revision: z.string().min(1),
+            source: ApplicationSourceSchema.optional(),
+          }),
+        )
+        .optional(),
       sync: z
         .object({
           status: z.string(),
@@ -177,6 +195,18 @@ const ReconcileApplicationSchema = z.object({
     })
     .optional(),
 });
+
+type ExpectedApplication = z.infer<typeof ExpectedApplicationsSchema>[number];
+
+type ReleaseReconciliationTarget = {
+  readonly name: string;
+  readonly order: number;
+  readonly prune: boolean;
+  readonly repositoryRelease: boolean;
+  readonly revision: string;
+  readonly source: z.infer<typeof ApplicationSourceSchema>;
+  readonly wave: number;
+};
 
 function serverUrl(): string {
   return optionalEnv("ARGOCD_SERVER_URL") ?? DEFAULT_SERVER_URL;
@@ -1893,6 +1923,128 @@ async function finalizeAsyncSync(
   );
 }
 
+function applicationSyncWave(
+  application: z.infer<typeof RenderedApplicationSchema>,
+): number {
+  const raw =
+    application.metadata.annotations?.["argocd.argoproj.io/sync-wave"] ?? "0";
+  if (!/^-?\d+$/.test(raw)) {
+    throw new Error(
+      `Application ${application.metadata.name} has invalid sync wave ${raw}`,
+    );
+  }
+  const wave = Number(raw);
+  if (!Number.isSafeInteger(wave)) {
+    throw new Error(
+      `Application ${application.metadata.name} has unsafe sync wave ${raw}`,
+    );
+  }
+  return wave;
+}
+
+function applicationPrunes(
+  application: z.infer<typeof RenderedApplicationSchema>,
+): boolean {
+  const automated = application.spec.syncPolicy?.["automated"];
+  return isRecord(automated) && automated["prune"] === true;
+}
+
+function releaseReconciliationTargets(
+  manifests: readonly string[],
+  expected: readonly ExpectedApplication[],
+  rootAppName: string,
+): readonly ReleaseReconciliationTarget[] {
+  const expectedByName = new Map<string, ExpectedApplication>();
+  for (const application of expected) {
+    if (expectedByName.has(application.name)) {
+      throw new Error(
+        `Expected release inventory contains duplicate Application ${application.name}`,
+      );
+    }
+    expectedByName.set(application.name, application);
+  }
+  if (!expectedByName.delete(rootAppName)) {
+    throw new Error(
+      `Expected release inventory is missing the ${rootAppName} revision`,
+    );
+  }
+
+  const targets: ReleaseReconciliationTarget[] = [];
+  for (const [order, manifestSource] of manifests.entries()) {
+    const parsed: unknown = JSON.parse(manifestSource);
+    if (RenderedObjectSchema.parse(parsed).kind !== "Application") {
+      continue;
+    }
+    const application = RenderedApplicationSchema.parse(parsed);
+    if (application.metadata.name === rootAppName) {
+      continue;
+    }
+    const published = expectedByName.get(application.metadata.name);
+    if (
+      published === undefined &&
+      application.spec.source.chart !== undefined &&
+      REPOSITORY_CHART_URLS.has(application.spec.source.repoURL)
+    ) {
+      throw new Error(
+        `Release inventory is missing repository Application ${application.metadata.name}`,
+      );
+    }
+    if (published !== undefined) {
+      expectedByName.delete(application.metadata.name);
+    }
+    targets.push({
+      name: application.metadata.name,
+      order,
+      prune: published?.prune ?? applicationPrunes(application),
+      repositoryRelease: published !== undefined,
+      revision: published?.revision ?? application.spec.source.targetRevision,
+      source: application.spec.source,
+      wave: applicationSyncWave(application),
+    });
+  }
+
+  if (expectedByName.size > 0) {
+    throw new Error(
+      `Release inventory contains Applications absent from the exact root revision: ${[...expectedByName.keys()].sort().join(", ")}`,
+    );
+  }
+  return targets.sort(
+    (left, right) => left.wave - right.wave || left.order - right.order,
+  );
+}
+
+function latestDeployment(current: z.infer<typeof ReconcileApplicationSchema>):
+  | {
+      readonly revision: string;
+      readonly source?: z.infer<typeof ApplicationSourceSchema> | undefined;
+    }
+  | undefined {
+  const history = current.status?.history;
+  if (history === undefined || history.length === 0) {
+    return undefined;
+  }
+  return history.reduce((latest, candidate) =>
+    candidate.id > latest.id ? candidate : latest,
+  );
+}
+
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => canonicalJson(entry)).join(",")}]`;
+  }
+  if (isRecord(value)) {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`)
+      .join(",")}}`;
+  }
+  const serialized = JSON.stringify(value);
+  if (serialized === undefined) {
+    throw new TypeError("Application source contains a non-JSON value");
+  }
+  return serialized;
+}
+
 async function reconcileRelease(
   expectedPath: string,
   timeoutSeconds: number,
@@ -1923,11 +2075,16 @@ async function reconcileRelease(
     timeoutSeconds,
   );
   const token = requireEnv("ARGOCD_TOKEN");
+  const targets = releaseReconciliationTargets(
+    await getApplicationManifests("apps", appsRelease.revision, token),
+    expected,
+    "apps",
+  );
   // The release step handles the root Application with the subsequent atomic
   // sync. Waiting for it here would make every release depend on unrelated
   // child Application health.
-  for (const wanted of expected) {
-    if (wanted.name === "apps" || deferredApps.has(wanted.name)) {
+  for (const wanted of targets) {
+    if (deferredApps.has(wanted.name)) {
       continue;
     }
     const current = ReconcileApplicationSchema.parse(
@@ -1938,14 +2095,21 @@ async function reconcileRelease(
     const operationPhase = current.status?.operationState?.phase;
     const operationRevision =
       current.status?.operationState?.syncResult?.revision;
+    const deployed = latestDeployment(current);
     const failedCurrentOperation =
       (operationPhase === "Failed" || operationPhase === "Error") &&
       (operationRevision === undefined || operationRevision === revision);
-    if (
+    const deployedExpectedRepositoryRelease =
+      wanted.repositoryRelease &&
       syncStatus === "Synced" &&
-      (wanted.revision === undefined || revision === wanted.revision) &&
-      !failedCurrentOperation
-    ) {
+      revision === wanted.revision &&
+      deployed?.revision === wanted.revision &&
+      !failedCurrentOperation;
+    const deployedExpectedExternalSource =
+      !wanted.repositoryRelease &&
+      deployed?.source !== undefined &&
+      canonicalJson(deployed.source) === canonicalJson(wanted.source);
+    if (deployedExpectedRepositoryRelease || deployedExpectedExternalSource) {
       continue;
     }
     await sync(wanted.name, timeoutSeconds, false, {
