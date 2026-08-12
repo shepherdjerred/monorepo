@@ -30,7 +30,7 @@ const QODO_FINDING_COUNT_LABELS = [
   "Skill insights",
 ];
 
-function activeFindingCount(body: string): number {
+function declaredFindingCount(body: string): number {
   const markerIndex = body.indexOf(QODO_REVIEW_MARKER);
   const dividerIndex = body.indexOf(QODO_DIVIDER_ALT, markerIndex);
   if (markerIndex === -1 || dividerIndex === -1) {
@@ -241,27 +241,26 @@ function assertSectionsAreModelled(reviewBody: string): void {
 
 function assertParsedLayout(input: {
   body: string;
-  expectedActiveFindings: number;
+  expectedFindings: number;
   findings: readonly ReviewThread[];
   severitySections: number;
 }): void {
-  const activeFindings = input.findings.filter(
-    (finding) => !finding.isResolved,
-  ).length;
+  const renderedFindings = input.findings.length;
   const reviewBody = input.body.slice(input.body.indexOf(QODO_DIVIDER_ALT));
   assertSectionsAreModelled(reviewBody);
-  // Qodo may re-append copies, so rendered active findings can exceed the
-  // header count. They must never fall below it: that means at least one
-  // declared active finding disappeared during parsing.
-  if (activeFindings < input.expectedActiveFindings) {
+  // Qodo's persistent comment can retain resolved rows and re-append copies,
+  // so the header is not an exact active-finding count. It is still a lower
+  // bound on the rendered finding rows: falling below it means markup drift
+  // hid at least one declared finding from the parser.
+  if (renderedFindings < input.expectedFindings) {
     throw new Error(
-      `Qodo review comment declares ${input.expectedActiveFindings.toString()} active finding(s) ` +
-        `but only ${activeFindings.toString()} were parsed`,
+      `Qodo review comment declares ${input.expectedFindings.toString()} finding(s) ` +
+        `but only ${renderedFindings.toString()} were parsed`,
     );
   }
   if (
     input.findings.length === 0 &&
-    (input.expectedActiveFindings !== 0 ||
+    (input.expectedFindings !== 0 ||
       input.severitySections !== 0 ||
       /<details>/iu.test(reviewBody))
   ) {
@@ -280,7 +279,7 @@ function assertParsedLayout(input: {
 export function parseQodoIssueComment(
   comment: ReviewIssueComment,
 ): readonly ReviewThread[] {
-  const expectedActiveFindings = activeFindingCount(comment.body);
+  const expectedFindings = declaredFindingCount(comment.body);
   const sections = comment.body.split(QODO_SECTION_SPLIT);
   const rendered: RenderedFinding[] = [];
   let severitySections = 0;
@@ -297,7 +296,7 @@ export function parseQodoIssueComment(
   // counts its copies too.
   assertParsedLayout({
     body: comment.body,
-    expectedActiveFindings,
+    expectedFindings,
     findings: rendered.map((entry) => entry.finding),
     severitySections,
   });

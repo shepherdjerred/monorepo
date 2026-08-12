@@ -118,6 +118,18 @@ describe("qodoProvider", () => {
       }),
     ).toHaveLength(3);
   });
+
+  test("accepts header totals that include resolved findings", () => {
+    expect(
+      parseQodoIssueComment({
+        ...comment,
+        body: comment.body.replace(
+          "<code>📘 Rule violations (1)</code>",
+          "<code>📘 Rule violations (2)</code>",
+        ),
+      }),
+    ).toHaveLength(3);
+  });
 });
 
 describe("qodo layout guards", () => {
@@ -172,26 +184,31 @@ describe("qodo layout guards", () => {
   test("fails closed when changed markup hides one active finding", () => {
     // Replacing both summary tags removes the numbered opener as well as the
     // parsed finding. The neighbouring resolved finding keeps the section
-    // structurally valid, so the declared active count is the independent
+    // structurally valid, so the declared rendered total is the independent
     // lower bound that exposes the omission.
     expect(() =>
       parseQodoIssueComment({
         ...comment,
-        body: comment.body.replace(
-          "<summary>  2. Stale wording <code>📝 Documentation</code></summary>",
-          "<strong>  2. Stale wording <code>📝 Documentation</code></strong>",
-        ),
+        body: comment.body
+          .replace(
+            "<code>📘 Rule violations (1)</code>",
+            "<code>📘 Rule violations (2)</code>",
+          )
+          .replace(
+            "<summary>  2. Stale wording <code>📝 Documentation</code></summary>",
+            "<strong>  2. Stale wording <code>📝 Documentation</code></strong>",
+          ),
       }),
-    ).toThrow("declares 2 active finding(s) but only 1 were parsed");
+    ).toThrow("declares 3 finding(s) but only 2 were parsed");
   });
 
-  test("fails closed when a declared review parses no active findings", () => {
-    expect(() =>
+  test("accepts a fully resolved rendering without treating it as parse loss", () => {
+    expect(
       parseQodoIssueComment({
         ...comment,
         body: comment.body.replaceAll("</summary>", " ☑</summary>"),
       }),
-    ).toThrow("declares 2 active finding(s) but only 0 were parsed");
+    ).toHaveLength(3);
   });
 });
 
