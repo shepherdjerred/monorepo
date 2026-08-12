@@ -23,7 +23,7 @@ the Prisma migration, then:
 ```bash
 bun install
 cd packages/alert-dashboard
-export DATABASE_URL=file:./data/alert-dashboard.db
+export DATABASE_URL="file:$PWD/data/alert-dashboard.db"
 mkdir -p data
 bun run generate         # Prisma client
 bun run migrate:deploy   # create the SQLite schema
