@@ -76,6 +76,11 @@ describe("catalog integrity", () => {
   test("resolves OpenRouter routes back to stable ids", () => {
     expect(modelIdForOpenRouterRoute("openai/gpt-5.6-sol")).toBe("gpt-5.6-sol");
     expect(modelIdForOpenRouterRoute("missing/model")).toBeUndefined();
+    // A dated snapshot and its undated alias share this route, so resolving it
+    // would have to guess which one a run meant.
+    expect(
+      modelIdForOpenRouterRoute("anthropic/claude-haiku-4.5"),
+    ).toBeUndefined();
   });
 });
 

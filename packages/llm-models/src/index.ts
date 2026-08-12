@@ -192,13 +192,38 @@ export function getOpenRouterRoute(id: string): OpenRouterRoute | undefined {
   return MODELS[id]?.routes.openRouter;
 }
 
-/** Resolve a gateway route back to the repository's stable catalog id. */
+// A gateway route is not guaranteed to be unique: a dated snapshot and its
+// undated alias can share one OpenRouter model (anthropic/claude-haiku-4.5 is
+// reached by both claude-haiku-4-5 and claude-haiku-4-5-20251001). A
+// first-match reverse lookup would attribute every dated run to the alias, so
+// ambiguous routes resolve to nothing and callers fall back to the raw route
+// id — an unresolved route is recoverable, a confidently wrong one is not.
+const CATALOG_IDS_BY_OPEN_ROUTER_ROUTE = ((): ReadonlyMap<
+  string,
+  readonly string[]
+> => {
+  const byRoute = new Map<string, string[]>();
+  for (const model of Object.values(MODELS)) {
+    const routeModelId = model.routes.openRouter?.modelId;
+    if (routeModelId === undefined) continue;
+    const ids = byRoute.get(routeModelId) ?? [];
+    ids.push(model.id);
+    byRoute.set(routeModelId, ids);
+  }
+  return byRoute;
+})();
+
+/**
+ * Resolve a gateway route back to the repository's stable catalog id.
+ *
+ * Returns undefined when the route is unknown *or* when more than one catalog
+ * entry claims it, so attribution never reports the wrong model.
+ */
 export function modelIdForOpenRouterRoute(
   routeModelId: string,
 ): string | undefined {
-  return Object.values(MODELS).find(
-    (model) => model.routes.openRouter?.modelId === routeModelId,
-  )?.id;
+  const ids = CATALOG_IDS_BY_OPEN_ROUTER_ROUTE.get(routeModelId);
+  return ids?.length === 1 ? ids[0] : undefined;
 }
 
 export function requireOpenRouterRoute(
