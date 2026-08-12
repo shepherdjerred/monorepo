@@ -5,6 +5,20 @@ import { z } from "zod";
 import { runAllowExit, type RunOptions, type RunResult } from "./run.ts";
 
 const CODEX_MODEL = "gpt-5.6-sol";
+// Every inference credential the release lane's environment may carry. The
+// refiner strips all of them and hands back only the one provider it is about
+// to launch, so neither agent can reach the other's subscription.
+const AGENT_CREDENTIAL_ENVIRONMENT = [
+  "ANTHROPIC_API_KEY",
+  "CLAUDE_CODE_OAUTH_TOKEN",
+  "CODEX_ACCESS_TOKEN",
+  "CODEX_ACCOUNT_ID",
+  "CODEX_API_KEY",
+  "CODEX_ID_TOKEN",
+  "CODEX_REFRESH_TOKEN",
+  "OPENAI_API_KEY",
+];
+const AGENT_CREDENTIAL_ENVIRONMENT_KEYS = new Set(AGENT_CREDENTIAL_ENVIRONMENT);
 const OUTPUT_TAIL_LIMIT = 16_384;
 const CLAUDE_QUOTA_PATTERN =
   /\b(?:hit|reached|exceeded) (?:your )?(?:weekly|monthly|usage)(?: usage)? limit\b/i;
@@ -170,6 +184,30 @@ function commandFailure(provider: string, result: RunResult): Error {
   );
 }
 
+/**
+ * Build a native SDK environment for the release refiner.
+ *
+ * Both SDKs replace the child environment wholesale rather than layering onto
+ * `process.env` the way `run()` does, so passing only the git-auth env would
+ * drop the CI image's mise `PATH` — and Claude is launched with
+ * `executable: "bun"`, which is only resolvable through that PATH. Preserve the
+ * process environment, strip every inference credential, then add back the git
+ * auth and the single provider credential this run needs.
+ */
+export function refinerSdkEnv(
+  input: Pick<RunReleaseRefinerInput, "env">,
+  credentials: Readonly<Record<string, string>>,
+  sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
+): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(sourceEnv)) {
+    if (typeof value !== "string") continue;
+    if (AGENT_CREDENTIAL_ENVIRONMENT_KEYS.has(key)) continue;
+    env[key] = value;
+  }
+  return { ...env, ...input.env, ...credentials };
+}
+
 async function runClaudeAgentSdk(
   input: RunReleaseRefinerInput,
 ): Promise<ReleaseAgentOutcome> {
@@ -179,11 +217,10 @@ async function runClaudeAgentSdk(
       allowedTools: ["Bash", "Read", "Edit", "Write", "Grep", "Glob"],
       allowDangerouslySkipPermissions: true,
       cwd: input.root,
-      env: {
-        ...input.env,
+      env: refinerSdkEnv(input, {
         CLAUDE_CODE_OAUTH_TOKEN: input.claudeToken,
         IS_SANDBOX: "1",
-      },
+      }),
       executable: "bun",
       maxTurns: 80,
       model: "claude-opus-5",
@@ -229,10 +266,9 @@ async function runCodexSdk(
   input: RunReleaseRefinerInput,
 ): Promise<ReleaseAgentOutcome> {
   const codex = new Codex({
-    env: {
-      ...input.env,
+    env: refinerSdkEnv(input, {
       CODEX_ACCESS_TOKEN: input.codexAccessToken,
-    },
+    }),
     config: {
       project_doc_max_bytes: 0,
       features: { apps: false, plugins: false, multi_agent: false },
@@ -277,16 +313,7 @@ async function verifiedCommand(
     cwd: input.root,
     capture: true,
     env: input.env,
-    unsetEnv: [
-      "OPENAI_API_KEY",
-      "CODEX_API_KEY",
-      "CODEX_ACCESS_TOKEN",
-      "CODEX_REFRESH_TOKEN",
-      "CODEX_ID_TOKEN",
-      "CODEX_ACCOUNT_ID",
-      "CLAUDE_CODE_OAUTH_TOKEN",
-      "ANTHROPIC_API_KEY",
-    ],
+    unsetEnv: AGENT_CREDENTIAL_ENVIRONMENT,
   });
   if (result.exitCode !== 0) {
     throw commandFailure("Release refiner verification", result);

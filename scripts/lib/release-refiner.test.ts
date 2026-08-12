@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   isClaudeQuotaExhaustion,
+  refinerSdkEnv,
   runReleaseRefiner,
   type RefinerCommandRunner,
   type ReleaseAgentOutcome,
@@ -359,5 +360,69 @@ describe("release refiner failure handling", () => {
     await expect(runReleaseRefiner(testHarness.input)).rejects.toThrow(
       "Codex release refiner exited 0 without a valid success envelope",
     );
+  });
+});
+
+describe("refinerSdkEnv", () => {
+  const gitAuth = {
+    env: {
+      GH_TOKEN: "minted-token",
+      GIT_ASKPASS: "/tmp/git-askpass.sh",
+      GIT_TERMINAL_PROMPT: "0",
+    },
+  };
+
+  test("preserves the CI image PATH the SDK needs to spawn bun", () => {
+    // Both SDKs replace the environment wholesale; without this the release
+    // lane dies with an executable-not-found before refinement.
+    expect(
+      refinerSdkEnv(gitAuth, {}, { PATH: "/opt/mise/shims:/usr/bin" })["PATH"],
+    ).toBe("/opt/mise/shims:/usr/bin");
+  });
+
+  test("layers git auth and the launched provider's credential on top", () => {
+    expect(
+      refinerSdkEnv(
+        gitAuth,
+        { CLAUDE_CODE_OAUTH_TOKEN: "claude-credential", IS_SANDBOX: "1" },
+        { PATH: "/usr/bin", GH_TOKEN: "worker-token" },
+      ),
+    ).toEqual({
+      PATH: "/usr/bin",
+      GH_TOKEN: "minted-token",
+      GIT_ASKPASS: "/tmp/git-askpass.sh",
+      GIT_TERMINAL_PROMPT: "0",
+      CLAUDE_CODE_OAUTH_TOKEN: "claude-credential",
+      IS_SANDBOX: "1",
+    });
+  });
+
+  test("strips every inference credential the launched provider did not ask for", () => {
+    const environment = refinerSdkEnv(
+      gitAuth,
+      { CODEX_ACCESS_TOKEN: "codex-credential" },
+      {
+        PATH: "/usr/bin",
+        ANTHROPIC_API_KEY: "anthropic-key",
+        CLAUDE_CODE_OAUTH_TOKEN: "claude-credential",
+        CODEX_ACCESS_TOKEN: "worker-codex-credential",
+        CODEX_API_KEY: "codex-key",
+        CODEX_ID_TOKEN: "codex-id",
+        CODEX_REFRESH_TOKEN: "codex-refresh",
+        OPENAI_API_KEY: "openai-key",
+      },
+    );
+
+    expect(environment["CODEX_ACCESS_TOKEN"]).toBe("codex-credential");
+    for (const stripped of [
+      "ANTHROPIC_API_KEY",
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "CODEX_API_KEY",
+      "CODEX_ID_TOKEN",
+      "CODEX_REFRESH_TOKEN",
+      "OPENAI_API_KEY",
+    ]) {
+      expect(environment).not.toHaveProperty(stripped);
+    }
   });
 });
