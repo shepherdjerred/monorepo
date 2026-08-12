@@ -5,6 +5,7 @@ const EXPECTED_VALUE = 1;
 // Services that should have Intel GPU resources, mapped to their chart files
 const GPU_SERVICES: Record<string, string> = {
   plex: "dist/media.k8s.yaml",
+  stash: "dist/stash.k8s.yaml",
 };
 
 async function testGpuResources() {

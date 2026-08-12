@@ -14,6 +14,17 @@ const ManifestSchema = z
   .loose();
 
 const VALID_HASH = `$2a$10$${"a".repeat(53)}`;
+const EXPECTED_STASH_ENV = {
+  TZ: "America/Los_Angeles",
+  STASH_CONFIG_FILE: "/state/config.yml",
+  STASH_STASH: "/data/",
+  STASH_METADATA: "/state/metadata/",
+  STASH_BLOBS: "/state/blobs/",
+  STASH_GENERATED: "/generated/",
+  STASH_CACHE: "/cache/",
+  STASH_PORT: "9999",
+  STASH_HW_DRI_DEVICE: "/dev/dri/renderD128",
+};
 
 // Runs the real init script so the credential guards are proven, not just matched
 // as text. Every case here fails before the script reaches /state, so no test
@@ -206,16 +217,7 @@ describe("Stash chart", () => {
       Object.fromEntries(
         appContainer.env.map(({ name, value }) => [name, value]),
       ),
-    ).toEqual({
-      TZ: "America/Los_Angeles",
-      STASH_CONFIG_FILE: "/state/config.yml",
-      STASH_STASH: "/data/",
-      STASH_METADATA: "/state/metadata/",
-      STASH_BLOBS: "/state/blobs/",
-      STASH_GENERATED: "/generated/",
-      STASH_CACHE: "/cache/",
-      STASH_PORT: "9999",
-    });
+    ).toEqual(EXPECTED_STASH_ENV);
     const ProbeSchema = z.object({
       failureThreshold: z.number(),
       periodSeconds: z.number(),
@@ -236,8 +238,14 @@ describe("Stash chart", () => {
       periodSeconds: 30,
       httpGet: { path: "/healthz", port: 9999 },
     });
+    // The CDK8s JSON patch materializes the extended-resource value during the
+    // post-synthesis patch step; the GPU manifest guard asserts the final 1.
     expect(appContainer.resources).toEqual({
-      limits: { cpu: "4", memory: "4096Mi" },
+      limits: {
+        cpu: "4",
+        memory: "4096Mi",
+        "gpu.intel.com/i915": undefined,
+      },
       requests: { cpu: "250m", memory: "512Mi" },
     });
   });
