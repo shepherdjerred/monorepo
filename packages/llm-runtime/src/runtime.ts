@@ -74,22 +74,43 @@ function resolveModel(modelId: string, requirements: ModelRequirements) {
   return route;
 }
 
+/**
+ * Record metrics and a log line for one observed OpenRouter response.
+ *
+ * Callers invoke this fire-and-forget, so it must never reject: a throwing
+ * metrics registry or caller-supplied logger would otherwise surface as an
+ * unhandled rejection and can take the process down. Failures are reported on
+ * the console rather than through `logger`, which is one of the things that
+ * may have just thrown.
+ */
 async function recordObservedResponse(input: {
   metrics: ReturnType<typeof runtimeMetrics> | undefined;
   observation: Promise<AttributedResponseObservation>;
   service: string;
   logger: NonNullable<OpenRouterRuntimeOptions["logger"]>;
 }): Promise<void> {
-  const observation = await input.observation;
-  recordRouterResponse(input.metrics, {
-    service: input.service,
-    ...observation,
-  });
-  logOpenRouterResponse({
-    logger: input.logger,
-    observation,
-    service: input.service,
-  });
+  try {
+    const observation = await input.observation;
+    recordRouterResponse(input.metrics, {
+      service: input.service,
+      ...observation,
+    });
+    logOpenRouterResponse({
+      logger: input.logger,
+      observation,
+      service: input.service,
+    });
+  } catch (error: unknown) {
+    console.warn(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: "error",
+        message: "OpenRouter response observation failed",
+        service: input.service,
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+  }
 }
 
 export function createOpenRouterRuntime(options: OpenRouterRuntimeOptions) {
@@ -111,6 +132,8 @@ export function createOpenRouterRuntime(options: OpenRouterRuntimeOptions) {
       if (input.observationId !== undefined) {
         responseObservations.set(input.observationId, input.observation);
       }
+      // Fire-and-forget by design: recording must never block or fail a
+      // provider call. recordObservedResponse absorbs its own failures.
       void recordObservedResponse({
         metrics,
         observation: input.observation,
