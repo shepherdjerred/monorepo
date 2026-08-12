@@ -1,10 +1,6 @@
 --- a/custom_components/mysa/mysa_api.py
 +++ b/custom_components/mysa/mysa_api.py
-@@ -290,6 +290,7 @@
-             is_auth_error = (
-                 isinstance(e, ClientResponseError) and e.status == 401
-             ) or (
-                 "NotAuthorizedException" in str(e)
+@@ -294,2 +294,3 @@
                  or "Refresh Token has expired" in str(e)
 +                or (isinstance(e, RuntimeError) and str(e) == "Session not initialized")
              )
