@@ -6,32 +6,19 @@ import {
   escapePrometheusTemplate,
 } from "./shared.ts";
 
-const ignoredUnavailableEntityDomains = [
-  "group",
-  "automation",
-  "scene",
-  "script",
-  "button",
-  "event",
-  "number",
-  "select",
-  "text",
-  "update",
-];
-
-const ignoredUnavailableEntities = [
-  "sensor.unavailable_entities_count",
-  "conversation.home_assistant",
-  "stt.home_assistant_cloud",
-  "tts.home_assistant_cloud",
-];
-
-const ignoredUnavailableEntityDomainPattern = `^(${ignoredUnavailableEntityDomains.join("|")})[.].*`;
-
-const unavailableEntitiesAnnotationQuery = `homeassistant_entity_available{entity!~"${ignoredUnavailableEntityDomainPattern}",${ignoredUnavailableEntities.map((entity) => `entity!="${entity}"`).join(",")}} == 0`;
-
-const escapedUnavailableEntitiesAnnotationQuery =
-  unavailableEntitiesAnnotationQuery.replaceAll('"', String.raw`\"`);
+export const TEMPORAL_AUTOMATION_ENTITY_IDS = [
+  "scene.bedroom_dimmed",
+  "scene.bedroom_bright",
+  "light.bedroom",
+  "climate.bedroom",
+  "climate.master_bathroom",
+  "sensor.master_bathroom_temperature",
+  "zone.home",
+  "lock.front_door",
+  "scene.living_room_bright",
+  "switch.light_2",
+  "switch.light",
+] as const;
 
 const masterBathroomTemperatureAvailability =
   'homeassistant_entity_available{entity="sensor.master_bathroom_temperature"}';
@@ -164,19 +151,23 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           labels: { severity: "warning" },
         },
         {
-          alert: "HomeAssistantEntitiesUnavailable",
+          record: "homeassistant:unavailable_entities_total",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "count(homeassistant_entity_available == 0) or vector(0)",
+          ),
+        },
+        ...TEMPORAL_AUTOMATION_ENTITY_IDS.map((entity) => ({
+          alert: "HomeAssistantAutomationDependencyUnavailable",
           annotations: {
-            description: `{{ "{{" }} $value {{ "}}" }} Home Assistant entities are unavailable or unknown:\n{{ "{{" }} with query "${escapedUnavailableEntitiesAnnotationQuery}" {{ "}}" }}{{ "{{" }} range sortByLabel "friendly_name" . {{ "}}" }}\n- {{ "{{" }} .Labels.friendly_name {{ "}}" }} ({{ "{{" }} .Labels.entity {{ "}}" }}){{ "{{" }} end {{ "}}" }}{{ "{{" }} end {{ "}}" }}`,
-            summary: "Home Assistant entities unavailable",
-            runbook_url:
-              "https://homeassistant.tailnet-1a49.ts.net/history?entity_id=sensor.unavailable_entities_count",
+            description: `Home Assistant entity ${entity}, required by a Temporal home automation, has been unavailable or absent from metrics for 15 minutes.`,
+            summary: `Home automation dependency unavailable: ${entity}`,
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'homeassistant_sensor_unit_entities{entity="sensor.unavailable_entities_count"} > 5',
+            `homeassistant_entity_available{entity="${entity}"} == 0 or absent(homeassistant_entity_available{entity="${entity}"})`,
           ),
           for: "15m",
-          labels: { severity: "warning" },
-        },
+          labels: { severity: "warning", entity },
+        })),
       ],
     },
 

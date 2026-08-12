@@ -11,6 +11,7 @@ const registration = {
   reportType: "daily-report",
   cadenceHours: 24,
   graceHours: 2,
+  receiptRequiredAfter: "2026-08-01T00:00:00.000Z",
 };
 
 afterEach(() => {
@@ -25,6 +26,7 @@ describe("evaluateFreshness", () => {
         registration,
         now,
         acceptedAt: "2026-08-09T11:00:01.000Z",
+        lastActionTakenAt: "2026-08-09T10:00:00.000Z",
         deployed: true,
         paused: false,
       }).status,
@@ -34,6 +36,7 @@ describe("evaluateFreshness", () => {
         registration,
         now,
         acceptedAt: "2026-08-09T09:59:59.000Z",
+        lastActionTakenAt: "2026-08-09T10:00:00.000Z",
         deployed: true,
         paused: false,
       }).status,
@@ -47,6 +50,7 @@ describe("evaluateFreshness", () => {
         registration,
         now,
         acceptedAt: undefined,
+        lastActionTakenAt: "2026-08-10T09:00:00.000Z",
         deployed: true,
         paused: false,
       }).status,
@@ -56,6 +60,7 @@ describe("evaluateFreshness", () => {
         registration,
         now,
         acceptedAt: undefined,
+        lastActionTakenAt: undefined,
         deployed: false,
         paused: false,
       }).status,
@@ -65,14 +70,67 @@ describe("evaluateFreshness", () => {
         registration,
         now,
         acceptedAt: undefined,
+        lastActionTakenAt: undefined,
         deployed: true,
         paused: true,
       }).status,
     ).toBe("schedule-paused");
   });
+
+  test("keeps receipt enforcement pending until a post-activation run exhausts grace", () => {
+    const activationRegistration = {
+      ...registration,
+      receiptRequiredAfter: "2026-08-11T23:52:18.000Z",
+    };
+    expect(
+      evaluateFreshness({
+        registration: activationRegistration,
+        now: new Date("2026-08-12T03:00:00.000Z"),
+        acceptedAt: undefined,
+        lastActionTakenAt: undefined,
+        deployed: true,
+        paused: false,
+      }).status,
+    ).toBe("pending");
+    expect(
+      evaluateFreshness({
+        registration: activationRegistration,
+        now: new Date("2026-08-12T03:00:00.000Z"),
+        acceptedAt: undefined,
+        lastActionTakenAt: "2026-08-12T02:00:00.000Z",
+        deployed: true,
+        paused: false,
+      }).status,
+    ).toBe("pending");
+    expect(
+      evaluateFreshness({
+        registration: activationRegistration,
+        now: new Date("2026-08-12T05:00:01.000Z"),
+        acceptedAt: undefined,
+        lastActionTakenAt: "2026-08-12T02:00:00.000Z",
+        deployed: true,
+        paused: false,
+      }).status,
+    ).toBe("missing");
+  });
 });
 
 describe("publishReportFreshnessMetrics", () => {
+  test("publishes pending schedules outside the alerting range", async () => {
+    publishReportFreshnessMetrics([
+      {
+        scheduleId: "daily-report",
+        status: "pending",
+        acceptedAt: undefined,
+        ageHours: undefined,
+        maximumAgeHours: 26,
+      },
+    ]);
+
+    const metric = await reportFreshnessState.get();
+    expect(metric.values[0]?.value).toBe(2);
+  });
+
   test("removes labels for schedules absent from the latest scan", async () => {
     reportFreshnessState.set({ schedule_id: "deleted-dynamic-task" }, -1);
 
@@ -105,7 +163,11 @@ describe("freshnessDeploymentState", () => {
         paused: false,
         memo: undefined,
       }),
-    ).toEqual({ paused: false, dynamic: true });
+    ).toEqual({
+      paused: false,
+      dynamic: true,
+      lastActionTakenAt: undefined,
+    });
   });
 
   test("recognizes custom dynamic IDs through the memo marker", () => {
@@ -114,7 +176,12 @@ describe("freshnessDeploymentState", () => {
         scheduleId: "custom-agent-check",
         paused: true,
         memo: { dynamicAgentTask: true },
+        recentActions: [{ takenAt: new Date("2026-08-11T23:52:18.000Z") }],
       }),
-    ).toEqual({ paused: true, dynamic: true });
+    ).toEqual({
+      paused: true,
+      dynamic: true,
+      lastActionTakenAt: "2026-08-11T23:52:18.000Z",
+    });
   });
 });

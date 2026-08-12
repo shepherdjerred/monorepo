@@ -7,6 +7,12 @@ const bucket = Bun.env["R2_BUCKET_NAME"] ?? "homelab";
 const basePrefix = Bun.env["R2_PREFIX"] ?? "";
 const prefixDepth = Number.parseInt(Bun.env["R2_PREFIX_DEPTH"] ?? "1", 10);
 
+export type R2Object = {
+  key: string;
+  size: number;
+  lastModified: string;
+};
+
 type InventoryGroup = {
   prefix: string;
   bytes: number;
@@ -76,8 +82,11 @@ function groupName(key: string): string {
   return `${parts.slice(0, Math.max(1, prefixDepth)).join("/")}/`;
 }
 
-async function listObjects(continuationToken: string | undefined): Promise<{
-  objects: { key: string; size: number; lastModified: string }[];
+async function listObjects(
+  prefix: string,
+  continuationToken: string | undefined,
+): Promise<{
+  objects: R2Object[];
   nextContinuationToken: string | undefined;
 }> {
   const now = new Date();
@@ -90,8 +99,8 @@ async function listObjects(continuationToken: string | undefined): Promise<{
     "list-type": "2",
     "max-keys": "1000",
   };
-  if (basePrefix !== "") {
-    query["prefix"] = basePrefix;
+  if (prefix !== "") {
+    query["prefix"] = prefix;
   }
   if (continuationToken !== undefined) {
     query["continuation-token"] = continuationToken;
@@ -153,49 +162,89 @@ async function listObjects(continuationToken: string | undefined): Promise<{
   const objects = [...xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)].map(
     (match) => {
       const content = match[1] ?? "";
-      return {
-        key: textFromXml(content, "Key") ?? "",
-        size: Number.parseInt(textFromXml(content, "Size") ?? "0", 10),
-        lastModified: textFromXml(content, "LastModified") ?? "",
-      };
+      const key = textFromXml(content, "Key");
+      const sizeText = textFromXml(content, "Size");
+      const lastModified = textFromXml(content, "LastModified");
+      if (
+        key === undefined ||
+        sizeText === undefined ||
+        lastModified === undefined
+      ) {
+        throw new TypeError(
+          "R2 object listing omitted required object metadata",
+        );
+      }
+      const size = Number.parseInt(sizeText, 10);
+      if (!Number.isSafeInteger(size) || size < 0) {
+        throw new TypeError(`R2 object ${key} has invalid size ${sizeText}`);
+      }
+      if (!Number.isFinite(Date.parse(lastModified))) {
+        throw new TypeError(
+          `R2 object ${key} has invalid LastModified ${lastModified}`,
+        );
+      }
+      return { key, size, lastModified };
     },
   );
 
+  const isTruncated = textFromXml(xml, "IsTruncated") === "true";
+  const nextContinuationToken = textFromXml(xml, "NextContinuationToken");
+  if (isTruncated && nextContinuationToken === undefined) {
+    throw new Error(
+      "R2 truncated an object listing without a continuation token",
+    );
+  }
+
   return {
     objects,
-    nextContinuationToken:
-      textFromXml(xml, "IsTruncated") === "true"
-        ? textFromXml(xml, "NextContinuationToken")
-        : undefined,
+    nextContinuationToken: isTruncated ? nextContinuationToken : undefined,
   };
 }
 
-async function main(): Promise<void> {
+export async function listR2Objects(prefix: string): Promise<R2Object[]> {
   assertEnv("CLOUDFLARE_R2_ACCESS_KEY_ID", accessKeyId);
   assertEnv("CLOUDFLARE_R2_SECRET_ACCESS_KEY", secretAccessKey);
   assertEnv("CLOUDFLARE_R2_ENDPOINT", endpoint);
 
-  const groups = new Map<string, InventoryGroup>();
+  const objects: R2Object[] = [];
   let continuationToken: string | undefined;
   do {
-    const page = await listObjects(continuationToken);
-    for (const object of page.objects) {
-      const name = groupName(object.key);
-      const group = groups.get(name) ?? {
-        prefix: name,
-        bytes: 0,
-        objects: 0,
-        newest: "",
-      };
-      group.bytes += object.size;
-      group.objects += 1;
-      if (object.lastModified > group.newest) {
-        group.newest = object.lastModified;
-      }
-      groups.set(name, group);
-    }
+    const page = await listObjects(prefix, continuationToken);
+    objects.push(...page.objects);
     continuationToken = page.nextContinuationToken;
   } while (continuationToken !== undefined);
+  return objects;
+}
+
+export function r2Configuration(): {
+  endpoint: string;
+  bucket: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+} {
+  assertEnv("CLOUDFLARE_R2_ACCESS_KEY_ID", accessKeyId);
+  assertEnv("CLOUDFLARE_R2_SECRET_ACCESS_KEY", secretAccessKey);
+  assertEnv("CLOUDFLARE_R2_ENDPOINT", endpoint);
+  return { endpoint, bucket, accessKeyId, secretAccessKey };
+}
+
+async function main(): Promise<void> {
+  const groups = new Map<string, InventoryGroup>();
+  for (const object of await listR2Objects(basePrefix)) {
+    const name = groupName(object.key);
+    const group = groups.get(name) ?? {
+      prefix: name,
+      bytes: 0,
+      objects: 0,
+      newest: "",
+    };
+    group.bytes += object.size;
+    group.objects += 1;
+    if (object.lastModified > group.newest) {
+      group.newest = object.lastModified;
+    }
+    groups.set(name, group);
+  }
 
   console.log("prefix\tbytes\tgib\tobjects\tnewest");
   for (const group of [...groups.values()].toSorted(
@@ -213,4 +262,6 @@ async function main(): Promise<void> {
   }
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}

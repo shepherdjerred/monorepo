@@ -102,8 +102,12 @@ export function summaryFromMetadata(
   return annotations["summary"] ?? labels["alertname"] ?? "Unnamed alert";
 }
 
-export function normalizeGeneratorUrl(value: string): string | null {
-  return value.length === 0 ? null : z.url().parse(value);
+export function normalizeGeneratorUrl(
+  value: string | undefined,
+): string | null {
+  return value === undefined || value.length === 0
+    ? null
+    : z.url().parse(value);
 }
 
 export function openingEmail(alerts: readonly AlertOccurrenceRecord[]): {

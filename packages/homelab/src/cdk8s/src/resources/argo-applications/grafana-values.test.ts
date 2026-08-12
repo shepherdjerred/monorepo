@@ -14,9 +14,10 @@ describe("Buildkite I/O observability Helm values", () => {
     );
   });
 
-  it("allowlists only the pod labels needed for CI attribution", () => {
+  it("allowlists the pod attribution and PVC backup-policy labels", () => {
     expect(BUILDKITE_KUBE_STATE_METRICS_VALUES.metricLabelsAllowlist).toEqual([
       "pods=[buildkite.com/job-uuid,ci.sjer.red/step-key]",
+      "persistentvolumeclaims=[velero.io/backup]",
     ]);
   });
 

@@ -53,7 +53,7 @@ const ALERT_DASHBOARD_SERVICE_URL =
 const ALERTMANAGER_GLOBAL = {
   resolve_timeout: "5m",
   smtp_from: "alerts@sjer.red",
-  smtp_smarthost: "postal-smtp-service.postal.svc.cluster.local:25",
+  smtp_smarthost: "postal-postal-smtp-service.postal.svc.cluster.local:25",
   smtp_require_tls: false,
 };
 
@@ -140,6 +140,11 @@ export async function createPrometheusApp(chart: Chart) {
       CPUThrottlingHigh: {
         for: "30m",
         severity: "info",
+      },
+    },
+    defaultRules: {
+      disabled: {
+        KubeMemoryOvercommit: true,
       },
     },
     kubeProxy: {

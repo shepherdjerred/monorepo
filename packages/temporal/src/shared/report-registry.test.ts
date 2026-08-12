@@ -23,4 +23,14 @@ describe("report schedule registry", () => {
       expect(sourceIds.has(scheduleId)).toBeTrue();
     }
   });
+
+  test("activates receipt enforcement from the deployed receipt-capable worker", () => {
+    expect(
+      new Set(
+        REPORT_SCHEDULE_REGISTRY.map(
+          (registration) => registration.receiptRequiredAfter,
+        ),
+      ),
+    ).toEqual(new Set(["2026-08-11T23:52:18.000Z"]));
+  });
 });

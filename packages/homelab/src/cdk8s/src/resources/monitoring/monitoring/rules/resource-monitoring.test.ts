@@ -86,6 +86,35 @@ describe("liskov memory and Buildkite admission alerts", () => {
   });
 });
 
+describe("production memory request capacity", () => {
+  it("replaces cluster-wide failover assumptions with a torvalds request alert", () => {
+    const group = getResourceMonitoringRuleGroups().find(
+      (candidate) => candidate.name === "resource-memory-monitoring-production",
+    );
+    const alert = group?.rules?.find(
+      (candidate) => candidate.alert === "ProductionNodeMemoryRequestsHigh",
+    );
+    expect(alert?.expr.value).toContain('node="torvalds"');
+    expect(alert?.expr.value).toContain("> 0.95");
+    expect(alert?.for).toBe("15m");
+  });
+});
+
+describe("generic disk write alerts", () => {
+  it("leaves liskov to the dedicated Buildkite write-volume signal", () => {
+    const rules = getResourceMonitoringRuleGroups().flatMap(
+      (group) => group.rules ?? [],
+    );
+    for (const name of [
+      "HighDiskWriteActivity",
+      "SustainedDiskWriteActivity",
+    ]) {
+      const alert = rules.find((candidate) => candidate.alert === name);
+      expect(alert?.expr.value).toContain('node!="liskov"');
+    }
+  });
+});
+
 function securityRules() {
   const groups = getResourceMonitoringRuleGroups();
   const group = groups.find(

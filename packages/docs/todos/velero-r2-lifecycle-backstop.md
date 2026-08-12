@@ -23,6 +23,14 @@ a privileged prerequisite for the durable backstop.
 
 ## Comment Log
 
+### 2026-08-11 — guarded manual remediation retained
+
+- Added a two-phase R2 orphan cleanup tool with a reviewed manifest, 24-hour
+  object-age fence, live Backup CR plus backup-metadata protection, and
+  apply-time drift checks. This makes operator cleanup safer but does not
+  replace the lifecycle backstop; lifecycle policy remains blocked on the
+  minimum required credential.
+
 ### 2026-07-27 — extracted from outage plan
 
 - Separated from the completed incident response because the remaining work is a privileged storage operation.

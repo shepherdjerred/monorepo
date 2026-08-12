@@ -436,7 +436,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
               "Temporal report heartbeat is not fresh for {{ $labels.schedule_id }}",
             ),
             description: escapePrometheusTemplate(
-              "The report freshness monitor recorded state {{ $value }} for {{ $labels.schedule_id }}. State 0 is stale or missing and -1 is an absent, paused, or unregistered schedule. Inspect accepted S3 receipts and deployed Temporal schedules; do not disable the schedule.",
+              "The report freshness monitor recorded state {{ $value }} for {{ $labels.schedule_id }}. State 2 is pending activation, 1 is fresh, 0 is stale or missing, and -1 is an absent, paused, or unregistered schedule. Inspect accepted S3 receipts and deployed Temporal schedules; do not disable the schedule.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

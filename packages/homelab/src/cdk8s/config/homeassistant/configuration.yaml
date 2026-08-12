@@ -55,7 +55,6 @@ homekit:
         - binary_sensor.remote_ui
         - sensor.800_series_long_range_usb_controller_status
         - sensor.petlibro_petlibro_sjer_red
-        - sensor.unavailable_entities_count
         - switch.hacs_pre_release
         # Sonos "buttons lock" config toggle, not a real door lock (same device
         # cluster as the already-excluded auto_brightness/proximity_mode switches)
@@ -238,41 +237,9 @@ automation: !include automation.yaml
 scene: !include scenes.yaml
 script: !include scripts.yaml
 
-# Template sensors for monitoring
+# Template binary sensors for monitoring
 # Note: Jinja2 templates are escaped for Helm compatibility ({{ "{{" }} ... {{ "}}" }})
 template:
-  - sensor:
-      - name: "Unavailable Entities Count"
-        unique_id: unavailable_entities_count
-        state: >
-          {% set ignored_entities = [
-            'sensor.unavailable_entities_count',
-            'conversation.home_assistant',
-            'stt.home_assistant_cloud',
-            'tts.home_assistant_cloud',
-          ] %}
-          {{ "{{" }} states
-             | selectattr('state', 'in', ['unavailable', 'unknown'])
-             | rejectattr('domain', 'in', ['group', 'automation', 'scene', 'script', 'button', 'event', 'number', 'select', 'text', 'update'])
-             | rejectattr('entity_id', 'in', ignored_entities)
-             | list | count {{ "}}" }}
-        unit_of_measurement: "entities"
-        state_class: measurement
-        icon: mdi:alert-circle
-        attributes:
-          entities: >
-            {% set ignored_entities = [
-              'sensor.unavailable_entities_count',
-              'conversation.home_assistant',
-              'stt.home_assistant_cloud',
-              'tts.home_assistant_cloud',
-            ] %}
-            {{ "{{" }} states
-               | selectattr('state', 'in', ['unavailable', 'unknown'])
-               | rejectattr('domain', 'in', ['group', 'automation', 'scene', 'script', 'button', 'event', 'number', 'select', 'text', 'update'])
-               | rejectattr('entity_id', 'in', ignored_entities)
-               | map(attribute='entity_id')
-               | list {{ "}}" }}
   # Roborock Saros 10R per-floor "problem" bridges. The vacuum/status/error enum
   # sensors carry no numeric Prometheus metric, so HA's exporter can't alert on
   # them directly; these device_class:problem template binary_sensors collapse the

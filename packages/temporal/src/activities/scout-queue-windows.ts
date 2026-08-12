@@ -443,6 +443,7 @@ export const scoutQueueWindowsActivities = {
               cwd: repoDir,
               env: { GH_TOKEN: githubToken },
               redactOutput: true,
+              operation: "pr-enable-auto-merge",
             },
           );
           autoMergeConfigured = true;
@@ -476,6 +477,7 @@ export const scoutQueueWindowsActivities = {
               cwd: repoDir,
               env: { GH_TOKEN: githubToken },
               redactOutput: true,
+              operation: "pr-read-auto-merge",
             },
           ),
         );
@@ -486,6 +488,7 @@ export const scoutQueueWindowsActivities = {
               cwd: repoDir,
               env: { GH_TOKEN: githubToken },
               redactOutput: true,
+              operation: "pr-disable-auto-merge",
             },
           );
         }

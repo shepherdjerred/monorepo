@@ -61,7 +61,7 @@ export function createAlertDashboardGrafanaDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            'up{namespace="alert-dashboard",service="alert-dashboard-service"}',
+            'up{namespace="alert-dashboard",service="alert-dashboard-alert-dashboard-service"}',
           )
           .legendFormat("up"),
       )

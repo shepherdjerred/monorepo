@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   occurrenceId,
+  normalizeGeneratorUrl,
   openingEmail,
   severityFromLabels,
   suppressionFromSnapshot,
@@ -74,5 +75,23 @@ describe("alert domain", () => {
       },
     });
     expect(suppressionFromSnapshot(alert)).toBe("silenced");
+  });
+
+  test("accepts direct Alertmanager snapshots without a generator URL", () => {
+    const alert = AlertmanagerSnapshotAlertSchema.parse({
+      annotations: {},
+      endsAt: "2026-08-08T13:00:00Z",
+      fingerprint: "direct-alert",
+      labels: { alertname: "DirectAlert" },
+      startsAt: "2026-08-08T12:00:00Z",
+      status: {
+        inhibitedBy: [],
+        silencedBy: [],
+        state: "active",
+      },
+    });
+
+    expect(alert.generatorURL).toBeUndefined();
+    expect(normalizeGeneratorUrl(alert.generatorURL)).toBeNull();
   });
 });

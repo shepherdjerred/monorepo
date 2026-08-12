@@ -14,8 +14,9 @@ describe("AlertDashboardDown", () => {
 
     expect(alert.expr.value).toContain(" == 0");
     expect(alert.expr.value).toContain(
-      'absent(up{namespace="alert-dashboard",service="alert-dashboard-service"})',
+      'absent(up{namespace="alert-dashboard",service="alert-dashboard-alert-dashboard-service"})',
     );
+    expect(alert.expr.value).not.toContain('service="alert-dashboard-service"');
   });
 
   it("alerts on the oldest pending email age rather than queue occupancy", () => {

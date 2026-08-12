@@ -397,7 +397,7 @@ export function createTemporalDashboard() {
         id: 408,
         title: "Report Heartbeats Fresh",
         description:
-          "Minimum registry heartbeat state. 1 is fresh; 0 is stale/missing; -1 is absent, paused, or unregistered.",
+          "Minimum registry heartbeat state. 2 is pending activation, 1 is fresh, 0 is stale/missing, and -1 is absent, paused, or unregistered.",
         expr: "min(temporal_report_freshness_state) or on() vector(-1)",
         legend: "minimum state",
         x: 0,

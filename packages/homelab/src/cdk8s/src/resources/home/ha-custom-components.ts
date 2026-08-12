@@ -89,8 +89,8 @@ export const HA_CUSTOM_COMPONENTS: HaCustomComponentSpec[] = [
   },
   {
     // True upstream, not the retired shepherdjerred/Mysa_HA fork -- the 3
-    // commits that used to live on that fork (device setpoint limits fix)
-    // are now a checked-in patch instead.
+    // commits that used to live on that fork and the session recovery fix are
+    // checked-in patches instead.
     repo: "kgelinas/Mysa_HA",
     version: versions["kgelinas/Mysa_HA"],
     sha256: MYSA_TARBALL_SHA256,
