@@ -176,22 +176,6 @@
       ]
     },
     {
-      "name": "shepherdjerred/shelfbridge",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-6673@sha256:87072a935d3f9967641e1e67c15a922d89aff4c06fb066a368c8e9e795d664b7",
-      "notes": [
-        "not managed by renovate — built from upstream selmant/shelfbridge at",
-        "SHELFBRIDGE_SOURCE_REF (packages/homelab/images/shelfbridge/Dockerfile);",
-        "upstream publishes goreleaser binaries only, no container image.",
-        "CI's version commit-back fills the real tag@digest after the first image",
-        "push; the seed digest below is a placeholder until then."
-      ]
-    },
-    {
       "name": "itzg/minecraft-server",
       "category": "upstream",
       "artifactType": "image",
@@ -332,34 +316,6 @@
         "versioning": "semver"
       },
       "value": "4.0.19@sha256:24acea2956a0ccb11f103877d9f4f8576600fb34bff34820ed749c2256dab89f"
-    },
-    {
-      "name": "shepherdjerred/bindery",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-6874@sha256:2833a75913988f67adfdf2eb92f0e63c1fa1cc81f503f156fb1474272b0b5472",
-      "notes": [
-        "not managed by renovate — updated by version commit-back",
-        "Self-built from pinned upstream source with the Chinese Google Books patch."
-      ]
-    },
-    {
-      "name": "crocodilestick/calibre-web-automated",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "semver"
-      },
-      "value": "v4.0.6@sha256:c31a738b6d5ec6982c050063dd3f063b6943eb1051fc81144789f840d9093a8d",
-      "notes": [
-        "Calibre-Web Automated — library + ingest + Send-to-Kindle path"
-      ]
     },
     {
       "name": "timothyjmiller/cloudflare-ddns",
@@ -1203,18 +1159,6 @@
         "versioning": "docker"
       },
       "value": "latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b"
-    },
-    {
-      "name": "library/haproxy",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "docker"
-      },
-      "value": "3.4.2-alpine@sha256:0878b11eb64c433be1b0f578a584b8aca12f6caaa64c8f239b8b556c0dd5eeeb"
     },
     {
       "name": "mccloud/bazarr-openai-whisperbridge",

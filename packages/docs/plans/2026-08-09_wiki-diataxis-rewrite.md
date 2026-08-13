@@ -195,7 +195,7 @@ effectively _different products for different users_; here there is one reader
 in different modes, so the mode is the stronger axis.
 
 **One deviation from Scout's flat layout.** Scout's largest section holds 11
-pages. The wiki's `explanation/` will hold 17, which exceeds the seven-item
+pages. The wiki's `explanation/` will hold 16, which exceeds the seven-item
 readability guidance by too much. `explanation/` therefore nests one level by
 subject (`explanation/homelab/`, `explanation/temporal/`, …). `autogenerate`
 renders nested directories as nested groups, so the mechanism is unchanged.
@@ -313,7 +313,7 @@ missed Plane — so any hand-written or pattern-scraped inventory would read as
 complete while being wrong. Derive it from synthesized cdk8s output instead,
 which is also the #2036 generate-don't-transcribe pattern.
 
-### `/explanation/` — 17 pages, nested one level by subject
+### `/explanation/` — 16 pages, nested one level by subject
 
 Sidebar label: **Concepts**. This is where the current wiki is already
 strongest; the "Why it is shaped this way" sections are the best writing on the
@@ -326,7 +326,6 @@ lifted out.
 | `/explanation/how-this-wiki-works/`                | → `how-this-wiki-works.md` + the home page's meta content     |
 | `/explanation/homelab/overview/`                   | NEW — the missing homelab overview                            |
 | `/explanation/homelab/release-safety/`             | → `homelab/releases.md`                                       |
-| `/explanation/homelab/qbittorrent-webseed-relay/`  | → `homelab/qbittorrent-vpn-webseed-relay.md`                  |
 | `/explanation/homelab/scout-evals-trust-boundary/` | → `homelab/scout-evals-tailnet-boundary.md`                   |
 | `/explanation/homelab/buildkite-admission/`        | → `homelab/buildkite-admission.md`                            |
 | `/explanation/homelab/plane/`                      | → `homelab/plane.md`                                          |
@@ -487,7 +486,7 @@ shippable — the wiki stays coherent between phases.
 | 2     | Machinery: `autogenerate` sidebar, section directories, redirect table, section test                                                          | `bun run typecheck test build test:e2e` green; no content moved yet                                                        |
 | 3     | Reference: create all seven reference pages by lifting facts out of existing pages                                                            | Every flag, path, schedule, and value in the wiki lives on exactly one reference page                                      |
 | 4     | How-to: create all nine guides, using phantom links to phase-3 reference pages                                                                | No procedure remains embedded in an explanation page                                                                       |
-| 5     | Explanation: rewrite all seventeen pages against the style rules, now that they carry only _why_                                              | No page mixes genres; sentence and bullet limits met                                                                       |
+| 5     | Explanation: rewrite all sixteen pages against the style rules, now that they carry only _why_                                                | No page mixes genres; sentence and bullet limits met                                                                       |
 | 6     | Tutorials, home page, cross-link pass, gap fills (`/explanation/monorepo/`, `/explanation/homelab/overview/`, `/reference/homelab-services/`) | Home routes by need; every how-to links its reference; four formerly orphaned pages reachable                              |
 
 Phase 1 leads deliberately: writing the steering first means phases 3–6 are

@@ -21,7 +21,7 @@ topology details, the 1Password secret linter, and operator runbooks
 | `src/tofu`       | OpenTofu stacks (Cloudflare, GitHub, Tailscale, ArgoCD, SeaweedFS, …) — see its [README](src/tofu/README.md) |
 | `src/helm-types` | Generator for type-safe Helm chart value interfaces                                                          |
 | `mac-ci`         | Bootstrap for a macOS Buildkite agent (currently dormant) — see its [README](mac-ci/README.md)               |
-| `images`         | Custom Docker images (bindery, caddy-s3proxy, mcp-gateway, obsidian-headless, redlib, shelfbridge)           |
+| `images`         | Custom Docker images (caddy-s3proxy, mcp-gateway, obsidian-headless, redlib)                                 |
 | `scripts`        | Release/automation scripts: helm push, ArgoCD reconcile, tofu stack wrapper, Velero, Tracker Tracker         |
 
 ## Details

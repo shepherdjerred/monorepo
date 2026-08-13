@@ -1042,7 +1042,6 @@ steps:
         - ".buildkite/scripts/buildkit-env.ts"
         - ".buildkite/scripts/ci-changed.ts"
         - ".buildkite/scripts/docker-source-label.ts"
-        - ".buildkite/scripts/hcl-source.ts"
         - ".buildkite/scripts/migration-core.ts"
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
         - ".buildkite/scripts/select-image-targets.ts"

@@ -69,7 +69,6 @@ General issue tracking — deferred work, acceptance-testing gaps, post-merge ve
 - [Discord Plays Pokémon Audio Research](guides/2026-06-13_dpp-audio-research.md) - Investigation notes on the DPP audio pipeline
 - [Streambot Autonomous Perf-Debug Runbook](guides/2026-06-14_streambot-autonomous-perf-debug-runbook.md) - End-to-end perf-debugging loop for streambot
 - [\*arr Stack Subtitle Strategy](guides/2026-06-27_arr-stack-subtitle-strategy.md) - Bazarr providers, forced/EN/zh targets, scoring, bilingual, Whisper & Lingarr — cited research
-- [Ebook Stack (Bindery + CWA + Kindle)](guides/2026-07-19_ebook-stack-bindery-cwa.md) - Bindery acquire → CWA library/Auto-Send → Kindle; paths, Postal SMTP, first-boot checklist
 - [npm Granular Token Rotation](guides/2026-05-20_npm-granular-token-rotation.md) - Rotating npm granular tokens: WebAuthn-gated bypass-2FA, classic tokens retired, 90-day cap
 - [Homelab SMART/NVMe Disk Metrics](guides/2026-06-28_homelab-smart-disk-metrics.md) - How disk health metrics are emitted/labeled and the serial-stability fix
 - [Homelab OpenTofu Stack Addition](guides/2026-06-28_homelab-tofu-stack-addition.md) - Adding a Tofu stack: import-before-merge, secret threading, `*arr` key locations
@@ -92,6 +91,7 @@ Historical docs preserved for reference. These are no longer actively maintained
 - [`archive/changelogs/`](archive/changelogs/) - 1 historical changelog
 - [`archive/completed/`](archive/completed/) - 177 plans whose work has shipped (preserves design context)
 - [`archive/dagger-migration/`](archive/dagger-migration/) - Dagger-era plans, audits, decisions, and runbooks (Dagger removed from the monorepo 2026-07)
+- [`archive/ebook-stack/`](archive/ebook-stack/) - Ebook-stack plan, operator runbook, board items, and shipped design records (Bindery, CWA, ShelfBridge, and the qBittorrent webseed relay removed from the homelab 2026-08)
 - [`archive/homelab-audits/`](archive/homelab-audits/) - 9 superseded homelab health audit snapshots
 - [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
 - [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist

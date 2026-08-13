@@ -101,7 +101,7 @@ in that dimension; existing non-CPU/memory device limits remain intact.
   selector that emits `tailscale.com/proxy-class`.
 - Assign heavy to ChartMuseum and SeaweedFS S3.
 - Assign medium to turbo-cache, Bazarr, Loki, Sonarr, PinchTab, Minecraft
-  Bluemap, Bindery, Plex, MCP gateway, Maintainerr, Alertmanager, and ArgoCD.
+  Bluemap, Plex, MCP gateway, Maintainerr, Alertmanager, and ArgoCD.
   All other proxies use standard.
 
 ## Storage and cache controls

@@ -92,8 +92,6 @@ export default defineConfig({
     "/homelab/alerts": "/explanation/homelab/alerts/",
     "/homelab/buildkite-admission": "/explanation/homelab/buildkite-admission/",
     "/homelab/plane": "/explanation/homelab/plane/",
-    "/homelab/qbittorrent-vpn-webseed-relay":
-      "/explanation/homelab/qbittorrent-webseed-relay/",
     "/homelab/releases": "/explanation/homelab/release-safety/",
     "/homelab/scout-evals-tailnet-boundary":
       "/explanation/homelab/scout-evals-trust-boundary/",

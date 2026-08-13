@@ -1,18 +1,20 @@
 ---
 id: plan-2026-07-19-ebook-stack-bindery-cwa
 type: plan
-status: in-progress
+status: complete
 board: false
 ---
 
 # Ebook stack: Bindery + CWA + Kindle Auto-Send
 
-Partially Complete — code on
-[PR #1581](https://github.com/shepherdjerred/monorepo/pull/1581); post-merge
-operator setup pending.
+Retired — the ebook stack (Bindery, Calibre-Web Automated, ShelfBridge, and the
+qBittorrent webseed relay) was removed from the homelab. This plan is preserved
+as the design record behind the storage and backup artifacts the removal
+retained; it is no longer an active work item. Code originally shipped on
+[PR #1581](https://github.com/shepherdjerred/monorepo/pull/1581).
 
 **Operator runbook (canonical):**
-[`guides/2026-07-19_ebook-stack-bindery-cwa.md`](../guides/2026-07-19_ebook-stack-bindery-cwa.md)
+[`2026-07-19_ebook-stack-bindery-cwa-guide.md`](./2026-07-19_ebook-stack-bindery-cwa-guide.md)
 
 ## Goal
 
@@ -60,7 +62,7 @@ convert/metadata/email. Library mount is read-only to prevent dual writers on
 
 ## Post-deploy checklist (summary)
 
-Full steps: [operator guide](../guides/2026-07-19_ebook-stack-bindery-cwa.md).
+Full steps: [operator guide](./2026-07-19_ebook-stack-bindery-cwa-guide.md).
 
 1. Argo sync `media` + `postal`
 2. Bindery: qBit + Prowlarr; External → `/ingest`; prefer EPUB

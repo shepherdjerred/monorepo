@@ -7,9 +7,14 @@ board: false
 
 # Ebook stack: Bindery + Calibre-Web Automated + Kindle
 
+Retired — the ebook stack (Bindery, Calibre-Web Automated, ShelfBridge, and the
+qBittorrent webseed relay) was removed from the homelab. This runbook is
+preserved as the operational history behind the storage and backup artifacts the
+removal retained; it no longer describes a running system.
+
 Operational reference — infra in PR
 [#1581](https://github.com/shepherdjerred/monorepo/pull/1581) / plan
-[`plans/2026-07-19_ebook-stack-bindery-cwa.md`](../plans/2026-07-19_ebook-stack-bindery-cwa.md).
+[`2026-07-19_ebook-stack-bindery-cwa-plan.md`](./2026-07-19_ebook-stack-bindery-cwa-plan.md).
 
 ## Why this exists
 
@@ -308,9 +313,9 @@ kubectl logs -n media deploy/media-qbittorrent -c shelfbridge-relay
 
 ## Related
 
-- Plan: [`plans/2026-07-19_ebook-stack-bindery-cwa.md`](../plans/2026-07-19_ebook-stack-bindery-cwa.md)
-- ShelfBridge plan: [`archive/completed/2026-07-19_shelfbridge-torznab-ebooks.md`](../archive/completed/2026-07-19_shelfbridge-torznab-ebooks.md)
+- Plan: [`2026-07-19_ebook-stack-bindery-cwa-plan.md`](./2026-07-19_ebook-stack-bindery-cwa-plan.md)
+- ShelfBridge plan: [`archive/ebook-stack/2026-07-19_shelfbridge-torznab-ebooks.md`](2026-07-19_shelfbridge-torznab-ebooks.md)
 - Post-deploy checklist (merge order, Torznab caps check, Chinese E2E, gluetun):
   the original investigation
 - Research notes (local): `~/.claude-extra/research/hands-off-ebook-arr-kindle-2026.{md,pdf}`
-- Subtitle \*arr guide (separate): [`2026-06-27_arr-stack-subtitle-strategy.md`](2026-06-27_arr-stack-subtitle-strategy.md)
+- Subtitle \*arr guide (separate): [`guides/2026-06-27_arr-stack-subtitle-strategy.md`](../../guides/2026-06-27_arr-stack-subtitle-strategy.md)

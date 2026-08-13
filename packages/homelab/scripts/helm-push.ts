@@ -19,6 +19,7 @@ import {
   latestPublishedVersion,
   planCharts,
   plannedChartRevision,
+  releasePrunesChart,
   verifyArchiveDigest,
   type ChartInput,
   type PublishedChart,
@@ -304,7 +305,7 @@ async function writeReleaseArtifacts(
         ...Object.entries(revisions).map(([name, revision]) => ({
           name,
           revision,
-          prune: name === "service-probes" || name === "turbo-cache",
+          prune: releasePrunesChart(name),
         })),
       ],
       undefined,

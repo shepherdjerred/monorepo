@@ -1,11 +1,9 @@
 ---
 id: bindery-patched-image-rollout-operator
 type: todo
-status: in-progress
-board: true
-verification: operator
-disposition: blocked
-origin: packages/docs/archive/completed/2026-07-25_bindery-fork-chinese-add.md
+status: complete
+board: false
+origin: packages/docs/archive/ebook-stack/2026-07-25_bindery-fork-chinese-add.md
 ---
 
 # Complete the privileged Bindery patched-image rollout checks
@@ -17,12 +15,19 @@ publicly pullable, PR #1759 merged, and the durable deployment is Ready on the
 first-party pinned image. Final validation uses the restricted production
 Bindery API and media pipeline.
 
-## Remaining
+## Resolution
 
-- [x] Make `ghcr.io/shepherdjerred/bindery` public and verify anonymous access to the pinned digest.
-- [ ] After the agent-authored deployment switch merges, replay the Chinese Google Books add and confirm HTTP 201 plus Wanted → ShelfBridge → qBittorrent → ingest → CWA flow.
-- [ ] Confirm the Bindery UI no longer returns 422 for the same Chinese selection.
-- [ ] Re-test a fresh Chinese grab when ShelfBridge returns a resolvable LibGen/Z-Library result, or configure credentials for a source that can resolve the current Anna's Archive results.
+Obsolete. The ebook stack was removed from the homelab, so the restricted Bindery API, UI, and media-chain checks no longer have a live target.
+
+Completed before retirement:
+
+- Make `ghcr.io/shepherdjerred/bindery` public and verify anonymous access to the pinned digest.
+
+Outstanding when retired:
+
+- After the agent-authored deployment switch merges, replay the Chinese Google Books add and confirm HTTP 201 plus Wanted → ShelfBridge → qBittorrent → ingest → CWA flow.
+- Confirm the Bindery UI no longer returns 422 for the same Chinese selection.
+- Re-test a fresh Chinese grab when ShelfBridge returns a resolvable LibGen/Z-Library result, or configure credentials for a source that can resolve the current Anna's Archive results.
 
 ## Comment Log
 
@@ -57,3 +62,7 @@ Bindery API and media pipeline.
 - Confirmed PR #1759 merged with green exact-head Buildkite #6712.
 - Confirmed the `media` Argo application is `Synced`/`Healthy` and Bindery is Ready on `ghcr.io/shepherdjerred/bindery:2.0.0-6874@sha256:2833…`.
 - The remaining restricted API, UI, and media-chain checks are now the only work on this card.
+
+### 2026-08-11 — retired with the ebook stack
+
+- Retired with the ebook stack. Bindery, Calibre-Web Automated, ShelfBridge, and the qBittorrent webseed relay were removed from the homelab, so this work is obsolete and will not be implemented. Preserved for the rationale behind the storage and backup artifacts the removal retained.

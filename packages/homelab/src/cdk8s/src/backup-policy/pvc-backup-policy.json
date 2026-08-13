@@ -145,24 +145,6 @@
   },
   {
     "namespace": "media",
-    "name": "bindery-pvc",
-    "backup": "enabled",
-    "reason": "Bindery application state"
-  },
-  {
-    "namespace": "media",
-    "name": "cwa-pvc",
-    "backup": "enabled",
-    "reason": "CWA application state"
-  },
-  {
-    "namespace": "media",
-    "name": "ebooks-hdd-pvc",
-    "backup": "enabled",
-    "reason": "User-managed ebook library"
-  },
-  {
-    "namespace": "media",
     "name": "maintainerr-pvc",
     "backup": "enabled",
     "reason": "Maintainerr configuration and database"

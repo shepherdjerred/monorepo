@@ -171,9 +171,9 @@ whose siblings are **mutually exclusive**, e.g. a **probe handler type**
 - The app is stuck `OutOfSync`/`SyncFailed` even though the **synthesized
   manifest is already correct** — no code change to the manifest heals it, because
   the problem is the stale live-object ownership, not the manifest. (This wedged the
-  `media` app in 2026-08; the `shelfbridge-relay` sidecar's probes were switched
-  from `httpGet` to `tcpSocket` while an untracked `httpGet` object was already
-  live. See the original investigation.)
+  `media` app in 2026-08; a relay sidecar's probes were switched from `httpGet`
+  to `tcpSocket` while an untracked `httpGet` object was already live. See the
+  original investigation.)
 
 **Remediate (one time):** force a full replace so the orphaned field is dropped.
 **Scope the replace to the one resource** with `--resource` — an app-level

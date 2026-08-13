@@ -1169,7 +1169,7 @@ test("keeps upstream provenance for infrastructure images", async () => {
   const events: string[] = [];
   await pushImages(
     {
-      targets: ["bindery"],
+      targets: ["redlib"],
       commit: "commit",
       buildNumber: "42",
       contractHash: "contract",
@@ -1180,7 +1180,7 @@ test("keeps upstream provenance for infrastructure images", async () => {
       readVersionCatalog: async () =>
         versionCatalogSource([
           {
-            name: "shepherdjerred/bindery",
+            name: "shepherdjerred/redlib",
             value: `2.0.0-1@${pinned}`,
           },
         ]),
