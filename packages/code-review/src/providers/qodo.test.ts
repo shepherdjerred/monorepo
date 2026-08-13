@@ -215,6 +215,22 @@ describe("qodo layout guards", () => {
     ).toHaveLength(3);
   });
 
+  test("fails closed when drift hides the final rendered finding", () => {
+    // Reshaping the LAST finding's wrapper leaves 1 and 2 parsed, which is a
+    // contiguous prefix, and its section still opens a numbered finding — so
+    // every within-parser guard passes. Only reading the numbering with a
+    // matcher the strict parser does not use proves row 3 was rendered.
+    expect(() =>
+      parseQodoIssueComment({
+        ...comment,
+        body: comment.body.replace(
+          "<summary>  3. Fixed finding <s>old issue</s> ☑</summary>",
+          "<strong>  3. Fixed finding <s>old issue</s> ☑</strong>",
+        ),
+      }),
+    ).toThrow("Qodo renders finding 3 but only 2 parsed");
+  });
+
   test("accepts a fully resolved rendering without treating it as parse loss", () => {
     expect(
       parseQodoIssueComment({

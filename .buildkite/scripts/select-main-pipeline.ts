@@ -452,9 +452,17 @@ async function main(): Promise<number> {
     validateRenderedSteps(rendered);
     // Clear any selection the failed attempt recorded: an empty value is how
     // the summary learns the complete graph was uploaded and every step
-    // exists. Doing it before the upload keeps the no-failure-after-upload
-    // rule that makes this fallback safe.
-    await recordSelectedSteps(new Set());
+    // exists. Best-effort, and deliberately not allowed to abort the fallback:
+    // this path exists to get a graph into the build when selection failed, so
+    // a metadata write must never be what leaves main with no steps at all. A
+    // stale value only mislabels rows in the summary annotation.
+    try {
+      await recordSelectedSteps(new Set());
+    } catch (clearError) {
+      const detail =
+        clearError instanceof Error ? clearError.message : String(clearError);
+      console.error(`WARN: could not clear the recorded selection: ${detail}`);
+    }
     await uploadPipeline(document, rendered, changedFilesPath);
     await annotateFallback(reason);
     return 0;

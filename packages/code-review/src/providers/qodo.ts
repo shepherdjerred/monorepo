@@ -255,6 +255,43 @@ function assertContiguousNumbering(rendered: readonly RenderedFinding[]): void {
 }
 
 /**
+ * A finding opener that survives a change of wrapper tag. The strict parser
+ * only recognizes `<summary>`; this recognizes the numbering itself wherever
+ * Qodo renders it.
+ */
+const LOOSE_FINDING_OPENER =
+  /<(?:summary|strong|b|p|h[1-6])[^>]*>\s*(\d+)\.\s/giu;
+
+/**
+ * Prove the parser reached the last finding the comment renders.
+ *
+ * Contiguity alone cannot: if drift reshapes the FINAL row, the numbers that
+ * survive are 1..n-1, which is contiguous, and the section still opens a
+ * numbered finding, so every other guard passes while the terminal finding is
+ * silently dropped. Reading the numbering with a looser matcher than the one
+ * that parses findings makes the two independent — the strict parse is checked
+ * against markup the strict parse cannot see — so a row that drifted out of the
+ * parser is still counted here.
+ */
+function assertNoFindingBeyondParsed(
+  reviewBody: string,
+  rendered: readonly RenderedFinding[],
+): void {
+  let highest = 0;
+  for (const match of reviewBody.matchAll(LOOSE_FINDING_OPENER)) {
+    const text = match[1];
+    if (text === undefined) continue;
+    highest = Math.max(highest, Number.parseInt(text, 10));
+  }
+  if (highest > rendered.length) {
+    throw new Error(
+      `Qodo renders finding ${String(highest)} but only ` +
+        `${String(rendered.length)} parsed`,
+    );
+  }
+}
+
+/**
  * Guard the layout structurally rather than by arithmetic. Qodo's header total
  * is not reconcilable with its own list — it re-appends a fresh copy of every
  * finding on each re-review, so a comment can enumerate more findings than the
@@ -331,6 +368,10 @@ export function parseQodoIssueComment(
     severitySections,
   });
   assertContiguousNumbering(rendered);
+  assertNoFindingBeyondParsed(
+    comment.body.slice(comment.body.indexOf(QODO_DIVIDER_ALT)),
+    rendered,
+  );
 
   return dedupeRenderedFindings(rendered);
 }

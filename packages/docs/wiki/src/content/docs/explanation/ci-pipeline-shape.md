@@ -20,11 +20,12 @@ any two of them would lose information the pipeline is built to preserve.
   against the lane defined in [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
 - **llm-observability E2E** is the dedicated tracing-stack lane. It starts Tempo
   and MinIO and runs only `@shepherdjerred/llm-observability`'s
-  service-dependent tests. It is not the only lane with a live backing service —
-  `alert-dashboard-postgres` runs a Postgres sidecar for the alert-ledger
-  integration tests — but it is the only one that needs a whole trace pipeline,
-  where a failure means the exporter/collector/object-store path broke rather
-  than a query. See the `docker-e2e` and `alert-dashboard-postgres` steps in
+  service-dependent tests. That live backing stack is what sets it apart:
+  `alert-dashboard-sqlite` also runs integration tests for the alert ledger, but
+  against a local SQLite file rather than a service. This lane is the only one
+  needing a whole trace pipeline, where a failure means the
+  exporter/collector/object-store path broke rather than a query. See the
+  `docker-e2e` and `alert-dashboard-sqlite` steps in
   [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
 - **OpenTofu** stays split into infrastructure stacks, GitHub resources, and
   Cloudflare resources. Those three have different ordering, concurrency,
