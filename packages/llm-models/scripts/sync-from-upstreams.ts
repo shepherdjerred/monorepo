@@ -19,8 +19,13 @@
  *      entry's OWN provider. See `providerKey`.
  *   2. Implausible edits are withheld and reported rather than applied. See
  *      `priceRejection` / `contextRejection`.
- * A withheld edit is not a failure — it is the script saying a human should
- * read the provider's own pricing page. It must never be reduced to stdout,
+ * A withheld edit is not a failure, and it is not a correction waiting to be
+ * applied either — it is the script saying a human should read the provider's
+ * own pricing page and decide. The catalog value can be the deliberate one:
+ * `claude-sonnet-5` holds the standard $3/$15 while upstreams list the
+ * introductory $2/$10, so the guard fires every week on a divergence that is
+ * working as intended. Anything that tells an operator to apply the upstream
+ * value unconditionally is wrong. It must never be reduced to stdout,
  * though: a run that withholds everything writes no catalog diff, so the
  * unattended caller would otherwise see a clean no-op and a real repricing
  * would sit unreviewed forever. `--report-json` gives that caller a typed
@@ -336,7 +341,7 @@ function emitReport(report: SyncReport, check: boolean): void {
   );
   if (report.withheld.length > 0) {
     emit(
-      `\nWITHHELD by plausibility guards — verify against the provider's own pricing page before applying by hand:\n${report.withheld.join("\n")}`,
+      `\nWITHHELD by plausibility guards — check each against the provider's own pricing page, then either apply the upstream value or confirm the catalog's is intended (a divergence can be deliberate, e.g. a standard rate held while upstream lists a promotional one):\n${report.withheld.join("\n")}`,
     );
   }
   if (report.overlayOnly.length > 0) {

@@ -68,8 +68,11 @@ export function buildCatalogWithheldAlert(
       ].join("\n")
     : [
         `sync-from-upstreams.ts refused ${String(withheld.length)} upstream edit(s) on a plausibility`,
-        "guard, so those values are NOT in the catalog. Verify each line against the",
-        "provider's own pricing page, then apply it by hand.",
+        "guard, so the catalog still holds its current values. Check each line against",
+        "the provider's own pricing page and decide: apply the upstream value, or",
+        "confirm the catalog's value is the intended one. Both are real outcomes — a",
+        "divergence can be deliberate, such as a standard rate held while upstream",
+        "lists a temporary promotional one.",
         prUrl === undefined
           ? "This run opened no catalog PR, so these withheld lines are its only outcome."
           : `The other ${String(applied.length)} edit(s) passed the guards and were applied — review those in ${prUrl}, not here.`,

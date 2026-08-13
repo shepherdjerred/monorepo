@@ -40,6 +40,27 @@ describe("buildCatalogWithheldAlert", () => {
     expect(alert.annotations["summary"]).toContain("2 upstream edit(s)");
   });
 
+  test("asks the operator to adjudicate rather than to apply", () => {
+    // A withheld value is not always a correction. The catalog deliberately
+    // holds claude-sonnet-5 at the standard $3/$15 while upstreams list the
+    // introductory $2/$10, so the guard fires every week on an intended
+    // divergence. Telling the operator to apply upstream would undo it.
+    const alert = buildCatalogWithheldAlert(
+      {
+        applied: [],
+        withheld: ["  claude-sonnet-5.input: 3 -> 2 is a 33% change"],
+        prUrl: undefined,
+      },
+      NOW,
+    );
+    const description = alert.annotations["description"] ?? "";
+    expect(description).toContain("apply the upstream value");
+    expect(description).toContain(
+      "confirm the catalog's value is the intended",
+    );
+    expect(description).not.toContain("apply it by hand");
+  });
+
   test("says nothing was published when no PR was opened", () => {
     const alert = buildCatalogWithheldAlert(
       { applied: [], withheld: ["  a.input: reason"], prUrl: undefined },
