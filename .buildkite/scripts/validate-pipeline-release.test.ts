@@ -45,6 +45,19 @@ describe("atomic ArgoCD root sync pipeline contract", () => {
     );
   });
 
+  test("rejects any additional argocd.ts invocation", () => {
+    expect(() =>
+      validateAtomicRootSyncLifecycle(
+        [
+          releaseRoot,
+          argocdCommand("suspend-auto-sync apps --timeout 300"),
+        ].join("\n"),
+      ),
+    ).toThrow(
+      "argocd-sync must contain exactly one identity-bound release-root command",
+    );
+  });
+
   test("ignores comments but rejects behavior-changing flags", () => {
     expect(() => validateAtomicRootSyncLifecycle(`# ${releaseRoot}`)).toThrow(
       "argocd-sync must contain exactly one identity-bound release-root command",

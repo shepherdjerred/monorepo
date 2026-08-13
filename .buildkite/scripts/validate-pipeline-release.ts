@@ -38,14 +38,12 @@ export function validateAtomicRootSyncLifecycle(
         .slice(1)
         .map((command) => command.trim()),
     );
-  const releaseRootCommands = executableCommands.filter((line) =>
-    /^(?:release-root|stage-root-release|reconcile-release|finalize-root-release|release-health-wait|finalize-async-sync|sync(?:-managed)?)\s+/.test(
-      line,
-    ),
-  );
+  // Every argocd.ts invocation counts. Allowlisting only the lifecycle
+  // subcommands would let an unrelated one (suspend-auto-sync,
+  // delete-application, health-wait) rejoin the step without failing here.
   if (
-    releaseRootCommands.length !== 1 ||
-    releaseRootCommands[0] !== RELEASE_ROOT_SUBCOMMAND
+    executableCommands.length !== 1 ||
+    executableCommands[0] !== RELEASE_ROOT_SUBCOMMAND
   ) {
     fail(
       "argocd-sync must contain exactly one identity-bound release-root command",
