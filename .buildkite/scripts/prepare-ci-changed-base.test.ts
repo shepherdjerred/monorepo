@@ -52,6 +52,26 @@ test("keeps normal selectors unchanged without fixed-corpus mode", () => {
   ).toBe(false);
 });
 
+test("treats the pipeline's default branch as the fixed-corpus branch", () => {
+  // Every main-only pipeline condition keys off `pipeline.default_branch`, so
+  // this must too: comparing to the literal "main" would reject the default
+  // branch itself wherever it is named something else.
+  expect(
+    fixedCorpusMode({
+      CI_IO_FIXED_CORPUS: "true",
+      BUILDKITE_BRANCH: "trunk",
+      BUILDKITE_PIPELINE_DEFAULT_BRANCH: "trunk",
+    }),
+  ).toBe(true);
+  expect(() =>
+    fixedCorpusMode({
+      CI_IO_FIXED_CORPUS: "true",
+      BUILDKITE_BRANCH: "main",
+      BUILDKITE_PIPELINE_DEFAULT_BRANCH: "trunk",
+    }),
+  ).toThrow("trunk-only");
+});
+
 test("rejects invalid and non-main fixed-corpus requests", () => {
   expect(() =>
     fixedCorpusMode({

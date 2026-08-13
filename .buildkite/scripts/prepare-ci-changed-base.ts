@@ -25,8 +25,12 @@ if (import.meta.main) {
   if (token === undefined) throw new Error("BUILDKITE_API_TOKEN is required");
   const organization = Bun.env["BUILDKITE_ORGANIZATION_SLUG"] ?? "sjerred";
   const pipeline = Bun.env["BUILDKITE_PIPELINE_SLUG"] ?? "monorepo";
+  // The last-green base must come from the branch this pipeline treats as its
+  // default; hardcoding "main" would query a branch that may not exist and
+  // silently degrade selection to the fail-open path.
+  const defaultBranch = Bun.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] ?? "main";
   const response = await fetch(
-    `https://api.buildkite.com/v2/organizations/${organization}/pipelines/${pipeline}/builds?branch=main&state=passed&per_page=20`,
+    `https://api.buildkite.com/v2/organizations/${organization}/pipelines/${pipeline}/builds?branch=${encodeURIComponent(defaultBranch)}&state=passed&per_page=20`,
     {
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(20_000),

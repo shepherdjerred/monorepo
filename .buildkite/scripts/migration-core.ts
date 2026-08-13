@@ -45,10 +45,16 @@ export function fixedCorpusMode(
       'CI_IO_FIXED_CORPUS must be exactly "true" when set',
     );
   }
+  // Key off the same signal the uploader and every main-only pipeline condition
+  // use (`pipeline.default_branch`), not the literal name. Comparing to "main"
+  // would reject the default branch itself wherever it is called something
+  // else, hard-failing the build before the selector's fail-open path.
+  const defaultBranch =
+    environment["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] ?? "main";
   const branch = environment["BUILDKITE_BRANCH"];
-  if (branch !== "main") {
+  if (branch !== defaultBranch) {
     throw new FixedCorpusConfigurationError(
-      `CI_IO_FIXED_CORPUS is main-only; BUILDKITE_BRANCH was ${branch ?? "unset"}`,
+      `CI_IO_FIXED_CORPUS is ${defaultBranch}-only; BUILDKITE_BRANCH was ${branch ?? "unset"}`,
     );
   }
   return true;
