@@ -81,7 +81,7 @@ describe("manifest override batching", () => {
     ).toHaveLength(2);
   });
 
-  test("counts the root finalizer phase marker in revisioned requests", () => {
+  test("counts the root release phase marker in revisioned requests", () => {
     const overrides = [override("one", 400), override("two", 400)];
 
     expect(
@@ -94,7 +94,7 @@ describe("manifest override batching", () => {
       batchManifestOverrides(overrides, {
         maxRequestBytes: 1470,
         revision: "2.0.0-42",
-        rootFinalizerPhase: "batch",
+        rootReleasePhase: "batch",
       }),
     ).toHaveLength(2);
   });

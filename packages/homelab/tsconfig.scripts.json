@@ -6,6 +6,8 @@
   },
   "include": [
     "scripts/argocd.ts",
+    "scripts/argocd-apply-safety.ts",
+    "scripts/argocd-apply-safety.test.ts",
     "scripts/argocd-manifest-overrides.ts",
     "scripts/argocd-manifest-overrides.test.ts",
     "scripts/helm-set-version.ts",

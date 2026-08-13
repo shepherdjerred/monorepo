@@ -5,6 +5,16 @@ function state(value: unknown): string {
   return JSON.stringify(value);
 }
 
+function database(volumeClaimTemplates: readonly unknown[]): string {
+  return state({
+    spec: {
+      serviceName: "db",
+      selector: { matchLabels: { app: "db" } },
+      volumeClaimTemplates,
+    },
+  });
+}
+
 describe("ArgoCD apply safety", () => {
   test("reports immutable StatefulSet template changes", () => {
     const findings = analyzeApplySafety([
@@ -31,44 +41,6 @@ describe("ArgoCD apply safety", () => {
     ]);
     expect(findings).toEqual([
       "apps/StatefulSet loki/loki changes immutable /spec/volumeClaimTemplates",
-    ]);
-  });
-
-  test("reports mutually exclusive probe handler swaps", () => {
-    const findings = analyzeApplySafety([
-      {
-        group: "apps",
-        kind: "Deployment",
-        namespace: "media",
-        name: "relay",
-        liveState: state({
-          spec: {
-            selector: { matchLabels: { app: "relay" } },
-            template: {
-              spec: {
-                containers: [
-                  { name: "relay", livenessProbe: { httpGet: { path: "/" } } },
-                ],
-              },
-            },
-          },
-        }),
-        targetState: state({
-          spec: {
-            selector: { matchLabels: { app: "relay" } },
-            template: {
-              spec: {
-                containers: [
-                  { name: "relay", livenessProbe: { tcpSocket: { port: 80 } } },
-                ],
-              },
-            },
-          },
-        }),
-      },
-    ]);
-    expect(findings).toEqual([
-      "apps/Deployment media/relay changes /spec/template/spec/containers/0/livenessProbe handler from httpGet to tcpSocket; use a resource-scoped replace",
     ]);
   });
 
@@ -139,6 +111,13 @@ describe("ArgoCD apply safety", () => {
   });
 
   test("ignores API-defaulted fields inside an immutable template", () => {
+    const claim = {
+      metadata: { name: "data" },
+      spec: {
+        accessModes: ["ReadWriteOnce"],
+        resources: { requests: { storage: "8Gi" } },
+      },
+    };
     expect(
       analyzeApplySafety([
         {
@@ -146,39 +125,72 @@ describe("ArgoCD apply safety", () => {
           kind: "StatefulSet",
           namespace: "test",
           name: "db",
-          liveState: state({
-            spec: {
-              serviceName: "db",
-              selector: { matchLabels: { app: "db" } },
-              volumeClaimTemplates: [
-                {
-                  metadata: { name: "data" },
-                  spec: {
-                    accessModes: ["ReadWriteOnce"],
-                    resources: { requests: { storage: "8Gi" } },
-                    volumeMode: "Filesystem",
-                  },
-                },
-              ],
-            },
-          }),
-          targetState: state({
-            spec: {
-              serviceName: "db",
-              selector: { matchLabels: { app: "db" } },
-              volumeClaimTemplates: [
-                {
-                  metadata: { name: "data" },
-                  spec: {
-                    accessModes: ["ReadWriteOnce"],
-                    resources: { requests: { storage: "8Gi" } },
-                  },
-                },
-              ],
-            },
-          }),
+          liveState: database([
+            { ...claim, spec: { ...claim.spec, volumeMode: "Filesystem" } },
+          ]),
+          targetState: database([claim]),
         },
       ]),
     ).toEqual([]);
+  });
+});
+
+function relayDeployment(
+  liveContainers: readonly unknown[],
+  targetContainers: readonly unknown[],
+) {
+  return {
+    group: "apps",
+    kind: "Deployment",
+    namespace: "media",
+    name: "relay",
+    liveState: state({
+      spec: { template: { spec: { containers: liveContainers } } },
+    }),
+    targetState: state({
+      spec: { template: { spec: { containers: targetContainers } } },
+    }),
+  };
+}
+
+describe("ArgoCD probe handler safety", () => {
+  test("reports mutually exclusive probe handler swaps", () => {
+    expect(
+      analyzeApplySafety([
+        relayDeployment(
+          [{ name: "relay", livenessProbe: { httpGet: { path: "/" } } }],
+          [{ name: "relay", livenessProbe: { tcpSocket: { port: 80 } } }],
+        ),
+      ]),
+    ).toEqual([
+      "apps/Deployment media/relay changes /spec/template/spec/containers/[name=relay]/livenessProbe handler from httpGet to tcpSocket; use a resource-scoped replace",
+    ]);
+  });
+
+  test("correlates probe handlers across reordered containers", () => {
+    const relay = { name: "relay", livenessProbe: { httpGet: { path: "/" } } };
+    const sidecar = {
+      name: "sidecar",
+      livenessProbe: { tcpSocket: { port: 9 } },
+    };
+    expect(
+      analyzeApplySafety([relayDeployment([relay, sidecar], [sidecar, relay])]),
+    ).toEqual([]);
+  });
+
+  test("reports a probe handler swap beside an inserted container", () => {
+    expect(
+      analyzeApplySafety([
+        relayDeployment(
+          [{ name: "relay", livenessProbe: { httpGet: { path: "/" } } }],
+          [
+            { name: "proxy", livenessProbe: { httpGet: { path: "/" } } },
+            { name: "relay", livenessProbe: { tcpSocket: { port: 80 } } },
+          ],
+        ),
+      ]),
+    ).toEqual([
+      "apps/Deployment media/relay changes /spec/template/spec/containers/[name=relay]/livenessProbe handler from httpGet to tcpSocket; use a resource-scoped replace",
+    ]);
   });
 });

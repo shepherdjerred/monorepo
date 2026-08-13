@@ -38,7 +38,7 @@ That process stages the exact root with child auto-sync disabled, performs the
 read-only immutable/handler preflight, reconciles exact child sources, restores
 every deterministic wave, verifies prune candidates, and owns scoped health.
 Retries may adopt only the exact request ID, revision, resource selection, and
-`batch` or `prune` phase marker. Never terminate a root operation by revision
+`stage`, `batch`, or `prune` phase marker. Never terminate a root operation by revision
 alone.
 
 An ordinary global sync from ArgoCD remains supported: admission merges every

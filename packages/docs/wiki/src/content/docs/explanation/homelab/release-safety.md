@@ -176,7 +176,12 @@ an independent last line of defense, not a replacement for that proof.
 Immutable selector, service, volume-claim-template, and PVC field changes, plus
 mutually exclusive probe-handler swaps, are discoverable from ArgoCD's live and
 target resource states before a child sync starts. `release-root` hard-refreshes
-comparison and performs that read-only analysis. Any finding fails the release
+comparison and performs that read-only analysis. ArgoCD reports managed
+resources against the Application's configured source, so when a sync requests a
+different revision the preflight renders that exact revision and compares the
+live state against it instead. Probe handlers are correlated by container name,
+because Kubernetes merges container lists by name and a reordered or inserted
+container changes no handler. Any finding fails the release
 before submitting the child operation, so the operator sees the exact resource
 and field instead of a partially applied sync. The preflight does not invent a
 fallback or silently replace resources; remediation remains an explicit source
@@ -265,7 +270,9 @@ Buildkite retries reuse the build UUID. The
 adopts only the same request ID and revision. It refuses any unrelated active
 operation. For the root workflow, the active resource selection must also equal
 one exact desired batch or the unselected final prune. Each owned operation
-also persists a `batch` or `prune` phase marker. An unselected operation is
+also persists a `stage`, `batch`, or `prune` phase marker, so a staging batch
+and a restoration batch over the same resources stay distinguishable. An
+unselected operation is
 adoptable as the final prune only when that marker says `prune` and Argo's prune
 flag is true, so an older full-source operation cannot borrow prior-batch proof.
 A generated per-operation UUID binds the top-level live operation to its

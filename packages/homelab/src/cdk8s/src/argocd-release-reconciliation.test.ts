@@ -106,6 +106,9 @@ describe("Argo CD staged external release reconciliation", () => {
         ) {
           return Response.json({ items: [] });
         }
+        if (request.method === "GET" && url.pathname.endsWith("/manifests")) {
+          return Response.json({ manifests: [] });
+        }
         const syncMatch = /^\/api\/v1\/applications\/([^/]+)\/sync$/.exec(
           url.pathname,
         );

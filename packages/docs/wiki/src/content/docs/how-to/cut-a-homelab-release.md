@@ -161,7 +161,7 @@ Buildkite retries reuse the build UUID. `release-root` adopts an operation only
 when the UUID and revision match and its selected resources are exactly one
 desired batch, or when it is the unselected final prune. An unrelated active
 operation or an unexpected selection remains a hard failure. The operation must
-also carry the finalizer's explicit `batch` or `prune` marker; prune adoption
+also carry an explicit `stage`, `batch`, or `prune` marker; prune adoption
 requires Argo's prune flag. This prevents an interrupted legacy full-source sync
 from impersonating the post-batch prune. Each POST also receives an internal
 operation UUID; adoption requires the live operation and its status to share

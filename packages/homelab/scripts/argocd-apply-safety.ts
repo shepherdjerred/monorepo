@@ -13,7 +13,7 @@ export const ManagedResourcesSchema = z.object({
   items: z.array(ManagedResourceSchema),
 });
 
-type ManagedResource = z.infer<typeof ManagedResourceSchema>;
+export type ManagedResource = z.infer<typeof ManagedResourceSchema>;
 
 const JsonObjectSchema = z.record(z.string(), z.unknown());
 const PROBE_HANDLERS = ["exec", "grpc", "httpGet", "tcpSocket"] as const;
@@ -82,14 +82,40 @@ function activeProbeHandler(probe: Record<string, unknown>): string | null {
   return handlers.length === 1 ? (handlers[0] ?? null) : null;
 }
 
+/**
+ * Kubernetes merges container and init-container lists by `name`, so a chart
+ * that inserts or reorders an entry leaves every other container untouched.
+ * Key such lists by name and fall back to positions only for lists that are
+ * not name-keyed, so a probe path identifies the same container on both sides.
+ */
+function arrayEntrySegments(entries: readonly unknown[]): readonly string[] {
+  const names = entries.flatMap((entry) => {
+    const parsed = JsonObjectSchema.safeParse(entry);
+    if (!parsed.success) {
+      return [];
+    }
+    const name = parsed.data["name"];
+    return typeof name === "string" && name !== "" ? [name] : [];
+  });
+  if (names.length !== entries.length || new Set(names).size !== names.length) {
+    return entries.map((_entry, index) => index.toString());
+  }
+  return names.map((name) => `[name=${name}]`);
+}
+
 function collectProbeHandlers(
   value: unknown,
   path: string,
   output: Map<string, string>,
 ): void {
   if (Array.isArray(value)) {
+    const segments = arrayEntrySegments(value);
     for (const [index, entry] of value.entries()) {
-      collectProbeHandlers(entry, `${path}/${index.toString()}`, output);
+      collectProbeHandlers(
+        entry,
+        `${path}/${segments[index] ?? index.toString()}`,
+        output,
+      );
     }
     return;
   }

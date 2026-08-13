@@ -87,10 +87,13 @@ marks unselected retained children as requiring prune.
 Main releases must use `argocd.ts release-root` with the exact apps revision,
 release inventory, and Buildkite request UUID. One process owns root staging,
 child preflight and reconciliation, exact-wave restoration, verified pruning,
-and scoped health. Its bounded internal operations retain the request UUID,
-revision, resource selection, and `batch` or `prune` phase marker, so a retry
-cannot adopt unrelated work. Only the self-managed root Application remains
-auto-sync suspended while those operations run.
+and scoped health. Every bounded internal operation, including root staging and
+each child reconciliation, retains that request UUID, the revision, its resource
+selection, and a `stage`, `batch`, or `prune` phase marker, so an interrupted
+release adopts only its own in-flight operation and never unrelated work. The
+apply-safety preflight inspects the revision the sync will request, not the
+Application's currently configured source. Only the self-managed root
+Application remains auto-sync suspended while those operations run.
 
 Ordinary manual or UI root syncs are supported. Admission merges each managed
 child Application's declared sync options into the requested operation, with
