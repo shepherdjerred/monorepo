@@ -51,4 +51,20 @@ describe("buildCatalogWithheldAlert", () => {
     expect(firingMs).toBeGreaterThan(7 * 24 * 60 * 60 * 1000);
     expect(alert.startsAt).toBe(NOW.toISOString());
   });
+
+  test("an empty withheld set resolves immediately instead of firing", () => {
+    // Without this a remediated finding keeps reporting for the full eight-day
+    // lifetime, and the next clean weekly run would not shorten it.
+    const resolved = buildCatalogWithheldAlert([], NOW);
+    expect(resolved.endsAt).toBe(NOW.toISOString());
+    expect(resolved.startsAt).toBe(resolved.endsAt);
+    expect(resolved.annotations["summary"]).toContain("resolved");
+  });
+
+  test("the resolution targets the firing alert's exact label set", () => {
+    // Alertmanager identifies an alert by its labels alone, so a single
+    // differing label would leave the firing occurrence open forever.
+    const firing = buildCatalogWithheldAlert(["  a.input: reason"], NOW);
+    expect(buildCatalogWithheldAlert([], NOW).labels).toEqual(firing.labels);
+  });
 });

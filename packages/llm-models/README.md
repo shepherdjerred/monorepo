@@ -70,7 +70,9 @@ The Temporal schedule `llm-catalog-refresh-weekly`
 runs this cross-check every Monday and opens a PR when pricing drifts. When
 every edit is withheld there is nothing to PR, so the activity reads
 `--report-json` and raises an `LlmCatalogDriftWithheld` Alertmanager
-occurrence instead.
+occurrence instead. Every run publishes that occurrence from its own report, so
+the next run that withholds nothing resolves it rather than leaving remediated
+drift reported until the alert expires.
 
 ## Development
 

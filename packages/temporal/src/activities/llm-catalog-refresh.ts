@@ -31,7 +31,14 @@ export type LlmCatalogRefreshResult = {
   outcome: "pr-created" | "no-diff" | "withheld-only";
 };
 
-async function postWithheldAlert(withheld: string[]): Promise<void> {
+/**
+ * Publish this run's withheld state — firing while edits await adjudication,
+ * resolving as soon as a run finds none. It is deliberately driven by the
+ * report alone and not by whether a PR was opened: conditioning the resolve on
+ * the catalog diff would leave an already-remediated alert firing for its full
+ * eight-day lifetime.
+ */
+async function publishWithheldAlert(withheld: string[]): Promise<void> {
   const alertmanagerUrl = Bun.env["ALERTMANAGER_URL"];
   if (alertmanagerUrl === undefined || alertmanagerUrl === "") {
     throw new Error(
@@ -97,24 +104,18 @@ export const llmCatalogRefreshActivities = {
       const summary = SyncReportSchema.parse(
         await Bun.file(reportJsonPath).json(),
       );
+      // A withheld-only run writes no catalog diff, so without this it would be
+      // indistinguishable from a clean no-op.
+      await publishWithheldAlert(summary.withheld);
 
-      const noDiff = async (): Promise<LlmCatalogRefreshResult> => {
-        const base = {
-          changedFiles: [],
-          branchName: undefined,
-          commitHash: undefined,
-          prUrl: undefined,
-          withheld: summary.withheld,
-        };
-        if (summary.withheld.length === 0) {
-          return { ...base, outcome: "no-diff" };
-        }
-        // Withheld-only: the guards found real drift and refused to apply it,
-        // so there is no diff to PR and this run would otherwise be
-        // indistinguishable from a clean no-op. Page a human instead.
-        await postWithheldAlert(summary.withheld);
-        return { ...base, outcome: "withheld-only" };
-      };
+      const noDiff = (): LlmCatalogRefreshResult => ({
+        changedFiles: [],
+        branchName: undefined,
+        commitHash: undefined,
+        prUrl: undefined,
+        withheld: summary.withheld,
+        outcome: summary.withheld.length === 0 ? "no-diff" : "withheld-only",
+      });
 
       // trimStdout: false so porcelain v1's leading-space status code isn't
       // stripped (see parsePorcelainPaths in #shared/porcelain.ts).
@@ -125,7 +126,7 @@ export const llmCatalogRefreshActivities = {
         }),
       );
       if (dirty.length === 0) {
-        return await noDiff();
+        return noDiff();
       }
 
       // Format the rewritten JSON with the repo's pinned prettier so the PR
@@ -144,7 +145,7 @@ export const llmCatalogRefreshActivities = {
         }),
       );
       if (files.length === 0) {
-        return await noDiff();
+        return noDiff();
       }
 
       const branch = `chore/llm-catalog-refresh-${id.slice(0, 8)}`;
