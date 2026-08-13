@@ -91,8 +91,15 @@ function priorityForSection(section: string): 1 | 2 | 3 | null {
   return null;
 }
 
-/** One rendered finding plus the identity shared by its re-appended copies. */
-type RenderedFinding = { identity: string; finding: ReviewThread };
+/**
+ * One rendered finding, the position Qodo numbered it with, and the identity
+ * shared by its re-appended copies.
+ */
+type RenderedFinding = {
+  number: number;
+  identity: string;
+  finding: ReviewThread;
+};
 
 /**
  * Canonical form of a rendered finding, used to recognize the copies Qodo
@@ -115,11 +122,12 @@ function parseSeveritySection(
 ): RenderedFinding[] {
   const findings: RenderedFinding[] = [];
   const summaries = [
-    ...section.matchAll(/<summary>(\s*\d+\.[\s\S]*?)<\/summary>/giu),
+    ...section.matchAll(/<summary>(\s*(\d+)\.[\s\S]*?)<\/summary>/giu),
   ];
   for (const [index, summaryMatch] of summaries.entries()) {
     const summary = summaryMatch[1];
-    if (summary === undefined) {
+    const numberText = summaryMatch[2];
+    if (summary === undefined || numberText === undefined) {
       throw new Error("Qodo finding summary could not be located");
     }
     const nextSummaryIndex = summaries[index + 1]?.index ?? section.length;
@@ -144,6 +152,7 @@ function parseSeveritySection(
     const rawPath = linkMatch?.[1] ?? null;
     const path = rawPath?.replace(/\[R\d+(?:-\d+)?\]$/u, "") ?? null;
     findings.push({
+      number: Number.parseInt(numberText, 10),
       identity: identityOf(summary, findingBody),
       finding: {
         authorLogin: QODO_LOGIN,
@@ -215,6 +224,33 @@ function hasNumberedFinding(section: string): boolean {
 }
 
 /**
+ * Qodo numbers every rendered finding consecutively from 1 across the whole
+ * comment, so the numbering is a self-check the document carries: if drift
+ * reshaped one finding's markup past recognition, the numbers the parser did
+ * recover skip the row it lost.
+ *
+ * This replaces reconciling the parsed rows against the header's category
+ * totals. That total is not a usable bound in either direction — Qodo
+ * re-appends a copy of every finding on re-review, so the rows can exceed it,
+ * and PR #2079's own review comment declared `Bugs (10)` while rendering nine
+ * bug rows, so they can also fall short with nothing hidden. Checking one
+ * Qodo-authored aggregate against another cannot distinguish drift from Qodo
+ * miscounting its own list; the numbering can.
+ */
+function assertContiguousNumbering(rendered: readonly RenderedFinding[]): void {
+  const numbers = rendered
+    .map((entry) => entry.number)
+    .sort((left, right) => left - right);
+  for (const [index, number] of numbers.entries()) {
+    if (number === index + 1) continue;
+    throw new Error(
+      `Qodo numbers its rendered findings consecutively, so parsing must yield ` +
+        `finding ${String(index + 1)}; it yielded ${String(number)} instead`,
+    );
+  }
+}
+
+/**
  * Guard the layout structurally rather than by arithmetic. Qodo's header total
  * is not reconcilable with its own list — it re-appends a fresh copy of every
  * finding on each re-review, so a comment can enumerate more findings than the
@@ -245,19 +281,8 @@ function assertParsedLayout(input: {
   findings: readonly ReviewThread[];
   severitySections: number;
 }): void {
-  const renderedFindings = input.findings.length;
   const reviewBody = input.body.slice(input.body.indexOf(QODO_DIVIDER_ALT));
   assertSectionsAreModelled(reviewBody);
-  // Qodo's persistent comment can retain resolved rows and re-append copies,
-  // so the header is not an exact active-finding count. It is still a lower
-  // bound on the rendered finding rows: falling below it means markup drift
-  // hid at least one declared finding from the parser.
-  if (renderedFindings < input.expectedFindings) {
-    throw new Error(
-      `Qodo review comment declares ${input.expectedFindings.toString()} finding(s) ` +
-        `but only ${renderedFindings.toString()} were parsed`,
-    );
-  }
   if (
     input.findings.length === 0 &&
     (input.expectedFindings !== 0 ||
@@ -292,14 +317,16 @@ export function parseQodoIssueComment(
   }
 
   // Assert against the renderings, not the deduplicated findings: the layout
-  // checks confirm the comment parsed as Qodo wrote it, and Qodo's header
-  // counts its copies too.
+  // checks confirm the comment parsed as Qodo wrote it, and Qodo numbers every
+  // copy it re-appends. Structure is checked before numbering so a recognizable
+  // break reports itself rather than surfacing as the gap it leaves behind.
   assertParsedLayout({
     body: comment.body,
     expectedFindings,
     findings: rendered.map((entry) => entry.finding),
     severitySections,
   });
+  assertContiguousNumbering(rendered);
 
   return dedupeRenderedFindings(rendered);
 }

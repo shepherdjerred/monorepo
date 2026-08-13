@@ -183,23 +183,34 @@ describe("qodo layout guards", () => {
 
   test("fails closed when changed markup hides one active finding", () => {
     // Replacing both summary tags removes the numbered opener as well as the
-    // parsed finding. The neighbouring resolved finding keeps the section
-    // structurally valid, so the declared rendered total is the independent
-    // lower bound that exposes the omission.
+    // parsed finding, so the section's own opener count still agrees and the
+    // neighbouring resolved finding keeps the section structurally valid.
+    // Qodo's numbering is what exposes the omission: findings 1 and 3 parse
+    // while 2 does not.
     expect(() =>
       parseQodoIssueComment({
         ...comment,
-        body: comment.body
-          .replace(
-            "<code>📘 Rule violations (1)</code>",
-            "<code>📘 Rule violations (2)</code>",
-          )
-          .replace(
-            "<summary>  2. Stale wording <code>📝 Documentation</code></summary>",
-            "<strong>  2. Stale wording <code>📝 Documentation</code></strong>",
-          ),
+        body: comment.body.replace(
+          "<summary>  2. Stale wording <code>📝 Documentation</code></summary>",
+          "<strong>  2. Stale wording <code>📝 Documentation</code></strong>",
+        ),
       }),
-    ).toThrow("declares 3 finding(s) but only 2 were parsed");
+    ).toThrow("parsing must yield finding 2; it yielded 3 instead");
+  });
+
+  test("accepts a header total that overcounts the rendered findings", () => {
+    // Qodo's own comment on PR #2079 declared `Bugs (10)` while rendering nine
+    // bug rows, so the header is not a lower bound on the rendered rows and
+    // must not fail the gate on its own.
+    expect(
+      parseQodoIssueComment({
+        ...comment,
+        body: comment.body.replace(
+          "<code>🐞 Bugs (1)</code>",
+          "<code>🐞 Bugs (7)</code>",
+        ),
+      }),
+    ).toHaveLength(3);
   });
 
   test("accepts a fully resolved rendering without treating it as parse loss", () => {
