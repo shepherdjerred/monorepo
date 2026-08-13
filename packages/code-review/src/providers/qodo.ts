@@ -116,7 +116,16 @@ function identityOf(summary: string, findingBody: string): string {
     .replaceAll(/^\s*\d+\.\s*/gu, "")
     .replaceAll(/<\/?s>/giu, "")
     .replaceAll(/<code>\s*[✓☑][^<]*<\/code>/giu, "");
-  return `${title} ${findingBody}`.replaceAll(/\s+/gu, "");
+  return (
+    `${title} ${findingBody}`
+      // Evidence permalinks embed the commit Qodo read when it rendered that
+      // copy, so two renderings of one finding differ by SHA alone. Keeping it
+      // would make every re-review a brand-new finding and double the blocking
+      // count on an unchanged PR — the exact accumulation this identity exists
+      // to collapse.
+      .replaceAll(/\b[0-9a-f]{40}\b/giu, "<commit>")
+      .replaceAll(/\s+/gu, "")
+  );
 }
 
 function parseSeveritySection(
@@ -228,10 +237,12 @@ function hasNumberedFinding(section: string): boolean {
 }
 
 /**
- * Qodo numbers every rendered finding consecutively from 1 across the whole
- * comment, so the numbering is a self-check the document carries: if drift
- * reshaped one finding's markup past recognition, the numbers the parser did
- * recover skip the row it lost.
+ * Qodo numbers the findings of each rendered review consecutively from 1, and
+ * re-appends the whole review — renumbered from 1 again — on re-review, so the
+ * numbering runs in blocks rather than across the comment. Within a block it is
+ * a self-check the document carries: if drift reshaped one finding's markup past
+ * recognition, the numbers the parser recovered skip the row it lost. Observed
+ * on PR #2079, whose comment rendered findings 1-8 twice.
  *
  * This replaces reconciling the parsed rows against the header's category
  * totals. That total is not a usable bound in either direction — Qodo
@@ -242,14 +253,22 @@ function hasNumberedFinding(section: string): boolean {
  * miscounting its own list; the numbering can.
  */
 function assertContiguousNumbering(rendered: readonly RenderedFinding[]): void {
-  const numbers = rendered
-    .map((entry) => entry.number)
-    .sort((left, right) => left - right);
-  for (const [index, number] of numbers.entries()) {
-    if (number === index + 1) continue;
+  let expected = 1;
+  for (const { number } of rendered) {
+    if (number === expected) {
+      expected += 1;
+      continue;
+    }
+    // A re-appended block restarts the numbering, so 1 is always a legal next
+    // number; anything else means a row between them never parsed.
+    if (number === 1) {
+      expected = 2;
+      continue;
+    }
     throw new Error(
-      `Qodo numbers its rendered findings consecutively, so parsing must yield ` +
-        `finding ${String(index + 1)}; it yielded ${String(number)} instead`,
+      `Qodo numbers each rendered review consecutively, so parsing must yield ` +
+        `finding ${String(expected)} or a restart at 1; it yielded ` +
+        `${String(number)} instead`,
     );
   }
 }
@@ -263,29 +282,25 @@ const LOOSE_FINDING_OPENER =
   /<(?:summary|strong|b|p|h[1-6])[^>]*>\s*(\d+)\.\s/giu;
 
 /**
- * Prove the parser reached the last finding the comment renders.
+ * Prove the parser reached every finding row the comment renders.
  *
- * Contiguity alone cannot: if drift reshapes the FINAL row, the numbers that
- * survive are 1..n-1, which is contiguous, and the section still opens a
- * numbered finding, so every other guard passes while the terminal finding is
- * silently dropped. Reading the numbering with a looser matcher than the one
- * that parses findings makes the two independent — the strict parse is checked
- * against markup the strict parse cannot see — so a row that drifted out of the
- * parser is still counted here.
+ * Numbering alone cannot: if drift reshapes the row that ends a block, the
+ * numbers that survive still run 1..n-1 and the next block legally restarts at
+ * 1, so every other guard passes while that finding is silently dropped.
+ * Counting the rows with a looser matcher than the one that parses them makes
+ * the two independent — the strict parse is checked against markup the strict
+ * parse cannot see — so a row that drifted out of the parser is still counted.
+ * Counting rather than comparing numbers keeps this correct however many times
+ * Qodo re-appends the review.
  */
 function assertNoFindingBeyondParsed(
   reviewBody: string,
   rendered: readonly RenderedFinding[],
 ): void {
-  let highest = 0;
-  for (const match of reviewBody.matchAll(LOOSE_FINDING_OPENER)) {
-    const text = match[1];
-    if (text === undefined) continue;
-    highest = Math.max(highest, Number.parseInt(text, 10));
-  }
-  if (highest > rendered.length) {
+  const loose = [...reviewBody.matchAll(LOOSE_FINDING_OPENER)].length;
+  if (loose > rendered.length) {
     throw new Error(
-      `Qodo renders finding ${String(highest)} but only ` +
+      `Qodo renders ${String(loose)} finding row(s) but only ` +
         `${String(rendered.length)} parsed`,
     );
   }

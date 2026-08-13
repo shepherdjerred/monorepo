@@ -197,7 +197,7 @@ describe("qodo layout guards", () => {
           "<strong>  2. Stale wording <code>📝 Documentation</code></strong>",
         ),
       }),
-    ).toThrow("parsing must yield finding 2; it yielded 3 instead");
+    ).toThrow("must yield finding 2 or a restart at 1; it yielded 3 instead");
   });
 
   test("accepts a header total that overcounts the rendered findings", () => {
@@ -228,7 +228,7 @@ describe("qodo layout guards", () => {
           "<strong>  3. Fixed finding <s>old issue</s> ☑</strong>",
         ),
       }),
-    ).toThrow("Qodo renders finding 3 but only 2 parsed");
+    ).toThrow("Qodo renders 3 finding row(s) but only 2 parsed");
   });
 
   test("accepts a fully resolved rendering without treating it as parse loss", () => {
@@ -316,5 +316,49 @@ describe("qodo re-review copies", () => {
       ),
     });
     expect(findings.map((finding) => finding.priority)).toEqual([1, 3, 3]);
+  });
+});
+
+function reviewBlock(sha: string): string {
+  return `
+<img src="https://example/action-required.png" alt="Action required">
+<details>
+<summary>  1. Consent cache <code>\u{1F41E} Bug</code></summary>
+<code>[src/telemetry.ts[R10-12]](https://github.com/o/r/blob/${sha}/src/telemetry.ts)</code>
+</details>
+<details>
+<summary>  2. Retry budget <code>\u{1F41E} Bug</code></summary>
+<code>[src/retry.ts[R4]](https://github.com/o/r/blob/${sha}/src/retry.ts)</code>
+</details>
+`;
+}
+
+describe("qodo re-appended review blocks", () => {
+  // Observed on PR #2079: rather than appending individual copies, Qodo
+  // re-rendered the WHOLE review below the first one, numbered from 1 again.
+  // The two blocks were byte-identical apart from the commit SHA embedded in
+  // each evidence permalink.
+  const reAppended = {
+    ...comment,
+    body: `
+<h3>Code Review by Qodo</h3>
+<code>\u{1F41E} Bugs (2)</code>
+<img src="https://example/divider.svg" alt="Grey Divider">
+${reviewBlock("a".repeat(40))}
+${reviewBlock("b".repeat(40))}
+`,
+  };
+
+  test("accepts a whole review re-appended with restarted numbering", () => {
+    expect(() => parseQodoIssueComment(reAppended)).not.toThrow();
+  });
+
+  test("collapses blocks that differ only by their evidence commit", () => {
+    // Without normalizing the permalink commit, each re-review would present
+    // every finding as brand new and double the gate's blocking count.
+    expect(parseQodoIssueComment(reAppended).map((f) => f.path)).toEqual([
+      "src/telemetry.ts",
+      "src/retry.ts",
+    ]);
   });
 });
