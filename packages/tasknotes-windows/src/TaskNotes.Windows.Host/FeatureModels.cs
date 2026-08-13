@@ -258,7 +258,10 @@ namespace TaskNotes.Windows.Host
         public string AutomationId => AutomationIds.TaskRow(Id);
 
         /// <summary>Gets a compact date label.</summary>
-        public string DateLabel => Due ?? Scheduled ?? OccurrenceDate ?? string.Empty;
+        // The projected occurrence identifies the row the checkbox acts on, so it has to
+        // win: a later recurrence shown with its persisted date would complete a
+        // different day from the one the user is reading.
+        public string DateLabel => OccurrenceDate ?? Due ?? Scheduled ?? string.Empty;
 
         /// <summary>Gets a compact taxonomy label.</summary>
         public string TaxonomyLabel => string.Join("  ", Projects.Concat(Contexts).Concat(Tags));

@@ -229,18 +229,33 @@ namespace TaskNotes.Windows.Host
             }
             if (!string.IsNullOrWhiteSpace(task.Recurrence))
             {
-                return Core.TaskNotesCoreMethods.RecurrenceOccursOn(
-                    task.Recurrence,
-                    task.Scheduled,
-                    task.DateCreated,
-                    today
+                if (
+                    Core.TaskNotesCoreMethods.RecurrenceOccursOn(
+                        task.Recurrence,
+                        task.Scheduled,
+                        task.DateCreated,
+                        today
+                    )
                 )
-                    ? Core.TaskNotesCoreMethods.RecurrenceCompletionTargetDate(
+                {
+                    return Core.TaskNotesCoreMethods.RecurrenceCompletionTargetDate(
                         task.Scheduled,
                         task.Due,
                         task.RecurrenceAnchor,
                         today
-                    )
+                    );
+                }
+
+                // deriveTodayAgenda keeps an unfinished recurring occurrence dated on or
+                // before today actionable. Asking the rule about today alone would hide a
+                // weekly task scheduled last Saturday until its next date comes round.
+                string? occurrence = CivilDate(task.Scheduled);
+                return
+                    occurrence is not null
+                    && IsActionableBy(occurrence, today)
+                    && !task.CompleteInstances.Contains(occurrence, StringComparer.Ordinal)
+                    && !task.SkippedInstances.Contains(occurrence, StringComparer.Ordinal)
+                    ? occurrence
                     : ExcludedOccurrence;
             }
             // Both dates are independently actionable, matching the established agenda

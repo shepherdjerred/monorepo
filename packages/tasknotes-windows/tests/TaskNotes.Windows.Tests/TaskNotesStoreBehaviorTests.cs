@@ -565,6 +565,46 @@ namespace TaskNotes.Windows.Tests
             Assert.Contains("Keep me", store.State.VisibleTasks.Select(task => task.Title));
         }
 
+        /// <summary>Keeps an unfinished recurring occurrence dated before today on Today.</summary>
+        [TestMethod]
+        public async Task TodayKeepsAnOverdueUnfinishedRecurrence()
+        {
+            using TemporaryDirectory directory = new();
+            await using TaskNotesStore store = new(directory.Path);
+            await store.InitializeAsync(null, null, TestContext.CancellationToken);
+            string lastWeek = DateTime
+                .Now.AddDays(-6)
+                .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            await store.AddAsync(
+                "Water the plants",
+                new TaskListQuery(TaskListKind.Inbox),
+                TestContext.CancellationToken
+            );
+            TaskItem created = store.State.AllTasks.Single();
+            await store.UpdateTaskAsync(
+                new TaskEditInput
+                {
+                    Id = created.Id,
+                    Title = "Water the plants",
+                    Status = "open",
+                    Priority = "normal",
+                    Scheduled = lastWeek,
+                    Recurrence = "FREQ=WEEKLY",
+                    RecurrenceAnchor = "scheduled",
+                },
+                TestContext.CancellationToken
+            );
+
+            await store.SetQueryAsync(
+                new TaskListQuery(TaskListKind.Today),
+                TestContext.CancellationToken
+            );
+
+            TaskItem row = store.State.VisibleTasks.Single(task => task.Id == created.Id);
+            // The row must present the occurrence its checkbox will complete.
+            Assert.AreEqual(lastWeek, row.DateLabel);
+        }
+
         private static readonly string[] SavedViewTitles = ["Alpha", "Zulu", "Mike"];
         private static readonly string[] DescendingSavedViewTitles = ["Zulu", "Mike", "Alpha"];
 
