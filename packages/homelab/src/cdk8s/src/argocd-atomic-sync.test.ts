@@ -88,7 +88,12 @@ function identifiedOperation(
             },
           ]),
     ],
-    sync: { revision },
+    // Every sync in this file posts `--prune`, and Argo records
+    // `operation.sync.prune` only when it is true (`prune,omitempty`), so a
+    // live operation for these requests carries it. Omitting it made the
+    // fixture describe an operation that did not match the request the test
+    // itself posted.
+    sync: { prune: true, revision },
   };
 }
 
