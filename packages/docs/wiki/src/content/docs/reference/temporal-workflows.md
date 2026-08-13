@@ -26,11 +26,17 @@ Cron times are `America/Los_Angeles` wall-clock. Source:
 | CI I/O impact       | daily 09:00 | deterministic                    | heartbeat email     |
 | protobufjs v8 watch | Mon 09:00   | deterministic                    | heartbeat email     |
 
-`llm-catalog-refresh` opens its PR only for upstream price changes that pass its
-plausibility guards. An implausible one is withheld from the catalog instead, so
-a run that withholds every change produces no PR at all — it raises an
-`LlmCatalogDriftWithheld` occurrence to be checked by hand against the provider's
-pricing page, and the next run that withholds nothing resolves it.
+`llm-catalog-refresh` applies an upstream price change only when it passes the
+plausibility guards in
+[`sync-from-upstreams.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/llm-models/scripts/sync-from-upstreams.ts).
+An implausible change is withheld from the catalog, so a run that withholds
+everything writes no diff and opens no PR.
+[`llm-catalog-refresh.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/llm-catalog-refresh.ts)
+publishes an `LlmCatalogDriftWithheld` occurrence instead, for a human to check
+against the provider's own pricing page. The next run that withholds nothing
+resolves it:
+[`llm-catalog-alert.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/llm-catalog-alert.ts)
+builds the firing and resolving occurrence from one label set.
 
 ## Scout
 
