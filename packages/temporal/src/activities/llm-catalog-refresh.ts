@@ -24,6 +24,24 @@ const SyncReportSchema = z.object({
   notChecked: z.array(z.string()),
 });
 
+/**
+ * Retry-stable branch name for the refresh PR.
+ *
+ * `openSeasonRefreshPr` avoids duplicate PRs by reusing an open PR whose head
+ * is this branch, so the branch is the idempotency key for the whole
+ * PR-creating half of this activity — it must never be derived from anything
+ * that varies per attempt. A per-attempt UUID silently defeats that reuse: any
+ * failure after the PR is created (the Alertmanager publish, a worker death
+ * before Temporal records completion) retries the activity under a fresh
+ * branch and opens a second catalog PR.
+ *
+ * The workflow run id is constant across every attempt and distinct for each
+ * scheduled run, which is exactly the lifetime one proposal PR should have.
+ */
+export function catalogRefreshBranch(workflowRunId: string): string {
+  return `chore/llm-catalog-refresh-${workflowRunId.slice(0, 8)}`;
+}
+
 export type LlmCatalogRefreshResult = {
   changedFiles: string[];
   branchName: string | undefined;
@@ -72,6 +90,9 @@ export const llmCatalogRefreshActivities = {
    */
   async refreshLlmCatalog(): Promise<LlmCatalogRefreshResult> {
     const start = Date.now();
+    // Scratch directory only. Deliberately per-attempt so a retry cannot trip
+    // over a previous attempt's half-cleaned clone — never reuse it for the
+    // branch name, which must be stable across attempts (catalogRefreshBranch).
     const id = crypto.randomUUID();
     const tempDir = `/tmp/llm-catalog-refresh-${id}`;
     const repoDir = `${tempDir}/monorepo`;
@@ -170,7 +191,18 @@ export const llmCatalogRefreshActivities = {
         return await finish(noDiff());
       }
 
-      const branch = `chore/llm-catalog-refresh-${id.slice(0, 8)}`;
+      // Optional in the SDK only because an activity can be invoked outside a
+      // workflow; this one always runs from `runLlmCatalogRefresh`. Falling
+      // back to a generated id here would quietly restore the duplicate-PR bug
+      // the run id exists to prevent, so treat absence as the contract
+      // violation it is.
+      const { workflowExecution } = Context.current().info;
+      if (workflowExecution === undefined) {
+        throw new Error(
+          "refreshLlmCatalog must be scheduled by a workflow: the run id is the refresh PR's idempotency key",
+        );
+      }
+      const branch = catalogRefreshBranch(workflowExecution.runId);
       const title =
         "chore(llm-models): refresh model catalog pricing from upstreams";
       const body = [

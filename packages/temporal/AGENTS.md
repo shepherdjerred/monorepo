@@ -429,6 +429,18 @@ There are **two** Temporal scheduling patterns — don't conflate them:
 - **Report-only agent-tasks** (`agentTaskWorkflow`, above) email reports and **cannot** open PRs/issues or edit files — `mode` is only `"report-only"` and the prompt forbids mutation.
 - **Deterministic PR-creating workflows** (e.g. `src/activities/data-dragon.ts`, `llm-catalog-refresh.ts`, `homelab-crd-imports-refresh.ts`) regenerate artifacts then `git push --force-with-lease` + `gh pr create`, authed by a GitHub App installation token (`src/lib/github-app-token.ts` `createGitHubAppInstallationToken()`, env `GITHUB_APP_ID`/`GITHUB_APP_INSTALLATION_ID`/`GITHUB_APP_PRIVATE_KEY`). scout-for-lol's data-dragon refresh is the canonical example.
 
+**The branch name is the idempotency key — derive it from retry-stable data.**
+`openSeasonRefreshPr` prevents duplicate PRs by reusing an open PR whose head is
+the branch it was given, so a branch built from a per-attempt value (a fresh
+`crypto.randomUUID()`, a timestamp) silently defeats that reuse: any failure
+after the PR is created retries the activity under a new branch and opens a
+second PR. Derive it from the content (`data-dragon.ts` uses the Data Dragon
+version), from the workflow's own args (`scout-season-refresh.ts`), or from
+`Context.current().info.workflowExecution.runId` (`llm-catalog-refresh.ts`) —
+never from a value generated inside the attempt. Scratch `/tmp` directories are
+the opposite: keep those per-attempt so a retry cannot trip over a previous
+attempt's half-cleaned clone.
+
 To add a "regenerate X on a schedule, open a PR if it changed" job, mirror `data-dragon.ts`: a deterministic activity (no Claude), GitHub App token, path-scoped `git add`, plus a thin workflow, an export in `src/workflows/index.ts`, and a `SCHEDULES` entry (cron, `America/Los_Angeles`, `TASK_QUEUES.DEFAULT`). The worker pod has bun/git/gh/kubectl (in-cluster SA — `homelab-crd-imports-daily` runs `kubectl get crds` with the read-only `temporal-worker-crd-reader` ClusterRole) but **not** helm — add tools to the worker image build (`Dockerfile`) if the job needs them (`bunx turbo run smoke --filter=temporal` builds + smoke-tests the image; CI builds/smokes/pushes it on merge to main). CLIs a job needs from the repo itself (e.g. `cdk8s` for the CRD imports) come from the bot clone's workspace install via a package devDependency, not the image.
 
 ### Bot-clone environment — use `bot-clone.ts`, never hand-rolled installs
