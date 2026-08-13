@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { isPrunableImage } from "./scout-image-gc.ts";
+import {
+  isPrunableImage,
+  showcaseExemptKeysByBucket,
+} from "./scout-image-gc.ts";
 
 describe("isPrunableImage", () => {
   const cutoff = new Date("2026-06-03T00:00:00Z");
@@ -81,5 +84,70 @@ describe("isPrunableImage", () => {
         exemptKeys,
       }),
     ).toBe(true);
+  });
+});
+
+describe("showcaseExemptKeysByBucket", () => {
+  test("assigns keys without an explicit bucket to scout-prod", () => {
+    const byBucket = showcaseExemptKeysByBucket({
+      entries: [
+        {
+          imageKey: "games/2026/05/01/M1/report.png",
+          dataKey: "games/2026/05/01/M1/match.json",
+        },
+      ],
+    });
+
+    expect(byBucket.get("scout-prod")).toEqual(
+      new Set([
+        "games/2026/05/01/M1/report.png",
+        "games/2026/05/01/M1/match.json",
+      ]),
+    );
+    expect(byBucket.has("scout-beta")).toBe(false);
+  });
+
+  test("exempts a pinned entry's keys in the bucket it pins, not the default", () => {
+    const byBucket = showcaseExemptKeysByBucket({
+      entries: [
+        { bucket: "scout-beta", imageKey: "games/2026/05/01/B1/report.png" },
+        { imageKey: "games/2026/05/01/P1/report.png" },
+      ],
+    });
+
+    expect(byBucket.get("scout-beta")).toEqual(
+      new Set(["games/2026/05/01/B1/report.png"]),
+    );
+    expect(byBucket.get("scout-prod")).toEqual(
+      new Set(["games/2026/05/01/P1/report.png"]),
+    );
+  });
+
+  test("keeps a pinned key alive in its own bucket and prunable in the other", () => {
+    const cutoff = new Date("2026-06-03T00:00:00Z");
+    const old = new Date("2026-05-01T00:00:00Z");
+    const key = "prematch/2026/05/01/B1/loading-screen.png";
+    const byBucket = showcaseExemptKeysByBucket({
+      entries: [{ bucket: "scout-beta", imageKey: key }],
+    });
+
+    expect(
+      isPrunableImage(key, old, cutoff, {
+        exemptKeys: byBucket.get("scout-beta") ?? new Set<string>(),
+      }),
+    ).toBe(false);
+    expect(
+      isPrunableImage(key, old, cutoff, {
+        exemptKeys: byBucket.get("scout-prod") ?? new Set<string>(),
+      }),
+    ).toBe(true);
+  });
+
+  test("entries with no keys (competition graph) contribute no exemptions", () => {
+    const byBucket = showcaseExemptKeysByBucket({
+      entries: [{ bucket: "scout-beta" }],
+    });
+
+    expect(byBucket.get("scout-beta")).toEqual(new Set<string>());
   });
 });

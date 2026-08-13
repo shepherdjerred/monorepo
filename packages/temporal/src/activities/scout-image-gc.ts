@@ -27,41 +27,64 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 // pruning them breaks the refresh permanently (rare queue types may never
 // produce a replacement; learned 2026-07-19 when a month of GC had eaten 60%
 // of the manifest's sources). Fetch the manifest from main and exempt every
-// referenced key. Scoped to scout-prod — the manifest is curated against prod.
+// referenced key in the bucket that entry actually reads.
 const SHOWCASE_MANIFEST_URL =
   "https://raw.githubusercontent.com/shepherdjerred/monorepo/main/packages/scout-for-lol/showcase/marketing-showcase.manifest.json";
-const SHOWCASE_EXEMPT_BUCKET = "scout-prod";
+
+// A manifest entry without an explicit `bucket` is read from the generator's
+// run bucket, which is prod for the committed showcase.
+const SHOWCASE_DEFAULT_BUCKET = "scout-prod";
 
 const ShowcaseManifestKeysSchema = z.object({
   entries: z.array(
     z.looseObject({
+      bucket: z.string().optional(),
       imageKey: z.string().optional(),
       dataKey: z.string().optional(),
     }),
   ),
 });
+type ShowcaseManifestKeys = z.infer<typeof ShowcaseManifestKeysSchema>;
 
 /**
- * Fetch the showcase manifest and return every S3 key it references. Fails
- * loudly (activity failure → Temporal retry) rather than pruning without the
- * exemption list — a GC run that can't see the manifest must not delete.
+ * Group every key the manifest references by the bucket the showcase generator
+ * reads it from. An entry may pin its own `bucket`, so a single flat key set
+ * applied to prod alone would leave a pinned `games/`/`prematch/` source in the
+ * other bucket unprotected — it would survive curation and then vanish after
+ * the retention window, breaking the weekly refresh.
+ */
+export function showcaseExemptKeysByBucket(
+  manifest: ShowcaseManifestKeys,
+): Map<string, Set<string>> {
+  const byBucket = new Map<string, Set<string>>();
+  for (const entry of manifest.entries) {
+    const bucket = entry.bucket ?? SHOWCASE_DEFAULT_BUCKET;
+    const keys = byBucket.get(bucket) ?? new Set<string>();
+    if (entry.imageKey !== undefined) keys.add(entry.imageKey);
+    if (entry.dataKey !== undefined) keys.add(entry.dataKey);
+    byBucket.set(bucket, keys);
+  }
+  return byBucket;
+}
+
+/**
+ * Fetch the showcase manifest and return every S3 key it references, keyed by
+ * source bucket. Fails loudly (activity failure → Temporal retry) rather than
+ * pruning without the exemption list — a GC run that can't see the manifest
+ * must not delete.
  */
 export async function fetchShowcaseExemptKeys(
   url: string = SHOWCASE_MANIFEST_URL,
-): Promise<Set<string>> {
+): Promise<Map<string, Set<string>>> {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(
       `[scout-image-gc] failed to fetch showcase manifest (${String(response.status)}) — refusing to prune without the exemption list`,
     );
   }
-  const manifest = ShowcaseManifestKeysSchema.parse(await response.json());
-  const keys = new Set<string>();
-  for (const entry of manifest.entries) {
-    if (entry.imageKey !== undefined) keys.add(entry.imageKey);
-    if (entry.dataKey !== undefined) keys.add(entry.dataKey);
-  }
-  return keys;
+  return showcaseExemptKeysByBucket(
+    ShowcaseManifestKeysSchema.parse(await response.json()),
+  );
 }
 
 const InputSchema = z.object({
@@ -267,10 +290,7 @@ export const scoutImageGcActivities = {
 
     const buckets: BucketPruneResult[] = [];
     for (const bucket of BUCKETS) {
-      const exemptKeys =
-        bucket === SHOWCASE_EXEMPT_BUCKET
-          ? showcaseExemptKeys
-          : new Set<string>();
+      const exemptKeys = showcaseExemptKeys.get(bucket) ?? new Set<string>();
       const result = await pruneBucket({
         client,
         bucket,

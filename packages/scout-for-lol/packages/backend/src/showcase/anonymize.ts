@@ -18,8 +18,19 @@ import { fnv1a } from "@scout-for-lol/report";
  *
  * The hard requirement is determinism. The showcase regenerates weekly and
  * commits the PNGs; a pseudonym that moved between runs would produce an image
- * diff and a junk PR every Monday. Every output is therefore a pure function of
- * the caller's stable key.
+ * diff and a junk PR every Monday.
+ *
+ * What that buys is narrower than "this player always draws this handle". A
+ * handle is a function of the whole call sequence, not of one call's arguments:
+ * the seed is `${stableKey}|${realName}`, and collisions are resolved by
+ * probing past the handles already taken (see `createPlayerAnonymizer`). So the
+ * guarantee is reproducibility — the same manifest, rendering the same rosters
+ * in the same order, yields the same handles, run after run, which is what
+ * keeps the committed PNGs stable. Anything that changes the inputs to that
+ * sequence — a re-curation pointing an entry at a different object, a player
+ * renaming, a change to how many players an entry renders — can move handles,
+ * including for players who themselves did not change. That is a one-off image
+ * diff to review on the Monday PR, not per-run churn.
  */
 
 // Invented handles in the same register as the hand-authored Discord chrome in
@@ -79,10 +90,14 @@ export type PlayerAnonymizer = (stableKey: string, realName: string) => string;
  *
  * `realName` is used only as a last-resort disambiguator; it is never emitted.
  *
- * Collisions are resolved by linear probing over the pool. That makes the result
- * order-dependent *within* a run, which is safe because the manifest fixes entry
- * order and entries are generated serially — two runs over the same manifest see
- * identical key order. It is bounded: once the pool is exhausted, fall back to a
+ * Collisions are resolved by linear probing over the pool, so an assignment
+ * depends on which handles earlier calls took, not just on this call's seed.
+ * Two runs over the same manifest still agree, because the manifest fixes entry
+ * order, entries are generated serially, and each entry pins exact S3 object
+ * keys — the roster behind an entry cannot move until a re-curation swaps that
+ * key. That is the precondition, not an inherent property: change the roster or
+ * the order and a player whose own seed did not change can still land on a
+ * different handle. It is bounded: once the pool is exhausted, fall back to a
  * numbered handle rather than emitting a duplicate, because a duplicate would
  * silently merge two people in a legend.
  */
@@ -97,8 +112,13 @@ export function createPlayerAnonymizer(): PlayerAnonymizer {
     }
 
     // Mix the real name into the hash so two players who somehow share a stable
-    // key still separate, while a rename alone (same key) cannot move the
-    // handle — the cache above already returned for that case.
+    // key still separate. The cache above is keyed on the stable key alone, so
+    // within a run a rename cannot move a handle; across runs it can, because
+    // the seed changes. A rename is not the only thing that can move a handle,
+    // though — the probe below reads `taken`, so who was assigned earlier in
+    // the run matters too. Both are one-off image diffs on the Monday PR rather
+    // than per-run churn, because an unchanged manifest replays an unchanged
+    // call sequence.
     const seed = fnv1a(`${stableKey}|${realName}`);
     for (let probe = 0; probe < HANDLE_POOL.length; probe += 1) {
       const candidate = HANDLE_POOL[(seed + probe) % HANDLE_POOL.length];
