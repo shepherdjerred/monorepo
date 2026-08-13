@@ -1094,6 +1094,7 @@ steps:
         - "packages/homelab/scripts/argocd.ts"
         - "packages/homelab/src/cdk8s/**"
         - "packages/homelab/src/helm-types/**"
+        - "packages/version-catalog/**"
         # Inputs of the npm, cooklang, and scout-image main lanes — mirrored
         # here so no lane input can change without a PR-side gate (asserted by
         # the lane↔if_changed coverage test).
