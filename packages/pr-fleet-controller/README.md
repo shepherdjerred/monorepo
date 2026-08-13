@@ -42,10 +42,13 @@ symlinked, non-owned, or group/world-accessible root before model access or PR
 mutation. The selected root and each run directory use mode `0700`; bundle
 files use mode `0600`.
 
-Readiness is gated on a hosted code-review provider (Codex by default). Select
-a different registered provider with `--review-provider <id>`; completion is
-detected as a review-at-head or a head-bound clean-review reaction, reusing the
-canonical `@shepherdjerred/code-review` gate logic.
+Readiness is gated on a hosted code-review provider. It defaults to the one the
+repository's CI gate requires (Qodo), so a run cannot call a PR ready on
+findings the gate does not see; select another registered provider with
+`--review-provider <id>`. Completion is detected with the canonical
+`@shepherdjerred/code-review` logic — for Qodo that is the separate
+acknowledgement naming the reviewed head, and for the others a review-at-head
+or a head-bound clean-review reaction.
 
 ## Live dashboard
 
