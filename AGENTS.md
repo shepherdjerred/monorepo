@@ -91,8 +91,10 @@ and scoped health. Every bounded internal operation, including root staging and
 each child reconciliation, retains that request UUID, the revision, its resource
 selection, and a `stage`, `batch`, `prune`, or `child` phase marker, so an
 interrupted release adopts only its own in-flight operation and never unrelated
-work. A child reconciliation declares a full-source selection, and adoption
-refuses a selective operation that merely shares the release identity. The
+work. Adoption compares the live operation against the complete request this
+process would post — prune mode, manifest override, and resource selection —
+not only its identity, so an operation that shares the UUID, revision, and
+phase marker but applies different work is refused. The
 apply-safety preflight inspects the revision the sync will request, not the
 Application's currently configured source. Only the self-managed root
 Application remains auto-sync suspended while those operations run.

@@ -500,6 +500,71 @@ function operationReleasePhase(
   return phase === undefined ? undefined : ReleasePhaseSchema.parse(phase);
 }
 
+const ActiveSyncRequestSchema = z.object({
+  manifests: z.array(z.string()).optional(),
+  prune: z.boolean().optional(),
+});
+
+/**
+ * Adoption must accept only the operation this call would itself have posted.
+ * Compare every field of the request this process controls rather than
+ * spot-checking one of them: a live operation can share the request UUID,
+ * revision, and phase marker while applying a manifest override, a different
+ * resource selection, or a different prune mode. Any option added to
+ * `SyncOptions` that changes the posted body belongs here too, so a retry can
+ * never adopt work that is not the exact request. Revision and identity stay
+ * with the operation observation, which reads them from the CI info entries.
+ */
+function activeOperationRequestMismatch(
+  app: Record<string, unknown>,
+  options: SyncOptions,
+): string | null {
+  const operation = app["operation"];
+  if (!isRecord(operation)) {
+    throw new Error(
+      "Cannot inspect the sync request for a missing live operation",
+    );
+  }
+  const sync = operation["sync"];
+  if (!isRecord(sync)) {
+    throw new Error("Active Argo operation is missing its sync request");
+  }
+  const active = ActiveSyncRequestSchema.parse(sync);
+  if ((active.prune ?? false) !== options.prune) {
+    return `prune ${(active.prune ?? false).toString()}`;
+  }
+  if ((active.manifests === undefined) !== (options.manifests === undefined)) {
+    return active.manifests === undefined
+      ? "no manifest override"
+      : "a manifest override";
+  }
+  if (
+    active.manifests !== undefined &&
+    options.manifests !== undefined &&
+    canonicalJson(active.manifests) !== canonicalJson(options.manifests)
+  ) {
+    return "a different manifest override";
+  }
+  const activeResources = activeOperationResourceIdentities(app);
+  const requestedResources =
+    options.resources === undefined
+      ? null
+      : operationResourceIdentities(options.resources);
+  if ((activeResources === null) !== (requestedResources === null)) {
+    return activeResources === null
+      ? "the full rendered source"
+      : "a resource selection";
+  }
+  if (
+    activeResources !== null &&
+    requestedResources !== null &&
+    !resourceIdentitySetsEqual(activeResources, requestedResources)
+  ) {
+    return "a different resource selection";
+  }
+  return null;
+}
+
 function activeOperationPrunes(app: Record<string, unknown>): boolean {
   const operation = app["operation"];
   if (!isRecord(operation)) {
@@ -1417,12 +1482,13 @@ async function sync(
           `Refusing to replace active ${appName} operation ${liveOperationDescription(baseline)}; expected request ${requestId}`,
         );
       }
-      if (
-        options.releasePhase === "child" &&
-        activeOperationResourceIdentities(baselineApplication) !== null
-      ) {
+      const mismatch = activeOperationRequestMismatch(
+        baselineApplication,
+        options,
+      );
+      if (mismatch !== null) {
         throw new Error(
-          `Refusing to adopt a selective ${appName} operation for request ${requestId}; expected the full-source child reconciliation`,
+          `Refusing to adopt the active ${appName} operation for request ${requestId}; it applies ${mismatch}`,
         );
       }
       operationId = requireLiveOperationId(baseline, appName);
