@@ -10,26 +10,12 @@ const HA_WORKFLOW_DIR = new URL(
   import.meta.url,
 ).pathname;
 
-// Only the domains a workflow can actually depend on being available. Matching
-// every `<word>.<word>` literal would sweep in module paths and service names.
-const ENTITY_DOMAINS = [
-  "binary_sensor",
-  "climate",
-  "light",
-  "lock",
-  "media_player",
-  "person",
-  "scene",
-  "sensor",
-  "sun",
-  "switch",
-  "vacuum",
-  "zone",
-];
-const ENTITY_PATTERN = new RegExp(
-  String.raw`"((?:${ENTITY_DOMAINS.join("|")})\.[a-z0-9_]+)"`,
-  "g",
-);
+// A string literal that is *entirely* `<domain>.<object_id>`. Anchoring on the
+// whole literal is what separates an entity from a module specifier
+// ("./util.ts", "#shared/x.ts"), which always carry a slash. Deliberately not a
+// fixed domain allowlist: a workflow adopting a new HA domain must still be
+// caught, and an allowlist would silently exempt exactly that case.
+const ENTITY_PATTERN = /["'`]([a-z_]+\.[a-z0-9_]+)["'`]/g;
 
 async function collectWorkflowEntityIds(): Promise<Set<string>> {
   const entities = new Set<string>();
