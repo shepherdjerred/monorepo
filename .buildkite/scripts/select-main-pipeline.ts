@@ -364,13 +364,14 @@ export const SELECTED_STEPS_METADATA_KEY = "ci-selected-main-steps";
  * steps exist in this build. Without it the annotator queries every step in
  * `summarySteps`, and `buildkite-agent step get` exits nonzero for a step the
  * selector omitted, failing the summary job on an otherwise green build. The
- * fallback path deliberately leaves this unset: it uploads the complete graph,
- * so every step exists.
+ * fallback path clears it back to empty: it uploads the complete graph, so
+ * every step exists.
  *
- * Call this only once the upload it describes has succeeded. A value written
- * ahead of the upload describes a build that may never exist: if the upload
- * then fails and the fallback uploads the complete graph, the annotator would
- * report steps that did run as "not selected".
+ * Call this BEFORE the upload it describes. Buildkite appends uploaded steps,
+ * so a failure after the graph is in the build cannot be retried and must not
+ * fail the build; writing first means a failed write still falls back to the
+ * complete graph. Every caller therefore records the set it is about to
+ * upload, and the value never outlives the attempt that wrote it.
  */
 async function recordSelectedSteps(
   selected: ReadonlySet<string>,
@@ -429,9 +430,15 @@ async function main(): Promise<number> {
     const selected = selectedKeys(steps, decisions);
     const rendered = renderSteps(steps, selected);
     validateRenderedSteps(rendered);
+    // Record the selection BEFORE uploading. Buildkite appends uploaded steps,
+    // so once the graph is in the build no later step may fail: recording
+    // afterwards let a transient metadata write turn an already-runnable build
+    // into a hard failure. Recording first also keeps the metadata a truthful
+    // description of what gets uploaded, because a failure here still falls
+    // back to the complete graph.
+    await recordSelectedSteps(selected);
     await uploadPipeline(document, rendered, changedFilesPath);
     uploaded = true;
-    await recordSelectedSteps(selected);
     console.log(`Uploaded ${selected.size.toString()} selected main CI steps`);
     return 0;
   } catch (error) {
@@ -443,6 +450,11 @@ async function main(): Promise<number> {
     console.error(`WARN: ${reason}; falling back to the complete main graph`);
     const rendered = renderFallbackSteps(document, steps, changedFilesPath);
     validateRenderedSteps(rendered);
+    // Clear any selection the failed attempt recorded: an empty value is how
+    // the summary learns the complete graph was uploaded and every step
+    // exists. Doing it before the upload keeps the no-failure-after-upload
+    // rule that makes this fallback safe.
+    await recordSelectedSteps(new Set());
     await uploadPipeline(document, rendered, changedFilesPath);
     await annotateFallback(reason);
     return 0;

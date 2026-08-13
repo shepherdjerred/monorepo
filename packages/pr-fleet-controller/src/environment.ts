@@ -6,7 +6,7 @@ import {
   parseChecks,
   parsePrList,
   parseReviewPage,
-  reviewFindingsFromThreads,
+  reviewFindings,
   splitRepo,
   type RawCheck,
   type RawReviewThread,
@@ -267,14 +267,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     // (findings-free) thread snapshot would let a green CI run classify the PR
     // green despite newly-created unresolved findings. Fetching threads last
     // keeps the findings snapshot at least as fresh as the completion signal.
-    const hostedReviewComplete = await this.#hostedReviewComplete(pr);
-    const threads = await this.#reviewThreads(pr);
-    const findings = reviewFindingsFromThreads(threads, this.#provider);
-    return { findings, hostedReviewComplete };
-  }
-
-  async #hostedReviewComplete(pr: PrIdentity): Promise<boolean> {
-    return resolveHostedReviewCompletion({
+    const completion = await resolveHostedReviewCompletion({
       repo: this.#repo,
       provider: this.#provider,
       pr,
@@ -283,6 +276,11 @@ export class CommandFleetEnvironment implements FleetEnvironment {
           sensitiveOutput: true,
         }),
     });
+    const threads = await this.#reviewThreads(pr);
+    const { issueComment, complete } = completion;
+    const provider = this.#provider;
+    const findings = reviewFindings({ threads, issueComment, provider });
+    return { findings, hostedReviewComplete: complete };
   }
 
   async #conflict(pr: PrIdentity): Promise<boolean> {

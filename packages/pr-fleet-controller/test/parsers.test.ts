@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { codexProvider } from "@shepherdjerred/code-review";
+import { codexProvider, qodoProvider } from "@shepherdjerred/code-review";
 import {
   checksWithBuildkiteSoftFailure,
   parseBuildkiteBuild,
   parsePrList,
+  reviewFindings,
   reviewFindingsFromThreads,
   type RawCheck,
 } from "@shepherdjerred/pr-fleet-controller/src/evidence-parsers.ts";
@@ -179,4 +180,49 @@ describe("Buildkite soft-failure correlation", () => {
 
 test("worker structured output fails closed when required fields are absent", () => {
   expect(() => WorkerResultSchema.parse({ pr: 1, state: "green" })).toThrow();
+});
+
+describe("issue-comment provider findings", () => {
+  // Qodo keeps every finding inside one persistent issue comment rather than in
+  // review threads. Reading only threads reports no findings for it at all, so
+  // a PR with unresolved Qodo findings would classify as ready.
+  const qodoComment = {
+    updatedAt: "2026-08-13T05:32:39Z",
+    url: "https://github.com/o/r/pull/1#issuecomment-1",
+    body: `
+<h3>Code Review by Qodo</h3>
+<code>\u{1F41E} Bugs (2)</code> <code>\u{1F4D8} Rule violations (0)</code>
+<img src="https://example/divider.svg" alt="Grey Divider">
+<img src="https://example/action-required.png" alt="Action required">
+<details>
+<summary>  1. Selector skips upload <code>\u{1F41E} Bug</code></summary>
+<code>[src/select.ts[R10-12]](https://github.com/o/r/pull/1/files#diff-abc)</code>
+</details>
+<details>
+<summary>  2. <s>Old issue</s> <code>\u{2713} Resolved</code> <code>\u{1F41E} Bug</code></summary>
+<code>[src/old.ts[R1]](https://github.com/o/r/pull/1/files#diff-def)</code>
+</details>
+`,
+  };
+
+  test("reads findings from the provider's persistent issue comment", () => {
+    const findings = reviewFindings({
+      threads: [],
+      issueComment: qodoComment,
+      provider: qodoProvider,
+    });
+    expect(findings).toHaveLength(2);
+    expect(findings.map((finding) => finding.resolved)).toEqual([false, true]);
+    expect(findings.every((finding) => finding.severity === "P1")).toBe(true);
+  });
+
+  test("reports no issue-comment findings when the snapshot is absent", () => {
+    expect(
+      reviewFindings({
+        threads: [],
+        issueComment: null,
+        provider: qodoProvider,
+      }),
+    ).toEqual([]);
+  });
 });
