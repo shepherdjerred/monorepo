@@ -252,8 +252,9 @@ export function reviewFindingsFromIssueComment(
   comment: ReviewIssueComment | null,
   provider: ReviewProvider,
 ): ReviewFinding[] {
-  const parse = provider.parseIssueComment;
-  if (comment === null || parse === undefined) return [];
+  const { completion } = provider;
+  if (comment === null || completion.kind !== "issue-comment") return [];
+  const parse = completion.parseFindings;
   const findings: ReviewFinding[] = [];
   for (const [index, finding] of parse(comment).entries()) {
     // Apply the same identity gate as the thread path: a row is only

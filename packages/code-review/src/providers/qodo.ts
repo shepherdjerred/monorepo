@@ -356,8 +356,8 @@ export const qodoProvider: ReviewProvider = {
     marker: QODO_REVIEW_MARKER,
     acknowledgement: { marker: QODO_ACKNOWLEDGEMENT_MARKER },
     inProgress: { marker: QODO_IN_PROGRESS_MARKER },
+    parseFindings: parseQodoIssueComment,
   },
-  parseIssueComment: parseQodoIssueComment,
   detectSkip: null,
   requestReview: {
     buildComment: (marker) => `/review\n\n${marker}`,

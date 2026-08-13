@@ -192,10 +192,8 @@ export async function fetchReviewThreads(input: {
     if (!page.hasNextPage || page.endCursor === null) break;
     cursor = page.endCursor;
   }
-  if (
-    input.provider.completion.kind === "issue-comment" &&
-    input.provider.parseIssueComment !== undefined
-  ) {
+  const { completion } = input.provider;
+  if (completion.kind === "issue-comment") {
     const comment =
       input.issueComment === undefined
         ? await fetchLatestProviderIssueComment({
@@ -206,7 +204,7 @@ export async function fetchReviewThreads(input: {
           })
         : input.issueComment;
     if (comment !== null) {
-      threads.push(...input.provider.parseIssueComment(comment));
+      threads.push(...completion.parseFindings(comment));
     }
   }
   return { threads, headRefOid };

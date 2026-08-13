@@ -96,6 +96,15 @@ export type CompletionStrategy =
        * not been written yet. `null` for providers that post no placeholder.
        */
       inProgress: { marker: string } | null;
+      /**
+       * Parse the findings the provider renders in that comment. Required
+       * here rather than optional on the provider: a provider whose findings
+       * live in a comment nobody can parse reads as a finding-free review, so
+       * the timestamp fallback would call it reviewed and its findings would
+       * never reach the gate. Declaring it alongside the strategy makes that
+       * combination unrepresentable instead of a fail-open misconfiguration.
+       */
+      parseFindings: (comment: ReviewIssueComment) => readonly ReviewThread[];
     };
 
 /**
@@ -143,8 +152,6 @@ export type ReviewProvider = {
   authorLogins: readonly string[];
   /** Parse the severity level (0..3) from a review comment body, or null. */
   parseSeverity: (body: string | null) => number | null;
-  /** Parse provider findings from a persistent issue-level review comment. */
-  parseIssueComment?: (comment: ReviewIssueComment) => readonly ReviewThread[];
   /** How the gate detects the provider finished reviewing the head commit. */
   completion: CompletionStrategy;
   /** How the provider signals a deliberate skip, or null if it has none. */

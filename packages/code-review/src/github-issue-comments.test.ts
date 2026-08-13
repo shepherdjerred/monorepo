@@ -166,22 +166,22 @@ const issueCommentProvider: ReviewProvider = {
   botAuthoredPullRequestPolicy: "review",
   authorLogins: ["review-bot"],
   parseSeverity: () => null,
-  parseIssueComment: () => [
-    {
-      authorLogin: "review-bot",
-      isResolved: false,
-      isOutdated: false,
-      path: "src/example.ts",
-      line: 1,
-      url: null,
-      priority: 1,
-    },
-  ],
   completion: {
     kind: "issue-comment",
     marker: "review-marker",
     acknowledgement: { marker: "ack-marker" },
     inProgress: { marker: "in-progress-marker" },
+    parseFindings: () => [
+      {
+        authorLogin: "review-bot",
+        isResolved: false,
+        isOutdated: false,
+        path: "src/example.ts",
+        line: 1,
+        url: null,
+        priority: 1,
+      },
+    ],
   },
   detectSkip: null,
   requestReview: null,
@@ -266,6 +266,56 @@ test("ignores the in-progress placeholder that supersedes the rendered review", 
       provider: issueCommentProvider,
     });
     expect(comment?.body).toBe("review-marker with findings");
+  } finally {
+    fetchSpy.mockRestore();
+  }
+});
+
+test("re-reads the review comment once an acknowledgement names the head", async () => {
+  // The paginated scan can read the review body from an early page and the
+  // acknowledgement from a later one, straddling a re-review that finished
+  // mid-scan. The gate must block on a body that postdates the acknowledgement,
+  // not the render that preceded it.
+  const staleBody = "review-marker stale render";
+  const freshBody = "review-marker fresh render";
+  let call = 0;
+  const fetchImplementation = Object.assign(
+    async () => {
+      call += 1;
+      // First scan: the pre-re-review body plus the new acknowledgement.
+      // Any later read sees the re-rendered comment.
+      const reviewBody = call === 1 ? staleBody : freshBody;
+      return Response.json([
+        {
+          body: reviewBody,
+          updated_at: "2026-08-10T06:51:00Z",
+          html_url: "https://github.com/o/r/issues/1#issuecomment-review",
+          user: { login: "review-bot" },
+        },
+        {
+          body: `ack-marker ${HEAD}`,
+          updated_at: "2026-08-10T06:52:00Z",
+          html_url: "https://github.com/o/r/issues/1#issuecomment-ack",
+          user: { login: "review-bot" },
+        },
+      ]);
+    },
+    { preconnect: globalThis.fetch.preconnect },
+  );
+  const fetchSpy = spyOn(globalThis, "fetch").mockImplementation(
+    fetchImplementation,
+  );
+  try {
+    const result = await resolveIssueCommentReview({
+      provider: issueCommentProvider,
+      repo: "o/r",
+      head: HEAD,
+      prNumber: 1,
+      token: "token",
+      headPushedAt,
+    });
+    expect(result.state).toBe("reviewed");
+    expect(result.issueComment?.body).toBe(freshBody);
   } finally {
     fetchSpy.mockRestore();
   }

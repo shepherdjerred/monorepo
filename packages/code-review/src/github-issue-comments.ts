@@ -195,21 +195,39 @@ export async function resolveIssueCommentReview(input: {
   token: string;
   headPushedAt: string | null;
 }): Promise<ReviewStateResult> {
-  const { review: comment, acknowledgement } = await fetchProviderIssueComments(
-    {
-      repo: input.repo,
-      number: input.prNumber,
-      token: input.token,
-      provider: input.provider,
-      // A review of this head cannot predate its push, so start from there and
-      // let the helper widen the scan if nothing has been touched since.
-      since: input.headPushedAt ?? undefined,
-    },
-  );
+  const scanned = await fetchProviderIssueComments({
+    repo: input.repo,
+    number: input.prNumber,
+    token: input.token,
+    provider: input.provider,
+    // A review of this head cannot predate its push, so start from there and
+    // let the helper widen the scan if nothing has been touched since.
+    since: input.headPushedAt ?? undefined,
+  });
+  const { acknowledgement } = scanned;
+  // The scan walks pages, so the review comment and the acknowledgement can
+  // come from different pages and straddle a re-review that finished mid-scan:
+  // an early page yields the body as it was rendered BEFORE the re-review while
+  // a later page yields the acknowledgement naming the current head. That pair
+  // reads as reviewed, and `fetchReviewThreads` reuses the stale body, so
+  // findings the re-review added would be missing when the gate passes. Once an
+  // acknowledgement for this head is in hand, re-read the comment so the
+  // snapshot the gate blocks on postdates it.
+  const comment =
+    acknowledgement !== null &&
+    commitsNamedBy(acknowledgement.body).has(input.head)
+      ? await fetchLatestProviderIssueComment({
+          repo: input.repo,
+          number: input.prNumber,
+          token: input.token,
+          provider: input.provider,
+        })
+      : scanned.review;
+  const { completion } = input.provider;
   const reportsFindings =
-    comment === null
+    comment === null || completion.kind !== "issue-comment"
       ? false
-      : (input.provider.parseIssueComment?.(comment).length ?? 0) > 0;
+      : completion.parseFindings(comment).length > 0;
   if (
     comment !== null &&
     reviewCommentBoundToHead({
