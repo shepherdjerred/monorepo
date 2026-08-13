@@ -62,21 +62,81 @@ describe("R2 orphan cleanup manifest", () => {
     expect(manifest.candidates).toEqual([]);
   });
 
-  test("extracts backup names from R2 metadata", () => {
+  // The deployed BackupStorageLocation prefix is "torvalds/backups/" and Velero
+  // nests its own "backups/" directory beneath it, so real keys carry it twice.
+  test("extracts backup names beneath Velero's nested backups directory", () => {
     expect(
+      metadataBackupNames([
+        {
+          key: "torvalds/backups/backups/daily-1/velero-backup.json",
+          size: 1,
+          lastModified: observedAt,
+        },
+        {
+          key: "torvalds/backups/backups/daily-1/daily-1.tar.gz",
+          size: 1,
+          lastModified: observedAt,
+        },
+        {
+          key: "torvalds/backups/backups/daily-2/velero-backup.json",
+          size: 1,
+          lastModified: observedAt,
+        },
+      ]),
+    ).toEqual(["daily-1", "daily-2"]);
+  });
+
+  test("never derives the constant directory name as a backup name", () => {
+    expect(
+      metadataBackupNames([
+        {
+          key: "torvalds/backups/backups/daily-1/velero-backup.json",
+          size: 1,
+          lastModified: observedAt,
+        },
+      ]),
+    ).not.toContain("backups");
+  });
+
+  test("reports no metadata when the location is genuinely empty", () => {
+    expect(metadataBackupNames([])).toEqual([]);
+  });
+
+  test("refuses an empty protection set when the metadata layout drifts", () => {
+    expect(() =>
       metadataBackupNames([
         {
           key: "torvalds/backups/daily-1/velero-backup.json",
           size: 1,
           lastModified: observedAt,
         },
-        {
-          key: "torvalds/backups/daily-2/velero-backup.json",
-          size: 1,
-          lastModified: observedAt,
-        },
       ]),
-    ).toEqual(["daily-1", "daily-2"]);
+    ).toThrow("refusing to treat an empty protection set as authoritative");
+  });
+
+  test("keeps a metadata-only backup out of the deletion manifest", () => {
+    const metadata = metadataBackupNames([
+      {
+        key: "torvalds/backups/backups/pending-cr/velero-backup.json",
+        size: 1,
+        lastModified: observedAt,
+      },
+    ]);
+    const manifest = buildR2OrphanManifest({
+      observedAt,
+      storage,
+      zfsObjects: [
+        {
+          key: "zfspv-incr/backups/pending-cr/chunk",
+          size: 1,
+          lastModified: "2026-08-09T00:00:00.000Z",
+        },
+      ],
+      liveBackupNames: [],
+      metadataBackupNames: metadata,
+    });
+    expect(manifest.protectedBackupNames).toEqual(["pending-cr"]);
+    expect(manifest.candidates).toEqual([]);
   });
 
   test("rejects apply when object or protection state drifts", () => {

@@ -4,6 +4,11 @@ import type { R2Object } from "./r2-prefix-inventory.ts";
 export const R2_ORPHAN_MINIMUM_AGE_HOURS = 24;
 export const R2_ZFS_PREFIX = "zfspv-incr/backups/";
 export const R2_BACKUP_METADATA_PREFIX = "torvalds/backups/";
+// Velero nests its own object-store layout (backups/, restores/, metadata/, …)
+// beneath the BackupStorageLocation prefix, so a backup's metadata really lives
+// at torvalds/backups/backups/<name>/. Slicing only the BSL prefix yields the
+// literal "backups" for every key and silently empties the protection set.
+export const R2_BACKUP_METADATA_BACKUPS_PREFIX = `${R2_BACKUP_METADATA_PREFIX}backups/`;
 
 const CandidateSchema = z.object({
   prefix: z.string().startsWith(R2_ZFS_PREFIX),
@@ -34,14 +39,23 @@ function backupName(key: string, prefix: string): string | undefined {
 }
 
 export function metadataBackupNames(objects: readonly R2Object[]): string[] {
-  return [
+  const names = [
     ...new Set(
       objects.flatMap((object) => {
-        const name = backupName(object.key, R2_BACKUP_METADATA_PREFIX);
+        const name = backupName(object.key, R2_BACKUP_METADATA_BACKUPS_PREFIX);
         return name === undefined ? [] : [name];
       }),
     ),
   ].toSorted();
+  // Metadata is the independent oracle protecting backups whose CR is briefly
+  // absent before BackupSyncController restores it. If the layout ever drifts
+  // again, fail loudly rather than hand back an empty, permissive protection set.
+  if (objects.length > 0 && names.length === 0) {
+    throw new Error(
+      `Velero metadata listing returned ${objects.length.toString()} objects, none under ${R2_BACKUP_METADATA_BACKUPS_PREFIX}; refusing to treat an empty protection set as authoritative`,
+    );
+  }
+  return names;
 }
 
 export function buildR2OrphanManifest(input: {

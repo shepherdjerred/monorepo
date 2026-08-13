@@ -3,7 +3,7 @@ import {
   assertManifestRevalidated,
   buildR2OrphanManifest,
   metadataBackupNames,
-  R2_BACKUP_METADATA_PREFIX,
+  R2_BACKUP_METADATA_BACKUPS_PREFIX,
   R2OrphanManifestSchema,
   R2_ZFS_PREFIX,
   type R2OrphanManifest,
@@ -106,7 +106,7 @@ async function observe(observedAt: string): Promise<{
   const config = r2Configuration();
   const [liveNames, metadataObjects, zfsObjects] = await Promise.all([
     liveBackupNames(),
-    listR2Objects(R2_BACKUP_METADATA_PREFIX),
+    listR2Objects(R2_BACKUP_METADATA_BACKUPS_PREFIX),
     listR2Objects(R2_ZFS_PREFIX),
   ]);
   return {
