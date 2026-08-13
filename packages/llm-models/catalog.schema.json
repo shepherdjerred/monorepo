@@ -24,6 +24,17 @@
         "description": { "type": "string" },
         "contextWindow": { "type": "integer", "exclusiveMinimum": 0 },
         "pinnedContextWindow": { "type": "boolean" },
+        "acceptedUpstreamPricing": {
+          "type": "object",
+          "description": "An upstream price a human reviewed and declined to adopt. Records the upstream value, not a blanket mute: if upstream publishes anything else, the divergence is reported again.",
+          "required": ["reason"],
+          "additionalProperties": false,
+          "properties": {
+            "input": { "type": "number", "minimum": 0 },
+            "output": { "type": "number", "minimum": 0 },
+            "reason": { "type": "string", "minLength": 1 }
+          }
+        },
         "status": { "enum": ["current", "preview", "deprecated"] },
         "category": { "type": "string" },
         "pricing": {

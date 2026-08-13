@@ -74,6 +74,13 @@ derives the firing and the resolving occurrence from one label set, so the next
 run that withholds nothing closes the alert instead of leaving a fixed finding
 to expire on its own.
 
+Adjudication has to persist, or the same divergence re-alerts every week. An
+operator who keeps the catalog's value records the upstream number under the
+entry's `acceptedUpstreamPricing`. That accepts one **value**, not the field —
+a later move to a different price surfaces again — which is why it is not a
+blanket mute. `claude-sonnet-5` carries one: upstreams list its introductory
+rate, the catalog holds the standard price that billing reverts to.
+
 ## Scout
 
 Five jobs track data Riot ships on its own clock, with three deliberate

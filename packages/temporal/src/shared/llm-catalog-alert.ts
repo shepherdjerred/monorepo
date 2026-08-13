@@ -73,6 +73,9 @@ export function buildCatalogWithheldAlert(
         "confirm the catalog's value is the intended one. Both are real outcomes — a",
         "divergence can be deliberate, such as a standard rate held while upstream",
         "lists a temporary promotional one.",
+        "To make a retain decision stick, record the upstream number under the",
+        "entry's `acceptedUpstreamPricing` in catalog.json. That stops this alert",
+        "for that value only — a later repricing to a different number reopens it.",
         prUrl === undefined
           ? "This run opened no catalog PR, so these withheld lines are its only outcome."
           : `The other ${String(applied.length)} edit(s) passed the guards and were applied — review those in ${prUrl}, not here.`,

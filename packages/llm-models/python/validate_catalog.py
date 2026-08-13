@@ -52,6 +52,19 @@ class Capabilities(BaseModel):
     effortTiers: list[str] | None = None
 
 
+class AcceptedUpstreamPricing(BaseModel):
+    """An upstream price a human reviewed and declined to adopt.
+
+    Records the upstream value rather than muting the field, so a later
+    repricing to some other number is still reported.
+    """
+
+    model_config = {"extra": "forbid"}
+    input: float | None = Field(default=None, ge=0)
+    output: float | None = Field(default=None, ge=0)
+    reason: str = Field(min_length=1)
+
+
 class ModelEntry(BaseModel):
     model_config = {"extra": "forbid"}
     id: str = Field(min_length=1)
@@ -61,6 +74,7 @@ class ModelEntry(BaseModel):
     pricing: Pricing
     contextWindow: int | None = Field(default=None, gt=0)
     pinnedContextWindow: bool | None = None
+    acceptedUpstreamPricing: AcceptedUpstreamPricing | None = None
     capabilities: Capabilities
     status: Literal["current", "preview", "deprecated"]
     category: str | None = None

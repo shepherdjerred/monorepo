@@ -60,6 +60,24 @@ export const ModelEntrySchema = z.object({
   contextWindow: z.number().int().positive().optional(),
   /** When true, the sync script will not overwrite contextWindow from upstream sources. */
   pinnedContextWindow: z.boolean().optional(),
+  /**
+   * An upstream price a human looked at and decided NOT to adopt, so the sync
+   * script stops re-reporting it every week.
+   *
+   * This records the upstream VALUE, not a blanket "ignore pricing" flag. The
+   * divergence is only accepted while upstream still lists these numbers; if it
+   * publishes anything else, the entry is reported again. A blanket mute would
+   * also swallow a genuine later repricing, which is the one thing this catalog
+   * must never miss.
+   */
+  acceptedUpstreamPricing: z
+    .object({
+      input: z.number().nonnegative().optional(),
+      output: z.number().nonnegative().optional(),
+      /** Why the catalog value wins. Required — an unexplained mute rots. */
+      reason: z.string().min(1),
+    })
+    .optional(),
   capabilities: ModelCapabilitiesSchema,
   status: ModelStatusSchema,
   category: z.string().optional(),

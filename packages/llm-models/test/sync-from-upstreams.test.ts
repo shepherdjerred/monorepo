@@ -293,6 +293,53 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
     expect(result.rejected[0]).toContain("models.dev");
   });
 
+  test("skips an upstream price a human already declined", () => {
+    // The claude-sonnet-5 case: upstream lists the introductory rate, the
+    // catalog holds the standard one on purpose. Without this the guard
+    // re-reports the same divergence every week forever.
+    const subject = entry({
+      acceptedUpstreamPricing: {
+        input: 2,
+        output: 10,
+        reason: "introductory rate; catalog holds the standard price",
+      },
+    });
+    const result = reconcile(
+      "subject",
+      subject,
+      { input: 2, output: 10 },
+      "models.dev",
+    );
+    expect(result.applied).toHaveLength(0);
+    expect(result.rejected).toHaveLength(0);
+    expect(subject.pricing).toMatchObject({ input: 5, output: 25 });
+  });
+
+  test("accepts one value, not the field — a later repricing reopens", () => {
+    // The whole reason this records a value instead of a mute flag. Accepting
+    // $2 must not swallow a later move to some other number, whichever side of
+    // the plausibility guard that number falls on.
+    const acceptance = {
+      acceptedUpstreamPricing: {
+        input: 2,
+        reason: "introductory rate; catalog holds the standard price",
+      },
+    };
+
+    // A plausible new price is applied, not silently ignored.
+    const modest = entry(acceptance);
+    const applied = reconcile("subject", modest, { input: 4 }, "models.dev");
+    expect(applied.applied).toHaveLength(1);
+    expect(modest.pricing).toMatchObject({ input: 4 });
+
+    // An implausible one still reaches the guard and is withheld.
+    const drastic = entry(acceptance);
+    const withheld = reconcile("subject", drastic, { input: 12 }, "models.dev");
+    expect(withheld.rejected).toHaveLength(1);
+    expect(withheld.rejected[0]).toContain("subject.input");
+    expect(drastic.pricing).toMatchObject({ input: 5 });
+  });
+
   test("still honours pinnedContextWindow", () => {
     const subject = entry({ pinnedContextWindow: true });
     const result = reconcile(

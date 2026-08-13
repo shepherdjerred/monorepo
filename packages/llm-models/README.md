@@ -54,7 +54,12 @@ upstreams are reported as overlay-only and stay manually maintained.
 
 An edit that fails a plausibility guard (see `priceDecision` /
 `contextRejection`) is **withheld** rather than applied, and needs a human to
-check the provider's own pricing page. A run that withholds everything writes
+check the provider's own pricing page and decide — the catalog value is
+sometimes the deliberate one. To keep the catalog's value, record the upstream
+number under the entry's `acceptedUpstreamPricing` and say why; the guard then
+stops reporting **that value**, while any later move to a different number
+surfaces again. `claude-sonnet-5` is the worked example: upstreams list the
+introductory rate, the catalog holds the standard one. A run that withholds everything writes
 no catalog diff, so both entry points give that outcome its own signal:
 `--check` exits non-zero on withheld edits as well as on drift, and
 `--report-json` writes the typed report for an unattended caller.

@@ -158,6 +158,11 @@
       "cacheRead": 0.3,
       "cacheWrite": 3.75
     },
+    "acceptedUpstreamPricing": {
+      "input": 2,
+      "output": 10,
+      "reason": "Upstreams list the introductory rate through 2026-08-31; the catalog holds the standard $3/$15 that billing reverts to."
+    },
     "contextWindow": 1000000,
     "pinnedContextWindow": true,
     "capabilities": {

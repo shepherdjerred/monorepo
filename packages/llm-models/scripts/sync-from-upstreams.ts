@@ -276,8 +276,21 @@ export function reconcile(
     rejected.push(`  ${id}.${field}: ${reason} (${source})`);
   };
 
+  /**
+   * True when a human already looked at exactly this upstream number and kept
+   * the catalog's. Matching on the value, not just the field, is deliberate: an
+   * accepted $2 does not accept a later $4, so a real repricing still surfaces.
+   */
+  const accepted = (field: "input" | "output", value: number): boolean => {
+    const acknowledged = entry.acceptedUpstreamPricing?.[field];
+    return (
+      acknowledged !== undefined && Math.abs(acknowledged - value) <= EPSILON
+    );
+  };
+
   if (
     upstream.input !== undefined &&
+    !accepted("input", upstream.input) &&
     Math.abs(entry.pricing.input - upstream.input) > EPSILON
   ) {
     const decision = priceDecision(entry.pricing.input, upstream.input);
@@ -290,6 +303,7 @@ export function reconcile(
   }
   if (
     upstream.output !== undefined &&
+    !accepted("output", upstream.output) &&
     Math.abs(entry.pricing.output - upstream.output) > EPSILON
   ) {
     const decision = priceDecision(entry.pricing.output, upstream.output);
