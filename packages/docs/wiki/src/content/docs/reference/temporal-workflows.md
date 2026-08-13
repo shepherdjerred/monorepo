@@ -16,15 +16,21 @@ Cron times are `America/Los_Angeles` wall-clock. Source:
 
 ## Repo upkeep
 
-| Workflow            | Trigger     | Brain                            | Output          |
-| ------------------- | ----------- | -------------------------------- | --------------- |
-| fetcher             | daily 05:00 | deterministic                    | S3 overwrite    |
-| deps-summary        | Mon 09:00   | deterministic + optional summary | heartbeat email |
-| llm-catalog-refresh | Mon 09:00   | deterministic                    | PR              |
-| homelab-crd-imports | daily 05:30 | deterministic                    | PR              |
-| pokeemerald-data    | daily 04:30 | deterministic                    | PR              |
-| CI I/O impact       | daily 09:00 | deterministic                    | heartbeat email |
-| protobufjs v8 watch | Mon 09:00   | deterministic                    | heartbeat email |
+| Workflow            | Trigger     | Brain                            | Output              |
+| ------------------- | ----------- | -------------------------------- | ------------------- |
+| fetcher             | daily 05:00 | deterministic                    | S3 overwrite        |
+| deps-summary        | Mon 09:00   | deterministic + optional summary | heartbeat email     |
+| llm-catalog-refresh | Mon 09:00   | deterministic                    | PR or durable alert |
+| homelab-crd-imports | daily 05:30 | deterministic                    | PR                  |
+| pokeemerald-data    | daily 04:30 | deterministic                    | PR                  |
+| CI I/O impact       | daily 09:00 | deterministic                    | heartbeat email     |
+| protobufjs v8 watch | Mon 09:00   | deterministic                    | heartbeat email     |
+
+`llm-catalog-refresh` opens its PR only for upstream price changes that pass its
+plausibility guards. An implausible one is withheld from the catalog instead, so
+a run that withholds every change produces no PR at all — it raises an
+`LlmCatalogDriftWithheld` occurrence to be checked by hand against the provider's
+pricing page, and the next run that withholds nothing resolves it.
 
 ## Scout
 
