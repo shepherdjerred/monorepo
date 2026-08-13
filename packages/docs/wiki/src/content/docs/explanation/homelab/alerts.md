@@ -12,11 +12,11 @@ routing, grouping, inhibition, silences, or current-state authority.
 ```mermaid
 flowchart LR
   accTitle: Alert routing and durable history
-  accDescr: Alertmanager remains authoritative for live state. Its authenticated webhook and snapshots feed a PostgreSQL ledger; the dashboard, read-only API, toolkit, Grafana previews, and Postal opening email use that ledger.
+  accDescr: Alertmanager remains authoritative for live state. Its authenticated webhook and snapshots feed a WAL-mode SQLite ledger on a single-writer PVC; the dashboard, read-only API, toolkit, Grafana previews, and Postal opening email use that ledger.
 
   AM[Alertmanager\nrouting and live state]
   LEDGER[Alerts service\nwebhook and reconciliation]
-  DB[(PostgreSQL\nlifecycle ledger)]
+  DB[(WAL-mode SQLite\non a single-writer PVC)]
   UI[Dashboard and\nread-only APIs]
   CLI[toolkit alerts]
   GRAFANA[Grafana previews\nPrometheus Loki Tempo]
@@ -32,7 +32,7 @@ flowchart LR
 
 ## Current deployment boundary
 
-The application, image, database chart, network policy, observability rules,
+The application, image, ledger volume, network policy, observability rules,
 Argo CD application, and cutover receiver exist in the repository. The cluster
 continues its existing notification path until the two GitOps changes pass
 Buildkite and Argo CD syncs them; after that, Alerts and Postal are the active
@@ -43,22 +43,26 @@ pin its real digest, bootstrap reconciliation with email disabled, then verify a
 synthetic fire/resolve before changing Alertmanager. This avoids deploying a
 zero-digest image or silently replacing the working notification path.
 
-## Database transport trust
+## SQLite persistence boundary
 
-Alerts verifies PostgreSQL transport rather than treating encryption alone as
-identity. A namespace-local self-signed issuer creates a long-lived CA, and a
-CA issuer signs the PostgreSQL server certificate for the operator service's
-cluster DNS names. The application and its migration container connect with
-`verify-full`, so the presented certificate must chain to that CA and match the
-service hostname.
+Alerts runs one replica with a recreate deployment strategy. Both the migration
+container and application mount the same ZFS-backed PVC and open one SQLite
+file. WAL mode improves read and write concurrency within that process, but it
+does not make the volume safe for multiple writers.
 
-Only the public `ca.crt` entry is projected into the application pod. The CA
-private key remains in its issuer secret, and the PostgreSQL leaf private key
-remains in the server secret consumed by the operator. The leaf certificate is
-short-lived and rotates automatically. The CA is deliberately stable and does
-not auto-rotate: replacing a trust root safely needs an overlap period in which
-both the old and new roots are trusted, so unattended single-secret replacement
-would turn routine renewal into an outage risk.
+The deployment therefore keeps write serialization process-local and treats
+the replica count, PVC, and backup policy as one persistence boundary. This is
+less operational surface than a database operator while preserving durable,
+snapshot-backed incident history.
+
+There is no database transport to verify. The ledger is a file on a mounted
+volume rather than a network service, so the former PostgreSQL certificate
+authority, server certificate, and `verify-full` connection requirements no
+longer exist and are not part of this deployment.
+
+The predecessor PostgreSQL database contained no application tables at the
+migration audit, so the SQLite ledger began empty. Its retained PVC is outside
+this persistence boundary and requires a separate teardown decision.
 
 ## Operator workflow after activation
 

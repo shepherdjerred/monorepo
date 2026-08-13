@@ -17,7 +17,7 @@ alert state.
 ## Decisions
 
 - Build `@shepherdjerred/alert-dashboard` as a Bun/Hono service with a
-  Vite/React UI, tRPC, a versioned read-only REST API, Prisma, and PostgreSQL.
+  Vite/React UI, tRPC, a versioned read-only REST API, Prisma, and SQLite.
 - Persist individual Alertmanager occurrences and lifecycle events. Poll all
   Alertmanager active state every 15 seconds; use its webhook for exact routed
   notification events and opening-email eligibility.
@@ -35,9 +35,12 @@ alert state.
 - Query Prometheus, Loki, and Tempo through a dedicated read-only Grafana
   service account. Derive bounded previews from validated occurrence metadata;
   never expose an arbitrary query proxy.
-- Deploy privately at `alerts.tailnet-1a49.ts.net` with a backed-up PostgreSQL
-  cluster and an independent Alertmanager-to-Postal fallback for failures of
-  the dashboard itself.
+- Deploy privately at `alerts.tailnet-1a49.ts.net` with a backed-up, WAL-mode
+  SQLite database on a single-writer PVC and an independent
+  Alertmanager-to-Postal fallback for failures of the dashboard itself.
+- Because the live PostgreSQL cluster now has a bound PVC, the cutover must
+  preserve its ledger through an explicit export/import or receive explicit
+  approval to discard that history before the old resources are removed.
 - Split the bootstrap release into activation and cutover changes: activation
   registers the Argo CD Application, service-health rules, probe, and network
   paths while preserving PagerDuty routing; cutover follows successful
@@ -55,9 +58,8 @@ alert state.
 2. Add the functional dashboard, history, detail, preview, and system-health
    routes with URL-backed filters and native browser navigation behavior.
 3. Add the application image, Buildkite integration, CDK8s chart, Helm chart,
-   ArgoCD application definition, PostgreSQL cluster, network policy,
-   monitoring, and secret references. Keep activation separate from the
-   notification cutover.
+   ArgoCD application definition, SQLite PVC, network policy, monitoring, and
+   secret references. Keep activation separate from the notification cutover.
 4. After bootstrap verification, replace Alertmanager's PagerDuty receiver,
    migrate Temporal/TRMNL consumers, remove the retained toolkit PagerDuty
    command and active PagerDuty credentials, and update current operator

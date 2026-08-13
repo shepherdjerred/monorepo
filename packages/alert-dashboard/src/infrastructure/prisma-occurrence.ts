@@ -3,25 +3,6 @@ import type {
   Prisma,
 } from "#generated/prisma/client/index.js";
 
-async function lockAlertFingerprint(
-  transaction: Prisma.TransactionClient,
-  fingerprint: string,
-): Promise<void> {
-  const lockKey = `alertmanager:${fingerprint}`;
-  await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
-}
-
-export async function lockAlertFingerprints(
-  transaction: Prisma.TransactionClient,
-  fingerprints: readonly string[],
-): Promise<void> {
-  const ordered = [...new Set(fingerprints)].sort((left, right) =>
-    left.localeCompare(right),
-  );
-  for (const fingerprint of ordered)
-    await lockAlertFingerprint(transaction, fingerprint);
-}
-
 export async function findObservedOccurrence(
   transaction: Prisma.TransactionClient,
   fingerprint: string,

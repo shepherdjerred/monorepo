@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 model AlertOccurrence {
@@ -29,6 +29,8 @@ model AlertOccurrence {
   labels             Json
   annotations        Json
   events             AlertEvent[]
+  labelEntries       AlertOccurrenceLabel[]
+  occurrenceLinks    WebhookDeliveryOccurrence[]
 
   @@unique([source, fingerprint, startedAtNs])
   @@index([lifecycleState, openedAtNs])
@@ -63,10 +65,31 @@ model WebhookDelivery {
   occurrenceIds      Json
   rawPayload         Json?
   rawExpiresAtNs     BigInt
+  occurrenceLinks    WebhookDeliveryOccurrence[]
 
   @@index([receivedAtNs])
   @@index([groupKey])
   @@index([rawExpiresAtNs])
+}
+
+model AlertOccurrenceLabel {
+  occurrenceId String
+  key          String
+  value        String
+  occurrence   AlertOccurrence @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
+
+  @@id([occurrenceId, key])
+  @@index([key, value, occurrenceId])
+}
+
+model WebhookDeliveryOccurrence {
+  deliveryId   String
+  occurrenceId String
+  delivery     WebhookDelivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  occurrence   AlertOccurrence @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
+
+  @@id([deliveryId, occurrenceId])
+  @@index([occurrenceId, deliveryId])
 }
 
 model SnapshotRun {

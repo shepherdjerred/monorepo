@@ -2,7 +2,7 @@ import { expect } from "bun:test";
 
 import { AlertmanagerSnapshotAlertSchema } from "#shared/schema";
 import { InstantTextSchema } from "#shared/time";
-import { input, nanoseconds, repository, webhook } from "./postgres-fixture.ts";
+import { input, nanoseconds, repository, webhook } from "./sqlite-fixture.ts";
 
 export async function matchesRefreshedResolution(): Promise<void> {
   const fingerprint = "fingerprint-promoted-resolution";

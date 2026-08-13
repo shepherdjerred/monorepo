@@ -1,4 +1,4 @@
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { z } from "zod";
 
 import { PrismaClient } from "#generated/prisma/client/index.js";
@@ -7,13 +7,13 @@ import { createPrismaRepository } from "#infrastructure/prisma-repository";
 import { AlertmanagerWebhookSchema, JsonObjectSchema } from "#shared/schema";
 import { InstantTextSchema, instantTextToEpochNanoseconds } from "#shared/time";
 
-const DatabaseUrlSchema = z.url().startsWith("postgresql://");
+const DatabaseUrlSchema = z.url().startsWith("file:");
 export const IndexRowSchema = z.array(z.object({ indexname: z.string() }));
 const databaseUrl = DatabaseUrlSchema.parse(Bun.env["DATABASE_URL"]);
 export const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: databaseUrl }),
+  adapter: new PrismaLibSql({ url: databaseUrl, intMode: "bigint" }),
 });
-export const repository = createPrismaRepository(databaseUrl);
+export const repository = await createPrismaRepository(databaseUrl);
 
 export function nanoseconds(value: string): bigint {
   return instantTextToEpochNanoseconds(InstantTextSchema.parse(value));
@@ -34,7 +34,15 @@ export async function waitForDatabase(): Promise<void> {
 }
 
 export async function resetDatabase(): Promise<void> {
-  await prisma.$executeRaw`TRUNCATE TABLE "AlertEvent", "EmailOutbox", "WebhookDelivery", "SnapshotRun", "AlertOccurrence"`;
+  await prisma.$transaction([
+    prisma.webhookDeliveryOccurrence.deleteMany(),
+    prisma.alertOccurrenceLabel.deleteMany(),
+    prisma.alertEvent.deleteMany(),
+    prisma.emailOutbox.deleteMany(),
+    prisma.webhookDelivery.deleteMany(),
+    prisma.snapshotRun.deleteMany(),
+    prisma.alertOccurrence.deleteMany(),
+  ]);
 }
 
 export async function disconnectDatabase(): Promise<void> {

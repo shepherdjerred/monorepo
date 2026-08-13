@@ -192,6 +192,14 @@ const commands: Record<
     command: [
       "set -eu",
       "cd /app",
+      "export DATABASE_URL=file:/tmp/alert-dashboard-smoke.db",
+      // Kept as separate commands: `set -e` ignores a failing non-final
+      // command in an AND-OR list, so chaining these with `&&` would swallow a
+      // migrate failure, leave the shell in the package directory, and surface
+      // it as a bogus "Module not found" for the server entrypoint below.
+      "cd /app/packages/alert-dashboard",
+      "bunx prisma migrate deploy",
+      "cd /app",
       "bun packages/alert-dashboard/src/server/index.ts >/tmp/alert-dashboard-smoke.log 2>&1 &",
       "pid=$!",
       "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
@@ -210,7 +218,7 @@ const commands: Record<
       ALERTMANAGER_URL: "http://127.0.0.1:19093",
       ALERT_DASHBOARD_WEBHOOK_TOKEN:
         "smoke-test-token-with-at-least-32-characters",
-      DATABASE_URL: "postgresql://alerts:alerts@127.0.0.1:15432/alerts",
+      DATABASE_URL: "file:/tmp/alert-dashboard-smoke.db",
       EMAIL_ENABLED: "false",
       GRAFANA_API_KEY: "smoke-viewer-token",
       GRAFANA_URL: "http://127.0.0.1:13000",

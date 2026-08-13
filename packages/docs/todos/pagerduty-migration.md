@@ -45,9 +45,12 @@ operations.
       produces exactly one grouped message.
 - [x] Migrate the Temporal audit and TRMNL consumers, remove the `toolkit pd`
       command, and remove runtime PagerDuty credentials from active source.
-- [ ] Deploy the activation and cutover branches, then verify database
-      migration, snapshot bootstrap, UI, REST, previews, reconciliation
+- [ ] Deploy the activation and cutover branches, then verify the SQLite PVC
+      creation, snapshot bootstrap, UI, REST, previews, reconciliation
       freshness, probes, consumers, and live routing.
+- [ ] Decide whether to export the live PostgreSQL ledger into SQLite or
+      explicitly discard that history; do not remove the PostgreSQL PVC or
+      operator resources before this decision is executed.
 - [ ] Record the production cutover timestamp in the Comment Log, then wait 30
       full days before performing the operator verification below.
 - [ ] Complete the production acceptance checks in
@@ -74,6 +77,26 @@ OpenTofu state.
 
 ## Comment Log
 
+### 2026-08-11 — live PostgreSQL ledger audited and found empty
+
+Read-only inspection of the live cluster while reviewing the SQLite replacement
+branch. `alert-dashboard-postgresql` is Running with its 16 GiB PVC bound, but
+the `alert_dashboard` database contains **zero tables** (`\dt` reports "Did not
+find any tables"), so Prisma migrations never ran and no ledger history exists.
+The cause is visible in the same namespace: the `alert-dashboard` Deployment has
+never started, sitting in `Init:CrashLoopBackOff` on the Prisma engine
+permission failure.
+
+This does not by itself check the export-or-discard decision below, but it
+establishes that there is no history to export. Note also that the SQLite branch
+removes only the PostgreSQL _declarations_: the `alert-dashboard` Argo CD
+Application enables automated sync without prune, the release prune allowlist in
+`helm-push.ts` covers only `service-probes` and `turbo-cache`, and the
+`Postgresql` resource carries `argocd.argoproj.io/sync-options: Delete=false`.
+Merging therefore cannot delete the live cluster or its PVC; those resources
+would persist as orphaned, no longer GitOps-declared, and need a separate
+deliberate teardown once the decision is recorded.
+
 ### 2026-08-09 — activation and cutover source staged
 
 The activation branch registers the deployable service while preserving the
@@ -86,7 +109,10 @@ email, and no-new-PagerDuty verification remain outstanding.
 Created the application 1Password item with email disabled and a dedicated
 Grafana Viewer service-account token. The shared Postal sender credential was
 copied from the existing Temporal mail integration; no email was sent.
-PostgreSQL credentials are generated and owned by the Zalando operator. The
+The live PostgreSQL resource now has a bound 16 GiB PVC and generated
+credentials, so its ledger must be treated as potentially valuable until an
+explicit export/import or discard decision is completed. The SQLite
+replacement owns a backup-enabled `alert-dashboard-data` PVC instead. The
 committed vault snapshot contains hashes and blank-state metadata only.
 
 ### 2026-08-08 — retention eligibility check scheduled

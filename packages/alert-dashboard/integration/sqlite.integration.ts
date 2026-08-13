@@ -19,17 +19,37 @@ import {
   resetDatabase,
   waitForDatabase,
   webhook,
-} from "./postgres-fixture.ts";
+} from "./sqlite-fixture.ts";
 import {
   keepsStaleResolutionOnPriorOccurrence,
   matchesRefreshedResolution,
 } from "./webhook-authority-cases.ts";
 
+async function expectNormalizedIndexes(): Promise<void> {
+  const indexes = IndexRowSchema.parse(
+    await prisma.$queryRaw`
+      SELECT name AS indexname
+      FROM sqlite_master
+      WHERE type = 'index'
+        AND (
+          tbl_name = 'AlertOccurrenceLabel' OR
+          tbl_name = 'WebhookDeliveryOccurrence'
+        )
+    `,
+  );
+  expect(indexes.map((row) => row.indexname)).toContain(
+    "AlertOccurrenceLabel_key_value_occurrenceId_idx",
+  );
+  expect(indexes.map((row) => row.indexname)).toContain(
+    "WebhookDeliveryOccurrence_occurrenceId_deliveryId_idx",
+  );
+}
+
 beforeAll(waitForDatabase);
 beforeEach(resetDatabase);
 afterAll(disconnectDatabase);
 
-describe("PostgreSQL alert ledger", () => {
+describe("SQLite alert ledger", () => {
   it("serializes concurrent webhook retries into one lifecycle and one email", async () => {
     const delivery = input(
       webhook("fingerprint-concurrent", "firing"),
@@ -408,15 +428,7 @@ describe("PostgreSQL alert ledger", () => {
         nanoseconds("2026-08-08T21:00:00Z"),
       ),
     ).toBe(2);
-    const indexes = IndexRowSchema.parse(
-      await prisma.$queryRaw`SELECT indexname FROM pg_indexes WHERE tablename IN ('AlertOccurrence', 'WebhookDelivery')`,
-    );
-    expect(indexes.map((row) => row.indexname)).toContain(
-      "AlertOccurrence_labels_gin_idx",
-    );
-    expect(indexes.map((row) => row.indexname)).toContain(
-      "WebhookDelivery_occurrenceIds_gin_idx",
-    );
+    await expectNormalizedIndexes();
   });
   it("reports the latest successful reconciliation separately from later failures", async () => {
     const successAt = nanoseconds("2026-08-08T18:00:01Z");
@@ -441,7 +453,7 @@ describe("PostgreSQL alert ledger", () => {
     );
   });
 });
-describe("PostgreSQL webhook authority", () => {
+describe("SQLite webhook authority", () => {
   it(
     "matches a refreshed-start resolution to its reconciled occurrence",
     matchesRefreshedResolution,

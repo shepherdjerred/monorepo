@@ -3,7 +3,7 @@
 `@shepherdjerred/alert-dashboard` is the homelab's durable, read-only alert
 ledger. Alertmanager remains authoritative for evaluation, grouping,
 inhibition, routing, and silences; this service stores occurrence history in
-PostgreSQL, serves a tailnet dashboard and API, sends grouped opening email
+SQLite, serves a tailnet dashboard and API, sends grouped opening email
 through Postal, and renders bounded Grafana-backed Prometheus, Loki, and Tempo
 previews for firing alerts.
 
@@ -17,16 +17,25 @@ manages the workload.
 
 ## Local development
 
-From the repository root, start PostgreSQL separately, then:
+From the repository root, point `DATABASE_URL` at a local SQLite file and apply
+the Prisma migration, then:
 
 ```bash
 bun install
 cd packages/alert-dashboard
-bun run generate   # Prisma client
+export DATABASE_URL="file:$PWD/data/alert-dashboard.db"
+mkdir -p data
+bun run generate         # Prisma client
+bun run migrate:deploy   # create the SQLite schema
 bun run dev
 ```
 
-Required configuration is validated at startup: `DATABASE_URL`,
+The package-local `data/` directory is ignored, including the primary database
+and SQLite's `-wal` and `-shm` companions, so this workflow does not leave
+retained alert data in the repository status.
+
+Required configuration is validated at startup: `DATABASE_URL` (a SQLite
+`file:` URL),
 `ALERTMANAGER_URL`, `ALERT_DASHBOARD_WEBHOOK_TOKEN`, `GRAFANA_URL`, and
 `GRAFANA_API_KEY`. Set `EMAIL_ENABLED=true` only with `POSTAL_HOST`,
 `POSTAL_API_KEY`, `POSTAL_FROM`, and `POSTAL_TO` present.
@@ -47,12 +56,11 @@ process in production (`bun run start`).
 | `bun run generate`           | Generate the Prisma client                                          |
 | `bun run typecheck`          | TypeScript (native `tsc`) after codegen                             |
 | `bun run test`               | Unit tests (`bun test src`)                                         |
-| `bun run test:postgres`      | PostgreSQL integration test (`integration/postgres.integration.ts`) |
+| `bun run test:sqlite`        | SQLite integration test (`integration/sqlite.integration.ts`)       |
 | `bun run test:e2e`           | Playwright end-to-end tests (`e2e/`, `playwright.config.ts`)        |
 | `bun run lint`               | ESLint plus the architecture check                                  |
 | `bun run check:architecture` | dependency-cruiser layering rules (`scripts/check-architecture.ts`) |
 | `bun run migrate:deploy`     | Apply Prisma migrations (`prisma migrate deploy`)                   |
-| `bun run wait:database`      | Block until the database accepts connections                        |
 | `bun run docker:build`       | Build the production image locally (`alert-dashboard:dev`)          |
 
 ## Architecture

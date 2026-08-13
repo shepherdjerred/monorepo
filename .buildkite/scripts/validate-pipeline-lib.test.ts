@@ -236,10 +236,9 @@ describe("complete Buildkite pod reservations", () => {
         expected: { cpuMilli: 1100, memoryMi: 3136 },
       })),
       {
-        name: "alert-dashboard-postgres",
+        name: "alert-dashboard-sqlite",
         command: { cpuMilli: 1000, memoryMi: 2048 },
-        additionalContainers: [{ cpuMilli: 250, memoryMi: 256 }],
-        expected: { cpuMilli: 1350, memoryMi: 3392 },
+        expected: { cpuMilli: 1100, memoryMi: 3136 },
       },
     ];
 

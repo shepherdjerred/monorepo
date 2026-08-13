@@ -13,12 +13,11 @@
     "migrate:deploy": "prisma migrate deploy",
     "start": "bun run src/server/index.ts",
     "test": "bun run generate && bun test src",
-    "test:postgres": "bun run generate && bun test ./integration/postgres.integration.ts",
+    "test:sqlite": "bun run generate && bun test ./integration/sqlite.integration.ts",
     "test:e2e": "playwright test",
     "test:ci": "bun ../../scripts/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts",
-    "typecheck": "bun run generate && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "wait:database": "bun scripts/wait-for-database.ts"
+    "typecheck": "bun run generate && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
   },
   "imports": {
     "#application/*": "./src/application/*.ts",
@@ -42,7 +41,7 @@
     "@opentelemetry/sdk-node": "^0.221.0",
     "@opentelemetry/sdk-trace-base": "^2.7.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
-    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/adapter-libsql": "7.9.1",
     "@prisma/client": "^7.9.1",
     "@prisma/client-runtime-utils": "7.9.1",
     "@tanstack/react-query": "^5.101.2",
