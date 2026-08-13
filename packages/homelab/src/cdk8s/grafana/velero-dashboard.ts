@@ -21,7 +21,7 @@ function buildNamespaceFilter() {
 }
 
 function backupEnabledPvcStorage(namespaceFilter: string): string {
-  return `kube_persistentvolumeclaim_resource_requests_storage_bytes{${namespaceFilter}} * on(namespace, persistentvolumeclaim) group_left() kube_persistentvolumeclaim_labels{label_velero_io_backup="enabled"}`;
+  return `kube_persistentvolumeclaim_resource_requests_storage_bytes{${namespaceFilter}} * on(namespace, persistentvolumeclaim) group_left() kube_persistentvolumeclaim_labels{${namespaceFilter},label_velero_io_backup="enabled"}`;
 }
 
 /**

@@ -113,6 +113,56 @@ describe("evaluateFreshness", () => {
       }).status,
     ).toBe("missing");
   });
+
+  test("stops pending from masking a schedule that never runs after activation", () => {
+    const activationRegistration = {
+      ...registration,
+      receiptRequiredAfter: "2026-08-11T23:52:18.000Z",
+    };
+    expect(
+      evaluateFreshness({
+        registration: activationRegistration,
+        now: new Date("2026-08-13T01:52:18.000Z"),
+        acceptedAt: undefined,
+        lastActionTakenAt: undefined,
+        deployed: true,
+        paused: false,
+      }).status,
+    ).toBe("pending");
+    expect(
+      evaluateFreshness({
+        registration: activationRegistration,
+        now: new Date("2026-08-13T01:52:19.000Z"),
+        acceptedAt: undefined,
+        lastActionTakenAt: undefined,
+        deployed: true,
+        paused: false,
+      }).status,
+    ).toBe("missing");
+    expect(
+      evaluateFreshness({
+        registration: activationRegistration,
+        now: new Date("2026-08-20T00:00:00.000Z"),
+        acceptedAt: "2026-07-01T00:00:00.000Z",
+        lastActionTakenAt: "2026-08-11T00:00:00.000Z",
+        deployed: true,
+        paused: false,
+      }).status,
+    ).toBe("missing");
+  });
+
+  test("rejects an unparseable receipt activation timestamp", () => {
+    expect(() =>
+      evaluateFreshness({
+        registration: { ...registration, receiptRequiredAfter: "not-a-date" },
+        now: new Date("2026-08-10T12:00:00.000Z"),
+        acceptedAt: undefined,
+        lastActionTakenAt: undefined,
+        deployed: true,
+        paused: false,
+      }),
+    ).toThrow("unparseable receiptRequiredAfter");
+  });
 });
 
 describe("publishReportFreshnessMetrics", () => {

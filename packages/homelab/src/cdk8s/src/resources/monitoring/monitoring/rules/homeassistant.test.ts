@@ -1,8 +1,48 @@
+import { Glob } from "bun";
 import { describe, expect, test } from "bun:test";
 import {
   getHomeAssistantRuleGroups,
   TEMPORAL_AUTOMATION_ENTITY_IDS,
 } from "./homeassistant.ts";
+
+const HA_WORKFLOW_DIR = new URL(
+  "../../../../../../../../temporal/src/workflows/ha/",
+  import.meta.url,
+).pathname;
+
+// Only the domains a workflow can actually depend on being available. Matching
+// every `<word>.<word>` literal would sweep in module paths and service names.
+const ENTITY_DOMAINS = [
+  "binary_sensor",
+  "climate",
+  "light",
+  "lock",
+  "media_player",
+  "person",
+  "scene",
+  "sensor",
+  "sun",
+  "switch",
+  "vacuum",
+  "zone",
+];
+const ENTITY_PATTERN = new RegExp(
+  String.raw`"((?:${ENTITY_DOMAINS.join("|")})\.[a-z0-9_]+)"`,
+  "g",
+);
+
+async function collectWorkflowEntityIds(): Promise<Set<string>> {
+  const entities = new Set<string>();
+  for await (const file of new Glob("*.ts").scan(HA_WORKFLOW_DIR)) {
+    if (file.endsWith(".test.ts")) continue;
+    const source = await Bun.file(`${HA_WORKFLOW_DIR}${file}`).text();
+    for (const match of source.matchAll(ENTITY_PATTERN)) {
+      const entity = match[1];
+      if (entity !== undefined) entities.add(entity);
+    }
+  }
+  return entities;
+}
 
 describe("Home Assistant rules", () => {
   test("alerts when the master bathroom temperature is unavailable or absent", () => {
@@ -84,6 +124,16 @@ describe("Home Assistant rules", () => {
     ).text();
 
     expect(configuration).not.toContain("unavailable_entities_count");
+  });
+
+  test("alerts on every entity the Temporal HA workflows depend on", async () => {
+    const workflowEntities = await collectWorkflowEntityIds();
+    expect(workflowEntities.size).toBeGreaterThan(0);
+
+    const covered = new Set<string>(TEMPORAL_AUTOMATION_ENTITY_IDS);
+    expect(
+      [...workflowEntities].filter((entity) => !covered.has(entity)),
+    ).toEqual([]);
   });
 
   test("uses gauge-safe battery trend math for the Roborock alert", () => {

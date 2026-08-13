@@ -113,6 +113,10 @@ export function evaluateFreshness(input: {
   const receiptRequiredAfter = Date.parse(
     input.registration.receiptRequiredAfter,
   );
+  if (!Number.isFinite(receiptRequiredAfter))
+    throw new Error(
+      `Schedule ${input.registration.scheduleId} has an unparseable receiptRequiredAfter: ${input.registration.receiptRequiredAfter}`,
+    );
   const lastActionTakenAt =
     input.lastActionTakenAt === undefined
       ? undefined
@@ -121,17 +125,17 @@ export function evaluateFreshness(input: {
     input.acceptedAt === undefined ||
     Date.parse(input.acceptedAt) < receiptRequiredAfter
   ) {
+    // A schedule that never runs after activation would otherwise sit at
+    // `pending` forever, which the alert deliberately does not page on. Bound
+    // that window by one full cadence plus grace measured from activation.
     const graceDeadline =
       lastActionTakenAt === undefined ||
       lastActionTakenAt < receiptRequiredAfter
-        ? undefined
+        ? receiptRequiredAfter + maximumAgeHours * 3_600_000
         : lastActionTakenAt + input.registration.graceHours * 3_600_000;
     return {
       scheduleId: input.registration.scheduleId,
-      status:
-        graceDeadline === undefined || input.now.getTime() <= graceDeadline
-          ? "pending"
-          : "missing",
+      status: input.now.getTime() <= graceDeadline ? "pending" : "missing",
       acceptedAt: input.acceptedAt,
       ageHours: undefined,
       maximumAgeHours,

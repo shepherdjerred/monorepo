@@ -6,6 +6,9 @@ import {
   escapePrometheusTemplate,
 } from "./shared.ts";
 
+// Every entity a Temporal home automation reads or actuates. Kept in sync with
+// packages/temporal/src/workflows/ha by homeassistant.test.ts — an entity added
+// to a workflow without a matching entry here would lose its availability alert.
 export const TEMPORAL_AUTOMATION_ENTITY_IDS = [
   "scene.bedroom_dimmed",
   "scene.bedroom_bright",
@@ -18,6 +21,14 @@ export const TEMPORAL_AUTOMATION_ENTITY_IDS = [
   "scene.living_room_bright",
   "switch.light_2",
   "switch.light",
+  "media_player.bedroom",
+  "media_player.master_bathroom",
+  "person.jerred",
+  "person.shuxin",
+  "sun.sun",
+  "vacuum.1st_floor",
+  "vacuum.2nd_floor",
+  "vacuum.3rd_floor",
 ] as const;
 
 const masterBathroomTemperatureAvailability =

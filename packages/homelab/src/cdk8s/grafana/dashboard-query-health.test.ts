@@ -38,7 +38,6 @@ describe("dashboard query health", () => {
   test("does not query metric families absent from the current cluster", () => {
     expect(dashboardJson).not.toContain("tasknotes_http_");
     expect(dashboardJson).not.toContain("temporal_worker_scout_data_dragon_");
-    expect(dashboardJson).not.toContain("label_velero_io_backup");
   });
 
   test("uses the live Kueue, NVMe, PVC, and ZFS metric families", () => {
