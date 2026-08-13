@@ -189,6 +189,22 @@ export function pipelinePayload(
   return payload;
 }
 
+/**
+ * `--replace` swaps the not-yet-started remainder of the build for the steps
+ * uploaded, rather than appending them (`buildkite-agent` v3.134: "Replace the
+ * rest of the existing pipeline with the steps uploaded. Jobs that are already
+ * running are not removed").
+ *
+ * On the default branch `upload-pipeline.sh` uploads only `main-bootstrap.yml`,
+ * so the build holds just the selector step when this runs and either mode
+ * would schedule the same graph the first time. Replace is what makes a
+ * REPEATED upload safe: if `ci-selector-base` is retried, a second run uploads
+ * the same graph over the first instead of scheduling every step twice.
+ * `ci-selector-base` is itself running at that point, so it is never removed
+ * and the `depends_on` every rendered step carries stays resolvable — the
+ * dependency shape is pinned by "renders stable selector dependencies and no
+ * duplicate keys".
+ */
 export function pipelineUploadArguments(
   changedFilesPath: string | undefined,
 ): string[] {
@@ -442,9 +458,11 @@ async function main(): Promise<number> {
     console.log(`Uploaded ${selected.size.toString()} selected main CI steps`);
     return 0;
   } catch (error) {
-    // Buildkite appends uploaded steps, so a second upload after the selected
-    // graph is already in the build would duplicate it. Past that point the
-    // failure has to surface rather than fall back.
+    // Uploading a DIFFERENT graph after one already landed is unsafe even
+    // under `--replace`: replace drops only steps that have not started, so
+    // any selected step already running would survive and the complete graph
+    // would schedule its own copy alongside. Past that point the failure has
+    // to surface rather than fall back.
     if (uploaded) throw error;
     const reason = error instanceof Error ? error.message : String(error);
     console.error(`WARN: ${reason}; falling back to the complete main graph`);

@@ -113,6 +113,10 @@ test("resolves committed image pins before the dynamic pipeline upload", () => {
 });
 
 test("uploads the selected graph with the selector-base changed-file list", () => {
+  // `--replace` is load-bearing, not incidental: it swaps the not-yet-started
+  // remainder of the build rather than appending, so a retried
+  // `ci-selector-base` re-uploads the same graph instead of scheduling every
+  // step twice. Dropping it would make a selector retry duplicate the build.
   expect(pipelineUploadArguments("/tmp/selector-changes")).toEqual([
     "buildkite-agent",
     "pipeline",
