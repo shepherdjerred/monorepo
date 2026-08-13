@@ -12,6 +12,12 @@ import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS } from "#shared/scout-queue-windows-lookback.ts";
 import { installScoutWorkspace } from "./bot-clone.ts";
 import {
+  BUCKET,
+  QueueWindowsReportSchema,
+  type QueueWindowsReport,
+} from "./scout-queue-windows-report.ts";
+import { buildPrBody, canAutoMerge } from "./scout-queue-windows-pr-body.ts";
+import {
   changedFilesInPaths,
   closeSeasonRefreshPr,
   openSeasonRefreshPr,
@@ -25,37 +31,11 @@ const SCOUT_ROOT = "packages/scout-for-lol";
 const QUEUE_WINDOWS_PATH = `${SCOUT_ROOT}/packages/data/src/model/queue-windows.json`;
 // The ONLY path this job is allowed to stage.
 const GENERATED_PATHS = [QUEUE_WINDOWS_PATH];
-const BUCKET = "scout-prod";
 const LOOKBACK_DAYS = SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS;
 const PROPOSAL_BRANCH = "chore/scout-queue-windows";
 const WARNING_STATE_KEY = "reports/state/scout-queue-windows.json";
 const AutoMergeStateSchema = z.enum(["true", "false"]);
 
-const ReportEditSchema = z.object({
-  queue: z.string(),
-  kind: z.enum(["open", "reopen", "close"]),
-  date: z.string(),
-  message: z.string(),
-});
-const ReportWarningSchema = z.object({
-  kind: z.string(),
-  message: z.string(),
-});
-const ReportPatchNotesSchema = z.union([
-  z.object({
-    titles: z.array(z.object({ title: z.string(), url: z.string() })),
-  }),
-  z.object({ error: z.string() }),
-]);
-const ReportSchema = z.object({
-  edits: z.array(ReportEditSchema),
-  warnings: z.array(ReportWarningSchema),
-  unknownQueueIds: z.array(
-    z.object({ queueId: z.string(), total: z.number() }),
-  ),
-  patchNotes: ReportPatchNotesSchema,
-});
-type Report = z.infer<typeof ReportSchema>;
 const WarningStateSchema = z.object({
   schemaVersion: z.literal(1),
   fingerprint: z
@@ -91,61 +71,6 @@ function resolveS3Region(): string {
     Bun.env["S3_REGION"] ??
     "us-east-1"
   );
-}
-
-/** Auto-merge is safe only when every edit merely opens/reopens a window. A
- * close retires a live mode and must be confirmed against patch notes. */
-function canAutoMerge(edits: readonly Report["edits"][number][]): boolean {
-  return edits.length > 0 && edits.every((edit) => edit.kind !== "close");
-}
-
-function buildPrBody(report: Report, autoMerge: boolean): string {
-  const lines: string[] = [
-    "Automated queue-windows update from Temporal (`scout-queue-windows-daily`).",
-    "",
-    "Proposed from real match volume in the last",
-    `${LOOKBACK_DAYS.toString()} days against the ${BUCKET} bucket.`,
-    "",
-    "## Edits",
-    "",
-    "| Queue | Kind | Date | Detail |",
-    "| --- | --- | --- | --- |",
-    ...report.edits.map(
-      (edit) =>
-        `| ${edit.queue} | ${edit.kind} | ${edit.date} | ${edit.message} |`,
-    ),
-  ];
-
-  if (report.warnings.length > 0) {
-    lines.push("", "## Warnings", "");
-    for (const warning of report.warnings) {
-      lines.push(`- **${warning.kind}**: ${warning.message}`);
-    }
-  }
-
-  lines.push("", "## Patch notes", "");
-  if ("error" in report.patchNotes) {
-    lines.push(`- Patch notes unavailable: ${report.patchNotes.error}`);
-  } else if (report.patchNotes.titles.length === 0) {
-    lines.push("- No recent patch notes found.");
-  } else {
-    for (const note of report.patchNotes.titles) {
-      lines.push(`- [${note.title}](${note.url})`);
-    }
-  }
-
-  lines.push("");
-  if (autoMerge) {
-    lines.push(
-      "Auto-merge enabled: every edit only opens/reopens a window (additive, reversible).",
-    );
-  } else {
-    lines.push(
-      "Auto-merge NOT enabled: this PR closes a window (retires a live mode).",
-      "A human must confirm the close against the patch notes above before merging.",
-    );
-  }
-  return lines.join("\n");
 }
 
 function warningStateStore(
@@ -212,7 +137,7 @@ export function nextWarningState(
 }
 
 async function warningFingerprint(
-  warnings: Report["warnings"],
+  warnings: QueueWindowsReport["warnings"],
 ): Promise<string | undefined> {
   if (warnings.length === 0) return undefined;
   const canonical = warnings
@@ -231,7 +156,7 @@ async function warningFingerprint(
 async function updateWarningState(
   endpoint: string,
   region: string,
-  warnings: Report["warnings"],
+  warnings: QueueWindowsReport["warnings"],
 ): Promise<{ fingerprint: string | undefined; consecutiveRuns: number }> {
   const store = warningStateStore(endpoint, region);
   const [prior, fingerprint] = await Promise.all([
@@ -258,7 +183,7 @@ async function updateWarningState(
 }
 
 function resultDetails(
-  report: Report,
+  report: QueueWindowsReport,
   warningState: { fingerprint: string | undefined; consecutiveRuns: number },
 ): Pick<
   ScoutQueueWindowsResult,
@@ -358,7 +283,7 @@ export const scoutQueueWindowsActivities = {
       );
 
       const rawReport: unknown = await Bun.file(reportPath).json();
-      const report = ReportSchema.parse(rawReport);
+      const report = QueueWindowsReportSchema.parse(rawReport);
       const warningState = await updateWarningState(
         s3Endpoint,
         region,

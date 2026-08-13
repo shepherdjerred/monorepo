@@ -3,7 +3,6 @@ import {
   DOOM_BOTS_QUEUES,
   isQueueCurrentlyAvailable,
   QueueTypeSchema,
-  queueAvailabilityNote,
   queueTypeToDisplayString,
   subscriptionFilterQueues,
   describeSubscriptionFilters,
@@ -74,9 +73,20 @@ function entryAvailable(entry: PickerEntry): boolean {
   return entry.queues.some((queue) => isQueueCurrentlyAvailable(queue));
 }
 
+/**
+ * The "not currently live" note, derived from the SAME predicate that decides
+ * whether the entry is shown at all.
+ *
+ * These two used to disagree by construction: availability was `.some()` across
+ * the group while the note read only `queues[0]`. The only multi-queue entry is
+ * the Doom Bots trio, which the drift engine keeps in lockstep, so it was
+ * latent — but a divergent trio would have rendered as selectable-and-visible
+ * while still captioned "not currently live", or the reverse.
+ */
 function entryNote(entry: PickerEntry): string | undefined {
-  const first = entry.queues[0];
-  return first === undefined ? undefined : queueAvailabilityNote(first);
+  return entryAvailable(entry)
+    ? undefined
+    : "Limited-time mode — not currently live";
 }
 
 function EntryRow(props: {
