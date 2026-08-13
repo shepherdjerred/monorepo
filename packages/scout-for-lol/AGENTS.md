@@ -652,11 +652,13 @@ real objects in the `scout-prod` bucket. Never hand-edit the outputs.
   a player to a curated handle by hashing `${stableKey}|${realName}`, where the
   stable key is a non-display identity (`playerId` / `puuid`). The weekly job
   commits these PNGs, so a pseudonym that moved between runs would open a junk
-  PR every Monday. The display name is in the seed only as a same-key
-  disambiguator, but it is still in the seed: within one run a rename cannot
-  move a handle (the per-run cache is keyed on the stable key alone), while
-  **across** runs a renamed player can draw a different pseudonym. That is a
-  one-off image diff to eyeball, not drift. Assign handles to the
+  PR every Monday. What is guaranteed is **reproducibility, not a fixed
+  key→handle mapping**: a handle depends on the whole call sequence, because
+  the seed includes the display name and collisions probe past the handles
+  already taken. Re-running the same manifest over the same rosters reproduces
+  the same PNGs; a re-curation, a rename, or a change to how many players an
+  entry renders can move handles, including for players who did not change.
+  Read that as a one-off image diff to eyeball, not drift. Assign handles to the
   players you will actually render (slice, then anonymize): the report graph
   aggregates ~120 participants but draws ten, and anonymizing before the slice
   exhausts the pool into a numbered fallback. **Known gap:** `s3-image` and
