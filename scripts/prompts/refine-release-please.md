@@ -1,6 +1,6 @@
 # Refine release-please CHANGELOGs
 
-You are running inside the shepherdjerred/monorepo CI pipeline immediately after `release-please release-pr` opened or updated the release PR on branch `release-please--branches--main`. Your job is to rewrite the per-package CHANGELOG entries that release-please just generated, replacing the auto-generated noise with a tight, library-consumer-focused view, then push a cleanup commit and update the PR body.
+You are running inside the shepherdjerred/monorepo CI pipeline immediately after `release-please release-pr` opened or updated the release PR on branch `release-please--branches--main`. Your job is to rewrite the per-package CHANGELOG entries that release-please just generated, replacing the auto-generated noise with a tight, library-consumer-focused view, then push a cleanup commit and update the PR body. This lane runs on every main build, so the PR you are handed is often one you already refined on an earlier build — step 2b detects that and exits successfully without refining again.
 
 A human will review and merge — you do **not** merge.
 
@@ -36,6 +36,40 @@ git checkout <headRefName>
 git config user.name  "release-please-refiner[bot]"
 git config user.email "release-please-refiner@users.noreply.github.com"
 ```
+
+### 2b. Stop early if this release PR is already refined
+
+This lane runs on **every** main build, and a release PR stays open until a
+human merges it — so re-running against an already-refined PR is the normal
+steady state, not an error. Refining twice would stack a second refiner commit
+onto the same release for no reason.
+
+```bash
+git log -1 --format='%an%n%s' HEAD
+git show --stat --format='' HEAD
+```
+
+If `HEAD`'s author is `release-please-refiner[bot]` **and** its subject matches
+`chore(root): refine release notes for <YYYY-MM-DD>`, an earlier build already
+refined this PR. Confirm it is still current: for every CHANGELOG that commit
+touched, the topmost section's version must equal that package's version in
+`.release-please-manifest.json`.
+
+When it is still current, emit the envelope citing that **existing** commit and
+exit 0 — do not rewrite, do not commit, do not touch the PR body:
+
+```text
+<!-- release-refiner-result -->
+{"status":"refined","prNumber":<N>,"packagesRefined":[<packages whose CHANGELOGs that commit touched>],"commitSha":"<full 40-char sha of HEAD>"}
+<!-- /release-refiner-result -->
+```
+
+`packagesRefined` must name exactly the packages whose CHANGELOGs that commit
+changed — no more, no fewer. CI independently re-reads the commit from GitHub
+and rejects the result if the set disagrees with the commit's changed files.
+
+Otherwise (`HEAD` is a release-please commit, or the versions moved on since
+that refiner commit), continue with the normal procedure below.
 
 ### 3. Identify what was bumped
 
@@ -104,8 +138,14 @@ Cite the actual commits that introduced each kept change (resolve via `git log -
 
 If `git diff` shows no changes after your edits, do **not** create an empty
 commit and do **not** claim successful refinement. Exit non-zero so the release
-lane stops for investigation; a `"refined"` result must identify a new,
-independently verifiable refiner commit and at least one changed CHANGELOG.
+lane stops for investigation; a `"refined"` result reached through this step
+must identify a new, independently verifiable refiner commit and at least one
+changed CHANGELOG.
+
+Reaching this step means step 2b already established that refinement is still
+needed, so an empty diff here is a real anomaly — your rewrite came out
+byte-identical to release-please's generated text. The already-refined case
+exits at step 2b and never gets here.
 
 Otherwise:
 
