@@ -57,6 +57,37 @@ describe("R2 orphan cleanup manifest", () => {
         },
       ],
       liveBackupNames: [],
+      metadataBackupNames: ["unrelated"],
+    });
+    expect(manifest.candidates).toEqual([]);
+  });
+
+  // A scoped listing returns nothing when the prefix is wrong, so an empty
+  // protection set is indistinguishable from a working, genuinely empty oracle.
+  test("refuses to propose deletions when metadata is empty but ZFS data exists", () => {
+    expect(() =>
+      buildR2OrphanManifest({
+        observedAt,
+        storage,
+        zfsObjects: [
+          {
+            key: "zfspv-incr/backups/orphan/chunk",
+            size: 1,
+            lastModified: "2026-08-09T00:00:00.000Z",
+          },
+        ],
+        liveBackupNames: [],
+        metadataBackupNames: [],
+      }),
+    ).toThrow("Refusing to propose R2 orphan deletions");
+  });
+
+  test("allows an empty observation when there is no ZFS data at all", () => {
+    const manifest = buildR2OrphanManifest({
+      observedAt,
+      storage,
+      zfsObjects: [],
+      liveBackupNames: [],
       metadataBackupNames: [],
     });
     expect(manifest.candidates).toEqual([]);
@@ -151,7 +182,7 @@ describe("R2 orphan cleanup manifest", () => {
         },
       ],
       liveBackupNames: [],
-      metadataBackupNames: [],
+      metadataBackupNames: ["unrelated"],
     });
     const drifted = buildR2OrphanManifest({
       observedAt,
@@ -164,7 +195,7 @@ describe("R2 orphan cleanup manifest", () => {
         },
       ],
       liveBackupNames: [],
-      metadataBackupNames: [],
+      metadataBackupNames: ["unrelated"],
     });
     expect(() => assertManifestRevalidated(approved, drifted)).toThrow(
       "no longer matches",

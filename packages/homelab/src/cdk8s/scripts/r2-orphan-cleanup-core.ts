@@ -69,6 +69,17 @@ export function buildR2OrphanManifest(input: {
   if (!Number.isFinite(observedAt)) {
     throw new TypeError(`Invalid observation timestamp: ${input.observedAt}`);
   }
+  // The listing is scoped to the Velero backups directory, so a moved or
+  // mistyped prefix yields zero objects and `metadataBackupNames` has nothing
+  // to reject — the drift guard never runs. Zero metadata alongside real ZFS
+  // data means the oracle is unavailable, not that nothing needs protecting,
+  // and deleting against an unavailable oracle is what destroys a recoverable
+  // backup whose CR has not yet been restored by BackupSyncController.
+  if (input.zfsObjects.length > 0 && input.metadataBackupNames.length === 0) {
+    throw new Error(
+      `Refusing to propose R2 orphan deletions: ${input.zfsObjects.length.toString()} ZFS backup objects exist but Velero metadata under ${R2_BACKUP_METADATA_BACKUPS_PREFIX} is empty. Confirm the BackupStorageLocation prefix and metadata layout before cleaning up.`,
+    );
+  }
   const protectedBackupNames = [
     ...new Set([...input.liveBackupNames, ...input.metadataBackupNames]),
   ].toSorted();
