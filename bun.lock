@@ -269,7 +269,6 @@
     "packages/discord-plays-mario-kart": {
       "name": "@shepherdjerred/discord-plays-mario-kart-scripts",
       "devDependencies": {
-        "@discord-plays-mario-kart/common": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@types/bun": "^1.3.14",
         "@typescript/native": "npm:typescript@7.0.2",

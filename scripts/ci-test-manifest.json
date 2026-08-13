@@ -71,7 +71,11 @@
       "steps": [
         {
           "runner": "bun",
-          "args": ["scripts"]
+          "args": [
+            "scripts/build-wasm.test.ts",
+            "scripts/vendor-n64wasm.test.ts",
+            "scripts/migration-smoke.test.ts"
+          ]
         }
       ]
     },
