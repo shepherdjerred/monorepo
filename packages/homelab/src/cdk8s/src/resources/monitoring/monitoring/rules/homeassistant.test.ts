@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { getHomeAssistantRuleGroups } from "./homeassistant.ts";
 
 describe("Home Assistant rules", () => {
-  test("alerts when the master bathroom temperature is unavailable", () => {
+  test("alerts when the master bathroom temperature is unavailable or absent", () => {
     const availabilityGroup = getHomeAssistantRuleGroups().find(
       (group) => group.name === "homeassistant-availability",
     );
@@ -21,8 +21,10 @@ describe("Home Assistant rules", () => {
     }
 
     expect(rule.for).toBe("15m");
+    // The absent() arm is load-bearing: a comparison alone yields an empty
+    // vector when the entity never makes it into the exported state set.
     expect(rule.expr.value).toBe(
-      'homeassistant_entity_available{entity="sensor.master_bathroom_temperature"} == 0',
+      'homeassistant_entity_available{entity="sensor.master_bathroom_temperature"} == 0 or absent(homeassistant_entity_available{entity="sensor.master_bathroom_temperature"})',
     );
     expect(rule.annotations?.["runbook_url"]).toBe(
       "https://homeassistant.tailnet-1a49.ts.net/history?entity_id=sensor.master_bathroom_temperature",

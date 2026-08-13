@@ -33,6 +33,15 @@ const unavailableEntitiesAnnotationQuery = `homeassistant_entity_available{entit
 const escapedUnavailableEntitiesAnnotationQuery =
   unavailableEntitiesAnnotationQuery.replaceAll('"', String.raw`\"`);
 
+const masterBathroomTemperatureAvailability =
+  'homeassistant_entity_available{entity="sensor.master_bathroom_temperature"}';
+
+// `== 0` only matches an entity Home Assistant still exports. When the Mysa
+// integration fails to set up, or the entity leaves the exported state set
+// entirely, the series is absent and the comparison yields an empty vector, so
+// the `absent()` arm is what catches a total integration failure.
+const masterBathroomTemperatureUnavailableExpr = `${masterBathroomTemperatureAvailability} == 0 or absent(${masterBathroomTemperatureAvailability})`;
+
 export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     // Litter Robot monitoring
@@ -143,13 +152,13 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "HomeAssistantMasterBathroomTemperatureUnavailable",
           annotations: {
             description:
-              "The Mysa master bathroom temperature sensor has been unavailable for 15 minutes. Floor-heat decisions are degraded; the morning wake routine will continue without activating heat, but still runs its end-of-window thermostat turn-off.",
+              "The Mysa master bathroom temperature sensor has been unavailable, or missing from Home Assistant entirely, for 15 minutes. Floor-heat decisions are degraded; the morning wake routine will continue without activating heat, but still runs its end-of-window thermostat turn-off.",
             summary: "Master bathroom temperature unavailable",
             runbook_url:
               "https://homeassistant.tailnet-1a49.ts.net/history?entity_id=sensor.master_bathroom_temperature",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'homeassistant_entity_available{entity="sensor.master_bathroom_temperature"} == 0',
+            masterBathroomTemperatureUnavailableExpr,
           ),
           for: "15m",
           labels: { severity: "warning" },
