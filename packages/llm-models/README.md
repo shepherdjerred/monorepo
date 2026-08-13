@@ -56,11 +56,15 @@ An edit that fails a plausibility guard (see `priceDecision` /
 `contextRejection`) is **withheld** rather than applied, and needs a human to
 check the provider's own pricing page and decide — the catalog value is
 sometimes the deliberate one. To keep the catalog's value, record the pair under
-the entry's `acceptedUpstreamPricing` (`{ upstream, catalog }` per field) and say
-why. The guard then stops reporting **that pair**; if either half moves — a new
-upstream price, or a later edit to the catalog value being protected — the
-divergence is reported again. `claude-sonnet-5` is the worked example: upstreams
-list the introductory rate, the catalog holds the standard one. A run that withholds everything writes
+the entry's `acceptedUpstreamPricing` (`{ upstream, catalog }` per field) with a
+`reason` and an `expiresAt`. The guard then stops reporting **that pair** until
+that instant; the divergence is reported again if either half moves — a new
+upstream price, or a later edit to the catalog value being protected — or once
+the expiry passes. `expiresAt` is required on purpose: prices are time-bound, so
+an acceptance that never lapses is the rot the field exists to prevent.
+`claude-sonnet-5` is the worked example — upstreams list its introductory rate,
+the catalog holds the standard one, and the acceptance expires when the
+promotion does. A run that withholds everything writes
 no catalog diff, so both entry points give that outcome its own signal:
 `--check` exits non-zero on withheld edits as well as on drift, and
 `--report-json` writes the typed report for an unattended caller.

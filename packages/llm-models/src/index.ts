@@ -88,6 +88,16 @@ export const ModelEntrySchema = z.object({
       output: AcceptedPriceSchema.optional(),
       /** Why the catalog value wins. Required — an unexplained mute rots. */
       reason: z.string().min(1),
+      /**
+       * When the acceptance lapses, as an ISO instant. Required, and not
+       * optional on purpose: prices are time-bound, so an acceptance that
+       * never expires is the rot this field exists to prevent. A date living
+       * only in `reason` is prose the code cannot enforce — if the promotion
+       * that justified the divergence is extended, an unexpiring acceptance
+       * suppresses it forever with nothing to trigger re-adjudication. Past
+       * this instant the divergence is reported again like any other.
+       */
+      expiresAt: z.iso.datetime(),
     })
     .optional(),
   capabilities: ModelCapabilitiesSchema,

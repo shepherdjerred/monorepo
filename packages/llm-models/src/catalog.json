@@ -161,7 +161,8 @@
     "acceptedUpstreamPricing": {
       "input": { "upstream": 2, "catalog": 3 },
       "output": { "upstream": 10, "catalog": 15 },
-      "reason": "Upstreams list the introductory rate through 2026-08-31; the catalog holds the standard $3/$15 that billing reverts to."
+      "reason": "Upstreams list the introductory rate through 2026-08-31; the catalog holds the standard $3/$15 that billing reverts to.",
+      "expiresAt": "2026-09-01T00:00:00Z"
     },
     "contextWindow": 1000000,
     "pinnedContextWindow": true,

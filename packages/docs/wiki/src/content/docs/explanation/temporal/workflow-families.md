@@ -77,11 +77,19 @@ to expire on its own.
 Adjudication has to persist, or the same divergence re-alerts every week. An
 operator who keeps the catalog's value records the pair under the entry's
 `acceptedUpstreamPricing`: the upstream number declined, and the catalog number
-kept. Accepting a **pair** rather than muting the field is what keeps it honest
-in both directions — a new upstream price reopens it, and so does a later edit
-to the catalog value it was protecting. `claude-sonnet-5` carries one: upstreams
-list its introductory rate, the catalog holds the standard price billing reverts
-to.
+kept, plus a required expiry. Accepting a **pair** rather than muting the field
+is what keeps it honest in three directions — a new upstream price reopens it, a
+later edit to the catalog value it was protecting reopens it, and so does the
+expiry passing. Prices are time-bound, so an acceptance that never lapses is the
+rot the expiry exists to prevent. `claude-sonnet-5` carries one: upstreams list
+its introductory rate, the catalog holds the standard price billing reverts to,
+and the acceptance dies with the promotion.
+
+Resolution needs the same rigour. An empty withheld list means "nothing is
+awaiting adjudication" only if every model was actually compared — a model that
+vanished from both upstreams drops out of the comparison without anyone deciding
+anything. When that happens the refresh publishes nothing at all, leaving the
+occurrence exactly as it stood rather than closing it on absent evidence.
 
 ## Scout
 

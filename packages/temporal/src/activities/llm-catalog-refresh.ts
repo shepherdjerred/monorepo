@@ -68,7 +68,21 @@ export type LlmCatalogRefreshResult = {
  */
 async function publishWithheldAlert(
   outcome: CatalogSyncOutcome,
+  unmeasured: string[],
 ): Promise<void> {
+  // Resolving is an affirmative claim that nothing is awaiting adjudication,
+  // and it needs model-level evidence to make it. A model that vanished from
+  // both upstreams — renamed, deprecated — lands in `overlayOnly` and drops out
+  // of `withheld` without anyone deciding anything, so an empty `withheld` here
+  // means "we lost sight of it", not "it is fine". Provider-level coverage does
+  // not catch this: the provider still has its other models.
+  //
+  // Publish nothing in that case. The prior occurrence stays exactly as it is
+  // rather than being falsely closed, and a later fully-measured run resolves
+  // it for real. Firing is unaffected — withheld edits still alert.
+  if (outcome.withheld.length === 0 && unmeasured.length > 0) {
+    return;
+  }
   const alertmanagerUrl = Bun.env["ALERTMANAGER_URL"];
   if (alertmanagerUrl === undefined || alertmanagerUrl === "") {
     throw new Error(
@@ -143,11 +157,14 @@ export const llmCatalogRefreshActivities = {
       const finish = async (
         result: LlmCatalogRefreshResult,
       ): Promise<LlmCatalogRefreshResult> => {
-        await publishWithheldAlert({
-          applied: summary.applied,
-          withheld: summary.withheld,
-          prUrl: result.prUrl,
-        });
+        await publishWithheldAlert(
+          {
+            applied: summary.applied,
+            withheld: summary.withheld,
+            prUrl: result.prUrl,
+          },
+          summary.overlayOnly,
+        );
         return result;
       };
 

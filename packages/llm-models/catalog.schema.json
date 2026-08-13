@@ -27,12 +27,17 @@
         "acceptedUpstreamPricing": {
           "type": "object",
           "description": "A divergence a human reviewed and decided to keep. Each field records the pair — the upstream value declined and the catalog value held — and both must still match for the divergence to stay accepted.",
-          "required": ["reason"],
+          "required": ["reason", "expiresAt"],
           "additionalProperties": false,
           "properties": {
             "input": { "$ref": "#/$defs/acceptedPrice" },
             "output": { "$ref": "#/$defs/acceptedPrice" },
-            "reason": { "type": "string", "minLength": 1 }
+            "reason": { "type": "string", "minLength": 1 },
+            "expiresAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Instant the acceptance lapses. Required: prices are time-bound, so an acceptance that never expires cannot be re-adjudicated."
+            }
           }
         },
         "status": { "enum": ["current", "preview", "deprecated"] },

@@ -19,6 +19,9 @@ import { CatalogSchema, type ModelEntry } from "#src/index.ts";
  *
  * Values are the real ones observed on models.dev.
  */
+/** Fixed clock: acceptance expiry is time-dependent, tests must not be. */
+const NOW = new Date("2026-08-13T00:00:00Z");
+
 const MODELS_DEV_FIXTURE = {
   anthropic: {
     models: {
@@ -312,7 +315,7 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
       "subject",
       subject,
       { input: 5.5, output: 27 },
-      "models.dev",
+      { source: "models.dev", now: NOW },
     );
     expect(result.rejected).toHaveLength(0);
     expect(result.applied).toHaveLength(2);
@@ -326,7 +329,7 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
       subject,
       // Fable-5-style repricing plus Haiku's context cut.
       { input: 1.5, output: 27.498, contextWindow: 20_000 },
-      "models.dev",
+      { source: "models.dev", now: NOW },
     );
 
     expect(result.applied).toHaveLength(0);
@@ -342,7 +345,7 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
       "subject",
       subject,
       { contextWindow: 20_000 },
-      "models.dev",
+      { source: "models.dev", now: NOW },
     );
     expect(result.rejected[0]).toContain("subject.contextWindow");
     expect(result.rejected[0]).toContain("shrinks");
@@ -358,17 +361,52 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
         input: { upstream: 2, catalog: 5 },
         output: { upstream: 10, catalog: 25 },
         reason: "introductory rate; catalog holds the standard price",
+        expiresAt: "2026-09-01T00:00:00Z",
       },
     });
     const result = reconcile(
       "subject",
       subject,
       { input: 2, output: 10 },
-      "models.dev",
+      { source: "models.dev", now: NOW },
     );
     expect(result.applied).toHaveLength(0);
     expect(result.rejected).toHaveLength(0);
     expect(subject.pricing).toMatchObject({ input: 5, output: 25 });
+  });
+
+  test("lapses once its expiry passes, so the decision is re-adjudicated", () => {
+    // The Sonnet 5 case is explicitly time-bound. If the promotion is extended
+    // past the date, an acceptance with no machine-readable expiry would keep
+    // matching the same numbers and suppress it forever with nothing to
+    // trigger another look.
+    const acceptance = {
+      acceptedUpstreamPricing: {
+        input: { upstream: 2, catalog: 5 },
+        reason: "introductory rate; catalog holds the standard price",
+        expiresAt: "2026-09-01T00:00:00Z",
+      },
+    };
+
+    const before = entry(acceptance);
+    const stillAccepted = reconcile(
+      "subject",
+      before,
+      { input: 2 },
+      { source: "models.dev", now: new Date("2026-08-31T23:59:59Z") },
+    );
+    expect(stillAccepted.applied).toHaveLength(0);
+    expect(stillAccepted.rejected).toHaveLength(0);
+
+    // Same upstream number, same catalog value — only the clock moved.
+    const after = entry(acceptance);
+    const lapsed = reconcile(
+      "subject",
+      after,
+      { input: 2 },
+      { source: "models.dev", now: new Date("2026-09-01T00:00:01Z") },
+    );
+    expect(lapsed.applied.length + lapsed.rejected.length).toBe(1);
   });
 
   test("lapses once the catalog value it protected has moved", () => {
@@ -380,12 +418,18 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
       acceptedUpstreamPricing: {
         input: { upstream: 2, catalog: 5 },
         reason: "introductory rate; catalog holds the standard price",
+        expiresAt: "2026-09-01T00:00:00Z",
       },
     });
 
     // Upstream moves to a plausible intermediate value: applied, so the
     // catalog side of the accepted pair no longer holds.
-    reconcile("subject", subject, { input: 4.5 }, "models.dev");
+    reconcile(
+      "subject",
+      subject,
+      { input: 4.5 },
+      { source: "models.dev", now: NOW },
+    );
     expect(subject.pricing).toMatchObject({ input: 4.5 });
 
     // Upstream returns to the accepted number. The pair no longer matches, so
@@ -394,7 +438,7 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
       "subject",
       subject,
       { input: 2 },
-      "models.dev",
+      { source: "models.dev", now: NOW },
     );
     expect(afterReturn.applied.length + afterReturn.rejected.length).toBe(1);
   });
@@ -407,18 +451,29 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
       acceptedUpstreamPricing: {
         input: { upstream: 2, catalog: 5 },
         reason: "introductory rate; catalog holds the standard price",
+        expiresAt: "2026-09-01T00:00:00Z",
       },
     };
 
     // A plausible new price is applied, not silently ignored.
     const modest = entry(acceptance);
-    const applied = reconcile("subject", modest, { input: 4 }, "models.dev");
+    const applied = reconcile(
+      "subject",
+      modest,
+      { input: 4 },
+      { source: "models.dev", now: NOW },
+    );
     expect(applied.applied).toHaveLength(1);
     expect(modest.pricing).toMatchObject({ input: 4 });
 
     // An implausible one still reaches the guard and is withheld.
     const drastic = entry(acceptance);
-    const withheld = reconcile("subject", drastic, { input: 12 }, "models.dev");
+    const withheld = reconcile(
+      "subject",
+      drastic,
+      { input: 12 },
+      { source: "models.dev", now: NOW },
+    );
     expect(withheld.rejected).toHaveLength(1);
     expect(withheld.rejected[0]).toContain("subject.input");
     expect(drastic.pricing).toMatchObject({ input: 5 });
@@ -430,7 +485,7 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
       "subject",
       subject,
       { contextWindow: 1_000_000 },
-      "models.dev",
+      { source: "models.dev", now: NOW },
     );
     expect(result.applied).toHaveLength(0);
     expect(result.rejected).toHaveLength(0);
@@ -446,7 +501,7 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
       "subject",
       subject,
       { input: 99, output: 99 },
-      "models.dev",
+      { source: "models.dev", now: NOW },
     );
     expect(result.applied).toHaveLength(0);
     expect(result.rejected).toHaveLength(0);

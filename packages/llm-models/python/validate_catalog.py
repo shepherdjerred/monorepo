@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -71,6 +72,7 @@ class AcceptedUpstreamPricing(BaseModel):
     input: AcceptedPrice | None = None
     output: AcceptedPrice | None = None
     reason: str = Field(min_length=1)
+    expiresAt: datetime
 
 
 class ModelEntry(BaseModel):

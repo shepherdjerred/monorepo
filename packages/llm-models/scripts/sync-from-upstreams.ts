@@ -299,11 +299,17 @@ export type ReconcileResult = {
 };
 
 /** Mutates `entry` to match upstream input/output/context, subject to the guards. */
+/** Which upstream supplied the values, and the clock acceptance expiry is judged against. */
+export type ReconcileContext = {
+  source: string;
+  now: Date;
+};
+
 export function reconcile(
   id: string,
   entry: ModelEntry,
   upstream: Upstream,
-  source: string,
+  { source, now }: ReconcileContext,
 ): ReconcileResult {
   if (entry.pricing.modality !== "text") {
     return { applied: [], rejected: [] };
@@ -324,12 +330,20 @@ export function reconcile(
    * the catalog's. Matching on the value, not just the field, is deliberate: an
    * accepted $2 does not accept a later $4, so a real repricing still surfaces.
    */
+  const recorded = entry.acceptedUpstreamPricing;
+  // An acceptance is a decision with a shelf life. Past its expiry the
+  // divergence is reported again, which is the only thing that forces a human
+  // to look at whether the reason still holds.
+  const acceptance =
+    recorded !== undefined && now < new Date(recorded.expiresAt)
+      ? recorded
+      : undefined;
   const accepted = (
     field: "input" | "output",
     upstreamValue: number,
     catalogValue: number,
   ): boolean => {
-    const acknowledged = entry.acceptedUpstreamPricing?.[field];
+    const acknowledged = acceptance?.[field];
     return (
       acknowledged !== undefined &&
       Math.abs(acknowledged.upstream - upstreamValue) <= EPSILON &&
@@ -458,6 +472,7 @@ async function main(): Promise<void> {
     ),
   );
 
+  const now = new Date();
   const drifted: string[] = [];
   const rejected: string[] = [];
   const overlayOnly: string[] = [];
@@ -477,12 +492,10 @@ async function main(): Promise<void> {
       overlayOnly.push(id);
       continue;
     }
-    const result = reconcile(
-      id,
-      entry,
-      upstream,
-      fromModelsDev === undefined ? "litellm" : "models.dev",
-    );
+    const result = reconcile(id, entry, upstream, {
+      source: fromModelsDev === undefined ? "litellm" : "models.dev",
+      now,
+    });
     drifted.push(...result.applied);
     rejected.push(...result.rejected);
   }
