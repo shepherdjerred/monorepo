@@ -33,13 +33,12 @@ const child = Bun.spawn([dotnet, ...argumentsList], {
     DOTNET_MULTILEVEL_LOOKUP: "0",
     DOTNET_ROOT: dotnetRoot,
     // The Linux CI image carries no libicu, so the SDK aborts during
-    // CultureInfo's static initializer before it runs any command. The abort
-    // is inside the dotnet CLI host itself, so no csproj or runtimeconfig
-    // property can prevent it -- only this variable can. Every culture-
-    // sensitive call in this package already pins InvariantCulture, and this
-    // configures the build tooling's own runtime rather than the shipped
-    // app's, so the packaged Windows client keeps full globalization.
-    DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "1",
+    // CultureInfo's static initializer before it runs any command. Windows
+    // resource tooling requires real locale data and rejects even en-US in
+    // invariant mode, so keep the workaround scoped to its intended host.
+    ...(process.platform === "linux"
+      ? { DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "1" }
+      : {}),
   },
   stdin: "inherit",
   stdout: "inherit",
