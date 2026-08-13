@@ -75,11 +75,13 @@ run that withholds nothing closes the alert instead of leaving a fixed finding
 to expire on its own.
 
 Adjudication has to persist, or the same divergence re-alerts every week. An
-operator who keeps the catalog's value records the upstream number under the
-entry's `acceptedUpstreamPricing`. That accepts one **value**, not the field —
-a later move to a different price surfaces again — which is why it is not a
-blanket mute. `claude-sonnet-5` carries one: upstreams list its introductory
-rate, the catalog holds the standard price that billing reverts to.
+operator who keeps the catalog's value records the pair under the entry's
+`acceptedUpstreamPricing`: the upstream number declined, and the catalog number
+kept. Accepting a **pair** rather than muting the field is what keeps it honest
+in both directions — a new upstream price reopens it, and so does a later edit
+to the catalog value it was protecting. `claude-sonnet-5` carries one: upstreams
+list its introductory rate, the catalog holds the standard price billing reverts
+to.
 
 ## Scout
 

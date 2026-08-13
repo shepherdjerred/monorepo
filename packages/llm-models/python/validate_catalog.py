@@ -52,16 +52,24 @@ class Capabilities(BaseModel):
     effortTiers: list[str] | None = None
 
 
-class AcceptedUpstreamPricing(BaseModel):
-    """An upstream price a human reviewed and declined to adopt.
+class AcceptedPrice(BaseModel):
+    """One reviewed divergence: what upstream published, and what we kept."""
 
-    Records the upstream value rather than muting the field, so a later
-    repricing to some other number is still reported.
+    model_config = {"extra": "forbid"}
+    upstream: float = Field(ge=0)
+    catalog: float = Field(ge=0)
+
+
+class AcceptedUpstreamPricing(BaseModel):
+    """A divergence a human reviewed and decided to keep.
+
+    Each field records the pair, so the acceptance lapses if either the
+    upstream value or the catalog value it was paired with changes.
     """
 
     model_config = {"extra": "forbid"}
-    input: float | None = Field(default=None, ge=0)
-    output: float | None = Field(default=None, ge=0)
+    input: AcceptedPrice | None = None
+    output: AcceptedPrice | None = None
     reason: str = Field(min_length=1)
 
 

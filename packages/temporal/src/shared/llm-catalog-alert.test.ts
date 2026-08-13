@@ -114,21 +114,39 @@ describe("buildCatalogWithheldAlert", () => {
     expect(description).not.toContain("github.com");
   });
 
-  test("bounds a pathological run and says how much it dropped", () => {
+  const manyWithheld = Array.from(
+    { length: 40 },
+    (_, i) => `  model-${String(i)}.input: reason`,
+  );
+
+  test("bounds a pathological run when the PR body holds the full list", () => {
     const alert = buildCatalogWithheldAlert(
       {
-        applied: [],
-        withheld: Array.from(
-          { length: 40 },
-          (_, i) => `  model-${String(i)}.input: reason`,
-        ),
-        prUrl: undefined,
+        applied: ["  a.input: applied"],
+        withheld: manyWithheld,
+        prUrl: PR_URL,
       },
       NOW,
     );
     expect(alert.annotations["description"]).toContain("model-24.input");
     expect(alert.annotations["description"]).not.toContain("model-25.input");
     expect(alert.annotations["description"]).toContain("…and 15 more");
+    expect(alert.annotations["description"]).toContain("in the PR body");
+  });
+
+  test("never truncates when the alert is the only record", () => {
+    // A withheld-only run opens no PR and its JSON report dies with the bot's
+    // temp clone. Truncating here drops edits nothing else records, and the
+    // fixed ordering means the same tail vanishes every week.
+    const alert = buildCatalogWithheldAlert(
+      { applied: [], withheld: manyWithheld, prUrl: undefined },
+      NOW,
+    );
+    const description = alert.annotations["description"] ?? "";
+    for (const line of manyWithheld) {
+      expect(description).toContain(line.trim());
+    }
+    expect(description).not.toContain("more —");
   });
 
   test("outlives the weekly refresh cadence so it cannot self-resolve between runs", () => {

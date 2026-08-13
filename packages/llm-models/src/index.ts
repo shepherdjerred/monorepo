@@ -51,6 +51,15 @@ export type ModelCapabilities = z.infer<typeof ModelCapabilitiesSchema>;
 export const ModelStatusSchema = z.enum(["current", "preview", "deprecated"]);
 export type ModelStatus = z.infer<typeof ModelStatusSchema>;
 
+/** One reviewed divergence: what upstream published, and what we kept instead. */
+export const AcceptedPriceSchema = z.object({
+  /** The upstream number the human saw and declined. */
+  upstream: z.number().nonnegative(),
+  /** The catalog number kept instead, so the pair can be re-verified later. */
+  catalog: z.number().nonnegative(),
+});
+export type AcceptedPrice = z.infer<typeof AcceptedPriceSchema>;
+
 export const ModelEntrySchema = z.object({
   id: z.string().min(1),
   provider: ProviderSchema,
@@ -61,19 +70,22 @@ export const ModelEntrySchema = z.object({
   /** When true, the sync script will not overwrite contextWindow from upstream sources. */
   pinnedContextWindow: z.boolean().optional(),
   /**
-   * An upstream price a human looked at and decided NOT to adopt, so the sync
-   * script stops re-reporting it every week.
+   * A divergence a human looked at and decided to keep, so the sync script
+   * stops re-reporting it every week.
    *
-   * This records the upstream VALUE, not a blanket "ignore pricing" flag. The
-   * divergence is only accepted while upstream still lists these numbers; if it
-   * publishes anything else, the entry is reported again. A blanket mute would
-   * also swallow a genuine later repricing, which is the one thing this catalog
-   * must never miss.
+   * An acceptance is a claim about a PAIR — "upstream says `upstream`, we
+   * deliberately hold `catalog`" — and both halves are checked. Recording only
+   * the upstream number would let the catalog side drift away underneath the
+   * decision: an intermediate plausible price gets applied, upstream later
+   * returns to the accepted number, and the acceptance would then suppress a
+   * catalog value nobody ever reviewed. Neither a blanket mute nor a
+   * one-sided one is safe; this catalog feeds every cost calculation in the
+   * repo, so a repricing must never pass silently.
    */
   acceptedUpstreamPricing: z
     .object({
-      input: z.number().nonnegative().optional(),
-      output: z.number().nonnegative().optional(),
+      input: AcceptedPriceSchema.optional(),
+      output: AcceptedPriceSchema.optional(),
       /** Why the catalog value wins. Required — an unexplained mute rots. */
       reason: z.string().min(1),
     })

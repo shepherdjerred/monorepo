@@ -56,7 +56,13 @@ export function buildCatalogWithheldAlert(
 ): AlertmanagerAlert {
   const { applied, withheld, prUrl } = outcome;
   const resolved = withheld.length === 0;
-  const shown = withheld.slice(0, MAX_WITHHELD_LINES);
+  // Truncation is a courtesy, allowed only when the full list survives
+  // elsewhere: the refresh PR body carries the script's entire report. A
+  // withheld-only run has no PR and its JSON report dies with the bot's temp
+  // clone, so this alert is the sole record and must carry every line — the
+  // fixed ordering would otherwise drop the same tail every week, forever.
+  const shown =
+    prUrl === undefined ? withheld : withheld.slice(0, MAX_WITHHELD_LINES);
   const omitted = withheld.length - shown.length;
   const summary = resolved
     ? "LLM catalog refresh withheld nothing — earlier withheld drift is resolved"
@@ -81,7 +87,9 @@ export function buildCatalogWithheldAlert(
           : `The other ${String(applied.length)} edit(s) passed the guards and were applied — review those in ${prUrl}, not here.`,
         "",
         ...shown,
-        ...(omitted > 0 ? [`…and ${String(omitted)} more`] : []),
+        ...(omitted > 0
+          ? [`…and ${String(omitted)} more — the full list is in the PR body.`]
+          : []),
       ].join("\n");
 
   return {

@@ -299,8 +299,8 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
     // re-reports the same divergence every week forever.
     const subject = entry({
       acceptedUpstreamPricing: {
-        input: 2,
-        output: 10,
+        input: { upstream: 2, catalog: 5 },
+        output: { upstream: 10, catalog: 25 },
         reason: "introductory rate; catalog holds the standard price",
       },
     });
@@ -315,13 +315,41 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
     expect(subject.pricing).toMatchObject({ input: 5, output: 25 });
   });
 
+  test("lapses once the catalog value it protected has moved", () => {
+    // The acceptance is a claim about a pair. If only the upstream half were
+    // checked, this sequence would silently protect a value nobody reviewed:
+    // an intermediate plausible price applies, upstream swings back to the
+    // accepted number, and the guard suppresses the difference forever.
+    const subject = entry({
+      acceptedUpstreamPricing: {
+        input: { upstream: 2, catalog: 5 },
+        reason: "introductory rate; catalog holds the standard price",
+      },
+    });
+
+    // Upstream moves to a plausible intermediate value: applied, so the
+    // catalog side of the accepted pair no longer holds.
+    reconcile("subject", subject, { input: 4.5 }, "models.dev");
+    expect(subject.pricing).toMatchObject({ input: 4.5 });
+
+    // Upstream returns to the accepted number. The pair no longer matches, so
+    // this must be reconciled rather than silently suppressed.
+    const afterReturn = reconcile(
+      "subject",
+      subject,
+      { input: 2 },
+      "models.dev",
+    );
+    expect(afterReturn.applied.length + afterReturn.rejected.length).toBe(1);
+  });
+
   test("accepts one value, not the field — a later repricing reopens", () => {
     // The whole reason this records a value instead of a mute flag. Accepting
     // $2 must not swallow a later move to some other number, whichever side of
     // the plausibility guard that number falls on.
     const acceptance = {
       acceptedUpstreamPricing: {
-        input: 2,
+        input: { upstream: 2, catalog: 5 },
         reason: "introductory rate; catalog holds the standard price",
       },
     };

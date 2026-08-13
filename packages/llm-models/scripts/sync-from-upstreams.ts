@@ -281,16 +281,25 @@ export function reconcile(
    * the catalog's. Matching on the value, not just the field, is deliberate: an
    * accepted $2 does not accept a later $4, so a real repricing still surfaces.
    */
-  const accepted = (field: "input" | "output", value: number): boolean => {
+  const accepted = (
+    field: "input" | "output",
+    upstreamValue: number,
+    catalogValue: number,
+  ): boolean => {
     const acknowledged = entry.acceptedUpstreamPricing?.[field];
     return (
-      acknowledged !== undefined && Math.abs(acknowledged - value) <= EPSILON
+      acknowledged !== undefined &&
+      Math.abs(acknowledged.upstream - upstreamValue) <= EPSILON &&
+      // The catalog half matters as much as the upstream half. Without it, an
+      // intermediate plausible price applies, upstream swings back to the
+      // accepted number, and this would suppress a value nobody adjudicated.
+      Math.abs(acknowledged.catalog - catalogValue) <= EPSILON
     );
   };
 
   if (
     upstream.input !== undefined &&
-    !accepted("input", upstream.input) &&
+    !accepted("input", upstream.input, entry.pricing.input) &&
     Math.abs(entry.pricing.input - upstream.input) > EPSILON
   ) {
     const decision = priceDecision(entry.pricing.input, upstream.input);
@@ -303,7 +312,7 @@ export function reconcile(
   }
   if (
     upstream.output !== undefined &&
-    !accepted("output", upstream.output) &&
+    !accepted("output", upstream.output, entry.pricing.output) &&
     Math.abs(entry.pricing.output - upstream.output) > EPSILON
   ) {
     const decision = priceDecision(entry.pricing.output, upstream.output);
