@@ -3,7 +3,10 @@ import { simpleGit } from "simple-git";
 import { z } from "zod";
 import { createAlertmanagerPoster } from "#lib/alertmanager.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
-import { buildCatalogWithheldAlert } from "#shared/llm-catalog-alert.ts";
+import {
+  buildCatalogWithheldAlert,
+  type CatalogSyncOutcome,
+} from "#shared/llm-catalog-alert.ts";
 import { parsePorcelainPaths } from "#shared/porcelain.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import { openSeasonRefreshPr } from "./scout-season-refresh-git.ts";
@@ -36,9 +39,12 @@ export type LlmCatalogRefreshResult = {
  * resolving as soon as a run finds none. It is deliberately driven by the
  * report alone and not by whether a PR was opened: conditioning the resolve on
  * the catalog diff would leave an already-remediated alert firing for its full
- * eight-day lifetime.
+ * eight-day lifetime. The report's `applied` set is what lets the alert
+ * describe a mixed run without claiming the catalog is untouched.
  */
-async function publishWithheldAlert(withheld: string[]): Promise<void> {
+async function publishWithheldAlert(
+  outcome: CatalogSyncOutcome,
+): Promise<void> {
   const alertmanagerUrl = Bun.env["ALERTMANAGER_URL"];
   if (alertmanagerUrl === undefined || alertmanagerUrl === "") {
     throw new Error(
@@ -46,7 +52,7 @@ async function publishWithheldAlert(withheld: string[]): Promise<void> {
     );
   }
   await createAlertmanagerPoster(alertmanagerUrl)([
-    buildCatalogWithheldAlert(withheld, new Date()),
+    buildCatalogWithheldAlert(outcome, new Date()),
   ]);
 }
 
@@ -104,9 +110,9 @@ export const llmCatalogRefreshActivities = {
       const summary = SyncReportSchema.parse(
         await Bun.file(reportJsonPath).json(),
       );
-      // A withheld-only run writes no catalog diff, so without this it would be
-      // indistinguishable from a clean no-op.
-      await publishWithheldAlert(summary.withheld);
+      // A withheld edit never reaches the catalog, so without this a run whose
+      // every edit was refused is indistinguishable from a clean no-op.
+      await publishWithheldAlert(summary);
 
       const noDiff = (): LlmCatalogRefreshResult => ({
         changedFiles: [],

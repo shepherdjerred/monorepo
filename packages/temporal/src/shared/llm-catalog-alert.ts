@@ -14,41 +14,61 @@ const MAX_WITHHELD_LINES = 25;
  */
 export const LLM_CATALOG_WITHHELD_ALERT_TTL_MS = 8 * 24 * 60 * 60 * 1000;
 
+/** The two report fields that decide what this alert can truthfully say. */
+export type CatalogSyncOutcome = {
+  /** Edits the guards accepted and the script wrote to the catalog. */
+  applied: string[];
+  /** Edits the guards refused — each needs a human to adjudicate. */
+  withheld: string[];
+};
+
 /**
- * Pure builder — no I/O. A withheld edit produces no catalog diff and no PR,
- * so this alert is the only thing standing between "a provider repriced by
- * 40%" and nobody finding out until a cost report looks wrong.
+ * Pure builder — no I/O. A withheld edit is never written to the catalog, so
+ * nothing downstream of the catalog can reveal it; this alert is what stands
+ * between "a provider repriced by 40%" and nobody finding out until a cost
+ * report looks wrong.
  *
- * The occurrence is a pure function of the run's withheld set, which is what
- * keeps the alert honest in BOTH directions: a non-empty set fires for the
- * eight-day window, and an empty set builds the resolving occurrence
+ * The occurrence is a pure function of the run's own report, which is what
+ * keeps the alert honest in BOTH directions: withheld edits fire for the
+ * eight-day window, and an empty withheld set builds the resolving occurrence
  * (`endsAt === startsAt`) for the same labels. Deriving the two from one
  * argument is deliberate — a separate resolve builder could drift from these
  * labels, and Alertmanager identifies an alert by its label set alone, so a
  * one-label difference would silently fail to close the firing occurrence and
  * leave remediated drift reported for up to eight days.
  *
+ * A run can both apply and withhold edits, so the wording is conditioned on
+ * `applied` rather than assuming the withheld-only shape. Only an empty
+ * `applied` proves the catalog is untouched: the script writes if and only if
+ * it applied something, so that is also the only case where "no PR exists" is
+ * a fact rather than a guess. When edits did apply, the alert points at the
+ * refresh PR instead of claiming one does not exist.
+ *
  * Labels carry no per-model values: one alert per run, deduped on identity.
  */
 export function buildCatalogWithheldAlert(
-  withheld: string[],
+  outcome: CatalogSyncOutcome,
   now: Date,
 ): AlertmanagerAlert {
+  const { applied, withheld } = outcome;
   const resolved = withheld.length === 0;
   const shown = withheld.slice(0, MAX_WITHHELD_LINES);
   const omitted = withheld.length - shown.length;
   const summary = resolved
     ? "LLM catalog refresh withheld nothing — earlier withheld drift is resolved"
-    : `LLM catalog refresh withheld ${String(withheld.length)} upstream edit(s) and opened no PR`;
+    : `LLM catalog refresh withheld ${String(withheld.length)} upstream edit(s)`;
   const description = resolved
     ? [
         "sync-from-upstreams.ts completed with every upstream edit either applied",
         "or in agreement with the catalog. Nothing is awaiting manual adjudication.",
       ].join("\n")
     : [
-        "sync-from-upstreams.ts found upstream drift but every edit failed a",
-        "plausibility guard, so the catalog is unchanged and no PR exists to review.",
-        "Verify each line against the provider's own pricing page, then apply it by hand.",
+        `sync-from-upstreams.ts refused ${String(withheld.length)} upstream edit(s) on a plausibility`,
+        "guard, so those values are NOT in the catalog. Verify each line against the",
+        "provider's own pricing page, then apply it by hand.",
+        applied.length > 0
+          ? `The other ${String(applied.length)} edit(s) this run passed the guards and were applied — review those in the catalog refresh PR, not here.`
+          : "No edit was applied, so this run changed nothing and opened no PR.",
         "",
         ...shown,
         ...(omitted > 0 ? [`…and ${String(omitted)} more`] : []),
