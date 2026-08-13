@@ -16,27 +16,15 @@ Cron times are `America/Los_Angeles` wall-clock. Source:
 
 ## Repo upkeep
 
-| Workflow            | Trigger     | Brain                            | Output              |
-| ------------------- | ----------- | -------------------------------- | ------------------- |
-| fetcher             | daily 05:00 | deterministic                    | S3 overwrite        |
-| deps-summary        | Mon 09:00   | deterministic + optional summary | heartbeat email     |
-| llm-catalog-refresh | Mon 09:00   | deterministic                    | PR or durable alert |
-| homelab-crd-imports | daily 05:30 | deterministic                    | PR                  |
-| pokeemerald-data    | daily 04:30 | deterministic                    | PR                  |
-| CI I/O impact       | daily 09:00 | deterministic                    | heartbeat email     |
-| protobufjs v8 watch | Mon 09:00   | deterministic                    | heartbeat email     |
-
-`llm-catalog-refresh` applies an upstream price change only when it passes the
-plausibility guards in
-[`sync-from-upstreams.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/llm-models/scripts/sync-from-upstreams.ts).
-An implausible change is withheld from the catalog, so a run that withholds
-everything writes no diff and opens no PR.
-[`llm-catalog-refresh.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/llm-catalog-refresh.ts)
-publishes an `LlmCatalogDriftWithheld` occurrence instead, for a human to check
-against the provider's own pricing page. The next run that withholds nothing
-resolves it:
-[`llm-catalog-alert.ts`](https://github.com/shepherdjerred/monorepo/blob/d29a823aaa0606544af7da21fb60280738208efb/packages/temporal/src/shared/llm-catalog-alert.ts)
-builds the firing and resolving occurrence from one label set.
+| Workflow            | Trigger     | Brain                            | Output                                                                      |
+| ------------------- | ----------- | -------------------------------- | --------------------------------------------------------------------------- |
+| fetcher             | daily 05:00 | deterministic                    | S3 overwrite                                                                |
+| deps-summary        | Mon 09:00   | deterministic + optional summary | heartbeat email                                                             |
+| llm-catalog-refresh | Mon 09:00   | deterministic                    | PR or [durable alert](/explanation/temporal/workflow-families/#repo-upkeep) |
+| homelab-crd-imports | daily 05:30 | deterministic                    | PR                                                                          |
+| pokeemerald-data    | daily 04:30 | deterministic                    | PR                                                                          |
+| CI I/O impact       | daily 09:00 | deterministic                    | heartbeat email                                                             |
+| protobufjs v8 watch | Mon 09:00   | deterministic                    | heartbeat email                                                             |
 
 ## Scout
 
