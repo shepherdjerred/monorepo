@@ -238,16 +238,24 @@ describe("Stash chart", () => {
       periodSeconds: 30,
       httpGet: { path: "/healthz", port: 9999 },
     });
-    // The CDK8s JSON patch materializes the extended-resource value during the
-    // post-synthesis patch step; the GPU manifest guard asserts the final 1.
-    expect(appContainer.resources).toEqual({
-      limits: {
-        cpu: "4",
-        memory: "4096Mi",
-        "gpu.intel.com/i915": undefined,
-      },
-      requests: { cpu: "250m", memory: "512Mi" },
-    });
+    // cdk8s drops the JSON-patched extended-resource value during synthesis, so
+    // the manifest carries a bare `gpu.intel.com/i915: null` placeholder that
+    // scripts/patch.ts rewrites to 1 and scripts/test-gpu-resources.ts asserts.
+    // Losing the key here would leave that patch step nothing to rewrite.
+    const resources = z
+      .object({
+        limits: z
+          .object({ cpu: z.literal("4"), memory: z.literal("4096Mi") })
+          .loose(),
+        requests: z.object({
+          cpu: z.literal("250m"),
+          memory: z.literal("512Mi"),
+        }),
+      })
+      .parse(appContainer.resources);
+    expect(new Set(Object.keys(resources.limits))).toEqual(
+      new Set(["cpu", "memory", "gpu.intel.com/i915"]),
+    );
   });
 
   it.each([
