@@ -238,6 +238,10 @@ namespace TaskNotes.Windows.Host
                     )
                 )
                 {
+                    // Deliberately not filtered by CompleteInstances here: a row the user
+                    // just checked stays on Today showing its completed state, which
+                    // ServerIntegrationTests.RecurringCompletionUsesTheCoreOccurrenceTarget
+                    // pins. Hiding it immediately would remove the undo affordance.
                     return Core.TaskNotesCoreMethods.RecurrenceCompletionTargetDate(
                         task.Scheduled,
                         task.Due,
@@ -250,13 +254,18 @@ namespace TaskNotes.Windows.Host
                 // before today actionable. Asking the rule about today alone would hide a
                 // weekly task scheduled last Saturday until its next date comes round.
                 string? occurrence = CivilDate(task.Scheduled);
-                return
+                if (
                     occurrence is not null
                     && IsActionableBy(occurrence, today)
-                    && !task.CompleteInstances.Contains(occurrence, StringComparer.Ordinal)
-                    && !task.SkippedInstances.Contains(occurrence, StringComparer.Ordinal)
-                    ? occurrence
-                    : ExcludedOccurrence;
+                    && !IsProcessed(task, occurrence)
+                )
+                {
+                    return occurrence;
+                }
+
+                // A deadline stays independently actionable for a recurring task too, so a
+                // series scheduled further out still surfaces on the day it is due.
+                return IsActionableBy(CivilDate(task.Due), today) ? null : ExcludedOccurrence;
             }
             // Both dates are independently actionable, matching the established agenda
             // in packages/tasks-for-obsidian/src/domain/agenda.ts. Preferring due would
@@ -266,6 +275,12 @@ namespace TaskNotes.Windows.Host
                 || IsActionableBy(CivilDate(task.Due), today)
                 ? null
                 : ExcludedOccurrence;
+        }
+
+        private static bool IsProcessed(CoreTask task, string date)
+        {
+            return task.CompleteInstances.Contains(date, StringComparer.Ordinal)
+                || task.SkippedInstances.Contains(date, StringComparer.Ordinal);
         }
 
         private static bool IsActionableBy(string? date, string today)

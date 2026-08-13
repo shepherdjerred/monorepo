@@ -13,12 +13,13 @@ namespace TaskNotes.Windows.Host
 
         private readonly FileHostStorage _storage = storage;
 
-        public IReadOnlyList<SavedViewDefinition> Load()
+        /// <summary>Reads the catalog, or null when no catalog file exists yet.</summary>
+        public IReadOnlyList<SavedViewDefinition>? Load()
         {
             string? json = _storage.ReadSavedViews();
             if (json is null)
             {
-                return [];
+                return null;
             }
 
             try

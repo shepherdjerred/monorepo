@@ -15,12 +15,18 @@ namespace TaskNotes.Windows.Host
         internal void LoadOrCreateDefaults()
         {
             _views.Clear();
-            IReadOnlyList<SavedViewDefinition> stored = _storage.Load();
-            _views.AddRange(stored.Count == 0 ? TaskProjectionService.DefaultSavedViews() : stored);
-            if (stored.Count == 0)
+            // An empty catalog is a state the user can reach by deleting every view, so
+            // only an absent file means "never initialized". Treating the two alike
+            // resurrected both defaults on the next start.
+            IReadOnlyList<SavedViewDefinition>? stored = _storage.Load();
+            if (stored is null)
             {
+                _views.AddRange(TaskProjectionService.DefaultSavedViews());
                 Save();
+                return;
             }
+
+            _views.AddRange(stored);
         }
 
         internal SavedViewDefinition Create(

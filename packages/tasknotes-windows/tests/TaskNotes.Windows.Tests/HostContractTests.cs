@@ -9,6 +9,29 @@ namespace TaskNotes.Windows.Tests
     [TestClass]
     public sealed class HostContractTests
     {
+        /// <summary>Keeps a deliberately emptied saved-view catalog empty across restarts.</summary>
+        [TestMethod]
+        public void AnEmptiedSavedViewCatalogSurvivesReload()
+        {
+            using TemporaryDirectory directory = new();
+            FileHostStorage files = new(directory.Path);
+            SavedViewStorage storage = new(files);
+            SavedViewCatalog catalog = new(storage);
+            catalog.LoadOrCreateDefaults();
+            Assert.IsNotEmpty(catalog.Presentation);
+
+            foreach (SavedViewDefinition view in catalog.Presentation.ToArray())
+            {
+                catalog.Delete(view.Id);
+            }
+
+            SavedViewCatalog reopened = new(
+                new SavedViewStorage(new FileHostStorage(directory.Path))
+            );
+            reopened.LoadOrCreateDefaults();
+            Assert.IsEmpty(reopened.Presentation);
+        }
+
         /// <summary>Keeps an unwritable diagnostics sink from failing the code that logs.</summary>
         [TestMethod]
         public void DiagnosticsSurviveAnUnwritableSink()
@@ -217,7 +240,10 @@ namespace TaskNotes.Windows.Tests
             SavedViewDefinition valid = template with { Id = "two", Name = "Two", Order = 2 };
             SavedViewDefinition first = template with { Id = "one", Name = "One", Order = 1 };
             storage.Save([valid, first]);
-            Assert.AreSequenceEqual(["one", "two"], storage.Load().Select(view => view.Id));
+            IReadOnlyList<SavedViewDefinition> reloaded =
+                storage.Load()
+                ?? throw new InvalidOperationException("The saved catalog went missing.");
+            Assert.AreSequenceEqual(["one", "two"], reloaded.Select(view => view.Id));
 
             _ = Assert.ThrowsExactly<Core.CoreException.Validation>(() =>
                 storage.Save([first, first])
