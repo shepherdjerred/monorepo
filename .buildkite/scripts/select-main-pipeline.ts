@@ -460,7 +460,18 @@ async function main(): Promise<number> {
     return 0;
   } finally {
     if (changedFilesPath !== undefined) {
-      await Bun.file(changedFilesPath).delete();
+      // Best-effort by design. This runs after the upload, and a throw from
+      // `finally` replaces the outcome of the block it follows — so a failed
+      // unlink of a scratch file would exit nonzero on a build whose steps are
+      // already scheduled, which is exactly the hard failure the upload
+      // ordering above exists to prevent. The file lives in the agent's
+      // temporary directory and is reclaimed with the workspace.
+      try {
+        await Bun.file(changedFilesPath).delete();
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        console.error(`WARN: could not delete ${changedFilesPath}: ${reason}`);
+      }
     }
   }
 }
