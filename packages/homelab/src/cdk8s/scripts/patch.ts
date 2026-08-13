@@ -5,6 +5,7 @@ const filesToPatch = [
   "dist/media.k8s.yaml",
   "dist/pokemon.k8s.yaml",
   "dist/mario-kart.k8s.yaml",
+  "dist/stash.k8s.yaml",
 ];
 
 console.log("🔧 Applying Intel GPU resource patches...");

@@ -1,5 +1,5 @@
 import type { Chart } from "cdk8s";
-import { Duration, Size } from "cdk8s";
+import { ApiObject, Duration, JsonPatch, Size } from "cdk8s";
 import {
   Capability,
   Cpu,
@@ -198,6 +198,7 @@ export function createStashDeployment(chart: Chart) {
         STASH_GENERATED: EnvValue.fromValue("/generated/"),
         STASH_CACHE: EnvValue.fromValue("/cache/"),
         STASH_PORT: EnvValue.fromValue(String(PORT)),
+        STASH_HW_DRI_DEVICE: EnvValue.fromValue("/dev/dri/renderD128"),
       },
       securityContext: {
         ensureNonRoot: false,
@@ -218,6 +219,16 @@ export function createStashDeployment(chart: Chart) {
   );
 
   setRevisionHistoryLimit(deployment);
+
+  // Request one shared Intel iGPU slot so the device plugin injects /dev/dri.
+  // cdk8s-plus does not expose extended GPU resources directly, so patch the
+  // generated limits using the same pattern as the other VAAPI workloads.
+  ApiObject.of(deployment).addJsonPatch(
+    JsonPatch.add(
+      "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",
+      1,
+    ),
+  );
 
   const service = new Service(chart, "stash-service", {
     metadata: { labels: LABELS },

@@ -56,8 +56,9 @@ Excluded:
   deployment acceptance.
 - Public internet exposure, Tailscale Funnel, a `stash.sjer.red` hostname, or a
   Cloudflare tunnel binding.
-- Intel GPU allocation and hardware transcoding. Add it only after the initial
-  deployment is stable and workload evidence justifies it.
+- Intel GPU allocation and hardware transcoding for the initial deployment;
+  this follow-up is tracked in
+  [`2026-08-11_stash-gpu-acceleration.md`](2026-08-11_stash-gpu-acceleration.md).
 
 ### Public terminology and disclosure
 
