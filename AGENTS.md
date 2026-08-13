@@ -102,7 +102,9 @@ UUID, revision, and phase marker but applying different work never gets
 adopted.
 
 The apply-safety preflight inspects the revision the sync will request, not the
-Application's currently configured source. Only the self-managed root
+Application's currently configured source, including resources that revision
+introduces, whose live state it reads directly because `managed-resources`
+describes only the configured revision. Only the self-managed root
 Application remains auto-sync suspended while those operations run.
 
 Ordinary manual or UI root syncs are supported. Admission merges each managed

@@ -147,6 +147,7 @@ const ActiveOperationResourceSchema = z.object({
   group: z.string().optional(),
   kind: z.string().min(1),
   name: z.string().min(1),
+  namespace: z.string().min(1).optional(),
 });
 
 const OperationInfoEntriesSchema = z
@@ -297,7 +298,11 @@ async function getApplicationManifests(
 }
 
 type RenderedTarget = {
+  readonly apiVersion: string;
+  readonly group: string;
+  readonly kind: string;
   readonly manifest: string;
+  readonly name: string;
   readonly namespace: string | undefined;
 };
 
@@ -308,19 +313,71 @@ function renderedTargetsByIdentity(
   for (const manifestSource of manifests) {
     const resource = RenderedResourceSchema.parse(JSON.parse(manifestSource));
     const separator = resource.apiVersion.indexOf("/");
+    const group =
+      separator === -1 ? "" : resource.apiVersion.slice(0, separator);
     const identity = resourceIdentity(
-      separator === -1 ? "" : resource.apiVersion.slice(0, separator),
+      group,
       resource.kind,
       resource.metadata.name,
     );
     const rendered = targets.get(identity) ?? [];
     rendered.push({
+      apiVersion: resource.apiVersion,
+      group,
+      kind: resource.kind,
       manifest: manifestSource,
+      name: resource.metadata.name,
       namespace: resource.metadata.namespace,
     });
     targets.set(identity, rendered);
   }
   return targets;
+}
+
+const ResourceManifestResponseSchema = z.object({ manifest: z.string() });
+
+/**
+ * Read one live object through the Application's resource endpoint. A resource
+ * the requested revision introduces has no entry in `managed-resources`, which
+ * only describes the configured revision, so its live state has to be fetched
+ * directly. A missing object is a creation and needs no immutable-field check.
+ */
+async function liveResourceState(
+  appName: string,
+  target: RenderedTarget,
+  token: string,
+): Promise<string | undefined> {
+  const separator = target.apiVersion.indexOf("/");
+  const url = new URL(
+    `/api/v1/applications/${encodeURIComponent(appName)}/resource`,
+    serverUrl(),
+  );
+  url.searchParams.set("resourceName", target.name);
+  url.searchParams.set("kind", target.kind);
+  url.searchParams.set("group", target.group);
+  url.searchParams.set(
+    "version",
+    separator === -1
+      ? target.apiVersion
+      : target.apiVersion.slice(separator + 1),
+  );
+  if (target.namespace !== undefined) {
+    url.searchParams.set("namespace", target.namespace);
+  }
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (response.status === 404) {
+    return undefined;
+  }
+  if (!response.ok) {
+    const body = (await response.text()).slice(0, 1024);
+    throw new Error(
+      `Could not read live ${target.kind} ${target.name} for ${appName}: ` +
+        `HTTP ${response.status.toString()} ${response.statusText}\n${body}`,
+    );
+  }
+  return ResourceManifestResponseSchema.parse(await response.json()).manifest;
 }
 
 /**
@@ -366,8 +423,12 @@ async function revisionScopedResources(
   const targets = renderedTargetsByIdentity(
     await getApplicationManifests(appName, revision, token),
   );
-  return resources.map((resource) => {
+  const matched = new Set<string>();
+  const scoped = resources.map((resource) => {
     const manifest = renderedTargetState(targets, resource, appName);
+    if (manifest !== undefined) {
+      matched.add(manifest);
+    }
     return {
       kind: resource.kind,
       name: resource.name,
@@ -381,6 +442,33 @@ async function revisionScopedResources(
       ...(manifest === undefined ? {} : { targetState: manifest }),
     };
   });
+  // A resource the requested revision adds is absent from `managed-resources`,
+  // so it never appears above. It still collides with any live object of the
+  // same identity, which is exactly the immutable-field case this gate exists
+  // to catch, so read those live states directly.
+  const introduced: ManagedResource[] = [];
+  for (const candidates of targets.values()) {
+    for (const target of candidates) {
+      if (matched.has(target.manifest)) {
+        continue;
+      }
+      const liveState = await liveResourceState(appName, target, token);
+      if (liveState === undefined) {
+        continue;
+      }
+      introduced.push({
+        kind: target.kind,
+        name: target.name,
+        group: target.group,
+        ...(target.namespace === undefined
+          ? {}
+          : { namespace: target.namespace }),
+        liveState,
+        targetState: target.manifest,
+      });
+    }
+  }
+  return [...scoped, ...introduced];
 }
 
 async function assertApplySafe(
@@ -442,6 +530,28 @@ function renderedResourceIdentities(
   return unique;
 }
 
+/**
+ * Two sync selectors are only the same target when their namespace agrees, so
+ * comparing one live operation's selection against another's must keep it.
+ * This is deliberately not `resourceIdentity`: that one compares selections
+ * against rendered manifests and Argo sync results, whose namespaces are
+ * populated inconsistently, so it stays namespace-agnostic on purpose.
+ */
+function operationSelectorIdentities(
+  resources: readonly SyncOperationResource[],
+): ReadonlySet<string> {
+  const identities = resources.map(({ group, kind, name, namespace }) =>
+    JSON.stringify([group, kind, name, namespace ?? ""]),
+  );
+  const unique = new Set(identities);
+  if (unique.size !== identities.length) {
+    throw new Error(
+      "Sync operation contains duplicate group/kind/namespace/name identities",
+    );
+  }
+  return unique;
+}
+
 function operationResourceIdentities(
   resources: readonly SyncOperationResource[],
 ): ReadonlySet<string> {
@@ -478,11 +588,12 @@ function activeOperationResourceIdentities(
   if (parsedResources.length === 0) {
     return null;
   }
-  return operationResourceIdentities(
-    parsedResources.map(({ group, kind, name }) => ({
+  return operationSelectorIdentities(
+    parsedResources.map(({ group, kind, name, namespace }) => ({
       group: group ?? "",
       kind,
       name,
+      ...(namespace === undefined ? {} : { namespace }),
     })),
   );
 }
@@ -603,7 +714,7 @@ function activeOperationRequestMismatch(
   const requestedResources =
     options.resources === undefined
       ? null
-      : operationResourceIdentities(options.resources);
+      : operationSelectorIdentities(options.resources);
   if ((activeResources === null) !== (requestedResources === null)) {
     return activeResources === null
       ? "the full rendered source"
@@ -980,7 +1091,7 @@ async function syncRootReleaseBatches(
     const activeBatchIndex = batches.findIndex((batch) =>
       resourceIdentitySetsEqual(
         activeResources,
-        operationResourceIdentities(batch.resources),
+        operationSelectorIdentities(batch.resources),
       ),
     );
     if (activeBatchIndex === -1) {

@@ -844,3 +844,118 @@ test("release-root resumes at a live later phase instead of restaging", async ()
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test("root release finalization refuses a batch selecting another namespace", async () => {
+  // Same group, kind, and name as the rendered policy, but a namespace the
+  // rendered revision never declares, so it is a different target.
+  const activeOperation = {
+    info: releaseOperationInfo("batch"),
+    initiatedBy: { username: "buildkite" },
+    sync: {
+      prune: false,
+      resources: [
+        {
+          group: "admissionregistration.k8s.io",
+          kind: "ValidatingAdmissionPolicy",
+          name: "pvc-backup-policy.sjer.red",
+          namespace: "other",
+        },
+      ],
+      revision: "2.0.0-43",
+    },
+  };
+  let syncPosts = 0;
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch(request) {
+      const url = new URL(request.url);
+      if (url.pathname === "/api/charts/apps") {
+        return Response.json([
+          {
+            version: "2.0.0-43",
+            urls: ["charts/apps-2.0.0-43.tgz"],
+            digest: "a".repeat(64),
+          },
+        ]);
+      }
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/apps/manifests"
+      ) {
+        return Response.json({
+          manifests: [
+            StagedRootApplication,
+            StagedRepositoryApplication,
+            StagedExternalApplication,
+            StagedAdmissionPolicy,
+          ],
+        });
+      }
+      if (
+        request.method === "POST" &&
+        url.pathname === "/api/v1/applications/apps/sync"
+      ) {
+        syncPosts += 1;
+        return Response.json({});
+      }
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/apps"
+      ) {
+        return Response.json({
+          operation: activeOperation,
+          status: {
+            resources: [],
+            operationState: {
+              phase: "Running",
+              startedAt: new Date().toISOString(),
+              operation: activeOperation,
+            },
+          },
+        });
+      }
+      return new Response("not found", { status: 404 });
+    },
+  });
+
+  try {
+    const process = Bun.spawn(
+      [
+        "bun",
+        "--no-install",
+        "scripts/argocd.ts",
+        "finalize-root-release",
+        "apps",
+        "--revision",
+        "2.0.0-43",
+        "--request-id",
+        RELEASE_REQUEST_ID,
+        "--timeout",
+        "1",
+      ],
+      {
+        cwd: path.resolve(import.meta.dir, "../../.."),
+        env: {
+          ...Bun.env,
+          ARGOCD_POLL_INTERVAL_MS: "5",
+          ARGOCD_SERVER_URL: server.url.origin,
+          ARGOCD_TOKEN: "test-token",
+          CHARTMUSEUM_ORIGIN: server.url.origin,
+        },
+        stderr: "pipe",
+        stdout: "pipe",
+      },
+    );
+    const [exitCode, stderr] = await Promise.all([
+      process.exited,
+      new Response(process.stderr).text(),
+    ]);
+
+    expect(exitCode).not.toBe(0);
+    expect(stderr).toContain("does not match an exact root batch");
+    expect(syncPosts).toBe(0);
+  } finally {
+    await server.stop(true);
+  }
+});
