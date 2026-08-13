@@ -235,7 +235,11 @@ namespace TaskNotes.Windows.Host
                 .RunAsync(
                     () =>
                     {
-                        CompletionRestore? restore = DispatchCompletion(taskId, completed, null);
+                        CompletionRestore? restore = DispatchCompletion(
+                            taskId,
+                            completed,
+                            ProjectedOccurrence(taskId)
+                        );
                         if (restore is not null)
                         {
                             _completionUndo.Push("Completed task", [restore]);
@@ -264,7 +268,11 @@ namespace TaskNotes.Windows.Host
                         List<CompletionRestore> restores = [];
                         foreach (string taskId in DistinctIds(taskIds))
                         {
-                            CompletionRestore? restore = DispatchCompletion(taskId, true, null);
+                            CompletionRestore? restore = DispatchCompletion(
+                                taskId,
+                                true,
+                                ProjectedOccurrence(taskId)
+                            );
                             if (restore is not null)
                             {
                                 restores.Add(restore);
@@ -583,6 +591,18 @@ namespace TaskNotes.Windows.Host
                     () =>
                     {
                         _savedViews.RestoreDefaults();
+                        // Restoration drops custom views, so an active one would leave
+                        // _query pointing at a view the projection then demands and
+                        // cannot find, throwing after the file was already rewritten.
+                        if (
+                            _query.Kind == TaskListKind.SavedView
+                            && !_savedViews.Presentation.Any(view =>
+                                string.Equals(view.Id, _query.Scope, StringComparison.Ordinal)
+                            )
+                        )
+                        {
+                            _query = new TaskListQuery(TaskListKind.Browse);
+                        }
                         return true;
                     },
                     cancellationToken
@@ -792,6 +812,19 @@ namespace TaskNotes.Windows.Host
             };
             _ = engine.Dispatch(new Core.CommandInput.Update(task.Id, request));
             return Observe();
+        }
+
+        // The row the user checked carries the occurrence it represents, which for an
+        // Upcoming recurring row is a later date than the task's current scheduled or
+        // due value. Without it DispatchCompletion recomputes the target and completes
+        // the wrong occurrence, or silently does nothing when that one is already done.
+        private string? ProjectedOccurrence(string taskId)
+        {
+            return State
+                .VisibleTasks.FirstOrDefault(task =>
+                    string.Equals(task.Id, taskId, StringComparison.Ordinal)
+                )
+                ?.OccurrenceDate;
         }
 
         private CompletionRestore? DispatchCompletion(

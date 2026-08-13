@@ -301,14 +301,12 @@ namespace TaskNotes.Windows.Host
                     ? occurrence
                     : ExcludedOccurrence;
             }
-            string? date = CivilDate(task.Due) ?? CivilDate(task.Scheduled);
+            // Both dates are independently actionable, as in TodayAdmission and in
+            // packages/tasks-for-obsidian/src/domain/agenda.ts. Preferring due would hide
+            // a task planned for a future day merely because its deadline already passed.
             return
-                date is not null
-                && Core.TaskNotesCoreMethods.DateIsUpcoming(
-                    date,
-                    today,
-                    new Core.UpcomingHorizon.Unbounded()
-                )
+                IsUpcoming(CivilDate(task.Scheduled), today)
+                || IsUpcoming(CivilDate(task.Due), today)
                 ? null
                 : ExcludedOccurrence;
         }
@@ -417,15 +415,30 @@ namespace TaskNotes.Windows.Host
                 : query.Scope;
         }
 
+        private static bool IsUpcoming(string? date, string today)
+        {
+            return date is not null
+                && Core.TaskNotesCoreMethods.DateIsUpcoming(
+                    date,
+                    today,
+                    new Core.UpcomingHorizon.Unbounded()
+                );
+        }
+
         private static string? CivilDate(string? raw)
         {
             if (raw is null)
             {
                 return null;
             }
-            int offset = checked(
-                (int)TimeZoneInfo.Local.GetUtcOffset(DateTimeOffset.Now).TotalSeconds
-            );
+            // Resolve the zone offset at the stored instant, not at now: using today's
+            // offset for a timestamp in the opposite daylight-saving season shifts it to
+            // the adjacent civil day, which misplaces Upcoming membership and grouping.
+            DateTimeOffset reference = Core.TaskNotesCoreMethods.DateInstantMillis(raw)
+                is long millis
+                ? DateTimeOffset.FromUnixTimeMilliseconds(millis)
+                : DateTimeOffset.Now;
+            int offset = checked((int)TimeZoneInfo.Local.GetUtcOffset(reference).TotalSeconds);
             return Core.TaskNotesCoreMethods.DateParseLocal(raw, offset);
         }
     }

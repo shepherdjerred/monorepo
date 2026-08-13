@@ -495,6 +495,76 @@ namespace TaskNotes.Windows.Tests
             );
         }
 
+        /// <summary>Keeps a task planned for a future day in Upcoming even when it is overdue.</summary>
+        [TestMethod]
+        public async Task UpcomingAdmitsATaskScheduledLaterAndAlreadyDue()
+        {
+            using TemporaryDirectory directory = new();
+            await using TaskNotesStore store = new(directory.Path);
+            await store.InitializeAsync(null, null, TestContext.CancellationToken);
+            string overdue = DateTime
+                .Now.AddDays(-2)
+                .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            string later = DateTime
+                .Now.AddDays(5)
+                .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            await store.AddAsync(
+                "Draft the proposal",
+                new TaskListQuery(TaskListKind.Inbox),
+                TestContext.CancellationToken
+            );
+            TaskItem created = store.State.AllTasks.Single();
+            await store.UpdateTaskAsync(
+                new TaskEditInput
+                {
+                    Id = created.Id,
+                    Title = "Draft the proposal",
+                    Status = "open",
+                    Priority = "normal",
+                    Scheduled = later,
+                    Due = overdue,
+                },
+                TestContext.CancellationToken
+            );
+
+            await AssertQueryTitlesAsync(
+                store,
+                new TaskListQuery(TaskListKind.Upcoming),
+                "Draft the proposal"
+            );
+        }
+
+        /// <summary>Restoring defaults while a custom view is open leaves the store usable.</summary>
+        [TestMethod]
+        public async Task RestoringDefaultsWhileACustomViewIsOpenFallsBackToBrowse()
+        {
+            using TemporaryDirectory directory = new();
+            await using TaskNotesStore store = new(directory.Path);
+            await store.InitializeAsync(null, null, TestContext.CancellationToken);
+            await store.AddAsync(
+                "Keep me",
+                new TaskListQuery(TaskListKind.Inbox),
+                TestContext.CancellationToken
+            );
+            SavedViewDefinition custom = await store.CreateSavedViewAsync(
+                "Temporary",
+                "Filter",
+                "#2563eb",
+                false,
+                new TaskListQuery(TaskListKind.Browse),
+                TestContext.CancellationToken
+            );
+            await store.SetQueryAsync(
+                new TaskListQuery(TaskListKind.SavedView, custom.Id),
+                TestContext.CancellationToken
+            );
+
+            await store.RestoreDefaultSavedViewsAsync(TestContext.CancellationToken);
+
+            Assert.IsFalse(store.State.SavedViews.Any(view => view.Id == custom.Id));
+            Assert.Contains("Keep me", store.State.VisibleTasks.Select(task => task.Title));
+        }
+
         private static readonly string[] SavedViewTitles = ["Alpha", "Zulu", "Mike"];
         private static readonly string[] DescendingSavedViewTitles = ["Zulu", "Mike", "Alpha"];
 
