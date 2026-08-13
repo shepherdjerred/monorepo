@@ -1,5 +1,6 @@
 import { describe, expect, spyOn, test } from "bun:test";
 import {
+  fetchLatestProviderIssueComment,
   resolveIssueCommentReview,
   reviewCommentBoundToHead,
 } from "./github-issue-comments.ts";
@@ -180,6 +181,7 @@ const issueCommentProvider: ReviewProvider = {
     kind: "issue-comment",
     marker: "review-marker",
     acknowledgement: { marker: "ack-marker" },
+    inProgress: { marker: "in-progress-marker" },
   },
   detectSkip: null,
   requestReview: null,
@@ -225,6 +227,45 @@ test("records the acknowledgement time as issue-comment completion", async () =>
       reviewedCommit: HEAD,
       reviewedAt: acknowledgementUpdatedAt,
     });
+  } finally {
+    fetchSpy.mockRestore();
+  }
+});
+
+test("ignores the in-progress placeholder that supersedes the rendered review", async () => {
+  // Qodo posts this while re-reading the head: it carries the review marker but
+  // renders no findings, and it is newer than the review it supersedes. Reading
+  // it as the review makes the gate parse a review that does not exist yet.
+  const reviewUpdatedAt = "2026-08-10T06:51:00Z";
+  const fetchImplementation = Object.assign(
+    async () =>
+      Response.json([
+        {
+          body: "review-marker with findings",
+          updated_at: reviewUpdatedAt,
+          html_url: "https://github.com/o/r/issues/1#issuecomment-review",
+          user: { login: "review-bot" },
+        },
+        {
+          body: "review-marker in-progress-marker superseded by a new analysis",
+          updated_at: "2026-08-10T06:59:00Z",
+          html_url: "https://github.com/o/r/issues/1#issuecomment-placeholder",
+          user: { login: "review-bot" },
+        },
+      ]),
+    { preconnect: globalThis.fetch.preconnect },
+  );
+  const fetchSpy = spyOn(globalThis, "fetch").mockImplementation(
+    fetchImplementation,
+  );
+  try {
+    const comment = await fetchLatestProviderIssueComment({
+      repo: "o/r",
+      number: 1,
+      token: "token",
+      provider: issueCommentProvider,
+    });
+    expect(comment?.body).toBe("review-marker with findings");
   } finally {
     fetchSpy.mockRestore();
   }

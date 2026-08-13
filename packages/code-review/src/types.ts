@@ -89,6 +89,13 @@ export type CompletionStrategy =
        * read for the commit they name and never for findings.
        */
       acknowledgement: { marker: string };
+      /**
+       * A placeholder the provider substitutes for its rendered review while a
+       * re-review runs. It carries `marker` but declares no findings, so
+       * reading it as the review comment fails the gate on a review that has
+       * not been written yet. `null` for providers that post no placeholder.
+       */
+      inProgress: { marker: string } | null;
     };
 
 /**

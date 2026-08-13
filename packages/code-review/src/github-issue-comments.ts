@@ -106,6 +106,16 @@ async function scanProviderIssueComments(
       // first: only a comment that is not an acknowledgement can be the review.
       if (body.includes(completion.acknowledgement.marker)) {
         acknowledgement.offer(comment);
+      } else if (
+        completion.inProgress !== null &&
+        body.includes(completion.inProgress.marker)
+      ) {
+        // The provider substitutes this placeholder for its rendered review
+        // while it re-reads the head, and it carries the review marker. It is
+        // the newest review-marked comment for as long as the re-review runs,
+        // so offering it would make the gate parse a review that does not
+        // exist yet instead of waiting for the one being written.
+        continue;
       } else if (body.includes(completion.marker)) {
         review.offer(comment);
       }

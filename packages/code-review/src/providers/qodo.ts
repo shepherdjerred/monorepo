@@ -20,6 +20,10 @@ const QODO_REVIEW_MARKER = "<h3>Code Review by Qodo</h3>";
 // commit it just read: "[Code review](…) by qodo was updated up to the latest
 // commit https://github.com/<repo>/commit/<sha>".
 const QODO_ACKNOWLEDGEMENT_MARKER = "was updated up to the latest commit";
+// While a re-review runs, Qodo replaces the rendered review with a placeholder
+// reading "New Review Started / This review has been superseded by a new
+// analysis". It keeps the review heading but drops the finding-count header.
+const QODO_IN_PROGRESS_MARKER = "<h3>New Review Started</h3>";
 const QODO_DIVIDER_ALT = "Grey Divider";
 const QODO_FINDING_COUNT_LABELS = [
   "Bugs",
@@ -351,6 +355,7 @@ export const qodoProvider: ReviewProvider = {
     kind: "issue-comment",
     marker: QODO_REVIEW_MARKER,
     acknowledgement: { marker: QODO_ACKNOWLEDGEMENT_MARKER },
+    inProgress: { marker: QODO_IN_PROGRESS_MARKER },
   },
   parseIssueComment: parseQodoIssueComment,
   detectSkip: null,

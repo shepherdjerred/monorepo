@@ -36,6 +36,7 @@ describe("qodoProvider", () => {
       kind: "issue-comment",
       marker: "<h3>Code Review by Qodo</h3>",
       acknowledgement: { marker: "was updated up to the latest commit" },
+      inProgress: { marker: "<h3>New Review Started</h3>" },
     });
     expect(qodoProvider.requestReview?.buildComment("marker")).toBe(
       "/review\n\nmarker",
