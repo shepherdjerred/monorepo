@@ -45,6 +45,7 @@ type Scenario = {
   indoorState: string;
   outdoorC: number;
   zoneAttributes: Record<string, unknown>;
+  temperatureReadAttempts: number;
   serviceCalls: ServiceCall[];
   notifications: string[];
   outcomes: OutcomeRecord[];
@@ -59,6 +60,7 @@ function makeScenario(
     indoorState: String(temps.indoorC),
     outdoorC: temps.outdoorC,
     zoneAttributes,
+    temperatureReadAttempts: 0,
     serviceCalls: [],
     notifications: [],
     outcomes: [],
@@ -83,8 +85,11 @@ function makeActivities(scenario: Scenario) {
           return Promise.resolve(entityState(entityId, "not_home"));
         case "sensor.master_bathroom_temperature":
           if (scenario.indoorState === MISSING_ENTITY) {
+            scenario.temperatureReadAttempts += 1;
+            // Retryable, exactly as the real activity raises it, so the
+            // degraded path is exercised only after the retry budget runs out.
             return Promise.reject(
-              ApplicationFailure.nonRetryable(
+              ApplicationFailure.retryable(
                 `Home Assistant has no entity ${entityId}`,
                 HA_ENTITY_NOT_FOUND_ERROR_TYPE,
               ),
@@ -354,6 +359,9 @@ describe("goodMorningWakeUp", () => {
         `wake-temperature-missing-${crypto.randomUUID()}`,
       );
 
+      // The shared three-attempt policy still applies, so a transiently
+      // missing entity during an HA restart recovers instead of degrading.
+      expect(scenario.temperatureReadAttempts).toBe(3);
       expect(climateCalls(scenario)).toEqual([TURN_OFF_MASTER_BATHROOM]);
       expect(scenario.notifications).toEqual(["Good Morning"]);
       expect(scenario.outcomes).toEqual([

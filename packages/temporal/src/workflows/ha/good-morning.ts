@@ -118,8 +118,10 @@ function isMissingEntityFailure(error: unknown): boolean {
 
 // A total Mysa setup failure removes the entity outright instead of leaving it
 // in `unavailable`, which is the same degraded condition from the wake
-// routine's point of view. Only this read is wrapped, so a missing zone.home
-// stays a hard failure rather than silently degrading the heat decision.
+// routine's point of view. The activity failure is retryable, so this only
+// fires once the entity is still gone after the full retry budget. Only this
+// read is wrapped, so a missing zone.home stays a hard failure rather than
+// silently degrading the heat decision.
 async function readIndoorTemperatureC(): Promise<number> {
   try {
     const state = await getEntityState(MASTER_BATHROOM_AIR_TEMP);

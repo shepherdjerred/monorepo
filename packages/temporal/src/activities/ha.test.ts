@@ -46,9 +46,10 @@ describe("haActivities", () => {
     }
   });
 
-  // A bare HaNotFoundError would reach the workflow as an untyped failure and
-  // burn the activity's whole retry budget on an entity that cannot appear.
-  it("raises a typed non-retryable failure for an entity HA does not have", async () => {
+  // A bare HaNotFoundError would reach the workflow as an untyped failure. It
+  // must stay retryable: HA serves this endpoint before every integration has
+  // registered its entities, so a startup/reload 404 is routinely transient.
+  it("raises a typed retryable failure for an entity HA does not have", async () => {
     const originalUrl = Bun.env["HA_URL"];
     const originalToken = Bun.env["HA_TOKEN"];
     const originalFetch = globalThis.fetch;
@@ -73,7 +74,7 @@ describe("haActivities", () => {
         throw new TypeError("Expected a typed ApplicationFailure");
       }
       expect(failure.type).toBe(HA_ENTITY_NOT_FOUND_ERROR_TYPE);
-      expect(failure.nonRetryable).toBe(true);
+      expect(failure.nonRetryable).toBe(false);
       expect(failure.message).toBe(
         "Home Assistant has no entity sensor.master_bathroom_temperature",
       );

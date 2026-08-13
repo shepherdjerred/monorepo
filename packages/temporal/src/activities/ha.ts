@@ -35,10 +35,15 @@ export const haActivities = {
     try {
       return await getClient().getState(entityId);
     } catch (error: unknown) {
-      // An entity Home Assistant does not have will not appear on a retry, and
-      // a bare HaNotFoundError reaches the workflow as an untyped failure.
+      // Retyped, not made terminal. A bare HaNotFoundError crosses the activity
+      // boundary as an untyped failure, so a workflow cannot tell a missing
+      // entity from any other error; the type is what makes that possible.
+      // It stays retryable because HA answers this endpoint before every
+      // integration has registered its entities, so a 404 during a restart or
+      // integration reload is routinely transient. Only an entity still absent
+      // after the caller's whole retry budget reaches the workflow.
       if (error instanceof HaNotFoundError) {
-        throw ApplicationFailure.nonRetryable(
+        throw ApplicationFailure.retryable(
           `Home Assistant has no entity ${entityId}`,
           HA_ENTITY_NOT_FOUND_ERROR_TYPE,
         );
