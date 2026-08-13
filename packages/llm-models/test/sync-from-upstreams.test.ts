@@ -3,7 +3,7 @@ import {
   contextRejection,
   indexLiteLlm,
   indexModelsDev,
-  priceRejection,
+  priceDecision,
   providerKey,
   reconcile,
 } from "#scripts/sync-from-upstreams.ts";
@@ -108,24 +108,42 @@ describe("indexModelsDev provider scoping", () => {
 });
 
 describe("indexLiteLlm provider scoping", () => {
+  // Shapes taken from the live dataset: attribution lives in
+  // `litellm_provider`, and the DIRECT rows we buy from are keyed bare while
+  // only gateway resales carry a `vendor/` prefix.
   const index = indexLiteLlm({
     "openai/gpt-5.5": {
+      litellm_provider: "openai",
       input_cost_per_token: 0.000005,
       output_cost_per_token: 0.00003,
       max_input_tokens: 400_000,
     },
+    "claude-opus-5": {
+      litellm_provider: "anthropic",
+      input_cost_per_token: 0.000005,
+      output_cost_per_token: 0.000025,
+      max_input_tokens: 1_000_000,
+    },
+    "gpt-5.6-luna": {
+      litellm_provider: "openai",
+      input_cost_per_token: 0.0000002,
+      output_cost_per_token: 0.0000012,
+      max_input_tokens: 1_050_000,
+    },
     "bedrock/anthropic.claude-opus-5": {
+      litellm_provider: "bedrock",
       input_cost_per_token: 0.000006,
       output_cost_per_token: 0.00003,
       max_input_tokens: 200_000,
     },
-    // Unattributable: no vendor prefix at all.
+    // Unattributable: no `litellm_provider` at all.
     "some-random-model": {
       input_cost_per_token: 0.000001,
       output_cost_per_token: 0.000002,
     },
     // Unknown vendor — must not be attributed to one of our providers.
     "sagemaker/claude-opus-5": {
+      litellm_provider: "sagemaker",
       input_cost_per_token: 0.000009,
       output_cost_per_token: 0.00009,
     },
@@ -138,11 +156,27 @@ describe("indexLiteLlm provider scoping", () => {
     );
   });
 
-  test("does not adopt a gateway's price as the direct provider's", () => {
-    // Bedrock resells Anthropic weights at AWS's price. Treating that as
-    // "anthropic" is the same mistake as trusting cortecs — we buy direct.
+  test("indexes the bare direct-provider keys the fallback exists to read", () => {
+    // The canonical anthropic/openai rows have no `vendor/` prefix. Requiring
+    // a slash dropped every one of them, so models.dev going quiet on a model
+    // left it reported as overlay-only instead of falling back to LiteLLM.
+    expect(index.get(providerKey("anthropic", "claude-opus-5"))).toEqual({
+      input: 5,
+      output: 25,
+      contextWindow: 1_000_000,
+    });
     expect(
-      index.get(providerKey("anthropic", "claude-opus-5")),
+      index.get(providerKey("openai", "gpt-5.6-luna"))?.output,
+    ).toBeCloseTo(1.2, 9);
+  });
+
+  test("does not adopt a gateway's price as the direct provider's", () => {
+    // Bedrock resells Anthropic weights at AWS's price ($6/$30 here). Treating
+    // that as "anthropic" is the same mistake as trusting cortecs — we buy
+    // direct, so the anthropic key must hold the direct row's $5/$25.
+    expect(index.get(providerKey("anthropic", "claude-opus-5"))?.input).toBe(5);
+    expect(
+      index.get(providerKey("anthropic", "anthropic.claude-opus-5")),
     ).toBeUndefined();
     expect(index.get(providerKey("openai", "claude-opus-5"))).toBeUndefined();
   });
@@ -155,27 +189,56 @@ describe("indexLiteLlm provider scoping", () => {
     ).toBeUndefined();
     expect(index.get("some-random-model")).toBeUndefined();
     expect(index.get(providerKey("anthropic", "sagemaker"))).toBeUndefined();
+    // The unknown vendor's row keeps its full key out of our namespace too.
+    expect(
+      index.get(providerKey("anthropic", "sagemaker/claude-opus-5")),
+    ).toBeUndefined();
   });
 });
+
+/** The withheld reason, asserting the guard fired at all. */
+function reasonFor(before: number, after: number): string {
+  const decision = priceDecision(before, after);
+  if (decision.kind !== "withhold") {
+    throw new Error(
+      `expected ${String(after)} to be withheld, got ${String(decision.value)}`,
+    );
+  }
+  return decision.reason;
+}
 
 describe("plausibility guards", () => {
   test("rejects prices with more than two decimal places", () => {
     // The #2102 tell: reseller markups produce 32.998 / 4.982 / 0.996.
-    expect(priceRejection(30, 32.998)).toContain("decimal places");
-    expect(priceRejection(5, 4.982)).toContain("decimal places");
-    expect(priceRejection(1, 0.996)).toContain("decimal places");
+    expect(reasonFor(30, 32.998)).toContain("decimal places");
+    expect(reasonFor(5, 4.982)).toContain("decimal places");
+    expect(reasonFor(1, 0.996)).toContain("decimal places");
   });
 
   test("accepts ordinary round prices within the change bound", () => {
-    expect(priceRejection(5, 5.5)).toBeUndefined();
-    expect(priceRejection(3, 2.5)).toBeUndefined();
-    expect(priceRejection(0.075, 0.08)).toBeUndefined();
+    expect(priceDecision(5, 5.5)).toEqual({ kind: "apply", value: 5.5 });
+    expect(priceDecision(3, 2.5)).toEqual({ kind: "apply", value: 2.5 });
+    expect(priceDecision(0.075, 0.08)).toEqual({ kind: "apply", value: 0.08 });
+  });
+
+  test("accepts a float artifact of our own per-million conversion", () => {
+    // LiteLLM lists $0.20/M as 0.0000002/token; `perMillion` multiplies that
+    // to 0.19999999999999998, which stringifies with 17 decimals. Counting
+    // those digits withheld a legitimate published price forever.
+    const artifact = 0.0000002 * 1_000_000;
+    expect(artifact.toString()).toBe("0.19999999999999998");
+    // The applied value is the normalized one, so the artifact never reaches
+    // catalog.json.
+    expect(priceDecision(0.25, artifact)).toEqual({
+      kind: "apply",
+      value: 0.2,
+    });
   });
 
   test("rejects a change larger than 25%", () => {
-    expect(priceRejection(10, 3)).toContain("70% change");
-    expect(priceRejection(5, 1.5)).toContain("70% change");
-    expect(priceRejection(15, 5.55)).toContain("change");
+    expect(reasonFor(10, 3)).toContain("70% change");
+    expect(reasonFor(5, 1.5)).toContain("70% change");
+    expect(reasonFor(15, 5.55)).toContain("change");
   });
 
   test("rejects any context-window shrink and allows growth", () => {

@@ -20,7 +20,12 @@
  *   2. Implausible edits are withheld and reported rather than applied. See
  *      `priceRejection` / `contextRejection`.
  * A withheld edit is not a failure — it is the script saying a human should
- * read the provider's own pricing page.
+ * read the provider's own pricing page. It must never be reduced to stdout,
+ * though: a run that withholds everything writes no catalog diff, so the
+ * unattended caller would otherwise see a clean no-op and a real repricing
+ * would sit unreviewed forever. `--report-json` gives that caller a typed
+ * signal to act on, and `--check` exits non-zero on withheld edits as well as
+ * on drift.
  *
  * Deliberately NOT cross-checked:
  *   - cache prices: providers name them differently (OpenAI cached-input vs
@@ -31,8 +36,9 @@
  * Never adds/removes models; never touches non-numeric fields.
  *
  * Usage:
- *   bun run scripts/sync-from-upstreams.ts            # apply drift, write catalog.json
- *   bun run scripts/sync-from-upstreams.ts --check    # report only, non-zero exit on drift
+ *   bun run scripts/sync-from-upstreams.ts                       # apply drift, write catalog.json
+ *   bun run scripts/sync-from-upstreams.ts --check               # report only, non-zero exit on drift or withheld edits
+ *   bun run scripts/sync-from-upstreams.ts --report-json <path>  # also write the machine-readable report
  */
 import { z } from "zod";
 import { CatalogSchema, type Catalog, type ModelEntry } from "#src/index.ts";
@@ -129,26 +135,35 @@ const LITELLM_VENDOR_TO_PROVIDER = new Map<string, string>([
   ["gemini", "google"],
 ]);
 
-/** LiteLLM: top-level { id: { *_cost_per_token, max_input_tokens } } — per-TOKEN. */
+/**
+ * LiteLLM: top-level { id: { litellm_provider, *_cost_per_token, max_input_tokens } } — per-TOKEN.
+ *
+ * Attribution comes from each row's `litellm_provider`, never from the key's
+ * shape. The direct-API rows we actually buy from are overwhelmingly keyed
+ * BARE — `claude-opus-5`, `gpt-5.5` — and only gateway resales carry a
+ * `vendor/` prefix, so requiring a slash would drop exactly the rows this
+ * fallback exists to read while keeping none of the ones it must reject.
+ * A prefix is stripped only when it is the row's own declared vendor, leaving
+ * the model id verbatim (`openai/gpt-5.5` -> `gpt-5.5`, dots intact).
+ */
 export function indexLiteLlm(raw: unknown): Map<string, Upstream> {
   const out = new Map<string, Upstream>();
   for (const [key, modelRaw] of Object.entries(record(raw))) {
-    const slash = key.indexOf("/");
-    if (slash === -1) {
+    const model = record(modelRaw);
+    const vendor = model["litellm_provider"];
+    if (typeof vendor !== "string") {
       continue;
     }
-    const provider = LITELLM_VENDOR_TO_PROVIDER.get(key.slice(0, slash));
+    const provider = LITELLM_VENDOR_TO_PROVIDER.get(vendor);
     if (provider === undefined) {
       continue;
     }
-    // The remainder is the model id verbatim — dots in it belong to the id
-    // (`openai/gpt-5.5`), never to a vendor, because a vendor-prefixed
-    // remainder only occurs under gateway keys we already skipped above.
-    const mapKey = providerKey(provider, key.slice(slash + 1));
+    const prefix = `${vendor}/`;
+    const id = key.startsWith(prefix) ? key.slice(prefix.length) : key;
+    const mapKey = providerKey(provider, id);
     if (out.has(mapKey)) {
       continue;
     }
-    const model = record(modelRaw);
     out.set(mapKey, {
       input: perMillion(model["input_cost_per_token"]),
       output: perMillion(model["output_cost_per_token"]),
@@ -167,25 +182,44 @@ export function indexLiteLlm(raw: unknown): Map<string, Upstream> {
  */
 const MAX_PRICE_CHANGE_RATIO = 0.25;
 const MAX_PRICE_DECIMALS = 2;
+/**
+ * Slack for binary-float artifacts. `perMillion` multiplies LiteLLM's
+ * per-token figures by 1e6, so a real $0.20/M list price arrives as
+ * 0.19999999999999998. Counting the digits of that string called a legitimate
+ * price a 17-decimal reseller markup and withheld it forever; a value is
+ * "round" if it sits this close to its 2-decimal rounding.
+ */
+const PRICE_ROUNDING_TOLERANCE = 1e-9;
 
-export function priceRejection(
-  before: number,
-  after: number,
-): string | undefined {
+/** Either the value to write (normalized) or the reason to withhold it. */
+export type PriceDecision =
+  | { readonly kind: "apply"; readonly value: number }
+  | { readonly kind: "withhold"; readonly reason: string };
+
+export function priceDecision(before: number, after: number): PriceDecision {
   // Published list prices are round. 32.998 / 4.982 / 0.996 are arithmetic
   // artifacts of a reseller's markup, and were a reliable tell in #2102.
-  const decimals = (after.toString().split(".")[1] ?? "").length;
-  if (decimals > MAX_PRICE_DECIMALS) {
-    return `${String(after)} has ${String(decimals)} decimal places (max ${String(MAX_PRICE_DECIMALS)})`;
+  const scale = 10 ** MAX_PRICE_DECIMALS;
+  const value = Math.round(after * scale) / scale;
+  if (Math.abs(after - value) > PRICE_ROUNDING_TOLERANCE) {
+    return {
+      kind: "withhold",
+      reason: `${String(after)} is not a round list price (max ${String(MAX_PRICE_DECIMALS)} decimal places)`,
+    };
   }
   if (before === 0) {
-    return after === 0 ? undefined : `${String(after)} replaces a zero price`;
+    return value === 0
+      ? { kind: "apply", value }
+      : { kind: "withhold", reason: `${String(value)} replaces a zero price` };
   }
-  const ratio = Math.abs(after - before) / before;
+  const ratio = Math.abs(value - before) / before;
   if (ratio > MAX_PRICE_CHANGE_RATIO) {
-    return `${String(before)} -> ${String(after)} is a ${String(Math.round(ratio * 100))}% change (max ${String(MAX_PRICE_CHANGE_RATIO * 100)}%)`;
+    return {
+      kind: "withhold",
+      reason: `${String(before)} -> ${String(value)} is a ${String(Math.round(ratio * 100))}% change (max ${String(MAX_PRICE_CHANGE_RATIO * 100)}%)`,
+    };
   }
-  return undefined;
+  return { kind: "apply", value };
 }
 
 export function contextRejection(
@@ -241,24 +275,24 @@ export function reconcile(
     upstream.input !== undefined &&
     Math.abs(entry.pricing.input - upstream.input) > EPSILON
   ) {
-    const reason = priceRejection(entry.pricing.input, upstream.input);
-    if (reason === undefined) {
-      note("input", entry.pricing.input, upstream.input);
-      entry.pricing.input = upstream.input;
+    const decision = priceDecision(entry.pricing.input, upstream.input);
+    if (decision.kind === "apply") {
+      note("input", entry.pricing.input, decision.value);
+      entry.pricing.input = decision.value;
     } else {
-      reject("input", reason);
+      reject("input", decision.reason);
     }
   }
   if (
     upstream.output !== undefined &&
     Math.abs(entry.pricing.output - upstream.output) > EPSILON
   ) {
-    const reason = priceRejection(entry.pricing.output, upstream.output);
-    if (reason === undefined) {
-      note("output", entry.pricing.output, upstream.output);
-      entry.pricing.output = upstream.output;
+    const decision = priceDecision(entry.pricing.output, upstream.output);
+    if (decision.kind === "apply") {
+      note("output", entry.pricing.output, decision.value);
+      entry.pricing.output = decision.value;
     } else {
-      reject("output", reason);
+      reject("output", decision.reason);
     }
   }
   if (
@@ -281,8 +315,55 @@ export function reconcile(
   return { applied, rejected };
 }
 
+/**
+ * The stdout report, structured, for an unattended caller. `withheld` is the
+ * field that matters: it is the only outcome that needs a human and produces
+ * no catalog diff to notice.
+ */
+export type SyncReport = {
+  applied: string[];
+  withheld: string[];
+  overlayOnly: string[];
+  notChecked: string[];
+};
+
+function emitReport(report: SyncReport, check: boolean): void {
+  emit("== LLM catalog cross-check ==");
+  emit(
+    report.applied.length > 0
+      ? `\nDrift vs upstreams (${check ? "not applied" : "applied"}):\n${report.applied.join("\n")}`
+      : "\nNo input/output/context drift vs upstreams.",
+  );
+  if (report.withheld.length > 0) {
+    emit(
+      `\nWITHHELD by plausibility guards — verify against the provider's own pricing page before applying by hand:\n${report.withheld.join("\n")}`,
+    );
+  }
+  if (report.overlayOnly.length > 0) {
+    emit(
+      `\nOverlay-only (absent from both upstreams under their own provider — verify manually):\n  ${report.overlayOnly.join("\n  ")}`,
+    );
+  }
+  if (report.notChecked.length > 0) {
+    emit(`\nNot cross-checked:\n  ${report.notChecked.join("\n  ")}`);
+  }
+}
+
+function flagValue(flag: string): string | undefined {
+  const index = process.argv.indexOf(flag);
+  if (index === -1) {
+    return undefined;
+  }
+  const value = process.argv[index + 1];
+  if (value === undefined || value.startsWith("--")) {
+    throw new Error(`${flag} requires a path argument`);
+  }
+  return value;
+}
+
 async function main(): Promise<void> {
   const check = process.argv.includes("--check");
+  const reportJsonPath = flagValue("--report-json");
 
   // Read the raw JSON text first so we can write it back without key reordering.
   // Zod's parse creates a new object with keys in schema-definition order; writing
@@ -326,25 +407,13 @@ async function main(): Promise<void> {
     rejected.push(...result.rejected);
   }
 
-  emit("== LLM catalog cross-check ==");
-  emit(
-    drifted.length > 0
-      ? `\nDrift vs upstreams (${check ? "not applied" : "applied"}):\n${drifted.join("\n")}`
-      : "\nNo input/output/context drift vs upstreams.",
-  );
-  if (rejected.length > 0) {
-    emit(
-      `\nWITHHELD by plausibility guards — verify against the provider's own pricing page before applying by hand:\n${rejected.join("\n")}`,
-    );
-  }
-  if (overlayOnly.length > 0) {
-    emit(
-      `\nOverlay-only (absent from both upstreams under their own provider — verify manually):\n  ${overlayOnly.join("\n  ")}`,
-    );
-  }
-  if (notChecked.length > 0) {
-    emit(`\nNot cross-checked:\n  ${notChecked.join("\n  ")}`);
-  }
+  const report: SyncReport = {
+    applied: drifted,
+    withheld: rejected,
+    overlayOnly,
+    notChecked,
+  };
+  emitReport(report, check);
 
   if (!check && drifted.length > 0) {
     // Patch only the drifted numeric fields into the raw JSON structure so that
@@ -366,7 +435,13 @@ async function main(): Promise<void> {
     await Bun.write(CATALOG_PATH, `${JSON.stringify(rawCatalog, null, 2)}\n`);
     emit("\nWrote updated src/catalog.json.");
   }
-  if (check && drifted.length > 0) {
+  if (reportJsonPath !== undefined) {
+    await Bun.write(reportJsonPath, `${JSON.stringify(report, null, 2)}\n`);
+  }
+  // Withheld edits count in `--check` too: a run that withholds every edit
+  // leaves the catalog clean, so drift alone would exit 0 on the one outcome
+  // that actually needs a human.
+  if (check && (drifted.length > 0 || rejected.length > 0)) {
     process.exitCode = 1;
   }
 }

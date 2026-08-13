@@ -22,7 +22,7 @@ Each deleted its local model map and imports the catalog: monarch `usage.ts`, te
 
 ## Auto-refresh
 
-`scripts/sync-from-upstreams.ts` (`bun run sync`) deterministically cross-checks input/output/context prices vs models.dev + LiteLLM (both MIT) and rewrites on drift; cache + image prices are NOT cross-checked. Temporal `llm-catalog-refresh-weekly` runs it and opens a PR on drift (no LLM). Brand-new flagships and Gemini image models are "overlay-only" (manually maintained); the refresh report flags them.
+`scripts/sync-from-upstreams.ts` (`bun run sync`) deterministically cross-checks input/output/context prices vs models.dev + LiteLLM (both MIT) and rewrites on drift; cache + image prices are NOT cross-checked. Temporal `llm-catalog-refresh-weekly` runs it and opens a PR on drift (no LLM). Brand-new flagships and Gemini image models are "overlay-only" (manually maintained); the refresh report flags them. Implausible edits are withheld rather than applied; a run where everything is withheld produces no diff and therefore no PR, so the activity raises an `LlmCatalogDriftWithheld` Alertmanager occurrence off the script's `--report-json` output instead of exiting silently.
 
 ## Fresh-worktree gotcha — missing `dist/`
 

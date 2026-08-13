@@ -1,6 +1,9 @@
 import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
+import { z } from "zod";
+import { createAlertmanagerPoster } from "#lib/alertmanager.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import { buildCatalogWithheldAlert } from "#shared/llm-catalog-alert.ts";
 import { parsePorcelainPaths } from "#shared/porcelain.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import { openSeasonRefreshPr } from "./scout-season-refresh-git.ts";
@@ -10,13 +13,35 @@ const REPO_SLUG = "shepherdjerred/monorepo";
 const MAIN_BRANCH = "main";
 const CATALOG_FILE = "packages/llm-models/src/catalog.json";
 
+/** Mirrors `SyncReport` in packages/llm-models/scripts/sync-from-upstreams.ts. */
+const SyncReportSchema = z.object({
+  applied: z.array(z.string()),
+  withheld: z.array(z.string()),
+  overlayOnly: z.array(z.string()),
+  notChecked: z.array(z.string()),
+});
+
 export type LlmCatalogRefreshResult = {
   changedFiles: string[];
   branchName: string | undefined;
   commitHash: string | undefined;
   prUrl: string | undefined;
-  outcome: "pr-created" | "no-diff";
+  /** Edits the plausibility guards withheld — each needs a human to adjudicate. */
+  withheld: string[];
+  outcome: "pr-created" | "no-diff" | "withheld-only";
 };
+
+async function postWithheldAlert(withheld: string[]): Promise<void> {
+  const alertmanagerUrl = Bun.env["ALERTMANAGER_URL"];
+  if (alertmanagerUrl === undefined || alertmanagerUrl === "") {
+    throw new Error(
+      "ALERTMANAGER_URL is required to report withheld LLM catalog edits",
+    );
+  }
+  await createAlertmanagerPoster(alertmanagerUrl)([
+    buildCatalogWithheldAlert(withheld, new Date()),
+  ]);
+}
 
 export type LlmCatalogRefreshActivities = typeof llmCatalogRefreshActivities;
 
@@ -58,17 +83,37 @@ export const llmCatalogRefreshActivities = {
       await runCommand(["bun", "install", "--frozen-lockfile"], {
         cwd: catalogDir,
       });
+      const reportJsonPath = `${tempDir}/sync-report.json`;
       const report = await runCommand(
-        ["bun", "run", "scripts/sync-from-upstreams.ts"],
+        [
+          "bun",
+          "run",
+          "scripts/sync-from-upstreams.ts",
+          "--report-json",
+          reportJsonPath,
+        ],
         { cwd: catalogDir },
       );
+      const summary = SyncReportSchema.parse(
+        await Bun.file(reportJsonPath).json(),
+      );
 
-      const noDiff: LlmCatalogRefreshResult = {
-        changedFiles: [],
-        branchName: undefined,
-        commitHash: undefined,
-        prUrl: undefined,
-        outcome: "no-diff",
+      const noDiff = async (): Promise<LlmCatalogRefreshResult> => {
+        const base = {
+          changedFiles: [],
+          branchName: undefined,
+          commitHash: undefined,
+          prUrl: undefined,
+          withheld: summary.withheld,
+        };
+        if (summary.withheld.length === 0) {
+          return { ...base, outcome: "no-diff" };
+        }
+        // Withheld-only: the guards found real drift and refused to apply it,
+        // so there is no diff to PR and this run would otherwise be
+        // indistinguishable from a clean no-op. Page a human instead.
+        await postWithheldAlert(summary.withheld);
+        return { ...base, outcome: "withheld-only" };
       };
 
       // trimStdout: false so porcelain v1's leading-space status code isn't
@@ -80,7 +125,7 @@ export const llmCatalogRefreshActivities = {
         }),
       );
       if (dirty.length === 0) {
-        return noDiff;
+        return await noDiff();
       }
 
       // Format the rewritten JSON with the repo's pinned prettier so the PR
@@ -99,7 +144,7 @@ export const llmCatalogRefreshActivities = {
         }),
       );
       if (files.length === 0) {
-        return noDiff;
+        return await noDiff();
       }
 
       const branch = `chore/llm-catalog-refresh-${id.slice(0, 8)}`;
@@ -135,6 +180,7 @@ export const llmCatalogRefreshActivities = {
         branchName: branch,
         commitHash,
         prUrl,
+        withheld: summary.withheld,
         outcome: "pr-created",
       };
     } finally {

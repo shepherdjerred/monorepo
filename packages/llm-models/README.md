@@ -52,14 +52,25 @@ never adds or removes models, and deliberately skips cache prices and image
 models (upstreams normalize those inconsistently); models absent from both
 upstreams are reported as overlay-only and stay manually maintained.
 
+An edit that fails a plausibility guard (see `priceDecision` /
+`contextRejection`) is **withheld** rather than applied, and needs a human to
+check the provider's own pricing page. A run that withholds everything writes
+no catalog diff, so both entry points give that outcome its own signal:
+`--check` exits non-zero on withheld edits as well as on drift, and
+`--report-json` writes the typed report for an unattended caller.
+
 ```bash
 bun run sync                                     # apply drift, rewrite src/catalog.json
-bun run scripts/sync-from-upstreams.ts --check   # report only, non-zero exit on drift
+bun run scripts/sync-from-upstreams.ts --check   # report only, non-zero exit on drift or withheld edits
+bun run scripts/sync-from-upstreams.ts --report-json /tmp/sync.json
 ```
 
 The Temporal schedule `llm-catalog-refresh-weekly`
 ([packages/temporal](../temporal/)`/src/schedules/schedule-definitions.ts`)
-runs this cross-check every Monday and opens a PR when pricing drifts.
+runs this cross-check every Monday and opens a PR when pricing drifts. When
+every edit is withheld there is nothing to PR, so the activity reads
+`--report-json` and raises an `LlmCatalogDriftWithheld` Alertmanager
+occurrence instead.
 
 ## Development
 
