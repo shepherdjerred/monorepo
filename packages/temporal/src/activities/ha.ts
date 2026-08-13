@@ -1,7 +1,10 @@
+import { ApplicationFailure } from "@temporalio/common";
 import {
+  HaNotFoundError,
   HomeAssistantRestClient,
   type EntityState,
 } from "@shepherdjerred/home-assistant";
+import { HA_ENTITY_NOT_FOUND_ERROR_TYPE } from "#shared/ha-errors.ts";
 
 // Activity signatures stay monomorphic (Temporal's proxyActivities rejects
 // generic methods), so the runtime client is the loose default. Compile-time
@@ -29,7 +32,19 @@ export type HaActivities = typeof haActivities;
 
 export const haActivities = {
   async getEntityState(entityId: string): Promise<EntityState> {
-    return getClient().getState(entityId);
+    try {
+      return await getClient().getState(entityId);
+    } catch (error: unknown) {
+      // An entity Home Assistant does not have will not appear on a retry, and
+      // a bare HaNotFoundError reaches the workflow as an untyped failure.
+      if (error instanceof HaNotFoundError) {
+        throw ApplicationFailure.nonRetryable(
+          `Home Assistant has no entity ${entityId}`,
+          HA_ENTITY_NOT_FOUND_ERROR_TYPE,
+        );
+      }
+      throw error;
+    }
   },
 
   async getStates(): Promise<EntityState[]> {

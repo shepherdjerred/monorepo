@@ -1,4 +1,5 @@
 import {
+  ActivityFailure,
   ApplicationFailure,
   patched,
   proxyActivities,
@@ -14,6 +15,7 @@ import {
   volumeUpBy,
 } from "./util.ts";
 import type { WeatherActivities } from "#activities/weather.ts";
+import { HA_ENTITY_NOT_FOUND_ERROR_TYPE } from "#shared/ha-errors.ts";
 
 const weatherActivities = proxyActivities<WeatherActivities>({
   startToCloseTimeout: "30 seconds",
@@ -106,23 +108,46 @@ function parseHomeZoneCoordinates(
   return result.data;
 }
 
+function isMissingEntityFailure(error: unknown): boolean {
+  return (
+    error instanceof ActivityFailure &&
+    error.cause instanceof ApplicationFailure &&
+    error.cause.type === HA_ENTITY_NOT_FOUND_ERROR_TYPE
+  );
+}
+
+// A total Mysa setup failure removes the entity outright instead of leaving it
+// in `unavailable`, which is the same degraded condition from the wake
+// routine's point of view. Only this read is wrapped, so a missing zone.home
+// stays a hard failure rather than silently degrading the heat decision.
+async function readIndoorTemperatureC(): Promise<number> {
+  try {
+    const state = await getEntityState(MASTER_BATHROOM_AIR_TEMP);
+    return parseTemperatureC(MASTER_BATHROOM_AIR_TEMP, state.state);
+  } catch (error: unknown) {
+    if (isMissingEntityFailure(error)) {
+      throw ApplicationFailure.nonRetryable(
+        `Temperature sensor ${MASTER_BATHROOM_AIR_TEMP} is missing from Home Assistant`,
+        "TemperatureSensorUnavailableError",
+      );
+    }
+    throw error;
+  }
+}
+
 // Reads the bathroom air sensor and the outdoor temperature (Open-Meteo at the
 // zone.home coordinates — HA has no weather integration) and decides whether
-// the morning floor heat is worth running. Any read failure propagates and
-// fails the workflow run: we never silently guess at the weather.
+// the morning floor heat is worth running. Every read failure propagates; only
+// goodMorningWakeUp decides which of them it is willing to degrade around.
 async function floorHeatDecision(): Promise<{
   heat: boolean;
   indoorC: number;
   outdoorC: number;
 }> {
-  const [indoorState, zoneState] = await Promise.all([
-    getEntityState(MASTER_BATHROOM_AIR_TEMP),
+  const [indoorC, zoneState] = await Promise.all([
+    readIndoorTemperatureC(),
     getEntityState(HOME_ZONE),
   ]);
-  const indoorC = parseTemperatureC(
-    MASTER_BATHROOM_AIR_TEMP,
-    indoorState.state,
-  );
   const { latitude, longitude } = parseHomeZoneCoordinates(
     zoneState.attributes,
   );

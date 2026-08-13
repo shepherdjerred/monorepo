@@ -4,6 +4,7 @@ import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { OutcomeRecord } from "#activities/outcome.ts";
+import { HA_ENTITY_NOT_FOUND_ERROR_TYPE } from "#shared/ha-errors.ts";
 import {
   goodMorningPreheat,
   goodMorningWakeUp,
@@ -15,6 +16,9 @@ const TASK_QUEUE = "good-morning-test";
 // default 5s Bun timeout is too short when the full repository test graph is
 // sharing the CI host, even though workflow time itself is skipped.
 const WORKFLOW_TEST_TIMEOUT_MS = 30_000;
+// Sentinel for "Home Assistant does not have this entity at all", which the
+// activity surfaces as a typed failure rather than any state string.
+const MISSING_ENTITY = "__missing__";
 const DEFAULT_ZONE_ATTRIBUTES: Record<string, unknown> = {
   latitude: 47.6,
   longitude: -122.3,
@@ -78,6 +82,14 @@ function makeActivities(scenario: Scenario) {
         case "person.shuxin":
           return Promise.resolve(entityState(entityId, "not_home"));
         case "sensor.master_bathroom_temperature":
+          if (scenario.indoorState === MISSING_ENTITY) {
+            return Promise.reject(
+              ApplicationFailure.nonRetryable(
+                `Home Assistant has no entity ${entityId}`,
+                HA_ENTITY_NOT_FOUND_ERROR_TYPE,
+              ),
+            );
+          }
           return Promise.resolve(
             entityState(entityId, scenario.indoorState, {
               unit_of_measurement: "°C",
@@ -326,6 +338,31 @@ describe("goodMorningWakeUp", () => {
       );
       expect(scenario.notifications).toEqual([]);
       expect(climateCalls(scenario)).toEqual([]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
+  test(
+    "degrades when the temperature entity is missing from Home Assistant",
+    async () => {
+      const scenario = makeScenario({ indoorC: 18, outdoorC: 5 });
+      scenario.indoorState = MISSING_ENTITY;
+
+      await runWorker(
+        scenario,
+        goodMorningWakeUp,
+        `wake-temperature-missing-${crypto.randomUUID()}`,
+      );
+
+      expect(climateCalls(scenario)).toEqual([TURN_OFF_MASTER_BATHROOM]);
+      expect(scenario.notifications).toEqual(["Good Morning"]);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningWakeUp",
+          outcome: "executed",
+          reason: "wake-routine-complete-temperature-unavailable",
+        },
+      ]);
     },
     WORKFLOW_TEST_TIMEOUT_MS,
   );
