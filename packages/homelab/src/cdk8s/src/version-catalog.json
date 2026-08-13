@@ -705,7 +705,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9323@sha256:45677810ca10ad79d05189412d41217be331a74ecf1ee9eca7e6d88e144a0430",
+      "value": "2.0.0-9326@sha256:aafc7abc0f61647b06b14402e654cc36eaf0240dcefc33d7835d55f6ed3a751e",
       "notes": ["not managed by renovate"]
     },
     {
