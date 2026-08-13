@@ -50,7 +50,7 @@ import {
   completedOperationId,
   completedOperationRequestId,
   operationRevision,
-  ROOT_RELEASE_PHASE_INFO_NAME,
+  RELEASE_PHASE_INFO_NAME,
   requestedOperationId,
   requestedOperationRequestId,
   requestedOperationRevision,
@@ -59,7 +59,7 @@ import {
   SYNC_REVISION_INFO_NAME,
   type ManifestOverride,
   type ManifestOverrideBatch,
-  type RootReleasePhase,
+  type ReleasePhase,
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
 import { latestPublishedVersion } from "./helm-release-core.ts";
@@ -83,7 +83,7 @@ const CHARTMUSEUM_RETRY_BASE_DELAY_MS = 100;
 const BuildRevisionSchema = z.string().regex(/^2\.0\.0-\d+$/);
 const SyncRequestIdSchema = z.uuid();
 const SyncOperationIdSchema = z.uuid();
-const RootReleasePhaseSchema = z.enum(["stage", "batch", "prune"]);
+const ReleasePhaseSchema = z.enum(["stage", "batch", "prune", "child"]);
 const OperationStartedAtSchema = z.iso.datetime({ offset: true }).optional();
 const PollIntervalSchema = z.coerce.number().int().positive();
 
@@ -487,17 +487,17 @@ function activeOperationResourceIdentities(
   );
 }
 
-function operationRootReleasePhase(
+function operationReleasePhase(
   operation: Record<string, unknown>,
-): RootReleasePhase | undefined {
+): ReleasePhase | undefined {
   const matches = (OperationInfoEntriesSchema.parse(operation).info ?? [])
-    .filter(({ name }) => name === ROOT_RELEASE_PHASE_INFO_NAME)
+    .filter(({ name }) => name === RELEASE_PHASE_INFO_NAME)
     .map(({ value }) => value);
   if (matches.length > 1) {
     throw new Error("Argo operation has multiple root release phases");
   }
   const phase = matches[0];
-  return phase === undefined ? undefined : RootReleasePhaseSchema.parse(phase);
+  return phase === undefined ? undefined : ReleasePhaseSchema.parse(phase);
 }
 
 function activeOperationPrunes(app: Record<string, unknown>): boolean {
@@ -512,15 +512,15 @@ function activeOperationPrunes(app: Record<string, unknown>): boolean {
   return sync["prune"] === true;
 }
 
-function requestedOperationRootReleasePhase(
+function requestedOperationReleasePhase(
   application: unknown,
-): RootReleasePhase | undefined {
+): ReleasePhase | undefined {
   const parsed = z.record(z.string(), z.unknown()).parse(application);
   const operation = parsed["operation"];
   if (!isRecord(operation)) {
     throw new Error("Argo sync response is missing the requested operation");
   }
-  return operationRootReleasePhase(operation);
+  return operationReleasePhase(operation);
 }
 
 function resourceIdentitySetsEqual(
@@ -806,7 +806,7 @@ async function syncRootReleaseBatch(
     requestId,
     resources: batch.resources,
     revision,
-    rootReleasePhase: phase,
+    releasePhase: phase,
     terminateAfterApplied: true,
     ...(batch.manifests === undefined ? {} : { manifests: batch.manifests }),
   });
@@ -843,7 +843,7 @@ async function syncRootReleaseBatches(
     const activeResources = activeOperationResourceIdentities(application);
     if (
       activeResources === null ||
-      observation.liveRootReleasePhase !== phase ||
+      observation.liveReleasePhase !== phase ||
       activeOperationPrunes(application)
     ) {
       throw new Error(
@@ -946,7 +946,7 @@ async function stageRootRelease(
   const batches = splitRootSyncBatches(
     batchManifestOverrides(
       staged.map(({ override }) => override),
-      { revision: exactRevision, rootReleasePhase: "stage" },
+      { revision: exactRevision, releasePhase: "stage" },
     ),
     manifestOverrideIdentities,
   );
@@ -1008,7 +1008,7 @@ async function finalizeRootRelease(
   const batches = splitRootSyncBatches(
     batchManifestOverrides(
       preparedManifests.map(({ override }) => override),
-      { revision: exactRevision, rootReleasePhase: "batch" },
+      { revision: exactRevision, releasePhase: "batch" },
     ),
     deferredDesiredIdentities,
   );
@@ -1039,7 +1039,7 @@ async function finalizeRootRelease(
       );
     }
     if (
-      initialOperation.liveRootReleasePhase !== "prune" ||
+      initialOperation.liveReleasePhase !== "prune" ||
       !activeOperationPrunes(initialApplication)
     ) {
       throw new Error(
@@ -1051,7 +1051,7 @@ async function finalizeRootRelease(
       prune: true,
       requestId: exactRequestId,
       revision: exactRevision,
-      rootReleasePhase: "prune",
+      releasePhase: "prune",
       terminateAfterApplied: true,
       verifiedRootDesiredIdentities,
     });
@@ -1072,7 +1072,7 @@ async function finalizeRootRelease(
     prune: true,
     requestId: exactRequestId,
     revision: exactRevision,
-    rootReleasePhase: "prune",
+    releasePhase: "prune",
     terminateAfterApplied: true,
     verifiedRootDesiredIdentities,
   });
@@ -1245,7 +1245,7 @@ async function assertRootPruneSafe(
 type SyncOptions = {
   prune: boolean;
   requestId?: string;
-  rootReleasePhase?: RootReleasePhase;
+  releasePhase?: ReleasePhase;
   terminateAfterApplied?: boolean;
   verifiedRootDesiredIdentities?: ReadonlySet<string>;
   waitForCompletion?: boolean;
@@ -1272,22 +1272,40 @@ async function sync(
   const token = requireEnv("ARGOCD_TOKEN");
   const verifiedRootDesiredIdentities = options.verifiedRootDesiredIdentities;
   if (
-    options.rootReleasePhase !== undefined &&
+    options.releasePhase !== undefined &&
+    (options.requestId === undefined || options.revision === undefined)
+  ) {
+    throw new Error("Release phases require an exact request and revision");
+  }
+  if (
+    options.releasePhase !== undefined &&
+    options.releasePhase !== "child" &&
     (appName !== "apps" ||
-      options.requestId === undefined ||
-      options.revision === undefined ||
       options.terminateAfterApplied !== true ||
-      (options.rootReleasePhase === "prune") !== options.prune)
+      (options.releasePhase === "prune") !== options.prune)
   ) {
     throw new Error(
       "Root release phases require an identity-bound atomic apps batch or prune",
+    );
+  }
+  // A child reconciliation always applies the child's complete rendered source.
+  // Declaring that here is what lets adoption reject a selective operation that
+  // merely shares the release identity.
+  if (
+    options.releasePhase === "child" &&
+    (appName === "apps" ||
+      options.manifests !== undefined ||
+      options.resources !== undefined)
+  ) {
+    throw new Error(
+      "Child release phases require a full-source sync of a managed Application",
     );
   }
   if (
     verifiedRootDesiredIdentities !== undefined &&
     (appName !== "apps" ||
       !options.prune ||
-      options.rootReleasePhase !== "prune" ||
+      options.releasePhase !== "prune" ||
       options.terminateAfterApplied !== true)
   ) {
     throw new Error(
@@ -1373,7 +1391,8 @@ async function sync(
   let adopted = false;
 
   if (retryable) {
-    baseline = observeOperation(await getApplication(appName, token));
+    const baselineApplication = await getApplication(appName, token);
+    baseline = observeOperation(baselineApplication);
     assertMatchingRevision(baseline, requestId, options.revision, appName);
     assertMatchingLiveRevision(baseline, requestId, options.revision, appName);
     if (baseline.hasLiveOperation) {
@@ -1383,11 +1402,19 @@ async function sync(
           requestId,
           options.revision,
           undefined,
-          options.rootReleasePhase,
+          options.releasePhase,
         )
       ) {
         throw new Error(
           `Refusing to replace active ${appName} operation ${liveOperationDescription(baseline)}; expected request ${requestId}`,
+        );
+      }
+      if (
+        options.releasePhase === "child" &&
+        activeOperationResourceIdentities(baselineApplication) !== null
+      ) {
+        throw new Error(
+          `Refusing to adopt a selective ${appName} operation for request ${requestId}; expected the full-source child reconciliation`,
         );
       }
       operationId = requireLiveOperationId(baseline, appName);
@@ -1396,7 +1423,7 @@ async function sync(
         requestId,
         options.revision,
         operationId,
-        options.rootReleasePhase,
+        options.releasePhase,
       );
       if (completedOperationMatches && baseline.phase === "Terminating") {
         if (
@@ -1445,12 +1472,12 @@ async function sync(
           ...(options.revision === undefined
             ? []
             : [{ name: SYNC_REVISION_INFO_NAME, value: options.revision }]),
-          ...(options.rootReleasePhase === undefined
+          ...(options.releasePhase === undefined
             ? []
             : [
                 {
-                  name: ROOT_RELEASE_PHASE_INFO_NAME,
-                  value: options.rootReleasePhase,
+                  name: RELEASE_PHASE_INFO_NAME,
+                  value: options.releasePhase,
                 },
               ]),
         ],
@@ -1492,12 +1519,9 @@ async function sync(
         `Argo sync response returned a different CI revision; expected ${options.revision}`,
       );
     }
-    if (
-      requestedOperationRootReleasePhase(responseBody) !==
-      options.rootReleasePhase
-    ) {
+    if (requestedOperationReleasePhase(responseBody) !== options.releasePhase) {
       throw new Error(
-        `Argo sync response returned a different root release phase; expected ${options.rootReleasePhase ?? "none"}`,
+        `Argo sync response returned a different root release phase; expected ${options.releasePhase ?? "none"}`,
       );
     }
     console.log(`sync operation started: ${appName}`);
@@ -1510,7 +1534,7 @@ async function sync(
     token,
     requestId,
     operationId,
-    rootReleasePhase: options.rootReleasePhase,
+    releasePhase: options.releasePhase,
     expectedResourceIdentities,
     revision: options.revision,
     timeoutSeconds,
@@ -1528,12 +1552,12 @@ type OperationObservation = {
   readonly liveOperationId: string | null;
   readonly liveRequestId: string | null;
   readonly liveRevision: string | undefined;
-  readonly liveRootReleasePhase: RootReleasePhase | undefined;
+  readonly liveReleasePhase: ReleasePhase | undefined;
   readonly operationId: string | null;
   readonly phase: string;
   readonly requestId: string | null;
   readonly revision: string | undefined;
-  readonly rootReleasePhase: RootReleasePhase | undefined;
+  readonly releasePhase: ReleasePhase | undefined;
   readonly startedAt: string | undefined;
   readonly state: Record<string, unknown>;
 };
@@ -1557,10 +1581,10 @@ function observeOperation(app: Record<string, unknown>): OperationObservation {
       liveOperation === undefined
         ? undefined
         : operationRevision(liveOperation),
-    liveRootReleasePhase:
+    liveReleasePhase:
       liveOperation === undefined
         ? undefined
-        : operationRootReleasePhase(liveOperation),
+        : operationReleasePhase(liveOperation),
     phase: typeof phase === "string" ? phase : "",
     operationId: completedOperationId(app),
     requestId: completedOperationRequestId(app),
@@ -1568,10 +1592,10 @@ function observeOperation(app: Record<string, unknown>): OperationObservation {
       completedOperation === undefined
         ? undefined
         : operationRevision(completedOperation),
-    rootReleasePhase:
+    releasePhase:
       completedOperation === undefined
         ? undefined
-        : operationRootReleasePhase(completedOperation),
+        : operationReleasePhase(completedOperation),
     startedAt: OperationStartedAtSchema.parse(state["startedAt"]),
     state,
   };
@@ -1582,15 +1606,14 @@ function liveOperationMatches(
   requestId: string,
   revision: string | undefined,
   operationId?: string | null,
-  rootReleasePhase?: RootReleasePhase,
+  releasePhase?: ReleasePhase,
 ): boolean {
   return (
     operation.hasLiveOperation &&
     operation.liveRequestId === requestId &&
     (revision === undefined || operation.liveRevision === revision) &&
     (operationId === undefined || operation.liveOperationId === operationId) &&
-    (rootReleasePhase === undefined ||
-      operation.liveRootReleasePhase === rootReleasePhase)
+    (releasePhase === undefined || operation.liveReleasePhase === releasePhase)
   );
 }
 
@@ -1599,14 +1622,13 @@ function operationMatches(
   requestId: string,
   revision: string | undefined,
   operationId?: string | null,
-  rootReleasePhase?: RootReleasePhase,
+  releasePhase?: ReleasePhase,
 ): boolean {
   return (
     operation.requestId === requestId &&
     (revision === undefined || operation.revision === revision) &&
     (operationId === undefined || operation.operationId === operationId) &&
-    (rootReleasePhase === undefined ||
-      operation.rootReleasePhase === rootReleasePhase)
+    (releasePhase === undefined || operation.releasePhase === releasePhase)
   );
 }
 
@@ -1783,7 +1805,7 @@ type WaitForIdentifiedOperationOptions = {
   readonly operationId: string;
   readonly requestId: string;
   readonly revision: string | undefined;
-  readonly rootReleasePhase: RootReleasePhase | undefined;
+  readonly releasePhase: ReleasePhase | undefined;
   readonly terminateAfterApplied: boolean;
   readonly timeoutSeconds: number;
   readonly token: string;
@@ -1795,7 +1817,7 @@ async function waitForIdentifiedOperation({
   operationId,
   requestId,
   revision,
-  rootReleasePhase,
+  releasePhase,
   terminateAfterApplied,
   timeoutSeconds,
   token,
@@ -1811,14 +1833,14 @@ async function waitForIdentifiedOperation({
       requestId,
       revision,
       operationId,
-      rootReleasePhase,
+      releasePhase,
     );
     const isExpectedLiveOperation = liveOperationMatches(
       current,
       requestId,
       revision,
       operationId,
-      rootReleasePhase,
+      releasePhase,
     );
     if (current.hasLiveOperation && !isExpectedLiveOperation) {
       throw new Error(
@@ -2347,7 +2369,9 @@ async function reconcileRelease(
     await sync(wanted.name, timeoutSeconds, false, {
       prune: wanted.prune,
       revision: wanted.revision,
-      ...(exactRequestId === undefined ? {} : { requestId: exactRequestId }),
+      ...(exactRequestId === undefined
+        ? {}
+        : { requestId: exactRequestId, releasePhase: "child" }),
     });
   }
   if (waitForHealth) {

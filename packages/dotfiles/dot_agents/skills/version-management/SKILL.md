@@ -2,7 +2,7 @@
 name: version-management
 description: >-
   Use when asking about version management, Renovate annotations,
-  versions.ts patterns, or pinning image/chart versions.
+  the version catalog, or pinning image/chart versions.
 ---
 
 # Version Management
@@ -158,14 +158,15 @@ new Application(chart, "myapp", {
 
 ## SHA256 Digests
 
-Always include digests for production images:
+Always include digests for production images. The digest lives in the entry's
+`value`, appended to the tag:
 
-```typescript
+```json
 // Good: Immutable reference
-"org/image": "1.0.0@sha256:abc123...",
+{ "name": "org/image", "value": "1.0.0@sha256:abc123..." }
 
 // Avoid: Mutable tag
-"org/image": "1.0.0",
+{ "name": "org/image", "value": "1.0.0" }
 ```
 
 **Benefits:**
@@ -187,9 +188,36 @@ docker inspect ghcr.io/org/image:1.0.0 --format='{{index .RepoDigests 0}}'
 
 ## Talos / Kubernetes Pins Reflect Deployed Reality
 
-The `"kubernetes/kubernetes"` and `"siderolabs/talos"` entries in `versions.ts` must match the version **actually deployed and running on `torvalds`** — not whatever upstream Renovate would bump to. These two are not consumed by code; they exist for Renovate to track AND as a source-of-truth record of cluster state.
+The `kubernetes/kubernetes` and `siderolabs/talos` entries in
+`packages/version-catalog/src/catalog.json` must match the version **actually
+deployed and running on `torvalds`** — not whatever upstream Renovate would bump
+to. These two are not consumed by code; they exist for Renovate to track AND as
+a source-of-truth record of cluster state.
 
-After any `talosctl upgrade` or `talosctl upgrade-k8s` that lands on a version different from the existing pin (e.g. the Sidero kubelet image for the latest patch isn't published yet, so you pick the prior k8s patch), update `versions.ts` **and** the README upgrade snippet (`packages/homelab/README.md` `VERSION=` example lines) to the now-running version in the same change. If they drift from reality, future upgrade sessions can't tell a Renovate target from a record of what's deployed.
+After any `talosctl upgrade` or `talosctl upgrade-k8s` that lands on a version
+different from the existing pin (e.g. the Sidero kubelet image for the latest
+patch isn't published yet, so you pick the prior k8s patch), edit that entry's
+`value` in the catalog **and** the README upgrade snippet
+(`packages/homelab/README.md` `VERSION=` example lines) to the now-running
+version in the same change. Both entries are `artifactType: "source"` with the
+`github-releases` datasource:
+
+```json
+{
+  "name": "siderolabs/talos",
+  "category": "upstream",
+  "artifactType": "source",
+  "management": {
+    "managed": true,
+    "datasource": "github-releases",
+    "versioning": "semver"
+  },
+  "value": "1.13.8"
+}
+```
+
+If they drift from reality, future upgrade sessions can't tell a Renovate target
+from a record of what's deployed.
 
 ## First-Party Image Versions (automated by version commit-back)
 
@@ -199,26 +227,42 @@ removed): the `images` step bakes/pushes images (tags `:$GIT_SHA` + `:latest`;
 the `2.0.0-<build>` in a pin is a cosmetic label on a digest-pinned ref) and
 records **content-gated** digests, and the `version commit-back` step
 (`scripts/update-versions.ts --commit-back`) opens the auto-merge
-"chore: bump pending image versions" PR rewriting the matching pins:
+"chore: bump pending image versions" PR rewriting the matching catalog entries:
 
-```typescript
-// not managed by renovate — beta updated by version-commit-back
-"shepherdjerred/temporal-worker":
-  "2.0.0-1020@sha256:…",
+```json
+{
+  "name": "shepherdjerred/temporal-worker",
+  "category": "internal-image",
+  "artifactType": "image",
+  "management": { "managed": false },
+  "value": "2.0.0-1020@sha256:…",
+  "notes": ["not managed by renovate"]
+}
 ```
 
-Commit-back only rewrites bare keys and `/beta` stage keys — never `/prod`.
+Commit-back rewrites only the `value` of bare-name and `/beta` stage entries —
+never `/prod`. It writes through the catalog's canonical serializer, so hand
+edits to the same entries should keep the existing field order.
 
 ### `/beta` and `/prod` are deployment-stage keys, not image names
 
-App images publish to a **single** GHCR package (e.g. `ghcr.io/shepherdjerred/scout-for-lol:2.0.0-710`) — there is no `/beta` or `/prod` in the image name. But `versions.ts` has separate `…/beta` and `…/prod` entries because they are deployment stages that may pin different versions:
+App images publish to a **single** GHCR package (e.g.
+`ghcr.io/shepherdjerred/scout-for-lol:2.0.0-710`) — there is no `/beta` or
+`/prod` in the image name. The catalog carries separate `…/beta` and `…/prod`
+entries because they are deployment stages that may pin different versions:
 
-```typescript
-"shepherdjerred/scout-for-lol/beta": "2.0.0-710@sha256:…", // beta tracks latest (auto-bumped)
-"shepherdjerred/scout-for-lol/prod": "2.0.0-700@sha256:…", // prod promoted explicitly
+```json
+// beta tracks latest (auto-bumped by version commit-back)
+{ "name": "shepherdjerred/scout-for-lol/beta", "value": "2.0.0-710@sha256:…" }
+// prod promoted explicitly by merging the Renovate PR
+{ "name": "shepherdjerred/scout-for-lol/prod", "value": "2.0.0-700@sha256:…" }
 ```
 
-The catalog's `versionKey` (used in `--tags ghcr.io/{versionKey}:…`) must **not** carry a `/beta`|`/prod` suffix; only the `versions.ts` entries and the cdk8s resources that read them use the stage suffixes to deploy a different version per stage.
+A `/prod` entry keeps `management.packageName` pointed at the suffix-free image
+so Renovate resolves the real GHCR package. The build target's `versionKey`
+(used in `--tags ghcr.io/{versionKey}:…`) must **not** carry a `/beta`|`/prod`
+suffix; only the catalog entry names and the cdk8s resources that read the
+projection use the stage suffixes to deploy a different version per stage.
 
 ### First-party prod pins are Renovate promotions (minted release tags)
 

@@ -89,8 +89,10 @@ release inventory, and Buildkite request UUID. One process owns root staging,
 child preflight and reconciliation, exact-wave restoration, verified pruning,
 and scoped health. Every bounded internal operation, including root staging and
 each child reconciliation, retains that request UUID, the revision, its resource
-selection, and a `stage`, `batch`, or `prune` phase marker, so an interrupted
-release adopts only its own in-flight operation and never unrelated work. The
+selection, and a `stage`, `batch`, `prune`, or `child` phase marker, so an
+interrupted release adopts only its own in-flight operation and never unrelated
+work. A child reconciliation declares a full-source selection, and adoption
+refuses a selective operation that merely shares the release identity. The
 apply-safety preflight inspects the revision the sync will request, not the
 Application's currently configured source. Only the self-managed root
 Application remains auto-sync suspended while those operations run.

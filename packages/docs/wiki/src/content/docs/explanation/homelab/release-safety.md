@@ -270,8 +270,9 @@ Buildkite retries reuse the build UUID. The
 adopts only the same request ID and revision. It refuses any unrelated active
 operation. For the root workflow, the active resource selection must also equal
 one exact desired batch or the unselected final prune. Each owned operation
-also persists a `stage`, `batch`, or `prune` phase marker, so a staging batch
-and a restoration batch over the same resources stay distinguishable. An
+also persists a `stage`, `batch`, `prune`, or `child` phase marker, so a staging
+batch and a restoration batch over the same resources stay distinguishable, and
+a child reconciliation cannot adopt a selective operation. An
 unselected operation is
 adoptable as the final prune only when that marker says `prune` and Argo's prune
 flag is true, so an older full-source operation cannot borrow prior-batch proof.

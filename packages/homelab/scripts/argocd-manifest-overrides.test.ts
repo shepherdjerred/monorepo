@@ -94,7 +94,7 @@ describe("manifest override batching", () => {
       batchManifestOverrides(overrides, {
         maxRequestBytes: 1470,
         revision: "2.0.0-42",
-        rootReleasePhase: "batch",
+        releasePhase: "batch",
       }),
     ).toHaveLength(2);
   });

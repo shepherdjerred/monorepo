@@ -26,8 +26,8 @@ const SyncInfoEntrySchema = z.discriminatedUnion("name", [
     value: z.string(),
   }),
   z.object({
-    name: z.literal("ci.sjer.red/root-release-phase"),
-    value: z.enum(["stage", "batch", "prune"]),
+    name: z.literal("ci.sjer.red/release-phase"),
+    value: z.enum(["stage", "batch", "prune", "child"]),
   }),
 ]);
 
@@ -826,7 +826,7 @@ function expectStagedRootRequests(syncBodies: readonly unknown[]): void {
     value: RELEASE_REQUEST_ID,
   });
   expect(applicationRequest.infos).toContainEqual({
-    name: "ci.sjer.red/root-release-phase",
+    name: "ci.sjer.red/release-phase",
     value: "stage",
   });
   expect(applicationRequest.resources).toEqual([
@@ -1028,6 +1028,9 @@ describe("Argo CD root release staging", () => {
 async function runReconcileRelease(
   origin: string,
   expected: readonly Record<string, unknown>[],
+  // Only the cases asserting request-bound adoption pass one; the rest exercise
+  // the unbound path, so an always-on identity would hide that difference.
+  requestId?: string,
 ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
   const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-"));
   const expectedPath = path.join(directory, "expected.json");
@@ -1041,6 +1044,7 @@ async function runReconcileRelease(
         "reconcile-release",
         expectedPath,
         "--skip-health-wait",
+        ...(requestId === undefined ? [] : ["--request-id", requestId]),
         "--timeout",
         "1",
       ],
@@ -1070,6 +1074,7 @@ async function runReconcileRelease(
 describe("Argo CD stale release protection", () => {
   test("retries a failed operation recorded for an otherwise current app", async () => {
     let requestedOperation: Record<string, unknown> | undefined;
+    let childSyncBody: unknown;
     let syncPosts = 0;
     const server = Bun.serve({
       hostname: "127.0.0.1",
@@ -1090,9 +1095,9 @@ describe("Argo CD stale release protection", () => {
           url.pathname === "/api/v1/applications/worker/sync"
         ) {
           syncPosts += 1;
-          requestedOperation = operationForRootSyncRequest(
-            await request.json(),
-          );
+          const body: unknown = await request.json();
+          childSyncBody = body;
+          requestedOperation = operationForRootSyncRequest(body);
           return Response.json({ operation: requestedOperation });
         }
         if (
@@ -1162,6 +1167,7 @@ describe("Argo CD stale release protection", () => {
           { name: "apps", revision: "2.0.0-42" },
           { name: "worker", revision: "2.0.0-42" },
         ],
+        RELEASE_REQUEST_ID,
       );
 
       expect(exitCode).toBe(0);
@@ -1169,6 +1175,18 @@ describe("Argo CD stale release protection", () => {
       expect(stdout).toContain("sync operation started: worker");
       expect(stdout).toContain("synced: worker");
       expect(syncPosts).toBe(1);
+      const childRequest = RootSyncRequestSchema.parse(childSyncBody);
+      expect(childRequest.infos).toContainEqual({
+        name: "ci.sjer.red/request-id",
+        value: RELEASE_REQUEST_ID,
+      });
+      expect(childRequest.infos).toContainEqual({
+        name: "ci.sjer.red/release-phase",
+        value: "child",
+      });
+      expect(
+        Object.keys(z.record(z.string(), z.unknown()).parse(childSyncBody)),
+      ).not.toContain("resources");
     } finally {
       await server.stop(true);
     }

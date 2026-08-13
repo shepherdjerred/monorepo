@@ -10,9 +10,10 @@ const SYNC_WAVE_PATTERN = /^[+-]?\d+$/;
 export const SYNC_REQUEST_ID_INFO_NAME = "ci.sjer.red/request-id";
 export const SYNC_OPERATION_ID_INFO_NAME = "ci.sjer.red/operation-id";
 export const SYNC_REVISION_INFO_NAME = "ci.sjer.red/revision";
-export const ROOT_RELEASE_PHASE_INFO_NAME = "ci.sjer.red/root-release-phase";
+export const RELEASE_PHASE_INFO_NAME = "ci.sjer.red/release-phase";
 
-export type RootReleasePhase = "stage" | "batch" | "prune";
+export type ReleasePhase = "stage" | "batch" | "prune" | "child";
+export type RootReleasePhase = Exclude<ReleasePhase, "child">;
 
 const ApplicationOperationSchema = z.object({
   operation: z.record(z.string(), z.unknown()).optional(),
@@ -77,7 +78,7 @@ export type ManifestOverrideBatch = {
 function serializedRequestBytes(
   batch: ManifestOverrideBatch,
   revision: string | undefined,
-  rootReleasePhase: RootReleasePhase | undefined,
+  releasePhase: ReleasePhase | undefined,
 ): number {
   return new TextEncoder().encode(
     JSON.stringify({
@@ -94,12 +95,12 @@ function serializedRequestBytes(
         ...(revision === undefined
           ? []
           : [{ name: SYNC_REVISION_INFO_NAME, value: revision }]),
-        ...(rootReleasePhase === undefined
+        ...(releasePhase === undefined
           ? []
           : [
               {
-                name: ROOT_RELEASE_PHASE_INFO_NAME,
-                value: rootReleasePhase,
+                name: RELEASE_PHASE_INFO_NAME,
+                value: releasePhase,
               },
             ]),
       ],
@@ -142,7 +143,7 @@ function batchSingleSyncWave(
   overrides: readonly ManifestOverride[],
   maxRequestBytes: number,
   revision: string | undefined,
-  rootReleasePhase: RootReleasePhase | undefined,
+  releasePhase: ReleasePhase | undefined,
 ): ManifestOverrideBatch[] {
   const batches: ManifestOverrideBatch[] = [];
   let current: ManifestOverrideBatch = { manifests: [], resources: [] };
@@ -150,7 +151,7 @@ function batchSingleSyncWave(
   for (const override of overrides) {
     const candidate = appendOverride(current, override);
     if (
-      serializedRequestBytes(candidate, revision, rootReleasePhase) <=
+      serializedRequestBytes(candidate, revision, releasePhase) <=
       maxRequestBytes
     ) {
       current = candidate;
@@ -163,8 +164,7 @@ function batchSingleSyncWave(
       current = candidate;
     }
     if (
-      serializedRequestBytes(current, revision, rootReleasePhase) >
-      maxRequestBytes
+      serializedRequestBytes(current, revision, releasePhase) > maxRequestBytes
     ) {
       throw new Error(
         `manifest override for ${override.resource.kind}/${override.resource.name} exceeds the request budget`,
@@ -195,7 +195,7 @@ export function batchManifestOverrides(
   options: {
     readonly maxRequestBytes?: number;
     readonly revision?: string;
-    readonly rootReleasePhase?: RootReleasePhase;
+    readonly releasePhase?: ReleasePhase;
   } = {},
 ): ManifestOverrideBatch[] {
   const maxRequestBytes = options.maxRequestBytes ?? DEFAULT_MAX_REQUEST_BYTES;
@@ -217,7 +217,7 @@ export function batchManifestOverrides(
         waveOverrides,
         maxRequestBytes,
         options.revision,
-        options.rootReleasePhase,
+        options.releasePhase,
       ),
     );
 }

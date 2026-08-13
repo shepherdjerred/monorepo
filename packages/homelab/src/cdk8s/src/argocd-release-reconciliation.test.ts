@@ -342,3 +342,120 @@ describe("Argo CD release inventory validation", () => {
     }
   });
 });
+
+describe("Argo CD child reconciliation identity", () => {
+  test("refuses to adopt a selective operation that shares the release identity", async () => {
+    const requestId = "11111111-1111-4111-8111-111111111111";
+    let syncPosts = 0;
+    const activeOperation = {
+      info: [
+        { name: "ci.sjer.red/request-id", value: requestId },
+        {
+          name: "ci.sjer.red/operation-id",
+          value: "22222222-2222-4222-8222-222222222222",
+        },
+        { name: "ci.sjer.red/revision", value: "2.0.0-42" },
+        { name: "ci.sjer.red/release-phase", value: "child" },
+      ],
+      sync: {
+        revision: "2.0.0-42",
+        resources: [{ group: "apps", kind: "Deployment", name: "worker" }],
+      },
+    };
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch(request) {
+        const url = new URL(request.url);
+        if (url.pathname === "/api/charts/apps") {
+          return Response.json([
+            {
+              version: "2.0.0-42",
+              urls: ["charts/apps-2.0.0-42.tgz"],
+              digest: "a".repeat(64),
+            },
+          ]);
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps/manifests"
+        ) {
+          return Response.json({ manifests: [RepositoryApplication] });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname.endsWith("/managed-resources")
+        ) {
+          return Response.json({ items: [] });
+        }
+        if (request.method === "GET" && url.pathname.endsWith("/manifests")) {
+          return Response.json({ manifests: [] });
+        }
+        if (request.method === "POST" && url.pathname.endsWith("/sync")) {
+          syncPosts += 1;
+          return Response.json({});
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/worker"
+        ) {
+          return Response.json({
+            operation: activeOperation,
+            status: { sync: { status: "OutOfSync", revision: "2.0.0-41" } },
+          });
+        }
+        return new Response("not found", { status: 404 });
+      },
+    });
+    const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-"));
+    const expectedPath = path.join(directory, "expected.json");
+    await Bun.write(
+      expectedPath,
+      JSON.stringify([
+        { name: "apps", revision: "2.0.0-42" },
+        { name: "worker", revision: "2.0.0-42" },
+      ]),
+    );
+
+    try {
+      const process = Bun.spawn(
+        [
+          "bun",
+          "--no-install",
+          "scripts/argocd.ts",
+          "reconcile-release",
+          expectedPath,
+          "--skip-health-wait",
+          "--request-id",
+          requestId,
+          "--timeout",
+          "1",
+        ],
+        {
+          cwd: path.resolve(import.meta.dir, "../../.."),
+          env: {
+            ...Bun.env,
+            ARGOCD_SERVER_URL: server.url.origin,
+            ARGOCD_TOKEN: "test-token",
+            CHARTMUSEUM_ORIGIN: server.url.origin,
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        },
+      );
+      const [exitCode, stderr] = await Promise.all([
+        process.exited,
+        new Response(process.stderr).text(),
+      ]);
+
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain(
+        "Refusing to adopt a selective worker operation",
+      );
+      expect(syncPosts).toBe(0);
+    } finally {
+      await server.stop(true);
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+});

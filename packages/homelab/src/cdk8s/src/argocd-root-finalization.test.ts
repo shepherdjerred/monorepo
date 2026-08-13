@@ -5,11 +5,11 @@ import { z } from "zod";
 const RELEASE_REQUEST_ID = "11111111-1111-4111-8111-111111111111";
 const RELEASE_OPERATION_ID = "33333333-3333-4333-8333-333333333333";
 const BATCH_PHASE_INFO = {
-  name: "ci.sjer.red/root-release-phase",
+  name: "ci.sjer.red/release-phase",
   value: "batch",
 } as const;
 const PRUNE_PHASE_INFO = {
-  name: "ci.sjer.red/root-release-phase",
+  name: "ci.sjer.red/release-phase",
   value: "prune",
 } as const;
 
@@ -27,8 +27,8 @@ const SyncInfoEntrySchema = z.discriminatedUnion("name", [
     value: z.string(),
   }),
   z.object({
-    name: z.literal("ci.sjer.red/root-release-phase"),
-    value: z.enum(["batch", "prune"]),
+    name: z.literal("ci.sjer.red/release-phase"),
+    value: z.enum(["stage", "batch", "prune", "child"]),
   }),
 ]);
 
@@ -170,7 +170,7 @@ function releaseOperationInfo(phase: "batch" | "prune") {
     { name: "ci.sjer.red/request-id", value: RELEASE_REQUEST_ID },
     { name: "ci.sjer.red/operation-id", value: RELEASE_OPERATION_ID },
     { name: "ci.sjer.red/revision", value: "2.0.0-43" },
-    { name: "ci.sjer.red/root-release-phase", value: phase },
+    { name: "ci.sjer.red/release-phase", value: phase },
   ];
 }
 
@@ -558,7 +558,7 @@ test("root release finalization adopts the exact active prune without another PO
   });
   const unmarkedOperation = operationForRootSyncRequest({
     infos: releaseOperationInfo("prune").filter(
-      ({ name }) => name !== "ci.sjer.red/root-release-phase",
+      ({ name }) => name !== "ci.sjer.red/release-phase",
     ),
     prune: true,
     revision: "2.0.0-43",
