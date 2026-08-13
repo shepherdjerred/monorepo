@@ -91,7 +91,9 @@ and scoped health. Every bounded internal operation, including root staging and
 each child reconciliation, retains that request UUID, the revision, its resource
 selection, and a `stage`, `batch`, `prune`, or `child` phase marker, so an
 interrupted release adopts only its own in-flight operation and never unrelated
-work. Adoption compares the live operation against the complete request this
+work. A retry resumes at whichever root phase is still live rather than
+restarting at staging, which cannot adopt a `batch` or `prune` operation.
+Adoption compares the live operation against the complete request this
 process would post — prune mode, manifest override, and resource selection —
 not only its identity, so an operation that shares the UUID, revision, and
 phase marker but applies different work is refused. The

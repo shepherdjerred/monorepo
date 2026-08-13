@@ -2488,6 +2488,30 @@ async function releaseHealthWait(
   );
 }
 
+/**
+ * A Buildkite retry restarts `release-root` from the top, but the interrupted
+ * attempt may have died with a later root phase still live. Staging cannot
+ * adopt a `batch` or `prune` operation, so it would reject an operation this
+ * release legitimately owns and no retry could ever recover. Resume at the
+ * finalizer instead. Earlier phases need no routing: staging re-applies the
+ * same suspension, and child reconciliation skips children that already carry
+ * the expected release, so replaying them is idempotent.
+ */
+async function activeRootReleasePhase(
+  rootAppName: string,
+  requestId: string,
+  revision: string,
+  token: string,
+): Promise<ReleasePhase | null> {
+  const observation = observeOperation(
+    await getApplication(rootAppName, token),
+  );
+  if (!liveOperationMatches(observation, requestId, revision)) {
+    return null;
+  }
+  return observation.liveReleasePhase ?? null;
+}
+
 async function releaseRoot(
   rootAppName: string,
   expectedPath: string,
@@ -2511,29 +2535,44 @@ async function releaseRoot(
   console.log(
     `--- argocd release-root: ${rootAppName} at ${exactRevision} for request ${exactRequestId}${dryRun ? " (dry run)" : ""}`,
   );
-  if (!dryRun) {
-    await assertReleaseInventoryIsComplete(
+  const resumePhase = dryRun
+    ? null
+    : await (async (): Promise<ReleasePhase | null> => {
+        const token = requireEnv("ARGOCD_TOKEN");
+        await assertReleaseInventoryIsComplete(
+          rootAppName,
+          expected,
+          exactRevision,
+          token,
+        );
+        return activeRootReleasePhase(
+          rootAppName,
+          exactRequestId,
+          exactRevision,
+          token,
+        );
+      })();
+  if (resumePhase === "batch" || resumePhase === "prune") {
+    console.log(
+      `resuming ${rootAppName} release at the ${resumePhase} phase for request ${exactRequestId}`,
+    );
+  } else {
+    await stageRootRelease(
       rootAppName,
-      expected,
       exactRevision,
-      requireEnv("ARGOCD_TOKEN"),
+      exactRequestId,
+      timeoutSeconds,
+      dryRun,
+    );
+    await reconcileRelease(
+      expectedPath,
+      timeoutSeconds,
+      dryRun,
+      new Set(),
+      false,
+      exactRequestId,
     );
   }
-  await stageRootRelease(
-    rootAppName,
-    exactRevision,
-    exactRequestId,
-    timeoutSeconds,
-    dryRun,
-  );
-  await reconcileRelease(
-    expectedPath,
-    timeoutSeconds,
-    dryRun,
-    new Set(),
-    false,
-    exactRequestId,
-  );
   await finalizeRootRelease(
     rootAppName,
     exactRevision,
