@@ -92,6 +92,39 @@ describe("ArgoCD apply safety", () => {
     ]);
   });
 
+  test("reports immutable PersistentVolumeClaim selector changes", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          kind: "PersistentVolumeClaim",
+          namespace: "media",
+          name: "changed",
+          liveState: state({
+            spec: { selector: { matchLabels: { tier: "hot" } } },
+          }),
+          targetState: state({
+            spec: { selector: { matchLabels: { tier: "cold" } } },
+          }),
+        },
+        {
+          kind: "PersistentVolumeClaim",
+          namespace: "media",
+          name: "dropped",
+          liveState: state({
+            spec: {
+              selector: { matchLabels: { tier: "hot" } },
+              volumeMode: "Filesystem",
+            },
+          }),
+          targetState: state({ spec: { volumeMode: "Filesystem" } }),
+        },
+      ]),
+    ).toEqual([
+      "/PersistentVolumeClaim media/changed changes immutable /spec/selector",
+      "/PersistentVolumeClaim media/dropped changes immutable /spec/selector",
+    ]);
+  });
+
   test("allows mutable changes and newly created resources", () => {
     expect(
       analyzeApplySafety([

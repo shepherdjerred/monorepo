@@ -228,6 +228,9 @@ function immutableFields(kind: string): readonly ImmutableField[] {
         // fail every such claim, so under-report rather than block releases.
         { path: ["spec", "dataSource"], omission: "keeps-live-value" },
         { path: ["spec", "dataSourceRef"], omission: "keeps-live-value" },
+        // Binds the claim to a matching volume. The author owns it and nothing
+        // defaults it, so changing or dropping it is an immutable update.
+        { path: ["spec", "selector"], omission: "removes-managed-field" },
         // Defaulted from the cluster's default StorageClass at creation, so a
         // live claim carries one whether or not the chart ever declared it.
         { path: ["spec", "storageClassName"], omission: "keeps-live-value" },
