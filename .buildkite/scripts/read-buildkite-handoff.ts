@@ -85,8 +85,11 @@ async function downloadArtifact(
       "download",
       name,
       ".",
-      // `artifact download` scopes with --step, which accepts a step key or a
-      // job UUID. --job is an upload-only flag and errors out here.
+      // `artifact download --step` scopes the search and accepts "the step's
+      // key or label, or a Job ID" (buildkite-agent v3.134 flag help; the
+      // command description points explicitly at $BUILDKITE_JOB_ID). The
+      // download command has no --job flag at all — that one is upload-only —
+      // so the producing job UUID in the pointer is the correct scope here.
       "--step",
       producingJobId,
     ],
