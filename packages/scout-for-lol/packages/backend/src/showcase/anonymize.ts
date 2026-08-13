@@ -19,7 +19,8 @@ import { fnv1a } from "@scout-for-lol/report";
  * The hard requirement is determinism. The showcase regenerates weekly and
  * commits the PNGs; a pseudonym that moved between runs would produce an image
  * diff and a junk PR every Monday. Every output is therefore a pure function of
- * the caller's stable key.
+ * the caller's inputs — the stable key and the display name, in that call
+ * order. Same inputs, same handle, forever.
  */
 
 // Invented handles in the same register as the hand-authored Discord chrome in
@@ -97,8 +98,10 @@ export function createPlayerAnonymizer(): PlayerAnonymizer {
     }
 
     // Mix the real name into the hash so two players who somehow share a stable
-    // key still separate, while a rename alone (same key) cannot move the
-    // handle — the cache above already returned for that case.
+    // key still separate. The cache above is keyed on the stable key alone, so
+    // within a run a rename cannot move a handle; across runs it can, because
+    // the seed changes. That is a one-time image diff on the Monday PR, not
+    // per-run churn — a player who does not rename is stable forever.
     const seed = fnv1a(`${stableKey}|${realName}`);
     for (let probe = 0; probe < HANDLE_POOL.length; probe += 1) {
       const candidate = HANDLE_POOL[(seed + probe) % HANDLE_POOL.length];

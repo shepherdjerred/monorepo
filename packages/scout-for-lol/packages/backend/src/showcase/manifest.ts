@@ -19,10 +19,11 @@ const BaseEntrySchema = z.strictObject({
   // behind the same SeaweedFS endpoint, so this swaps the bucket name only, not
   // the client. Needed because prod's competitions are thin (the best one has 3
   // players across its whole range) while beta has competitions with 28 — and a
-  // leaderboard chart is only interesting with real players on it. Safe for
-  // leaderboards specifically: scout-image-gc only prunes .png/.svg under
-  // games/ and prematch/, so `leaderboards/**` snapshots are never collected in
-  // either bucket and need no manifest exemption to survive.
+  // leaderboard chart is only interesting with real players on it.
+  // `leaderboards/**` is outside scout-image-gc's prune prefixes entirely, and
+  // a pinned `games/`/`prematch/` source is exempted in the bucket named here
+  // (the GC groups its manifest exemptions by this field), so a pin survives
+  // retention in either bucket.
   bucket: z.string().min(1).optional(),
 });
 

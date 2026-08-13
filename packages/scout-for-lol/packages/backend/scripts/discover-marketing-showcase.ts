@@ -271,6 +271,30 @@ function s3Entry(params: {
 }
 
 /**
+ * An entry that pins its own `bucket` was curated by hand against a source this
+ * scan cannot even see — discover only ever lists the run's `--bucket`. Without
+ * treating it as untouchable, a re-curation silently reverts that choice: the
+ * fresh entry is built from scratch with no `bucket` field, so generate falls
+ * back to the run bucket and renders a different object (or fails on
+ * NoSuchKey). The `--prev` fallback below cannot save it either, because it is
+ * only reached when nothing fresh was found at all.
+ *
+ * Carrying only the `bucket` field onto a fresh candidate would be worse than
+ * useless: that candidate's key was discovered in the run bucket and generally
+ * does not exist in the pinned one.
+ */
+function pinnedEntry(
+  prevById: Map<string, ShowcaseEntry>,
+  id: string,
+): ShowcaseEntry | undefined {
+  const prev = prevById.get(id);
+  if (prev === undefined || prev.kind === "unsupported") {
+    return undefined;
+  }
+  return prev.bucket === undefined ? undefined : prev;
+}
+
+/**
  * Use a freshly-found entry if available, else fall back to the previous
  * manifest's entry (preserving an older-but-valid image so required coverage
  * never regresses), else mark unsupported.
@@ -291,6 +315,11 @@ function buildEntries(params: {
   prevById: Map<string, ShowcaseEntry>;
 }): ShowcaseEntry[] {
   return params.specs.map((spec) => {
+    const pinned = pinnedEntry(params.prevById, spec.id);
+    if (pinned !== undefined) {
+      return pinned;
+    }
+
     // These two short-circuit before the candidate lookup and before the
     // `--prev` fallback, so they are permanent rather than budget-dependent.
     // Say so: the generic miss reason below means "not found within the head
@@ -338,6 +367,11 @@ function discordEntries(
   prevById: Map<string, ShowcaseEntry>,
 ): ShowcaseEntry[] {
   return DISCORD_SHOWCASE_TEMPLATES.map((template) => {
+    const pinned = pinnedEntry(prevById, template.id);
+    if (pinned !== undefined) {
+      return pinned;
+    }
+
     const candidate = findCandidate(
       postmatchCandidates,
       template.queue,
@@ -561,18 +595,10 @@ async function competitionGraphEntry(params: {
   keys: string[];
   prevById: Map<string, ShowcaseEntry>;
 }): Promise<ShowcaseEntry> {
-  // An entry that pins its own `bucket` was curated by hand against a source
-  // this scan cannot even see — discover only ever lists the run's `--bucket`.
-  // Without this, a re-curation silently reverts that choice: the fresh entry
-  // below is built from scratch with no `bucket` field, so generate would fall
-  // back to the run bucket and render a different competition (or fail on
-  // NoSuchKey). The `--prev` fallback at the bottom cannot save it either,
-  // because it is only reached when NO competition in the run bucket qualifies.
-  const pinned = params.prevById.get("competition-graph");
-  if (pinned !== undefined && pinned.kind !== "unsupported") {
-    if (pinned.bucket !== undefined) {
-      return pinned;
-    }
+  // Checked before the snapshot scan below, which is the expensive part.
+  const pinned = pinnedEntry(params.prevById, "competition-graph");
+  if (pinned !== undefined) {
+    return pinned;
   }
 
   // Prefer the competition with the most snapshots whose *latest* snapshot is
@@ -624,6 +650,11 @@ function reportGraphEntry(
   postmatchCandidates: ImageCandidate[],
   prevById: Map<string, ShowcaseEntry>,
 ): ShowcaseEntry {
+  const pinned = pinnedEntry(prevById, "report-graph");
+  if (pinned !== undefined) {
+    return pinned;
+  }
+
   const matchKeys = postmatchCandidates
     .map((candidate) => candidate.dataKey)
     .slice(0, 12);

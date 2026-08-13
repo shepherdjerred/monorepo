@@ -633,20 +633,30 @@ real objects in the `scout-prod` bucket. Never hand-edit the outputs.
 - **GC protection**: `scout-image-gc-daily` exempts every key the manifest
   references (it fetches the manifest from `main` before pruning), so curated
   sources outlive the 30-day image window. Consequence: manifest edits on a
-  branch don't protect new keys until merged. It only prunes `.png`/`.svg`
-  under `games/` and `prematch/`, so `leaderboards/**` snapshots are never
-  collected and need no exemption.
+  branch don't protect new keys until merged. It prunes **both** `scout-prod`
+  and `scout-beta`, so the exemption list is grouped by the bucket each entry
+  actually reads (`bucket` if pinned, else `scout-prod`) — a flat list applied
+  to prod alone would leave a beta-pinned source unprotected. It only prunes
+  `.png`/`.svg` under `games/` and `prematch/`, so `leaderboards/**` snapshots
+  are never collected and need no exemption.
 - **Per-entry `bucket` override**: an entry may pin its own source bucket.
   Both buckets sit behind one SeaweedFS endpoint, so only the bucket name
   swaps, not the client. The competition graph uses it to source `scout-beta`,
   whose competitions have ~28 players against prod's richest at 3. `discover`
-  treats an entry carrying an explicit `bucket` as pinned and leaves it alone —
-  without that it would rebuild the entry from the run's `--bucket` and
-  silently revert the pin.
+  treats any entry carrying an explicit `bucket` as pinned and returns it
+  untouched, for every entry kind — without that it would rebuild the entry
+  from the run's `--bucket` and silently revert the pin. The pin has to carry
+  the whole entry, not just the `bucket` field: a freshly discovered key came
+  from the run bucket and generally does not exist in the pinned one.
 - **Player names are pseudonymous in the charts.** `showcase/anonymize.ts` maps
-  a stable non-display identity (`playerId` / `puuid`) to a curated handle,
-  deterministically — the weekly job commits these PNGs, so a pseudonym that
-  moved between runs would open a junk PR every Monday. Assign handles to the
+  a player to a curated handle by hashing `${stableKey}|${realName}`, where the
+  stable key is a non-display identity (`playerId` / `puuid`). The weekly job
+  commits these PNGs, so a pseudonym that moved between runs would open a junk
+  PR every Monday. The display name is in the seed only as a same-key
+  disambiguator, but it is still in the seed: within one run a rename cannot
+  move a handle (the per-run cache is keyed on the stable key alone), while
+  **across** runs a renamed player can draw a different pseudonym. That is a
+  one-off image diff to eyeball, not drift. Assign handles to the
   players you will actually render (slice, then anonymize): the report graph
   aggregates ~120 participants but draws ten, and anonymizing before the slice
   exhausts the pool into a numbered fallback. **Known gap:** `s3-image` and
@@ -667,9 +677,19 @@ real objects in the `scout-prod` bucket. Never hand-edit the outputs.
 --prev ../../showcase/marketing-showcase.manifest.json`, then run
   `scripts/generate-marketing-showcase.ts` with the standard flags (see the
   Temporal activity for the exact invocation) and commit manifest + outputs.
-  Let the `seaweedfs` AWS profile supply the endpoint; passing `--endpoint-url`
-  by hand overrides it. Expect roughly 30s — the post-match scan uses its full
-  head budget because ARAM Mayhem has no post-match object to find.
+  Both scripts validate their flag names against a closed `z.enum`, so there is
+  **no** endpoint flag and an unknown `--…` fails CLI parsing rather than being
+  ignored. `createS3Client()` sets no endpoint, region, or credentials, so all
+  three come from standard AWS resolution — that is what `AWS_PROFILE=seaweedfs`
+  (its `endpoint_url` in `~/.aws/config`) is doing above; point the run
+  somewhere else by selecting a different profile. Expect roughly 30s: the
+  post-match scan runs to its full head budget whenever a wanted combo is never
+  satisfied, and today `aram mayhem` post-match is that combo — the manifest has
+  carried it as unsupported since the generator landed. Unlike League Classic,
+  whose absence was verified against prod (zero `classic` reports across 1,078
+  post-match objects), ARAM Mayhem has no such survey, so it is deliberately
+  **not** declared `states: ["prematch"]` — the scan keeps looking. Run that
+  survey before narrowing the spec.
 - **Adding or renaming a variant** touches four places: the spec in
   `discover-marketing-showcase.ts`, `REQUIRED_SHOWCASE_VARIANT_IDS` in
   `src/showcase/manifest.ts`, `showcasePreviews` in the frontend's
