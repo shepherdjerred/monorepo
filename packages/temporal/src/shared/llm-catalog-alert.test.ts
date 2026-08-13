@@ -5,6 +5,7 @@ import {
 } from "#shared/llm-catalog-alert.ts";
 
 const NOW = new Date("2026-08-13T12:00:00.000Z");
+const PR_URL = "https://github.com/shepherdjerred/monorepo/pull/9999";
 
 describe("buildCatalogWithheldAlert", () => {
   test("identifies the alert without per-model labels", () => {
@@ -12,6 +13,7 @@ describe("buildCatalogWithheldAlert", () => {
       {
         applied: [],
         withheld: ["  claude-opus-5.input: 5 -> 12 is a 140% change"],
+        prUrl: undefined,
       },
       NOW,
     );
@@ -24,7 +26,11 @@ describe("buildCatalogWithheldAlert", () => {
 
   test("carries every withheld line into the description", () => {
     const alert = buildCatalogWithheldAlert(
-      { applied: [], withheld: ["  a.input: reason one", "  b.output: two"] },
+      {
+        applied: [],
+        withheld: ["  a.input: reason one", "  b.output: two"],
+        prUrl: undefined,
+      },
       NOW,
     );
     expect(alert.annotations["description"]).toContain("a.input: reason one");
@@ -34,17 +40,17 @@ describe("buildCatalogWithheldAlert", () => {
     expect(alert.annotations["summary"]).toContain("2 upstream edit(s)");
   });
 
-  test("only claims nothing changed when nothing was applied", () => {
+  test("says nothing was published when no PR was opened", () => {
     const alert = buildCatalogWithheldAlert(
-      { applied: [], withheld: ["  a.input: reason"] },
+      { applied: [], withheld: ["  a.input: reason"], prUrl: undefined },
       NOW,
     );
     expect(alert.annotations["description"]).toContain(
-      "this run changed nothing and opened no PR",
+      "opened no catalog PR, so these withheld lines are its only outcome",
     );
   });
 
-  test("a mixed run points at the PR instead of denying it exists", () => {
+  test("a mixed run links the PR that carries the applied edits", () => {
     // Applied edits are written to the catalog, which opens a refresh PR. An
     // alert that still said "no PR exists to review" would send the operator
     // away from the actual review artifact.
@@ -55,17 +61,36 @@ describe("buildCatalogWithheldAlert", () => {
           "  gpt-5.5.ctx: 4e5 -> 1e6",
         ],
         withheld: ["  claude-sonnet-5.input: 3 -> 2 is a 33% change"],
+        prUrl: PR_URL,
       },
       NOW,
     );
     const description = alert.annotations["description"] ?? "";
     expect(description).toContain("The other 2 edit(s)");
-    expect(description).toContain("catalog refresh PR");
-    expect(description).not.toContain("no PR");
-    expect(description).not.toContain("changed nothing");
+    expect(description).toContain(PR_URL);
+    expect(description).not.toContain("opened no catalog PR");
     // The withheld line is still the subject of the alert.
     expect(description).toContain("claude-sonnet-5.input");
     expect(alert.annotations["summary"]).toContain("1 upstream edit(s)");
+  });
+
+  test("applied edits alone never conjure a PR reference", () => {
+    // The alert is built at each exit with that exit's real `prUrl`. If it
+    // inferred a PR from a non-empty `applied` instead, an alert published
+    // before — or without — a successful `openSeasonRefreshPr` would spend
+    // eight days pointing at a PR that does not exist.
+    const alert = buildCatalogWithheldAlert(
+      {
+        applied: ["  gpt-5.6-terra.input: 2.5 -> 2"],
+        withheld: ["  claude-sonnet-5.input: 3 -> 2 is a 33% change"],
+        prUrl: undefined,
+      },
+      NOW,
+    );
+    const description = alert.annotations["description"] ?? "";
+    expect(description).toContain("opened no catalog PR");
+    expect(description).not.toContain("review those in");
+    expect(description).not.toContain("github.com");
   });
 
   test("bounds a pathological run and says how much it dropped", () => {
@@ -76,6 +101,7 @@ describe("buildCatalogWithheldAlert", () => {
           { length: 40 },
           (_, i) => `  model-${String(i)}.input: reason`,
         ),
+        prUrl: undefined,
       },
       NOW,
     );
@@ -86,7 +112,7 @@ describe("buildCatalogWithheldAlert", () => {
 
   test("outlives the weekly refresh cadence so it cannot self-resolve between runs", () => {
     const alert = buildCatalogWithheldAlert(
-      { applied: [], withheld: ["  a.input: reason"] },
+      { applied: [], withheld: ["  a.input: reason"], prUrl: undefined },
       NOW,
     );
     const firingMs = new Date(alert.endsAt).getTime() - NOW.getTime();
@@ -99,7 +125,11 @@ describe("buildCatalogWithheldAlert", () => {
     // Without this a remediated finding keeps reporting for the full eight-day
     // lifetime, and the next clean weekly run would not shorten it.
     const resolved = buildCatalogWithheldAlert(
-      { applied: ["  gpt-5.6-terra.input: 2.5 -> 2"], withheld: [] },
+      {
+        applied: ["  gpt-5.6-terra.input: 2.5 -> 2"],
+        withheld: [],
+        prUrl: PR_URL,
+      },
       NOW,
     );
     expect(resolved.endsAt).toBe(NOW.toISOString());
@@ -111,11 +141,14 @@ describe("buildCatalogWithheldAlert", () => {
     // Alertmanager identifies an alert by its labels alone, so a single
     // differing label would leave the firing occurrence open forever.
     const firing = buildCatalogWithheldAlert(
-      { applied: [], withheld: ["  a.input: reason"] },
+      { applied: [], withheld: ["  a.input: reason"], prUrl: undefined },
       NOW,
     );
     expect(
-      buildCatalogWithheldAlert({ applied: [], withheld: [] }, NOW).labels,
+      buildCatalogWithheldAlert(
+        { applied: [], withheld: [], prUrl: undefined },
+        NOW,
+      ).labels,
     ).toEqual(firing.labels);
   });
 });

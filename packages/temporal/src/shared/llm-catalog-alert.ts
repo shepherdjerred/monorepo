@@ -14,12 +14,17 @@ const MAX_WITHHELD_LINES = 25;
  */
 export const LLM_CATALOG_WITHHELD_ALERT_TTL_MS = 8 * 24 * 60 * 60 * 1000;
 
-/** The two report fields that decide what this alert can truthfully say. */
+/** Everything that decides what this alert can truthfully say. */
 export type CatalogSyncOutcome = {
   /** Edits the guards accepted and the script wrote to the catalog. */
   applied: string[];
   /** Edits the guards refused — each needs a human to adjudicate. */
   withheld: string[];
+  /**
+   * The refresh PR carrying `applied`, once it exists. Must be the real URL of
+   * an opened PR, never a prediction that one is about to be opened.
+   */
+  prUrl: string | undefined;
 };
 
 /**
@@ -38,11 +43,10 @@ export type CatalogSyncOutcome = {
  * leave remediated drift reported for up to eight days.
  *
  * A run can both apply and withhold edits, so the wording is conditioned on
- * `applied` rather than assuming the withheld-only shape. Only an empty
- * `applied` proves the catalog is untouched: the script writes if and only if
- * it applied something, so that is also the only case where "no PR exists" is
- * a fact rather than a guess. When edits did apply, the alert points at the
- * refresh PR instead of claiming one does not exist.
+ * `prUrl` rather than assuming the withheld-only shape. It names a PR only
+ * when handed the URL of one that already exists — an alert that predicted a
+ * PR would outlive the failure that stopped it being opened and spend eight
+ * days pointing at nothing.
  *
  * Labels carry no per-model values: one alert per run, deduped on identity.
  */
@@ -50,7 +54,7 @@ export function buildCatalogWithheldAlert(
   outcome: CatalogSyncOutcome,
   now: Date,
 ): AlertmanagerAlert {
-  const { applied, withheld } = outcome;
+  const { applied, withheld, prUrl } = outcome;
   const resolved = withheld.length === 0;
   const shown = withheld.slice(0, MAX_WITHHELD_LINES);
   const omitted = withheld.length - shown.length;
@@ -66,9 +70,9 @@ export function buildCatalogWithheldAlert(
         `sync-from-upstreams.ts refused ${String(withheld.length)} upstream edit(s) on a plausibility`,
         "guard, so those values are NOT in the catalog. Verify each line against the",
         "provider's own pricing page, then apply it by hand.",
-        applied.length > 0
-          ? `The other ${String(applied.length)} edit(s) this run passed the guards and were applied — review those in the catalog refresh PR, not here.`
-          : "No edit was applied, so this run changed nothing and opened no PR.",
+        prUrl === undefined
+          ? "This run opened no catalog PR, so these withheld lines are its only outcome."
+          : `The other ${String(applied.length)} edit(s) passed the guards and were applied — review those in ${prUrl}, not here.`,
         "",
         ...shown,
         ...(omitted > 0 ? [`…and ${String(omitted)} more`] : []),

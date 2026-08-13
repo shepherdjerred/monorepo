@@ -36,11 +36,17 @@ export type LlmCatalogRefreshResult = {
 
 /**
  * Publish this run's withheld state — firing while edits await adjudication,
- * resolving as soon as a run finds none. It is deliberately driven by the
- * report alone and not by whether a PR was opened: conditioning the resolve on
- * the catalog diff would leave an already-remediated alert firing for its full
- * eight-day lifetime. The report's `applied` set is what lets the alert
- * describe a mixed run without claiming the catalog is untouched.
+ * resolving as soon as a run finds none. Which of the two it is depends on the
+ * report alone, never on whether the catalog changed: conditioning the resolve
+ * on the diff would leave an already-remediated alert firing for its full
+ * eight-day lifetime.
+ *
+ * Every `return` publishes exactly once, and only once its own `prUrl` is
+ * settled. Publishing earlier from a single site would be more obviously
+ * unskippable, but it can only name a PR it has not yet opened, and a failure
+ * in the steps between would strand an eight-day alert pointing at nothing.
+ * A run that dies before any exit publishes nothing and fails the activity,
+ * which `temporal-failure-watch` turns into its own occurrence.
  */
 async function publishWithheldAlert(
   outcome: CatalogSyncOutcome,
@@ -110,9 +116,19 @@ export const llmCatalogRefreshActivities = {
       const summary = SyncReportSchema.parse(
         await Bun.file(reportJsonPath).json(),
       );
-      // A withheld edit never reaches the catalog, so without this a run whose
-      // every edit was refused is indistinguishable from a clean no-op.
-      await publishWithheldAlert(summary);
+      // Every exit goes through here. A withheld edit never reaches the
+      // catalog, so a run whose edits were all refused is otherwise
+      // indistinguishable from a clean no-op.
+      const finish = async (
+        result: LlmCatalogRefreshResult,
+      ): Promise<LlmCatalogRefreshResult> => {
+        await publishWithheldAlert({
+          applied: summary.applied,
+          withheld: summary.withheld,
+          prUrl: result.prUrl,
+        });
+        return result;
+      };
 
       const noDiff = (): LlmCatalogRefreshResult => ({
         changedFiles: [],
@@ -132,7 +148,7 @@ export const llmCatalogRefreshActivities = {
         }),
       );
       if (dirty.length === 0) {
-        return noDiff();
+        return await finish(noDiff());
       }
 
       // Format the rewritten JSON with the repo's pinned prettier so the PR
@@ -151,7 +167,7 @@ export const llmCatalogRefreshActivities = {
         }),
       );
       if (files.length === 0) {
-        return noDiff();
+        return await finish(noDiff());
       }
 
       const branch = `chore/llm-catalog-refresh-${id.slice(0, 8)}`;
@@ -182,14 +198,14 @@ export const llmCatalogRefreshActivities = {
         mainBranch: MAIN_BRANCH,
       });
 
-      return {
+      return await finish({
         changedFiles: files,
         branchName: branch,
         commitHash,
         prUrl,
         withheld: summary.withheld,
         outcome: "pr-created",
-      };
+      });
     } finally {
       clearInterval(heartbeat);
       try {
