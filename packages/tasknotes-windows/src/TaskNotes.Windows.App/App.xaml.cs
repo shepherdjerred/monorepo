@@ -26,6 +26,13 @@ namespace TaskNotes.Windows.App
             string localFolder = ApplicationData.Current.LocalFolder.Path;
             JsonLineLoggerProvider diagnostics = new(Path.Combine(localFolder, "Logs"));
             _host = new HostBuilder()
+                .UseDefaultServiceProvider(
+                    (_, options) =>
+                    {
+                        options.ValidateOnBuild = true;
+                        options.ValidateScopes = true;
+                    }
+                )
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
@@ -34,7 +41,7 @@ namespace TaskNotes.Windows.App
                 })
                 .ConfigureServices(services =>
                 {
-                    services.AddSingleton<AppSettingsService>();
+                    services.AddSingleton(_ => new AppSettingsService());
                     services.AddSingleton<IServerConfigurationStore>(provider =>
                         provider.GetRequiredService<AppSettingsService>()
                     );
@@ -68,7 +75,19 @@ namespace TaskNotes.Windows.App
                     services.AddSingleton<GlobalHotkeyViewModel>();
                     services.AddSingleton<PomodoroViewModel>();
                     services.AddSingleton<TimeReportViewModel>();
-                    services.AddSingleton<MainWindow>();
+                    services.AddSingleton(provider => new MainWindow(
+                        provider.GetRequiredService<TaskNotesStore>(),
+                        provider.GetRequiredService<ShellViewModel>(),
+                        provider.GetRequiredService<AppSettingsService>(),
+                        provider.GetRequiredService<ILogger<MainWindow>>(),
+                        provider.GetRequiredService<UiOperationQueue>(),
+                        provider.GetRequiredService<QuickAddViewModel>(),
+                        provider.GetRequiredService<TaskEditorViewModel>(),
+                        provider.GetRequiredService<SettingsViewModel>(),
+                        provider.GetRequiredService<GlobalHotkeyViewModel>(),
+                        provider.GetRequiredService<PomodoroViewModel>(),
+                        provider.GetRequiredService<TimeReportViewModel>()
+                    ));
                 })
                 .Build();
             _logger = _host.Services.GetRequiredService<ILogger<App>>();
