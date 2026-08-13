@@ -17,11 +17,11 @@
   "portableComponents": {
     "TaskNotes.Windows.Host": {
       "line": 90.2,
-      "branch": 85.3
+      "branch": 80.0
     },
     "TaskNotes.Windows.Presentation": {
-      "line": 96.3,
-      "branch": 76.9
+      "line": 96.4,
+      "branch": 77.0
     }
   },
   "changedLineMinimums": {

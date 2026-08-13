@@ -137,19 +137,25 @@ for (const suite of suiteComponents) {
       merged = new Map();
       componentLines.set(component, merged);
     }
+    // Cobertura reports a line's branch coverage as an aggregate count, and its
+    // <condition> children carry only a percentage — neither identifies *which*
+    // branch ran. Suites instrument overlapping assemblies, so adding their
+    // counts turns two suites that both took the same 1-of-2 branch into 2/2.
+    // Take the maximum instead: it can only under-report a branch that two
+    // suites genuinely split, which leaves the gate stricter rather than
+    // letting an uncovered branch satisfy the baseline.
     for (const [key, reading] of suiteLines) {
       const previous = merged.get(key);
-      const branchValid = Math.max(
-        previous?.branchesValid ?? 0,
-        reading.branchesValid,
-      );
       merged.set(key, {
         hits: Math.max(previous?.hits ?? 0, reading.hits),
-        branchesCovered: Math.min(
-          (previous?.branchesCovered ?? 0) + reading.branchesCovered,
-          branchValid,
+        branchesCovered: Math.max(
+          previous?.branchesCovered ?? 0,
+          reading.branchesCovered,
         ),
-        branchesValid: branchValid,
+        branchesValid: Math.max(
+          previous?.branchesValid ?? 0,
+          reading.branchesValid,
+        ),
       });
     }
   }
