@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 
 namespace TaskNotes.Windows.Tests
@@ -106,14 +105,6 @@ namespace TaskNotes.Windows.Tests
                 .Select(element => element.Attribute("Include")?.Value)
                 .OfType<string>();
 
-        private static string PackageRoot([CallerFilePath] string sourceFile = "")
-        {
-            string directory =
-                Path.GetDirectoryName(sourceFile)
-                ?? throw new InvalidOperationException(
-                    "The architecture test source path has no parent."
-                );
-            return Path.GetFullPath(Path.Combine(directory, "..", ".."));
-        }
+        private static string PackageRoot() => PackagePaths.PackageRoot();
     }
 }

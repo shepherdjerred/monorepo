@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.Json;
@@ -154,26 +153,7 @@ namespace TaskNotes.Windows.Tests
             Directory.Delete(VaultPath, true);
         }
 
-        private static string ServerPackage
-        {
-            get
-            {
-                string testsDirectory =
-                    Path.GetDirectoryName(SourceFile())
-                    ?? throw new InvalidOperationException(
-                        "The test source path has no parent directory."
-                    );
-
-                return Path.GetFullPath(
-                    Path.Combine(testsDirectory, "..", "..", "..", "tasknotes-server")
-                );
-            }
-        }
-
-        private static string SourceFile([CallerFilePath] string path = "")
-        {
-            return path;
-        }
+        private static string ServerPackage => PackagePaths.SiblingPackage("tasknotes-server");
 
         private static int ReserveEphemeralPort()
         {
