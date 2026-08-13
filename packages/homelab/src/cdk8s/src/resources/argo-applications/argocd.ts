@@ -57,9 +57,17 @@ if operationPhase == "Running" or operationPhase == "Terminating" then
   return hs
 end
 
-local currentStateIsHealthy = syncStatus == "Synced" and healthStatus == "Healthy"
 if operationPhase == "Failed" or operationPhase == "Error" then
-  if not currentStateIsHealthy then
+  -- A failure only stops mattering once it belongs to a superseded revision.
+  -- Synced and Healthy is not enough on its own: a failed hook leaves both in
+  -- place while the release did not finish, and child health is what orders the
+  -- root's waves. This matches operationIsReadyForCurrentRevision in
+  -- argocd-application-readiness.ts, which refuses the same state.
+  local failedOtherRevision =
+    operationRevision ~= nil
+    and syncRevision ~= nil
+    and operationRevision ~= syncRevision
+  if not failedOtherRevision then
     hs.status = "Degraded"
     hs.message = operationMessage or ("Application operation is " .. operationPhase)
     return hs

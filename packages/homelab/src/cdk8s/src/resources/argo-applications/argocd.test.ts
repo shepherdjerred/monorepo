@@ -175,12 +175,24 @@ describe("ArgoCD application", () => {
         },
       },
       {
-        name: "resolved same-revision failure",
-        expected: "Healthy",
+        // Synced and Healthy do not resolve a failure on the revision under
+        // release: a failed hook leaves both in place, and treating that as
+        // healthy would let the root advance to later waves.
+        name: "unresolved same-revision failure behind healthy state",
+        expected: "Degraded",
         status: {
           sync: { status: "Synced", revision: "new" },
           health: { status: "Healthy" },
           operationState: { phase: "Failed", syncResult: { revision: "new" } },
+        },
+      },
+      {
+        name: "failure without a recorded operation revision",
+        expected: "Degraded",
+        status: {
+          sync: { status: "Synced", revision: "new" },
+          health: { status: "Healthy" },
+          operationState: { phase: "Failed" },
         },
       },
       {
