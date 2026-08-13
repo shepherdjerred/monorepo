@@ -1,11 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import {
+  assertUpstreamCoverage,
   contextRejection,
   indexLiteLlm,
   indexModelsDev,
   priceDecision,
   providerKey,
   reconcile,
+  type Upstream,
 } from "#scripts/sync-from-upstreams.ts";
 import { CatalogSchema, type ModelEntry } from "#src/index.ts";
 
@@ -193,6 +195,60 @@ describe("indexLiteLlm provider scoping", () => {
     expect(
       index.get(providerKey("anthropic", "sagemaker/claude-opus-5")),
     ).toBeUndefined();
+  });
+});
+
+/** One index entry under `provider`, standing in for a healthy payload. */
+function healthy(provider: string): Map<string, Upstream> {
+  return new Map([
+    [providerKey(provider, "some-model"), { input: 1, output: 2 }],
+  ]);
+}
+
+function merge(...maps: Map<string, Upstream>[]): Map<string, Upstream> {
+  return new Map(maps.flatMap((map) => [...map.entries()]));
+}
+
+describe("assertUpstreamCoverage", () => {
+  const providers = new Set(["openai", "anthropic"]);
+
+  test("accepts indexes that cover every cross-checked provider", () => {
+    expect(() => {
+      assertUpstreamCoverage(
+        merge(healthy("openai"), healthy("anthropic")),
+        healthy("openai"),
+        providers,
+      );
+    }).not.toThrow();
+  });
+
+  test("rejects an empty index rather than reading it as no drift", () => {
+    // A 200 with `{}` or a reshaped body indexes nothing. Every model then
+    // falls through to overlay-only and the report looks byte-identical to a
+    // clean run — which would resolve a real open alert.
+    expect(() => {
+      assertUpstreamCoverage(new Map(), healthy("openai"), providers);
+    }).toThrow(/models\.dev returned no usable models/);
+    expect(() => {
+      assertUpstreamCoverage(healthy("openai"), new Map(), providers);
+    }).toThrow(/litellm returned no usable models/);
+  });
+
+  test("rejects a partial payload that covers no model for a provider", () => {
+    expect(() => {
+      assertUpstreamCoverage(healthy("openai"), healthy("openai"), providers);
+    }).toThrow(/anthropic/);
+  });
+
+  test("tolerates one source covering a provider the other misses", () => {
+    // LiteLLM is only a fallback; models.dev alone is still real evidence.
+    expect(() => {
+      assertUpstreamCoverage(
+        merge(healthy("openai"), healthy("anthropic")),
+        new Map([[providerKey("openai", "only-one"), { input: 1 }]]),
+        providers,
+      );
+    }).not.toThrow();
   });
 });
 

@@ -57,7 +57,7 @@ const EPSILON = 1e-9;
 const UnknownRecord = z.record(z.string(), z.unknown());
 
 /** Per-1M-token input/output (+ context) — the fields we cross-check. */
-type Upstream = {
+export type Upstream = {
   input?: number | undefined;
   output?: number | undefined;
   contextWindow?: number | undefined;
@@ -176,6 +176,49 @@ export function indexLiteLlm(raw: unknown): Map<string, Upstream> {
     });
   }
   return out;
+}
+
+/**
+ * Refuse to treat a failed cross-check as a clean one.
+ *
+ * `record()` turns any unexpected body into `{}`, so a 200 carrying an empty
+ * or reshaped payload builds empty indexes, every model falls through to
+ * overlay-only, and the report comes back with nothing applied and nothing
+ * withheld. That is byte-identical to a genuinely clean run — which means the
+ * unattended caller would resolve a real, still-open drift alert on the
+ * strength of a comparison that never happened. A degraded fetch must fail the
+ * run instead, so the alert simply stays as it was.
+ *
+ * Both sources publish thousands of models, so an empty index is never a real
+ * answer. Per-provider coverage is checked across the union rather than
+ * per-source, because LiteLLM is only a fallback: models.dev alone is still
+ * evidence.
+ */
+export function assertUpstreamCoverage(
+  modelsDev: Map<string, Upstream>,
+  liteLlm: Map<string, Upstream>,
+  providers: ReadonlySet<string>,
+): void {
+  for (const [source, index] of [
+    ["models.dev", modelsDev],
+    ["litellm", liteLlm],
+  ] satisfies [string, Map<string, Upstream>][]) {
+    if (index.size === 0) {
+      throw new Error(
+        `${source} returned no usable models; refusing to report an empty cross-check as clean`,
+      );
+    }
+  }
+  const covered = (provider: string): boolean =>
+    [...modelsDev.keys(), ...liteLlm.keys()].some((key) =>
+      key.startsWith(`${provider}:`),
+    );
+  const missing = [...providers].filter((provider) => !covered(provider));
+  if (missing.length > 0) {
+    throw new Error(
+      `no upstream covered any model for: ${missing.join(", ")}; refusing to report an incomplete cross-check as clean`,
+    );
+  }
 }
 
 /**
@@ -405,6 +448,15 @@ async function main(): Promise<void> {
   ]);
   const modelsDev = indexModelsDev(modelsDevRaw);
   const liteLlm = indexLiteLlm(liteLlmRaw);
+  assertUpstreamCoverage(
+    modelsDev,
+    liteLlm,
+    new Set(
+      Object.values(catalog)
+        .filter((entry) => entry.pricing.modality === "text")
+        .map((entry) => entry.provider),
+    ),
+  );
 
   const drifted: string[] = [];
   const rejected: string[] = [];
