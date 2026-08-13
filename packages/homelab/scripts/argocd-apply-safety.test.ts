@@ -65,6 +65,33 @@ describe("ArgoCD apply safety", () => {
     ]);
   });
 
+  test("reports an immutable StatefulSet pod management change", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "media",
+          name: "index",
+          liveState: state({ spec: { podManagementPolicy: "OrderedReady" } }),
+          targetState: state({ spec: { podManagementPolicy: "Parallel" } }),
+        },
+        // The API server defaults this field, so a chart that leaves it out is
+        // not declaring a change and must not be reported.
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "media",
+          name: "cache",
+          liveState: state({ spec: { podManagementPolicy: "OrderedReady" } }),
+          targetState: state({ spec: { replicas: 2 } }),
+        },
+      ]),
+    ).toEqual([
+      "apps/StatefulSet media/index changes immutable /spec/podManagementPolicy",
+    ]);
+  });
+
   test("allows mutable changes and newly created resources", () => {
     expect(
       analyzeApplySafety([

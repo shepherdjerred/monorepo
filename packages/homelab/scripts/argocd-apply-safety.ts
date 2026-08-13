@@ -155,6 +155,7 @@ function immutablePaths(kind: string): readonly (readonly string[])[] {
       return [["spec", "selector"]];
     case "StatefulSet":
       return [
+        ["spec", "podManagementPolicy"],
         ["spec", "selector"],
         ["spec", "serviceName"],
         ["spec", "volumeClaimTemplates"],
