@@ -4,37 +4,17 @@ import { escapePrometheusTemplate } from "./shared.ts";
 import { getSystemHealthRuleGroups } from "./resource-monitoring-system.ts";
 import { getLiskovResourceMonitoringRuleGroups } from "./resource-monitoring-liskov.ts";
 import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+import { getProductionResourceMonitoringRuleGroups } from "./resource-monitoring-production.ts";
+import {
+  memoryLeakExpression,
+  pvcProjectedFullExpression,
+} from "./resource-monitoring-expressions.ts";
 
-// The dedicated CI node runs at high CPU by design (that's its job), so
-// sustained-usage alerts exclude it via the `node` label added by the
-// node-exporter ServiceMonitor relabeling (prometheus.ts).
 const NOT_CI_NODE = `node!="${CI_NODE_HOSTNAME}"`;
-// ...but the CI node is not a security blind spot. Where we need to still
-// watch it (crypto-mining), we scope to it explicitly.
 const CI_NODE_ONLY = `node="${CI_NODE_HOSTNAME}"`;
-
-const memoryLeakExpression = [
-  "((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) - on(instance) ",
-  "group_left node_zfs_arc_size) - ((node_memory_MemTotal_bytes offset 24h - ",
-  "node_memory_MemAvailable_bytes offset 24h) - on(instance) group_left ",
-  "node_zfs_arc_size offset 24h) > 8589934592",
-].join("");
-
-function pvcProjectedFullExpression(days: number): string {
-  const seconds = days * 24 * 60 * 60;
-  return `(
-  kubelet_volume_stats_available_bytes
-  /
-  deriv(kubelet_volume_stats_used_bytes[7d])
-) < ${String(seconds)}
-and on (namespace, persistentvolumeclaim)
-deriv(kubelet_volume_stats_used_bytes[7d]) > 0
-and on (namespace, persistentvolumeclaim) kubelet_volume_stats_used_bytes offset 7d`;
-}
 
 export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
-    // CPU monitoring
     {
       name: "resource-cpu-monitoring",
       rules: [
@@ -69,7 +49,6 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
       ],
     },
 
-    // Memory monitoring
     {
       name: "resource-memory-monitoring",
       rules: [
@@ -119,9 +98,9 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
       ],
     },
 
+    ...getProductionResourceMonitoringRuleGroups(),
     ...getLiskovResourceMonitoringRuleGroups(),
 
-    // Network monitoring
     {
       name: "resource-network-monitoring",
       rules: [
@@ -170,7 +149,6 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
       ],
     },
 
-    // Disk monitoring
     {
       name: "resource-disk-monitoring",
       rules: [
@@ -239,7 +217,7 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             summary: "High disk write activity detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'max by (instance, device) (rate(node_disk_written_bytes_total[5m])) > 52428800 and on (instance, device) node_disk_info{rotational="0"}', // 50MB/s, SSD only
+            `max by (instance, device) (rate(node_disk_written_bytes_total{${NOT_CI_NODE}}[5m])) > 52428800 and on (instance, device) node_disk_info{rotational="0",${NOT_CI_NODE}}`, // 50MB/s, SSD only
           ),
           for: "30m",
           labels: { severity: "warning" },
@@ -254,7 +232,7 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
               "Sustained disk write activity detected - SSD wear concern",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(max by (instance, device) (node_disk_written_bytes_total)[24h:5m]) > 1024^4 and on (instance, device) node_disk_info{rotational="0"}', // > 1 TiB/day, SSD only
+            `increase(max by (instance, device) (node_disk_written_bytes_total{${NOT_CI_NODE}})[24h:5m]) > 1024^4 and on (instance, device) node_disk_info{rotational="0",${NOT_CI_NODE}}`, // > 1 TiB/day, SSD only
           ),
           for: "1h",
           labels: { severity: "warning" },
@@ -304,7 +282,6 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
       ],
     },
 
-    // Temperature monitoring
     getTemperatureRuleGroup(),
 
     // Security and anomaly detection

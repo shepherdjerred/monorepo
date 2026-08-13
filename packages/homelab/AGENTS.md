@@ -308,6 +308,37 @@ op run --env-file=.env -- tofu -chdir=cloudflare apply
 
 OpenTofu/Terraform state for the `src/tofu/*` stacks is stored in **SeaweedFS** (S3-compatible), not locally. `tofu init` therefore needs AWS credentials for the backend. To validate `.tf` without state access, use `tofu init -backend=false` (syntax) and `tofu validate` (resource schemas).
 
+## R2 orphan cleanup (destructive)
+
+`bun run r2:orphans` (in `src/cdk8s`) permanently deletes ZFS backup data from
+R2. It is a two-command, operator-driven flow — never wire it into automation.
+The canonical runbook is
+`packages/docs/guides/2026-05-05_velero-orphan-snapshot-remediation.md`.
+
+```bash
+cd src/cdk8s
+# 1. Read-only: write the candidate manifest, then review it by hand.
+op run -- bun run r2:orphans -- inspect --manifest /tmp/r2-orphans.json
+# 2. Destructive: re-observes and revalidates before every deletion.
+op run -- bun run r2:orphans -- apply --manifest /tmp/r2-orphans.json --apply
+```
+
+- `inspect` is read-only and rejects the destructive flags. `apply` requires an
+  explicit `--apply`, plus either an interactive typed confirmation phrase or
+  `--yes` (mandatory when stdin is not a TTY).
+- A prefix is a candidate only if it has no live Velero `Backup` CR, no R2
+  metadata, and no object newer than 24 hours. The manifest is revalidated
+  against freshly observed state before the run and again before each
+  individual deletion, so a backup that becomes protected mid-run aborts it.
+- The Velero metadata listing is an independent safety oracle, not a
+  convenience. It lives under `torvalds/backups/backups/<name>/` — the
+  BackupStorageLocation prefix plus Velero's own nested `backups/` directory.
+  If that listing is empty while ZFS backup objects exist, the tool refuses to
+  propose anything: an empty protection set means the oracle is unavailable,
+  not that nothing needs protecting. Investigate the prefix rather than
+  bypassing the guard.
+- `r2:inventory` is the read-only prefix report and is always safe to run.
+
 ## GitHub Repo Settings & Rulesets
 
 The `shepherdjerred/monorepo` branch rulesets and repo settings are OpenTofu-managed in `src/tofu/github/` (`rulesets.tf`, `repos.tf`). **Manual edits via `gh api`/the GitHub UI do not stick** — a `tofu apply` reconciles them away. To change required status checks, enforcement, or bypass actors, edit `rulesets.tf`.

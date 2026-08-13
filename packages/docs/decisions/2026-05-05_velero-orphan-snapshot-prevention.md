@@ -7,8 +7,8 @@ board: false
 
 # Velero Orphan-Snapshot Pathology — Prevention Options Analyzed
 
-**Date:** 2026-05-05 (reaffirmed 2026-06-06)
-**Status:** Decided — detection + manual remediation only; auto-prune and self-healing **declined**. Re-deploy guard (Option 2, `Prune=false`) implemented 2026-06-06. See [Recurrence — 2026-05-30](#recurrence--2026-05-30-ttl-finalizer-mode).
+**Date:** 2026-05-05 (reaffirmed 2026-08-11)
+**Status:** Decided — detection + operator-approved remediation only; unattended auto-prune and self-healing **declined**. The manual path now uses a reviewed manifest, live Backup CR plus backup-metadata protection, a 24-hour age fence, and apply-time revalidation. Re-deploy guard (Option 2, `Prune=false`) was implemented 2026-06-06. See [Recurrence — 2026-05-30](#recurrence--2026-05-30-ttl-finalizer-mode).
 
 ## Summary
 
@@ -46,7 +46,7 @@ Automated daily check that flags orphans; humans run a documented runbook to rem
 - Emit Prometheus metrics for orphan counts and bytes
 - Log to Bugsink when orphans found
 - Prometheus alert rules paging via existing PagerDuty pipeline
-- Remediation runbook documenting `zfs destroy` + `aws s3 rm` procedure
+- Remediation runbook documenting individual `zfs destroy` operations and the guarded two-phase R2 cleanup command
 
 **Pros:**
 

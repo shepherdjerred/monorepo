@@ -1,5 +1,34 @@
+import { Glob } from "bun";
 import { describe, expect, test } from "bun:test";
-import { getHomeAssistantRuleGroups } from "./homeassistant.ts";
+import {
+  getHomeAssistantRuleGroups,
+  TEMPORAL_AUTOMATION_ENTITY_IDS,
+} from "./homeassistant.ts";
+
+const HA_WORKFLOW_DIR = new URL(
+  "../../../../../../../../temporal/src/workflows/ha/",
+  import.meta.url,
+).pathname;
+
+// A string literal that is *entirely* `<domain>.<object_id>`. Anchoring on the
+// whole literal is what separates an entity from a module specifier
+// ("./util.ts", "#shared/x.ts"), which always carry a slash. Deliberately not a
+// fixed domain allowlist: a workflow adopting a new HA domain must still be
+// caught, and an allowlist would silently exempt exactly that case.
+const ENTITY_PATTERN = /["'`]([a-z_]+\.[a-z0-9_]+)["'`]/g;
+
+async function collectWorkflowEntityIds(): Promise<Set<string>> {
+  const entities = new Set<string>();
+  for await (const file of new Glob("*.ts").scan(HA_WORKFLOW_DIR)) {
+    if (file.endsWith(".test.ts")) continue;
+    const source = await Bun.file(`${HA_WORKFLOW_DIR}${file}`).text();
+    for (const match of source.matchAll(ENTITY_PATTERN)) {
+      const entity = match[1];
+      if (entity !== undefined) entities.add(entity);
+    }
+  }
+  return entities;
+}
 
 describe("Home Assistant rules", () => {
   test("alerts when the master bathroom temperature is unavailable or absent", () => {
@@ -31,7 +60,7 @@ describe("Home Assistant rules", () => {
     );
   });
 
-  test("renders a Prometheus-template-safe unavailable entity annotation query", () => {
+  test("records complete inventory and alerts only on explicit automation dependencies", () => {
     const availabilityGroup = getHomeAssistantRuleGroups().find(
       (group) => group.name === "homeassistant-availability",
     );
@@ -44,20 +73,53 @@ describe("Home Assistant rules", () => {
       throw new Error("Missing homeassistant-availability rules");
     }
 
-    const rule = rules.find(
-      (candidate) => candidate.alert === "HomeAssistantEntitiesUnavailable",
+    const inventory = rules.find(
+      (candidate) =>
+        candidate.record === "homeassistant:unavailable_entities_total",
     );
-    if (rule === undefined) {
-      throw new Error("Missing HomeAssistantEntitiesUnavailable rule");
+    if (inventory === undefined) {
+      throw new Error("Missing unavailable entity inventory recording rule");
     }
-
-    const description = rule.annotations?.["description"];
-    if (description === undefined) {
-      throw new Error("Missing HomeAssistantEntitiesUnavailable description");
+    expect(inventory.expr.value).toBe(
+      "count(homeassistant_entity_available == 0) or vector(0)",
+    );
+    expect(
+      rules.some(
+        (candidate) => candidate.alert === "HomeAssistantEntitiesUnavailable",
+      ),
+    ).toBe(false);
+    const dependencies = rules.filter(
+      (candidate) =>
+        candidate.alert === "HomeAssistantAutomationDependencyUnavailable",
+    );
+    expect(dependencies).toHaveLength(TEMPORAL_AUTOMATION_ENTITY_IDS.length);
+    expect(dependencies.map((rule) => rule.labels?.["entity"])).toEqual([
+      ...TEMPORAL_AUTOMATION_ENTITY_IDS,
+    ]);
+    for (const rule of dependencies) {
+      expect(rule.expr.value).toContain("or absent(");
     }
+  });
 
-    expect(description).toContain("[.].*");
-    expect(description).not.toContain(String.raw`\\..*`);
+  test("does not keep the retired self-referential availability sensor", async () => {
+    const configuration = await Bun.file(
+      new URL(
+        "../../../../../config/homeassistant/configuration.yaml",
+        import.meta.url,
+      ),
+    ).text();
+
+    expect(configuration).not.toContain("unavailable_entities_count");
+  });
+
+  test("alerts on every entity the Temporal HA workflows depend on", async () => {
+    const workflowEntities = await collectWorkflowEntityIds();
+    expect(workflowEntities.size).toBeGreaterThan(0);
+
+    const covered = new Set<string>(TEMPORAL_AUTOMATION_ENTITY_IDS);
+    expect(
+      [...workflowEntities].filter((entity) => !covered.has(entity)),
+    ).toEqual([]);
   });
 
   test("uses gauge-safe battery trend math for the Roborock alert", () => {

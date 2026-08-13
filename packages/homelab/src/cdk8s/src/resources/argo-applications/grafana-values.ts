@@ -60,7 +60,10 @@ export type PrometheusValuesWithBlackbox = Omit<
 };
 
 export const BUILDKITE_KUBE_STATE_METRICS_VALUES = {
-  metricLabelsAllowlist: ["pods=[buildkite.com/job-uuid,ci.sjer.red/step-key]"],
+  metricLabelsAllowlist: [
+    "pods=[buildkite.com/job-uuid,ci.sjer.red/step-key]",
+    "persistentvolumeclaims=[velero.io/backup]",
+  ],
   metricAnnotationsAllowList: [
     "pods=[buildkite.com/build-branch,buildkite.com/build-url,buildkite.com/job-url,buildkite.com/pipeline-slug]",
   ],

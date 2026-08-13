@@ -28,15 +28,17 @@ velero backup get        # must list current Backup CRs
 aws --version            # local CLI present
 ```
 
-R2 credentials extracted from the `cloud-credentials` secret in the `velero` namespace:
+The R2 commands use the repository's standard operator environment names. Load
+them from 1Password without writing credentials to disk:
 
 ```bash
-CREDS=$(kubectl -n velero get secret cloud-credentials -o jsonpath='{.data.cloud}' | base64 -d)
-export AWS_ACCESS_KEY_ID=$(echo "$CREDS" | grep aws_access_key_id | cut -d= -f2 | tr -d ' ')
-export AWS_SECRET_ACCESS_KEY=$(echo "$CREDS" | grep aws_secret_access_key | cut -d= -f2 | tr -d ' ')
-export AWS_REGION=auto
-ENDPOINT="https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com"
+export CLOUDFLARE_R2_ACCESS_KEY_ID="op://..."
+export CLOUDFLARE_R2_SECRET_ACCESS_KEY="op://..."
+export CLOUDFLARE_R2_ENDPOINT="op://..."
 ```
+
+Run the Bun commands below through `op run`; do not resolve these references
+into a checked-in env file.
 
 ## Step 1: Verify the orphan finding
 
@@ -100,15 +102,18 @@ Output groups orphans by dataset. Save it to a file (`/tmp/orphans-local.txt`) a
 
 ### R2 orphan prefixes
 
+Generate a reviewed manifest with the operator-only cleanup tool:
+
 ```bash
-LIVE=$(velero backup get -o json | jq -r '.items[]? | .metadata.name' | sort -u)
-aws s3 ls s3://homelab/zfspv-incr/backups/ --endpoint-url=$ENDPOINT \
-  | awk '{print $2}' | sed 's|/$||' | sort -u > /tmp/r2-prefixes.txt
-echo "$LIVE" | sort -u > /tmp/live.txt
-comm -23 /tmp/r2-prefixes.txt /tmp/live.txt > /tmp/orphans-r2.txt
-echo "Orphan R2 backup prefixes: $(wc -l < /tmp/orphans-r2.txt)"
-head /tmp/orphans-r2.txt
+cd packages/homelab/src/cdk8s
+op run -- bun run r2:orphans -- inspect --manifest /tmp/r2-orphans.json
 ```
+
+The manifest protects the union of live `Backup` CR names and backup metadata
+under `torvalds/backups/`. It only proposes per-backup prefixes under
+`zfspv-incr/backups/` whose newest object is more than 24 hours old. Review
+every candidate, byte count, object count, and newest timestamp before
+continuing.
 
 ## Step 3: Sanity-check before destroying
 
@@ -169,23 +174,20 @@ kubectl -n openebs exec -i $NODE_POD -c openebs-zfs-plugin -- sh -c '
 
 ## Step 5: Prune R2 orphans
 
-For each orphan prefix in `/tmp/orphans-r2.txt`:
+Apply exactly the reviewed manifest:
 
 ```bash
-i=0
-total=$(wc -l < /tmp/orphans-r2.txt)
-while read prefix; do
-  [ -z "$prefix" ] && continue
-  i=$((i + 1))
-  echo "[$i/$total] aws s3 rm s3://homelab/zfspv-incr/backups/$prefix/ --recursive"
-  aws s3 rm "s3://homelab/zfspv-incr/backups/$prefix/" \
-    --recursive \
-    --endpoint-url=$ENDPOINT \
-    --quiet
-done < /tmp/orphans-r2.txt
+cd packages/homelab/src/cdk8s
+op run -- bun run r2:orphans -- apply \
+  --manifest /tmp/r2-orphans.json \
+  --apply
 ```
 
-R2 charges per Class A operation (DELETE) — for tens of thousands of objects, expect a small operations bill (~$0.01–$0.10).
+The command re-lists live Backup CRs, backup metadata, and every ZFS backup
+object before deleting anything and again before each prefix. Any drift from
+the reviewed manifest aborts the operation. Non-interactive use additionally
+requires `--yes`. After deletion it verifies that no object remains under any
+approved prefix.
 
 ## Step 6: Verify post-prune state
 
@@ -204,12 +206,9 @@ kubectl -n openebs exec -i $NODE_POD -c openebs-zfs-plugin -- sh -c '
   echo "done"
 ' -- "$LIVE"
 
-# R2: orphan prefix count should be 0
-LIVE=$(velero backup get -o json | jq -r '.items[]? | .metadata.name' | sort -u)
-aws s3 ls s3://homelab/zfspv-incr/backups/ --endpoint-url=$ENDPOINT \
-  | awk '{print $2}' | sed 's|/$||' | sort -u > /tmp/r2-prefixes.txt
-echo "$LIVE" | sort -u > /tmp/live.txt
-echo "Remaining R2 orphans: $(comm -23 /tmp/r2-prefixes.txt /tmp/live.txt | wc -l)"
+# R2: a fresh inspection should contain zero candidates
+cd packages/homelab/src/cdk8s
+op run -- bun run r2:orphans -- inspect --manifest /tmp/r2-postcheck.json
 ```
 
 Both should report 0. The next workflow run will confirm:
@@ -233,7 +232,7 @@ The PagerDuty alerts auto-resolve once the metrics stay at 0 for the alert's `fo
 - **Don't run this immediately after a Velero re-deploy.** Wait at least 5 minutes for `BackupSyncController` to recreate Backup CRs from R2 metadata. Otherwise you'll see the entire backup set as "orphan" and might delete recoverable state. The workflow's 24h `for:` window naturally guards against this; if you're running manually, mind the timing.
 - **Don't strip `metadata.finalizers` from Backup CRs to "fix" stuck deletions.** That's exactly how the original orphan event happened. If a Backup CR is stuck, debug the plugin instead.
 - **Don't `zfs destroy -R`.** Recursive destroy would also delete child datasets and clones. Always destroy individual snapshots only.
-- **Don't `aws s3 rm` without `--recursive` on a prefix.** R2 returns a "directory" listing as a single empty object; you must recurse to actually free the data.
+- **Don't bypass the guarded R2 tool with an ad-hoc `aws s3 rm`.** The reviewed manifest, metadata union, age fence, and apply-time revalidation are the safety boundary.
 - **Don't bypass Step 3.** A bug in the audit workflow could mark live state as orphan. The "verify before destroy" step exists to catch that.
 
 ## Re-deploying Velero correctly

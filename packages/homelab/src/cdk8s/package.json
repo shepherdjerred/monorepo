@@ -14,6 +14,7 @@
     "build-app": "bun run src/app.ts",
     "patch": "bun run scripts/patch.ts",
     "r2:inventory": "bun run scripts/r2-prefix-inventory.ts",
+    "r2:orphans": "bun run scripts/r2-orphan-cleanup.ts",
     "pvc-backup-policy": "bun run scripts/apply-pvc-backup-policy.ts",
     "update-imports": "bun run scripts/update-imports.ts",
     "generate": "bun run generate-version-catalog-types",

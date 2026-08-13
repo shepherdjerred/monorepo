@@ -1,9 +1,17 @@
 ---
-title: About Plane
-description: A private issue tracker deployed from a vendor chart, with two separate recovery paths for two kinds of state.
-sidebar:
-  order: 6
+id: reference-2026-08-11-plane-private-issue-tracker
+type: reference
+status: complete
+board: false
 ---
+
+# Plane private issue tracker (retired)
+
+Retired — Plane was removed from the homelab along with its cdk8s chart and
+ArgoCD Application, and its ZFSVolume/PV pair is inventoried for deletion. This
+page is preserved as the deployment and recovery rationale behind that state; it
+no longer describes a running system. It was previously published in the wiki at
+`/explanation/homelab/plane/`, which now redirects to the homelab overview.
 
 Plane is the homelab's private issue tracker, reachable only through the
 Tailscale ingress at the tailnet's `plane` MagicDNS name. Funnel is not

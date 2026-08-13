@@ -14,7 +14,7 @@ export function getAlertDashboardRuleGroups(): PrometheusRuleSpecGroups[] {
               "The Alerts service has no healthy Prometheus scrape target.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            '(up{namespace="alert-dashboard",service="alert-dashboard-service"} == 0) or absent(up{namespace="alert-dashboard",service="alert-dashboard-service"})',
+            '(up{namespace="alert-dashboard",service="alert-dashboard-alert-dashboard-service"} == 0) or absent(up{namespace="alert-dashboard",service="alert-dashboard-alert-dashboard-service"})',
           ),
           for: "5m",
           labels: { severity: "critical", alert_dashboard_fallback: "true" },

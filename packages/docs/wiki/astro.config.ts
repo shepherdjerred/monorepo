@@ -84,14 +84,18 @@ export default defineConfig({
     }),
   },
   output: "static",
-  // Every route below was published before the wiki was restructured on
-  // Diátaxis. They are linked from pull requests and possibly bookmarked, so
-  // they redirect rather than 404.
+  // Routes that were published before the wiki was restructured on Diátaxis,
+  // plus canonical post-restructure routes whose page has since been retired.
+  // Both are linked from pull requests and possibly bookmarked, so they
+  // redirect rather than 404.
   redirects: {
     "/birmel": "/explanation/birmel/",
+    // Plane was retired; the page is preserved at
+    // packages/docs/archive/plane/, which the wiki does not publish.
+    "/explanation/homelab/plane": "/explanation/homelab/overview/",
     "/homelab/alerts": "/explanation/homelab/alerts/",
     "/homelab/buildkite-admission": "/explanation/homelab/buildkite-admission/",
-    "/homelab/plane": "/explanation/homelab/plane/",
+    "/homelab/plane": "/explanation/homelab/overview/",
     "/homelab/releases": "/explanation/homelab/release-safety/",
     "/homelab/scout-evals-tailnet-boundary":
       "/explanation/homelab/scout-evals-trust-boundary/",

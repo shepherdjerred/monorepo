@@ -71,7 +71,7 @@ export const AlertmanagerSnapshotAlertSchema = z.object({
   fingerprint: AlertFingerprintSchema,
   startsAt: InstantTextSchema,
   updatedAt: InstantTextSchema.optional(),
-  generatorURL: z.url().or(z.literal("")),
+  generatorURL: z.url().or(z.literal("")).optional(),
   labels: LabelMapSchema,
   status: z.object({
     inhibitedBy: z.array(z.string()),

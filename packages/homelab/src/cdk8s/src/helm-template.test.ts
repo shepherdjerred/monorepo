@@ -369,6 +369,16 @@ describe("Helm Escaping - E2E Content Verification (dist/)", () => {
         "credentials_file: /etc/alertmanager/secrets/alert-dashboard-secrets/WEBHOOK_TOKEN",
       );
       expect(result.stdout).toContain("send_resolved: true");
+      expect(result.stdout).toContain(
+        "smtp_smarthost: postal-postal-smtp-service.postal.svc.cluster.local:25",
+      );
+      expect(result.stdout).not.toContain(
+        "smtp_smarthost: postal-smtp-service.postal.svc.cluster.local:25",
+      );
+      expect(result.stdout).not.toContain("alert: KubeMemoryOvercommit");
+      expect(result.stdout).toContain(
+        "persistentvolumeclaims=[velero.io/backup]",
+      );
       expect(result.stdout).not.toContain("pagerduty_configs:");
     },
     HELM_TEMPLATE_TIMEOUT_MS,

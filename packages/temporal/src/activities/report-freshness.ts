@@ -4,7 +4,6 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { createTemporalClient } from "#client";
-import { createAlertmanagerPoster } from "#lib/alertmanager.ts";
 import { reportFreshnessState } from "#observability/metrics-report.ts";
 import {
   ReportDeliveryReceiptV1Schema,
@@ -18,6 +17,7 @@ import { isDynamicAgentTaskSchedule } from "#schedules/orphan-detection.ts";
 
 export type ReportFreshnessStatus =
   | "fresh"
+  | "pending"
   | "stale"
   | "missing"
   | "schedule-missing"
@@ -36,10 +36,21 @@ export function freshnessDeploymentState(input: {
   scheduleId: string;
   paused: boolean;
   memo: Record<string, unknown> | undefined;
-}): { paused: boolean; dynamic: boolean } {
+  recentActions?: readonly { takenAt: Date }[];
+}): {
+  paused: boolean;
+  dynamic: boolean;
+  lastActionTakenAt: string | undefined;
+} {
+  const latestAction = input.recentActions?.reduce<Date | undefined>(
+    (latest, action) =>
+      latest === undefined || action.takenAt > latest ? action.takenAt : latest,
+    undefined,
+  );
   return {
     paused: input.paused,
     dynamic: isDynamicAgentTaskSchedule(input.scheduleId, input.memo),
+    lastActionTakenAt: latestAction?.toISOString(),
   };
 }
 
@@ -77,6 +88,7 @@ export function evaluateFreshness(input: {
   registration: ReportScheduleRegistration;
   now: Date;
   acceptedAt: string | undefined;
+  lastActionTakenAt: string | undefined;
   deployed: boolean;
   paused: boolean;
 }): ReportFreshnessResult {
@@ -98,14 +110,37 @@ export function evaluateFreshness(input: {
       ageHours: undefined,
       maximumAgeHours,
     };
-  if (input.acceptedAt === undefined)
+  const receiptRequiredAfter = Date.parse(
+    input.registration.receiptRequiredAfter,
+  );
+  if (!Number.isFinite(receiptRequiredAfter))
+    throw new Error(
+      `Schedule ${input.registration.scheduleId} has an unparseable receiptRequiredAfter: ${input.registration.receiptRequiredAfter}`,
+    );
+  const lastActionTakenAt =
+    input.lastActionTakenAt === undefined
+      ? undefined
+      : Date.parse(input.lastActionTakenAt);
+  if (
+    input.acceptedAt === undefined ||
+    Date.parse(input.acceptedAt) < receiptRequiredAfter
+  ) {
+    // A schedule that never runs after activation would otherwise sit at
+    // `pending` forever, which the alert deliberately does not page on. Bound
+    // that window by one full cadence plus grace measured from activation.
+    const graceDeadline =
+      lastActionTakenAt === undefined ||
+      lastActionTakenAt < receiptRequiredAfter
+        ? receiptRequiredAfter + maximumAgeHours * 3_600_000
+        : lastActionTakenAt + input.registration.graceHours * 3_600_000;
     return {
       scheduleId: input.registration.scheduleId,
-      status: "missing",
-      acceptedAt: undefined,
+      status: input.now.getTime() <= graceDeadline ? "pending" : "missing",
+      acceptedAt: input.acceptedAt,
       ageHours: undefined,
       maximumAgeHours,
     };
+  }
   const ageHours =
     (input.now.getTime() - Date.parse(input.acceptedAt)) / 3_600_000;
   return {
@@ -129,9 +164,11 @@ export function publishReportFreshnessMetrics(
       { schedule_id: result.scheduleId },
       result.status === "fresh"
         ? 1
-        : result.status === "stale" || result.status === "missing"
-          ? 0
-          : -1,
+        : result.status === "pending"
+          ? 2
+          : result.status === "stale" || result.status === "missing"
+            ? 0
+            : -1,
     );
   }
 }
@@ -194,7 +231,14 @@ export async function inspectReportFreshness(): Promise<
   ReportFreshnessResult[]
 > {
   const client = await createTemporalClient();
-  const deployed = new Map<string, { paused: boolean; dynamic: boolean }>();
+  const deployed = new Map<
+    string,
+    {
+      paused: boolean;
+      dynamic: boolean;
+      lastActionTakenAt: string | undefined;
+    }
+  >();
   for await (const schedule of client.schedule.list()) {
     deployed.set(
       schedule.scheduleId,
@@ -202,6 +246,7 @@ export async function inspectReportFreshness(): Promise<
         scheduleId: schedule.scheduleId,
         memo: schedule.memo,
         paused: schedule.state.paused,
+        recentActions: schedule.info.recentActions,
       }),
     );
   }
@@ -214,6 +259,7 @@ export async function inspectReportFreshness(): Promise<
         registration,
         now,
         acceptedAt: await latestAcceptedAt(storage, registration),
+        lastActionTakenAt: live?.lastActionTakenAt,
         deployed: live !== undefined,
         paused: live?.paused === true,
       });
@@ -234,24 +280,6 @@ export async function inspectReportFreshness(): Promise<
     }
   }
   publishReportFreshnessMetrics(results);
-  const poster = createAlertmanagerPoster(requiredEnv("ALERTMANAGER_URL"));
-  await poster(
-    results.map((result) => ({
-      labels: {
-        alertname: "TemporalReportHeartbeatStale",
-        severity: "warning",
-        schedule_id: result.scheduleId,
-      },
-      annotations: {
-        summary: `Temporal report heartbeat ${result.status}: ${result.scheduleId}`,
-        description: `status=${result.status}; acceptedAt=${result.acceptedAt ?? "none"}; ageHours=${result.ageHours?.toFixed(2) ?? "unknown"}; maximumAgeHours=${result.maximumAgeHours?.toString() ?? "unknown"}`,
-      },
-      startsAt: now.toISOString(),
-      endsAt: new Date(
-        now.getTime() + (result.status === "fresh" ? 0 : 60 * 60 * 1000),
-      ).toISOString(),
-    })),
-  );
   return results;
 }
 

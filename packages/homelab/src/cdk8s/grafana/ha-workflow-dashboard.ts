@@ -249,6 +249,40 @@ export function createHaWorkflowDashboard() {
     ),
   );
 
+  builder.withRow(new dashboard.RowBuilder("Home Assistant Entity Inventory"));
+
+  builder.withPanel(
+    createStatPanel({
+      title: "Unavailable Entities",
+      description:
+        "Complete Home Assistant unavailable/unknown inventory count. This is diagnostic context; only explicit automation dependencies alert.",
+      query: "homeassistant:unavailable_entities_total",
+      legend: "unavailable",
+      gridPos: { x: 0, y: 33, w: 8, h: 6 },
+      unit: "short",
+      decimals: 0,
+      graphMode: common.BigValueGraphMode.None,
+    }),
+  );
+
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("Unavailable Entity Inventory")
+      .description(
+        "Every entity currently exported as unavailable; use the entity legend to identify integrations needing maintenance.",
+      )
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("homeassistant_entity_available == 0")
+          .legendFormat("{{friendly_name}} ({{entity}})"),
+      )
+      .unit("short")
+      .lineWidth(2)
+      .fillOpacity(10)
+      .gridPos({ x: 8, y: 33, w: 16, h: 6 }),
+  );
+
   return builder.build();
 }
 

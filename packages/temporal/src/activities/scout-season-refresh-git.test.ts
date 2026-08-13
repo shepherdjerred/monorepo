@@ -2,10 +2,28 @@ import { describe, expect, test } from "bun:test";
 import {
   closeSeasonRefreshPr,
   refreshSeasonRefreshPrMetadata,
+  runCommand,
   type GitCommandRunner,
 } from "./scout-season-refresh-git.ts";
 
 describe("shared proposal PR reconciliation", () => {
+  test("reports a safe operation label when command output is redacted", async () => {
+    await expect(
+      runCommand(
+        [
+          "bun",
+          "-e",
+          'console.error("credential-shaped-secret"); process.exit(7)',
+        ],
+        {
+          cwd: "/tmp",
+          redactOutput: true,
+          operation: "branch-push",
+        },
+      ),
+    ).rejects.toThrow("Command failed (branch-push): exit 7 <redacted>");
+  });
+
   test("refreshes the title and body of a reused PR", async () => {
     const calls: string[][] = [];
     const commandRunner: GitCommandRunner = (command) => {

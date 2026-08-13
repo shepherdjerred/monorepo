@@ -1,16 +1,21 @@
 import { parsePorcelainPaths } from "#shared/porcelain.ts";
 import { disarmGitHooks } from "./bot-clone.ts";
 
-export type GitRunOptions = {
+type GitRunBaseOptions = {
   cwd: string;
   env?: Record<string, string | undefined>;
-  redactOutput?: boolean;
   // Trailing-whitespace trimming is on by default because nearly every caller
   // wants a bare value (a sha, a branch name, a URL). `git status --porcelain`
   // is the exception: its first line can legitimately begin with a space, so
   // porcelain readers MUST opt out. Mirrors data-dragon-shell.ts's runCommand.
   trimStdout?: boolean;
 };
+
+export type GitRunOptions = GitRunBaseOptions &
+  (
+    | { redactOutput: true; operation: string }
+    | { redactOutput?: false; operation?: never }
+  );
 
 export async function runCommand(
   command: string[],
@@ -52,7 +57,7 @@ export async function runCommand(
         ? "<redacted>"
         : `${stdout}\n${stderr}`.trim();
     throw new Error(
-      `Command failed (${command[0] ?? "?"}): exit ${String(exitCode)} ${output}`,
+      `Command failed (${options.redactOutput === true ? options.operation : (command[0] ?? "?")}): exit ${String(exitCode)} ${output}`,
     );
   }
   return options.trimStdout === false ? stdout : stdout.trim();
@@ -148,6 +153,7 @@ export async function findOpenSeasonRefreshPr(
       cwd: input.repoDir,
       env: { GH_TOKEN: input.ghToken },
       redactOutput: true,
+      operation: "pr-list",
     },
   );
   const prUrl = output.trim();
@@ -179,6 +185,7 @@ export async function refreshSeasonRefreshPrMetadata(
       cwd: input.repoDir,
       env: { GH_TOKEN: input.ghToken },
       redactOutput: true,
+      operation: "pr-edit",
     },
   );
 }
@@ -207,6 +214,7 @@ export async function closeSeasonRefreshPr(
       cwd: input.repoDir,
       env: { GH_TOKEN: input.ghToken },
       redactOutput: true,
+      operation: "pr-close",
     },
   );
   return prUrl;
@@ -234,7 +242,12 @@ export async function openSeasonRefreshPr(
   // overwriting a concurrent update.
   const remoteBranch = await runCommand(
     ["git", "ls-remote", "--heads", "origin", input.branch],
-    { cwd: input.repoDir, env: gitEnv, redactOutput: true },
+    {
+      cwd: input.repoDir,
+      env: gitEnv,
+      redactOutput: true,
+      operation: "branch-discovery",
+    },
   );
   if (remoteBranch.length > 0) {
     await runCommand(
@@ -244,7 +257,12 @@ export async function openSeasonRefreshPr(
         "origin",
         `refs/heads/${input.branch}:refs/remotes/origin/${input.branch}`,
       ],
-      { cwd: input.repoDir, env: gitEnv, redactOutput: true },
+      {
+        cwd: input.repoDir,
+        env: gitEnv,
+        redactOutput: true,
+        operation: "branch-fetch",
+      },
     );
   }
   await runCommand(["git", "checkout", "-B", input.branch], {
@@ -269,6 +287,7 @@ export async function openSeasonRefreshPr(
       cwd: input.repoDir,
       env: gitEnv,
       redactOutput: true,
+      operation: "branch-push",
     },
   );
   // Idempotency across activity retries: if a PR for this head branch already
@@ -303,6 +322,7 @@ export async function openSeasonRefreshPr(
       cwd: input.repoDir,
       env: { GH_TOKEN: input.ghToken },
       redactOutput: true,
+      operation: "pr-create",
     },
   );
   return { commitHash, prUrl };
