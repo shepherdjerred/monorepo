@@ -648,6 +648,9 @@ real objects in the `scout-prod` bucket. Never hand-edit the outputs.
   from the run's `--bucket` and silently revert the pin. The pin has to carry
   the whole entry, not just the `bucket` field: a freshly discovered key came
   from the run bucket and generally does not exist in the pinned one.
+  Untouchable is not unconditional, though: `discover` verifies every pinned
+  entry's source keys in its own bucket up front, and a missing one is a hard
+  error rather than a silent rebuild — see the NoSuchKey recovery below.
 - **Player names are pseudonymous in the charts.** `showcase/anonymize.ts` maps
   a player to a curated handle by hashing `${stableKey}|${realName}`, where the
   stable key is a non-display identity (`playerId` / `puuid`). The weekly job
@@ -692,6 +695,17 @@ real objects in the `scout-prod` bucket. Never hand-edit the outputs.
   post-match objects), ARAM Mayhem has no such survey, so it is deliberately
   **not** declared `states: ["prematch"]` — the scan keeps looking. Run that
   survey before narrowing the spec.
+- **Recovering a dead pinned source.** `discover` verifies each pinned entry's
+  keys before scanning, so a deleted source stops the run in seconds with the
+  entry id, the bucket, and the missing key — instead of letting `generate`
+  fail on NoSuchKey again. Repointing a hand-curated source is a decision, so
+  the fix is explicit, not inferred. Either re-pin the entry by hand to a live
+  object in the same bucket, or discard the pin with
+  `--refresh-pinned <entry-id>` (comma-separate ids, or `all`) to rebuild it
+  from the run bucket. Unknown ids fail rather than silently refreshing
+  nothing. Prefer re-pinning for the competition graph: refreshing it moves the
+  chart back to prod's three-player leaderboard, which renders fine and is not
+  what anyone chose.
 - **Adding or renaming a variant** touches four places: the spec in
   `discover-marketing-showcase.ts`, `REQUIRED_SHOWCASE_VARIANT_IDS` in
   `src/showcase/manifest.ts`, `showcasePreviews` in the frontend's

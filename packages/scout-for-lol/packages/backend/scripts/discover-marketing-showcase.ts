@@ -1,8 +1,11 @@
 import {
   GetObjectCommand,
   ListObjectsV2Command,
+  NoSuchKey,
+  NotFound,
   type S3Client,
 } from "@aws-sdk/client-s3";
+import { match, P } from "ts-pattern";
 import { z } from "zod";
 import { QueueTypeSchema, type QueueType } from "@scout-for-lol/data";
 import { createS3Client } from "#src/storage/s3-client.ts";
@@ -25,6 +28,7 @@ const CliFlagNameSchema = z.enum([
   "out",
   "prev",
   "max-head",
+  "refresh-pinned",
 ]);
 
 const CliValuesSchema = z.strictObject({
@@ -35,6 +39,9 @@ const CliValuesSchema = z.strictObject({
   out: z.string().optional(),
   prev: z.string().optional(),
   "max-head": z.string().optional(),
+  // Comma-separated entry ids (or `all`) to rebuild from the run bucket,
+  // discarding their pin. See `resolvePinnedEntries`.
+  "refresh-pinned": z.string().optional(),
 });
 
 /** Safety cap on metadata reads per prefix if a wanted combo is unexpectedly scarce. */
@@ -270,28 +277,145 @@ function s3Entry(params: {
   };
 }
 
+/** Every S3 object an entry's renderer will read. */
+function entrySourceKeys(entry: ShowcaseEntry): string[] {
+  return match(entry)
+    .with({ kind: "unsupported" }, () => [])
+    .with({ kind: "competition-graph" }, (graph) => graph.snapshotKeys)
+    .with({ kind: "report-graph" }, (graph) => graph.matchKeys)
+    .with(
+      { kind: P.union("s3-image", "discord-screenshot") },
+      (image): string[] =>
+        image.dataKey === undefined
+          ? [image.imageKey]
+          : [image.imageKey, image.dataKey],
+    )
+    .exhaustive();
+}
+
+async function objectExists(params: {
+  client: S3Client;
+  bucket: string;
+  key: string;
+}): Promise<boolean> {
+  try {
+    await objectMetadata(params);
+    return true;
+  } catch (error) {
+    // Narrow: a missing object is the answer to the question being asked, but a
+    // credential, endpoint, or permission failure is not — those must surface
+    // rather than be reported as "the pin is stale".
+    if (error instanceof NoSuchKey || error instanceof NotFound) {
+      return false;
+    }
+    throw error;
+  }
+}
+
 /**
+ * Resolve which previous entries are still usable as pins.
+ *
  * An entry that pins its own `bucket` was curated by hand against a source this
  * scan cannot even see — discover only ever lists the run's `--bucket`. Without
  * treating it as untouchable, a re-curation silently reverts that choice: the
  * fresh entry is built from scratch with no `bucket` field, so generate falls
  * back to the run bucket and renders a different object (or fails on
- * NoSuchKey). The `--prev` fallback below cannot save it either, because it is
- * only reached when nothing fresh was found at all.
+ * NoSuchKey). The `--prev` fallback in `withFallback` cannot save it either,
+ * because it is only reached when nothing fresh was found at all. Carrying only
+ * the `bucket` field onto a fresh candidate would be worse than useless: that
+ * candidate's key was discovered in the run bucket and generally does not exist
+ * in the pinned one.
  *
- * Carrying only the `bucket` field onto a fresh candidate would be worse than
- * useless: that candidate's key was discovered in the run bucket and generally
- * does not exist in the pinned one.
+ * But "untouchable" cannot mean "unconditional", or the NoSuchKey runbook
+ * cannot recover: if a pinned source is deleted, re-running with `--prev`
+ * reloads the same dead entry, returns it before considering any replacement,
+ * and generate fails on the same key forever. So every pinned entry's source
+ * keys are verified in its own bucket first, and a missing one is a hard error
+ * naming the remedy. Repointing a hand-curated source is a decision, not
+ * something to infer: silently rebuilding it from the run bucket would swap the
+ * competition graph back to prod's three-player leaderboard and render a chart
+ * that looks fine and is not what anyone chose. `--refresh-pinned` is how an
+ * operator says to do it anyway.
  */
-function pinnedEntry(
-  prevById: Map<string, ShowcaseEntry>,
-  id: string,
-): ShowcaseEntry | undefined {
-  const prev = prevById.get(id);
-  if (prev === undefined || prev.kind === "unsupported") {
-    return undefined;
+async function resolvePinnedEntries(params: {
+  client: S3Client;
+  prevById: Map<string, ShowcaseEntry>;
+  refreshIds: ReadonlySet<string>;
+}): Promise<Map<string, ShowcaseEntry>> {
+  const pinned = new Map<string, ShowcaseEntry>();
+
+  for (const entry of params.prevById.values()) {
+    if (entry.kind === "unsupported" || entry.bucket === undefined) {
+      continue;
+    }
+    if (params.refreshIds.has(entry.id) || params.refreshIds.has("all")) {
+      process.stderr.write(
+        `Refreshing pinned entry ${entry.id}: rebuilding from the run bucket, dropping its ${entry.bucket} pin.\n`,
+      );
+      continue;
+    }
+
+    for (const key of entrySourceKeys(entry)) {
+      if (
+        !(await objectExists({
+          client: params.client,
+          bucket: entry.bucket,
+          key,
+        }))
+      ) {
+        throw new Error(
+          `Pinned showcase entry '${entry.id}' references ${entry.bucket}/${key}, which no longer exists. ` +
+            `Re-pin it by hand to a live object in ${entry.bucket}, or rerun with --refresh-pinned ${entry.id} ` +
+            `to discard the pin and rebuild the entry from the run bucket.`,
+        );
+      }
+    }
+    pinned.set(entry.id, entry);
   }
-  return prev.bucket === undefined ? undefined : prev;
+
+  return pinned;
+}
+
+/**
+ * Ids named by `--refresh-pinned`, validated against the entries that are
+ * actually pinned so a typo fails here rather than silently refreshing nothing.
+ */
+function parseRefreshIds(
+  raw: string | undefined,
+  prevById: Map<string, ShowcaseEntry>,
+): ReadonlySet<string> {
+  if (raw === undefined) {
+    return new Set<string>();
+  }
+
+  const ids = new Set(
+    raw
+      .split(",")
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0),
+  );
+  if (ids.size === 0) {
+    throw new Error("--refresh-pinned needs at least one entry id, or 'all'");
+  }
+  if (ids.has("all")) {
+    return ids;
+  }
+
+  const pinnedIds = new Set(
+    [...prevById.values()]
+      .filter(
+        (entry) => entry.kind !== "unsupported" && entry.bucket !== undefined,
+      )
+      .map((entry) => entry.id),
+  );
+  for (const id of ids) {
+    if (!pinnedIds.has(id)) {
+      throw new Error(
+        `--refresh-pinned '${id}' is not a pinned entry in --prev (pinned: ${[...pinnedIds].join(", ") || "none"})`,
+      );
+    }
+  }
+  return ids;
 }
 
 /**
@@ -313,9 +437,10 @@ function buildEntries(params: {
   prematchCandidates: ImageCandidate[];
   postmatchCandidates: ImageCandidate[];
   prevById: Map<string, ShowcaseEntry>;
+  pinnedById: Map<string, ShowcaseEntry>;
 }): ShowcaseEntry[] {
   return params.specs.map((spec) => {
-    const pinned = pinnedEntry(params.prevById, spec.id);
+    const pinned = params.pinnedById.get(spec.id);
     if (pinned !== undefined) {
       return pinned;
     }
@@ -365,9 +490,10 @@ function buildEntries(params: {
 function discordEntries(
   postmatchCandidates: ImageCandidate[],
   prevById: Map<string, ShowcaseEntry>,
+  pinnedById: Map<string, ShowcaseEntry>,
 ): ShowcaseEntry[] {
   return DISCORD_SHOWCASE_TEMPLATES.map((template) => {
-    const pinned = pinnedEntry(prevById, template.id);
+    const pinned = pinnedById.get(template.id);
     if (pinned !== undefined) {
       return pinned;
     }
@@ -540,10 +666,9 @@ function variantSpecs(): VariantSpec[] {
 function leaderboardSnapshotGroups(keys: string[]): Map<string, string[]> {
   const groups = new Map<string, string[]>();
   for (const key of keys) {
-    const match = /^leaderboards\/competition-\d+\/snapshots\/.+\.json$/.exec(
-      key,
-    );
-    if (match === null) {
+    const snapshotMatch =
+      /^leaderboards\/competition-\d+\/snapshots\/.+\.json$/.exec(key);
+    if (snapshotMatch === null) {
       continue;
     }
     const competitionKey = key.split("/snapshots/")[0];
@@ -594,9 +719,10 @@ async function competitionGraphEntry(params: {
   bucket: string;
   keys: string[];
   prevById: Map<string, ShowcaseEntry>;
+  pinnedById: Map<string, ShowcaseEntry>;
 }): Promise<ShowcaseEntry> {
   // Checked before the snapshot scan below, which is the expensive part.
-  const pinned = pinnedEntry(params.prevById, "competition-graph");
+  const pinned = params.pinnedById.get("competition-graph");
   if (pinned !== undefined) {
     return pinned;
   }
@@ -649,8 +775,9 @@ async function competitionGraphEntry(params: {
 function reportGraphEntry(
   postmatchCandidates: ImageCandidate[],
   prevById: Map<string, ShowcaseEntry>,
+  pinnedById: Map<string, ShowcaseEntry>,
 ): ShowcaseEntry {
-  const pinned = pinnedEntry(prevById, "report-graph");
+  const pinned = pinnedById.get("report-graph");
   if (pinned !== undefined) {
     return pinned;
   }
@@ -739,6 +866,14 @@ function wantedCombosForState(state: "prematch" | "postmatch"): Set<string> {
 
 const prevById = await loadPrevEntries(values.prev);
 
+// Resolved before the scans so a dead pin fails in seconds rather than after a
+// full head budget of metadata reads.
+const pinnedById = await resolvePinnedEntries({
+  client,
+  prevById,
+  refreshIds: parseRefreshIds(values["refresh-pinned"], prevById),
+});
+
 const [postmatch, prematch, leaderboardKeys] = await Promise.all([
   discoverImageCandidates({
     client,
@@ -768,6 +903,7 @@ const competitionEntry = await competitionGraphEntry({
   bucket,
   keys: leaderboardKeys,
   prevById,
+  pinnedById,
 });
 
 const manifest = ShowcaseManifestSchema.parse({
@@ -778,10 +914,11 @@ const manifest = ShowcaseManifestSchema.parse({
       prematchCandidates: prematch.candidates,
       postmatchCandidates: postmatch.candidates,
       prevById,
+      pinnedById,
     }),
-    ...discordEntries(postmatch.candidates, prevById),
+    ...discordEntries(postmatch.candidates, prevById, pinnedById),
     competitionEntry,
-    reportGraphEntry(postmatch.candidates, prevById),
+    reportGraphEntry(postmatch.candidates, prevById, pinnedById),
   ],
 });
 
