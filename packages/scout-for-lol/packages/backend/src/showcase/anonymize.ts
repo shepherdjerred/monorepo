@@ -114,8 +114,11 @@ export function createPlayerAnonymizer(): PlayerAnonymizer {
     // Mix the real name into the hash so two players who somehow share a stable
     // key still separate. The cache above is keyed on the stable key alone, so
     // within a run a rename cannot move a handle; across runs it can, because
-    // the seed changes. That is a one-time image diff on the Monday PR, not
-    // per-run churn — a player who does not rename is stable forever.
+    // the seed changes. A rename is not the only thing that can move a handle,
+    // though — the probe below reads `taken`, so who was assigned earlier in
+    // the run matters too. Both are one-off image diffs on the Monday PR rather
+    // than per-run churn, because an unchanged manifest replays an unchanged
+    // call sequence.
     const seed = fnv1a(`${stableKey}|${realName}`);
     for (let probe = 0; probe < HANDLE_POOL.length; probe += 1) {
       const candidate = HANDLE_POOL[(seed + probe) % HANDLE_POOL.length];

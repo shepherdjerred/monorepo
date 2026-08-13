@@ -312,6 +312,16 @@ async function objectExists(params: {
   }
 }
 
+type ResolvedPins = {
+  /** Verified pins, returned untouched by every entry generator. */
+  pinned: Map<string, ShowcaseEntry>;
+  /**
+   * Previous entries still usable as a stale-but-valid fallback when a fresh
+   * scan finds nothing. Excludes anything `--refresh-pinned` discarded.
+   */
+  fallback: Map<string, ShowcaseEntry>;
+};
+
 /**
  * Resolve which previous entries are still usable as pins.
  *
@@ -336,19 +346,29 @@ async function objectExists(params: {
  * competition graph back to prod's three-player leaderboard and render a chart
  * that looks fine and is not what anyone chose. `--refresh-pinned` is how an
  * operator says to do it anyway.
+ *
+ * Refreshing has to drop the entry from BOTH maps. Omitting it only from
+ * `pinned` still leaves it in the fallback, and the fallback is reached exactly
+ * when the run bucket produced no candidate within the head budget — so the
+ * dead entry an operator asked to discard would come straight back, and
+ * generate would fail on the same missing key. Discarded means discarded; a
+ * refreshed entry with no replacement becomes `unsupported`, which is honest
+ * about the coverage gap.
  */
 async function resolvePinnedEntries(params: {
   client: S3Client;
   prevById: Map<string, ShowcaseEntry>;
   refreshIds: ReadonlySet<string>;
-}): Promise<Map<string, ShowcaseEntry>> {
+}): Promise<ResolvedPins> {
   const pinned = new Map<string, ShowcaseEntry>();
+  const fallback = new Map(params.prevById);
 
   for (const entry of params.prevById.values()) {
     if (entry.kind === "unsupported" || entry.bucket === undefined) {
       continue;
     }
     if (params.refreshIds.has(entry.id) || params.refreshIds.has("all")) {
+      fallback.delete(entry.id);
       process.stderr.write(
         `Refreshing pinned entry ${entry.id}: rebuilding from the run bucket, dropping its ${entry.bucket} pin.\n`,
       );
@@ -373,7 +393,7 @@ async function resolvePinnedEntries(params: {
     pinned.set(entry.id, entry);
   }
 
-  return pinned;
+  return { pinned, fallback };
 }
 
 /**
@@ -426,17 +446,17 @@ function parseRefreshIds(
 function withFallback(
   id: string,
   fresh: ShowcaseEntry | undefined,
-  prevById: Map<string, ShowcaseEntry>,
+  fallbackById: Map<string, ShowcaseEntry>,
   unsupported: ShowcaseEntry,
 ): ShowcaseEntry {
-  return fresh ?? prevById.get(id) ?? unsupported;
+  return fresh ?? fallbackById.get(id) ?? unsupported;
 }
 
 function buildEntries(params: {
   specs: VariantSpec[];
   prematchCandidates: ImageCandidate[];
   postmatchCandidates: ImageCandidate[];
-  prevById: Map<string, ShowcaseEntry>;
+  fallbackById: Map<string, ShowcaseEntry>;
   pinnedById: Map<string, ShowcaseEntry>;
 }): ShowcaseEntry[] {
   return params.specs.map((spec) => {
@@ -473,7 +493,7 @@ function buildEntries(params: {
     return withFallback(
       spec.id,
       candidate === undefined ? undefined : s3Entry({ spec, candidate }),
-      params.prevById,
+      params.fallbackById,
       unsupportedEntry(
         spec,
         `No recent ${spec.queue} ${spec.state} report was found within the head budget for ${spec.playerCount.toString()} tracked player(s).`,
@@ -489,7 +509,7 @@ function buildEntries(params: {
  */
 function discordEntries(
   postmatchCandidates: ImageCandidate[],
-  prevById: Map<string, ShowcaseEntry>,
+  fallbackById: Map<string, ShowcaseEntry>,
   pinnedById: Map<string, ShowcaseEntry>,
 ): ShowcaseEntry[] {
   return DISCORD_SHOWCASE_TEMPLATES.map((template) => {
@@ -511,7 +531,7 @@ function discordEntries(
             imageKey: candidate.key,
             dataKey: candidate.dataKey,
           }),
-      prevById,
+      fallbackById,
       {
         kind: "unsupported",
         id: template.id,
@@ -718,7 +738,7 @@ async function competitionGraphEntry(params: {
   client: S3Client;
   bucket: string;
   keys: string[];
-  prevById: Map<string, ShowcaseEntry>;
+  fallbackById: Map<string, ShowcaseEntry>;
   pinnedById: Map<string, ShowcaseEntry>;
 }): Promise<ShowcaseEntry> {
   // Checked before the snapshot scan below, which is the expensive part.
@@ -762,7 +782,7 @@ async function competitionGraphEntry(params: {
   }
 
   return (
-    params.prevById.get("competition-graph") ?? {
+    params.fallbackById.get("competition-graph") ?? {
       kind: "unsupported",
       id: "competition-graph",
       title: "Competition Graph",
@@ -774,7 +794,7 @@ async function competitionGraphEntry(params: {
 
 function reportGraphEntry(
   postmatchCandidates: ImageCandidate[],
-  prevById: Map<string, ShowcaseEntry>,
+  fallbackById: Map<string, ShowcaseEntry>,
   pinnedById: Map<string, ShowcaseEntry>,
 ): ShowcaseEntry {
   const pinned = pinnedById.get("report-graph");
@@ -788,7 +808,7 @@ function reportGraphEntry(
 
   if (matchKeys.length === 0) {
     return (
-      prevById.get("report-graph") ?? {
+      fallbackById.get("report-graph") ?? {
         kind: "unsupported",
         id: "report-graph",
         title: "Report Graph",
@@ -868,11 +888,12 @@ const prevById = await loadPrevEntries(values.prev);
 
 // Resolved before the scans so a dead pin fails in seconds rather than after a
 // full head budget of metadata reads.
-const pinnedById = await resolvePinnedEntries({
-  client,
-  prevById,
-  refreshIds: parseRefreshIds(values["refresh-pinned"], prevById),
-});
+const { pinned: pinnedById, fallback: fallbackById } =
+  await resolvePinnedEntries({
+    client,
+    prevById,
+    refreshIds: parseRefreshIds(values["refresh-pinned"], prevById),
+  });
 
 const [postmatch, prematch, leaderboardKeys] = await Promise.all([
   discoverImageCandidates({
@@ -902,7 +923,7 @@ const competitionEntry = await competitionGraphEntry({
   client,
   bucket,
   keys: leaderboardKeys,
-  prevById,
+  fallbackById,
   pinnedById,
 });
 
@@ -913,12 +934,12 @@ const manifest = ShowcaseManifestSchema.parse({
       specs: variantSpecs(),
       prematchCandidates: prematch.candidates,
       postmatchCandidates: postmatch.candidates,
-      prevById,
+      fallbackById,
       pinnedById,
     }),
-    ...discordEntries(postmatch.candidates, prevById, pinnedById),
+    ...discordEntries(postmatch.candidates, fallbackById, pinnedById),
     competitionEntry,
-    reportGraphEntry(postmatch.candidates, prevById, pinnedById),
+    reportGraphEntry(postmatch.candidates, fallbackById, pinnedById),
   ],
 });
 
