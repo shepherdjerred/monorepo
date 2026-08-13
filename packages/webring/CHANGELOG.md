@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.1](https://github.com/shepherdjerred/monorepo/compare/webring-v1.10.0...webring-v1.10.1) (2026-08-13)
+
+No library behavior changes. `src/`, the runtime dependencies, and the published `package.json` metadata are identical to `1.10.0`. The shipped `README.md` — the page you see on npm — did get a substantive documentation pass.
+
+- `README.md` now documents every `Configuration` key in a table, and clarifies which fields are genuinely required: because the exported `Configuration` type is the Zod _output_ type, the schema's defaults for `number` and `truncate` are already applied in the type, so both must be passed explicitly alongside `sources`. Only `cache` and `shuffle` may be omitted. The Quick Start snippet was corrected to match ([9a546a4](https://github.com/shepherdjerred/monorepo/commit/9a546a4b05cccbc469ab8ce5ef5104ef7f40a34f))
+- `README.md` logo images render again. They pointed at `cdn.rawgit.com` under the retired standalone `shepherdjerred/webring` repo, which now 404s, and are served from the monorepo instead. The generated API docs link moved from `shepherdjerred.github.io/webring` to [webring.sjer.red](https://webring.sjer.red) ([9a546a4](https://github.com/shepherdjerred/monorepo/commit/9a546a4b05cccbc469ab8ce5ef5104ef7f40a34f))
+- The analytics snippet injected into the generated TypeDoc site was retuned — history-change pageviews, heatmaps, dead clicks, and web-vitals/network timing on; session recording re-enabled with all inputs masked; person profiles now persisted; DNT still respected ([f56bf21](https://github.com/shepherdjerred/monorepo/commit/f56bf21a9e4dbf0855fb1f95b7c41015069f299c)). Only `posthog.js` changed, and it is not part of the published npm tarball.
+
 ## [1.10.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.9.0...webring-v1.10.0) (2026-08-10)
 
 No library behavior changes. The shipped code is identical to `1.9.0`; this release exists only because of repo-level housekeeping that release-please picked up.
