@@ -20,6 +20,16 @@ In PostHog project privacy settings, IP collection must stay **enabled** — it 
 what produces the country and city breakdowns — and session-recording masking
 stays at the standard setting. Leave _Cookieless server hash mode_ **disabled**.
 
+Administrative MCP access is a separate credential boundary from ingestion.
+The tailnet-only MCP gateway connects to PostHog's official remote server with
+a project-scoped `phx_` personal API key created from the **MCP Server** preset.
+The key lives in 1Password and is rendered into the gateway pod at startup; it
+is never committed, placed in the source ConfigMap, or copied into each AI
+client. Clients receive only the gateway's own shared authentication token.
+The gateway requests PostHog's CLI-oriented tool surface, so this access can
+inspect and mutate project configuration even though the browser-facing `phc_`
+token remains intentionally public.
+
 All eight sites use PostHog's default persistence (a first-party cookie plus
 `localStorage`), create person profiles, and capture autocapture, heatmaps, dead
 clicks, web vitals, and session replay with inputs masked. Every site respects

@@ -32,15 +32,18 @@ const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 // as hex, `openssl rand -hex 32`); FASTMAIL_TOKEN is the Bearer token for the
 // official Fastmail MCP server (https://api.fastmail.com/mcp, an `fmu1-…` API
 // token); HOMEASSISTANT_TOKEN is a Home Assistant long-lived access token used
-// as the Bearer for HA's /api/mcp endpoint. None contain sed metacharacters, so
-// the `#`-delimited seds are safe.
+// as the Bearer for HA's /api/mcp endpoint; LINEAR_API_KEY is a Linear API key;
+// and POSTHOG_API_KEY is a project-scoped PostHog personal API key. These token
+// formats contain no sed metacharacters, so the `#`-delimited seds are safe.
 const RENDER_CONFIG_SCRIPT = [
   "set -eu",
   'if [ -z "${MCP_PROXY_AUTH_TOKEN:-}" ]; then echo "MCP_PROXY_AUTH_TOKEN is required for the mcp-gateway client auth token" >&2; exit 1; fi',
   'if [ -z "${FASTMAIL_TOKEN:-}" ]; then echo "FASTMAIL_TOKEN is required for the Fastmail MCP bearer token" >&2; exit 1; fi',
   'if [ -z "${HOMEASSISTANT_TOKEN:-}" ]; then echo "HOMEASSISTANT_TOKEN is required for the Home Assistant MCP bearer token" >&2; exit 1; fi',
-  'sed -e "s#MCP_PROXY_AUTH_TOKEN_PLACEHOLDER#${MCP_PROXY_AUTH_TOKEN}#g" -e "s#FASTMAIL_TOKEN_PLACEHOLDER#${FASTMAIL_TOKEN}#g" -e "s#HOMEASSISTANT_TOKEN_PLACEHOLDER#${HOMEASSISTANT_TOKEN}#g" /config/config.json > /rendered/config.json',
-  'echo "rendered mcp-proxy config with client auth + fastmail + home-assistant tokens"',
+  'if [ -z "${LINEAR_API_KEY:-}" ]; then echo "LINEAR_API_KEY is required for the Linear MCP bearer token" >&2; exit 1; fi',
+  'if [ -z "${POSTHOG_API_KEY:-}" ]; then echo "POSTHOG_API_KEY is required for the PostHog MCP bearer token" >&2; exit 1; fi',
+  'sed -e "s#MCP_PROXY_AUTH_TOKEN_PLACEHOLDER#${MCP_PROXY_AUTH_TOKEN}#g" -e "s#FASTMAIL_TOKEN_PLACEHOLDER#${FASTMAIL_TOKEN}#g" -e "s#HOMEASSISTANT_TOKEN_PLACEHOLDER#${HOMEASSISTANT_TOKEN}#g" -e "s#LINEAR_API_KEY_PLACEHOLDER#${LINEAR_API_KEY}#g" -e "s#POSTHOG_API_KEY_PLACEHOLDER#${POSTHOG_API_KEY}#g" /config/config.json > /rendered/config.json',
+  'echo "rendered mcp-proxy config with client and downstream bearer tokens"',
 ].join("\n");
 
 export async function createMcpGatewayDeployment(chart: Chart) {
@@ -171,6 +174,26 @@ export async function createMcpGatewayDeployment(chart: Chart) {
             mcpGatewayCredentials.name,
           ),
           key: "HOMEASSISTANT_TOKEN",
+        }),
+        // Linear API key for the official remote MCP server. Rendering it in
+        // the init container keeps the credential out of the ConfigMap.
+        LINEAR_API_KEY: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "linear-api-key-init-secret",
+            mcpGatewayCredentials.name,
+          ),
+          key: "LINEAR_API_KEY",
+        }),
+        // Project-scoped PostHog personal API key created from the MCP Server
+        // preset and rendered into the remote MCP Authorization header.
+        POSTHOG_API_KEY: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "posthog-api-key-init-secret",
+            mcpGatewayCredentials.name,
+          ),
+          key: "POSTHOG_API_KEY",
         }),
       },
       volumeMounts: [

@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "mcp-gateway-linear": {
+      "url": "https://mcp-gateway.tailnet-1a49.ts.net/linear/sse",
+      "headers": {
+        "Authorization": "Bearer {{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/MCP_PROXY_AUTH_TOKEN" }}"
+      }
+    },
+    "mcp-gateway-posthog": {
+      "url": "https://mcp-gateway.tailnet-1a49.ts.net/posthog/sse",
+      "headers": {
+        "Authorization": "Bearer {{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/MCP_PROXY_AUTH_TOKEN" }}"
+      }
+    }
+  }
+}

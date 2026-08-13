@@ -31,6 +31,21 @@
         "Authorization": "Bearer FASTMAIL_TOKEN_PLACEHOLDER"
       }
     },
+    "linear": {
+      "transportType": "streamable-http",
+      "url": "https://mcp.linear.app/mcp",
+      "headers": {
+        "Authorization": "Bearer LINEAR_API_KEY_PLACEHOLDER"
+      }
+    },
+    "posthog": {
+      "transportType": "streamable-http",
+      "url": "https://mcp.posthog.com/mcp",
+      "headers": {
+        "Authorization": "Bearer POSTHOG_API_KEY_PLACEHOLDER",
+        "x-posthog-mcp-mode": "cli"
+      }
+    },
     "gmail": {
       "command": "npx",
       "args": ["-y", "@automatearmy/email-reader-mcp@GMAIL_MCP_VERSION"],

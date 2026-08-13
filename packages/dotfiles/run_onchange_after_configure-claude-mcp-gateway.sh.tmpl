@@ -1,0 +1,32 @@
+#!/bin/sh
+
+set -eu
+
+# Re-run when the gateway credential rotates without storing the credential in
+# the Chezmoi source.
+# gateway-token-sha256: {{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/MCP_PROXY_AUTH_TOKEN" | sha256sum }}
+
+gateway_token="$(op read "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/MCP_PROXY_AUTH_TOKEN")"
+
+configure_gateway_server() {
+  server_name="$1"
+  server_url="$2"
+
+  if claude mcp get "$server_name"; then
+    claude mcp remove --scope user "$server_name"
+  fi
+
+  claude mcp add \
+    --scope user \
+    --transport sse \
+    "$server_name" \
+    "$server_url" \
+    --header "Authorization: Bearer ${gateway_token}"
+}
+
+configure_gateway_server \
+  "mcp-gateway-linear" \
+  "https://mcp-gateway.tailnet-1a49.ts.net/linear/sse"
+configure_gateway_server \
+  "mcp-gateway-posthog" \
+  "https://mcp-gateway.tailnet-1a49.ts.net/posthog/sse"

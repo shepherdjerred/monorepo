@@ -78,6 +78,26 @@
       "kubectl delete * --all-namespaces*": "deny",
     },
   },
+  "mcp": {
+    "mcp-gateway-linear": {
+      "type": "remote",
+      "url": "https://mcp-gateway.tailnet-1a49.ts.net/linear/sse",
+      "enabled": true,
+      "oauth": false,
+      "headers": {
+        "Authorization": "Bearer {{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/MCP_PROXY_AUTH_TOKEN" }}",
+      },
+    },
+    "mcp-gateway-posthog": {
+      "type": "remote",
+      "url": "https://mcp-gateway.tailnet-1a49.ts.net/posthog/sse",
+      "enabled": true,
+      "oauth": false,
+      "headers": {
+        "Authorization": "Bearer {{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/MCP_PROXY_AUTH_TOKEN" }}",
+      },
+    },
+  },
   "provider": {
     "kimi-for-coding-oauth": {
       "name": "Kimi For Coding (OAuth)",
