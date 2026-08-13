@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  buildCatalogAlerts,
   buildCatalogWithheldAlert,
   LLM_CATALOG_WITHHELD_ALERT_TTL_MS,
 } from "#shared/llm-catalog-alert.ts";
@@ -8,9 +9,10 @@ const NOW = new Date("2026-08-13T12:00:00.000Z");
 const PR_URL = "https://github.com/shepherdjerred/monorepo/pull/9999";
 
 describe("buildCatalogWithheldAlert", () => {
-  test("identifies the alert without per-model labels", () => {
+  test("identifies the occurrence by model, so each resolves on its own", () => {
     const alert = buildCatalogWithheldAlert(
       {
+        model: "subject-model",
         applied: [],
         withheld: ["  claude-opus-5.input: 5 -> 12 is a 140% change"],
         prUrl: undefined,
@@ -21,12 +23,14 @@ describe("buildCatalogWithheldAlert", () => {
       alertname: "LlmCatalogDriftWithheld",
       severity: "warning",
       component: "llm-catalog-refresh",
+      model: "subject-model",
     });
   });
 
   test("carries every withheld line into the description", () => {
     const alert = buildCatalogWithheldAlert(
       {
+        model: "subject-model",
         applied: [],
         withheld: ["  a.input: reason one", "  b.output: two"],
         prUrl: undefined,
@@ -37,7 +41,9 @@ describe("buildCatalogWithheldAlert", () => {
     expect(alert.annotations["description"]).toContain("b.output: two");
     // The Alerts template reads either key depending on the source.
     expect(alert.annotations["message"]).toBe(alert.annotations["description"]);
-    expect(alert.annotations["summary"]).toContain("2 upstream edit(s)");
+    expect(alert.annotations["summary"]).toContain(
+      "2 withheld upstream edit(s)",
+    );
   });
 
   test("asks the operator to adjudicate rather than to apply", () => {
@@ -47,6 +53,7 @@ describe("buildCatalogWithheldAlert", () => {
     // divergence. Telling the operator to apply upstream would undo it.
     const alert = buildCatalogWithheldAlert(
       {
+        model: "subject-model",
         applied: [],
         withheld: ["  claude-sonnet-5.input: 3 -> 2 is a 33% change"],
         prUrl: undefined,
@@ -63,7 +70,12 @@ describe("buildCatalogWithheldAlert", () => {
 
   test("says nothing was published when no PR was opened", () => {
     const alert = buildCatalogWithheldAlert(
-      { applied: [], withheld: ["  a.input: reason"], prUrl: undefined },
+      {
+        model: "subject-model",
+        applied: [],
+        withheld: ["  a.input: reason"],
+        prUrl: undefined,
+      },
       NOW,
     );
     expect(alert.annotations["description"]).toContain(
@@ -77,6 +89,7 @@ describe("buildCatalogWithheldAlert", () => {
     // away from the actual review artifact.
     const alert = buildCatalogWithheldAlert(
       {
+        model: "subject-model",
         applied: [
           "  gpt-5.6-terra.input: 2.5 -> 2",
           "  gpt-5.5.ctx: 4e5 -> 1e6",
@@ -92,7 +105,9 @@ describe("buildCatalogWithheldAlert", () => {
     expect(description).not.toContain("opened no catalog PR");
     // The withheld line is still the subject of the alert.
     expect(description).toContain("claude-sonnet-5.input");
-    expect(alert.annotations["summary"]).toContain("1 upstream edit(s)");
+    expect(alert.annotations["summary"]).toContain(
+      "1 withheld upstream edit(s)",
+    );
   });
 
   test("applied edits alone never conjure a PR reference", () => {
@@ -102,6 +117,7 @@ describe("buildCatalogWithheldAlert", () => {
     // eight days pointing at a PR that does not exist.
     const alert = buildCatalogWithheldAlert(
       {
+        model: "subject-model",
         applied: ["  gpt-5.6-terra.input: 2.5 -> 2"],
         withheld: ["  claude-sonnet-5.input: 3 -> 2 is a 33% change"],
         prUrl: undefined,
@@ -122,6 +138,7 @@ describe("buildCatalogWithheldAlert", () => {
   test("bounds a pathological run when the PR body holds the full list", () => {
     const alert = buildCatalogWithheldAlert(
       {
+        model: "subject-model",
         applied: ["  a.input: applied"],
         withheld: manyWithheld,
         prUrl: PR_URL,
@@ -139,7 +156,12 @@ describe("buildCatalogWithheldAlert", () => {
     // temp clone. Truncating here drops edits nothing else records, and the
     // fixed ordering means the same tail vanishes every week.
     const alert = buildCatalogWithheldAlert(
-      { applied: [], withheld: manyWithheld, prUrl: undefined },
+      {
+        model: "subject-model",
+        applied: [],
+        withheld: manyWithheld,
+        prUrl: undefined,
+      },
       NOW,
     );
     const description = alert.annotations["description"] ?? "";
@@ -151,7 +173,12 @@ describe("buildCatalogWithheldAlert", () => {
 
   test("outlives the weekly refresh cadence so it cannot self-resolve between runs", () => {
     const alert = buildCatalogWithheldAlert(
-      { applied: [], withheld: ["  a.input: reason"], prUrl: undefined },
+      {
+        model: "subject-model",
+        applied: [],
+        withheld: ["  a.input: reason"],
+        prUrl: undefined,
+      },
       NOW,
     );
     const firingMs = new Date(alert.endsAt).getTime() - NOW.getTime();
@@ -165,6 +192,7 @@ describe("buildCatalogWithheldAlert", () => {
     // lifetime, and the next clean weekly run would not shorten it.
     const resolved = buildCatalogWithheldAlert(
       {
+        model: "subject-model",
         applied: ["  gpt-5.6-terra.input: 2.5 -> 2"],
         withheld: [],
         prUrl: PR_URL,
@@ -180,14 +208,63 @@ describe("buildCatalogWithheldAlert", () => {
     // Alertmanager identifies an alert by its labels alone, so a single
     // differing label would leave the firing occurrence open forever.
     const firing = buildCatalogWithheldAlert(
-      { applied: [], withheld: ["  a.input: reason"], prUrl: undefined },
+      {
+        model: "subject-model",
+        applied: [],
+        withheld: ["  a.input: reason"],
+        prUrl: undefined,
+      },
       NOW,
     );
     expect(
       buildCatalogWithheldAlert(
-        { applied: [], withheld: [], prUrl: undefined },
+        { model: "subject-model", applied: [], withheld: [], prUrl: undefined },
         NOW,
       ).labels,
     ).toEqual(firing.labels);
+  });
+});
+
+describe("buildCatalogAlerts", () => {
+  test("an unmeasured model neither speaks nor blocks", () => {
+    // The regression this exists for: gating on the run-wide unmeasured set
+    // meant one permanently overlay-only flagship — a normal state for a model
+    // upstreams have not published — froze every unrelated resolution until the
+    // eight-day TTL ran out. Identity is per model, so an unmeasured model
+    // simply gets no occurrence while the others are decided on their own
+    // evidence.
+    const alerts = buildCatalogAlerts(
+      {
+        applied: [],
+        measured: ["claude-sonnet-5", "claude-opus-5"],
+        withheldByModel: {
+          "claude-sonnet-5": [
+            "  claude-sonnet-5.input: 3 -> 2 is a 33% change",
+          ],
+        },
+        prUrl: undefined,
+      },
+      NOW,
+    );
+
+    expect(alerts.map((alert) => alert.labels["model"])).toEqual([
+      "claude-sonnet-5",
+      "claude-opus-5",
+    ]);
+    // The withheld one fires for its full window...
+    expect(new Date(alerts[0]?.endsAt ?? "").getTime()).toBe(
+      NOW.getTime() + LLM_CATALOG_WITHHELD_ALERT_TTL_MS,
+    );
+    // ...and the clean one resolves regardless of what else went unmeasured.
+    expect(alerts[1]?.endsAt).toBe(NOW.toISOString());
+  });
+
+  test("a run that measured nothing publishes nothing", () => {
+    expect(
+      buildCatalogAlerts(
+        { applied: [], measured: [], withheldByModel: {}, prUrl: undefined },
+        NOW,
+      ),
+    ).toEqual([]);
   });
 });

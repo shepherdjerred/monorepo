@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createAlertmanagerPoster } from "#lib/alertmanager.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
-  buildCatalogWithheldAlert,
+  buildCatalogAlerts,
   type CatalogSyncOutcome,
 } from "#shared/llm-catalog-alert.ts";
 import { parsePorcelainPaths } from "#shared/porcelain.ts";
@@ -20,6 +20,8 @@ const CATALOG_FILE = "packages/llm-models/src/catalog.json";
 const SyncReportSchema = z.object({
   applied: z.array(z.string()),
   withheld: z.array(z.string()),
+  withheldByModel: z.record(z.string(), z.array(z.string())),
+  measured: z.array(z.string()),
   overlayOnly: z.array(z.string()),
   notChecked: z.array(z.string()),
 });
@@ -66,21 +68,15 @@ export type LlmCatalogRefreshResult = {
  * A run that dies before any exit publishes nothing and fails the activity,
  * which `temporal-failure-watch` turns into its own occurrence.
  */
-async function publishWithheldAlert(
+async function publishWithheldAlerts(
   outcome: CatalogSyncOutcome,
-  unmeasured: string[],
 ): Promise<void> {
-  // Resolving is an affirmative claim that nothing is awaiting adjudication,
-  // and it needs model-level evidence to make it. A model that vanished from
-  // both upstreams — renamed, deprecated — lands in `overlayOnly` and drops out
-  // of `withheld` without anyone deciding anything, so an empty `withheld` here
-  // means "we lost sight of it", not "it is fine". Provider-level coverage does
-  // not catch this: the provider still has its other models.
-  //
-  // Publish nothing in that case. The prior occurrence stays exactly as it is
-  // rather than being falsely closed, and a later fully-measured run resolves
-  // it for real. Firing is unaffected — withheld edits still alert.
-  if (outcome.withheld.length === 0 && unmeasured.length > 0) {
+  // One occurrence per model the run actually measured. A model missing from
+  // both upstreams gets none, so its previous occurrence stands rather than
+  // being closed on absent evidence — and, unlike a run-wide gate, it cannot
+  // hold every other model's resolution hostage while it sits there.
+  const alerts = buildCatalogAlerts(outcome, new Date());
+  if (alerts.length === 0) {
     return;
   }
   const alertmanagerUrl = Bun.env["ALERTMANAGER_URL"];
@@ -89,9 +85,7 @@ async function publishWithheldAlert(
       "ALERTMANAGER_URL is required to report withheld LLM catalog edits",
     );
   }
-  await createAlertmanagerPoster(alertmanagerUrl)([
-    buildCatalogWithheldAlert(outcome, new Date()),
-  ]);
+  await createAlertmanagerPoster(alertmanagerUrl)(alerts);
 }
 
 export type LlmCatalogRefreshActivities = typeof llmCatalogRefreshActivities;
@@ -157,14 +151,12 @@ export const llmCatalogRefreshActivities = {
       const finish = async (
         result: LlmCatalogRefreshResult,
       ): Promise<LlmCatalogRefreshResult> => {
-        await publishWithheldAlert(
-          {
-            applied: summary.applied,
-            withheld: summary.withheld,
-            prUrl: result.prUrl,
-          },
-          summary.overlayOnly,
-        );
+        await publishWithheldAlerts({
+          applied: summary.applied,
+          measured: summary.measured,
+          withheldByModel: summary.withheldByModel,
+          prUrl: result.prUrl,
+        });
         return result;
       };
 

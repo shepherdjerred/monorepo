@@ -14,11 +14,13 @@ const MAX_WITHHELD_LINES = 25;
  */
 export const LLM_CATALOG_WITHHELD_ALERT_TTL_MS = 8 * 24 * 60 * 60 * 1000;
 
-/** Everything that decides what this alert can truthfully say. */
-export type CatalogSyncOutcome = {
-  /** Edits the guards accepted and the script wrote to the catalog. */
+/** Everything that decides what one model's alert can truthfully say. */
+export type CatalogModelOutcome = {
+  /** Catalog id this occurrence is about. Its identity, not a description. */
+  model: string;
+  /** Edits the guards accepted this run, across the catalog. */
   applied: string[];
-  /** Edits the guards refused — each needs a human to adjudicate. */
+  /** This model's refused edits. Empty means resolve. */
   withheld: string[];
   /**
    * The refresh PR carrying `applied`, once it exists. Must be the real URL of
@@ -26,6 +28,47 @@ export type CatalogSyncOutcome = {
    */
   prUrl: string | undefined;
 };
+
+/** The run's per-model verdicts, as the sync report records them. */
+export type CatalogSyncOutcome = {
+  applied: string[];
+  /** Models actually compared. Only these may be spoken for. */
+  measured: string[];
+  /** Refused edits keyed by model id. */
+  withheldByModel: Record<string, string[]>;
+  prUrl: string | undefined;
+};
+
+/**
+ * One occurrence per measured model — the identity that makes resolution safe.
+ *
+ * A run may only speak for what it measured. A model missing from both
+ * upstreams is not evidence of anything, so it gets no occurrence at all and
+ * its previous one stands untouched; crucially it also cannot speak for any
+ * OTHER model. Gating on the run-wide unmeasured set instead made one
+ * permanently overlay-only flagship — a normal, expected state for a model
+ * upstreams have not published yet — block every unrelated resolution until
+ * the eight-day TTL expired.
+ *
+ * Cardinality stays bounded by the catalog's text models (currently 14), and
+ * the `model` label is what lets Alertmanager track each divergence separately.
+ */
+export function buildCatalogAlerts(
+  outcome: CatalogSyncOutcome,
+  now: Date,
+): AlertmanagerAlert[] {
+  return outcome.measured.map((model) =>
+    buildCatalogWithheldAlert(
+      {
+        model,
+        applied: outcome.applied,
+        withheld: outcome.withheldByModel[model] ?? [],
+        prUrl: outcome.prUrl,
+      },
+      now,
+    ),
+  );
+}
 
 /**
  * Pure builder — no I/O. A withheld edit is never written to the catalog, so
@@ -48,13 +91,15 @@ export type CatalogSyncOutcome = {
  * PR would outlive the failure that stopped it being opened and spend eight
  * days pointing at nothing.
  *
- * Labels carry no per-model values: one alert per run, deduped on identity.
+ * The `model` label IS the identity: it is what lets one model's divergence
+ * resolve without speaking for another's. Cardinality is bounded by the
+ * catalog's text models.
  */
 export function buildCatalogWithheldAlert(
-  outcome: CatalogSyncOutcome,
+  outcome: CatalogModelOutcome,
   now: Date,
 ): AlertmanagerAlert {
-  const { applied, withheld, prUrl } = outcome;
+  const { model, applied, withheld, prUrl } = outcome;
   const resolved = withheld.length === 0;
   // Truncation is a courtesy, allowed only when the full list survives
   // elsewhere: the refresh PR body carries the script's entire report. A
@@ -65,15 +110,16 @@ export function buildCatalogWithheldAlert(
     prUrl === undefined ? withheld : withheld.slice(0, MAX_WITHHELD_LINES);
   const omitted = withheld.length - shown.length;
   const summary = resolved
-    ? "LLM catalog refresh withheld nothing — earlier withheld drift is resolved"
-    : `LLM catalog refresh withheld ${String(withheld.length)} upstream edit(s)`;
+    ? `LLM catalog: ${model} has no withheld drift — earlier finding is resolved`
+    : `LLM catalog: ${model} has ${String(withheld.length)} withheld upstream edit(s)`;
   const description = resolved
     ? [
-        "sync-from-upstreams.ts completed with every upstream edit either applied",
-        "or in agreement with the catalog. Nothing is awaiting manual adjudication.",
+        `sync-from-upstreams.ts compared ${model} against the upstreams and found`,
+        "every edit either applied or already in agreement. Nothing about this model",
+        "is awaiting manual adjudication.",
       ].join("\n")
     : [
-        `sync-from-upstreams.ts refused ${String(withheld.length)} upstream edit(s) on a plausibility`,
+        `sync-from-upstreams.ts refused ${String(withheld.length)} upstream edit(s) for ${model} on a`,
         "guard, so the catalog still holds its current values. Check each line against",
         "the provider's own pricing page and decide: apply the upstream value, or",
         "confirm the catalog's value is the intended one. Both are real outcomes — a",
@@ -97,6 +143,7 @@ export function buildCatalogWithheldAlert(
       alertname: "LlmCatalogDriftWithheld",
       severity: "warning",
       component: "llm-catalog-refresh",
+      model,
     },
     // `message` mirrors `description` — the Alerts template reads either
     // depending on the alert source (see xcode-cloud-webhook.ts).

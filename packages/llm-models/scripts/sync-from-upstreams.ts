@@ -407,7 +407,17 @@ export function reconcile(
  */
 export type SyncReport = {
   applied: string[];
+  /** Every withheld line, flattened — the human-readable view. */
   withheld: string[];
+  /**
+   * Withheld lines keyed by model id. The alert is raised per model, so the
+   * identity has to survive the report: a run only ever resolves the models it
+   * actually measured, and an unrelated model nobody could measure must not
+   * speak for them.
+   */
+  withheldByModel: Record<string, string[]>;
+  /** Models genuinely compared this run — the only ones a run may resolve. */
+  measured: string[];
   overlayOnly: string[];
   notChecked: string[];
 };
@@ -474,7 +484,8 @@ async function main(): Promise<void> {
 
   const now = new Date();
   const drifted: string[] = [];
-  const rejected: string[] = [];
+  const withheldByModel: Record<string, string[]> = {};
+  const measured: string[] = [];
   const overlayOnly: string[] = [];
   const notChecked: string[] = [];
 
@@ -492,17 +503,24 @@ async function main(): Promise<void> {
       overlayOnly.push(id);
       continue;
     }
+    measured.push(id);
     const result = reconcile(id, entry, upstream, {
       source: fromModelsDev === undefined ? "litellm" : "models.dev",
       now,
     });
     drifted.push(...result.applied);
-    rejected.push(...result.rejected);
+    if (result.rejected.length > 0) {
+      withheldByModel[id] = result.rejected;
+    }
   }
 
   const report: SyncReport = {
     applied: drifted,
-    withheld: rejected,
+    // One source of truth: the flat list is the per-model map read end to end,
+    // so the human report and the per-model alerts can never disagree.
+    withheld: Object.values(withheldByModel).flat(),
+    withheldByModel,
+    measured,
     overlayOnly,
     notChecked,
   };
@@ -534,7 +552,7 @@ async function main(): Promise<void> {
   // Withheld edits count in `--check` too: a run that withholds every edit
   // leaves the catalog clean, so drift alone would exit 0 on the one outcome
   // that actually needs a human.
-  if (check && (drifted.length > 0 || rejected.length > 0)) {
+  if (check && (report.applied.length > 0 || report.withheld.length > 0)) {
     process.exitCode = 1;
   }
 }

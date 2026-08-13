@@ -85,11 +85,15 @@ rot the expiry exists to prevent. `claude-sonnet-5` carries one: upstreams list
 its introductory rate, the catalog holds the standard price billing reverts to,
 and the acceptance dies with the promotion.
 
-Resolution needs the same rigour. An empty withheld list means "nothing is
-awaiting adjudication" only if every model was actually compared — a model that
-vanished from both upstreams drops out of the comparison without anyone deciding
-anything. When that happens the refresh publishes nothing at all, leaving the
-occurrence exactly as it stood rather than closing it on absent evidence.
+Resolution needs the same rigour, and it is why the occurrence is raised **per
+model** rather than per run. An empty withheld list means "nothing is awaiting
+adjudication" only for models actually compared; one that vanished from both
+upstreams drops out without anyone deciding anything. Each measured model
+therefore resolves or fires on its own evidence, and an unmeasured one simply
+gets no occurrence — its previous one stands, and it cannot speak for anything
+else. A run-wide gate got this wrong in the other direction: a single
+permanently overlay-only flagship, a perfectly normal state, froze every
+unrelated resolution.
 
 ## Scout
 
