@@ -61,11 +61,32 @@ namespace TaskNotes.Windows.Tests
         [DataRow("tasknotes://contexts/desktop", "contexts")]
         [DataRow("tasknotes://tags/quality", "tags")]
         [DataRow("tasknotes://saved-views/view%201", "saved-views")]
+        // The singular hosts the macOS and iOS clients emit.
+        [DataRow("tasknotes://task/Tasks%2Fplan.md", "tasks")]
+        [DataRow("tasknotes://project/Website", "projects")]
+        [DataRow("tasknotes://context/desktop", "contexts")]
+        [DataRow("tasknotes://tag/release", "tags")]
+        [DataRow("tasknotes://view/job-search", "saved-views")]
         [DataRow("tasknotes://diagnostics/reset", "diagnostics")]
         public void ActivationParsesEverySupportedRoute(string uri, string expectedAction)
         {
             ActivationRoute route = ActivationRouteParser.Parse(new Uri(uri, UriKind.Absolute));
             Assert.AreEqual(expectedAction, route.Action);
+        }
+
+        /// <summary>Rejects entity routes that carry no value and hosts that name no route.</summary>
+        [TestMethod]
+        [DataRow("tasknotes://task")]
+        [DataRow("tasknotes://project")]
+        [DataRow("tasknotes://context")]
+        [DataRow("tasknotes://tag")]
+        [DataRow("tasknotes://view")]
+        [DataRow("tasknotes://unsupported")]
+        public void ActivationRejectsValuelessEntitiesAndUnknownHosts(string uri)
+        {
+            _ = Assert.ThrowsExactly<ArgumentException>(() =>
+                ActivationRouteParser.Parse(new Uri(uri, UriKind.Absolute))
+            );
         }
 
         /// <summary>Maps every synchronization state to a semantic severity and descriptive status.</summary>

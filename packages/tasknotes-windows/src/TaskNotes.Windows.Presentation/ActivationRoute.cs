@@ -36,27 +36,33 @@ namespace TaskNotes.Windows.Presentation
                 "QUICK-ADD" => new ActivationRoute("quick-add", value, query),
                 "POMODORO" => new ActivationRoute("pomodoro", value, query),
                 "TIME-REPORT" => new ActivationRoute("time-report", value, query),
-                "TASKS" when value is not null => new ActivationRoute(
+                // The singular hosts are the cross-client vocabulary the macOS and
+                // iOS clients emit (TaskNotesKit/TaskNotesURL.swift: task, project,
+                // context, tag, view), so links they hand off must resolve here for
+                // activation.deep-links parity to hold. The plural spellings are
+                // this client's own and stay accepted for the links its end-to-end
+                // scenarios already produce.
+                "TASK" or "TASKS" when value is not null => new ActivationRoute(
                     "tasks",
                     Uri.UnescapeDataString(value),
                     query
                 ),
-                "PROJECTS" when value is not null => new ActivationRoute(
+                "PROJECT" or "PROJECTS" when value is not null => new ActivationRoute(
                     "projects",
                     Uri.UnescapeDataString(value),
                     query
                 ),
-                "CONTEXTS" when value is not null => new ActivationRoute(
+                "CONTEXT" or "CONTEXTS" when value is not null => new ActivationRoute(
                     "contexts",
                     Uri.UnescapeDataString(value),
                     query
                 ),
-                "TAGS" when value is not null => new ActivationRoute(
+                "TAG" or "TAGS" when value is not null => new ActivationRoute(
                     "tags",
                     Uri.UnescapeDataString(value),
                     query
                 ),
-                "SAVED-VIEWS" when value is not null => new ActivationRoute(
+                "VIEW" or "SAVED-VIEWS" when value is not null => new ActivationRoute(
                     "saved-views",
                     Uri.UnescapeDataString(value),
                     query
