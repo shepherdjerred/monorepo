@@ -265,3 +265,80 @@ describe("Argo CD staged external release reconciliation", () => {
     }
   });
 });
+
+describe("Argo CD release inventory validation", () => {
+  test("rejects an incomplete inventory before staging mutates the root", async () => {
+    let syncPosts = 0;
+    const renderedRevisions: (string | null)[] = [];
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch(request) {
+        const url = new URL(request.url);
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps/manifests"
+        ) {
+          renderedRevisions.push(url.searchParams.get("revision"));
+          return Response.json({ manifests: [RepositoryApplication] });
+        }
+        if (request.method === "POST" && url.pathname.endsWith("/sync")) {
+          syncPosts += 1;
+        }
+        return new Response("not found", { status: 404 });
+      },
+    });
+    const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-"));
+    const expectedPath = path.join(directory, "expected.json");
+    await Bun.write(
+      expectedPath,
+      JSON.stringify([{ name: "apps", revision: "2.0.0-42" }]),
+    );
+
+    try {
+      const process = Bun.spawn(
+        [
+          "bun",
+          "--no-install",
+          "scripts/argocd.ts",
+          "release-root",
+          "apps",
+          expectedPath,
+          "--revision",
+          "2.0.0-42",
+          "--request-id",
+          "11111111-1111-4111-8111-111111111111",
+          "--timeout",
+          "1",
+        ],
+        {
+          cwd: path.resolve(import.meta.dir, "../../.."),
+          env: {
+            ...Bun.env,
+            ARGOCD_SERVER_URL: server.url.origin,
+            ARGOCD_TOKEN: "test-token",
+            CHARTMUSEUM_ORIGIN: server.url.origin,
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        },
+      );
+      const [exitCode, stdout, stderr] = await Promise.all([
+        process.exited,
+        new Response(process.stdout).text(),
+        new Response(process.stderr).text(),
+      ]);
+
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain(
+        "Release inventory is missing repository Application worker",
+      );
+      expect(renderedRevisions).toEqual(["2.0.0-42"]);
+      expect(stdout).not.toContain("stage-root-release");
+      expect(syncPosts).toBe(0);
+    } finally {
+      await server.stop(true);
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+});

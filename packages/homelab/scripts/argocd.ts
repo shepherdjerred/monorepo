@@ -2254,6 +2254,26 @@ function expectedAppsRelease(
   return appsRelease;
 }
 
+/**
+ * `releaseReconciliationTargets` is the only complete oracle for the release
+ * inventory: it rejects duplicate children, a missing repository child, and any
+ * Application absent from the exact rendered root. Running it before staging
+ * keeps semantically invalid input from applying root prerequisites and
+ * suspending child auto-sync first.
+ */
+async function assertReleaseInventoryIsComplete(
+  rootAppName: string,
+  expected: readonly ExpectedApplication[],
+  revision: string,
+  token: string,
+): Promise<void> {
+  releaseReconciliationTargets(
+    await getApplicationManifests(rootAppName, revision, token),
+    expected,
+    rootAppName,
+  );
+}
+
 async function reconcileRelease(
   expectedPath: string,
   timeoutSeconds: number,
@@ -2383,9 +2403,8 @@ async function releaseRoot(
   }
   const exactRevision = BuildRevisionSchema.parse(revision);
   const exactRequestId = SyncRequestIdSchema.parse(requestId);
-  const appsRelease = expectedAppsRelease(
-    await readExpectedApplications(expectedPath),
-  );
+  const expected = await readExpectedApplications(expectedPath);
+  const appsRelease = expectedAppsRelease(expected);
   if (appsRelease.revision !== exactRevision) {
     throw new Error(
       `Release inventory declares apps ${appsRelease.revision}; expected ${exactRevision}`,
@@ -2394,6 +2413,14 @@ async function releaseRoot(
   console.log(
     `--- argocd release-root: ${rootAppName} at ${exactRevision} for request ${exactRequestId}${dryRun ? " (dry run)" : ""}`,
   );
+  if (!dryRun) {
+    await assertReleaseInventoryIsComplete(
+      rootAppName,
+      expected,
+      exactRevision,
+      requireEnv("ARGOCD_TOKEN"),
+    );
+  }
   await stageRootRelease(
     rootAppName,
     exactRevision,

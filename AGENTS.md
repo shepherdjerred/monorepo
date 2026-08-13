@@ -104,8 +104,9 @@ Deleting a managed Application is admission-protected by the retain-or-cascade
 lifecycle contract; that policy matches the labeled children plus the
 explicitly named root, and leaves unmanaged Applications deletable.
 `release-root` binds the release inventory's `apps` revision to `--revision`
-before it stages anything, so invalid release input cannot leave prerequisites
-applied.
+and validates the whole inventory against the exact rendered root revision
+before it stages anything, so semantically invalid release input cannot leave
+prerequisites applied and child auto-sync suspended.
 
 ## Code Review Rules
 
