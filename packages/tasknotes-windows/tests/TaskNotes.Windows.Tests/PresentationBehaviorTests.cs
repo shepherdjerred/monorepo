@@ -181,6 +181,7 @@ namespace TaskNotes.Windows.Tests
             );
             Assert.IsTrue(double.IsNaN(editor.EstimateValue));
             Assert.AreEqual(string.Empty, editor.TrackedTimeLabel);
+            Assert.IsFalse(editor.IsTimerActive);
 
             TaskItem blocked = new(
                 "timed",
@@ -222,6 +223,14 @@ namespace TaskNotes.Windows.Tests
             store.Publish(
                 TaskNotesState.Unconfigured with
                 {
+                    TaskTime = new TaskTimeReading("other", 3, false),
+                }
+            );
+            Assert.IsTrue(editor.IsTimerActive);
+
+            store.Publish(
+                TaskNotesState.Unconfigured with
+                {
                     TaskTime = new TaskTimeReading("timed", 12, true),
                 }
             );
@@ -237,9 +246,22 @@ namespace TaskNotes.Windows.Tests
                 }
             );
             Assert.IsFalse(editor.IsTimerActive);
+            Assert.AreEqual("Start timer", editor.TimerLabel);
             await editor.ToggleTimeAsync(TestContext.CancellationToken);
             Assert.AreEqual(3, store.TimingCount);
             Assert.IsGreaterThanOrEqualTo(2, dispatcher.DispatchCount);
+
+            int dispatchedOffThread = dispatcher.DispatchCount;
+            dispatcher.HasThreadAccess = true;
+            store.Publish(
+                TaskNotesState.Unconfigured with
+                {
+                    TaskTime = new TaskTimeReading("timed", 12, true),
+                }
+            );
+            Assert.IsTrue(editor.IsTimerActive);
+            Assert.AreEqual(dispatchedOffThread, dispatcher.DispatchCount);
+            dispatcher.HasThreadAccess = false;
 
             TaskItem blocking = new(
                 "blocking",
@@ -408,7 +430,7 @@ namespace TaskNotes.Windows.Tests
 
         private sealed class ImmediateDispatcher : IUiDispatcher
         {
-            public bool HasThreadAccess => false;
+            public bool HasThreadAccess { get; set; }
 
             internal int DispatchCount { get; private set; }
 

@@ -21,7 +21,7 @@
   },
   "scripts": {
     "build": "bun scripts/dotnet.ts build TaskNotes.Windows.Portable.slnx --configuration Release --property:RestoreLockedMode=true",
-    "typecheck": "bun scripts/dotnet.ts build TaskNotes.Windows.Portable.slnx --configuration Release --property:RestoreLockedMode=true && bun node_modules/@typescript/native/bin/tsc --noEmit",
+    "typecheck": "bun scripts/dotnet.ts build TaskNotes.Windows.Portable.slnx --configuration Release --property:RestoreLockedMode=true && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "format": "bun scripts/dotnet.ts tool restore && bun scripts/dotnet.ts csharpier format src tests && bun scripts/xaml-format.ts",
     "format:check": "bun scripts/dotnet.ts tool restore && bun scripts/dotnet.ts csharpier check src tests && bun scripts/xaml-format.ts --check",
     "analysis": "bun run typecheck && bun scripts/quality-check.ts && bunx jscpd --config .jscpd.json --silent",

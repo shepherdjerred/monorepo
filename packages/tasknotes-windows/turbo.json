@@ -1,6 +1,10 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
+  // Every task here shells out to the mise-pinned .NET SDK. Turbo's strict env
+  // mode drops MISE_DATA_DIR, which the CI image sets to /opt/mise, so without
+  // the passthrough `mise where dotnet` resolves against the default
+  // ~/.local/share/mise and reports the SDK as not installed.
   "tasks": {
     "build": {
       "passThroughEnv": [
@@ -8,6 +12,7 @@
         "HTTP_PROXY",
         "HTTPS_PROXY",
         "LOCALAPPDATA",
+        "MISE_DATA_DIR",
         "NO_PROXY",
         "TEMP",
         "TMP",
@@ -38,6 +43,7 @@
         "HTTP_PROXY",
         "HTTPS_PROXY",
         "LOCALAPPDATA",
+        "MISE_DATA_DIR",
         "NO_PROXY",
         "TEMP",
         "TMP",
@@ -52,6 +58,7 @@
         "HTTP_PROXY",
         "HTTPS_PROXY",
         "LOCALAPPDATA",
+        "MISE_DATA_DIR",
         "NO_PROXY",
         "TEMP",
         "TMP",
@@ -66,6 +73,7 @@
         "HTTP_PROXY",
         "HTTPS_PROXY",
         "LOCALAPPDATA",
+        "MISE_DATA_DIR",
         "NO_PROXY",
         "TEMP",
         "TMP",
@@ -80,6 +88,7 @@
         "HTTP_PROXY",
         "HTTPS_PROXY",
         "LOCALAPPDATA",
+        "MISE_DATA_DIR",
         "NO_PROXY",
         "TEMP",
         "TMP",
@@ -94,6 +103,7 @@
         "HTTP_PROXY",
         "HTTPS_PROXY",
         "LOCALAPPDATA",
+        "MISE_DATA_DIR",
         "NO_PROXY",
         "TEMP",
         "TMP",
@@ -109,6 +119,7 @@
         "HTTP_PROXY",
         "HTTPS_PROXY",
         "LOCALAPPDATA",
+        "MISE_DATA_DIR",
         "NO_PROXY",
         "TEMP",
         "TMP",
