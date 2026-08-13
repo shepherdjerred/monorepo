@@ -47,7 +47,7 @@ packages/
 ├── trmnl-dashboard/            # TRMNL e-ink dashboard
 ├── webring/                    # Webring component (npm)
 scripts/                        # Repo automation (setup-free): checks, deploys, release, hooks
-.buildkite/pipeline.yml         # Static Buildkite CI pipeline (no generator)
+.buildkite/pipeline.yml         # Canonical Buildkite CI pipeline (main selects a subset of these steps)
 sandbox/                        # Personal scratch (not shipped, excluded from most lint/CI)
 ├── archive/                    # Legacy projects (do not modify): bun-decompile, castle-casters, clauderon, glance, hn-enhancer, macos-cross-compiler, tips
 ├── poc/                        # Proof-of-concept experiments (e.g. interview-practice CLI)
@@ -97,9 +97,14 @@ every rendered identity.
 
 ## Code Review Rules
 
-These rules steer the automated PR code-review provider (Codex by default; the
-gate is provider-neutral — see `@shepherdjerred/code-review` and the `review-gate`
-Buildkite step). They apply repo-wide; per-package `AGENTS.md` files add more.
+These rules steer automated PR code review. Qodo is the repository-required CI
+provider, and consumers that decide against the gate — PR fleet — default to it
+too, so their findings cannot disagree with the check that blocks the PR.
+`resolveProvider()` keeps a separate neutral default for callers that are not
+reproducing a gate decision.
+The gate implementation remains provider-neutral — see
+`@shepherdjerred/code-review` and the `review-gate` Buildkite step. These rules
+apply repo-wide; per-package `AGENTS.md` files add more.
 
 - **Review against the `AGENTS.md` hierarchy** (root + `packages/*/AGENTS.md`) — it
   is the source of truth. Flag deviations from it; do not restate it.

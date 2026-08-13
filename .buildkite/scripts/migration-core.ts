@@ -45,10 +45,16 @@ export function fixedCorpusMode(
       'CI_IO_FIXED_CORPUS must be exactly "true" when set',
     );
   }
+  // Key off the same signal the uploader and every main-only pipeline condition
+  // use (`pipeline.default_branch`), not the literal name. Comparing to "main"
+  // would reject the default branch itself wherever it is called something
+  // else, hard-failing the build before the selector's fail-open path.
+  const defaultBranch =
+    environment["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] ?? "main";
   const branch = environment["BUILDKITE_BRANCH"];
-  if (branch !== "main") {
+  if (branch !== defaultBranch) {
     throw new FixedCorpusConfigurationError(
-      `CI_IO_FIXED_CORPUS is main-only; BUILDKITE_BRANCH was ${branch ?? "unset"}`,
+      `CI_IO_FIXED_CORPUS is ${defaultBranch}-only; BUILDKITE_BRANCH was ${branch ?? "unset"}`,
     );
   }
   return true;
@@ -229,11 +235,20 @@ export function outcomeIcon(outcome: string): string {
   return outcome === "passed" ? ":white_check_mark:" : ":x:";
 }
 
+// The handoff helpers are global because they are the seam between the image
+// lane that writes the digests and the Helm, ArgoCD, Scout, and version steps
+// that execute them. A commit touching only one side would otherwise select
+// neither, so a repair to the handoff could land without any lane exercising
+// the release path it repairs.
 export const globalPaths = [
+  ".buildkite/main-bootstrap.yml",
   ".buildkite/pipeline.yml",
+  ".buildkite/scripts/buildkite-handoff.ts",
   ".buildkite/scripts/ci-changed.ts",
   ".buildkite/scripts/migration-core.ts",
   ".buildkite/scripts/prepare-ci-changed-base.ts",
+  ".buildkite/scripts/read-buildkite-handoff.ts",
+  ".buildkite/scripts/select-main-pipeline.ts",
   ".buildkite/scripts/upload-pipeline.sh",
 ] as const;
 

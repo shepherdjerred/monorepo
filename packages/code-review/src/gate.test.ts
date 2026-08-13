@@ -17,6 +17,7 @@ function thread(overrides: Partial<ReviewThread>): ReviewThread {
     line: 10,
     url: "https://github.com/o/r/pull/1#d",
     priority: 2,
+    title: null,
     ...overrides,
   };
 }

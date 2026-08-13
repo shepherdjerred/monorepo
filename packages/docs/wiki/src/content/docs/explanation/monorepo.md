@@ -54,7 +54,11 @@ verification machinery, not for everyday work. There is no pre-push hook.
 
 ## CI is Buildkite, not GitHub Actions
 
-The pipeline is static, in `.buildkite/pipeline.yml`. There is no generator.
+`.buildkite/pipeline.yml` is the single canonical source: every step is written
+there by hand, and PR builds upload it unchanged. Default-branch builds take a
+bootstrap path instead, where `select-main-pipeline.ts` uploads the subset of
+those same steps the commit actually needs. So the graph main runs is selected
+rather than authored — no step exists that is not in the checked-in file.
 
 This matters mostly because it breaks a common assumption: `gh run` is not the
 source of truth for CI here, and never will be. Buildkite tooling or the PR's
@@ -76,6 +80,7 @@ the only feedback channel an unattended system has.
 
 ## Related
 
+- [Why the CI pipeline has so many steps](/explanation/ci-pipeline-shape/) — what each lane covers
 - [About the homelab](/explanation/homelab/overview/) — where most of it runs
 - [Why Temporal](/explanation/temporal/overview/) — where the automation lives
 - [How this wiki works](/explanation/how-this-wiki-works/)

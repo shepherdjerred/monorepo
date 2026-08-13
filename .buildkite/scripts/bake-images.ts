@@ -1,5 +1,6 @@
 import { rm } from "node:fs/promises";
 import { asRecord } from "../../scripts/lib/json.ts";
+import { writeJsonHandoff } from "./buildkite-handoff.ts";
 import {
   classifyRuntimeChange,
   imageRuntimeFingerprint,
@@ -191,16 +192,7 @@ export async function manifestDigest(
 async function setDigestMetadata(
   digests: Readonly<Record<string, string>>,
 ): Promise<void> {
-  const metadata = Bun.spawn(
-    ["buildkite-agent", "meta-data", "set", "image-digests"],
-    {
-      stdin: new Blob([JSON.stringify(digests)]),
-      stdout: "inherit",
-      stderr: "inherit",
-    },
-  );
-  const exitCode = await metadata.exited;
-  if (exitCode !== 0) throw new Error("metadata write failed");
+  await writeJsonHandoff("image-digests", "image-digests.json", digests);
 }
 
 async function setPinCandidatesMetadata(
@@ -217,23 +209,11 @@ async function setPinCandidatesMetadata(
       { version: `2.0.0-${buildNumber}`, digest },
     ]),
   );
-  const metadata = Bun.spawn(
-    ["buildkite-agent", "meta-data", "set", "pin-candidates"],
-    {
-      stdin: new Blob([
-        JSON.stringify({
-          schema: "pin-candidates/v1",
-          buildNumber: parsedBuildNumber,
-          candidates,
-        }),
-      ]),
-      stdout: "inherit",
-      stderr: "inherit",
-    },
-  );
-  if ((await metadata.exited) !== 0) {
-    throw new Error("pin candidate metadata write failed");
-  }
+  await writeJsonHandoff("pin-candidates", "pin-candidates.json", {
+    schema: "pin-candidates/v1",
+    buildNumber: parsedBuildNumber,
+    candidates,
+  });
 }
 
 export async function ensureBuilder(

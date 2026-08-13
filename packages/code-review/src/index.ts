@@ -10,8 +10,11 @@ export * from "./signal.ts";
 export {
   PROVIDERS,
   DEFAULT_PROVIDER_ID,
+  REQUIRED_REVIEW_PROVIDER_ID,
   resolveProvider,
+  resolveRequiredReviewProvider,
   type ProviderId,
 } from "./providers/registry.ts";
 export { greptileProvider } from "./providers/greptile.ts";
 export { codexProvider } from "./providers/codex.ts";
+export { qodoProvider } from "./providers/qodo.ts";

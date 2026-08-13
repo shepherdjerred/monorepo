@@ -330,15 +330,15 @@ export const prMergeConflictCheckDurationSeconds = new Histogram({
 // ---------------------------------------------------------------------------
 // Review-signal collector — durable longitudinal record of "what the code-
 // review provider did and when" (see src/activities/observe-review-signals.ts
-// and @shepherdjerred/code-review's ReviewSignalEvent). Provider-neutral: the
-// `provider` label carries the active provider id (REVIEW_PROVIDER, default
-// `codex`). The CI gate (scripts/wait-for-review.ts) emits the same event
-// shape as structured logs only; this collector is the metrics + S3 side.
+// and @shepherdjerred/code-review's ReviewSignalEvent). The `provider` label
+// carries the repository-required provider id shared with the CI gate
+// (scripts/wait-for-review.ts), which emits the same event shape as structured
+// logs only; this collector is the metrics + S3 side.
 // ---------------------------------------------------------------------------
 
 export const reviewCompletionLatencySeconds = new Histogram({
   name: "review_completion_latency_seconds",
-  help: "Seconds from PR head-commit push to the review provider's completion signal (review-at-head, check-run, or 👍 reaction), by provider. Only observed when the reviewed commit is confirmed to be the head.",
+  help: "Seconds from PR head-commit push to the review provider's completion signal (review-at-head, check-run, issue-comment, or 👍 reaction), by provider. Only observed when the reviewed commit is confirmed to be the head.",
   labelNames: ["provider"] as const,
   buckets: [30, 60, 120, 300, 600, 900, 1200, 1800, 3600],
   registers: [register],
@@ -361,7 +361,7 @@ export const reviewFindingsPerPr = new Histogram({
 
 export const reviewCompletionSignalTotal = new Counter({
   name: "review_completion_signal_total",
-  help: "Review-signal collector observations by provider and completion signal (check-run|review-at-head|thumbsup-reaction|none)",
+  help: "Review-signal collector observations by provider and completion signal (check-run|review-at-head|thumbsup-reaction|issue-comment|none)",
   labelNames: ["provider", "signal"] as const,
   registers: [register],
 });

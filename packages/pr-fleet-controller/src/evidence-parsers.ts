@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   isProviderAuthor,
+  type ReviewIssueComment,
   type ReviewProvider,
 } from "@shepherdjerred/code-review";
 import {
@@ -235,6 +236,66 @@ export function reviewFindingsFromThreads(
     });
   }
   return findings;
+}
+
+/**
+ * Convert the findings a provider renders inside its persistent issue comment
+ * into the same blocking-eligible shape as thread findings.
+ *
+ * Providers whose completion is `issue-comment` keep every finding in one
+ * comment rather than in review threads, so reading only threads reports no
+ * findings at all for them and a PR with unresolved findings classifies as
+ * ready. The snapshot must be the one completion was decided on: refetching
+ * the comment could pair a "reviewed" verdict with a different finding set.
+ */
+export function reviewFindingsFromIssueComment(
+  comment: ReviewIssueComment | null,
+  provider: ReviewProvider,
+): ReviewFinding[] {
+  const { completion } = provider;
+  if (comment === null || completion.kind !== "issue-comment") return [];
+  const parse = completion.parseFindings;
+  const findings: ReviewFinding[] = [];
+  for (const [index, finding] of parse(comment).entries()) {
+    // Apply the same identity gate as the thread path: a row is only
+    // blocking-eligible when the configured provider authored it.
+    if (!isProviderAuthor(provider, finding.authorLogin)) continue;
+    const { priority } = finding;
+    if (priority === null) continue;
+    findings.push({
+      // The comment renders findings as rows, not as addressable threads, so
+      // the position within the parsed rendering is the only stable identity.
+      id: `${provider.id}-issue-comment-${String(index)}`,
+      author: finding.authorLogin ?? provider.id,
+      // The finding's own words, not just where it points: a diff anchor
+      // names a file, so a worker given only that cannot tell what to fix, and
+      // a reworded finding on the same path would not move the fingerprint.
+      body: [finding.title, finding.path, finding.url]
+        .flatMap((part) => (part === null || part === "" ? [] : [part]))
+        .join(" — "),
+      severity: reviewSeverity(priority),
+      resolved: finding.isResolved,
+      outdated: finding.isOutdated,
+    });
+  }
+  return findings;
+}
+
+/**
+ * Every finding the configured provider reported on a PR, from whichever place
+ * that provider keeps them. Reading only one source silently reports no
+ * findings for providers that use the other, which classifies a PR with
+ * unresolved findings as ready.
+ */
+export function reviewFindings(input: {
+  threads: RawReviewThread[];
+  issueComment: ReviewIssueComment | null;
+  provider: ReviewProvider;
+}): ReviewFinding[] {
+  return [
+    ...reviewFindingsFromThreads(input.threads, input.provider),
+    ...reviewFindingsFromIssueComment(input.issueComment, input.provider),
+  ];
 }
 
 export function fingerprint(values: string[]): string | null {

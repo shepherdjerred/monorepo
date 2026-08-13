@@ -165,7 +165,6 @@ Workflow:
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_ENDPOINT` — S3/SeaweedFS credentials
-- `REVIEW_PROVIDER` — active code-review provider id (`codex` default, or `greptile`); shared by the `review-gate` CI step and the `review-signals-collect` schedule
 - `REVIEW_SIGNAL_ARCHIVE_BUCKET` — S3/SeaweedFS bucket the review-signal collector writes NDJSON archives to (`review-signals/<temporal-run-id>.ndjson` — the object is keyed by the Temporal workflow run id, with no wall-clock component, so an activity retry overwrites idempotently rather than forking a second object; each NDJSON event carries its own `ts`). Optional — defaults to the existing `llm-archive` bucket (namespaced by the key prefix), so no new bucket/env is needed to start collecting
 - `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY` — GitHub App credentials used to mint short-lived installation tokens for GitHub automation so GitHub attributes those actions to the app bot.
 - `OPENAI_API_KEY` — OpenAI API key
@@ -443,11 +442,11 @@ The **`scripts/rehearse-bot-clone.ts`** rehearsal script drives these same helpe
 
 ## Review threads (CI gate)
 
-The Buildkite pipeline has a **blocking** review gate on PR builds (`scripts/wait-for-review.ts`, `.buildkite/pipeline.yml`, step key `review-gate`): every non-outdated review thread from the active provider must be resolved before the aggregate `buildkite/monorepo/pr` required status can go green. The gate is **provider-neutral** — the active reviewer (Greptile, Codex, …) is chosen by `REVIEW_PROVIDER` (default `codex`), and all provider-specific knowledge lives in `@shepherdjerred/code-review`. This CI gate is wholly separate from the GitHub webhook server (`## GitHub webhook` below), which handles only the merge-conflict check and PR-closed build cancellation.
+The Buildkite pipeline has a **blocking** review gate on PR builds (`scripts/wait-for-review.ts`, `.buildkite/pipeline.yml`, step key `review-gate`): every non-outdated Qodo review finding that still applies to the latest revision must be resolved before the aggregate `buildkite/monorepo/pr` required status can go green. The gate implementation remains provider-neutral, and all provider-specific knowledge lives in `@shepherdjerred/code-review`, but the repository-required provider is centrally pinned to Qodo so CI and the durable signal collector cannot drift. `REVIEW_PROVIDER` may be omitted or explicitly set to `qodo`; any other value fails loudly. This CI gate is wholly separate from the GitHub webhook server (`## GitHub webhook` below), which handles only the merge-conflict check and PR-closed build cancellation.
 
 - **Gate on review threads, not the provider's own status.** A thread blocks iff authored by the active provider (`isProviderAuthor`, which strips the REST `[bot]` suffix so GraphQL `greptile-apps` / `chatgpt-codex-connector` and their `[bot]` REST forms compare equal) AND `!isResolved` AND `!isOutdated` AND its severity is at/above the threshold. Providers auto-resolve/outdate their own threads as referenced lines change.
-- **Completion detection is provider-specific** (`CompletionStrategy` in the package). Greptile posts a check-run on every reviewed commit (`.greptile/config.json` `statusCheck:true`) — used only as the "reviewed this head?" marker (it goes green even with comments unresolved, verified on PR #1026, so it's useless as a "comments addressed" gate). Codex posts **no** check-run: it has reviewed the head once its latest PR review's `commit_id === head`, and on a clean no-findings PR it leaves only a 👍 reaction (the `thumbsup-reaction` clean signal).
-- **A PR the provider never reviews can time out.** Greptile's empty-diff PR posts `No reviewable files…` (handled via the provider skip marker); a Codex PR where the head was pushed but Codex hasn't re-reviewed yet stays `reviewing` until it catches up (it auto-re-reviews on push) or the gate times out — re-trigger with `@codex review`. Such a PR needs a genuine reviewable diff, to be closed, or admin-merged once any conflict is cleared.
+- **Completion detection is provider-specific** (`CompletionStrategy` in the package). Qodo — the required provider — uses `issue-comment`: it keeps every finding in one persistent issue comment and posts a **separate acknowledgement** naming the commit it just read (`… was updated up to the latest commit <sha>`). That acknowledgement is the completion signal, not the review comment: Qodo relinks the review comment's findings to a new head within seconds of a push, long before re-reading the code, so the body alone proves nothing. While a re-review runs it replaces the rendered review with a `New Review Started` placeholder, which carries the review heading but no findings and is deliberately ignored. For context, the other strategies: Greptile posts a check-run per reviewed commit (`.greptile/config.json` `statusCheck:true`), useful only as a "reviewed this head?" marker since it goes green with comments unresolved (verified on PR #1026); Codex posts no check-run and is reviewed once its latest PR review's `commit_id === head`, leaving only a 👍 reaction on a clean PR (`thumbsup-reaction`).
+- **A PR the provider never reviews can time out.** Qodo does **not** reliably re-review on push — it may relink its comment without re-reading — so a PR whose head was never reviewed stays `reviewing` until the gate times out. Re-trigger by commenting `/review` on the PR; the acknowledgement for the new head follows within a few minutes. (Greptile's empty-diff PRs post `No reviewable files…`, handled by the provider skip marker; Codex re-triggers with `@codex review`.) Such a PR needs a genuine reviewable diff, to be closed, or admin-merged once any conflict is cleared.
 
 ### Durable review-signal collector (`review-signals-collect`)
 
@@ -473,8 +472,8 @@ Component log value: `pr-webhook`. Metrics: `pr_webhook_*` (received / skipped /
 signature-failures) plus `pr_merge_conflict_check_*`.
 
 Not to be confused with the **CI review gate** (`## Review threads (CI gate)`
-above) — that is Codex/Greptile via `@shepherdjerred/code-review`, wholly separate
-from this webhook.
+above) — that is Qodo via `@shepherdjerred/code-review`, wholly separate from this
+webhook.
 
 ## HA presence (welcomeHome / leavingHome / reconcileLock) — debounce model
 

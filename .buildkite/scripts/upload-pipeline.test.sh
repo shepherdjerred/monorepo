@@ -33,6 +33,8 @@ if [ "$3" = "--changed-files-path" ]; then
   cp "$4" "$CAPTURE_PATH"
 elif [ "$3" = ".buildkite/reporting-pipeline.yml" ]; then
   printf '%s\n' "$3" > "$CAPTURE_PATH"
+elif [ "$3" = ".buildkite/main-bootstrap.yml" ]; then
+  printf '%s\n' "$3" > "$CAPTURE_PATH"
 else
   echo "unexpected buildkite-agent pipeline upload arguments: $*" >&2
   exit 2
@@ -62,6 +64,41 @@ if [ "$(cat "$FIXTURE/ci-base-image")" != "ghcr.io/shepherdjerred/ci-base@sha256
 fi
 if [ "$(cat "$FIXTURE/ci-playwright-image")" != "ghcr.io/shepherdjerred/ci-playwright@sha256:0000000000000000000000000000000000000000000000000000000000000001" ]; then
   echo "ci-playwright digest pin was not exported" >&2
+  exit 1
+fi
+
+CAPTURE_PATH="$FIXTURE/main-bootstrap" \
+  CI_BASE_IMAGE_CAPTURE="$FIXTURE/main-ci-base-image" \
+  CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/main-ci-playwright-image" \
+  BUILDKITE_BRANCH=main \
+  PATH="$FIXTURE/fake-bin:$PATH" \
+  sh -c "cd '$FIXTURE' && sh '$UPLOADER'"
+if [ "$(cat "$FIXTURE/main-bootstrap")" != ".buildkite/main-bootstrap.yml" ]; then
+  echo "main uploader did not upload the selector bootstrap" >&2
+  exit 1
+fi
+
+CAPTURE_PATH="$FIXTURE/renamed-default-bootstrap" \
+  CI_BASE_IMAGE_CAPTURE="$FIXTURE/renamed-default-ci-base-image" \
+  CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/renamed-default-ci-playwright-image" \
+  BUILDKITE_BRANCH=trunk \
+  BUILDKITE_PIPELINE_DEFAULT_BRANCH=trunk \
+  PATH="$FIXTURE/fake-bin:$PATH" \
+  sh -c "cd '$FIXTURE' && sh '$UPLOADER'"
+if [ "$(cat "$FIXTURE/renamed-default-bootstrap")" != ".buildkite/main-bootstrap.yml" ]; then
+  echo "renamed default branch did not upload the selector bootstrap" >&2
+  exit 1
+fi
+
+CAPTURE_PATH="$FIXTURE/release-please" \
+  CI_BASE_IMAGE_CAPTURE="$FIXTURE/release-please-ci-base-image" \
+  CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/release-please-ci-playwright-image" \
+  BUILDKITE_BRANCH=release-please--branches--main \
+  CI_CHANGED_FILES_BASE="$BASE" \
+  PATH="$FIXTURE/fake-bin:$PATH" \
+  sh -c "cd '$FIXTURE' && sh '$UPLOADER'"
+if [ "$(cat "$FIXTURE/release-please")" = ".buildkite/main-bootstrap.yml" ]; then
+  echo "release-please webhook was incorrectly routed through the main bootstrap" >&2
   exit 1
 fi
 

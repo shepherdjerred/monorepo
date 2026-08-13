@@ -3,7 +3,11 @@
 import { createInterface } from "node:readline/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { resolveProvider } from "@shepherdjerred/code-review";
+import {
+  resolveProvider,
+  resolveRequiredReviewProvider,
+  REQUIRED_REVIEW_PROVIDER_ID,
+} from "@shepherdjerred/code-review";
 import { z } from "zod";
 import { MastraMaster, MastraWorkerRunner } from "./agents.ts";
 import { combineFailures, normalizeFailure } from "./cli-failures.ts";
@@ -182,7 +186,8 @@ async function createBootstrapRecorder(
     worktreeRoot: bootstrapWorktreeRoot,
     maxWorkers: bootstrapMaxWorkers,
     author: rawOptionValue(args, "author") ?? null,
-    reviewProvider: rawOptionValue(args, "review-provider") ?? "codex",
+    reviewProvider:
+      rawOptionValue(args, "review-provider") ?? REQUIRED_REVIEW_PROVIDER_ID,
   });
   process.stdout.write(`Run bundle: ${recorder.paths.runDirectory}\n`);
   return recorder;
@@ -369,7 +374,16 @@ async function main(): Promise<void> {
       parsed.values["base-url"],
       apiKeyEnvironment,
     );
-    const reviewProvider = resolveProvider(parsed.values["review-provider"]);
+    // Default to the provider the repository's CI gate enforces, not the
+    // provider-neutral default. The fleet decides readiness from the same
+    // findings that gate the PR, and a provider whose findings live somewhere
+    // this one does not read (Qodo keeps them in an issue comment) would report
+    // a PR ready while CI blocks it.
+    const requestedProvider = parsed.values["review-provider"];
+    const reviewProvider =
+      requestedProvider === undefined
+        ? resolveRequiredReviewProvider()
+        : resolveProvider(requestedProvider);
     preflightInProgress = false;
     if (await finishIfRequested()) {
       return;

@@ -21,10 +21,15 @@ import {
   stringField,
 } from "./github-http.ts";
 import { reactionBoundToHead } from "./head-pushed-at.ts";
+import {
+  fetchLatestProviderIssueComment,
+  resolveIssueCommentReview,
+} from "./github-issue-comments.ts";
 import { isProviderAuthor } from "./identity.ts";
 import type { CompletionSignal } from "./signal.ts";
 import type {
   PullRequestAuthor,
+  ReviewIssueComment,
   ReviewProvider,
   ReviewState,
   ReviewThread,
@@ -147,6 +152,8 @@ function parseThreadPage(
       line: numberField(node, "line"),
       url,
       priority,
+      // A GitHub thread is addressable: consumers read its comment directly.
+      title: null,
     });
   }
 
@@ -164,6 +171,12 @@ export async function fetchReviewThreads(input: {
   number: number;
   token: string;
   provider: ReviewProvider;
+  /**
+   * Issue comment already fetched this poll iteration (see
+   * {@link ReviewStateResult.issueComment}). `undefined` means "not fetched",
+   * so this function fetches it; `null` means "fetched, none found".
+   */
+  issueComment?: ReviewIssueComment | null | undefined;
 }): Promise<{ threads: ReviewThread[]; headRefOid: string | null }> {
   const { owner, name } = splitRepo(input.repo);
   const threads: ReviewThread[] = [];
@@ -180,6 +193,21 @@ export async function fetchReviewThreads(input: {
     threads.push(...page.threads);
     if (!page.hasNextPage || page.endCursor === null) break;
     cursor = page.endCursor;
+  }
+  const { completion } = input.provider;
+  if (completion.kind === "issue-comment") {
+    const comment =
+      input.issueComment === undefined
+        ? await fetchLatestProviderIssueComment({
+            repo: input.repo,
+            number: input.number,
+            token: input.token,
+            provider: input.provider,
+          })
+        : input.issueComment;
+    if (comment !== null) {
+      threads.push(...completion.parseFindings(comment));
+    }
   }
   return { threads, headRefOid };
 }
@@ -409,6 +437,13 @@ export type ReviewStateResult = {
    * the gate. Telemetry only — the `state` already reflects the non-pass.
    */
   staleReaction: boolean;
+  /**
+   * The provider's persistent issue comment, for issue-comment providers only.
+   * Carried so `fetchReviewThreads` can reuse this poll iteration's fetch
+   * instead of paginating the whole comment history a second time.
+   * `undefined` means "not fetched"; `null` means "fetched, none found".
+   */
+  issueComment?: ReviewIssueComment | null;
   /** Provider skip reason (check-run providers only), or null. */
   skipReason: string | null;
 };
@@ -433,6 +468,17 @@ export async function resolveReviewState(input: {
   headPushedAt: string | null;
 }): Promise<ReviewStateResult> {
   const { provider, repo, head, prNumber, token, headPushedAt } = input;
+
+  if (provider.completion.kind === "issue-comment") {
+    return resolveIssueCommentReview({
+      provider,
+      repo,
+      head,
+      prNumber,
+      token,
+      headPushedAt,
+    });
+  }
 
   if (provider.completion.kind === "check-run") {
     const { state, reviewedAt } = await fetchCheckRunState({

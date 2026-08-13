@@ -1,0 +1,42 @@
+agents:
+  queue: default
+
+steps:
+  - label: ":mag_right: select and upload main CI work"
+    key: ci-selector-base
+    if: build.branch == pipeline.default_branch
+    timeout_in_minutes: 5
+    command: |
+      . .buildkite/scripts/ci-image-refs.sh
+      bun --no-install .buildkite/scripts/select-main-pipeline.ts
+    plugins:
+      - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: ci-selector-base
+          checkout:
+            cloneFlags: "--no-tags"
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: checkout
+                resources:
+                  requests: { cpu: "50m", memory: "1Gi" }
+                  limits: { cpu: "400m", memory: "2Gi" }
+              - name: container-0
+                image: "${CI_BASE_IMAGE}"
+                imagePullPolicy: IfNotPresent
+                env:
+                  - name: BUILDKITE_SHELL
+                    value: "/bin/bash -e -c"
+                resources:
+                  requests:
+                    { cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }
+                  limits:
+                    { cpu: "7", memory: "12Gi", ephemeral-storage: "20Gi" }
+                volumeMounts:
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
+                envFrom:
+                  - secretRef: { name: buildkite-ci-secrets }

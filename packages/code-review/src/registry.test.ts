@@ -1,8 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { DEFAULT_PROVIDER_ID, resolveProvider } from "./providers/registry.ts";
+import {
+  DEFAULT_PROVIDER_ID,
+  REQUIRED_REVIEW_PROVIDER_ID,
+  resolveProvider,
+  resolveRequiredReviewProvider,
+} from "./providers/registry.ts";
 
 describe("resolveProvider", () => {
-  test("defaults to Codex", () => {
+  test("defaults provider-neutral consumers to Codex", () => {
     expect(DEFAULT_PROVIDER_ID).toBe("codex");
     expect(resolveProvider().id).toBe("codex");
     expect(resolveProvider(null).id).toBe("codex");
@@ -10,14 +15,20 @@ describe("resolveProvider", () => {
     expect(resolveProvider("  ").id).toBe("codex");
   });
 
-  test("resolves greptile (case-insensitive, trimmed)", () => {
-    expect(resolveProvider("greptile").id).toBe("greptile");
+  test("resolves every registered provider (case-insensitive, trimmed)", () => {
+    expect(resolveProvider("codex").id).toBe("codex");
     expect(resolveProvider("  GREPTILE ").id).toBe("greptile");
+    expect(resolveProvider("qodo").id).toBe("qodo");
+    expect(resolveProvider("  QODO ").id).toBe("qodo");
   });
 
-  test("throws loudly on an unknown provider", () => {
-    expect(() => resolveProvider("coderabbit")).toThrow(
-      /Unknown review provider/,
-    );
+  test("keeps the required CI provider separate from the neutral default", () => {
+    expect(REQUIRED_REVIEW_PROVIDER_ID).toBe("qodo");
+    expect(resolveRequiredReviewProvider().id).toBe("qodo");
+    expect(resolveProvider().id).toBe("codex");
+  });
+
+  test("rejects unknown providers", () => {
+    expect(() => resolveProvider("unknown")).toThrow(/Unknown review provider/);
   });
 });

@@ -49,6 +49,21 @@ export type ReviewThread = {
   line: number | null;
   url: string | null;
   priority: number | null;
+  /**
+   * What the finding says, when the provider renders it somewhere a consumer
+   * cannot re-read. Threads carry their own comment bodies, but findings parsed
+   * out of a persistent issue comment do not: without this a consumer is left
+   * with a path and a diff anchor, which name a file rather than the problem.
+   * `null` for providers whose findings are addressable GitHub threads.
+   */
+  title: string | null;
+};
+
+/** A provider-authored issue comment used as a review completion signal. */
+export type ReviewIssueComment = {
+  body: string;
+  updatedAt: string | null;
+  url: string | null;
 };
 
 /**
@@ -62,10 +77,43 @@ export type ReviewThread = {
  *   mode leave no artifact on a clean PR, so `cleanSignal` says how to detect
  *   "reviewed, nothing to flag" — currently a 👍 reaction from the provider
  *   (Codex).
+ * - `issue-comment`: the provider maintains findings in a review issue comment
+ *   and posts an independent acknowledgement naming each reviewed head. A
+ *   clean review with no acknowledgement falls back to the comment's
+ *   `updated_at`, bound against the head's push time (Qodo).
  */
 export type CompletionStrategy =
   | { kind: "check-run"; namePattern: RegExp }
-  | { kind: "review-at-head"; cleanSignal: "thumbsup-reaction" };
+  | { kind: "review-at-head"; cleanSignal: "thumbsup-reaction" }
+  | {
+      kind: "issue-comment";
+      marker: string;
+      /**
+       * A second provider-authored comment, posted only once a re-review of a
+       * named commit has finished. The review comment itself cannot carry that
+       * signal: providers rewrite its links to the new head within seconds of a
+       * push, long before re-reading the code, and providers whose links are
+       * PR-relative name no commit at all. Comments containing this marker are
+       * read for the commit they name and never for findings.
+       */
+      acknowledgement: { marker: string };
+      /**
+       * A placeholder the provider substitutes for its rendered review while a
+       * re-review runs. It carries `marker` but declares no findings, so
+       * reading it as the review comment fails the gate on a review that has
+       * not been written yet. `null` for providers that post no placeholder.
+       */
+      inProgress: { marker: string } | null;
+      /**
+       * Parse the findings the provider renders in that comment. Required
+       * here rather than optional on the provider: a provider whose findings
+       * live in a comment nobody can parse reads as a finding-free review, so
+       * the timestamp fallback would call it reviewed and its findings would
+       * never reach the gate. Declaring it alongside the strategy makes that
+       * combination unrepresentable instead of a fail-open misconfiguration.
+       */
+      parseFindings: (comment: ReviewIssueComment) => readonly ReviewThread[];
+    };
 
 /**
  * How a provider signals it deliberately skipped review (no reviewable files,

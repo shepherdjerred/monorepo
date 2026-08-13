@@ -33,6 +33,7 @@ export type ReviewSignalSummary = {
 function emptyCompletionSignalCounts(): Record<CompletionSignal, number> {
   return {
     "check-run": 0,
+    "issue-comment": 0,
     "review-at-head": 0,
     "thumbsup-reaction": 0,
     none: 0,

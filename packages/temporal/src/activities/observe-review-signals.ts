@@ -5,7 +5,7 @@ import {
   isBlocking,
   isProviderAuthor,
   REVIEW_SIGNAL_SCHEMA,
-  resolveProvider,
+  resolveRequiredReviewProvider,
   tallyFindings,
   type ReviewProvider,
   type ReviewSignalEvent,
@@ -36,8 +36,8 @@ import {
  * code-review signal via `@shepherdjerred/code-review` (the same
  * provider-neutral model the CI gate — `scripts/wait-for-review.ts` — uses),
  * records Prometheus metrics, and appends the signals as NDJSON to S3. A
- * longitudinal dataset of "what the review bot (Codex by default) did and
- * when", independent of the ephemeral gate logs.
+ * longitudinal dataset of "what the required review bot did and when",
+ * independent of the ephemeral gate logs.
  */
 
 const COMPONENT = "review-signal-collector";
@@ -141,8 +141,8 @@ async function buildSignalEvent(input: {
 }): Promise<ReviewSignalEvent> {
   const { provider, repo, prNumber, head, token } = input;
 
-  // Head push time first — `resolveReviewState` needs it to bind a 👍 reaction
-  // to the current head. Then resolve completion state, and fetch threads
+  // Head push time first — `resolveReviewState` needs it to bind a provider's
+  // commit-less completion signal to the current head. Then resolve state, and fetch threads
   // strictly AFTER (never concurrently): a concurrent thread query can capture
   // the pre-review snapshot while the state query observes the completed review,
   // archiving a "reviewed" event that undercounts the newly-created findings and
@@ -167,6 +167,7 @@ async function buildSignalEvent(input: {
     number: prNumber,
     token,
     provider,
+    issueComment: state.issueComment,
   });
 
   const providerThreads = threadResult.threads.filter(
@@ -374,7 +375,7 @@ async function runObserveReviewSignalsImpl(
   const start = Date.now();
   const repo = input.repo ?? DEFAULT_REPO;
   const limit = input.limit ?? DEFAULT_PR_LIMIT;
-  const provider = resolveProvider(Bun.env["REVIEW_PROVIDER"]);
+  const provider = resolveRequiredReviewProvider();
 
   // Total failures here (bad app credentials, GitHub outage) must propagate —
   // this is a boundary/telemetry job, but a run that can't even authenticate
