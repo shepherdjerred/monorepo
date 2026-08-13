@@ -267,7 +267,12 @@ export function reviewFindingsFromIssueComment(
       // the position within the parsed rendering is the only stable identity.
       id: `${provider.id}-issue-comment-${String(index)}`,
       author: finding.authorLogin ?? provider.id,
-      body: `${finding.path ?? "(no path)"} ${finding.url ?? ""}`.trim(),
+      // The finding's own words, not just where it points: a diff anchor
+      // names a file, so a worker given only that cannot tell what to fix, and
+      // a reworded finding on the same path would not move the fingerprint.
+      body: [finding.title, finding.path, finding.url]
+        .flatMap((part) => (part === null || part === "" ? [] : [part]))
+        .join(" — "),
       severity: reviewSeverity(priority),
       resolved: finding.isResolved,
       outdated: finding.isOutdated,

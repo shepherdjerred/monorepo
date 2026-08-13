@@ -128,6 +128,21 @@ function identityOf(summary: string, findingBody: string): string {
   );
 }
 
+/**
+ * The finding's headline, as a reader would see it: the summary stripped of its
+ * position, its resolved styling, and its category chips. Consumers that cannot
+ * re-read the comment rely on this to say what the finding is.
+ */
+function findingTitle(summary: string): string {
+  return summary
+    .replaceAll(/<code>[^<]*<\/code>/giu, "")
+    .replaceAll(/<[^>]*>/gu, "")
+    .replace(/^\s*\d+\.\s*/u, "")
+    .replaceAll(/[☑✓]/gu, "")
+    .replaceAll(/\s+/gu, " ")
+    .trim();
+}
+
 function parseSeveritySection(
   section: string,
   priority: 1 | 2 | 3,
@@ -168,6 +183,7 @@ function parseSeveritySection(
       number: Number.parseInt(numberText, 10),
       identity: identityOf(summary, findingBody),
       finding: {
+        title: findingTitle(summary),
         authorLogin: QODO_LOGIN,
         isResolved: struck || checked,
         isOutdated: false,

@@ -472,8 +472,8 @@ Component log value: `pr-webhook`. Metrics: `pr_webhook_*` (received / skipped /
 signature-failures) plus `pr_merge_conflict_check_*`.
 
 Not to be confused with the **CI review gate** (`## Review threads (CI gate)`
-above) — that is Codex/Greptile via `@shepherdjerred/code-review`, wholly separate
-from this webhook.
+above) — that is Qodo via `@shepherdjerred/code-review`, wholly separate from this
+webhook.
 
 ## HA presence (welcomeHome / leavingHome / reconcileLock) — debounce model
 

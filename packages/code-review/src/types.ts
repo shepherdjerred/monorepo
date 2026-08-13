@@ -49,6 +49,14 @@ export type ReviewThread = {
   line: number | null;
   url: string | null;
   priority: number | null;
+  /**
+   * What the finding says, when the provider renders it somewhere a consumer
+   * cannot re-read. Threads carry their own comment bodies, but findings parsed
+   * out of a persistent issue comment do not: without this a consumer is left
+   * with a path and a diff anchor, which name a file rather than the problem.
+   * `null` for providers whose findings are addressable GitHub threads.
+   */
+  title: string | null;
 };
 
 /** A provider-authored issue comment used as a review completion signal. */

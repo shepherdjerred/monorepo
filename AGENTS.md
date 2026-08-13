@@ -47,7 +47,7 @@ packages/
 ├── trmnl-dashboard/            # TRMNL e-ink dashboard
 ├── webring/                    # Webring component (npm)
 scripts/                        # Repo automation (setup-free): checks, deploys, release, hooks
-.buildkite/pipeline.yml         # Static Buildkite CI pipeline (no generator)
+.buildkite/pipeline.yml         # Canonical Buildkite CI pipeline (main selects a subset of these steps)
 sandbox/                        # Personal scratch (not shipped, excluded from most lint/CI)
 ├── archive/                    # Legacy projects (do not modify): bun-decompile, castle-casters, clauderon, glance, hn-enhancer, macos-cross-compiler, tips
 ├── poc/                        # Proof-of-concept experiments (e.g. interview-practice CLI)

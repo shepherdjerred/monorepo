@@ -180,6 +180,7 @@ const issueCommentProvider: ReviewProvider = {
         line: 1,
         url: null,
         priority: 1,
+        title: null,
       },
     ],
   },

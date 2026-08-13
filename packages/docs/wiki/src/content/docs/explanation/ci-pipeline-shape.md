@@ -51,9 +51,14 @@ keeps the second one a real failure.
 
 ## The review gate waits for the exact head
 
-The required PR review gate is Qodo. It waits for Qodo's persistent review
-comment to be updated for the exact PR head, and it folds unresolved Qodo
-findings into the gate decision. The gate is
+The required PR review gate is Qodo. Qodo keeps every finding in one persistent
+comment and relinks that comment to a new head within seconds of a push — often
+before it has re-read the code — so the gate deliberately does **not** treat an
+update to that comment as evidence the head was reviewed. A review that reports
+findings is bound to the head only by the separate acknowledgement Qodo posts
+naming the commit it just read. A clean review has no such acknowledgement to
+wait for, so it alone falls back to comparing the comment's timestamp against
+the push. Unresolved findings then fold into the gate decision. The gate is
 [`wait-for-review.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/wait-for-review.ts).
 
 Binding to the head commit is the whole point. A review comment from an earlier

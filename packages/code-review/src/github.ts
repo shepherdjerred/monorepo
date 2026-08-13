@@ -152,6 +152,8 @@ function parseThreadPage(
       line: numberField(node, "line"),
       url,
       priority,
+      // A GitHub thread is addressable: consumers read its comment directly.
+      title: null,
     });
   }
 
