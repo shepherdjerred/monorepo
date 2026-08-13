@@ -41,6 +41,7 @@ import {
 import {
   APPLICATION_LIFECYCLE_ANNOTATION,
   APPLICATION_RESOURCES_FINALIZER,
+  MANAGED_APPLICATION_LABEL,
   REPOSITORY_CHART_URLS,
 } from "../src/cdk8s/src/application-release-policy.ts";
 import {
@@ -618,6 +619,10 @@ const ActiveSyncRequestSchema = z.object({
 });
 
 const DeclaredSyncOptionsSchema = z.object({
+  metadata: z
+    .object({ labels: z.record(z.string(), z.string()).optional() })
+    .loose()
+    .optional(),
   spec: z
     .object({
       syncPolicy: z
@@ -643,10 +648,19 @@ const ACCOUNTED_SYNC_KEYS = new Set([
   "syncOptions",
 ]);
 
-function declaredSyncOptions(app: Record<string, unknown>): readonly string[] {
-  return (
-    DeclaredSyncOptionsSchema.parse(app).spec?.syncPolicy?.syncOptions ?? []
-  );
+/**
+ * The sync options an operation on this Application is expected to carry. The
+ * request never sends any, so they can only come from the sync-option admission
+ * policy, which matches on the managed label. The release policy withholds that
+ * label from the root `apps` Application precisely so its operations are not
+ * mutated, so the root legitimately carries none even though it declares some.
+ * Reading the declaration alone would reject every root retry.
+ */
+function expectedSyncOptions(app: Record<string, unknown>): readonly string[] {
+  const parsed = DeclaredSyncOptionsSchema.parse(app);
+  const admitted =
+    parsed.metadata?.labels?.[MANAGED_APPLICATION_LABEL] === "true";
+  return admitted ? (parsed.spec?.syncPolicy?.syncOptions ?? []) : [];
 }
 
 /**
@@ -692,9 +706,9 @@ function activeOperationRequestMismatch(
     return `prune ${(active.prune ?? false).toString()}`;
   }
   // The request never sends sync options, so admission's merge leaves exactly
-  // the Application's declared set. Anything else was added by someone else.
+  // the set it injects. Anything else was added by someone else.
   const admittedOptions = [...(active.syncOptions ?? [])].sort();
-  const expectedOptions = [...declaredSyncOptions(app)].sort();
+  const expectedOptions = [...expectedSyncOptions(app)].sort();
   if (canonicalJson(admittedOptions) !== canonicalJson(expectedOptions)) {
     return `sync options ${JSON.stringify(admittedOptions)}`;
   }

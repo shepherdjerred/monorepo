@@ -614,6 +614,10 @@ test("root release finalization adopts the exact active prune without another PO
         const currentOperation = marked ? activeOperation : unmarkedOperation;
         return Response.json({
           operation: currentOperation,
+          // The real root declares sync options but is deliberately excluded
+          // from the sync-option admission policy (no managed label), so its
+          // operations legitimately carry none.
+          spec: { syncPolicy: { syncOptions: ["CreateNamespace=true"] } },
           status: {
             resources: [],
             operationState: {

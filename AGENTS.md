@@ -95,8 +95,10 @@ work. A retry resumes at whichever root phase is still live rather than
 restarting at staging, which cannot adopt a `batch` or `prune` operation.
 Adoption compares the live operation against the complete operation this
 process would have produced, not only its identity: prune mode, manifest
-override, resource selection, and the sync options admission merges in from the
-Application's declared policy. The comparison is closed-world, so any field it
+override, resource selection, and the sync options admission merges in. Those
+options are expected only where admission applies, so the root Application,
+which the release policy withholds the managed label from, is expected to carry
+none even though it declares some. The comparison is closed-world, so any field it
 cannot account for is refused rather than ignored, and an operation sharing the
 UUID, revision, and phase marker but applying different work never gets
 adopted.

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { MANAGED_APPLICATION_LABEL } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -362,7 +363,7 @@ function activeChildOperation(sync: Record<string, unknown>) {
 
 async function reconcileAgainstActiveChildOperation(
   activeOperation: unknown,
-  workerSpec: Record<string, unknown> = {},
+  workerApplication: Record<string, unknown> = {},
 ): Promise<{
   exitCode: number;
   stderr: string;
@@ -409,7 +410,7 @@ async function reconcileAgainstActiveChildOperation(
       ) {
         return Response.json({
           operation: activeOperation,
-          spec: workerSpec,
+          ...workerApplication,
           status: { sync: { status: "OutOfSync", revision: "2.0.0-41" } },
         });
       }
@@ -509,8 +510,13 @@ describe("Argo CD child reconciliation identity", () => {
           syncOptions: ["ServerSideApply=true", "CreateNamespace=true"],
         }),
         {
-          syncPolicy: {
-            syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
+          // A managed child carries the label the admission policy matches on,
+          // which is what makes its declared options the expected ones.
+          metadata: { labels: { [MANAGED_APPLICATION_LABEL]: "true" } },
+          spec: {
+            syncPolicy: {
+              syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
+            },
           },
         },
       );

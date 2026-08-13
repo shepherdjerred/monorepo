@@ -63,16 +63,33 @@ function targetMatchesLive(target: unknown, live: unknown): boolean {
   return JSON.stringify(target) === JSON.stringify(live);
 }
 
+type ImmutableField = {
+  readonly path: readonly string[];
+  /**
+   * The value the API server assigns when the field is omitted. Present only
+   * for fields that are defaulted rather than server-assigned: dropping a
+   * non-default value resets it toward this default, which is itself an
+   * immutable update. A field without a default keeps its live value when the
+   * target omits it, so omission declares no change there.
+   */
+  readonly apiDefault?: string;
+};
+
 function declaredTargetChanged(
   live: Record<string, unknown>,
   target: Record<string, unknown>,
-  path: readonly string[],
+  field: ImmutableField,
 ): boolean {
-  const targetValue = valueAt(target, path);
-  return (
-    targetValue !== undefined &&
-    !targetMatchesLive(targetValue, valueAt(live, path))
-  );
+  const targetValue = valueAt(target, field.path);
+  const liveValue = valueAt(live, field.path);
+  if (targetValue === undefined) {
+    return (
+      field.apiDefault !== undefined &&
+      liveValue !== undefined &&
+      liveValue !== field.apiDefault
+    );
+  }
+  return !targetMatchesLive(targetValue, liveValue);
 }
 
 function activeProbeHandler(probe: Record<string, unknown>): string | null {
@@ -146,34 +163,37 @@ function identity(resource: ManagedResource): string {
   return `${resource.group ?? ""}/${resource.kind} ${resource.namespace ?? "_cluster"}/${resource.name}`;
 }
 
-function immutablePaths(kind: string): readonly (readonly string[])[] {
+function immutableFields(kind: string): readonly ImmutableField[] {
   switch (kind) {
     // A DaemonSet's selector is as immutable as a Deployment's; the API server
     // rejects the update rather than replacing the workload.
     case "DaemonSet":
     case "Deployment":
-      return [["spec", "selector"]];
+      return [{ path: ["spec", "selector"] }];
     case "StatefulSet":
       return [
-        ["spec", "podManagementPolicy"],
-        ["spec", "selector"],
-        ["spec", "serviceName"],
-        ["spec", "volumeClaimTemplates"],
+        {
+          path: ["spec", "podManagementPolicy"],
+          apiDefault: "OrderedReady",
+        },
+        { path: ["spec", "selector"] },
+        { path: ["spec", "serviceName"] },
+        { path: ["spec", "volumeClaimTemplates"] },
       ];
     case "PersistentVolumeClaim":
       return [
-        ["spec", "accessModes"],
-        ["spec", "dataSource"],
-        ["spec", "dataSourceRef"],
-        ["spec", "storageClassName"],
-        ["spec", "volumeMode"],
-        ["spec", "volumeName"],
+        { path: ["spec", "accessModes"] },
+        { path: ["spec", "dataSource"] },
+        { path: ["spec", "dataSourceRef"] },
+        { path: ["spec", "storageClassName"] },
+        { path: ["spec", "volumeMode"], apiDefault: "Filesystem" },
+        { path: ["spec", "volumeName"] },
       ];
     case "Service":
       return [
-        ["spec", "clusterIP"],
-        ["spec", "clusterIPs"],
-        ["spec", "ipFamilies"],
+        { path: ["spec", "clusterIP"] },
+        { path: ["spec", "clusterIPs"] },
+        { path: ["spec", "ipFamilies"] },
       ];
     default:
       return [];
@@ -190,10 +210,10 @@ export function analyzeApplySafety(
     if (live === null || target === null) {
       continue;
     }
-    for (const path of immutablePaths(resource.kind)) {
-      if (declaredTargetChanged(live, target, path)) {
+    for (const field of immutableFields(resource.kind)) {
+      if (declaredTargetChanged(live, target, field)) {
         findings.push(
-          `${identity(resource)} changes immutable /${path.join("/")}`,
+          `${identity(resource)} changes immutable /${field.path.join("/")}`,
         );
       }
     }

@@ -92,6 +92,35 @@ describe("ArgoCD apply safety", () => {
     ]);
   });
 
+  test("reports dropping a non-default immutable field", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "media",
+          name: "index",
+          // Omitting the field resets it toward OrderedReady, which the API
+          // server rejects just as it rejects an explicit change.
+          liveState: state({ spec: { podManagementPolicy: "Parallel" } }),
+          targetState: state({ spec: { replicas: 2 } }),
+        },
+        {
+          kind: "PersistentVolumeClaim",
+          namespace: "media",
+          name: "blocks",
+          liveState: state({
+            spec: { accessModes: ["ReadWriteOnce"], volumeMode: "Block" },
+          }),
+          targetState: state({ spec: { accessModes: ["ReadWriteOnce"] } }),
+        },
+      ]),
+    ).toEqual([
+      "apps/StatefulSet media/index changes immutable /spec/podManagementPolicy",
+      "/PersistentVolumeClaim media/blocks changes immutable /spec/volumeMode",
+    ]);
+  });
+
   test("allows mutable changes and newly created resources", () => {
     expect(
       analyzeApplySafety([
