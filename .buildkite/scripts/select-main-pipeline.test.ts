@@ -50,7 +50,7 @@ test("keeps only required main jobs when no optional lane changed", () => {
   const selected = selectedKeys(steps, new Map());
   expect([...selected]).toEqual([
     "verify",
-    "alert-dashboard-postgres",
+    "alert-dashboard-sqlite",
     "release-please",
     "build-summary",
   ]);
@@ -58,7 +58,7 @@ test("keeps only required main jobs when no optional lane changed", () => {
   validateRenderedSteps(rendered);
   expect(rendered.map((step) => step["key"])).toEqual([
     "verify",
-    "alert-dashboard-postgres",
+    "alert-dashboard-sqlite",
     "release-please",
     "build-summary",
   ]);
@@ -207,7 +207,7 @@ test("renders stable selector dependencies and no duplicate keys", () => {
 test("rejects missing dependencies before dynamic upload", () => {
   const missingDependencySteps = new Map([
     ["verify", { key: "verify", depends_on: "missing-step" }],
-    ["alert-dashboard-postgres", { key: "alert-dashboard-postgres" }],
+    ["alert-dashboard-sqlite", { key: "alert-dashboard-sqlite" }],
     ["release-please", { key: "release-please" }],
     ["build-summary", { key: "build-summary" }],
   ]);
@@ -296,7 +296,7 @@ test("keeps unmodeled main steps in the fail-open graph", () => {
 test("preserves native path filters when the selector diff is available", () => {
   const fallbackDocument = parsePipeline(`steps:
   - key: verify
-  - key: alert-dashboard-postgres
+  - key: alert-dashboard-sqlite
     if_changed: packages/alert-dashboard/**
 `);
   const rendered = renderFallbackSteps(

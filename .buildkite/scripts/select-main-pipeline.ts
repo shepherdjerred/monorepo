@@ -12,7 +12,7 @@ type PipelineDocument = {
 
 const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   verify: [],
-  "alert-dashboard-postgres": [],
+  "alert-dashboard-sqlite": [],
   "release-please": [],
   "build-summary": [],
   "playwright-e2e-main": ["playwright"],
