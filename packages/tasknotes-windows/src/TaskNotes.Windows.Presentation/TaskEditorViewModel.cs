@@ -151,10 +151,21 @@ namespace TaskNotes.Windows.Presentation
         public string TimerLabel => IsTimerActive ? "Stop timer" : "Start timer";
 
         /// <summary>Gets whether the loaded task has a live timing session.</summary>
-        public bool IsTimerActive =>
-            TaskId is string taskId
-            && _store.State.TaskTime?.TaskId == taskId
-            && _store.State.TaskTime.HasActiveSession;
+        public bool IsTimerActive
+        {
+            get
+            {
+                if (TaskId is not string taskId)
+                {
+                    return false;
+                }
+                return
+                    _store.State.TaskTime is { } live
+                    && string.Equals(live.TaskId, taskId, StringComparison.Ordinal)
+                    ? live.HasActiveSession
+                    : _original?.HasActiveTimeSession == true;
+            }
+        }
 
         /// <summary>Gets the current validation message.</summary>
         public string? ValidationError

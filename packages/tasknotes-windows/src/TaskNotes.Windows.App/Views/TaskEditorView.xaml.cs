@@ -48,14 +48,10 @@ namespace TaskNotes.Windows.App.Views
                 showValidation ?? throw new ArgumentNullException(nameof(showValidation));
         }
 
-        internal void Load(TaskItem task, bool loadTime = true)
+        internal void Load(TaskItem task)
         {
             RequireViewModel().Load(task);
             Visibility = Visibility.Visible;
-            if (loadTime)
-            {
-                Run("load-task-time", () => RequireViewModel().LoadTimeAsync());
-            }
         }
 
         internal void Refresh(TaskNotesState state)
@@ -74,7 +70,7 @@ namespace TaskNotes.Windows.App.Views
             }
             else if (!viewModel.IsDirty)
             {
-                Load(current, loadTime: false);
+                Load(current);
             }
         }
 

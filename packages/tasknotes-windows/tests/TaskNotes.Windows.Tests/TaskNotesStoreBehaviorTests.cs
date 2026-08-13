@@ -400,7 +400,8 @@ namespace TaskNotes.Windows.Tests
                 false,
                 true,
                 null,
-                "Today"
+                "Today",
+                false
             );
             Assert.AreEqual("Pending", item.PendingLabel);
             Assert.AreEqual("2026-08-11", item.DateLabel);

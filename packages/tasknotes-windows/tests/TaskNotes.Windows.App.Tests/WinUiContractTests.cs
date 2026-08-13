@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
@@ -167,6 +168,37 @@ namespace TaskNotes.Windows.App.Tests
                 Assert.AreSame(quickAdd, quickAddView.ViewModel);
                 Assert.AreSame(shell, taskListView.ViewModel);
                 Assert.AreSame(editor, taskListView.EditorViewModel);
+
+                TaskItem task = new(
+                    "task.md",
+                    "Task title",
+                    null,
+                    "open",
+                    "Open",
+                    "normal",
+                    "Normal",
+                    null,
+                    null,
+                    null,
+                    null,
+                    [],
+                    [],
+                    [],
+                    null,
+                    0,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    null,
+                    string.Empty,
+                    false
+                );
+                editorView.Load(task);
+
+                Assert.AreEqual("Task title", editor.Title);
+                Assert.AreEqual(Visibility.Visible, editorView.Visibility);
             }
             finally
             {

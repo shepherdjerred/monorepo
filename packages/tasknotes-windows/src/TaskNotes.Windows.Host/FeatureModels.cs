@@ -149,7 +149,8 @@ namespace TaskNotes.Windows.Host
             bool isRecurring,
             bool isPending,
             string? occurrenceDate,
-            string groupLabel
+            string groupLabel,
+            bool hasActiveTimeSession
         )
         {
             Id = id;
@@ -175,6 +176,7 @@ namespace TaskNotes.Windows.Host
             IsPending = isPending;
             OccurrenceDate = occurrenceDate;
             GroupLabel = groupLabel;
+            HasActiveTimeSession = hasActiveTimeSession;
         }
 
         /// <summary>Gets the stable task identifier.</summary>
@@ -245,6 +247,9 @@ namespace TaskNotes.Windows.Host
 
         /// <summary>Gets the presentation group label.</summary>
         public string GroupLabel { get; }
+
+        /// <summary>Gets whether the synchronized task snapshot contains an open time entry.</summary>
+        public bool HasActiveTimeSession { get; }
 
         /// <summary>Gets the compact synchronization label.</summary>
         public string PendingLabel => IsPending ? "Pending" : string.Empty;

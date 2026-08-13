@@ -205,13 +205,14 @@ namespace TaskNotes.Windows.Tests
                 false,
                 false,
                 null,
-                string.Empty
+                string.Empty,
+                true
             );
             editor.Load(blocked);
             Assert.AreEqual(45d, editor.EstimateValue);
             Assert.AreEqual("Blocked by another task", editor.DependencyLabel);
             Assert.AreEqual("Tracked: 12 minutes", editor.TrackedTimeLabel);
-            Assert.AreEqual("Start timer", editor.TimerLabel);
+            Assert.AreEqual("Stop timer", editor.TimerLabel);
             editor.EstimateValue = 31.6;
             Assert.AreEqual(32u, editor.TimeEstimate);
             editor.EstimateValue = double.NaN;
@@ -263,7 +264,8 @@ namespace TaskNotes.Windows.Tests
                 false,
                 false,
                 null,
-                string.Empty
+                string.Empty,
+                false
             );
             editor.Load(blocking);
             Assert.AreEqual("Blocking another task", editor.DependencyLabel);
@@ -396,7 +398,8 @@ namespace TaskNotes.Windows.Tests
                 false,
                 false,
                 null,
-                string.Empty
+                string.Empty,
+                false
             );
         }
 

@@ -220,7 +220,8 @@ namespace TaskNotes.Windows.Tests
                 false,
                 false,
                 null,
-                string.Empty
+                string.Empty,
+                false
             );
         }
 

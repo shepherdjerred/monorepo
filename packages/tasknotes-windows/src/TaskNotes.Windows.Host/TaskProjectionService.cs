@@ -326,7 +326,8 @@ namespace TaskNotes.Windows.Host
                 recurring,
                 pending,
                 occurrence,
-                GroupLabel(task, occurrence, group, today)
+                GroupLabel(task, occurrence, group, today),
+                task.TimeEntries.Any(entry => entry.EndTime is null)
             );
         }
 
