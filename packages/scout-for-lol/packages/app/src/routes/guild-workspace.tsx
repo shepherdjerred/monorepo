@@ -7,9 +7,14 @@ import {
   useParams,
 } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Suspense, type ReactNode } from "react";
+import { Suspense, useEffect, type ReactNode } from "react";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import type { Permission } from "@scout-for-lol/data";
+import {
+  analyticsContextRoute,
+  clearGuildContext,
+  resolveGuildContext,
+} from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { cn } from "#src/lib/cn.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
@@ -71,6 +76,33 @@ export function GuildWorkspace() {
   );
   const guild = guilds?.find((g) => g.id === guildId);
   const { perms, isLoading, hasAccess, error } = usePermissions(guildId);
+
+  // This is the only component mounted for every `/g/:guildId/*` route, so it
+  // owns the guild super property: every subsequent event — autocapture and
+  // pageviews included — carries the guild, and leaving the workspace clears it.
+  //
+  // `guildId` is an unvalidated route param until `usePermissions` resolves, so
+  // registering it eagerly would let any signed-in visitor deep-link
+  // `/g/<anything>` and stamp an arbitrary value onto every event the
+  // unauthorized view emits — attacker-controlled and unbounded in cardinality.
+  // Wait for the server to confirm access; the property stays cleared on
+  // validation or authorization failure.
+  //
+  // The root layout holds this route's first pageview — and all autocapture —
+  // until this effect reports the answer. On a cold deep link the permission
+  // queries have not resolved on first render, and an entry pageview emitted
+  // then would permanently lack `guild_id`: the property registers later, but
+  // no replacement pageview is ever sent, and that entry event is the
+  // installation-to-guild signal the whole join exists for.
+  const contextRoute = analyticsContextRoute(location.pathname);
+  const analyticsGuildId = hasAccess ? guildId : undefined;
+  useEffect(() => {
+    if (contextRoute === undefined || isLoading) return;
+    resolveGuildContext(contextRoute, analyticsGuildId);
+    return () => {
+      clearGuildContext();
+    };
+  }, [contextRoute, isLoading, analyticsGuildId]);
 
   if (guildId === undefined) {
     return (

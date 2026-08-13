@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "test": "bun test scripts",
+    "test": "bun test scripts/build-wasm.test.ts scripts/vendor-n64wasm.test.ts scripts/migration-smoke.test.ts",
     "test:coverage": "bun test --coverage-reporter=text --coverage-reporter=lcov --coverage-dir=coverage --config ../../scripts/bunfig.coverage.toml --coverage scripts/build-wasm.test.ts scripts/vendor-n64wasm.test.ts",
     "lint": "eslint --config eslint.config.ts scripts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",

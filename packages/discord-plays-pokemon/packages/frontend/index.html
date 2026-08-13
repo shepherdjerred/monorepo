@@ -71,20 +71,25 @@
             ui_host: "https://us.posthog.com",
             defaults: "2026-05-30",
             autocapture: true,
-            capture_pageview: true,
+            capture_pageview: "history_change",
             capture_pageleave: true,
-            cookieless_mode: "always",
+            capture_heatmaps: true,
+            capture_dead_clicks: true,
+            capture_performance: { web_vitals: true, network_timing: true },
             respect_dnt: true,
-            person_profiles: "never",
-            disable_session_recording: true,
-            before_send: function (event) {
-              if (event && event.properties) {
-                event.properties.$current_url =
-                  window.location.origin + window.location.pathname;
-                event.properties.$pathname = window.location.pathname;
-              }
-              return event;
-            },
+            person_profiles: "always",
+            // Autocapture records element text and attributes on its own;
+            // maskTextSelector below covers session replay only. Without these
+            // two flags every click attached a Discord username to a durable
+            // person profile. Interaction counts survive; identities do not.
+            mask_all_text: true,
+            mask_all_element_attributes: true,
+            // The profile card renders the signed-in player's Discord username
+            // as ordinary text, which maskAllInputs does not cover — it masks
+            // form values only. Masking every text node keeps replay useful for
+            // layout and interaction without recording who is playing.
+            session_recording: { maskAllInputs: true, maskTextSelector: "*" },
+            disable_session_recording: false,
             loaded: function (posthog) {
               posthog.register({
                 site_key: "pokemon",

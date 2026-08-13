@@ -17,25 +17,81 @@ const RegistrySchema = z.object({
   ),
 });
 
+// `masksAllText` marks the sites that render a signed-in Discord identity as
+// ordinary DOM text. `maskAllInputs` only masks form values, so replay on those
+// sites would otherwise record usernames verbatim. An element-level allowlist
+// would fail open the first time a new component renders a name, so those sites
+// mask every text node instead.
 const staticTrackers = [
   {
     path: "packages/sjer.red/src/layouts/BaseLayout.astro",
     hostname: "sjer.red",
+    masksAllText: false,
   },
-  { path: "packages/resume/index.html", hostname: "resume.sjer.red" },
-  { path: "packages/webring/posthog.js", hostname: "webring.sjer.red" },
+  {
+    path: "packages/resume/index.html",
+    hostname: "resume.sjer.red",
+    masksAllText: false,
+  },
+  {
+    path: "packages/webring/posthog.js",
+    hostname: "webring.sjer.red",
+    masksAllText: false,
+  },
   {
     path: "packages/better-skill-capped/index.html",
     hostname: "better-skill-capped.com",
+    masksAllText: false,
   },
   {
     path: "packages/discord-plays-mario-kart/packages/frontend/index.html",
     hostname: "mariokart.sjer.red",
+    masksAllText: true,
   },
   {
     path: "packages/discord-plays-pokemon/packages/frontend/index.html",
     hostname: "pokebot.sjer.red",
+    masksAllText: true,
   },
+] as const;
+
+// These three keys are load-bearing by their ABSENCE, and each one silently
+// degrades collection rather than failing loudly:
+//   cookieless_mode — PostHog's ingestion drops cookieless events unless the
+//     project enables cookieless server hash mode; capture still returns 200.
+//   persistence     — an override to "memory" resets the distinct id on every
+//     page load, so unique visitors collapse into page loads.
+//   before_send     — the old hook rewrote $current_url to origin+pathname,
+//     discarding the campaign query strings attribution depends on.
+// Matched as the key followed by a colon or an open paren (method shorthand)
+// with optional whitespace between. A fixed `"persistence:"` substring search
+// misses `persistence : "memory"`, which is valid JavaScript, so the gate would
+// pass while the regression it exists to catch shipped.
+const FORBIDDEN_SETTINGS: readonly { key: string; pattern: RegExp }[] = [
+  { key: "cookieless_mode", pattern: /\bcookieless_mode\s*[:(]/ },
+  { key: "persistence", pattern: /\bpersistence\s*[:(]/ },
+  { key: "before_send", pattern: /\bbefore_send\s*[:(]/ },
+];
+
+function forbiddenSettingIn(source: string): string | undefined {
+  return FORBIDDEN_SETTINGS.find((setting) => setting.pattern.test(source))
+    ?.key;
+}
+
+function sessionRecordingSetting(masksAllText: boolean): string {
+  return masksAllText
+    ? 'session_recording: { maskAllInputs: true, maskTextSelector: "*" }'
+    : "session_recording: { maskAllInputs: true }";
+}
+
+// Replay masking and autocapture masking are separate switches. `maskTextSelector`
+// governs recordings only, so a site can hide a username from replay while
+// autocapture still ships it as element text on every click — and with person
+// profiles on, straight onto a durable profile. The sites that render an identity
+// need both.
+const AUTOCAPTURE_MASKING = [
+  "mask_all_text: true",
+  "mask_all_element_attributes: true",
 ] as const;
 
 const registry = RegistrySchema.parse(
@@ -68,11 +124,8 @@ for (const site of registry.sites) {
     throw new Error(`Duplicate analytics site key: ${site.key}`);
   }
   keys.add(site.key);
-  const shouldReplay = site.hostname.endsWith("scout-for-lol.com");
-  if (site.sessionReplay !== shouldReplay) {
-    throw new Error(
-      `Session replay must be ${String(shouldReplay)} for ${site.hostname}`,
-    );
+  if (!site.sessionReplay) {
+    throw new Error(`Session replay must be enabled for ${site.hostname}`);
   }
 }
 
@@ -106,13 +159,18 @@ for (const tracker of staticTrackers) {
       `${tracker.path} must register PostHog site key ${site.key}`,
     );
   }
-  if (!source.includes("disable_session_recording: true")) {
-    throw new Error(`${tracker.path} must keep session replay disabled`);
+  if (!source.includes("disable_session_recording: false")) {
+    throw new Error(`${tracker.path} must enable session replay`);
   }
   for (const captureSetting of [
     "autocapture: true",
-    "capture_pageview:",
+    'capture_pageview: "history_change"',
     "capture_pageleave: true",
+    "capture_heatmaps: true",
+    "capture_dead_clicks: true",
+    "capture_performance: { web_vitals: true, network_timing: true }",
+    sessionRecordingSetting(tracker.masksAllText),
+    ...(tracker.masksAllText ? AUTOCAPTURE_MASKING : []),
   ]) {
     if (!source.includes(captureSetting)) {
       throw new Error(
@@ -121,9 +179,8 @@ for (const tracker of staticTrackers) {
     }
   }
   for (const privacySetting of [
-    'cookieless_mode: "always"',
     "respect_dnt: true",
-    'person_profiles: "never"',
+    'person_profiles: "always"',
   ]) {
     if (!source.includes(privacySetting)) {
       throw new Error(
@@ -131,13 +188,9 @@ for (const tracker of staticTrackers) {
       );
     }
   }
-  if (
-    !source.includes("window.location.origin + window.location.pathname") ||
-    !source.includes("$pathname")
-  ) {
-    throw new Error(
-      `${tracker.path} must strip query strings and hashes from analytics URLs`,
-    );
+  const forbidden = forbiddenSettingIn(source);
+  if (forbidden !== undefined) {
+    throw new Error(`${tracker.path} must not set ${forbidden}`);
   }
   if (
     !source.includes("e.__SV") ||
@@ -157,11 +210,13 @@ for (const requiredSetting of [
   "e.__SV",
   "e._i.push",
   "autocapture: true",
-  "capture_pageview: true",
+  'capture_pageview: "history_change"',
   "capture_pageleave: true",
-  'persistence: "memory"',
+  "capture_heatmaps: true",
+  "capture_dead_clicks: true",
+  "capture_performance: { web_vitals: true, network_timing: true }",
   "respect_dnt: true",
-  'person_profiles: "never"',
+  'person_profiles: "always"',
   "session_recording: { maskAllInputs: true }",
 ]) {
   if (!scoutBootstrap.includes(requiredSetting)) {
@@ -169,6 +224,12 @@ for (const requiredSetting of [
       `${scoutBootstrapPath} must configure Scout PostHog setting ${requiredSetting}`,
     );
   }
+}
+const forbiddenScoutSetting = forbiddenSettingIn(scoutBootstrap);
+if (forbiddenScoutSetting !== undefined) {
+  throw new Error(
+    `${scoutBootstrapPath} must not set ${forbiddenScoutSetting}`,
+  );
 }
 
 if (registry.projectToken === "phc_REPLACEWITHEXISTINGPROJECTTOKEN") {

@@ -701,15 +701,106 @@ messaging real people.
 
 ## Server-side product analytics invariants
 
-- PostHog guild lifecycle identity is `GuildInstall.analyticsInstallationId`,
-  never a Discord ID. Preserve it across reconnect-style `guildCreate` events;
-  rotate it only after a confirmed removal and reinstall.
-- Keep the event/property registry closed and bounded. Never send Discord
-  guild/user/channel IDs, guild names, Riot IDs, command options, content, URLs,
-  or error messages.
-- Every event sets `$process_person_profile: false` and disables GeoIP. Never
-  call PostHog `identify`, `alias`, or group APIs, and never correlate browser
-  sessions to guild installations.
+- PostHog guild lifecycle identity is `GuildInstall.analyticsInstallationId`.
+  Preserve it across reconnect-style `guildCreate` events; rotate it only after
+  a confirmed removal and reinstall. It remains the event `distinctId`.
+- Every event also carries `guild_id`, the Discord guild id, sourced from
+  `AnalyticsInstallation.serverId`. The two identifiers answer different
+  questions and must not be collapsed into one: `analyticsInstallationId`
+  rotates on reinstall so install-level funnels restart cleanly, while
+  `guild_id` is stable for the guild's whole history. The browser SPA registers
+  the same `guild_id` as a super property, which is what lets a web session be
+  joined to a guild installation. Register it only once `usePermissions`
+  confirms the viewer may access that guild — before that it is an unvalidated
+  route parameter, and a deep link to `/g/<anything>` would stamp an
+  attacker-supplied value onto every event — and register it for the session,
+  not durably: the workspace clears it from a React effect cleanup that a hard
+  navigation or a closed tab never runs.
+- Keep the event/property registry closed and bounded. Beyond `guild_id`, never
+  send Discord user or channel IDs, guild names, Riot IDs, command options,
+  message content, URLs, or error messages. **The distinct id counts.** The
+  browser identifies with `User.analyticsUserId`, an opaque app-owned UUID —
+  never `discordId`. A distinct id is the durable join key for a person's
+  events and recordings, so a snowflake there makes all of it addressable by
+  Discord account, which is exactly what this rule exists to prevent.
+- The identity sync lives in `RootLayout` (`useAnalyticsIdentity`), which every
+  route renders through — **not** in `RequireSession`. `/login` is mounted
+  outside that guard, so the guard only ever runs for people who still have a
+  session: exactly the people who do not need resetting. Putting it there left
+  the login page, the one screen a signed-out person actually sees, attributed
+  to the previous account. `router-analytics-identity.test.ts` pins this.
+- **PostHog's persisted state is the only source of truth for who is
+  identified.** `analytics.ts` deliberately keeps no module-level "current user"
+  variable, and `identifyUser` decides from `_isIdentified()` +
+  `get_distinct_id()`. Module state is empty on every fresh page load while
+  PostHog still holds the previous person, and a full-page navigation is the
+  normal case here — the OAuth round trip, a hard reload, a restored tab. Every
+  identity bug this file has had was those two disagreeing: a stale identity
+  surviving an expired cookie, and an account switch aliasing two people because
+  `identify` ran without a reset. Do not reintroduce a cache of the current user.
+- **Nothing is captured until the gate opens.** `initAnalytics` calls
+  `opt_out_capturing()` explicitly on **every** initialisation, and `RootLayout`
+  calls `startAnalyticsCapture()` only once the session has answered and the
+  route's own context is attached. The explicit close is load-bearing:
+  `opt_out_capturing_by_default` is consulted only when the browser has no
+  stored consent decision, so once a visit opts in, every later cold load would
+  honour that stored opt-in and capture immediately — leaving the gate inert for
+  exactly the returning visitors it protects. Keep
+  `opt_out_persistence_by_default` at `false`, or opting out takes the distinct
+  id with it.
+  The gate exists because autocapture begins the instant PostHog initialises:
+  ordering a `capture()` call later cannot hold it back, so a cold load with a
+  stale persisted identity recorded autocapture — and the entry pageview —
+  against the previous account, which PostHog cannot reattribute afterwards.
+  The trade is deliberate: pre-gate events are dropped rather than
+  mis-attributed. A route that carries its own analytics property
+  must be listed in `analyticsContextRoute` and must call `resolveGuildContext`
+  (or an equivalent) when its answer settles, including when access is denied —
+  unresolved is the default, so forgetting withholds the pageview instead of
+  leaking an unattributed one.
+- **Every `reset()` must be followed by a re-opt-in, and only
+  `resetPersistedIdentity` may call it.** `posthog.reset()` clears consent along
+  with the person, returning the instance to its configured default — which is
+  opted out. A reset after the gate opened therefore kills capture permanently
+  and silently for that browser. This is a worse failure than any bug the gate
+  fixes, and it is invisible in review, so the re-opt-in lives in one helper
+  rather than at call sites.
+- **Only a successful session response is an answer.** `syncAnalyticsIdentity`
+  acts on `isSuccess`, never on `!isLoading`. A failed query also stops loading,
+  and the session query runs with retries disabled, so reading failure as
+  "signed out" resets a live identity and strands the rest of the visit as
+  anonymous while the cookie is still valid. Loading and failure are both
+  "unknown", and unknown means do nothing.
+- Scout's replay masks every text node (`maskTextSelector: "*"`), not just form
+  values. `person_profiles: "always"` associates each recording with an
+  identified person, and the workspace renders guild names, Discord display
+  names, Riot accounts, player aliases, and channel names as ordinary text.
+  Do not narrow this to a per-component allowlist: it fails open the first time
+  a new screen renders a name, and the failure is silent.
+- **Replay masking and autocapture masking are different switches**, and a site
+  that renders an identity needs both. `maskTextSelector` governs recordings
+  only; autocapture independently collects element `textContent` and attributes,
+  so a masked recording can sit beside a click event carrying the alias as
+  `$el_text` and the guild path in `href` — attached to a durable person profile.
+  Scout, Mario Kart, and Pokémon therefore all set `mask_all_text` and
+  `mask_all_element_attributes`; `scripts/check-analytics-sites.ts` enforces it
+  for every tracker marked `masksAllText`.
+- `guild_id` on browser events deliberately joins a website session to a bot
+  installation, and the published privacy policy
+  (`packages/frontend/src/pages/privacy.mdx`) discloses that join. If the join
+  ever changes shape — new identifiers, a wider link, or removing it — update
+  that policy in the same change. It is a user-facing legal statement, not a
+  code comment.
+- Person profiles are ON. Do not reintroduce `$process_person_profile: false` or
+  `$geoip_disable` — install-level retention depends on them being off.
+- GeoIP is ON for browser events and OFF for these server events
+  (`disableGeoip: true`). These captures come from Discord gateway events and
+  background database/delivery workflows with no end-user `$ip`, so PostHog
+  would resolve the backend's own egress location — one datacenter, identical on
+  every event — and present it as the guild's. Do not turn it on for a country
+  breakdown: the breakdown it produces is wrong, not merely coarse.
+- PostHog _group_ analytics is a paid add-on and is deliberately NOT used; guild
+  analysis goes through the `guild_id` property.
 - Capture first subscription only after the web or Discord transaction commits,
   and claim `firstSubscriptionAt` atomically (like `firstCoreOutputAt` below)
   rather than deriving "first" from the current subscription count: a guild

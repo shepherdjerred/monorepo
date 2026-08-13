@@ -293,5 +293,12 @@ describe("handleGuildCreate — availability guard and concurrent races", () => 
     );
     expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
     expect(captureGuildInstalled.mock.calls[0]?.[1]).toBe("reinstall");
+    // The two identities answer different questions and must not move together:
+    // analyticsInstallationId rotates (asserted above) so install-level funnels
+    // restart, while serverId stays put so guild-level history survives.
+    expect(captureGuildInstalled.mock.calls[0]?.[0]).toMatchObject({
+      analyticsInstallationId: row?.analyticsInstallationId,
+      serverId: SERVER_ID,
+    });
   });
 });

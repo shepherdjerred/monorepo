@@ -19,6 +19,45 @@
     return;
   }
 
+  var captureConfig = {
+    autocapture: true,
+    capture_pageview: "history_change",
+    capture_pageleave: true,
+    capture_heatmaps: true,
+    capture_dead_clicks: true,
+    capture_performance: { web_vitals: true, network_timing: true },
+    session_recording: { maskAllInputs: true },
+    disable_session_recording: sessionReplay !== "true",
+  };
+
+  function parseSession(payload) {
+    if (payload === null || typeof payload !== "object") return undefined;
+    var result = payload["result"];
+    if (result === null || typeof result !== "object") return undefined;
+    var data = result["data"];
+    if (data === null || typeof data !== "object") return undefined;
+    var user = data["user"];
+    if (user === null) return { analyticsUserId: null };
+    if (typeof user !== "object") return undefined;
+    var analyticsUserId = user["analyticsUserId"];
+    if (typeof analyticsUserId !== "string" || analyticsUserId.length === 0) {
+      return undefined;
+    }
+    return { analyticsUserId: analyticsUserId };
+  }
+
+  function reconcileIdentity(posthog, session) {
+    if (session.analyticsUserId === null) {
+      if (posthog._isIdentified()) posthog.reset();
+      return;
+    }
+    if (posthog._isIdentified()) {
+      if (posthog.get_distinct_id() === session.analyticsUserId) return;
+      posthog.reset();
+    }
+    posthog.identify(session.analyticsUserId);
+  }
+
   !(function (t, e) {
     var o, n, p, r;
     e.__SV ||
@@ -76,27 +115,62 @@
     asset_host: assetHost,
     ui_host: "https://us.posthog.com",
     defaults: "2026-05-30",
-    autocapture: true,
-    capture_pageview: true,
-    capture_pageleave: true,
-    persistence: "memory",
+    // Automatic sources start disabled. The public marketing shell shares
+    // PostHog storage with `/app`, so SDK initialisation must not let a stored
+    // opt-in attribute this page to a stale signed-in person.
+    autocapture: false,
+    capture_pageview: false,
+    capture_pageleave: false,
+    capture_heatmaps: false,
+    capture_dead_clicks: false,
+    capture_performance: false,
     respect_dnt: true,
-    person_profiles: "never",
+    person_profiles: "always",
     session_recording: { maskAllInputs: true },
-    disable_session_recording: sessionReplay !== "true",
-    before_send: function (event) {
-      if (event && event.properties) {
-        event.properties.$current_url =
-          window.location.origin + window.location.pathname;
-        event.properties.$pathname = window.location.pathname;
+    disable_session_recording: true,
+    opt_out_capturing_by_default: true,
+    opt_out_persistence_by_default: false,
+    loaded: async function (posthog) {
+      posthog.opt_out_capturing();
+      posthog.unregister_for_session("guild_id");
+      // Once capture is explicitly closed, start the high-fidelity collectors.
+      // Their events remain suppressed until session reconciliation opts in.
+      posthog.set_config(captureConfig);
+
+      var response;
+      try {
+        response = await window.fetch("/trpc/auth.sessionState", {
+          credentials: "same-origin",
+          headers: { Accept: "application/json" },
+        });
+      } catch {
+        return;
       }
-      return event;
-    },
-    loaded: function (posthog) {
+      if (!response.ok) return;
+
+      var payload;
+      try {
+        payload = await response.json();
+      } catch {
+        return;
+      }
+      var session = parseSession(payload);
+      if (session === undefined) return;
+
+      reconcileIdentity(posthog, session);
+      // `reset()` also clears registered properties, so restore site identity
+      // after reconciliation and only then enable capture. PostHog's opt-in
+      // path emits the initial pageview with the now-current identity.
+      posthog.unregister_for_session("guild_id");
       posthog.register({
         site_key: siteKey,
         site_hostname: siteDomain,
       });
+      posthog.opt_in_capturing({ captureEventName: false });
     },
   });
+  // Returning visitors can carry a stored opt-in, so the default above is not
+  // enough on its own. This queued call closes manual capture before the SDK
+  // finishes loading; `loaded` closes it again before enabling collectors.
+  window.posthog.opt_out_capturing();
 })();

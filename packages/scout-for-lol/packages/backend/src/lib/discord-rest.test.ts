@@ -33,6 +33,7 @@ function testUser(overrides: Partial<User> = {}): User {
     discordRefreshToken: "refresh-token",
     // Far future, so no refresh is attempted unless a test asks for one.
     tokenExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    analyticsUserId: `analytics-${userSeq.toString()}`,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

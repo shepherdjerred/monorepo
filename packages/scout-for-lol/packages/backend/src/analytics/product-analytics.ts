@@ -58,6 +58,14 @@ export type ProductAnalyticsEvent = {
 export type AnalyticsInstallation = {
   analyticsInstallationId: string;
   analyticsLifecycleTracked: boolean;
+  /**
+   * Discord guild id, sent as the `guild_id` property. `analyticsInstallationId`
+   * rotates on reinstall by design, so it answers "how does one installation
+   * behave"; `guild_id` is stable across reinstalls and answers "how does one
+   * server behave over its whole history". Both are needed, and they are not
+   * interchangeable.
+   */
+  serverId: string;
 };
 
 type CaptureProperties = Record<string, string | boolean>;
@@ -85,6 +93,11 @@ function createPostHogTransport(
 ): ProductAnalyticsTransport {
   const client = new PostHog(analyticsConfiguration.projectToken, {
     host: analyticsConfiguration.apiHost,
+    // These captures originate from Discord gateway events and background
+    // database/delivery workflows, never from an end-user request, and the
+    // transport supplies no `$ip`. GeoIP would therefore describe this
+    // backend's own egress location — one datacenter, identical on every
+    // event — and label it as the guild's, which is worse than no geography.
     disableGeoip: true,
     enableExceptionAutocapture: false,
     flushAt: 20,
@@ -137,8 +150,7 @@ export function createProductAnalytics(options: {
           disableGeoip: true,
           properties: {
             ...event.properties,
-            $process_person_profile: false,
-            $geoip_disable: true,
+            guild_id: installation.serverId,
             stage: options.environment,
             site_key: analyticsConfiguration.siteKey,
             site_hostname: analyticsConfiguration.siteHostname,

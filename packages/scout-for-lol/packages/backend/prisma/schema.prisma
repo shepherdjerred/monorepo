@@ -354,6 +354,12 @@ model User {
   discordAccessToken  String?
   discordRefreshToken String?
   tokenExpiresAt      DateTime?
+  // Opaque, app-owned analytics identity. PostHog must never receive the
+  // Discord snowflake as a distinct id: that is an external identifier the
+  // analytics registry forbids sending, and using it as the join key would
+  // make every event and recording addressable by Discord account. Same role
+  // for a person as `GuildInstall.analyticsInstallationId` has for an install.
+  analyticsUserId     String    @unique @default(uuid())
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 

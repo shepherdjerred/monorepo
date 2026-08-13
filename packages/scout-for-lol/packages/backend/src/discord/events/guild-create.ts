@@ -208,7 +208,7 @@ async function saveGuildInstall(
 
     if (reinstallClaim.count === 1) {
       captureGuildInstalled(
-        { analyticsInstallationId, analyticsLifecycleTracked: true },
+        { analyticsInstallationId, analyticsLifecycleTracked: true, serverId },
         "reinstall",
         guild.memberCount,
       );
