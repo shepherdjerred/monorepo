@@ -35,7 +35,7 @@ everything writes no diff and opens no PR.
 publishes an `LlmCatalogDriftWithheld` occurrence instead, for a human to check
 against the provider's own pricing page. The next run that withholds nothing
 resolves it:
-[`llm-catalog-alert.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/llm-catalog-alert.ts)
+[`llm-catalog-alert.ts`](https://github.com/shepherdjerred/monorepo/blob/d29a823aaa0606544af7da21fb60280738208efb/packages/temporal/src/shared/llm-catalog-alert.ts)
 builds the firing and resolving occurrence from one label set.
 
 ## Scout
