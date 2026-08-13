@@ -111,8 +111,12 @@
       ],
       "outputs": []
     },
+    // Ordered after test:ci rather than beside it: both execute the same test
+    // assemblies, and the coverage-instrumented run collides with a concurrent
+    // plain run of those binaries, killing one host with SIGBUS. Two plain runs
+    // overlap safely, so only the coverage pass needs the exclusive turn.
     "coverage:portable": {
-      "dependsOn": ["lint", "^build", "generate"],
+      "dependsOn": ["lint", "^build", "generate", "test:ci"],
       "cache": false,
       "passThroughEnv": [
         "APPDATA",

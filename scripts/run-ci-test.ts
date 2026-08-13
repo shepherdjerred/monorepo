@@ -231,6 +231,10 @@ for (const [index, step] of workspace.steps.entries()) {
           ...environment,
           DOTNET_MULTILEVEL_LOOKUP: "0",
           DOTNET_ROOT: path.dirname(command[0] ?? ""),
+          // Matches packages/tasknotes-windows/scripts/dotnet.ts: the Linux CI
+          // image has no libicu, and the SDK aborts in CultureInfo's static
+          // initializer before running anything.
+          DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "1",
         }
       : environment;
   let exitCode: number;
