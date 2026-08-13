@@ -11,6 +11,9 @@ steps:
       bun --no-install .buildkite/scripts/select-main-pipeline.ts
     plugins:
       - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: ci-selector-base
           checkout:
             cloneFlags: "--no-tags"
           podSpecPatch:

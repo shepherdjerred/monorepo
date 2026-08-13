@@ -277,7 +277,12 @@ export class CommandFleetEnvironment implements FleetEnvironment {
         }),
     });
     const threads = await this.#reviewThreads(pr);
-    const { issueComment, complete } = completion;
+    // Until the provider acknowledges this head, its comment still renders the
+    // PREVIOUS head's findings — the snapshot completion itself refuses. Since
+    // `classify()` reads findings before `hostedReviewComplete`, surfacing them
+    // would dispatch a repair against findings the push already fixed.
+    const { complete } = completion;
+    const issueComment = complete ? completion.issueComment : null;
     const provider = this.#provider;
     const findings = reviewFindings({ threads, issueComment, provider });
     return { findings, hostedReviewComplete: complete };
