@@ -143,7 +143,7 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "HomeAssistantMasterBathroomTemperatureUnavailable",
           annotations: {
             description:
-              "The Mysa master bathroom temperature sensor has been unavailable for 15 minutes. Floor-heat decisions are degraded; the morning wake routine will continue without climate actions.",
+              "The Mysa master bathroom temperature sensor has been unavailable for 15 minutes. Floor-heat decisions are degraded; the morning wake routine will continue without activating heat, but still runs its end-of-window thermostat turn-off.",
             summary: "Master bathroom temperature unavailable",
             runbook_url:
               "https://homeassistant.tailnet-1a49.ts.net/history?entity_id=sensor.master_bathroom_temperature",

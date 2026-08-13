@@ -113,6 +113,12 @@ function makeActivities(scenario: Scenario) {
   };
 }
 
+const TURN_OFF_MASTER_BATHROOM: ServiceCall = {
+  domain: "climate",
+  service: "turn_off",
+  data: { entity_id: "climate.master_bathroom" },
+};
+
 function climateCalls(scenario: Scenario): ServiceCall[] {
   return scenario.serviceCalls.filter((call) => call.domain === "climate");
 }
@@ -272,7 +278,7 @@ describe("goodMorningPreheat", () => {
 
 describe("goodMorningWakeUp", () => {
   test(
-    "continues notification and media without climate actions when temperature is unavailable",
+    "keeps the turn-off backstop while skipping heat when temperature is unavailable",
     async () => {
       const scenario = makeScenario({ indoorC: 18, outdoorC: 5 });
       scenario.indoorState = "unavailable";
@@ -283,7 +289,7 @@ describe("goodMorningWakeUp", () => {
         "wake-temperature-unavailable-" + crypto.randomUUID(),
       );
 
-      expect(climateCalls(scenario)).toEqual([]);
+      expect(climateCalls(scenario)).toEqual([TURN_OFF_MASTER_BATHROOM]);
       expect(scenario.notifications).toEqual(["Good Morning"]);
       expect(
         scenario.serviceCalls.some(
@@ -325,6 +331,27 @@ describe("goodMorningWakeUp", () => {
   );
 
   test(
+    "fails non-retryably on a corrupt temperature state instead of degrading",
+    async () => {
+      const scenario = makeScenario({ indoorC: 18, outdoorC: 5 });
+      scenario.indoorState = "error";
+
+      await expectNonRetryableApplicationFailure(
+        runWorker(
+          scenario,
+          goodMorningWakeUp,
+          `wake-corrupt-temperature-${crypto.randomUUID()}`,
+        ),
+        "TemperatureSensorStateError",
+        "Temperature sensor sensor.master_bathroom_temperature has a non-numeric state: error",
+      );
+      expect(scenario.notifications).toEqual([]);
+      expect(climateCalls(scenario)).toEqual([]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
+  test(
     "runs the wake routine without heat on a warm morning",
     async () => {
       const scenario = makeScenario({ indoorC: 26, outdoorC: 28 });
@@ -333,15 +360,7 @@ describe("goodMorningWakeUp", () => {
         goodMorningWakeUp,
         `wake-warm-${crypto.randomUUID()}`,
       );
-      expect(climateCalls(scenario)).toEqual([
-        {
-          domain: "climate",
-          service: "turn_off",
-          data: {
-            entity_id: "climate.master_bathroom",
-          },
-        },
-      ]);
+      expect(climateCalls(scenario)).toEqual([TURN_OFF_MASTER_BATHROOM]);
       expect(scenario.notifications).toEqual(["Good Morning"]);
       expect(
         scenario.serviceCalls.some(

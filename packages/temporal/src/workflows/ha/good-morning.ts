@@ -75,12 +75,19 @@ export function shouldHeatFloor(temps: {
   );
 }
 
+// Home Assistant's two "there is no reading" states. Anything else non-numeric
+// is a corrupt/unexpected value, which must fail rather than degrade.
+const HA_NO_READING_STATES = new Set(["unavailable", "unknown"]);
+
 function parseTemperatureC(entityId: string, raw: string): number {
   const value = Number.parseFloat(raw);
   if (!Number.isFinite(value)) {
+    const noReading = HA_NO_READING_STATES.has(raw.trim().toLowerCase());
     throw ApplicationFailure.nonRetryable(
-      `Temperature sensor ${entityId} has non-numeric state: ${raw}`,
-      "TemperatureSensorStateError",
+      `Temperature sensor ${entityId} has ${noReading ? "no reading" : "a non-numeric state"}: ${raw}`,
+      noReading
+        ? "TemperatureSensorUnavailableError"
+        : "TemperatureSensorStateError",
     );
   }
   return value;
@@ -210,14 +217,14 @@ export async function goodMorningWakeUp(): Promise<void> {
       if (
         !patched(DEGRADED_WAKE_SENSOR_PATCH) ||
         !(error instanceof ApplicationFailure) ||
-        error.type !== "TemperatureSensorStateError"
+        error.type !== "TemperatureSensorUnavailableError"
       ) {
         throw error;
       }
       sensorUnavailable = true;
       heat = false;
       console.warn(
-        "good_morning_wake_up: bathroom temperature unavailable, skipping climate actions and continuing wake routine",
+        "good_morning_wake_up: bathroom temperature unavailable, skipping heat activation and continuing wake routine",
       );
     }
   } else {
@@ -254,15 +261,15 @@ export async function goodMorningWakeUp(): Promise<void> {
     transition: 3,
   });
 
-  // Wait through the heat window, then turn the thermostat off when the
-  // temperature decision succeeded. If the sensor is unavailable, preheat
-  // remains responsible for its own turn-off backstop.
+  // Wait through the heat window, then always turn the thermostat off. The
+  // unconditional cleanup recovers a preheat run that set the thermostat but
+  // failed or was cancelled before its own backstop, even if this second
+  // temperature reading is now warm or unavailable — the sensor degradation
+  // only suppresses climate decisions, never this cleanup.
   await sleep(MORNING_HEAT_DURATION);
-  if (!sensorUnavailable) {
-    await callServiceUnchecked("climate", "turn_off", {
-      entity_id: MASTER_BATHROOM_HEAT,
-    });
-  }
+  await callServiceUnchecked("climate", "turn_off", {
+    entity_id: MASTER_BATHROOM_HEAT,
+  });
   await setOutcome(
     "executed",
     sensorUnavailable
