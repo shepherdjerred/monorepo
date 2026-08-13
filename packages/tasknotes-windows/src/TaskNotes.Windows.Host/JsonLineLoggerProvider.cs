@@ -22,6 +22,7 @@ namespace TaskNotes.Windows.Host
 
         private readonly object _gate = new();
         private readonly string _directory;
+        private bool _sinkFailed;
 
         /// <summary>Creates an allow-listed rotating JSONL diagnostics provider.</summary>
         public JsonLineLoggerProvider(string directory)
@@ -80,7 +81,25 @@ namespace TaskNotes.Windows.Host
 
             lock (_gate)
             {
-                File.AppendAllText(CurrentLogPath(), string.Concat(line, "\n"), Utf8WithoutBom);
+                if (_sinkFailed)
+                {
+                    return;
+                }
+
+                try
+                {
+                    File.AppendAllText(CurrentLogPath(), string.Concat(line, "\n"), Utf8WithoutBom);
+                }
+                catch (Exception failure)
+                    when (failure is IOException or UnauthorizedAccessException)
+                {
+                    // This provider is the app's only logging sink, so a full disk, a
+                    // locked file, or a revoked ACL would otherwise throw out of an
+                    // ordinary Log call and fail whatever operation emitted it. Those
+                    // conditions persist, so stop writing rather than paying an
+                    // exception per line for the rest of the process.
+                    _sinkFailed = true;
+                }
             }
         }
 
@@ -114,7 +133,17 @@ namespace TaskNotes.Windows.Host
             {
                 if (File.GetLastWriteTimeUtc(file) < cutoff)
                 {
-                    File.Delete(file);
+                    try
+                    {
+                        File.Delete(file);
+                    }
+                    catch (Exception failure)
+                        when (failure is IOException or UnauthorizedAccessException)
+                    {
+                        // One stale log another process still holds must not stop the
+                        // app from starting; the next run retries the deletion.
+                        continue;
+                    }
                 }
             }
         }

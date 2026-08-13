@@ -1,3 +1,4 @@
+using System.Globalization;
 using TaskNotes.Windows.Host;
 
 namespace TaskNotes.Windows.Tests
@@ -410,6 +411,92 @@ namespace TaskNotes.Windows.Tests
             TodayTask today = new("one", "Task", null, null, false, false, false);
             Assert.AreEqual(string.Empty, today.PendingLabel);
         }
+
+        /// <summary>Keeps a task planned for today on Today even when its deadline is later.</summary>
+        [TestMethod]
+        public async Task TodayAdmitsATaskScheduledTodayAndDueLater()
+        {
+            using TemporaryDirectory directory = new();
+            await using TaskNotesStore store = new(directory.Path);
+            await store.InitializeAsync(null, null, TestContext.CancellationToken);
+            string today = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            string later = DateTime
+                .Now.AddDays(3)
+                .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            await store.AddAsync(
+                "Plan the release",
+                new TaskListQuery(TaskListKind.Inbox),
+                TestContext.CancellationToken
+            );
+            TaskItem created = store.State.AllTasks.Single();
+            await store.UpdateTaskAsync(
+                new TaskEditInput
+                {
+                    Id = created.Id,
+                    Title = "Plan the release",
+                    Status = "open",
+                    Priority = "normal",
+                    Scheduled = today,
+                    Due = later,
+                },
+                TestContext.CancellationToken
+            );
+
+            await AssertQueryTitlesAsync(
+                store,
+                new TaskListQuery(TaskListKind.Today),
+                "Plan the release"
+            );
+        }
+
+        /// <summary>Applies the sort and grouping a saved view persisted when it is opened.</summary>
+        [TestMethod]
+        public async Task SavedViewProjectionKeepsItsOwnSortAndGrouping()
+        {
+            using TemporaryDirectory directory = new();
+            await using TaskNotesStore store = new(directory.Path);
+            await store.InitializeAsync(null, null, TestContext.CancellationToken);
+            foreach (string title in SavedViewTitles)
+            {
+                await store.AddAsync(
+                    title,
+                    new TaskListQuery(TaskListKind.Project, "[[Windows]]"),
+                    TestContext.CancellationToken
+                );
+            }
+
+            SavedViewDefinition view = await store.CreateSavedViewAsync(
+                "Windows By Title",
+                "Filter",
+                "#2563eb",
+                false,
+                new TaskListQuery(TaskListKind.Project, "[[Windows]]")
+                {
+                    Projects = ["[[Windows]]"],
+                    Sort = TaskSortChoice.Title,
+                    Descending = true,
+                    Group = TaskGroupChoice.Project,
+                },
+                TestContext.CancellationToken
+            );
+
+            // The query names only the view, exactly as opening it from the sidebar does.
+            await store.SetQueryAsync(
+                new TaskListQuery(TaskListKind.SavedView, view.Id),
+                TestContext.CancellationToken
+            );
+
+            Assert.AreSequenceEqual(
+                DescendingSavedViewTitles,
+                store.State.VisibleTasks.Select(task => task.Title).ToArray()
+            );
+            Assert.IsTrue(
+                store.State.VisibleTasks.All(task => !string.IsNullOrEmpty(task.GroupLabel))
+            );
+        }
+
+        private static readonly string[] SavedViewTitles = ["Alpha", "Zulu", "Mike"];
+        private static readonly string[] DescendingSavedViewTitles = ["Zulu", "Mike", "Alpha"];
 
         private async Task AssertQueryTitlesAsync(
             TaskNotesStore store,

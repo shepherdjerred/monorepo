@@ -9,6 +9,40 @@ namespace TaskNotes.Windows.Tests
     [TestClass]
     public sealed class HostContractTests
     {
+        /// <summary>Keeps an unwritable diagnostics sink from failing the code that logs.</summary>
+        [TestMethod]
+        public void DiagnosticsSurviveAnUnwritableSink()
+        {
+            using TemporaryDirectory temporary = new();
+            using JsonLineLoggerProvider provider = new(temporary.Path);
+            // Occupy the exact path the provider rotates to with a directory, so every
+            // append fails the way a revoked ACL or a full disk would.
+            string blocked = Path.Combine(
+                temporary.Path,
+                $"tasknotes-{DateTime.UtcNow:yyyyMMdd}-00.jsonl"
+            );
+            Directory.CreateDirectory(blocked);
+            ILogger logger = provider.CreateLogger("TaskNotes.Unit");
+
+            KeyValuePair<string, object?>[] state = [new("Operation", "refresh")];
+            logger.Log(
+                LogLevel.Warning,
+                new EventId(1, "Sink"),
+                state,
+                null,
+                static (_, _) => "ignored formatter output"
+            );
+            logger.Log(
+                LogLevel.Warning,
+                new EventId(2, "Sink"),
+                state,
+                null,
+                static (_, _) => "ignored formatter output"
+            );
+
+            Assert.IsEmpty(Directory.GetFiles(temporary.Path));
+        }
+
         /// <summary>Verifies diagnostics retain only the allow-listed structured fields.</summary>
         [TestMethod]
         public void DiagnosticsRedactSecretsAndNormalizeProperties()

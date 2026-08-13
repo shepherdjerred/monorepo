@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net.Http.Headers;
+using Microsoft.VisualStudio.Threading;
 using Core = uniffi.TaskNotesCore;
 
 namespace TaskNotes.Windows.Host
@@ -9,12 +10,16 @@ namespace TaskNotes.Windows.Host
         private readonly HttpClient _client;
         private readonly string? _token;
         private readonly ConcurrentDictionary<long, ActiveRequest> _active = new();
+        private readonly JoinableTaskContext _joinableTaskContext = new();
         private long _requestId;
         private bool _disposed;
 
         internal BearerHttpTransport(string? token, HttpMessageHandler? handler = null)
         {
-            _token = string.IsNullOrWhiteSpace(token) ? null : token;
+            // Tokens are pasted, so they arrive with trailing newlines and spaces that
+            // would otherwise reach the Authorization header verbatim and fail auth.
+            string? normalized = token?.Trim();
+            _token = string.IsNullOrEmpty(normalized) ? null : normalized;
             _client = handler is null ? new HttpClient() : new HttpClient(handler, true);
         }
 
@@ -84,6 +89,7 @@ namespace TaskNotes.Windows.Host
             _disposed = true;
             CancelAll();
             _client.Dispose();
+            _joinableTaskContext.Dispose();
         }
 
         private HttpRequestMessage CreateMessage(Core.HttpRequest request)
@@ -133,18 +139,18 @@ namespace TaskNotes.Windows.Host
             }
         }
 
-        private static byte[] ReadBody(HttpContent content, CancellationToken cancellationToken)
+        private byte[] ReadBody(HttpContent content, CancellationToken cancellationToken)
         {
             using Stream source = content.ReadAsStream(cancellationToken);
             using MemoryStream destination = new();
-            byte[] buffer = new byte[81920];
-            int bytesRead;
-            while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                destination.Write(buffer, 0, bytesRead);
-            }
-
+            // A synchronous Stream.Read ignores the token and only returns once the
+            // server sends or drops the connection, so a stalled body would pin the
+            // sole EngineRunner worker past both the request timeout and CancelAll.
+            // CopyToAsync reads through the cancellation-aware path instead, joined
+            // the way every other sync-over-async boundary in this host is.
+            _joinableTaskContext.Factory.Run(() =>
+                source.CopyToAsync(destination, cancellationToken)
+            );
             return destination.ToArray();
         }
 

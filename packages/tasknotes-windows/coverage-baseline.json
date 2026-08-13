@@ -16,8 +16,8 @@
   },
   "portableComponents": {
     "TaskNotes.Windows.Host": {
-      "line": 90.2,
-      "branch": 80.0
+      "line": 90.1,
+      "branch": 81.4
     },
     "TaskNotes.Windows.Presentation": {
       "line": 97.1,

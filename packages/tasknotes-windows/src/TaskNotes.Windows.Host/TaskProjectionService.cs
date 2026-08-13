@@ -21,9 +21,13 @@ namespace TaskNotes.Windows.Host
         )
         {
             CoreTask[] corpus = [.. snapshot.Where(task => !task.Archived)];
+            SavedViewDefinition? savedView =
+                query.Kind == TaskListKind.SavedView
+                    ? _requireSavedView(query.Scope ?? string.Empty)
+                    : null;
             Dictionary<string, string?> occurrences = new(StringComparer.Ordinal);
             List<CoreTask> admitted = [];
-            foreach (CoreTask task in Scope(corpus, query))
+            foreach (CoreTask task in Scope(corpus, query, savedView))
             {
                 string? occurrence = Admission(task, query.Kind, today);
                 if (occurrence == ExcludedOccurrence)
@@ -38,7 +42,17 @@ namespace TaskNotes.Windows.Host
             CoreTask[] filtered = Core.TaskNotesCoreMethods.TaskFilterChainIsActive(queryFilter)
                 ? Core.TaskNotesCoreMethods.TaskFilterChainApply([.. admitted], queryFilter)
                 : [.. admitted];
-            Core.SortConfig? sort = BuildSort(query);
+            // A saved view persists its own sort and grouping, so adopt them unless the
+            // caller changed either one while the view is open.
+            Core.SortConfig? sort =
+                savedView?.SortJson is string sortJson
+                && query.Sort == TaskSortChoice.AsSynchronized
+                    ? Core.TaskNotesCoreMethods.SortConfigFromJson(sortJson)
+                    : BuildSort(query);
+            TaskGroupChoice group =
+                savedView is not null && query.Group == TaskGroupChoice.None
+                    ? savedView.Group
+                    : query.Group;
             CoreTask[] ordered = sort is null
                 ? filtered
                 : Core.TaskNotesCoreMethods.TaskSortApply(filtered, sort, today);
@@ -48,7 +62,7 @@ namespace TaskNotes.Windows.Host
                         task,
                         pending.Contains(task.Id),
                         occurrences.GetValueOrDefault(task.Id),
-                        query.Group,
+                        group,
                         today
                     )
                 ),
@@ -154,13 +168,16 @@ namespace TaskNotes.Windows.Host
             ];
         }
 
-        private CoreTask[] Scope(CoreTask[] tasks, TaskListQuery query)
+        private static CoreTask[] Scope(
+            CoreTask[] tasks,
+            TaskListQuery query,
+            SavedViewDefinition? savedView
+        )
         {
-            if (query.Kind == TaskListKind.SavedView)
+            if (savedView is not null)
             {
-                SavedViewDefinition view = _requireSavedView(query.Scope ?? string.Empty);
                 Core.FilterChain chain = Core.TaskNotesCoreMethods.FilterChainFromJson(
-                    view.FilterJson
+                    savedView.FilterJson
                 );
                 return Core.TaskNotesCoreMethods.TaskFilterChainIsActive(chain)
                     ? Core.TaskNotesCoreMethods.TaskFilterChainApply(tasks, chain)
@@ -226,15 +243,23 @@ namespace TaskNotes.Windows.Host
                     )
                     : ExcludedOccurrence;
             }
-            string? date = CivilDate(task.Due) ?? CivilDate(task.Scheduled);
+            // Both dates are independently actionable, matching the established agenda
+            // in packages/tasks-for-obsidian/src/domain/agenda.ts. Preferring due would
+            // drop a task planned for today that is not due until later.
             return
-                date is not null
+                IsActionableBy(CivilDate(task.Scheduled), today)
+                || IsActionableBy(CivilDate(task.Due), today)
+                ? null
+                : ExcludedOccurrence;
+        }
+
+        private static bool IsActionableBy(string? date, string today)
+        {
+            return date is not null
                 && (
                     Core.TaskNotesCoreMethods.DateIsToday(date, today)
                     || Core.TaskNotesCoreMethods.DateIsOverdue(date, today)
-                )
-                ? null
-                : ExcludedOccurrence;
+                );
         }
 
         private static string? InboxAdmission(CoreTask task)

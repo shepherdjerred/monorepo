@@ -259,6 +259,86 @@ namespace TaskNotes.Windows.Tests
             ) => Task.FromResult(Send(request, cancellationToken));
         }
 
+        /// <summary>Times out a response whose headers arrive before the body stalls.</summary>
+        [TestMethod]
+        public void StalledResponseBodyHonorsTheRequestTimeout()
+        {
+            using BearerHttpTransport transport = new(null, new StalledBodyHandler());
+            Core.HttpRequest request = new(
+                Core.HttpMethod.Get,
+                "https://tasks.example.test/v2/tasks",
+                [],
+                null,
+                50
+            );
+
+            _ = Assert.ThrowsExactly<Core.TransportException.Timeout>(() =>
+                transport.Send(request)
+            );
+        }
+
+        private sealed class StalledBodyHandler : HttpMessageHandler
+        {
+            protected override HttpResponseMessage Send(
+                HttpRequestMessage request,
+                CancellationToken cancellationToken
+            )
+            {
+                _ = request;
+                _ = cancellationToken;
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StreamContent(new StalledStream()),
+                };
+            }
+
+            protected override Task<HttpResponseMessage> SendAsync(
+                HttpRequestMessage request,
+                CancellationToken cancellationToken
+            ) => Task.FromResult(Send(request, cancellationToken));
+        }
+
+        /// <summary>A body that never arrives and that only the cancellable path can abandon.</summary>
+        private sealed class StalledStream : Stream
+        {
+            public override bool CanRead => true;
+            public override bool CanSeek => false;
+            public override bool CanWrite => false;
+            public override long Length => throw new NotSupportedException();
+            public override long Position
+            {
+                get => throw new NotSupportedException();
+                set => throw new NotSupportedException();
+            }
+
+            // A real stalled socket blocks here forever. Refusing the call keeps a
+            // regression a fast failure instead of a hung suite, and asserts that the
+            // transport reads the body through the cancellation-aware path.
+            public override int Read(byte[] buffer, int offset, int count) =>
+                throw new NotSupportedException(
+                    "The response body must be read through a cancellation-aware API."
+                );
+
+            public override async ValueTask<int> ReadAsync(
+                Memory<byte> buffer,
+                CancellationToken cancellationToken = default
+            )
+            {
+                await Task.Delay(Timeout.Infinite, cancellationToken).ConfigureAwait(false);
+                return 0;
+            }
+
+            public override void Flush() { }
+
+            public override long Seek(long offset, SeekOrigin origin) =>
+                throw new NotSupportedException();
+
+            public override void SetLength(long value) => throw new NotSupportedException();
+
+            public override void Write(byte[] buffer, int offset, int count) =>
+                throw new NotSupportedException();
+        }
+
         private sealed class TimeoutHandler : HttpMessageHandler
         {
             protected override HttpResponseMessage Send(

@@ -88,11 +88,20 @@ namespace TaskNotes.Windows.Presentation
                 ValidationError = "Enter an absolute HTTP or HTTPS TaskNotes server URL.";
                 return false;
             }
+            ServerConfiguration previous = _configuration.Load();
             await _store.ReconfigureAsync(serverUrl, Token, cancellationToken);
             if (_store.State.SyncState != TaskNotesSyncState.Connected)
             {
                 ValidationError =
                     _store.State.UserFacingError ?? "TaskNotes could not connect to this server.";
+                // Reconfiguring already retired the working engine and installed the
+                // candidate, so returning here would strand the running app on the
+                // endpoint that just failed even though the old credentials are still
+                // persisted. Put the configuration that was working back in place.
+                if (previous.ServerUrl is string restoredUrl)
+                {
+                    await _store.ReconfigureAsync(restoredUrl, previous.Token, cancellationToken);
+                }
                 return false;
             }
             _configuration.Save(serverUrl, Token);
