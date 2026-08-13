@@ -2,6 +2,35 @@ import { describe, expect, test } from "bun:test";
 import { getHomeAssistantRuleGroups } from "./homeassistant.ts";
 
 describe("Home Assistant rules", () => {
+  test("alerts when the master bathroom temperature is unavailable or absent", () => {
+    const availabilityGroup = getHomeAssistantRuleGroups().find(
+      (group) => group.name === "homeassistant-availability",
+    );
+    if (availabilityGroup?.rules === undefined) {
+      throw new Error("Missing homeassistant-availability rules");
+    }
+
+    const rule = availabilityGroup.rules.find(
+      (candidate) =>
+        candidate.alert === "HomeAssistantMasterBathroomTemperatureUnavailable",
+    );
+    if (rule === undefined) {
+      throw new Error(
+        "Missing HomeAssistantMasterBathroomTemperatureUnavailable rule",
+      );
+    }
+
+    expect(rule.for).toBe("15m");
+    // The absent() arm is load-bearing: a comparison alone yields an empty
+    // vector when the entity never makes it into the exported state set.
+    expect(rule.expr.value).toBe(
+      'homeassistant_entity_available{entity="sensor.master_bathroom_temperature"} == 0 or absent(homeassistant_entity_available{entity="sensor.master_bathroom_temperature"})',
+    );
+    expect(rule.annotations?.["runbook_url"]).toBe(
+      "https://homeassistant.tailnet-1a49.ts.net/history?entity_id=sensor.master_bathroom_temperature",
+    );
+  });
+
   test("renders a Prometheus-template-safe unavailable entity annotation query", () => {
     const availabilityGroup = getHomeAssistantRuleGroups().find(
       (group) => group.name === "homeassistant-availability",

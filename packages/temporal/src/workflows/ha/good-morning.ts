@@ -1,4 +1,5 @@
 import {
+  ActivityFailure,
   ApplicationFailure,
   patched,
   proxyActivities,
@@ -14,6 +15,7 @@ import {
   volumeUpBy,
 } from "./util.ts";
 import type { WeatherActivities } from "#activities/weather.ts";
+import { HA_ENTITY_NOT_FOUND_ERROR_TYPE } from "#shared/ha-errors.ts";
 
 const weatherActivities = proxyActivities<WeatherActivities>({
   startToCloseTimeout: "30 seconds",
@@ -31,19 +33,18 @@ const BEDROOM_BRIGHT = "scene.bedroom_bright" as const;
 const MASTER_BATHROOM_HEAT = "climate.master_bathroom" as const;
 const MASTER_BATHROOM_AIR_TEMP = "sensor.master_bathroom_temperature" as const;
 const HOME_ZONE = "zone.home" as const;
-// The INF-V1 floor heater's true max is 40°C. Upstream kgelinas/Mysa_HA capped
-// it at 30°C (issue #16); the fix (PR #18) was closed unmerged and upstream is
-// stale, so HA runs our fork shepherdjerred/Mysa_HA@v0.9.3 (via HACS), which
-// exposes the real device limit. See
-// packages/docs/plans/2026-05-05_mysa-max-temp-cap.md. The morning target is
-// now 30°C (was 40°C until 2026-07) — warm feet without the multi-hour 40°C
-// preheat, and only on cold mornings (see shouldHeatFloor).
+// The INF-V1 floor heater's true max is 40°C. The GitOps-managed Mysa
+// integration carries a checked-in setpoint-limit patch so the device's real
+// range is exposed. The morning target is now 30°C (was 40°C until 2026-07) —
+// warm feet without the multi-hour 40°C preheat, and only on cold mornings
+// (see shouldHeatFloor).
 const MORNING_HEAT_TEMP_C = 30;
 // Cold-morning thresholds (user-tuned 2026-07): heat when the bathroom air is
 // at/below 20°C OR the outdoor temperature is at/below 15°C.
 const HEAT_INDOOR_THRESHOLD_C = 20;
 const HEAT_OUTDOOR_THRESHOLD_C = 15;
 const CONDITIONAL_FLOOR_HEAT_PATCH = "good-morning-conditional-floor-heat-v1";
+const DEGRADED_WAKE_SENSOR_PATCH = "good-morning-degraded-sensor-wake-v1";
 const LEGACY_MORNING_HEAT_TEMP_C = 40;
 const MORNING_HEAT_DURATION = "60 minutes" as const;
 // The floor ramps ~8.3°C/hour (measured 2026-07-09: 22.3→30.6°C in the 60-min
@@ -76,12 +77,19 @@ export function shouldHeatFloor(temps: {
   );
 }
 
+// Home Assistant's two "there is no reading" states. Anything else non-numeric
+// is a corrupt/unexpected value, which must fail rather than degrade.
+const HA_NO_READING_STATES = new Set(["unavailable", "unknown"]);
+
 function parseTemperatureC(entityId: string, raw: string): number {
   const value = Number.parseFloat(raw);
   if (!Number.isFinite(value)) {
+    const noReading = HA_NO_READING_STATES.has(raw.trim().toLowerCase());
     throw ApplicationFailure.nonRetryable(
-      `Temperature sensor ${entityId} has non-numeric state: ${raw}`,
-      "TemperatureSensorStateError",
+      `Temperature sensor ${entityId} has ${noReading ? "no reading" : "a non-numeric state"}: ${raw}`,
+      noReading
+        ? "TemperatureSensorUnavailableError"
+        : "TemperatureSensorStateError",
     );
   }
   return value;
@@ -100,23 +108,48 @@ function parseHomeZoneCoordinates(
   return result.data;
 }
 
+function isMissingEntityFailure(error: unknown): boolean {
+  return (
+    error instanceof ActivityFailure &&
+    error.cause instanceof ApplicationFailure &&
+    error.cause.type === HA_ENTITY_NOT_FOUND_ERROR_TYPE
+  );
+}
+
+// A total Mysa setup failure removes the entity outright instead of leaving it
+// in `unavailable`, which is the same degraded condition from the wake
+// routine's point of view. The activity failure is retryable, so this only
+// fires once the entity is still gone after the full retry budget. Only this
+// read is wrapped, so a missing zone.home stays a hard failure rather than
+// silently degrading the heat decision.
+async function readIndoorTemperatureC(): Promise<number> {
+  try {
+    const state = await getEntityState(MASTER_BATHROOM_AIR_TEMP);
+    return parseTemperatureC(MASTER_BATHROOM_AIR_TEMP, state.state);
+  } catch (error: unknown) {
+    if (isMissingEntityFailure(error)) {
+      throw ApplicationFailure.nonRetryable(
+        `Temperature sensor ${MASTER_BATHROOM_AIR_TEMP} is missing from Home Assistant`,
+        "TemperatureSensorUnavailableError",
+      );
+    }
+    throw error;
+  }
+}
+
 // Reads the bathroom air sensor and the outdoor temperature (Open-Meteo at the
 // zone.home coordinates — HA has no weather integration) and decides whether
-// the morning floor heat is worth running. Any read failure propagates and
-// fails the workflow run: we never silently guess at the weather.
+// the morning floor heat is worth running. Every read failure propagates; only
+// goodMorningWakeUp decides which of them it is willing to degrade around.
 async function floorHeatDecision(): Promise<{
   heat: boolean;
   indoorC: number;
   outdoorC: number;
 }> {
-  const [indoorState, zoneState] = await Promise.all([
-    getEntityState(MASTER_BATHROOM_AIR_TEMP),
+  const [indoorC, zoneState] = await Promise.all([
+    readIndoorTemperatureC(),
     getEntityState(HOME_ZONE),
   ]);
-  const indoorC = parseTemperatureC(
-    MASTER_BATHROOM_AIR_TEMP,
-    indoorState.state,
-  );
   const { latitude, longitude } = parseHomeZoneCoordinates(
     zoneState.attributes,
   );
@@ -191,18 +224,34 @@ export async function goodMorningWakeUp(): Promise<void> {
   // or paused). On warm mornings the heat stays off; the rest of the wake
   // routine (notification, media, lights) is unconditional.
   let heat = true;
+  let sensorUnavailable = false;
   if (patched(CONDITIONAL_FLOOR_HEAT_PATCH)) {
-    const decision = await floorHeatDecision();
-    heat = decision.heat;
-    if (heat) {
-      await callServiceUnchecked("climate", "set_temperature", {
-        entity_id: MASTER_BATHROOM_HEAT,
-        temperature: MORNING_HEAT_TEMP_C,
-        hvac_mode: "heat",
-      });
-    } else {
+    try {
+      const decision = await floorHeatDecision();
+      heat = decision.heat;
+      if (heat) {
+        await callServiceUnchecked("climate", "set_temperature", {
+          entity_id: MASTER_BATHROOM_HEAT,
+          temperature: MORNING_HEAT_TEMP_C,
+          hvac_mode: "heat",
+        });
+      } else {
+        console.warn(
+          `good_morning_wake_up: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), heat stays off`,
+        );
+      }
+    } catch (error: unknown) {
+      if (
+        !patched(DEGRADED_WAKE_SENSOR_PATCH) ||
+        !(error instanceof ApplicationFailure) ||
+        error.type !== "TemperatureSensorUnavailableError"
+      ) {
+        throw error;
+      }
+      sensorUnavailable = true;
+      heat = false;
       console.warn(
-        `good_morning_wake_up: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), heat stays off`,
+        "good_morning_wake_up: bathroom temperature unavailable, skipping heat activation and continuing wake routine",
       );
     }
   } else {
@@ -242,14 +291,19 @@ export async function goodMorningWakeUp(): Promise<void> {
   // Wait through the heat window, then always turn the thermostat off. The
   // unconditional cleanup recovers a preheat run that set the thermostat but
   // failed or was cancelled before its own backstop, even if this second
-  // temperature reading is now warm.
+  // temperature reading is now warm or unavailable — the sensor degradation
+  // only suppresses climate decisions, never this cleanup.
   await sleep(MORNING_HEAT_DURATION);
   await callServiceUnchecked("climate", "turn_off", {
     entity_id: MASTER_BATHROOM_HEAT,
   });
   await setOutcome(
     "executed",
-    heat ? "wake-routine-complete" : "wake-routine-complete-no-heat",
+    sensorUnavailable
+      ? "wake-routine-complete-temperature-unavailable"
+      : heat
+        ? "wake-routine-complete"
+        : "wake-routine-complete-no-heat",
   );
 }
 

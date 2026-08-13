@@ -98,7 +98,10 @@ export const HA_CUSTOM_COMPONENTS: HaCustomComponentSpec[] = [
     install: {
       kind: "custom_components",
       slug: "mysa",
-      patches: ["0001-expose-device-setpoint-limits.patch"],
+      patches: [
+        "0001-expose-device-setpoint-limits.patch",
+        "0002-recover-uninitialized-session.patch",
+      ],
     },
   },
   {

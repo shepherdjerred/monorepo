@@ -4,6 +4,7 @@ import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { OutcomeRecord } from "#activities/outcome.ts";
+import { HA_ENTITY_NOT_FOUND_ERROR_TYPE } from "#shared/ha-errors.ts";
 import {
   goodMorningPreheat,
   goodMorningWakeUp,
@@ -15,6 +16,9 @@ const TASK_QUEUE = "good-morning-test";
 // default 5s Bun timeout is too short when the full repository test graph is
 // sharing the CI host, even though workflow time itself is skipped.
 const WORKFLOW_TEST_TIMEOUT_MS = 30_000;
+// Sentinel for "Home Assistant does not have this entity at all", which the
+// activity surfaces as a typed failure rather than any state string.
+const MISSING_ENTITY = "__missing__";
 const DEFAULT_ZONE_ATTRIBUTES: Record<string, unknown> = {
   latitude: 47.6,
   longitude: -122.3,
@@ -38,8 +42,10 @@ type ServiceCall = {
 
 type Scenario = {
   indoorC: number;
+  indoorState: string;
   outdoorC: number;
   zoneAttributes: Record<string, unknown>;
+  temperatureReadAttempts: number;
   serviceCalls: ServiceCall[];
   notifications: string[];
   outcomes: OutcomeRecord[];
@@ -51,8 +57,10 @@ function makeScenario(
 ): Scenario {
   return {
     indoorC: temps.indoorC,
+    indoorState: String(temps.indoorC),
     outdoorC: temps.outdoorC,
     zoneAttributes,
+    temperatureReadAttempts: 0,
     serviceCalls: [],
     notifications: [],
     outcomes: [],
@@ -76,8 +84,19 @@ function makeActivities(scenario: Scenario) {
         case "person.shuxin":
           return Promise.resolve(entityState(entityId, "not_home"));
         case "sensor.master_bathroom_temperature":
+          if (scenario.indoorState === MISSING_ENTITY) {
+            scenario.temperatureReadAttempts += 1;
+            // Retryable, exactly as the real activity raises it, so the
+            // degraded path is exercised only after the retry budget runs out.
+            return Promise.reject(
+              ApplicationFailure.retryable(
+                `Home Assistant has no entity ${entityId}`,
+                HA_ENTITY_NOT_FOUND_ERROR_TYPE,
+              ),
+            );
+          }
           return Promise.resolve(
-            entityState(entityId, String(scenario.indoorC), {
+            entityState(entityId, scenario.indoorState, {
               unit_of_measurement: "°C",
             }),
           );
@@ -110,6 +129,12 @@ function makeActivities(scenario: Scenario) {
     },
   };
 }
+
+const TURN_OFF_MASTER_BATHROOM: ServiceCall = {
+  domain: "climate",
+  service: "turn_off",
+  data: { entity_id: "climate.master_bathroom" },
+};
 
 function climateCalls(scenario: Scenario): ServiceCall[] {
   return scenario.serviceCalls.filter((call) => call.domain === "climate");
@@ -270,6 +295,108 @@ describe("goodMorningPreheat", () => {
 
 describe("goodMorningWakeUp", () => {
   test(
+    "keeps the turn-off backstop while skipping heat when temperature is unavailable",
+    async () => {
+      const scenario = makeScenario({ indoorC: 18, outdoorC: 5 });
+      scenario.indoorState = "unavailable";
+
+      await runWorker(
+        scenario,
+        goodMorningWakeUp,
+        "wake-temperature-unavailable-" + crypto.randomUUID(),
+      );
+
+      expect(climateCalls(scenario)).toEqual([TURN_OFF_MASTER_BATHROOM]);
+      expect(scenario.notifications).toEqual(["Good Morning"]);
+      expect(
+        scenario.serviceCalls.some(
+          (call) =>
+            call.domain === "media_player" && call.service === "play_media",
+        ),
+      ).toBe(true);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningWakeUp",
+          outcome: "executed",
+          reason: "wake-routine-complete-temperature-unavailable",
+        },
+      ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
+  test(
+    "fails non-retryably for unrelated climate decision failures",
+    async () => {
+      const scenario = makeScenario(
+        { indoorC: 18, outdoorC: 5 },
+        { latitude: "47.6", longitude: -122.3 },
+      );
+      await expectNonRetryableApplicationFailure(
+        runWorker(
+          scenario,
+          goodMorningWakeUp,
+          `wake-invalid-zone-${crypto.randomUUID()}`,
+        ),
+        "HomeZoneAttributesError",
+        "Home Assistant zone.home attributes must include numeric latitude and longitude",
+      );
+      expect(scenario.notifications).toEqual([]);
+      expect(climateCalls(scenario)).toEqual([]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
+  test(
+    "degrades when the temperature entity is missing from Home Assistant",
+    async () => {
+      const scenario = makeScenario({ indoorC: 18, outdoorC: 5 });
+      scenario.indoorState = MISSING_ENTITY;
+
+      await runWorker(
+        scenario,
+        goodMorningWakeUp,
+        `wake-temperature-missing-${crypto.randomUUID()}`,
+      );
+
+      // The shared three-attempt policy still applies, so a transiently
+      // missing entity during an HA restart recovers instead of degrading.
+      expect(scenario.temperatureReadAttempts).toBe(3);
+      expect(climateCalls(scenario)).toEqual([TURN_OFF_MASTER_BATHROOM]);
+      expect(scenario.notifications).toEqual(["Good Morning"]);
+      expect(scenario.outcomes).toEqual([
+        {
+          workflow: "goodMorningWakeUp",
+          outcome: "executed",
+          reason: "wake-routine-complete-temperature-unavailable",
+        },
+      ]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
+  test(
+    "fails non-retryably on a corrupt temperature state instead of degrading",
+    async () => {
+      const scenario = makeScenario({ indoorC: 18, outdoorC: 5 });
+      scenario.indoorState = "error";
+
+      await expectNonRetryableApplicationFailure(
+        runWorker(
+          scenario,
+          goodMorningWakeUp,
+          `wake-corrupt-temperature-${crypto.randomUUID()}`,
+        ),
+        "TemperatureSensorStateError",
+        "Temperature sensor sensor.master_bathroom_temperature has a non-numeric state: error",
+      );
+      expect(scenario.notifications).toEqual([]);
+      expect(climateCalls(scenario)).toEqual([]);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
+
+  test(
     "runs the wake routine without heat on a warm morning",
     async () => {
       const scenario = makeScenario({ indoorC: 26, outdoorC: 28 });
@@ -278,15 +405,7 @@ describe("goodMorningWakeUp", () => {
         goodMorningWakeUp,
         `wake-warm-${crypto.randomUUID()}`,
       );
-      expect(climateCalls(scenario)).toEqual([
-        {
-          domain: "climate",
-          service: "turn_off",
-          data: {
-            entity_id: "climate.master_bathroom",
-          },
-        },
-      ]);
+      expect(climateCalls(scenario)).toEqual([TURN_OFF_MASTER_BATHROOM]);
       expect(scenario.notifications).toEqual(["Good Morning"]);
       expect(
         scenario.serviceCalls.some(

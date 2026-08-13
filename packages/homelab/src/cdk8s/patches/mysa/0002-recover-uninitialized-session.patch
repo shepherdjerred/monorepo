@@ -1,0 +1,6 @@
+--- a/custom_components/mysa/mysa_api.py
++++ b/custom_components/mysa/mysa_api.py
+@@ -294,2 +294,3 @@
+                 or "Refresh Token has expired" in str(e)
++                or (isinstance(e, RuntimeError) and str(e) == "Session not initialized")
+             )
