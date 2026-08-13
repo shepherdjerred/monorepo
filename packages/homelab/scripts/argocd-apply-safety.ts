@@ -63,17 +63,56 @@ function targetMatchesLive(target: unknown, live: unknown): boolean {
   return JSON.stringify(target) === JSON.stringify(live);
 }
 
+/**
+ * What it means for the requested target to omit an immutable field. "No
+ * default" was previously conflated into one case, which hid a real class of
+ * change: a field the chart author owns is not the same as one the API server
+ * populates. Every immutable field must say which it is, so adding one forces
+ * the question rather than defaulting to silence.
+ */
 type ImmutableField = {
   readonly path: readonly string[];
-  /**
-   * The value the API server assigns when the field is omitted. Present only
-   * for fields that are defaulted rather than server-assigned: dropping a
-   * non-default value resets it toward this default, which is itself an
-   * immutable update. A field without a default keeps its live value when the
-   * target omits it, so omission declares no change there.
-   */
-  readonly apiDefault?: string;
-};
+} & (
+  | {
+      /**
+       * The API server populates it and keeps the live value when the request
+       * omits it, so omission declares no change. Flagging it would fail every
+       * release whose chart simply never mentions the field.
+       */
+      readonly omission: "keeps-live-value";
+    }
+  | {
+      /**
+       * The API server defaults it, so omitting it resets the field to that
+       * default. That is a change exactly when the live value is not already
+       * the default.
+       */
+      readonly omission: "resets-to-default";
+      readonly apiDefault: string;
+    }
+  | {
+      /**
+       * The chart author owns it and the API server neither populates nor
+       * defaults it, so removing the declaration removes a previously managed
+       * immutable field. Kubernetes rejects that like any other change to it.
+       */
+      readonly omission: "removes-managed-field";
+    }
+);
+
+function omissionChanges(field: ImmutableField, liveValue: unknown): boolean {
+  if (liveValue === undefined) {
+    return false;
+  }
+  switch (field.omission) {
+    case "keeps-live-value":
+      return false;
+    case "resets-to-default":
+      return liveValue !== field.apiDefault;
+    case "removes-managed-field":
+      return true;
+  }
+}
 
 function declaredTargetChanged(
   live: Record<string, unknown>,
@@ -82,14 +121,9 @@ function declaredTargetChanged(
 ): boolean {
   const targetValue = valueAt(target, field.path);
   const liveValue = valueAt(live, field.path);
-  if (targetValue === undefined) {
-    return (
-      field.apiDefault !== undefined &&
-      liveValue !== undefined &&
-      liveValue !== field.apiDefault
-    );
-  }
-  return !targetMatchesLive(targetValue, liveValue);
+  return targetValue === undefined
+    ? omissionChanges(field, liveValue)
+    : !targetMatchesLive(targetValue, liveValue);
 }
 
 function activeProbeHandler(probe: Record<string, unknown>): string | null {
@@ -169,31 +203,47 @@ function immutableFields(kind: string): readonly ImmutableField[] {
     // rejects the update rather than replacing the workload.
     case "DaemonSet":
     case "Deployment":
-      return [{ path: ["spec", "selector"] }];
+      return [
+        { path: ["spec", "selector"], omission: "removes-managed-field" },
+      ];
     case "StatefulSet":
       return [
         {
           path: ["spec", "podManagementPolicy"],
+          omission: "resets-to-default",
           apiDefault: "OrderedReady",
         },
-        { path: ["spec", "selector"] },
-        { path: ["spec", "serviceName"] },
-        { path: ["spec", "volumeClaimTemplates"] },
+        { path: ["spec", "selector"], omission: "removes-managed-field" },
+        { path: ["spec", "serviceName"], omission: "removes-managed-field" },
+        {
+          path: ["spec", "volumeClaimTemplates"],
+          omission: "removes-managed-field",
+        },
       ];
     case "PersistentVolumeClaim":
       return [
-        { path: ["spec", "accessModes"] },
-        { path: ["spec", "dataSource"] },
-        { path: ["spec", "dataSourceRef"] },
-        { path: ["spec", "storageClassName"] },
-        { path: ["spec", "volumeMode"], apiDefault: "Filesystem" },
-        { path: ["spec", "volumeName"] },
+        { path: ["spec", "accessModes"], omission: "removes-managed-field" },
+        // The API server cross-populates these two, so a claim authored with
+        // only one of them reports both. Treating an omission as a change would
+        // fail every such claim, so under-report rather than block releases.
+        { path: ["spec", "dataSource"], omission: "keeps-live-value" },
+        { path: ["spec", "dataSourceRef"], omission: "keeps-live-value" },
+        // Defaulted from the cluster's default StorageClass at creation, so a
+        // live claim carries one whether or not the chart ever declared it.
+        { path: ["spec", "storageClassName"], omission: "keeps-live-value" },
+        {
+          path: ["spec", "volumeMode"],
+          omission: "resets-to-default",
+          apiDefault: "Filesystem",
+        },
+        { path: ["spec", "volumeName"], omission: "keeps-live-value" },
       ];
     case "Service":
+      // All three are assigned by the cluster, not the chart.
       return [
-        { path: ["spec", "clusterIP"] },
-        { path: ["spec", "clusterIPs"] },
-        { path: ["spec", "ipFamilies"] },
+        { path: ["spec", "clusterIP"], omission: "keeps-live-value" },
+        { path: ["spec", "clusterIPs"], omission: "keeps-live-value" },
+        { path: ["spec", "ipFamilies"], omission: "keeps-live-value" },
       ];
     default:
       return [];

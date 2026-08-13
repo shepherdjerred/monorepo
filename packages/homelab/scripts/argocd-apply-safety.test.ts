@@ -92,6 +92,61 @@ describe("ArgoCD apply safety", () => {
     ]);
   });
 
+  test("allows mutable changes and newly created resources", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "Deployment",
+          namespace: "test",
+          name: "api",
+          liveState: state({
+            spec: {
+              replicas: 1,
+              selector: { matchLabels: { app: "api" } },
+            },
+          }),
+          targetState: state({
+            spec: {
+              replicas: 2,
+              selector: { matchLabels: { app: "api" } },
+            },
+          }),
+        },
+        { kind: "Service", name: "new", targetState: state({ spec: {} }) },
+      ]),
+    ).toEqual([]);
+  });
+
+  test("ignores API-defaulted fields inside an immutable template", () => {
+    const claim = {
+      metadata: { name: "data" },
+      spec: {
+        accessModes: ["ReadWriteOnce"],
+        resources: { requests: { storage: "8Gi" } },
+      },
+    };
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "test",
+          name: "db",
+          liveState: database([
+            { ...claim, spec: { ...claim.spec, volumeMode: "Filesystem" } },
+          ]),
+          targetState: database([claim]),
+        },
+      ]),
+    ).toEqual([]);
+  });
+});
+
+// Omitting an immutable field means something different for each kind of
+// field, so these cover all three: reset to default, removal of an
+// author-owned field, and a server-assigned value the request never sets.
+describe("ArgoCD immutable field omission", () => {
   test("reports dropping a non-default immutable field", () => {
     expect(
       analyzeApplySafety([
@@ -121,30 +176,32 @@ describe("ArgoCD apply safety", () => {
     ]);
   });
 
-  test("allows mutable changes and newly created resources", () => {
+  test("reports removing an author-owned immutable field", () => {
     expect(
       analyzeApplySafety([
         {
           group: "apps",
-          kind: "Deployment",
-          namespace: "test",
-          name: "api",
-          liveState: state({
-            spec: {
-              replicas: 1,
-              selector: { matchLabels: { app: "api" } },
-            },
-          }),
-          targetState: state({
-            spec: {
-              replicas: 2,
-              selector: { matchLabels: { app: "api" } },
-            },
-          }),
+          kind: "StatefulSet",
+          namespace: "media",
+          name: "index",
+          // Nothing defaults serviceName, so dropping it removes a managed
+          // immutable field rather than resetting it.
+          liveState: state({ spec: { serviceName: "index", replicas: 1 } }),
+          targetState: state({ spec: { replicas: 2 } }),
         },
-        { kind: "Service", name: "new", targetState: state({ spec: {} }) },
+        {
+          group: "apps",
+          kind: "Deployment",
+          namespace: "media",
+          name: "relay",
+          liveState: state({ spec: { selector: { matchLabels: { a: "b" } } } }),
+          targetState: state({ spec: { replicas: 2 } }),
+        },
       ]),
-    ).toEqual([]);
+    ).toEqual([
+      "apps/StatefulSet media/index changes immutable /spec/serviceName",
+      "apps/Deployment media/relay changes immutable /spec/selector",
+    ]);
   });
 
   test("ignores server-assigned immutable fields omitted by the target", () => {
@@ -182,30 +239,6 @@ describe("ArgoCD apply safety", () => {
               volumeMode: "Filesystem",
             },
           }),
-        },
-      ]),
-    ).toEqual([]);
-  });
-
-  test("ignores API-defaulted fields inside an immutable template", () => {
-    const claim = {
-      metadata: { name: "data" },
-      spec: {
-        accessModes: ["ReadWriteOnce"],
-        resources: { requests: { storage: "8Gi" } },
-      },
-    };
-    expect(
-      analyzeApplySafety([
-        {
-          group: "apps",
-          kind: "StatefulSet",
-          namespace: "test",
-          name: "db",
-          liveState: database([
-            { ...claim, spec: { ...claim.spec, volumeMode: "Filesystem" } },
-          ]),
-          targetState: database([claim]),
         },
       ]),
     ).toEqual([]);
