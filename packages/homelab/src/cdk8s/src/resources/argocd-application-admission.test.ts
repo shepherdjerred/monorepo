@@ -97,4 +97,29 @@ describe("ArgoCD Application admission policies", () => {
       ],
     });
   });
+
+  test("scopes deletion checks to released Applications", () => {
+    const policy = synthesizePolicies().find(
+      (manifest) => manifest.kind === "ValidatingAdmissionPolicy",
+    );
+    const constraints = z
+      .object({ objectSelector: z.unknown().optional() })
+      .parse(
+        z
+          .object({ matchConstraints: z.record(z.string(), z.unknown()) })
+          .parse(policy?.spec).matchConstraints,
+      );
+    expect(constraints.objectSelector).toBeUndefined();
+    const conditions = z
+      .array(z.object({ name: z.string(), expression: z.string() }))
+      .parse(
+        z.object({ matchConditions: z.unknown() }).parse(policy?.spec)
+          .matchConditions,
+      );
+    const scope = conditions.find(
+      ({ name }) => name === "release-managed-application",
+    );
+    expect(scope?.expression).toContain(MANAGED_APPLICATION_LABEL);
+    expect(scope?.expression).toContain("'apps', 'argocd'");
+  });
 });

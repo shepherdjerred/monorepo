@@ -103,7 +103,6 @@ export function createArgoCdApplicationAdmissionPolicies(chart: Chart): void {
       matchConstraints: {
         matchPolicy: "Equivalent",
         namespaceSelector: {},
-        objectSelector: {},
         resourceRules: [
           {
             ...APPLICATION_RULES[0],
@@ -115,6 +114,15 @@ export function createArgoCdApplicationAdmissionPolicies(chart: Chart): void {
         {
           name: "argocd-namespace",
           expression: "request.namespace == 'argocd'",
+        },
+        // The retain-or-cascade contract only covers Applications this
+        // repository renders. The root Application carries no managed label
+        // (the sync-option mutation must not reach it), so it is named
+        // explicitly instead. An ad-hoc or externally managed Application stays
+        // deletable.
+        {
+          name: "release-managed-application",
+          expression: `['apps', 'argocd'].exists(name, name == oldObject.metadata.name) || (has(oldObject.metadata.labels) && '${MANAGED_APPLICATION_LABEL}' in oldObject.metadata.labels && oldObject.metadata.labels['${MANAGED_APPLICATION_LABEL}'] == 'true')`,
         },
       ],
       validations: [

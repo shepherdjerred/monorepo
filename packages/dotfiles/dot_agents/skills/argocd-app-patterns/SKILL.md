@@ -148,7 +148,9 @@ values win when the request supplies the same option key. This makes ordinary
 global syncs safe without asking operators to reproduce per-child options. The
 recursive `apps` Application is deliberately excluded from operation mutation.
 A validating admission policy separately enforces the retain-or-cascade
-deletion contract.
+deletion contract over the labeled children plus the explicitly named `apps`
+and `argocd` Applications. An ad-hoc Application in the `argocd` namespace is
+outside that contract and stays deletable.
 
 ### Server-Side Apply (Large Configs)
 

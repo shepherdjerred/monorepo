@@ -148,6 +148,9 @@ function identity(resource: ManagedResource): string {
 
 function immutablePaths(kind: string): readonly (readonly string[])[] {
   switch (kind) {
+    // A DaemonSet's selector is as immutable as a Deployment's; the API server
+    // rejects the update rather than replacing the workload.
+    case "DaemonSet":
     case "Deployment":
       return [["spec", "selector"]];
     case "StatefulSet":

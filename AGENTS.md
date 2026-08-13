@@ -101,7 +101,11 @@ the declared value winning by key, and deterministic waves put admission,
 secret controllers, providers, certificates, queues, and workloads in
 dependency order. Only the recursive `apps` Application ignores child health.
 Deleting a managed Application is admission-protected by the retain-or-cascade
-lifecycle contract.
+lifecycle contract; that policy matches the labeled children plus the
+explicitly named root, and leaves unmanaged Applications deletable.
+`release-root` binds the release inventory's `apps` revision to `--revision`
+before it stages anything, so invalid release input cannot leave prerequisites
+applied.
 
 ## Code Review Rules
 

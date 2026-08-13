@@ -2228,6 +2228,32 @@ function canonicalJson(value: unknown): string {
   return serialized;
 }
 
+/**
+ * The release inventory is operator input, so every command that consumes it
+ * parses and binds it before mutating anything. `release-root` validates it
+ * ahead of staging so invalid input cannot leave root prerequisites applied
+ * and child auto-sync suspended.
+ */
+async function readExpectedApplications(
+  expectedPath: string,
+): Promise<readonly ExpectedApplication[]> {
+  return ExpectedApplicationsSchema.parse(
+    JSON.parse(await Bun.file(expectedPath).text()),
+  );
+}
+
+function expectedAppsRelease(
+  expected: readonly ExpectedApplication[],
+): ExpectedApplication {
+  const appsRelease = expected.find(
+    (application) => application.name === "apps",
+  );
+  if (appsRelease === undefined) {
+    throw new Error("Expected release inventory is missing the apps revision");
+  }
+  return appsRelease;
+}
+
 async function reconcileRelease(
   expectedPath: string,
   timeoutSeconds: number,
@@ -2238,9 +2264,7 @@ async function reconcileRelease(
 ): Promise<void> {
   const exactRequestId =
     requestId === undefined ? undefined : SyncRequestIdSchema.parse(requestId);
-  const expected = ExpectedApplicationsSchema.parse(
-    JSON.parse(await Bun.file(expectedPath).text()),
-  );
+  const expected = await readExpectedApplications(expectedPath);
   if (dryRun) {
     console.log(
       `DRYRUN: would reconcile ${expected.length.toString()} expected Application(s)` +
@@ -2250,12 +2274,7 @@ async function reconcileRelease(
     );
     return;
   }
-  const appsRelease = expected.find(
-    (application) => application.name === "apps",
-  );
-  if (appsRelease === undefined) {
-    throw new Error("Expected release inventory is missing the apps revision");
-  }
+  const appsRelease = expectedAppsRelease(expected);
   await assertExpectedAppsRevisionIsLatest(
     appsRelease.revision,
     timeoutSeconds,
@@ -2321,9 +2340,7 @@ async function releaseHealthWait(
   timeoutSeconds: number,
   dryRun: boolean,
 ): Promise<void> {
-  const expected = ExpectedApplicationsSchema.parse(
-    JSON.parse(await Bun.file(expectedPath).text()),
-  );
+  const expected = await readExpectedApplications(expectedPath);
   console.log(
     `--- argocd release-health-wait: ${expected.length.toString()} expected Application(s)`,
   );
@@ -2366,6 +2383,14 @@ async function releaseRoot(
   }
   const exactRevision = BuildRevisionSchema.parse(revision);
   const exactRequestId = SyncRequestIdSchema.parse(requestId);
+  const appsRelease = expectedAppsRelease(
+    await readExpectedApplications(expectedPath),
+  );
+  if (appsRelease.revision !== exactRevision) {
+    throw new Error(
+      `Release inventory declares apps ${appsRelease.revision}; expected ${exactRevision}`,
+    );
+  }
   console.log(
     `--- argocd release-root: ${rootAppName} at ${exactRevision} for request ${exactRequestId}${dryRun ? " (dry run)" : ""}`,
   );

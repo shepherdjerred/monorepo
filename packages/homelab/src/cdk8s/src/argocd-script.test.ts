@@ -414,6 +414,51 @@ test("release-root owns the complete dry-run lifecycle", async () => {
   }
 });
 
+test("release-root rejects an inventory that names another apps revision", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-root-"));
+  const expectedPath = path.join(directory, "expected.json");
+  await Bun.write(
+    expectedPath,
+    JSON.stringify([{ name: "apps", revision: "2.0.0-42" }]),
+  );
+
+  try {
+    const process = Bun.spawn(
+      [
+        "bun",
+        "--no-install",
+        "scripts/argocd.ts",
+        "release-root",
+        "apps",
+        expectedPath,
+        "--revision",
+        "2.0.0-43",
+        "--request-id",
+        RELEASE_REQUEST_ID,
+        "--dry-run",
+      ],
+      {
+        cwd: path.resolve(import.meta.dir, "../../.."),
+        stderr: "pipe",
+        stdout: "pipe",
+      },
+    );
+    const [exitCode, stdout, stderr] = await Promise.all([
+      process.exited,
+      new Response(process.stdout).text(),
+      new Response(process.stderr).text(),
+    ]);
+
+    expect(exitCode).not.toBe(0);
+    expect(stderr).toContain(
+      "Release inventory declares apps 2.0.0-42; expected 2.0.0-43",
+    );
+    expect(stdout).not.toContain("stage-root-release");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 describe("Argo CD root prune safety", () => {
   test("blocks root pruning when a pruning child lacks the cascade finalizer", async () => {
     let syncPosts = 0;

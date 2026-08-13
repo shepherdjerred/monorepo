@@ -44,6 +44,27 @@ describe("ArgoCD apply safety", () => {
     ]);
   });
 
+  test("reports an immutable DaemonSet selector change", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "DaemonSet",
+          namespace: "observability",
+          name: "alloy",
+          liveState: state({
+            spec: { selector: { matchLabels: { app: "alloy" } } },
+          }),
+          targetState: state({
+            spec: { selector: { matchLabels: { app: "alloy-logs" } } },
+          }),
+        },
+      ]),
+    ).toEqual([
+      "apps/DaemonSet observability/alloy changes immutable /spec/selector",
+    ]);
+  });
+
   test("allows mutable changes and newly created resources", () => {
     expect(
       analyzeApplySafety([
