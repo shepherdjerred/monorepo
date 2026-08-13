@@ -503,17 +503,59 @@ function operationReleasePhase(
 const ActiveSyncRequestSchema = z.object({
   manifests: z.array(z.string()).optional(),
   prune: z.boolean().optional(),
+  syncOptions: z.array(z.string()).optional(),
+});
+
+const DeclaredSyncOptionsSchema = z.object({
+  spec: z
+    .object({
+      syncPolicy: z
+        .object({ syncOptions: z.array(z.string()).optional() })
+        .loose()
+        .optional(),
+    })
+    .loose()
+    .optional(),
 });
 
 /**
- * Adoption must accept only the operation this call would itself have posted.
- * Compare every field of the request this process controls rather than
- * spot-checking one of them: a live operation can share the request UUID,
- * revision, and phase marker while applying a manifest override, a different
- * resource selection, or a different prune mode. Any option added to
- * `SyncOptions` that changes the posted body belongs here too, so a retry can
- * never adopt work that is not the exact request. Revision and identity stay
- * with the operation observation, which reads them from the CI info entries.
+ * Every key this process can account for in a live `operation.sync`. `revision`,
+ * `prune`, `manifests`, and `resources` are the request's own fields;
+ * `syncOptions` is absent from the request and injected by the sync-option
+ * admission policy from the Application's declared policy.
+ */
+const ACCOUNTED_SYNC_KEYS = new Set([
+  "manifests",
+  "prune",
+  "resources",
+  "revision",
+  "syncOptions",
+]);
+
+function declaredSyncOptions(app: Record<string, unknown>): readonly string[] {
+  return (
+    DeclaredSyncOptionsSchema.parse(app).spec?.syncPolicy?.syncOptions ?? []
+  );
+}
+
+/**
+ * Adoption must accept only the operation this call would itself have produced.
+ * That is not the same as the request this call posts: admission merges the
+ * Application's declared sync options into the operation server-side, so the
+ * live operation legitimately carries a field the request never sent.
+ *
+ * The comparison is therefore closed-world. Every key in the live sync request
+ * must be one this process can account for and must equal the value it would
+ * have produced, and any key it cannot account for is a refusal rather than
+ * something ignored. An operation sharing the request UUID, revision, and phase
+ * marker can otherwise apply materially different semantics — `Force=true` or
+ * `Replace=true` sync options, a manifest override, a different resource
+ * selection, or a different prune mode.
+ *
+ * A future Argo release that always serializes a new `operation.sync` field
+ * will surface here as a refusal on retry rather than a silent adoption. That
+ * is the intended direction to fail: add the field to `ACCOUNTED_SYNC_KEYS`
+ * with its expected value once its semantics are known.
  */
 function activeOperationRequestMismatch(
   app: Record<string, unknown>,
@@ -529,9 +571,21 @@ function activeOperationRequestMismatch(
   if (!isRecord(sync)) {
     throw new Error("Active Argo operation is missing its sync request");
   }
+  for (const key of Object.keys(sync)) {
+    if (!ACCOUNTED_SYNC_KEYS.has(key)) {
+      return `an unaccounted ${key} field`;
+    }
+  }
   const active = ActiveSyncRequestSchema.parse(sync);
   if ((active.prune ?? false) !== options.prune) {
     return `prune ${(active.prune ?? false).toString()}`;
+  }
+  // The request never sends sync options, so admission's merge leaves exactly
+  // the Application's declared set. Anything else was added by someone else.
+  const admittedOptions = [...(active.syncOptions ?? [])].sort();
+  const expectedOptions = [...declaredSyncOptions(app)].sort();
+  if (canonicalJson(admittedOptions) !== canonicalJson(expectedOptions)) {
+    return `sync options ${JSON.stringify(admittedOptions)}`;
   }
   if ((active.manifests === undefined) !== (options.manifests === undefined)) {
     return active.manifests === undefined

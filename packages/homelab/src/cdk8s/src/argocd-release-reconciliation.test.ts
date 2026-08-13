@@ -362,7 +362,13 @@ function activeChildOperation(sync: Record<string, unknown>) {
 
 async function reconcileAgainstActiveChildOperation(
   activeOperation: unknown,
-): Promise<{ exitCode: number; stderr: string; syncPosts: number }> {
+  workerSpec: Record<string, unknown> = {},
+): Promise<{
+  exitCode: number;
+  stderr: string;
+  stdout: string;
+  syncPosts: number;
+}> {
   let syncPosts = 0;
   const server = Bun.serve({
     hostname: "127.0.0.1",
@@ -403,6 +409,7 @@ async function reconcileAgainstActiveChildOperation(
       ) {
         return Response.json({
           operation: activeOperation,
+          spec: workerSpec,
           status: { sync: { status: "OutOfSync", revision: "2.0.0-41" } },
         });
       }
@@ -445,11 +452,12 @@ async function reconcileAgainstActiveChildOperation(
         stdout: "pipe",
       },
     );
-    const [exitCode, stderr] = await Promise.all([
+    const [exitCode, stdout, stderr] = await Promise.all([
       process.exited,
+      new Response(process.stdout).text(),
       new Response(process.stderr).text(),
     ]);
-    return { exitCode, stderr, syncPosts };
+    return { exitCode, stderr, stdout, syncPosts };
   } finally {
     await server.stop(true);
     await rm(directory, { recursive: true, force: true });
@@ -471,6 +479,11 @@ describe("Argo CD child reconciliation identity", () => {
       sync: { manifests: ['{"kind":"Deployment"}'] },
     },
     { applies: "prune true", sync: { prune: true } },
+    {
+      applies: 'sync options ["Force=true"]',
+      sync: { syncOptions: ["Force=true"] },
+    },
+    { applies: "an unaccounted dryRun field", sync: { dryRun: true } },
   ];
 
   for (const { applies, sync } of divergentOperations) {
@@ -485,4 +498,27 @@ describe("Argo CD child reconciliation identity", () => {
       expect(syncPosts).toBe(0);
     });
   }
+
+  test("adopts an operation carrying the Application's declared sync options", async () => {
+    // Admission merges these into the operation server-side, so a legitimate
+    // live operation carries options the request never sent. Rejecting them
+    // would break every managed Application that declares any.
+    const { stdout, stderr, syncPosts } =
+      await reconcileAgainstActiveChildOperation(
+        activeChildOperation({
+          syncOptions: ["ServerSideApply=true", "CreateNamespace=true"],
+        }),
+        {
+          syncPolicy: {
+            syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
+          },
+        },
+      );
+
+    expect(stderr).not.toContain("Refusing to adopt");
+    expect(stdout).toContain("adopted active sync operation: worker");
+    // The adopted operation never completes in this fixture, so the run then
+    // times out waiting for it; that wait is not what this test covers.
+    expect(syncPosts).toBe(0);
+  });
 });

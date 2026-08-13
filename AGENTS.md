@@ -93,11 +93,15 @@ selection, and a `stage`, `batch`, `prune`, or `child` phase marker, so an
 interrupted release adopts only its own in-flight operation and never unrelated
 work. A retry resumes at whichever root phase is still live rather than
 restarting at staging, which cannot adopt a `batch` or `prune` operation.
-Adoption compares the live operation against the complete request this
-process would post — prune mode, manifest override, and resource selection —
-not only its identity, so an operation that shares the UUID, revision, and
-phase marker but applies different work is refused. The
-apply-safety preflight inspects the revision the sync will request, not the
+Adoption compares the live operation against the complete operation this
+process would have produced, not only its identity: prune mode, manifest
+override, resource selection, and the sync options admission merges in from the
+Application's declared policy. The comparison is closed-world, so any field it
+cannot account for is refused rather than ignored, and an operation sharing the
+UUID, revision, and phase marker but applying different work never gets
+adopted.
+
+The apply-safety preflight inspects the revision the sync will request, not the
 Application's currently configured source. Only the self-managed root
 Application remains auto-sync suspended while those operations run.
 
