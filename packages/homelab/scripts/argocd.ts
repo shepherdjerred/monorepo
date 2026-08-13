@@ -735,6 +735,14 @@ function splitRootSyncBatches(
   });
 }
 
+/**
+ * Deliberately carries no release identity, unlike every phase of
+ * `release-root`. This runs in `helm-push`, before the release exists, and only
+ * rewrites each child's auto-sync policy to the same suspended value, so a
+ * Buildkite retry can re-apply it blindly. Identity binding exists to decide
+ * between adopting and restarting an in-flight operation; there is nothing to
+ * decide when repeating the operation is the correct outcome either way.
+ */
 async function suspendRepositoryAutoSync(
   rootAppName: string,
   timeoutSeconds: number,
