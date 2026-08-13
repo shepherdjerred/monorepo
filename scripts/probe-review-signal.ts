@@ -6,9 +6,12 @@
  * `ReviewSignalEvent` the CI gate emits plus the raw building blocks — suitable
  * as test fixtures for `@shepherdjerred/code-review`.
  *
+ * Defaults to the provider the CI review gate requires, so its output explains
+ * that gate; set `REVIEW_PROVIDER` to inspect a different one.
+ *
  * Usage:
  *   GH_TOKEN=$(gh auth token) bun scripts/probe-review-signal.ts 1645 1643 1638
- *   REVIEW_PROVIDER=qodo GH_TOKEN=… bun scripts/probe-review-signal.ts 2079
+ *   REVIEW_PROVIDER=codex GH_TOKEN=… bun scripts/probe-review-signal.ts 2079
  */
 
 import {
@@ -16,6 +19,7 @@ import {
   isProviderAuthor,
   REVIEW_SIGNAL_SCHEMA,
   resolveProvider,
+  resolveRequiredReviewProvider,
   tallyFindings,
   type ReviewSignalEvent,
 } from "@shepherdjerred/code-review";
@@ -64,7 +68,15 @@ async function probePr(
   prNumber: number,
   token: string,
 ): Promise<void> {
-  const provider = resolveProvider(Bun.env["REVIEW_PROVIDER"]);
+  // Default to the provider the CI gate enforces, not the provider-neutral
+  // default. This probe exists to explain a red review gate, so answering about
+  // a different provider than the gate polls reports unrelated threads as the
+  // reason it is stuck. `REVIEW_PROVIDER` still selects another provider.
+  const configured = Bun.env["REVIEW_PROVIDER"];
+  const provider =
+    configured === undefined || configured.trim() === ""
+      ? resolveRequiredReviewProvider()
+      : resolveProvider(configured);
   const head = await fetchHeadSha(repo, prNumber, token);
 
   // Head push time first — `resolveReviewState` needs it to bind a provider's
