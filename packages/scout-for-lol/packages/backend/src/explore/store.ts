@@ -3,43 +3,59 @@ import {
   EXPLORE_TITLE_MAX_LENGTH,
   ExploreConversationSchema,
   ExploreMessageSchema,
+  ExploreTraceEntrySchema,
   ReportAiPreviewSummarySchema,
   VisualizationSnapshotSchema,
   type DiscordAccountId,
   type ExploreAnswer,
   type ExploreConversation,
   type ExploreMessage,
+  type ExploreTraceEntry,
   type ExploreTranscript,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import {
+  deepestLeafFrom,
+  pathToLeaf,
+  versionPosition,
+} from "#src/explore/tree.ts";
 
 /**
  * Storage for explore conversations.
  *
- * SQLite has no JSON column type, so the structured parts of a turn (preview
- * rows, visualization snapshot, string arrays) are stored as JSON text and
- * validated with Zod on the way back out. A row that fails to parse is a bug
- * in whatever wrote it, so it throws rather than degrading to an empty turn —
- * a share link silently losing its chart is worse than an error.
+ * Turns form a tree (see tree.ts); this module is the boundary between that
+ * tree and Prisma. Two rules hold throughout:
+ *
+ * - **Nothing is ever deleted to make room for a new version.** Editing or
+ *   regenerating appends a sibling, so every earlier answer stays reachable.
+ * - **Every read and write is owner-scoped.** ExploreMessage has no userId, so
+ *   scoping goes through the conversation relation rather than being assumed
+ *   from a caller that already looked the conversation up.
+ *
+ * SQLite has no JSON column type, so the structured parts of a turn are stored
+ * as JSON text and validated with Zod on the way back out. A row that fails to
+ * parse is a bug in whatever wrote it, so it throws rather than degrading to
+ * an empty turn — a share link silently losing its chart is worse than an
+ * error.
  */
 
 const StringArraySchema = z.array(z.string());
+const TraceArraySchema = z.array(ExploreTraceEntrySchema);
 
 type ConversationRow = {
   id: string;
-  userId: string;
   title: string;
   shareToken: string | null;
-  sharedAt: Date | null;
+  sharedLeafId: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
 
 type MessageRow = {
   id: string;
-  ordinal: number;
+  parentId: string | null;
   role: string;
   content: string;
   queryText: string | null;
@@ -47,6 +63,7 @@ type MessageRow = {
   followUps: string;
   preview: string | null;
   visualization: string | null;
+  trace: string | null;
   createdAt: Date;
 };
 
@@ -68,11 +85,16 @@ function parseJsonColumn<T>(
   return result.data;
 }
 
-function toMessage(row: MessageRow): ExploreMessage {
+function toMessage(
+  row: MessageRow,
+  position: { index: number; count: number },
+): ExploreMessage {
   return ExploreMessageSchema.parse({
     id: row.id,
     role: row.role,
-    ordinal: row.ordinal,
+    parentId: row.parentId,
+    versionIndex: position.index,
+    versionCount: position.count,
     content: row.content,
     queryText: row.queryText,
     caveats: parseJsonColumn(row.caveats, StringArraySchema, "caveats") ?? [],
@@ -88,6 +110,7 @@ function toMessage(row: MessageRow): ExploreMessage {
       VisualizationSnapshotSchema,
       "visualization",
     ),
+    trace: parseJsonColumn(row.trace, TraceArraySchema, "trace") ?? [],
     createdAt: row.createdAt.toISOString(),
   });
 }
@@ -97,9 +120,30 @@ function toConversation(row: ConversationRow): ExploreConversation {
     id: row.id,
     title: row.title,
     shareToken: row.shareToken,
+    sharedLeafId: row.sharedLeafId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   });
+}
+
+/**
+ * Turn a loaded conversation into the transcript for one path.
+ *
+ * Every message of the conversation is loaded, not just the path — sibling
+ * counts for the version arrows need the whole tree, and a conversation is
+ * small enough that one query beats one per level.
+ */
+function buildTranscript(
+  conversation: ConversationRow,
+  rows: MessageRow[],
+  leafId: string | null,
+): ExploreTranscript {
+  const resolvedLeaf = leafId ?? deepestLeafFrom(rows, null);
+  const path = pathToLeaf(rows, resolvedLeaf);
+  return {
+    conversation: toConversation(conversation),
+    messages: path.map((row) => toMessage(row, versionPosition(rows, row.id))),
+  };
 }
 
 /**
@@ -133,23 +177,33 @@ export async function loadExploreTranscript(
   prisma: ExtendedPrismaClient,
   conversationId: string,
   userId: DiscordAccountId,
+  /**
+   * Render this path instead of the reader's current one. Used while a turn
+   * is running to assemble the history leading to the question being answered,
+   * which for an edit or a regenerate is not the branch on screen.
+   */
+  leafIdOverride?: string,
 ): Promise<ExploreTranscript | null> {
   const row = await prisma.exploreConversation.findFirst({
     where: { id: conversationId, userId },
-    include: { messages: { orderBy: { ordinal: "asc" } } },
+    include: { messages: true },
   });
   if (row === null) {
     return null;
   }
-  return {
-    conversation: toConversation(row),
-    messages: row.messages.map((message) => toMessage(message)),
-  };
+  return buildTranscript(
+    row,
+    row.messages,
+    leafIdOverride ?? row.currentLeafId,
+  );
 }
 
 /**
  * Load a shared transcript by token. Deliberately not scoped to a user: the
  * token is the credential, and the caller is typically anonymous.
+ *
+ * Renders `sharedLeafId` — the path pinned when the link was created — so the
+ * owner branching afterwards cannot change what a recipient sees.
  */
 export async function loadSharedExploreTranscript(
   prisma: ExtendedPrismaClient,
@@ -157,22 +211,23 @@ export async function loadSharedExploreTranscript(
 ): Promise<ExploreTranscript | null> {
   const row = await prisma.exploreConversation.findUnique({
     where: { shareToken },
-    include: { messages: { orderBy: { ordinal: "asc" } } },
+    include: { messages: true },
   });
   if (row === null) {
     return null;
   }
-  return {
-    conversation: toConversation(row),
-    messages: row.messages.map((message) => toMessage(message)),
-  };
+  return buildTranscript(row, row.messages, row.sharedLeafId);
 }
 
 /**
  * Create the conversation if needed and append the user's question.
  *
- * Done before the model runs so the question survives a failed or abandoned
+ * Written before the model runs so the question survives a failed or abandoned
  * turn — a conversation that loses what was asked is not resumable.
+ *
+ * `parentMessageId` decides whether this continues the conversation or forks
+ * it: passing the parent of an existing question makes the new one a sibling,
+ * which is how editing works.
  */
 export async function startExploreTurn(
   prisma: ExtendedPrismaClient,
@@ -180,59 +235,118 @@ export async function startExploreTurn(
     conversationId: string | null;
     userId: DiscordAccountId;
     question: string;
+    parentMessageId: string | null;
   },
-): Promise<{ conversationId: string; title: string; ordinal: number }> {
+): Promise<{ conversationId: string; title: string; messageId: string }> {
   if (input.conversationId === null) {
     const title = titleFromQuestion(input.question);
     const created = await prisma.exploreConversation.create({
       data: {
         userId: input.userId,
         title,
-        messages: {
-          create: {
-            ordinal: 0,
-            role: "user",
-            content: input.question,
-          },
-        },
+        messages: { create: { role: "user", content: input.question } },
       },
+      include: { messages: true },
     });
-    return { conversationId: created.id, title, ordinal: 0 };
+    const messageId = created.messages[0]?.id;
+    if (messageId === undefined) {
+      throw new Error("Conversation was created without its first message.");
+    }
+    return { conversationId: created.id, title, messageId };
   }
 
   const existing = await prisma.exploreConversation.findFirst({
     where: { id: input.conversationId, userId: input.userId },
-    include: { messages: { orderBy: { ordinal: "desc" }, take: 1 } },
+    include: { messages: true },
   });
   if (existing === null) {
     throw new Error("Conversation not found.");
   }
-  const ordinal = (existing.messages[0]?.ordinal ?? -1) + 1;
-  await prisma.exploreMessage.create({
+
+  const parentId =
+    input.parentMessageId ??
+    deepestLeafFrom(existing.messages, existing.currentLeafId);
+  const parentBelongs =
+    parentId === null ||
+    existing.messages.some((message) => message.id === parentId);
+  if (!parentBelongs) {
+    throw new Error("Message not found.");
+  }
+
+  const created = await prisma.exploreMessage.create({
     data: {
       conversationId: existing.id,
-      ordinal,
+      parentId,
       role: "user",
       content: input.question,
     },
   });
-  return { conversationId: existing.id, title: existing.title, ordinal };
+  return {
+    conversationId: existing.id,
+    title: existing.title,
+    messageId: created.id,
+  };
+}
+
+/**
+ * Resolve the user message a regenerate should answer again.
+ *
+ * Regenerating adds a new assistant sibling under an existing question rather
+ * than duplicating the question, which is what puts the version arrows on the
+ * answer where a reader expects them.
+ */
+export async function resolveRegenerateTarget(
+  prisma: ExtendedPrismaClient,
+  input: {
+    conversationId: string;
+    userId: DiscordAccountId;
+    parentMessageId: string;
+  },
+): Promise<{
+  conversationId: string;
+  title: string;
+  messageId: string;
+  question: string;
+}> {
+  const existing = await prisma.exploreConversation.findFirst({
+    where: { id: input.conversationId, userId: input.userId },
+    include: { messages: true },
+  });
+  if (existing === null) {
+    throw new Error("Conversation not found.");
+  }
+  const parent = existing.messages.find(
+    (message) => message.id === input.parentMessageId,
+  );
+  if (parent === undefined) {
+    throw new Error("Message not found.");
+  }
+  if (parent.role !== "user") {
+    throw new Error("Only a question can be answered again.");
+  }
+  return {
+    conversationId: existing.id,
+    title: existing.title,
+    messageId: parent.id,
+    question: parent.content,
+  };
 }
 
 export async function appendExploreAnswer(
   prisma: ExtendedPrismaClient,
   input: {
     conversationId: string;
-    ordinal: number;
+    parentMessageId: string;
     answer: ExploreAnswer;
     preview: ReportAiPreviewSummary | null;
     visualization: VisualizationSnapshot | null;
+    trace: ExploreTraceEntry[];
   },
 ): Promise<ExploreMessage> {
   const row = await prisma.exploreMessage.create({
     data: {
       conversationId: input.conversationId,
-      ordinal: input.ordinal,
+      parentId: input.parentMessageId,
       role: "assistant",
       content: input.answer.answer,
       queryText: input.answer.queryText,
@@ -243,14 +357,53 @@ export async function appendExploreAnswer(
         input.visualization === null
           ? null
           : JSON.stringify(input.visualization),
+      trace: JSON.stringify(input.trace),
     },
   });
-  // Touch the conversation so the sidebar orders by real activity.
+  // The new answer becomes the branch the owner is reading, and the touch
+  // reorders the sidebar by real activity.
   await prisma.exploreConversation.update({
     where: { id: input.conversationId },
-    data: { updatedAt: new Date() },
+    data: { currentLeafId: row.id, updatedAt: new Date() },
   });
-  return toMessage(row);
+
+  const siblings = await prisma.exploreMessage.findMany({
+    where: { conversationId: input.conversationId },
+    select: { id: true, parentId: true, createdAt: true },
+  });
+  return toMessage(row, versionPosition(siblings, row.id));
+}
+
+/**
+ * Switch which branch the owner is reading.
+ *
+ * Selecting a version follows it down to its own leaf rather than stopping at
+ * the version itself — otherwise choosing an older question would hide the
+ * answer that came after it.
+ */
+export async function setExploreLeaf(
+  prisma: ExtendedPrismaClient,
+  conversationId: string,
+  userId: DiscordAccountId,
+  messageId: string,
+): Promise<boolean> {
+  const existing = await prisma.exploreConversation.findFirst({
+    where: { id: conversationId, userId },
+    include: {
+      messages: { select: { id: true, parentId: true, createdAt: true } },
+    },
+  });
+  if (existing === null) {
+    return false;
+  }
+  if (!existing.messages.some((message) => message.id === messageId)) {
+    return false;
+  }
+  await prisma.exploreConversation.update({
+    where: { id: conversationId },
+    data: { currentLeafId: deepestLeafFrom(existing.messages, messageId) },
+  });
+  return true;
 }
 
 export async function deleteExploreConversation(
@@ -281,7 +434,8 @@ export async function renameExploreConversation(
  * Mint a share token, or return the existing one.
  *
  * Re-sharing keeps the same token so a link already sent to someone does not
- * break. Revoking and re-sharing deliberately mints a new one.
+ * break, and re-pins it to whatever the owner is reading now. Revoking and
+ * re-sharing deliberately mints a new one.
  */
 export async function shareExploreConversation(
   prisma: ExtendedPrismaClient,
@@ -290,18 +444,22 @@ export async function shareExploreConversation(
 ): Promise<string | null> {
   const existing = await prisma.exploreConversation.findFirst({
     where: { id: conversationId, userId },
-    select: { shareToken: true },
+    include: {
+      messages: { select: { id: true, parentId: true, createdAt: true } },
+    },
   });
   if (existing === null) {
     return null;
   }
-  if (existing.shareToken !== null) {
-    return existing.shareToken;
-  }
-  const shareToken = globalThis.crypto.randomUUID().replaceAll("-", "");
+  const sharedLeafId = deepestLeafFrom(
+    existing.messages,
+    existing.currentLeafId,
+  );
+  const shareToken =
+    existing.shareToken ?? globalThis.crypto.randomUUID().replaceAll("-", "");
   await prisma.exploreConversation.updateMany({
     where: { id: conversationId, userId },
-    data: { shareToken, sharedAt: new Date() },
+    data: { shareToken, sharedLeafId, sharedAt: new Date() },
   });
   return shareToken;
 }
@@ -313,7 +471,7 @@ export async function revokeExploreShare(
 ): Promise<boolean> {
   const result = await prisma.exploreConversation.updateMany({
     where: { id: conversationId, userId },
-    data: { shareToken: null, sharedAt: null },
+    data: { shareToken: null, sharedLeafId: null, sharedAt: null },
   });
   return result.count > 0;
 }

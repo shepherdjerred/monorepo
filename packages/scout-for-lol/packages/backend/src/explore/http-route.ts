@@ -8,8 +8,10 @@ import {
   ExploreStreamEventSchema,
   ExploreTranscriptSchema,
   ExploreTurnRequestSchema,
+  type ExploreMessage,
   type ExploreQuotaSnapshot,
   type ExploreStreamEvent,
+  type ExploreTraceEntry,
   type ExploreTurnRequest,
 } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
@@ -20,11 +22,13 @@ import {
   getExploreQuotaStatus,
   tryStartExploreTurn,
   type ExploreRateLimitIdentity,
+  type ExploreRateLimitTicket,
 } from "#src/explore/rate-limit.ts";
 import {
   appendExploreAnswer,
   loadExploreTranscript,
   loadSharedExploreTranscript,
+  resolveRegenerateTarget,
   startExploreTurn,
 } from "#src/explore/store.ts";
 import {
@@ -92,106 +96,42 @@ export async function handleExploreRoute(
 
   // The question is persisted before the model runs, so an abandoned turn
   // still leaves a resumable conversation rather than losing what was asked.
-  let started: { conversationId: string; title: string; ordinal: number };
+  //
+  // A null question means "answer this existing one again", so nothing new is
+  // written — the fresh answer will simply become another child of it.
+  let started: {
+    conversationId: string;
+    title: string;
+    messageId: string;
+    question: string;
+  };
   try {
-    started = await startExploreTurn(prisma, {
-      conversationId: parsedBody.input.conversationId,
-      userId: authResult.identity.userId,
-      question: parsedBody.input.question,
-    });
+    started = await resolveTurnTarget(parsedBody.input, authResult.identity);
   } catch (error) {
     ticket.finish();
     scoutExploreTurnsTotal.inc({ status: "error" });
     return jsonError(errorMessage(error), 404, corsHeaders);
   }
 
+  // The path ending at the question being answered — which for an edit or a
+  // regenerate is not the branch currently on screen.
   const history = await loadExploreTranscript(
     prisma,
     started.conversationId,
     authResult.identity.userId,
+    started.messageId,
   );
 
-  const stream = new ReadableStream({
+  const stream = new ReadableStream<Uint8Array>({
     start(controller) {
-      const abortController = new AbortController();
-      const timeout = setTimeout(() => {
-        abortController.abort("Explore turn timed out.");
-      }, EXPLORE_TIMEOUT_MS);
-      const abortFromRequest = () => {
-        abortController.abort("Client disconnected.");
-      };
-      request.signal.addEventListener("abort", abortFromRequest);
-      let closed = false;
-      let runStatus = "error";
-      const startedAt = Date.now();
-      scoutExploreActiveRuns.inc();
-
-      const emit = (event: ExploreStreamEvent): void => {
-        if (closed) {
-          return;
-        }
-        const parsed = ExploreStreamEventSchema.parse(event);
-        controller.enqueue(
-          encoder.encode(
-            `event: ${parsed.type}\ndata: ${JSON.stringify(parsed)}\n\n`,
-          ),
-        );
-      };
-
-      emit({
-        type: "started",
-        runId: ticket.runId,
-        conversationId: started.conversationId,
+      runExploreTurnStream({
+        controller,
+        request,
+        ticket,
+        identity: authResult.identity,
+        started,
+        history: history?.messages ?? [],
       });
-
-      void (async () => {
-        try {
-          const result = await streamExploreAgent({
-            runId: ticket.runId,
-            question: parsedBody.input.question,
-            // Drop the question just written — the agent receives it as the
-            // current turn, and replaying it would duplicate it.
-            history: (history?.messages ?? []).slice(0, -1),
-            abortSignal: abortController.signal,
-            emit,
-          });
-          const message = await appendExploreAnswer(prisma, {
-            conversationId: started.conversationId,
-            ordinal: started.ordinal + 1,
-            answer: result.answer,
-            preview: result.preview,
-            visualization: result.visualization,
-          });
-          ticket.finish();
-          runStatus = "success";
-          emit({
-            type: "final",
-            message,
-            title: started.title,
-            quota: getExploreQuotaStatus(authResult.identity, Date.now()).quota,
-          });
-        } catch (error) {
-          runStatus = abortController.signal.aborted ? "cancelled" : "error";
-          emit({
-            type: "error",
-            message: errorMessage(error),
-            retryAfterSeconds: null,
-            quota: getExploreQuotaStatus(authResult.identity, Date.now()).quota,
-          });
-        } finally {
-          clearTimeout(timeout);
-          request.signal.removeEventListener("abort", abortFromRequest);
-          ticket.finish();
-          scoutExploreActiveRuns.dec();
-          scoutExploreTurnsTotal.inc({ status: runStatus });
-          scoutExploreTurnDurationSeconds
-            .labels(runStatus)
-            .observe((Date.now() - startedAt) / 1000);
-          emit({ type: "done" });
-          closed = true;
-          controller.close();
-        }
-      })();
     },
   });
 
@@ -205,6 +145,145 @@ export async function handleExploreRoute(
       ...corsHeaders,
     },
   });
+}
+
+/**
+ * Run one turn onto an SSE controller.
+ *
+ * Extracted from the route handler purely so neither function is a wall of
+ * code; the flow is linear and reads top to bottom.
+ */
+function runExploreTurnStream(input: {
+  controller: ReadableStreamDefaultController<Uint8Array>;
+  request: Request;
+  ticket: ExploreRateLimitTicket;
+  identity: ExploreRateLimitIdentity;
+  started: {
+    conversationId: string;
+    title: string;
+    messageId: string;
+    question: string;
+  };
+  history: ExploreMessage[];
+}): void {
+  const { controller, request, ticket, identity, started, history } = input;
+  const abortController = new AbortController();
+  const timeout = setTimeout(() => {
+    abortController.abort("Explore turn timed out.");
+  }, EXPLORE_TIMEOUT_MS);
+  const abortFromRequest = () => {
+    abortController.abort("Client disconnected.");
+  };
+  request.signal.addEventListener("abort", abortFromRequest);
+  let closed = false;
+  let runStatus = "error";
+  const startedAt = Date.now();
+  scoutExploreActiveRuns.inc();
+
+  const emit = (event: ExploreStreamEvent): void => {
+    if (closed) {
+      return;
+    }
+    const parsed = ExploreStreamEventSchema.parse(event);
+    controller.enqueue(
+      encoder.encode(
+        `event: ${parsed.type}\ndata: ${JSON.stringify(parsed)}\n\n`,
+      ),
+    );
+  };
+
+  emit({
+    type: "started",
+    runId: ticket.runId,
+    conversationId: started.conversationId,
+  });
+
+  // Accumulated as the run goes so a stopped turn can still be saved, and
+  // so the finished answer carries the trace the reasoning panel shows.
+  const trace: ExploreTraceEntry[] = [];
+  let streamedAnswer = "";
+  const record = (event: ExploreStreamEvent): void => {
+    if (event.type === "answer_delta") {
+      streamedAnswer += event.text;
+    }
+    if (event.type === "tool_result") {
+      trace.push({
+        toolName: event.toolName,
+        message: event.message,
+        ok: event.ok,
+      });
+    }
+    emit(event);
+  };
+
+  void (async () => {
+    try {
+      const result = await streamExploreAgent({
+        runId: ticket.runId,
+        question: started.question,
+        // Drop the question itself — the agent receives it as the current
+        // turn, and replaying it would duplicate it.
+        history: history.slice(0, -1),
+        abortSignal: abortController.signal,
+        emit: record,
+      });
+      const message = await appendExploreAnswer(prisma, {
+        conversationId: started.conversationId,
+        parentMessageId: started.messageId,
+        answer: result.answer,
+        preview: result.preview,
+        visualization: result.visualization,
+        trace,
+      });
+      ticket.finish();
+      runStatus = "success";
+      emit({
+        type: "final",
+        message,
+        title: started.title,
+        quota: getExploreQuotaStatus(identity, Date.now()).quota,
+      });
+    } catch (error) {
+      runStatus = abortController.signal.aborted ? "cancelled" : "error";
+      // A stopped turn keeps whatever it had already said. Discarding it
+      // would leave a question with no answer under it, which reads as a
+      // bug rather than as a deliberate stop.
+      const salvaged = await persistPartialAnswer({
+        aborted: abortController.signal.aborted,
+        conversationId: started.conversationId,
+        parentMessageId: started.messageId,
+        text: streamedAnswer,
+        trace,
+      });
+      if (salvaged === null) {
+        emit({
+          type: "error",
+          message: errorMessage(error),
+          retryAfterSeconds: null,
+          quota: getExploreQuotaStatus(identity, Date.now()).quota,
+        });
+      } else {
+        emit({
+          type: "final",
+          message: salvaged,
+          title: started.title,
+          quota: getExploreQuotaStatus(identity, Date.now()).quota,
+        });
+      }
+    } finally {
+      clearTimeout(timeout);
+      request.signal.removeEventListener("abort", abortFromRequest);
+      ticket.finish();
+      scoutExploreActiveRuns.dec();
+      scoutExploreTurnsTotal.inc({ status: runStatus });
+      scoutExploreTurnDurationSeconds
+        .labels(runStatus)
+        .observe((Date.now() - startedAt) / 1000);
+      emit({ type: "done" });
+      closed = true;
+      controller.close();
+    }
+  })();
 }
 
 /**
@@ -237,6 +316,75 @@ async function handleSharedTranscript(
       "Cache-Control": "public, max-age=300",
       ...corsHeaders,
     },
+  });
+}
+
+/**
+ * Work out which question this turn answers, creating it when the request
+ * carries new text.
+ *
+ * `parentMessageId` is the attach point: null continues the branch on screen,
+ * an existing question's parent forks a sibling (an edit), and the question
+ * itself with no new text means answer it again (a regenerate).
+ */
+async function resolveTurnTarget(
+  input: ExploreTurnRequest,
+  identity: ExploreRateLimitIdentity,
+): Promise<{
+  conversationId: string;
+  title: string;
+  messageId: string;
+  question: string;
+}> {
+  if (input.question === null) {
+    if (input.conversationId === null || input.parentMessageId === null) {
+      throw new Error("Answering again needs an existing question.");
+    }
+    return await resolveRegenerateTarget(prisma, {
+      conversationId: input.conversationId,
+      userId: identity.userId,
+      parentMessageId: input.parentMessageId,
+    });
+  }
+
+  const started = await startExploreTurn(prisma, {
+    conversationId: input.conversationId,
+    userId: identity.userId,
+    question: input.question,
+    parentMessageId: input.parentMessageId,
+  });
+  return { ...started, question: input.question };
+}
+
+/**
+ * Save what a stopped turn had already produced.
+ *
+ * Only for a deliberate stop with text in hand: a turn that failed outright
+ * has nothing worth keeping, and persisting an empty answer would just put a
+ * blank bubble under the question.
+ */
+async function persistPartialAnswer(input: {
+  aborted: boolean;
+  conversationId: string;
+  parentMessageId: string;
+  text: string;
+  trace: ExploreTraceEntry[];
+}): Promise<ExploreMessage | null> {
+  if (!input.aborted || input.text.trim().length === 0) {
+    return null;
+  }
+  return await appendExploreAnswer(prisma, {
+    conversationId: input.conversationId,
+    parentMessageId: input.parentMessageId,
+    answer: {
+      answer: input.text,
+      queryText: null,
+      caveats: ["This answer was stopped before it finished."],
+      followUps: [],
+    },
+    preview: null,
+    visualization: null,
+    trace: input.trace,
   });
 }
 

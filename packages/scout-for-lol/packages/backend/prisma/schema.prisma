@@ -373,16 +373,23 @@ model User {
 /// A saved explore conversation. Explore queries the whole report lake rather
 /// than one server's data, so a conversation belongs to a person, not a guild.
 model ExploreConversation {
-  id         String    @id @default(uuid())
-  userId     String
-  title      String
+  id            String    @id @default(uuid())
+  userId        String
+  title         String
   /// Set when the owner shares the conversation; null means private. Opaque
   /// and unguessable rather than derived from `id`, because possession of the
   /// token is the only credential a share link carries.
-  shareToken String?   @unique
-  sharedAt   DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  shareToken    String?   @unique
+  sharedAt      DateTime?
+  /// Which leaf of the message tree the owner is currently looking at. The
+  /// active transcript is the path from this message back to the root.
+  currentLeafId String?
+  /// The leaf the share link is pinned to, captured when the conversation was
+  /// shared. Without it, branching after sharing would silently change what a
+  /// link shows — the same freeze guarantee the stored results already give.
+  sharedLeafId  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   user     User             @relation(fields: [userId], references: [discordId], onDelete: Cascade)
   messages ExploreMessage[]
@@ -390,7 +397,12 @@ model ExploreConversation {
   @@index([userId, updatedAt])
 }
 
-/// One turn of an explore conversation.
+/// One turn of an explore conversation, as a node in a tree.
+///
+/// Turns form a tree rather than a list so editing a question or regenerating
+/// an answer forks a sibling instead of destroying what was there. Messages
+/// sharing a `parentId` are versions of each other — that is what the `‹ 1/2 ›`
+/// arrows page through — and nothing is ever deleted to make a new one.
 ///
 /// Assistant turns store the rendered result inline — the preview rows and the
 /// visualization snapshot the asker actually saw. A shared conversation is
@@ -400,8 +412,8 @@ model ExploreConversation {
 model ExploreMessage {
   id             String   @id @default(uuid())
   conversationId String
-  /// Position within the conversation, starting at 0.
-  ordinal        Int
+  /// Null for the opening message. Siblings under one parent are versions.
+  parentId       String?
   /// "user" or "assistant".
   role           String
   content        String
@@ -413,12 +425,16 @@ model ExploreMessage {
   /// JSON blobs matching ReportAiPreviewSummarySchema / VisualizationSnapshotSchema.
   preview        String?
   visualization  String?
+  /// JSON array of the tool calls this turn made, for the reasoning panel.
+  trace          String?
   createdAt      DateTime @default(now())
 
   conversation ExploreConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  parent       ExploreMessage?     @relation("ExploreMessageTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children     ExploreMessage[]    @relation("ExploreMessageTree")
 
-  @@unique([conversationId, ordinal])
   @@index([conversationId])
+  @@index([conversationId, parentId])
 }
 
 model ApiToken {

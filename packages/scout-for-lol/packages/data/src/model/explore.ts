@@ -48,11 +48,24 @@ export const ExploreQuestionSchema = z
   .min(1)
   .max(EXPLORE_QUESTION_MAX_LENGTH);
 
+/**
+ * One request covers all three ways a turn starts.
+ *
+ * | Flow       | `question` | `parentMessageId`                 |
+ * | ---------- | ---------- | --------------------------------- |
+ * | Ask        | set        | null (attach at the current leaf)  |
+ * | Edit       | set        | the edited message's parent        |
+ * | Regenerate | null       | the user message to answer again   |
+ *
+ * A null `question` means "answer this existing user turn again", so the
+ * parent must be a user message; the server rejects anything else.
+ */
 export const ExploreTurnRequestSchema = z
   .object({
     /** Null starts a new conversation; the server mints the id. */
     conversationId: ExploreConversationIdSchema.nullable().default(null),
-    question: ExploreQuestionSchema,
+    question: ExploreQuestionSchema.nullable().default(null),
+    parentMessageId: z.uuid().nullable().default(null),
   })
   .strict();
 
@@ -82,6 +95,20 @@ export const ExploreAnswerSchema = z
 
 export type ExploreAnswer = z.infer<typeof ExploreAnswerSchema>;
 
+/**
+ * One step the agent took, kept so a reader can audit how an answer was
+ * reached rather than taking the prose on trust.
+ */
+export const ExploreTraceEntrySchema = z
+  .object({
+    toolName: z.string().min(1).max(100),
+    message: z.string().min(1).max(500),
+    ok: z.boolean(),
+  })
+  .strict();
+
+export type ExploreTraceEntry = z.infer<typeof ExploreTraceEntrySchema>;
+
 export const ExploreMessageRoleSchema = z.enum(["user", "assistant"]);
 export type ExploreMessageRole = z.infer<typeof ExploreMessageRoleSchema>;
 
@@ -94,13 +121,21 @@ export const ExploreMessageSchema = z
   .object({
     id: z.uuid(),
     role: ExploreMessageRoleSchema,
-    ordinal: z.number().int().nonnegative(),
+    /** Null for the opening message. Siblings under a parent are versions. */
+    parentId: z.uuid().nullable().default(null),
+    /**
+     * Which version of this turn is being shown, and how many exist. Computed
+     * server-side from the sibling set so the arrows need no extra round trip.
+     */
+    versionIndex: z.number().int().nonnegative().default(0),
+    versionCount: z.number().int().positive().default(1),
     content: z.string(),
     queryText: ReportQueryTextSchema.nullable().default(null),
     caveats: z.array(z.string()).default([]),
     followUps: z.array(z.string()).default([]),
     preview: ReportAiPreviewSummarySchema.nullable().default(null),
     visualization: VisualizationSnapshotSchema.nullable().default(null),
+    trace: z.array(ExploreTraceEntrySchema).default([]),
     createdAt: z.iso.datetime(),
   })
   .strict();
@@ -112,6 +147,8 @@ export const ExploreConversationSchema = z
     id: ExploreConversationIdSchema,
     title: z.string().trim().min(1).max(EXPLORE_TITLE_MAX_LENGTH),
     shareToken: ExploreShareTokenSchema.nullable().default(null),
+    /** The leaf a share link is pinned to, if the conversation is shared. */
+    sharedLeafId: z.uuid().nullable().default(null),
     createdAt: z.iso.datetime(),
     updatedAt: z.iso.datetime(),
   })

@@ -94,7 +94,7 @@ describe("explore router", () => {
         userId: OWNER,
         title: "Mine",
         messages: {
-          create: { ordinal: 0, role: "user", content: "Which champion?" },
+          create: { role: "user", content: "Which champion?" },
         },
       },
     });
@@ -121,7 +121,7 @@ describe("explore router", () => {
         userId: SHARER,
         title: "Shared",
         messages: {
-          create: { ordinal: 0, role: "user", content: "Which champion?" },
+          create: { role: "user", content: "Which champion?" },
         },
       },
     });
@@ -145,7 +145,7 @@ describe("explore router", () => {
         userId: LOSER,
         title: "Mine",
         messages: {
-          create: { ordinal: 0, role: "user", content: "Which champion?" },
+          create: { role: "user", content: "Which champion?" },
         },
       },
     });

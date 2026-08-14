@@ -84,29 +84,70 @@ afterAll(async () => {
 
 async function seedSharedConversation(): Promise<string> {
   const shareToken = "a".repeat(32);
-  await trpc.prisma.exploreConversation.create({
+  const conversation = await trpc.prisma.exploreConversation.create({
     data: {
       userId: owner,
       title: "Champion win rates",
       shareToken,
       sharedAt: new Date(),
-      messages: {
-        create: [
-          { ordinal: 0, role: "user", content: "Which champion wins most?" },
-          {
-            ordinal: 1,
-            role: "assistant",
-            content: "Jinx, over 42 games.",
-            queryText:
-              "SELECT champion, win_rate FROM match_participants GROUP BY champion",
-            caveats: JSON.stringify(["Small sample."]),
-            followUps: JSON.stringify(["How about by patch?"]),
-          },
-        ],
-      },
     },
   });
+  const question = await trpc.prisma.exploreMessage.create({
+    data: {
+      conversationId: conversation.id,
+      role: "user",
+      content: "Which champion wins most?",
+    },
+  });
+  const answer = await trpc.prisma.exploreMessage.create({
+    data: {
+      conversationId: conversation.id,
+      parentId: question.id,
+      role: "assistant",
+      content: "Jinx, over 42 games.",
+      queryText:
+        "SELECT champion, win_rate FROM match_participants GROUP BY champion",
+      caveats: JSON.stringify(["Small sample."]),
+      followUps: JSON.stringify(["How about by patch?"]),
+    },
+  });
+  // A share pins the path it was taken from, so later branching cannot change
+  // what the link renders.
+  await trpc.prisma.exploreConversation.update({
+    where: { id: conversation.id },
+    data: { currentLeafId: answer.id, sharedLeafId: answer.id },
+  });
   return shareToken;
+}
+
+/**
+ * A shared link keeps showing the path it captured even after the owner adds a
+ * different branch — the freeze guarantee the stored results already give,
+ * extended to which turns are on screen.
+ */
+async function branchAfterShare(shareToken: string): Promise<void> {
+  const conversation = await trpc.prisma.exploreConversation.findUniqueOrThrow({
+    where: { shareToken },
+    include: { messages: true },
+  });
+  const question = conversation.messages.find(
+    (message) => message.role === "user",
+  );
+  if (question === undefined) {
+    throw new Error("expected the seeded question");
+  }
+  const rival = await trpc.prisma.exploreMessage.create({
+    data: {
+      conversationId: conversation.id,
+      parentId: question.id,
+      role: "assistant",
+      content: "On reflection, Caitlyn.",
+    },
+  });
+  await trpc.prisma.exploreConversation.update({
+    where: { id: conversation.id },
+    data: { currentLeafId: rival.id },
+  });
 }
 
 describe("explore http route", () => {
@@ -192,6 +233,21 @@ describe("explore http route", () => {
     });
     const after = await getShared(shareToken);
     expect(after.status).toBe(404);
+  });
+
+  test("a shared link keeps its path after the owner branches", async () => {
+    const shareToken = await seedSharedConversation();
+    await branchAfterShare(shareToken);
+
+    const response = await getShared(shareToken);
+    expect(response.status).toBe(200);
+    const body = z
+      .object({ messages: z.array(z.object({ content: z.string() })) })
+      .parse(await response.json());
+    expect(body.messages.map((message) => message.content)).toEqual([
+      "Which champion wins most?",
+      "Jinx, over 42 games.",
+    ]);
   });
 
   test("membership outside the allowlist is refused", async () => {

@@ -19,6 +19,7 @@ import {
   loadExploreTranscript,
   renameExploreConversation,
   revokeExploreShare,
+  setExploreLeaf,
   shareExploreConversation,
 } from "#src/explore/store.ts";
 import { scoutExploreSharesTotal } from "#src/metrics/explore.ts";
@@ -91,6 +92,32 @@ export const exploreRouter = router({
         });
       }
       return transcript;
+    }),
+
+  /**
+   * Switch which version of a branched turn is being read.
+   *
+   * Takes the chosen message rather than a leaf: the store follows it down to
+   * its own leaf, so picking an older question does not hide the answer that
+   * came after it.
+   */
+  setLeaf: exploreProcedure
+    .input(conversationInput.extend({ messageId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = await requireExploreUser(ctx.user);
+      const moved = await setExploreLeaf(
+        prisma,
+        input.conversationId,
+        userId,
+        input.messageId,
+      );
+      if (!moved) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found.",
+        });
+      }
+      return { ok: true };
     }),
 
   rename: exploreProcedure
