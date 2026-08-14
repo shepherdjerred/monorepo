@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, TypeAdapter
+from pydantic import AwareDatetime, BaseModel, Field, TypeAdapter, model_validator
 
 CATALOG_PATH = Path(__file__).resolve().parent.parent / "src" / "catalog.json"
 
@@ -52,6 +52,43 @@ class Capabilities(BaseModel):
     effortTiers: list[str] | None = None
 
 
+class AcceptedPrice(BaseModel):
+    """One reviewed divergence: what upstream published, and what we kept."""
+
+    model_config = {"extra": "forbid"}
+    upstream: float = Field(ge=0)
+    catalog: float = Field(ge=0)
+
+
+class AcceptedUpstreamPricing(BaseModel):
+    """A divergence a human reviewed and decided to keep.
+
+    Each field records the pair, so the acceptance lapses if either the
+    upstream value or the catalog value it was paired with changes.
+    """
+
+    model_config = {"extra": "forbid"}
+    input: AcceptedPrice | None = None
+    output: AcceptedPrice | None = None
+    reason: str = Field(min_length=1)
+    # Aware, not bare `datetime`: this is an instant, and plain `datetime`
+    # accepts a naive local time that the JSON Schema's RFC 3339 `date-time`
+    # and the TypeScript view both reject. An expiry ambiguous by hours cannot
+    # decide whether a divergence is still accepted.
+    expiresAt: AwareDatetime
+
+    @model_validator(mode="after")
+    def _requires_a_price(self) -> AcceptedUpstreamPricing:
+        # Acceptances are matched per field, so a block with neither price can
+        # never suppress anything. It would sit in the catalog carrying a reason
+        # and an expiry, reading like a decision that was made while the
+        # divergence it names keeps re-alerting. Omit the block instead.
+        if self.input is None and self.output is None:
+            msg = "acceptedUpstreamPricing needs at least one of input/output"
+            raise ValueError(msg)
+        return self
+
+
 class ModelEntry(BaseModel):
     model_config = {"extra": "forbid"}
     id: str = Field(min_length=1)
@@ -61,6 +98,7 @@ class ModelEntry(BaseModel):
     pricing: Pricing
     contextWindow: int | None = Field(default=None, gt=0)
     pinnedContextWindow: bool | None = None
+    acceptedUpstreamPricing: AcceptedUpstreamPricing | None = None
     capabilities: Capabilities
     status: Literal["current", "preview", "deprecated"]
     category: str | None = None

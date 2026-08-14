@@ -57,6 +57,47 @@ PR touches the generator inputs, so CI never sees the change coming.
 Two jobs are outliers: `fetcher` only overwrites an S3 manifest, and
 `deps-summary` only emails. Neither opens a PR, ever.
 
+`llm-catalog-refresh` deviates in the other direction: it can finish with
+something to say and nothing to commit. It applies an upstream price only when
+that price clears the plausibility guards in
+[`sync-from-upstreams.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/llm-models/scripts/sync-from-upstreams.ts) —
+guards that exist because an unattended run once repriced most of the catalog
+from resellers. A change failing one is withheld rather than written, so a run
+that withholds everything produces no diff and no PR.
+
+That silence is the problem it has to solve.
+[`llm-catalog-refresh.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/llm-catalog-refresh.ts)
+publishes an `LlmCatalogDriftWithheld` occurrence instead, because a withheld
+repricing otherwise looks exactly like a clean week.
+[`llm-catalog-alert.ts`](https://github.com/shepherdjerred/monorepo/blob/d29a823aaa0606544af7da21fb60280738208efb/packages/temporal/src/shared/llm-catalog-alert.ts)
+derives the firing and the resolving occurrence from one label set, so the next
+run that withholds nothing closes the alert instead of leaving a fixed finding
+to expire on its own.
+
+Adjudication has to persist, or the same divergence re-alerts every week. An
+operator who keeps the catalog's value records the pair under the entry's
+`acceptedUpstreamPricing`: the upstream number declined, and the catalog number
+kept, plus a required expiry. Accepting a **pair** rather than muting the field
+is what keeps it honest in three directions — a new upstream price reopens it, a
+later edit to the catalog value it was protecting reopens it, and so does the
+expiry passing. Prices are time-bound, so an acceptance that never lapses is the
+rot the expiry exists to prevent. `claude-sonnet-5` carries one: upstreams list
+its introductory rate, the catalog holds the standard price billing reverts to,
+and the acceptance dies with the promotion.
+
+Resolution needs the same rigour, and it is why the occurrence is raised **per
+(model, field)** — the unit the cross-check actually compares, and the finest
+one that exists. Coarser identities all fail the same way: an upstream row can
+carry a price but omit a context window, so "this model was measured" would let
+a resolution close an alert about a field nobody fetched.
+
+A field with no upstream value gets no drift occurrence at all, because there is
+nothing to claim. Silence alone would be its own trap — the previous occurrence
+would simply age out — so the gap is stated instead: `LlmCatalogEvidenceMissing`
+fires for exactly that field and resolves when evidence returns. The two
+conditions are deliberately separate, because "this price diverges" and "nobody
+can currently check this price" need different responses.
+
 ## Scout
 
 Five jobs track data Riot ships on its own clock, with three deliberate

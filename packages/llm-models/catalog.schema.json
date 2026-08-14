@@ -24,6 +24,23 @@
         "description": { "type": "string" },
         "contextWindow": { "type": "integer", "exclusiveMinimum": 0 },
         "pinnedContextWindow": { "type": "boolean" },
+        "acceptedUpstreamPricing": {
+          "type": "object",
+          "description": "A divergence a human reviewed and decided to keep. Each field records the pair — the upstream value declined and the catalog value held — and both must still match for the divergence to stay accepted. At least one of input/output is required: acceptances are matched per field, so a block with neither is inert and only reads like a decision that was made.",
+          "required": ["reason", "expiresAt"],
+          "anyOf": [{ "required": ["input"] }, { "required": ["output"] }],
+          "additionalProperties": false,
+          "properties": {
+            "input": { "$ref": "#/$defs/acceptedPrice" },
+            "output": { "$ref": "#/$defs/acceptedPrice" },
+            "reason": { "type": "string", "minLength": 1 },
+            "expiresAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Instant the acceptance lapses. Required: prices are time-bound, so an acceptance that never expires cannot be re-adjudicated."
+            }
+          }
+        },
         "status": { "enum": ["current", "preview", "deprecated"] },
         "category": { "type": "string" },
         "pricing": {
@@ -64,6 +81,16 @@
             "effortTiers": { "type": "array", "items": { "type": "string" } }
           }
         }
+      }
+    },
+    "acceptedPrice": {
+      "type": "object",
+      "description": "One reviewed divergence: the upstream value a human declined and the catalog value kept instead. Both must still match for the acceptance to hold.",
+      "required": ["upstream", "catalog"],
+      "additionalProperties": false,
+      "properties": {
+        "upstream": { "type": "number", "minimum": 0 },
+        "catalog": { "type": "number", "minimum": 0 }
       }
     }
   }
