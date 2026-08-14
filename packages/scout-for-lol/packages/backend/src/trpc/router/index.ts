@@ -16,6 +16,7 @@ import { subscriptionRouter } from "#src/trpc/router/subscription.router.ts";
 import { playerRouter } from "#src/trpc/router/player.router.ts";
 import { competitionRouter } from "#src/trpc/router/competition.router.ts";
 import { reportRouter } from "#src/trpc/router/report.router.ts";
+import { exploreRouter } from "#src/trpc/router/explore.router.ts";
 import { discordRouter } from "#src/trpc/router/discord.router.ts";
 import { riotRouter } from "#src/trpc/router/riot.router.ts";
 import { rolesRouter } from "#src/trpc/router/roles.router.ts";
@@ -32,6 +33,7 @@ export const appRouter = router({
   player: playerRouter,
   competition: competitionRouter,
   report: reportRouter,
+  explore: exploreRouter,
   discord: discordRouter,
   riot: riotRouter,
   roles: rolesRouter,
