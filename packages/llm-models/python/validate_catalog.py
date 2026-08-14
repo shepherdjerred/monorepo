@@ -16,11 +16,10 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, TypeAdapter
+from pydantic import AwareDatetime, BaseModel, Field, TypeAdapter
 
 CATALOG_PATH = Path(__file__).resolve().parent.parent / "src" / "catalog.json"
 
@@ -72,7 +71,11 @@ class AcceptedUpstreamPricing(BaseModel):
     input: AcceptedPrice | None = None
     output: AcceptedPrice | None = None
     reason: str = Field(min_length=1)
-    expiresAt: datetime
+    # Aware, not bare `datetime`: this is an instant, and plain `datetime`
+    # accepts a naive local time that the JSON Schema's RFC 3339 `date-time`
+    # and the TypeScript view both reject. An expiry ambiguous by hours cannot
+    # decide whether a divergence is still accepted.
+    expiresAt: AwareDatetime
 
 
 class ModelEntry(BaseModel):

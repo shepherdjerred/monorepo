@@ -535,3 +535,36 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
     expect(result.rejected).toHaveLength(0);
   });
 });
+
+/** An entry override carrying one acceptance that expires at `expiresAt`. */
+function accepted(expiresAt: string): Record<string, unknown> {
+  return {
+    acceptedUpstreamPricing: {
+      input: { upstream: 2, catalog: 5 },
+      reason: "introductory rate; catalog holds the standard price",
+      expiresAt,
+    },
+  };
+}
+
+describe("acceptedUpstreamPricing.expiresAt timezone contract", () => {
+  test("accepts a UTC instant", () => {
+    expect(() => entry(accepted("2026-09-01T00:00:00Z"))).not.toThrow();
+  });
+
+  test("accepts a non-UTC offset, as the JSON Schema and Python view do", () => {
+    // catalog.json is the language-neutral source of truth, so the three
+    // validators must agree. Zod's bare `z.iso.datetime()` takes only `Z`,
+    // which left an operator able to write a valid RFC 3339 acceptance that
+    // Python and the JSON Schema read fine and TypeScript alone refused.
+    expect(() => entry(accepted("2026-09-01T00:00:00-07:00"))).not.toThrow();
+    expect(() => entry(accepted("2026-09-01T00:00:00+02:00"))).not.toThrow();
+  });
+
+  test("rejects a bare local time in every view", () => {
+    // Aligning on RFC 3339 means tightening, not just widening: `expiresAt` is
+    // an instant, and one ambiguous by hours cannot decide whether a
+    // divergence is still accepted.
+    expect(() => entry(accepted("2026-09-01T00:00:00"))).toThrow();
+  });
+});

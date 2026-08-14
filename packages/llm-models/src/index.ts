@@ -97,7 +97,13 @@ export const ModelEntrySchema = z.object({
        * suppresses it forever with nothing to trigger re-adjudication. Past
        * this instant the divergence is reported again like any other.
        */
-      expiresAt: z.iso.datetime(),
+      // `offset: true` to match catalog.schema.json's RFC 3339 `date-time` and
+      // the Python view. Zod's default accepts only `Z`, so an operator writing
+      // a perfectly valid `-07:00` acceptance got a catalog every other
+      // consumer reads and TypeScript alone refuses to import. A bare local
+      // time stays rejected in all three: this is an instant, and an expiry
+      // ambiguous by hours cannot decide whether a divergence is still accepted.
+      expiresAt: z.iso.datetime({ offset: true }),
     })
     .optional(),
   capabilities: ModelCapabilitiesSchema,
