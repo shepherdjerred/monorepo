@@ -23,6 +23,7 @@ import {
   scoutScheduledReportLastSuccessTimestamp,
 } from "#src/metrics/report-runs.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { guildScope } from "#src/reports/duckdb/scope.ts";
 import {
   renderReportOutput,
   type RenderedReportOutput,
@@ -75,7 +76,7 @@ export async function runReport(
     // excluding malformed stored queries from the query error-rate metric.
     const result = await executeReportQuery({
       prisma: params.prisma,
-      serverId: params.report.serverId,
+      scope: guildScope(params.report.serverId),
       queryText: params.report.queryText,
       sourceCompetitionId: params.report.sourceCompetitionId,
       now: startedAt,

@@ -186,28 +186,44 @@ export async function writeTestLake(
     serverId: string;
     matchFacts?: TestLakeMatchFact[];
     prematchFacts?: TestLakePrematchFact[];
+    /**
+     * Additional servers that also track every account above, producing a
+     * second accounts row per (server, account) exactly as the compactor does.
+     * This is the shape that makes an unscoped accounts join double-count, so
+     * global-scope tests need it to be meaningful.
+     */
+    alsoTrackedBy?: string[];
+    /**
+     * Match facts written to the lake but deliberately absent from the accounts
+     * dimension — the other nine participants of a game Scout ingested for one
+     * tracked player. Guild scope must not see them; global scope must.
+     */
+    untrackedMatchFacts?: TestLakeMatchFact[];
   },
 ): Promise<void> {
   await ensureLakeScaffold(lakeDir);
 
-  // Accounts dimension: one account per distinct (playerId, puuid).
+  // Accounts dimension: one account per distinct (server, playerId, puuid).
   const accountsByKey = new Map<string, AccountLakeRow>();
   const allFacts = [
     ...(input.matchFacts ?? []),
     ...(input.prematchFacts ?? []),
   ];
+  const accountServerIds = [input.serverId, ...(input.alsoTrackedBy ?? [])];
   for (const fact of allFacts) {
-    const key = `${fact.playerId.toString()}:${fact.puuid}`;
-    accountsByKey.set(key, {
-      server_id: input.serverId,
-      puuid: fact.puuid,
-      account_id: fact.playerId,
-      account_alias: fact.playerAlias,
-      region: "AMERICA_NORTH",
-      player_id: fact.playerId,
-      player_alias: fact.playerAlias,
-      discord_id: fact.discordId ?? null,
-    });
+    for (const serverId of accountServerIds) {
+      const key = `${serverId}:${fact.playerId.toString()}:${fact.puuid}`;
+      accountsByKey.set(key, {
+        server_id: serverId,
+        puuid: fact.puuid,
+        account_id: fact.playerId,
+        account_alias: fact.playerAlias,
+        region: "AMERICA_NORTH",
+        player_id: fact.playerId,
+        player_alias: fact.playerAlias,
+        discord_id: fact.discordId ?? null,
+      });
+    }
   }
 
   testBuildCounter += 1;
@@ -232,8 +248,13 @@ export async function writeTestLake(
   await publishBuild(lakeDir, buildId);
 
   // Match rows: one staging file per matchId (exercises the union path).
+  // Untracked facts are written alongside tracked ones — the lake makes no
+  // distinction; only the accounts dimension above does.
   const byMatch = new Map<string, MatchLakeRow[]>();
-  for (const fact of input.matchFacts ?? []) {
+  for (const fact of [
+    ...(input.matchFacts ?? []),
+    ...(input.untrackedMatchFacts ?? []),
+  ]) {
     const rows = byMatch.get(fact.matchId) ?? [];
     rows.push(matchRowFromFact(fact));
     byMatch.set(fact.matchId, rows);

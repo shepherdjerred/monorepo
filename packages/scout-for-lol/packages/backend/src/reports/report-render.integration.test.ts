@@ -29,6 +29,7 @@ import {
 } from "#src/reports/output.ts";
 import { runReport } from "#src/reports/runner.ts";
 import { loadPlayerDiscordIds } from "#src/reports/alias-mentions.ts";
+import { guildScope } from "#src/reports/duckdb/scope.ts";
 
 // End-to-end coverage of the report DSL's declarative `RENDER` clause: real
 // report-lake rows → parse → compiled SQL on DuckDB → render. This is the
@@ -94,7 +95,7 @@ const BASE_QUERY =
 async function render(queryText: string): Promise<RenderedReportOutput> {
   const result = await executeReportQuery({
     prisma,
-    serverId,
+    scope: guildScope(serverId),
     queryText,
     now,
   });
@@ -218,7 +219,7 @@ describe("RENDER clause — leaderboard top-3 mentions", () => {
     });
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText: `${BASE_QUERY} RENDER leaderboard`,
       now,
     });
@@ -295,7 +296,7 @@ describe("RENDER clause — leaderboard mentions option", () => {
     });
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText: `${BASE_QUERY} RENDER leaderboard WITH (mentions = 1)`,
       now,
     });
@@ -340,7 +341,7 @@ describe("RENDER clause — leaderboard mentions option", () => {
     });
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText: `${BASE_QUERY} RENDER leaderboard WITH (mentions = all)`,
       now,
     });
@@ -357,7 +358,7 @@ describe("RENDER clause — leaderboard mentions option", () => {
     await seedFacts();
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText: `${BASE_QUERY} RENDER leaderboard WITH (mentions = 0)`,
       now,
     });
@@ -416,7 +417,7 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
       title: TITLE,
       result: await executeReportQuery({
         prisma,
-        serverId,
+        scope: guildScope(serverId),
         queryText: `${BASE_QUERY} RENDER leaderboard`,
         now,
       }),
@@ -437,7 +438,7 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
     });
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT group, games, wins FROM player_groups WHERE queue IN ('solo') GROUP BY group(all) ORDER BY label ASC RENDER leaderboard",
       now,

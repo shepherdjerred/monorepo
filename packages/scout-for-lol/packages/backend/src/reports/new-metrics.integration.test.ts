@@ -4,6 +4,7 @@ import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { guildScope } from "#src/reports/duckdb/scope.ts";
 
 /**
  * End-to-end coverage of the lake-only metric batch (gold_earned,
@@ -51,7 +52,7 @@ describe("new lake metrics", () => {
     await seedTwoGames();
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT games, round(per_game(kills + assists), 2) AS takedowns_per_game, round(kills / deaths, 3) AS kill_death_ratio, coalesce(kills / 0, 99) AS safe_fallback FROM match_participants GROUP BY player HAVING games >= 2 AND takedowns_per_game > 10 ORDER BY takedowns_per_game DESC",
       now,
@@ -76,7 +77,7 @@ describe("new lake metrics", () => {
     await seedTwoGames();
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT player, games, gold_earned, vision_score, damage_taken, total_damage_dealt, wards_placed, multikills, avg_game_duration, cs_per_minute FROM match_participants GROUP BY player ORDER BY games DESC",
       now,
@@ -135,7 +136,7 @@ describe("new lake metrics", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT pair, games, gold_earned, avg_game_duration, cs_per_minute FROM player_pairs GROUP BY pair",
       now,
@@ -169,7 +170,7 @@ describe("new lake metrics", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT player, prematches, gold_earned, cs_per_minute FROM prematch_participants GROUP BY player",
       now,

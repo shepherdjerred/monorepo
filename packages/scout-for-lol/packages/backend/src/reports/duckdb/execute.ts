@@ -1,4 +1,4 @@
-import type { DiscordGuildId, ReportQueryPlan } from "@scout-for-lol/data";
+import type { ReportQueryPlan } from "@scout-for-lol/data";
 import type { DuckDBValue } from "@duckdb/node-api";
 import { match } from "ts-pattern";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
@@ -16,6 +16,7 @@ import {
   type DuckDBSession,
 } from "#src/reports/duckdb/instance.ts";
 import { resolveLakeFiles, type BoundParam } from "#src/reports/duckdb/lake.ts";
+import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
 import {
   LakeAggregateRowSchema,
   LakeGroupFactRowSchema,
@@ -46,7 +47,7 @@ function bindParams(
  */
 export async function runLakeAggregation(input: {
   plan: ReportQueryPlan;
-  serverId: DiscordGuildId;
+  scope: LakeQueryScope;
   startDate: Date;
   endDate: Date;
   playerIds?: number[];
@@ -57,7 +58,7 @@ export async function runLakeAggregation(input: {
 
   const queryInput: LakeQueryInput = {
     plan: input.plan,
-    serverId: input.serverId,
+    scope: input.scope,
     startMs: input.startDate.getTime(),
     endMs: input.endDate.getTime(),
     ...(input.playerIds === undefined ? {} : { playerIds: input.playerIds }),

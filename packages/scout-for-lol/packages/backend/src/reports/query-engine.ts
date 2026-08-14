@@ -1,4 +1,4 @@
-import type { DiscordGuildId, ReportQueryPlan } from "@scout-for-lol/data";
+import type { ReportQueryPlan } from "@scout-for-lol/data";
 import {
   CompetitionIdSchema,
   REPORT_MAX_ROWS_LIMIT,
@@ -16,6 +16,10 @@ import {
   scoutReportQueryRunsTotal,
 } from "#src/metrics/report-query.ts";
 import { runLakeAggregation } from "#src/reports/duckdb/execute.ts";
+import {
+  requireGuildScope,
+  type LakeQueryScope,
+} from "#src/reports/duckdb/scope.ts";
 import {
   cappedLimit,
   rowsFromAggregates,
@@ -101,7 +105,12 @@ export type ReportQueryResult = {
 
 export type ExecuteReportQueryParams = {
   prisma: ExtendedPrismaClient;
-  serverId: DiscordGuildId;
+  /**
+   * Which population to query. Guild scope is every scheduled and
+   * user-authored report; global scope backs the explore surface and rejects
+   * the competition sources below, which authorize against an owning server.
+   */
+  scope: LakeQueryScope;
   queryText: string;
   sourceCompetitionId?: number | null;
   now?: Date;
@@ -178,7 +187,7 @@ async function runReportQueryPlan(
   const ranges = queryRanges(plan, params.now, params.rangeOverride);
   const result = await runLakeAggregation({
     plan,
-    serverId: params.serverId,
+    scope: params.scope,
     startDate: ranges.current.startDate,
     endDate: ranges.current.endDate,
   });
@@ -191,7 +200,7 @@ async function runReportQueryPlan(
   if (ranges.comparison === null) return current;
   const comparison = await runLakeAggregation({
     plan,
-    serverId: params.serverId,
+    scope: params.scope,
     startDate: ranges.comparison.startDate,
     endDate: ranges.comparison.endDate,
   });
@@ -230,6 +239,7 @@ async function executeCompetitionMatchParticipantReport(
   params: ReportExecutionParams,
   plan: ReportQueryPlan,
 ): Promise<ReportQueryResult> {
+  const serverId = requireGuildScope(params.scope, "Competition reports");
   const competitionId = resolveCompetitionId(params, plan);
   const competition = parseCompetition(
     await params.prisma.competition.findUniqueOrThrow({
@@ -237,7 +247,7 @@ async function executeCompetitionMatchParticipantReport(
       include: { season: true },
     }),
   );
-  if (competition.serverId !== params.serverId) {
+  if (competition.serverId !== serverId) {
     throw new Error("Report competition does not belong to this server.");
   }
 
@@ -256,7 +266,7 @@ async function executeCompetitionMatchParticipantReport(
   );
   const result = await runLakeAggregation({
     plan,
-    serverId: params.serverId,
+    scope: params.scope,
     startDate: ranges.current.startDate,
     endDate: ranges.current.endDate,
     playerIds: participantRows.map((row) => row.playerId),
@@ -270,7 +280,7 @@ async function executeCompetitionMatchParticipantReport(
   if (ranges.comparison === null) return current;
   const comparison = await runLakeAggregation({
     plan,
-    serverId: params.serverId,
+    scope: params.scope,
     startDate: ranges.comparison.startDate,
     endDate: ranges.comparison.endDate,
     playerIds: participantRows.map((row) => row.playerId),
@@ -298,6 +308,7 @@ async function executeCompetitionRankReport(
   params: ReportExecutionParams,
   plan: ReportQueryPlan,
 ): Promise<ReportQueryResult> {
+  const serverId = requireGuildScope(params.scope, "Competition reports");
   const competitionId = resolveCompetitionId(params, plan);
   const competition = parseCompetition(
     await params.prisma.competition.findUniqueOrThrow({
@@ -305,7 +316,7 @@ async function executeCompetitionRankReport(
       include: { season: true },
     }),
   );
-  if (competition.serverId !== params.serverId) {
+  if (competition.serverId !== serverId) {
     throw new Error("Report competition does not belong to this server.");
   }
 

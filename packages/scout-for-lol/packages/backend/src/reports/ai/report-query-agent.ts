@@ -39,6 +39,7 @@ import {
 import { emitReportAgentStreamChunk } from "#src/reports/ai/report-query-agent-stream.ts";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { guildScope } from "#src/reports/duckdb/scope.ts";
 
 export type ReportQueryAgentParams = {
   runId: string;
@@ -288,7 +289,7 @@ function createReportQueryTools(params: ReportQueryAgentParams) {
 
         const result = await executeReportQuery({
           prisma,
-          serverId: params.input.guildId,
+          scope: guildScope(params.input.guildId),
           queryText: validation.formattedQueryText,
           sourceCompetitionId:
             inputData.sourceCompetitionId ?? params.input.sourceCompetitionId,
@@ -422,7 +423,7 @@ async function emitPreview(
 ): Promise<void> {
   const result = await executeReportQuery({
     prisma,
-    serverId: params.input.guildId,
+    scope: guildScope(params.input.guildId),
     queryText,
     sourceCompetitionId: params.input.sourceCompetitionId,
   });

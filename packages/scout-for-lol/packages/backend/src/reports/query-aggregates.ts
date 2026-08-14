@@ -10,7 +10,10 @@ import type {
   ReportMetric,
   ReportQueryPlan,
 } from "@scout-for-lol/data";
-import type { ReportQueryResult } from "#src/reports/query-engine.ts";
+import type {
+  ReportMentionIdentity,
+  ReportQueryResult,
+} from "#src/reports/query-engine.ts";
 
 export type AggregateRow = {
   label: string;
@@ -88,12 +91,7 @@ export function rowsFromAggregates(
         plan.groupBy === "group"
           ? groupMentionIdentity(row)
           : plan.groupBys.length === 1 && plan.groupBys[0] === "player"
-            ? {
-                kind: "player",
-                playerId: row.playerId,
-                alias: row.label,
-                discordId: row.discordId,
-              }
+            ? playerMentionIdentity(row)
             : null,
       values: plan.selectItems.map((item) => ({
         column: item.key,
@@ -108,6 +106,32 @@ export function rowsFromAggregates(
         ...metricEvidence(row, item.expression),
       })),
     })),
+  };
+}
+
+/**
+ * A mention identity for a player-grouped row, or null when the row cannot
+ * address anyone.
+ *
+ * Guild-scoped rows always carry a player id (accounts rows have one), and an
+ * unlinked player keeps its identity so the leaderboard can fall back to the
+ * alias. Global-scoped rows carry neither id — there is no accounts join, so
+ * the row is a Riot account rather than a tracked player. Returning an
+ * identity there would claim an addressee that does not exist.
+ */
+function playerMentionIdentity(row: {
+  label: string;
+  playerId: number | null;
+  discordId: string | null;
+}): ReportMentionIdentity | null {
+  if (row.playerId === null && row.discordId === null) {
+    return null;
+  }
+  return {
+    kind: "player",
+    playerId: row.playerId,
+    alias: row.label,
+    discordId: row.discordId,
   };
 }
 

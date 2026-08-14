@@ -14,6 +14,7 @@ import {
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { guildScope } from "#src/reports/duckdb/scope.ts";
 
 const { prisma } = createTestDatabase("report-query-engine-test");
 const serverId = testGuildId("919191");
@@ -95,7 +96,7 @@ describe("executeReportQuery", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText: `
         SELECT player, games, surrenders, surrender_rate
         FROM match_participants
@@ -158,7 +159,7 @@ describe("executeReportQuery", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT player, games, kills FROM match_participants GROUP BY player ORDER BY kills DESC LIMIT 1",
       now,
@@ -205,7 +206,7 @@ describe("executeReportQuery", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT pair, games, wins, win_rate FROM player_pairs WHERE queue IN ('solo') GROUP BY pair ORDER BY win_rate DESC LIMIT 10",
       now,
@@ -237,7 +238,7 @@ describe("executeReportQuery", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT player, prematches FROM prematch_participants WHERE queue IN ('solo') GROUP BY player ORDER BY prematches DESC",
       now,
@@ -267,7 +268,7 @@ describe("executeReportQuery temporal prematches", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT prematches FROM prematch_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC",
       now,
@@ -294,7 +295,7 @@ describe("executeReportQuery temporal comparisons", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT games, win_rate FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY COMPARE TO BETWEEN '2026-05-14' AND '2026-05-15' IN TIME ZONE 'UTC' ORDER BY label ASC",
       now,
@@ -339,7 +340,7 @@ describe("executeReportQuery temporal comparisons", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT kda FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = kda, rolling = 2)",
       now,
@@ -379,7 +380,7 @@ describe("executeReportQuery temporal comparisons", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT kills / deaths AS kd FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = kd, rolling = 2)",
       now,
@@ -420,7 +421,7 @@ describe("executeReportQuery temporal comparisons", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT per_minute(kills) AS kpm FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = kpm, rolling = 2)",
       now,
@@ -442,7 +443,7 @@ describe("executeReportQuery temporal comparisons", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT (kills - deaths) / games AS differential FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-16' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = differential)",
       now,
@@ -491,7 +492,7 @@ describe("executeReportQuery player groups", () => {
 
     const base = {
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       now,
     };
     const legacy = await executeReportQuery({
@@ -530,7 +531,7 @@ describe("executeReportQuery player groups", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT group, games, wins FROM player_groups GROUP BY group(all) ORDER BY label ASC",
       now,
@@ -580,7 +581,7 @@ describe("executeReportQuery player groups", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText:
         "SELECT group, games, wins FROM player_groups WHERE queue IN ('arena') GROUP BY group(all) ORDER BY label ASC",
       now,
@@ -664,7 +665,7 @@ describe("executeReportQuery competition rank reports", () => {
 
     const result = await executeReportQuery({
       prisma,
-      serverId,
+      scope: guildScope(serverId),
       queryText: `SELECT player, score FROM competition_rank WHERE competition_id = ${competition.id.toString()} GROUP BY player ORDER BY score DESC`,
       sourceCompetitionId: competition.id,
       now: new Date("2026-06-01T00:00:00Z"),

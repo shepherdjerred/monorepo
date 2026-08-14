@@ -1,7 +1,6 @@
 import type {
   ReportFilter,
   ReportFilterField,
-  ReportGroupBy,
   ReportQueryPlan,
 } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
@@ -20,6 +19,11 @@ import {
   matchAggregateSelect,
   prematchAggregateSelect,
 } from "#src/reports/duckdb/metrics-sql.ts";
+import {
+  requireGuildScope,
+  type LakeQueryScope,
+} from "#src/reports/duckdb/scope.ts";
+import { matchGrouping } from "#src/reports/duckdb/compile-grouping.ts";
 
 /**
  * ScoutQL plan → parameterized DuckDB SQL.
@@ -50,144 +54,13 @@ export type CompiledLakeQuery = {
 
 export type LakeQueryInput = {
   plan: ReportQueryPlan;
-  serverId: string;
+  scope: LakeQueryScope;
   startMs: number;
   endMs: number;
   /** Competition scoping: restrict to these player ids (query-time). */
   playerIds?: number[];
   files: LakeFiles;
 };
-
-type Grouping = {
-  labelExpr: string;
-  discordExpr: string;
-  groupExprs: string[];
-  labelParams?: BoundParam[];
-  groupParams?: BoundParam[];
-};
-
-function singleMatchGrouping(
-  groupBy: ReportGroupBy,
-  timezone: string,
-  timeColumn: "game_creation_at" | "observed_at" = "game_creation_at",
-): Grouping {
-  return match(groupBy)
-    .with("player", () => ({
-      labelExpr: "any_value(player_alias)",
-      discordExpr: "any_value(discord_id)",
-      groupExprs: ["player_id"],
-    }))
-    .with("champion", () => ({
-      labelExpr: "any_value(champion_name)",
-      discordExpr: "NULL::VARCHAR",
-      groupExprs: ["champion_id"],
-    }))
-    .with("queue", () => ({
-      labelExpr: "COALESCE(queue, 'unknown')",
-      discordExpr: "NULL::VARCHAR",
-      groupExprs: ["COALESCE(queue, 'unknown')"],
-    }))
-    .with("team_position", () => textGrouping("team_position"))
-    .with("individual_position", () => textGrouping("individual_position"))
-    .with("lane", () => textGrouping("lane"))
-    .with("role", () => textGrouping("role"))
-    .with("game_mode", () => textGrouping("game_mode"))
-    .with("game_type", () => textGrouping("game_type"))
-    .with("patch", () => ({
-      labelExpr: String.raw`regexp_extract(any_value(game_version), '^[0-9]+\.[0-9]+')`,
-      discordExpr: "NULL::VARCHAR",
-      groupExprs: [String.raw`regexp_extract(game_version, '^[0-9]+\.[0-9]+')`],
-    }))
-    .with("map", () => ({
-      labelExpr: "any_value(map_id)::VARCHAR",
-      discordExpr: "NULL::VARCHAR",
-      groupExprs: ["map_id"],
-    }))
-    .with("outcome", () => ({
-      labelExpr: "CASE WHEN win THEN 'Win' ELSE 'Loss' END",
-      discordExpr: "NULL::VARCHAR",
-      groupExprs: ["win"],
-    }))
-    .with("surrender_state", () => ({
-      labelExpr:
-        "CASE WHEN early_surrendered THEN 'Early surrender' WHEN surrendered THEN 'Surrender' ELSE 'Played out' END",
-      discordExpr: "NULL::VARCHAR",
-      groupExprs: ["early_surrendered", "surrendered"],
-    }))
-    .with("arena_placement", () => ({
-      labelExpr: "COALESCE(placement::VARCHAR, 'Not Arena')",
-      discordExpr: "NULL::VARCHAR",
-      groupExprs: ["placement"],
-    }))
-    .with("day", () => timeGrouping("day", "%Y-%m-%d", timezone, timeColumn))
-    .with("week", () => timeGrouping("week", "%Y-%m-%d", timezone, timeColumn))
-    .with("month", () => timeGrouping("month", "%Y-%m", timezone, timeColumn))
-    .with("all", () => ({
-      labelExpr: "'All'",
-      discordExpr: "NULL::VARCHAR",
-      groupExprs: [],
-    }))
-    .with("group", () => {
-      throw new Error("group grouping uses compileGroupFactsQuery");
-    })
-    .exhaustive();
-}
-
-function textGrouping(column: string): Grouping {
-  const expression = `COALESCE(${column}, 'unknown')`;
-  return {
-    labelExpr: `any_value(${expression})`,
-    discordExpr: "NULL::VARCHAR",
-    groupExprs: [expression],
-  };
-}
-
-function timeGrouping(
-  unit: "day" | "week" | "month",
-  format: string,
-  timezone: string,
-  timeColumn: "game_creation_at" | "observed_at",
-): Grouping {
-  const expression =
-    timezone === "UTC"
-      ? `date_trunc('${unit}', ${timeColumn})`
-      : `date_trunc('${unit}', timezone(?, timezone('UTC', ${timeColumn})))`;
-  const params = timezone === "UTC" ? [] : [scalarParam(timezone)];
-  return {
-    labelExpr: `strftime(any_value(${expression}), '${format}')`,
-    discordExpr: "NULL::VARCHAR",
-    groupExprs: [expression],
-    labelParams: params,
-    groupParams: params,
-  };
-}
-
-function matchGrouping(
-  groupBys: ReportGroupBy[],
-  timezone: string,
-  timeColumn: "game_creation_at" | "observed_at" = "game_creation_at",
-  prematch = false,
-): Grouping {
-  const groupings = groupBys.map((groupBy) => {
-    const grouping = singleMatchGrouping(groupBy, timezone, timeColumn);
-    return prematch && groupBy === "champion"
-      ? { ...grouping, labelExpr: "any_value(champion_id::VARCHAR)" }
-      : grouping;
-  });
-  const labels = groupings.map((grouping) => grouping.labelExpr);
-  return {
-    labelExpr:
-      labels.length === 1
-        ? (labels[0] ?? "'All'")
-        : `concat_ws(' • ', ${labels.join(", ")})`,
-    discordExpr: groupBys.includes("player")
-      ? "any_value(discord_id)"
-      : "NULL::VARCHAR",
-    groupExprs: groupings.flatMap((grouping) => grouping.groupExprs),
-    labelParams: groupings.flatMap((grouping) => grouping.labelParams ?? []),
-    groupParams: groupings.flatMap((grouping) => grouping.groupParams ?? []),
-  };
-}
 
 function timePredicate(
   column: "game_creation_at" | "observed_at",
@@ -299,8 +172,25 @@ function genericPredicate(
   return combinePredicates(fragments);
 }
 
+/**
+ * Identity columns for a guild-scoped facts row: resolved from the accounts
+ * dimension of the one server the query belongs to.
+ */
+const GUILD_IDENTITY_COLUMNS = "a.player_id, a.player_alias, a.discord_id";
+
+/**
+ * Identity columns for a global facts row. There is no accounts dimension, so
+ * the account labels itself with the Riot ID already on the match fact.
+ * `player_alias` keeps its name so both scopes produce the same facts shape;
+ * in global scope it carries a Riot ID, never a Discord nickname.
+ */
+const GLOBAL_IDENTITY_COLUMNS =
+  "NULL::BIGINT AS player_id, " +
+  "concat_ws('#', m.riot_id_game_name, m.riot_id_tagline) AS player_alias, " +
+  "NULL::VARCHAR AS discord_id";
+
 const MATCH_FACT_COLUMNS =
-  "a.player_id, a.player_alias, a.discord_id, m.match_id, m.team_id, " +
+  "m.match_id, m.team_id, " +
   "m.player_subteam_id, m.puuid, " +
   "m.champion_id, m.champion_name, m.queue, m.team_position, " +
   "m.individual_position, m.lane, m.role, m.game_mode, m.game_type, " +
@@ -325,9 +215,27 @@ function buildMatchFactsCte(
   input: LakeQueryInput,
   matchesSource: SqlFragment,
 ): FactsCte {
+  const playerFilter = genericPredicate(input.plan.filters, true);
+
+  if (input.scope.kind === "global") {
+    if (input.playerIds !== undefined) {
+      throw new Error(
+        "playerIds scoping requires a guild scope — player ids are per-server.",
+      );
+    }
+    const factWhere =
+      playerFilter.sql.length === 0 ? "" : ` WHERE ${playerFilter.sql}`;
+    return {
+      sql:
+        `WITH facts AS (SELECT ${GLOBAL_IDENTITY_COLUMNS}, ${MATCH_FACT_COLUMNS} ` +
+        `FROM (${matchesSource.sql}) m${factWhere})`,
+      params: [...matchesSource.params, ...playerFilter.params],
+    };
+  }
+
   const accounts = buildAccountsSource(
     requireAccounts(input.files),
-    input.serverId,
+    input.scope.serverId,
   );
   const emptyScope: SqlFragment = { sql: "", params: [] };
   const playerIdScope: SqlFragment =
@@ -337,13 +245,12 @@ function buildMatchFactsCte(
           sql: "a.player_id IN (SELECT unnest(?))",
           params: [listParam(input.playerIds)],
         };
-  const playerFilter = genericPredicate(input.plan.filters, true);
   const factScope = combinePredicates([playerIdScope, playerFilter]);
   const factWhere = factScope.sql.length === 0 ? "" : ` WHERE ${factScope.sql}`;
   return {
     sql:
       `WITH accounts AS (${accounts.sql}), ` +
-      `facts AS (SELECT ${MATCH_FACT_COLUMNS} FROM (${matchesSource.sql}) m ` +
+      `facts AS (SELECT ${GUILD_IDENTITY_COLUMNS}, ${MATCH_FACT_COLUMNS} FROM (${matchesSource.sql}) m ` +
       `JOIN accounts a ON a.puuid = m.puuid${factWhere})`,
     params: [...accounts.params, ...matchesSource.params, ...factScope.params],
   };
@@ -356,6 +263,30 @@ function requireAccounts(files: LakeFiles): string {
     );
   }
   return files.accountsParquet;
+}
+
+/**
+ * Gate a built source on everything its scope also needs.
+ *
+ * Guild-scoped compilation joins the accounts dimension, so a lake with no
+ * accounts.parquet has nothing to answer with. Global scope never reads it,
+ * so a lake missing accounts.parquet still answers globally. Returns
+ * undefined when the caller must short-circuit to an empty result.
+ */
+function usableSource(
+  input: LakeQueryInput,
+  source: SqlFragment | undefined,
+): SqlFragment | undefined {
+  if (source === undefined) {
+    return undefined;
+  }
+  if (
+    input.scope.kind === "guild" &&
+    input.files.accountsParquet === undefined
+  ) {
+    return undefined;
+  }
+  return source;
 }
 
 function scannedStatement(facts: FactsCte): {
@@ -378,18 +309,19 @@ export function compileMatchQuery(
     championPredicate(input.plan.championId),
     genericPredicate(input.plan.filters, false),
   ]);
-  const matchesSource = buildMatchesSource(input.files, predicate);
-  if (
-    matchesSource === undefined ||
-    input.files.accountsParquet === undefined
-  ) {
+  const matchesSource = usableSource(
+    input,
+    buildMatchesSource(input.files, predicate),
+  );
+  if (matchesSource === undefined) {
     return undefined;
   }
   const facts = buildMatchFactsCte(input, matchesSource);
-  const grouping = matchGrouping(
-    input.plan.groupBys,
-    input.plan.analysis?.timezone ?? "UTC",
-  );
+  const grouping = matchGrouping({
+    groupBys: input.plan.groupBys,
+    timezone: input.plan.analysis?.timezone ?? "UTC",
+    scope: input.scope,
+  });
   const groupBySql =
     grouping.groupExprs.length === 0
       ? " HAVING COUNT(*) > 0"
@@ -421,17 +353,29 @@ export function compileMatchQuery(
 export function compileGroupFactsQuery(
   input: LakeQueryInput,
 ): CompiledLakeQuery | undefined {
+  if (input.scope.kind === "global") {
+    // A teammate group means "these tracked accounts queued together". Global
+    // facts carry every participant of every match, where a team of five is
+    // just a team of five — a premade is indistinguishable from random fill,
+    // so every match would report a five-stack. There is no correct global
+    // answer to give, so refuse rather than invent one.
+    throw new Error(
+      "player_groups is not available in global scope — teammate groups are " +
+        "defined by tracked accounts queueing together, which global match " +
+        "facts cannot distinguish from random matchmaking.",
+    );
+  }
   const predicate = combinePredicates([
     timePredicate("game_creation_at", input.startMs, input.endMs),
     queuePredicate(input.plan.queueFilter),
     championPredicate(input.plan.championId),
     genericPredicate(input.plan.filters, false),
   ]);
-  const matchesSource = buildMatchesSource(input.files, predicate);
-  if (
-    matchesSource === undefined ||
-    input.files.accountsParquet === undefined
-  ) {
+  const matchesSource = usableSource(
+    input,
+    buildMatchesSource(input.files, predicate),
+  );
+  if (matchesSource === undefined) {
     return undefined;
   }
   const facts = buildMatchFactsCte(input, matchesSource);
@@ -453,6 +397,24 @@ export function compileGroupFactsQuery(
   };
 }
 
+function buildGuildPrematchFacts(
+  input: LakeQueryInput,
+  prematchSource: SqlFragment,
+): { factsSql: string; factsParams: BoundParam[] } {
+  const accounts = buildAccountsSource(
+    requireAccounts(input.files),
+    requireGuildScope(input.scope, "prematch_participants guild facts"),
+  );
+  return {
+    factsSql:
+      `WITH accounts AS (${accounts.sql}), ` +
+      `facts AS (SELECT a.player_id, a.player_alias, a.discord_id, ` +
+      `p.puuid, p.champion_id, p.queue, p.observed_at FROM (${prematchSource.sql}) p ` +
+      `JOIN accounts a ON a.puuid = p.puuid)`,
+    factsParams: [...accounts.params, ...prematchSource.params],
+  };
+}
+
 /** prematch_participants: spectator observations; stats are 0 by design. */
 export function compilePrematchQuery(
   input: LakeQueryInput,
@@ -464,33 +426,37 @@ export function compilePrematchQuery(
     queuePredicate(input.plan.queueFilter),
     genericPredicate(input.plan.filters, false),
   ]);
-  const prematchSource = buildPrematchSource(input.files, predicate);
-  if (
-    prematchSource === undefined ||
-    input.files.accountsParquet === undefined
-  ) {
+  const prematchSource = usableSource(
+    input,
+    buildPrematchSource(input.files, predicate),
+  );
+  if (prematchSource === undefined) {
     return undefined;
   }
-  const accounts = buildAccountsSource(
-    requireAccounts(input.files),
-    input.serverId,
-  );
-  const factsSql =
-    `WITH accounts AS (${accounts.sql}), ` +
-    `facts AS (SELECT a.player_id, a.player_alias, a.discord_id, ` +
-    `p.champion_id, p.queue, p.observed_at FROM (${prematchSource.sql}) p ` +
-    `JOIN accounts a ON a.puuid = p.puuid)`;
-  const factsParams = [...accounts.params, ...prematchSource.params];
+  // Prematch rows carry the Riot ID pre-joined as a single `riot_id` string,
+  // so global scope labels straight off it rather than concatenating.
+  const { factsSql, factsParams } =
+    input.scope.kind === "global"
+      ? {
+          factsSql:
+            `WITH facts AS (SELECT NULL::BIGINT AS player_id, ` +
+            `p.riot_id AS player_alias, NULL::VARCHAR AS discord_id, ` +
+            `p.puuid, p.champion_id, p.queue, p.observed_at ` +
+            `FROM (${prematchSource.sql}) p)`,
+          factsParams: [...prematchSource.params],
+        }
+      : buildGuildPrematchFacts(input, prematchSource);
 
   const champion = championPredicate(input.plan.championId);
   const aggregateWhere =
     champion.sql.length > 0 ? ` WHERE ${champion.sql}` : "";
-  const grouping = matchGrouping(
-    input.plan.groupBys,
-    input.plan.analysis?.timezone ?? "UTC",
-    "observed_at",
-    true,
-  );
+  const grouping = matchGrouping({
+    groupBys: input.plan.groupBys,
+    timezone: input.plan.analysis?.timezone ?? "UTC",
+    scope: input.scope,
+    timeColumn: "observed_at",
+    prematch: true,
+  });
   const groupBySql =
     grouping.groupExprs.length === 0
       ? " HAVING COUNT(*) > 0"
