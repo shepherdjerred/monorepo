@@ -114,6 +114,25 @@ decisions as part of routine setup.
 
 - `chezmoi diff` contains no unexplained configuration drift.
 - `brew bundle check --file="$HOME/.Brewfile" --no-upgrade` succeeds.
+- `command -v bun | grep mise/shims` confirms bun still resolves through mise
+  rather than a shadowing Homebrew copy.
+- `gcx config check` exits zero and reports the `homelab` context online against
+  the self-hosted Grafana.
+- `bk build list --org sjerred --limit 3`, `logcli labels`, and
+  `promtool query instant "$PROMETHEUS_URL" 'count(up)'` all return live data.
+- `temporal --profile homelab operator cluster health` reports `SERVING`, and
+  `temporal config get --profile default` still points at `localhost:7233`.
+- `linear auth whoami` resolves the workspace from `LINEAR_API_KEY`.
+- `psql --version` resolves through the keg-only `libpq` on PATH, in both fish
+  and `bash -lc`.
+- `tailscale version` succeeds through `~/.local/bin/tailscale`, and the brew
+  `tailscale` formula is **not** installed (the cask supplies the daemon). That
+  path is an `exec` wrapper rather than a symlink — the bundled binary resolves
+  its bundle identity from its invocation path and crashes when reached through
+  one — so `readlink` on it is empty and running it is the real check.
+- `cf --version` matches the pin in `~/.local/bin/cf`, and
+  `env | grep -c '^CLOUDFLARE_API_TOKEN='` returns `0` so a bare `tofu apply`
+  still fails closed without `op run`.
 - `pinchtab health` succeeds with `PINCHTAB_CONFIG` pointing at the launchd
   daemon's config under `~/Library/Application Support/pinchtab/`.
 - `lightpanda fetch --dump markdown https://example.com` returns the rendered

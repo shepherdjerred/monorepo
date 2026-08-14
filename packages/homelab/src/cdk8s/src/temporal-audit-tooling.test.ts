@@ -121,7 +121,7 @@ function envNames(deployment: SynthesizedDeployment): Set<string> {
   );
 }
 
-describe("temporal homelab audit tooling", () => {
+describe("temporal homelab audit tooling configuration", () => {
   it("injects Buildkite and Bugsink configuration", async () => {
     const yaml = await synthesizeApp();
 
@@ -151,7 +151,9 @@ describe("temporal homelab audit tooling", () => {
     expect(yaml).toContain("value: glitter-discord-corpus");
     expect(yaml).not.toContain("name: GLITTER_CORPUS_R2_");
   });
+});
 
+describe("temporal homelab audit tooling worker topology", () => {
   it("isolates core, agent, and Glitter queues behind event-loop health probes", async () => {
     const deployments = parseDeployments(await synthesizeApp());
     const core = requireDeployment(deployments, "temporal-temporal-worker");
@@ -225,7 +227,9 @@ describe("temporal homelab audit tooling", () => {
     expect(configYaml).toContain("  - value: true");
     expect(configYaml).not.toContain("frontend.workerHeartbeatsEnabled:");
   });
+});
 
+describe("temporal homelab audit tooling access boundaries", () => {
   it("keeps the audit ClusterRole read-only and includes Tailscale CRDs", async () => {
     const resources = parseResources(await synthesizeApp());
     const auditRole = resources.find(
@@ -327,6 +331,43 @@ describe("temporal homelab audit tooling", () => {
       "XCODE_CLOUD_WEBHOOK_TOKEN",
     ]) {
       expect(names).not.toContain(prohibited);
+    }
+  });
+
+  it("gives the core worker the Grafana credentials and gcx configuration the audit needs", async () => {
+    const deployments = parseDeployments(await synthesizeApp());
+    const core = requireDeployment(deployments, "temporal-temporal-worker");
+    const names = envNames(core);
+
+    // ensureGcxContext() (packages/temporal/src/activities/gcx-context.ts) reads
+    // these two to provision the gcx `homelab` context; GCX_CONFIG pins where
+    // that config lands, independent of the base image's HOME.
+    for (const required of [
+      "GRAFANA_URL",
+      "GRAFANA_API_KEY",
+      "GCX_CONFIG",
+      "GCX_NO_UPDATE_NOTIFIER",
+      "GCX_TELEMETRY",
+    ]) {
+      expect(names).toContain(required);
+    }
+
+    // /tmp is a fresh emptyDir on every pod start and nothing creates
+    // directories under it before `gcx login` runs, so the config path must
+    // stay one level deep. A nested path would need an mkdir that does not
+    // exist, and gcx would fail on every fresh pod.
+    const gcxConfig = envValue(core, "GCX_CONFIG");
+    expect(gcxConfig).toBe("/tmp/gcx-config.yaml");
+    expect(gcxConfig?.split("/").filter(Boolean)).toHaveLength(2);
+
+    // The agent worker is deliberately denied the same credentials.
+    const agent = requireDeployment(
+      deployments,
+      "temporal-temporal-agent-worker",
+    );
+    const agentNames = envNames(agent);
+    for (const prohibited of ["GRAFANA_API_KEY", "GCX_CONFIG"]) {
+      expect(agentNames).not.toContain(prohibited);
     }
   });
 });

@@ -66,7 +66,20 @@
       "Bash(kubectl delete crd*)",
       "Bash(kubectl delete customresourcedefinition*)",
       "Bash(kubectl delete --all *)",
-      "Bash(kubectl delete * --all-namespaces*)"
+      "Bash(kubectl delete * --all-namespaces*)",
+      "Bash(cf dns records create*)",
+      "Bash(cf dns records update*)",
+      "Bash(cf dns records edit*)",
+      "Bash(cf dns records delete*)",
+      "Bash(cf dns records import*)",
+      "Bash(cf dns records batch*)",
+      "Bash(cf dns dnssec delete*)",
+      "Bash(cf dns dnssec edit*)",
+      "Bash(cf zones create*)",
+      "Bash(cf zones delete*)",
+      "Bash(cf zones edit*)",
+      "Bash(cf registrar registrations create*)",
+      "Bash(cf registrar registrations update*)"
     ],
     "ask": [
       "Bash(git push --force*)",
@@ -121,7 +134,23 @@
       "Bash(aws s3 cp*)",
       "Bash(aws s3 mv*)",
       "Bash(aws s3 sync*)",
-      "Bash(tailscale down*)"
+      "Bash(tailscale down*)",
+      "Bash(crane delete*)",
+      "Bash(crane push*)",
+      "Bash(crane copy*)",
+      "Bash(crane tag*)",
+      "Bash(temporal workflow terminate*)",
+      "Bash(temporal workflow cancel*)",
+      "Bash(temporal workflow reset*)",
+      "Bash(temporal schedule delete*)",
+      "Bash(temporal schedule pause*)",
+      "Bash(temporal operator namespace delete*)",
+      "Bash(gcx resources apply*)",
+      "Bash(bk build cancel*)",
+      "Bash(bk unblock*)",
+      "Bash(cf r2 buckets delete*)",
+      "Bash(cf accounts tokens create*)",
+      "Bash(cf accounts tokens delete*)"
     ]
   },
   "enabledPlugins": {

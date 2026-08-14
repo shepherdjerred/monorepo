@@ -8,7 +8,7 @@
 # codex (agent-task Codex provider),
 # kubectl (bugsink-housekeeping / zfs-maintenance `kubectl exec`),
 # github-mcp-server (pr-agent's MCP GitHub backend), talosctl / tofu / argocd /
-# velero / bk / temporal / toolkit (homelab-audit-daily runbook + preflight —
+# velero / bk / temporal / gcx / toolkit (homelab-audit-daily runbook + preflight —
 # see src/activities/homelab-audit-preflight.ts REQUIRED_AUDIT_BINARIES),
 # and the direct maintenance runtimes Kometa, uv, and Trivy.
 # scripts/smoke.ts asserts every one of these boots + is on PATH.
@@ -113,6 +113,8 @@ ARG VELERO_CLI_VERSION=v1.18.2
 ARG BUILDKITE_CLI_VERSION=3.48.0
 # renovate: datasource=github-releases depName=temporalio/cli
 ARG TEMPORAL_CLI_VERSION=1.7.3
+# renovate: datasource=github-releases depName=grafana/gcx
+ARG GCX_VERSION=1.0.0
 # renovate: datasource=pypi depName=uv
 ARG UV_VERSION=0.12.3
 # renovate: datasource=github-releases depName=aquasecurity/trivy
@@ -262,6 +264,27 @@ RUN set -e; \
     chmod +x /usr/local/bin/temporal; \
     rm /tmp/temporal.tar.gz /tmp/temporal.checksums.txt; \
     temporal --version
+
+# --- Grafana CLI (per-arch tarball, SHA256-verified) ---
+# Replaces the retired `toolkit gf` Grafana client for the homelab audit's
+# PromQL/LogQL evidence. The release layout matches temporalio/cli above: a bare
+# `gcx` binary at the tarball root plus a `<name>_<version>_checksums.txt`.
+RUN set -e; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in amd64) gcxarch=amd64 ;; arm64) gcxarch=arm64 ;; \
+      *) echo "unsupported architecture: $arch" >&2; exit 1 ;; esac; \
+    base="https://github.com/grafana/gcx/releases/download/v${GCX_VERSION}"; \
+    tarball="gcx_${GCX_VERSION}_linux_${gcxarch}.tar.gz"; \
+    curl -fsSL "$base/$tarball" -o /tmp/gcx.tar.gz; \
+    curl -fsSL "$base/gcx_${GCX_VERSION}_checksums.txt" -o /tmp/gcx.checksums.txt; \
+    expected="$(grep " $tarball$" /tmp/gcx.checksums.txt | awk '{print $1}')"; \
+    [ -n "$expected" ] || { echo "no checksum entry for $tarball" >&2; exit 1; }; \
+    actual="$(sha256sum /tmp/gcx.tar.gz | awk '{print $1}')"; \
+    [ "$expected" = "$actual" ] || { echo "gcx checksum mismatch (expected $expected, got $actual)" >&2; exit 1; }; \
+    tar -xzf /tmp/gcx.tar.gz -C /usr/local/bin gcx; \
+    chmod +x /usr/local/bin/gcx; \
+    rm /tmp/gcx.tar.gz /tmp/gcx.checksums.txt; \
+    gcx --version
 
 # --- Python + pip (required by the uv install below) ---
 RUN set -e; \

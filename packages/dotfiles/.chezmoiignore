@@ -9,6 +9,9 @@ AppData_*
 
 {{- if ne .chezmoi.os "darwin" }}
 Library/
+# The tailscale CLI ships inside the macOS app bundle, so the wrapper that
+# execs it is meaningless off darwin.
+.local/bin/tailscale
 {{- end }}
 
 scripts

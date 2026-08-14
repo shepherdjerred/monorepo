@@ -16,6 +16,13 @@ if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
     export PATH="$HOME/.local/bin:$PATH"
 fi
 
+# Add Homebrew's keg-only libpq (psql, pg_dump, pg_isready, pg_config).
+# It conflicts with a full postgresql install, so brew never links it into
+# /opt/homebrew/bin; pgcli pulls it in as a dependency but that is not enough.
+if [[ ":$PATH:" != *":/opt/homebrew/opt/libpq/bin:"* ]] && [[ -d /opt/homebrew/opt/libpq/bin ]]; then
+    export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+fi
+
 # Activate mise shims if mise is available
 if command -v mise &>/dev/null; then
     eval "$(mise activate bash --shims)"

@@ -118,11 +118,13 @@ if command -v brew &>/dev/null; then
     log_info "Trusting third-party Homebrew formulae"
     third_party_formulae=(
         "artginzburg/tap/sudo-touchid"
+        "buildkite/buildkite/bk@3"
         "cormacrelf/tap/dark-notify"
         "dsully/tap/macos-defaults"
         "lightpanda-io/browser/lightpanda"
         "pinchtab/tap/pinchtab"
         "rsteube/tap/carapace"
+        "schpet/tap/linear"
         "siderolabs/tap/talosctl"
     )
     for formula in "${third_party_formulae[@]}"; do

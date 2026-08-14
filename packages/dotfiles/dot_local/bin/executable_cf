@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -eu
+
+# Cloudflare's unified CLI is a technical preview with no Homebrew formula and
+# breaking changes between minor releases, so it is pinned here and run through
+# bunx rather than installed globally. A global npm install would also be
+# captured *unpinned* by `brew bundle dump` (see bin/write_brewfile.sh), giving
+# a fresh machine a different version than this one.
+#
+# renovate: datasource=npm depName=cf
+CF_VERSION=0.6.0
+
+# `cf --version` and `cf --help` are pure local output: both exit 0 with no
+# credential at all. They also run before any secret exists — MACOS_FRESH_INSTALL.md
+# verifies the pinned version on a fresh machine, and install_macos.sh explicitly
+# continues when secrets are unavailable — so gating them on a token makes a
+# documented bootstrap step fail for a command that never needed auth. Everything
+# else still fails closed below.
+case "${1:-}" in
+--version | --help | -h)
+  exec bunx "cf@${CF_VERSION}" "$@"
+  ;;
+esac
+
+# The token is deliberately named CF_API_TOKEN rather than CLOUDFLARE_API_TOKEN.
+# packages/homelab/src/tofu/cloudflare authenticates purely from an ambient
+# CLOUDFLARE_API_TOKEN, supplied by `op run --env-file=.env -- tofu ...`. If that
+# variable were exported globally, a bare `tofu apply` with no `op run` would
+# silently authenticate and apply against production instead of failing on a
+# missing credential. Mapping the name here keeps that guardrail intact while
+# still giving cf a token.
+if [ -z "${CF_API_TOKEN:-}" ]; then
+  printf 'cf: CF_API_TOKEN is unset; run `chezmoi apply` with the op CLI available\n' >&2
+  exit 1
+fi
+
+CLOUDFLARE_API_TOKEN="$CF_API_TOKEN"
+export CLOUDFLARE_API_TOKEN
+
+exec bunx "cf@${CF_VERSION}" "$@"

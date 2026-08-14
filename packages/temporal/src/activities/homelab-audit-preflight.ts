@@ -43,6 +43,7 @@ const REQUIRED_AUDIT_BINARIES = [
   "toolkit",
   "temporal",
   "bk",
+  "gcx",
 ] as const;
 
 const REQUIRED_ENV_GROUPS: readonly RequiredEnvGroup[] = [

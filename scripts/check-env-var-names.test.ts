@@ -39,6 +39,54 @@ describe("findEnvironmentVariableViolations", () => {
     ).toEqual([]);
   });
 
+  test("permits a vendor CLI's own spelling at the gcx boundary", () => {
+    expect(
+      findEnvironmentVariableViolations(
+        "packages/temporal/src/activities/gcx-context.ts",
+        'const GCX_TOKEN_ENV = "GRAFANA_TOKEN";',
+      ),
+    ).toEqual([]);
+  });
+
+  test("keeps the vendor exemption scoped to that boundary", () => {
+    expect(
+      findEnvironmentVariableViolations(
+        "packages/temporal/src/activities/other.ts",
+        'const GCX_TOKEN_ENV = "GRAFANA_TOKEN";',
+      ),
+    ).toHaveLength(1);
+  });
+
+  // The exemption waives two specific vendor spellings, not the whole scan:
+  // an unrelated non-canonical name must not ride in behind the boundary.
+  test("still reports unrelated banned names inside an exempt file", () => {
+    expect(
+      findEnvironmentVariableViolations(
+        "packages/temporal/src/activities/gcx-context.ts",
+        "const account = CF_ACCOUNT_ID;",
+      ),
+    ).toEqual([
+      {
+        path: "packages/temporal/src/activities/gcx-context.ts",
+        line: 1,
+        pattern: "CF_ACCOUNT_ID",
+        replacement: "CLOUDFLARE_ACCOUNT_ID",
+        text: "const account = CF_ACCOUNT_ID;",
+      },
+    ]);
+  });
+
+  // Exact-file matching, so a neighbour whose path merely contains the exempt
+  // name is not silently exempted too.
+  test("does not exempt a file that only shares the boundary's path prefix", () => {
+    expect(
+      findEnvironmentVariableViolations(
+        "packages/temporal/src/activities/gcx-context-helpers.ts",
+        'const token = "GRAFANA_TOKEN";',
+      ),
+    ).toHaveLength(1);
+  });
+
   test("reports the generic GitHub token", () => {
     expect(
       findEnvironmentVariableViolations(

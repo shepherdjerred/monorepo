@@ -1,4 +1,5 @@
 tap "artginzburg/tap"
+tap "buildkite/buildkite"
 tap "catppuccin/tap"
 tap "cormacrelf/tap"
 tap "dsully/tap"
@@ -7,6 +8,7 @@ tap "lightpanda-io/browser"
 tap "mobile-dev-inc/tap"
 tap "pinchtab/tap"
 tap "rsteube/tap"
+tap "schpet/tap"
 tap "siderolabs/tap"
 # Static checker for GitHub Actions workflow files
 brew "actionlint"
@@ -22,8 +24,6 @@ brew "bash"
 brew "bat"
 # Resource monitor. C++ version and continuation of bashtop and bpytop
 brew "btop"
-# JavaScript runtime, bundler, test runner, and package manager
-brew "bun"
 # Define k8s native apps and abstractions using object-oriented programming
 brew "cdk8s"
 # Manage your dotfiles across multiple diverse machines, securely
@@ -32,6 +32,8 @@ brew "chezmoi"
 brew "cloudflared"
 # Dependency manager for Cocoa projects
 brew "cocoapods"
+# Tool for interacting with remote images and registries
+brew "crane"
 # Diff that understands syntax
 brew "difftastic"
 # Select default apps for documents and URL schemes on macOS
@@ -46,6 +48,8 @@ brew "ffmpeg"
 brew "fish"
 # Command-line outline and bitmap font editor/converter
 brew "fontforge"
+# CLI for managing Grafana Cloud resources
+brew "gcx"
 # GitHub command-line tool
 brew "gh"
 # Distributed revision control system
@@ -62,8 +66,12 @@ brew "gping"
 brew "hadolint"
 # Kubernetes package manager
 brew "helm"
+# Agent multiplexer that lives in your terminal
+brew "herdr"
 # Command-line benchmarking tool
 brew "hyperfine"
+# Tool to unpack installers created by Inno Setup
+brew "innoextract", args: ["HEAD"]
 # Lightweight and flexible command-line JSON processor
 brew "jq"
 # Static analysis tool for Kubernetes YAML files and Helm charts
@@ -72,6 +80,8 @@ brew "kube-linter"
 brew "kubernetes-cli"
 # Image processing and image analysis library
 brew "leptonica"
+# Run LogQL queries against a Loki server
+brew "logcli"
 # Fast, flexible, config-based cli for linting Markdown/CommonMark files
 brew "markdownlint-cli2"
 # Polyglot runtime manager (asdf rust clone)
@@ -88,18 +98,26 @@ brew "opentofu"
 brew "ov"
 # PAM module for reattaching to the user's GUI (Aqua) session
 brew "pam-reattach"
+# CLI for Postgres with auto-completion and syntax highlighting
+brew "pgcli"
 # Package compiler and linker metadata toolkit
 brew "pkgconf"
 # PDF rendering library (based on the xpdf-3.0 code base)
 brew "poppler"
+# Service monitoring system and time series database
+brew "prometheus"
 # Generic machine emulator and virtualizer
 brew "qemu"
 # Rsync for cloud storage
 brew "rclone"
+# 7-Zip is a file archiver with a high compression ratio
+brew "sevenzip"
 # Cross-shell prompt for astronauts
 brew "starship"
 # Tool to enforce Swift style and conventions
 brew "swiftlint"
+# Command-line interface for running and interacting with Temporal Server and UI
+brew "temporal"
 # OCR (Optical Character Recognition) engine
 brew "tesseract"
 # CLI tool that moves files or folder to the trash
@@ -120,6 +138,8 @@ brew "watch"
 brew "watchman"
 # Internet file retriever
 brew "wget"
+# Generate your Xcode project from a spec file and your folder structure
+brew "xcodegen"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
 brew "yq"
 # Feature-rich command-line audio/video downloader
@@ -128,6 +148,8 @@ brew "yt-dlp"
 brew "zellij"
 # Permanent TouchID support for sudo
 brew "artginzburg/tap/sudo-touchid", trusted: true
+# Work with Buildkite from the command-line
+brew "buildkite/buildkite/bk@3", trusted: true
 # Watcher for macOS 10.14+ light/dark mode changes
 brew "cormacrelf/tap/dark-notify", trusted: true
 # Defaults setting for macOS
@@ -140,6 +162,8 @@ brew "mobile-dev-inc/tap/maestro", trusted: true
 brew "pinchtab/tap/pinchtab", trusted: true
 # A multi-shell completion binary
 brew "rsteube/tap/carapace", trusted: true
+# CLI tool for linear.app that uses git branch names and directory names to open issues and team pages
+brew "schpet/tap/linear", trusted: true
 # CLI for out-of-band management of Kubernetes nodes created by Talos
 brew "siderolabs/tap/talosctl", trusted: true
 # Password manager that keeps all passwords secure behind one password
@@ -214,6 +238,7 @@ go "cmd/go"
 go "cmd/gofmt"
 uv "docling[asr,easyocr,htmlrender,ocrmac,onnxruntime,rapidocr,remote-serving,tesserocr,vlm,xbrl]"
 npm "@google/gemini-cli"
+npm "@posthog/cli"
 npm "corepack"
 npm "eslint"
 npm "neovim"

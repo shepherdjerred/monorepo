@@ -28,6 +28,14 @@
     },
     {
       "customType": "regex",
+      "description": "Pinned Cloudflare cf CLI preview version in the chezmoi bunx wrapper",
+      "managerFilePatterns": ["packages/dotfiles/dot_local/bin/executable_cf"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+)\\n[ \\t]*CF_VERSION=(?<currentValue>[0-9][a-zA-Z0-9._-]*)"
+      ]
+    },
+    {
+      "customType": "regex",
       "description": "Pinned tool versions in application Dockerfile ARGs",
       "managerFilePatterns": [
         "packages/birmel/Dockerfile",

@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -eu
+
+# Re-run when the Grafana credential rotates without storing the credential in
+# the Chezmoi source. `onepasswordRead` runs at render time, so it is guarded by
+# `lookPath` the same way the other secret templates are: on a fresh machine that
+# has no `op` yet, an unguarded call fails template rendering and takes the whole
+# `chezmoi apply` with it. The placeholder is stable, so installing `op` changes
+# this line and re-runs the script.
+# grafana-token-sha256: {{ if lookPath "op" }}{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/w5y6wldczvojkh3yxe5zadkpvi/password" | sha256sum }}{{ else }}op-unavailable{{ end }}
+
+# gcx deliberately owns ~/.config/gcx/config.yaml rather than Chezmoi. Writing
+# the credential inline there does work, but gcx migrates it into the macOS
+# Keychain and rewrites the file on the first command, leaving `chezmoi diff`
+# permanently dirty. gcx's own two environment variables for server and
+# credential are both banned repo-wide by scripts/environment-variable-rules.ts,
+# which canonicalized them to GRAFANA_URL and GRAFANA_API_KEY, so passing them
+# that way is not an option either. The context is provisioned here instead: the
+# secret goes to the Keychain, the config keeps only a `keychain:` reference,
+# and a rotation in 1Password re-runs this script via the hash above.
+if ! command -v gcx >/dev/null; then
+  echo "gcx is not installed yet; this will run on the next chezmoi apply" >&2
+  exit 0
+fi
+
+if ! command -v op >/dev/null; then
+  echo "op is not installed yet; this will run on the next chezmoi apply" >&2
+  exit 0
+fi
+
+grafana_api_key="$(op read "op://v64ocnykdqju4ui6j6pua56xw4/w5y6wldczvojkh3yxe5zadkpvi/password")"
+
+# `gcx login` is idempotent: re-running against an existing context updates the
+# stored credential in place. org-id is auto-detected from the server.
+gcx login homelab \
+  --server "https://grafana.tailnet-1a49.ts.net" \
+  --token "$grafana_api_key" \
+  --yes
+
+# Anonymous usage telemetry is on by default; a homelab CLI should not phone home.
+gcx config set diagnostics.telemetry disabled
+
+# gcx seeds an empty `default` context that references no stack, which makes
+# `gcx config check` exit 1 even when every real context is healthy. Dropping it
+# keeps the check usable as a verification gate. Unsetting a missing key is a
+# no-op, so this stays idempotent.
+gcx config unset contexts.default

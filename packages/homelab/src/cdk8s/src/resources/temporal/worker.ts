@@ -69,6 +69,27 @@ function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
     PROMETHEUS_URL: EnvValue.fromValue(
       "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
     ),
+    // gcx stores its credential in a config file, written by
+    // ensureGcxContext() (src/activities/gcx-context.ts) at audit time from the
+    // GRAFANA_URL/GRAFANA_API_KEY below. Its default location is
+    // $HOME/.config/gcx/config.yaml, which resolves to /home/bun from the
+    // oven/bun base image and is writable by uid 1000. Pinning the path anyway
+    // keeps the credential's location independent of the base image, so a bun
+    // bump that changes HOME cannot silently relocate it.
+    //
+    // The file sits directly under the /tmp mount rather than in a gcx/
+    // subdirectory: /tmp is a fresh emptyDir on every pod start, so any
+    // intermediate directory would have to be created before `gcx login` runs,
+    // and nothing does that. Keeping the path one level deep means there is no
+    // directory to create. Do not reintroduce a subdirectory here without also
+    // creating it in ensureGcxContext().
+    GCX_CONFIG: EnvValue.fromValue("/tmp/gcx-config.yaml"),
+    // Suppress gcx's outbound GitHub release check and anonymous telemetry; a
+    // homelab worker should make no unsolicited egress. ensureGcxContext()
+    // spawns gcx with an allowlisted environment, so both names must stay in
+    // its GCX_INHERITED_ENV or they never reach the process they constrain.
+    GCX_NO_UPDATE_NOTIFIER: EnvValue.fromValue("1"),
+    GCX_TELEMETRY: EnvValue.fromValue("disabled"),
     ...requiredSecretEnv(secret, [
       "BUGSINK_TOKEN",
       "GRAFANA_URL",
