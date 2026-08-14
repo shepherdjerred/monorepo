@@ -1,0 +1,30 @@
+# Temporal CLI profiles.
+#
+# Location note: `temporal config --help` says the config lives at
+# "$CONFIG_PATH/temporalio/temporal.toml where $CONFIG_PATH is $HOME/.config on
+# Unix", but on macOS the CLI actually resolves it through os.UserConfigDir(),
+# i.e. ~/Library/Application Support/temporalio/. A file under ~/.config is
+# silently ignored. .chezmoiignore already excludes Library/ off darwin.
+#
+# `default` deliberately stays on localhost. packages/temporal/scripts/*.ts all
+# read `Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_TEMPORAL_ADDRESS`, so exporting a
+# global TEMPORAL_ADDRESS pointing at the homelab would silently retarget every
+# "local" script at production. Reach the cluster explicitly instead:
+#
+#   temporal --profile homelab workflow list
+#
+# The homelab server is tailnet-only, so no credential belongs here — the
+# tailnet is the auth boundary.
+
+[profile]
+
+  [profile.default]
+    address = "localhost:7233"
+    namespace = "default"
+
+  [profile.homelab]
+    address = "temporal.tailnet-1a49.ts.net:443"
+    namespace = "default"
+
+    [profile.homelab.tls]
+      disabled = false

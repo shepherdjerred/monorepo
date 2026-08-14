@@ -9,6 +9,9 @@ AppData_*
 
 {{- if ne .chezmoi.os "darwin" }}
 Library/
+# The tailscale CLI ships inside the macOS app bundle; symlinking it there is
+# meaningless off darwin and would leave a dangling link.
+.local/bin/tailscale
 {{- end }}
 
 scripts

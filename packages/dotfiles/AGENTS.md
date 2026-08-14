@@ -111,6 +111,36 @@ print(doc.export_to_markdown())
 - When changing any preference, setting, or config file, **edit both the live copy and the chezmoi source** (`packages/dotfiles/`) if the file is managed by chezmoi.
 - If the file being edited is NOT managed by chezmoi, suggest that it be added if it's the kind of file that should be tracked (config files, shell settings, tool preferences, etc.).
 
+## Homebrew — the Brewfile is generated, not authored
+
+- `.Brewfile_darwin` / `.Brewfile_linux` are **rewritten from installed state** by
+  `bin/write_brewfile.sh` (`rm -f` then `brew bundle dump`). Hand-written lines and
+  hand-written comments do not survive — the comments you see are Homebrew's own
+  `brew desc` output. Rationale belongs here or in `MACOS_FRESH_INSTALL.md`.
+- To add a package: `brew install` it, then run `~/bin/write_brewfile.sh`, then
+  `chezmoi apply`. Never hand-edit the manifest.
+- Third-party taps additionally need an entry in `install_macos.sh`'s
+  `third_party_formulae` array, or `brew bundle` aborts on an untrusted formula
+  during a fresh install.
+- **One channel per tool.** `bun`, `node`, `go`, `java`, `rust`, and `python` are
+  mise-managed (`.mise.toml`, `~/.config/mise/config.toml`). Never `brew install`
+  or `cargo install` them — the dump records the duplicate, and the mise shim wins
+  PATH, so you get a shadowed second copy that silently drifts.
+
+## CLI tool boundaries
+
+- **Cloudflare DNS is OpenTofu-owned.** `cf` (`~/.local/bin/cf`) carries a
+  read/write token, but records, zones, and DNSSEC live in
+  `packages/homelab/src/tofu/cloudflare/`. Use `cf` to read; make every change
+  through Tofu. See `packages/homelab/AGENTS.md`.
+- **Never export `TEMPORAL_ADDRESS` globally.** `packages/temporal/scripts/*.ts`
+  read it and fall back to localhost, so a global export silently retargets every
+  "local" script at production. Use `temporal --profile homelab` instead.
+- **`gcx` owns `~/.config/gcx/config.yaml`.** Chezmoi deliberately does not manage
+  it: gcx migrates any inline token into the macOS Keychain and rewrites the file
+  on first use. `run_onchange_after_configure-gcx.sh.tmpl` provisions the context
+  and re-runs when the 1Password credential rotates.
+
 ## macOS Fresh Install — Berkeley Mono
 
 - `install_macos.sh` requires the licensed static Berkeley Mono TTF package to

@@ -304,6 +304,23 @@ op run --env-file=.env -- tofu -chdir=cloudflare plan
 op run --env-file=.env -- tofu -chdir=cloudflare apply
 ```
 
+### The `cf` CLI is read-only for DNS
+
+`~/.local/bin/cf` (chezmoi-managed, a pinned `bunx cf@<version>` wrapper) holds a
+read/write Cloudflare token separate from the Tofu one. It is for **reading** —
+`cf dns records list`, `cf zones get`, `cf dns analytics`, `cf r2 buckets list`.
+Records created or edited with `cf` do not stick: `tofu apply` reconciles them
+away, and a `cf`-created record that Tofu does not know about is invisible to the
+config forever. Add or change records by editing the zone's `.tf` file. The
+read/write scope exists only because Cloudflare tokens cannot separate DNS reads
+from the other read surfaces; `packages/dotfiles/claude-managed/managed-settings.json`
+denies the mutating `cf dns`/`cf zones`/`cf registrar` subcommands to enforce it.
+
+The wrapper reads `CF_API_TOKEN` and maps it to `CLOUDFLARE_API_TOKEN` only for
+its own process. Do not export `CLOUDFLARE_API_TOKEN` globally — a bare
+`tofu -chdir=cloudflare apply` with no `op run` currently fails closed on the
+missing credential, and that is a deliberate guardrail.
+
 ## OpenTofu State
 
 OpenTofu/Terraform state for the `src/tofu/*` stacks is stored in **SeaweedFS** (S3-compatible), not locally. `tofu init` therefore needs AWS credentials for the backend. To validate `.tf` without state access, use `tofu init -backend=false` (syntax) and `tofu validate` (resource schemas).
