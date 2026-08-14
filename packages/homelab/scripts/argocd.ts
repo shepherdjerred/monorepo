@@ -391,9 +391,17 @@ async function liveResourceState(
 }
 
 /**
- * A rendered manifest may omit the namespace an Application's destination
- * supplies, so an unnamespaced rendering matches a live namespaced resource.
- * Anything more ambiguous than that would silently preflight the wrong target.
+ * Either side may omit the namespace for the same object: a rendered manifest
+ * leaves it to the Application's destination, and `managed-resources` omits it
+ * for a cluster-scoped resource whose chart still stamps `metadata.namespace`
+ * (harmless — the API server ignores it). So a missing namespace on either side
+ * is a wildcard, and only two *concrete, different* namespaces are a mismatch.
+ *
+ * That mismatch is fatal rather than silent. Returning no manifest leaves the
+ * resource without a `targetState`, and `analyzeApplySafety` skips a resource
+ * that has no target — so a namespace disagreement used to mean the immutable
+ * checks simply never ran for it. Failing an ambiguous match loudly while
+ * quietly failing an impossible one was the wrong way round.
  */
 function renderedTargetState(
   targets: ReadonlyMap<string, readonly RenderedTarget[]>,
@@ -408,11 +416,21 @@ function renderedTargetState(
   const candidates = targets.get(identity) ?? [];
   const matches = candidates.filter(
     ({ namespace }) =>
-      namespace === undefined || namespace === resource.namespace,
+      namespace === undefined ||
+      resource.namespace === undefined ||
+      namespace === resource.namespace,
   );
   if (matches.length > 1) {
     throw new Error(
       `Apply-safety preflight for ${appName} matched ${identity} to ${matches.length.toString()} rendered manifests`,
+    );
+  }
+  if (matches.length === 0 && candidates.length > 0) {
+    const rendered = candidates
+      .map(({ namespace }) => namespace ?? "<none>")
+      .join(", ");
+    throw new Error(
+      `Apply-safety preflight for ${appName} found ${identity} in namespace ${resource.namespace ?? "<none>"} but rendered it in ${rendered}`,
     );
   }
   return matches[0]?.manifest;
