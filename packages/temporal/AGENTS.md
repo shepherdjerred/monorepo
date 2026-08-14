@@ -435,11 +435,20 @@ the branch it was given, so a branch built from a per-attempt value (a fresh
 `crypto.randomUUID()`, a timestamp) silently defeats that reuse: any failure
 after the PR is created retries the activity under a new branch and opens a
 second PR. Derive it from the content (`data-dragon.ts` uses the Data Dragon
-version), from the workflow's own args (`scout-season-refresh.ts`), or from
-`Context.current().info.workflowExecution.runId` (`llm-catalog-refresh.ts`) —
-never from a value generated inside the attempt. Scratch `/tmp` directories are
-the opposite: keep those per-attempt so a retry cannot trip over a previous
-attempt's half-cleaned clone.
+version; `llm-catalog-refresh.ts` hashes the proposed `catalog.json`) or from
+the workflow's own args (`scout-season-refresh.ts`) — never from a value
+generated inside the attempt. Scratch `/tmp` directories are the opposite: keep
+those per-attempt so a retry cannot trip over a previous attempt's half-cleaned
+clone.
+
+**Retry-stable is not sufficient — the key must also be stable across scheduled
+runs.** The workflow run id survives retries but changes weekly, so while a
+proposal sits unmerged `main` still holds the old artifact, the next run
+regenerates the identical diff under a new branch, and `openSeasonRefreshPr`
+opens a duplicate PR for a change already awaiting review. A content hash is
+stable on both axes and additionally gives a genuinely changed proposal its own
+PR, rather than force-pushing over one an operator is part-way through
+adjudicating.
 
 To add a "regenerate X on a schedule, open a PR if it changed" job, mirror `data-dragon.ts`: a deterministic activity (no Claude), GitHub App token, path-scoped `git add`, plus a thin workflow, an export in `src/workflows/index.ts`, and a `SCHEDULES` entry (cron, `America/Los_Angeles`, `TASK_QUEUES.DEFAULT`). The worker pod has bun/git/gh/kubectl (in-cluster SA — `homelab-crd-imports-daily` runs `kubectl get crds` with the read-only `temporal-worker-crd-reader` ClusterRole) but **not** helm — add tools to the worker image build (`Dockerfile`) if the job needs them (`bunx turbo run smoke --filter=temporal` builds + smoke-tests the image; CI builds/smokes/pushes it on merge to main). CLIs a job needs from the repo itself (e.g. `cdk8s` for the CRD imports) come from the bot clone's workspace install via a package devDependency, not the image.
 
