@@ -39,6 +39,24 @@ describe("findEnvironmentVariableViolations", () => {
     ).toEqual([]);
   });
 
+  test("permits a vendor CLI's own spelling at the gcx boundary", () => {
+    expect(
+      findEnvironmentVariableViolations(
+        "packages/temporal/src/activities/gcx-context.ts",
+        'const GCX_TOKEN_ENV = "GRAFANA_TOKEN";',
+      ),
+    ).toEqual([]);
+  });
+
+  test("keeps the vendor exemption scoped to that boundary", () => {
+    expect(
+      findEnvironmentVariableViolations(
+        "packages/temporal/src/activities/other.ts",
+        'const GCX_TOKEN_ENV = "GRAFANA_TOKEN";',
+      ),
+    ).toHaveLength(1);
+  });
+
   test("reports the generic GitHub token", () => {
     expect(
       findEnvironmentVariableViolations(

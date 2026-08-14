@@ -1,14 +1,20 @@
 import { redactSecrets } from "#shared/redact.ts";
 
-// gcx authenticates from a config file, not from environment variables. Its own
-// two native variables for server and credential are banned repo-wide by
-// scripts/environment-variable-rules.ts, which canonicalized them to
-// GRAFANA_URL and GRAFANA_API_KEY, so the worker provisions a context once per
-// pod lifetime instead.
+// gcx stores its credential in a config file, so the worker provisions a
+// context once per pod lifetime. The worker sets GCX_CONFIG to pin where that
+// config lands, keeping the credential's location independent of the base
+// image's HOME.
 //
-// The worker sets GCX_CONFIG to pin where that config lands, keeping the
-// credential's location independent of the base image's HOME.
+// The credential reaches gcx through its own GRAFANA_TOKEN runtime override
+// rather than `--token`: argv is readable by any process that can see
+// /proc/<pid>/cmdline, so a `--token` value is exposed to anything sharing the
+// pod's PID namespace. gcx documents this env form as its CI/CD path and its
+// own login error names it as the alternative to the flag. `--server` is not a
+// credential and stays an argument. scripts/environment-variable-rules.ts
+// exempts this file for that vendor spelling; GRAFANA_URL/GRAFANA_API_KEY
+// remain the canonical names this repo reads from.
 const GCX_CONTEXT_NAME = "homelab";
+const GCX_TOKEN_ENV = "GRAFANA_TOKEN";
 const GCX_LOGIN_TIMEOUT_MS = 15_000;
 
 export class GcxContextError extends Error {
@@ -18,7 +24,7 @@ export class GcxContextError extends Error {
 function requireEnv(name: string): string {
   // Trimmed once and reused: the trimmed form is both what makes the value
   // non-blank and what gcx receives, so a trailing newline in the 1Password
-  // field cannot reach the --server URL or the --token credential.
+  // field cannot reach the --server URL or the credential.
   const value = Bun.env[name]?.trim();
   if (value === undefined || value === "") {
     throw new GcxContextError(
@@ -28,14 +34,22 @@ function requireEnv(name: string): string {
   return value;
 }
 
-export type GcxSpawn = (args: string[]) => {
+export type GcxSpawn = (
+  args: string[],
+  env: Record<string, string>,
+) => {
   stderr: ReadableStream<Uint8Array>;
   exited: Promise<number>;
   kill: () => void;
 };
 
-const defaultSpawn: GcxSpawn = (args) =>
-  Bun.spawn(args, { stdin: "ignore", stdout: "ignore", stderr: "pipe" });
+const defaultSpawn: GcxSpawn = (args, env) =>
+  Bun.spawn(args, {
+    stdin: "ignore",
+    stdout: "ignore",
+    stderr: "pipe",
+    env: { ...Bun.env, ...env },
+  });
 
 type SettleResult =
   | { readonly ok: true; readonly stderr: string; readonly exitCode: number }
@@ -64,16 +78,10 @@ async function loginToGcx(spawn: GcxSpawn, timeoutMs: number): Promise<void> {
 
   // `gcx login` is idempotent: re-running against an existing context replaces
   // the stored credential in place.
-  const child = spawn([
-    "gcx",
-    "login",
-    GCX_CONTEXT_NAME,
-    "--server",
-    server,
-    "--token",
-    apiKey,
-    "--yes",
-  ]);
+  const child = spawn(
+    ["gcx", "login", GCX_CONTEXT_NAME, "--server", server, "--yes"],
+    { [GCX_TOKEN_ENV]: apiKey },
+  );
 
   const settled = settleChild(child);
 
@@ -100,8 +108,9 @@ async function loginToGcx(spawn: GcxSpawn, timeoutMs: number): Promise<void> {
       throw result.error;
     }
     if (result.exitCode !== 0) {
-      // gcx echoes the --token argument back in some error paths, so the
-      // credential is redacted before it can reach a Temporal failure message.
+      // gcx can echo the credential back in some error paths (notably under
+      // --insecure-log-http-payload), so it is redacted before it can reach a
+      // Temporal failure message.
       const detail = redactSecrets(result.stderr.trim().slice(0, 1000), [
         apiKey,
       ]);

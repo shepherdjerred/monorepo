@@ -9,7 +9,16 @@ import {
 
 const TOKEN = "glsa_supersecretvalue_0123456789";
 
-type SpawnCall = { args: string[] };
+type SpawnCall = { args: string[]; env: Record<string, string> };
+
+const EXPECTED_ARGS = [
+  "gcx",
+  "login",
+  "homelab",
+  "--server",
+  "https://grafana.example.ts.net",
+  "--yes",
+];
 
 function noop(): void {
   // The stub never spawns a process, so there is nothing to kill.
@@ -29,8 +38,8 @@ function stubSpawn(options: {
   stderr?: string;
   calls?: SpawnCall[];
 }): GcxSpawn {
-  return (args) => {
-    options.calls?.push({ args });
+  return (args, env) => {
+    options.calls?.push({ args, env });
     return {
       stderr: new Response(options.stderr ?? "").body ?? new ReadableStream(),
       exited: Promise.resolve(options.exitCode),
@@ -62,16 +71,20 @@ describe("ensureGcxContext", () => {
     await ensureGcxContext(stubSpawn({ exitCode: 0, calls }));
 
     expect(calls).toHaveLength(1);
-    expect(calls[0]?.args).toEqual([
-      "gcx",
-      "login",
-      "homelab",
-      "--server",
-      "https://grafana.example.ts.net",
-      "--token",
-      TOKEN,
-      "--yes",
-    ]);
+    expect(calls[0]?.args).toEqual(EXPECTED_ARGS);
+    expect(calls[0]?.env).toEqual({ GRAFANA_TOKEN: TOKEN });
+  });
+
+  // argv is world-readable via /proc/<pid>/cmdline, so the credential must
+  // never appear there — not as a `--token` value and not as a bare argument.
+  test("never puts the credential in the process arguments", async () => {
+    const calls: SpawnCall[] = [];
+    await ensureGcxContext(stubSpawn({ exitCode: 0, calls }));
+
+    expect(calls[0]?.args).not.toContain("--token");
+    for (const arg of calls[0]?.args ?? []) {
+      expect(arg).not.toContain(TOKEN);
+    }
   });
 
   test("memoizes so both the collector and the preflight share one login", async () => {
@@ -109,16 +122,8 @@ describe("ensureGcxContext", () => {
     const calls: SpawnCall[] = [];
     await ensureGcxContext(stubSpawn({ exitCode: 0, calls }));
 
-    expect(calls[0]?.args).toEqual([
-      "gcx",
-      "login",
-      "homelab",
-      "--server",
-      "https://grafana.example.ts.net",
-      "--token",
-      TOKEN,
-      "--yes",
-    ]);
+    expect(calls[0]?.args).toEqual(EXPECTED_ARGS);
+    expect(calls[0]?.env).toEqual({ GRAFANA_TOKEN: TOKEN });
   });
 
   test("rejects at the deadline when the subprocess never settles", async () => {
@@ -144,7 +149,7 @@ describe("ensureGcxContext", () => {
   test("redacts the credential out of a failing login's stderr", async () => {
     const spawn = stubSpawn({
       exitCode: 3,
-      stderr: `unauthorized while using --token ${TOKEN}`,
+      stderr: `unauthorized while using credential ${TOKEN}`,
     });
 
     let captured: unknown;
