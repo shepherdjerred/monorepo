@@ -19,6 +19,7 @@ import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   deepestLeafFrom,
   pathToLeaf,
+  siblingsOf,
   versionPosition,
 } from "#src/explore/tree.ts";
 
@@ -87,14 +88,15 @@ function parseJsonColumn<T>(
 
 function toMessage(
   row: MessageRow,
-  position: { index: number; count: number },
+  versions: { siblingIds: string[]; index: number; count: number },
 ): ExploreMessage {
   return ExploreMessageSchema.parse({
     id: row.id,
     role: row.role,
     parentId: row.parentId,
-    versionIndex: position.index,
-    versionCount: position.count,
+    siblingIds: versions.siblingIds,
+    versionIndex: versions.index,
+    versionCount: versions.count,
     content: row.content,
     queryText: row.queryText,
     caveats: parseJsonColumn(row.caveats, StringArraySchema, "caveats") ?? [],
@@ -126,6 +128,19 @@ function toConversation(row: ConversationRow): ExploreConversation {
   });
 }
 
+/** Position and sibling ids, derived together so they cannot disagree. */
+function versionsOf(
+  nodes: { id: string; parentId: string | null; createdAt: Date }[],
+  messageId: string,
+): { siblingIds: string[]; index: number; count: number } {
+  const position = versionPosition(nodes, messageId);
+  return {
+    siblingIds: siblingsOf(nodes, messageId).map((sibling) => sibling.id),
+    index: position.index,
+    count: position.count,
+  };
+}
+
 /**
  * Turn a loaded conversation into the transcript for one path.
  *
@@ -142,7 +157,7 @@ function buildTranscript(
   const path = pathToLeaf(rows, resolvedLeaf);
   return {
     conversation: toConversation(conversation),
-    messages: path.map((row) => toMessage(row, versionPosition(rows, row.id))),
+    messages: path.map((row) => toMessage(row, versionsOf(rows, row.id))),
   };
 }
 
@@ -371,7 +386,7 @@ export async function appendExploreAnswer(
     where: { conversationId: input.conversationId },
     select: { id: true, parentId: true, createdAt: true },
   });
-  return toMessage(row, versionPosition(siblings, row.id));
+  return toMessage(row, versionsOf(siblings, row.id));
 }
 
 /**

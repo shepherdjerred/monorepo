@@ -1,10 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ExploreMessage } from "@scout-for-lol/data";
+import { Square } from "lucide-react";
+import type {
+  ExploreConversation,
+  ExploreStreamEvent,
+} from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
 import { Textarea } from "#src/components/ui/textarea.tsx";
+import { ExploreHeader } from "#src/components/explore-header.tsx";
+import { ExploreSidebar } from "#src/components/explore-sidebar.tsx";
 import { ExploreTranscript } from "#src/components/explore-transcript.tsx";
+import { ConfirmDeleteDialog } from "#src/components/confirm-delete-dialog.tsx";
+import { RenameConversationDialog } from "#src/components/rename-conversation-dialog.tsx";
 import { streamExploreTurn } from "#src/lib/explore-stream.ts";
+import {
+  conversationToMarkdown,
+  downloadMarkdown,
+  exportFilename,
+} from "#src/lib/explore-export.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 /**
@@ -13,8 +26,9 @@ import { useTRPC } from "#src/lib/trpc.ts";
  * Turns stream over SSE while conversation management goes through tRPC, so
  * the transcript is authoritative on the server and this page only mirrors
  * it. After a turn finishes the conversation is refetched rather than patched
- * locally — the server already owns ordering and ids, and duplicating that
- * here is how a transcript drifts from what a share link would show.
+ * locally — the server owns ordering, ids, and which branch is current, and
+ * duplicating that here is how a transcript drifts from what a share link
+ * would show.
  */
 export function Explore() {
   const trpc = useTRPC();
@@ -25,25 +39,50 @@ export function Explore() {
   const [pendingAnswer, setPendingAnswer] = useState<string | null>(null);
   const [activity, setActivity] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [renaming, setRenaming] = useState<ExploreConversation | null>(null);
+  const [deleting, setDeleting] = useState<ExploreConversation | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const status = useQuery(trpc.explore.status.queryOptions());
-  const conversations = useQuery({
-    ...trpc.explore.list.queryOptions(),
-    enabled: status.data?.enabled === true,
-  });
-  const transcript = useQuery({
-    ...trpc.explore.get.queryOptions({ conversationId: conversationId ?? "" }),
-    enabled: status.data?.enabled === true && conversationId !== null,
-  });
+  const {
+    status,
+    enabled,
+    conversations,
+    transcript,
+    messages,
+    title,
+    shared,
+  } = useExploreConversation(conversationId);
 
   const shareMutation = useMutation(trpc.explore.share.mutationOptions());
   const deleteMutation = useMutation(trpc.explore.delete.mutationOptions());
+  const renameMutation = useMutation(trpc.explore.rename.mutationOptions());
+  const setLeafMutation = useMutation(trpc.explore.setLeaf.mutationOptions());
+
+  const refresh = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      queryKey: trpc.explore.list.queryKey(),
+    });
+    await queryClient.invalidateQueries({
+      queryKey: trpc.explore.get.queryKey(),
+    });
+  }, [queryClient, trpc.explore.get, trpc.explore.list]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [transcript.data, pendingAnswer]);
+
+  // Grow the composer with its content instead of scrolling a fixed box.
+  useEffect(() => {
+    const textarea = composerRef.current;
+    if (textarea === null) {
+      return;
+    }
+    textarea.style.height = "auto";
+    textarea.style.height = `${String(Math.min(textarea.scrollHeight, 200))}px`;
+  }, [question]);
 
   // Abandon an in-flight turn if the page unmounts.
   useEffect(
@@ -53,57 +92,43 @@ export function Explore() {
     [],
   );
 
-  const ask = useCallback(
-    async (text: string) => {
-      const trimmed = text.trim();
-      if (activity !== null || trimmed.length === 0) {
+  const runTurn = useCallback(
+    async (input: {
+      question: string | null;
+      parentMessageId: string | null;
+      displayQuestion: string | null;
+    }) => {
+      if (activity !== null) {
         return;
       }
       const controller = new AbortController();
       abortRef.current = controller;
       setError(null);
-      setQuestion("");
-      setPendingQuestion(trimmed);
+      setPendingQuestion(input.displayQuestion);
       setPendingAnswer(null);
       setActivity("Thinking…");
 
       let answered: string | null = null;
       try {
         await streamExploreTurn({
-          input: { conversationId, question: trimmed },
+          input: {
+            conversationId,
+            question: input.question,
+            parentMessageId: input.parentMessageId,
+          },
           signal: controller.signal,
           onEvent: (event) => {
-            switch (event.type) {
-              case "started": {
-                setConversationId(event.conversationId);
-                break;
-              }
-              case "tool_call": {
-                setActivity(event.message);
-                break;
-              }
-              case "answer_delta": {
-                answered = (answered ?? "") + event.text;
-                setPendingAnswer(answered);
-                break;
-              }
-              case "final": {
-                setActivity(null);
-                break;
-              }
-              case "error": {
-                setError(event.message);
-                break;
-              }
-              case "preview":
-              case "tool_result":
-              case "done": {
-                break;
-              }
-            }
+            answered = applyStreamEvent(event, answered, {
+              setConversationId,
+              setActivity,
+              setPendingAnswer,
+              setError,
+            });
           },
         });
       } catch (streamError) {
+        // A deliberate stop is not a failure — the server keeps whatever the
+        // answer had reached, so there is nothing to apologise for.
         if (!controller.signal.aborted) {
           setError(
             streamError instanceof Error
@@ -116,28 +141,33 @@ export function Explore() {
         setActivity(null);
         setPendingAnswer(null);
         setPendingQuestion(null);
-        await queryClient.invalidateQueries({
-          queryKey: trpc.explore.list.queryKey(),
-        });
-        await queryClient.invalidateQueries({
-          queryKey: trpc.explore.get.queryKey(),
-        });
+        await refresh();
       }
     },
-    [
-      activity,
-      conversationId,
-      queryClient,
-      trpc.explore.get,
-      trpc.explore.list,
-    ],
+    [activity, conversationId, refresh],
+  );
+
+  const ask = useCallback(
+    (text: string) => {
+      const trimmed = text.trim();
+      if (trimmed.length === 0) {
+        return;
+      }
+      setQuestion("");
+      void runTurn({
+        question: trimmed,
+        parentMessageId: null,
+        displayQuestion: trimmed,
+      });
+    },
+    [runTurn],
   );
 
   if (status.isLoading) {
     return <p className="text-sm text-muted-foreground">Loading…</p>;
   }
 
-  if (status.data?.enabled !== true) {
+  if (!enabled) {
     return (
       <div className="space-y-2">
         <h2 className="text-xl font-semibold tracking-tight">Explore</h2>
@@ -149,86 +179,59 @@ export function Explore() {
     );
   }
 
-  const messages: ExploreMessage[] = transcript.data?.messages ?? [];
-  const shareToken = transcript.data?.conversation.shareToken ?? null;
+  const headerActions =
+    conversationId !== null && messages.length > 0
+      ? {
+          shared: shared !== null,
+          onExport: () => {
+            downloadMarkdown(
+              exportFilename(title),
+              conversationToMarkdown(title, messages),
+            );
+          },
+          onShare: () => {
+            void (async () => {
+              const result = await shareMutation.mutateAsync({
+                conversationId,
+              });
+              await navigator.clipboard.writeText(
+                `${globalThis.location.origin}/app/explore/s/${result.shareToken}`,
+              );
+              await refresh();
+            })();
+          },
+        }
+      : undefined;
+
+  const sidebar = (
+    <ExploreSidebar
+      conversations={conversations.data ?? []}
+      activeId={conversationId}
+      onSelect={(id) => {
+        setConversationId(id);
+        setDrawerOpen(false);
+      }}
+      onNew={() => {
+        setConversationId(null);
+        setDrawerOpen(false);
+      }}
+      onRename={setRenaming}
+      onDelete={setDeleting}
+    />
+  );
 
   return (
     <div className="flex gap-6">
-      <aside className="hidden w-56 shrink-0 space-y-2 md:block">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={() => {
-            setConversationId(null);
-          }}
-        >
-          New conversation
-        </Button>
-        <ul className="space-y-1">
-          {(conversations.data ?? []).map((conversation) => (
-            <li key={conversation.id} className="flex items-center gap-1">
-              <button
-                type="button"
-                className={`flex-1 truncate rounded-md px-2 py-1 text-left text-sm hover:bg-muted ${
-                  conversation.id === conversationId ? "bg-muted" : ""
-                }`}
-                onClick={() => {
-                  setConversationId(conversation.id);
-                }}
-              >
-                {conversation.title}
-              </button>
-              <button
-                type="button"
-                aria-label={`Delete ${conversation.title}`}
-                className="px-1 text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => {
-                  void (async () => {
-                    await deleteMutation.mutateAsync({
-                      conversationId: conversation.id,
-                    });
-                    if (conversation.id === conversationId) {
-                      setConversationId(null);
-                    }
-                    await queryClient.invalidateQueries({
-                      queryKey: trpc.explore.list.queryKey(),
-                    });
-                  })();
-                }}
-              >
-                ✕
-              </button>
-            </li>
-          ))}
-        </ul>
-      </aside>
+      <aside className="hidden w-60 shrink-0 md:block">{sidebar}</aside>
 
-      <div className="min-w-0 flex-1 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold tracking-tight">Explore</h2>
-          {conversationId !== null && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                void (async () => {
-                  const result = await shareMutation.mutateAsync({
-                    conversationId,
-                  });
-                  await navigator.clipboard.writeText(
-                    `${globalThis.location.origin}/app/explore/s/${result.shareToken}`,
-                  );
-                  await queryClient.invalidateQueries({
-                    queryKey: trpc.explore.get.queryKey(),
-                  });
-                })();
-              }}
-            >
-              {shareToken === null ? "Share" : "Copy link"}
-            </Button>
-          )}
-        </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <ExploreHeader
+          title={conversationId === null ? "Explore" : title}
+          drawerOpen={drawerOpen}
+          onDrawerOpenChange={setDrawerOpen}
+          sidebar={sidebar}
+          {...(headerActions === undefined ? {} : { actions: headerActions })}
+        />
 
         {messages.length === 0 && pendingQuestion === null && (
           <div className="space-y-2 rounded-lg border border-dashed p-6">
@@ -247,7 +250,7 @@ export function Explore() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    void ask(example);
+                    ask(example);
                   }}
                 >
                   {example}
@@ -262,8 +265,32 @@ export function Explore() {
           pendingQuestion={pendingQuestion}
           pendingAnswer={pendingAnswer}
           activity={activity}
-          onFollowUp={(followUp) => {
-            void ask(followUp);
+          onFollowUp={ask}
+          onEdit={(message, edited) => {
+            // Attach the new question beside the old one, so both survive.
+            void runTurn({
+              question: edited,
+              parentMessageId: message.parentId,
+              displayQuestion: edited,
+            });
+          }}
+          onRegenerate={(message) => {
+            // A null question means "answer this one again"; the parent of an
+            // answer is the question it belongs to.
+            void runTurn({
+              question: null,
+              parentMessageId: message.parentId,
+              displayQuestion: null,
+            });
+          }}
+          onSelectVersion={(messageId) => {
+            if (conversationId === null) {
+              return;
+            }
+            void (async () => {
+              await setLeafMutation.mutateAsync({ conversationId, messageId });
+              await refresh();
+            })();
           }}
         />
 
@@ -276,34 +303,160 @@ export function Explore() {
         <div ref={bottomRef} />
 
         <form
-          className="flex gap-2"
+          className="flex items-end gap-2"
           onSubmit={(event) => {
             event.preventDefault();
-            void ask(question);
+            ask(question);
           }}
         >
           <Textarea
+            ref={composerRef}
             value={question}
+            rows={1}
+            className="max-h-[200px] min-h-[42px] resize-none"
             onChange={(event) => {
               setQuestion(event.target.value);
             }}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
-                void ask(question);
+                ask(question);
               }
             }}
             placeholder="Ask a question about match data…"
-            rows={2}
             disabled={activity !== null}
           />
-          <Button type="submit" disabled={activity !== null}>
-            Ask
-          </Button>
+          {activity === null ? (
+            <Button type="submit" disabled={question.trim().length === 0}>
+              Ask
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => {
+                abortRef.current?.abort();
+              }}
+            >
+              <Square className="size-3.5" />
+              Stop
+            </Button>
+          )}
         </form>
       </div>
+
+      <RenameConversationDialog
+        conversation={renaming}
+        onClose={() => {
+          setRenaming(null);
+        }}
+        onRename={(conversation, nextTitle) => {
+          void (async () => {
+            await renameMutation.mutateAsync({
+              conversationId: conversation.id,
+              title: nextTitle,
+            });
+            setRenaming(null);
+            await refresh();
+          })();
+        }}
+      />
+
+      <ConfirmDeleteDialog
+        conversation={deleting}
+        onClose={() => {
+          setDeleting(null);
+        }}
+        onConfirm={(conversation) => {
+          void (async () => {
+            await deleteMutation.mutateAsync({
+              conversationId: conversation.id,
+            });
+            if (conversation.id === conversationId) {
+              setConversationId(null);
+            }
+            setDeleting(null);
+            await refresh();
+          })();
+        }}
+      />
     </div>
   );
+}
+
+/**
+ * Load everything the page reads: availability, the conversation list, and the
+ * active transcript with its derived fields.
+ *
+ * Separated from the component so the route's own logic stays about handling
+ * turns rather than unwrapping query state.
+ */
+function useExploreConversation(conversationId: string | null) {
+  const trpc = useTRPC();
+  const status = useQuery(trpc.explore.status.queryOptions());
+  const enabled = status.data?.enabled === true;
+  const conversations = useQuery({
+    ...trpc.explore.list.queryOptions(),
+    enabled,
+  });
+  const transcript = useQuery({
+    ...trpc.explore.get.queryOptions({ conversationId: conversationId ?? "" }),
+    enabled: enabled && conversationId !== null,
+  });
+
+  return {
+    status,
+    enabled,
+    conversations,
+    transcript,
+    messages: transcript.data?.messages ?? [],
+    title: transcript.data?.conversation.title ?? "Explore",
+    shared: transcript.data?.conversation.shareToken ?? null,
+  };
+}
+
+/**
+ * Fold one stream event into page state, returning the answer text so far.
+ *
+ * Lifted out of the component so its switch does not count against the
+ * route's complexity budget, and so the event handling reads on its own.
+ */
+function applyStreamEvent(
+  event: ExploreStreamEvent,
+  answered: string | null,
+  setters: {
+    setConversationId: (id: string) => void;
+    setActivity: (message: string) => void;
+    setPendingAnswer: (text: string) => void;
+    setError: (message: string) => void;
+  },
+): string | null {
+  switch (event.type) {
+    case "started": {
+      setters.setConversationId(event.conversationId);
+      return answered;
+    }
+    case "tool_call": {
+      setters.setActivity(event.message);
+      return answered;
+    }
+    case "answer_delta": {
+      const next = (answered ?? "") + event.text;
+      setters.setPendingAnswer(next);
+      return next;
+    }
+    case "error": {
+      setters.setError(event.message);
+      return answered;
+    }
+    case "final":
+    case "preview":
+    case "tool_result":
+    case "done": {
+      return answered;
+    }
+  }
 }
 
 const EXAMPLES = [

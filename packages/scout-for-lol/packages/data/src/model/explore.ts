@@ -124,9 +124,13 @@ export const ExploreMessageSchema = z
     /** Null for the opening message. Siblings under a parent are versions. */
     parentId: z.uuid().nullable().default(null),
     /**
-     * Which version of this turn is being shown, and how many exist. Computed
-     * server-side from the sibling set so the arrows need no extra round trip.
+     * Every version of this turn, oldest first — the order the arrows page
+     * through. Computed server-side so switching needs no extra round trip,
+     * and carrying the ids rather than just a count is what lets the UI say
+     * *which* message "previous" means.
      */
+    siblingIds: z.array(z.uuid()).default([]),
+    /** Position within {@link siblingIds}, and its length. Derived together. */
     versionIndex: z.number().int().nonnegative().default(0),
     versionCount: z.number().int().positive().default(1),
     content: z.string(),
