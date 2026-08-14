@@ -199,7 +199,15 @@ namespace TaskNotes.Windows.Host
         private sealed class ActiveRequest : IDisposable
         {
             private readonly CancellationTokenSource _cancellation = new();
+
+            // CancelAll walks a snapshot of the active requests, so a request that
+            // finishes between the snapshot and the call has already removed itself and
+            // disposed this source. Cancelling it then threw ObjectDisposedException out
+            // of DisposeAsync. The gate makes the two operations exclusive, and a request
+            // that already completed simply has nothing left to cancel.
+            private readonly object _gate = new();
             private int _cancelledByHost;
+            private bool _disposed;
 
             internal ActiveRequest(TimeSpan timeout)
             {
@@ -212,13 +220,28 @@ namespace TaskNotes.Windows.Host
 
             internal void CancelByHost()
             {
-                _ = Interlocked.Exchange(ref _cancelledByHost, 1);
-                _cancellation.Cancel();
+                lock (_gate)
+                {
+                    if (_disposed)
+                    {
+                        return;
+                    }
+                    _ = Interlocked.Exchange(ref _cancelledByHost, 1);
+                    _cancellation.Cancel();
+                }
             }
 
             public void Dispose()
             {
-                _cancellation.Dispose();
+                lock (_gate)
+                {
+                    if (_disposed)
+                    {
+                        return;
+                    }
+                    _disposed = true;
+                    _cancellation.Dispose();
+                }
             }
         }
     }

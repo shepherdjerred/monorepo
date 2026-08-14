@@ -259,6 +259,47 @@ namespace TaskNotes.Windows.Tests
             ) => Task.FromResult(Send(request, cancellationToken));
         }
 
+        /// <summary>Cancelling while requests finish never touches a disposed request.</summary>
+        [TestMethod]
+        public async Task CancelAllRacingCompletionDoesNotThrow()
+        {
+            using BearerHttpTransport transport = new(null, new RecordingHandler());
+            Core.HttpRequest request = new(
+                Core.HttpMethod.Get,
+                "https://tasks.example.test/v2/tasks",
+                [],
+                null,
+                5_000
+            );
+
+            using CancellationTokenSource stop = new();
+            // CancelAll enumerates a snapshot of the active requests, so a request that
+            // completes between the snapshot and the call had already disposed its token
+            // source. Hammer both sides to expose that window.
+            Task canceller = Task.Run(() =>
+            {
+                while (!stop.Token.IsCancellationRequested)
+                {
+                    transport.CancelAll();
+                }
+            });
+
+            for (int attempt = 0; attempt < 400; attempt++)
+            {
+                try
+                {
+                    _ = transport.Send(request);
+                }
+                catch (Core.TransportException)
+                {
+                    // A genuinely cancelled request is an expected outcome here.
+                }
+            }
+
+            await stop.CancelAsync();
+            await canceller;
+        }
+
         /// <summary>Times out a response whose headers arrive before the body stalls.</summary>
         [TestMethod]
         public void StalledResponseBodyHonorsTheRequestTimeout()
