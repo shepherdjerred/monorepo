@@ -102,6 +102,45 @@ describe("ensureGcxContext", () => {
     );
   });
 
+  test("trims the env values it passes to gcx", async () => {
+    Bun.env["GRAFANA_URL"] = "  https://grafana.example.ts.net\n";
+    Bun.env["GRAFANA_API_KEY"] = `\n${TOKEN}  `;
+
+    const calls: SpawnCall[] = [];
+    await ensureGcxContext(stubSpawn({ exitCode: 0, calls }));
+
+    expect(calls[0]?.args).toEqual([
+      "gcx",
+      "login",
+      "homelab",
+      "--server",
+      "https://grafana.example.ts.net",
+      "--token",
+      TOKEN,
+      "--yes",
+    ]);
+  });
+
+  test("rejects at the deadline when the subprocess never settles", async () => {
+    let killed = false;
+    const neverSettles: GcxSpawn = () => ({
+      // A child that ignores the signal settles neither of these, so killing
+      // it cannot on its own end the wait.
+      stderr: new ReadableStream(),
+      exited: new Promise<number>(() => {
+        // Deliberately never settled.
+      }),
+      kill: () => {
+        killed = true;
+      },
+    });
+
+    await expect(ensureGcxContext(neverSettles, 25)).rejects.toThrow(
+      /did not complete within 25ms/,
+    );
+    expect(killed).toBe(true);
+  });
+
   test("redacts the credential out of a failing login's stderr", async () => {
     const spawn = stubSpawn({
       exitCode: 3,
