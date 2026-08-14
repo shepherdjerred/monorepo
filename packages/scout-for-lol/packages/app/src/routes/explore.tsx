@@ -39,6 +39,7 @@ export function Explore() {
   const [pendingAnswer, setPendingAnswer] = useState<string | null>(null);
   const [activity, setActivity] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [shareLink, setShareLink] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [renaming, setRenaming] = useState<ExploreConversation | null>(null);
   const [deleting, setDeleting] = useState<ExploreConversation | null>(null);
@@ -69,6 +70,29 @@ export function Explore() {
       queryKey: trpc.explore.get.queryKey(),
     });
   }, [queryClient, trpc.explore.get, trpc.explore.list]);
+
+  // Sharing is two steps that can each fail — mint the token, then hand the
+  // link to the clipboard, which a browser may refuse over permissions or not
+  // implement at all. The link is shown as soon as it exists, so a refused
+  // clipboard write costs the copy and not the share; failing silently would
+  // look exactly like a copy that worked.
+  const share = useCallback(
+    async (id: string) => {
+      setError(null);
+      try {
+        const result = await shareMutation.mutateAsync({ conversationId: id });
+        const link = `${globalThis.location.origin}/app/explore/s/${result.shareToken}`;
+        setShareLink(link);
+        await refresh();
+        await navigator.clipboard.writeText(link);
+      } catch (shareError) {
+        setError(
+          shareError instanceof Error ? shareError.message : String(shareError),
+        );
+      }
+    },
+    [refresh, shareMutation],
+  );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -189,16 +213,9 @@ export function Explore() {
               conversationToMarkdown(title, messages),
             );
           },
+          sharing: shareMutation.isPending,
           onShare: () => {
-            void (async () => {
-              const result = await shareMutation.mutateAsync({
-                conversationId,
-              });
-              await navigator.clipboard.writeText(
-                `${globalThis.location.origin}/app/explore/s/${result.shareToken}`,
-              );
-              await refresh();
-            })();
+            void share(conversationId);
           },
         }
       : undefined;
@@ -209,10 +226,12 @@ export function Explore() {
       activeId={conversationId}
       onSelect={(id) => {
         setConversationId(id);
+        setShareLink(null);
         setDrawerOpen(false);
       }}
       onNew={() => {
         setConversationId(null);
+        setShareLink(null);
         setDrawerOpen(false);
       }}
       onRename={setRenaming}
@@ -298,6 +317,20 @@ export function Explore() {
           <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">
             {error}
           </p>
+        )}
+
+        {shareLink !== null && (
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            Share link
+            <input
+              readOnly
+              value={shareLink}
+              onFocus={(event) => {
+                event.target.select();
+              }}
+              className="min-w-0 flex-1 rounded-md border bg-muted px-2 py-1 font-mono text-xs"
+            />
+          </label>
         )}
 
         <div ref={bottomRef} />

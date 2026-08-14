@@ -539,12 +539,16 @@ Two sources **refuse** global scope rather than answering wrongly:
   in that turn**, and must describe the corpus as the matches Scout ingested
   rather than the League ladder. Both live in `explore/prompt.ts`. A
   confidently wrong win rate is indistinguishable from a right one to a reader.
-- **Shares are frozen by construction.** An assistant turn stores its preview
-  rows and visualization snapshot inline, so rendering a shared conversation
-  needs no re-execution: an anonymous viewer costs no query and the link cannot
-  change meaning as the lake grows. `GET /api/explore/shared/:token` is the
-  only unauthenticated route and the only `Cache-Control: public` response in
-  the service.
+- **Shares are frozen against the lake, not against the owner.** An assistant
+  turn stores its preview rows and visualization snapshot inline, so rendering
+  a shared conversation needs no re-execution: an anonymous viewer costs no
+  query and the link cannot change meaning as the lake grows. The owner can
+  still move it, though — sharing again re-pins `sharedLeafId` to the branch
+  they are reading now, under the same token, and revoking clears the token
+  outright. So `GET /api/explore/shared/:token`, the one unauthenticated route,
+  answers `Cache-Control: no-store`: a cached copy would keep serving a revoked
+  conversation for the life of its TTL, and no delay is acceptable on
+  withdrawing access.
 - Scope-independent ScoutQL tools (read the language, validate, format) are
   shared with the report editor agent in `reports/ai/scoutql-tools.ts`.
   Executing a query is deliberately not shared — it is the one operation whose

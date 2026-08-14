@@ -3,6 +3,8 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 import type { DiscordAccountId } from "@scout-for-lol/data";
 import { testAccountId } from "#src/testing/test-ids.ts";
 import {
+  ExploreInvalidTurnError,
+  ExploreNotFoundError,
   appendExploreAnswer,
   deleteExploreConversation,
   listExploreConversations,
@@ -255,7 +257,7 @@ describe("explore store — branching", () => {
         userId,
         parentMessageId: first.answerId,
       }),
-    ).rejects.toThrow(/only a question/i);
+    ).rejects.toBeInstanceOf(ExploreInvalidTurnError);
   });
 
   test("a share pins its path, so later branching cannot change the link", async () => {
@@ -276,6 +278,16 @@ describe("explore store — branching", () => {
     );
     expect(token).toMatch(/^[0-9a-f]{32}$/);
 
+    // A returned token that was never written would be a link that can only
+    // ever 404, so the persisted row is what the caller was promised.
+    const stored = await prisma.exploreConversation.findUnique({
+      where: { id: first.conversationId },
+      select: { shareToken: true, sharedLeafId: true, sharedAt: true },
+    });
+    expect(stored?.shareToken).toBe(token);
+    expect(stored?.sharedLeafId).not.toBeNull();
+    expect(stored?.sharedAt).not.toBeNull();
+
     // The owner branches after sharing.
     await askAndAnswer({
       conversationId: first.conversationId,
@@ -294,6 +306,18 @@ describe("explore store — branching", () => {
     ]);
     // …while the owner is reading the new branch.
     expect(await path(first.conversationId)).toContain("ARAM skews it hard.");
+  });
+
+  test("sharing a conversation that no longer exists mints nothing", async () => {
+    const first = await askAndAnswer({
+      conversationId: null,
+      question: "Which champion has the most games?",
+    });
+    await deleteExploreConversation(prisma, first.conversationId, userId);
+
+    expect(
+      await shareExploreConversation(prisma, first.conversationId, userId),
+    ).toBeNull();
   });
 
   test("sharing is stable and revocable", async () => {
@@ -370,7 +394,7 @@ describe("explore store — ownership", () => {
         question: "Sneaking in.",
         parentMessageId: null,
       }),
-    ).rejects.toThrow(/not found/i);
+    ).rejects.toBeInstanceOf(ExploreNotFoundError);
   });
 
   test("attaching to a message from another conversation is refused", async () => {
@@ -390,7 +414,7 @@ describe("explore store — ownership", () => {
         question: "Grafting on.",
         parentMessageId: other.answerId,
       }),
-    ).rejects.toThrow(/not found/i);
+    ).rejects.toBeInstanceOf(ExploreNotFoundError);
   });
 
   test("deleting a conversation removes its messages", async () => {

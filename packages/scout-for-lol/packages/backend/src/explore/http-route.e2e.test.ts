@@ -185,6 +185,39 @@ describe("explore http route", () => {
     expect(response?.status).toBe(413);
   });
 
+  test("an oversized streamed body is refused without being buffered", async () => {
+    // No Content-Length to check: a chunked body has none, and a client
+    // controls the header anyway, so the read itself has to be what stops.
+    const url = new URL("http://localhost/api/explore/stream");
+    const chunk = new TextEncoder().encode("x".repeat(4096));
+    let produced = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (produced >= 64) {
+          controller.close();
+          return;
+        }
+        produced += 1;
+        controller.enqueue(chunk);
+      },
+    });
+
+    const response = await handleExploreRoute(
+      new Request(url.toString(), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body,
+        duplex: "half",
+      }),
+      url,
+      cors,
+    );
+
+    expect(response?.status).toBe(413);
+    // 16 KiB limit, 4 KiB chunks: the read stops rather than draining all 256 KiB.
+    expect(produced).toBeLessThanOrEqual(8);
+  });
+
   test("an unrelated path is not claimed by the explore handler", async () => {
     const url = new URL("http://localhost/api/something-else");
     expect(
@@ -196,13 +229,13 @@ describe("explore http route", () => {
     ).toBeNull();
   });
 
-  test("a shared transcript is readable with no session and is cacheable", async () => {
+  test("a shared transcript is readable with no session and is never cached", async () => {
     const shareToken = await seedSharedConversation();
 
     const response = await getShared(shareToken);
     expect(response.status).toBe(200);
-    // Public, unlike every authenticated response in this service.
-    expect(response.headers.get("Cache-Control")).toBe("public, max-age=300");
+    // A cached copy would outlive a revoked share, so nothing may store it.
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
 
     const body = z
       .object({

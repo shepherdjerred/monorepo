@@ -45,6 +45,27 @@ import {
 const StringArraySchema = z.array(z.string());
 const TraceArraySchema = z.array(ExploreTraceEntrySchema);
 
+/**
+ * The conversation or message a turn refers to does not exist, or is not the
+ * caller's. Separate from {@link ExploreInvalidTurnError} and from an
+ * unexpected fault so the HTTP surface can answer 404, 400, and 500 apart
+ * rather than reporting a database outage as a missing conversation.
+ */
+export class ExploreNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ExploreNotFoundError";
+  }
+}
+
+/** The turn refers to real rows but asks for something incoherent of them. */
+export class ExploreInvalidTurnError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ExploreInvalidTurnError";
+  }
+}
+
 type ConversationRow = {
   id: string;
   title: string;
@@ -275,7 +296,7 @@ export async function startExploreTurn(
     include: { messages: true },
   });
   if (existing === null) {
-    throw new Error("Conversation not found.");
+    throw new ExploreNotFoundError("Conversation not found.");
   }
 
   const parentId =
@@ -285,7 +306,7 @@ export async function startExploreTurn(
     parentId === null ||
     existing.messages.some((message) => message.id === parentId);
   if (!parentBelongs) {
-    throw new Error("Message not found.");
+    throw new ExploreNotFoundError("Message not found.");
   }
 
   const created = await prisma.exploreMessage.create({
@@ -328,16 +349,16 @@ export async function resolveRegenerateTarget(
     include: { messages: true },
   });
   if (existing === null) {
-    throw new Error("Conversation not found.");
+    throw new ExploreNotFoundError("Conversation not found.");
   }
   const parent = existing.messages.find(
     (message) => message.id === input.parentMessageId,
   );
   if (parent === undefined) {
-    throw new Error("Message not found.");
+    throw new ExploreNotFoundError("Message not found.");
   }
   if (parent.role !== "user") {
-    throw new Error("Only a question can be answered again.");
+    throw new ExploreInvalidTurnError("Only a question can be answered again.");
   }
   return {
     conversationId: existing.id,
@@ -457,26 +478,34 @@ export async function shareExploreConversation(
   conversationId: string,
   userId: DiscordAccountId,
 ): Promise<string | null> {
-  const existing = await prisma.exploreConversation.findFirst({
-    where: { id: conversationId, userId },
-    include: {
-      messages: { select: { id: true, parentId: true, createdAt: true } },
-    },
+  return await prisma.$transaction(async (tx) => {
+    const existing = await tx.exploreConversation.findFirst({
+      where: { id: conversationId, userId },
+      include: {
+        messages: { select: { id: true, parentId: true, createdAt: true } },
+      },
+    });
+    if (existing === null) {
+      return null;
+    }
+    const sharedLeafId = deepestLeafFrom(
+      existing.messages,
+      existing.currentLeafId,
+    );
+    const shareToken =
+      existing.shareToken ?? globalThis.crypto.randomUUID().replaceAll("-", "");
+    const updated = await tx.exploreConversation.updateMany({
+      where: { id: conversationId, userId },
+      data: { shareToken, sharedLeafId, sharedAt: new Date() },
+    });
+    // The token is only real once the row carries it. Returning one from an
+    // update that matched nothing — the conversation deleted in between —
+    // would hand the owner a link that can only ever 404.
+    if (updated.count === 0) {
+      return null;
+    }
+    return shareToken;
   });
-  if (existing === null) {
-    return null;
-  }
-  const sharedLeafId = deepestLeafFrom(
-    existing.messages,
-    existing.currentLeafId,
-  );
-  const shareToken =
-    existing.shareToken ?? globalThis.crypto.randomUUID().replaceAll("-", "");
-  await prisma.exploreConversation.updateMany({
-    where: { id: conversationId, userId },
-    data: { shareToken, sharedLeafId, sharedAt: new Date() },
-  });
-  return shareToken;
 }
 
 export async function revokeExploreShare(

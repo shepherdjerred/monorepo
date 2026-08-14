@@ -20,6 +20,7 @@ export function ExploreHeader(props: {
   sidebar: ReactNode;
   actions?: {
     shared: boolean;
+    sharing: boolean;
     onExport: () => void;
     onShare: () => void;
   };
@@ -64,6 +65,7 @@ export function ExploreHeader(props: {
             variant="outline"
             size="sm"
             className="gap-1.5"
+            disabled={props.actions.sharing}
             onClick={props.actions.onShare}
           >
             <Share2 className="size-4" />

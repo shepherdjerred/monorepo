@@ -17,6 +17,15 @@ import {
  * scope would mean nothing. Limits are looser than the editor's because a
  * conversation is many small turns rather than one expensive draft, but a
  * global ceiling still bounds total spend if several people explore at once.
+ *
+ * Buckets and the active-run guard live in this process's memory, so they
+ * reset on restart and would not be shared between replicas. That is exact
+ * today rather than approximate: the backend deploys as a single replica with
+ * the Recreate strategy (packages/homelab/src/cdk8s/src/resources/scout), so
+ * there is never a second process to disagree with. Scaling this service out
+ * means moving these counters to shared storage first — the quotas bound
+ * model spend, and per-replica copies would multiply every ceiling by the
+ * replica count.
  */
 
 export type ExploreRateLimitIdentity = {

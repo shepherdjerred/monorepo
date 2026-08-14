@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/bun";
 import { TRPCError } from "@trpc/server";
 import {
   DiscordAccountIdSchema,
@@ -25,12 +26,16 @@ import {
   type ExploreRateLimitTicket,
 } from "#src/explore/rate-limit.ts";
 import {
+  ExploreInvalidTurnError,
+  ExploreNotFoundError,
   appendExploreAnswer,
   loadExploreTranscript,
   loadSharedExploreTranscript,
   resolveRegenerateTarget,
   startExploreTurn,
 } from "#src/explore/store.ts";
+import { createLogger } from "#src/logger.ts";
+import { readBodyWithinLimit } from "#src/utils/bounded-request-body.ts";
 import {
   scoutExploreActiveRuns,
   scoutExploreTurnDurationSeconds,
@@ -41,15 +46,15 @@ import { createContext, type Context } from "#src/trpc/context.ts";
 const STREAM_PATH = "/api/explore/stream";
 const SHARED_PREFIX = "/api/explore/shared/";
 const encoder = new TextEncoder();
+const logger = createLogger("explore-http");
 
 /**
  * Explore's HTTP surface.
  *
  * The turn endpoint streams over SSE because a turn runs tools for tens of
  * seconds and the transcript should fill in as it goes. The shared endpoint
- * is the only unauthenticated route in this file: it serves a frozen
- * transcript to whoever holds the link, so it is publicly cacheable — unlike
- * every authenticated response, which is not.
+ * is the only unauthenticated route in this file: it serves a stored
+ * transcript to whoever holds the link.
  */
 export async function handleExploreRoute(
   request: Request,
@@ -70,12 +75,12 @@ export async function handleExploreRoute(
   if (contentLength > EXPLORE_REQUEST_MAX_BYTES) {
     return jsonError("Request body is too large.", 413, corsHeaders);
   }
-  const bodyText = await request.text();
-  if (encoder.encode(bodyText).byteLength > EXPLORE_REQUEST_MAX_BYTES) {
+  const body = await readBodyWithinLimit(request, EXPLORE_REQUEST_MAX_BYTES);
+  if (!body.ok) {
     return jsonError("Request body is too large.", 413, corsHeaders);
   }
 
-  const parsedBody = parseRequestBody(bodyText);
+  const parsedBody = parseRequestBody(body.text);
   if (!parsedBody.ok) {
     return jsonError(parsedBody.message, 400, corsHeaders);
   }
@@ -110,7 +115,18 @@ export async function handleExploreRoute(
   } catch (error) {
     ticket.finish();
     scoutExploreTurnsTotal.inc({ status: "error" });
-    return jsonError(errorMessage(error), 404, corsHeaders);
+    if (error instanceof ExploreNotFoundError) {
+      return jsonError(error.message, 404, corsHeaders);
+    }
+    if (error instanceof ExploreInvalidTurnError) {
+      return jsonError(error.message, 400, corsHeaders);
+    }
+    // Anything else is a fault on our side — a database error, a broken
+    // invariant. Report it as one and keep the detail in the logs instead of
+    // telling the caller they asked for something that does not exist.
+    logger.error("Failed to start an explore turn", errorMessage(error));
+    Sentry.captureException(error, { tags: { source: "explore-turn-start" } });
+    return jsonError("Could not start this question.", 500, corsHeaders);
   }
 
   // The path ending at the question being answered — which for an edit or a
@@ -287,11 +303,18 @@ function runExploreTurnStream(input: {
 }
 
 /**
- * Serve a frozen shared transcript to an anonymous caller.
+ * Serve a shared transcript to an anonymous caller.
  *
  * No session, no CSRF, and no query execution: the token is the credential
- * and the stored turns are the whole answer. Publicly cacheable because the
- * content cannot change without the owner minting a new token.
+ * and the stored turns are the whole answer.
+ *
+ * Not cacheable, despite being anonymous and cheap. The token is the only
+ * credential, so revoking a share has to stop resolving it immediately — a
+ * cached copy would keep serving a withdrawn conversation for the life of its
+ * TTL to exactly the people the owner just cut off. Nor is the content fixed
+ * for a given token: sharing again re-pins `sharedLeafId` to whatever the
+ * owner is reading now, so the same link can legitimately answer differently
+ * before and after.
  */
 async function handleSharedTranscript(
   request: Request,
@@ -313,7 +336,7 @@ async function handleSharedTranscript(
   return Response.json(ExploreTranscriptSchema.parse(transcript), {
     status: 200,
     headers: {
-      "Cache-Control": "public, max-age=300",
+      "Cache-Control": "no-store",
       ...corsHeaders,
     },
   });
@@ -338,7 +361,9 @@ async function resolveTurnTarget(
 }> {
   if (input.question === null) {
     if (input.conversationId === null || input.parentMessageId === null) {
-      throw new Error("Answering again needs an existing question.");
+      throw new ExploreInvalidTurnError(
+        "Answering again needs an existing question.",
+      );
     }
     return await resolveRegenerateTarget(prisma, {
       conversationId: input.conversationId,

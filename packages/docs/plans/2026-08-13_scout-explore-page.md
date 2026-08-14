@@ -89,9 +89,12 @@ visualization snapshot). A shared conversation is therefore frozen by
 construction: rendering needs no re-execution, an anonymous viewer costs no
 query, and a link cannot quietly change meaning as the lake grows.
 
-`GET /api/explore/shared/:token` is the only unauthenticated route and the only
-response in the service with `Cache-Control: public` — safe precisely because
-the content cannot change without the owner minting a new token.
+Frozen against the lake is not frozen against the owner, though: sharing again
+re-pins `sharedLeafId` to the branch being read at the time, under the same
+token, and revoking clears the token outright. `GET /api/explore/shared/:token`
+is therefore the only unauthenticated route and answers `Cache-Control:
+no-store` — a cached copy would keep serving a revoked conversation for the
+life of its TTL, and withdrawing access has to be immediate to mean anything.
 
 ## Access
 
