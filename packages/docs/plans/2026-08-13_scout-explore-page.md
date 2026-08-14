@@ -100,6 +100,30 @@ everyone. Every tRPC procedure re-checks it rather than trusting that the caller
 passed when the conversation was created, so losing membership removes access to
 conversations already saved.
 
+## ChatGPT-parity pass
+
+A follow-up pass on the same branch fixed one bug and closed the affordance
+gaps that made the first cut read as a prototype.
+
+**The bug:** answers streamed the raw JSON of the structured output. With
+`structuredOutput` on, `text-delta` chunks carry JSON fragments — the report
+editor renders its stream into a monospace scratch box precisely because of
+this — and explore piped them into a prose paragraph. Mastra already emits
+parsed `Partial<OUTPUT>` snapshots as `object` chunks on the same
+`fullStream`, so the fix was one chunk kind and one case. Two silent-failure
+modes are now pinned by tests: `answer` staying the first schema field, and
+the stream loop draining rather than breaking.
+
+**Turns became a tree.** Editing or regenerating appends a sibling instead of
+truncating, `currentLeafId` selects the path on screen, and a share pins
+`sharedLeafId` so branching afterwards cannot change what a link renders.
+Regenerating forks the answer; editing forks the question.
+
+**The UI** gained live markdown, version arrows, copy, edit, regenerate, a
+collapsible tool trace, a stop button, a mobile drawer, title search, markdown
+export, an auto-growing composer, and date-grouped conversations. Delete is
+behind a real modal rather than the repo's usual `globalThis.confirm()`.
+
 ## Deliberately deferred
 
 - **A restricted "global dialect."** The ScoutQL registry is a flat set of
@@ -133,3 +157,8 @@ conversations already saved.
 - [ ] Watch `scout_explore_tokens_used_total` and the OpenAI budget counters
       after the first real users, and tighten the per-user quotas if a
       conversation costs more per turn than expected.
+- [ ] Drive one real turn against a live model via `dev:web`. Everything below
+      the model call is tested, but the prompt's grounding behaviour is
+      unproven and streaming now depends on the model emitting `answer` first.
+      This needs `op signin` and briefly disconnects the beta Discord bot, so
+      it is a deliberate operator step rather than something to slip in.
