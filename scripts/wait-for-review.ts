@@ -41,7 +41,33 @@ import {
 } from "@shepherdjerred/code-review/github";
 
 const DEFAULT_REPO = "shepherdjerred/monorepo";
-const DEFAULT_TIMEOUT_SECONDS = 20 * 60;
+/**
+ * Qodo routinely needs longer than this gate used to allow. Two completed
+ * reviews were measured at 1637s and 1834s while the budget was 1200s, so the
+ * gate reported `timed_out` on reviews that were progressing normally and the
+ * PR went red for a reason unrelated to its diff.
+ *
+ * This value is an empirical ceiling over those samples plus margin. It is
+ * explicitly **not** a proof of sufficiency: a ~51-line PR was still reviewing
+ * when a 2400s budget expired, so latency does not scale with diff size and
+ * behaves more like provider-side queue depth, which no constant bounds. Treat
+ * this as raising the share of reviews that finish inside the build, not as a
+ * guarantee that they all will. Overshooting costs idle polling in a light pod;
+ * undershooting costs a false red on a healthy PR, so the asymmetry favours
+ * headroom.
+ *
+ * The durable fix is ordering rather than duration — not starting the gate
+ * until the review exists — but that is a CI-architecture change, not a
+ * constant.
+ *
+ * The `review-gate` step allows longer still — by a margin sized for its
+ * unbounded `toolchain.sh` and install preamble, not a token few minutes — so
+ * this deadline is always the binding one and the timeout message names the
+ * provider and head commit instead of Buildkite killing the pod anonymously.
+ * `wait-for-review.test.ts` asserts that ordering against the pipeline,
+ * reading the step's own declared timeout rather than the first one it finds.
+ */
+export const DEFAULT_TIMEOUT_SECONDS = 40 * 60;
 const DEFAULT_INTERVAL_SECONDS = 30;
 
 export function resolveReviewGateProvider(
@@ -155,7 +181,7 @@ function errorCode(error: unknown): string | null {
  * than failing the gate. Retry ONLY recognized transient failures — a 5xx
  * response, or a transport-level failure (socket closed/refused, DNS error,
  * timeout — by message OR error code). Everything else fails fast so the step
- * doesn't hold a Buildkite agent until the 20-minute deadline: a 4xx (bad token
+ * doesn't hold a Buildkite agent until the gate deadline: a 4xx (bad token
  * / missing permission), a GraphQL application-error payload (HTTP 200 +
  * `errors`), and — critically — an unexpected-shape / invariant error thrown by
  * our own parsers (e.g. `parseThreadPage` when `reviewThreads` is missing) all

@@ -1,0 +1,95 @@
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.22000.0</TargetPlatformMinVersion>
+    <AssemblyName>TaskNotes.Windows.App.Tests</AssemblyName>
+    <RootNamespace>TaskNotes.Windows.App.Tests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>
+    <MSTestParallelizeScope>None</MSTestParallelizeScope>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSdkBootstrapInitialize>true</WindowsAppSdkBootstrapInitialize>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Page Remove="TestApplication.xaml" />
+    <ApplicationDefinition Include="TestApplication.xaml" />
+    <ProjectCapability Include="TestContainer" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/TaskNotes.Windows.Host/TaskNotes.Windows.Host.csproj" />
+    <ProjectReference Include="../../src/TaskNotes.Windows.Presentation/TaskNotes.Windows.Presentation.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/HotkeyBinding.cs"
+      Link="WindowsAdapters/HotkeyBinding.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/GlobalHotkeyService.cs"
+      Link="WindowsAdapters/GlobalHotkeyService.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/ShellPreferencesCodec.cs"
+      Link="WindowsAdapters/ShellPreferencesCodec.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/UiOperationQueue.cs"
+      Link="WindowsAdapters/UiOperationQueue.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/WinUiDispatcher.cs"
+      Link="WindowsAdapters/WinUiDispatcher.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/Views/BoardView.xaml.cs"
+      Link="Views/BoardView.xaml.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/Views/SettingsView.xaml.cs"
+      Link="Views/SettingsView.xaml.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/Views/QuickAddView.xaml.cs"
+      Link="Views/QuickAddView.xaml.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/Views/TaskEditorView.xaml.cs"
+      Link="Views/TaskEditorView.xaml.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/Views/TaskListWorkspaceView.xaml.cs"
+      Link="Views/TaskListWorkspaceView.xaml.cs"
+    />
+    <Page
+      Include="../../src/TaskNotes.Windows.App/Views/BoardView.xaml"
+      Link="Views/BoardView.xaml"
+    />
+    <Page
+      Include="../../src/TaskNotes.Windows.App/Views/SettingsView.xaml"
+      Link="Views/SettingsView.xaml"
+    />
+    <Page
+      Include="../../src/TaskNotes.Windows.App/Views/QuickAddView.xaml"
+      Link="Views/QuickAddView.xaml"
+    />
+    <Page
+      Include="../../src/TaskNotes.Windows.App/Views/TaskEditorView.xaml"
+      Link="Views/TaskEditorView.xaml"
+    />
+    <Page
+      Include="../../src/TaskNotes.Windows.App/Views/TaskListWorkspaceView.xaml"
+      Link="Views/TaskListWorkspaceView.xaml"
+    />
+  </ItemGroup>
+</Project>

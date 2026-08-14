@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { changedFilesInPaths, runCommand } from "./scout-season-refresh-git.ts";
+import {
+  assertRemoteBranchIsOurs,
+  changedFilesInPaths,
+  runCommand,
+} from "./scout-season-refresh-git.ts";
 
 // These tests drive `changedFilesInPaths` against a REAL git repository rather
 // than feeding a hand-written string to the parser.
@@ -91,5 +95,270 @@ describe("changedFilesInPaths (real git repo)", () => {
     const files = await changedFilesInPaths(repoDir, ["public", "src"]);
 
     expect(files.includes(changelog)).toBe(true);
+  });
+});
+
+// This guard exists because a bot force-push can DESTROY a human's commit, so
+// it is driven against real repositories with a real remote rather than mocked
+// git output. The bug it prevents is invisible to any test that stubs git:
+// `openSeasonRefreshPr` builds its commit with `git checkout -B` from a fresh
+// main clone, so the fetched `origin/<branch>` is never a base and
+// `--force-with-lease` — which only proves the REF has not moved — happily
+// replaces content it never saw.
+/** Commit `file` in `dir` authored by `email`, without touching repo config. */
+async function commitAs(
+  dir: string,
+  email: string,
+  file: string,
+  body: string,
+): Promise<void> {
+  await Bun.write(`${dir}/${file}`, body);
+  await runCommand(["git", "add", "--", file], { cwd: dir });
+  await runCommand(
+    [
+      "git",
+      "-c",
+      `user.email=${email}`,
+      "-c",
+      "user.name=X",
+      "commit",
+      "-qm",
+      `edit ${file}`,
+    ],
+    { cwd: dir },
+  );
+}
+
+describe("assertRemoteBranchIsOurs (real remote)", () => {
+  const BOT = "ci@sjer.red";
+  const BRANCH = "chore/proposal";
+  let remoteDir: string;
+  let repoDir: string;
+
+  beforeEach(async () => {
+    remoteDir = await mkdtemp(`${tmpdir()}/branch-guard-remote-`);
+    await runCommand(["git", "init", "-q", "--bare", "."], { cwd: remoteDir });
+
+    // A seed clone stands in for the previous run: it publishes main and the
+    // bot's proposal branch.
+    const seed = await mkdtemp(`${tmpdir()}/branch-guard-seed-`);
+    await runCommand(["git", "clone", "-q", remoteDir, "."], { cwd: seed });
+    await commitAs(seed, BOT, "catalog.json", "original");
+    await runCommand(["git", "branch", "-M", "main"], { cwd: seed });
+    await runCommand(["git", "push", "-q", "origin", "main"], { cwd: seed });
+    await runCommand(["git", "checkout", "-qB", BRANCH], { cwd: seed });
+    await commitAs(seed, BOT, "catalog.json", "bot proposal");
+    await runCommand(["git", "push", "-q", "origin", BRANCH], { cwd: seed });
+    await rm(seed, { recursive: true, force: true });
+
+    // The bot's own working clone: main only, exactly as the activities clone it.
+    repoDir = await mkdtemp(`${tmpdir()}/branch-guard-bot-`);
+    await runCommand(
+      [
+        "git",
+        "clone",
+        "-q",
+        "--branch",
+        "main",
+        "--single-branch",
+        remoteDir,
+        ".",
+      ],
+      { cwd: repoDir },
+    );
+    await runCommand(
+      [
+        "git",
+        "fetch",
+        "-q",
+        "origin",
+        `refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}`,
+      ],
+      { cwd: repoDir },
+    );
+    await runCommand(["git", "checkout", "-qB", BRANCH], { cwd: repoDir });
+  });
+
+  afterEach(async () => {
+    await rm(remoteDir, { recursive: true, force: true });
+    await rm(repoDir, { recursive: true, force: true });
+  });
+
+  test("permits replacing the bot's own proposal, even with new content", async () => {
+    // The common case, and the one a tree comparison would have broken: a
+    // branch whose name is stable across runs legitimately carries different
+    // content each time.
+    await commitAs(repoDir, BOT, "catalog.json", "regenerated, different");
+
+    await assertRemoteBranchIsOurs({ repoDir, branch: BRANCH });
+  });
+
+  test("permits an unchanged regeneration", async () => {
+    await commitAs(repoDir, BOT, "catalog.json", "bot proposal");
+
+    await assertRemoteBranchIsOurs({ repoDir, branch: BRANCH });
+  });
+
+  test("refuses when an operator has committed to the branch", async () => {
+    // The real scenario: someone records an adjudication on the open PR.
+    const operatorClone = await mkdtemp(`${tmpdir()}/branch-guard-op-`);
+    await runCommand(
+      [
+        "git",
+        "clone",
+        "-q",
+        "--branch",
+        BRANCH,
+        "--single-branch",
+        remoteDir,
+        ".",
+      ],
+      { cwd: operatorClone },
+    );
+    await commitAs(
+      operatorClone,
+      "jerred@sjer.red",
+      "catalog.json",
+      "human adjudication",
+    );
+    await runCommand(["git", "push", "-q", "origin", BRANCH], {
+      cwd: operatorClone,
+    });
+    await rm(operatorClone, { recursive: true, force: true });
+
+    // The bot re-fetches and regenerates, as the next scheduled run would.
+    await runCommand(
+      [
+        "git",
+        "fetch",
+        "-q",
+        "origin",
+        `refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}`,
+        "--force",
+      ],
+      { cwd: repoDir },
+    );
+    await commitAs(repoDir, BOT, "catalog.json", "bot proposal");
+
+    await expect(
+      assertRemoteBranchIsOurs({ repoDir, branch: BRANCH }),
+    ).rejects.toThrow(/jerred@sjer\.red/);
+  });
+
+  test("refuses an amended commit, where the bot is still the author", async () => {
+    // `git commit --amend` preserves the ORIGINAL author and records the
+    // amender only as committer. Editing the generated commit in place is the
+    // most natural way to tweak a proposal, and an author-only check waves it
+    // straight through while destroying exactly the work it should protect.
+    const operatorClone = await mkdtemp(`${tmpdir()}/branch-guard-amend-`);
+    await runCommand(
+      [
+        "git",
+        "clone",
+        "-q",
+        "--branch",
+        BRANCH,
+        "--single-branch",
+        remoteDir,
+        ".",
+      ],
+      { cwd: operatorClone },
+    );
+    await Bun.write(`${operatorClone}/catalog.json`, "human adjudication");
+    await runCommand(["git", "add", "--", "catalog.json"], {
+      cwd: operatorClone,
+    });
+    await runCommand(
+      [
+        "git",
+        "-c",
+        "user.email=jerred@sjer.red",
+        "-c",
+        "user.name=Jerred",
+        "commit",
+        "-q",
+        "--amend",
+        "--no-edit",
+      ],
+      { cwd: operatorClone },
+    );
+    // The amend kept the bot as author — the exact condition that fooled the
+    // author-only check.
+    const author = await runCommand(
+      ["git", "log", "-1", "--format=%ae", "HEAD"],
+      { cwd: operatorClone },
+    );
+    expect(author).toBe(BOT);
+    await runCommand(["git", "push", "-qf", "origin", BRANCH], {
+      cwd: operatorClone,
+    });
+    await rm(operatorClone, { recursive: true, force: true });
+
+    await runCommand(
+      [
+        "git",
+        "fetch",
+        "-q",
+        "origin",
+        `refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}`,
+        "--force",
+      ],
+      { cwd: repoDir },
+    );
+    await commitAs(repoDir, BOT, "catalog.json", "bot proposal");
+
+    await expect(
+      assertRemoteBranchIsOurs({ repoDir, branch: BRANCH }),
+    ).rejects.toThrow(/jerred@sjer\.red/);
+  });
+
+  test("recognises itself when GIT_AUTHOR_EMAIL overrides the repo config", async () => {
+    // AGENTS.md documents GIT_AUTHOR_EMAIL as the bot identity for activities
+    // that commit, and the env var beats `git config user.email`. Comparing
+    // against a hardcoded address would make the bot fail to recognise its own
+    // commits and block every run forever.
+    const deployBot = "deploy-bot@sjer.red";
+    const seed = await mkdtemp(`${tmpdir()}/branch-guard-seed2-`);
+    await runCommand(
+      [
+        "git",
+        "clone",
+        "-q",
+        "--branch",
+        BRANCH,
+        "--single-branch",
+        remoteDir,
+        ".",
+      ],
+      { cwd: seed },
+    );
+    await commitAs(
+      seed,
+      deployBot,
+      "catalog.json",
+      "earlier run under env identity",
+    );
+    await runCommand(["git", "push", "-q", "origin", BRANCH], { cwd: seed });
+    await rm(seed, { recursive: true, force: true });
+
+    await runCommand(
+      [
+        "git",
+        "fetch",
+        "-q",
+        "origin",
+        `refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}`,
+        "--force",
+      ],
+      { cwd: repoDir },
+    );
+    await commitAs(
+      repoDir,
+      deployBot,
+      "catalog.json",
+      "this run, same identity",
+    );
+
+    await assertRemoteBranchIsOurs({ repoDir, branch: BRANCH });
   });
 });

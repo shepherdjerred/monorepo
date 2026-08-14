@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "projects": [
+    {
+      "path": "src/TaskNotes.Core.Bindings/TaskNotes.Core.Bindings.csproj",
+      "classification": "portable-generated"
+    },
+    {
+      "path": "src/TaskNotes.Windows.Host/TaskNotes.Windows.Host.csproj",
+      "classification": "portable"
+    },
+    {
+      "path": "src/TaskNotes.Windows.Presentation/TaskNotes.Windows.Presentation.csproj",
+      "classification": "portable"
+    },
+    {
+      "path": "src/TaskNotes.Windows.App/TaskNotes.Windows.App.csproj",
+      "classification": "windows-only"
+    },
+    {
+      "path": "tests/TaskNotes.Windows.Tests/TaskNotes.Windows.Tests.csproj",
+      "classification": "portable-test"
+    },
+    {
+      "path": "tests/TaskNotes.Windows.IntegrationTests/TaskNotes.Windows.IntegrationTests.csproj",
+      "classification": "portable-test"
+    },
+    {
+      "path": "tests/TaskNotes.Windows.E2E/TaskNotes.Windows.E2E.csproj",
+      "classification": "windows-only-test"
+    },
+    {
+      "path": "tests/TaskNotes.Windows.App.Tests/TaskNotes.Windows.App.Tests.csproj",
+      "classification": "windows-only-test"
+    }
+  ]
+}

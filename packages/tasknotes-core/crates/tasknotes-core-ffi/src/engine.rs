@@ -303,13 +303,13 @@ impl FfiSyncEngine {
     /// # Errors
     ///
     /// Reports a poisoned lock.
-    pub fn dispose(&self) -> Result<(), CoreError> {
+    pub fn shutdown(&self) -> Result<(), CoreError> {
         self.cancel_all();
         self.locked()?.dispose();
         Ok(())
     }
 
-    /// Whether [`FfiSyncEngine::dispose`] has been called.
+    /// Whether [`FfiSyncEngine::shutdown`] has been called.
     ///
     /// # Errors
     ///
@@ -730,7 +730,7 @@ mod tests {
         let memory = Arc::new(Memory::default());
         let (engine, _) = build(&memory, Some(offline_api()));
         engine.restore().unwrap();
-        engine.dispose().unwrap();
+        engine.shutdown().unwrap();
         assert!(engine.is_disposed().unwrap());
         engine.request_sync().unwrap();
         engine.settle().unwrap();

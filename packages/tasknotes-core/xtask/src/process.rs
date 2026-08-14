@@ -151,8 +151,12 @@ mod tests {
 
     #[test]
     fn a_non_zero_exit_is_an_error_naming_the_command() {
-        let error = run("false", NO_ARGUMENTS, Path::new(".")).unwrap_err();
-        assert_eq!(error, "`false` exited with status 1");
+        let (program, arguments) = failure_command();
+        let error = run(program, arguments, Path::new(".")).unwrap_err();
+        assert_eq!(
+            error,
+            format!("`{}` exited with status 1", render(program, arguments))
+        );
     }
 
     #[test]
@@ -171,13 +175,40 @@ mod tests {
 
     #[test]
     fn captures_standard_output() {
-        let output = capture("echo", &["hello"], Path::new(".")).unwrap();
+        let (program, arguments) = echo_command();
+        let output = capture(program, arguments, Path::new(".")).unwrap();
         assert_eq!(output.trim_end(), "hello");
     }
 
     #[test]
     fn reports_success_without_failing() {
-        assert!(succeeded("true", NO_ARGUMENTS, Path::new(".")).unwrap());
-        assert!(!succeeded("false", NO_ARGUMENTS, Path::new(".")).unwrap());
+        let (success_program, success_arguments) = success_command();
+        assert!(succeeded(success_program, success_arguments, Path::new(".")).unwrap());
+        let (failure_program, failure_arguments) = failure_command();
+        assert!(!succeeded(failure_program, failure_arguments, Path::new(".")).unwrap());
+    }
+
+    fn success_command() -> (&'static str, &'static [&'static str]) {
+        if cfg!(windows) {
+            ("cmd.exe", &["/d", "/c", "exit 0"])
+        } else {
+            ("true", NO_ARGUMENTS)
+        }
+    }
+
+    fn failure_command() -> (&'static str, &'static [&'static str]) {
+        if cfg!(windows) {
+            ("cmd.exe", &["/d", "/c", "exit 1"])
+        } else {
+            ("false", NO_ARGUMENTS)
+        }
+    }
+
+    fn echo_command() -> (&'static str, &'static [&'static str]) {
+        if cfg!(windows) {
+            ("cmd.exe", &["/d", "/c", "echo hello"])
+        } else {
+            ("echo", &["hello"])
+        }
     }
 }

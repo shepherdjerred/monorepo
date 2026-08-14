@@ -7,7 +7,7 @@ Personal monorepo for active projects, learning, and archived work.
 - [homelab](packages/homelab/) — Kubernetes homelab (`torvalds`): Talos, cdk8s, OpenTofu, ArgoCD app-of-apps
 - [temporal](packages/temporal/) — Temporal worker running the repo's scheduled automation: agent tasks, homelab audits, and PR-opening refresh jobs
 - [scout-for-lol](packages/scout-for-lol/) — Discord bot that tracks friends' League of Legends matches and posts rich post-game reports
-- [tasknotes](packages/tasknotes-core/) — the Facet task app family: shared Rust core, [macOS app](packages/tasknotes-macos/), [sync server](packages/tasknotes-server/), and the [iOS app](packages/tasks-for-obsidian/)
+- [tasknotes](packages/tasknotes-core/) — the Facet task app family: shared Rust core, [macOS app](packages/tasknotes-macos/), [Windows app](packages/tasknotes-windows/), [sync server](packages/tasknotes-server/), and the [iOS app](packages/tasks-for-obsidian/)
 - [toolkit](packages/toolkit/) — CLI developer tools (`pr`, `alerts`, `bugsink`, `grafana`, `discord`, …)
 - [birmel](packages/birmel/) — AI-driven Discord bot on an explicit agent runtime
 - [monarch](packages/monarch/) — AI transaction categorization pipeline for Monarch Money

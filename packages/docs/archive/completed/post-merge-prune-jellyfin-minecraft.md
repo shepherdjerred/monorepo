@@ -1,10 +1,8 @@
 ---
 id: post-merge-prune-jellyfin-minecraft
 type: todo
-board: true
-status: in-progress
-verification: operator
-disposition: blocked
+board: false
+status: complete
 origin: log-2026-07-27-homelab-cleanup-floor-heat
 ---
 
@@ -24,9 +22,9 @@ records and their Ready OpenEBS ZFSVolume datasets remain.
 
 ## Remaining
 
-- [ ] With explicit operator authorization, delete Released PV `pvc-1ecb5ee0-6643-42c7-b02c-22c11a84795e` and its Ready OpenEBS ZFSVolume (`jellyfin-cache-pvc`, 32 GiB).
-- [ ] With explicit operator authorization, delete Released PV `pvc-36653931-84b8-4600-ad7b-8427c0115c46` and its Ready OpenEBS ZFSVolume (`jellyfin-config-pvc`, 16 GiB).
-- [ ] Verify both PVs, ZFSVolume objects, and backing datasets are absent, then archive this todo.
+- [x] With explicit operator authorization, delete Released PV `pvc-1ecb5ee0-6643-42c7-b02c-22c11a84795e` and its Ready OpenEBS ZFSVolume (`jellyfin-cache-pvc`, 32 GiB).
+- [x] With explicit operator authorization, delete Released PV `pvc-36653931-84b8-4600-ad7b-8427c0115c46` and its Ready OpenEBS ZFSVolume (`jellyfin-config-pvc`, 16 GiB).
+- [x] Verify both PVs, ZFSVolume objects, and backing datasets are absent, then archive this todo.
 
 ## Comment Log
 
@@ -35,3 +33,14 @@ records and their Ready OpenEBS ZFSVolume datasets remain.
 - 2026-07-28: Buildkite #6690 successfully pruned the five empty Minecraft namespaces. It later failed its app-tree health wait because `mcp-gateway` was degraded and `media`/`loki` were out of sync. Live verification found no retired Applications, namespaces, or namespaced resources; the three surviving Minecraft Applications remained Healthy/Synced. Main build #6694 subsequently passed, including the app sync.
 - 2026-07-28: Verified `qbittorrent-hdd-pvc` is Bound with a 2 TiB request and capacity. Its OpenEBS ZFSVolume is Ready on `torvalds`; current collector metrics report `zfspv-pool-hdd` ONLINE with 10.85 TiB free (49.7%), so no expansion remediation remains.
 - 2026-07-28: After PR #1757 merged, the operator deleted the five remaining `Released` retired-Minecraft PV API records. Live verification found none of the five PVs and confirmed `minecraft-sjerred`, `minecraft-shuxin`, and `minecraft-tsmc` remain Healthy/Synced.
+- 2026-08-13: Both Jellyfin volumes are gone. Deleting each OpenEBS `ZFSVolume`
+  CR let its `zfs.openebs.io/finalizer` destroy the backing dataset
+  (`jellyfin-cache-pvc` 32 GiB nominal / 0.03 GiB actual, `jellyfin-config-pvc`
+  16 GiB nominal / 3.43 GiB actual — both thin provisioned), verified absent by
+  `zfs list` on `torvalds` before the PV records were removed. The harness again
+  blocked `kubectl delete pv`, so the operator deleted the two PV API objects by
+  hand, as in the 2026-07-28 Minecraft pass. Done as part of a sweep of all ten
+  accumulated `Released` PVs; see
+  `packages/docs/archive/completed/2026-08-13_released-pv-reclamation.md`.
+  Closing invariant re-verified across both nodes: 70 PVs = 70 ZFSVolumes = 70
+  datasets, zero non-`Bound` PVs.

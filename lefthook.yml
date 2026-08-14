@@ -70,6 +70,9 @@ pre-commit:
               - run: test -n "$CLAUDE_CODE_REMOTE"
               - run: test -n "$CODEX_CI"
               - run: test -n "$CODEX_CLOUD_TASKS_BASE_URL"
+              # Swift, swiftlint, xcrun, and the XCFramework builder are
+              # macOS-only. Buildkite remains the cross-platform backstop.
+              - run: 'bun -e ''process.exit(process.platform === "win32" ? 0 : 1)'''
             run: |
               cd packages/tasknotes-macos
               bun run mac:build
@@ -100,6 +103,7 @@ pre-commit:
               - run: test -n "$CLAUDE_CODE_REMOTE"
               - run: test -n "$CODEX_CI"
               - run: test -n "$CODEX_CLOUD_TASKS_BASE_URL"
+              - run: 'bun -e ''process.exit(process.platform === "win32" ? 0 : 1)'''
             run: |
               cd packages/tasknotes-macos
               bun run mac:smoke

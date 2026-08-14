@@ -65,6 +65,9 @@ packages/dpp/
 /.npm/
 /.rustup/
 .config/
+# The Windows client's CSharpier/XAML Styler pins are a tracked tool manifest,
+# not a HOME cache; `dotnet tool restore` needs it in every checkout.
+!/packages/tasknotes-windows/.config/
 
 
 **/.eslintcache

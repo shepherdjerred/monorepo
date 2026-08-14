@@ -1,0 +1,23 @@
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <AssemblyName>TaskNotes.Windows.UnitTests</AssemblyName>
+    <RootNamespace>TaskNotes.Windows.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <NeedsTaskNotesNative>true</NeedsTaskNotesNative>
+    <TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>
+    <MSTestParallelizeScope>MethodLevel</MSTestParallelizeScope>
+    <MSTestParallelizeWorkers>0</MSTestParallelizeWorkers>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/TaskNotes.Core.Bindings/TaskNotes.Core.Bindings.csproj" />
+    <ProjectReference Include="../../src/TaskNotes.Windows.Host/TaskNotes.Windows.Host.csproj" />
+    <ProjectReference Include="../../src/TaskNotes.Windows.Presentation/TaskNotes.Windows.Presentation.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="ServerIntegrationTests.cs" />
+    <Compile Remove="TaskNotesServerProcess.cs" />
+  </ItemGroup>
+</Project>

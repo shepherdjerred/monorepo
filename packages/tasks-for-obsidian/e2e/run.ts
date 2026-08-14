@@ -17,19 +17,15 @@
  */
 
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { access, cp, mkdtemp, readFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { ScenarioEnvironment } from "@tasknotes/e2e";
 import { z } from "zod";
 
 import { captureFlowToday } from "./simulator-date";
 import { assertVaultState } from "./vault-assertions";
 
-const SERVER_PORT = 18_901;
-const CHAOS_PORT = 18_902;
-const AUTH_TOKEN = "e2e-test-token";
-const TASKS_DIR = "TaskNotes";
 const METRO_PORT = 8081;
 const APP_ID = "org.reactjs.native.example.TasksForObsidian";
 
@@ -175,107 +171,6 @@ function ensureBootedSimulator(): SimDevice {
   // -b blocks until the device finishes booting.
   runSimctl(["bootstatus", best.device.udid, "-b"]);
   return best.device;
-}
-
-// ---------------------------------------------------------------------------
-// Server + proxy
-// ---------------------------------------------------------------------------
-
-const HealthEnvelopeSchema = z.object({
-  success: z.literal(true),
-  data: z.object({ status: z.string() }),
-});
-
-/**
- * Fail fast if a fixed port is already taken. Without this, the health poll
- * happily talks to a STALE server left over from an earlier run — the suite
- * then runs against that server's old, already-mutated vault and fails with
- * baffling "task not visible" assertions.
- */
-async function assertPortFree(port: number, what: string): Promise<void> {
-  let responded = false;
-  try {
-    await fetch(`http://127.0.0.1:${String(port)}/`, {
-      signal: AbortSignal.timeout(1000),
-    });
-    responded = true;
-  } catch {
-    // connection refused / timeout — port is free enough
-  }
-  if (responded) {
-    fail(
-      `port ${String(port)} (${what}) is already serving HTTP — a stale ` +
-        `process from a previous run is still alive. Kill it first: ` +
-        `lsof -ti tcp:${String(port)} | xargs kill`,
-    );
-  }
-}
-
-async function startServer(vaultDir: string): Promise<ChildProcess> {
-  await assertPortFree(SERVER_PORT, "tasknotes-server");
-  const proc = spawn("bun", ["run", "src/index.ts"], {
-    cwd: serverDir,
-    env: {
-      ...process.env,
-      VAULT_PATH: vaultDir,
-      TASKS_DIR,
-      AUTH_TOKEN,
-      PORT: String(SERVER_PORT),
-      SENTRY_ENABLED: "false",
-    },
-    stdio: ["ignore", "ignore", "pipe"],
-  });
-  const stderrChunks: Buffer[] = [];
-  proc.stderr.on("data", (chunk: Buffer) => {
-    stderrChunks.push(chunk);
-  });
-
-  try {
-    await pollUntil("tasknotes-server /api/health", 30_000, async () => {
-      try {
-        const response = await fetch(
-          `http://127.0.0.1:${String(SERVER_PORT)}/api/health`,
-        );
-        if (!response.ok) return false;
-        HealthEnvelopeSchema.parse(await response.json());
-        return true;
-      } catch {
-        return false;
-      }
-    });
-  } catch (error) {
-    proc.kill();
-    console.error(
-      `[e2e] tasknotes-server stderr:\n${Buffer.concat(stderrChunks).toString("utf8")}`,
-    );
-    throw error;
-  }
-  log(`tasknotes-server healthy on :${String(SERVER_PORT)}`);
-  return proc;
-}
-
-async function startChaosProxy(): Promise<ChildProcess> {
-  await assertPortFree(CHAOS_PORT, "chaos proxy");
-  const proc = spawn("bun", [path.join(packageDir, "e2e", "chaos-proxy.ts")], {
-    env: {
-      ...process.env,
-      CHAOS_PORT: String(CHAOS_PORT),
-      TARGET_PORT: String(SERVER_PORT),
-    },
-    stdio: "inherit",
-  });
-  await pollUntil("chaos proxy /__chaos/status", 10_000, async () => {
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:${String(CHAOS_PORT)}/__chaos/status`,
-      );
-      return response.ok;
-    } catch {
-      return false;
-    }
-  });
-  log(`chaos proxy on :${String(CHAOS_PORT)} -> :${String(SERVER_PORT)}`);
-  return proc;
 }
 
 // ---------------------------------------------------------------------------
@@ -447,6 +342,8 @@ async function orderedFlowFiles(): Promise<readonly string[]> {
 async function runMaestro(
   simulator: SimDevice,
   focusedFlow: string | null,
+  appUrl: string,
+  authToken: string,
 ): Promise<ReadonlyMap<string, string>> {
   const which = spawnSync("which", ["maestro"], { encoding: "utf8" });
   if (which.status !== 0) {
@@ -484,9 +381,9 @@ async function runMaestro(
         "test",
         target,
         "--env",
-        `APP_URL=http://127.0.0.1:${String(CHAOS_PORT)}`,
+        `APP_URL=${appUrl}`,
         "--env",
-        `AUTH_TOKEN=${AUTH_TOKEN}`,
+        `AUTH_TOKEN=${authToken}`,
         "--env",
         `E2E_TODAY=${today}`,
       ],
@@ -515,30 +412,42 @@ function requestedFlow(): string | null {
 // Main
 // ---------------------------------------------------------------------------
 
-// Module scope so signal handlers can reach them: `finally` does NOT run when
-// the process dies from Ctrl+C, and orphaned servers keep the fixed ports —
-// every later run then silently adopts the stale server and its stale vault.
+// Module scope lets signal handlers clean up simulator/Metro children and the
+// shared real-server environment when Ctrl+C bypasses the normal flow.
 const children: ChildProcess[] = [];
+let sharedEnvironment: ScenarioEnvironment | null = null;
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.on(signal, () => {
-    for (const child of children) child.kill();
-    process.exit(signal === "SIGINT" ? 130 : 143);
+    queueSignalCleanup(signal);
   });
 }
 
+function queueSignalCleanup(signal: "SIGINT" | "SIGTERM"): void {
+  void handleSignalCleanup(signal);
+}
+
+async function handleSignalCleanup(
+  signal: "SIGINT" | "SIGTERM",
+): Promise<void> {
+  for (const child of children) child.kill();
+  if (sharedEnvironment !== null) {
+    await sharedEnvironment.dispose(false);
+  }
+  process.exit(signal === "SIGINT" ? 130 : 143);
+}
+
 async function main(): Promise<void> {
-  let vaultDir: string | null = null;
   let passed = false;
   const focusedFlow = requestedFlow();
   try {
-    // (1) temp vault seeded with fixtures
-    vaultDir = await mkdtemp(path.join(tmpdir(), "tasknotes-e2e-"));
-    await cp(fixturesDir, vaultDir, { recursive: true });
-    log(`temp vault: ${vaultDir}`);
-
-    // (2) server, (3) chaos proxy
-    children.push(await startServer(vaultDir));
-    children.push(await startChaosProxy());
+    // (1) seeded temp vault, (2) real server, and (3) deterministic proxy.
+    sharedEnvironment = await ScenarioEnvironment.start({
+      scenarioId: focusedFlow?.replace(".yaml", "") ?? "ios-suite",
+      seedVault: fixturesDir,
+      tasknotesServerDirectory: serverDir,
+    });
+    log(`temp vault: ${sharedEnvironment.vaultDirectory}`);
+    log(`chaos proxy: ${sharedEnvironment.proxyUrl}`);
 
     // (4) simulator
     const simulator = ensureBootedSimulator();
@@ -552,12 +461,22 @@ async function main(): Promise<void> {
     launchApp(simulator);
 
     // (6) Maestro flows
-    const todayByFlow = await runMaestro(simulator, focusedFlow);
+    const todayByFlow = await runMaestro(
+      simulator,
+      focusedFlow,
+      sharedEnvironment.proxyUrl,
+      sharedEnvironment.authToken,
+    );
 
     // (7) vault-state assertions. Focused runs still verify the selected
     // flow's authoritative Markdown mutation, rather than relying only on
     // optimistic UI state.
-    await assertVaultState(vaultDir, log, focusedFlow, todayByFlow);
+    await assertVaultState(
+      sharedEnvironment.vaultDirectory,
+      log,
+      focusedFlow,
+      todayByFlow,
+    );
 
     log("e2e suite passed");
     passed = true;
@@ -570,14 +489,13 @@ async function main(): Promise<void> {
         return exited;
       }),
     );
-    if (vaultDir !== null) {
-      if (passed) {
-        await rm(vaultDir, { recursive: true, force: true });
-      } else {
-        // Keep the vault for post-mortem: the final markdown bytes are often
-        // the fastest way to tell which flow mutated what.
-        log(`suite failed — temp vault preserved at ${vaultDir}`);
+    if (sharedEnvironment !== null) {
+      const scenarioDirectory = sharedEnvironment.scenarioDirectory;
+      await sharedEnvironment.dispose(passed);
+      if (!passed) {
+        log(`suite failed — diagnostics preserved at ${scenarioDirectory}`);
       }
+      sharedEnvironment = null;
     }
   }
 }

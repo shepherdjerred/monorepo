@@ -126,8 +126,10 @@ export function isPostalBoundaryViolation(
   path: string,
   contents: string,
 ): boolean {
+  const normalizedPath = path.replaceAll("\\", "/");
   return (
-    contents.includes("sendPostalEmail") && !POSTAL_BOUNDARY_FILES.has(path)
+    contents.includes("sendPostalEmail") &&
+    !POSTAL_BOUNDARY_FILES.has(normalizedPath)
   );
 }
 

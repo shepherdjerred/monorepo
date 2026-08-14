@@ -257,12 +257,12 @@ public final class TaskNotesStore {
         // before anything else runs, so the retired engine cannot arm a timer
         // whose fire would drive the replacement.
         if let retired {
-            absorb(Result { try retired.dispose() })
+            absorb(Result { try retired.shutdown() })
         }
         if !isUsable {
             // It never became the active engine, so this is only about letting
             // go of anything its restore armed before it failed.
-            absorb(Result { try replacement.dispose() })
+            absorb(Result { try replacement.shutdown() })
         }
         // Last, so the restore failure is the error left standing rather than
         // one from a dispose above it.
@@ -286,7 +286,7 @@ public final class TaskNotesStore {
     public func shutdown() {
         let retired = engineBox.replace(with: nil)
         if let retired {
-            absorb(Result { try retired.dispose() })
+            absorb(Result { try retired.shutdown() })
         }
         scheduler.cancelAll()
         refresh()

@@ -615,8 +615,9 @@ throughout (Phase 0 touches its sync tests) · `bun run verify` stays green.
 
 ## Deferred
 
-**Windows is explicitly out of scope for this plan** _(decided 2026-08-08)_. The focus is macOS.
-It may be added later, likely WinUI 3 or something else genuinely native — so the standing
+**Windows is explicitly out of scope for this plan** _(decided 2026-08-08)_. Its native WinUI
+implementation now has a separate [initial plan](2026-08-10_tasknotes-native-windows-app.md) and
+[feature-parity successor](2026-08-11_tasknotes-windows-feature-parity-and-e2e.md), so the standing
 constraint is: **do not make decisions that would make adding Windows hard.** Concretely, that means
 
 - keep the core's exported surface **language-neutral** — no Swift-shaped API leaking into Rust,

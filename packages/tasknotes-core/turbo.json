@@ -65,8 +65,13 @@
         "rustfmt.toml",
         "ci/no-suppressions.sh",
         "ci/check-clippy-config.sh",
+        "ci/quality-check.ts",
+        "ci/coverage.ts",
+        "ci/coverage-ratchet.ts",
+        "coverage-baseline.json",
         "bindings/Sources/**",
         "bindings/ffi/**",
+        "bindings/csharp/**",
         "!target/**"
       ],
       "outputs": []

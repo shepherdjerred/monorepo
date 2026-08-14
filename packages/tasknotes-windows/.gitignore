@@ -1,0 +1,8 @@
+.build/
+**/bin/
+**/obj/
+AppPackages/
+artifacts/
+BundleArtifacts/
+*.pfx
+Directory.Build.local.props
