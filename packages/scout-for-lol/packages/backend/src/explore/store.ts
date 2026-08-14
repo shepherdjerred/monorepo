@@ -317,6 +317,20 @@ export async function startExploreTurn(
       content: input.question,
     },
   });
+  // Move the branch onto the question straight away, which is what makes
+  // persisting it before the model runs worth anything: the transcript is read
+  // by `currentLeafId`, so a turn that dies before its answer would otherwise
+  // leave the question in the database but off the path — invisible to the
+  // person who just asked it. For an edit this is also the switch onto the
+  // branch they just created.
+  //
+  // A brand-new conversation needs no equivalent: its `currentLeafId` is null
+  // and `buildTranscript` falls back to the deepest leaf, which is the
+  // question.
+  await prisma.exploreConversation.update({
+    where: { id: existing.id },
+    data: { currentLeafId: created.id, updatedAt: new Date() },
+  });
   return {
     conversationId: existing.id,
     title: existing.title,

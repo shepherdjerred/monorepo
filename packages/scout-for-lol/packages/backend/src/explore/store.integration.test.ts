@@ -94,6 +94,33 @@ async function path(conversationId: string): Promise<string[]> {
 }
 
 describe("explore store", () => {
+  /**
+   * The question is written before the model runs so an abandoned turn stays
+   * resumable. That only holds if the branch moves onto it: the transcript is
+   * read by `currentLeafId`, so a question left off the path is in the
+   * database but invisible to the person who just asked it.
+   */
+  test("a question is on the path before its answer exists", async () => {
+    const first = await askAndAnswer({
+      conversationId: null,
+      question: "Which champion has the most games?",
+    });
+
+    // A follow-up whose turn then dies before any answer is appended.
+    await startExploreTurn(prisma, {
+      conversationId: first.conversationId,
+      userId,
+      question: "And by patch?",
+      parentMessageId: null,
+    });
+
+    expect(await path(first.conversationId)).toEqual([
+      "Which champion has the most games?",
+      ANSWER.answer,
+      "And by patch?",
+    ]);
+  });
+
   test("a new conversation is titled from its opening question", async () => {
     const started = await startExploreTurn(prisma, {
       conversationId: null,

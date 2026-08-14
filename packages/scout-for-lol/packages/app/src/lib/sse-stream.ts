@@ -86,6 +86,14 @@ async function readEventStream(
     if (buffer.trim().length > 0) {
       onBlock(buffer);
     }
+  } catch (error) {
+    // Releasing the lock is not hanging up: the response body — and the
+    // connection behind it — stay open, so the server keeps running the turn
+    // it is streaming. That matters because the backend allows one active run
+    // per user, so an abandoned-but-live run rejects every retry until it
+    // finishes on its own. Cancelling is what the server sees as a disconnect.
+    await reader.cancel();
+    throw error;
   } finally {
     reader.releaseLock();
   }
