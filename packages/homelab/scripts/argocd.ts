@@ -2105,10 +2105,16 @@ async function reconcileRelease(
       revision === wanted.revision &&
       deployed?.revision === wanted.revision &&
       !failedCurrentOperation;
+    // An externally sourced child needs the same failed-operation retry as a
+    // repository release. ArgoCD never re-runs a sync for an application it
+    // already considers Synced, so a failure recorded against the current
+    // revision stays on the Application forever, keeps the child reporting
+    // Progressing, and blocks every later root health wave.
     const deployedExpectedExternalSource =
       !wanted.repositoryRelease &&
       deployed?.source !== undefined &&
-      canonicalJson(deployed.source) === canonicalJson(wanted.source);
+      canonicalJson(deployed.source) === canonicalJson(wanted.source) &&
+      !failedCurrentOperation;
     if (deployedExpectedRepositoryRelease || deployedExpectedExternalSource) {
       continue;
     }
