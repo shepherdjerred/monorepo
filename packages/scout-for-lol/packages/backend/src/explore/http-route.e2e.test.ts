@@ -27,6 +27,21 @@ const cors: Record<string, string> = {};
 
 const ErrorBody = z.object({ error: z.string() });
 
+const { signSession } = await import("#src/trpc/jwt.ts");
+const { getExploreQuotaStatus, resetExploreRateLimitStateForTests } =
+  await import("#src/explore/rate-limit.ts");
+
+/** Headers for a request that passes session + CSRF + origin. */
+async function authedHeaders(): Promise<Record<string, string>> {
+  const { jwt } = await signSession({ discordId: owner });
+  return {
+    "content-type": "application/json",
+    cookie: `scout_session=${jwt}; scout_csrf=csrf`,
+    "x-csrf-token": "csrf",
+    Origin: "https://scout-for-lol.com",
+  };
+}
+
 function setAllowlist(value: string | undefined): void {
   if (value === undefined) {
     delete Bun.env["EXPLORE_GUILD_ALLOWLIST"];
@@ -216,6 +231,89 @@ describe("explore http route", () => {
     expect(response?.status).toBe(413);
     // 16 KiB limit, 4 KiB chunks: the read stops rather than draining all 256 KiB.
     expect(produced).toBeLessThanOrEqual(8);
+  });
+
+  /**
+   * The rate-limit ticket is taken before the turn is set up and released only
+   * by `ticket.finish()`. A stored transcript that fails its schema throws
+   * during the load that happens after the ticket exists — so without a guard
+   * there, one unreadable row would hold that user's active-run slot (and one
+   * of five global slots) until the process restarted.
+   */
+  test("a turn that fails after taking its ticket still releases it", async () => {
+    resetExploreRateLimitStateForTests();
+
+    // A conversation whose stored assistant turn cannot be parsed back.
+    const conversation = await trpc.prisma.exploreConversation.create({
+      data: {
+        userId: owner,
+        title: "Broken",
+        messages: { create: { role: "user", content: "Which champion wins?" } },
+      },
+      include: { messages: true },
+    });
+    const question = conversation.messages[0];
+    if (question === undefined) {
+      throw new Error("expected the seeded question");
+    }
+    await trpc.prisma.exploreMessage.create({
+      data: {
+        conversationId: conversation.id,
+        parentId: question.id,
+        role: "assistant",
+        content: "Jinx.",
+        // Not a ReportAiPreviewSummary — parsing this row throws.
+        preview: JSON.stringify({ nonsense: true }),
+      },
+    });
+
+    const url = new URL("http://localhost/api/explore/stream");
+    const response = await handleExploreRoute(
+      new Request(url.toString(), {
+        method: "POST",
+        headers: await authedHeaders(),
+        body: JSON.stringify({
+          conversationId: conversation.id,
+          parentMessageId: null,
+          question: "And by patch?",
+        }),
+      }),
+      url,
+      cors,
+    );
+
+    expect(response?.status).toBe(500);
+    // The generic message, not the schema-parse exception text.
+    const body = ErrorBody.parse(await response?.json());
+    expect(body.error).toBe("Could not start this question.");
+    expect(body.error).not.toMatch(/schema/i);
+
+    // The real assertion: the slot is free again.
+    expect(getExploreQuotaStatus({ userId: owner }).activeRun).toBe(false);
+  });
+
+  test("an oversized error message does not break the error response", async () => {
+    // `parseRequestBody` runs before auth, and a wide invalid body makes Zod's
+    // message grow without bound — while `ExploreHttpErrorSchema` caps it at
+    // 1000. Unclamped, building the 400 would itself throw.
+    const url = new URL("http://localhost/api/explore/stream");
+    const response = await handleExploreRoute(
+      new Request(url.toString(), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          conversationId: 123,
+          parentMessageId: 456,
+          question: Array.from({ length: 60 }, (_, index) => index),
+        }),
+      }),
+      url,
+      cors,
+    );
+
+    expect(response?.status).toBe(400);
+    const body = ErrorBody.parse(await response?.json());
+    expect(body.error.length).toBeLessThanOrEqual(1000);
   });
 
   test("an unrelated path is not claimed by the explore handler", async () => {

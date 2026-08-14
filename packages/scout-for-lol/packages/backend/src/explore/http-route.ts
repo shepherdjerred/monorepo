@@ -1,7 +1,5 @@
 import * as Sentry from "@sentry/bun";
-import { TRPCError } from "@trpc/server";
 import {
-  DiscordAccountIdSchema,
   EXPLORE_REQUEST_MAX_BYTES,
   EXPLORE_TIMEOUT_MS,
   ExploreHttpErrorSchema,
@@ -15,10 +13,8 @@ import {
   type ExploreTraceEntry,
   type ExploreTurnRequest,
 } from "@scout-for-lol/data";
-import configuration from "#src/configuration.ts";
 import { prisma } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
-import { assertExploreAccess } from "#src/explore/access.ts";
 import {
   getExploreQuotaStatus,
   tryStartExploreTurn,
@@ -34,6 +30,7 @@ import {
   resolveRegenerateTarget,
   startExploreTurn,
 } from "#src/explore/store.ts";
+import { authenticateExploreRequest } from "#src/explore/http-auth.ts";
 import { createLogger } from "#src/logger.ts";
 import { readBodyWithinLimit } from "#src/utils/bounded-request-body.ts";
 import {
@@ -41,7 +38,6 @@ import {
   scoutExploreTurnDurationSeconds,
   scoutExploreTurnsTotal,
 } from "#src/metrics/explore.ts";
-import { createContext, type Context } from "#src/trpc/context.ts";
 
 const STREAM_PATH = "/api/explore/stream";
 const SHARED_PREFIX = "/api/explore/shared/";
@@ -129,38 +125,52 @@ export async function handleExploreRoute(
     return jsonError("Could not start this question.", 500, corsHeaders);
   }
 
-  // The path ending at the question being answered — which for an edit or a
-  // regenerate is not the branch currently on screen.
-  const history = await loadExploreTranscript(
-    prisma,
-    started.conversationId,
-    authResult.identity.userId,
-    started.messageId,
-  );
+  // Everything from here until the stream owns the ticket has to release it on
+  // failure. `loadExploreTranscript` parses stored JSON and throws on a row
+  // that does not match its schema, and the active-run counters are cleared
+  // only by `ticket.finish()` — so one unreadable transcript would otherwise
+  // wedge that user's slot, and eventually the global one, until restart.
+  try {
+    // The path ending at the question being answered — which for an edit or a
+    // regenerate is not the branch currently on screen.
+    const history = await loadExploreTranscript(
+      prisma,
+      started.conversationId,
+      authResult.identity.userId,
+      started.messageId,
+    );
 
-  const stream = new ReadableStream<Uint8Array>({
-    start(controller) {
-      runExploreTurnStream({
-        controller,
-        request,
-        ticket,
-        identity: authResult.identity,
-        started,
-        history: history?.messages ?? [],
-      });
-    },
-  });
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        runExploreTurnStream({
+          controller,
+          request,
+          ticket,
+          identity: authResult.identity,
+          started,
+          history: history?.messages ?? [],
+        });
+      },
+    });
 
-  return new Response(stream, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/event-stream; charset=utf-8",
-      "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive",
-      "X-Accel-Buffering": "no",
-      ...corsHeaders,
-    },
-  });
+    return new Response(stream, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+        ...corsHeaders,
+      },
+    });
+  } catch (error) {
+    // Idempotent, so the stream having already taken over is harmless.
+    ticket.finish();
+    scoutExploreTurnsTotal.inc({ status: "error" });
+    logger.error("Failed to open an explore turn stream", errorMessage(error));
+    Sentry.captureException(error, { tags: { source: "explore-turn-stream" } });
+    return jsonError("Could not start this question.", 500, corsHeaders);
+  }
 }
 
 /**
@@ -274,7 +284,7 @@ function runExploreTurnStream(input: {
       if (salvaged === null) {
         emit({
           type: "error",
-          message: errorMessage(error),
+          message: clampMessage(errorMessage(error)),
           retryAfterSeconds: null,
           quota: getExploreQuotaStatus(identity, Date.now()).quota,
         });
@@ -430,92 +440,6 @@ function parseRequestBody(bodyText: string): ParsedRequestBody {
   }
 }
 
-type AuthResult =
-  | { ok: true; identity: ExploreRateLimitIdentity }
-  | { ok: false; status: number; message: string };
-
-async function authenticateExploreRequest(
-  request: Request,
-): Promise<AuthResult> {
-  try {
-    const ctx = await createContext(request);
-    const web = readWebCsrfContext(ctx);
-    assertWebCsrf(web.webSession);
-    await assertExploreAccess(web.user);
-    return {
-      ok: true,
-      identity: {
-        userId: DiscordAccountIdSchema.parse(web.user.discordId),
-      },
-    };
-  } catch (error) {
-    if (error instanceof TRPCError) {
-      return {
-        ok: false,
-        status: statusForTrpcError(error),
-        message: error.message,
-      };
-    }
-    return { ok: false, status: 500, message: errorMessage(error) };
-  }
-}
-
-function readWebCsrfContext(ctx: Context): {
-  user: NonNullable<Context["user"]>;
-  webSession: NonNullable<Context["webSession"]>;
-} {
-  if (ctx.webSession === null || ctx.user === null) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Sign in to use explore.",
-    });
-  }
-  return { user: ctx.user, webSession: ctx.webSession };
-}
-
-function assertWebCsrf(webSession: NonNullable<Context["webSession"]>): void {
-  const { csrfToken, csrfHeader, origin } = webSession;
-  if (
-    csrfToken === null ||
-    csrfHeader === null ||
-    csrfToken !== csrfHeader ||
-    csrfToken.length === 0 ||
-    csrfHeader.length === 0
-  ) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "CSRF token missing or mismatched",
-    });
-  }
-
-  const expectedOrigin = configuration.webAppOrigin;
-  if (expectedOrigin !== undefined && origin !== expectedOrigin) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Cross-origin request rejected",
-    });
-  }
-}
-
-function statusForTrpcError(error: TRPCError): number {
-  if (error.code === "UNAUTHORIZED") {
-    return 401;
-  }
-  if (error.code === "FORBIDDEN") {
-    return 403;
-  }
-  if (error.code === "NOT_FOUND") {
-    return 404;
-  }
-  if (error.code === "BAD_REQUEST") {
-    return 400;
-  }
-  if (error.code === "TOO_MANY_REQUESTS") {
-    return 429;
-  }
-  return 500;
-}
-
 function jsonError(
   message: string,
   status: number,
@@ -527,7 +451,9 @@ function jsonError(
 ): Response {
   return Response.json(
     ExploreHttpErrorSchema.parse({
-      error: message,
+      // Clamped here rather than at each call site: this is the one place
+      // every error response is built, so nothing can route around it.
+      error: clampMessage(message),
       retryAfterSeconds: options.retryAfterSeconds ?? null,
       quota: options.quota ?? null,
     }),
@@ -540,4 +466,27 @@ function jsonError(
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+/** The longest a message may be in `ExploreHttpErrorSchema` and the SSE error event. */
+const MESSAGE_MAX_LENGTH = 1000;
+
+/**
+ * Fit a message inside the schema that will validate it.
+ *
+ * Both message fields are `.trim().min(1).max(1000)`, and both are parsed on
+ * the way out — so an over-long message makes the *error response itself*
+ * throw, turning a 400 into a crashed request. A Zod validation error grows
+ * with the input, so a wide enough invalid body reaches that length on demand.
+ * An empty message would fail `min(1)` just as hard, hence the fallback.
+ */
+function clampMessage(message: string): string {
+  const trimmed = message.trim();
+  if (trimmed.length === 0) {
+    return "Request failed.";
+  }
+  if (trimmed.length <= MESSAGE_MAX_LENGTH) {
+    return trimmed;
+  }
+  return `${trimmed.slice(0, MESSAGE_MAX_LENGTH - 1)}…`;
 }
