@@ -37,6 +37,7 @@ const CLI_CHECKS: readonly { name: string; args: readonly string[] }[] = [
   { name: "velero", args: ["velero", "version", "--client-only"] },
   { name: "bk", args: ["bk", "--version"] },
   { name: "temporal", args: ["temporal", "--version"] },
+  { name: "gcx", args: ["gcx", "--version"] },
   { name: "iptables", args: ["iptables", "--version"] },
   { name: "ip6tables", args: ["ip6tables", "--version"] },
   { name: "setpriv", args: ["setpriv", "--version"] },

@@ -372,6 +372,7 @@ const commands: Record<
       "ip6tables --version",
       "setpriv --version",
       "toolkit --version",
+      "gcx --version",
       "set +e",
       'output="$(timeout 60s bun src/worker.ts 2>&1)"',
       "status=$?",
