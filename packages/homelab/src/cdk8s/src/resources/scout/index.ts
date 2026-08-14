@@ -190,6 +190,12 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     stage === "beta"
       ? {
           ...baseEnvVariables,
+          // Explore's entire access gate: sign in, and belong to one of these
+          // Discord servers. Beta-only, alongside the AI credentials the
+          // surface needs — prod has neither, so it stays closed. An unset or
+          // empty list denies everyone, so this must be present for anyone to
+          // reach /app/explore.
+          EXPLORE_GUILD_ALLOWLIST: EnvValue.fromValue("1337623164146155593"),
           OPENAI_API_KEY: EnvValue.fromSecretValue({
             secret: Secret.fromSecretName(
               chart,

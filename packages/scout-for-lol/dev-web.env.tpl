@@ -35,9 +35,25 @@ JWT_SIGNING_SECRET=local-dev-only-jwt-signing-secret-not-for-any-deployed-env
 # This MUST match the redirect URI registered on the BETA Discord app.
 WEB_APP_ORIGIN=http://localhost:5180
 
+# ── AI (report editor + explore) ──────────────────────────────────────
+# Both agents default to an OpenAI model, so without this every AI turn fails
+# at the model call. Same BETA item as the secrets above.
+OPENAI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/OPENAI_API_KEY
+
+# Explore is gated on membership of an allowlisted Discord server, and an empty
+# list denies everyone. Left unset here because the right value is whichever
+# server you test in — export it for the session instead:
+#   EXPLORE_GUILD_ALLOWLIST=<your guild id> bun run dev:web
+
 # ── Riot / DB / storage ───────────────────────────────────────────────
 RIOT_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/RIOT_API_KEY
 DATABASE_URL=file:./local-web-dev.db
+
+# Raw match JSON for a local report-lake rebuild (explore reads the lake, not
+# the database). Build one with, from packages/backend:
+#   AWS_PROFILE=seaweedfs op run --env-file=../../dev-web.env.tpl -- \
+#     bun run compact:report-lake
+S3_BUCKET_NAME=scout-beta
 
 # ── Optional: silence Sentry locally ──────────────────────────────────
 SENTRY_DSN=

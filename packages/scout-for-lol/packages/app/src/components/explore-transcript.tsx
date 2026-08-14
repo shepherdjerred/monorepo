@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { match } from "ts-pattern";
 import {
   Check,
   ChevronLeft,
@@ -8,10 +7,14 @@ import {
   Pencil,
   RefreshCw,
 } from "lucide-react";
+import {
+  formatReportDisplayValue,
+  REPORT_RENDER_KINDS,
+} from "@scout-for-lol/data";
 import type {
   ExploreMessage,
   ReportAiPreviewSummary,
-  ReportValueFormat,
+  VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
 import { Textarea } from "#src/components/ui/textarea.tsx";
@@ -160,18 +163,21 @@ function AssistantTurn(props: {
   const { message, actions } = props;
   const [showQuery, setShowQuery] = useState(false);
   const [showTrace, setShowTrace] = useState(false);
+  const chart = chartableSnapshot(message.visualization);
 
   return (
     <div className="space-y-3">
       <MarkdownAnswer>{message.content}</MarkdownAnswer>
 
-      {message.visualization !== null && (
-        <div className="rounded-lg border p-3">
-          <InteractiveVisualization snapshot={message.visualization} compact />
-        </div>
+      {chart !== null && (
+        // Not `compact` — that pins the chart to 180px, which is a preview
+        // thumbnail height and squashes a multi-category chart in a
+        // full-width transcript. The component draws its own border, so this
+        // wrapper adds none.
+        <InteractiveVisualization snapshot={chart} />
       )}
 
-      {message.preview !== null && message.visualization === null && (
+      {chart === null && message.preview !== null && (
         <PreviewTable preview={message.preview} />
       )}
 
@@ -358,6 +364,24 @@ function IconButton(props: {
 }
 
 /**
+ * A snapshot only when the query actually asked to be drawn.
+ *
+ * The engine builds a visualization snapshot for every result regardless of
+ * render kind, so `visualization !== null` is not the question — `RENDER
+ * table` produces one too. The registry knows which kinds are charts; drawing
+ * one for a table turns a two-row answer into a graph nobody asked for.
+ */
+function chartableSnapshot(
+  snapshot: VisualizationSnapshot | null,
+): VisualizationSnapshot | null {
+  if (snapshot === null) {
+    return null;
+  }
+  const kind = REPORT_RENDER_KINDS.find((entry) => entry.id === snapshot.kind);
+  return kind?.isChart === true ? snapshot : null;
+}
+
+/**
  * Fallback table for answers whose render kind produced no chart (a plain
  * table or leaderboard). Bounded to what the preview carries.
  */
@@ -366,13 +390,21 @@ function PreviewTable(props: { preview: ReportAiPreviewSummary }) {
   if (preview.rows.length === 0) {
     return null;
   }
+  // The first column describes the grouping dimension ("Player", "Champion"),
+  // and its value is the row label rather than an entry in `values` — so it
+  // heads the label cell instead of becoming a column of its own. Rendering it
+  // as a normal column produced a stray "Player" column of em-dashes.
+  const [labelColumn, ...metricColumns] = preview.columns;
+
   return (
     <div className="overflow-x-auto rounded-lg border">
       <table className="w-full text-sm">
         <thead className="bg-muted/50">
           <tr>
-            <th className="px-3 py-2 text-left font-medium">Row</th>
-            {preview.columns.map((column) => (
+            <th className="px-3 py-2 text-left font-medium">
+              {labelColumn?.label ?? "Row"}
+            </th>
+            {metricColumns.map((column) => (
               <th key={column.key} className="px-3 py-2 text-right font-medium">
                 {column.label}
               </th>
@@ -383,43 +415,22 @@ function PreviewTable(props: { preview: ReportAiPreviewSummary }) {
           {preview.rows.map((row) => (
             <tr key={row.label} className="border-t">
               <td className="px-3 py-2">{row.label}</td>
-              {preview.columns.map((column) => (
-                <td key={column.key} className="px-3 py-2 text-right">
-                  {formatValue(
-                    row.values.find((value) => value.column === column.key)
-                      ?.value ?? null,
-                    column.format,
-                  )}
-                </td>
-              ))}
+              {metricColumns.map((column) => {
+                const value = row.values.find(
+                  (entry) => entry.column === column.key,
+                )?.value;
+                return (
+                  <td key={column.key} className="px-3 py-2 text-right">
+                    {value === undefined || value === null
+                      ? "—"
+                      : formatReportDisplayValue(column, value)}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>
       </table>
     </div>
   );
-}
-
-/**
- * Render a cell using the column's declared format.
- *
- * The format matters for reading the answer, not just for polish: a win rate
- * shown as "56.40" reads as a count, and the prose next to it says "56.4%".
- */
-function formatValue(
-  value: string | number | null,
-  format: ReportValueFormat,
-): string {
-  if (value === null) {
-    return "—";
-  }
-  if (typeof value === "string") {
-    return value;
-  }
-  return match(format)
-    .with("percent", () => `${value.toFixed(1)}%`)
-    .with("integer", () => Math.round(value).toLocaleString())
-    .with("decimal", () => value.toFixed(2))
-    .with("text", () => value.toString())
-    .exhaustive();
 }
