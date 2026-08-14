@@ -232,7 +232,15 @@ describe("explore http route", () => {
     // 16 KiB limit, 4 KiB chunks: the read stops rather than draining all 256 KiB.
     expect(produced).toBeLessThanOrEqual(8);
   });
+});
 
+/**
+ * How a turn is accounted for: the concurrency slot and the shared quota.
+ *
+ * Both are process-wide, so a request that never runs a turn must leave
+ * neither behind — otherwise one caller degrades the surface for everyone.
+ */
+describe("explore turn accounting", () => {
   /**
    * The rate-limit ticket is taken before the turn is set up and released only
    * by `ticket.finish()`. A stored transcript that fails its schema throws
@@ -292,6 +300,45 @@ describe("explore http route", () => {
     expect(getExploreQuotaStatus({ userId: owner }).activeRun).toBe(false);
   });
 
+  /**
+   * Quota is the shared resource, so a request that never runs a turn must not
+   * spend any: otherwise an allowlisted caller could exhaust the global
+   * allowance by naming conversations that do not exist, and 429 everyone else.
+   */
+  test("a turn naming a conversation that does not exist costs no quota", async () => {
+    resetExploreRateLimitStateForTests();
+    const before = getExploreQuotaStatus({ userId: owner }).quota;
+
+    const url = new URL("http://localhost/api/explore/stream");
+    const response = await handleExploreRoute(
+      new Request(url.toString(), {
+        method: "POST",
+        headers: await authedHeaders(),
+        body: JSON.stringify({
+          // A well-formed id that resolves to nothing. A malformed one would
+          // be a 400 at schema-parse time, before the ticket exists — a
+          // different path that never risked the quota.
+          conversationId: "00000000-0000-4000-8000-000000000000",
+          parentMessageId: null,
+          question: "Who wins?",
+        }),
+      }),
+      url,
+      cors,
+    );
+
+    expect(response?.status).toBe(404);
+
+    const after = getExploreQuotaStatus({ userId: owner }).quota;
+    expect(after.map((entry) => entry.remaining)).toEqual(
+      before.map((entry) => entry.remaining),
+    );
+    // And the concurrency slot came back too.
+    expect(getExploreQuotaStatus({ userId: owner }).activeRun).toBe(false);
+  });
+});
+
+describe("explore http route — remaining surface", () => {
   test("an oversized error message does not break the error response", async () => {
     // `parseRequestBody` runs before auth, and a wide invalid body makes Zod's
     // message grow without bound — while `ExploreHttpErrorSchema` caps it at

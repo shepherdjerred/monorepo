@@ -16,13 +16,25 @@ beforeEach(() => {
   resetExploreRateLimitStateForTests();
 });
 
-/** Consume a turn and immediately release it, as a completed turn does. */
+/** Reserve, charge, and release — what a turn that actually ran does. */
 function completeTurn(id: DiscordAccountId, at: number): void {
   const ticket = tryStartExploreTurn({ userId: id }, at);
   if (!ticket.allowed) {
     throw new Error(`expected an allowed turn: ${ticket.reason}`);
   }
+  ticket.commit();
   ticket.finish();
+}
+
+/** Remaining questions in the per-minute user bucket. */
+function minuteRemaining(id: DiscordAccountId, at: number): number {
+  const snapshot = getExploreQuotaStatus({ userId: id }, at).quota.find(
+    (entry) => entry.scope === "user" && entry.window === "minute",
+  );
+  if (snapshot === undefined) {
+    throw new Error("expected a per-minute user quota snapshot");
+  }
+  return snapshot.remaining;
 }
 
 describe("explore rate limit", () => {
@@ -81,6 +93,55 @@ describe("explore rate limit", () => {
     // user has no run in flight.
     expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(false);
     expect(tryStartExploreTurn({ userId }, now).allowed).toBe(true);
+  });
+
+  /**
+   * The reserve/commit split exists for this: a request is charged only once
+   * it is known to be a real turn. Otherwise anyone allowlisted could drain
+   * the shared global allowance with requests naming conversations that do not
+   * exist, and lock everyone else out.
+   */
+  test("a reserved turn that never commits costs no quota", () => {
+    const before = minuteRemaining(userId, now);
+
+    const ticket = tryStartExploreTurn({ userId }, now);
+    if (!ticket.allowed) {
+      throw new Error("expected an allowed turn");
+    }
+    // The route's 400/404 path: release the slot, having charged nothing.
+    ticket.finish();
+
+    expect(minuteRemaining(userId, now)).toBe(before);
+    expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(false);
+  });
+
+  test("a committed turn does spend its quota", () => {
+    // The other half of the contract — without this, forgetting to commit
+    // would read as "unlimited free turns" rather than as a bug.
+    const before = minuteRemaining(userId, now);
+
+    const ticket = tryStartExploreTurn({ userId }, now);
+    if (!ticket.allowed) {
+      throw new Error("expected an allowed turn");
+    }
+    ticket.commit();
+    ticket.finish();
+
+    expect(minuteRemaining(userId, now)).toBe(before - 1);
+  });
+
+  test("commit is idempotent so a turn cannot be charged twice", () => {
+    const before = minuteRemaining(userId, now);
+
+    const ticket = tryStartExploreTurn({ userId }, now);
+    if (!ticket.allowed) {
+      throw new Error("expected an allowed turn");
+    }
+    ticket.commit();
+    ticket.commit();
+    ticket.finish();
+
+    expect(minuteRemaining(userId, now)).toBe(before - 1);
   });
 
   test("a rejected turn reports the quota it hit", () => {

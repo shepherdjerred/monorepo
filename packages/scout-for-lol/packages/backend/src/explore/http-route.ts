@@ -154,6 +154,12 @@ export async function handleExploreRoute(
       },
     });
 
+    // The turn is valid and now running, so it is charged. Everything that can
+    // reject a request — a bad target, an unreadable transcript — happens
+    // above this line and leaves the quota untouched, so a caller cannot spend
+    // the shared allowance on requests that never ran.
+    ticket.commit();
+
     return new Response(stream, {
       status: 200,
       headers: {

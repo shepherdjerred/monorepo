@@ -44,10 +44,24 @@ export type ExploreRateLimitRejection = {
   reason: string;
 };
 
+/**
+ * A granted turn, in two phases.
+ *
+ * Reserving takes the concurrency slot immediately — that is what bounds how
+ * much work can be in flight — but does **not** spend quota. `commit()` does,
+ * and is only called once the request has been validated and the turn is
+ * actually starting. Without that split, a request with a bogus conversation
+ * id was charged before anyone checked whether it referred to anything, so a
+ * caller could drain the shared global allowance with requests that never ran
+ * a turn.
+ *
+ * Both calls are idempotent, and `finish()` alone is the correct cleanup for
+ * an early exit: nothing was spent yet, so there is nothing to refund.
+ */
 export type ExploreRateLimitTicket = {
   allowed: true;
   runId: string;
-  quota: ExploreQuotaSnapshot[];
+  commit: () => void;
   finish: () => void;
 };
 
@@ -118,15 +132,23 @@ export function tryStartExploreTurn(
     };
   }
 
-  engine.consume(identity, now);
   activeUserRuns.add(identity.userId);
   activeGlobalRuns++;
   let finished = false;
+  let committed = false;
 
   return {
     allowed: true,
     runId: globalThis.crypto.randomUUID(),
-    quota: engine.snapshots(identity, now),
+    // Charged against `now` rather than commit time: the window a request
+    // belongs to is when it arrived, and the two are milliseconds apart.
+    commit: () => {
+      if (committed) {
+        return;
+      }
+      committed = true;
+      engine.consume(identity, now);
+    },
     finish: () => {
       if (finished) {
         return;
