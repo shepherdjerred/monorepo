@@ -14,7 +14,6 @@ import { cn } from "#src/lib/cn.ts";
  */
 export const Sheet = DialogPrimitive.Root;
 export const SheetTrigger = DialogPrimitive.Trigger;
-export const SheetClose = DialogPrimitive.Close;
 export const SheetTitle = DialogPrimitive.Title;
 
 export const SheetContent = React.forwardRef<
