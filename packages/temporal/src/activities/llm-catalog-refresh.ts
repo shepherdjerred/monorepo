@@ -144,7 +144,6 @@ export const llmCatalogRefreshActivities = {
         "--filter=blob:none",
       ]);
 
-<<<<<<< HEAD
       // One hook-free root install for the whole activity: it covers the
       // catalog package's own deps (zod, for the sync script) and the repo's
       // pinned prettier used further down. Bot clones must go through this

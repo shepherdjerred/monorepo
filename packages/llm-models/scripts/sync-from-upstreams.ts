@@ -47,20 +47,21 @@
  */
 import { z } from "zod";
 import { CatalogSchema, type Catalog, type ModelEntry } from "#src/index.ts";
+import {
+  indexOpenRouterRoutes,
+  missingOpenRouterRoute,
+  OPENROUTER_EMBEDDINGS_URL,
+  OPENROUTER_MODELS_URL,
+} from "#scripts/openrouter-routes.ts";
+import { emit, emitReport } from "#scripts/report.ts";
 
 const MODELS_DEV_URL = "https://models.dev/api.json";
 const LITELLM_URL =
   "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json";
-const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
-const OPENROUTER_EMBEDDINGS_URL =
-  "https://openrouter.ai/api/v1/embeddings/models";
 const CATALOG_PATH = new URL("../src/catalog.json", import.meta.url);
 const EPSILON = 1e-9;
 
 const UnknownRecord = z.record(z.string(), z.unknown());
-const OpenRouterCatalogSchema = z.object({
-  data: z.array(z.object({ id: z.string().min(1) }).loose()),
-});
 
 /** Per-1M-token input/output (+ context) — the fields we cross-check. */
 export type Upstream = {
@@ -94,10 +95,6 @@ function record(value: unknown): Record<string, unknown> {
 function perMillion(value: unknown): number | undefined {
   const n = num(value);
   return n === undefined ? undefined : n * 1_000_000;
-}
-
-function emit(line: string): void {
-  process.stdout.write(`${line}\n`);
 }
 
 /**
@@ -580,28 +577,6 @@ export type SyncReport = {
   notChecked: string[];
 };
 
-function emitReport(report: SyncReport, check: boolean): void {
-  emit("== LLM catalog cross-check ==");
-  emit(
-    report.applied.length > 0
-      ? `\nDrift vs upstreams (${check ? "not applied" : "applied"}):\n${report.applied.join("\n")}`
-      : "\nNo input/output/context drift vs upstreams.",
-  );
-  if (report.withheld.length > 0) {
-    emit(
-      `\nWITHHELD by plausibility guards — check each against the provider's own pricing page, then either apply the upstream value or confirm the catalog's is intended (a divergence can be deliberate, e.g. a standard rate held while upstream lists a promotional one):\n${report.withheld.join("\n")}`,
-    );
-  }
-  if (report.overlayOnly.length > 0) {
-    emit(
-      `\nOverlay-only (absent from both upstreams under their own provider — verify manually):\n  ${report.overlayOnly.join("\n  ")}`,
-    );
-  }
-  if (report.notChecked.length > 0) {
-    emit(`\nNot cross-checked:\n  ${report.notChecked.join("\n  ")}`);
-  }
-}
-
 function flagValue(flag: string): string | undefined {
   const index = process.argv.indexOf(flag);
   if (index === -1) {
@@ -646,15 +621,9 @@ async function main(): Promise<void> {
         .map((entry) => entry.provider),
     ),
   );
-  const openRouterModels = new Set(
-    OpenRouterCatalogSchema.parse(openRouterModelsRaw).data.map(
-      (entry) => entry.id,
-    ),
-  );
-  const openRouterEmbeddings = new Set(
-    OpenRouterCatalogSchema.parse(openRouterEmbeddingsRaw).data.map(
-      (entry) => entry.id,
-    ),
+  const openRouterRoutes = indexOpenRouterRoutes(
+    openRouterModelsRaw,
+    openRouterEmbeddingsRaw,
   );
 
   const now = new Date();
@@ -665,21 +634,9 @@ async function main(): Promise<void> {
   const missingOpenRouterRoutes: string[] = [];
 
   for (const [id, entry] of Object.entries(catalog)) {
-    const openRouterRoute = entry.routes.openRouter;
-    if (entry.status === "current" || entry.status === "preview") {
-      if (openRouterRoute === undefined) {
-        missingOpenRouterRoutes.push(`${id} (route not configured)`);
-      } else {
-        const available =
-          openRouterRoute.endpoint === "embedding"
-            ? openRouterEmbeddings.has(openRouterRoute.modelId)
-            : openRouterModels.has(openRouterRoute.modelId);
-        if (!available) {
-          missingOpenRouterRoutes.push(
-            `${id} (${openRouterRoute.modelId} missing from ${openRouterRoute.endpoint} catalog)`,
-          );
-        }
-      }
+    const missingRoute = missingOpenRouterRoute(id, entry, openRouterRoutes);
+    if (missingRoute !== undefined) {
+      missingOpenRouterRoutes.push(missingRoute);
     }
     if (entry.pricing.modality !== "text") {
       notChecked.push(`${id} (image — per-image pricing not in upstreams)`);

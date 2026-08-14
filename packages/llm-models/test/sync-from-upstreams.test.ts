@@ -77,7 +77,19 @@ function entry(overrides: Record<string, unknown>): ModelEntry {
       displayName: "Subject",
       pricing: { modality: "text", input: 5, output: 25 },
       contextWindow: 200_000,
-      capabilities: { supportsTemperature: false, supportsTopP: false },
+      capabilities: {
+        inputModalities: ["text"],
+        outputModalities: ["text"],
+        tools: false,
+        structuredOutputs: false,
+        webSearch: false,
+        reasoning: false,
+        supportsTemperature: false,
+        supportsTopP: false,
+      },
+      // No route: these cases exercise the pricing/context indexers and the
+      // reconcile guards, never route availability.
+      routes: {},
       status: "current",
       ...overrides,
     },
