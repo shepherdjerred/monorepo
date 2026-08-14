@@ -175,11 +175,14 @@ describe("ArgoCD application", () => {
         },
       },
       {
-        // Synced and Healthy do not resolve a failure on the revision under
-        // release: a failed hook leaves both in place, and treating that as
-        // healthy would let the root advance to later waves.
-        name: "unresolved same-revision failure behind healthy state",
-        expected: "Degraded",
+        // ArgoCD never re-syncs an application it already considers Synced, so
+        // this failure can never clear on its own. Blocking would wedge every
+        // later root wave behind a child with nothing left to converge. The CI
+        // release gate still refuses this state — see
+        // operationIsReadyForCurrentRevision — so a failed hook on the revision
+        // under release stops the release without stranding the cluster.
+        name: "same-revision failure on a converged application",
+        expected: "Healthy",
         status: {
           sync: { status: "Synced", revision: "new" },
           health: { status: "Healthy" },
@@ -187,11 +190,22 @@ describe("ArgoCD application", () => {
         },
       },
       {
-        name: "failure without a recorded operation revision",
-        expected: "Degraded",
+        // No recorded revision means the failure cannot be shown to be
+        // superseded, so convergence is the only thing that can excuse it.
+        name: "failure without a recorded operation revision, converged",
+        expected: "Healthy",
         status: {
           sync: { status: "Synced", revision: "new" },
           health: { status: "Healthy" },
+          operationState: { phase: "Failed" },
+        },
+      },
+      {
+        name: "failure without a recorded operation revision, not converged",
+        expected: "Degraded",
+        status: {
+          sync: { status: "Synced", revision: "new" },
+          health: { status: "Degraded" },
           operationState: { phase: "Failed" },
         },
       },
@@ -230,32 +244,35 @@ describe("ArgoCD application", () => {
     }
   });
 
-  it("ignores terminal operation failures on applications that have converged", () => {
-    const application = synthArgoCdApplication();
-    const customization =
-      application.spec.source.helm.valuesObject.configs.cm[
-        "resource.customizations.health.argoproj.io_Application"
-      ];
-
-    // ArgoCD only re-runs a sync for an application it still sees as OutOfSync,
-    // so a failure recorded against an application that later reached
-    // Synced+Healthy can never clear. Blocking on it wedges every root health
-    // wave behind a child that has nothing left to converge.
-    expect(customization).toContain('obj.status.sync.status == "Synced" and');
-    expect(customization).toContain(
-      'obj.status.health.status == "Healthy" then',
-    );
-
-    const convergedClause = customization.slice(
-      customization.indexOf('obj.status.sync.status == "Synced" and'),
-    );
-    expect(convergedClause).toContain("operationBlocks = false");
+  // Asserted through the evaluator rather than by matching the Lua source: the
+  // rule is what the customization decides, and a source match breaks on any
+  // rewrite that preserves the behaviour — as this one did.
+  it("ignores terminal operation failures on applications that have converged", async () => {
+    const converged = await evaluateApplicationHealth({
+      sync: { status: "Synced", revision: "new" },
+      health: { status: "Healthy" },
+      operationState: { phase: "Failed", syncResult: { revision: "new" } },
+    });
+    expect(converged).toContain("Healthy");
 
     // The carve-out must stay scoped to terminal phases: a Running operation is
-    // an in-flight child sync the root health wave still has to wait for.
-    expect(
-      customization.match(/if \(phase == "Failed" or phase == "Error"\) and/g),
-    ).toHaveLength(2);
+    // an in-flight child sync the root health wave still has to wait for, even
+    // though this state is otherwise Synced and Healthy.
+    const running = await evaluateApplicationHealth({
+      sync: { status: "Synced", revision: "new" },
+      health: { status: "Healthy" },
+      operationState: { phase: "Running", syncResult: { revision: "new" } },
+    });
+    expect(running).toContain("Progressing");
+
+    // And a child that has not converged still blocks, so a rejected apply is
+    // not swept up by the same carve-out.
+    const stillBroken = await evaluateApplicationHealth({
+      sync: { status: "OutOfSync", revision: "new" },
+      health: { status: "Healthy" },
+      operationState: { phase: "Failed", syncResult: { revision: "new" } },
+    });
+    expect(stillBroken).toContain("Degraded");
   });
 
   it("keeps only non-failed cert-manager secret issuance progressing", () => {

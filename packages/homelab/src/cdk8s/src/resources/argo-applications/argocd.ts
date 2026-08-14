@@ -58,16 +58,27 @@ if operationPhase == "Running" or operationPhase == "Terminating" then
 end
 
 if operationPhase == "Failed" or operationPhase == "Error" then
-  -- A failure only stops mattering once it belongs to a superseded revision.
-  -- Synced and Healthy is not enough on its own: a failed hook leaves both in
-  -- place while the release did not finish, and child health is what orders the
-  -- root's waves. This matches operationIsReadyForCurrentRevision in
-  -- argocd-application-readiness.ts, which refuses the same state.
+  -- A failure stops mattering once it belongs to a superseded revision, or once
+  -- the application has converged anyway. ArgoCD never re-runs a sync for an
+  -- application it already considers Synced, so a failure recorded against one
+  -- that later reached Synced and Healthy can never clear: blocking on it wedges
+  -- every root health wave behind a child with nothing left to converge, which
+  -- is what took main CI down for two days. A rejected apply leaves the resource
+  -- OutOfSync or Degraded, so a genuinely broken child still blocks here.
+  --
+  -- This is deliberately more forgiving than
+  -- operationIsReadyForCurrentRevision in argocd-application-readiness.ts,
+  -- which still refuses a same-revision failure. The two gate different things:
+  -- this customization orders ArgoCD's own sync waves, where a permanent block
+  -- is unrecoverable, while that predicate gates the CI release, where refusing
+  -- fails one build that a retry can clear. A failed hook on the revision under
+  -- release therefore still stops the release without stranding the cluster.
   local failedOtherRevision =
     operationRevision ~= nil
     and syncRevision ~= nil
     and operationRevision ~= syncRevision
-  if not failedOtherRevision then
+  local convergedSinceFailure = syncStatus == "Synced" and healthStatus == "Healthy"
+  if not failedOtherRevision and not convergedSinceFailure then
     hs.status = "Degraded"
     hs.message = operationMessage or ("Application operation is " .. operationPhase)
     return hs

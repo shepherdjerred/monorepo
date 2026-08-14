@@ -1,8 +1,16 @@
 import { describe, expect, test } from "bun:test";
+import { z } from "zod";
 import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
-import { z } from "zod";
+import {
+  operationForRootSyncRequest,
+  operationForSyncRequest,
+  operationResponseForRootSync,
+  RootSyncRequestSchema,
+  SyncRequestSchema,
+  type SyncRequest,
+} from "./argocd-script-support.ts";
 
 type RequestObservation = {
   authorization: string | null;
@@ -11,64 +19,6 @@ type RequestObservation = {
   path: string;
   query: string;
 };
-
-const SyncInfoEntrySchema = z.discriminatedUnion("name", [
-  z.object({
-    name: z.literal("ci.sjer.red/request-id"),
-    value: z.uuid(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/operation-id"),
-    value: z.uuid(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/revision"),
-    value: z.string(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/release-phase"),
-    value: z.enum(["stage", "batch", "prune", "child"]),
-  }),
-]);
-
-const SyncRequestSchema = z.object({
-  infos: z.array(SyncInfoEntrySchema),
-  manifests: z.array(z.string()).optional(),
-  revision: z.string().optional(),
-  resources: z.array(
-    z.object({
-      group: z.string(),
-      kind: z.string(),
-      name: z.string(),
-    }),
-  ),
-});
-
-const RootSyncRequestSchema = z.object({
-  infos: z.array(SyncInfoEntrySchema),
-  prune: z.boolean(),
-  revision: z.string().optional(),
-});
-
-function operationForRootSyncRequest(
-  request: unknown,
-): Record<string, unknown> {
-  const syncRequest = RootSyncRequestSchema.parse(request);
-  return {
-    info: syncRequest.infos,
-    initiatedBy: { username: "buildkite" },
-    sync: {
-      prune: syncRequest.prune,
-      ...(syncRequest.revision === undefined
-        ? {}
-        : { revision: syncRequest.revision }),
-    },
-  };
-}
-
-function operationResponseForRootSync(request: unknown): unknown {
-  return { operation: operationForRootSyncRequest(request) };
-}
 
 const RELEASE_REQUEST_ID = "11111111-1111-4111-8111-111111111111";
 
@@ -118,20 +68,6 @@ const StagedExternalApplication = JSON.stringify({
     syncPolicy: { automated: { enabled: true } },
   },
 });
-
-function operationForSyncRequest(request: unknown): Record<string, unknown> {
-  const syncRequest = SyncRequestSchema.parse(request);
-  return {
-    info: syncRequest.infos,
-    initiatedBy: { username: "buildkite" },
-    sync: {
-      ...(syncRequest.manifests === undefined
-        ? {}
-        : { manifests: syncRequest.manifests }),
-      resources: syncRequest.resources,
-    },
-  };
-}
 
 function expectSuspendedWorkerRequest(request: unknown): void {
   const syncRequest = SyncRequestSchema.parse(request);
@@ -895,7 +831,7 @@ describe("Argo CD root release staging", () => {
   test("stages root prerequisites while child auto-sync remains suspended", async () => {
     const syncBodies: unknown[] = [];
     let requestedOperation: unknown;
-    let activeSyncRequest: z.infer<typeof SyncRequestSchema> | undefined;
+    let activeSyncRequest: SyncRequest | undefined;
     let deleteRequests = 0;
     const server = Bun.serve({
       hostname: "127.0.0.1",
@@ -1071,6 +1007,30 @@ async function runReconcileRelease(
   }
 }
 
+/**
+ * Every child sync is preceded by the apply-safety preflight, which reads the
+ * child's live inventory and renders the revision it is about to request.
+ * Cases that are not about apply safety answer both with nothing.
+ */
+function emptyPreflight(
+  request: Request,
+  url: URL,
+  app: string,
+  revision: string,
+): Response | null {
+  if (request.method !== "GET") {
+    return null;
+  }
+  if (url.pathname === `/api/v1/applications/${app}/managed-resources`) {
+    return Response.json({ items: [] });
+  }
+  if (url.pathname === `/api/v1/applications/${app}/manifests`) {
+    expect(url.searchParams.get("revision")).toBe(revision);
+    return Response.json({ manifests: [] });
+  }
+  return null;
+}
+
 describe("Argo CD stale release protection", () => {
   test("retries a failed operation recorded for an otherwise current app", async () => {
     let requestedOperation: Record<string, unknown> | undefined;
@@ -1100,18 +1060,9 @@ describe("Argo CD stale release protection", () => {
           requestedOperation = operationForRootSyncRequest(body);
           return Response.json({ operation: requestedOperation });
         }
-        if (
-          request.method === "GET" &&
-          url.pathname === "/api/v1/applications/worker/managed-resources"
-        ) {
-          return Response.json({ items: [] });
-        }
-        if (
-          request.method === "GET" &&
-          url.pathname === "/api/v1/applications/worker/manifests"
-        ) {
-          expect(url.searchParams.get("revision")).toBe("2.0.0-42");
-          return Response.json({ manifests: [] });
+        const pre = emptyPreflight(request, url, "worker", "2.0.0-42");
+        if (pre !== null) {
+          return pre;
         }
         if (
           request.method === "GET" &&
@@ -1238,6 +1189,10 @@ describe("Argo CD stale release protection", () => {
               }),
             ],
           });
+        }
+        const lokiPreflight = emptyPreflight(request, url, "loki", "6.1.0");
+        if (lokiPreflight !== null) {
+          return lokiPreflight;
         }
         if (
           request.method === "GET" &&
