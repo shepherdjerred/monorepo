@@ -346,6 +346,44 @@ function renderedTargetsByIdentity(
 
 const ResourceManifestResponseSchema = z.object({ manifest: z.string() });
 
+const ResourceErrorResponseSchema = z.object({ message: z.string() });
+
+/**
+ * The resource endpoint does not answer an object outside the Application's
+ * live tree with a 404. It fails the lookup with `codes.InvalidArgument`, which
+ * the gRPC gateway renders as HTTP 400, so the absent case is only
+ * distinguishable by its message. Rebuild that message exactly as the server
+ * formats it — `"%s %s %s not found as part of application %s"` over kind,
+ * group, name, and application, which leaves a double space for a core-group
+ * resource whose group is empty — and treat only an exact match as absent.
+ *
+ * Reconstructing it from this request's own parameters is what keeps the check
+ * narrow: every other 400 still fails loudly, as do the neighbouring failures
+ * that are emphatically not "absent" — an unknown application answers 403 and a
+ * malformed query answers 500.
+ */
+function describesResourceOutsideApplication(
+  body: string,
+  appName: string,
+  target: RenderedTarget,
+): boolean {
+  let decoded: unknown;
+  try {
+    decoded = JSON.parse(body);
+  } catch {
+    // A non-JSON body is not the response this recognizes, so the caller throws.
+    return false;
+  }
+  const parsed = ResourceErrorResponseSchema.safeParse(decoded);
+  if (!parsed.success) {
+    return false;
+  }
+  return (
+    parsed.data.message ===
+    `${target.kind} ${target.group} ${target.name} not found as part of application ${appName}`
+  );
+}
+
 /**
  * Read one live object through the Application's resource endpoint. A resource
  * the requested revision introduces has no entry in `managed-resources`, which
@@ -382,6 +420,12 @@ async function liveResourceState(
   }
   if (!response.ok) {
     const body = (await response.text()).slice(0, 1024);
+    if (
+      response.status === 400 &&
+      describesResourceOutsideApplication(body, appName, target)
+    ) {
+      return undefined;
+    }
     throw new Error(
       `Could not read live ${target.kind} ${target.name} for ${appName}: ` +
         `HTTP ${response.status.toString()} ${response.statusText}\n${body}`,

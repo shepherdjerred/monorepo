@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import path from "node:path";
+import { operationForRootSyncRequest } from "./argocd-script-support.ts";
 
 test("sync-managed rejects detached operations", async () => {
   const process = Bun.spawn(
@@ -309,6 +310,133 @@ test("sync-managed preflights a resource the requested revision introduces", asy
     expect(resourceQueries[0]).toContain("resourceName=index");
     expect(resourceQueries[0]).toContain("namespace=worker");
     expect(syncPosts).toBe(0);
+  } finally {
+    await server.stop(true);
+  }
+});
+
+// ArgoCD does not answer a resource outside the Application's live tree with a
+// 404. It fails the lookup with `codes.InvalidArgument` — HTTP 400 — so the
+// preflight's 404 branch never fires for the very case it exists to allow: a
+// resource the requested revision introduces, which by definition has no live
+// object yet. Reading that as a hard error failed `argocd-sync` on every main
+// build once the revision declared a Job the live tree did not carry.
+function serveIntroducedResourceLookup(resourceError: {
+  readonly error: string;
+  readonly code: number;
+  readonly message: string;
+}) {
+  let syncPosts = 0;
+  const resourceQueries: string[] = [];
+  let requestedOperation: Record<string, unknown> | undefined;
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request) {
+      const url = new URL(request.url);
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/worker" &&
+        url.searchParams.get("refresh") === "hard"
+      ) {
+        return Response.json({ status: {} });
+      }
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/worker/managed-resources"
+      ) {
+        return Response.json({ items: [] });
+      }
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/worker/manifests"
+      ) {
+        return Response.json({
+          manifests: [
+            JSON.stringify({
+              apiVersion: "batch/v1",
+              kind: "Job",
+              metadata: { name: "index-init", namespace: "worker" },
+              spec: { template: { spec: { containers: [] } } },
+            }),
+          ],
+        });
+      }
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/worker/resource"
+      ) {
+        resourceQueries.push(url.search);
+        return Response.json(resourceError, { status: 400 });
+      }
+      if (
+        request.method === "POST" &&
+        url.pathname === "/api/v1/applications/worker/sync"
+      ) {
+        syncPosts += 1;
+        requestedOperation = operationForRootSyncRequest(await request.json());
+        return Response.json({ operation: requestedOperation });
+      }
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/worker"
+      ) {
+        return Response.json({
+          status: {
+            sync: { revision: "2.0.0-43", status: "Synced" },
+            health: { status: "Healthy" },
+            operationState: {
+              phase: "Succeeded",
+              startedAt: new Date().toISOString(),
+              operation: requestedOperation,
+            },
+          },
+        });
+      }
+      return new Response("not found", { status: 404 });
+    },
+  });
+  return { server, syncPosts: () => syncPosts, resourceQueries };
+}
+
+test("sync-managed treats a resource outside the live tree as a creation", async () => {
+  // Verbatim from ArgoCD v3.5.0 — the message is the only thing that
+  // distinguishes this from any other 400.
+  const { server, syncPosts, resourceQueries } = serveIntroducedResourceLookup({
+    error: "Job batch index-init not found as part of application worker",
+    code: 3,
+    message: "Job batch index-init not found as part of application worker",
+  });
+  try {
+    const { exitCode, stderr } = await runSyncManagedAtRevision(
+      server.url.origin,
+    );
+
+    expect(stderr).not.toContain("Could not read live");
+    expect(exitCode).toBe(0);
+    expect(resourceQueries).toHaveLength(1);
+    expect(resourceQueries[0]).toContain("resourceName=index-init");
+    expect(syncPosts()).toBe(1);
+  } finally {
+    await server.stop(true);
+  }
+});
+
+test("sync-managed still fails on an unrecognized 400 from the resource endpoint", async () => {
+  const { server, syncPosts } = serveIntroducedResourceLookup({
+    error: "server misconfigured",
+    code: 3,
+    message: "server misconfigured",
+  });
+  try {
+    const { exitCode, stderr } = await runSyncManagedAtRevision(
+      server.url.origin,
+    );
+
+    expect(exitCode).not.toBe(0);
+    expect(stderr).toContain("Could not read live Job index-init for worker");
+    expect(stderr).toContain("server misconfigured");
+    expect(syncPosts()).toBe(0);
   } finally {
     await server.stop(true);
   }
