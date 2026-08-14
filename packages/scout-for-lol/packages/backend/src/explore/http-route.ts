@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/bun";
 import {
+  EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_REQUEST_MAX_BYTES,
   EXPLORE_TIMEOUT_MS,
   ExploreHttpErrorSchema,
@@ -412,7 +413,7 @@ async function persistPartialAnswer(input: {
     conversationId: input.conversationId,
     parentMessageId: input.parentMessageId,
     answer: {
-      answer: input.text,
+      answer: clampAnswer(input.text),
       queryText: null,
       caveats: ["This answer was stopped before it finished."],
       followUps: [],
@@ -466,6 +467,26 @@ function jsonError(
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Fit a stopped turn's text inside the answer contract.
+ *
+ * Every answer the model produces arrives through `ExploreAnswerSchema`, which
+ * caps length. A stopped turn does not: it hands a hand-built object to
+ * `appendExploreAnswer`, which takes the plain type and writes straight to
+ * Prisma, so nothing between here and the column would enforce the cap.
+ *
+ * Truncating rather than rejecting is the point — the text is what the person
+ * stopped to keep. The caller has already refused an empty one, so the `min(1)`
+ * end of the contract is covered.
+ */
+export function clampAnswer(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= EXPLORE_ANSWER_MAX_LENGTH) {
+    return trimmed;
+  }
+  return `${trimmed.slice(0, EXPLORE_ANSWER_MAX_LENGTH - 1)}…`;
 }
 
 /** The longest a message may be in `ExploreHttpErrorSchema` and the SSE error event. */

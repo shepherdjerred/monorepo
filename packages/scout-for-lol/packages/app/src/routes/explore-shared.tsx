@@ -19,6 +19,13 @@ export function ExploreShared() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Both reset here, not just on success: rendering checks `error` before
+    // `transcript`, so an error left over from a previous token would mask the
+    // new one permanently, and a transcript left over would briefly show the
+    // previous conversation under the new link. The effect re-runs whenever
+    // the token changes, which is the only time either can be stale.
+    setError(null);
+    setTranscript(null);
     if (shareToken === undefined) {
       setError("This link is missing its conversation.");
       return;
