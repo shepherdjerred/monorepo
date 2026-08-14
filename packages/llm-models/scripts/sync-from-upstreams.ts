@@ -63,6 +63,17 @@ export type Upstream = {
   contextWindow?: number | undefined;
 };
 
+/**
+ * One upstream value and the source that published it, as a single unit.
+ *
+ * Deliberately inseparable. Provenance used to be one string for the whole
+ * model, which only worked while a model's values all came from one row.
+ */
+export type MeasuredField = { readonly value: number; readonly source: string };
+
+/** A model's cross-checkable values after both upstreams are considered. */
+export type MergedUpstream = Partial<Record<CrossCheckField, MeasuredField>>;
+
 function num(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value)
     ? value
@@ -313,18 +324,46 @@ export type ReconcileResult = {
   rejected: string[];
 };
 
+/**
+ * Combine the two upstream rows field by field, models.dev winning only where
+ * it actually published a value.
+ *
+ * Preferring the whole models.dev object discarded a LiteLLM value whenever
+ * models.dev had a partial row. The field then counted as unmeasured and
+ * `LlmCatalogEvidenceMissing` announced that no upstream published it — while
+ * LiteLLM had, and any real drift in that number went unexamined. Precedence
+ * is a tie-breaker between two values, not a reason to ignore the only one.
+ */
+export function mergeUpstreams(
+  primary: Upstream | undefined,
+  fallback: Upstream | undefined,
+): MergedUpstream | undefined {
+  const merged: MergedUpstream = {};
+  for (const field of ["input", "output", "contextWindow"] as const) {
+    const fromPrimary = primary?.[field];
+    if (fromPrimary !== undefined) {
+      merged[field] = { value: fromPrimary, source: "models.dev" };
+      continue;
+    }
+    const fromFallback = fallback?.[field];
+    if (fromFallback !== undefined) {
+      merged[field] = { value: fromFallback, source: "litellm" };
+    }
+  }
+  return Object.keys(merged).length === 0 ? undefined : merged;
+}
+
 /** Mutates `entry` to match upstream input/output/context, subject to the guards. */
-/** Which upstream supplied the values, and the clock acceptance expiry is judged against. */
+/** The clock the acceptance expiry is judged against. */
 export type ReconcileContext = {
-  source: string;
   now: Date;
 };
 
 export function reconcile(
   id: string,
   entry: ModelEntry,
-  upstream: Upstream,
-  { source, now }: ReconcileContext,
+  upstream: MergedUpstream,
+  { now }: ReconcileContext,
 ): ReconcileResult {
   if (entry.pricing.modality !== "text") {
     return { applied: [], rejectedByField: {}, rejected: [] };
@@ -332,16 +371,21 @@ export function reconcile(
   const applied: string[] = [];
   const rejectedByField: Partial<Record<CrossCheckField, string>> = {};
   const note = (
+    measured: MeasuredField,
     field: CrossCheckField,
     before: number,
     after: number,
   ): void => {
     applied.push(
-      `  ${id}.${field}: ${String(before)} -> ${String(after)} (${source})`,
+      `  ${id}.${field}: ${String(before)} -> ${String(after)} (${measured.source})`,
     );
   };
-  const reject = (field: CrossCheckField, reason: string): void => {
-    rejectedByField[field] = `  ${id}.${field}: ${reason} (${source})`;
+  const reject = (
+    measured: MeasuredField,
+    field: CrossCheckField,
+    reason: string,
+  ): void => {
+    rejectedByField[field] = `  ${id}.${field}: ${reason} (${measured.source})`;
   };
 
   /**
@@ -373,47 +417,52 @@ export function reconcile(
     );
   };
 
+  const inputField = upstream.input;
   if (
-    upstream.input !== undefined &&
-    !accepted("input", upstream.input, entry.pricing.input) &&
-    Math.abs(entry.pricing.input - upstream.input) > EPSILON
+    inputField !== undefined &&
+    !accepted("input", inputField.value, entry.pricing.input) &&
+    Math.abs(entry.pricing.input - inputField.value) > EPSILON
   ) {
-    const decision = priceDecision(entry.pricing.input, upstream.input);
+    const decision = priceDecision(entry.pricing.input, inputField.value);
     if (decision.kind === "apply") {
-      note("input", entry.pricing.input, decision.value);
+      note(inputField, "input", entry.pricing.input, decision.value);
       entry.pricing.input = decision.value;
     } else {
-      reject("input", decision.reason);
+      reject(inputField, "input", decision.reason);
     }
   }
+  const outputField = upstream.output;
   if (
-    upstream.output !== undefined &&
-    !accepted("output", upstream.output, entry.pricing.output) &&
-    Math.abs(entry.pricing.output - upstream.output) > EPSILON
+    outputField !== undefined &&
+    !accepted("output", outputField.value, entry.pricing.output) &&
+    Math.abs(entry.pricing.output - outputField.value) > EPSILON
   ) {
-    const decision = priceDecision(entry.pricing.output, upstream.output);
+    const decision = priceDecision(entry.pricing.output, outputField.value);
     if (decision.kind === "apply") {
-      note("output", entry.pricing.output, decision.value);
+      note(outputField, "output", entry.pricing.output, decision.value);
       entry.pricing.output = decision.value;
     } else {
-      reject("output", decision.reason);
+      reject(outputField, "output", decision.reason);
     }
   }
+  const contextField = upstream.contextWindow;
   if (
-    upstream.contextWindow !== undefined &&
+    contextField !== undefined &&
     entry.contextWindow !== undefined &&
-    entry.contextWindow !== upstream.contextWindow &&
+    entry.contextWindow !== contextField.value &&
     entry.pinnedContextWindow !== true
   ) {
-    const reason = contextRejection(
-      entry.contextWindow,
-      upstream.contextWindow,
-    );
+    const reason = contextRejection(entry.contextWindow, contextField.value);
     if (reason === undefined) {
-      note("contextWindow", entry.contextWindow, upstream.contextWindow);
-      entry.contextWindow = upstream.contextWindow;
+      note(
+        contextField,
+        "contextWindow",
+        entry.contextWindow,
+        contextField.value,
+      );
+      entry.contextWindow = contextField.value;
     } else {
-      reject("contextWindow", reason);
+      reject(contextField, "contextWindow", reason);
     }
   }
   return {
@@ -451,7 +500,7 @@ export type ModelVerdict = {
 
 export function verdictFor(
   entry: ModelEntry,
-  upstream: Upstream | undefined,
+  upstream: MergedUpstream | undefined,
   result: ReconcileResult,
 ): ModelVerdict {
   const applicable = applicableFields(entry);
@@ -558,8 +607,7 @@ async function main(): Promise<void> {
     // Look the model up under ITS OWN provider. A `claude-opus-5` price from
     // some reseller is not evidence about what Anthropic charges us.
     const key = providerKey(entry.provider, id);
-    const fromModelsDev = modelsDev.get(key);
-    const upstream = fromModelsDev ?? liteLlm.get(key);
+    const upstream = mergeUpstreams(modelsDev.get(key), liteLlm.get(key));
     if (upstream === undefined) {
       overlayOnly.push(id);
       // Still a verdict: every applicable field is unmeasured, which is what
@@ -571,10 +619,7 @@ async function main(): Promise<void> {
       });
       continue;
     }
-    const result = reconcile(id, entry, upstream, {
-      source: fromModelsDev === undefined ? "litellm" : "models.dev",
-      now,
-    });
+    const result = reconcile(id, entry, upstream, { now });
     drifted.push(...result.applied);
     // Measurement is per FIELD, not per model. `Upstream` fields are each
     // optional, so a row carrying `cost.input` but not `cost.output` proves

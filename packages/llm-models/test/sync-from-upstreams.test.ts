@@ -5,8 +5,11 @@ import {
   indexLiteLlm,
   indexModelsDev,
   priceDecision,
+  mergeUpstreams,
   providerKey,
   reconcile,
+  verdictFor,
+  type MergedUpstream,
   type Upstream,
 } from "#scripts/sync-from-upstreams.ts";
 import { CatalogSchema, type ModelEntry } from "#src/index.ts";
@@ -212,6 +215,15 @@ function merge(...maps: Map<string, Upstream>[]): Map<string, Upstream> {
   return new Map(maps.flatMap((map) => [...map.entries()]));
 }
 
+/** A models.dev-only row, the ordinary case for the guard tests. */
+function devRow(upstream: Upstream): MergedUpstream {
+  const merged = mergeUpstreams(upstream, undefined);
+  if (merged === undefined) {
+    throw new Error("fixture supplied no upstream values");
+  }
+  return merged;
+}
+
 describe("assertUpstreamCoverage", () => {
   const providers = new Set(["openai", "anthropic"]);
 
@@ -342,8 +354,8 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
     const result = reconcile(
       "subject",
       subject,
-      { input: 5.5, output: 27 },
-      { source: "models.dev", now: NOW },
+      devRow({ input: 5.5, output: 27 }),
+      { now: NOW },
     );
     expect(result.rejected).toHaveLength(0);
     expect(result.applied).toHaveLength(2);
@@ -356,8 +368,8 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
       "subject",
       subject,
       // Fable-5-style repricing plus Haiku's context cut.
-      { input: 1.5, output: 27.498, contextWindow: 20_000 },
-      { source: "models.dev", now: NOW },
+      devRow({ input: 1.5, output: 27.498, contextWindow: 20_000 }),
+      { now: NOW },
     );
 
     expect(result.applied).toHaveLength(0);
@@ -372,8 +384,8 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
     const result = reconcile(
       "subject",
       subject,
-      { contextWindow: 20_000 },
-      { source: "models.dev", now: NOW },
+      devRow({ contextWindow: 20_000 }),
+      { now: NOW },
     );
     expect(result.rejected[0]).toContain("subject.contextWindow");
     expect(result.rejected[0]).toContain("shrinks");
@@ -395,8 +407,8 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
     const result = reconcile(
       "subject",
       subject,
-      { input: 2, output: 10 },
-      { source: "models.dev", now: NOW },
+      devRow({ input: 2, output: 10 }),
+      { now: NOW },
     );
     expect(result.applied).toHaveLength(0);
     expect(result.rejected).toHaveLength(0);
@@ -417,23 +429,17 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
     };
 
     const before = entry(acceptance);
-    const stillAccepted = reconcile(
-      "subject",
-      before,
-      { input: 2 },
-      { source: "models.dev", now: new Date("2026-08-31T23:59:59Z") },
-    );
+    const stillAccepted = reconcile("subject", before, devRow({ input: 2 }), {
+      now: new Date("2026-08-31T23:59:59Z"),
+    });
     expect(stillAccepted.applied).toHaveLength(0);
     expect(stillAccepted.rejected).toHaveLength(0);
 
     // Same upstream number, same catalog value — only the clock moved.
     const after = entry(acceptance);
-    const lapsed = reconcile(
-      "subject",
-      after,
-      { input: 2 },
-      { source: "models.dev", now: new Date("2026-09-01T00:00:01Z") },
-    );
+    const lapsed = reconcile("subject", after, devRow({ input: 2 }), {
+      now: new Date("2026-09-01T00:00:01Z"),
+    });
     expect(lapsed.applied.length + lapsed.rejected.length).toBe(1);
   });
 
@@ -452,22 +458,14 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
 
     // Upstream moves to a plausible intermediate value: applied, so the
     // catalog side of the accepted pair no longer holds.
-    reconcile(
-      "subject",
-      subject,
-      { input: 4.5 },
-      { source: "models.dev", now: NOW },
-    );
+    reconcile("subject", subject, devRow({ input: 4.5 }), { now: NOW });
     expect(subject.pricing).toMatchObject({ input: 4.5 });
 
     // Upstream returns to the accepted number. The pair no longer matches, so
     // this must be reconciled rather than silently suppressed.
-    const afterReturn = reconcile(
-      "subject",
-      subject,
-      { input: 2 },
-      { source: "models.dev", now: NOW },
-    );
+    const afterReturn = reconcile("subject", subject, devRow({ input: 2 }), {
+      now: NOW,
+    });
     expect(afterReturn.applied.length + afterReturn.rejected.length).toBe(1);
   });
 
@@ -485,23 +483,17 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
 
     // A plausible new price is applied, not silently ignored.
     const modest = entry(acceptance);
-    const applied = reconcile(
-      "subject",
-      modest,
-      { input: 4 },
-      { source: "models.dev", now: NOW },
-    );
+    const applied = reconcile("subject", modest, devRow({ input: 4 }), {
+      now: NOW,
+    });
     expect(applied.applied).toHaveLength(1);
     expect(modest.pricing).toMatchObject({ input: 4 });
 
     // An implausible one still reaches the guard and is withheld.
     const drastic = entry(acceptance);
-    const withheld = reconcile(
-      "subject",
-      drastic,
-      { input: 12 },
-      { source: "models.dev", now: NOW },
-    );
+    const withheld = reconcile("subject", drastic, devRow({ input: 12 }), {
+      now: NOW,
+    });
     expect(withheld.rejected).toHaveLength(1);
     expect(withheld.rejected[0]).toContain("subject.input");
     expect(drastic.pricing).toMatchObject({ input: 5 });
@@ -512,8 +504,8 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
     const result = reconcile(
       "subject",
       subject,
-      { contextWindow: 1_000_000 },
-      { source: "models.dev", now: NOW },
+      devRow({ contextWindow: 1_000_000 }),
+      { now: NOW },
     );
     expect(result.applied).toHaveLength(0);
     expect(result.rejected).toHaveLength(0);
@@ -528,8 +520,8 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
     const result = reconcile(
       "subject",
       subject,
-      { input: 99, output: 99 },
-      { source: "models.dev", now: NOW },
+      devRow({ input: 99, output: 99 }),
+      { now: NOW },
     );
     expect(result.applied).toHaveLength(0);
     expect(result.rejected).toHaveLength(0);
@@ -622,5 +614,56 @@ describe("acceptedUpstreamPricing shape contract", () => {
         },
       }),
     ).not.toThrow();
+  });
+});
+
+describe("mergeUpstreams", () => {
+  test("fills a field models.dev omitted from the LiteLLM row", () => {
+    // The whole-object preference discarded LiteLLM entirely whenever
+    // models.dev had any row at all. The field then counted as unmeasured and
+    // LlmCatalogEvidenceMissing announced that no upstream published it —
+    // while LiteLLM had, and real drift in that number went unexamined.
+    const merged = mergeUpstreams(
+      { input: 2 },
+      { input: 9, output: 10, contextWindow: 400_000 },
+    );
+    expect(merged).toEqual({
+      // models.dev still wins where it actually has a value.
+      input: { value: 2, source: "models.dev" },
+      output: { value: 10, source: "litellm" },
+      contextWindow: { value: 400_000, source: "litellm" },
+    });
+  });
+
+  test("reports the true source per field, not per model", () => {
+    // The reason strings name the source, so a merged row must not attribute
+    // a LiteLLM number to models.dev.
+    const subject = entry({});
+    const merged = mergeUpstreams({ input: 5.5 }, { output: 40 });
+    if (merged === undefined) {
+      throw new Error("fixture supplied no upstream values");
+    }
+    const result = reconcile("subject", subject, merged, { now: NOW });
+    expect(result.applied.join("\n")).toContain("subject.input");
+    expect(result.applied.join("\n")).toContain("(models.dev)");
+    // 25 -> 40 is a 60% change, so it is withheld, and cites litellm.
+    expect(result.rejectedByField.output).toContain("(litellm)");
+  });
+
+  test("a field neither upstream published stays unmeasured", () => {
+    const subject = entry({});
+    const merged = mergeUpstreams({ input: 5 }, { input: 5 });
+    const verdict = verdictFor(subject, merged, {
+      applied: [],
+      rejectedByField: {},
+      rejected: [],
+    });
+    expect(verdict.measured).toEqual(["input"]);
+    expect(verdict.unmeasured).toEqual(["output", "contextWindow"]);
+  });
+
+  test("two empty rows produce no upstream at all", () => {
+    expect(mergeUpstreams(undefined, undefined)).toBeUndefined();
+    expect(mergeUpstreams({}, {})).toBeUndefined();
   });
 });
