@@ -31,7 +31,7 @@ const VENDOR_INTERFACE_FILES = [
   "packages/temporal/src/activities/gcx-context.test.ts",
 ];
 
-const VENDOR_INTERFACE_VARIABLES = ["GRAFANA_SERVER", "GRAFANA_TOKEN"];
+const VENDOR_INTERFACE_VARIABLES = new Set(["GRAFANA_SERVER", "GRAFANA_TOKEN"]);
 
 const GITHUB_TOKEN_EXCLUSIONS = [
   "TOFU_GITHUB_TOKEN",
@@ -67,7 +67,7 @@ export function findEnvironmentVariableViolations(
   for (const [index, text] of source.split("\n").entries()) {
     const upper = text.toUpperCase();
     for (const [pattern, replacement] of BANNED_ENVIRONMENT_VARIABLES) {
-      if (vendorInterface && VENDOR_INTERFACE_VARIABLES.includes(pattern)) {
+      if (vendorInterface && VENDOR_INTERFACE_VARIABLES.has(pattern)) {
         continue;
       }
       if (upper.includes(pattern)) {
