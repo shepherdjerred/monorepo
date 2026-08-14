@@ -281,13 +281,31 @@ function runExploreTurnStream(input: {
       // A stopped turn keeps whatever it had already said. Discarding it
       // would leave a question with no answer under it, which reads as a
       // bug rather than as a deliberate stop.
-      const salvaged = await persistPartialAnswer({
-        aborted: abortController.signal.aborted,
-        conversationId: started.conversationId,
-        parentMessageId: started.messageId,
-        text: streamedAnswer,
-        trace,
-      });
+      //
+      // Guarded on its own because this is a real database write inside a
+      // catch block: a throw here would escape the catch, skip both terminal
+      // events, and surface as an unhandled rejection from the voided async
+      // runner. Salvage is best effort — the turn has already failed, so
+      // failing to keep its remains must not also cost the caller its answer
+      // about what happened.
+      let salvaged: ExploreMessage | null = null;
+      try {
+        salvaged = await persistPartialAnswer({
+          aborted: abortController.signal.aborted,
+          conversationId: started.conversationId,
+          parentMessageId: started.messageId,
+          text: streamedAnswer,
+          trace,
+        });
+      } catch (salvageError) {
+        logger.error(
+          "Failed to salvage a stopped explore turn",
+          errorMessage(salvageError),
+        );
+        Sentry.captureException(salvageError, {
+          tags: { source: "explore-salvage" },
+        });
+      }
       if (salvaged === null) {
         emit({
           type: "error",
