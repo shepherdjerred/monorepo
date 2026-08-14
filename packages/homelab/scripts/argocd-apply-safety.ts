@@ -163,6 +163,85 @@ function declaredTargetChanged(
     : !targetMatchesLive(targetValue, liveValue, field.liveOnlyKeys);
 }
 
+/**
+ * A list whose entries are themselves resources of a known kind, compared with
+ * that kind's own immutable-field rules.
+ *
+ * The surrounding list has to tolerate live-only keys, because the API server
+ * writes them into every entry. That tolerance is what lets an author-owned key
+ * removed from one entry — dropping `accessModes` from a claim template — read
+ * as no change. Descending with the entry kind's rules recovers the precision:
+ * each of those fields already declares whether the API server owns it, so the
+ * classification comes from one reviewed table rather than a second list of
+ * server-defaulted keys that would drift with every Kubernetes release.
+ */
+type EmbeddedResourceList = {
+  readonly path: readonly string[];
+  readonly entryKind: string;
+};
+
+function embeddedResourceLists(kind: string): readonly EmbeddedResourceList[] {
+  switch (kind) {
+    case "StatefulSet":
+      return [
+        {
+          path: ["spec", "volumeClaimTemplates"],
+          entryKind: "PersistentVolumeClaim",
+        },
+      ];
+    default:
+      return [];
+  }
+}
+
+function entriesByName(value: unknown): Map<string, Record<string, unknown>> {
+  const byName = new Map<string, Record<string, unknown>>();
+  if (!Array.isArray(value)) {
+    return byName;
+  }
+  for (const entry of value) {
+    const parsed = JsonObjectSchema.safeParse(entry);
+    if (!parsed.success) {
+      continue;
+    }
+    const name = valueAt(parsed.data, ["metadata", "name"]);
+    if (typeof name === "string" && name !== "") {
+      byName.set(name, parsed.data);
+    }
+  }
+  return byName;
+}
+
+/**
+ * Entries are matched by name rather than position: the enclosing list already
+ * reports an added, removed, or reordered entry, so descending by index would
+ * only restate that as a pile of per-field findings.
+ */
+function embeddedListFindings(
+  live: Record<string, unknown>,
+  target: Record<string, unknown>,
+  list: EmbeddedResourceList,
+  resourceIdentity: string,
+): readonly string[] {
+  const liveEntries = entriesByName(valueAt(live, list.path));
+  const targetEntries = entriesByName(valueAt(target, list.path));
+  const findings: string[] = [];
+  for (const [name, targetEntry] of targetEntries) {
+    const liveEntry = liveEntries.get(name);
+    if (liveEntry === undefined) {
+      continue;
+    }
+    for (const field of immutableFields(list.entryKind)) {
+      if (declaredTargetChanged(liveEntry, targetEntry, field)) {
+        findings.push(
+          `${resourceIdentity} changes immutable /${list.path.join("/")}/[name=${name}]/${field.path.join("/")}`,
+        );
+      }
+    }
+  }
+  return findings;
+}
+
 function activeProbeHandler(probe: Record<string, unknown>): string | null {
   const handlers = PROBE_HANDLERS.filter(
     (handler) => probe[handler] !== undefined,
@@ -363,6 +442,11 @@ export function analyzeApplySafety(
           `${identity(resource)} changes immutable /${field.path.join("/")}`,
         );
       }
+    }
+    for (const list of embeddedResourceLists(resource.kind)) {
+      findings.push(
+        ...embeddedListFindings(live, target, list, identity(resource)),
+      );
     }
     const liveProbes = new Map<string, string>();
     const targetProbes = new Map<string, string>();

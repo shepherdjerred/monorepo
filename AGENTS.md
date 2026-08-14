@@ -110,9 +110,13 @@ describes only the configured revision. Every immutable field declares both
 what omitting the whole field means and what a key found only in the live value
 means, because dropping a key inside a declared field is as rejectable as
 changing one; only fields the API server populates keys inside, such as a
-StatefulSet's claim templates, compare the declared keys alone. Only the
-self-managed root Application remains auto-sync suspended while those
-operations run.
+StatefulSet's claim templates, compare the declared keys alone. Where that
+tolerance would hide an author-owned removal, the preflight descends into the
+list with the entry kind's own rules — a claim template is compared as a
+PersistentVolumeClaim, matched by name — so the classification comes from one
+reviewed table rather than a second list of server-defaulted keys that would
+drift with every Kubernetes release. Only the self-managed root Application
+remains auto-sync suspended while those operations run.
 
 Ordinary manual or UI root syncs are supported. Admission merges each managed
 child Application's declared sync options into the requested operation, with

@@ -279,6 +279,104 @@ describe("ArgoCD immutable nested key removal", () => {
   });
 });
 
+// A claim template is a PersistentVolumeClaim, so the same author-owned keys
+// are immutable inside it. The enclosing list has to tolerate live-only keys
+// because the API server writes them into every template, which is exactly what
+// would otherwise hide a key the author removed from one.
+describe("ArgoCD immutable keys inside a claim template", () => {
+  test("reports an author-owned key dropped from a claim template", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "test",
+          name: "db",
+          liveState: database([
+            {
+              ...declaredClaim,
+              spec: {
+                ...declaredClaim.spec,
+                volumeMode: "Filesystem",
+                storageClassName: "zfs-ssd",
+              },
+            },
+          ]),
+          targetState: database([
+            {
+              ...declaredClaim,
+              spec: { resources: { requests: { storage: "8Gi" } } },
+            },
+          ]),
+        },
+      ]),
+    ).toEqual([
+      "apps/StatefulSet test/db changes immutable /spec/volumeClaimTemplates/[name=data]/spec/accessModes",
+    ]);
+  });
+
+  test("reports a selector label removed inside a claim template", () => {
+    const selected = {
+      ...declaredClaim,
+      spec: {
+        ...declaredClaim.spec,
+        selector: { matchLabels: { tier: "hot", zone: "a" } },
+      },
+    };
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "test",
+          name: "db",
+          liveState: database([selected]),
+          targetState: database([
+            {
+              ...selected,
+              spec: {
+                ...selected.spec,
+                selector: { matchLabels: { tier: "hot" } },
+              },
+            },
+          ]),
+        },
+      ]),
+      // The enclosing list tolerates live-only keys, so it stays silent here
+      // and the finding names the exact template and field instead.
+    ).toEqual([
+      "apps/StatefulSet test/db changes immutable /spec/volumeClaimTemplates/[name=data]/spec/selector",
+    ]);
+  });
+
+  // The tolerance that makes the gap possible must survive: a template carrying
+  // only API-populated additions is still not a declared change.
+  test("ignores a template that differs only by API-populated keys", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "test",
+          name: "db",
+          liveState: database([
+            {
+              ...declaredClaim,
+              spec: {
+                ...declaredClaim.spec,
+                volumeMode: "Filesystem",
+                storageClassName: "zfs-ssd",
+                volumeName: "pvc-123",
+              },
+            },
+          ]),
+          targetState: database([declaredClaim]),
+        },
+      ]),
+    ).toEqual([]);
+  });
+});
+
 // Omitting an immutable field means something different for each kind of
 // field, so these cover all three: reset to default, removal of an
 // author-owned field, and a server-assigned value the request never sets.
