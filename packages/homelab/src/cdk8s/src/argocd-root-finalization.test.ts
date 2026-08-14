@@ -43,6 +43,10 @@ const SyncRequestSchema = z.object({
       group: z.string(),
       kind: z.string(),
       name: z.string(),
+      // Modelled because Zod strips unknown keys: without it the fixture
+      // silently dropped the namespace before serving the operation back, so
+      // no test could reach the parsing this file exercises.
+      namespace: z.string().optional(),
     }),
   ),
 });
@@ -409,148 +413,158 @@ test("root release finalization applies every exact wave before accepting a part
   }
 });
 
-test("root release finalization adopts the exact active batch without replaying prior waves", async () => {
-  const policyResource = {
-    group: "admissionregistration.k8s.io",
-    kind: "ValidatingAdmissionPolicy",
-    name: "pvc-backup-policy.sjer.red",
-  };
-  const activeBatchRequest = {
-    infos: releaseOperationInfo("batch"),
-    prune: false,
-    resources: [policyResource],
-    revision: "2.0.0-43",
-  };
-  let activeRequest: unknown = activeBatchRequest;
-  let requestedOperation: Record<string, unknown> | undefined =
-    operationForSyncRequest(activeBatchRequest);
-  let deleteRequests = 0;
-  let syncPosts = 0;
-  const server = Bun.serve({
-    hostname: "127.0.0.1",
-    port: 0,
-    async fetch(request) {
-      const url = new URL(request.url);
-      if (url.pathname === "/api/charts/apps") {
-        return Response.json([
-          {
-            version: "2.0.0-43",
-            urls: ["charts/apps-2.0.0-43.tgz"],
-            digest: "a".repeat(64),
-          },
-        ]);
-      }
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/v1/applications/apps/manifests"
-      ) {
-        return Response.json({
-          manifests: [
-            StagedRootApplication,
-            StagedRepositoryApplication,
-            StagedExternalApplication,
-            StagedAdmissionPolicy,
-          ],
-        });
-      }
-      if (
-        request.method === "POST" &&
-        url.pathname === "/api/v1/applications/apps/sync"
-      ) {
-        syncPosts += 1;
-        activeRequest = await request.json();
-        requestedOperation = operationForRootSyncRequest(activeRequest);
-        return Response.json({ operation: requestedOperation });
-      }
-      if (
-        request.method === "DELETE" &&
-        url.pathname === "/api/v1/applications/apps/operation"
-      ) {
-        deleteRequests += 1;
-        activeRequest = undefined;
-        requestedOperation = undefined;
-        return Response.json({});
-      }
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/v1/applications/apps"
-      ) {
-        if (activeRequest === undefined || requestedOperation === undefined) {
-          return Response.json({ status: { resources: [] } });
+// A cluster-scoped selector has two equally valid spellings on the wire: Argo
+// may omit `namespace` or send it empty. Both name the same target, so adoption
+// has to accept either. Rejecting the empty one at the parse boundary aborted
+// the whole batch before it could even look at the active operation.
+for (const clusterScoped of [
+  { label: "an omitted namespace", fields: {} },
+  { label: "an empty namespace", fields: { namespace: "" } },
+]) {
+  test(`root release finalization adopts the exact active batch with ${clusterScoped.label} and without replaying prior waves`, async () => {
+    const policyResource = {
+      group: "admissionregistration.k8s.io",
+      kind: "ValidatingAdmissionPolicy",
+      name: "pvc-backup-policy.sjer.red",
+      ...clusterScoped.fields,
+    };
+    const activeBatchRequest = {
+      infos: releaseOperationInfo("batch"),
+      prune: false,
+      resources: [policyResource],
+      revision: "2.0.0-43",
+    };
+    let activeRequest: unknown = activeBatchRequest;
+    let requestedOperation: Record<string, unknown> | undefined =
+      operationForSyncRequest(activeBatchRequest);
+    let deleteRequests = 0;
+    let syncPosts = 0;
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      async fetch(request) {
+        const url = new URL(request.url);
+        if (url.pathname === "/api/charts/apps") {
+          return Response.json([
+            {
+              version: "2.0.0-43",
+              urls: ["charts/apps-2.0.0-43.tgz"],
+              digest: "a".repeat(64),
+            },
+          ]);
         }
-        const manifestRequest = SyncRequestSchema.safeParse(activeRequest);
-        return Response.json({
-          operation: requestedOperation,
-          status: {
-            resources: [],
-            operationState: {
-              phase: "Running",
-              startedAt: new Date().toISOString(),
-              operation: requestedOperation,
-              syncResult: {
-                revision: "2.0.0-43",
-                resources: manifestRequest.success
-                  ? manifestRequest.data.resources.map((resource) => ({
-                      ...resource,
-                      status: "Synced",
-                    }))
-                  : [
-                      { ...RootApplicationResource, status: "Synced" },
-                      { ...WorkerApplicationResource, status: "Synced" },
-                    ],
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps/manifests"
+        ) {
+          return Response.json({
+            manifests: [
+              StagedRootApplication,
+              StagedRepositoryApplication,
+              StagedExternalApplication,
+              StagedAdmissionPolicy,
+            ],
+          });
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/v1/applications/apps/sync"
+        ) {
+          syncPosts += 1;
+          activeRequest = await request.json();
+          requestedOperation = operationForRootSyncRequest(activeRequest);
+          return Response.json({ operation: requestedOperation });
+        }
+        if (
+          request.method === "DELETE" &&
+          url.pathname === "/api/v1/applications/apps/operation"
+        ) {
+          deleteRequests += 1;
+          activeRequest = undefined;
+          requestedOperation = undefined;
+          return Response.json({});
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps"
+        ) {
+          if (activeRequest === undefined || requestedOperation === undefined) {
+            return Response.json({ status: { resources: [] } });
+          }
+          const manifestRequest = SyncRequestSchema.safeParse(activeRequest);
+          return Response.json({
+            operation: requestedOperation,
+            status: {
+              resources: [],
+              operationState: {
+                phase: "Running",
+                startedAt: new Date().toISOString(),
+                operation: requestedOperation,
+                syncResult: {
+                  revision: "2.0.0-43",
+                  resources: manifestRequest.success
+                    ? manifestRequest.data.resources.map((resource) => ({
+                        ...resource,
+                        status: "Synced",
+                      }))
+                    : [
+                        { ...RootApplicationResource, status: "Synced" },
+                        { ...WorkerApplicationResource, status: "Synced" },
+                      ],
+                },
               },
             },
-          },
-        });
-      }
-      return new Response("not found", { status: 404 });
-    },
-  });
-
-  try {
-    const process = Bun.spawn(
-      [
-        "bun",
-        "--no-install",
-        "scripts/argocd.ts",
-        "finalize-root-release",
-        "apps",
-        "--revision",
-        "2.0.0-43",
-        "--request-id",
-        RELEASE_REQUEST_ID,
-        "--timeout",
-        "1",
-      ],
-      {
-        cwd: path.resolve(import.meta.dir, "../../.."),
-        env: {
-          ...Bun.env,
-          ARGOCD_POLL_INTERVAL_MS: "5",
-          ARGOCD_SERVER_URL: server.url.origin,
-          ARGOCD_TOKEN: "test-token",
-          CHARTMUSEUM_ORIGIN: server.url.origin,
-        },
-        stderr: "pipe",
-        stdout: "pipe",
+          });
+        }
+        return new Response("not found", { status: 404 });
       },
-    );
-    const [exitCode, stdout, stderr] = await Promise.all([
-      process.exited,
-      new Response(process.stdout).text(),
-      new Response(process.stderr).text(),
-    ]);
+    });
 
-    expect(exitCode).toBe(0);
-    expect(stderr).toBe("");
-    expect(stdout).toContain("adopting exact root batch 3/3 (1 resources)");
-    expect(stdout).not.toContain("syncing exact root batch 1/2");
-    expect(syncPosts).toBe(1);
-    expect(deleteRequests).toBe(2);
-  } finally {
-    await server.stop(true);
-  }
-});
+    try {
+      const process = Bun.spawn(
+        [
+          "bun",
+          "--no-install",
+          "scripts/argocd.ts",
+          "finalize-root-release",
+          "apps",
+          "--revision",
+          "2.0.0-43",
+          "--request-id",
+          RELEASE_REQUEST_ID,
+          "--timeout",
+          "1",
+        ],
+        {
+          cwd: path.resolve(import.meta.dir, "../../.."),
+          env: {
+            ...Bun.env,
+            ARGOCD_POLL_INTERVAL_MS: "5",
+            ARGOCD_SERVER_URL: server.url.origin,
+            ARGOCD_TOKEN: "test-token",
+            CHARTMUSEUM_ORIGIN: server.url.origin,
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        },
+      );
+      const [exitCode, stdout, stderr] = await Promise.all([
+        process.exited,
+        new Response(process.stdout).text(),
+        new Response(process.stderr).text(),
+      ]);
+
+      expect(exitCode).toBe(0);
+      expect(stderr).toBe("");
+      expect(stdout).toContain("adopting exact root batch 3/3 (1 resources)");
+      expect(stdout).not.toContain("syncing exact root batch 1/2");
+      expect(syncPosts).toBe(1);
+      expect(deleteRequests).toBe(2);
+    } finally {
+      await server.stop(true);
+    }
+  });
+}
 
 test("root release finalization adopts the exact active prune without another POST", async () => {
   const activeOperation = operationForRootSyncRequest({

@@ -144,11 +144,20 @@ const RenderedResourceSchema = z.object({
     .passthrough(),
 });
 
+/**
+ * A live operation's selector as Argo reports it. `namespace` accepts an empty
+ * string on purpose: a cluster-scoped target has two valid spellings on the
+ * wire, omitted or empty, and this identity model already treats them as one —
+ * `group` is normalised with `?? ""` and `operationSelectorIdentities` does the
+ * same for `namespace`. Requiring a non-empty namespace made the parse reject a
+ * selector the comparison would then have matched, aborting batch adoption
+ * before it could read the operation at all.
+ */
 const ActiveOperationResourceSchema = z.object({
   group: z.string().optional(),
   kind: z.string().min(1),
   name: z.string().min(1),
-  namespace: z.string().min(1).optional(),
+  namespace: z.string().optional(),
 });
 
 const OperationInfoEntriesSchema = z
