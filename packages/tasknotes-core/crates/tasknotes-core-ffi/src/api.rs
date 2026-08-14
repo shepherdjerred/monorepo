@@ -121,7 +121,7 @@ pub fn priority_rank(priority: Priority) -> u8 {
     priority.rank()
 }
 
-// â”€â”€ Recurrence anchor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Recurrence anchor ──────────────────────────────────────────────────────
 
 /// The persisted spelling of a recurrence anchor.
 #[uniffi::export]

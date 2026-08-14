@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import http from "node:http";
+import { pipeline as streamPipeline } from "node:stream/promises";
 import type { Socket } from "node:net";
 import { z } from "zod";
 
@@ -105,11 +106,24 @@ async function handleRequest(
       upstreamResponse.pipe(response);
     },
   );
-  upstream.on("error", () => request.socket.destroy());
-  for await (const chunk of request) {
-    upstream.write(chunk);
+  upstream.on("error", () => {
+    // Destroying the socket surfaced as an opaque transport reset. Answer with a
+    // status instead so a failing scenario names its cause, and only fall back to
+    // destroying once the response has already begun.
+    if (response.headersSent) {
+      response.destroy();
+      return;
+    }
+    response.writeHead(502, { "content-type": "application/json" });
+    response.end(JSON.stringify({ error: "chaos proxy upstream failed" }));
+  });
+  // pipeline honours backpressure; the previous write-in-a-loop ignored the
+  // return value, so a large body buffered without bound.
+  try {
+    await streamPipeline(request, upstream);
+  } catch {
+    // The error handler above has already answered the client.
   }
-  upstream.end();
 }
 
 server.on("connection", (socket) => {

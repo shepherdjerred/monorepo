@@ -206,7 +206,16 @@ export class ScenarioEnvironment {
       await environment.writeProcessSnapshot();
       return environment;
     } catch (error) {
-      await stopProcesses(processes);
+      // Report why startup failed, not why cleanup afterwards failed. Letting
+      // stopProcesses reject here replaced the real cause with a teardown
+      // timeout, which is the harder failure to diagnose.
+      try {
+        await stopProcesses(processes);
+      } catch (cleanupError) {
+        if (error instanceof Error && cleanupError instanceof Error) {
+          error.cause = cleanupError;
+        }
+      }
       throw error;
     }
   }
@@ -428,16 +437,29 @@ export class StreamingSecretRedactor {
 async function stopProcesses(
   processes: readonly StartedProcess[],
 ): Promise<void> {
+  const failures: Error[] = [];
   for (const entry of [...processes].reverse()) {
-    if (entry.process.exitCode === null) {
-      entry.process.kill();
+    try {
+      if (entry.process.exitCode === null) {
+        entry.process.kill();
+      }
+      await withTimeout(
+        entry.process.exited,
+        10_000,
+        `${entry.name} process exit`,
+      );
+      await withTimeout(entry.logging, 10_000, `${entry.name} log drain`);
+    } catch (error) {
+      // Keep tearing the rest down. Abandoning the loop on the first stubborn
+      // process leaks every process that started before it.
+      failures.push(error instanceof Error ? error : new Error(String(error)));
     }
-    await withTimeout(
-      entry.process.exited,
-      10_000,
-      `${entry.name} process exit`,
+  }
+  if (failures.length > 0) {
+    throw new AggregateError(
+      failures,
+      `Failed to stop ${String(failures.length)} scenario process(es).`,
     );
-    await withTimeout(entry.logging, 10_000, `${entry.name} log drain`);
   }
 }
 
