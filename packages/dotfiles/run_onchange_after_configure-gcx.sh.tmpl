@@ -3,8 +3,12 @@
 set -eu
 
 # Re-run when the Grafana credential rotates without storing the credential in
-# the Chezmoi source.
-# grafana-token-sha256: {{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/w5y6wldczvojkh3yxe5zadkpvi/password" | sha256sum }}
+# the Chezmoi source. `onepasswordRead` runs at render time, so it is guarded by
+# `lookPath` the same way the other secret templates are: on a fresh machine that
+# has no `op` yet, an unguarded call fails template rendering and takes the whole
+# `chezmoi apply` with it. The placeholder is stable, so installing `op` changes
+# this line and re-runs the script.
+# grafana-token-sha256: {{ if lookPath "op" }}{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/w5y6wldczvojkh3yxe5zadkpvi/password" | sha256sum }}{{ else }}op-unavailable{{ end }}
 
 # gcx deliberately owns ~/.config/gcx/config.yaml rather than Chezmoi. Writing
 # the credential inline there does work, but gcx migrates it into the macOS
@@ -15,8 +19,13 @@ set -eu
 # that way is not an option either. The context is provisioned here instead: the
 # secret goes to the Keychain, the config keeps only a `keychain:` reference,
 # and a rotation in 1Password re-runs this script via the hash above.
-if ! command -v gcx >/dev/null 2>&1; then
+if ! command -v gcx >/dev/null; then
   echo "gcx is not installed yet; this will run on the next chezmoi apply" >&2
+  exit 0
+fi
+
+if ! command -v op >/dev/null; then
+  echo "op is not installed yet; this will run on the next chezmoi apply" >&2
   exit 0
 fi
 
