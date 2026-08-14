@@ -25,8 +25,24 @@ resource "buildkite_pipeline" "monorepo" {
 
   # Buildkite "skip/cancel intermediate builds" (REST: skip_queued_branch_builds
   # / cancel_running_branch_builds).
-  skip_intermediate_builds   = true
-  cancel_intermediate_builds = true
+  #
+  # main is exempt from cancellation, and that exemption is load-bearing. A main
+  # build's release phase (helm-push -> tofu-apply -> argocd-sync) suspends every
+  # child ArgoCD Application by manifest override and restores the declared policy
+  # only when the closing full-source root sync re-applies the un-overridden
+  # manifests. Cancelling between those two points leaves the override live, so
+  # auto-sync stays off tree-wide while every app still reports Synced + Healthy —
+  # invisible, because suspension is a spec fact and the monitored signals are all
+  # status. Two aborted releases froze 63 of 64 Applications that way on
+  # 2026-08-14, and a cancel produces the identical state. Buildkite has no
+  # per-step cancellation opt-out, so the filter is the only place to express it.
+  #
+  # skip_intermediate_builds deliberately keeps NO filter: skipping only affects
+  # builds that have not started, so it still collapses a burst of main commits
+  # into the newest one without ever killing a release in flight.
+  skip_intermediate_builds                 = true
+  cancel_intermediate_builds               = true
+  cancel_intermediate_builds_branch_filter = "!main"
 
   # Exact upload step the pipeline currently runs (queue: default keeps the
   # bootstrap step on the cluster's default queue). The stable key and pod
