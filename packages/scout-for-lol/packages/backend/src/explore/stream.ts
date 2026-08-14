@@ -1,6 +1,9 @@
 import { z } from "zod";
 import type { ExploreStreamEvent } from "@scout-for-lol/data";
 import { parseAgentStreamChunk } from "#src/utils/agent-stream-chunk.ts";
+import { createLogger } from "#src/logger.ts";
+
+const logger = createLogger("explore-stream");
 
 /**
  * Tracks how much of the answer has already been sent to the client.
@@ -76,11 +79,21 @@ export async function emitExploreStreamChunk(
       break;
     }
     case "tool-error": {
+      // The raw exception text is deliberately not forwarded. It is unbounded
+      // — a stack trace or a SQL error blows past the 500-char cap on this
+      // field and makes ExploreStreamEventSchema.parse throw, which kills the
+      // whole turn's stream. It is also persisted into the message trace and
+      // rendered verbatim, including to anonymous holders of a share link, so
+      // it would leak internals to people who never ran the query.
+      logger.warn("Explore tool failed", {
+        toolName: chunk.toolName,
+        error: chunk.message,
+      });
       await emit({
         type: "tool_result",
         toolName: chunk.toolName,
         ok: false,
-        message: `Tool failed: ${chunk.message}`,
+        message: toolResultMessage(chunk.toolName, false),
       });
       break;
     }

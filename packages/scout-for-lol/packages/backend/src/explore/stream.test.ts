@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   ExploreAnswerSchema,
+  ExploreStreamEventSchema,
   type ExploreStreamEvent,
 } from "@scout-for-lol/data";
 import {
@@ -106,6 +107,35 @@ describe("explore stream mapping", () => {
       "tool_result",
       "answer_delta",
     ]);
+  });
+
+  /**
+   * A tool exception is unbounded (stack traces, SQL errors), the event field
+   * is capped at 500 chars, and `emit` validates against that schema — so
+   * forwarding the raw text would throw mid-turn and take the whole stream
+   * down. The same string is persisted into the trace and rendered to
+   * anonymous share-link holders, so it must not carry internals either.
+   */
+  test("a tool error is reported without forwarding the raw exception", async () => {
+    const rawError = `Boom: ${"x".repeat(4000)}\nat someInternalFrame`;
+    const { events } = await collect([
+      {
+        type: "tool-error",
+        payload: { toolName: "run_report_query", error: rawError },
+      },
+    ]);
+
+    expect(events).toHaveLength(1);
+    const [event] = events;
+    if (event?.type !== "tool_result") {
+      throw new Error("expected a tool_result event");
+    }
+    expect(event.ok).toBe(false);
+    expect(event.message.length).toBeLessThanOrEqual(500);
+    expect(event.message).not.toContain("someInternalFrame");
+    expect(event.message).not.toContain("xxxx");
+    // The schema is what would have thrown, so parsing is the real assertion.
+    expect(ExploreStreamEventSchema.parse(event)).toEqual(event);
   });
 
   test("a stream error chunk throws rather than ending the turn quietly", () => {

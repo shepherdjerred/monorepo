@@ -216,6 +216,45 @@ describe("global scope", () => {
     ).rejects.toThrow(/not available in global scope/);
   });
 
+  /**
+   * Global scope computes `player_alias` as a SELECT-list expression
+   * (`concat_ws('#', riot_id_game_name, riot_id_tagline)`) and then filters on
+   * that name in the WHERE of the same query block. Standard SQL forbids that
+   * — WHERE is evaluated before the SELECT list — but DuckDB accepts column
+   * aliases in WHERE as a deliberate extension, which is what makes the
+   * single-block form legal here.
+   *
+   * This is pinned because the shape reads like a bug to anyone applying
+   * ordinary SQL rules (a reviewer flagged exactly that), and because it
+   * silently depends on the engine staying DuckDB. If this ever fails, the
+   * fix is to wrap the base select in a subquery and filter outside it — not
+   * to drop the filter.
+   */
+  test("a global-scope player filter resolves the derived alias", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        untrackedMatch("NA1_1", "Faker", true),
+        untrackedMatch("NA1_2", "Faker", false),
+        untrackedMatch("NA1_3", "Nobody", true),
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      scope: GLOBAL_SCOPE,
+      queryText:
+        "SELECT player, games FROM match_participants WHERE player IN ('Faker#NA1') GROUP BY player",
+      now,
+    });
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]?.label).toBe("Faker#NA1");
+    expect(
+      result.rows[0]?.values.find((value) => value.column === "games")?.value,
+    ).toBe(2);
+  });
+
   test("competition sources are refused in global scope", async () => {
     await writeTestLake(lakeDir, {
       serverId,

@@ -84,12 +84,26 @@ const COMPONENTS: Components = {
   hr: () => <hr className="my-4" />,
 };
 
+/**
+ * `skipHtml` drops raw HTML, but markdown has its own image syntax and
+ * `![](https://…)` survives it — the browser would fetch that URL on render.
+ * A shared transcript renders through this same component for an anonymous
+ * viewer, so an image the model was talked into emitting becomes a tracking
+ * pixel firing from whoever opened the link. Nothing in an explore answer is
+ * supposed to be an image, so the element is dropped rather than proxied.
+ *
+ * The alt text goes with it: alt is an attribute rather than child content, so
+ * there is nothing to unwrap and the node disappears whole.
+ */
+const DISALLOWED_ELEMENTS = ["img"];
+
 function MarkdownAnswerView(props: { children: string }) {
   return (
     <div className="text-sm leading-relaxed">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         skipHtml
+        disallowedElements={DISALLOWED_ELEMENTS}
         components={COMPONENTS}
       >
         {props.children}
