@@ -67,6 +67,10 @@ set -gx GEMINI_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/ysjs
 set -gx HASS_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/y4c2gno3yrxcdcudaofbirmi4u/password" }}'
 set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
 set -gx LINEAR_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/LINEAR_API_KEY" }}'
+# posthog-cli reads POSTHOG_CLI_*, not the POSTHOG_API_KEY label the value is
+# stored under. Deliberately shares the MCP gateway's project-scoped key.
+set -gx POSTHOG_CLI_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/POSTHOG_API_KEY" }}'
+set -gx POSTHOG_CLI_PROJECT_ID '549883'
 # Loki and Prometheus are tailnet-only with no auth (loki runs auth_enabled:
 # false), so logcli and promtool need an address but no credential.
 set -gx LOKI_ADDR 'https://loki.tailnet-1a49.ts.net'
@@ -96,6 +100,7 @@ set -gx BUGSINK_URL 'https://bugsink.sjer.red'
 set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
 set -gx LOKI_ADDR 'https://loki.tailnet-1a49.ts.net'
 set -gx PROMETHEUS_URL 'https://prometheus.tailnet-1a49.ts.net'
+set -gx POSTHOG_CLI_PROJECT_ID '549883'
 {{ end -}}
 if status is-interactive
   fish_vi_key_bindings
