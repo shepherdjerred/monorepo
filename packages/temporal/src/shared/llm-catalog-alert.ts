@@ -36,6 +36,8 @@ export type CatalogModelVerdict = {
   withheld: Record<string, string | undefined>;
   measured: string[];
   unmeasured: string[];
+  /** Fields a human has adjudicated out of cross-checking (e.g. a pinned context window). */
+  retired: string[];
 };
 
 /** The run's verdicts, as the sync report records them. */
@@ -166,6 +168,26 @@ export function buildCatalogAlerts(
     }
     for (const field of verdict.unmeasured) {
       alerts.push(buildCatalogEvidenceAlert(model, field, true, now));
+    }
+    // A retired field closes BOTH conditions. The operator pinned it because
+    // this alert told them to, so the run that observes the pin has to be the
+    // run that resolves it — otherwise the advice looks like it did nothing
+    // and the finding lingers for the full TTL. Nothing is missing either:
+    // a field nobody is checking cannot be lacking evidence.
+    for (const field of verdict.retired) {
+      alerts.push(
+        buildCatalogWithheldAlert(
+          {
+            model,
+            field,
+            applied: outcome.applied,
+            withheld: [],
+            prUrl: outcome.prUrl,
+          },
+          now,
+        ),
+        buildCatalogEvidenceAlert(model, field, false, now),
+      );
     }
   }
   return alerts;

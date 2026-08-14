@@ -488,6 +488,21 @@ function applicableFields(entry: ModelEntry): CrossCheckField[] {
   return fields;
 }
 
+/**
+ * Fields this entry carries but has taken out of cross-checking on purpose.
+ *
+ * A model with no `contextWindow` at all is not our business and produces
+ * nothing. One that has a context window and pins it is a decision, and a
+ * decision has to close the alert that prompted it.
+ */
+function retiredFields(entry: ModelEntry): CrossCheckField[] {
+  return entry.pricing.modality === "text" &&
+    entry.contextWindow !== undefined &&
+    entry.pinnedContextWindow === true
+    ? ["contextWindow"]
+    : [];
+}
+
 /** What this run can honestly say about one model, field by field. */
 export type ModelVerdict = {
   /** Withheld reason per field — needs a human. */
@@ -496,6 +511,16 @@ export type ModelVerdict = {
   measured: CrossCheckField[];
   /** Applicable fields no upstream covered — no evidence either way. */
   unmeasured: CrossCheckField[];
+  /**
+   * Fields the entry has deliberately retired from cross-checking.
+   *
+   * Distinct from "not applicable": a pinned context window is a field we WERE
+   * checking and a human has since adjudicated, so it is exactly the case that
+   * must publish a resolution. Omitting it left the drift alert the operator
+   * was responding to firing until its TTL — the alert told them to pin the
+   * field, and pinning it appeared to do nothing.
+   */
+  retired: CrossCheckField[];
 };
 
 export function verdictFor(
@@ -511,6 +536,7 @@ export function verdictFor(
     withheld: result.rejectedByField,
     measured,
     unmeasured: applicable.filter((field) => !measured.includes(field)),
+    retired: retiredFields(entry),
   };
 }
 

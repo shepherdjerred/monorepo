@@ -275,6 +275,7 @@ describe("buildCatalogAlerts", () => {
             withheld: {},
             measured: ["input"],
             unmeasured: ["output"],
+            retired: [],
           },
         },
         prUrl: undefined,
@@ -310,13 +311,20 @@ describe("buildCatalogAlerts", () => {
             withheld: { input: "  claude-sonnet-5.input: 3 -> 2" },
             measured: ["input"],
             unmeasured: [],
+            retired: [],
           },
           "claude-opus-5": {
             withheld: {},
             measured: ["input"],
             unmeasured: [],
+            retired: [],
           },
-          "gpt-new": { withheld: {}, measured: [], unmeasured: ["input"] },
+          "gpt-new": {
+            withheld: {},
+            measured: [],
+            unmeasured: ["input"],
+            retired: [],
+          },
         },
         prUrl: undefined,
       },
@@ -377,5 +385,61 @@ describe("retain instructions per field", () => {
     // It must not hand over the price-only recipe.
     expect(description).not.toContain('"acceptedUpstreamPricing": {');
     expect(description).not.toContain("expiresAt");
+  });
+});
+
+describe("retired fields close their own alerts", () => {
+  test("pinning a context window resolves the drift alert that asked for it", () => {
+    // The alert tells the operator to set `pinnedContextWindow: true`. Pinning
+    // removes the field from cross-checking, so before this it produced no
+    // occurrence at all and the very alert they were answering stayed firing
+    // for the full eight-day TTL — the advice appeared to do nothing.
+    const alerts = buildCatalogAlerts(
+      {
+        applied: [],
+        models: {
+          "claude-sonnet-5": {
+            withheld: {},
+            measured: ["input", "output"],
+            unmeasured: [],
+            retired: ["contextWindow"],
+          },
+        },
+        prUrl: undefined,
+      },
+      NOW,
+    );
+
+    const drift = alerts.find(
+      (alert) =>
+        alert.labels["alertname"] === "LlmCatalogDriftWithheld" &&
+        alert.labels["field"] === "contextWindow",
+    );
+    expect(drift).toBeDefined();
+    // endsAt === startsAt is the resolving occurrence.
+    expect(drift?.endsAt).toBe(drift?.startsAt);
+  });
+
+  test("a retired field is not also reported as missing evidence", () => {
+    // Nobody is checking it, so "no upstream published this" would be a
+    // finding about a question we stopped asking.
+    const alerts = buildCatalogAlerts(
+      {
+        applied: [],
+        models: {
+          "claude-sonnet-5": {
+            withheld: {},
+            measured: ["input", "output"],
+            unmeasured: [],
+            retired: ["contextWindow"],
+          },
+        },
+        prUrl: undefined,
+      },
+      NOW,
+    );
+
+    expect(firingFor(alerts, "LlmCatalogEvidenceMissing")).toEqual([]);
+    expect(firingFor(alerts, "LlmCatalogDriftWithheld")).toEqual([]);
   });
 });

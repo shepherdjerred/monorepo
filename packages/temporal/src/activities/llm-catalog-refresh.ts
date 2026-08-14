@@ -8,6 +8,7 @@ import {
   type CatalogSyncOutcome,
 } from "#shared/llm-catalog-alert.ts";
 import { parsePorcelainPaths } from "#shared/porcelain.ts";
+import { rootInstallWithoutHooks } from "./bot-clone.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import { openSeasonRefreshPr } from "./scout-season-refresh-git.ts";
 
@@ -26,6 +27,7 @@ const SyncReportSchema = z.object({
       withheld: z.record(z.string(), z.string()),
       measured: z.array(z.string()),
       unmeasured: z.array(z.string()),
+      retired: z.array(z.string()),
     }),
   ),
   overlayOnly: z.array(z.string()),
@@ -142,12 +144,14 @@ export const llmCatalogRefreshActivities = {
         "--filter=blob:none",
       ]);
 
-      // Install the catalog package's deps (zod) so the sync script can import
-      // the package, then run it (fetches models.dev + LiteLLM and rewrites
-      // catalog.json on drift). Capture its report for the PR body.
-      await runCommand(["bun", "install", "--frozen-lockfile"], {
-        cwd: catalogDir,
-      });
+      // One hook-free root install for the whole activity: it covers the
+      // catalog package's own deps (zod, for the sync script) and the repo's
+      // pinned prettier used further down. Bot clones must go through this
+      // helper rather than a bare `bun install` — it isolates the per-run Bun
+      // cache, retries a transient install, suppresses lifecycle scripts so
+      // the dev pre-commit suite is never armed inside the worker pod, and is
+      // the path `scripts/rehearse-bot-clone.ts` exercises in CI.
+      await rootInstallWithoutHooks(repoDir);
       const reportJsonPath = `${tempDir}/sync-report.json`;
       const report = await runCommand(
         [
@@ -199,9 +203,7 @@ export const llmCatalogRefreshActivities = {
 
       // Format the rewritten JSON with the repo's pinned prettier so the PR
       // passes the prettier gate (the sync writes plain JSON.stringify output).
-      await runCommand(["bun", "install", "--frozen-lockfile"], {
-        cwd: repoDir,
-      });
+      // The root install above already provisioned it.
       await runCommand(["bunx", "prettier", "--write", CATALOG_FILE], {
         cwd: repoDir,
       });
