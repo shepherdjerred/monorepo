@@ -1,10 +1,8 @@
 ---
 id: pvc-backup-policy-zfs-cleanup
 type: plan
-status: planned
-board: true
-verification: operator
-disposition: blocked
+status: complete
+board: false
 ---
 
 # Explicit PVC Backup Policy and ZFS Cleanup
@@ -69,8 +67,25 @@ unknown PVCs, and apply consistent Velero labels.
 
 ## Remaining
 
-- [ ] On or after 2026-08-03 12:30 PDT, review the quarantine re-audit and
+- [x] On or after 2026-08-03 12:30 PDT, review the quarantine re-audit and
       explicitly approve or reject final deletion.
+
+Resolved 2026-08-13, 11 days past the hold. The operator approved final
+deletion. All 28 children were confirmed to carry an expired
+`sjer.red:quarantine-hold-until` of 2026-08-03T19:30:00Z, the quarantine tree
+held zero snapshots, and no dataset anywhere on the pool listed a quarantine
+child as its `origin` (no dependent clones). `zfs destroy -r
+zfspv-pool-nvme/quarantine-2026-07-27` then removed the root and all 28
+children; the root is absent on re-query. See
+[2026-08-13_released-pv-reclamation](./2026-08-13_released-pv-reclamation.md),
+which destroyed the quarantine in the same operation that reclaimed ten
+unrelated `Released` PVs.
+
+The post-cleanup invariants below are the 2026-07-27 figures and are kept as
+written. As of 2026-08-13 the equality still holds at a lower count — 70 live
+ZFS PVs = 70 ZFSVolume resources = 70 ordinary datasets (62 on `torvalds`, 8 on
+`liskov`) — the reduction being the Jellyfin, ebook-stack, Plane, and
+alert-dashboard PostgreSQL retirements.
 
 ## Quarantine Hold
 
