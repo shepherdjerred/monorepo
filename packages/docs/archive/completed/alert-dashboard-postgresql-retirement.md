@@ -1,10 +1,8 @@
 ---
 id: alert-dashboard-postgresql-retirement
 type: todo
-status: planned
-board: true
-verification: human
-disposition: blocked
+status: complete
+board: false
 source_marker: false
 ---
 
@@ -44,11 +42,11 @@ state with no representation in git, so it must not outlive the decision below.
 
 ## Remaining
 
-- [ ] Decide whether the PostgreSQL alert history is exported into the SQLite ledger, archived elsewhere, or discarded.
-- [ ] Execute that decision against the live database before removing anything.
-- [ ] Delete the six retired resources and the `pgdata-alert-dashboard-postgresql-0` PVC, then drop its entry from `packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.json`.
-- [ ] Remove the `IgnoreExtraneous` annotations so no untracked ArgoCD escape hatch is left behind, and confirm `alert-dashboard` still reports `Synced`.
-- [ ] Confirm the retained alert history was handled as intended before the database was destroyed.
+- [x] Decide whether the PostgreSQL alert history is exported into the SQLite ledger, archived elsewhere, or discarded.
+- [x] Execute that decision against the live database before removing anything.
+- [x] Delete the six retired resources and the `pgdata-alert-dashboard-postgresql-0` PVC, then drop its entry from `packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.json`.
+- [x] Remove the `IgnoreExtraneous` annotations so no untracked ArgoCD escape hatch is left behind, and confirm `alert-dashboard` still reports `Synced`.
+- [x] Confirm the retained alert history was handled as intended before the database was destroyed.
 
 ## Comment Log
 
@@ -58,3 +56,21 @@ The deferred cleanup became a hard CI blocker rather than a background item:
 every main build failed in `release-health-wait` until the six resources were
 excluded from the comparison. Pruning was rejected as the fix because #2129
 explicitly reserved the export/discard call for a human.
+
+### 2026-08-13 — resolved: discard, and the stack is gone
+
+The owner chose to keep SQLite and remove PostgreSQL. A final `pg_dump` of
+`alert_dashboard` was taken first as a safety net (900 KB gzipped, six tables
+including `_prisma_migrations`), kept off-cluster at
+`~/Downloads/alert_dashboard_pg_final_2026-08-14.sql.gz`, because the Velero
+schedules that cover the namespace record object metadata but produced no
+volume snapshot or file-system backup for that PVC — so the delete was
+effectively irreversible.
+
+Deleting the Zalando `postgresql` resource let the operator garbage collect the
+pod, both services, the three generated credential secrets, and the 16 GiB
+`pgdata-alert-dashboard-postgresql-0` PVC. The two `Certificate`s, two
+`Issuer`s, the postgres `NetworkPolicy`, and two orphaned cert-manager TLS
+secrets were deleted explicitly. Nothing carries the `IgnoreExtraneous`
+annotation any more because none of those objects exist. `alert-dashboard` runs
+on the SQLite ledger alone and reports Synced/Healthy.
