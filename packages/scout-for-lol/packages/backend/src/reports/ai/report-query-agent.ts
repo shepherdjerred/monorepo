@@ -4,23 +4,12 @@ import * as Sentry from "@sentry/bun";
 import { z } from "zod";
 import {
   formatReportQuery,
-  lintReportQuery,
   parseAndCompile,
-  reportQueueValues,
   REPORT_AI_MAX_OUTPUT_TOKENS,
   REPORT_AI_MAX_PREVIEW_CALLS,
   REPORT_AI_MAX_STEPS,
   REPORT_AI_MAX_TOOL_CALLS,
-  REPORT_COMMON_PRESETS,
-  REPORT_FILTERS,
-  REPORT_FUNCTIONS,
-  REPORT_GROUP_BYS,
-  REPORT_METRICS,
-  REPORT_RENDER_KINDS,
-  REPORT_RENDER_OPTIONS,
-  REPORT_SOURCES,
   ReportAiFinalDraftSchema,
-  ReportAiPreviewSummarySchema,
   ReportQueryTextSchema,
   type ReportAiEditRequest,
   type ReportAiFinalDraft,
@@ -39,6 +28,15 @@ import {
 import { emitReportAgentStreamChunk } from "#src/reports/ai/report-query-agent-stream.ts";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { guildScope } from "#src/reports/duckdb/scope.ts";
+import {
+  createFormatTool,
+  createLanguageTool,
+  createValidateTool,
+  QueryResultToolOutputSchema,
+  validateQuery,
+  type ToolTracker,
+} from "#src/reports/ai/scoutql-tools.ts";
 
 export type ReportQueryAgentParams = {
   runId: string;
@@ -46,30 +44,6 @@ export type ReportQueryAgentParams = {
   abortSignal: AbortSignal;
   emit: (event: ReportAiStreamEvent) => void | Promise<void>;
 };
-
-const ValidationToolOutputSchema = z
-  .object({
-    ok: z.boolean(),
-    message: z.string(),
-    diagnostics: z.array(z.string()),
-    formattedQueryText: z.string().nullable(),
-  })
-  .strict();
-
-const PreviewToolOutputSchema = z
-  .object({
-    ok: z.boolean(),
-    message: z.string(),
-    formattedQueryText: z.string().nullable(),
-    preview: ReportAiPreviewSummarySchema.nullable(),
-  })
-  .strict();
-
-const FormatToolOutputSchema = z
-  .object({
-    formattedQueryText: z.string(),
-  })
-  .strict();
 
 type RunState = {
   toolCalls: number;
@@ -161,103 +135,12 @@ export async function streamReportQueryAgent(
 
 function createReportQueryTools(params: ReportQueryAgentParams) {
   const state: RunState = { toolCalls: 0, previewCalls: 0 };
+  const track: ToolTracker = (toolName, work) =>
+    trackToolCall(state, toolName, work);
 
-  const getReportLanguage = createTool({
-    id: "get_report_language",
-    description:
-      "Read ScoutQL sources, metrics, expressions, groupings, filters, render kinds/options, queues, and common examples.",
-    inputSchema: z.object({}).strict(),
-    outputSchema: z
-      .object({
-        sources: z.array(
-          z.object({
-            id: z.string(),
-            label: z.string(),
-            description: z.string(),
-            validGroupBys: z.array(z.string()),
-          }),
-        ),
-        metrics: z.array(
-          z.object({
-            id: z.string(),
-            label: z.string(),
-            description: z.string(),
-            kind: z.string(),
-          }),
-        ),
-        functions: z.array(
-          z.object({
-            id: z.string(),
-            syntax: z.string(),
-            description: z.string(),
-          }),
-        ),
-        groupBys: z.array(
-          z.object({
-            id: z.string(),
-            label: z.string(),
-            description: z.string(),
-          }),
-        ),
-        filters: z.array(
-          z.object({
-            syntax: z.string(),
-            description: z.string(),
-          }),
-        ),
-        renderKinds: z.array(
-          z.object({
-            id: z.string(),
-            label: z.string(),
-            description: z.string(),
-          }),
-        ),
-        renderOptions: z.array(
-          z.object({
-            id: z.string(),
-            syntax: z.string(),
-            description: z.string(),
-          }),
-        ),
-        queues: z.array(z.object({ id: z.string(), label: z.string() })),
-        presets: z.array(
-          z.object({
-            title: z.string(),
-            description: z.string(),
-            query: z.string(),
-          }),
-        ),
-      })
-      .strict(),
-    execute: () =>
-      trackToolCall(state, "get_report_language", () => ({
-        sources: REPORT_SOURCES,
-        metrics: REPORT_METRICS,
-        functions: REPORT_FUNCTIONS,
-        groupBys: REPORT_GROUP_BYS,
-        filters: REPORT_FILTERS,
-        renderKinds: REPORT_RENDER_KINDS,
-        renderOptions: REPORT_RENDER_OPTIONS,
-        queues: reportQueueValues(),
-        presets: REPORT_COMMON_PRESETS.map((preset) => ({
-          title: preset.title,
-          description: preset.description,
-          query: preset.query,
-        })),
-      })),
-  });
+  const getReportLanguage = createLanguageTool(track);
 
-  const validateReportQuery = createTool({
-    id: "validate_report_query",
-    description:
-      "Validate a ScoutQL report query and return diagnostics plus formatted text.",
-    inputSchema: z.object({ queryText: ReportQueryTextSchema }).strict(),
-    outputSchema: ValidationToolOutputSchema,
-    execute: (inputData) =>
-      trackToolCall(state, "validate_report_query", () =>
-        validateQuery(inputData.queryText),
-      ),
-  });
+  const validateReportQuery = createValidateTool(track);
 
   const previewReportQuery = createTool({
     id: "preview_report_query",
@@ -269,7 +152,7 @@ function createReportQueryTools(params: ReportQueryAgentParams) {
         sourceCompetitionId: z.number().int().positive().nullable().optional(),
       })
       .strict(),
-    outputSchema: PreviewToolOutputSchema,
+    outputSchema: QueryResultToolOutputSchema,
     execute: (inputData) =>
       trackToolCall(state, "preview_report_query", async () => {
         state.previewCalls++;
@@ -288,7 +171,7 @@ function createReportQueryTools(params: ReportQueryAgentParams) {
 
         const result = await executeReportQuery({
           prisma,
-          serverId: params.input.guildId,
+          scope: guildScope(params.input.guildId),
           queryText: validation.formattedQueryText,
           sourceCompetitionId:
             inputData.sourceCompetitionId ?? params.input.sourceCompetitionId,
@@ -305,16 +188,7 @@ function createReportQueryTools(params: ReportQueryAgentParams) {
       }),
   });
 
-  const formatReportQueryTool = createTool({
-    id: "format_report_query",
-    description: "Format valid ScoutQL report query text for display.",
-    inputSchema: z.object({ queryText: ReportQueryTextSchema }).strict(),
-    outputSchema: FormatToolOutputSchema,
-    execute: (inputData) =>
-      trackToolCall(state, "format_report_query", () => ({
-        formattedQueryText: formatReportQuery(inputData.queryText),
-      })),
-  });
+  const formatReportQueryTool = createFormatTool(track);
 
   return {
     get_report_language: getReportLanguage,
@@ -341,40 +215,6 @@ async function trackToolCall<T>(
   } catch (error) {
     scoutReportAiToolCallsTotal.inc({ tool_name: toolName, status: "error" });
     throw error;
-  }
-}
-
-function validateQuery(
-  queryText: string,
-): z.infer<typeof ValidationToolOutputSchema> {
-  const diagnostics = lintReportQuery(queryText)
-    .filter((diagnostic) => diagnostic.severity === "error")
-    .map((diagnostic) => diagnostic.message);
-  if (diagnostics.length > 0) {
-    return {
-      ok: false,
-      message: diagnostics[0] ?? "The query is invalid.",
-      diagnostics,
-      formattedQueryText: null,
-    };
-  }
-
-  try {
-    parseAndCompile(queryText);
-    return {
-      ok: true,
-      message: "Query is valid.",
-      diagnostics: [],
-      formattedQueryText: formatReportQuery(queryText),
-    };
-  } catch (error) {
-    const message = errorMessage(error);
-    return {
-      ok: false,
-      message,
-      diagnostics: [message],
-      formattedQueryText: null,
-    };
   }
 }
 
@@ -422,14 +262,10 @@ async function emitPreview(
 ): Promise<void> {
   const result = await executeReportQuery({
     prisma,
-    serverId: params.input.guildId,
+    scope: guildScope(params.input.guildId),
     queryText,
     sourceCompetitionId: params.input.sourceCompetitionId,
   });
   const preview = reportQueryPreviewSummary(result);
   await params.emit({ type: "preview", preview });
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }

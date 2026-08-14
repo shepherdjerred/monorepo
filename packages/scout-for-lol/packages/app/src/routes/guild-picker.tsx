@@ -120,6 +120,12 @@ export function GuildPicker() {
         <h1 className="text-xl font-semibold tracking-tight">Pick a guild</h1>
         <div className="flex items-center gap-3">
           <Link
+            to="/explore"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Explore
+          </Link>
+          <Link
             to="/welcome"
             className="text-sm text-muted-foreground hover:text-foreground"
           >

@@ -20,6 +20,7 @@ import {
   type ReportAiRateLimitIdentity,
 } from "#src/reports/ai/rate-limit.ts";
 import { getReportAiEditStatus } from "#src/reports/ai/status.ts";
+import { readBodyWithinLimit } from "#src/utils/bounded-request-body.ts";
 import {
   scoutReportAiActiveRuns,
   scoutReportAiRunDurationSeconds,
@@ -47,12 +48,12 @@ export async function handleReportAiRoute(
     return jsonError("Request body is too large.", 413, corsHeaders);
   }
 
-  const bodyText = await request.text();
-  if (encoder.encode(bodyText).byteLength > REPORT_AI_REQUEST_MAX_BYTES) {
+  const body = await readBodyWithinLimit(request, REPORT_AI_REQUEST_MAX_BYTES);
+  if (!body.ok) {
     return jsonError("Request body is too large.", 413, corsHeaders);
   }
 
-  const parsedBody = parseRequestBody(bodyText);
+  const parsedBody = parseRequestBody(body.text);
   if (!parsedBody.ok) {
     return jsonError(parsedBody.message, 400, corsHeaders);
   }

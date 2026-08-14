@@ -1036,7 +1036,9 @@
         "posthog-js": "^1.414.0",
         "react": "19.2.8",
         "react-dom": "19.2.8",
+        "react-markdown": "^10.1.0",
         "react-router": "^8.3.0",
+        "remark-gfm": "^4.0.1",
         "tailwind-merge": "^3.4.0",
         "ts-pattern": "^5.7.0",
         "zod": "^4.4.3",
@@ -1702,7 +1704,7 @@
     },
     "packages/webring": {
       "name": "webring",
-      "version": "1.10.0",
+      "version": "1.10.1",
       "dependencies": {
         "htmlparser2": "^12.0.0",
         "remeda": "^2.33.7",

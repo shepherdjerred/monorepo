@@ -40,6 +40,7 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { canCreateAnotherUserReport } from "#src/lib/reports/authorization.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { guildScope } from "#src/reports/duckdb/scope.ts";
 import { renderReportOutput } from "#src/reports/output.ts";
 import { runReport } from "#src/reports/runner.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
@@ -386,7 +387,7 @@ export const reportRouter = router({
       try {
         const result = await executeReportQuery({
           prisma,
-          serverId: input.guildId,
+          scope: guildScope(input.guildId),
           queryText: input.queryText,
           sourceCompetitionId: input.sourceCompetitionId,
         });

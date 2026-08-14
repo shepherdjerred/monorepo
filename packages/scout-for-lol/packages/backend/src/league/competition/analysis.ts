@@ -31,6 +31,7 @@ import {
   executeCompiledReportQuery,
   type ReportQueryResult,
 } from "#src/reports/query-engine.ts";
+import { guildScope } from "#src/reports/duckdb/scope.ts";
 import {
   clampTemporalRange,
   resolveTemporalRanges,
@@ -117,7 +118,7 @@ export async function analyzeCompetition(
       const visualizationResult = await executeCompiledReportQuery(
         {
           prisma: params.prisma,
-          serverId: params.competition.serverId,
+          scope: guildScope(params.competition.serverId),
           sourceCompetitionId: params.competition.id,
           now: params.now,
           rangeOverride: range,
@@ -162,7 +163,7 @@ export async function analyzeCompetition(
       : await executeCompiledReportQuery(
           {
             prisma: params.prisma,
-            serverId: params.competition.serverId,
+            scope: guildScope(params.competition.serverId),
             sourceCompetitionId: params.competition.id,
             now: params.now,
             rangeOverride: range,
@@ -177,7 +178,7 @@ export async function analyzeCompetition(
       : await executeCompiledReportQuery(
           {
             prisma: params.prisma,
-            serverId: params.competition.serverId,
+            scope: guildScope(params.competition.serverId),
             sourceCompetitionId: params.competition.id,
             now: params.now,
             rangeOverride: range,
@@ -217,7 +218,7 @@ async function analyzeRankPosition(input: {
       ? await executeCompiledReportQuery(
           {
             prisma: params.prisma,
-            serverId: params.competition.serverId,
+            scope: guildScope(params.competition.serverId),
             sourceCompetitionId: params.competition.id,
             now: params.now,
             rangeOverride: range,

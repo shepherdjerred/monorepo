@@ -6,33 +6,23 @@ import {
   compilePrematchQuery,
   type LakeQueryInput,
 } from "#src/reports/duckdb/compile.ts";
-import type { BoundParam, LakeFiles } from "#src/reports/duckdb/lake.ts";
-
-const FILES: LakeFiles = {
-  matchesParquet: ["/lake/builds/b1/matches/month=2026-07/data_0.parquet"],
-  matchesStaging: ["/lake/matches-recent/NA1_1.jsonl"],
-  prematchParquet: ["/lake/builds/b1/prematch/month=2026-07/data_0.parquet"],
-  prematchStaging: [],
-  accountsParquet: "/lake/builds/b1/accounts/accounts.parquet",
-  competitionRankHistoryParquet: [],
-  competitionRankHistoryStaging: [],
-};
+import type { LakeFiles } from "#src/reports/duckdb/lake.ts";
+import { guildScope } from "#src/reports/duckdb/scope.ts";
+import {
+  TEST_GUILD_ID,
+  TEST_LAKE_FILES,
+  paramValues,
+} from "#src/testing/test-lake-files.ts";
 
 function input(queryText: string, playerIds?: number[]): LakeQueryInput {
   return {
     plan: parseAndCompile(queryText),
-    serverId: "guild-1",
+    scope: guildScope(TEST_GUILD_ID),
     startMs: 1_700_000_000_000,
     endMs: 1_700_600_000_000,
     ...(playerIds === undefined ? {} : { playerIds }),
-    files: FILES,
+    files: TEST_LAKE_FILES,
   };
-}
-
-function paramValues(params: BoundParam[]): (string | number | boolean)[] {
-  return params.flatMap((param) =>
-    param.kind === "scalar" ? [param.value] : [...param.values],
-  );
 }
 
 describe("compile", () => {
@@ -70,7 +60,6 @@ describe("compile", () => {
     const compiled = compileMatchQuery({
       ...base,
       plan: { ...base.plan, queueFilter: [hostile] },
-      serverId: "guild'; DROP TABLE accounts;--",
     });
     if (compiled === undefined) {
       throw new Error("expected compiled query");

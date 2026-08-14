@@ -10,6 +10,7 @@ import { handleDevLogin } from "#src/trpc/dev-login.ts";
 import { prisma } from "#src/database/index.ts";
 import { handleImageRoute } from "#src/trpc/image-routes.ts";
 import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
+import { handleExploreRoute } from "#src/explore/http-route.ts";
 import { handleVersion } from "#src/http/version.ts";
 import {
   classifyMethod,
@@ -309,6 +310,17 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
   );
   if (reportAiResponse !== null) {
     return reportAiResponse;
+  }
+
+  // Explore: the SSE turn endpoint (session + allowlist) and the
+  // unauthenticated shared-transcript read.
+  const exploreResponse = await handleExploreRoute(
+    request,
+    url,
+    corsHeadersFor(request),
+  );
+  if (exploreResponse !== null) {
+    return exploreResponse;
   }
 
   // Generated chart PNGs for the web app (<img src>), cookie-authorized.
