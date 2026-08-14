@@ -26,8 +26,9 @@
         "pinnedContextWindow": { "type": "boolean" },
         "acceptedUpstreamPricing": {
           "type": "object",
-          "description": "A divergence a human reviewed and decided to keep. Each field records the pair — the upstream value declined and the catalog value held — and both must still match for the divergence to stay accepted.",
+          "description": "A divergence a human reviewed and decided to keep. Each field records the pair — the upstream value declined and the catalog value held — and both must still match for the divergence to stay accepted. At least one of input/output is required: acceptances are matched per field, so a block with neither is inert and only reads like a decision that was made.",
           "required": ["reason", "expiresAt"],
+          "anyOf": [{ "required": ["input"] }, { "required": ["output"] }],
           "additionalProperties": false,
           "properties": {
             "input": { "$ref": "#/$defs/acceptedPrice" },

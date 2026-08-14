@@ -568,3 +568,59 @@ describe("acceptedUpstreamPricing.expiresAt timezone contract", () => {
     expect(() => entry(accepted("2026-09-01T00:00:00"))).toThrow();
   });
 });
+
+describe("acceptedUpstreamPricing shape contract", () => {
+  test("rejects an unknown key inside an acceptance", () => {
+    // catalog.schema.json and the Pydantic view both forbid extras. Zod's
+    // default `z.object` silently STRIPS them, so a typo like `inpt` parsed
+    // clean in TypeScript while the acceptance it was meant to record simply
+    // did not exist — an adjudication that looks saved and suppresses nothing.
+    expect(() =>
+      entry({
+        acceptedUpstreamPricing: {
+          inpt: { upstream: 2, catalog: 5 },
+          reason: "typo'd key",
+          expiresAt: "2026-09-01T00:00:00Z",
+        },
+      }),
+    ).toThrow();
+  });
+
+  test("rejects an unknown key on the price pair itself", () => {
+    expect(() =>
+      entry({
+        acceptedUpstreamPricing: {
+          input: { upstream: 2, catalog: 5, note: "why" },
+          reason: "extra key on the pair",
+          expiresAt: "2026-09-01T00:00:00Z",
+        },
+      }),
+    ).toThrow();
+  });
+
+  test("rejects an acceptance naming neither input nor output", () => {
+    // Well-formed and inert: reconcile matches acceptances per field, so this
+    // suppresses nothing while reading like a decision that was made.
+    expect(() =>
+      entry({
+        acceptedUpstreamPricing: {
+          reason: "no price recorded",
+          expiresAt: "2026-09-01T00:00:00Z",
+        },
+      }),
+    ).toThrow();
+  });
+
+  test("accepts an acceptance naming only one side", () => {
+    // Only one of the two prices diverging is the common case.
+    expect(() =>
+      entry({
+        acceptedUpstreamPricing: {
+          output: { upstream: 10, catalog: 25 },
+          reason: "output only",
+          expiresAt: "2026-09-01T00:00:00Z",
+        },
+      }),
+    ).not.toThrow();
+  });
+});

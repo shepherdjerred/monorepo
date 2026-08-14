@@ -16,7 +16,7 @@ export const ProviderSchema = z.enum(["openai", "anthropic", "google"]);
 export type Provider = z.infer<typeof ProviderSchema>;
 
 /** USD per 1M tokens. `cachedInput` is OpenAI prompt-cache hits; `cacheRead`/`cacheWrite` are Anthropic cache reads/creations. */
-export const TextPricingSchema = z.object({
+export const TextPricingSchema = z.strictObject({
   modality: z.literal("text"),
   input: z.number().nonnegative(),
   output: z.number().nonnegative(),
@@ -27,7 +27,7 @@ export const TextPricingSchema = z.object({
 export type TextPricing = z.infer<typeof TextPricingSchema>;
 
 /** USD per generated image. */
-export const ImagePricingSchema = z.object({
+export const ImagePricingSchema = z.strictObject({
   modality: z.literal("image"),
   perImage: z.number().nonnegative(),
 });
@@ -39,7 +39,7 @@ export const ModelPricingSchema = z.discriminatedUnion("modality", [
 ]);
 export type ModelPricing = z.infer<typeof ModelPricingSchema>;
 
-export const ModelCapabilitiesSchema = z.object({
+export const ModelCapabilitiesSchema = z.strictObject({
   supportsTemperature: z.boolean(),
   supportsTopP: z.boolean(),
   maxTokens: z.number().int().positive().optional(),
@@ -52,7 +52,7 @@ export const ModelStatusSchema = z.enum(["current", "preview", "deprecated"]);
 export type ModelStatus = z.infer<typeof ModelStatusSchema>;
 
 /** One reviewed divergence: what upstream published, and what we kept instead. */
-export const AcceptedPriceSchema = z.object({
+export const AcceptedPriceSchema = z.strictObject({
   /** The upstream number the human saw and declined. */
   upstream: z.number().nonnegative(),
   /** The catalog number kept instead, so the pair can be re-verified later. */
@@ -60,7 +60,7 @@ export const AcceptedPriceSchema = z.object({
 });
 export type AcceptedPrice = z.infer<typeof AcceptedPriceSchema>;
 
-export const ModelEntrySchema = z.object({
+export const ModelEntrySchema = z.strictObject({
   id: z.string().min(1),
   provider: ProviderSchema,
   displayName: z.string().min(1),
@@ -83,7 +83,7 @@ export const ModelEntrySchema = z.object({
    * repo, so a repricing must never pass silently.
    */
   acceptedUpstreamPricing: z
-    .object({
+    .strictObject({
       input: AcceptedPriceSchema.optional(),
       output: AcceptedPriceSchema.optional(),
       /** Why the catalog value wins. Required — an unexplained mute rots. */
@@ -105,6 +105,16 @@ export const ModelEntrySchema = z.object({
       // ambiguous by hours cannot decide whether a divergence is still accepted.
       expiresAt: z.iso.datetime({ offset: true }),
     })
+    // An acceptance with neither price is well-formed and inert: `reconcile`
+    // matches acceptances per field, so it can never suppress anything. It
+    // would sit in the catalog carrying a reason and an expiry, reading like a
+    // decision that was made while the divergence it names keeps re-alerting.
+    // Omit the block entirely instead.
+    .refine(
+      (accepted) =>
+        accepted.input !== undefined || accepted.output !== undefined,
+      { message: "acceptedUpstreamPricing needs at least one of input/output" },
+    )
     .optional(),
   capabilities: ModelCapabilitiesSchema,
   status: ModelStatusSchema,

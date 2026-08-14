@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import AwareDatetime, BaseModel, Field, TypeAdapter
+from pydantic import AwareDatetime, BaseModel, Field, TypeAdapter, model_validator
 
 CATALOG_PATH = Path(__file__).resolve().parent.parent / "src" / "catalog.json"
 
@@ -76,6 +76,17 @@ class AcceptedUpstreamPricing(BaseModel):
     # and the TypeScript view both reject. An expiry ambiguous by hours cannot
     # decide whether a divergence is still accepted.
     expiresAt: AwareDatetime
+
+    @model_validator(mode="after")
+    def _requires_a_price(self) -> AcceptedUpstreamPricing:
+        # Acceptances are matched per field, so a block with neither price can
+        # never suppress anything. It would sit in the catalog carrying a reason
+        # and an expiry, reading like a decision that was made while the
+        # divergence it names keeps re-alerting. Omit the block instead.
+        if self.input is None and self.output is None:
+            msg = "acceptedUpstreamPricing needs at least one of input/output"
+            raise ValueError(msg)
+        return self
 
 
 class ModelEntry(BaseModel):
