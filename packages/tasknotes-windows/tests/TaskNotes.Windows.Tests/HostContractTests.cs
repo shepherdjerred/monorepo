@@ -9,6 +9,36 @@ namespace TaskNotes.Windows.Tests
     [TestClass]
     public sealed class HostContractTests
     {
+        /// <summary>Lets a caller abandon its wait while earlier work occupies the runner.</summary>
+        [TestMethod]
+        public async Task RunnerWaitHonorsTheCallersCancellation()
+        {
+            await using EngineRunner runner = new();
+            using ManualResetEventSlim release = new(false);
+            // Fires after the item is safely enqueued, so this exercises the wait
+            // rather than the enqueue write, which already honored the token.
+            using CancellationTokenSource cancelled = new(TimeSpan.FromMilliseconds(250));
+
+            // Occupy the single reader so the next item cannot start.
+            Task<int> blocking = runner.RunAsync(
+                () =>
+                {
+                    release.Wait(TimeSpan.FromSeconds(30));
+                    return 1;
+                },
+                TestContext.CancellationToken
+            );
+
+            // Without the caller's token this wait would sit here until the blocking
+            // item finished, which is the responsiveness bug being pinned.
+            _ = await Assert.ThrowsExactlyAsync<OperationCanceledException>(() =>
+                runner.RunAsync(() => 2, cancelled.Token)
+            );
+
+            release.Set();
+            Assert.AreEqual(1, await blocking);
+        }
+
         /// <summary>Keeps a deliberately emptied saved-view catalog empty across restarts.</summary>
         [TestMethod]
         public void AnEmptiedSavedViewCatalogSurvivesReload()

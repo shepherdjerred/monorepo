@@ -45,7 +45,13 @@ namespace TaskNotes.Windows.Host
                 throw new ObjectDisposedException(nameof(EngineRunner), exception);
             }
 
-            await item.Completion.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+            // Waiting on CancellationToken.None pinned the caller to the queue: an
+            // interactive operation could not abandon its wait once enqueued, so it
+            // stayed blocked behind everything ahead of it. Abandoning is safe because
+            // Execute re-checks the same token and skips the operation outright, and
+            // DisposeAsync still drains the worker, so no orphaned item runs against a
+            // disposed engine.
+            await item.Completion.WaitAsync(cancellationToken).ConfigureAwait(false);
             return item.GetResult();
         }
 
