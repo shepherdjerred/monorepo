@@ -352,6 +352,14 @@ describe("temporal homelab audit tooling access boundaries", () => {
       expect(names).toContain(required);
     }
 
+    // /tmp is a fresh emptyDir on every pod start and nothing creates
+    // directories under it before `gcx login` runs, so the config path must
+    // stay one level deep. A nested path would need an mkdir that does not
+    // exist, and gcx would fail on every fresh pod.
+    const gcxConfig = envValue(core, "GCX_CONFIG");
+    expect(gcxConfig).toBe("/tmp/gcx-config.yaml");
+    expect(gcxConfig?.split("/").filter(Boolean)).toHaveLength(2);
+
     // The agent worker is deliberately denied the same credentials.
     const agent = requireDeployment(
       deployments,

@@ -76,7 +76,14 @@ function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
     // oven/bun base image and is writable by uid 1000. Pinning the path anyway
     // keeps the credential's location independent of the base image, so a bun
     // bump that changes HOME cannot silently relocate it.
-    GCX_CONFIG: EnvValue.fromValue("/tmp/gcx/config.yaml"),
+    //
+    // The file sits directly under the /tmp mount rather than in a gcx/
+    // subdirectory: /tmp is a fresh emptyDir on every pod start, so any
+    // intermediate directory would have to be created before `gcx login` runs,
+    // and nothing does that. Keeping the path one level deep means there is no
+    // directory to create. Do not reintroduce a subdirectory here without also
+    // creating it in ensureGcxContext().
+    GCX_CONFIG: EnvValue.fromValue("/tmp/gcx-config.yaml"),
     // Suppress gcx's outbound GitHub release check and anonymous telemetry; a
     // homelab worker should make no unsolicited egress. ensureGcxContext()
     // spawns gcx with an allowlisted environment, so both names must stay in
