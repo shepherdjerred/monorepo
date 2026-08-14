@@ -14,6 +14,12 @@ const MAX_WITHHELD_LINES = 25;
  */
 export const LLM_CATALOG_WITHHELD_ALERT_TTL_MS = 8 * 24 * 60 * 60 * 1000;
 
+/** Whether a field currently has upstream evidence, or has stopped needing it. */
+export type EvidenceState = "missing" | "measured" | "retired";
+
+/** Why a drift finding is being closed. */
+export type ResolutionReason = "measured" | "retired";
+
 /** Everything that decides what one model's alert can truthfully say. */
 export type CatalogModelOutcome = {
   /** Catalog id this occurrence is about. Its identity, not a description. */
@@ -24,6 +30,15 @@ export type CatalogModelOutcome = {
   applied: string[];
   /** This model's refused edits. Empty means resolve. */
   withheld: string[];
+  /**
+   * Why an empty `withheld` is truthful, so the resolution can say which.
+   * "measured" means the run compared the field and found no divergence;
+   * "retired" means nobody compared it because a human took it out of
+   * cross-checking. Required rather than defaulted: the two read identically
+   * to Alertmanager and completely differently to the operator reading the
+   * text, and a default would silently pick one.
+   */
+  resolution: ResolutionReason;
   /**
    * The refresh PR carrying `applied`, once it exists. Must be the real URL of
    * an opened PR, never a prediction that one is about to be opened.
@@ -96,17 +111,32 @@ function retainAdvice(field: string): string[] {
 export function buildCatalogEvidenceAlert(
   model: string,
   field: string,
-  missing: boolean,
+  state: EvidenceState,
   now: Date,
 ): AlertmanagerAlert {
-  const description = missing
-    ? [
-        `No upstream published a ${field} value for ${model}, so the catalog's`,
-        "number cannot be verified this run and its drift alert is not being",
-        "refreshed. Check the provider's own pricing page, or remove the model if",
-        "it is retired.",
-      ].join("\n")
-    : `${model}.${field} is measurable again; upstream evidence has returned.`;
+  const missing = state === "missing";
+  const summary =
+    state === "missing"
+      ? `LLM catalog: ${model}.${field} has no upstream evidence`
+      : state === "measured"
+        ? `LLM catalog: ${model}.${field} is verifiable again`
+        : `LLM catalog: ${model}.${field} is no longer cross-checked`;
+  const description =
+    state === "missing"
+      ? [
+          `No upstream published a ${field} value for ${model}, so the catalog's`,
+          "number cannot be verified this run and its drift alert is not being",
+          "refreshed. Check the provider's own pricing page, or remove the model if",
+          "it is retired.",
+        ].join("\n")
+      : state === "measured"
+        ? `${model}.${field} is measurable again; upstream evidence has returned.`
+        : [
+            `${model}.${field} is pinned, so the sync no longer cross-checks it and`,
+            "no upstream evidence is expected. This clears the missing-evidence",
+            "finding rather than answering it — unset the pin to start checking the",
+            "field again.",
+          ].join("\n");
   return {
     labels: {
       alertname: "LlmCatalogEvidenceMissing",
@@ -115,13 +145,7 @@ export function buildCatalogEvidenceAlert(
       model,
       field,
     },
-    annotations: {
-      summary: missing
-        ? `LLM catalog: ${model}.${field} has no upstream evidence`
-        : `LLM catalog: ${model}.${field} is verifiable again`,
-      description,
-      message: description,
-    },
+    annotations: { summary, description, message: description },
     startsAt: now.toISOString(),
     endsAt: new Date(
       now.getTime() + (missing ? LLM_CATALOG_WITHHELD_ALERT_TTL_MS : 0),
@@ -160,14 +184,15 @@ export function buildCatalogAlerts(
             applied: outcome.applied,
             withheld: withheld === undefined ? [] : [withheld],
             prUrl: outcome.prUrl,
+            resolution: "measured",
           },
           now,
         ),
-        buildCatalogEvidenceAlert(model, field, false, now),
+        buildCatalogEvidenceAlert(model, field, "measured", now),
       );
     }
     for (const field of verdict.unmeasured) {
-      alerts.push(buildCatalogEvidenceAlert(model, field, true, now));
+      alerts.push(buildCatalogEvidenceAlert(model, field, "missing", now));
     }
     // A retired field closes BOTH conditions. The operator pinned it because
     // this alert told them to, so the run that observes the pin has to be the
@@ -183,10 +208,11 @@ export function buildCatalogAlerts(
             applied: outcome.applied,
             withheld: [],
             prUrl: outcome.prUrl,
+            resolution: "retired",
           },
           now,
         ),
-        buildCatalogEvidenceAlert(model, field, false, now),
+        buildCatalogEvidenceAlert(model, field, "retired", now),
       );
     }
   }
@@ -222,7 +248,7 @@ export function buildCatalogWithheldAlert(
   outcome: CatalogModelOutcome,
   now: Date,
 ): AlertmanagerAlert {
-  const { model, field, applied, withheld, prUrl } = outcome;
+  const { model, field, applied, withheld, prUrl, resolution } = outcome;
   const resolved = withheld.length === 0;
   // Truncation is a courtesy, allowed only when the full list survives
   // elsewhere: the refresh PR body carries the script's entire report. A
@@ -233,14 +259,23 @@ export function buildCatalogWithheldAlert(
     prUrl === undefined ? withheld : withheld.slice(0, MAX_WITHHELD_LINES);
   const omitted = withheld.length - shown.length;
   const summary = resolved
-    ? `LLM catalog: ${model}.${field} has no withheld drift — earlier finding is resolved`
+    ? resolution === "measured"
+      ? `LLM catalog: ${model}.${field} has no withheld drift — earlier finding is resolved`
+      : `LLM catalog: ${model}.${field} is no longer cross-checked — earlier finding is closed`
     : `LLM catalog: ${model}.${field} has ${String(withheld.length)} withheld upstream edit(s)`;
   const description = resolved
-    ? [
-        `sync-from-upstreams.ts compared ${model}.${field} against the upstreams and`,
-        "found it either applied or already in agreement. Nothing about this field",
-        "is awaiting manual adjudication.",
-      ].join("\n")
+    ? resolution === "measured"
+      ? [
+          `sync-from-upstreams.ts compared ${model}.${field} against the upstreams and`,
+          "found it either applied or already in agreement. Nothing about this field",
+          "is awaiting manual adjudication.",
+        ].join("\n")
+      : [
+          `${model}.${field} is pinned, so sync-from-upstreams.ts no longer compares`,
+          "it against the upstreams. This closes the earlier finding because the",
+          "field was taken out of cross-checking — NOT because a comparison agreed.",
+          "Unset the pin to start checking it again.",
+        ].join("\n")
     : [
         `sync-from-upstreams.ts refused ${String(withheld.length)} upstream edit(s) for ${model}.${field} on a`,
         "guard, so the catalog still holds its current values. Check each line against",

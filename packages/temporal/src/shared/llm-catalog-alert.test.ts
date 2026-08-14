@@ -17,6 +17,7 @@ describe("buildCatalogWithheldAlert", () => {
         applied: [],
         withheld: ["  claude-opus-5.input: 5 -> 12 is a 140% change"],
         prUrl: undefined,
+        resolution: "measured",
       },
       NOW,
     );
@@ -37,6 +38,7 @@ describe("buildCatalogWithheldAlert", () => {
         applied: [],
         withheld: ["  a.input: reason one", "  b.output: two"],
         prUrl: undefined,
+        resolution: "measured",
       },
       NOW,
     );
@@ -61,6 +63,7 @@ describe("buildCatalogWithheldAlert", () => {
         applied: [],
         withheld: ["  claude-sonnet-5.input: 3 -> 2 is a 33% change"],
         prUrl: undefined,
+        resolution: "measured",
       },
       NOW,
     );
@@ -80,6 +83,7 @@ describe("buildCatalogWithheldAlert", () => {
         applied: [],
         withheld: ["  a.input: reason"],
         prUrl: undefined,
+        resolution: "measured",
       },
       NOW,
     );
@@ -102,6 +106,7 @@ describe("buildCatalogWithheldAlert", () => {
         ],
         withheld: ["  claude-sonnet-5.input: 3 -> 2 is a 33% change"],
         prUrl: PR_URL,
+        resolution: "measured",
       },
       NOW,
     );
@@ -128,6 +133,7 @@ describe("buildCatalogWithheldAlert", () => {
         applied: ["  gpt-5.6-terra.input: 2.5 -> 2"],
         withheld: ["  claude-sonnet-5.input: 3 -> 2 is a 33% change"],
         prUrl: undefined,
+        resolution: "measured",
       },
       NOW,
     );
@@ -145,6 +151,7 @@ describe("buildCatalogWithheldAlert", () => {
         applied: [],
         withheld: ["  a.input: reason"],
         prUrl: undefined,
+        resolution: "measured",
       },
       NOW,
     );
@@ -164,6 +171,7 @@ describe("buildCatalogWithheldAlert", () => {
         applied: ["  gpt-5.6-terra.input: 2.5 -> 2"],
         withheld: [],
         prUrl: PR_URL,
+        resolution: "measured",
       },
       NOW,
     );
@@ -182,6 +190,7 @@ describe("buildCatalogWithheldAlert", () => {
         applied: [],
         withheld: ["  a.input: reason"],
         prUrl: undefined,
+        resolution: "measured",
       },
       NOW,
     );
@@ -193,6 +202,7 @@ describe("buildCatalogWithheldAlert", () => {
           applied: [],
           withheld: [],
           prUrl: undefined,
+          resolution: "measured",
         },
         NOW,
       ).labels,
@@ -214,6 +224,7 @@ describe("withheld-line truncation", () => {
         applied: ["  a.input: applied"],
         withheld: manyWithheld,
         prUrl: PR_URL,
+        resolution: "measured",
       },
       NOW,
     );
@@ -234,6 +245,7 @@ describe("withheld-line truncation", () => {
         applied: [],
         withheld: manyWithheld,
         prUrl: undefined,
+        resolution: "measured",
       },
       NOW,
     );
@@ -358,6 +370,7 @@ function withheldFor(field: string): string {
         applied: [],
         withheld: [`  subject-model.${field}: withheld`],
         prUrl: undefined,
+        resolution: "measured",
       },
       NOW,
     ).annotations["description"] ?? ""
@@ -418,6 +431,125 @@ describe("retired fields close their own alerts", () => {
     expect(drift).toBeDefined();
     // endsAt === startsAt is the resolving occurrence.
     expect(drift?.endsAt).toBe(drift?.startsAt);
+  });
+
+  test("says the field was retired, not that a comparison agreed", () => {
+    // The resolution used the measured wording, which claims
+    // sync-from-upstreams compared the field and found agreement. Nothing was
+    // compared — the operator pinned it. Telling them a check passed on a
+    // number nobody checked is the same class of false claim as the
+    // evidence-missing alert this branch already fixed.
+    const alerts = buildCatalogAlerts(
+      {
+        applied: [],
+        models: {
+          "claude-sonnet-5": {
+            withheld: {},
+            measured: ["input", "output"],
+            unmeasured: [],
+            retired: ["contextWindow"],
+          },
+        },
+        prUrl: undefined,
+      },
+      NOW,
+    );
+    const drift = alerts.find(
+      (alert) =>
+        alert.labels["alertname"] === "LlmCatalogDriftWithheld" &&
+        alert.labels["field"] === "contextWindow",
+    );
+    const description = drift?.annotations["description"] ?? "";
+    expect(description).toContain("pinned");
+    expect(description).toContain("no longer compares");
+    expect(description).not.toContain("found it either applied");
+    expect(description).not.toContain("in agreement");
+  });
+
+  test("says evidence is not expected, not that it returned", () => {
+    const alerts = buildCatalogAlerts(
+      {
+        applied: [],
+        models: {
+          "claude-sonnet-5": {
+            withheld: {},
+            measured: ["input", "output"],
+            unmeasured: [],
+            retired: ["contextWindow"],
+          },
+        },
+        prUrl: undefined,
+      },
+      NOW,
+    );
+    const evidence = alerts.find(
+      (alert) =>
+        alert.labels["alertname"] === "LlmCatalogEvidenceMissing" &&
+        alert.labels["field"] === "contextWindow",
+    );
+    const description = evidence?.annotations["description"] ?? "";
+    expect(description).toContain("no upstream evidence is expected");
+    expect(description).not.toContain("evidence has returned");
+    expect(description).not.toContain("measurable again");
+  });
+
+  test("a genuinely measured field keeps the comparison wording", () => {
+    // The retired path must not bleed into the common one: for a field that
+    // really was compared, "we checked and it agrees" is the true statement.
+    const alerts = buildCatalogAlerts(
+      {
+        applied: [],
+        models: {
+          "claude-sonnet-5": {
+            withheld: {},
+            measured: ["input"],
+            unmeasured: [],
+            retired: [],
+          },
+        },
+        prUrl: undefined,
+      },
+      NOW,
+    );
+    const drift = alerts.find(
+      (alert) => alert.labels["alertname"] === "LlmCatalogDriftWithheld",
+    );
+    const description = drift?.annotations["description"] ?? "";
+    expect(description).toContain("compared");
+    expect(description).not.toContain("pinned");
+  });
+
+  test("both resolutions still carry the firing alert's exact labels", () => {
+    // Alertmanager identifies an alert by its label set alone, so a retired
+    // resolution that differed by one label would leave the firing occurrence
+    // open forever. This is why the reason is a parameter of the existing
+    // builders rather than a separate retired-only builder.
+    const firing = buildCatalogWithheldAlert(
+      {
+        model: "subject-model",
+        field: "contextWindow",
+        applied: [],
+        withheld: ["  subject-model.contextWindow: shrank"],
+        prUrl: undefined,
+        resolution: "measured",
+      },
+      NOW,
+    );
+    for (const resolution of ["measured", "retired"] as const) {
+      expect(
+        buildCatalogWithheldAlert(
+          {
+            model: "subject-model",
+            field: "contextWindow",
+            applied: [],
+            withheld: [],
+            prUrl: undefined,
+            resolution,
+          },
+          NOW,
+        ).labels,
+      ).toEqual(firing.labels);
+    }
   });
 
   test("a retired field is not also reported as missing evidence", () => {
