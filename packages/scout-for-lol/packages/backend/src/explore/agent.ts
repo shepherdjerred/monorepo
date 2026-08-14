@@ -18,7 +18,11 @@ import {
 import configuration from "#src/configuration.ts";
 import { prisma } from "#src/database/index.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
-import { emitExploreStreamChunk } from "#src/explore/stream.ts";
+import { createLogger } from "#src/logger.ts";
+import {
+  createExploreStreamState,
+  emitExploreStreamChunk,
+} from "#src/explore/stream.ts";
 import {
   assertWithinBudget,
   recordTokenUsage,
@@ -38,6 +42,8 @@ import {
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
 import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
+
+const logger = createLogger("explore-agent");
 
 export type ExploreAgentParams = {
   runId: string;
@@ -101,11 +107,15 @@ export async function streamExploreAgent(
     },
   });
 
+  // Drained to completion on purpose. Cancelling a Mastra evented stream
+  // calls removeAllListeners() on the shared emitter, which would silently
+  // starve every other consumer of the same run — so never break out early.
+  const streamState = createExploreStreamState();
   const reader = stream.fullStream.getReader();
   try {
     let read = await reader.read();
     while (!read.done) {
-      await emitExploreStreamChunk(read.value, params.emit);
+      await emitExploreStreamChunk(read.value, params.emit, streamState);
       read = await reader.read();
     }
   } finally {
@@ -118,6 +128,18 @@ export async function streamExploreAgent(
   }
 
   const answer = ExploreAnswerSchema.parse(output.object);
+
+  // Streaming depends on the model emitting `answer` early enough for the
+  // partial snapshots to carry it. If that ever stops holding — a reordered
+  // schema, a provider that buffers — the turn still succeeds and the answer
+  // simply appears all at once, which is invisible in tests and in prod.
+  // Say so out loud rather than letting the page quietly stop streaming.
+  if (streamState.sentAnswerLength === 0 && answer.answer.length > 0) {
+    logger.warn(
+      "Explore answer never streamed: no partial snapshot carried `answer`.",
+      { model, answerLength: answer.answer.length },
+    );
+  }
 
   const usage = output.totalUsage;
   const inputTokens = usage.inputTokens ?? 0;

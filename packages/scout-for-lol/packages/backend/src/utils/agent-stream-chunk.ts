@@ -40,6 +40,13 @@ const AgentStreamChunkSchema = z.discriminatedUnion("type", [
     type: z.literal("error"),
     payload: z.looseObject({ error: z.unknown() }),
   }),
+  // Unlike every chunk above, the partial object rides at the top level rather
+  // than under `payload` — see the `type: 'object'` member of AgentChunkType in
+  // @mastra/core dist/stream/types.d.ts.
+  z.looseObject({
+    type: z.literal("object"),
+    object: z.unknown(),
+  }),
 ]);
 
 export type AgentStreamChunk =
@@ -47,7 +54,19 @@ export type AgentStreamChunk =
   | { kind: "text-delta"; text: string }
   | { kind: "tool-call"; toolName: string }
   | { kind: "tool-result"; toolName: string; ok: boolean }
-  | { kind: "tool-error"; toolName: string; message: string };
+  | { kind: "tool-error"; toolName: string; message: string }
+  /**
+   * A progressively-completed snapshot of the structured output.
+   *
+   * When an agent runs with `structuredOutput`, Mastra parses the JSON the
+   * model is emitting — repairing the truncation mid-stream — and emits a
+   * whole snapshot per text delta. Consumers that want readable prose want
+   * this, not `text-delta`, which carries the raw JSON.
+   *
+   * A snapshot only contains the keys the model has emitted so far, so a
+   * field's position in the schema decides how early it starts streaming.
+   */
+  | { kind: "object"; object: unknown };
 
 /**
  * Returns null for chunks that carry nothing an agent needs to act on.
@@ -86,6 +105,9 @@ export function parseAgentStreamChunk(
         toolName: chunk.payload.toolName,
         message: agentStreamErrorMessage(chunk.payload.error),
       };
+    }
+    case "object": {
+      return { kind: "object", object: chunk.object };
     }
     case "error": {
       throw new Error(agentStreamErrorMessage(chunk.payload.error));
