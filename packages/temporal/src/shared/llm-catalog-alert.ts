@@ -18,6 +18,8 @@ export const LLM_CATALOG_WITHHELD_ALERT_TTL_MS = 8 * 24 * 60 * 60 * 1000;
 export type CatalogModelOutcome = {
   /** Catalog id this occurrence is about. Its identity, not a description. */
   model: string;
+  /** The cross-checked field. Identity bottoms out here — nothing is finer. */
+  field: string;
   /** Edits the guards accepted this run, across the catalog. */
   applied: string[];
   /** This model's refused edits. Empty means resolve. */
@@ -29,15 +31,66 @@ export type CatalogModelOutcome = {
   prUrl: string | undefined;
 };
 
-/** The run's per-model verdicts, as the sync report records them. */
+/** One model's field-by-field verdict, mirroring the sync report. */
+export type CatalogModelVerdict = {
+  withheld: Record<string, string | undefined>;
+  measured: string[];
+  unmeasured: string[];
+};
+
+/** The run's verdicts, as the sync report records them. */
 export type CatalogSyncOutcome = {
   applied: string[];
-  /** Models actually compared. Only these may be spoken for. */
-  measured: string[];
-  /** Refused edits keyed by model id. */
-  withheldByModel: Record<string, string[]>;
+  models: Record<string, CatalogModelVerdict>;
   prUrl: string | undefined;
 };
+
+/**
+ * Fires while a field cannot be checked at all, and resolves the moment it can.
+ *
+ * This is the counterpart that makes per-field silence safe. A drift occurrence
+ * is only published for fields the run actually measured, so a field that stops
+ * being measurable stops being re-fired and expires on its TTL — which would
+ * quietly retire an unadjudicated divergence. Raising the missing-evidence
+ * condition in its place keeps the model visible under a claim that is
+ * accurate: not "this is fine", but "nobody can currently tell".
+ */
+export function buildCatalogEvidenceAlert(
+  model: string,
+  field: string,
+  missing: boolean,
+  now: Date,
+): AlertmanagerAlert {
+  const description = missing
+    ? [
+        `No upstream published a ${field} value for ${model}, so the catalog's`,
+        "number cannot be verified this run and its drift alert is not being",
+        "refreshed. Check the provider's own pricing page, or remove the model if",
+        "it is retired.",
+      ].join("\n")
+    : `${model}.${field} is measurable again; upstream evidence has returned.`;
+  return {
+    labels: {
+      alertname: "LlmCatalogEvidenceMissing",
+      severity: "warning",
+      component: "llm-catalog-refresh",
+      model,
+      field,
+    },
+    annotations: {
+      summary: missing
+        ? `LLM catalog: ${model}.${field} has no upstream evidence`
+        : `LLM catalog: ${model}.${field} is verifiable again`,
+      description,
+      message: description,
+    },
+    startsAt: now.toISOString(),
+    endsAt: new Date(
+      now.getTime() + (missing ? LLM_CATALOG_WITHHELD_ALERT_TTL_MS : 0),
+    ).toISOString(),
+    generatorURL: SYNC_SCRIPT_URL,
+  };
+}
 
 /**
  * One occurrence per measured model — the identity that makes resolution safe.
@@ -57,17 +110,29 @@ export function buildCatalogAlerts(
   outcome: CatalogSyncOutcome,
   now: Date,
 ): AlertmanagerAlert[] {
-  return outcome.measured.map((model) =>
-    buildCatalogWithheldAlert(
-      {
-        model,
-        applied: outcome.applied,
-        withheld: outcome.withheldByModel[model] ?? [],
-        prUrl: outcome.prUrl,
-      },
-      now,
-    ),
-  );
+  const alerts: AlertmanagerAlert[] = [];
+  for (const [model, verdict] of Object.entries(outcome.models)) {
+    for (const field of verdict.measured) {
+      const withheld = verdict.withheld[field];
+      alerts.push(
+        buildCatalogWithheldAlert(
+          {
+            model,
+            field,
+            applied: outcome.applied,
+            withheld: withheld === undefined ? [] : [withheld],
+            prUrl: outcome.prUrl,
+          },
+          now,
+        ),
+        buildCatalogEvidenceAlert(model, field, false, now),
+      );
+    }
+    for (const field of verdict.unmeasured) {
+      alerts.push(buildCatalogEvidenceAlert(model, field, true, now));
+    }
+  }
+  return alerts;
 }
 
 /**
@@ -99,7 +164,7 @@ export function buildCatalogWithheldAlert(
   outcome: CatalogModelOutcome,
   now: Date,
 ): AlertmanagerAlert {
-  const { model, applied, withheld, prUrl } = outcome;
+  const { model, field, applied, withheld, prUrl } = outcome;
   const resolved = withheld.length === 0;
   // Truncation is a courtesy, allowed only when the full list survives
   // elsewhere: the refresh PR body carries the script's entire report. A
@@ -110,16 +175,16 @@ export function buildCatalogWithheldAlert(
     prUrl === undefined ? withheld : withheld.slice(0, MAX_WITHHELD_LINES);
   const omitted = withheld.length - shown.length;
   const summary = resolved
-    ? `LLM catalog: ${model} has no withheld drift — earlier finding is resolved`
-    : `LLM catalog: ${model} has ${String(withheld.length)} withheld upstream edit(s)`;
+    ? `LLM catalog: ${model}.${field} has no withheld drift — earlier finding is resolved`
+    : `LLM catalog: ${model}.${field} has ${String(withheld.length)} withheld upstream edit(s)`;
   const description = resolved
     ? [
-        `sync-from-upstreams.ts compared ${model} against the upstreams and found`,
-        "every edit either applied or already in agreement. Nothing about this model",
+        `sync-from-upstreams.ts compared ${model}.${field} against the upstreams and`,
+        "found it either applied or already in agreement. Nothing about this field",
         "is awaiting manual adjudication.",
       ].join("\n")
     : [
-        `sync-from-upstreams.ts refused ${String(withheld.length)} upstream edit(s) for ${model} on a`,
+        `sync-from-upstreams.ts refused ${String(withheld.length)} upstream edit(s) for ${model}.${field} on a`,
         "guard, so the catalog still holds its current values. Check each line against",
         "the provider's own pricing page and decide: apply the upstream value, or",
         "confirm the catalog's value is the intended one. Both are real outcomes — a",
@@ -144,6 +209,7 @@ export function buildCatalogWithheldAlert(
       severity: "warning",
       component: "llm-catalog-refresh",
       model,
+      field,
     },
     // `message` mirrors `description` — the Alerts template reads either
     // depending on the alert source (see xcode-cloud-webhook.ts).

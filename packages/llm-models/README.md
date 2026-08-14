@@ -80,10 +80,11 @@ The Temporal schedule `llm-catalog-refresh-weekly`
 runs this cross-check every Monday and opens a PR when pricing drifts. When
 every edit is withheld there is nothing to PR, so the activity reads
 `--report-json` and raises an `LlmCatalogDriftWithheld` Alertmanager
-occurrence instead — one **per model**, labelled with its catalog id. Each
-measured model fires or resolves on its own evidence, so a remediated finding
-closes on the next refresh, and a model absent from both upstreams gets no
-occurrence at all rather than resolving on evidence nobody has.
+occurrence instead — one per **(model, field)**, the unit the cross-check
+actually compares. Each measured field fires or resolves on its own evidence, so
+a remediated finding closes on the next refresh. A field no upstream covers gets
+no drift occurrence at all; `LlmCatalogEvidenceMissing` fires for it instead, so
+the gap is stated rather than left as silence.
 
 ## Development
 

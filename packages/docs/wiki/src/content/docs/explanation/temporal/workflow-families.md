@@ -86,14 +86,17 @@ its introductory rate, the catalog holds the standard price billing reverts to,
 and the acceptance dies with the promotion.
 
 Resolution needs the same rigour, and it is why the occurrence is raised **per
-model** rather than per run. An empty withheld list means "nothing is awaiting
-adjudication" only for models actually compared; one that vanished from both
-upstreams drops out without anyone deciding anything. Each measured model
-therefore resolves or fires on its own evidence, and an unmeasured one simply
-gets no occurrence — its previous one stands, and it cannot speak for anything
-else. A run-wide gate got this wrong in the other direction: a single
-permanently overlay-only flagship, a perfectly normal state, froze every
-unrelated resolution.
+(model, field)** — the unit the cross-check actually compares, and the finest
+one that exists. Coarser identities all fail the same way: an upstream row can
+carry a price but omit a context window, so "this model was measured" would let
+a resolution close an alert about a field nobody fetched.
+
+A field with no upstream value gets no drift occurrence at all, because there is
+nothing to claim. Silence alone would be its own trap — the previous occurrence
+would simply age out — so the gap is stated instead: `LlmCatalogEvidenceMissing`
+fires for exactly that field and resolves when evidence returns. The two
+conditions are deliberately separate, because "this price diverges" and "nobody
+can currently check this price" need different responses.
 
 ## Scout
 

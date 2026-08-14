@@ -291,10 +291,23 @@ async function fetchJson(url: string): Promise<unknown> {
   return res.json();
 }
 
+/**
+ * The three values we cross-check. This is the comparison atom — reconcile has
+ * exactly one block per field and nothing finer exists, which is why alert
+ * identity bottoms out at (model, field).
+ */
+export type CrossCheckField = "input" | "output" | "contextWindow";
+
 export type ReconcileResult = {
   /** Edits applied to `entry`. */
   applied: string[];
-  /** Edits withheld by a plausibility guard, for a human to adjudicate. */
+  /**
+   * Withheld reason per field. Keyed rather than flat because a run may only
+   * speak for the fields it actually compared, and the alert is raised per
+   * field for the same reason.
+   */
+  rejectedByField: Partial<Record<CrossCheckField, string>>;
+  /** The withheld reasons, flattened — the human-readable view. */
   rejected: string[];
 };
 
@@ -312,17 +325,21 @@ export function reconcile(
   { source, now }: ReconcileContext,
 ): ReconcileResult {
   if (entry.pricing.modality !== "text") {
-    return { applied: [], rejected: [] };
+    return { applied: [], rejectedByField: {}, rejected: [] };
   }
   const applied: string[] = [];
-  const rejected: string[] = [];
-  const note = (field: string, before: number, after: number): void => {
+  const rejectedByField: Partial<Record<CrossCheckField, string>> = {};
+  const note = (
+    field: CrossCheckField,
+    before: number,
+    after: number,
+  ): void => {
     applied.push(
       `  ${id}.${field}: ${String(before)} -> ${String(after)} (${source})`,
     );
   };
-  const reject = (field: string, reason: string): void => {
-    rejected.push(`  ${id}.${field}: ${reason} (${source})`);
+  const reject = (field: CrossCheckField, reason: string): void => {
+    rejectedByField[field] = `  ${id}.${field}: ${reason} (${source})`;
   };
 
   /**
@@ -397,7 +414,53 @@ export function reconcile(
       reject("contextWindow", reason);
     }
   }
-  return { applied, rejected };
+  return {
+    applied,
+    rejectedByField,
+    rejected: Object.values(rejectedByField),
+  };
+}
+
+/**
+ * Which fields this entry is eligible to have cross-checked at all. Anything
+ * outside this set is not "unmeasured" — it is simply not our business, so it
+ * must never produce a missing-evidence signal.
+ */
+function applicableFields(entry: ModelEntry): CrossCheckField[] {
+  if (entry.pricing.modality !== "text") {
+    return [];
+  }
+  const fields: CrossCheckField[] = ["input", "output"];
+  if (entry.contextWindow !== undefined && entry.pinnedContextWindow !== true) {
+    fields.push("contextWindow");
+  }
+  return fields;
+}
+
+/** What this run can honestly say about one model, field by field. */
+export type ModelVerdict = {
+  /** Withheld reason per field — needs a human. */
+  withheld: Partial<Record<CrossCheckField, string>>;
+  /** Fields an upstream actually supplied a value for. */
+  measured: CrossCheckField[];
+  /** Applicable fields no upstream covered — no evidence either way. */
+  unmeasured: CrossCheckField[];
+};
+
+export function verdictFor(
+  entry: ModelEntry,
+  upstream: Upstream | undefined,
+  result: ReconcileResult,
+): ModelVerdict {
+  const applicable = applicableFields(entry);
+  const measured = applicable.filter(
+    (field) => upstream?.[field] !== undefined,
+  );
+  return {
+    withheld: result.rejectedByField,
+    measured,
+    unmeasured: applicable.filter((field) => !measured.includes(field)),
+  };
 }
 
 /**
@@ -410,14 +473,11 @@ export type SyncReport = {
   /** Every withheld line, flattened — the human-readable view. */
   withheld: string[];
   /**
-   * Withheld lines keyed by model id. The alert is raised per model, so the
-   * identity has to survive the report: a run only ever resolves the models it
-   * actually measured, and an unrelated model nobody could measure must not
-   * speak for them.
+   * Per-model, per-field verdicts. Identity has to survive the report because
+   * the alert is raised per (model, field): a run may only speak for the exact
+   * fields it compared, and nothing coarser is honest.
    */
-  withheldByModel: Record<string, string[]>;
-  /** Models genuinely compared this run — the only ones a run may resolve. */
-  measured: string[];
+  models: Record<string, ModelVerdict>;
   overlayOnly: string[];
   notChecked: string[];
 };
@@ -484,8 +544,7 @@ async function main(): Promise<void> {
 
   const now = new Date();
   const drifted: string[] = [];
-  const withheldByModel: Record<string, string[]> = {};
-  const measured: string[] = [];
+  const models: Record<string, ModelVerdict> = {};
   const overlayOnly: string[] = [];
   const notChecked: string[] = [];
 
@@ -501,26 +560,35 @@ async function main(): Promise<void> {
     const upstream = fromModelsDev ?? liteLlm.get(key);
     if (upstream === undefined) {
       overlayOnly.push(id);
+      // Still a verdict: every applicable field is unmeasured, which is what
+      // keeps a vanished model visible instead of silently dropping out.
+      models[id] = verdictFor(entry, undefined, {
+        applied: [],
+        rejectedByField: {},
+        rejected: [],
+      });
       continue;
     }
-    measured.push(id);
     const result = reconcile(id, entry, upstream, {
       source: fromModelsDev === undefined ? "litellm" : "models.dev",
       now,
     });
     drifted.push(...result.applied);
-    if (result.rejected.length > 0) {
-      withheldByModel[id] = result.rejected;
-    }
+    // Measurement is per FIELD, not per model. `Upstream` fields are each
+    // optional, so a row carrying `cost.input` but not `cost.output` proves
+    // nothing about output — marking the whole model measured would let a
+    // resolution close an output alert on evidence that was never fetched.
+    models[id] = verdictFor(entry, upstream, result);
   }
 
   const report: SyncReport = {
     applied: drifted,
     // One source of truth: the flat list is the per-model map read end to end,
     // so the human report and the per-model alerts can never disagree.
-    withheld: Object.values(withheldByModel).flat(),
-    withheldByModel,
-    measured,
+    withheld: Object.values(models).flatMap((verdict) =>
+      Object.values(verdict.withheld),
+    ),
+    models,
     overlayOnly,
     notChecked,
   };

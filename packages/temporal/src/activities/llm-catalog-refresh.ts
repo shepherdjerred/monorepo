@@ -20,8 +20,14 @@ const CATALOG_FILE = "packages/llm-models/src/catalog.json";
 const SyncReportSchema = z.object({
   applied: z.array(z.string()),
   withheld: z.array(z.string()),
-  withheldByModel: z.record(z.string(), z.array(z.string())),
-  measured: z.array(z.string()),
+  models: z.record(
+    z.string(),
+    z.object({
+      withheld: z.record(z.string(), z.string()),
+      measured: z.array(z.string()),
+      unmeasured: z.array(z.string()),
+    }),
+  ),
   overlayOnly: z.array(z.string()),
   notChecked: z.array(z.string()),
 });
@@ -153,8 +159,7 @@ export const llmCatalogRefreshActivities = {
       ): Promise<LlmCatalogRefreshResult> => {
         await publishWithheldAlerts({
           applied: summary.applied,
-          measured: summary.measured,
-          withheldByModel: summary.withheldByModel,
+          models: summary.models,
           prUrl: result.prUrl,
         });
         return result;
