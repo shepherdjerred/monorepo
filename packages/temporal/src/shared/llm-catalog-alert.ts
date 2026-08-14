@@ -46,6 +46,42 @@ export type CatalogSyncOutcome = {
 };
 
 /**
+ * How to make a retain decision stick, for the field the alert is about.
+ *
+ * The two mechanisms are genuinely different, and naming the wrong one is worse
+ * than saying nothing: an operator who follows it writes metadata the sync
+ * silently ignores and the same divergence re-alerts next week. Only
+ * input/output prices go through `acceptedUpstreamPricing` — it records a price
+ * PAIR and has no context-window field at all, so a context-window divergence
+ * has no expression there. Pinning is the mechanism for that one.
+ */
+function retainAdvice(field: string): string[] {
+  if (field === "contextWindow") {
+    return [
+      "To keep the catalog's context window, set `pinnedContextWindow: true` on",
+      "the entry in catalog.json. That tells the sync this number is maintained",
+      "by hand and stops it being cross-checked at all.",
+      "Note this one is a pin, not a dated acceptance: it does not expire, so",
+      "unset it once the upstream figure is trustworthy again.",
+      "`acceptedUpstreamPricing` cannot express this — it records a price pair",
+      "and has no context-window field.",
+    ];
+  }
+  return [
+    "To make a retain decision stick, record the PAIR under the entry's",
+    "`acceptedUpstreamPricing` in catalog.json — per field, both the upstream",
+    "number you declined and the catalog number you kept, plus a `reason` and",
+    "an `expiresAt`. For example:",
+    '  "acceptedUpstreamPricing": { "input": { "upstream": 2, "catalog": 3 },',
+    '    "reason": "…", "expiresAt": "2026-09-01T00:00:00Z" }',
+    "Both halves are checked, so the acceptance lapses if upstream reprices OR",
+    "if the catalog value it was protecting is later edited — and it lapses on",
+    "its own at `expiresAt`. Recording only the upstream number does not match",
+    "the contract and will not suppress anything.",
+  ];
+}
+
+/**
  * Fires while a field cannot be checked at all, and resolves the moment it can.
  *
  * This is the counterpart that makes per-field silence safe. A drift occurrence
@@ -190,16 +226,7 @@ export function buildCatalogWithheldAlert(
         "confirm the catalog's value is the intended one. Both are real outcomes — a",
         "divergence can be deliberate, such as a standard rate held while upstream",
         "lists a temporary promotional one.",
-        "To make a retain decision stick, record the PAIR under the entry's",
-        "`acceptedUpstreamPricing` in catalog.json — per field, both the upstream",
-        "number you declined and the catalog number you kept, plus a `reason` and",
-        "an `expiresAt`. For example:",
-        '  "acceptedUpstreamPricing": { "input": { "upstream": 2, "catalog": 3 },',
-        '    "reason": "…", "expiresAt": "2026-09-01T00:00:00Z" }',
-        "Both halves are checked, so the acceptance lapses if upstream reprices OR",
-        "if the catalog value it was protecting is later edited — and it lapses on",
-        "its own at `expiresAt`. Recording only the upstream number does not match",
-        "the contract and will not suppress anything.",
+        ...retainAdvice(field),
         prUrl === undefined
           ? "This run opened no catalog PR, so these withheld lines are its only outcome."
           : `The other ${String(applied.length)} edit(s) passed the guards and were applied — review those in ${prUrl}, not here.`,

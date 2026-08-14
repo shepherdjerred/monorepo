@@ -339,3 +339,43 @@ describe("buildCatalogAlerts", () => {
     ).toEqual([]);
   });
 });
+
+/** The withheld-alert description for one field. */
+function withheldFor(field: string): string {
+  return (
+    buildCatalogWithheldAlert(
+      {
+        model: "subject-model",
+        field,
+        applied: [],
+        withheld: [`  subject-model.${field}: withheld`],
+        prUrl: undefined,
+      },
+      NOW,
+    ).annotations["description"] ?? ""
+  );
+}
+
+describe("retain instructions per field", () => {
+  test("a price divergence points at the acceptance pair", () => {
+    for (const field of ["input", "output"]) {
+      const description = withheldFor(field);
+      expect(description).toContain("acceptedUpstreamPricing");
+      expect(description).toContain("upstream");
+      expect(description).toContain("catalog");
+      expect(description).not.toContain("pinnedContextWindow");
+    }
+  });
+
+  test("a context-window divergence points at the pin, not the acceptance", () => {
+    // acceptedUpstreamPricing records a price PAIR and has no contextWindow
+    // field, so telling an operator to use it here produces metadata the sync
+    // ignores — the divergence would re-alert next week having been "accepted".
+    const description = withheldFor("contextWindow");
+    expect(description).toContain("pinnedContextWindow: true");
+    expect(description).toContain("cannot express this");
+    // It must not hand over the price-only recipe.
+    expect(description).not.toContain('"acceptedUpstreamPricing": {');
+    expect(description).not.toContain("expiresAt");
+  });
+});
