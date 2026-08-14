@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -eu
+
+# The Tailscale CLI ships inside the macOS app bundle rather than as a separate
+# formula, and the brew `tailscale` formula would collide with the installed
+# cask (it wants to run its own tailscaled).
+#
+# This has to be an exec wrapper, NOT a symlink. The bundled binary resolves its
+# own bundle identity from the path it was invoked through, so a symlink on PATH
+# dies immediately with:
+#
+#   Tailscale/BundleIdentifiers.swift:47: Fatal error: The current
+#   bundleIdentifier is unknown to the registry
+#
+# `exec`ing the real path keeps argv[0] inside the bundle and the CLI works.
+exec /Applications/Tailscale.app/Contents/MacOS/Tailscale "$@"
