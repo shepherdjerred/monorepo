@@ -611,6 +611,16 @@ function activeOperationResourceIdentities(
   );
 }
 
+/**
+ * Deliberately reads only the current info key, with no fallback to the
+ * `ci.sjer.red/root-finalizer-phase` name this replaced. An operation carrying
+ * the old key was started by a different Buildkite build, so
+ * `liveOperationMatches` has already refused it on the request UUID before the
+ * phase is ever compared — a fallback could not change any outcome, and
+ * teaching the closed-world comparison to accept a key this code never writes
+ * would weaken it. Such an operation still parses cleanly: the info schema is
+ * loose and unknown names are filtered out rather than rejected.
+ */
 function operationReleasePhase(
   operation: Record<string, unknown>,
 ): ReleasePhase | undefined {

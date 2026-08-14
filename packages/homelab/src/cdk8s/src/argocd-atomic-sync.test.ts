@@ -63,10 +63,18 @@ function identifiedOperation(
   requestId: string,
   revision = REVISION,
   operationId: string | null = CURRENT_OPERATION_ID,
-  persistedRevision?: string,
+  options: {
+    readonly persistedRevision?: string;
+    readonly extraInfo?: readonly {
+      readonly name: string;
+      readonly value: string;
+    }[];
+  } = {},
 ): unknown {
+  const { persistedRevision, extraInfo = [] } = options;
   return {
     info: [
+      ...extraInfo,
       {
         name: "ci.sjer.red/request-id",
         value: requestId,
@@ -113,6 +121,10 @@ function applicationOperation(options: {
     readonly kind: string;
     readonly name: string;
   }[];
+  readonly extraInfo?: readonly {
+    readonly name: string;
+    readonly value: string;
+  }[];
 }): unknown {
   const revision = options.revision ?? REVISION;
   const operationId =
@@ -123,17 +135,21 @@ function applicationOperation(options: {
     options.liveOperationId === undefined
       ? operationId
       : options.liveOperationId;
+  const identity = {
+    persistedRevision: options.persistedRevision,
+    extraInfo: options.extraInfo,
+  };
   const completedOperation = identifiedOperation(
     options.requestId,
     revision,
     operationId,
-    options.persistedRevision,
+    identity,
   );
   const liveOperation = identifiedOperation(
     options.requestId,
     revision,
     liveOperationId,
-    options.persistedRevision,
+    identity,
   );
   const live =
     options.live ??
@@ -767,6 +783,21 @@ for (const scenario of [
     error: "Refusing to replace active apps operation",
   },
   {
+    // An operation started before `ci.sjer.red/root-finalizer-phase` was
+    // renamed. It carries an info key this code no longer writes, which the
+    // loose info schema filters out rather than rejecting, so it is refused on
+    // request identity like any other foreign operation — never on a parse
+    // error, and never adopted. This is why `operationReleasePhase` needs no
+    // fallback to the old name.
+    name: "an operation carrying the superseded release-phase info key",
+    requestId: OTHER_REQUEST_ID,
+    revision: REVISION,
+    extraInfo: [
+      { name: "ci.sjer.red/root-finalizer-phase", value: "batch" },
+    ] as const,
+    error: "Refusing to replace active apps operation",
+  },
+  {
     name: "the same request ID at another revision",
     requestId: CURRENT_REQUEST_ID,
     revision: "2.0.0-41",
@@ -780,6 +811,7 @@ for (const scenario of [
         requestId: scenario.requestId,
         resources: [{ status: "Synced" }],
         revision: scenario.revision,
+        ...("extraInfo" in scenario ? { extraInfo: scenario.extraInfo } : {}),
       }),
     ]);
 
