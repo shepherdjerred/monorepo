@@ -153,6 +153,18 @@ function computeConfiguration() {
       .asString(),
     openaiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
     reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "openai/gpt-5.6-sol"),
+    exploreModel: env
+      .get("EXPLORE_MODEL")
+      .default("openai/gpt-5.6-sol")
+      .asString(),
+    // Explore reads the whole lake, so access is an explicit allowlist of
+    // Discord servers rather than a permission on any one of them. Unset
+    // means nobody — an empty list fails closed, which is the only safe
+    // default for a surface whose gate is the allowlist itself.
+    exploreGuildAllowlist: env
+      .get("EXPLORE_GUILD_ALLOWLIST")
+      .default("")
+      .asArray(","),
     geminiApiKey: getOptionalEnvVar("GEMINI_API_KEY"),
     openaiHourlyTokenBudget: env
       .get("OPENAI_HOURLY_TOKEN_BUDGET")
@@ -257,6 +269,12 @@ const configuration: Configuration = {
   },
   get reportAiModel() {
     return getConfiguration().reportAiModel;
+  },
+  get exploreModel() {
+    return getConfiguration().exploreModel;
+  },
+  get exploreGuildAllowlist() {
+    return getConfiguration().exploreGuildAllowlist;
   },
   get geminiApiKey() {
     return getConfiguration().geminiApiKey;

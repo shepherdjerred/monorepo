@@ -1,10 +1,10 @@
-import type { ReportAiStreamEvent } from "@scout-for-lol/data";
+import type { ExploreStreamEvent } from "@scout-for-lol/data";
 import { parseAgentStreamChunk } from "#src/utils/agent-stream-chunk.ts";
 
-/** Map Mastra agent stream chunks onto report AI editor stream events. */
-export async function emitReportAgentStreamChunk(
+/** Map Mastra agent stream chunks onto explore stream events. */
+export async function emitExploreStreamChunk(
   rawChunk: unknown,
-  emit: (event: ReportAiStreamEvent) => void | Promise<void>,
+  emit: (event: ExploreStreamEvent) => void | Promise<void>,
 ): Promise<void> {
   const chunk = parseAgentStreamChunk(rawChunk);
   if (chunk === null) {
@@ -12,14 +12,12 @@ export async function emitReportAgentStreamChunk(
   }
   switch (chunk.kind) {
     case "step-start": {
-      await emit({
-        type: "step_started",
-        message: "The agent started a query editing step.",
-      });
+      // Explore shows tool activity rather than step boundaries; a bare
+      // "started a step" line adds noise to a chat transcript.
       break;
     }
     case "text-delta": {
-      await emit({ type: "draft_delta", text: chunk.text });
+      await emit({ type: "answer_delta", text: chunk.text });
       break;
     }
     case "tool-call": {
@@ -53,13 +51,13 @@ export async function emitReportAgentStreamChunk(
 
 function toolCallMessage(toolName: string): string {
   if (toolName === "get_report_language") {
-    return "Reading ScoutQL reference.";
+    return "Reading the ScoutQL reference.";
   }
   if (toolName === "validate_report_query") {
-    return "Validating the query.";
+    return "Checking the query.";
   }
-  if (toolName === "preview_report_query") {
-    return "Previewing the query against server data.";
+  if (toolName === "run_report_query") {
+    return "Querying match data.";
   }
   if (toolName === "format_report_query") {
     return "Formatting the query.";
@@ -71,11 +69,11 @@ function toolResultMessage(toolName: string, ok: boolean): string {
   if (!ok) {
     return `${toolName} returned an error.`;
   }
-  if (toolName === "preview_report_query") {
-    return "Preview completed.";
+  if (toolName === "run_report_query") {
+    return "Got results.";
   }
   if (toolName === "validate_report_query") {
-    return "Validation completed.";
+    return "Query checked.";
   }
   return `${toolName} completed.`;
 }
