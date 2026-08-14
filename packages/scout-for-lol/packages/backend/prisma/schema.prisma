@@ -363,10 +363,62 @@ model User {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  apiTokens      ApiToken[]
-  soundPacks     SoundPack[]
-  desktopClients DesktopClient[]
-  storedSounds   StoredSound[]
+  apiTokens            ApiToken[]
+  soundPacks           SoundPack[]
+  desktopClients       DesktopClient[]
+  storedSounds         StoredSound[]
+  exploreConversations ExploreConversation[]
+}
+
+/// A saved explore conversation. Explore queries the whole report lake rather
+/// than one server's data, so a conversation belongs to a person, not a guild.
+model ExploreConversation {
+  id         String    @id @default(uuid())
+  userId     String
+  title      String
+  /// Set when the owner shares the conversation; null means private. Opaque
+  /// and unguessable rather than derived from `id`, because possession of the
+  /// token is the only credential a share link carries.
+  shareToken String?   @unique
+  sharedAt   DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user     User             @relation(fields: [userId], references: [discordId], onDelete: Cascade)
+  messages ExploreMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+/// One turn of an explore conversation.
+///
+/// Assistant turns store the rendered result inline — the preview rows and the
+/// visualization snapshot the asker actually saw. A shared conversation is
+/// therefore frozen by construction: rendering it needs no re-execution, so a
+/// share link cannot silently change meaning as the lake grows, and an
+/// anonymous viewer costs no query.
+model ExploreMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  /// Position within the conversation, starting at 0.
+  ordinal        Int
+  /// "user" or "assistant".
+  role           String
+  content        String
+  /// The ScoutQL the answer rests on, when the turn ran one.
+  queryText      String?
+  /// JSON string arrays; empty when the turn produced none.
+  caveats        String   @default("[]")
+  followUps      String   @default("[]")
+  /// JSON blobs matching ReportAiPreviewSummarySchema / VisualizationSnapshotSchema.
+  preview        String?
+  visualization  String?
+  createdAt      DateTime @default(now())
+
+  conversation ExploreConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, ordinal])
+  @@index([conversationId])
 }
 
 model ApiToken {
