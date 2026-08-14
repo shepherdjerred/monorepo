@@ -90,11 +90,37 @@ describe("ensureGcxContext", () => {
       // things gcx needs; only the vendor spelling is handed over.
       expect(env["GRAFANA_API_KEY"]).toBeUndefined();
       expect(env["GRAFANA_URL"]).toBeUndefined();
-      const allowed = new Set(["GCX_CONFIG", "GRAFANA_TOKEN", "HOME", "PATH"]);
+      const allowed = new Set([
+        "GCX_CONFIG",
+        "GCX_NO_UPDATE_NOTIFIER",
+        "GCX_TELEMETRY",
+        "GRAFANA_TOKEN",
+        "HOME",
+        "PATH",
+      ]);
       expect(Object.keys(env).filter((name) => !allowed.has(name))).toEqual([]);
       expect(env["GRAFANA_TOKEN"]).toBe(TOKEN);
     } finally {
       delete Bun.env["CLOUDFLARE_API_TOKEN"];
+    }
+  });
+
+  // The deployment sets these to stop gcx making its release check and
+  // telemetry calls. An allowlist that drops them would silently re-enable the
+  // egress the pod spec exists to prevent, so forwarding them is asserted
+  // rather than left to the allowlist's shape.
+  test("forwards the pod's gcx egress-suppression flags", async () => {
+    Bun.env["GCX_NO_UPDATE_NOTIFIER"] = "1";
+    Bun.env["GCX_TELEMETRY"] = "disabled";
+    try {
+      const calls: SpawnCall[] = [];
+      await ensureGcxContext(stubSpawn({ exitCode: 0, calls }));
+
+      expect(calls[0]?.env["GCX_NO_UPDATE_NOTIFIER"]).toBe("1");
+      expect(calls[0]?.env["GCX_TELEMETRY"]).toBe("disabled");
+    } finally {
+      delete Bun.env["GCX_NO_UPDATE_NOTIFIER"];
+      delete Bun.env["GCX_TELEMETRY"];
     }
   });
 

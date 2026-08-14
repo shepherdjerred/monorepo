@@ -21,10 +21,22 @@ const GCX_LOGIN_TIMEOUT_MS = 15_000;
 // This process holds unrelated credentials — Cloudflare, Buildkite, the GitHub
 // App key, S3, provider tokens — and handing gcx the whole environment would
 // undo the point of taking the credential out of argv: the secret would simply
-// be reachable one level down instead. gcx needs PATH to resolve helpers, HOME
-// for the default config location it falls back to, and GCX_CONFIG for the
-// path the worker pins. Anything else it does not get.
-const GCX_INHERITED_ENV = ["PATH", "HOME", "GCX_CONFIG"];
+// be reachable one level down instead.
+//
+// An allowlist only holds if it carries every knob the deployment relies on:
+// anything the pod sets to constrain gcx has to be listed here, or dropping it
+// silently re-enables the behaviour the deployment meant to switch off. PATH
+// resolves helpers, HOME is the config location gcx falls back to, GCX_CONFIG
+// is the path the worker pins, and GCX_NO_UPDATE_NOTIFIER/GCX_TELEMETRY are
+// the pod's egress suppression (see the temporal worker's cdk8s deployment) —
+// without them gcx makes its unsolicited release check and telemetry calls.
+const GCX_INHERITED_ENV = [
+  "PATH",
+  "HOME",
+  "GCX_CONFIG",
+  "GCX_NO_UPDATE_NOTIFIER",
+  "GCX_TELEMETRY",
+];
 
 /** The complete environment for a gcx child: the allowlist plus `overrides`. */
 function gcxChildEnv(

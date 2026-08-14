@@ -69,7 +69,7 @@ function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
     PROMETHEUS_URL: EnvValue.fromValue(
       "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
     ),
-    // gcx authenticates from a config file rather than env vars, written by
+    // gcx stores its credential in a config file, written by
     // ensureGcxContext() (src/activities/gcx-context.ts) at audit time from the
     // GRAFANA_URL/GRAFANA_API_KEY below. Its default location is
     // $HOME/.config/gcx/config.yaml, which resolves to /home/bun from the
@@ -78,7 +78,9 @@ function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
     // bump that changes HOME cannot silently relocate it.
     GCX_CONFIG: EnvValue.fromValue("/tmp/gcx/config.yaml"),
     // Suppress gcx's outbound GitHub release check and anonymous telemetry; a
-    // homelab worker should make no unsolicited egress.
+    // homelab worker should make no unsolicited egress. ensureGcxContext()
+    // spawns gcx with an allowlisted environment, so both names must stay in
+    // its GCX_INHERITED_ENV or they never reach the process they constrain.
     GCX_NO_UPDATE_NOTIFIER: EnvValue.fromValue("1"),
     GCX_TELEMETRY: EnvValue.fromValue("disabled"),
     ...requiredSecretEnv(secret, [
