@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { match } from "ts-pattern";
 import type {
   ExploreMessage,
   ReportAiPreviewSummary,
+  ReportValueFormat,
 } from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
 import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
@@ -172,6 +174,7 @@ function PreviewTable(props: { preview: ReportAiPreviewSummary }) {
                   {formatValue(
                     row.values.find((value) => value.column === column.key)
                       ?.value ?? null,
+                    column.format,
                   )}
                 </td>
               ))}
@@ -183,12 +186,26 @@ function PreviewTable(props: { preview: ReportAiPreviewSummary }) {
   );
 }
 
-function formatValue(value: string | number | null): string {
+/**
+ * Render a cell using the column's declared format.
+ *
+ * The format matters for reading the answer, not just for polish: a win rate
+ * shown as "56.40" reads as a count, and the prose next to it says "56.4%".
+ */
+function formatValue(
+  value: string | number | null,
+  format: ReportValueFormat,
+): string {
   if (value === null) {
     return "—";
   }
-  if (typeof value === "number") {
-    return Number.isInteger(value) ? value.toString() : value.toFixed(2);
+  if (typeof value === "string") {
+    return value;
   }
-  return value;
+  return match(format)
+    .with("percent", () => `${value.toFixed(1)}%`)
+    .with("integer", () => Math.round(value).toLocaleString())
+    .with("decimal", () => value.toFixed(2))
+    .with("text", () => value.toString())
+    .exhaustive();
 }

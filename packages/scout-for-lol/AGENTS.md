@@ -492,6 +492,68 @@ produce mentions, even when their labels match a player alias.
 - Ingest staging: `store.ts` appends flattened rows to
   `<lake>/matches-recent/` so games are queryable seconds after ingest.
 
+### Query scope — guild vs global
+
+Every lake query carries a `LakeQueryScope` (`reports/duckdb/scope.ts`), a
+discriminated union of `{kind:"guild", serverId}` and `{kind:"global"}`. It is
+deliberately not an optional `serverId`: a field that merely went missing would
+let a scheduled report widen to the whole lake by accident, so global has to be
+asked for at every call site.
+
+**Global scope drops the accounts join entirely — that is a correctness
+requirement, not a simplification.** Accounts rows are written per
+`(server_id, account)`, so an accounts join with the `server_id` predicate
+merely removed matches a PUUID once per server tracking it and silently doubles
+every aggregate for exactly the players tracked in more than one server. With
+no join there is nothing to fan out. This is pinned by
+`reports/global-scope.integration.test.ts`; do not "optimize" it back into a
+join.
+
+Global scope is possible at all because match facts already hold every
+participant: `flattenMatch` maps `info.participants` with no tracked-player
+filter, and the rows carry `riot_id_game_name` / `riot_id_tagline`. So global
+rows label themselves by Riot ID, group by `puuid`, and have no `player_id` or
+`discord_id` — which is why `playerMentionIdentity` returns null for a row that
+can address nobody.
+
+Two sources **refuse** global scope rather than answering wrongly:
+
+- `player_groups` / `player_pairs` — a teammate group means "these tracked
+  accounts queued together", and global facts cannot distinguish a premade from
+  random matchmaking, so every match would report a five-stack.
+- the competition sources — they authorize against an owning server and have no
+  meaning without one.
+
+## Explore — conversational queries over the whole lake
+
+`/app/explore` is a chat surface over global scope (`backend/src/explore/`,
+`app/src/routes/explore.tsx`). Design notes:
+`packages/docs/plans/2026-08-13_scout-explore-page.md`.
+
+- **Access is `EXPLORE_GUILD_ALLOWLIST`**, an operator-managed list of Discord
+  server ids: sign in, and belong to one of them. An empty or unset list denies
+  everyone — it is the entire gate for this surface, so an omitted config must
+  fail closed. Every tRPC procedure re-checks it, so losing membership removes
+  access to conversations already saved.
+- **The agent must never state a statistic it did not read from a query result
+  in that turn**, and must describe the corpus as the matches Scout ingested
+  rather than the League ladder. Both live in `explore/prompt.ts`. A
+  confidently wrong win rate is indistinguishable from a right one to a reader.
+- **Shares are frozen by construction.** An assistant turn stores its preview
+  rows and visualization snapshot inline, so rendering a shared conversation
+  needs no re-execution: an anonymous viewer costs no query and the link cannot
+  change meaning as the lake grows. `GET /api/explore/shared/:token` is the
+  only unauthenticated route and the only `Cache-Control: public` response in
+  the service.
+- Scope-independent ScoutQL tools (read the language, validate, format) are
+  shared with the report editor agent in `reports/ai/scoutql-tools.ts`.
+  Executing a query is deliberately not shared — it is the one operation whose
+  meaning depends on scope.
+- The full ScoutQL registry is exposed as-is; there is no restricted dialect.
+  Adding one properly needs a registry projection _plus_ a compile-time
+  rejection path, because hiding an item from `get_report_language` alone would
+  not stop the model emitting it.
+
 ---
 
 ## Database (Prisma)
