@@ -121,7 +121,7 @@ function envNames(deployment: SynthesizedDeployment): Set<string> {
   );
 }
 
-describe("temporal homelab audit tooling", () => {
+describe("temporal homelab audit tooling configuration", () => {
   it("injects Buildkite and Bugsink configuration", async () => {
     const yaml = await synthesizeApp();
 
@@ -151,7 +151,9 @@ describe("temporal homelab audit tooling", () => {
     expect(yaml).toContain("value: glitter-discord-corpus");
     expect(yaml).not.toContain("name: GLITTER_CORPUS_R2_");
   });
+});
 
+describe("temporal homelab audit tooling worker topology", () => {
   it("isolates core, agent, and Glitter queues behind event-loop health probes", async () => {
     const deployments = parseDeployments(await synthesizeApp());
     const core = requireDeployment(deployments, "temporal-temporal-worker");
@@ -225,7 +227,9 @@ describe("temporal homelab audit tooling", () => {
     expect(configYaml).toContain("  - value: true");
     expect(configYaml).not.toContain("frontend.workerHeartbeatsEnabled:");
   });
+});
 
+describe("temporal homelab audit tooling access boundaries", () => {
   it("keeps the audit ClusterRole read-only and includes Tailscale CRDs", async () => {
     const resources = parseResources(await synthesizeApp());
     const auditRole = resources.find(
