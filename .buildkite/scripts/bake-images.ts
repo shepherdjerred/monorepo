@@ -35,7 +35,7 @@ const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
 const pushOutcomes = "image-push-outcomes.json";
 export const VERSION_CATALOG_URL = new URL(
-  "../../packages/homelab/src/cdk8s/src/version-catalog.json",
+  "../../packages/version-catalog/src/catalog.json",
   import.meta.url,
 );
 const applicationImageTargets = new Set(APPLICATION_IMAGE_TARGETS);

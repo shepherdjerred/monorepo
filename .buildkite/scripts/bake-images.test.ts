@@ -47,7 +47,7 @@ function versionCatalogSource(
   entries: readonly { readonly name: string; readonly value: string }[],
 ): string {
   return JSON.stringify({
-    $schema: "./version-catalog.schema.json",
+    $schema: "./schema.json",
     schemaVersion: 1,
     entries: entries.map((entry) => ({
       name: entry.name,

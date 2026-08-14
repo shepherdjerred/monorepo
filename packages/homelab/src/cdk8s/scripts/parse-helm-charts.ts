@@ -1,6 +1,6 @@
 /** Parse Helm chart information from the language-neutral version catalog. */
 
-import { parseVersionCatalogText } from "@shepherdjerred/homelab/cdk8s/src/version-catalog.ts";
+import { parseVersionCatalogText } from "@shepherdjerred/version-catalog";
 
 export type ChartInfo = {
   name: string;
@@ -19,7 +19,7 @@ function bareVersion(value: string): string {
 }
 
 export async function parseChartInfoFromVersions(
-  catalogPath = "src/version-catalog.json",
+  catalogPath = "../../../version-catalog/src/catalog.json",
 ): Promise<ChartInfo[]> {
   const catalog = parseVersionCatalogText(await Bun.file(catalogPath).text());
   return catalog.entries

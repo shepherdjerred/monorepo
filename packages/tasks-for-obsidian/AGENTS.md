@@ -26,8 +26,8 @@ bun run e2e                          # Maestro e2e (simulator + real server + ch
   spawned real `../tasknotes-server` over a temp vault. Exposed as the
   `test:contract` turbo task (`turbo.json`), whose inputs and
   `tasknotes-server#typecheck` dependency make it cache correctly; it runs in
-  `bun run verify` (and therefore the `pre-push` hook and the Buildkite
-  pipeline). Lives in
+  `bun run verify` and therefore the Buildkite pipeline. There is no
+  `pre-push` hook. Lives in
   `contract-tests/` — deliberately outside the default test glob because it needs
   the sibling server package present.
 - **E2E** (`bun run e2e`, see `e2e/README.md`): Maestro drives the app in a

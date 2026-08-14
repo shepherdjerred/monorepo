@@ -9,10 +9,10 @@
  * timeouts are preserved.
  *
  * Usage:
- *   bun packages/homelab/scripts/argocd.ts sync <app> [--revision <v>]
- *       [--prune] [--async | --terminate-after-applied]
+ *   bun packages/homelab/scripts/argocd.ts sync-managed <app> [--revision <v>]
+ *       [--prune] [--terminate-after-applied]
  *       [--request-id <uuid>] [--timeout <s>] [--dry-run]
- *   bun packages/homelab/scripts/argocd.ts finalize-async-sync <app> \
+ *   bun packages/homelab/scripts/argocd.ts release-root apps <expected.json> \
  *       --revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts delete-application <app> \
  *       --project <project> [--timeout <s>] [--dry-run]
@@ -20,10 +20,6 @@
  *   bun packages/homelab/scripts/argocd.ts tree-health-wait <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> \
  *       [--revision <v>] [--timeout <s>] [--dry-run]
- *   bun packages/homelab/scripts/argocd.ts stage-root-release <root-app> \
- *       --revision <v> [--timeout <s>] [--dry-run]
- *   bun packages/homelab/scripts/argocd.ts finalize-root-release apps \
- *       --revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts wait-deletion <app> \
  *       --group <g> --version <v> --kind <k> --namespace <ns> \
  *       [--timeout <s>] [--dry-run]
@@ -45,6 +41,7 @@ import {
 import {
   APPLICATION_LIFECYCLE_ANNOTATION,
   APPLICATION_RESOURCES_FINALIZER,
+  MANAGED_APPLICATION_LABEL,
   REPOSITORY_CHART_URLS,
 } from "../src/cdk8s/src/application-release-policy.ts";
 import {
@@ -54,7 +51,7 @@ import {
   completedOperationId,
   completedOperationRequestId,
   operationRevision,
-  ROOT_FINALIZER_PHASE_INFO_NAME,
+  RELEASE_PHASE_INFO_NAME,
   requestedOperationId,
   requestedOperationRequestId,
   requestedOperationRevision,
@@ -63,9 +60,15 @@ import {
   SYNC_REVISION_INFO_NAME,
   type ManifestOverride,
   type ManifestOverrideBatch,
+  type ReleasePhase,
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
 import { latestPublishedVersion } from "./helm-release-core.ts";
+import {
+  analyzeApplySafety,
+  ManagedResourcesSchema,
+  type ManagedResource,
+} from "./argocd-apply-safety.ts";
 import { z } from "zod";
 
 const DEFAULT_SERVER_URL = "https://argocd.sjer.red";
@@ -81,11 +84,9 @@ const CHARTMUSEUM_RETRY_BASE_DELAY_MS = 100;
 const BuildRevisionSchema = z.string().regex(/^2\.0\.0-\d+$/);
 const SyncRequestIdSchema = z.uuid();
 const SyncOperationIdSchema = z.uuid();
-const RootFinalizerPhaseSchema = z.enum(["batch", "prune"]);
+const ReleasePhaseSchema = z.enum(["stage", "batch", "prune", "child"]);
 const OperationStartedAtSchema = z.iso.datetime({ offset: true }).optional();
 const PollIntervalSchema = z.coerce.number().int().positive();
-
-type RootFinalizerPhase = z.infer<typeof RootFinalizerPhaseSchema>;
 
 const ExpectedApplicationsSchema = z.array(
   z.object({
@@ -143,10 +144,20 @@ const RenderedResourceSchema = z.object({
     .passthrough(),
 });
 
+/**
+ * A live operation's selector as Argo reports it. `namespace` accepts an empty
+ * string on purpose: a cluster-scoped target has two valid spellings on the
+ * wire, omitted or empty, and this identity model already treats them as one —
+ * `group` is normalised with `?? ""` and `operationSelectorIdentities` does the
+ * same for `namespace`. Requiring a non-empty namespace made the parse reject a
+ * selector the comparison would then have matched, aborting batch adoption
+ * before it could read the operation at all.
+ */
 const ActiveOperationResourceSchema = z.object({
   group: z.string().optional(),
   kind: z.string().min(1),
   name: z.string().min(1),
+  namespace: z.string().optional(),
 });
 
 const OperationInfoEntriesSchema = z
@@ -230,8 +241,15 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 async function getApplication(
   appName: string,
   token: string,
+  refresh?: "hard",
 ): Promise<Record<string, unknown>> {
-  const url = `${serverUrl()}/api/v1/applications/${appName}`;
+  const url = new URL(
+    `/api/v1/applications/${encodeURIComponent(appName)}`,
+    serverUrl(),
+  );
+  if (refresh !== undefined) {
+    url.searchParams.set("refresh", refresh);
+  }
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
     redirect: "follow",
@@ -239,13 +257,13 @@ async function getApplication(
   if (res.status !== 200) {
     const body = (await res.text()).slice(0, 1024);
     throw new Error(
-      `ERROR: ${url} returned HTTP ${res.status.toString()}\n` +
+      `ERROR: ${url.toString()} returned HTTP ${res.status.toString()}\n` +
         `Response body (first 1KB): ${body}`,
     );
   }
   const data: unknown = await res.json();
   if (!isRecord(data)) {
-    throw new Error(`${url} returned a non-object body`);
+    throw new Error(`${url.toString()} returned a non-object body`);
   }
   return data;
 }
@@ -289,6 +307,242 @@ async function getApplicationManifests(
   return ManifestResponseSchema.parse(await response.json()).manifests;
 }
 
+type RenderedTarget = {
+  readonly apiVersion: string;
+  readonly group: string;
+  readonly kind: string;
+  readonly manifest: string;
+  readonly name: string;
+  readonly namespace: string | undefined;
+};
+
+function renderedTargetsByIdentity(
+  manifests: readonly string[],
+): ReadonlyMap<string, readonly RenderedTarget[]> {
+  const targets = new Map<string, RenderedTarget[]>();
+  for (const manifestSource of manifests) {
+    const resource = RenderedResourceSchema.parse(JSON.parse(manifestSource));
+    const separator = resource.apiVersion.indexOf("/");
+    const group =
+      separator === -1 ? "" : resource.apiVersion.slice(0, separator);
+    const identity = resourceIdentity(
+      group,
+      resource.kind,
+      resource.metadata.name,
+    );
+    const rendered = targets.get(identity) ?? [];
+    rendered.push({
+      apiVersion: resource.apiVersion,
+      group,
+      kind: resource.kind,
+      manifest: manifestSource,
+      name: resource.metadata.name,
+      namespace: resource.metadata.namespace,
+    });
+    targets.set(identity, rendered);
+  }
+  return targets;
+}
+
+const ResourceManifestResponseSchema = z.object({ manifest: z.string() });
+
+/**
+ * Read one live object through the Application's resource endpoint. A resource
+ * the requested revision introduces has no entry in `managed-resources`, which
+ * only describes the configured revision, so its live state has to be fetched
+ * directly. A missing object is a creation and needs no immutable-field check.
+ */
+async function liveResourceState(
+  appName: string,
+  target: RenderedTarget,
+  token: string,
+): Promise<string | undefined> {
+  const separator = target.apiVersion.indexOf("/");
+  const url = new URL(
+    `/api/v1/applications/${encodeURIComponent(appName)}/resource`,
+    serverUrl(),
+  );
+  url.searchParams.set("resourceName", target.name);
+  url.searchParams.set("kind", target.kind);
+  url.searchParams.set("group", target.group);
+  url.searchParams.set(
+    "version",
+    separator === -1
+      ? target.apiVersion
+      : target.apiVersion.slice(separator + 1),
+  );
+  if (target.namespace !== undefined) {
+    url.searchParams.set("namespace", target.namespace);
+  }
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (response.status === 404) {
+    return undefined;
+  }
+  if (!response.ok) {
+    const body = (await response.text()).slice(0, 1024);
+    throw new Error(
+      `Could not read live ${target.kind} ${target.name} for ${appName}: ` +
+        `HTTP ${response.status.toString()} ${response.statusText}\n${body}`,
+    );
+  }
+  return ResourceManifestResponseSchema.parse(await response.json()).manifest;
+}
+
+/**
+ * Either side may omit the namespace for the same object: a rendered manifest
+ * leaves it to the Application's destination, and `managed-resources` omits it
+ * for a cluster-scoped resource whose chart still stamps `metadata.namespace`
+ * (harmless — the API server ignores it). So a missing namespace on either side
+ * is a wildcard, and only two *concrete, different* namespaces are a mismatch.
+ *
+ * That mismatch is fatal rather than silent. Returning no manifest leaves the
+ * resource without a `targetState`, and `analyzeApplySafety` skips a resource
+ * that has no target — so a namespace disagreement used to mean the immutable
+ * checks simply never ran for it. Failing an ambiguous match loudly while
+ * quietly failing an impossible one was the wrong way round.
+ */
+function renderedTargetState(
+  targets: ReadonlyMap<string, readonly RenderedTarget[]>,
+  resource: ManagedResource,
+  appName: string,
+): string | undefined {
+  const identity = resourceIdentity(
+    resource.group ?? "",
+    resource.kind,
+    resource.name,
+  );
+  const candidates = targets.get(identity) ?? [];
+  const matches = candidates.filter(
+    ({ namespace }) =>
+      namespace === undefined ||
+      resource.namespace === undefined ||
+      namespace === resource.namespace,
+  );
+  if (matches.length > 1) {
+    throw new Error(
+      `Apply-safety preflight for ${appName} matched ${identity} to ${matches.length.toString()} rendered manifests`,
+    );
+  }
+  if (matches.length === 0 && candidates.length > 0) {
+    const rendered = candidates
+      .map(({ namespace }) => namespace ?? "<none>")
+      .join(", ");
+    throw new Error(
+      `Apply-safety preflight for ${appName} found ${identity} in namespace ${resource.namespace ?? "<none>"} but rendered it in ${rendered}`,
+    );
+  }
+  return matches[0]?.manifest;
+}
+
+/**
+ * `managed-resources` reports the target state of the Application's configured
+ * revision, so a sync that requests a different revision must be preflighted
+ * against that revision's rendered manifests instead. A resource the requested
+ * revision no longer declares is a prune, not an apply, so it carries no target.
+ */
+async function revisionScopedResources(
+  appName: string,
+  revision: string,
+  token: string,
+  resources: readonly ManagedResource[],
+): Promise<readonly ManagedResource[]> {
+  const targets = renderedTargetsByIdentity(
+    await getApplicationManifests(appName, revision, token),
+  );
+  const matched = new Set<string>();
+  const scoped = resources.map((resource) => {
+    const manifest = renderedTargetState(targets, resource, appName);
+    if (manifest !== undefined) {
+      matched.add(manifest);
+    }
+    return {
+      kind: resource.kind,
+      name: resource.name,
+      ...(resource.group === undefined ? {} : { group: resource.group }),
+      ...(resource.namespace === undefined
+        ? {}
+        : { namespace: resource.namespace }),
+      ...(resource.liveState === undefined
+        ? {}
+        : { liveState: resource.liveState }),
+      ...(manifest === undefined ? {} : { targetState: manifest }),
+    };
+  });
+  // A resource the requested revision adds is absent from `managed-resources`,
+  // so it never appears above. It still collides with any live object of the
+  // same identity, which is exactly the immutable-field case this gate exists
+  // to catch, so read those live states directly.
+  const introduced: ManagedResource[] = [];
+  for (const candidates of targets.values()) {
+    for (const target of candidates) {
+      if (matched.has(target.manifest)) {
+        continue;
+      }
+      const liveState = await liveResourceState(appName, target, token);
+      if (liveState === undefined) {
+        continue;
+      }
+      introduced.push({
+        kind: target.kind,
+        name: target.name,
+        group: target.group,
+        ...(target.namespace === undefined
+          ? {}
+          : { namespace: target.namespace }),
+        liveState,
+        targetState: target.manifest,
+      });
+    }
+  }
+  return [...scoped, ...introduced];
+}
+
+async function assertApplySafe(
+  appName: string,
+  token: string,
+  revision: string | undefined,
+): Promise<void> {
+  // The hard refresh is the price of a trustworthy answer, not an oversight.
+  // `managed-resources` is served from Argo's cached comparison, which the
+  // controller only recomputes every `timeout.reconciliation` (60s), so without
+  // it this can decide apply safety from live state a minute out of date and
+  // wave through a change the API server then rejects mid-release.
+  //
+  // It is also already minimal. `refresh=hard` is per-application — there is no
+  // batch form — and the caller loop reaches this only for children it is about
+  // to sync, having skipped the converged ones. Folding it into the caller's
+  // own read would save a request but make a safety precondition depend on
+  // every future caller remembering to pre-refresh; this function is also
+  // invoked standalone by `sync-managed`.
+  await getApplication(appName, token, "hard");
+  const url = new URL(
+    `/api/v1/applications/${encodeURIComponent(appName)}/managed-resources`,
+    serverUrl(),
+  );
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const body = (await response.text()).slice(0, 1024);
+    throw new Error(
+      `Could not inspect apply safety for ${appName}: HTTP ${response.status.toString()} ${response.statusText}\n${body}`,
+    );
+  }
+  const managed = ManagedResourcesSchema.parse(await response.json()).items;
+  const findings = analyzeApplySafety(
+    revision === undefined
+      ? managed
+      : await revisionScopedResources(appName, revision, token, managed),
+  );
+  if (findings.length > 0) {
+    throw new Error(
+      `Refusing ${appName} sync because the read-only apply-safety preflight found:\n${findings.map((finding) => `- ${finding}`).join("\n")}`,
+    );
+  }
+}
+
 function resourceIdentity(group: string, kind: string, name: string): string {
   return JSON.stringify([group, kind, name]);
 }
@@ -311,6 +565,28 @@ function renderedResourceIdentities(
   if (unique.size !== identities.length) {
     throw new Error(
       "Rendered sync source contains duplicate group/kind/name identities",
+    );
+  }
+  return unique;
+}
+
+/**
+ * Two sync selectors are only the same target when their namespace agrees, so
+ * comparing one live operation's selection against another's must keep it.
+ * This is deliberately not `resourceIdentity`: that one compares selections
+ * against rendered manifests and Argo sync results, whose namespaces are
+ * populated inconsistently, so it stays namespace-agnostic on purpose.
+ */
+function operationSelectorIdentities(
+  resources: readonly SyncOperationResource[],
+): ReadonlySet<string> {
+  const identities = resources.map(({ group, kind, name, namespace }) =>
+    JSON.stringify([group, kind, name, namespace ?? ""]),
+  );
+  const unique = new Set(identities);
+  if (unique.size !== identities.length) {
+    throw new Error(
+      "Sync operation contains duplicate group/kind/namespace/name identities",
     );
   }
   return unique;
@@ -352,28 +628,169 @@ function activeOperationResourceIdentities(
   if (parsedResources.length === 0) {
     return null;
   }
-  return operationResourceIdentities(
-    parsedResources.map(({ group, kind, name }) => ({
+  return operationSelectorIdentities(
+    parsedResources.map(({ group, kind, name, namespace }) => ({
       group: group ?? "",
       kind,
       name,
+      ...(namespace === undefined ? {} : { namespace }),
     })),
   );
 }
 
-function operationRootFinalizerPhase(
+/**
+ * Deliberately reads only the current info key, with no fallback to the
+ * `ci.sjer.red/root-finalizer-phase` name this replaced. An operation carrying
+ * the old key was started by a different Buildkite build, so
+ * `liveOperationMatches` has already refused it on the request UUID before the
+ * phase is ever compared — a fallback could not change any outcome, and
+ * teaching the closed-world comparison to accept a key this code never writes
+ * would weaken it. Such an operation still parses cleanly: the info schema is
+ * loose and unknown names are filtered out rather than rejected.
+ */
+function operationReleasePhase(
   operation: Record<string, unknown>,
-): RootFinalizerPhase | undefined {
+): ReleasePhase | undefined {
   const matches = (OperationInfoEntriesSchema.parse(operation).info ?? [])
-    .filter(({ name }) => name === ROOT_FINALIZER_PHASE_INFO_NAME)
+    .filter(({ name }) => name === RELEASE_PHASE_INFO_NAME)
     .map(({ value }) => value);
   if (matches.length > 1) {
-    throw new Error("Argo operation has multiple root finalizer phases");
+    throw new Error("Argo operation has multiple root release phases");
   }
   const phase = matches[0];
-  return phase === undefined
-    ? undefined
-    : RootFinalizerPhaseSchema.parse(phase);
+  return phase === undefined ? undefined : ReleasePhaseSchema.parse(phase);
+}
+
+const ActiveSyncRequestSchema = z.object({
+  manifests: z.array(z.string()).optional(),
+  prune: z.boolean().optional(),
+  syncOptions: z.array(z.string()).optional(),
+});
+
+const DeclaredSyncOptionsSchema = z.object({
+  metadata: z
+    .object({ labels: z.record(z.string(), z.string()).optional() })
+    .loose()
+    .optional(),
+  spec: z
+    .object({
+      syncPolicy: z
+        .object({ syncOptions: z.array(z.string()).optional() })
+        .loose()
+        .optional(),
+    })
+    .loose()
+    .optional(),
+});
+
+/**
+ * Every key this process can account for in a live `operation.sync`. `revision`,
+ * `prune`, `manifests`, and `resources` are the request's own fields;
+ * `syncOptions` is absent from the request and injected by the sync-option
+ * admission policy from the Application's declared policy.
+ */
+const ACCOUNTED_SYNC_KEYS = new Set([
+  "manifests",
+  "prune",
+  "resources",
+  "revision",
+  "syncOptions",
+]);
+
+/**
+ * The sync options an operation on this Application is expected to carry. The
+ * request never sends any, so they can only come from the sync-option admission
+ * policy, which matches on the managed label. The release policy withholds that
+ * label from the root `apps` Application precisely so its operations are not
+ * mutated, so the root legitimately carries none even though it declares some.
+ * Reading the declaration alone would reject every root retry.
+ */
+function expectedSyncOptions(app: Record<string, unknown>): readonly string[] {
+  const parsed = DeclaredSyncOptionsSchema.parse(app);
+  const admitted =
+    parsed.metadata?.labels?.[MANAGED_APPLICATION_LABEL] === "true";
+  return admitted ? (parsed.spec?.syncPolicy?.syncOptions ?? []) : [];
+}
+
+/**
+ * Adoption must accept only the operation this call would itself have produced.
+ * That is not the same as the request this call posts: admission merges the
+ * Application's declared sync options into the operation server-side, so the
+ * live operation legitimately carries a field the request never sent.
+ *
+ * The comparison is therefore closed-world. Every key in the live sync request
+ * must be one this process can account for and must equal the value it would
+ * have produced, and any key it cannot account for is a refusal rather than
+ * something ignored. An operation sharing the request UUID, revision, and phase
+ * marker can otherwise apply materially different semantics — `Force=true` or
+ * `Replace=true` sync options, a manifest override, a different resource
+ * selection, or a different prune mode.
+ *
+ * A future Argo release that always serializes a new `operation.sync` field
+ * will surface here as a refusal on retry rather than a silent adoption. That
+ * is the intended direction to fail: add the field to `ACCOUNTED_SYNC_KEYS`
+ * with its expected value once its semantics are known.
+ */
+function activeOperationRequestMismatch(
+  app: Record<string, unknown>,
+  options: SyncOptions,
+): string | null {
+  const operation = app["operation"];
+  if (!isRecord(operation)) {
+    throw new Error(
+      "Cannot inspect the sync request for a missing live operation",
+    );
+  }
+  const sync = operation["sync"];
+  if (!isRecord(sync)) {
+    throw new Error("Active Argo operation is missing its sync request");
+  }
+  for (const key of Object.keys(sync)) {
+    if (!ACCOUNTED_SYNC_KEYS.has(key)) {
+      return `an unaccounted ${key} field`;
+    }
+  }
+  const active = ActiveSyncRequestSchema.parse(sync);
+  if ((active.prune ?? false) !== options.prune) {
+    return `prune ${(active.prune ?? false).toString()}`;
+  }
+  // The request never sends sync options, so admission's merge leaves exactly
+  // the set it injects. Anything else was added by someone else.
+  const admittedOptions = [...(active.syncOptions ?? [])].sort();
+  const expectedOptions = [...expectedSyncOptions(app)].sort();
+  if (canonicalJson(admittedOptions) !== canonicalJson(expectedOptions)) {
+    return `sync options ${JSON.stringify(admittedOptions)}`;
+  }
+  if ((active.manifests === undefined) !== (options.manifests === undefined)) {
+    return active.manifests === undefined
+      ? "no manifest override"
+      : "a manifest override";
+  }
+  if (
+    active.manifests !== undefined &&
+    options.manifests !== undefined &&
+    canonicalJson(active.manifests) !== canonicalJson(options.manifests)
+  ) {
+    return "a different manifest override";
+  }
+  const activeResources = activeOperationResourceIdentities(app);
+  const requestedResources =
+    options.resources === undefined
+      ? null
+      : operationSelectorIdentities(options.resources);
+  if ((activeResources === null) !== (requestedResources === null)) {
+    return activeResources === null
+      ? "the full rendered source"
+      : "a resource selection";
+  }
+  if (
+    activeResources !== null &&
+    requestedResources !== null &&
+    !resourceIdentitySetsEqual(activeResources, requestedResources)
+  ) {
+    return "a different resource selection";
+  }
+  return null;
 }
 
 function activeOperationPrunes(app: Record<string, unknown>): boolean {
@@ -388,15 +805,15 @@ function activeOperationPrunes(app: Record<string, unknown>): boolean {
   return sync["prune"] === true;
 }
 
-function requestedOperationRootFinalizerPhase(
+function requestedOperationReleasePhase(
   application: unknown,
-): RootFinalizerPhase | undefined {
+): ReleasePhase | undefined {
   const parsed = z.record(z.string(), z.unknown()).parse(application);
   const operation = parsed["operation"];
   if (!isRecord(operation)) {
     throw new Error("Argo sync response is missing the requested operation");
   }
-  return operationRootFinalizerPhase(operation);
+  return operationReleasePhase(operation);
 }
 
 function resourceIdentitySetsEqual(
@@ -611,6 +1028,14 @@ function splitRootSyncBatches(
   });
 }
 
+/**
+ * Deliberately carries no release identity, unlike every phase of
+ * `release-root`. This runs in `helm-push`, before the release exists, and only
+ * rewrites each child's auto-sync policy to the same suspended value, so a
+ * Buildkite retry can re-apply it blindly. Identity binding exists to decide
+ * between adopting and restarting an in-flight operation; there is nothing to
+ * decide when repeating the operation is the correct outcome either way.
+ */
 async function suspendRepositoryAutoSync(
   rootAppName: string,
   timeoutSeconds: number,
@@ -664,15 +1089,126 @@ async function suspendRepositoryAutoSync(
   }
 }
 
+const ROOT_BATCH_LABELS = {
+  batch: "exact root batch",
+  stage: "staged root batch",
+} as const;
+
+async function syncRootReleaseBatch(
+  rootAppName: string,
+  batch: RootSyncBatch,
+  phase: "stage" | "batch",
+  requestId: string,
+  revision: string,
+  timeoutSeconds: number,
+): Promise<void> {
+  await sync(rootAppName, timeoutSeconds, false, {
+    prune: false,
+    requestId,
+    resources: batch.resources,
+    revision,
+    releasePhase: phase,
+    terminateAfterApplied: true,
+    ...(batch.manifests === undefined ? {} : { manifests: batch.manifests }),
+  });
+}
+
+/**
+ * Every batch of a release phase carries the same request UUID, revision, and
+ * phase marker, so an interrupted process can identify its own in-flight batch
+ * on retry. The live operation's exact resource selection decides which batch
+ * it is; anything that does not match one of this phase's batches belongs to
+ * different work and must not be adopted.
+ */
+async function syncRootReleaseBatches(
+  rootAppName: string,
+  batches: readonly RootSyncBatch[],
+  phase: "stage" | "batch",
+  requestId: string,
+  revision: string,
+  timeoutSeconds: number,
+  token: string,
+): Promise<void> {
+  const label = ROOT_BATCH_LABELS[phase];
+  let nextBatchIndex = 0;
+  const application = await getApplication(rootAppName, token);
+  const observation = observeOperation(application);
+  assertMatchingRevision(observation, requestId, revision, rootAppName);
+  assertMatchingLiveRevision(observation, requestId, revision, rootAppName);
+  if (observation.hasLiveOperation) {
+    if (!liveOperationMatches(observation, requestId, revision)) {
+      throw new Error(
+        `Refusing to replace active ${rootAppName} operation ${liveOperationDescription(observation)}; expected request ${requestId}`,
+      );
+    }
+    const activeResources = activeOperationResourceIdentities(application);
+    if (
+      activeResources === null ||
+      observation.liveReleasePhase !== phase ||
+      activeOperationPrunes(application)
+    ) {
+      throw new Error(
+        `Active ${rootAppName} selective operation is not a marked ${label}`,
+      );
+    }
+    const activeBatchIndex = batches.findIndex((batch) =>
+      resourceIdentitySetsEqual(
+        activeResources,
+        operationSelectorIdentities(batch.resources),
+      ),
+    );
+    if (activeBatchIndex === -1) {
+      throw new Error(
+        `Active ${rootAppName} operation for request ${requestId} does not match an ${label}`,
+      );
+    }
+    const activeBatch = batches[activeBatchIndex];
+    if (activeBatch === undefined) {
+      throw new Error("Matched root batch is missing");
+    }
+    console.log(
+      `adopting ${label} ${(activeBatchIndex + 1).toString()}/${batches.length.toString()} (${activeBatch.resources.length.toString()} resources)`,
+    );
+    await syncRootReleaseBatch(
+      rootAppName,
+      activeBatch,
+      phase,
+      requestId,
+      revision,
+      timeoutSeconds,
+    );
+    nextBatchIndex = activeBatchIndex + 1;
+  }
+  for (let index = nextBatchIndex; index < batches.length; index += 1) {
+    const batch = batches[index];
+    if (batch === undefined) {
+      throw new Error(`${label} ${index.toString()} is missing`);
+    }
+    console.log(
+      `syncing ${label} ${(index + 1).toString()}/${batches.length.toString()} (${batch.resources.length.toString()} resources)`,
+    );
+    await syncRootReleaseBatch(
+      rootAppName,
+      batch,
+      phase,
+      requestId,
+      revision,
+      timeoutSeconds,
+    );
+  }
+}
+
 async function stageRootRelease(
   rootAppName: string,
   revision: string,
+  requestId: string,
   timeoutSeconds: number,
   dryRun: boolean,
 ): Promise<void> {
   const exactRevision = BuildRevisionSchema.parse(revision);
+  const exactRequestId = SyncRequestIdSchema.parse(requestId);
   console.log(
-    `--- argocd stage-root-release: ${rootAppName} at ${exactRevision}${dryRun ? " (dry run)" : ""}`,
+    `--- argocd stage-root-release: ${rootAppName} at ${exactRevision} for request ${exactRequestId}${dryRun ? " (dry run)" : ""}`,
   );
   if (dryRun) {
     return;
@@ -711,22 +1247,19 @@ async function stageRootRelease(
   const batches = splitRootSyncBatches(
     batchManifestOverrides(
       staged.map(({ override }) => override),
-      { revision: exactRevision },
+      { revision: exactRevision, releasePhase: "stage" },
     ),
     manifestOverrideIdentities,
   );
-  for (const [index, batch] of batches.entries()) {
-    console.log(
-      `syncing staged root batch ${(index + 1).toString()}/${batches.length.toString()} (${batch.resources.length.toString()} resources)`,
-    );
-    await sync(rootAppName, timeoutSeconds, false, {
-      prune: false,
-      revision: exactRevision,
-      terminateAfterApplied: true,
-      resources: batch.resources,
-      ...(batch.manifests === undefined ? {} : { manifests: batch.manifests }),
-    });
-  }
+  await syncRootReleaseBatches(
+    rootAppName,
+    batches,
+    "stage",
+    exactRequestId,
+    exactRevision,
+    timeoutSeconds,
+    token,
+  );
 }
 
 async function finalizeRootRelease(
@@ -776,12 +1309,11 @@ async function finalizeRootRelease(
   const batches = splitRootSyncBatches(
     batchManifestOverrides(
       preparedManifests.map(({ override }) => override),
-      { revision: exactRevision, rootFinalizerPhase: "batch" },
+      { revision: exactRevision, releasePhase: "batch" },
     ),
     deferredDesiredIdentities,
   );
 
-  let nextBatchIndex = 0;
   const initialApplication = await getApplication(rootAppName, token);
   const initialOperation = observeOperation(initialApplication);
   assertMatchingRevision(
@@ -796,7 +1328,10 @@ async function finalizeRootRelease(
     exactRevision,
     rootAppName,
   );
-  if (initialOperation.hasLiveOperation) {
+  if (
+    initialOperation.hasLiveOperation &&
+    activeOperationResourceIdentities(initialApplication) === null
+  ) {
     if (
       !liveOperationMatches(initialOperation, exactRequestId, exactRevision)
     ) {
@@ -804,92 +1339,41 @@ async function finalizeRootRelease(
         `Refusing to replace active ${rootAppName} operation ${liveOperationDescription(initialOperation)}; expected request ${exactRequestId}`,
       );
     }
-    const activeResources =
-      activeOperationResourceIdentities(initialApplication);
-    if (activeResources === null) {
-      if (
-        initialOperation.liveRootFinalizerPhase !== "prune" ||
-        !activeOperationPrunes(initialApplication)
-      ) {
-        throw new Error(
-          `Active ${rootAppName} full-source operation is not the marked final root prune`,
-        );
-      }
-      console.log(`adopting active final root prune: ${rootAppName}`);
-      await sync(rootAppName, timeoutSeconds, false, {
-        prune: true,
-        requestId: exactRequestId,
-        revision: exactRevision,
-        rootFinalizerPhase: "prune",
-        terminateAfterApplied: true,
-        verifiedRootDesiredIdentities,
-      });
-      return;
-    }
     if (
-      initialOperation.liveRootFinalizerPhase !== "batch" ||
-      activeOperationPrunes(initialApplication)
+      initialOperation.liveReleasePhase !== "prune" ||
+      !activeOperationPrunes(initialApplication)
     ) {
       throw new Error(
-        `Active ${rootAppName} selective operation is not a marked root batch`,
+        `Active ${rootAppName} full-source operation is not the marked final root prune`,
       );
     }
-    const activeBatchIndex = batches.findIndex((batch) =>
-      resourceIdentitySetsEqual(
-        activeResources,
-        operationResourceIdentities(batch.resources),
-      ),
-    );
-    if (activeBatchIndex === -1) {
-      throw new Error(
-        `Active ${rootAppName} operation for request ${exactRequestId} does not match an exact root batch`,
-      );
-    }
-    const activeBatch = batches[activeBatchIndex];
-    if (activeBatch === undefined) {
-      throw new Error("Matched root batch is missing");
-    }
-    console.log(
-      `adopting exact root batch ${(activeBatchIndex + 1).toString()}/${batches.length.toString()} (${activeBatch.resources.length.toString()} resources)`,
-    );
+    console.log(`adopting active final root prune: ${rootAppName}`);
     await sync(rootAppName, timeoutSeconds, false, {
-      prune: false,
+      prune: true,
       requestId: exactRequestId,
-      resources: activeBatch.resources,
       revision: exactRevision,
-      rootFinalizerPhase: "batch",
+      releasePhase: "prune",
       terminateAfterApplied: true,
-      ...(activeBatch.manifests === undefined
-        ? {}
-        : { manifests: activeBatch.manifests }),
+      verifiedRootDesiredIdentities,
     });
-    nextBatchIndex = activeBatchIndex + 1;
+    return;
   }
 
-  for (let index = nextBatchIndex; index < batches.length; index += 1) {
-    const batch = batches[index];
-    if (batch === undefined) {
-      throw new Error(`Exact root batch ${index.toString()} is missing`);
-    }
-    console.log(
-      `syncing exact root batch ${(index + 1).toString()}/${batches.length.toString()} (${batch.resources.length.toString()} resources)`,
-    );
-    await sync(rootAppName, timeoutSeconds, false, {
-      prune: false,
-      requestId: exactRequestId,
-      resources: batch.resources,
-      revision: exactRevision,
-      rootFinalizerPhase: "batch",
-      terminateAfterApplied: true,
-      ...(batch.manifests === undefined ? {} : { manifests: batch.manifests }),
-    });
-  }
+  await syncRootReleaseBatches(
+    rootAppName,
+    batches,
+    "batch",
+    exactRequestId,
+    exactRevision,
+    timeoutSeconds,
+    token,
+  );
 
   await sync(rootAppName, timeoutSeconds, false, {
     prune: true,
     requestId: exactRequestId,
     revision: exactRevision,
-    rootFinalizerPhase: "prune",
+    releasePhase: "prune",
     terminateAfterApplied: true,
     verifiedRootDesiredIdentities,
   });
@@ -1062,7 +1546,7 @@ async function assertRootPruneSafe(
 type SyncOptions = {
   prune: boolean;
   requestId?: string;
-  rootFinalizerPhase?: RootFinalizerPhase;
+  releasePhase?: ReleasePhase;
   terminateAfterApplied?: boolean;
   verifiedRootDesiredIdentities?: ReadonlySet<string>;
   waitForCompletion?: boolean;
@@ -1089,22 +1573,40 @@ async function sync(
   const token = requireEnv("ARGOCD_TOKEN");
   const verifiedRootDesiredIdentities = options.verifiedRootDesiredIdentities;
   if (
-    options.rootFinalizerPhase !== undefined &&
+    options.releasePhase !== undefined &&
+    (options.requestId === undefined || options.revision === undefined)
+  ) {
+    throw new Error("Release phases require an exact request and revision");
+  }
+  if (
+    options.releasePhase !== undefined &&
+    options.releasePhase !== "child" &&
     (appName !== "apps" ||
-      options.requestId === undefined ||
-      options.revision === undefined ||
       options.terminateAfterApplied !== true ||
-      (options.rootFinalizerPhase === "prune") !== options.prune)
+      (options.releasePhase === "prune") !== options.prune)
   ) {
     throw new Error(
-      "Root finalizer phases require an identity-bound atomic apps batch or prune",
+      "Root release phases require an identity-bound atomic apps batch or prune",
+    );
+  }
+  // A child reconciliation always applies the child's complete rendered source.
+  // Declaring that here is what lets adoption reject a selective operation that
+  // merely shares the release identity.
+  if (
+    options.releasePhase === "child" &&
+    (appName === "apps" ||
+      options.manifests !== undefined ||
+      options.resources !== undefined)
+  ) {
+    throw new Error(
+      "Child release phases require a full-source sync of a managed Application",
     );
   }
   if (
     verifiedRootDesiredIdentities !== undefined &&
     (appName !== "apps" ||
       !options.prune ||
-      options.rootFinalizerPhase !== "prune" ||
+      options.releasePhase !== "prune" ||
       options.terminateAfterApplied !== true)
   ) {
     throw new Error(
@@ -1190,7 +1692,8 @@ async function sync(
   let adopted = false;
 
   if (retryable) {
-    baseline = observeOperation(await getApplication(appName, token));
+    const baselineApplication = await getApplication(appName, token);
+    baseline = observeOperation(baselineApplication);
     assertMatchingRevision(baseline, requestId, options.revision, appName);
     assertMatchingLiveRevision(baseline, requestId, options.revision, appName);
     if (baseline.hasLiveOperation) {
@@ -1200,11 +1703,20 @@ async function sync(
           requestId,
           options.revision,
           undefined,
-          options.rootFinalizerPhase,
+          options.releasePhase,
         )
       ) {
         throw new Error(
           `Refusing to replace active ${appName} operation ${liveOperationDescription(baseline)}; expected request ${requestId}`,
+        );
+      }
+      const mismatch = activeOperationRequestMismatch(
+        baselineApplication,
+        options,
+      );
+      if (mismatch !== null) {
+        throw new Error(
+          `Refusing to adopt the active ${appName} operation for request ${requestId}; it applies ${mismatch}`,
         );
       }
       operationId = requireLiveOperationId(baseline, appName);
@@ -1213,7 +1725,7 @@ async function sync(
         requestId,
         options.revision,
         operationId,
-        options.rootFinalizerPhase,
+        options.releasePhase,
       );
       if (completedOperationMatches && baseline.phase === "Terminating") {
         if (
@@ -1262,12 +1774,12 @@ async function sync(
           ...(options.revision === undefined
             ? []
             : [{ name: SYNC_REVISION_INFO_NAME, value: options.revision }]),
-          ...(options.rootFinalizerPhase === undefined
+          ...(options.releasePhase === undefined
             ? []
             : [
                 {
-                  name: ROOT_FINALIZER_PHASE_INFO_NAME,
-                  value: options.rootFinalizerPhase,
+                  name: RELEASE_PHASE_INFO_NAME,
+                  value: options.releasePhase,
                 },
               ]),
         ],
@@ -1309,12 +1821,9 @@ async function sync(
         `Argo sync response returned a different CI revision; expected ${options.revision}`,
       );
     }
-    if (
-      requestedOperationRootFinalizerPhase(responseBody) !==
-      options.rootFinalizerPhase
-    ) {
+    if (requestedOperationReleasePhase(responseBody) !== options.releasePhase) {
       throw new Error(
-        `Argo sync response returned a different root finalizer phase; expected ${options.rootFinalizerPhase ?? "none"}`,
+        `Argo sync response returned a different root release phase; expected ${options.releasePhase ?? "none"}`,
       );
     }
     console.log(`sync operation started: ${appName}`);
@@ -1327,7 +1836,7 @@ async function sync(
     token,
     requestId,
     operationId,
-    rootFinalizerPhase: options.rootFinalizerPhase,
+    releasePhase: options.releasePhase,
     expectedResourceIdentities,
     revision: options.revision,
     timeoutSeconds,
@@ -1345,12 +1854,12 @@ type OperationObservation = {
   readonly liveOperationId: string | null;
   readonly liveRequestId: string | null;
   readonly liveRevision: string | undefined;
-  readonly liveRootFinalizerPhase: RootFinalizerPhase | undefined;
+  readonly liveReleasePhase: ReleasePhase | undefined;
   readonly operationId: string | null;
   readonly phase: string;
   readonly requestId: string | null;
   readonly revision: string | undefined;
-  readonly rootFinalizerPhase: RootFinalizerPhase | undefined;
+  readonly releasePhase: ReleasePhase | undefined;
   readonly startedAt: string | undefined;
   readonly state: Record<string, unknown>;
 };
@@ -1374,10 +1883,10 @@ function observeOperation(app: Record<string, unknown>): OperationObservation {
       liveOperation === undefined
         ? undefined
         : operationRevision(liveOperation),
-    liveRootFinalizerPhase:
+    liveReleasePhase:
       liveOperation === undefined
         ? undefined
-        : operationRootFinalizerPhase(liveOperation),
+        : operationReleasePhase(liveOperation),
     phase: typeof phase === "string" ? phase : "",
     operationId: completedOperationId(app),
     requestId: completedOperationRequestId(app),
@@ -1385,10 +1894,10 @@ function observeOperation(app: Record<string, unknown>): OperationObservation {
       completedOperation === undefined
         ? undefined
         : operationRevision(completedOperation),
-    rootFinalizerPhase:
+    releasePhase:
       completedOperation === undefined
         ? undefined
-        : operationRootFinalizerPhase(completedOperation),
+        : operationReleasePhase(completedOperation),
     startedAt: OperationStartedAtSchema.parse(state["startedAt"]),
     state,
   };
@@ -1399,15 +1908,14 @@ function liveOperationMatches(
   requestId: string,
   revision: string | undefined,
   operationId?: string | null,
-  rootFinalizerPhase?: RootFinalizerPhase,
+  releasePhase?: ReleasePhase,
 ): boolean {
   return (
     operation.hasLiveOperation &&
     operation.liveRequestId === requestId &&
     (revision === undefined || operation.liveRevision === revision) &&
     (operationId === undefined || operation.liveOperationId === operationId) &&
-    (rootFinalizerPhase === undefined ||
-      operation.liveRootFinalizerPhase === rootFinalizerPhase)
+    (releasePhase === undefined || operation.liveReleasePhase === releasePhase)
   );
 }
 
@@ -1416,14 +1924,13 @@ function operationMatches(
   requestId: string,
   revision: string | undefined,
   operationId?: string | null,
-  rootFinalizerPhase?: RootFinalizerPhase,
+  releasePhase?: ReleasePhase,
 ): boolean {
   return (
     operation.requestId === requestId &&
     (revision === undefined || operation.revision === revision) &&
     (operationId === undefined || operation.operationId === operationId) &&
-    (rootFinalizerPhase === undefined ||
-      operation.rootFinalizerPhase === rootFinalizerPhase)
+    (releasePhase === undefined || operation.releasePhase === releasePhase)
   );
 }
 
@@ -1600,7 +2107,7 @@ type WaitForIdentifiedOperationOptions = {
   readonly operationId: string;
   readonly requestId: string;
   readonly revision: string | undefined;
-  readonly rootFinalizerPhase: RootFinalizerPhase | undefined;
+  readonly releasePhase: ReleasePhase | undefined;
   readonly terminateAfterApplied: boolean;
   readonly timeoutSeconds: number;
   readonly token: string;
@@ -1612,7 +2119,7 @@ async function waitForIdentifiedOperation({
   operationId,
   requestId,
   revision,
-  rootFinalizerPhase,
+  releasePhase,
   terminateAfterApplied,
   timeoutSeconds,
   token,
@@ -1628,14 +2135,14 @@ async function waitForIdentifiedOperation({
       requestId,
       revision,
       operationId,
-      rootFinalizerPhase,
+      releasePhase,
     );
     const isExpectedLiveOperation = liveOperationMatches(
       current,
       requestId,
       revision,
       operationId,
-      rootFinalizerPhase,
+      releasePhase,
     );
     if (current.hasLiveOperation && !isExpectedLiveOperation) {
       throw new Error(
@@ -2045,16 +2552,63 @@ function canonicalJson(value: unknown): string {
   return serialized;
 }
 
+/**
+ * The release inventory is operator input, so every command that consumes it
+ * parses and binds it before mutating anything. `release-root` validates it
+ * ahead of staging so invalid input cannot leave root prerequisites applied
+ * and child auto-sync suspended.
+ */
+async function readExpectedApplications(
+  expectedPath: string,
+): Promise<readonly ExpectedApplication[]> {
+  return ExpectedApplicationsSchema.parse(
+    JSON.parse(await Bun.file(expectedPath).text()),
+  );
+}
+
+function expectedAppsRelease(
+  expected: readonly ExpectedApplication[],
+): ExpectedApplication {
+  const appsRelease = expected.find(
+    (application) => application.name === "apps",
+  );
+  if (appsRelease === undefined) {
+    throw new Error("Expected release inventory is missing the apps revision");
+  }
+  return appsRelease;
+}
+
+/**
+ * `releaseReconciliationTargets` is the only complete oracle for the release
+ * inventory: it rejects duplicate children, a missing repository child, and any
+ * Application absent from the exact rendered root. Running it before staging
+ * keeps semantically invalid input from applying root prerequisites and
+ * suspending child auto-sync first.
+ */
+async function assertReleaseInventoryIsComplete(
+  rootAppName: string,
+  expected: readonly ExpectedApplication[],
+  revision: string,
+  token: string,
+): Promise<void> {
+  releaseReconciliationTargets(
+    await getApplicationManifests(rootAppName, revision, token),
+    expected,
+    rootAppName,
+  );
+}
+
 async function reconcileRelease(
   expectedPath: string,
   timeoutSeconds: number,
   dryRun: boolean,
   deferredApps: ReadonlySet<string>,
   waitForHealth: boolean,
+  requestId: string | undefined,
 ): Promise<void> {
-  const expected = ExpectedApplicationsSchema.parse(
-    JSON.parse(await Bun.file(expectedPath).text()),
-  );
+  const exactRequestId =
+    requestId === undefined ? undefined : SyncRequestIdSchema.parse(requestId);
+  const expected = await readExpectedApplications(expectedPath);
   if (dryRun) {
     console.log(
       `DRYRUN: would reconcile ${expected.length.toString()} expected Application(s)` +
@@ -2064,12 +2618,7 @@ async function reconcileRelease(
     );
     return;
   }
-  const appsRelease = expected.find(
-    (application) => application.name === "apps",
-  );
-  if (appsRelease === undefined) {
-    throw new Error("Expected release inventory is missing the apps revision");
-  }
+  const appsRelease = expectedAppsRelease(expected);
   await assertExpectedAppsRevisionIsLatest(
     appsRelease.revision,
     timeoutSeconds,
@@ -2118,9 +2667,13 @@ async function reconcileRelease(
     if (deployedExpectedRepositoryRelease || deployedExpectedExternalSource) {
       continue;
     }
+    await assertApplySafe(wanted.name, token, wanted.revision);
     await sync(wanted.name, timeoutSeconds, false, {
       prune: wanted.prune,
       revision: wanted.revision,
+      ...(exactRequestId === undefined
+        ? {}
+        : { requestId: exactRequestId, releasePhase: "child" }),
     });
   }
   if (waitForHealth) {
@@ -2133,9 +2686,7 @@ async function releaseHealthWait(
   timeoutSeconds: number,
   dryRun: boolean,
 ): Promise<void> {
-  const expected = ExpectedApplicationsSchema.parse(
-    JSON.parse(await Bun.file(expectedPath).text()),
-  );
+  const expected = await readExpectedApplications(expectedPath);
   console.log(
     `--- argocd release-health-wait: ${expected.length.toString()} expected Application(s)`,
   );
@@ -2163,6 +2714,101 @@ async function releaseHealthWait(
   throw new Error(
     `Release tree did not become ready: ${latestFailures.join("; ")}`,
   );
+}
+
+/**
+ * A Buildkite retry restarts `release-root` from the top, but the interrupted
+ * attempt may have died with a later root phase still live. Staging cannot
+ * adopt a `batch` or `prune` operation, so it would reject an operation this
+ * release legitimately owns and no retry could ever recover. Resume at the
+ * finalizer instead. Earlier phases need no routing: staging re-applies the
+ * same suspension, and child reconciliation skips children that already carry
+ * the expected release, so replaying them is idempotent.
+ */
+async function activeRootReleasePhase(
+  rootAppName: string,
+  requestId: string,
+  revision: string,
+  token: string,
+): Promise<ReleasePhase | null> {
+  const observation = observeOperation(
+    await getApplication(rootAppName, token),
+  );
+  if (!liveOperationMatches(observation, requestId, revision)) {
+    return null;
+  }
+  return observation.liveReleasePhase ?? null;
+}
+
+async function releaseRoot(
+  rootAppName: string,
+  expectedPath: string,
+  revision: string,
+  requestId: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
+  if (rootAppName !== "apps") {
+    throw new Error("release-root only supports the apps root");
+  }
+  const exactRevision = BuildRevisionSchema.parse(revision);
+  const exactRequestId = SyncRequestIdSchema.parse(requestId);
+  const expected = await readExpectedApplications(expectedPath);
+  const appsRelease = expectedAppsRelease(expected);
+  if (appsRelease.revision !== exactRevision) {
+    throw new Error(
+      `Release inventory declares apps ${appsRelease.revision}; expected ${exactRevision}`,
+    );
+  }
+  console.log(
+    `--- argocd release-root: ${rootAppName} at ${exactRevision} for request ${exactRequestId}${dryRun ? " (dry run)" : ""}`,
+  );
+  const resumePhase = dryRun
+    ? null
+    : await (async (): Promise<ReleasePhase | null> => {
+        const token = requireEnv("ARGOCD_TOKEN");
+        await assertReleaseInventoryIsComplete(
+          rootAppName,
+          expected,
+          exactRevision,
+          token,
+        );
+        return activeRootReleasePhase(
+          rootAppName,
+          exactRequestId,
+          exactRevision,
+          token,
+        );
+      })();
+  if (resumePhase === "batch" || resumePhase === "prune") {
+    console.log(
+      `resuming ${rootAppName} release at the ${resumePhase} phase for request ${exactRequestId}`,
+    );
+  } else {
+    await stageRootRelease(
+      rootAppName,
+      exactRevision,
+      exactRequestId,
+      timeoutSeconds,
+      dryRun,
+    );
+    await reconcileRelease(
+      expectedPath,
+      timeoutSeconds,
+      dryRun,
+      new Set(),
+      false,
+      exactRequestId,
+    );
+  }
+  await finalizeRootRelease(
+    rootAppName,
+    exactRevision,
+    exactRequestId,
+    timeoutSeconds,
+    dryRun,
+  );
+  await releaseHealthWait(expectedPath, timeoutSeconds, dryRun);
 }
 
 /**
@@ -2389,28 +3035,19 @@ async function waitDeletion(opts: {
 function usage(): never {
   console.error(
     "Usage:\n" +
-      "  bun packages/homelab/scripts/argocd.ts sync <app> " +
-      "[--revision <v>] [--prune] [--async | --terminate-after-applied] " +
+      "  bun packages/homelab/scripts/argocd.ts sync-managed <app> " +
+      "[--revision <v>] [--prune] [--terminate-after-applied] " +
       "[--request-id <uuid>] [--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts release-root apps <expected.json> " +
+      "--revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts delete-application <app> " +
       "--project <project> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts health-wait <app> " +
       "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts tree-health-wait <app> " +
       "[--timeout <s>] [--dry-run]\n" +
-      "  bun packages/homelab/scripts/argocd.ts release-health-wait <expected.json> " +
-      "[--timeout <s>] [--dry-run]\n" +
-      "  bun packages/homelab/scripts/argocd.ts reconcile-release <expected.json> " +
-      "[--defer-apps <app,...>] [--skip-health-wait] " +
-      "[--timeout <s>] [--dry-run]\n" +
-      "  bun packages/homelab/scripts/argocd.ts finalize-async-sync <app> " +
-      "--revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> " +
       "[--revision <v>] [--timeout <s>] [--dry-run]\n" +
-      "  bun packages/homelab/scripts/argocd.ts stage-root-release <root-app> " +
-      "--revision <v> [--timeout <s>] [--dry-run]\n" +
-      "  bun packages/homelab/scripts/argocd.ts finalize-root-release apps " +
-      "--revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts wait-deletion <app> " +
       "--group <g> --version <v> --kind <k> --namespace <ns> " +
       "[--timeout <s>] [--dry-run]",
@@ -2430,18 +3067,6 @@ function flag(argv: string[], name: string): string | undefined {
     usage();
   }
   return v;
-}
-
-function appList(raw: string | undefined): ReadonlySet<string> {
-  if (raw === undefined) {
-    return new Set();
-  }
-  const apps = raw.split(",").map((app) => app.trim());
-  if (apps.some((app) => app.length === 0)) {
-    console.error("--defer-apps must contain only comma-separated names");
-    usage();
-  }
-  return new Set(apps);
 }
 
 async function main(): Promise<void> {
@@ -2466,6 +3091,43 @@ async function main(): Promise<void> {
   }
 
   switch (subcommand) {
+    case "sync-managed": {
+      const revision = flag(argv, "revision");
+      const requestId = flag(argv, "request-id");
+      const terminateAfterApplied = argv.includes("--terminate-after-applied");
+      if (argv.includes("--async")) {
+        console.error("sync-managed is bounded and does not support --async.");
+        usage();
+      }
+      if (terminateAfterApplied && revision === undefined) {
+        console.error(
+          "--terminate-after-applied requires an exact --revision.",
+        );
+        usage();
+      }
+      if (requestId !== undefined && revision === undefined) {
+        console.error("--request-id requires an exact --revision.");
+        usage();
+      }
+      const exactRequestId =
+        requestId === undefined
+          ? undefined
+          : SyncRequestIdSchema.parse(requestId);
+      if (!dryRun) {
+        await assertApplySafe(app, requireEnv("ARGOCD_TOKEN"), revision);
+      }
+      await sync(app, timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S, dryRun, {
+        prune: argv.includes("--prune"),
+        waitForCompletion: true,
+        terminateAfterApplied,
+        ...(revision === undefined ? {} : { revision }),
+        ...(exactRequestId === undefined ? {} : { requestId: exactRequestId }),
+      });
+      return;
+    }
+    // Internal compatibility primitives keep the detailed lifecycle tests and
+    // exact-operation recovery path executable. Buildkite and operator docs
+    // expose only release-root and sync-managed.
     case "sync": {
       const revision = flag(argv, "revision");
       const requestId = flag(argv, "request-id");
@@ -2530,11 +3192,12 @@ async function main(): Promise<void> {
         true,
       );
       return;
-    case "release-health-wait":
-      await releaseHealthWait(
+    case "suspend-auto-sync":
+      await suspendRepositoryAutoSync(
         app,
-        timeoutOverride ?? DEFAULT_HEALTH_TIMEOUT_S,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
         dryRun,
+        flag(argv, "revision"),
       );
       return;
     case "reconcile-release":
@@ -2542,10 +3205,47 @@ async function main(): Promise<void> {
         app,
         timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
         dryRun,
-        appList(flag(argv, "defer-apps")),
+        new Set(),
         !argv.includes("--skip-health-wait"),
+        flag(argv, "request-id"),
       );
       return;
+    case "stage-root-release": {
+      const revision = flag(argv, "revision");
+      const requestId = flag(argv, "request-id");
+      if (revision === undefined || requestId === undefined) {
+        console.error(
+          "--revision and --request-id are required for stage-root-release.",
+        );
+        usage();
+      }
+      await stageRootRelease(
+        app,
+        revision,
+        requestId,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
+        dryRun,
+      );
+      return;
+    }
+    case "finalize-root-release": {
+      const revision = flag(argv, "revision");
+      const requestId = flag(argv, "request-id");
+      if (revision === undefined || requestId === undefined) {
+        console.error(
+          "--revision and --request-id are required for finalize-root-release.",
+        );
+        usage();
+      }
+      await finalizeRootRelease(
+        app,
+        revision,
+        requestId,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
+        dryRun,
+      );
+      return;
+    }
     case "finalize-async-sync": {
       const revision = flag(argv, "revision");
       const requestId = flag(argv, "request-id");
@@ -2564,39 +3264,24 @@ async function main(): Promise<void> {
       );
       return;
     }
-    case "suspend-auto-sync":
-      await suspendRepositoryAutoSync(
-        app,
-        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
-        dryRun,
-        flag(argv, "revision"),
-      );
-      return;
-    case "stage-root-release": {
-      const revision = flag(argv, "revision");
-      if (revision === undefined) {
-        console.error("--revision is required for stage-root-release.");
-        usage();
-      }
-      await stageRootRelease(
-        app,
-        revision,
-        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
-        dryRun,
-      );
-      return;
-    }
-    case "finalize-root-release": {
+    case "release-root": {
+      const expectedPath = argv[2];
       const revision = flag(argv, "revision");
       const requestId = flag(argv, "request-id");
-      if (revision === undefined || requestId === undefined) {
+      if (
+        expectedPath === undefined ||
+        expectedPath.startsWith("--") ||
+        revision === undefined ||
+        requestId === undefined
+      ) {
         console.error(
-          "--revision and --request-id are required for finalize-root-release.",
+          "release-root requires <expected.json>, --revision, and --request-id.",
         );
         usage();
       }
-      await finalizeRootRelease(
+      await releaseRoot(
         app,
+        expectedPath,
         revision,
         requestId,
         timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,

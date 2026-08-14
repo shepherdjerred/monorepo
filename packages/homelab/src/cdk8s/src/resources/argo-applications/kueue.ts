@@ -127,10 +127,6 @@ export function createKueueApp(chart: Chart) {
   return new Application(chart, "kueue-app", {
     metadata: {
       name: "kueue",
-      annotations: {
-        // Deploy early so the webhook is ready before Buildkite creates Jobs
-        "argocd.argoproj.io/sync-wave": "1",
-      },
     },
     spec: {
       revisionHistoryLimit: 5,

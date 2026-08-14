@@ -5,6 +5,106 @@ import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
+export const ARGO_APPLICATION_HEALTH_LUA = `hs = {}
+hs.status = "Progressing"
+hs.message = "Waiting for Application status"
+if obj.status == nil then
+  return hs
+end
+
+if obj.status.conditions ~= nil then
+  for _, condition in ipairs(obj.status.conditions) do
+    if condition.type == "ComparisonError" or
+       condition.type == "InvalidSpecError" or
+       condition.type == "SyncError" or
+       condition.type == "UnknownError" or
+       condition.type == "DeletionError" then
+      hs.status = "Degraded"
+      hs.message = condition.message or condition.type
+      return hs
+    end
+  end
+end
+
+local syncStatus = nil
+local syncRevision = nil
+if obj.status.sync ~= nil then
+  syncStatus = obj.status.sync.status
+  syncRevision = obj.status.sync.revision
+end
+
+local healthStatus = nil
+local healthMessage = nil
+if obj.status.health ~= nil then
+  healthStatus = obj.status.health.status
+  healthMessage = obj.status.health.message
+end
+
+local operationPhase = nil
+local operationRevision = nil
+local operationMessage = nil
+if obj.status.operationState ~= nil then
+  operationPhase = obj.status.operationState.phase
+  operationMessage = obj.status.operationState.message
+  if obj.status.operationState.syncResult ~= nil then
+    operationRevision = obj.status.operationState.syncResult.revision
+  end
+end
+
+if operationPhase == "Running" or operationPhase == "Terminating" then
+  hs.status = "Progressing"
+  hs.message = operationMessage or ("Application operation is " .. operationPhase)
+  return hs
+end
+
+if operationPhase == "Failed" or operationPhase == "Error" then
+  -- A failure stops mattering once it belongs to a superseded revision, or once
+  -- the application has converged anyway. ArgoCD never re-runs a sync for an
+  -- application it already considers Synced, so a failure recorded against one
+  -- that later reached Synced and Healthy can never clear: blocking on it wedges
+  -- every root health wave behind a child with nothing left to converge, which
+  -- is what took main CI down for two days. A rejected apply leaves the resource
+  -- OutOfSync or Degraded, so a genuinely broken child still blocks here.
+  --
+  -- This is deliberately more forgiving than
+  -- operationIsReadyForCurrentRevision in argocd-application-readiness.ts,
+  -- which still refuses a same-revision failure. The two gate different things:
+  -- this customization orders ArgoCD's own sync waves, where a permanent block
+  -- is unrecoverable, while that predicate gates the CI release, where refusing
+  -- fails one build that a retry can clear. A failed hook on the revision under
+  -- release therefore still stops the release without stranding the cluster.
+  local failedOtherRevision =
+    operationRevision ~= nil
+    and syncRevision ~= nil
+    and operationRevision ~= syncRevision
+  local convergedSinceFailure = syncStatus == "Synced" and healthStatus == "Healthy"
+  if not failedOtherRevision and not convergedSinceFailure then
+    hs.status = "Degraded"
+    hs.message = operationMessage or ("Application operation is " .. operationPhase)
+    return hs
+  end
+elseif operationPhase ~= nil and operationPhase ~= "Succeeded" then
+  hs.status = "Degraded"
+  hs.message = "Application has unknown operation phase " .. operationPhase
+  return hs
+end
+
+if syncStatus ~= "Synced" then
+  hs.status = "Progressing"
+  if syncRevision ~= nil and operationRevision ~= nil and syncRevision ~= operationRevision then
+    hs.message = "Application is not Synced; last operation targeted another revision"
+  else
+    hs.message = "Application is not Synced"
+  end
+  return hs
+end
+
+if healthStatus ~= nil then
+  hs.status = healthStatus
+  hs.message = healthMessage or ""
+end
+return hs`;
+
 export function createArgoCdApp(chart: Chart) {
   createIngress(chart, "argocd-ingress", {
     namespace: "argocd",
@@ -179,62 +279,8 @@ export function createArgoCdApp(chart: Chart) {
         // ArgoCD removed built-in Application CR health in 1.8. Restore the
         // documented app-of-apps check so the root app inherits child app and
         // workload health without widening the Buildkite account's RBAC.
-        "resource.customizations.health.argoproj.io_Application": `hs = {}
-hs.status = "Progressing"
-hs.message = ""
-if obj.status ~= nil then
-  if obj.status.health ~= nil then
-    -- ArgoCD's Lua health evaluator requires a non-nil hs.status; a health
-    -- object without a .status field (e.g. a freshly-created child app) would
-    -- otherwise blank it out and fall back to Unknown. Keep the "Progressing"
-    -- default in that case.
-    if obj.status.health.status ~= nil then
-      hs.status = obj.status.health.status
-    end
-    if obj.status.health.message ~= nil then
-      hs.message = obj.status.health.message
-    end
-  end
-  if obj.status.sync == nil or obj.status.sync.status ~= "Synced" then
-    if hs.status == "Healthy" then
-      hs.status = "Progressing"
-    end
-    hs.message = "Application is not Synced"
-  end
-  local operationBlocks = false
-  if obj.status.operationState ~= nil and
-     obj.status.operationState.phase ~= nil and
-     obj.status.operationState.phase ~= "Succeeded" then
-    operationBlocks = true
-    local phase = obj.status.operationState.phase
-    if (phase == "Failed" or phase == "Error") and
-       obj.status.operationState.syncResult ~= nil and
-       obj.status.operationState.syncResult.revision ~= nil and
-       obj.status.sync ~= nil and
-       obj.status.sync.revision ~= nil and
-       obj.status.operationState.syncResult.revision ~= obj.status.sync.revision then
-      operationBlocks = false
-    end
-    -- A terminal failure whose application has since converged is stale too.
-    -- ArgoCD never re-runs a sync for an application that is already Synced, so
-    -- nothing can ever clear the recorded phase: the child would report
-    -- Progressing forever and every later root health wave would block on it.
-    -- Requiring both Synced and Healthy keeps a genuinely broken child blocking,
-    -- because a rejected apply leaves the resource OutOfSync or Degraded.
-    if (phase == "Failed" or phase == "Error") and
-       obj.status.sync ~= nil and
-       obj.status.sync.status == "Synced" and
-       obj.status.health ~= nil and
-       obj.status.health.status == "Healthy" then
-      operationBlocks = false
-    end
-  end
-  if operationBlocks then
-    hs.status = "Progressing"
-    hs.message = "Application operation is " .. obj.status.operationState.phase
-  end
-end
-return hs`,
+        "resource.customizations.health.argoproj.io_Application":
+          ARGO_APPLICATION_HEALTH_LUA,
         // A newly-created cert-manager Certificate reports Ready=False with
         // reason DoesNotExist while it creates its target Secret. ArgoCD's
         // documented generic Certificate health check classifies every False

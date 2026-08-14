@@ -223,12 +223,23 @@ export function createSonarrDeployment(
 
 ## Version Management
 
-Add versions with SHA256 digests:
+Add versions with SHA256 digests to
+`packages/version-catalog/src/catalog.json`; do not hand-edit the CDK8s runtime
+projection:
 
-```typescript
-// In src/cdk8s/src/versions.ts
-// renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
-"linuxserver/sonarr": "4.0.16@sha256:8b9f2138ec50fc9e521960868f79d2ad0d529bc610aef19031ea8ff80b54c5e0",
+```json
+{
+  "name": "linuxserver/sonarr",
+  "value": "4.0.16@sha256:8b9f2138ec50fc9e521960868f79d2ad0d529bc610aef19031ea8ff80b54c5e0",
+  "category": "upstream",
+  "artifactType": "image",
+  "management": {
+    "managed": true,
+    "datasource": "docker",
+    "registryUrl": "https://ghcr.io",
+    "versioning": "docker"
+  }
+}
 ```
 
 ## Deployment Strategy

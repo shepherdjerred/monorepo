@@ -44,7 +44,7 @@
     "generate": {
       "inputs": [
         "scripts/generate-version-map-schema.ts",
-        "src/version-catalog.json"
+        "$TURBO_ROOT$/packages/version-catalog/src/catalog.json"
       ],
       "outputs": ["src/version-map.generated.ts"]
     },

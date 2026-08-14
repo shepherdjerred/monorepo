@@ -14,9 +14,19 @@ import {
   synthesizeDependencyChanges,
 } from "./deps-summary-release-notes.ts";
 
-const VERSION_CATALOG_PATH =
+const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
+// The catalog lived here before it became its own workspace, and `versions.ts`
+// was already a projection of it. Reading history across that move therefore
+// needs all three eras: the current catalog, the catalog at its former path,
+// and only then the pre-catalog literal `versions.ts`.
+const PRIOR_VERSION_CATALOG_PATH =
   "packages/homelab/src/cdk8s/src/version-catalog.json";
 const LEGACY_VERSIONS_PATH = "packages/homelab/src/cdk8s/src/versions.ts";
+export const CATALOG_HISTORY_PATHS = [
+  VERSION_CATALOG_PATH,
+  PRIOR_VERSION_CATALOG_PATH,
+  LEGACY_VERSIONS_PATH,
+] as const;
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const CHECKPOINT_KEY = "reports/state/deps-summary-weekly.json";
 
@@ -255,9 +265,14 @@ async function tryGitShow(
   }
 }
 
-async function catalogAt(git: SimpleGit, ref: string): Promise<CatalogEntry[]> {
+export async function catalogAt(
+  git: SimpleGit,
+  ref: string,
+): Promise<CatalogEntry[]> {
   const catalog = await tryGitShow(git, ref, VERSION_CATALOG_PATH);
   if (catalog !== undefined) return parseCatalog(catalog);
+  const priorCatalog = await tryGitShow(git, ref, PRIOR_VERSION_CATALOG_PATH);
+  if (priorCatalog !== undefined) return parseCatalog(priorCatalog);
   const legacy = await tryGitShow(git, ref, LEGACY_VERSIONS_PATH);
   if (legacy !== undefined) return parseLegacyVersionsSource(legacy);
   throw new Error(`no version catalog exists at ${ref}`);
@@ -426,8 +441,7 @@ export async function collectDependencyChanges(
       "--reverse",
       `${baseSha}..${headSha}`,
       "--",
-      VERSION_CATALOG_PATH,
-      LEGACY_VERSIONS_PATH,
+      ...CATALOG_HISTORY_PATHS,
     ]);
     const commits = rawCommits.trim().split("\n").filter(Boolean);
     const catalogCommits: {

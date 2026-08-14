@@ -6,7 +6,7 @@
  *
  * Modes:
  *   (default)  Regenerate `generated/helm/` in place from the chart versions in
- *              `src/version-catalog.json`.
+ *              `packages/version-catalog/src/catalog.json`.
  *   --check    Regenerate into a throwaway dir and FAIL (exit 1) if the result
  *              differs from the committed `generated/helm/` tree — without
  *              mutating it. Runs in CI as the `helm-types-drift-check`
@@ -27,7 +27,7 @@ import {
   type ChartInfo,
 } from "./parse-helm-charts.ts";
 
-const VERSION_CATALOG_FILE = "src/version-catalog.json";
+const VERSION_CATALOG_FILE = "../../../version-catalog/src/catalog.json";
 const OUTPUT_DIR = "generated/helm";
 // Throwaway dir used by --check so the committed tree is never mutated. Kept as
 // a sibling of OUTPUT_DIR under `generated/` so prettier resolves the SAME
@@ -240,14 +240,14 @@ async function checkHelmTypes() {
       console.error(`   - ${entry}`);
     }
     console.error(
-      "\nThe committed generated/helm/ tree does not match what src/version-catalog.json produces.\n" +
+      "\nThe committed generated/helm/ tree does not match what packages/version-catalog/src/catalog.json produces.\n" +
         "Fix: run `bun run generate-helm-types` in packages/homelab/src/cdk8s, then\n" +
         "commit packages/homelab/src/cdk8s/generated/helm/.\n",
     );
     process.exit(1);
   }
   console.log(
-    "\n✅ Committed Helm types are in sync with src/version-catalog.json",
+    "\n✅ Committed Helm types are in sync with packages/version-catalog/src/catalog.json",
   );
 }
 

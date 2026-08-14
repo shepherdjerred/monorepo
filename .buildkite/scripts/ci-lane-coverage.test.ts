@@ -145,4 +145,15 @@ describe("lane↔if_changed coverage", () => {
       Object.keys(LANE_TO_STEP).sort(),
     );
   });
+
+  // The subset property above is satisfied trivially by a lane that lists
+  // nothing, so it cannot catch a release input going untracked. These lanes
+  // package charts, reconcile Applications, regenerate Helm types, and promote
+  // the Scout pin from the version catalog; dropping it here would let a
+  // catalog-only commit skip them entirely.
+  test("release lanes track the version catalog", () => {
+    for (const lane of ["helm", "argocd", "helm-types", "scout-reconcile"]) {
+      expect(selectorPathsForLane(lane)).toContain("packages/version-catalog");
+    }
+  });
 });

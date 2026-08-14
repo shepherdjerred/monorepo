@@ -33,7 +33,7 @@ function catalogSource(
   entries: { name: string; value: string; notes?: string[] }[],
 ): string {
   return JSON.stringify({
-    $schema: "./version-catalog.schema.json",
+    $schema: "./schema.json",
     schemaVersion: 1,
     entries: entries.map((entry) => ({
       name: entry.name,

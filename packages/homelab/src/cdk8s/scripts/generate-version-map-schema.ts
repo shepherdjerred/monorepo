@@ -6,7 +6,10 @@ const CatalogNamesSchema = z.object({
 });
 
 async function main(): Promise<void> {
-  const catalogPath = new URL("../src/version-catalog.json", import.meta.url);
+  const catalogPath = new URL(
+    "../../../../version-catalog/src/catalog.json",
+    import.meta.url,
+  );
   const outputPath = new URL(
     "../src/version-map.generated.ts",
     import.meta.url,

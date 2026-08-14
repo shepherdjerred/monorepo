@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:sjer:red:schema:homelab-version-catalog:v1",
-  "title": "Homelab version catalog",
+  "$id": "urn:sjer:red:schema:version-catalog:v1",
+  "title": "Version catalog",
   "type": "object",
   "additionalProperties": false,
   "required": ["$schema", "schemaVersion", "entries"],

@@ -58,7 +58,7 @@ function stateJson(overrides: Record<string, unknown> = {}): string {
 
 function versionCatalogSource(name: string, value: string): string {
   return JSON.stringify({
-    $schema: "./version-catalog.schema.json",
+    $schema: "./schema.json",
     schemaVersion: 1,
     entries: [
       {

@@ -15,7 +15,8 @@ import {
 } from "./pvc-backup-policy.ts";
 import {
   createPvcBackupAdmissionPolicies,
-  PVC_BACKUP_ADMISSION_SYNC_WAVE,
+  PVC_BACKUP_ADMISSION_BINDING_SYNC_WAVE,
+  PVC_BACKUP_ADMISSION_POLICY_SYNC_WAVE,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
 
 const ManifestSchema = z.object({
@@ -156,10 +157,10 @@ describe("PVC backup policy", () => {
 
     expect(pvcCount).toBeGreaterThan(0);
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
-    expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(2);
-    expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(2);
-    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(1);
-    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(1);
+    expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(3);
+    expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(3);
+    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(2);
+    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(2);
   }, 20_000);
 
   it("syncs admission policy updates before PVC changes", () => {
@@ -172,8 +173,11 @@ describe("PVC backup policy", () => {
 
     expect(admissionObjects).toHaveLength(6);
     for (const manifest of admissionObjects) {
+      const expectedWave = manifest.kind.endsWith("Binding")
+        ? PVC_BACKUP_ADMISSION_BINDING_SYNC_WAVE
+        : PVC_BACKUP_ADMISSION_POLICY_SYNC_WAVE;
       expect(manifest.metadata.annotations).toEqual({
-        "argocd.argoproj.io/sync-wave": PVC_BACKUP_ADMISSION_SYNC_WAVE,
+        "argocd.argoproj.io/sync-wave": expectedWave,
       });
     }
   });

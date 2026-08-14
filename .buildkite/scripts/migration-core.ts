@@ -356,6 +356,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   ],
   "helm-types": [
     ...workspacePaths,
+    "packages/version-catalog",
     "packages/homelab/src/cdk8s/src/versions.ts",
     "packages/homelab/src/cdk8s/scripts/generate-helm-types.ts",
     "packages/homelab/src/cdk8s/scripts/parse-helm-charts.ts",
@@ -371,6 +372,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   ],
   helm: [
     ...workspacePaths,
+    "packages/version-catalog",
     "packages/homelab/src/cdk8s",
     "packages/homelab/scripts/helm-release-core.ts",
     "packages/homelab/scripts/helm-push.ts",
@@ -378,6 +380,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   ],
   argocd: [
     ...workspacePaths,
+    "packages/version-catalog",
     "packages/homelab/src/cdk8s",
     "packages/homelab/scripts/argocd.ts",
     "scripts/lib/run.ts",
@@ -400,6 +403,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/scout-for-lol",
     "packages/astro-opengraph-images",
     "packages/llm-models",
+    "packages/version-catalog",
     "packages/homelab/src/cdk8s/src/versions.ts",
     "scripts/package.json",
     "scripts/scout-site-release.ts",

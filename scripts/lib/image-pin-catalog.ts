@@ -32,7 +32,7 @@ function requiredString(
  * primitives. A Zod-backed schema here makes every bake pod fail at module load
  * with "Cannot find package 'zod'" — moving the module between workspaces does
  * not help, because the lane has no `node_modules` at all. The installed lanes
- * keep their fully validated catalog read in `version-catalog.ts`.
+ * keep their fully validated catalog read in `@shepherdjerred/version-catalog`.
  */
 function readCatalogImageEntries(
   versionCatalogSource: string,

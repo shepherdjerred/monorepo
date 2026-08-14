@@ -1,8 +1,16 @@
 import { describe, expect, test } from "bun:test";
+import { z } from "zod";
 import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
-import { z } from "zod";
+import {
+  operationForRootSyncRequest,
+  operationForSyncRequest,
+  operationResponseForRootSync,
+  RootSyncRequestSchema,
+  SyncRequestSchema,
+  type SyncRequest,
+} from "./argocd-script-support.ts";
 
 type RequestObservation = {
   authorization: string | null;
@@ -12,59 +20,7 @@ type RequestObservation = {
   query: string;
 };
 
-const SyncInfoEntrySchema = z.discriminatedUnion("name", [
-  z.object({
-    name: z.literal("ci.sjer.red/request-id"),
-    value: z.uuid(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/operation-id"),
-    value: z.uuid(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/revision"),
-    value: z.string(),
-  }),
-]);
-
-const SyncRequestSchema = z.object({
-  infos: z.array(SyncInfoEntrySchema),
-  manifests: z.array(z.string()).optional(),
-  revision: z.string().optional(),
-  resources: z.array(
-    z.object({
-      group: z.string(),
-      kind: z.string(),
-      name: z.string(),
-    }),
-  ),
-});
-
-const RootSyncRequestSchema = z.object({
-  infos: z.array(SyncInfoEntrySchema),
-  prune: z.boolean(),
-  revision: z.string().optional(),
-});
-
-function operationForRootSyncRequest(
-  request: unknown,
-): Record<string, unknown> {
-  const syncRequest = RootSyncRequestSchema.parse(request);
-  return {
-    info: syncRequest.infos,
-    initiatedBy: { username: "buildkite" },
-    sync: {
-      prune: syncRequest.prune,
-      ...(syncRequest.revision === undefined
-        ? {}
-        : { revision: syncRequest.revision }),
-    },
-  };
-}
-
-function operationResponseForRootSync(request: unknown): unknown {
-  return { operation: operationForRootSyncRequest(request) };
-}
+const RELEASE_REQUEST_ID = "11111111-1111-4111-8111-111111111111";
 
 const WorkerApplicationResource = {
   group: "argoproj.io",
@@ -112,20 +68,6 @@ const StagedExternalApplication = JSON.stringify({
     syncPolicy: { automated: { enabled: true } },
   },
 });
-
-function operationForSyncRequest(request: unknown): Record<string, unknown> {
-  const syncRequest = SyncRequestSchema.parse(request);
-  return {
-    info: syncRequest.infos,
-    initiatedBy: { username: "buildkite" },
-    sync: {
-      ...(syncRequest.manifests === undefined
-        ? {}
-        : { manifests: syncRequest.manifests }),
-      resources: syncRequest.resources,
-    },
-  };
-}
 
 function expectSuspendedWorkerRequest(request: unknown): void {
   const syncRequest = SyncRequestSchema.parse(request);
@@ -334,7 +276,7 @@ test("Argo CD root pruning requires an exact revision", async () => {
   );
 });
 
-test("Argo CD CLI usage documents atomic sync and recovery identity", async () => {
+test("Argo CD CLI usage exposes one root release command", async () => {
   const process = Bun.spawn(["bun", "--no-install", "scripts/argocd.ts"], {
     cwd: path.resolve(import.meta.dir, "../../.."),
     stderr: "pipe",
@@ -347,21 +289,110 @@ test("Argo CD CLI usage documents atomic sync and recovery identity", async () =
 
   expect(exitCode).not.toBe(0);
   expect(stderr).toContain(
-    "sync <app> [--revision <v>] [--prune] [--async | --terminate-after-applied]",
+    "sync-managed <app> [--revision <v>] [--prune] [--terminate-after-applied]",
   );
   expect(stderr).toContain("[--request-id <uuid>]");
   expect(stderr).toContain(
+    "release-root apps <expected.json> --revision <v> --request-id <uuid>",
+  );
+  expect(stderr).toContain(
     "suspend-auto-sync <root-app> [--revision <v>] [--timeout <s>]",
   );
-  expect(stderr).toContain(
-    "stage-root-release <root-app> --revision <v> [--timeout <s>]",
+  expect(stderr).not.toContain("stage-root-release <root-app>");
+  expect(stderr).not.toContain("finalize-root-release apps");
+  expect(stderr).not.toContain("finalize-async-sync <app>");
+});
+
+test("release-root owns the complete dry-run lifecycle", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-root-"));
+  const expectedPath = path.join(directory, "expected.json");
+  await Bun.write(
+    expectedPath,
+    JSON.stringify([{ name: "apps", revision: "2.0.0-42" }]),
   );
-  expect(stderr).toContain(
-    "finalize-root-release apps --revision <v> --request-id <uuid>",
+
+  try {
+    const process = Bun.spawn(
+      [
+        "bun",
+        "--no-install",
+        "scripts/argocd.ts",
+        "release-root",
+        "apps",
+        expectedPath,
+        "--revision",
+        "2.0.0-42",
+        "--request-id",
+        "11111111-1111-4111-8111-111111111111",
+        "--dry-run",
+      ],
+      {
+        cwd: path.resolve(import.meta.dir, "../../.."),
+        stderr: "pipe",
+        stdout: "pipe",
+      },
+    );
+    const [exitCode, stdout, stderr] = await Promise.all([
+      process.exited,
+      new Response(process.stdout).text(),
+      new Response(process.stderr).text(),
+    ]);
+
+    expect(exitCode).toBe(0);
+    expect(stderr).toBe("");
+    expect(stdout).toContain("argocd release-root: apps at 2.0.0-42");
+    expect(stdout).toContain("argocd stage-root-release: apps at 2.0.0-42");
+    expect(stdout).toContain("would reconcile 1 expected Application(s)");
+    expect(stdout).toContain("argocd finalize-root-release: apps at 2.0.0-42");
+    expect(stdout).toContain("argocd release-health-wait: 1 expected");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("release-root rejects an inventory that names another apps revision", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-root-"));
+  const expectedPath = path.join(directory, "expected.json");
+  await Bun.write(
+    expectedPath,
+    JSON.stringify([{ name: "apps", revision: "2.0.0-42" }]),
   );
-  expect(stderr).toContain(
-    "finalize-async-sync <app> --revision <v> --request-id <uuid>",
-  );
+
+  try {
+    const process = Bun.spawn(
+      [
+        "bun",
+        "--no-install",
+        "scripts/argocd.ts",
+        "release-root",
+        "apps",
+        expectedPath,
+        "--revision",
+        "2.0.0-43",
+        "--request-id",
+        RELEASE_REQUEST_ID,
+        "--dry-run",
+      ],
+      {
+        cwd: path.resolve(import.meta.dir, "../../.."),
+        stderr: "pipe",
+        stdout: "pipe",
+      },
+    );
+    const [exitCode, stdout, stderr] = await Promise.all([
+      process.exited,
+      new Response(process.stdout).text(),
+      new Response(process.stderr).text(),
+    ]);
+
+    expect(exitCode).not.toBe(0);
+    expect(stderr).toContain(
+      "Release inventory declares apps 2.0.0-42; expected 2.0.0-43",
+    );
+    expect(stdout).not.toContain("stage-root-release");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 describe("Argo CD root prune safety", () => {
@@ -630,6 +661,12 @@ describe("Argo CD release gating", () => {
           });
         }
         if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/worker/managed-resources"
+        ) {
+          return Response.json({ items: [] });
+        }
+        if (
           request.method === "POST" &&
           url.pathname === "/api/v1/applications/apps/sync"
         ) {
@@ -713,6 +750,56 @@ describe("Argo CD release gating", () => {
   });
 });
 
+function expectStagedRootRequests(syncBodies: readonly unknown[]): void {
+  const applicationRequest = SyncRequestSchema.parse(syncBodies[0]);
+  expect(applicationRequest.revision).toBe("2.0.0-43");
+  expect(applicationRequest.infos).toContainEqual({
+    name: "ci.sjer.red/revision",
+    value: "2.0.0-43",
+  });
+  expect(applicationRequest.infos).toContainEqual({
+    name: "ci.sjer.red/request-id",
+    value: RELEASE_REQUEST_ID,
+  });
+  expect(applicationRequest.infos).toContainEqual({
+    name: "ci.sjer.red/release-phase",
+    value: "stage",
+  });
+  expect(applicationRequest.resources).toEqual([
+    WorkerApplicationResource,
+    {
+      group: "argoproj.io",
+      kind: "Application",
+      name: "external",
+    },
+  ]);
+  const applicationManifests = applicationRequest.manifests;
+  if (applicationManifests === undefined) {
+    throw new Error("Staged Applications are missing manifest overrides");
+  }
+  const policyRequest = SyncRequestSchema.parse(syncBodies[1]);
+  expect(policyRequest.revision).toBe("2.0.0-43");
+  expect(policyRequest.resources).toEqual([
+    {
+      group: "admissionregistration.k8s.io",
+      kind: "ValidatingAdmissionPolicy",
+      name: "pvc-backup-policy.sjer.red",
+    },
+  ]);
+  expect(JSON.parse(applicationManifests[0] ?? "")).toMatchObject({
+    spec: { syncPolicy: { automated: { enabled: false } } },
+  });
+  expect(JSON.parse(applicationManifests[1] ?? "")).toMatchObject({
+    spec: {
+      source: {
+        helm: { valuesObject: { storage: { size: "10Gi" } } },
+      },
+      syncPolicy: { automated: { enabled: false } },
+    },
+  });
+  expect(policyRequest.manifests).toBeUndefined();
+}
+
 describe("Argo CD root release staging", () => {
   test("requires an exact root revision", async () => {
     const process = Bun.spawn(
@@ -736,13 +823,15 @@ describe("Argo CD root release staging", () => {
     ]);
 
     expect(exitCode).not.toBe(0);
-    expect(stderr).toContain("--revision is required for stage-root-release");
+    expect(stderr).toContain(
+      "--revision and --request-id are required for stage-root-release",
+    );
   });
 
   test("stages root prerequisites while child auto-sync remains suspended", async () => {
     const syncBodies: unknown[] = [];
     let requestedOperation: unknown;
-    let activeSyncRequest: z.infer<typeof SyncRequestSchema> | undefined;
+    let activeSyncRequest: SyncRequest | undefined;
     let deleteRequests = 0;
     const server = Bun.serve({
       hostname: "127.0.0.1",
@@ -835,6 +924,8 @@ describe("Argo CD root release staging", () => {
           "apps",
           "--revision",
           "2.0.0-43",
+          "--request-id",
+          RELEASE_REQUEST_ID,
           "--timeout",
           "1",
         ],
@@ -863,45 +954,7 @@ describe("Argo CD root release staging", () => {
       expect(stdout).toContain("terminated applied sync operation: apps");
       expect(syncBodies).toHaveLength(2);
       expect(deleteRequests).toBe(2);
-      const applicationRequest = SyncRequestSchema.parse(syncBodies[0]);
-      expect(applicationRequest.revision).toBe("2.0.0-43");
-      expect(applicationRequest.infos).toContainEqual({
-        name: "ci.sjer.red/revision",
-        value: "2.0.0-43",
-      });
-      expect(applicationRequest.resources).toEqual([
-        WorkerApplicationResource,
-        {
-          group: "argoproj.io",
-          kind: "Application",
-          name: "external",
-        },
-      ]);
-      const applicationManifests = applicationRequest.manifests;
-      if (applicationManifests === undefined) {
-        throw new Error("Staged Applications are missing manifest overrides");
-      }
-      const policyRequest = SyncRequestSchema.parse(syncBodies[1]);
-      expect(policyRequest.revision).toBe("2.0.0-43");
-      expect(policyRequest.resources).toEqual([
-        {
-          group: "admissionregistration.k8s.io",
-          kind: "ValidatingAdmissionPolicy",
-          name: "pvc-backup-policy.sjer.red",
-        },
-      ]);
-      expect(JSON.parse(applicationManifests[0] ?? "")).toMatchObject({
-        spec: { syncPolicy: { automated: { enabled: false } } },
-      });
-      expect(JSON.parse(applicationManifests[1] ?? "")).toMatchObject({
-        spec: {
-          source: {
-            helm: { valuesObject: { storage: { size: "10Gi" } } },
-          },
-          syncPolicy: { automated: { enabled: false } },
-        },
-      });
-      expect(policyRequest.manifests).toBeUndefined();
+      expectStagedRootRequests(syncBodies);
     } finally {
       await server.stop(true);
     }
@@ -911,6 +964,9 @@ describe("Argo CD root release staging", () => {
 async function runReconcileRelease(
   origin: string,
   expected: readonly Record<string, unknown>[],
+  // Only the cases asserting request-bound adoption pass one; the rest exercise
+  // the unbound path, so an always-on identity would hide that difference.
+  requestId?: string,
 ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
   const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-"));
   const expectedPath = path.join(directory, "expected.json");
@@ -924,6 +980,7 @@ async function runReconcileRelease(
         "reconcile-release",
         expectedPath,
         "--skip-health-wait",
+        ...(requestId === undefined ? [] : ["--request-id", requestId]),
         "--timeout",
         "1",
       ],
@@ -950,9 +1007,34 @@ async function runReconcileRelease(
   }
 }
 
+/**
+ * Every child sync is preceded by the apply-safety preflight, which reads the
+ * child's live inventory and renders the revision it is about to request.
+ * Cases that are not about apply safety answer both with nothing.
+ */
+function emptyPreflight(
+  request: Request,
+  url: URL,
+  app: string,
+  revision: string,
+): Response | null {
+  if (request.method !== "GET") {
+    return null;
+  }
+  if (url.pathname === `/api/v1/applications/${app}/managed-resources`) {
+    return Response.json({ items: [] });
+  }
+  if (url.pathname === `/api/v1/applications/${app}/manifests`) {
+    expect(url.searchParams.get("revision")).toBe(revision);
+    return Response.json({ manifests: [] });
+  }
+  return null;
+}
+
 describe("Argo CD stale release protection", () => {
   test("retries a failed operation recorded for an otherwise current app", async () => {
     let requestedOperation: Record<string, unknown> | undefined;
+    let childSyncBody: unknown;
     let syncPosts = 0;
     const server = Bun.serve({
       hostname: "127.0.0.1",
@@ -973,10 +1055,14 @@ describe("Argo CD stale release protection", () => {
           url.pathname === "/api/v1/applications/worker/sync"
         ) {
           syncPosts += 1;
-          requestedOperation = operationForRootSyncRequest(
-            await request.json(),
-          );
+          const body: unknown = await request.json();
+          childSyncBody = body;
+          requestedOperation = operationForRootSyncRequest(body);
           return Response.json({ operation: requestedOperation });
+        }
+        const pre = emptyPreflight(request, url, "worker", "2.0.0-42");
+        if (pre !== null) {
+          return pre;
         }
         if (
           request.method === "GET" &&
@@ -1032,6 +1118,7 @@ describe("Argo CD stale release protection", () => {
           { name: "apps", revision: "2.0.0-42" },
           { name: "worker", revision: "2.0.0-42" },
         ],
+        RELEASE_REQUEST_ID,
       );
 
       expect(exitCode).toBe(0);
@@ -1039,6 +1126,18 @@ describe("Argo CD stale release protection", () => {
       expect(stdout).toContain("sync operation started: worker");
       expect(stdout).toContain("synced: worker");
       expect(syncPosts).toBe(1);
+      const childRequest = RootSyncRequestSchema.parse(childSyncBody);
+      expect(childRequest.infos).toContainEqual({
+        name: "ci.sjer.red/request-id",
+        value: RELEASE_REQUEST_ID,
+      });
+      expect(childRequest.infos).toContainEqual({
+        name: "ci.sjer.red/release-phase",
+        value: "child",
+      });
+      expect(
+        Object.keys(z.record(z.string(), z.unknown()).parse(childSyncBody)),
+      ).not.toContain("resources");
     } finally {
       await server.stop(true);
     }
@@ -1090,6 +1189,10 @@ describe("Argo CD stale release protection", () => {
               }),
             ],
           });
+        }
+        const lokiPreflight = emptyPreflight(request, url, "loki", "6.1.0");
+        if (lokiPreflight !== null) {
+          return lokiPreflight;
         }
         if (
           request.method === "GET" &&

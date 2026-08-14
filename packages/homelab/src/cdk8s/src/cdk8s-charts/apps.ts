@@ -69,6 +69,7 @@ import { createTrackerTrackerApp } from "@shepherdjerred/homelab/cdk8s/src/resou
 import { createAlertDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/alert-dashboard.ts";
 import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/stash.ts";
 import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
+import { createArgoCdApplicationAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/argocd-application-admission.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -78,6 +79,7 @@ export async function createAppsChart(app: App) {
 
   createStorageClasses(chart);
   createPriorityClasses(chart);
+  createArgoCdApplicationAdmissionPolicies(chart);
   createPvcBackupAdmissionPolicies(chart);
 
   new Namespace(chart, `maintenance-namespace`, {
