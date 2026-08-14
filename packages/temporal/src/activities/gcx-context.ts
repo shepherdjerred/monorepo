@@ -17,6 +17,29 @@ const GCX_CONTEXT_NAME = "homelab";
 const GCX_TOKEN_ENV = "GRAFANA_TOKEN";
 const GCX_LOGIN_TIMEOUT_MS = 15_000;
 
+// The child gets an explicit environment rather than a copy of the worker's.
+// This process holds unrelated credentials — Cloudflare, Buildkite, the GitHub
+// App key, S3, provider tokens — and handing gcx the whole environment would
+// undo the point of taking the credential out of argv: the secret would simply
+// be reachable one level down instead. gcx needs PATH to resolve helpers, HOME
+// for the default config location it falls back to, and GCX_CONFIG for the
+// path the worker pins. Anything else it does not get.
+const GCX_INHERITED_ENV = ["PATH", "HOME", "GCX_CONFIG"];
+
+/** The complete environment for a gcx child: the allowlist plus `overrides`. */
+function gcxChildEnv(
+  overrides: Record<string, string>,
+): Record<string, string> {
+  const inherited: Record<string, string> = {};
+  for (const name of GCX_INHERITED_ENV) {
+    const value = Bun.env[name];
+    if (value !== undefined) {
+      inherited[name] = value;
+    }
+  }
+  return { ...inherited, ...overrides };
+}
+
 export class GcxContextError extends Error {
   override readonly name = "GcxContextError";
 }
@@ -43,12 +66,15 @@ export type GcxSpawn = (
   kill: () => void;
 };
 
+// `env` is the child's complete environment, not an overlay on this process's:
+// Bun.spawn replaces the environment wholesale when `env` is given, which is
+// what keeps the worker's other credentials out of the child.
 const defaultSpawn: GcxSpawn = (args, env) =>
   Bun.spawn(args, {
     stdin: "ignore",
     stdout: "ignore",
     stderr: "pipe",
-    env: { ...Bun.env, ...env },
+    env,
   });
 
 type SettleResult =
@@ -80,7 +106,7 @@ async function loginToGcx(spawn: GcxSpawn, timeoutMs: number): Promise<void> {
   // the stored credential in place.
   const child = spawn(
     ["gcx", "login", GCX_CONTEXT_NAME, "--server", server, "--yes"],
-    { [GCX_TOKEN_ENV]: apiKey },
+    gcxChildEnv({ [GCX_TOKEN_ENV]: apiKey }),
   );
 
   const settled = settleChild(child);

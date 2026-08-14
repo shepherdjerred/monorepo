@@ -72,7 +72,30 @@ describe("ensureGcxContext", () => {
 
     expect(calls).toHaveLength(1);
     expect(calls[0]?.args).toEqual(EXPECTED_ARGS);
-    expect(calls[0]?.env).toEqual({ GRAFANA_TOKEN: TOKEN });
+    expect(calls[0]?.env["GRAFANA_TOKEN"]).toBe(TOKEN);
+  });
+
+  // Taking the credential out of argv is pointless if the child can still read
+  // every other secret the worker holds, so the child's environment is an
+  // allowlist rather than a copy of this process's.
+  test("gives gcx an allowlisted environment, not the worker's secrets", async () => {
+    Bun.env["CLOUDFLARE_API_TOKEN"] = "cf-unrelated-secret";
+    try {
+      const calls: SpawnCall[] = [];
+      await ensureGcxContext(stubSpawn({ exitCode: 0, calls }));
+
+      const env = calls[0]?.env ?? {};
+      expect(env["CLOUDFLARE_API_TOKEN"]).toBeUndefined();
+      // The canonical names this repo reads are inputs to the activity, not
+      // things gcx needs; only the vendor spelling is handed over.
+      expect(env["GRAFANA_API_KEY"]).toBeUndefined();
+      expect(env["GRAFANA_URL"]).toBeUndefined();
+      const allowed = new Set(["GCX_CONFIG", "GRAFANA_TOKEN", "HOME", "PATH"]);
+      expect(Object.keys(env).filter((name) => !allowed.has(name))).toEqual([]);
+      expect(env["GRAFANA_TOKEN"]).toBe(TOKEN);
+    } finally {
+      delete Bun.env["CLOUDFLARE_API_TOKEN"];
+    }
   });
 
   // argv is world-readable via /proc/<pid>/cmdline, so the credential must
@@ -123,7 +146,7 @@ describe("ensureGcxContext", () => {
     await ensureGcxContext(stubSpawn({ exitCode: 0, calls }));
 
     expect(calls[0]?.args).toEqual(EXPECTED_ARGS);
-    expect(calls[0]?.env).toEqual({ GRAFANA_TOKEN: TOKEN });
+    expect(calls[0]?.env["GRAFANA_TOKEN"]).toBe(TOKEN);
   });
 
   test("rejects at the deadline when the subprocess never settles", async () => {
