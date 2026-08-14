@@ -298,6 +298,7 @@ test("Argo CD CLI usage exposes one root release command", async () => {
   expect(stderr).toContain(
     "suspend-auto-sync <root-app> [--revision <v>] [--timeout <s>]",
   );
+  expect(stderr).toContain("verify-auto-sync <root-app> --revision <v>");
   expect(stderr).not.toContain("stage-root-release <root-app>");
   expect(stderr).not.toContain("finalize-root-release apps");
   expect(stderr).not.toContain("finalize-async-sync <app>");
@@ -344,7 +345,20 @@ test("release-root owns the complete dry-run lifecycle", async () => {
     expect(stdout).toContain("argocd stage-root-release: apps at 2.0.0-42");
     expect(stdout).toContain("would reconcile 1 expected Application(s)");
     expect(stdout).toContain("argocd finalize-root-release: apps at 2.0.0-42");
+    expect(stdout).toContain(
+      "argocd verify-auto-sync: apps at 2.0.0-42 (dry run)",
+    );
     expect(stdout).toContain("argocd release-health-wait: 1 expected");
+    // Ordering, not just presence: the auto-sync invariant has to run after the
+    // finalizer restores the declared policy and before the health wait, so a
+    // divergence is reported instead of the release spending its timeout on a
+    // tree already known to be broken.
+    expect(stdout.indexOf("argocd verify-auto-sync")).toBeGreaterThan(
+      stdout.indexOf("argocd finalize-root-release"),
+    );
+    expect(stdout.indexOf("argocd verify-auto-sync")).toBeLessThan(
+      stdout.indexOf("argocd release-health-wait"),
+    );
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

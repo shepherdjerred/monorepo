@@ -20,6 +20,8 @@
  *   bun packages/homelab/scripts/argocd.ts tree-health-wait <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> \
  *       [--revision <v>] [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts verify-auto-sync <root-app> \
+ *       --revision <v> [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts wait-deletion <app> \
  *       --group <g> --version <v> --kind <k> --namespace <ns> \
  *       [--timeout <s>] [--dry-run]
@@ -63,6 +65,7 @@ import {
   type ReleasePhase,
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
+import { autoSyncPolicyDivergences } from "./argocd-auto-sync-policy.ts";
 import { latestPublishedVersion } from "./helm-release-core.ts";
 import {
   analyzeApplySafety,
@@ -258,7 +261,19 @@ async function getApplication(
     const body = (await res.text()).slice(0, 1024);
     throw new Error(
       `ERROR: ${url.toString()} returned HTTP ${res.status.toString()}\n` +
-        `Response body (first 1KB): ${body}`,
+        `Response body (first 1KB): ${body}` +
+        // ArgoCD evaluates RBAC against the application's project, which it
+        // cannot look up for a name that does not exist, so a missing
+        // Application is a 403 and not a 404 on this endpoint. Say so, rather
+        // than leaving a typo'd or already-deleted name looking like a token
+        // problem. (Passing `project` would make it a clean 404, but most
+        // callers here do not know it — `delete-application` does, which is why
+        // its wait loop can rely on the 404.)
+        (res.status === 403
+          ? `\nA 403 here can mean the Application does not exist: the name is ` +
+            `unknown to ArgoCD, so it cannot resolve the project this request ` +
+            `would be authorized against.`
+          : ""),
     );
   }
   const data: unknown = await res.json();
@@ -2784,6 +2799,72 @@ async function activeRootReleasePhase(
   return observation.liveReleasePhase ?? null;
 }
 
+/**
+ * How many times to re-read the live Application list before reporting a
+ * divergence. The closing root sync uses `terminateAfterApplied`, so it returns
+ * as soon as the operation reports applied, while `/api/v1/applications` is
+ * served from the controller's informer cache — a single read can legitimately
+ * still show the pre-restore spec. Deliberately a small fixed count rather than
+ * the release timeout: a genuine divergence has to surface in seconds, not
+ * after burning the full timeout on a tree that is already broken.
+ */
+const AUTO_SYNC_SETTLE_ATTEMPTS = 3;
+
+/**
+ * Refuse to finish a release that left an Application's auto-sync policy
+ * disagreeing with the revision it just applied.
+ *
+ * This is the check that would have caught 2026-08-14, when two aborted
+ * releases left 63 of 64 Applications suspended and nothing reported it for
+ * ~1.5h. Suspension is a `spec` fact and every signal the release already
+ * watches is `status`, so a frozen tree is indistinguishable from a healthy one
+ * — all 63 read Synced and Healthy throughout. `releaseTreeReadiness` cannot
+ * see it by construction.
+ */
+async function assertLiveAutoSyncMatchesRelease(
+  rootAppName: string,
+  revision: string,
+  dryRun: boolean,
+): Promise<void> {
+  const exactRevision = BuildRevisionSchema.parse(revision);
+  console.log(
+    `--- argocd verify-auto-sync: ${rootAppName} at ${exactRevision}` +
+      `${dryRun ? " (dry run)" : ""}`,
+  );
+  if (dryRun) {
+    return;
+  }
+  const token = requireEnv("ARGOCD_TOKEN");
+  const manifests = await getApplicationManifests(
+    rootAppName,
+    exactRevision,
+    token,
+  );
+  let divergences: readonly string[] = [];
+  for (let attempt = 0; attempt < AUTO_SYNC_SETTLE_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) {
+      await Bun.sleep(operationPollIntervalMs());
+    }
+    divergences = autoSyncPolicyDivergences(
+      manifests,
+      await getApplications(token),
+    );
+    if (divergences.length === 0) {
+      console.log("live auto-sync policy matches the rendered revision");
+      return;
+    }
+  }
+  throw new Error(
+    `Refusing to complete the ${rootAppName} release at ${exactRevision} ` +
+      `because live auto-sync policy diverges from the rendered revision:\n` +
+      divergences.map((divergence) => `- ${divergence}`).join("\n") +
+      `\nInside a release this means the tree was left suspended and needs ` +
+      `the release rerun. Run standalone, it also reports the suspension a ` +
+      `concurrent release legitimately holds while it stages — check whether ` +
+      `${rootAppName} has a live operation before treating it as a freeze.`,
+  );
+}
+
 async function releaseRoot(
   rootAppName: string,
   expectedPath: string,
@@ -2852,6 +2933,14 @@ async function releaseRoot(
     timeoutSeconds,
     dryRun,
   );
+  // Ordered before the health wait deliberately. A wrong policy cannot make the
+  // health wait fail — it reads only `status` — so this is not a prerequisite.
+  // It runs first because a divergence is the more actionable diagnosis of the
+  // two, and because there is nothing to gain from spending the health-wait
+  // timeout on a tree already known to be broken. It also runs on the resume
+  // path, since `finalizeRootRelease` is unconditional: a resumed release is
+  // exactly the shape that produced the incident this guards.
+  await assertLiveAutoSyncMatchesRelease(rootAppName, exactRevision, dryRun);
   await releaseHealthWait(expectedPath, timeoutSeconds, dryRun);
 }
 
@@ -3092,6 +3181,8 @@ function usage(): never {
       "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> " +
       "[--revision <v>] [--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts verify-auto-sync <root-app> " +
+      "--revision <v> [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts wait-deletion <app> " +
       "--group <g> --version <v> --kind <k> --namespace <ns> " +
       "[--timeout <s>] [--dry-run]",
@@ -3244,6 +3335,18 @@ async function main(): Promise<void> {
         flag(argv, "revision"),
       );
       return;
+    // Standalone so an operator can answer "is anything still suspended?"
+    // without running a release — the question that took manual kubectl
+    // archaeology to answer during the 2026-08-14 freeze.
+    case "verify-auto-sync": {
+      const revision = flag(argv, "revision");
+      if (revision === undefined) {
+        console.error("verify-auto-sync requires an exact --revision.");
+        usage();
+      }
+      await assertLiveAutoSyncMatchesRelease(app, revision, dryRun);
+      return;
+    }
     case "reconcile-release":
       await reconcileRelease(
         app,
