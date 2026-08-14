@@ -481,7 +481,22 @@ function applicableFields(entry: ModelEntry): CrossCheckField[] {
   if (entry.pricing.modality !== "text") {
     return [];
   }
-  const fields: CrossCheckField[] = ["input", "output"];
+  // Embeddings emit no output tokens, so `output` is not a billing dimension
+  // for them — `text-embedding-3-small` carries a placeholder 0. Treating it as
+  // checkable made an upstream that CORRECTLY omits the price look like missing
+  // evidence, and fired a finding about a number that does not exist.
+  //
+  // Keyed on the category rather than `output === 0` deliberately: the category
+  // states why there is no dimension, while a zero price is a consequence that
+  // a genuinely free model would also produce. Both identify the same single
+  // row today; only one stays right if a promotional free price appears.
+  //
+  // This is a stopgap. It is the fourth model class this function has had to
+  // special-case, and the real fix is for entries to declare which fields
+  // upstream owns instead of having this infer it — see
+  // packages/docs/todos/llm-catalog-field-ownership.md.
+  const fields: CrossCheckField[] =
+    entry.category === "embedding" ? ["input"] : ["input", "output"];
   if (entry.contextWindow !== undefined && entry.pinnedContextWindow !== true) {
     fields.push("contextWindow");
   }

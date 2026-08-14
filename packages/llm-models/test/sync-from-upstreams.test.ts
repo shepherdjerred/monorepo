@@ -667,3 +667,54 @@ describe("mergeUpstreams", () => {
     expect(mergeUpstreams({}, {})).toBeUndefined();
   });
 });
+
+/** A text entry shaped like `text-embedding-3-small`: input-only pricing. */
+function embedding(): ModelEntry {
+  return entry({
+    pricing: { modality: "text", input: 0.02, output: 0 },
+    category: "embedding",
+    contextWindow: 8191,
+  });
+}
+
+describe("applicable fields for an embedding model", () => {
+  test("does not treat output as a checkable dimension", () => {
+    // Embeddings emit no output tokens. Marking `output` applicable made an
+    // upstream that CORRECTLY omits the price look like missing evidence, so
+    // LlmCatalogEvidenceMissing fired about a number that does not exist.
+    const merged = mergeUpstreams({ input: 0.02 }, undefined);
+    const verdict = verdictFor(embedding(), merged, {
+      applied: [],
+      rejectedByField: {},
+      rejected: [],
+    });
+    expect(verdict.measured).toEqual(["input"]);
+    expect(verdict.unmeasured).toEqual(["contextWindow"]);
+    expect(verdict.unmeasured).not.toContain("output");
+  });
+
+  test("still cross-checks the dimensions an embedding does bill for", () => {
+    // The narrowing must not turn into "skip embeddings" — the input price is
+    // real, and a reseller markup on it is the exact failure this script
+    // exists to catch. A 150% jump must still be caught and withheld.
+    const subject = embedding();
+    const merged = mergeUpstreams({ input: 0.05 }, undefined);
+    if (merged === undefined) {
+      throw new Error("fixture supplied no upstream values");
+    }
+    const result = reconcile("subject", subject, merged, { now: NOW });
+    expect(result.rejectedByField.input).toContain("subject.input");
+    // Withheld means the catalog keeps its own number.
+    expect(subject.pricing).toMatchObject({ input: 0.02 });
+  });
+
+  test("an ordinary text model still checks output", () => {
+    const merged = mergeUpstreams({ input: 5 }, undefined);
+    const verdict = verdictFor(entry({}), merged, {
+      applied: [],
+      rejectedByField: {},
+      rejected: [],
+    });
+    expect(verdict.unmeasured).toContain("output");
+  });
+});
