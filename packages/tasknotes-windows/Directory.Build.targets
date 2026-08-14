@@ -1,0 +1,31 @@
+<Project>
+  <PropertyGroup Condition="'$(NeedsTaskNotesNative)' == 'true'">
+    <TaskNotesCoreRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../tasknotes-core'))</TaskNotesCoreRoot>
+    <TaskNotesRustProfile Condition="'$(Configuration)' == 'Release'">release</TaskNotesRustProfile>
+    <TaskNotesRustProfile Condition="'$(TaskNotesRustProfile)' == ''">debug</TaskNotesRustProfile>
+    <TaskNotesRustProfileArgument Condition="'$(TaskNotesRustProfile)' == 'release'">--release</TaskNotesRustProfileArgument>
+    <TaskNotesNativeFileName Condition="$([MSBuild]::IsOSPlatform('Windows'))">tasknotes_core_ffi.dll</TaskNotesNativeFileName>
+    <TaskNotesNativeFileName Condition="$([MSBuild]::IsOSPlatform('OSX'))">libtasknotes_core_ffi.dylib</TaskNotesNativeFileName>
+    <TaskNotesNativeFileName Condition="$([MSBuild]::IsOSPlatform('Linux'))">libtasknotes_core_ffi.so</TaskNotesNativeFileName>
+    <TaskNotesNativeSource>$([System.IO.Path]::Combine('$(TaskNotesCoreRoot)', 'target', '$(TaskNotesRustProfile)', '$(TaskNotesNativeFileName)'))</TaskNotesNativeSource>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(NeedsTaskNotesNative)' == 'true'">
+    <Content Include="$(TaskNotesNativeSource)">
+      <Link>$(TaskNotesNativeFileName)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <Target Name="BuildTaskNotesNative" BeforeTargets="PrepareForBuild" Condition="'$(NeedsTaskNotesNative)' == 'true'">
+    <Error Condition="'$(TaskNotesNativeFileName)' == ''" Text="TaskNotes native builds do not support this host operating system." />
+    <Exec
+      Command="cargo build --package tasknotes-core-ffi --lib $(TaskNotesRustProfileArgument)"
+      WorkingDirectory="$(TaskNotesCoreRoot)" />
+  </Target>
+
+  <Target Name="CopyTaskNotesNative" AfterTargets="Build" DependsOnTargets="BuildTaskNotesNative" Condition="'$(NeedsTaskNotesNative)' == 'true'">
+    <Copy SourceFiles="$(TaskNotesNativeSource)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

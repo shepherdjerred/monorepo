@@ -269,6 +269,21 @@
       "entry": ["scripts/*.ts"],
       "project": ["scripts/**/*.ts"]
     },
+    "packages/tasknotes-core": {
+      "entry": ["ci/*.ts"],
+      "project": ["ci/**/*.ts"]
+    },
+    // The Rust core and the sync server are consumed by path, not by import:
+    // MSBuild compiles the core's generated C# and the tests spawn the server
+    // from its directory. The workspace deps are what order turbo's graph.
+    "packages/tasknotes-windows": {
+      "entry": ["scripts/*.ts", "eslint.config.ts"],
+      "project": ["scripts/**/*.ts", "e2e/**/*.ts", "eslint.config.ts"],
+      "ignoreDependencies": ["tasknotes-core", "tasknotes-server"]
+    },
+    "packages/tasknotes-e2e": {
+      "ignoreDependencies": ["tasknotes-server"]
+    },
     "packages/tasknotes-server": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]

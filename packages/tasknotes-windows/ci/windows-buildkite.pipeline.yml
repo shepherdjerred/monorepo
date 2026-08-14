@@ -1,0 +1,72 @@
+# Prepared only. This file is intentionally not uploaded by .buildkite/pipeline.yml.
+# Activation is blocked by packages/docs/todos/tasknotes-windows-buildkite-worker.md.
+steps:
+  - label: ":windows: TaskNotes Windows release gate"
+    key: "tasknotes-windows-verify"
+    agents:
+      queue: "tasknotes-windows-interactive"
+      os: "windows-11-x64"
+      unlocked: "true"
+    timeout_in_minutes: 180
+    command:
+      - "mise install"
+      - "bun install --frozen-lockfile"
+      - "bunx turbo run generate"
+      - "bun run windows:verify"
+    artifact_paths:
+      - "packages/tasknotes-windows/artifacts/test-results/**/*.junit.xml"
+      - "packages/tasknotes-windows/artifacts/test-results/**/*.trx"
+      - "packages/tasknotes-windows/artifacts/test-results/**/coverage.cobertura.xml"
+      - "packages/tasknotes-windows/artifacts/e2e/**/*"
+      - "packages/tasknotes-windows/artifacts/visual-matrix/**/*"
+      - "packages/tasknotes-windows/AppPackages/**/*"
+
+  # Each profile needs a real unlocked desktop session configured to match its
+  # agent tag. These are not simulated; visual-profile.ts verifies OS state.
+  - group: ":mag: TaskNotes visual and accessibility profiles"
+    steps:
+      - label: "100% light"
+        agents:
+          {
+            queue: "tasknotes-windows-interactive",
+            visual-profile: "100-light",
+          }
+        env: { TASKNOTES_VISUAL_PROFILE: "100-light" }
+        command: ["bun run windows:visual-profile"]
+      - label: "100% dark"
+        agents:
+          { queue: "tasknotes-windows-interactive", visual-profile: "100-dark" }
+        env: { TASKNOTES_VISUAL_PROFILE: "100-dark" }
+        command: ["bun run windows:visual-profile"]
+      - label: "100% high contrast"
+        agents:
+          {
+            queue: "tasknotes-windows-interactive",
+            visual-profile: "100-high-contrast",
+          }
+        env: { TASKNOTES_VISUAL_PROFILE: "100-high-contrast" }
+        command: ["bun run windows:visual-profile"]
+      - label: "200% light"
+        agents:
+          {
+            queue: "tasknotes-windows-interactive",
+            visual-profile: "200-light",
+          }
+        env: { TASKNOTES_VISUAL_PROFILE: "200-light" }
+        command: ["bun run windows:visual-profile"]
+      - label: "200% dark"
+        agents:
+          { queue: "tasknotes-windows-interactive", visual-profile: "200-dark" }
+        env: { TASKNOTES_VISUAL_PROFILE: "200-dark" }
+        command: ["bun run windows:visual-profile"]
+      - label: "200% high contrast"
+        agents:
+          {
+            queue: "tasknotes-windows-interactive",
+            visual-profile: "200-high-contrast",
+          }
+        env: { TASKNOTES_VISUAL_PROFILE: "200-high-contrast" }
+        command: ["bun run windows:visual-profile"]
+    artifact_paths:
+      - "packages/tasknotes-windows/artifacts/visual-matrix/**/*"
+      - "packages/tasknotes-windows/artifacts/e2e/**/*"

@@ -4,8 +4,11 @@ node_modules/
 # Build outputs
 dist/
 build/
+**/bin/
+**/obj/
 .build/
 target/
+**/AppPackages/
 .next/
 .astro/
 .expo/

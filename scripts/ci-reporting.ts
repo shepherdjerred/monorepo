@@ -17,7 +17,7 @@ const StepSchema = z.discriminatedUnion("runner", [
     .object({
       runner: z.literal("vitest"),
       name: z.string().min(1).optional(),
-      args: z.array(z.string()),
+      args: z.array(z.string()).min(1),
     })
     .strict(),
   z
@@ -32,6 +32,13 @@ const StepSchema = z.discriminatedUnion("runner", [
       runner: z.literal("cargo"),
       name: z.string().min(1).optional(),
       args: z.array(z.string()),
+    })
+    .strict(),
+  z
+    .object({
+      runner: z.literal("dotnet"),
+      name: z.string().min(1).optional(),
+      args: z.array(z.string()).min(1),
     })
     .strict(),
   z
@@ -168,6 +175,7 @@ function stepTargetPaths(step: TestStep): readonly string[] {
     case "vitest":
     case "go":
     case "cargo":
+    case "dotnet":
       return step.args;
     case "command":
       return step.command;
@@ -394,13 +402,14 @@ export async function completeJUnitReport({
   exitCode,
 }: CompleteJUnitReportOptions): Promise<CompletedJUnitReport> {
   try {
-    if (runner === "command") {
+    const report = Bun.file(reportPath);
+    if (runner === "command" || !(await report.exists())) {
       await Bun.write(
         reportPath,
         syntheticJUnit(workspace, name, durationSeconds, exitCode),
       );
     } else {
-      const xml = await Bun.file(reportPath).text();
+      const xml = await report.text();
       await Bun.write(reportPath, namespaceJUnit(xml, workspace));
     }
     return { exitCode };

@@ -1,56 +1,72 @@
 ---
-title: About Tasks for Obsidian
-description: Why a native mobile app sits over a markdown vault, and where its boundary currently is.
+title: About the TaskNotes clients
+description: Why native and React Native clients share one Rust policy core over an authoritative markdown vault.
 sidebar:
   order: 6
 ---
 
-Tasks for Obsidian is a React Native app over the TaskNotes markdown vault. The
-durable data stays as markdown files on the server; the app is a fast surface
-over them.
+TaskNotes keeps durable task data in a markdown vault while several clients
+provide platform-native interaction. The vault remains authoritative; clients
+cache and queue work but never become a second source of truth.
 
-The tension it manages: markdown files are the right storage for tasks you want
-to own forever, and completely the wrong storage for a phone that is
-occasionally offline and needs to feel instant.
+The central tension is unchanged. Markdown is ideal for data meant to outlive
+an application, but poorly suited to an occasionally offline device that must
+feel immediate.
 
-## Why the vault stays authoritative
+## Why policy lives in a shared core
 
-Task data lives in the vault, not in an app database that syncs to it. There is
-no second source of truth to reconcile.
+Recurrence, mutations, filtering, and synchronization are easy to make almost
+identical. Almost identical is dangerous when every client edits the same
+files.
 
-That constrains the app — every write eventually has to become a file edit — but
-it means the tasks remain readable, greppable, and portable without the app
-existing. A task app that outlives its vendor is the whole point of storing
-tasks in Obsidian.
+The native macOS and Windows clients therefore call one Rust core through
+generated UniFFI bindings. Their shells provide storage, HTTP, time, randomness,
+and retry timers. They do not reinterpret domain or wire rules.
 
-Offline writes queue and replay rather than being applied locally and merged
-later.
+Windows adds a portable Presentation layer between WinUI and the host. Focused
+view models own navigation, validation, command state, and screen projections.
+This keeps Windows UI code testable without loading WinUI or the generated
+binding.
 
-## The current boundary
+The React Native client still has a TypeScript implementation. Both languages
+execute the same language-neutral JSON scenarios and recurrence corpus. Those
+fixtures are the independent oracle that exposes drift.
 
-- **Quick Add** does contextual capture, natural-language dates, and
-  save-and-add-another.
-- **Task detail** organizes a task across projects, tags, and contexts. List
-  actions do bulk completion, deletion, scheduling, and priority changes.
-- **Saved views** are device-local definitions. They can be created, renamed,
-  reordered, favorited, styled, and deleted without touching task files.
+## Why clients still have host code
 
-Saved views being device-local is a deliberate split: a view is a preference
-about how you look at your tasks, not data about the tasks, so it has no
-business writing into the vault.
+The Rust core deliberately performs no filesystem, network, or clock I/O. Each
+platform owns the capabilities only it can implement correctly.
 
-## How the boundary is defended
+- macOS uses app-container files, URLSession, and Keychain-backed settings.
+- Windows uses atomic local-data files, HttpClient, and Credential Locker.
+- React Native integrates with its existing mobile storage and navigation.
 
-The simulator E2E suite checks the **authoritative markdown files** after UI
-flows — not just the UI state.
+This split preserves platform-native security and lifecycle behavior without
+copying synchronization policy.
 
-That is the only assertion that actually proves the app and the vault agree.
-Coverage includes offline replay, recurring completion, saved-view lifecycle,
-and uncomplete persistence, each of which is a place where a UI could plausibly
-look right while the file was wrong.
+## What remains authoritative
+
+Every successful mutation eventually becomes a markdown edit on the server.
+Offline commands are durable and replayable. Mutations the server cannot safely
+apply are parked for an explicit retry or discard decision.
+
+The iOS simulator and Windows packaged-app suites share orchestration for
+temporary seeded vaults, real server processes, bearer authentication, and a
+deterministic network-failure proxy. Platform drivers remain native: Maestro
+drives iOS, while Windows uses UI Automation directly.
+
+Parity is an evidence contract, not a list of test names. Each applicable
+surface names the UI, server, persistence, or markdown assertions that must run
+before the Windows gate accepts it.
+
+The strongest integration checks inspect resulting markdown, not merely a
+client's rendered state. A UI can look correct while the vault is wrong; the
+file is the contract that matters.
 
 ## Related
 
-- [The React Native app](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasks-for-obsidian)
+- [React Native client](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasks-for-obsidian)
+- [Rust core and generated bindings](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasknotes-core)
+- [Native macOS client](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasknotes-macos)
+- [Native Windows client](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasknotes-windows)
 - [TaskNotes server](https://github.com/shepherdjerred/monorepo/tree/main/packages/tasknotes-server)
-- [Product comparison and remaining gaps](/working/guides/2026-07-22_todoist-feature-comparison/)

@@ -1,0 +1,135 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  // Every task here shells out to the mise-pinned .NET SDK. Turbo's strict env
+  // mode drops MISE_DATA_DIR, which the CI image sets to /opt/mise, so without
+  // the passthrough `mise where dotnet` resolves against the default
+  // ~/.local/share/mise and reports the SDK as not installed.
+  "tasks": {
+    "build": {
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "MISE_DATA_DIR",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "inputs": [
+        "src/**",
+        "tests/**",
+        "Directory.Build.props",
+        "Directory.Build.targets",
+        "Directory.Packages.props",
+        "projects.json",
+        "coverage-baseline.json",
+        "coverage.settings.xml",
+        "stryker-config.json",
+        ".config/dotnet-tools.json",
+        "TaskNotes.Windows.Portable.slnx",
+        "**/packages.lock.json",
+        "!**/bin/**",
+        "!**/obj/**"
+      ],
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["build", "^build", "generate"],
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "MISE_DATA_DIR",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "outputs": []
+    },
+    "lint": {
+      "dependsOn": ["typecheck", "^build", "generate"],
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "MISE_DATA_DIR",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["lint", "^build", "generate"],
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "MISE_DATA_DIR",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "outputs": []
+    },
+    "test:ci": {
+      "dependsOn": ["lint", "^build", "generate"],
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "MISE_DATA_DIR",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "outputs": []
+    },
+    "test:report": {
+      "dependsOn": ["lint", "^build", "generate"],
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "MISE_DATA_DIR",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "outputs": []
+    },
+    // Ordered after test:ci rather than beside it: both execute the same test
+    // assemblies, and the coverage-instrumented run collides with a concurrent
+    // plain run of those binaries, killing one host with SIGBUS. Two plain runs
+    // overlap safely, so only the coverage pass needs the exclusive turn.
+    "coverage:portable": {
+      "dependsOn": ["lint", "^build", "generate", "test:ci"],
+      "cache": false,
+      "passThroughEnv": [
+        "APPDATA",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "LOCALAPPDATA",
+        "MISE_DATA_DIR",
+        "NO_PROXY",
+        "TEMP",
+        "TMP",
+        "USERPROFILE"
+      ],
+      "outputs": []
+    }
+  }
+}

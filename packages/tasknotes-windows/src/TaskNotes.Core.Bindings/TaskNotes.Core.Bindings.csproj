@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>TaskNotes.Core.Bindings</AssemblyName>
+    <RootNamespace>TaskNotes.Core.Bindings</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../../tasknotes-core/bindings/csharp/TaskNotesCore.cs" Link="Generated/TaskNotesCore.cs" />
+  </ItemGroup>
+</Project>

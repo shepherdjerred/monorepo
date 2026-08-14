@@ -914,24 +914,7 @@ public protocol FfiSyncEngineProtocol: AnyObject, Sendable {
     func dispatch(input: CommandInput) throws  -> Task?
     
     /**
-     * Stop this engine from initiating new work.
-     *
-     * Cancels the armed retry timer and arms no new one, so a failure already
-     * in flight cannot resurrect a replaced engine.
-     *
-     * In-flight requests are abandoned **before** the lock is taken. That
-     * ordering is the whole reason cancellation is a transport capability:
-     * were it done after, a shell replacing its server mid-drain would block
-     * here for the length of a network timeout.
-     *
-     * # Errors
-     *
-     * Reports a poisoned lock.
-     */
-    func dispose() throws 
-    
-    /**
-     * Whether [`FfiSyncEngine::dispose`] has been called.
+     * Whether [`FfiSyncEngine::shutdown`] has been called.
      *
      * # Errors
      *
@@ -1004,6 +987,23 @@ public protocol FfiSyncEngineProtocol: AnyObject, Sendable {
      * discarded — read it back from [`FfiSyncEngine::status`].
      */
     func settle() throws 
+    
+    /**
+     * Stop this engine from initiating new work.
+     *
+     * Cancels the armed retry timer and arms no new one, so a failure already
+     * in flight cannot resurrect a replaced engine.
+     *
+     * In-flight requests are abandoned **before** the lock is taken. That
+     * ordering is the whole reason cancellation is a transport capability:
+     * were it done after, a shell replacing its server mid-drain would block
+     * here for the length of a network timeout.
+     *
+     * # Errors
+     *
+     * Reports a poisoned lock.
+     */
+    func shutdown() throws 
     
     /**
      * Everything the UI reads, frozen at this instant.
@@ -1183,29 +1183,7 @@ open func dispatch(input: CommandInput)throws  -> Task?  {
 }
     
     /**
-     * Stop this engine from initiating new work.
-     *
-     * Cancels the armed retry timer and arms no new one, so a failure already
-     * in flight cannot resurrect a replaced engine.
-     *
-     * In-flight requests are abandoned **before** the lock is taken. That
-     * ordering is the whole reason cancellation is a transport capability:
-     * were it done after, a shell replacing its server mid-drain would block
-     * here for the length of a network timeout.
-     *
-     * # Errors
-     *
-     * Reports a poisoned lock.
-     */
-open func dispose()throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
-    uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_dispose(
-            self.uniffiCloneHandle(),$0
-    )
-}
-}
-    
-    /**
-     * Whether [`FfiSyncEngine::dispose`] has been called.
+     * Whether [`FfiSyncEngine::shutdown`] has been called.
      *
      * # Errors
      *
@@ -1314,6 +1292,28 @@ open func retryDeadLetter(id: String)throws   {try rustCallWithError(FfiConverte
      */
 open func settle()throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
     uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_settle(
+            self.uniffiCloneHandle(),$0
+    )
+}
+}
+    
+    /**
+     * Stop this engine from initiating new work.
+     *
+     * Cancels the armed retry timer and arms no new one, so a failure already
+     * in flight cannot resurrect a replaced engine.
+     *
+     * In-flight requests are abandoned **before** the lock is taken. That
+     * ordering is the whole reason cancellation is a transport capability:
+     * were it done after, a shell replacing its server mid-drain would block
+     * here for the length of a network timeout.
+     *
+     * # Errors
+     *
+     * Reports a poisoned lock.
+     */
+open func shutdown()throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_shutdown(
             self.uniffiCloneHandle(),$0
     )
 }
@@ -3746,13 +3746,85 @@ public protocol TaskNotesApiProtocol: AnyObject, Sendable {
     /**
      * Abandon every request currently in flight.
      *
-     * Takes no engine lock on purpose. The engine's own `dispose()` has to
+     * Takes no engine lock on purpose. The engine's own `shutdown()` has to
      * take one, and the lock is held for the whole of a blocking drain — so a
      * cancel routed through the engine could only ever run once the request it
      * meant to cancel had already finished. This is the path that works while
      * the app is quitting mid-request.
      */
     func cancelAll() 
+    
+    /**
+     * Toggle the current interval between running and paused.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+    func pausePomodoro() throws  -> PomodoroStatus
+    
+    /**
+     * Read the current server-backed focus interval.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+    func pomodoroStatus() throws  -> PomodoroStatus
+    
+    /**
+     * Start a server-backed focus interval, optionally assigned to a task.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+    func startPomodoro(taskId: TaskId?) throws  -> PomodoroStatus
+    
+    /**
+     * Start tracking time against a task through the core-owned wire client.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+    func startTimeTracking(taskId: TaskId) throws  -> Task
+    
+    /**
+     * Stop the current server-backed focus interval.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+    func stopPomodoro() throws  -> PomodoroStatus
+    
+    /**
+     * Stop tracking time against a task through the core-owned wire client.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+    func stopTimeTracking(taskId: TaskId) throws  -> Task
+    
+    /**
+     * Read tracked-time totals for one task.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+    func taskTime(taskId: TaskId) throws  -> TaskTime
+    
+    /**
+     * Read the aggregate time report for a named server period.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+    func timeSummary(period: String) throws  -> TimeSummary
     
 }
 /**
@@ -3857,7 +3929,7 @@ open func baseUrl() -> String  {
     /**
      * Abandon every request currently in flight.
      *
-     * Takes no engine lock on purpose. The engine's own `dispose()` has to
+     * Takes no engine lock on purpose. The engine's own `shutdown()` has to
      * take one, and the lock is held for the whole of a blocking drain — so a
      * cancel routed through the engine could only ever run once the request it
      * meant to cancel had already finished. This is the path that works while
@@ -3868,6 +3940,131 @@ open func cancelAll()  {try! rustCall() {
             self.uniffiCloneHandle(),$0
     )
 }
+}
+    
+    /**
+     * Toggle the current interval between running and paused.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+open func pausePomodoro()throws  -> PomodoroStatus  {
+    return try  FfiConverterTypePomodoroStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pause_pomodoro(
+            self.uniffiCloneHandle(),$0
+    )
+})
+}
+    
+    /**
+     * Read the current server-backed focus interval.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+open func pomodoroStatus()throws  -> PomodoroStatus  {
+    return try  FfiConverterTypePomodoroStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_pomodoro_status(
+            self.uniffiCloneHandle(),$0
+    )
+})
+}
+    
+    /**
+     * Start a server-backed focus interval, optionally assigned to a task.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+open func startPomodoro(taskId: TaskId?)throws  -> PomodoroStatus  {
+    return try  FfiConverterTypePomodoroStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_pomodoro(
+            self.uniffiCloneHandle(),
+        FfiConverterOptionTypeTaskId.lower(taskId),$0
+    )
+})
+}
+    
+    /**
+     * Start tracking time against a task through the core-owned wire client.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+open func startTimeTracking(taskId: TaskId)throws  -> Task  {
+    return try  FfiConverterTypeTask_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_start_time_tracking(
+            self.uniffiCloneHandle(),
+        FfiConverterTypeTaskId_lower(taskId),$0
+    )
+})
+}
+    
+    /**
+     * Stop the current server-backed focus interval.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+open func stopPomodoro()throws  -> PomodoroStatus  {
+    return try  FfiConverterTypePomodoroStatus_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_pomodoro(
+            self.uniffiCloneHandle(),$0
+    )
+})
+}
+    
+    /**
+     * Stop tracking time against a task through the core-owned wire client.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+open func stopTimeTracking(taskId: TaskId)throws  -> Task  {
+    return try  FfiConverterTypeTask_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_stop_time_tracking(
+            self.uniffiCloneHandle(),
+        FfiConverterTypeTaskId_lower(taskId),$0
+    )
+})
+}
+    
+    /**
+     * Read tracked-time totals for one task.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+open func taskTime(taskId: TaskId)throws  -> TaskTime  {
+    return try  FfiConverterTypeTaskTime_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_task_time(
+            self.uniffiCloneHandle(),
+        FfiConverterTypeTaskId_lower(taskId),$0
+    )
+})
+}
+    
+    /**
+     * Read the aggregate time report for a named server period.
+     *
+     * # Errors
+     *
+     * Propagates the core's transport, HTTP, and response-validation failure.
+     */
+open func timeSummary(period: String)throws  -> TimeSummary  {
+    return try  FfiConverterTypeTimeSummary_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_tasknotesapi_time_summary(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(period),$0
+    )
+})
 }
     
 
@@ -11439,6 +11636,30 @@ public func projectPath(value: String) -> String  {
 })
 }
 /**
+ * Parse the persisted spelling of a recurrence anchor.
+ *
+ * # Errors
+ *
+ * Returns a validation failure for any value outside the closed set.
+ */
+public func recurrenceAnchorParse(raw: String)throws  -> RecurrenceAnchor  {
+    return try  FfiConverterTypeRecurrenceAnchor_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_func_recurrence_anchor_parse(
+        FfiConverterString.lower(raw),$0
+    )
+})
+}
+/**
+ * The persisted spelling of a recurrence anchor.
+ */
+public func recurrenceAnchorWireValue(anchor: RecurrenceAnchor) -> String  {
+    return try!  FfiConverterString.lift(try! rustCall() {
+    uniffi_tasknotes_core_ffi_fn_func_recurrence_anchor_wire_value(
+        FfiConverterTypeRecurrenceAnchor_lower(anchor),$0
+    )
+})
+}
+/**
  * Read a sort specification back from the core's own persisted document.
  *
  * # Errors
@@ -12532,6 +12753,12 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_func_project_path() != 27994) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_anchor_parse() != 60401) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_anchor_wire_value() != 51521) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_tasknotes_core_ffi_checksum_func_sort_config_from_json() != 3755) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -12712,10 +12939,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_dispatch() != 57833) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_dispose() != 2884) {
-        return InitializationResult.apiChecksumMismatch
-    }
-    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_disposed() != 34611) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_disposed() != 829) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_sync_requested() != 53643) {
@@ -12734,6 +12958,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_settle() != 39142) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_shutdown() != 2258) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_snapshot() != 19360) {
@@ -12829,7 +13056,31 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_base_url() != 25373) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_cancel_all() != 58118) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_cancel_all() != 25500) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pause_pomodoro() != 54250) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_pomodoro_status() != 14635) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_pomodoro() != 6368) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_start_time_tracking() != 50502) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_pomodoro() != 55687) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_stop_time_tracking() != 31911) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_task_time() != 65051) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_tasknotesapi_time_summary() != 60823) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new() != 45268) {

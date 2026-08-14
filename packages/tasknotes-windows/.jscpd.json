@@ -1,0 +1,11 @@
+{
+  "path": ["src", "tests"],
+  "pattern": "**/*.cs",
+  "ignore": ["**/bin/**", "**/obj/**"],
+  "minLines": 12,
+  "minTokens": 80,
+  "threshold": 0,
+  "gitignore": true,
+  "silent": false,
+  "reporters": ["console"]
+}

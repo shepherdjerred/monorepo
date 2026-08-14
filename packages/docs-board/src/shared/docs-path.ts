@@ -5,5 +5,8 @@ export function isWorkflowDocumentPath(path: string): boolean {
 }
 
 export function workflowDocumentPaths(paths: Iterable<string>): string[] {
-  return [...paths].filter((path) => isWorkflowDocumentPath(path)).sort();
+  return [...paths]
+    .map((path) => path.replaceAll("\\", "/"))
+    .filter((path) => isWorkflowDocumentPath(path))
+    .sort();
 }
