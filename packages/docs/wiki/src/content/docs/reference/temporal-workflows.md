@@ -16,15 +16,15 @@ Cron times are `America/Los_Angeles` wall-clock. Source:
 
 ## Repo upkeep
 
-| Workflow            | Trigger     | Brain                            | Output          |
-| ------------------- | ----------- | -------------------------------- | --------------- |
-| fetcher             | daily 05:00 | deterministic                    | S3 overwrite    |
-| deps-summary        | Mon 09:00   | deterministic + optional summary | heartbeat email |
-| llm-catalog-refresh | Mon 09:00   | deterministic                    | PR              |
-| homelab-crd-imports | daily 05:30 | deterministic                    | PR              |
-| pokeemerald-data    | daily 04:30 | deterministic                    | PR              |
-| CI I/O impact       | daily 09:00 | deterministic                    | heartbeat email |
-| protobufjs v8 watch | Mon 09:00   | deterministic                    | heartbeat email |
+| Workflow            | Trigger     | Brain                            | Output                                                                      |
+| ------------------- | ----------- | -------------------------------- | --------------------------------------------------------------------------- |
+| fetcher             | daily 05:00 | deterministic                    | S3 overwrite                                                                |
+| deps-summary        | Mon 09:00   | deterministic + optional summary | heartbeat email                                                             |
+| llm-catalog-refresh | Mon 09:00   | deterministic                    | PR or [durable alert](/explanation/temporal/workflow-families/#repo-upkeep) |
+| homelab-crd-imports | daily 05:30 | deterministic                    | PR                                                                          |
+| pokeemerald-data    | daily 04:30 | deterministic                    | PR                                                                          |
+| CI I/O impact       | daily 09:00 | deterministic                    | heartbeat email                                                             |
+| protobufjs v8 watch | Mon 09:00   | deterministic                    | heartbeat email                                                             |
 
 ## Scout
 

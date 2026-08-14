@@ -13,6 +13,7 @@
 //! Cargo must never run from an Xcode build phase; this binary is the only
 //! entry point that drives it.
 
+mod csharp;
 mod process;
 mod swift;
 
@@ -25,8 +26,8 @@ USAGE:
     cargo xtask <COMMAND> [OPTIONS]
 
 COMMANDS:
-    generate-bindings   Regenerate the committed Swift bindings in bindings/
-    check-bindings      Regenerate them, then fail if the committed copy moved
+    generate-bindings   Regenerate the committed Swift and C# bindings
+    check-bindings      Regenerate them, then fail if a committed copy moved
     build-xcframework   Build the Apple static libraries and package them
     check-xcframework   Fail if the built XCFramework predates the bindings
     verify-swift        Compile and run a Swift smoke test against the package
@@ -39,7 +40,8 @@ OPTIONS:
                         One of: macos, ios, ios-sim
 
 NOTES:
-    generate-bindings and check-bindings run on any host, Linux included.
+    generate-bindings and check-bindings run on any host, Linux included, and
+    require the mise-pinned uniffi-bindgen-cs tool.
     build-xcframework and verify-swift require macOS.
     check-xcframework only compares timestamps, so it runs anywhere — but it
     can only pass where build-xcframework has run.
@@ -64,8 +66,16 @@ fn main() -> ExitCode {
 fn dispatch(arguments: &[String]) -> Result<String, String> {
     match parse(arguments)? {
         Command::Help => Ok(USAGE.to_owned()),
-        Command::GenerateBindings { profile } => swift::generate_bindings(&profile),
-        Command::CheckBindings { profile } => swift::check_bindings(&profile),
+        Command::GenerateBindings { profile } => {
+            let swift = swift::generate_bindings(&profile)?;
+            let csharp = csharp::generate_bindings(&profile)?;
+            Ok(format!("{swift}{csharp}"))
+        }
+        Command::CheckBindings { profile } => {
+            let swift = swift::check_bindings(&profile)?;
+            let csharp = csharp::check_bindings(&profile)?;
+            Ok(format!("{swift}{csharp}"))
+        }
         Command::BuildXcframework { profile, platforms } => {
             swift::build_xcframework(&profile, &platforms)
         }

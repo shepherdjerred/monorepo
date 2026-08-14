@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="TaskNotes.Windows.App.Views.TaskEditorView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border
+        Width="360"
+        Margin="18,0,0,0"
+        Padding="18"
+        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        CornerRadius="8">
+        <ScrollViewer>
+            <StackPanel Spacing="12">
+                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Task inspector" />
+                <TextBox
+                    AutomationProperties.AutomationId="TaskNotes.Editor.Title"
+                    Header="Title"
+                    Text="{x:Bind ViewModel.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox
+                    Height="120"
+                    AcceptsReturn="True"
+                    AutomationProperties.AutomationId="TaskNotes.Editor.Details"
+                    Header="Markdown details"
+                    Text="{x:Bind ViewModel.Details, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextWrapping="Wrap" />
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox
+                        AutomationProperties.AutomationId="TaskNotes.Editor.Status"
+                        Header="Status"
+                        SelectedValue="{x:Bind ViewModel.Status, Mode=TwoWay}"
+                        SelectedValuePath="Tag">
+                        <ComboBoxItem Content="Open" Tag="open" />
+                        <ComboBoxItem Content="In progress" Tag="in-progress" />
+                        <ComboBoxItem Content="Waiting" Tag="waiting" />
+                        <ComboBoxItem Content="Delegated" Tag="delegated" />
+                        <ComboBoxItem Content="Done" Tag="done" />
+                        <ComboBoxItem Content="Cancelled" Tag="cancelled" />
+                    </ComboBox>
+                    <ComboBox
+                        Grid.Column="1"
+                        AutomationProperties.AutomationId="TaskNotes.Editor.Priority"
+                        Header="Priority"
+                        SelectedValue="{x:Bind ViewModel.Priority, Mode=TwoWay}"
+                        SelectedValuePath="Tag">
+                        <ComboBoxItem Content="None" Tag="none" />
+                        <ComboBoxItem Content="Low" Tag="low" />
+                        <ComboBoxItem Content="Normal" Tag="normal" />
+                        <ComboBoxItem Content="High" Tag="high" />
+                    </ComboBox>
+                </Grid>
+                <TextBox
+                    AutomationProperties.AutomationId="TaskNotes.Editor.Scheduled"
+                    Header="Planned / scheduled"
+                    PlaceholderText="YYYY-MM-DD"
+                    Text="{x:Bind ViewModel.Scheduled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox
+                    AutomationProperties.AutomationId="TaskNotes.Editor.Due"
+                    Header="Deadline / due"
+                    PlaceholderText="YYYY-MM-DD"
+                    Text="{x:Bind ViewModel.Due, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox
+                    AutomationProperties.AutomationId="TaskNotes.Editor.Recurrence"
+                    Header="Recurrence"
+                    PlaceholderText="RRULE or natural recurrence"
+                    Text="{x:Bind ViewModel.Recurrence, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <ComboBox
+                    AutomationProperties.AutomationId="TaskNotes.Editor.RecurrenceAnchor"
+                    Header="Recurrence anchor"
+                    SelectedValue="{x:Bind ViewModel.RecurrenceAnchor, Mode=TwoWay}"
+                    SelectedValuePath="Tag">
+                    <ComboBoxItem Content="Default" Tag="" />
+                    <ComboBoxItem Content="Scheduled" Tag="scheduled" />
+                    <ComboBoxItem Content="Completion" Tag="completion" />
+                </ComboBox>
+                <TextBox
+                    AutomationProperties.AutomationId="TaskNotes.Editor.Projects"
+                    Header="Projects"
+                    PlaceholderText="Comma separated"
+                    Text="{x:Bind ViewModel.Projects, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox
+                    AutomationProperties.AutomationId="TaskNotes.Editor.Contexts"
+                    Header="Contexts"
+                    PlaceholderText="Comma separated"
+                    Text="{x:Bind ViewModel.Contexts, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox
+                    AutomationProperties.AutomationId="TaskNotes.Editor.Tags"
+                    Header="Tags"
+                    PlaceholderText="Comma separated"
+                    Text="{x:Bind ViewModel.Tags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <NumberBox
+                    AutomationProperties.AutomationId="TaskNotes.Editor.Estimate"
+                    Header="Estimate (minutes)"
+                    Minimum="0"
+                    SpinButtonPlacementMode="Inline"
+                    Value="{x:Bind ViewModel.EstimateValue, Mode=TwoWay}" />
+                <TextBlock
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="{x:Bind ViewModel.DependencyLabel, Mode=OneWay}"
+                    TextWrapping="Wrap" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.TrackedTimeLabel, Mode=OneWay}" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Click="ToggleTime_Click" Content="{x:Bind ViewModel.TimerLabel, Mode=OneWay}" />
+                    <Button
+                        AutomationProperties.AutomationId="TaskNotes.Editor.Save"
+                        Click="Save_Click"
+                        Content="Save" />
+                    <Button
+                        AutomationProperties.AutomationId="TaskNotes.Editor.Delete"
+                        Click="Delete_Click"
+                        Content="Delete" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>

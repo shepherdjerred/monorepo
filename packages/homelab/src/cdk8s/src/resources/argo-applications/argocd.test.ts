@@ -74,6 +74,34 @@ describe("ArgoCD application", () => {
     );
   });
 
+  it("ignores terminal operation failures on applications that have converged", () => {
+    const application = synthArgoCdApplication();
+    const customization =
+      application.spec.source.helm.valuesObject.configs.cm[
+        "resource.customizations.health.argoproj.io_Application"
+      ];
+
+    // ArgoCD only re-runs a sync for an application it still sees as OutOfSync,
+    // so a failure recorded against an application that later reached
+    // Synced+Healthy can never clear. Blocking on it wedges every root health
+    // wave behind a child that has nothing left to converge.
+    expect(customization).toContain('obj.status.sync.status == "Synced" and');
+    expect(customization).toContain(
+      'obj.status.health.status == "Healthy" then',
+    );
+
+    const convergedClause = customization.slice(
+      customization.indexOf('obj.status.sync.status == "Synced" and'),
+    );
+    expect(convergedClause).toContain("operationBlocks = false");
+
+    // The carve-out must stay scoped to terminal phases: a Running operation is
+    // an in-flight child sync the root health wave still has to wait for.
+    expect(
+      customization.match(/if \(phase == "Failed" or phase == "Error"\) and/g),
+    ).toHaveLength(2);
+  });
+
   it("keeps only non-failed cert-manager secret issuance progressing", () => {
     const application = synthArgoCdApplication();
     const customization =

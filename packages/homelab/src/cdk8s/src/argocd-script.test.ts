@@ -908,6 +908,48 @@ describe("Argo CD root release staging", () => {
   });
 });
 
+async function runReconcileRelease(
+  origin: string,
+  expected: readonly Record<string, unknown>[],
+): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+  const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-"));
+  const expectedPath = path.join(directory, "expected.json");
+  await Bun.write(expectedPath, JSON.stringify(expected));
+  try {
+    const process = Bun.spawn(
+      [
+        "bun",
+        "--no-install",
+        "scripts/argocd.ts",
+        "reconcile-release",
+        expectedPath,
+        "--skip-health-wait",
+        "--timeout",
+        "1",
+      ],
+      {
+        cwd: path.resolve(import.meta.dir, "../../.."),
+        env: {
+          ...Bun.env,
+          ARGOCD_SERVER_URL: origin,
+          ARGOCD_TOKEN: "test-token",
+          CHARTMUSEUM_ORIGIN: origin,
+        },
+        stderr: "pipe",
+        stdout: "pipe",
+      },
+    );
+    const [exitCode, stdout, stderr] = await Promise.all([
+      process.exited,
+      new Response(process.stdout).text(),
+      new Response(process.stderr).text(),
+    ]);
+    return { exitCode, stdout, stderr };
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
 describe("Argo CD stale release protection", () => {
   test("retries a failed operation recorded for an otherwise current app", async () => {
     let requestedOperation: Record<string, unknown> | undefined;
@@ -983,45 +1025,14 @@ describe("Argo CD stale release protection", () => {
         return new Response("not found", { status: 404 });
       },
     });
-    const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-"));
-    const expectedPath = path.join(directory, "expected.json");
-    await Bun.write(
-      expectedPath,
-      JSON.stringify([
-        { name: "apps", revision: "2.0.0-42" },
-        { name: "worker", revision: "2.0.0-42" },
-      ]),
-    );
-
     try {
-      const process = Bun.spawn(
+      const { exitCode, stdout, stderr } = await runReconcileRelease(
+        server.url.origin,
         [
-          "bun",
-          "--no-install",
-          "scripts/argocd.ts",
-          "reconcile-release",
-          expectedPath,
-          "--skip-health-wait",
-          "--timeout",
-          "1",
+          { name: "apps", revision: "2.0.0-42" },
+          { name: "worker", revision: "2.0.0-42" },
         ],
-        {
-          cwd: path.resolve(import.meta.dir, "../../.."),
-          env: {
-            ...Bun.env,
-            ARGOCD_SERVER_URL: server.url.origin,
-            ARGOCD_TOKEN: "test-token",
-            CHARTMUSEUM_ORIGIN: server.url.origin,
-          },
-          stderr: "pipe",
-          stdout: "pipe",
-        },
       );
-      const [exitCode, stdout, stderr] = await Promise.all([
-        process.exited,
-        new Response(process.stdout).text(),
-        new Response(process.stderr).text(),
-      ]);
 
       expect(exitCode).toBe(0);
       expect(stderr).toBe("");
@@ -1030,7 +1041,94 @@ describe("Argo CD stale release protection", () => {
       expect(syncPosts).toBe(1);
     } finally {
       await server.stop(true);
-      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("retries a failed operation recorded for an externally sourced app", async () => {
+    const externalSource = {
+      repoURL: "https://grafana.github.io/helm-charts",
+      chart: "loki",
+      targetRevision: "6.1.0",
+    };
+    let requestedOperation: Record<string, unknown> | undefined;
+    let syncPosts = 0;
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      async fetch(request) {
+        const url = new URL(request.url);
+        if (url.pathname === "/api/charts/apps") {
+          return Response.json([
+            {
+              version: "2.0.0-42",
+              urls: ["charts/apps-2.0.0-42.tgz"],
+              digest: "a".repeat(64),
+            },
+          ]);
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/v1/applications/loki/sync"
+        ) {
+          syncPosts += 1;
+          requestedOperation = operationForRootSyncRequest(
+            await request.json(),
+          );
+          return Response.json({ operation: requestedOperation });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps/manifests"
+        ) {
+          return Response.json({
+            manifests: [
+              JSON.stringify({
+                apiVersion: "argoproj.io/v1alpha1",
+                kind: "Application",
+                metadata: { name: "loki" },
+                spec: { source: externalSource },
+              }),
+            ],
+          });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/loki"
+        ) {
+          // The application is Synced and Healthy on the source it is supposed
+          // to run, so only the recorded failure can trigger the retry.
+          return Response.json({
+            status: {
+              sync: { status: "Synced", revision: "6.1.0" },
+              health: { status: "Healthy" },
+              history: [{ id: 1, revision: "6.1.0", source: externalSource }],
+              operationState:
+                requestedOperation === undefined
+                  ? { phase: "Failed", syncResult: { revision: "6.1.0" } }
+                  : {
+                      phase: "Succeeded",
+                      operation: requestedOperation,
+                      syncResult: { revision: "6.1.0" },
+                    },
+            },
+          });
+        }
+        return new Response("not found", { status: 404 });
+      },
+    });
+    try {
+      const { exitCode, stdout, stderr } = await runReconcileRelease(
+        server.url.origin,
+        [{ name: "apps", revision: "2.0.0-42" }],
+      );
+
+      expect(exitCode).toBe(0);
+      expect(stderr).toBe("");
+      expect(stdout).toContain("sync operation started: loki");
+      expect(stdout).toContain("synced: loki");
+      expect(syncPosts).toBe(1);
+    } finally {
+      await server.stop(true);
     }
   });
 });

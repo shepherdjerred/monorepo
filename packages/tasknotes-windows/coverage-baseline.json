@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "components": {
+    "TaskNotes.Windows.Host": {
+      "line": 90.3,
+      "branch": 86.2
+    },
+    "TaskNotes.Windows.Presentation": {
+      "line": 97.5,
+      "branch": 81.9
+    },
+    "TaskNotes.Windows.AppAdapters": {
+      "line": 92.7,
+      "branch": 88.0
+    }
+  },
+  "portableComponents": {
+    "TaskNotes.Windows.Host": {
+      "line": 90.1,
+      "branch": 81.4
+    },
+    "TaskNotes.Windows.Presentation": {
+      "line": 97.1,
+      "branch": 79.1
+    }
+  },
+  "changedLineMinimums": {
+    "TaskNotes.Windows.Host": 90,
+    "TaskNotes.Windows.Presentation": 90,
+    "TaskNotes.Windows.AppAdapters": 80
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "scenarios": [
+    {
+      "id": "onboarding-auth",
+      "test": "OnboardingAndAuthentication",
+      "assertions": [
+        "settings.invalid-url",
+        "settings.authentication",
+        "settings.connected"
+      ]
+    },
+    {
+      "id": "settings-credentials",
+      "test": "SettingsKeepCredentialsSeparate",
+      "assertions": ["credentials.token-separation"]
+    },
+    {
+      "id": "cached-offline-recovery",
+      "test": "CachedOfflineReplayAndRecovery",
+      "assertions": [
+        "sync.offline",
+        "sync.cached-restart",
+        "sync.replayed-markdown"
+      ]
+    },
+    {
+      "id": "navigation-query",
+      "test": "NavigationSearchFilterSortAndCompleted",
+      "assertions": ["navigation.fixed", "query.search", "query.sort-group"]
+    },
+    {
+      "id": "quick-add-create",
+      "test": "QuickAddAndCreate",
+      "assertions": ["quick-add.preview", "tasks.created-markdown"]
+    },
+    {
+      "id": "task-edit-delete",
+      "test": "TaskEditingValidationAndDeletion",
+      "assertions": [
+        "editor.all-fields-markdown",
+        "editor.validation-unsaved",
+        "tasks.deleted-markdown"
+      ]
+    },
+    {
+      "id": "completion-recurrence-undo",
+      "test": "CompletionRecurrenceAndUndo",
+      "assertions": ["completion.plain-undo", "completion.recurring-undo"]
+    },
+    {
+      "id": "bulk-actions",
+      "test": "BulkActionsAndGroupedUndo",
+      "assertions": ["bulk.complete-undo", "bulk.schedule-priority-delete"]
+    },
+    {
+      "id": "saved-views",
+      "test": "SavedViewLifecycle",
+      "assertions": ["saved-view.query", "saved-view.lifecycle-persistence"]
+    },
+    {
+      "id": "deep-links-entities",
+      "test": "DeepLinksAndEntityDestinations",
+      "assertions": [
+        "activation.fixed",
+        "activation.entities",
+        "activation.search"
+      ]
+    },
+    {
+      "id": "kanban",
+      "test": "KanbanMovesAndFailures",
+      "assertions": [
+        "kanban.columns",
+        "kanban.move-persisted",
+        "kanban.failure-visible"
+      ]
+    },
+    {
+      "id": "time-tracking-report",
+      "test": "TimeTrackingAndReport",
+      "assertions": [
+        "timing.task-server",
+        "timing.markdown",
+        "timing.report-ui"
+      ]
+    },
+    {
+      "id": "pomodoro",
+      "test": "PomodoroLifecycle",
+      "assertions": ["pomodoro.server-lifecycle", "window.pomodoro-singleton"]
+    },
+    {
+      "id": "parked-errors",
+      "test": "SynchronizationAndParkedErrors",
+      "assertions": ["sync.parked", "sync.retry-discard"]
+    },
+    {
+      "id": "global-quick-add",
+      "test": "GlobalQuickAddHotkey",
+      "assertions": ["hotkey.invoke-cancel", "hotkey.rebind-collision"]
+    },
+    {
+      "id": "package-persistence",
+      "test": "PackagedLaunchAndPersistence",
+      "assertions": [
+        "package.cold-launch",
+        "package.restart",
+        "window.state-restored"
+      ]
+    },
+    {
+      "id": "accessibility-keyboard",
+      "test": "KeyboardAndAccessibilityContract",
+      "assertions": [
+        "accessibility.names-roles-values",
+        "accessibility.live-status",
+        "keyboard.search-focus"
+      ]
+    },
+    {
+      "id": "visual-modes",
+      "test": "ScaleThemeAndHighContrast",
+      "assertions": [
+        "visual.profile-match",
+        "visual.usable-bounds",
+        "visual.screenshot"
+      ]
+    }
+  ]
+}

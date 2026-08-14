@@ -215,6 +215,19 @@ if obj.status ~= nil then
        obj.status.operationState.syncResult.revision ~= obj.status.sync.revision then
       operationBlocks = false
     end
+    -- A terminal failure whose application has since converged is stale too.
+    -- ArgoCD never re-runs a sync for an application that is already Synced, so
+    -- nothing can ever clear the recorded phase: the child would report
+    -- Progressing forever and every later root health wave would block on it.
+    -- Requiring both Synced and Healthy keeps a genuinely broken child blocking,
+    -- because a rejected apply leaves the resource OutOfSync or Degraded.
+    if (phase == "Failed" or phase == "Error") and
+       obj.status.sync ~= nil and
+       obj.status.sync.status == "Synced" and
+       obj.status.health ~= nil and
+       obj.status.health.status == "Healthy" then
+      operationBlocks = false
+    end
   end
   if operationBlocks then
     hs.status = "Progressing"

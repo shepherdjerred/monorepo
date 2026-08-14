@@ -48,7 +48,7 @@ operations.
 - [ ] Deploy the activation and cutover branches, then verify the SQLite PVC
       creation, snapshot bootstrap, UI, REST, previews, reconciliation
       freshness, probes, consumers, and live routing.
-- [ ] Decide whether to export the live PostgreSQL ledger into SQLite or
+- [x] Decide whether to export the live PostgreSQL ledger into SQLite or
       explicitly discard that history; do not remove the PostgreSQL PVC or
       operator resources before this decision is executed.
 - [ ] Record the production cutover timestamp in the Comment Log, then wait 30
@@ -76,6 +76,27 @@ consumer before requesting authorization to cancel the account or destroy the
 OpenTofu state.
 
 ## Comment Log
+
+### 2026-08-13 — PostgreSQL history discarded and the stack torn down
+
+The owner chose discard: keep SQLite, remove the PostgreSQL stack. Executed
+against the live cluster in that order — a final `pg_dump` of `alert_dashboard`
+was taken as a safety net (900 KB gzipped, six tables, kept off-cluster at
+`~/Downloads/alert_dashboard_pg_final_2026-08-14.sql.gz`), then the Zalando
+`postgresql/alert-dashboard-postgresql` was deleted. The operator garbage
+collected the pod, both services, the three generated credential secrets, and
+the 16 GiB `pgdata-alert-dashboard-postgresql-0` PVC. The two `Certificate`s,
+two `Issuer`s, `NetworkPolicy/alert-dashboard-postgres-netpol`, and the two
+orphaned cert-manager TLS secrets were removed explicitly.
+
+Note the 2026-08-11 entry below is no longer accurate about content: the
+database did hold six tables by the time it was dropped, including
+`_prisma_migrations` and the ledger tables, so migrations had run since that
+audit. The dump is the record of what was discarded.
+
+The teardown also cleared the `argocd.argoproj.io/compare-options:
+IgnoreExtraneous` annotations that had been applied to those six resources to
+unblock main CI, since the resources they were attached to no longer exist.
 
 ### 2026-08-11 — live PostgreSQL ledger audited and found empty
 

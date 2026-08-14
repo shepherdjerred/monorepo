@@ -197,7 +197,7 @@ struct ServerIntegrationTests {
             let engine = host.engine()
             try engine.restore()
             _ = try engine.dispatch(input: .create(payload: createRequest(title: "Survivor")))
-            try engine.dispose()
+            try engine.shutdown()
         }
         #expect(try server.markdownFiles().isEmpty)
 
@@ -261,7 +261,7 @@ struct ServerIntegrationTests {
 
         // Disposing cancels the armed timer and arms no new one, so a failure
         // already in flight cannot resurrect a replaced engine.
-        try engine.dispose()
+        try engine.shutdown()
         #expect(try engine.isDisposed())
     }
 

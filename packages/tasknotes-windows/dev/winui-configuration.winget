@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+
+# TaskNotes extends Microsoft's WinUI configuration with the x64 MSVC linker
+# required to build the shared Rust cdylib on Windows.
+properties:
+  assertions:
+    - resource: Microsoft.Windows.Developer/OsVersion
+      directives:
+        description: Verify the minimum supported Windows version
+        allowPrerelease: true
+      settings:
+        MinVersion: "10.0.22000"
+  resources:
+    - resource: Microsoft.Windows.Settings/WindowsSettings
+      directives:
+        description: Enable Developer Mode
+        securityContext: elevated
+        allowPrerelease: true
+      settings:
+        DeveloperMode: true
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Visual Studio
+      directives:
+        description: Install Visual Studio 2026 Community
+        securityContext: elevated
+      settings:
+        id: Microsoft.VisualStudio.Community
+        source: winget
+    - resource: Microsoft.VisualStudio.DSC/VSComponents
+      id: TaskNotes Windows workloads
+      dependsOn:
+        - Visual Studio
+      directives:
+        description: Install WinUI, Windows SDK, and x64 MSVC components
+        allowPrerelease: true
+        securityContext: elevated
+      settings:
+        productId: Microsoft.VisualStudio.Product.Community
+        channelId: VisualStudio.18.Release
+        components:
+          - Microsoft.VisualStudio.Workload.ManagedDesktop
+          - Microsoft.VisualStudio.Workload.Universal
+          - Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs
+          - Microsoft.VisualStudio.Component.VC.Tools.x86.x64
+          - Microsoft.VisualStudio.Component.Windows11SDK.26100
+  configurationVersion: 0.2.0

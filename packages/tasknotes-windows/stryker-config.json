@@ -1,0 +1,26 @@
+{
+  "stryker-config": {
+    "solution": "TaskNotes.Windows.Portable.slnx",
+    "test-projects": [
+      "tests/TaskNotes.Windows.Tests/TaskNotes.Windows.Tests.csproj"
+    ],
+    "project-info": {
+      "name": "TaskNotes Windows portable layers",
+      "module": "TaskNotes.Windows"
+    },
+    "mutate": [
+      "src/TaskNotes.Windows.Host/**/*.cs",
+      "src/TaskNotes.Windows.Presentation/**/*.cs",
+      "!src/**/obj/**/*.cs",
+      "!src/**/bin/**/*.cs"
+    ],
+    "thresholds": {
+      "high": 90,
+      "low": 80,
+      "break": 80
+    },
+    "reporters": ["progress", "json"],
+    "report-file-name": "artifacts/mutation/stryker-report.json",
+    "concurrency": 4
+  }
+}

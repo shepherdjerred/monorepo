@@ -5,7 +5,9 @@
   "scripts": {
     "build": "cargo build --workspace --all-targets",
     "test": "cargo test --workspace",
-    "lint": "cargo fmt --all --check && cargo clippy --workspace --all-targets --all-features -- -D warnings && ./ci/no-suppressions.sh && ./ci/check-clippy-config.sh && cargo run --package xtask -- check-bindings && bun run deny",
+    "coverage": "bun ci/coverage.ts",
+    "mutation": "cargo mutants --workspace --all-features --minimum-test-timeout 30 --timeout-multiplier 5",
+    "lint": "cargo fmt --all --check && cargo clippy --workspace --all-targets --all-features -- -D warnings && bun ci/quality-check.ts && cargo run --package xtask -- check-bindings && bun run deny",
     "bindings": "cargo run --package xtask -- generate-bindings",
     "typecheck": "cargo check --workspace --all-targets --all-features",
     "deny": "cargo deny --all-features check",

@@ -46,5 +46,11 @@ describe("isPostalBoundaryViolation", () => {
         "sendPostalEmail({})",
       ),
     ).toBe(false);
+    expect(
+      isPostalBoundaryViolation(
+        String.raw`packages\temporal\src\shared\postal.ts`,
+        "sendPostalEmail({})",
+      ),
+    ).toBe(false);
   });
 });

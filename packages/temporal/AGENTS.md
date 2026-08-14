@@ -190,7 +190,7 @@ Workflow:
 - `XCODE_CLOUD_WEBHOOK_TOKEN` — unguessable token embedded in the Xcode Cloud webhook URL path (`/hook/<token>`). Xcode Cloud webhooks carry no signature/auth header, so the URL path IS the credential. **Required** to start the receiver; when unset the server is skipped.
 - `XCODE_CLOUD_WEBHOOK_PORT` — port for the Xcode Cloud webhook receiver (default `9468`).
 - `XCODE_CLOUD_ALERT_TTL_SECONDS` — safety auto-resolve window for a fired build-failure alert if no later `SUCCEEDED` clears it (default `21600` = 6h).
-- `ALERTMANAGER_URL` — in-cluster Alertmanager base URL (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** by two features: the Xcode Cloud webhook receiver (when enabled) and the `temporal-failure-watch` schedule (see below) — both POST to `/api/v2/alerts` via `src/lib/alertmanager.ts`.
+- `ALERTMANAGER_URL` — in-cluster Alertmanager base URL (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** by three features: the Xcode Cloud webhook receiver (when enabled), the `temporal-failure-watch` schedule (see below), and `llm-catalog-refresh-weekly`, which publishes its withheld state on every run (firing when the cross-check withholds edits, resolving when it withholds none) — all POST to `/api/v2/alerts` via `src/lib/alertmanager.ts`.
 - `TEMPORAL_FAILURE_ALERT_TTL_SECONDS` — how long a `TemporalWorkflowFailed` alert stays firing in Alertmanager before auto-resolving if the watcher stops re-observing it (default `87090` = 24h lookback plus the full 6.5m activity retry budget and a 5m delivery margin).
 
 ## Homelab audit (daily)
@@ -428,6 +428,41 @@ There are **two** Temporal scheduling patterns — don't conflate them:
 
 - **Report-only agent-tasks** (`agentTaskWorkflow`, above) email reports and **cannot** open PRs/issues or edit files — `mode` is only `"report-only"` and the prompt forbids mutation.
 - **Deterministic PR-creating workflows** (e.g. `src/activities/data-dragon.ts`, `llm-catalog-refresh.ts`, `homelab-crd-imports-refresh.ts`) regenerate artifacts then `git push --force-with-lease` + `gh pr create`, authed by a GitHub App installation token (`src/lib/github-app-token.ts` `createGitHubAppInstallationToken()`, env `GITHUB_APP_ID`/`GITHUB_APP_INSTALLATION_ID`/`GITHUB_APP_PRIVATE_KEY`). scout-for-lol's data-dragon refresh is the canonical example.
+
+**The branch name is the idempotency key — derive it from retry-stable data.**
+`openSeasonRefreshPr` prevents duplicate PRs by reusing an open PR whose head is
+the branch it was given, so a branch built from a per-attempt value (a fresh
+`crypto.randomUUID()`, a timestamp) silently defeats that reuse: any failure
+after the PR is created retries the activity under a new branch and opens a
+second PR. Derive it from the content (`data-dragon.ts` uses the Data Dragon
+version; `llm-catalog-refresh.ts` hashes the proposed `catalog.json`) or from
+the workflow's own args (`scout-season-refresh.ts`) — never from a value
+generated inside the attempt. Scratch `/tmp` directories are the opposite: keep
+those per-attempt so a retry cannot trip over a previous attempt's half-cleaned
+clone.
+
+**`--force-with-lease` does not protect the branch's CONTENT.** The lease only
+proves the ref has not moved since the fetch. `openSeasonRefreshPr` builds its
+commit with `git checkout -B` from a fresh main clone, so the fetched
+`origin/<branch>` is never used as a base — an operator who commits an
+adjudication onto an open proposal PR would have it replaced wholesale by the
+next run landing on that branch. `assertRemoteBranchIsOurs` refuses the push
+when the remote tip's author OR committer differs from the pair our own commit
+just used. Both halves matter: `git commit --amend` keeps the original author
+and records only a new committer, so an author-only check waves an in-place
+edit straight through. Do not swap this for a tree comparison (a branch derived
+from workflow args legitimately changes content every run) or a commit count
+against main (`scout-season-refresh` clones `--depth 1`, so that history is
+absent).
+
+**Retry-stable is not sufficient — the key must also be stable across scheduled
+runs.** The workflow run id survives retries but changes weekly, so while a
+proposal sits unmerged `main` still holds the old artifact, the next run
+regenerates the identical diff under a new branch, and `openSeasonRefreshPr`
+opens a duplicate PR for a change already awaiting review. A content hash is
+stable on both axes and additionally gives a genuinely changed proposal its own
+PR, rather than force-pushing over one an operator is part-way through
+adjudicating.
 
 To add a "regenerate X on a schedule, open a PR if it changed" job, mirror `data-dragon.ts`: a deterministic activity (no Claude), GitHub App token, path-scoped `git add`, plus a thin workflow, an export in `src/workflows/index.ts`, and a `SCHEDULES` entry (cron, `America/Los_Angeles`, `TASK_QUEUES.DEFAULT`). The worker pod has bun/git/gh/kubectl (in-cluster SA — `homelab-crd-imports-daily` runs `kubectl get crds` with the read-only `temporal-worker-crd-reader` ClusterRole) but **not** helm — add tools to the worker image build (`Dockerfile`) if the job needs them (`bunx turbo run smoke --filter=temporal` builds + smoke-tests the image; CI builds/smokes/pushes it on merge to main). CLIs a job needs from the repo itself (e.g. `cdk8s` for the CRD imports) come from the bot clone's workspace install via a package devDependency, not the image.
 

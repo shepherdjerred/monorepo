@@ -1022,9 +1022,12 @@ steps:
   # Qodo is the only active provider in the registry; its persistent issue
   # comment is bound to the head timestamp and its Action required/Remediation
   # recommended findings are included in the same gate.
+  # This budget stays above wait-for-review.ts's own deadline plus its install,
+  # so the script always reports which provider and head it gave up on rather
+  # than Buildkite killing the pod first.
   - label: ":robot_face: Qodo review gate (required)"
     key: review-gate
-    timeout_in_minutes: 30
+    timeout_in_minutes: 60
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     cancel_on_build_failing: true
     command: |
@@ -1422,7 +1425,7 @@ steps:
   # a finally, so a failed dev publish can't leak -dev.N into a later prod run).
   - label: ":npm: publish packages + cooklang plugin"
     key: publish
-    timeout_in_minutes: 45
+    timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: verify
     cancel_on_build_failing: true
@@ -1466,7 +1469,7 @@ steps:
   # ── Main-only: homelab release track ─────────────────────────────────────
   - label: ":helm: helm push"
     key: helm-push
-    timeout_in_minutes: 45
+    timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     # Wait for this build's remote solves before suspending the currently
     # floating repository Applications and publishing their immutable charts.
@@ -1502,7 +1505,7 @@ steps:
 
   - label: ":terraform: OpenTofu apply — infra state stacks"
     key: tofu-apply
-    timeout_in_minutes: 45
+    timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: [verify, helm-push]
     cancel_on_build_failing: true
@@ -1527,7 +1530,7 @@ steps:
 
   - label: ":terraform: OpenTofu apply — GitHub state"
     key: tofu-github
-    timeout_in_minutes: 45
+    timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: verify
     cancel_on_build_failing: true
@@ -1553,7 +1556,7 @@ steps:
 
   - label: ":argo: sync + wait"
     key: argocd-sync
-    timeout_in_minutes: 45
+    timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: [images, helm-push, tofu-apply]
     concurrency: 1
@@ -1710,7 +1713,7 @@ steps:
 
   - label: ":terraform: OpenTofu apply — Cloudflare after tunnel gate"
     key: tofu-cloudflare
-    timeout_in_minutes: 45
+    timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: argocd-sync
     cancel_on_build_failing: true
@@ -1750,7 +1753,7 @@ steps:
   # pushed image digests — is its own step below, gated on images.
   - label: ":package: release-please"
     key: release-please
-    timeout_in_minutes: 45
+    timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: verify
     cancel_on_build_failing: true
@@ -1776,7 +1779,7 @@ steps:
   # merge redeploys nothing.
   - label: ":package: version commit-back"
     key: version-commit-back
-    timeout_in_minutes: 45
+    timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: images
     cancel_on_build_failing: true

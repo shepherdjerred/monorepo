@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="TaskNotes.Windows.App.Views.BoardView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:host="using:TaskNotes.Windows.Host">
+    <Grid>
+        <Grid.Resources>
+            <DataTemplate x:Key="BoardTaskTemplate" x:DataType="host:TaskItem">
+                <Grid
+                    Padding="8"
+                    AutomationProperties.AutomationId="{x:Bind AutomationId}"
+                    AutomationProperties.Name="{x:Bind Title}"
+                    ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{x:Bind Title}" TextWrapping="Wrap" />
+                    <Button
+                        Grid.Column="1"
+                        AutomationProperties.Name="Move task to next status"
+                        Click="AdvanceBoardTask_Click"
+                        Content="Move next"
+                        Tag="{x:Bind Id}" />
+                </Grid>
+            </DataTemplate>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Board" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Move tasks with drag and drop, the keyboard, or the context menu." />
+            </StackPanel>
+            <Button
+                Grid.Column="1"
+                Click="Refresh_Click"
+                Content="Refresh" />
+        </Grid>
+        <ScrollViewer
+            Grid.Row="1"
+            Margin="0,18,0,0"
+            AutomationProperties.AutomationId="TaskNotes.Board"
+            AutomationProperties.Name="Kanban board"
+            HorizontalScrollBarVisibility="Auto"
+            HorizontalScrollMode="Enabled"
+            VerticalScrollMode="Disabled">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="280" />
+                    <ColumnDefinition Width="280" />
+                    <ColumnDefinition Width="280" />
+                    <ColumnDefinition Width="280" />
+                    <ColumnDefinition Width="280" />
+                    <ColumnDefinition Width="280" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Open" />
+                    <ListView
+                        AllowDrop="True"
+                        AutomationProperties.AutomationId="TaskNotes.Board.open"
+                        CanDragItems="True"
+                        DragItemsStarting="Board_DragItemsStarting"
+                        Drop="Board_Drop"
+                        ItemTemplate="{StaticResource BoardTaskTemplate}"
+                        ItemsSource="{x:Bind ViewModel.OpenBoardTasks, Mode=OneWay}"
+                        Tag="open" />
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="In progress" />
+                    <ListView
+                        AllowDrop="True"
+                        AutomationProperties.AutomationId="TaskNotes.Board.in-progress"
+                        CanDragItems="True"
+                        DragItemsStarting="Board_DragItemsStarting"
+                        Drop="Board_Drop"
+                        ItemTemplate="{StaticResource BoardTaskTemplate}"
+                        ItemsSource="{x:Bind ViewModel.InProgressBoardTasks, Mode=OneWay}"
+                        Tag="in-progress" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Waiting" />
+                    <ListView
+                        AllowDrop="True"
+                        AutomationProperties.AutomationId="TaskNotes.Board.waiting"
+                        CanDragItems="True"
+                        DragItemsStarting="Board_DragItemsStarting"
+                        Drop="Board_Drop"
+                        ItemTemplate="{StaticResource BoardTaskTemplate}"
+                        ItemsSource="{x:Bind ViewModel.WaitingBoardTasks, Mode=OneWay}"
+                        Tag="waiting" />
+                </StackPanel>
+                <StackPanel Grid.Column="3">
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Delegated" />
+                    <ListView
+                        AllowDrop="True"
+                        AutomationProperties.AutomationId="TaskNotes.Board.delegated"
+                        CanDragItems="True"
+                        DragItemsStarting="Board_DragItemsStarting"
+                        Drop="Board_Drop"
+                        ItemTemplate="{StaticResource BoardTaskTemplate}"
+                        ItemsSource="{x:Bind ViewModel.DelegatedBoardTasks, Mode=OneWay}"
+                        Tag="delegated" />
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Done" />
+                    <ListView
+                        AllowDrop="True"
+                        AutomationProperties.AutomationId="TaskNotes.Board.done"
+                        CanDragItems="True"
+                        DragItemsStarting="Board_DragItemsStarting"
+                        Drop="Board_Drop"
+                        ItemTemplate="{StaticResource BoardTaskTemplate}"
+                        ItemsSource="{x:Bind ViewModel.DoneBoardTasks, Mode=OneWay}"
+                        Tag="done" />
+                </StackPanel>
+                <StackPanel Grid.Column="5">
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Cancelled" />
+                    <ListView
+                        AllowDrop="True"
+                        AutomationProperties.AutomationId="TaskNotes.Board.cancelled"
+                        CanDragItems="True"
+                        DragItemsStarting="Board_DragItemsStarting"
+                        Drop="Board_Drop"
+                        ItemTemplate="{StaticResource BoardTaskTemplate}"
+                        ItemsSource="{x:Bind ViewModel.CancelledBoardTasks, Mode=OneWay}"
+                        Tag="cancelled" />
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

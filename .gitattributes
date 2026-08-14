@@ -35,6 +35,13 @@ packages/homelab/src/cdk8s/patches/** -text
 **/__snapshots__/** linguist-generated=true
 *.snap              linguist-generated=true
 
+# --- UniFFI output: preserve the generator's exact bytes ---
+# The Swift/header templates intentionally emit trailing spaces. The committed
+# output is drift-checked byte-for-byte, so Git must not rewrite or reject it.
+packages/tasknotes-core/bindings/Sources/** linguist-generated=true whitespace=-trailing-space
+packages/tasknotes-core/bindings/ffi/**     linguist-generated=true whitespace=-trailing-space
+packages/tasknotes-core/bindings/csharp/**  linguist-generated=true whitespace=-trailing-space
+
 # --- Binary files (carried over from previous .gitattributes) ---
 *.data    binary
 *.wasm    binary

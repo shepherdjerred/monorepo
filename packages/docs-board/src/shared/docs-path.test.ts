@@ -22,4 +22,14 @@ describe("workflow document paths", () => {
       ]),
     ).toEqual(["architecture/system.md", "todos/later.md"]);
   });
+
+  test("normalizes Windows glob paths before filtering", () => {
+    expect(
+      workflowDocumentPaths([
+        String.raw`wiki\AGENTS.md`,
+        String.raw`todos\later.md`,
+        String.raw`plans\first.md`,
+      ]),
+    ).toEqual(["plans/first.md", "todos/later.md"]);
+  });
 });

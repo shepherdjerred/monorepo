@@ -7,6 +7,18 @@
 # renovate: datasource=github-releases depName=oven-sh/bun
 bun = "1.3.14"
 rust = "1.97.1"
+# renovate: datasource=dotnet-sdk depName=dotnet-sdk
+dotnet = "10.0.302"
+# C# is a third-party UniFFI binding. Keep the generator outside Cargo.toml:
+# it is a developer/CI tool, not part of the shipped Rust dependency graph.
+# renovate: datasource=github-tags depName=NordSecurity/uniffi-bindgen-cs
+"cargo:https://github.com/NordSecurity/uniffi-bindgen-cs" = { version = "tag:v0.11.0+v0.31.0", bin = "uniffi-bindgen-cs" }
+# Explicit deep-quality tools. These are scheduled/operator gates, not ordinary
+# PR-lane work, but they stay pinned with the rest of the repository toolchain.
+# renovate: datasource=crate depName=cargo-mutants
+"cargo:cargo-mutants" = "27.1.0"
+# renovate: datasource=crate depName=cargo-llvm-cov
+"cargo:cargo-llvm-cov" = "0.8.7"
 # tasknotes-core's `deny` script (supply-chain + license + build-script bans).
 # No mise registry entry exists, so this names the backend explicitly; `github:`
 # fetches the release binary and verifies its artifact attestation and SLSA

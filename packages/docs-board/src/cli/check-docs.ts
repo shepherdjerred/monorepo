@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import nodePath from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 
 import {
@@ -13,8 +14,8 @@ import type { ParsedMarkdownDocument } from "#shared/markdown";
 import { workflowDocumentPaths } from "#shared/docs-path";
 import { FrontmatterSchema } from "#shared/schema";
 
-const REPO_ROOT = decodeURIComponent(
-  new URL("../../../..", import.meta.url).pathname.replace(/\/$/, ""),
+const REPO_ROOT = nodePath.resolve(
+  fileURLToPath(new URL("../../../..", import.meta.url)),
 );
 const DOCS_ROOT = `${REPO_ROOT}/packages/docs`;
 const ErrorSchema = z.instanceof(Error);

@@ -16,7 +16,7 @@
 //! `taskStatusNext` — since UniFFI has no namespacing for free functions.
 
 use tasknotes_core::domain::{
-    self, FilterChain, FilterConfig, Priority, SortConfig, Task, TaskStatus,
+    self, FilterChain, FilterConfig, Priority, RecurrenceAnchor, SortConfig, Task, TaskStatus,
 };
 
 use crate::{dates::parse_iso_date, error::CoreError, update::UpdateTaskRequest};
@@ -119,6 +119,35 @@ pub fn priority_label(priority: Priority) -> String {
 #[must_use]
 pub fn priority_rank(priority: Priority) -> u8 {
     priority.rank()
+}
+
+// ── Recurrence anchor ──────────────────────────────────────────────────────
+
+/// The persisted spelling of a recurrence anchor.
+#[uniffi::export]
+#[must_use]
+pub fn recurrence_anchor_wire_value(anchor: RecurrenceAnchor) -> String {
+    match anchor {
+        RecurrenceAnchor::Scheduled => "scheduled",
+        RecurrenceAnchor::Completion => "completion",
+    }
+    .to_owned()
+}
+
+/// Parse the persisted spelling of a recurrence anchor.
+///
+/// # Errors
+///
+/// Returns a validation failure for any value outside the closed set.
+#[uniffi::export]
+pub fn recurrence_anchor_parse(raw: &str) -> Result<RecurrenceAnchor, CoreError> {
+    match raw {
+        "scheduled" => Ok(RecurrenceAnchor::Scheduled),
+        "completion" => Ok(RecurrenceAnchor::Completion),
+        _ => Err(CoreError::Validation {
+            message: format!("unknown recurrence anchor {raw:?}"),
+        }),
+    }
 }
 
 // ── Task identity ──────────────────────────────────────────────────────────
@@ -478,20 +507,21 @@ pub fn sort_config_from_json(json: &str) -> Result<SortConfig, CoreError> {
 #[cfg(test)]
 mod tests {
     use tasknotes_core::domain::{
-        ALL_PRIORITIES, ALL_STATUSES, FilterChain, FilterConfig, Priority, SortConfig,
-        SortDirection, SortField, Task, TaskStatus,
+        ALL_PRIORITIES, ALL_STATUSES, FilterChain, FilterConfig, Priority, RecurrenceAnchor,
+        SortConfig, SortDirection, SortField, Task, TaskStatus,
     };
 
     use super::{
         core_version, filter_chain_from_json, filter_chain_to_json, filter_config_from_json,
         filter_config_to_json, priority_all, priority_label, priority_parse, priority_rank,
         priority_wire_value, project_display_name, project_matches, project_path,
-        sort_config_from_json, sort_config_to_json, task_filter_active_count, task_filter_apply,
-        task_filter_chain_apply, task_filter_chain_is_active, task_filter_chain_matches,
-        task_filter_is_active, task_filter_matches, task_from_json, task_id_parse,
-        task_search_matches, task_sort_apply, task_status_all, task_status_is_active,
-        task_status_label, task_status_next, task_status_parse, task_status_wire_value,
-        task_to_json, update_task_request_from_json, update_task_request_to_json,
+        recurrence_anchor_parse, recurrence_anchor_wire_value, sort_config_from_json,
+        sort_config_to_json, task_filter_active_count, task_filter_apply, task_filter_chain_apply,
+        task_filter_chain_is_active, task_filter_chain_matches, task_filter_is_active,
+        task_filter_matches, task_from_json, task_id_parse, task_search_matches, task_sort_apply,
+        task_status_all, task_status_is_active, task_status_label, task_status_next,
+        task_status_parse, task_status_wire_value, task_to_json, update_task_request_from_json,
+        update_task_request_to_json,
     };
     use crate::error::CoreError;
 
@@ -544,6 +574,26 @@ mod tests {
             task_status_parse("delegated").unwrap(),
             TaskStatus::Delegated
         );
+        assert_eq!(
+            recurrence_anchor_parse("scheduled").unwrap(),
+            RecurrenceAnchor::Scheduled
+        );
+        assert_eq!(
+            recurrence_anchor_parse("completion").unwrap(),
+            RecurrenceAnchor::Completion
+        );
+        assert_eq!(
+            recurrence_anchor_wire_value(RecurrenceAnchor::Scheduled),
+            "scheduled"
+        );
+        assert_eq!(
+            recurrence_anchor_wire_value(RecurrenceAnchor::Completion),
+            "completion"
+        );
+        assert!(matches!(
+            recurrence_anchor_parse("created"),
+            Err(CoreError::Validation { .. })
+        ));
     }
 
     #[test]

@@ -294,23 +294,32 @@ describe("CI test reporting", () => {
     ).toThrow("unknown workspace");
   });
 
-  test("preserves a failing test exit code when its report is missing", async () => {
+  test("synthesizes a failing JUnit case when a runner emits no report", async () => {
     const missingReport = path.join(
       repositoryRoot,
       ".ci-reports",
       `missing-${process.pid.toString()}.xml`,
     );
-    const completed = await completeJUnitReport({
-      runner: "bun",
-      reportPath: missingReport,
-      workspace: "package",
-      name: "unit",
-      durationSeconds: 1,
-      exitCode: 17,
-    });
+    try {
+      const completed = await completeJUnitReport({
+        runner: "bun",
+        reportPath: missingReport,
+        workspace: "package",
+        name: "unit",
+        durationSeconds: 1,
+        exitCode: 17,
+      });
 
-    expect(completed.exitCode).toBe(17);
-    expect(completed.reportingError).toBeInstanceOf(Error);
+      expect(completed).toEqual({ exitCode: 17 });
+      const xml = await Bun.file(missingReport).text();
+      expect(xml).toContain('name="package::unit"');
+      expect(xml).toContain('message="command exited with status 17"');
+    } finally {
+      const report = Bun.file(missingReport);
+      if (await report.exists()) {
+        await report.delete();
+      }
+    }
   });
 });
 
@@ -383,6 +392,10 @@ describe("Coverage report aggregation", () => {
   });
 
   test("inventories workspace source without tests or nested workspaces", () => {
+    const testRepositoryRoot = path.resolve(
+      path.parse(process.cwd()).root,
+      "repo",
+    );
     expect(
       coverableWorkspaceSources(
         ["packages/parent", ".buildkite/scripts"],
@@ -404,14 +417,18 @@ describe("Coverage report aggregation", () => {
     ]);
     expect(
       resolveCoverageSource(
-        "/repo",
+        testRepositoryRoot,
         "packages/parent",
         "packages/parent/src/index.ts",
       ),
-    ).toBe(path.normalize("/repo/packages/parent/src/index.ts"));
+    ).toBe(path.join(testRepositoryRoot, "packages/parent/src/index.ts"));
     expect(
-      resolveCoverageSource("/repo", "packages/parent", "src/index.ts"),
-    ).toBe(path.normalize("/repo/packages/parent/src/index.ts"));
+      resolveCoverageSource(
+        testRepositoryRoot,
+        "packages/parent",
+        "src/index.ts",
+      ),
+    ).toBe(path.join(testRepositoryRoot, "packages/parent/src/index.ts"));
   });
 
   test("inventories production languages without coverage collection", () => {
@@ -755,12 +772,15 @@ describe("CI reporting manifest", () => {
         if (manifestEntry === undefined) {
           throw new Error(`Missing manifest entry for ${directory}`);
         }
-        const relativeRunner = path.relative(
-          directory,
-          "scripts/run-ci-test.ts",
-        );
+        const relativeRunner = path
+          .relative(directory, "scripts/run-ci-test.ts")
+          .split(path.sep)
+          .join("/");
         const usesCoverage = manifestEntry.steps.some(
-          (step) => step.runner !== "cargo" && step.runner !== "command",
+          (step) =>
+            step.runner !== "cargo" &&
+            step.runner !== "command" &&
+            step.runner !== "dotnet",
         );
         const expectedReportScript = usesCoverage
           ? `CI_TEST_COVERAGE=1 bun ${relativeRunner}`
