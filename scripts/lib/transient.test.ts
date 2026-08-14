@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
-import { EXIT_TRANSIENT, isTransientError, runMain } from "./transient.ts";
+import {
+  EXIT_TRANSIENT,
+  isTransientError,
+  runMain,
+  stripAnsi,
+} from "./transient.ts";
 import { TransientError } from "./transient-error.ts";
 
 describe("isTransientError", () => {
@@ -36,6 +41,10 @@ describe("isTransientError", () => {
     "curl: (6) Could not resolve host: temporary failure in name resolution",
     // ArgoCD code 9: an overlapping sync op still holds the app (build 6296).
     'Sync failed: HTTP 400 Bad Request\n{"error":"another operation is already in progress","code":9,"message":"another operation is already in progress"}',
+    // Bun's fetch transport failure, surfaced through octokit as a synthetic
+    // 500 with no body — the only 5xx signature is the colored `status: 500`
+    // below, so the message itself has to classify (build 9421).
+    "GitHubAPIError: The socket connection was closed unexpectedly. For more information, pass `verbose: true` in the second argument to fetch()",
   ])("transient: %s", (message) => {
     expect(isTransientError(new Error(message))).toBe(true);
   });
@@ -53,6 +62,31 @@ describe("isTransientError", () => {
     "logical readiness failure\n    at reconcile (argocd.ts:515:11)",
   ])("not transient: %s", (message) => {
     expect(isTransientError(new Error(message))).toBe(false);
+  });
+
+  test("classifies a colorized 5xx the same as a plain one", () => {
+    // Byte-for-byte from build 9421's release-please stderr, where Bun colored
+    // the octokit dump: the escapes split `status: 500` into four fragments.
+    const esc = String.fromCodePoint(0x1b);
+    const colored = `  status${esc}[0m${esc}[2m:${esc}[0m ${esc}[0m${esc}[33m500${esc}[0m${esc}[0m${esc}[2m,${esc}[0m`;
+    expect(colored).toContain(esc);
+    expect(stripAnsi(colored)).toBe("  status: 500,");
+    expect(isTransientError(new Error(colored))).toBe(true);
+  });
+
+  test("stripping color does not make a logical failure retryable", () => {
+    const esc = String.fromCodePoint(0x1b);
+    expect(
+      isTransientError(
+        new Error(`${esc}[31mThe command exited with status 1${esc}[0m`),
+      ),
+    ).toBe(false);
+    // A source location is still not an HTTP status once the color is gone.
+    expect(
+      isTransientError(
+        new Error(`${esc}[2m    at reconcile (argocd.ts:500:11)${esc}[0m`),
+      ),
+    ).toBe(false);
   });
 
   test("handles non-Error values", () => {
