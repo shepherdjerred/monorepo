@@ -225,16 +225,44 @@ describe("assertUpstreamCoverage", () => {
     }).not.toThrow();
   });
 
-  test("rejects an empty index rather than reading it as no drift", () => {
-    // A 200 with `{}` or a reshaped body indexes nothing. Every model then
-    // falls through to overlay-only and the report looks byte-identical to a
-    // clean run — which would resolve a real open alert.
+  test("rejects two empty indexes rather than reading them as no drift", () => {
+    // A 200 with `{}` or a reshaped body indexes nothing. With no source left,
+    // every model falls through to overlay-only and the report looks
+    // byte-identical to a clean run — which would resolve a real open alert.
     expect(() => {
-      assertUpstreamCoverage(new Map(), healthy("openai"), providers);
-    }).toThrow(/models\.dev returned no usable models/);
+      assertUpstreamCoverage(new Map(), new Map(), providers);
+    }).toThrow(/no upstream returned usable models/);
+  });
+
+  test("names the empty fetch even when the catalog cross-checks no provider", () => {
+    // The coverage loop is vacuous with no providers, so this is the only
+    // check standing between a total fetch failure and a clean-looking report.
+    expect(() => {
+      assertUpstreamCoverage(new Map(), new Map(), new Set());
+    }).toThrow(/no upstream returned usable models/);
+  });
+
+  test("one empty source cannot abort a run the other fully covers", () => {
+    // LiteLLM is the fallback, so a transient empty payload from it is not a
+    // reason to abandon a cross-check models.dev can still substantiate — and
+    // aborting would take the whole weekly refresh down with it, publishing
+    // neither a PR nor the withheld/evidence alerts.
+    const complete = merge(healthy("openai"), healthy("anthropic"));
+    expect(() => {
+      assertUpstreamCoverage(complete, new Map(), providers);
+    }).not.toThrow();
+    // Symmetric: coverage is what matters, not which source supplied it.
+    expect(() => {
+      assertUpstreamCoverage(new Map(), complete, providers);
+    }).not.toThrow();
+  });
+
+  test("a surviving source must still cover every provider", () => {
+    // The relaxation above is not a licence to skip the real invariant: one
+    // empty source plus a partial other is still an incomplete cross-check.
     expect(() => {
       assertUpstreamCoverage(healthy("openai"), new Map(), providers);
-    }).toThrow(/litellm returned no usable models/);
+    }).toThrow(/anthropic/);
   });
 
   test("rejects a partial payload that covers no model for a provider", () => {

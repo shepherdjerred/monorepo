@@ -189,25 +189,27 @@ export function indexLiteLlm(raw: unknown): Map<string, Upstream> {
  * strength of a comparison that never happened. A degraded fetch must fail the
  * run instead, so the alert simply stays as it was.
  *
- * Both sources publish thousands of models, so an empty index is never a real
- * answer. Per-provider coverage is checked across the union rather than
- * per-source, because LiteLLM is only a fallback: models.dev alone is still
- * evidence.
+ * What must hold is coverage, not that both fetches succeeded. Coverage is
+ * therefore checked across the union: LiteLLM is only a fallback, so models.dev
+ * alone is still evidence, and either source going empty on a transient payload
+ * or shape change must not abort a run the other source can still substantiate.
+ * A field no surviving source publishes is not silently treated as agreeing —
+ * it is reported as unmeasured, which is what `verdictFor` exists to say.
+ *
+ * Both sources going empty is the one case with no evidence at all behind it.
+ * The coverage loop below would catch it whenever the catalog ships a provider,
+ * but only by naming every provider at once; failing here says what actually
+ * happened, and still holds for a catalog that ships none.
  */
 export function assertUpstreamCoverage(
   modelsDev: Map<string, Upstream>,
   liteLlm: Map<string, Upstream>,
   providers: ReadonlySet<string>,
 ): void {
-  for (const [source, index] of [
-    ["models.dev", modelsDev],
-    ["litellm", liteLlm],
-  ] satisfies [string, Map<string, Upstream>][]) {
-    if (index.size === 0) {
-      throw new Error(
-        `${source} returned no usable models; refusing to report an empty cross-check as clean`,
-      );
-    }
+  if (modelsDev.size === 0 && liteLlm.size === 0) {
+    throw new Error(
+      "no upstream returned usable models; refusing to report an empty cross-check as clean",
+    );
   }
   const covered = (provider: string): boolean =>
     [...modelsDev.keys(), ...liteLlm.keys()].some((key) =>
