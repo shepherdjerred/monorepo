@@ -126,8 +126,11 @@ export function buildCatalogEvidenceAlert(
       ? [
           `No upstream published a ${field} value for ${model}, so the catalog's`,
           "number cannot be verified this run and its drift alert is not being",
-          "refreshed. Check the provider's own pricing page, or remove the model if",
-          "it is retired.",
+          "refreshed. Check the provider's own pricing page. If the model is gone",
+          "from upstream because it was retired, mark the entry",
+          '`status: "deprecated"` and maintain the number by hand — do NOT delete',
+          "the row: deprecated pricing is what costs historical usage, and the",
+          "catalog keeps superseded rows on purpose.",
         ].join("\n")
       : state === "measured"
         ? `${model}.${field} is measurable again; upstream evidence has returned.`

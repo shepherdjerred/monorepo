@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   buildCatalogAlerts,
+  buildCatalogEvidenceAlert,
   buildCatalogWithheldAlert,
   LLM_CATALOG_WITHHELD_ALERT_TTL_MS,
 } from "#shared/llm-catalog-alert.ts";
@@ -573,5 +574,21 @@ describe("retired fields close their own alerts", () => {
 
     expect(firingFor(alerts, "LlmCatalogEvidenceMissing")).toEqual([]);
     expect(firingFor(alerts, "LlmCatalogDriftWithheld")).toEqual([]);
+  });
+});
+
+describe("missing-evidence advice", () => {
+  test("never tells an operator to delete a retired model", () => {
+    // packages/docs/guides/2026-06-28_llm-models-catalog.md is explicit that
+    // superseded rows are retained — deprecated pricing is what costs
+    // historical usage. The alert used to say "remove the model if it is
+    // retired", which would destroy exactly that.
+    const description =
+      buildCatalogEvidenceAlert("gpt-5.5", "input", "missing", NOW).annotations[
+        "description"
+      ] ?? "";
+    expect(description).not.toContain("remove the model");
+    expect(description).toContain('status: "deprecated"');
+    expect(description).toContain("do NOT delete");
   });
 });
