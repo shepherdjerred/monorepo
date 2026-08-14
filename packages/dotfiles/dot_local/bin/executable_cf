@@ -11,6 +11,18 @@ set -eu
 # renovate: datasource=npm depName=cf
 CF_VERSION=0.6.0
 
+# `cf --version` and `cf --help` are pure local output: both exit 0 with no
+# credential at all. They also run before any secret exists — MACOS_FRESH_INSTALL.md
+# verifies the pinned version on a fresh machine, and install_macos.sh explicitly
+# continues when secrets are unavailable — so gating them on a token makes a
+# documented bootstrap step fail for a command that never needed auth. Everything
+# else still fails closed below.
+case "${1:-}" in
+--version | --help | -h)
+  exec bunx "cf@${CF_VERSION}" "$@"
+  ;;
+esac
+
 # The token is deliberately named CF_API_TOKEN rather than CLOUDFLARE_API_TOKEN.
 # packages/homelab/src/tofu/cloudflare authenticates purely from an ambient
 # CLOUDFLARE_API_TOKEN, supplied by `op run --env-file=.env -- tofu ...`. If that
