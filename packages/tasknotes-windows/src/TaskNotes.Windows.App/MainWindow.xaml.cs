@@ -587,7 +587,7 @@ namespace TaskNotes.Windows.App
 
         private void TaskWorkspace_TaskInvoked(TaskItem task)
         {
-            TaskWorkspace.Editor.Load(task);
+            _uiOperations.Run("open-task", () => LoadTaskAsync(task));
         }
 
         private void EditTask_Click(object sender, RoutedEventArgs e)
@@ -595,8 +595,20 @@ namespace TaskNotes.Windows.App
             _ = e;
             if (sender is FrameworkElement element && TaskFromElement(element) is TaskItem task)
             {
-                TaskWorkspace.Editor.Load(task);
+                _uiOperations.Run("open-task", () => LoadTaskAsync(task));
             }
+        }
+
+        // Both selection paths reach the editor, so both have to offer the same discard
+        // prompt navigation does. Calling Load directly overwrote every edited field and
+        // lost the previous task's changes without asking.
+        private async Task LoadTaskAsync(TaskItem task)
+        {
+            if (!await TaskWorkspace.Editor.ConfirmDiscardAsync())
+            {
+                return;
+            }
+            TaskWorkspace.Editor.Load(task);
         }
 
         private void DeleteTask_Click(object sender, RoutedEventArgs e)

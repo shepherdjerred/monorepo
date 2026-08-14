@@ -1162,8 +1162,20 @@ namespace TaskNotes.Windows.E2E
             _ = session.WaitForAutomationId(AutomationIds.QuickAddInput, cancellationToken);
             session.InvokeByName("Cancel");
 
-            session.SetValue(AutomationIds.Hotkey, "Ctrl+Alt+M");
+            // The app owns Ctrl+Alt+M from the rebind above, so a competing
+            // RegisterHotKey for the same chord returns false and the collision
+            // constructor throws, aborting before this assertion is ever recorded.
+            // Release the app's registration first, take the chord from the other
+            // process, and only then ask the app to re-apply it.
+            session.Invoke(AutomationIds.ClearHotkey);
+            _ = await session.WaitForTextAsync(
+                AutomationIds.HotkeyStatus,
+                text => text.Contains("disabled", StringComparison.OrdinalIgnoreCase),
+                cancellationToken
+            );
+
             using GlobalHotkeyCollision collisionRegistration = new("Ctrl+Alt+M");
+            session.SetValue(AutomationIds.Hotkey, "Ctrl+Alt+M");
             session.Invoke(AutomationIds.ApplyHotkey);
             string collision = await session.WaitForTextAsync(
                 AutomationIds.HotkeyStatus,
