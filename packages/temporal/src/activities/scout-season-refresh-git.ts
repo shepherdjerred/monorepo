@@ -230,9 +230,15 @@ export async function closeSeasonRefreshPr(
  * adjudication onto an open proposal PR has that work silently destroyed by the
  * next run that lands on the same branch.
  *
- * The test is authorship of the remote tip, compared against the identity our
- * own commit just used rather than a hardcoded address, so `GIT_AUTHOR_EMAIL`
+ * The test is the remote tip's author AND committer, compared against the pair
+ * our own commit just used rather than hardcoded addresses, so `GIT_AUTHOR_EMAIL`
  * overriding the repo config cannot make the bot fail to recognise itself.
+ *
+ * Both halves are load-bearing. `git commit --amend` keeps the original author
+ * and records the amender as committer, so an operator who edits the generated
+ * commit in place — rather than adding one on top — leaves an author that still
+ * says "bot". Checking the author alone would wave that straight through, which
+ * is the most likely way someone would actually tweak a proposal.
  *
  * Two alternatives do not work here, both for reasons worth recording:
  *   - Comparing the tree we are about to push against the remote tree flags
@@ -247,16 +253,17 @@ export async function closeSeasonRefreshPr(
 export async function assertRemoteBranchIsOurs(
   input: Pick<OpenPrInput, "repoDir" | "branch">,
 ): Promise<void> {
-  const authorOf = async (rev: string): Promise<string> =>
-    runCommand(["git", "log", "-1", "--format=%ae", rev], {
+  // "<author> / <committer>" — an amend changes only the second.
+  const identityOf = async (rev: string): Promise<string> =>
+    runCommand(["git", "log", "-1", "--format=%ae / %ce", rev], {
       cwd: input.repoDir,
     });
-  const ours = await authorOf("HEAD");
-  const theirs = await authorOf(`refs/remotes/origin/${input.branch}`);
+  const ours = await identityOf("HEAD");
+  const theirs = await identityOf(`refs/remotes/origin/${input.branch}`);
   if (theirs !== ours) {
     throw new Error(
-      `refusing to force-push ${input.branch}: its tip was committed by ${theirs}, not by this bot (${ours}). ` +
-        "A human has edited this proposal branch; force-pushing would destroy that work. " +
+      `refusing to force-push ${input.branch}: its tip is authored/committed by ${theirs}, not by this bot (${ours}). ` +
+        "Someone has edited this proposal branch; force-pushing would destroy that work. " +
         "Merge or close the open PR, or delete the branch, and the next run will republish.",
     );
   }

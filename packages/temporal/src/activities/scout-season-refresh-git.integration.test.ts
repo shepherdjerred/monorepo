@@ -245,6 +245,73 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
     ).rejects.toThrow(/jerred@sjer\.red/);
   });
 
+  test("refuses an amended commit, where the bot is still the author", async () => {
+    // `git commit --amend` preserves the ORIGINAL author and records the
+    // amender only as committer. Editing the generated commit in place is the
+    // most natural way to tweak a proposal, and an author-only check waves it
+    // straight through while destroying exactly the work it should protect.
+    const operatorClone = await mkdtemp(`${tmpdir()}/branch-guard-amend-`);
+    await runCommand(
+      [
+        "git",
+        "clone",
+        "-q",
+        "--branch",
+        BRANCH,
+        "--single-branch",
+        remoteDir,
+        ".",
+      ],
+      { cwd: operatorClone },
+    );
+    await Bun.write(`${operatorClone}/catalog.json`, "human adjudication");
+    await runCommand(["git", "add", "--", "catalog.json"], {
+      cwd: operatorClone,
+    });
+    await runCommand(
+      [
+        "git",
+        "-c",
+        "user.email=jerred@sjer.red",
+        "-c",
+        "user.name=Jerred",
+        "commit",
+        "-q",
+        "--amend",
+        "--no-edit",
+      ],
+      { cwd: operatorClone },
+    );
+    // The amend kept the bot as author — the exact condition that fooled the
+    // author-only check.
+    const author = await runCommand(
+      ["git", "log", "-1", "--format=%ae", "HEAD"],
+      { cwd: operatorClone },
+    );
+    expect(author).toBe(BOT);
+    await runCommand(["git", "push", "-qf", "origin", BRANCH], {
+      cwd: operatorClone,
+    });
+    await rm(operatorClone, { recursive: true, force: true });
+
+    await runCommand(
+      [
+        "git",
+        "fetch",
+        "-q",
+        "origin",
+        `refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}`,
+        "--force",
+      ],
+      { cwd: repoDir },
+    );
+    await commitAs(repoDir, BOT, "catalog.json", "bot proposal");
+
+    await expect(
+      assertRemoteBranchIsOurs({ repoDir, branch: BRANCH }),
+    ).rejects.toThrow(/jerred@sjer\.red/);
+  });
+
   test("recognises itself when GIT_AUTHOR_EMAIL overrides the repo config", async () => {
     // AGENTS.md documents GIT_AUTHOR_EMAIL as the bot identity for activities
     // that commit, and the env var beats `git config user.email`. Comparing

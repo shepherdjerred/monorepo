@@ -447,10 +447,13 @@ commit with `git checkout -B` from a fresh main clone, so the fetched
 `origin/<branch>` is never used as a base — an operator who commits an
 adjudication onto an open proposal PR would have it replaced wholesale by the
 next run landing on that branch. `assertRemoteBranchIsOurs` refuses the push
-when the remote tip's author differs from the identity our own commit just
-used. Do not swap that for a tree comparison (a branch derived from workflow
-args legitimately changes content every run) or a commit count against main
-(`scout-season-refresh` clones `--depth 1`, so that history is absent).
+when the remote tip's author OR committer differs from the pair our own commit
+just used. Both halves matter: `git commit --amend` keeps the original author
+and records only a new committer, so an author-only check waves an in-place
+edit straight through. Do not swap this for a tree comparison (a branch derived
+from workflow args legitimately changes content every run) or a commit count
+against main (`scout-season-refresh` clones `--depth 1`, so that history is
+absent).
 
 **Retry-stable is not sufficient — the key must also be stable across scheduled
 runs.** The workflow run id survives retries but changes weekly, so while a
