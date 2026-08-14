@@ -41,21 +41,15 @@ test("reports no divergence when live matches the declaration", () => {
   expect(divergences).toEqual([]);
 });
 
+// The shape a self-healing platform Application declares, and the shape the
+// release's manifest override turns it into.
+const SELF_HEALING = { enabled: true, prune: true, selfHeal: true };
+const SUSPENDED = { enabled: false, prune: true, selfHeal: true };
+
 test("reports an external child left auto-sync suspended", () => {
   const divergences = autoSyncPolicyDivergences(
-    [
-      application("worker", {
-        automated: { enabled: true, prune: true, selfHeal: true },
-      }),
-    ],
-    liveList([
-      {
-        name: "worker",
-        syncPolicy: {
-          automated: { enabled: false, prune: true, selfHeal: true },
-        },
-      },
-    ]),
+    [application("worker", { automated: SELF_HEALING })],
+    liveList([{ name: "worker", syncPolicy: { automated: SUSPENDED } }]),
   );
 
   expect(divergences).toEqual([
@@ -119,11 +113,7 @@ test("ignores an Application the rendered revision declares but the cluster lack
 
 test("treats reordered keys as equal", () => {
   const divergences = autoSyncPolicyDivergences(
-    [
-      application("worker", {
-        automated: { enabled: true, prune: true, selfHeal: true },
-      }),
-    ],
+    [application("worker", { automated: SELF_HEALING })],
     liveList([
       {
         name: "worker",

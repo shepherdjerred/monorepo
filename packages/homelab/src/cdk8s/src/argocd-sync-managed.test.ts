@@ -1,6 +1,10 @@
 import { expect, test } from "bun:test";
 import path from "node:path";
-import { operationForRootSyncRequest } from "./argocd-script-support.ts";
+import { serveIntroducedResourceLookup } from "./argocd-script-support.ts";
+import {
+  readArgocdApiContract,
+  resourceOutsideApplicationMessage,
+} from "@shepherdjerred/homelab/cdk8s/scripts/argocd-api-contract.ts";
 
 test("sync-managed rejects detached operations", async () => {
   const process = Bun.spawn(
@@ -321,91 +325,33 @@ test("sync-managed preflights a resource the requested revision introduces", asy
 // resource the requested revision introduces, which by definition has no live
 // object yet. Reading that as a hard error failed `argocd-sync` on every main
 // build once the revision declared a Job the live tree did not carry.
-function serveIntroducedResourceLookup(resourceError: {
-  readonly error: string;
-  readonly code: number;
-  readonly message: string;
-}) {
-  let syncPosts = 0;
-  const resourceQueries: string[] = [];
-  let requestedOperation: Record<string, unknown> | undefined;
-  const server = Bun.serve({
-    hostname: "127.0.0.1",
-    port: 0,
-    async fetch(request) {
-      const url = new URL(request.url);
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/v1/applications/worker" &&
-        url.searchParams.get("refresh") === "hard"
-      ) {
-        return Response.json({ status: {} });
-      }
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/v1/applications/worker/managed-resources"
-      ) {
-        return Response.json({ items: [] });
-      }
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/v1/applications/worker/manifests"
-      ) {
-        return Response.json({
-          manifests: [
-            JSON.stringify({
-              apiVersion: "batch/v1",
-              kind: "Job",
-              metadata: { name: "index-init", namespace: "worker" },
-              spec: { template: { spec: { containers: [] } } },
-            }),
-          ],
-        });
-      }
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/v1/applications/worker/resource"
-      ) {
-        resourceQueries.push(url.search);
-        return Response.json(resourceError, { status: 400 });
-      }
-      if (
-        request.method === "POST" &&
-        url.pathname === "/api/v1/applications/worker/sync"
-      ) {
-        syncPosts += 1;
-        requestedOperation = operationForRootSyncRequest(await request.json());
-        return Response.json({ operation: requestedOperation });
-      }
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/v1/applications/worker"
-      ) {
-        return Response.json({
-          status: {
-            sync: { revision: "2.0.0-43", status: "Synced" },
-            health: { status: "Healthy" },
-            operationState: {
-              phase: "Succeeded",
-              startedAt: new Date().toISOString(),
-              operation: requestedOperation,
-            },
-          },
-        });
-      }
-      return new Response("not found", { status: 404 });
-    },
-  });
-  return { server, syncPosts: () => syncPosts, resourceQueries };
-}
 
 test("sync-managed treats a resource outside the live tree as a creation", async () => {
-  // Verbatim from ArgoCD v3.5.0 — the message is the only thing that
-  // distinguishes this from any other 400.
+  // The absent-resource response comes from the recorded contract rather than a
+  // literal typed here, so this test and the offline contract tests cannot drift
+  // apart — separate fakes agreeing with each other, and both being wrong, is
+  // exactly how the original bug survived.
+  const contract = await readArgocdApiContract();
+  const absent = contract.cases.find(
+    (entry) => entry.name === "resource-absent-from-application",
+  );
+  if (absent === undefined) {
+    throw new Error("contract is missing resource-absent-from-application");
+  }
+  // The recording is against another application and resource name, so rebuild
+  // its message for this fixture's identity using the server's own format.
+  const message = resourceOutsideApplicationMessage({
+    ...absent,
+    request: {
+      application: "worker",
+      query: { resourceName: "index-init", kind: "Job", group: "batch" },
+    },
+  });
   const { server, syncPosts, resourceQueries } = serveIntroducedResourceLookup({
-    error: "Job batch index-init not found as part of application worker",
-    code: 3,
-    message: "Job batch index-init not found as part of application worker",
+    response: {
+      status: absent.response.status,
+      body: { error: message, code: 3, message },
+    },
   });
   try {
     const { exitCode, stderr } = await runSyncManagedAtRevision(
@@ -424,9 +370,14 @@ test("sync-managed treats a resource outside the live tree as a creation", async
 
 test("sync-managed still fails on an unrecognized 400 from the resource endpoint", async () => {
   const { server, syncPosts } = serveIntroducedResourceLookup({
-    error: "server misconfigured",
-    code: 3,
-    message: "server misconfigured",
+    response: {
+      status: 400,
+      body: {
+        error: "server misconfigured",
+        code: 3,
+        message: "server misconfigured",
+      },
+    },
   });
   try {
     const { exitCode, stderr } = await runSyncManagedAtRevision(
