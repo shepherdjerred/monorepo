@@ -18,6 +18,8 @@ import { ReportList } from "#src/routes/report-list.tsx";
 import { ReportDetail } from "#src/routes/report-detail.tsx";
 import { ReportForm } from "#src/routes/report-form.tsx";
 import { ReportHelp } from "#src/routes/report-help.tsx";
+import { Explore } from "#src/routes/explore.tsx";
+import { ExploreShared } from "#src/routes/explore-shared.tsx";
 import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
@@ -156,12 +158,16 @@ export const routes: RouteObject[] = [
     element: <RootLayout />,
     children: [
       { path: "login", element: <Login /> },
+      // A share link must work for someone with no Scout account, so this
+      // sits outside RequireSession alongside /login.
+      { path: "explore/s/:shareToken", element: <ExploreShared /> },
       {
         element: <RequireSession />,
         loader: requireSessionLoader,
         errorElement: <RouteErrorPanel />,
         children: [
           { index: true, element: <GuildPicker /> },
+          { path: "explore", element: <Explore /> },
           { path: "welcome", element: <OnboardingWizard /> },
           { path: "installed", element: <InstallLanding /> },
           {
