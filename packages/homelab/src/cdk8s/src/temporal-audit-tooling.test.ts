@@ -329,4 +329,33 @@ describe("temporal homelab audit tooling", () => {
       expect(names).not.toContain(prohibited);
     }
   });
+
+  it("gives the core worker the Grafana credentials and gcx configuration the audit needs", async () => {
+    const deployments = parseDeployments(await synthesizeApp());
+    const core = requireDeployment(deployments, "temporal-temporal-worker");
+    const names = envNames(core);
+
+    // ensureGcxContext() (packages/temporal/src/activities/gcx-context.ts) reads
+    // these two to provision the gcx `homelab` context; GCX_CONFIG pins where
+    // that config lands, independent of the base image's HOME.
+    for (const required of [
+      "GRAFANA_URL",
+      "GRAFANA_API_KEY",
+      "GCX_CONFIG",
+      "GCX_NO_UPDATE_NOTIFIER",
+      "GCX_TELEMETRY",
+    ]) {
+      expect(names).toContain(required);
+    }
+
+    // The agent worker is deliberately denied the same credentials.
+    const agent = requireDeployment(
+      deployments,
+      "temporal-temporal-agent-worker",
+    );
+    const agentNames = envNames(agent);
+    for (const prohibited of ["GRAFANA_API_KEY", "GCX_CONFIG"]) {
+      expect(agentNames).not.toContain(prohibited);
+    }
+  });
 });
