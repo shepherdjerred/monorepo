@@ -18,13 +18,29 @@ export type ManagedResource = z.infer<typeof ManagedResourceSchema>;
 const JsonObjectSchema = z.record(z.string(), z.unknown());
 const PROBE_HANDLERS = ["exec", "grpc", "httpGet", "tcpSocket"] as const;
 
+/**
+ * Unreadable state stays fatal — a resource whose live or target state cannot
+ * be parsed is a broken contract, not a finding, and continuing would report
+ * "no immutable changes" for a resource nobody actually inspected. But the
+ * failure has to say which resource and which side, because the preflight
+ * reads every managed resource in the application and a bare JSON or Zod
+ * message names none of them.
+ */
 function parseObject(
   source: string | undefined,
+  resource: ManagedResource,
+  field: "liveState" | "targetState",
 ): Record<string, unknown> | null {
   if (source === undefined || source === "" || source === "null") {
     return null;
   }
-  return JsonObjectSchema.parse(JSON.parse(source));
+  try {
+    return JsonObjectSchema.parse(JSON.parse(source));
+  } catch (error) {
+    throw new Error(`Could not read ${field} for ${identity(resource)}`, {
+      cause: error,
+    });
+  }
 }
 
 function valueAt(
@@ -431,8 +447,8 @@ export function analyzeApplySafety(
 ): readonly string[] {
   const findings: string[] = [];
   for (const resource of resources) {
-    const live = parseObject(resource.liveState);
-    const target = parseObject(resource.targetState);
+    const live = parseObject(resource.liveState, resource, "liveState");
+    const target = parseObject(resource.targetState, resource, "targetState");
     if (live === null || target === null) {
       continue;
     }

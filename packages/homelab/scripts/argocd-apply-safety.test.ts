@@ -24,6 +24,28 @@ const declaredClaim = {
   },
 };
 
+// A StatefulSet whose live claim template carries keys the API server added on
+// top of what the chart declared, which is the state that makes an author-owned
+// removal easy to miss.
+function databaseWithApiPopulatedClaim(
+  apiPopulated: Record<string, unknown>,
+  targetClaim: unknown = declaredClaim,
+) {
+  return {
+    group: "apps",
+    kind: "StatefulSet",
+    namespace: "test",
+    name: "db",
+    liveState: database([
+      {
+        ...declaredClaim,
+        spec: { ...declaredClaim.spec, ...apiPopulated },
+      },
+    ]),
+    targetState: database([targetClaim]),
+  };
+}
+
 describe("ArgoCD apply safety", () => {
   test("reports immutable StatefulSet template changes", () => {
     const findings = analyzeApplySafety([
@@ -163,21 +185,66 @@ describe("ArgoCD apply safety", () => {
   test("ignores API-defaulted fields inside an immutable template", () => {
     expect(
       analyzeApplySafety([
+        databaseWithApiPopulatedClaim({ volumeMode: "Filesystem" }),
+      ]),
+    ).toEqual([]);
+  });
+});
+
+// The preflight reads every managed resource in the application, so an
+// unreadable one has to name itself. Staying fatal is the point — reporting no
+// immutable changes for a resource nobody could inspect is the failure mode
+// worth avoiding — but a bare JSON or Zod message identifies nothing.
+describe("ArgoCD apply safety on unreadable state", () => {
+  test("names the resource and side when live state will not parse", () => {
+    expect(() =>
+      analyzeApplySafety([
         {
           group: "apps",
           kind: "StatefulSet",
-          namespace: "test",
-          name: "db",
-          liveState: database([
-            {
-              ...declaredClaim,
-              spec: { ...declaredClaim.spec, volumeMode: "Filesystem" },
-            },
-          ]),
-          targetState: database([declaredClaim]),
+          namespace: "media",
+          name: "index",
+          liveState: "{not json",
+          targetState: state({ spec: {} }),
         },
       ]),
-    ).toEqual([]);
+    ).toThrow("Could not read liveState for apps/StatefulSet media/index");
+  });
+
+  test("names the resource and side when target state is not an object", () => {
+    expect(() =>
+      analyzeApplySafety([
+        {
+          kind: "PersistentVolumeClaim",
+          namespace: "media",
+          name: "data",
+          liveState: state({ spec: {} }),
+          targetState: "[1,2,3]",
+        },
+      ]),
+    ).toThrow(
+      "Could not read targetState for /PersistentVolumeClaim media/data",
+    );
+  });
+
+  test("preserves the underlying parse error as the cause", () => {
+    try {
+      analyzeApplySafety([
+        {
+          kind: "Service",
+          namespace: "test",
+          name: "api",
+          liveState: "{not json",
+          targetState: state({ spec: {} }),
+        },
+      ]);
+      throw new Error("expected analyzeApplySafety to throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect(error instanceof Error ? error.cause : undefined).toBeInstanceOf(
+        Error,
+      );
+    }
   });
 });
 
@@ -287,28 +354,13 @@ describe("ArgoCD immutable keys inside a claim template", () => {
   test("reports an author-owned key dropped from a claim template", () => {
     expect(
       analyzeApplySafety([
-        {
-          group: "apps",
-          kind: "StatefulSet",
-          namespace: "test",
-          name: "db",
-          liveState: database([
-            {
-              ...declaredClaim,
-              spec: {
-                ...declaredClaim.spec,
-                volumeMode: "Filesystem",
-                storageClassName: "zfs-ssd",
-              },
-            },
-          ]),
-          targetState: database([
-            {
-              ...declaredClaim,
-              spec: { resources: { requests: { storage: "8Gi" } } },
-            },
-          ]),
-        },
+        databaseWithApiPopulatedClaim(
+          { volumeMode: "Filesystem", storageClassName: "zfs-ssd" },
+          {
+            ...declaredClaim,
+            spec: { resources: { requests: { storage: "8Gi" } } },
+          },
+        ),
       ]),
     ).toEqual([
       "apps/StatefulSet test/db changes immutable /spec/volumeClaimTemplates/[name=data]/spec/accessModes",
@@ -354,24 +406,11 @@ describe("ArgoCD immutable keys inside a claim template", () => {
   test("ignores a template that differs only by API-populated keys", () => {
     expect(
       analyzeApplySafety([
-        {
-          group: "apps",
-          kind: "StatefulSet",
-          namespace: "test",
-          name: "db",
-          liveState: database([
-            {
-              ...declaredClaim,
-              spec: {
-                ...declaredClaim.spec,
-                volumeMode: "Filesystem",
-                storageClassName: "zfs-ssd",
-                volumeName: "pvc-123",
-              },
-            },
-          ]),
-          targetState: database([declaredClaim]),
-        },
+        databaseWithApiPopulatedClaim({
+          volumeMode: "Filesystem",
+          storageClassName: "zfs-ssd",
+          volumeName: "pvc-123",
+        }),
       ]),
     ).toEqual([]);
   });

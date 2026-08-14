@@ -477,6 +477,18 @@ async function assertApplySafe(
   token: string,
   revision: string | undefined,
 ): Promise<void> {
+  // The hard refresh is the price of a trustworthy answer, not an oversight.
+  // `managed-resources` is served from Argo's cached comparison, which the
+  // controller only recomputes every `timeout.reconciliation` (60s), so without
+  // it this can decide apply safety from live state a minute out of date and
+  // wave through a change the API server then rejects mid-release.
+  //
+  // It is also already minimal. `refresh=hard` is per-application — there is no
+  // batch form — and the caller loop reaches this only for children it is about
+  // to sync, having skipped the converged ones. Folding it into the caller's
+  // own read would save a request but make a safety precondition depend on
+  // every future caller remembering to pre-refresh; this function is also
+  // invoked standalone by `sync-managed`.
   await getApplication(appName, token, "hard");
   const url = new URL(
     `/api/v1/applications/${encodeURIComponent(appName)}/managed-resources`,
