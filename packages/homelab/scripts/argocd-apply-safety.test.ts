@@ -15,6 +15,15 @@ function database(volumeClaimTemplates: readonly unknown[]): string {
   });
 }
 
+// Exactly what a chart declares for a claim template: no API-populated keys.
+const declaredClaim = {
+  metadata: { name: "data" },
+  spec: {
+    accessModes: ["ReadWriteOnce"],
+    resources: { requests: { storage: "8Gi" } },
+  },
+};
+
 describe("ArgoCD apply safety", () => {
   test("reports immutable StatefulSet template changes", () => {
     const findings = analyzeApplySafety([
@@ -152,13 +161,6 @@ describe("ArgoCD apply safety", () => {
   });
 
   test("ignores API-defaulted fields inside an immutable template", () => {
-    const claim = {
-      metadata: { name: "data" },
-      spec: {
-        accessModes: ["ReadWriteOnce"],
-        resources: { requests: { storage: "8Gi" } },
-      },
-    };
     expect(
       analyzeApplySafety([
         {
@@ -167,9 +169,110 @@ describe("ArgoCD apply safety", () => {
           namespace: "test",
           name: "db",
           liveState: database([
-            { ...claim, spec: { ...claim.spec, volumeMode: "Filesystem" } },
+            {
+              ...declaredClaim,
+              spec: { ...declaredClaim.spec, volumeMode: "Filesystem" },
+            },
           ]),
-          targetState: database([claim]),
+          targetState: database([declaredClaim]),
+        },
+      ]),
+    ).toEqual([]);
+  });
+});
+
+// Dropping a key *inside* a declared immutable field is as rejectable as
+// changing one, but comparing only the target's keys reported it as no change.
+describe("ArgoCD immutable nested key removal", () => {
+  test("reports a selector label removed from the declaration", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "DaemonSet",
+          namespace: "observability",
+          name: "alloy",
+          liveState: state({
+            spec: { selector: { matchLabels: { app: "alloy", tier: "logs" } } },
+          }),
+          targetState: state({
+            spec: { selector: { matchLabels: { app: "alloy" } } },
+          }),
+        },
+        {
+          kind: "PersistentVolumeClaim",
+          namespace: "media",
+          name: "data",
+          liveState: state({
+            spec: { selector: { matchLabels: { tier: "hot", zone: "a" } } },
+          }),
+          targetState: state({
+            spec: { selector: { matchLabels: { tier: "hot" } } },
+          }),
+        },
+      ]),
+    ).toEqual([
+      "apps/DaemonSet observability/alloy changes immutable /spec/selector",
+      "/PersistentVolumeClaim media/data changes immutable /spec/selector",
+    ]);
+  });
+
+  test("reports a matchExpressions entry removed from a selector", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "Deployment",
+          namespace: "media",
+          name: "relay",
+          liveState: state({
+            spec: {
+              selector: {
+                matchLabels: { app: "relay" },
+                matchExpressions: [
+                  { key: "tier", operator: "In", values: ["hot"] },
+                ],
+              },
+            },
+          }),
+          targetState: state({
+            spec: { selector: { matchLabels: { app: "relay" } } },
+          }),
+        },
+      ]),
+    ).toEqual(["apps/Deployment media/relay changes immutable /spec/selector"]);
+  });
+
+  // The opposite classification: the API server owns keys inside a claim
+  // template, so a live-only key there is its doing and must stay silent even
+  // though the identical shape is a finding for a selector.
+  test("ignores API-populated keys nested deep inside a claim template", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "test",
+          name: "db",
+          liveState: database([
+            {
+              ...declaredClaim,
+              metadata: {
+                ...declaredClaim.metadata,
+                creationTimestamp: null,
+              },
+              spec: {
+                ...declaredClaim.spec,
+                volumeMode: "Filesystem",
+                storageClassName: "zfs-ssd",
+                resources: {
+                  requests: { storage: "8Gi" },
+                  limits: { storage: "8Gi" },
+                },
+              },
+            },
+          ]),
+          targetState: database([declaredClaim]),
         },
       ]),
     ).toEqual([]);

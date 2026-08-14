@@ -42,22 +42,58 @@ function valueAt(
   return current;
 }
 
-function targetMatchesLive(target: unknown, live: unknown): boolean {
+/**
+ * What a key found only in the live value means. `omission` below classifies
+ * dropping a whole immutable field; this classifies dropping something inside
+ * one. Comparing only the target's keys answered that silently as "no change",
+ * so removing a selector label passed the preflight and was rejected later by
+ * the API server, mid-release, after earlier resources had already applied.
+ */
+type LiveOnlyKeys =
+  /**
+   * The API server populates keys the request never sets, so a live-only key
+   * is its doing rather than a removal. Only the declared keys can be
+   * compared; flagging the rest would fail every release whose chart omits a
+   * defaulted key.
+   */
+  | "api-populates"
+  /**
+   * The chart author owns every key, so a key that exists only in live was
+   * removed from the declaration. Kubernetes rejects that like any other
+   * change to an immutable field.
+   */
+  | "removes-managed-key";
+
+function targetMatchesLive(
+  target: unknown,
+  live: unknown,
+  liveOnlyKeys: LiveOnlyKeys,
+): boolean {
   if (Array.isArray(target)) {
     return (
       Array.isArray(live) &&
       target.length === live.length &&
-      target.every((entry, index) => targetMatchesLive(entry, live[index]))
+      target.every((entry, index) =>
+        targetMatchesLive(entry, live[index], liveOnlyKeys),
+      )
     );
   }
   const targetObject = JsonObjectSchema.safeParse(target);
   if (targetObject.success) {
     const liveObject = JsonObjectSchema.safeParse(live);
-    return (
-      liveObject.success &&
-      Object.entries(targetObject.data).every(([key, value]) =>
-        targetMatchesLive(value, liveObject.data[key]),
+    if (!liveObject.success) {
+      return false;
+    }
+    if (
+      liveOnlyKeys === "removes-managed-key" &&
+      Object.keys(liveObject.data).some(
+        (key) => !Object.hasOwn(targetObject.data, key),
       )
+    ) {
+      return false;
+    }
+    return Object.entries(targetObject.data).every(([key, value]) =>
+      targetMatchesLive(value, liveObject.data[key], liveOnlyKeys),
     );
   }
   return JSON.stringify(target) === JSON.stringify(live);
@@ -72,6 +108,7 @@ function targetMatchesLive(target: unknown, live: unknown): boolean {
  */
 type ImmutableField = {
   readonly path: readonly string[];
+  readonly liveOnlyKeys: LiveOnlyKeys;
 } & (
   | {
       /**
@@ -123,7 +160,7 @@ function declaredTargetChanged(
   const liveValue = valueAt(live, field.path);
   return targetValue === undefined
     ? omissionChanges(field, liveValue)
-    : !targetMatchesLive(targetValue, liveValue);
+    : !targetMatchesLive(targetValue, liveValue, field.liveOnlyKeys);
 }
 
 function activeProbeHandler(probe: Record<string, unknown>): string | null {
@@ -204,7 +241,11 @@ function immutableFields(kind: string): readonly ImmutableField[] {
     case "DaemonSet":
     case "Deployment":
       return [
-        { path: ["spec", "selector"], omission: "removes-managed-field" },
+        {
+          path: ["spec", "selector"],
+          omission: "removes-managed-field",
+          liveOnlyKeys: "removes-managed-key",
+        },
       ];
     case "StatefulSet":
       return [
@@ -212,41 +253,94 @@ function immutableFields(kind: string): readonly ImmutableField[] {
           path: ["spec", "podManagementPolicy"],
           omission: "resets-to-default",
           apiDefault: "OrderedReady",
+          liveOnlyKeys: "removes-managed-key",
         },
-        { path: ["spec", "selector"], omission: "removes-managed-field" },
-        { path: ["spec", "serviceName"], omission: "removes-managed-field" },
+        {
+          path: ["spec", "selector"],
+          omission: "removes-managed-field",
+          liveOnlyKeys: "removes-managed-key",
+        },
+        {
+          path: ["spec", "serviceName"],
+          omission: "removes-managed-field",
+          liveOnlyKeys: "removes-managed-key",
+        },
         {
           path: ["spec", "volumeClaimTemplates"],
           omission: "removes-managed-field",
+          // Each template is a claim the API server defaults like any other:
+          // volumeMode, storageClassName, and status appear on the live copy
+          // whether or not the chart wrote them.
+          liveOnlyKeys: "api-populates",
         },
       ];
     case "PersistentVolumeClaim":
       return [
-        { path: ["spec", "accessModes"], omission: "removes-managed-field" },
+        {
+          path: ["spec", "accessModes"],
+          omission: "removes-managed-field",
+          liveOnlyKeys: "removes-managed-key",
+        },
         // The API server cross-populates these two, so a claim authored with
         // only one of them reports both. Treating an omission as a change would
         // fail every such claim, so under-report rather than block releases.
-        { path: ["spec", "dataSource"], omission: "keeps-live-value" },
-        { path: ["spec", "dataSourceRef"], omission: "keeps-live-value" },
+        // The same cross-population adds keys inside them.
+        {
+          path: ["spec", "dataSource"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "api-populates",
+        },
+        {
+          path: ["spec", "dataSourceRef"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "api-populates",
+        },
         // Binds the claim to a matching volume. The author owns it and nothing
         // defaults it, so changing or dropping it is an immutable update.
-        { path: ["spec", "selector"], omission: "removes-managed-field" },
+        {
+          path: ["spec", "selector"],
+          omission: "removes-managed-field",
+          liveOnlyKeys: "removes-managed-key",
+        },
         // Defaulted from the cluster's default StorageClass at creation, so a
         // live claim carries one whether or not the chart ever declared it.
-        { path: ["spec", "storageClassName"], omission: "keeps-live-value" },
+        {
+          path: ["spec", "storageClassName"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "removes-managed-key",
+        },
         {
           path: ["spec", "volumeMode"],
           omission: "resets-to-default",
           apiDefault: "Filesystem",
+          liveOnlyKeys: "removes-managed-key",
         },
-        { path: ["spec", "volumeName"], omission: "keeps-live-value" },
+        {
+          path: ["spec", "volumeName"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "removes-managed-key",
+        },
       ];
     case "Service":
-      // All three are assigned by the cluster, not the chart.
+      // All three are assigned by the cluster, not the chart. Each holds a
+      // string or a list of strings, so there is no key inside for the API
+      // server to populate.
       return [
-        { path: ["spec", "clusterIP"], omission: "keeps-live-value" },
-        { path: ["spec", "clusterIPs"], omission: "keeps-live-value" },
-        { path: ["spec", "ipFamilies"], omission: "keeps-live-value" },
+        {
+          path: ["spec", "clusterIP"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "removes-managed-key",
+        },
+        {
+          path: ["spec", "clusterIPs"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "removes-managed-key",
+        },
+        {
+          path: ["spec", "ipFamilies"],
+          omission: "keeps-live-value",
+          liveOnlyKeys: "removes-managed-key",
+        },
       ];
     default:
       return [];

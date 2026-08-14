@@ -106,8 +106,13 @@ adopted.
 The apply-safety preflight inspects the revision the sync will request, not the
 Application's currently configured source, including resources that revision
 introduces, whose live state it reads directly because `managed-resources`
-describes only the configured revision. Only the self-managed root
-Application remains auto-sync suspended while those operations run.
+describes only the configured revision. Every immutable field declares both
+what omitting the whole field means and what a key found only in the live value
+means, because dropping a key inside a declared field is as rejectable as
+changing one; only fields the API server populates keys inside, such as a
+StatefulSet's claim templates, compare the declared keys alone. Only the
+self-managed root Application remains auto-sync suspended while those
+operations run.
 
 Ordinary manual or UI root syncs are supported. Admission merges each managed
 child Application's declared sync options into the requested operation, with
