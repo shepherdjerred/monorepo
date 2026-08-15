@@ -474,6 +474,30 @@ describe("explore store — ownership", () => {
     ).rejects.toBeInstanceOf(ExploreNotFoundError);
   });
 
+  test("a stale currentLeafId cannot become a parent", async () => {
+    // `deepestLeafFrom` returns the pointer unchanged when nothing descends
+    // from it, without checking it is a node at all, and `parentId` has no
+    // foreign key — so an unvalidated stale pointer is written silently and
+    // leaves the question hanging off an id no transcript walk reaches.
+    const first = await askAndAnswer({
+      conversationId: null,
+      question: "Which champion has the most games?",
+    });
+    await prisma.exploreConversation.update({
+      where: { id: first.conversationId },
+      data: { currentLeafId: "44444444-4444-4444-8444-444444444444" },
+    });
+
+    await expect(
+      startExploreTurn(prisma, {
+        conversationId: first.conversationId,
+        userId,
+        question: "Follow-up onto a pointer that is not in the tree.",
+        attach: { kind: "leaf" },
+      }),
+    ).rejects.toBeInstanceOf(ExploreNotFoundError);
+  });
+
   test("attaching to a message from another conversation is refused", async () => {
     const first = await askAndAnswer({
       conversationId: null,

@@ -162,6 +162,16 @@ export function useExploreTurn(params: {
           },
           signal: controller.signal,
           onEvent: (event) => {
+            // The same ownership question the finally block asks, and for the
+            // same reason. `abortForNavigation` clears `turnRef` synchronously,
+            // so a newer turn can be underway while this stream is still
+            // draining: one `reader.read()` can carry several SSE blocks and
+            // dispatches them with no abort checkpoint between them. Without
+            // this, those leftovers edit the new turn's state and can announce
+            // the abandoned run's conversation.
+            if (readSeq(seqRef) !== seq) {
+              return;
+            }
             const current = turnRef.current;
             if (current === null) {
               return;

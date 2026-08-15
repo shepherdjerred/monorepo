@@ -310,8 +310,19 @@ export async function startExploreTurn(
       : input.attach.kind === "root"
         ? null
         : input.attach.messageId;
+  // Whichever attach point produced it, a parent must be a row in THIS
+  // conversation. `message` names one directly. `leaf` resolves
+  // `currentLeafId`, and `deepestLeafFrom` returns that pointer unchanged when
+  // nothing descends from it — without checking it is a node at all — so a
+  // stale pointer resolves to itself. `parentId` carries no foreign key, so an
+  // unchecked one is written silently and leaves a message hanging off an id
+  // that is not in the tree, where no transcript walk will ever reach it.
+  //
+  // Deliberately strict here and lenient in `buildTranscript`, which resolves
+  // the same pointer for reading: a stale pointer should still render a
+  // conversation, but it must not be able to author into one.
   if (
-    input.attach.kind === "message" &&
+    parentId !== null &&
     !existing.messages.some((message) => message.id === parentId)
   ) {
     throw new ExploreNotFoundError("Message not found.");
