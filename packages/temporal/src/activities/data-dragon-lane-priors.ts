@@ -71,11 +71,24 @@ type RunCommand = (
   },
 ) => Promise<string>;
 
-/** Injected so the stub-`runCommand` tests stay hermetic (no real filesystem). */
-type FileExists = (path: string) => Promise<boolean>;
+/**
+ * Last-modified time of the artifact, or null when it does not exist.
+ *
+ * Injected so the stub-`runCommand` tests stay hermetic (no real filesystem).
+ * Modification time rather than a content hash, because the question is whether
+ * the generator WROTE this run, not whether the result differs: a run that
+ * legitimately reproduces identical bytes still has to count as written, and a
+ * hash comparison would reject it.
+ */
+type ArtifactMtimeMs = (path: string) => Promise<number | null>;
 
-async function defaultFileExists(path: string): Promise<boolean> {
-  return await Bun.file(path).exists();
+async function defaultArtifactMtimeMs(path: string): Promise<number | null> {
+  const file = Bun.file(path);
+  if (!(await file.exists())) {
+    return null;
+  }
+  const stat = await file.stat();
+  return stat.mtimeMs;
 }
 
 export function queueIdCsv(queueIds: readonly number[]): string {
@@ -137,14 +150,17 @@ export async function updateLanePriors(input: {
   repoDir: string;
   rawConfig: LanePriorUpdateConfig;
   runCommand: RunCommand;
-  fileExists?: FileExists;
+  artifactMtimeMs?: ArtifactMtimeMs;
 }): Promise<void> {
   const config = LanePriorUpdateConfigSchema.parse(input.rawConfig);
   const endpointUrl = config.endpointUrl ?? Bun.env["S3_ENDPOINT"];
   const queueIds = queueIdCsv(config.queueIds);
   const awsRegion = lanePriorAwsRegion(config);
   const artifactPath = lanePriorArtifactPath(input.repoDir);
-  const fileExists = input.fileExists ?? defaultFileExists;
+  const artifactMtimeMs = input.artifactMtimeMs ?? defaultArtifactMtimeMs;
+  // Read BEFORE generating: the artifact is committed, so it is already on disk
+  // in the bot's fresh clone and its mere presence afterwards proves nothing.
+  const mtimeBeforeGeneration = await artifactMtimeMs(artifactPath);
   const commandEnv = {
     AWS_REGION: awsRegion,
     AWS_DEFAULT_REGION: awsRegion,
@@ -179,9 +195,24 @@ export async function updateLanePriors(input: {
   // the landing before the eval reads it back, so a future path regression
   // fails here — naming the exact missing file — instead of surfacing as an
   // unrelated-looking allowlist rejection several steps later.
-  if (!(await fileExists(artifactPath))) {
+  //
+  // Existence alone cannot say that: `lane-priors.generated.json` is committed,
+  // so the clone already carries the PREVIOUS run's copy and a generator that
+  // wrote nowhere near it leaves a file that still reads as present and valid —
+  // which is the same three-month failure wearing a different face. Only a
+  // changed modification time shows this run produced it.
+  const mtimeAfterGeneration = await artifactMtimeMs(artifactPath);
+  if (mtimeAfterGeneration === null) {
     throw new Error(
       `Lane-prior generation reported success but wrote no artifact at ${artifactPath}. ` +
+        `The lane-prior CLI resolves its path flags against its own cwd, which ` +
+        `\`bun run --filter\` sets to the filtered package — pass absolute paths.`,
+    );
+  }
+  if (mtimeAfterGeneration === mtimeBeforeGeneration) {
+    throw new Error(
+      `Lane-prior generation reported success but left the committed artifact at ` +
+        `${artifactPath} untouched, so it still holds the previous run's data. ` +
         `The lane-prior CLI resolves its path flags against its own cwd, which ` +
         `\`bun run --filter\` sets to the filtered package — pass absolute paths.`,
     );

@@ -10,8 +10,18 @@ import {
 
 const REPO_DIR = "/tmp/repo";
 
-/** Stands in for the artifact the real generator would have written. */
-const artifactWritten = async (): Promise<boolean> => true;
+/**
+ * Stands in for the artifact the real generator would have written: the
+ * committed copy is already there, and the run rewrites it. Each call returns a
+ * later time, so the pre-generation read and the post-generation read differ.
+ */
+function artifactWritten(): (path: string) => Promise<number | null> {
+  let mtimeMs = 1000;
+  return async () => {
+    mtimeMs += 1000;
+    return mtimeMs;
+  };
+}
 
 const config = {
   bucket: "scout-prod",
@@ -40,7 +50,7 @@ describe("updateLanePriors", () => {
         calls.push({ command, cwd: options.cwd, env: options.env });
         return "";
       },
-      fileExists: artifactWritten,
+      artifactMtimeMs: artifactWritten(),
     });
 
     expect(calls).toHaveLength(2);
@@ -112,7 +122,7 @@ describe("updateLanePriors", () => {
         calls.push({ env: options.env });
         return "";
       },
-      fileExists: artifactWritten,
+      artifactMtimeMs: artifactWritten(),
     });
 
     expect(calls).toHaveLength(2);
@@ -160,6 +170,32 @@ describe("updateLanePriors", () => {
 });
 
 /**
+ * Drive the activity with an artifact whose mtime the caller controls and assert
+ * it rejects. Both landing failures must stop BEFORE the eval, which would
+ * otherwise read a stale or missing artifact and report a meaningless verdict.
+ */
+async function expectLandingFailure(
+  artifactMtimeMs: () => Promise<number | null>,
+  message: string,
+): Promise<void> {
+  const commands: string[][] = [];
+  await expect(
+    updateLanePriors({
+      repoDir: REPO_DIR,
+      rawConfig: config,
+      runCommand: async (command) => {
+        commands.push(command);
+        return "";
+      },
+      artifactMtimeMs,
+    }),
+  ).rejects.toThrow(message);
+
+  expect(commands).toHaveLength(1);
+  expect(commands[0]).toContain("generate-lane-priors");
+}
+
+/**
  * `bun run --filter=<pkg>` runs the script with cwd set to that package, NOT to
  * the `cwd` passed alongside it. Every path flag must therefore be absolute.
  *
@@ -187,7 +223,7 @@ describe("lane-prior path flags are cwd-independent", () => {
         captured.push({ command, values });
         return "";
       },
-      fileExists: artifactWritten,
+      artifactMtimeMs: artifactWritten(),
     });
     return captured;
   }
@@ -232,24 +268,20 @@ describe("lane-prior path flags are cwd-independent", () => {
   });
 
   test("throws when generation reported success but wrote no artifact", async () => {
-    const commands: string[][] = [];
-    await expect(
-      updateLanePriors({
-        repoDir: REPO_DIR,
-        rawConfig: config,
-        runCommand: async (command) => {
-          commands.push(command);
-          return "";
-        },
-        fileExists: async () => false,
-      }),
-    ).rejects.toThrow(
+    await expectLandingFailure(
+      async () => null,
       `Lane-prior generation reported success but wrote no artifact at ${lanePriorArtifactPath(REPO_DIR)}`,
     );
+  });
 
-    // It must fail BEFORE the eval, which would otherwise read a stale or
-    // missing artifact and report a meaningless verdict.
-    expect(commands).toHaveLength(1);
-    expect(commands[0]).toContain("generate-lane-priors");
+  // The regression that an existence check cannot catch. `lane-priors.generated
+  // .json` is committed, so the bot's fresh clone already holds the previous
+  // run's copy: a generator that writes nowhere near it still leaves a present,
+  // parseable file. Modelled as an mtime that does not move across generation.
+  test("throws when generation left the committed artifact untouched", async () => {
+    await expectLandingFailure(
+      async () => 1_700_000_000_000,
+      `left the committed artifact at ${lanePriorArtifactPath(REPO_DIR)} untouched`,
+    );
   });
 });
