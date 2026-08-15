@@ -1,6 +1,6 @@
 # OpenTofu Infrastructure
 
-Manages external resources (Cloudflare DNS, GitHub repo settings, SeaweedFS S3 buckets, the Tailscale ACL policy, Buildkite, the \*arr apps, PagerDuty, and an ArgoCD CI token) with [OpenTofu](https://opentofu.org/).
+Manages external resources (Cloudflare DNS, GitHub repo settings, SeaweedFS S3 buckets, the Tailscale ACL policy, Buildkite, the \*arr apps, and an ArgoCD CI token) with [OpenTofu](https://opentofu.org/).
 
 ## Structure
 
@@ -11,7 +11,6 @@ tofu/
 ├── buildkite/           # Buildkite cluster + monorepo pipeline settings
 ├── cloudflare/          # DNS zones, bot management, email security (one .tf per domain)
 ├── github/              # Repository settings and branch rulesets
-├── pagerduty/           # On-call config, imported from the live account
 ├── seaweedfs/           # SeaweedFS S3 bucket management (AWS provider, custom endpoint)
 └── tailscale/           # Tailnet ACL policy (deny-by-default access control)
 ```
@@ -27,7 +26,6 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
   - `github` — `TF_VAR_github_token` (fine-grained PAT, classic PAT, or GitHub App token)
   - `tailscale` — `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` (scope `acl`)
   - `buildkite` — `TF_VAR_buildkite_api_token`
-  - `pagerduty` — `TF_VAR_pagerduty_token` (deliberately not `PAGERDUTY_TOKEN`, which is used elsewhere)
   - `argocd` — ArgoCD admin credentials plus `OP_CONNECT_TOKEN` for the 1Password provider
   - `arr` — Radarr/Sonarr/Prowlarr API credentials (see `arr/providers.tf`)
 
@@ -49,7 +47,7 @@ The static Buildkite pipeline ([`.buildkite/pipeline.yml`](../../../../.buildkit
 
 - **Every PR** (when tofu inputs change): `tofu plan` for `seaweedfs`, `tailscale`, `buildkite`, `arr`, `github`, and `cloudflare`.
 - **On merge to main**: applies `seaweedfs`, `tailscale`, `buildkite`, and `arr` (`tofu-apply` step); `github` in its own no-retry step (GitHub API mutations are not idempotent on partial failure); and `cloudflare` after the ArgoCD sync step's TunnelBinding deletion gate.
-- The `argocd` and `pagerduty` stacks are operator-run only — they are not in the CI plan/apply loops.
+- The `argocd` stack is operator-run only — it is not in the CI plan/apply loops.
 
 ## What's Managed
 
@@ -97,10 +95,6 @@ The Buildkite cluster and the `monorepo` pipeline's Buildkite-side settings (rep
 ### \*arr
 
 Radarr/Sonarr/Prowlarr configuration imported from the live instances. Quality profiles and custom formats are owned by Recyclarr, and Radarr/Sonarr indexers by Prowlarr's application sync — neither is in this stack.
-
-### PagerDuty
-
-On-call configuration (escalation policy, service, Events-v2 integration) imported from the live account.
 
 ### ArgoCD
 

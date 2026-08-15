@@ -567,6 +567,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // backoff ≈ 6.5m) with margin; SKIP overlap makes the wider ceiling
     // harmless against the 5-minute cadence.
     workflowExecutionTimeout: "8 minutes",
-    memo: "Notifies Alerts (via Alertmanager) with the specific error for every Temporal workflow execution that failed or timed out — see packages/docs/plans/2026-07-30_temporal-workflow-failure-pagerduty-alerts.md",
+    memo: "Notifies Alerts (via Alertmanager) with the specific error for every Temporal workflow execution that failed or timed out.",
   },
 ];

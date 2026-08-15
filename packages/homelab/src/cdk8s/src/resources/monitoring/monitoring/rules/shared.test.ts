@@ -149,7 +149,7 @@ describe("Template escaping utilities", () => {
       expect(escapeAlertmanagerTemplate(input)).toBe(input);
     });
 
-    test("should pass through JSON details for PagerDuty unchanged", () => {
+    test("should pass through JSON Alertmanager details unchanged", () => {
       const jsonTemplate = JSON.stringify(
         {
           firing: "{{ range .Alerts.Firing }}{{ . }}\n{{ end }}",

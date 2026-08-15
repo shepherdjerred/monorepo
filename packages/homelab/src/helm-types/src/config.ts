@@ -80,7 +80,7 @@ export const EXTENSIBLE_TYPE_PATTERNS: Record<string, string[]> = {
   "kube-prometheus-stack": [
     "grafana", // Allows "grafana.ini" and other quoted config keys
     "grafana.deploymentStrategy", // Allows Kubernetes Deployment strategy objects with flexible fields
-    "alertmanager.config.receivers", // Allows various *_configs (pagerduty_configs, etc.) on array elements
+    "alertmanager.config.receivers", // Allows receiver-specific config blocks on array elements
     "prometheus-node-exporter", // Allows extraHostVolumeMounts and other node exporter specific configs
     "prometheusNodeExporter", // Also support camelCase variant
   ],

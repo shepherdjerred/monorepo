@@ -139,7 +139,7 @@ describe("slash commands", () => {
         prompt: "Check health",
         status: "pending",
         triggerType: "webhook",
-        triggerSource: "pagerduty",
+        triggerSource: "webhook",
       },
     });
     await testPrisma.job.create({

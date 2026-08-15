@@ -114,7 +114,6 @@ export const testConfig: Config = {
     port: 3000,
     host: "0.0.0.0",
     githubSecret: "test-github-secret",
-    pagerdutySecret: "test-pagerduty-secret",
     bugsinkSecret: "test-bugsink-secret",
     buildkiteToken: "test-buildkite-token",
   },

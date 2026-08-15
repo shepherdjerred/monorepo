@@ -1,6 +1,11 @@
 const BANNED_ENVIRONMENT_VARIABLES: ReadonlyMap<string, string> = new Map([
   ["GRAFANA_SERVER", "GRAFANA_URL"],
   ["GRAFANA_TOKEN", "GRAFANA_API_KEY"],
+  // PagerDuty integrations were removed from the repo (no code reads
+  // PAGERDUTY_TOKEN anymore), but the deprecated spellings stay banned as
+  // defense-in-depth: without this, PAGERDUTY_API_KEY/PAGERDUTY_API_TOKEN
+  // could be reintroduced by a future integration with no gate to catch the
+  // non-canonical name.
   ["PAGERDUTY_API_KEY", "PAGERDUTY_TOKEN"],
   ["PAGERDUTY_API_TOKEN", "PAGERDUTY_TOKEN"],
   ["RIOT_API_TOKEN", "RIOT_API_KEY"],

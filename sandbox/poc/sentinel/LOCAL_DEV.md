@@ -38,20 +38,19 @@ op run --env-file=.env -- bun run dev
 
 ## Environment Variables
 
-| Variable                   | Required | Description                                            |
-| -------------------------- | -------- | ------------------------------------------------------ |
-| `DATABASE_URL`             | Yes      | SQLite database path (e.g., `file:./data/sentinel.db`) |
-| `ANTHROPIC_API_KEY`        | Yes      | Anthropic API key for Claude agent sessions            |
-| `DISCORD_TOKEN`            | No       | Discord bot token for notifications and approvals      |
-| `DISCORD_CHANNEL_ID`       | No       | Discord channel for Sentinel messages                  |
-| `DISCORD_GUILD_ID`         | No       | Discord server ID                                      |
-| `GITHUB_WEBHOOK_SECRET`    | No       | HMAC secret for GitHub webhook verification            |
-| `PAGERDUTY_WEBHOOK_SECRET` | No       | HMAC secret for PagerDuty webhook verification         |
-| `BUGSINK_WEBHOOK_SECRET`   | No       | Token for Bugsink webhook URL path verification        |
-| `BUILDKITE_WEBHOOK_TOKEN`  | No       | Token for Buildkite webhook header verification        |
-| `SENTRY_ENABLED`           | No       | Enable Sentry error tracking (default: `false`)        |
-| `TELEMETRY_ENABLED`        | No       | Enable telemetry (default: `true`)                     |
-| `LOG_LEVEL`                | No       | Pino log level (default: `info`)                       |
+| Variable                  | Required | Description                                            |
+| ------------------------- | -------- | ------------------------------------------------------ |
+| `DATABASE_URL`            | Yes      | SQLite database path (e.g., `file:./data/sentinel.db`) |
+| `ANTHROPIC_API_KEY`       | Yes      | Anthropic API key for Claude agent sessions            |
+| `DISCORD_TOKEN`           | No       | Discord bot token for notifications and approvals      |
+| `DISCORD_CHANNEL_ID`      | No       | Discord channel for Sentinel messages                  |
+| `DISCORD_GUILD_ID`        | No       | Discord server ID                                      |
+| `GITHUB_WEBHOOK_SECRET`   | No       | HMAC secret for GitHub webhook verification            |
+| `BUGSINK_WEBHOOK_SECRET`  | No       | Token for Bugsink webhook URL path verification        |
+| `BUILDKITE_WEBHOOK_TOKEN` | No       | Token for Buildkite webhook header verification        |
+| `SENTRY_ENABLED`          | No       | Enable Sentry error tracking (default: `false`)        |
+| `TELEMETRY_ENABLED`       | No       | Enable telemetry (default: `true`)                     |
+| `LOG_LEVEL`               | No       | Pino log level (default: `info`)                       |
 
 ## Running Tests
 
@@ -69,7 +68,6 @@ bun run dev
 
 # In another terminal, send a test webhook
 bun run test:webhook github
-bun run test:webhook pagerduty
 bun run test:webhook buildkite
 bun run test:webhook bugsink
 
@@ -93,7 +91,7 @@ bun run test:queue -- --db=file:./data/other.db
 ## Architecture Overview
 
 ```
-Webhooks (GitHub, PagerDuty, Buildkite, Bugsink)
+Webhooks (GitHub, Buildkite, Bugsink)
   |
   v
 Queue (SQLite via Prisma)

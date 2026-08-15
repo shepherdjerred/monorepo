@@ -1,7 +1,7 @@
 // Command amrender renders Alertmanager Go templates against fixture data using
 // the same text/template engine Alertmanager uses, so tests can assert on the
-// EXACT string Alertmanager would send to PagerDuty (incident title, custom
-// details, severity) rather than merely grepping the template source.
+// EXACT string Alertmanager would send to a receiver rather than merely
+// grepping the template source.
 //
 // It reads a JSON job list from stdin and writes a JSON result list to stdout:
 //
@@ -9,7 +9,7 @@
 //	-> {"results":[{"id":"...","output":"...","error":""}]}
 //
 // The `data` object mirrors the subset of Alertmanager's template.Data contract
-// that the PagerDuty receiver templates use: CommonLabels, CommonAnnotations,
+// that the receiver templates use: CommonLabels, CommonAnnotations,
 // GroupLabels (maps), Alerts (each with Status/Labels/Annotations, exposing the
 // Firing/Resolved methods), and ExternalURL. The templates in scope use only Go
 // text/template builtins (if/else/range/eq/gt/len/index), so stdlib rendering is
@@ -49,7 +49,7 @@ func (as alerts) filter(status string) alerts {
 }
 
 // data mirrors prometheus/alertmanager/template.Data (subset used by the
-// PagerDuty receiver templates).
+// receiver templates).
 type data struct {
 	Receiver          string `json:"receiver"`
 	Status            string `json:"status"`

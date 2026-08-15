@@ -102,7 +102,6 @@ function loadConfigFromEnv(): Config {
       port: parseNumber(resolveEnv("WEBHOOKS_PORT"), 3000),
       host: resolveEnv("WEBHOOKS_HOST") ?? "0.0.0.0",
       githubSecret: resolveEnv("GITHUB_WEBHOOK_SECRET"),
-      pagerdutySecret: resolveEnv("PAGERDUTY_WEBHOOK_SECRET"),
       bugsinkSecret: resolveEnv("BUGSINK_WEBHOOK_SECRET"),
       buildkiteToken: resolveEnv("BUILDKITE_WEBHOOK_TOKEN"),
     },

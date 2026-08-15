@@ -5,8 +5,8 @@ import { scoutScheduledReportLastSuccessTimestamp } from "#src/metrics/report-ru
 const logger = createLogger("schedule-metric-seed");
 
 // Seed the per-report "last successful scheduled run" gauge from DB on
-// startup. Without this, the `ScoutScheduledReportMissed*` PagerDuty
-// alerts can't fire until the next scheduled fire — which for a
+// startup. Without this, the `ScoutScheduledReportMissed*` alerts can't fire
+// until the next scheduled fire — which for a
 // once-a-week report could be 7 days. After this seed, the alert is
 // immediately accurate against historical state.
 //

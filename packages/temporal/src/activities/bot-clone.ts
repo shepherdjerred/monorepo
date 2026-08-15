@@ -6,8 +6,8 @@ export type BotCloneCommandRunner = typeof runCommand;
 // hand: that package (@shepherdjerred/root-scripts) has no `exports` map and
 // isn't set up as a cross-package library (its own doc comment scopes it to
 // CI-script exit-code semantics), so this duplicates the minimal classifier
-// rather than reshaping that package's boundary. Root cause of PagerDuty
-// #6948: a `registry.npmjs.org` tarball-extraction blip during
+// rather than reshaping that package's boundary. A `registry.npmjs.org`
+// tarball-extraction blip during
 // rootInstallWithoutHooks forced Temporal's full 5-minute-backoff activity
 // retry, redoing the whole clone+build+asset-download pipeline for one
 // flaky install.

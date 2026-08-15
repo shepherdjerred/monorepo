@@ -180,63 +180,6 @@ export async function handleCheckSuite(
   }
 }
 
-export async function handlePagerDutyEvent(
-  payload: Record<string, unknown>,
-): Promise<WebhookResult> {
-  const event = getRecord(payload, "event");
-  if (event == null) return { status: "error", error: "missing event" };
-
-  const eventType = getString(event, "event_type");
-  if (eventType !== "incident.triggered") {
-    return { status: "ignored", reason: "unhandled event type" };
-  }
-
-  const eventId = getString(event, "id");
-  const eventData = getRecord(event, "data");
-  const title =
-    (eventData == null ? undefined : getString(eventData, "title")) ??
-    "unknown";
-  const urgency =
-    (eventData == null ? undefined : getString(eventData, "urgency")) ??
-    "unknown";
-  const htmlUrl =
-    (eventData == null ? undefined : getString(eventData, "html_url")) ??
-    "unknown";
-  const service =
-    eventData == null
-      ? undefined
-      : extractNestedString(eventData, "service", "summary");
-
-  const prompt = buildPromptBlock(
-    "A PagerDuty incident has been triggered. Investigate and triage this alert.",
-    {
-      Title: title,
-      Service: service ?? "unknown",
-      Urgency: urgency,
-      URL: htmlUrl,
-    },
-  );
-
-  try {
-    const job = await enqueueJob({
-      agent: "pd-triager",
-      prompt,
-      triggerType: "webhook",
-      triggerSource: "pagerduty",
-      ...(eventId == null ? {} : { deduplicationKey: `pagerduty:${eventId}` }),
-      triggerMetadata: { eventType, eventId, title, service, urgency },
-    });
-    webhookLogger.info(
-      { jobId: job.id, title, service },
-      "PagerDuty incident enqueued",
-    );
-    return { status: "enqueued", jobId: job.id };
-  } catch (error: unknown) {
-    webhookLogger.error({ error }, "Failed to enqueue PagerDuty job");
-    return { status: "error", error: "enqueue failed" };
-  }
-}
-
 export async function handleBugsinkEvent(
   rawBody: string,
 ): Promise<WebhookResult> {

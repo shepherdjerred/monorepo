@@ -18,7 +18,7 @@
 # `events` list; the resulting apply resent the whole `configuration`
 # block including the literal "********", and GitHub accepted it as the
 # new real secret -- silently breaking the live webhook's HMAC
-# verification for ~ a day before it was noticed via a PagerDuty alert
+# verification for ~ a day before it was noticed via a monitoring alert
 # and a required-status-check outage. Confirmed root cause via live HMAC
 # verification against a real GitHub delivery.
 #

@@ -894,7 +894,7 @@
         "rejects with `501 NotImplemented` (\"Header 'x-amz-tagging' with value '' not implemented\").",
         "That fails Velero's backup-metadata upload, so every backup since the v1.14.1 deploy",
         "(2026-06-21, PR #1307) is marked Failed and leaves orphaned ZFS snapshots + R2 data behind",
-        "(PagerDuty #5860, #5849). v1.14.2 is NOT a fix — it still sets Tagging unconditionally; the",
+        "(incidents #5860 and #5849). v1.14.2 is NOT a fix — it still sets Tagging unconditionally; the",
         "upstream guard (velero-io/velero-plugin-for-aws#299) is on main, not in any release yet.",
         "Renovate is blocked to <1.14.1 in renovate.json until a release contains #299 and is",
         "verified on R2. See packages/docs/todos/velero-aws-plugin-r2-tagging.md."

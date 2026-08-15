@@ -379,7 +379,6 @@ describe("Helm Escaping - E2E Content Verification (dist/)", () => {
       expect(result.stdout).toContain(
         "persistentvolumeclaims=[velero.io/backup]",
       );
-      expect(result.stdout).not.toContain("pagerduty_configs:");
     },
     HELM_TEMPLATE_TIMEOUT_MS,
   );

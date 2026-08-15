@@ -20,7 +20,6 @@
  *   TF_VAR_PROWLARR_API_KEY, TF_VAR_QBITTORRENT_PASSWORD,
  *   TF_VAR_PRIVATEHD_PASSWORD, TF_VAR_PRIVATEHD_PID, TF_VAR_AVISTAZ_PASSWORD,
  *   TF_VAR_AVISTAZ_PID, TF_VAR_ANIMEZ_PASSWORD, TF_VAR_ANIMEZ_PID,
- *   TF_VAR_PAGERDUTY_TOKEN
  */
 
 import { existsSync } from "node:fs";
@@ -68,7 +67,6 @@ const OPTIONAL_SECRET_ENV: readonly [source: string, target: string][] = [
   ["AVISTAZ_PID", "TF_VAR_avistaz_pid"],
   ["ANIMEZ_PASSWORD", "TF_VAR_animez_password"],
   ["ANIMEZ_PID", "TF_VAR_animez_pid"],
-  ["PAGERDUTY_TOKEN", "TF_VAR_pagerduty_token"],
 ];
 
 /** Build the env the tofu subprocess runs with. */

@@ -8,10 +8,6 @@ const PROVIDERS = {
     opField: "github-webhook-secret",
     envVar: "GITHUB_WEBHOOK_SECRET",
   },
-  pagerduty: {
-    opField: "pagerduty-webhook-secret",
-    envVar: "PAGERDUTY_WEBHOOK_SECRET",
-  },
   buildkite: {
     opField: "buildkite-webhook-token",
     envVar: "BUILDKITE_WEBHOOK_TOKEN",
@@ -75,24 +71,6 @@ function makeGitHubPayload(): Record<string, unknown> {
   };
 }
 
-function makePagerDutyPayload(): Record<string, unknown> {
-  return {
-    event: {
-      id: "test-event-001",
-      event_type: "incident.triggered",
-      data: {
-        id: "P123ABC",
-        title: "High CPU usage on production web server",
-        urgency: "high",
-        html_url: "https://example.pagerduty.com/incidents/P123ABC",
-        service: {
-          summary: "Production Web App",
-        },
-      },
-    },
-  };
-}
-
 function makeBuildkitePayload(): Record<string, unknown> {
   return {
     event: "build.finished",
@@ -138,13 +116,6 @@ async function sendWebhook(provider: Provider, baseUrl: string): Promise<void> {
       headers["X-GitHub-Delivery"] = crypto.randomUUID();
       break;
     }
-    case "pagerduty": {
-      url = `${baseUrl}/webhook/pagerduty`;
-      body = JSON.stringify(makePagerDutyPayload());
-      const signature = `v1=${createHmac("sha256", secret).update(body).digest("hex")}`;
-      headers["X-PagerDuty-Signature"] = signature;
-      break;
-    }
     case "buildkite": {
       url = `${baseUrl}/webhook/buildkite`;
       body = JSON.stringify(makeBuildkitePayload());
@@ -180,14 +151,14 @@ async function sendWebhook(provider: Provider, baseUrl: string): Promise<void> {
   }
 }
 
-const ProviderSchema = z.enum(["github", "pagerduty", "buildkite", "bugsink"]);
+const ProviderSchema = z.enum(["github", "buildkite", "bugsink"]);
 const baseUrl = Bun.argv[3] ?? "http://localhost:3000";
 
 const parsed = ProviderSchema.safeParse(Bun.argv[2]);
 
 if (!parsed.success) {
   console.error(`Usage: bun run scripts/test-webhook.ts <provider> [url]`);
-  console.error(`  provider: github | pagerduty | buildkite | bugsink`);
+  console.error(`  provider: github | buildkite | bugsink`);
   console.error(`  url: defaults to http://localhost:3000`);
   process.exit(1);
 }

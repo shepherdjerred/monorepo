@@ -20,9 +20,9 @@ one — see the last section.
 
 ## 2. Confirm the run actually failed
 
-Find the execution in the UI. `temporal-failure-watch` pages PagerDuty for any
-execution that failed or timed out in the last 15 minutes, one alert per run, so
-a page usually means there is a real execution to read.
+Find the execution in the UI. `temporal-failure-watch` sends one Alerts
+occurrence for any execution that failed or timed out in the last 24 hours, so
+an occurrence usually means there is a real execution to read.
 
 ## 3. Classify a timeout
 

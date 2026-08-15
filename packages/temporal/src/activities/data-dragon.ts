@@ -555,8 +555,8 @@ export const dataDragonActivities = {
       // this catch, so recording the failed metric here would silently miss
       // exactly those outages — while a per-attempt record would also
       // double-count across the retries the workflow already collapses into one
-      // terminal failure (PagerDuty #6948: a transient attempt-1 blip must not
-      // page when attempt 2 self-heals). This block only logs the attempt.
+      // terminal failure. A transient attempt-1 blip must not create a false
+      // failure signal when attempt 2 self-heals. This block only logs the attempt.
       jsonLog("error", "Data Dragon update attempt failed", {
         ...input,
         attempt,
