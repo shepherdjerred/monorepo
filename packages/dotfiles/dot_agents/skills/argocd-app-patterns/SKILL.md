@@ -328,13 +328,13 @@ export async function createPrometheusApp(chart: Chart) {
       },
     },
 
-    // Alertmanager with PagerDuty
+    // Alertmanager with a receiver
     alertmanager: {
       config: {
         receivers: [
           {
-            name: "pagerduty",
-            pagerduty_configs: [{ routing_key_file: "/path/to/key" }],
+            name: "alerts",
+            webhook_configs: [{ url: "http://alerts.example/webhook" }],
           },
         ],
       },

@@ -16,7 +16,7 @@ export const UPDATE_DATA_DRAGON_MAX_ATTEMPTS = 2;
  * 1-indexed via `Context.current().info.attempt`. Only the final attempt's
  * outcome should feed the `outcome="failed"` metric that backs the paging
  * alert — an earlier attempt that gets retried and later succeeds must not
- * page (PagerDuty #6948).
+ * create a false failure signal.
  */
 export function isFinalAttempt(attempt: number, maxAttempts: number): boolean {
   return attempt >= maxAttempts;

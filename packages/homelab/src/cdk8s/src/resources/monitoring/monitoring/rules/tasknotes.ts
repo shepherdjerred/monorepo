@@ -64,8 +64,7 @@ export function getTasknotesRuleGroups(): PrometheusRuleSpecGroups[] {
           // Alert on actual crash-looping, not single restarts. A routine
           // GitOps image bump rolls the pod (one restart) but never enters
           // CrashLoopBackOff, so this stays quiet on clean deploys while still
-          // catching a container that is genuinely failing to stay up
-          // (PagerDuty 5398).
+          // catching a container that is genuinely failing to stay up.
           alert: "TasknotesContainerCrashLooping",
           annotations: {
             summary: "TaskNotes container is crash-looping",

@@ -13,10 +13,11 @@ source_marker: false
 ## Context
 
 The Alerts service, durable ledger, UI, APIs, image build, deployment chart, and
-`toolkit alerts` command are implemented. The activation and cutover source
-changes are staged on separate branches. PagerDuty remains the active live
-Alertmanager receiver until Buildkite publishes the changes and ArgoCD syncs
-them.
+`toolkit alerts` command are implemented. The repository cutover is now present:
+the active PagerDuty receiver, credentials, OpenTofu provider stack, and
+development webhook integration have been removed from source. Live account
+retention, incident audit, and external-state teardown remain separate operator
+actions.
 
 The activation branch registers the Argo CD Application, service-health rules,
 probe, and network paths while leaving the existing receiver intact. The
@@ -45,6 +46,8 @@ operations.
       produces exactly one grouped message.
 - [x] Migrate the Temporal audit and TRMNL consumers, remove the `toolkit pd`
       command, and remove runtime PagerDuty credentials from active source.
+- [x] Remove the PagerDuty OpenTofu stack, secret forwarding, bundled helper,
+      and Sentinel development webhook integration from the repository.
 - [ ] Deploy the activation and cutover branches, then verify the SQLite PVC
       creation, snapshot bootstrap, UI, REST, previews, reconciliation
       freshness, probes, consumers, and live routing.
@@ -56,7 +59,7 @@ operations.
 - [ ] Complete the production acceptance checks in
       `packages/docs/plans/2026-08-08_alert-dashboard-pagerduty-replacement.md`.
 - [ ] With separate explicit operator approval, cancel the PagerDuty account and
-      destroy or remove the retained OpenTofu stack.
+      remove any retained remote state or external account resources.
 - [ ] Archive this TODO and the completed implementation plan.
 
 ## Operator Verification
@@ -76,6 +79,14 @@ consumer before requesting authorization to cancel the account or destroy the
 OpenTofu state.
 
 ## Comment Log
+
+### 2026-08-15 — repository integrations removed
+
+Removed the active PagerDuty provider and credential consumers from the
+repository, including the OpenTofu module and secret bridge, the bundled helper
+skill, and the Sentinel POC webhook/agent. Historical incident references remain
+in archived records. No live account cancellation, remote state deletion, or
+production teardown was performed by this source change.
 
 ### 2026-08-13 — PostgreSQL history discarded and the stack torn down
 
@@ -153,7 +164,7 @@ and cannot substitute for the operator API check.
   "checks": [
     { "id": "cutover-timestamp", "label": "Production cutover timestamp", "required": true, "evidenceRequirement": "A dated Comment Log heading explicitly records the production cutover.", "evidenceCollectors": [{ "id": "cutover-marker", "kind": "command", "argv": ["rg", "--json", "^### 2026-[0-9]{2}-[0-9]{2}.*production cutover", "packages/docs/todos/pagerduty-migration.md"], "output": "non-empty", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }] },
     { "id": "retention-window", "label": "Thirty-day retention window", "required": true, "evidenceRequirement": "The recorded cutover marker is present and the current UTC timestamp is available for the report calculation.", "evidenceCollectors": [{ "id": "cutover-marker", "kind": "command", "argv": ["rg", "--json", "^### 2026-[0-9]{2}-[0-9]{2}.*production cutover", "packages/docs/todos/pagerduty-migration.md"], "output": "non-empty", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }, { "id": "current-time", "kind": "command", "argv": ["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"], "output": "non-empty", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }] },
-    { "id": "credential-consumers", "label": "Remaining PagerDuty consumers", "required": true, "evidenceRequirement": "No active source reference remains and live workload inventory is available.", "evidenceCollectors": [{ "id": "active-source-scan", "kind": "command", "argv": ["rg", "--json", "-i", "pagerduty", "packages/homelab", "packages/temporal", "packages/trmnl-dashboard", ".buildkite"], "output": "allow-empty", "successExitCodes": [0, 1], "expectation": { "kind": "exit-code", "passedExitCodes": [1] } }, { "id": "live-workloads", "kind": "command", "argv": ["kubectl", "get", "deployments,statefulsets,daemonsets,cronjobs", "-A", "-o", "json"], "output": "json", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }] }
+    { "id": "credential-consumers", "label": "Remaining PagerDuty consumers", "required": true, "evidenceRequirement": "No active runtime or infrastructure source reference remains and live workload inventory is available.", "evidenceCollectors": [{ "id": "active-source-scan", "kind": "command", "argv": ["rg", "--json", "-i", "pagerduty", "packages/homelab/src/tofu", "packages/homelab/scripts", "packages/homelab/src/cdk8s/src", "packages/temporal/src", "packages/trmnl-dashboard", ".buildkite"], "output": "allow-empty", "successExitCodes": [0, 1], "expectation": { "kind": "exit-code", "passedExitCodes": [1] } }, { "id": "live-workloads", "kind": "command", "argv": ["kubectl", "get", "deployments,statefulsets,daemonsets,cronjobs", "-A", "-o", "json"], "output": "json", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }] }
   ],
   "source": {
     "docPath": "packages/docs/todos/pagerduty-migration.md"

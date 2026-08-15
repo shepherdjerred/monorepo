@@ -36,7 +36,7 @@ export const DELETED_SCHEDULE_IDS = [
   // deleted or it would keep firing a missing workflow.
   "readme-refresh-weekly",
   // Alert-remediation workflow removed entirely: in ~1 month it opened 0 PRs
-  // (metrics: ~564 `failed`, ~2 `report-only`, 0 `pr-created`). Most PagerDuty/
+  // (metrics: ~564 `failed`, ~2 `report-only`, 0 `pr-created`). Most
   // Bugsink alerts (absence signals, infra flaps, capacity) aren't fixable by a
   // repo-only PR, so the premise didn't hold. Both ids stay here so the
   // reconciler deletes the live schedules on startup rather than orphaning them.
@@ -55,12 +55,12 @@ export const DELETED_SCHEDULE_IDS = [
   // `prReviewWeeklySignificanceWorkflow`) are no longer in the bundle. Delete
   // BOTH schedules on startup so the worker stops firing missing workflow
   // types (which would also trip the `temporal_schedule_orphans` gauge). The
-  // dedicated `pr_review_eval` Postgres DB and PagerDuty alert group were torn
+  // dedicated `pr_review_eval` Postgres DB and alert group were torn
   // down with them.
   "pr-review-eval-nightly",
   "pr-review-ab-weekly-report",
   // Replaced by per-execution temporal-failure-watch alerts and worker-task
-  // health guardrails. Delete the old aggregate pager on worker startup.
+  // health guardrails. Delete the old aggregate alert on worker startup.
   "agent-task-timeout-watch",
 ] as const;
 

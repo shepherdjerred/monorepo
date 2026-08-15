@@ -65,7 +65,7 @@ that quietly does not do what you meant. Pushing that into a type error moves th
 discovery from "weeks later" to "before merge".
 
 OpenTofu covers what is not in the cluster: ArgoCD bootstrap, Cloudflare,
-GitHub, PagerDuty, SeaweedFS, Tailscale, and the media stack's external config.
+GitHub, SeaweedFS, Tailscale, and the media stack's external config.
 
 ## Delivery is GitOps, with an unusual amount of care
 

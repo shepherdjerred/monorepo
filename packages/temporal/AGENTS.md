@@ -213,7 +213,7 @@ are delivered through the shared reporter as partial.
 3. Builds one `AlertmanagerAlert` per execution via the pure `buildWorkflowFailureAlert` helper (`src/shared/workflow-failure-alert.ts`) — labels `{alertname: "TemporalWorkflowFailed", workflowType, taskQueue, workflowId, runId}` for identity/dedup, plus a summary/description with the actual error, timeout classification/diagnosis, and a direct link to the failed run in the Temporal UI (`temporalUiExecutionUrl`).
 4. Posts the batch via `createAlertmanagerPoster` (`src/lib/alertmanager.ts`, shared with the Xcode Cloud webhook), which routes through the existing Alertmanager Alerts receiver.
 
-No exclusion list — every workflow type produces an occurrence on any failure, including per-PR bots (`prReview`/`prSummary`) that the older threshold-based rules deliberately exclude. Revisit with an exclusion list if that proves too noisy. See `packages/docs/plans/2026-07-30_temporal-workflow-failure-pagerduty-alerts.md` for the full design rationale.
+No exclusion list — every workflow type produces an occurrence on any failure, including per-PR bots (`prReview`/`prSummary`) that the older threshold-based rules deliberately exclude. Revisit with an exclusion list if that proves too noisy.
 
 ## Generic agent tasks
 

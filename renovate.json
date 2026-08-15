@@ -243,7 +243,7 @@
       "allowedVersions": "<8"
     },
     {
-      "description": "Pin velero-plugin-for-aws to v1.14.0. v1.14.1 sends an empty x-amz-tagging header on every PutObject, which Cloudflare R2 rejects with 501 NotImplemented, failing all Velero backup-metadata uploads (PR #1307 deployed it 2026-06-21 \u2192 every backup Failed since, plus orphaned ZFS/R2 data: PagerDuty #5860, #5849). See packages/docs/todos/velero-aws-plugin-r2-tagging.md. allowedVersions:<1.14.1 keeps v1.14.1+ off the auto-PR list (surfaces on the Dependency Dashboard as ignored) until upstream omits the header on R2; revisit and unpin once R2 compat is confirmed.",
+      "description": "Pin velero-plugin-for-aws to v1.14.0. v1.14.1 sends an empty x-amz-tagging header on every PutObject, which Cloudflare R2 rejects with 501 NotImplemented, failing all Velero backup-metadata uploads (PR #1307 deployed it 2026-06-21 \u2192 every backup Failed since, plus orphaned ZFS/R2 data: incidents #5860 and #5849). See packages/docs/todos/velero-aws-plugin-r2-tagging.md. allowedVersions:<1.14.1 keeps v1.14.1+ off the auto-PR list (surfaces on the Dependency Dashboard as ignored) until upstream omits the header on R2; revisit and unpin once R2 compat is confirmed.",
       "matchPackageNames": ["velero/velero-plugin-for-aws"],
       "allowedVersions": "<1.14.1"
     },

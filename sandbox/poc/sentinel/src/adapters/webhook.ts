@@ -20,7 +20,6 @@ import {
   handleBugsinkEvent,
   handleBuildkiteBuild,
   handleCheckSuite,
-  handlePagerDutyEvent,
   handleWorkflowRun,
 } from "./webhook-handlers.ts";
 
@@ -133,26 +132,6 @@ export function createApp(config: Config): Hono {
     }
 
     return c.json({ status: "ignored", reason: "unhandled event/action" });
-  });
-
-  app.post("/webhook/pagerduty", async (c) => {
-    const rawBody = await readBody(c);
-    if (rawBody == null) return c.json({ error: "invalid body" }, 400);
-
-    const sigError = verifyWebhookSignature(c, {
-      rawBody,
-      headerName: "X-PagerDuty-Signature",
-      secret: config.webhooks.pagerdutySecret,
-      prefix: "v1=",
-      provider: "PagerDuty",
-    });
-    if (sigError != null) return sigError;
-
-    const payload = parseJsonBody(rawBody);
-    if (payload == null) return c.json({ error: "invalid JSON" }, 400);
-
-    const result = await handlePagerDutyEvent(payload);
-    return c.json(result, result.error == null ? 200 : 500);
   });
 
   app.post("/webhook/bugsink/:token", async (c) => {

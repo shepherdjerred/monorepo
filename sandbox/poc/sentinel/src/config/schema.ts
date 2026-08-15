@@ -35,7 +35,6 @@ export const WebhooksConfigSchema = z.object({
   port: z.number().default(3000),
   host: z.string().default("0.0.0.0"),
   githubSecret: z.string().optional(),
-  pagerdutySecret: z.string().optional(),
   bugsinkSecret: z.string().optional(),
   buildkiteToken: z.string().optional(),
 });

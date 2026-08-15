@@ -9,7 +9,7 @@ type PrometheusRule = NonNullable<PrometheusRuleSpecGroups["rules"]>[number];
 // legitimately skip most runs — e.g. runVacuumIfNotHome skips whenever someone
 // is home, which is the common case for a WFH household. A skip for one of those
 // *expected* gate reasons is NOT a malfunction, so counting it toward a
-// "never executed" alert produces false pages (PagerDuty 5332).
+// "never executed" alert produces false failure signals.
 //
 // Each entry lists the skip `reason`s that are normal operation for that
 // workflow; the alert counts only skips whose reason is NOT benign, so it fires

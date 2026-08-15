@@ -70,7 +70,6 @@ const testConfig: Config = {
     port: 3000,
     host: "0.0.0.0",
     githubSecret: "test-github-secret",
-    pagerdutySecret: "test-pagerduty-secret",
     bugsinkSecret: "test-bugsink-secret",
     buildkiteToken: "test-buildkite-token",
   },
@@ -280,46 +279,6 @@ async function main(): Promise<void> {
         }),
       );
       assertEqual(res.status, 401, "status");
-    },
-  );
-
-  // ===== PagerDuty webhook =====
-  console.log("\nPagerDuty webhook:");
-
-  await runTest(
-    "POST /webhook/pagerduty with valid signature enqueues job",
-    async () => {
-      await cleanupTables();
-      const body = JSON.stringify({
-        event: {
-          id: "evt-1",
-          event_type: "incident.triggered",
-          data: {
-            title: "Test Alert",
-            urgency: "high",
-            html_url: "https://pagerduty.com/incidents/1",
-            service: { summary: "test-service" },
-          },
-        },
-      });
-      const signature = `v1=${createHmac("sha256", testConfig.webhooks.pagerdutySecret!).update(body).digest("hex")}`;
-      const res = await app.fetch(
-        new Request("http://localhost/webhook/pagerduty", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-PagerDuty-Signature": signature,
-          },
-          body,
-        }),
-      );
-      assertEqual(res.status, 200, "status");
-      const json = (await res.json()) as Record<string, unknown>;
-      assertEqual(json["status"], "enqueued", "response status");
-      assert(
-        typeof json["jobId"] === "string" && json["jobId"].length > 0,
-        "jobId should be a non-empty string",
-      );
     },
   );
 
