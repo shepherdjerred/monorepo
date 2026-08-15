@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { isProviderAuthor } from "../identity.ts";
+import type { ReviewThread } from "../types.ts";
 import { qodoProvider, parseQodoIssueComment } from "./qodo.ts";
 
 const comment = {
@@ -244,6 +245,52 @@ describe("qodo layout guards", () => {
   });
 });
 
+/**
+ * One finding rendered twice, as a re-review leaves it: the first copy struck
+ * and resolved, the second re-appended unstruck against the previous head.
+ * Only the Issue Context quoting differs, which is what each case varies.
+ */
+function quotedCopy(
+  number: number,
+  summary: string,
+  context: string,
+  sha: string,
+): string {
+  return `<details>
+<summary>  ${String(number)}. ${summary}</summary>
+<code>[src/priors.ts[R10-12]](https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc)</code>
+>Existence does not prove this run wrote it.
+${context}
+>The intent is to assert the landing.
+>[src/priors.ts[10-12]](https://github.com/shepherdjerred/monorepo/blob/${sha}/src/priors.ts/#L10-L12)
+></details>
+
+<hr/>
+</details>`;
+}
+
+function reviewWithQuotedContext(
+  firstContext: string,
+  secondContext: string,
+): string {
+  return `
+<h3>Code Review by Qodo</h3>
+<code>🐞 Bugs (1)</code> <code>📘 Rule violations (0)</code>
+<img src="https://example/divider.svg" alt="Grey Divider">
+<img src="https://example/action-required.png" alt="Action required">
+${quotedCopy(1, "<s>Stale artifact</s> <code>✓ Resolved</code> <code>🐞 Bug</code>", firstContext, "f4c0d5a390d7aa2ad7713f0da3de349b8e66d421")}
+${quotedCopy(2, "Stale artifact <code>🐞 Bug</code>", secondContext, "52d176391dc9015d5b3a070ea025081cdd1fad85")}
+`;
+}
+
+function soleFinding(body: string): ReviewThread {
+  const findings = parseQodoIssueComment({ ...comment, body });
+  expect(findings).toHaveLength(1);
+  const finding = findings[0];
+  if (finding === undefined) throw new Error("expected one finding");
+  return finding;
+}
+
 describe("qodo re-review copies", () => {
   test("collapses the copies Qodo re-appends on each re-review", () => {
     // Qodo re-appends every finding on re-review and reflows the copy's
@@ -304,44 +351,27 @@ describe("qodo re-review copies", () => {
     // Collapsing whitespace leaves the marker itself behind, so the two copies
     // read as different findings and the gate blocked on the unstruck duplicate
     // of a finding Qodo had already marked resolved.
-    const blankQuoteLine = `
-<h3>Code Review by Qodo</h3>
-<code>🐞 Bugs (1)</code> <code>📘 Rule violations (0)</code>
-<img src="https://example/divider.svg" alt="Grey Divider">
-<img src="https://example/action-required.png" alt="Action required">
-<details>
-<summary>  1. <s>Stale artifact</s> <code>✓ Resolved</code> <code>🐞 Bug</code></summary>
-<code>[src/priors.ts[R10-12]](https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc)</code>
->Existence does not prove this run wrote it.
->## Issue Context
->The intent is to assert the landing.
->[src/priors.ts[10-12]](https://github.com/shepherdjerred/monorepo/blob/f4c0d5a390d7aa2ad7713f0da3de349b8e66d421/src/priors.ts/#L10-L12)
-></details>
+    const finding = soleFinding(
+      reviewWithQuotedContext(">## Issue Context", ">\n>## Issue Context"),
+    );
 
-<hr/>
-</details>
-<details>
-<summary>  2. Stale artifact <code>🐞 Bug</code></summary>
-<code>[src/priors.ts[R10-12]](https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc)</code>
->Existence does not prove this run wrote it.
->
->## Issue Context
->The intent is to assert the landing.
->[src/priors.ts[10-12]](https://github.com/shepherdjerred/monorepo/blob/52d176391dc9015d5b3a070ea025081cdd1fad85/src/priors.ts/#L10-L12)
-></details>
-
-<hr/>
-</details>
-`;
-    const findings = parseQodoIssueComment({
-      ...comment,
-      body: blankQuoteLine,
-    });
-
-    expect(findings).toHaveLength(1);
     // Qodo's own verdict on the finding, not on the copy it happened to strike.
-    expect(findings[0]?.isResolved).toBe(true);
-    expect(findings[0]?.title).toBe("Stale artifact");
+    expect(finding.isResolved).toBe(true);
+    expect(finding.title).toBe("Stale artifact");
+  });
+
+  test("collapses copies whose quoting differs only in nesting depth", () => {
+    // Nesting is conventionally written `> >`, so a marker matched as a run of
+    // `>` characters stops at the space between the levels and leaves the inner
+    // one behind — the same failure the blank-line case produces, one level
+    // down. Not seen in a live comment yet; it is the shape the identity claims
+    // to normalize, so it is pinned rather than left to be discovered.
+    const finding = soleFinding(
+      reviewWithQuotedContext(">## Issue Context", "> > ## Issue Context"),
+    );
+
+    expect(finding.isResolved).toBe(true);
+    expect(finding.title).toBe("Stale artifact");
   });
 
   test("keeps same-titled findings apart when their bodies differ", () => {

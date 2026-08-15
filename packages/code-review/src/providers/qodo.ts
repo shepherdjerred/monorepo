@@ -106,11 +106,17 @@ type RenderedFinding = {
 };
 
 /**
- * Blockquote markers opening a line, including the nested `> >` form and the
- * single space a marker conventionally takes. Horizontal whitespace only, so a
- * line's own marker is matched without reaching into the line before it.
+ * Blockquote markers opening a line, however deeply nested.
+ *
+ * Repeats the whole `>`-plus-optional-space unit rather than matching a run of
+ * `>` characters: nesting is conventionally written `> >`, and a `>+` run stops
+ * at the space between the levels, leaving the inner marker in the identity —
+ * which is the very difference this exists to erase, one level down.
+ *
+ * Horizontal whitespace only, so a line's own marker is matched without
+ * reaching into the line before it.
  */
-const BLOCKQUOTE_MARKER = /^[^\S\n]*>+[^\S\n]?/gmu;
+const BLOCKQUOTE_MARKER = /^(?:[^\S\n]*>[^\S\n]?)+/gmu;
 
 /**
  * Canonical form of a rendered finding, used to recognize the copies Qodo
