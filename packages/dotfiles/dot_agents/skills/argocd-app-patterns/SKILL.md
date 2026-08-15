@@ -334,7 +334,7 @@ export async function createPrometheusApp(chart: Chart) {
         receivers: [
           {
             name: "alerts",
-            webhook_configs: [{ url: "http://alerts.example/webhook" }],
+            webhook_configs: [{ url: "<YOUR_WEBHOOK_URL>" }],
           },
         ],
       },

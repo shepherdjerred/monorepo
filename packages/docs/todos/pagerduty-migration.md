@@ -26,10 +26,15 @@ Postal fallback, migrates Temporal and TRMNL, and removes the active `toolkit
 pd` command and PagerDuty runtime references. The image version is pinned to a
 real digest; production acceptance remains a separate deployment gate.
 
-After production cutover, retain the PagerDuty account and
-`packages/homelab/src/tofu/pagerduty` state read-only for 30 days. Account
-cancellation and OpenTofu destruction remain separate, explicitly authorized
-operations.
+After production cutover, retain the PagerDuty account and its remote OpenTofu
+state read-only for 30 days. The `packages/homelab/src/tofu/pagerduty` module
+itself was removed from source in this repository cutover; that removal does
+not delete the remote state it last applied, which still describes the live
+PagerDuty resources. Because the module is no longer in source, the eventual
+teardown cannot be a plain `tofu destroy` from the checkout — it needs either
+restoring the module from git history for one destroy run, or a manual
+removal against the retained remote state. Account cancellation and that
+teardown remain separate, explicitly authorized operations.
 
 ## Remaining
 
