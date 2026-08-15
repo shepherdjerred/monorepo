@@ -1,4 +1,4 @@
-import { createTool } from "@mastra/core/tools";
+import { tool } from "ai";
 import { z } from "zod";
 import {
   ReportAiPreviewSummarySchema,
@@ -189,8 +189,7 @@ export function validateQuery(queryText: string): ValidationToolOutput {
 }
 
 export function createLanguageTool(track: ToolTracker) {
-  return createTool({
-    id: "get_report_language",
+  return tool({
     description:
       "Read ScoutQL sources, metrics, expressions, groupings, filters, render kinds/options, queues, and common examples.",
     inputSchema: z.object({}).strict(),
@@ -200,8 +199,7 @@ export function createLanguageTool(track: ToolTracker) {
 }
 
 export function createValidateTool(track: ToolTracker) {
-  return createTool({
-    id: "validate_report_query",
+  return tool({
     description:
       "Validate a ScoutQL report query and return diagnostics plus formatted text.",
     inputSchema: z.object({ queryText: ReportQueryTextSchema }).strict(),
@@ -212,8 +210,7 @@ export function createValidateTool(track: ToolTracker) {
 }
 
 export function createFormatTool(track: ToolTracker) {
-  return createTool({
-    id: "format_report_query",
+  return tool({
     description: "Format valid ScoutQL report query text for display.",
     inputSchema: z.object({ queryText: ReportQueryTextSchema }).strict(),
     outputSchema: FormatToolOutputSchema,

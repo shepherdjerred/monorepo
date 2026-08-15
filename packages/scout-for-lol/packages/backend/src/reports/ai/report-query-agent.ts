@@ -9,7 +9,6 @@ import {
   REPORT_AI_MAX_PREVIEW_CALLS,
   REPORT_AI_MAX_STEPS,
   REPORT_AI_MAX_TOOL_CALLS,
-  ReportAiFinalDraftSchema,
   ReportQueryTextSchema,
   type ReportAiEditRequest,
   type ReportAiFinalDraft,
