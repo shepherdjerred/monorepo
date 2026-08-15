@@ -159,7 +159,7 @@ export const streamLatencyCorrelationFailuresTotal = new Counter({
 
 export const streamTrackerVideoSourceDepth = new Gauge({
   name: "stream_tracker_video_source_depth",
-  help: "Unconsumed raw-video source entries in the latency tracker's pairing FIFO. Sustained ~30 while the viewer's glass is realtime means phantom head entries are corrupting every pipeline histogram (packages/docs/todos/mk64-stream-latency-correlation-desync.md); ~0-3 means the pairing is honest. Delivered frames ≈ stream_frame_interval_ms_count − stream_frames_dropped_total; emitted packets = stream_packet_ready_delay_ms_count",
+  help: "Unconsumed raw-video source entries in the latency tracker's pairing FIFO. Sustained ~30 while the viewer's glass is realtime means phantom head entries are corrupting every pipeline histogram; ~0-3 means the pairing is honest. Delivered frames ≈ stream_frame_interval_ms_count − stream_frames_dropped_total; emitted packets = stream_packet_ready_delay_ms_count",
   registers: [registry],
 });
 

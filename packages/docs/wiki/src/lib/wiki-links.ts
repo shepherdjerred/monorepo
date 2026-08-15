@@ -5,7 +5,7 @@ import { rewriteWikiLink } from "./wiki-paths.ts";
 
 const PLAIN_TEXT_LANGUAGES = new Set(["caddy", "caddyfile", "promql"]);
 
-export function wikiLinksPlugin(docsRoot: string) {
+export function wikiLinksPlugin(wikiRoot: string) {
   return defineMdastPlugin({
     name: "wiki-links",
     code(node, context) {
@@ -22,11 +22,11 @@ export function wikiLinksPlugin(docsRoot: string) {
       }
 
       const sourceFile = fileURLToPath(context.fileURL).replaceAll("\\", "/");
-      const normalizedRoot = docsRoot
+      const normalizedRoot = wikiRoot
         .replaceAll("\\", "/")
         .replaceAll(/\/$/gu, "");
       const sourcePath = sourceFile.startsWith(`${normalizedRoot}/`)
-        ? `packages/docs/${sourceFile.slice(normalizedRoot.length + 1)}`
+        ? `packages/docs/wiki/${sourceFile.slice(normalizedRoot.length + 1)}`
         : sourceFile;
       context.setProperty(node, "url", rewriteWikiLink(sourcePath, node.url));
     },

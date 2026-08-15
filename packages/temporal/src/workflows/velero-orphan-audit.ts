@@ -47,7 +47,7 @@ export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
       `Velero orphan audit: ${String(result.totalOrphanCount)} orphan snapshots ` +
         `(${String(Math.round(result.totalOrphanBytes / 1024 / 1024))} MiB) across ` +
         `${String(result.datasets.filter((d) => d.orphanCount > 0).length)} datasets. ` +
-        `Run remediation runbook: packages/docs/guides/2026-05-05_velero-orphan-snapshot-remediation.md`,
+        `Run remediation runbook: packages/temporal/runbooks/velero-orphan-snapshot-remediation.md`,
     );
   }
 }

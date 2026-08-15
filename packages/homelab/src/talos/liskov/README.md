@@ -4,10 +4,8 @@ Ryzen 9950X (105W eco in BIOS) · 128GB DDR5-5600 · 990 Pro 1TB (OS) +
 990 Pro 2TB (`zfspv-pool-nvme` CI cache pool) · ASUS PRIME B650-PLUS WiFi ·
 SecureBoot Talos, schematic in `image.yaml`.
 
-Purpose and design: `packages/docs/plans/2026-07-25_liskov-cluster-join.md`
-(port/adapt/skip audit) and
-the original investigation (why the
-node exists: CI/prod failure-domain isolation). Apply the `ci=only:NoSchedule`
+The node exists to isolate the CI and production failure domains. Apply the
+`ci=only:NoSchedule`
 taint through the cluster API after the worker joins; Kubernetes' default
 NodeRestriction admission plugin prevents a worker identity from setting its
 own taints. The K8s side of the contract lives in `src/cdk8s/src/misc/nodes.ts`.
@@ -76,8 +74,7 @@ committed).
 
    The OpenEBS node pod has host root and the Talos ZFS utilities, so create
    the pool through it — the same exec path the repo uses for every other
-   on-node ZFS op (see
-   `packages/docs/guides/2026-05-05_velero-orphan-snapshot-remediation.md`).
+   on-node ZFS operation.
 
    ```bash
    NODE_POD=$(kubectl -n openebs get pod -l name=openebs-zfs-node \

@@ -353,7 +353,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // 2 and 3. 65m genuinely accommodates 3 × 20m + backoff; SKIP overlap + the
     // daily cadence make the wider ceiling harmless (the next run is 24h out).
     workflowExecutionTimeout: "65 minutes",
-    memo: "Daily GC of Scout images: delete .png/.svg older than 30d under games/ & prematch/ in scout-prod + scout-beta (SeaweedFS), keeping JSON. See packages/docs/plans/2026-07-03_scout-s3-image-retention.md",
+    memo: "Daily GC of Scout images: delete .png/.svg older than 30d under games/ & prematch/ in scout-prod + scout-beta (SeaweedFS), keeping JSON.",
   },
   {
     id: "glitter-corpus-daily",
@@ -410,7 +410,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "15 minutes",
-    memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology (see packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md)",
+    memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology.",
   },
   {
     id: "review-signals-collect",

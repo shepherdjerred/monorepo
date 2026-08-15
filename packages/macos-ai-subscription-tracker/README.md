@@ -94,7 +94,7 @@ Apple password, private key, or notarization credential belongs in the
 repository.
 
 See the
-[Brim signing and notarization runbook](../docs/guides/2026-08-09_quotabar-signing-notarization.md)
+[Brim signing and notarization runbook](docs/signing-and-notarization.md)
 for prerequisites, artifact definitions, verification evidence, versioning,
 and troubleshooting.
 

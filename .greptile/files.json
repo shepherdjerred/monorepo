@@ -2,12 +2,7 @@
   "files": [
     {
       "path": "AGENTS.md",
-      "description": "Repo-wide conventions and the single source of truth for AI/reviewer rules. Covers ESLint discipline, durable documentation taxonomy, TODO(todo:<id>) format, temporal-agent-task block schema, secret hygiene, and fail-fast principles. CLAUDE.md is a symlink to this file."
-    },
-    {
-      "path": "packages/docs/AGENTS.md",
-      "description": "Docs taxonomy and authoring rules: how plans, todos, architecture, patterns, decisions, and guides differ; when durable documentation is appropriate; and the temporal-agent-task block format.",
-      "scope": ["packages/docs/**"]
+      "description": "Repo-wide conventions and the single source of truth for AI/reviewer rules. Covers ESLint discipline, Linear work tracking, temporal-agent-task contracts, secret hygiene, and fail-fast principles. CLAUDE.md is a symlink to this file."
     },
     {
       "path": "packages/homelab/AGENTS.md",

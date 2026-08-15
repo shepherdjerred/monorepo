@@ -210,8 +210,7 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
           labels: { severity: "critical", category: "storage" },
         },
         // Fragmentation alerts moved to zfs-maintenance.ts with raised
-        // thresholds (80% / 90% on SSD pools). See
-        // packages/docs/decisions/2026-05-05_zfs-fragmentation-acceptance.md.
+        // thresholds (80% / 90% on SSD pools).
       ],
     },
   ];

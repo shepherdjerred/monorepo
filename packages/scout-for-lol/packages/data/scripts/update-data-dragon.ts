@@ -1252,8 +1252,7 @@ async function main(): Promise<void> {
     // whatever Data Dragon assets are already committed in the tree. Used by
     // the temporal-schedule-rehearsal CI canary to exercise the exact step
     // that broke scout-data-dragon-weekly-refresh without a network fetch or
-    // a real version bump — see
-    // packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md.
+    // a real version bump.
     if (process.argv.includes("--snapshots-only")) {
       console.log("\n📸 Updating snapshots (--snapshots-only)...");
       await updateSnapshots();

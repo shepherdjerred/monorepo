@@ -806,8 +806,7 @@
       },
       "value": "2.11.5@sha256:dfd1ce24cc4bdd59113e3ba68c881269fda5dd5929e58e2ea95010c51c09056d",
       "notes": [
-        "Self-hosted Turborepo remote cache (backs the workspace task-graph",
-        "replatform — packages/docs/plans/2026-07-12_workspace-taskgraph-replatform.md)."
+        "Self-hosted Turborepo remote cache backing the workspace task graph."
       ]
     },
     {
@@ -897,7 +896,7 @@
         "(incidents #5860 and #5849). v1.14.2 is NOT a fix — it still sets Tagging unconditionally; the",
         "upstream guard (velero-io/velero-plugin-for-aws#299) is on main, not in any release yet.",
         "Renovate is blocked to <1.14.1 in renovate.json until a release contains #299 and is",
-        "verified on R2. See packages/docs/todos/velero-aws-plugin-r2-tagging.md."
+        "verified on R2."
       ]
     },
     {

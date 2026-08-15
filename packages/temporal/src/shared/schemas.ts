@@ -49,7 +49,7 @@ export const CancelBuildkiteBuildsInputSchema = z.object({
  *   next main push.
  *
  * The conflict result is computed locally — the activity NEVER reads
- * GitHub's `mergeable` field. See packages/docs/plans/2026-06-14_pr-merge-conflict-check.md.
+ * GitHub's `mergeable` field.
  */
 export const CheckPrMergeConflictsInputSchema = z.discriminatedUnion("kind", [
   z.object({

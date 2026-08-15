@@ -120,7 +120,6 @@ export function createTemporalWorkerMaintenanceRbac(
   // Namespace-scoped RBAC for the Velero orphan-snapshot audit workflow.
   // Reads `velero.io/v1/Backup` CRs in the velero namespace and execs into
   // the openebs-zfs-localpv-node pod to enumerate ZFS snapshots.
-  // See packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md.
   new KubeRole(chart, "temporal-worker-velero-backups-read", {
     metadata: {
       name: "temporal-worker-velero-backups-read",

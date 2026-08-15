@@ -29,14 +29,6 @@
   max-width: 68ch;
 }
 
-.working-content {
-  opacity: 0.92;
-}
-
-.working-content :is(h1, h2, h3) {
-  color: var(--sl-color-gray-2);
-}
-
 .mermaid {
   overflow-x: auto;
   padding: 1rem;

@@ -42,11 +42,6 @@ describe("wiki structure", () => {
       if (page === "index.md" || page === "index.mdx") {
         return false;
       }
-      // Working material is provenance, not documentation, and sits outside
-      // the four kinds on purpose.
-      if (page.startsWith("working/")) {
-        return false;
-      }
       return !SECTIONS.some((section) => page.startsWith(`${section}/`));
     });
 
@@ -81,9 +76,7 @@ describe("wiki links", () => {
         if (target === undefined) {
           continue;
         }
-        // Working material is loaded from the parent docs corpus rather than
-        // this directory, so its routes cannot be resolved here.
-        if (target === "/" || target.startsWith("/working/")) {
+        if (target === "/") {
           continue;
         }
         const normalized = target.endsWith("/") ? target : `${target}/`;

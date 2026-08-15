@@ -431,7 +431,7 @@ async function runObserveReviewSignalsImpl(
   // idempotent. Fully deduping metric side effects across retries AND across the
   // 6-hourly scheduled scans needs a persistent seen-set keyed by
   // (provider, PR, head); tracked in
-  // packages/docs/todos/review-signal-cross-run-metric-dedup.md.
+  // Cross-run metric deduplication remains intentionally separate.
   for (const event of events) {
     recordEventMetrics(provider.id, event);
   }

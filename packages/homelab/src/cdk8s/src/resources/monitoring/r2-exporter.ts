@@ -27,7 +27,6 @@ export async function createR2ExporterMonitoring(chart: Chart) {
   // Python f-string braces ({{ and }}) conflict with Helm's Go template engine
   // when this ConfigMap is packaged inside the apps Helm chart.
   // Escape them so Helm passes them through literally.
-  // See: packages/docs/guides/2026-04-04_helm-escaping-pipeline.md
   const escapedScriptContent = scriptContent.replaceAll(
     /\{\{|\}\}/g,
     (match) => (match === "{{" ? '{{ "{{" }}' : '{{ "}}" }}'),

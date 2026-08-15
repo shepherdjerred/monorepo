@@ -61,8 +61,8 @@ pyroscope.write "default" {
  *
  * SECURITY: this is a cluster-wide privileged DaemonSet (hostPID + privileged
  * securityContext + CAP_SYS_ADMIN/BPF/PERFMON) — required for kernel-side eBPF
- * profiling of every pod on the node with no app changes. Accepted trade-off for
- * the profiling capability; see packages/docs and the homelab hardening notes.
+ * profiling of every pod on the node with no app changes. This privileged
+ * boundary is the accepted trade-off for the profiling capability.
  * It only pushes profiles to the in-cluster Pyroscope; it has no ingress.
  */
 export function createAlloyApp(chart: Chart) {

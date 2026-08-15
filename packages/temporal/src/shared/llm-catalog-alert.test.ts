@@ -579,10 +579,9 @@ describe("retired fields close their own alerts", () => {
 
 describe("missing-evidence advice", () => {
   test("never tells an operator to delete a retired model", () => {
-    // packages/docs/guides/2026-06-28_llm-models-catalog.md is explicit that
-    // superseded rows are retained — deprecated pricing is what costs
+    // Superseded catalog rows are retained: deprecated pricing is what costs
     // historical usage. The alert used to say "remove the model if it is
-    // retired", which would destroy exactly that.
+    // retired", which would destroy exactly that history.
     const description =
       buildCatalogEvidenceAlert("gpt-5.5", "input", "missing", NOW).annotations[
         "description"

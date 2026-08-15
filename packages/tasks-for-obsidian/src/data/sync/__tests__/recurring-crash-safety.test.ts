@@ -21,7 +21,7 @@ import { FakeServer, makeClock, makeHarness, makeTask } from "./harness";
  *
  * ⚠️ They are therefore TS-only: the Rust core does **not** check them. Porting
  * them into the corpus is tracked in
- * `packages/docs/todos/port-recurring-crash-safety-to-fixtures.md`.
+ * This should move into the shared language-neutral fixture corpus.
  */
 
 describe("FakeServer recurring restore semantics", () => {

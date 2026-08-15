@@ -23,8 +23,6 @@ import type { TaintedNode } from "cdk8s-plus-31";
  * - Buildkite CI step pods — they tolerate AND select the node
  *   (buildkite.ts pod-spec-patch), so CI runs only on liskov and liskov
  *   runs only CI.
- *
- * See packages/docs/plans/2026-07-25_liskov-cluster-join.md.
  */
 export const PROD_NODE_HOSTNAME = "torvalds";
 export const CI_NODE_HOSTNAME = "liskov";

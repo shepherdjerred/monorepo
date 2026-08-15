@@ -97,4 +97,4 @@ bun run lint
 
 Consumers include `packages/temporal` (bot-clone, data-dragon, budget
 activities) and `packages/scout-for-lol` (review model selection). Background
-and history: `packages/docs/guides/2026-06-28_llm-models-catalog.md`.
+and history in Git.

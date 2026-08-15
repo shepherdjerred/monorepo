@@ -50,5 +50,5 @@ worth being honest about —
 [what the PR fleet may never do](/explanation/pr-fleet-authority-boundary/) and
 [what "report-only" actually protects](/explanation/temporal/agent-task-boundary/).
 
-Provenance for all of it lives in [working material](/working/), and
-[how this wiki works](/explanation/how-this-wiki-works/) explains the split.
+[How this wiki works](/explanation/how-this-wiki-works/) explains how curated
+documentation stays separate from work tracking.

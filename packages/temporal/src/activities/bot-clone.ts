@@ -57,9 +57,8 @@ export async function withInstallRetry(
 // clone through these helpers — the `temporal-schedule-rehearsal` CI step
 // drives these exact functions against the PR's tree, so environment logic
 // added here is what gets validated at PR time. Hand-rolling install steps in
-// an activity puts them outside that safety net (which is how the weekly
-// refreshes silently broke for a month — see
-// packages/docs/plans/2026-07-11_fix-temporal-weekly-refreshes.md).
+// an activity puts them outside that safety net, which previously let weekly
+// refreshes remain broken for a month.
 
 /**
  * Per-run Bun install cache directory for a bot clone, sibling to the git
@@ -72,8 +71,7 @@ export async function withInstallRetry(
  * fresh path under this run's own tempDir means no run ever reads or writes
  * cache state left behind by another run, past or concurrent (the cause of
  * a `Cannot find module '@shepherdjerred/llm-models'` recurrence in
- * `scout-data-dragon-weekly-refresh` even after the producer build was
- * fixed — see packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md).
+ * `scout-data-dragon-weekly-refresh` even after the producer build was fixed.
  */
 export function botCloneCacheDir(repoDir: string): string {
   return `${repoDir}/../bun-install-cache`;

@@ -1,7 +1,7 @@
 # packages/tasknotes-windows
 
-Native Windows 11 x64 TaskNotes client. The durable design is
-`packages/docs/plans/2026-08-10_tasknotes-native-windows-app.md`.
+Native Windows 11 x64 TaskNotes client. Remaining design and implementation
+work is tracked in Linear as SJ-144.
 
 - Keep `TaskNotes.Windows.Host` portable and free of WinUI/Windows Runtime APIs.
 - Keep presentation logic in the portable `TaskNotes.Windows.Presentation`

@@ -79,7 +79,7 @@ flags or steps you are in the wrong kind. Diagrams live here.
 
 - **No workflow or plan residue.** No "superseded", no "the deep-dive plan
   remains in progress", no "this TODO stays open", no status. That is
-  agent-to-agent state and belongs in `packages/docs/`.
+  agent-to-agent state and belongs in Linear.
 - **No secrets or private data.** This site is public: no tokens, private host
   details, personal data, or sensitive incident material.
 - **No duplicated facts.** State something once; link to it everywhere else.
@@ -94,17 +94,6 @@ flags or steps you are in the wrong kind. Diagrams live here.
   cropped to the evidence. Store durable images in `src/assets/` and use Astro
   image paths. Do not hotlink ephemeral screenshots.
 - Do not add a diagram when a sentence is clearer.
-
-## Working material
-
-`/working/` is provenance, not documentation, and sits outside the four kinds.
-
-- Only paths listed in `src/lib/wiki-publication.ts` render under `/working/`.
-- Approved working pages carry a banner, are hidden from the sidebar and
-  sitemap, are `noindex,follow`, and are down-ranked in Pagefind.
-- To publish one, review it for public-data safety, then add its
-  `packages/docs/`-relative path to that allowlist. Never copy a working
-  document into the curated wiki.
 
 ## Keeping it current
 

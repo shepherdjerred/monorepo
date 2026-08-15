@@ -89,9 +89,8 @@ maxEventAgeSeconds: 300
 route:
   drop:
     # Drop Normal events - only keep Warning. NOTE: this also drops Normal pod-lifecycle events
-    # (Killing/Scheduled/Started), so pod deletions remain invisible here by design — see
-    # packages/docs/todos/streambot-stutter-observability-followup.md before relying on Loki
-    # k8s-events for pod forensics.
+    # (Killing/Scheduled/Started), so pod deletions remain invisible here by design.
+    # Do not rely on Loki k8s-events alone for pod forensics.
     - type: "Normal"
   routes:
     # Route Warning events to Loki

@@ -1,17 +1,10 @@
 import { docsSchema } from "@astrojs/starlight/schema";
 import { defineCollection } from "astro:content";
-import { z } from "astro/zod";
-
-import { wikiDocsLoader } from "./lib/wiki-loader.ts";
+import { glob } from "astro/loaders";
 
 const docs = defineCollection({
-  loader: wikiDocsLoader(),
-  schema: docsSchema({
-    extend: z.object({
-      sourceKind: z.enum(["human", "working"]),
-      sourcePath: z.string(),
-    }),
-  }),
+  loader: glob({ base: "./src/content/docs", pattern: "**/*.{md,mdx}" }),
+  schema: docsSchema(),
 });
 
 export const collections = { docs };

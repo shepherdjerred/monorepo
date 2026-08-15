@@ -1,5 +1,5 @@
 # Prepared only. This file is intentionally not uploaded by .buildkite/pipeline.yml.
-# Activation is blocked by packages/docs/todos/tasknotes-windows-buildkite-worker.md.
+# Activation is blocked by Linear issue SJ-134.
 steps:
   - label: ":windows: TaskNotes Windows release gate"
     key: "tasknotes-windows-verify"

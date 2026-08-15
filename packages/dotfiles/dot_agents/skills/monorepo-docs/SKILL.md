@@ -1,97 +1,71 @@
 ---
 name: monorepo-docs
-description: Author and maintain documentation in shepherdjerred/monorepo. Use for implementation plans, architecture notes, decisions, guides, TODO records, docs-board workflow changes, or the human-focused Starlight wiki in packages/docs/wiki. Also use when code or infrastructure changes should update durable AI or human documentation.
+description: Author and maintain the human-focused Starlight wiki in packages/docs/wiki, or decide whether repository documentation belongs there. Use when code or infrastructure changes should update durable human documentation. Route plans, TODOs, reviews, and implementation work to Linear instead of repository workflow documents.
 ---
 
 # Monorepo Docs
 
-Keep two documentation layers distinct:
+Keep documentation and work tracking separate:
 
-- `packages/docs/` is AI working memory and workflow state.
-- `packages/docs/wiki/` is a public, human-first explanation layer authored for
-  Jerred.
+- `packages/docs/wiki/` is the public, human-first explanation layer.
+- Linear owns plans, TODOs, review queues, and implementation follow-ups.
+- Code, commit history, and pull requests own implementation provenance.
 
-Read the root `AGENTS.md`, `packages/docs/AGENTS.md`, and the nearest nested
-instructions before writing.
+Read the root `AGENTS.md` and `packages/docs/wiki/AGENTS.md` before writing.
 
 ## Choose the destination
 
+Use Linear when the content asks what should happen next, records incomplete
+work, requests human review, or tracks a rollout.
+
 Use `packages/docs/wiki/src/content/docs/` when the reader needs a durable,
-terse answer about what exists, how systems connect, or why a choice was made.
+current answer about what exists, how to operate it, how systems connect, or
+why a choice remains in force.
 
-Use the parent workflow taxonomy for agent-operational artifacts:
+Keep package-local runbooks or references beside their runtime consumer when
+the software reads them or ships them as an operational asset.
 
-- `architecture/`: detailed system design and package relationships
-- `patterns/`: reusable engineering conventions
-- `decisions/`: decisions, audits, and tradeoff records
-- `guides/`: procedures, runbooks, and research
-- `plans/`: substantive multi-step design and future work
-- `todos/`: deferred work and source-marker records
-
-Do not copy a workflow document into the wiki. Parent docs are private by
-default; the site renders only exact paths listed in
-`packages/docs/wiki/src/lib/wiki-publication.ts` under `/working/`. To publish a
-workflow document, first review it for public-data safety, then add its
-`packages/docs/`-relative path to that explicit allowlist.
+Do not create plans, TODO records, session journals, archives, or workflow
+frontmatter under `packages/docs/`.
 
 ## Author the human wiki
 
-The wiki is structured on Diátaxis. **Load the `diataxis` skill first**, then
+The wiki is structured on Diátaxis. Load the `diataxis` skill first, then
 follow `packages/docs/wiki/AGENTS.md`.
 
-A wiki page is **exactly one kind** of documentation. Pick the kind with the
-compass — does the content inform action or cognition, and does it serve the
-reader at study or at work? — and write it into that directory:
+A wiki page is exactly one kind:
 
 | Kind         | Directory      | Contains                                    |
 | ------------ | -------------- | ------------------------------------------- |
-| Tutorial     | `tutorials/`   | a lesson with a real finish line (rare here)|
+| Tutorial     | `tutorials/`   | a lesson with a real finish line            |
 | How-to guide | `how-to/`      | steps toward one operational goal           |
-| Reference    | `reference/`   | flags, paths, schedules, values — as tables |
+| Reference    | `reference/`   | flags, paths, schedules, values as tables   |
 | Explanation  | `explanation/` | why the system is shaped this way           |
 
 Then:
 
 1. Inspect the live implementation and nearby wiki pages.
-2. Update the nearest existing page of the *right kind* when possible. A new
-   flag is a reference edit, not a rewrite of an explanation page.
+2. Update the nearest existing page of the right kind when possible.
 3. Lead with a one-sentence answer.
-4. Keep the kinds apart. If you want to explain inside a how-to, or list flags
-   inside an explanation, link to the other page instead — create it if needed.
-5. Prefer a small Mermaid diagram for relationships, flow, ownership, or
-   lifecycle, on explanation pages. Include `accTitle` and `accDescr`.
-6. Use real screenshots for visual or operational surfaces. Add useful alt text
-   and store durable images in `src/assets/`.
-7. Never carry workflow state across: no plan status, no "superseded", no open
-   TODOs. That stays in the parent `packages/docs/` taxonomy.
-8. Keep public-data hygiene: omit secrets, private host details, personal data,
+4. Link between kinds instead of mixing them.
+5. Use Mermaid only when relationships or flow scan better visually; include
+   `accTitle` and `accDescr`.
+6. Keep public-data hygiene: omit secrets, private host details, personal data,
    and sensitive incident evidence.
+7. Exclude workflow state. Link to current source, not Linear issues, from
+   public wiki pages.
 
 Human pages require `title` and `description` frontmatter and no Markdown H1.
-The sidebar is autogenerated from the four directories, so set `sidebar.order`
-rather than editing `astro.config.ts`. Use absolute wiki routes. One focused
-page is better than a broad encyclopedia entry.
+The sidebar is autogenerated from the four directories, so set
+`sidebar.order` rather than editing `astro.config.ts`. Use absolute wiki routes.
 
 When implementation changes a meaningful boundary, operator workflow, or
 architectural reason, update the human page in the same change. Routine
 refactors and ephemeral fixes do not need forced wiki churn.
 
-## Author workflow documents
-
-Follow the canonical frontmatter, workflow, board, archival, and TODO rules in
-the `AGENTS.md` hierarchy. Wiki files are not docs-board inputs and must not
-receive workflow frontmatter. Do not create a workflow document solely to
-journal an agent session; use a plan only when the design is durable.
-
 ## Verify
 
-For workflow-document changes, run the relevant root docs checks:
-
-```bash
-bun run check-todos
-```
-
-For wiki changes, run from `packages/docs/wiki/`:
+From `packages/docs/wiki/`:
 
 ```bash
 bun run typecheck
@@ -101,4 +75,4 @@ bun run test:e2e
 ```
 
 Inspect visible changes at desktop and mobile widths and attach the rendered
-result to the pull request.
+result to the pull request when the change is user-visible.

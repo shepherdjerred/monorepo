@@ -42,13 +42,6 @@ export const PACKAGES: PackageEntry[] = [
     defaultRoute: "/",
   },
   {
-    alias: "docs-board",
-    cwd: "packages/docs-board",
-    devCommand: ["bun", "run", "dev"],
-    expectedPort: 7332,
-    defaultRoute: "/",
-  },
-  {
     alias: "scout-marketing",
     cwd: "packages/scout-for-lol/packages/frontend",
     devCommand: ["bun", "run", "dev"],

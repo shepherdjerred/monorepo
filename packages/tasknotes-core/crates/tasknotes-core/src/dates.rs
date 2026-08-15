@@ -14,9 +14,8 @@
 //!   can compute, because it depends on the host's UTC offset. It is never read
 //!   here; every function that needs it takes a `today: NaiveDate` parameter.
 //!
-//! Collapsing the two is precisely the bug recorded in
-//! `packages/docs/todos/recurrence-local-utc-off-by-one.md`, where a
-//! local-midnight `Date` was handed to a component that read it back with UTC
+//! Collapsing the two caused a production bug where a local-midnight `Date`
+//! was handed to a component that read it back with UTC
 //! getters — making every recurring task a day late east of Greenwich. Making
 //! "today" an argument means that class of mistake has to be written down at a
 //! call site rather than hiding inside a helper.
@@ -233,9 +232,8 @@ pub fn to_iso_date(date: NaiveDate) -> String {
 /// ## Why the shell must not do this itself
 ///
 /// "Tomorrow" is the smallest possible piece of date arithmetic, and it is
-/// exactly the size of mistake that shipped: `packages/docs/todos/
-/// recurrence-local-utc-off-by-one.md` records a whole class of recurring tasks
-/// arriving a day late because one side built a local-midnight `Date` and the
+/// exactly the size of mistake that shipped: a whole class of recurring tasks
+/// arrived a day late because one side built a local-midnight `Date` and the
 /// other read it back with UTC getters. Adding `86_400_000` milliseconds to an
 /// instant is *not* adding a day — across a DST boundary it is 23 or 25 hours —
 /// and every host date API invites that shape. Civil-date arithmetic on a

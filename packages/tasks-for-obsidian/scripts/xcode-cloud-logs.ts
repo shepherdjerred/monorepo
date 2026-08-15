@@ -2,10 +2,11 @@
 /**
  * Pull Xcode Cloud build logs for Tasks for Obsidian via the App Store Connect API.
  *
- * There are no macOS CI agents in the monorepo (see docs/todos/mac-mini-buildkite-agent.md),
- * so iOS release builds run on Apple's Xcode Cloud. When an Archive fails, the only signal
- * is a terse email ("Command PhaseScriptExecution failed with a nonzero exit code"). This
- * script fetches the real build logs so the failing command + stderr are visible locally.
+ * There are no active macOS CI agents in the monorepo, so iOS release builds
+ * run on Apple's Xcode Cloud. When an Archive fails, the only signal is a terse
+ * email ("Command PhaseScriptExecution failed with a nonzero exit code"). This
+ * script fetches the real build logs so the failing command + stderr are visible
+ * locally.
  *
  * Credentials live in 1Password (item "App Store Connect API — Xcode Cloud", Personal vault):
  *   - credential : the App Store Connect API private key (.p8, ES256)

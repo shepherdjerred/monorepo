@@ -1,21 +1,21 @@
 ---
 title: Schedule an agent task
-description: Put a follow-up check next to the document that motivated it, then dispatch it to Temporal.
+description: Define a report-only follow-up, link it to its tracked work, and dispatch it to Temporal.
 sidebar:
   order: 3
 ---
 
 An agent task is a scheduled Claude or Codex run that inspects current state and
-emails you a report. Use one when a document needs checking later and you do not
-want to remember to check it.
+emails you a report. Use one when Linear work needs checking later and you do
+not want to remember to check it.
 
 Anything that must _change_ the repo is a deterministic workflow instead, not an
 agent task.
 
 ## 1. Write the task block
 
-Put the block in the document that motivated the follow-up, so the task and its
-context stay together.
+Put the block in a temporary Markdown file and identify the motivating Linear
+work in `source.note`.
 
 ```md
 <!-- temporal-agent-task
@@ -29,9 +29,7 @@ context stay together.
   "checks": [
     { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Every current Birmel target reports up=1.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}", "expectation": { "kind": "numeric", "operator": "eq", "threshold": 1, "quantifier": "all" } }] }
   ],
-  "source": {
-    "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
-  },
+  "source": { "note": "Birmel post-deploy follow-up in Linear" },
   "prompt": "Pull the metrics from the Post-deploy verification section. Email whether each check is green or still red, with links/evidence."
 }
 -->
@@ -60,7 +58,7 @@ failed.
 ```bash
 cd packages/temporal
 TEMPORAL_ADDRESS=localhost:7233 \
-  bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/<doc>.md
+  bun run scripts/schedule-agent-task.ts --from-doc /tmp/agent-task.md
 ```
 
 The CLI validates every block as contract v2 before connecting, then schedules

@@ -109,7 +109,6 @@ resource "github_repository_webhook" "buildkite" {
 #       backfill statuses on every currently-open PR.
 # Same constraint as the `ci/merge-conflict` required check in
 # rulesets.tf — both should be applied together, after backfill.
-# See packages/docs/plans/2026-06-14_pr-merge-conflict-check.md.
 import {
   to = github_repository_webhook.pr_bot
   id = "monorepo/616025071"

@@ -9,7 +9,7 @@ import { z } from "zod/v4";
 // Scout writes generated match/prematch images (.png + .svg) into date-partitioned
 // folders alongside the raw JSON it wants to keep forever. Native S3 lifecycle can
 // only filter by prefix (not suffix), so this activity prunes the images by suffix +
-// age instead. See packages/docs/plans/2026-07-03_scout-s3-image-retention.md.
+// age instead.
 //
 // Objects are write-once, so LastModified ≈ the date embedded in the key — a 30-day
 // age filter yields an accurate rolling ~1-month image window.

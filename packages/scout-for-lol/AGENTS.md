@@ -195,7 +195,7 @@ CI runs on the static Buildkite pipeline (`.buildkite/pipeline.yml`): every PR r
 
 ### Stage deploys are lockstep (beta continuous, prod promoted)
 
-Each stage serves backend + marketing site + SPA from the same monorepo build; the SPA compiles against the backend tRPC router types, so mixed versions are a real contract hazard (design: `packages/docs/archive/superseded/2026-07-19_scout-lockstep-stage-deploys.md`).
+Each stage serves backend + marketing site + SPA from the same monorepo build; the SPA compiles against the backend tRPC router types, so mixed versions are a real contract hazard.
 
 - **Beta (continuous):** every main build auto-bumps the `shepherdjerred/scout-for-lol/beta` image pin (version commit-back) and runs `bun scripts/scout-site-release.ts deploy-beta` (beta-flavored site → `scout-frontend-beta` bucket + a `.release-version` marker). The same build archives a prod-flavored site artifact to `s3://scout-site-releases/2.0.0-<n>/` for later promotion.
 - **Prod (promotion = merging the Renovate PR):** the `scout-tag-release` CI step mints `ghcr.io/shepherdjerred/scout-for-lol:2.0.0-<n>` after site version `<n>` is archived, pointing at the backend digest beta serves it against — every minted tag is a complete backend+site release pair. Renovate (docker datasource on the `shepherdjerred/scout-for-lol/prod` pin, `automerge: false`) offers those tags as a standing PR. **Merging that PR is the promotion**: ArgoCD deploys the backend and the `scout-prod-reconcile` CI step syncs the prod bucket from the archived artifact for the version in the pin's tag portion (there is no separate site pin). Don't enable auto-merge unless you want prod to track beta continuously. Rollback = revert the promotion commit, or hand-edit the pin to any older **minted** tag@digest.
@@ -527,8 +527,8 @@ Two sources **refuse** global scope rather than answering wrongly:
 ## Explore — conversational queries over the whole lake
 
 `/app/explore` is a chat surface over global scope (`backend/src/explore/`,
-`app/src/routes/explore.tsx`). Design notes:
-`packages/docs/plans/2026-08-13_scout-explore-page.md`.
+`app/src/routes/explore.tsx`). Remaining product work is tracked in Linear as
+SJ-147.
 
 - **Access is `EXPLORE_GUILD_ALLOWLIST`**, an operator-managed list of Discord
   server ids: sign in, and belong to one of them. An empty or unset list denies

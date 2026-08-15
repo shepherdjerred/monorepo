@@ -75,7 +75,7 @@ const EXCLUDED_FILES = [
   // Documentation: AGENTS.md files and docs mention suppression patterns as things to avoid
   "AGENTS.md",
   "CLAUDE.md",
-  "packages/docs/",
+  "packages/docs/wiki/",
   // Agent prompts are prose that PROHIBITS the banned patterns by name
   // (e.g. refine-release-please.md tells the agent never to `git add -A`).
   "scripts/prompts/",

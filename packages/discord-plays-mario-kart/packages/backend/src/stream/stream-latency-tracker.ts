@@ -28,8 +28,7 @@ export type StreamLatencyObservations = {
   ) => void;
   /**
    * Depth of the unconsumed video-source FIFO after each record/consume.
-   * The decisive discriminator for the pairing-corruption investigation
-   * (packages/docs/todos/mk64-stream-latency-correlation-desync.md): a
+   * The decisive discriminator for the pairing-corruption investigation: a
    * standing ~30 while the viewer's glass is realtime means phantom head
    * entries; ~0-3 means honest pairing.
    */

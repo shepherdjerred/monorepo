@@ -21,8 +21,7 @@ const { runCheckPrMergeConflicts } =
  * Walks open PRs and posts a `ci/merge-conflict` commit status per PR computed
  * from a local `git merge-tree` (never GitHub's lazy `mergeable` field).
  * Triggered by the GitHub webhook on push-to-main (`kind: all-prs`) and on
- * per-PR events (`kind: single-pr`). See
- * packages/docs/plans/2026-06-14_pr-merge-conflict-check.md.
+ * per-PR events (`kind: single-pr`).
  */
 export async function checkPrMergeConflictsWorkflow(
   input: CheckPrMergeConflictsInput,

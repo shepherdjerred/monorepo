@@ -59,7 +59,5 @@ runs the fast build/test/lint subset when `.swift` files here are staged, and
 `mac:smoke` when bundle-affecting files (`project.yml`, `App/`, …) change.
 `mac:verify` is the pre-PR command.
 
-See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes (the host
-layer contract, threading rules, and release procedure), and
-[packages/docs/plans/2026-08-08_tasknotes-native-macos-app.md](../docs/plans/2026-08-08_tasknotes-native-macos-app.md)
-for the canonical design spec.
+See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes, including the
+host-layer contract, threading rules, and release procedure.

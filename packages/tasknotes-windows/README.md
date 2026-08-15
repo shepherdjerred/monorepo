@@ -164,7 +164,7 @@ UIA tree, screenshot, process inventory, and vault under `artifacts/e2e/`.
 
 The Windows UI lane remains local until Buildkite has unlocked interactive
 Windows 11 x64 workers. The exact inactive lane contract is checked in at
-`ci/windows-buildkite.pipeline.yml`; provisioning is tracked in
-`packages/docs/todos/tasknotes-windows-buildkite-worker.md`. Until that TODO is
-complete, a PR needs attached local `windows:verify` evidence and must not
-claim packaged Windows tests are CI-enforced.
+`ci/windows-buildkite.pipeline.yml`; provisioning is tracked in Linear as
+SJ-134. Until that issue is complete, a PR needs attached local
+`windows:verify` evidence and must not claim packaged Windows tests are
+CI-enforced.

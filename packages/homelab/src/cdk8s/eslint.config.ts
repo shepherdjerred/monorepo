@@ -22,7 +22,6 @@ const config = [
     rules: {
       // Imports of the loose CRD shim are silent strict-typing regressions —
       // route through the strict types in src/cdk8s-types/cfargotunnel.ts.
-      // See packages/docs/plans/2026-05-26_cdk8s-cfargotunnel-strict-types.md.
       "no-restricted-imports": [
         "error",
         {

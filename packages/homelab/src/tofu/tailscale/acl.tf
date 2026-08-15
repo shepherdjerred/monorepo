@@ -11,7 +11,7 @@
 #     policy (`GET /api/v2/tailnet/-/acl`) and reconcile its `tagOwners` /
 #     `autoApprovers` here — otherwise the Tailscale Kubernetes operator can
 #     lose the ability to tag the ingress proxies it creates and *.ts.net
-#     ingresses break. See packages/docs/guides/2026-06-06_tailscale-acls-runbook.md.
+#     ingresses break.
 #   * The account owner (autogroup:admin) keeps full access below, so you cannot
 #     lock yourself out. Still: run `tofu plan` AND the Tailscale policy preview,
 #     and rely on the `tests` block, before `tofu apply`.

@@ -86,5 +86,4 @@ part of this service.
 - Service and UI: `packages/alert-dashboard/`.
 - Deployment definitions: `packages/homelab/src/cdk8s/src/resources/alert-dashboard/`.
 - Operator CLI: `packages/toolkit/src/handlers/alerts.ts`.
-- Activation and retention boundary:
-  `packages/docs/todos/pagerduty-migration.md`.
+- Activation and retention work: Linear.

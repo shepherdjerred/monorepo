@@ -7,8 +7,7 @@ import { z } from "zod";
  * engine library): snake_case recurrence fields (`complete_instances`,
  * `recurrence_anchor`), path-as-ID semantics, config-driven statuses and
  * priorities. Every route/shape below was transcribed from the upstream
- * controllers (`src/api/*Controller.ts` @ upstream `main`, spec 0.2.x) —
- * see `packages/docs/plans/2026-07-03_tasknotes-first-in-class.md` (P3).
+ * controllers (`src/api/*Controller.ts` @ upstream `main`, spec 0.2.x).
  *
  * The legacy camelCase contract lives in `./index` until P6 deletes it.
  */

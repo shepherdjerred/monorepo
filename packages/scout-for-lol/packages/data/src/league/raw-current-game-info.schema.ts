@@ -32,8 +32,7 @@ export const RawCurrentGameParticipantSchema = z.object({
    * When Riot scrubs a participant for privacy, this is `null` AND `riotId`
    * below is replaced with the champion display name (not a real Riot ID), so
    * the participant carries no usable identity and cannot be matched to a
-   * tracked player in pre-match. See
-   * packages/docs/decisions/2026-06-07_scout-arena-prematch-scrubbed-players.md
+   * tracked player in pre-match.
    */
   puuid: z.string().nullable(),
   teamId: z.number(),

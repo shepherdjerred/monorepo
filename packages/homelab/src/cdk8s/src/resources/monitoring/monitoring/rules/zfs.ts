@@ -65,7 +65,7 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
           // The ARC is deliberately right-sized (16Gi, 2026-07-10) and runs pinned at
           // cap, so steady eviction is normal operation — not memory pressure. Only
           // sustained extreme churn is signal; ZfsArcHitRateLow is the "cache too
-          // small" canary. See packages/docs/plans/2026-07-10_torvalds-memory-rightsize.md.
+          // small" canary.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(node_zfs_arc_deleted[5m]) > 10000",
           ),
@@ -190,8 +190,7 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
           // under the oversized 48Gi ARC (30d: p50 36/s, p95 5.1k/s, max 13.5k/s) —
           // raising the ARC to quell this alert demonstrably did not work, so the
           // threshold now sits above the observed 30d max instead (~1.5x). Collisions
-          // are a perf-noise signal, not data risk. See
-          // packages/docs/plans/2026-07-10_torvalds-memory-rightsize.md.
+          // are a perf-noise signal, not data risk.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(node_zfs_arc_hash_collisions[5m]) > 20000",
           ),
