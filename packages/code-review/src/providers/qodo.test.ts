@@ -297,6 +297,53 @@ describe("qodo re-review copies", () => {
     ]);
   });
 
+  test("collapses copies separated only by a blank blockquote line", () => {
+    // Observed on PR #2174. Qodo resolved the finding and re-appended an
+    // unstruck copy whose Issue Context carried one extra blank `>`
+    // continuation line — invisible when rendered, and no part of the finding.
+    // Collapsing whitespace leaves the marker itself behind, so the two copies
+    // read as different findings and the gate blocked on the unstruck duplicate
+    // of a finding Qodo had already marked resolved.
+    const blankQuoteLine = `
+<h3>Code Review by Qodo</h3>
+<code>🐞 Bugs (1)</code> <code>📘 Rule violations (0)</code>
+<img src="https://example/divider.svg" alt="Grey Divider">
+<img src="https://example/action-required.png" alt="Action required">
+<details>
+<summary>  1. <s>Stale artifact</s> <code>✓ Resolved</code> <code>🐞 Bug</code></summary>
+<code>[src/priors.ts[R10-12]](https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc)</code>
+>Existence does not prove this run wrote it.
+>## Issue Context
+>The intent is to assert the landing.
+>[src/priors.ts[10-12]](https://github.com/shepherdjerred/monorepo/blob/f4c0d5a390d7aa2ad7713f0da3de349b8e66d421/src/priors.ts/#L10-L12)
+></details>
+
+<hr/>
+</details>
+<details>
+<summary>  2. Stale artifact <code>🐞 Bug</code></summary>
+<code>[src/priors.ts[R10-12]](https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc)</code>
+>Existence does not prove this run wrote it.
+>
+>## Issue Context
+>The intent is to assert the landing.
+>[src/priors.ts[10-12]](https://github.com/shepherdjerred/monorepo/blob/52d176391dc9015d5b3a070ea025081cdd1fad85/src/priors.ts/#L10-L12)
+></details>
+
+<hr/>
+</details>
+`;
+    const findings = parseQodoIssueComment({
+      ...comment,
+      body: blankQuoteLine,
+    });
+
+    expect(findings).toHaveLength(1);
+    // Qodo's own verdict on the finding, not on the copy it happened to strike.
+    expect(findings[0]?.isResolved).toBe(true);
+    expect(findings[0]?.title).toBe("Stale artifact");
+  });
+
   test("keeps same-titled findings apart when their bodies differ", () => {
     const findings = parseQodoIssueComment({
       ...comment,

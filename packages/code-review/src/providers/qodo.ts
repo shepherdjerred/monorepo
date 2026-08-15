@@ -106,6 +106,13 @@ type RenderedFinding = {
 };
 
 /**
+ * Blockquote markers opening a line, including the nested `> >` form and the
+ * single space a marker conventionally takes. Horizontal whitespace only, so a
+ * line's own marker is matched without reaching into the line before it.
+ */
+const BLOCKQUOTE_MARKER = /^[^\S\n]*>+[^\S\n]?/gmu;
+
+/**
  * Canonical form of a rendered finding, used to recognize the copies Qodo
  * re-appends. Qodo reflows the blockquote indentation of a finding's agent
  * prompt between copies, so whitespace carries no meaning here; everything
@@ -124,6 +131,14 @@ function identityOf(summary: string, findingBody: string): string {
       // count on an unchanged PR — the exact accumulation this identity exists
       // to collapse.
       .replaceAll(/\b[0-9a-f]{40}\b/giu, "<commit>")
+      // Blockquote markers are reflow, not content. Collapsing whitespace alone
+      // leaves them behind, so one copy gaining a blank `>` continuation line —
+      // which renders identically and says nothing — made the two copies
+      // different findings, and the gate blocked on an unstruck duplicate of a
+      // finding Qodo had already resolved. Stripped BEFORE the whitespace
+      // collapse, which is the step that would otherwise weld a marker to the
+      // text after it.
+      .replaceAll(BLOCKQUOTE_MARKER, "")
       .replaceAll(/\s+/gu, "")
   );
 }
