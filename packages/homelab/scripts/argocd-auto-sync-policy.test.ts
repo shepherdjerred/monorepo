@@ -176,6 +176,41 @@ test("skips manifests that are not Applications", () => {
   expect(divergences).toEqual([]);
 });
 
+// A manifest that names no kind cannot be judged "not an Application" — the
+// skip above is for manifests that say what they are. Silently passing over one
+// would drop a real Application from the comparison and report agreement the
+// release never actually checked.
+test("rejects a rendered manifest declaring no kind", () => {
+  expect(() =>
+    autoSyncPolicyDivergences(
+      [
+        JSON.stringify({
+          apiVersion: "argoproj.io/v1alpha1",
+          metadata: { name: "worker" },
+          spec: { syncPolicy: { automated: { enabled: true } } },
+        }),
+      ],
+      liveList([]),
+    ),
+  ).toThrow();
+});
+
+test("rejects a rendered manifest whose kind is empty", () => {
+  expect(() =>
+    autoSyncPolicyDivergences(
+      [
+        JSON.stringify({
+          apiVersion: "argoproj.io/v1alpha1",
+          kind: "",
+          metadata: { name: "worker" },
+          spec: { syncPolicy: { automated: { enabled: true } } },
+        }),
+      ],
+      liveList([]),
+    ),
+  ).toThrow();
+});
+
 test("rejects a rendered Application that is missing its name", () => {
   expect(() =>
     autoSyncPolicyDivergences(

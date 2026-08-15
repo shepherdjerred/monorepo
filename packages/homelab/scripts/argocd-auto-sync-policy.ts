@@ -36,7 +36,15 @@ const ApplicationPolicySchema = z.object({
   spec: z.object({ syncPolicy: SyncPolicySchema }).optional(),
 });
 
-const RenderedKindSchema = z.object({ kind: z.string().optional() });
+/**
+ * `kind` is required so a manifest that declares none fails here rather than
+ * being mistaken for "not an Application" and skipped. Skipping is right for a
+ * manifest that says what it is and simply is not an Application; a manifest
+ * that says nothing is a malformed root revision, which is the same judgement
+ * the strict parse below makes. `RenderedResourceSchema` in `argocd.ts` already
+ * requires it of this identical manifest stream.
+ */
+const RenderedKindSchema = z.object({ kind: z.string().min(1) });
 
 // ArgoCD serves `items: null` rather than `[]` for an empty list, matching
 // ApplicationListSchema in argocd-application-readiness.ts.
