@@ -120,6 +120,83 @@ test("captures router metadata from the final additive SSE chunk", async () => {
   ).toBe("Provider B");
 });
 
+test("keeps the final SSE metadata event without buffering the whole stream", async () => {
+  const observations: AttributedResponseObservation[] = [];
+  const filler = "x".repeat(4096);
+  const chunks = [
+    ...Array.from(
+      { length: 64 },
+      (_unused, index) =>
+        `data: {"id":"generation-sse","choices":[{"delta":{"content":"${String(index)}${filler}"}}]}\n\n`,
+    ),
+    'data: {"id":"generation-sse","openrouter_metadata":{"requested":"openai/gpt-5.6-luna","attempts":[{"provider":"Provider C","model":"openai/gpt-5.6-luna","status":200}]}}\n\n',
+    "data: [DONE]\n\n",
+  ];
+  const attributedFetch = createAttributedFetch(
+    () =>
+      Promise.resolve(
+        new Response(
+          new ReadableStream<Uint8Array>({
+            start(controller) {
+              const encoder = new TextEncoder();
+              for (const chunk of chunks) {
+                controller.enqueue(encoder.encode(chunk));
+              }
+              controller.close();
+            },
+          }),
+          { headers: { "Content-Type": "text/event-stream" } },
+        ),
+      ),
+    (input) => {
+      void collectObservation(input.observation, observations);
+    },
+  );
+
+  const response = await attributedFetch(
+    "https://openrouter.test/api/v1/chat/completions",
+    requestInit(),
+  );
+  const streamedText = await response.text();
+  expect(streamedText.length).toBeGreaterThan(64 * 1024);
+  const observation = ObservationSchema.parse(
+    await waitForObservation(observations),
+  );
+  expect(
+    observation.responseBody.openrouter_metadata.attempts[0]?.provider,
+  ).toBe("Provider C");
+});
+
+test("abandons a JSON body larger than the inspection cap", async () => {
+  const observations: AttributedResponseObservation[] = [];
+  const responseBody = {
+    id: "generation-oversized",
+    padding: "y".repeat(128 * 1024),
+    openrouter_metadata: {
+      requested: "openai/gpt-5.6-luna",
+      attempts: [{ provider: "Provider D", status: 200 }],
+    },
+  };
+  const attributedFetch = createAttributedFetch(
+    () => Promise.resolve(Response.json(responseBody)),
+    (input) => {
+      void collectObservation(input.observation, observations);
+    },
+  );
+
+  const response = await attributedFetch(
+    "https://openrouter.test/api/v1/chat/completions",
+    requestInit(),
+  );
+  expect(await response.json()).toEqual(responseBody);
+  const observation = await waitForObservation(observations);
+  // The metadata is unreadable within the cap, but the call is still attributed.
+  expect(observation.responseBody).toBeUndefined();
+  expect(observation.responseStatus).toBe(200);
+  expect(observation.endpoint).toBe("language");
+  expect(observation.workload).toBe("stream-test");
+});
+
 test("records stable model ids, upstream attempts, and missing metadata", async () => {
   const register = new Registry();
   const metrics = runtimeMetrics(register);

@@ -1,4 +1,8 @@
 import { costForTextUsage } from "@shepherdjerred/llm-models";
+import {
+  MAX_CORRECTIVE_PROMPT_CHARS,
+  MAX_SEMANTIC_ATTEMPTS,
+} from "@shepherdjerred/llm-runtime";
 import { ApplicationFailure } from "@temporalio/common";
 import type { GenerationArtifactResult } from "./glitter-context-refresh-cache.ts";
 
@@ -31,6 +35,34 @@ export function estimatedCallCostUsd(input: {
     throw new Error(`missing text pricing for ${input.model}`);
   }
   return cost;
+}
+
+/**
+ * Cost of one `generateGlitterObject` call in the worst case: every semantic
+ * attempt the runtime is allowed to issue is billable, and each retry after the
+ * first sends the corrective preamble plus, when the caller raised the ceiling
+ * for truncation retries, a larger output cap. Reserving only the first attempt
+ * would let a run exceed its limit before `record` could observe the overrun.
+ */
+export function worstCaseGenerationCostUsd(input: {
+  model: string;
+  inputTokenUpperBound: number;
+  outputTokenUpperBound: number;
+  semanticRetryOutputTokenUpperBound?: number | undefined;
+}): number {
+  const firstAttempt = estimatedCallCostUsd({
+    model: input.model,
+    inputTokenUpperBound: input.inputTokenUpperBound,
+    outputTokenUpperBound: input.outputTokenUpperBound,
+  });
+  const retryAttempt = estimatedCallCostUsd({
+    model: input.model,
+    inputTokenUpperBound:
+      input.inputTokenUpperBound + MAX_CORRECTIVE_PROMPT_CHARS,
+    outputTokenUpperBound:
+      input.semanticRetryOutputTokenUpperBound ?? input.outputTokenUpperBound,
+  });
+  return firstAttempt + retryAttempt * (MAX_SEMANTIC_ATTEMPTS - 1);
 }
 
 export class GenerationBudget {

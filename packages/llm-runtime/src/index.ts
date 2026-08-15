@@ -7,6 +7,8 @@ import {
 } from "./metadata.ts";
 import { createOpenRouterRuntime as innerCreateOpenRouterRuntime } from "./runtime.ts";
 import {
+  MAX_CORRECTIVE_PROMPT_CHARS as INNER_MAX_CORRECTIVE_PROMPT_CHARS,
+  MAX_SEMANTIC_ATTEMPTS as INNER_MAX_SEMANTIC_ATTEMPTS,
   REQUIRED_MODEL_CAPABILITIES as INNER_REQUIRED_MODEL_CAPABILITIES,
   StructuredOutputExhaustionError as InnerStructuredOutputExhaustionError,
   type AggregateOpenRouterUsage as InnerAggregateOpenRouterUsage,
@@ -31,6 +33,12 @@ const passthrough = <T>(value: T): T => value;
 
 export const REQUIRED_MODEL_CAPABILITIES = passthrough(
   INNER_REQUIRED_MODEL_CAPABILITIES,
+);
+export const MAX_SEMANTIC_ATTEMPTS: number = passthrough(
+  INNER_MAX_SEMANTIC_ATTEMPTS,
+);
+export const MAX_CORRECTIVE_PROMPT_CHARS: number = passthrough(
+  INNER_MAX_CORRECTIVE_PROMPT_CHARS,
 );
 export type RequiredModelCapability =
   (typeof REQUIRED_MODEL_CAPABILITIES)[number];

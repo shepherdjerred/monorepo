@@ -5,9 +5,9 @@ import {
 } from "@shepherdjerred/glitter-context/schema";
 import type { CurrentMessage } from "#shared/glitter-corpus.ts";
 import {
-  estimatedCallCostUsd,
   type GenerationBudget,
   inputTokenUpperBound,
+  worstCaseGenerationCostUsd,
 } from "./glitter-context-refresh-budget.ts";
 import {
   readOrCreateGenerationArtifact,
@@ -157,7 +157,7 @@ async function runChunkExtraction(input: {
     responseSchema: CompletionArtifactSchema,
     generate: async () => {
       input.budget.authorizeUncachedCall(
-        estimatedCallCostUsd({
+        worstCaseGenerationCostUsd({
           model: EXTRACTION_MODEL,
           inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(messages)),
           outputTokenUpperBound: EXTRACTION_MAX_OUTPUT_TOKENS,
@@ -355,10 +355,12 @@ async function runSynthesis(input: {
     responseSchema: CompletionArtifactSchema,
     generate: async () => {
       input.budget.authorizeUncachedCall(
-        estimatedCallCostUsd({
+        worstCaseGenerationCostUsd({
           model: SYNTHESIS_MODEL,
           inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(messages)),
-          outputTokenUpperBound: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+          outputTokenUpperBound: SYNTHESIS_MAX_OUTPUT_TOKENS,
+          semanticRetryOutputTokenUpperBound:
+            SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
         }),
       );
       return await generateGlitterObject({

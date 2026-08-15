@@ -6,9 +6,9 @@ import {
 } from "@shepherdjerred/glitter-context/schema";
 import type { CurrentMessage } from "#shared/glitter-corpus.ts";
 import {
-  estimatedCallCostUsd,
   type GenerationBudget,
   inputTokenUpperBound,
+  worstCaseGenerationCostUsd,
 } from "./glitter-context-refresh-budget.ts";
 import {
   readOrCreateGenerationArtifact,
@@ -94,7 +94,7 @@ export function estimateRelationshipGenerationCost(
   if (input.evidence.length === 0) {
     return 0;
   }
-  return estimatedCallCostUsd({
+  return worstCaseGenerationCostUsd({
     model: RELATIONSHIP_MODEL,
     inputTokenUpperBound: inputTokenUpperBound(
       JSON.stringify(relationshipMessages(input)),
@@ -137,7 +137,7 @@ export async function proposeRelationships(input: {
     responseSchema: CompletionArtifactSchema,
     generate: async () => {
       input.budget.authorizeUncachedCall(
-        estimatedCallCostUsd({
+        worstCaseGenerationCostUsd({
           model: RELATIONSHIP_MODEL,
           inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(messages)),
           outputTokenUpperBound: RELATIONSHIP_MAX_OUTPUT_TOKENS,

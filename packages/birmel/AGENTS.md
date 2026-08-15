@@ -1,6 +1,6 @@
 # AGENTS.md - Birmel
 
-Birmel is a Discord bot with one explicit AI SDK 6 runtime. Do not introduce
+Birmel is a Discord bot with one explicit AI SDK 7 runtime. Do not introduce
 framework-owned conversation memory, nested supervisor handoffs, or a second
 implementation of context, memory, sessions, jobs, or orchestration.
 

@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   createOpenRouterRuntime,
   generateValidatedObject,
+  MAX_CORRECTIVE_PROMPT_CHARS,
   openRouterWebSearchTool,
   parseOpenRouterMetadata,
   StructuredOutputExhaustionError,
@@ -563,5 +564,70 @@ describe("generateValidatedObject retries", () => {
     ]);
     expect(result.attempts).toHaveLength(2);
     expect(result.attempts[0]?.finishReason).toBe("length");
+  });
+});
+
+describe("generateValidatedObject corrective prompts", () => {
+  test("keeps a semantic retry's added prompt within the declared bound", async () => {
+    const PromptBodySchema = z
+      .object({
+        messages: z.array(
+          z.object({ role: z.string(), content: z.string() }).loose(),
+        ),
+      })
+      .loose();
+    const prompts: string[] = [];
+    const responses = [
+      openRouterResponse('{"count":1}'),
+      openRouterResponse('{"count":2}'),
+    ];
+    const runtime = createOpenRouterRuntime({
+      apiKey: "test-key",
+      service: "test",
+      appName: "test",
+      fetch: Object.assign(
+        async (
+          _input: Parameters<typeof fetch>[0],
+          init?: Parameters<typeof fetch>[1],
+        ) => {
+          if (typeof init?.body !== "string") {
+            throw new TypeError("expected JSON request body");
+          }
+          const body = PromptBodySchema.parse(JSON.parse(init.body));
+          const user = body.messages.findLast(
+            (message) => message.role === "user",
+          );
+          if (user === undefined) throw new Error("expected a user message");
+          prompts.push(user.content);
+          const response = responses.shift();
+          if (response === undefined) throw new Error("unexpected request");
+          return response;
+        },
+        { preconnect: (url: string | URL) => void url },
+      ),
+    });
+
+    // A validation message far larger than the bound forces the truncation path.
+    const result = await generateValidatedObject(runtime, {
+      model: "gpt-5.6-luna",
+      schema: z
+        .object({ count: z.number().int() })
+        .refine((value) => value.count > 1, { message: "z".repeat(20_000) }),
+      schemaName: "CountResult",
+      prompt: "Return a count.",
+      workload: "corrective-prompt-bound-test",
+    });
+
+    expect(result.object).toEqual({ count: 2 });
+    expect(prompts).toHaveLength(2);
+    const [first, retry] = prompts;
+    if (first === undefined || retry === undefined) {
+      throw new Error("expected two recorded prompts");
+    }
+    const added = retry.length - first.length;
+    // Truncation engaged (otherwise the 20k message would flow through), and
+    // the result still respects the bound budget callers reserve against.
+    expect(added).toBeGreaterThan(MAX_CORRECTIVE_PROMPT_CHARS / 2);
+    expect(added).toBeLessThanOrEqual(MAX_CORRECTIVE_PROMPT_CHARS);
   });
 });

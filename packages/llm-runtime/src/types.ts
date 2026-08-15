@@ -46,6 +46,20 @@ export const REQUIRED_MODEL_CAPABILITIES = [
   "reasoning",
 ] as const;
 
+/**
+ * Worst-case number of billable generations one `generateValidatedObject` call
+ * can issue. A caller that reserves budget before the call must reserve for all
+ * of them, not for the first attempt alone.
+ */
+export const MAX_SEMANTIC_ATTEMPTS = 3;
+
+/**
+ * Upper bound on the characters a semantic retry appends to the caller's
+ * prompt: the fixed corrective preamble plus the truncated issue summary.
+ * Callers size a retry's input estimate with this.
+ */
+export const MAX_CORRECTIVE_PROMPT_CHARS = 1400;
+
 export type RequiredModelCapability =
   (typeof REQUIRED_MODEL_CAPABILITIES)[number];
 

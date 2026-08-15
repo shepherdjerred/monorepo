@@ -18,6 +18,8 @@ import {
 } from "./metadata.ts";
 import type { OpenRouterRuntime } from "./runtime.ts";
 import {
+  MAX_CORRECTIVE_PROMPT_CHARS,
+  MAX_SEMANTIC_ATTEMPTS,
   StructuredOutputExhaustionError,
   type AggregateOpenRouterUsage,
   type GenerateValidatedObjectInput,
@@ -26,10 +28,14 @@ import {
   type StructuredOutputAttempt,
 } from "./types.ts";
 
-const MAX_SEMANTIC_ATTEMPTS = 3;
 const MAX_TRANSPORT_RETRIES = 2;
 const MAX_ISSUES = 8;
-const MAX_ISSUE_SUMMARY_CHARS = 1200;
+const CORRECTIVE_PROMPT_PREAMBLE =
+  "\n\nThe prior structured response failed schema validation. Correct only these bounded issues and return a complete object matching the schema: ";
+// Keeps the appended correction within MAX_CORRECTIVE_PROMPT_CHARS, which is
+// what budget-reserving callers size a retry's input against.
+const MAX_ISSUE_SUMMARY_CHARS =
+  MAX_CORRECTIVE_PROMPT_CHARS - CORRECTIVE_PROMPT_PREAMBLE.length;
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -105,7 +111,7 @@ function correctivePrompt(
   priorIssueSummary: string | undefined,
 ): string {
   if (priorIssueSummary === undefined) return originalPrompt;
-  return `${originalPrompt}\n\nThe prior structured response failed schema validation. Correct only these bounded issues and return a complete object matching the schema: ${priorIssueSummary}`;
+  return `${originalPrompt}${CORRECTIVE_PROMPT_PREAMBLE}${priorIssueSummary}`;
 }
 
 function outputTokenLimit(input: {

@@ -89,12 +89,57 @@ function sseFinalMetadata(text: string): unknown {
   return metadataValue ?? lastValue;
 }
 
+// Router metadata is a small object at the end of a completion, so inspection
+// never needs the whole body. A JSON response larger than this is not worth
+// buffering to read it; an SSE stream is followed with a rolling tail of this
+// size, which is far more than the final `openrouter_metadata` event needs.
+const MAX_INSPECTED_CHARS = 64 * 1024;
+
+type InspectedResponse = {
+  body: ReadableStream<Uint8Array> | null;
+  headers: { get: (name: string) => string | null };
+  status: number;
+};
+
+/**
+ * Drains `stream` without ever retaining more than `MAX_INSPECTED_CHARS`.
+ * `keepTail` selects which end survives: SSE metadata arrives last, so the
+ * stream is followed to completion and only its tail is kept, while a JSON body
+ * is only usable whole and is abandoned once it exceeds the cap.
+ */
+async function boundedText(
+  stream: ReadableStream<Uint8Array>,
+  keepTail: boolean,
+): Promise<string | undefined> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let text = "";
+  try {
+    for (;;) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      text += decoder.decode(chunk.value, { stream: true });
+      if (text.length <= MAX_INSPECTED_CHARS) continue;
+      if (!keepTail) return undefined;
+      // Trim on a doubling threshold rather than every chunk so following a
+      // long stream stays linear in the bytes received.
+      if (text.length > MAX_INSPECTED_CHARS * 2) {
+        text = text.slice(text.length - MAX_INSPECTED_CHARS);
+      }
+    }
+    text += decoder.decode();
+    return keepTail && text.length > MAX_INSPECTED_CHARS
+      ? text.slice(text.length - MAX_INSPECTED_CHARS)
+      : text;
+  } finally {
+    // Releasing the tee'd branch stops the underlying response from buffering
+    // for a reader that has already given up.
+    await reader.cancel();
+  }
+}
+
 async function inspectResponse(input: {
-  response: {
-    text: () => Promise<string>;
-    headers: { get: (name: string) => string | null };
-    status: number;
-  };
+  response: InspectedResponse;
   workload: string;
   requestedModel: string | undefined;
   traceId: string | undefined;
@@ -103,14 +148,21 @@ async function inspectResponse(input: {
 }): Promise<AttributedResponseObservation> {
   let responseBody: unknown;
   try {
-    const text = await input.response.text();
-    responseBody =
+    const streamed =
       input.response.headers
         .get("content-type")
         ?.toLowerCase()
-        .includes("text/event-stream") === true
-        ? sseFinalMetadata(text)
-        : jsonValue(text);
+        .includes("text/event-stream") === true;
+    const text =
+      input.response.body === null
+        ? undefined
+        : await boundedText(input.response.body, streamed);
+    responseBody =
+      text === undefined
+        ? undefined
+        : streamed
+          ? sseFinalMetadata(text)
+          : jsonValue(text);
   } catch {
     responseBody = undefined;
   }

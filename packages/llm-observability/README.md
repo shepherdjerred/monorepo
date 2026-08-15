@@ -18,20 +18,23 @@ GenAI semantic conventions: `gen_ai.system`, `gen_ai.operation.name`,
 Message bodies go on `gen_ai.input.messages` / `gen_ai.output.messages` (to be
 stripped by the archive processor).
 
-| Export                                                                         | Traces                                                    |
-| ------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| `traceAnthropic`                                                               | An Anthropic Messages call                                |
-| `traceOpenAi`                                                                  | An OpenAI chat completion call                            |
-| `traceGemini`                                                                  | A Google Generative AI call                               |
-| `traceClaudeAgent`                                                             | A Claude Agent SDK message stream (async generator)       |
-| `traceClaudeCli` (+ `parseCliStdout`)                                          | A `claude` CLI subprocess run (JSON / stream-JSON stdout) |
-| `attachCodexTrace` (`./wrappers/codex`)                                        | A Codex exec session, spans per turn/tool call            |
-| `createCodexJsonlParser`, `pumpCodexStdout`, `addCodexUsage` (`./codex-jsonl`) | Codex JSONL event stream parsing                          |
-| `traceTextStream`                                                              | A generic streamed text response                          |
+| Export                                                                         | Traces                                              |
+| ------------------------------------------------------------------------------ | --------------------------------------------------- |
+| `traceClaudeAgent` (`./wrappers/claude-agent`)                                 | A Claude Agent SDK message stream (async generator) |
+| `attachCodexTrace` (`./wrappers/codex`)                                        | A Codex exec session, spans per turn/tool call      |
+| `createCodexJsonlParser`, `pumpCodexStdout`, `addCodexUsage` (`./codex-jsonl`) | Codex JSONL event stream parsing                    |
+| `traceTextStream` (`./wrappers/text-stream`)                                   | A generic streamed text response                    |
 
-All of these are re-exported from the package root; per-wrapper subpaths
-(`@shepherdjerred/llm-observability/wrappers/anthropic`, …) exist so a consumer
-only type-checks against the peer SDKs it actually uses.
+All of these are re-exported from the package root; the per-wrapper subpaths
+listed above exist so a consumer only type-checks against the peer SDKs it
+actually uses.
+
+Direct provider-SDK wrappers (Anthropic, OpenAI, Gemini, and the `claude` CLI)
+are gone: every model call in the repository now goes through OpenRouter via
+the AI SDK, so those calls are instrumented by
+`RepositoryOpenTelemetry` (`./ai-sdk-telemetry`) and the `withLlmSpan` /
+`setLlmResponseAttributes` primitives in `./span-helpers` rather than by a
+per-provider wrapper.
 
 ## Archive pipeline (slim spans)
 

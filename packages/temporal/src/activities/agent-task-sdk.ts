@@ -267,11 +267,41 @@ function codexEventMayApplyEffect(event: ThreadEvent): boolean {
   );
 }
 
+const CODEX_TOOL_ITEM_TYPES = new Set([
+  "command_execution",
+  "file_change",
+  "mcp_tool_call",
+  "web_search",
+]);
+
+/**
+ * The Codex SDK has no tool allow-list, so a read-only finalization thread can
+ * still shell out and read the checkout. The phase contract is therefore
+ * enforced on the event stream: any tool use during finalization would put
+ * facts in the report that never passed a declared collector, so the run fails
+ * rather than producing a report whose evidence provenance is unverifiable.
+ */
+export function codexFinalizationToolViolation(input: {
+  phase: AgentTaskSdkConfig["phase"];
+  event: ThreadEvent;
+}): string | undefined {
+  if (input.phase !== "finalization") return undefined;
+  const event = input.event;
+  if (event.type !== "item.started" && event.type !== "item.completed") {
+    return undefined;
+  }
+  if (!CODEX_TOOL_ITEM_TYPES.has(event.item.type)) return undefined;
+  return `Codex finalization invoked the ${event.item.type} tool; the finalization phase may only reason over the captured evidence catalog`;
+}
+
 async function runCodexSdk(
   input: AgentTaskSdkRunInput,
 ): Promise<AgentTaskSdkResult> {
   const startedAtMs = Date.now();
   const progress = createProgress(startedAtMs, input.onEvent);
+  // Finalization reasons only over the captured evidence catalog, so the thread
+  // loses network, web search, and write access for that phase.
+  const finalizing = input.config.phase === "finalization";
   let generationStarted = false;
   let possiblyAppliedEffects = false;
   let output: string | undefined;
@@ -293,9 +323,6 @@ async function runCodexSdk(
   try {
     const streamed = await trace.run(async () => {
       const codex = new Codex({ env: input.env });
-      // Finalization reasons only over the captured evidence catalog, so the
-      // thread loses network, web search, and write access for that phase.
-      const finalizing = input.config.phase === "finalization";
       const thread = codex.startThread({
         approvalPolicy: "never",
         model: input.config.model,
@@ -321,6 +348,11 @@ async function runCodexSdk(
       generationStarted ||= event.type !== "thread.started";
       possiblyAppliedEffects ||= codexEventMayApplyEffect(event);
       progress.observe(event.type);
+      const toolViolation = codexFinalizationToolViolation({
+        phase: input.config.phase,
+        event,
+      });
+      if (toolViolation !== undefined) throw new Error(toolViolation);
       switch (event.type) {
         case "thread.started":
           sessionId = event.thread_id;

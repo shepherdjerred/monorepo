@@ -265,11 +265,15 @@ history replay, and its undeclared output is always reported as partial.
 **A v2 run is two bounded SDK phases, not one.** `investigateAgentTask` runs the
 agent with its normal tool set and returns a preliminary assessment; the
 declared collectors then run independently, and `finalizeAgentTask` re-runs the
-agent over the merged receipt catalog with **no tools at all**
-(`buildAgentTaskSdkConfig` empties `allowedTools`, and a Codex finalization
-thread additionally drops network, web search, and write access). Provider
-evidence receipts are extracted from the SDK's own redacted event stream, so a
-tool call the agent only claims to have made cannot be cited.
+agent over the merged receipt catalog with **no tools at all**. Claude enforces
+that at configuration time — `buildAgentTaskSdkConfig` empties `allowedTools`.
+The Codex SDK exposes no tool allow-list, so a Codex finalization thread drops
+network, web search, and write access **and** `runCodexSdk` fails the run on the
+first `command_execution`, `file_change`, `mcp_tool_call`, or `web_search` item
+it observes during finalization; the phase contract is enforced on the event
+stream rather than trusted to the sandbox. Provider evidence receipts are
+extracted from the SDK's own redacted event stream, so a tool call the agent
+only claims to have made cannot be cited.
 
 **Claude structured output is an SDK result contract.** Pass the draft-07
 schema through `query({ options: { outputFormat } })`, read only the final
