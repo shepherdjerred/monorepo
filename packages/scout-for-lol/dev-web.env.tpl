@@ -50,9 +50,9 @@ RIOT_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/RIOT_API
 DATABASE_URL=file:./local-web-dev.db
 
 # Raw match JSON for a local report-lake rebuild (explore reads the lake, not
-# the database). Build one with, from packages/backend:
-#   AWS_PROFILE=seaweedfs op run --env-file=../../dev-web.env.tpl -- \
-#     bun run compact:report-lake
+# the database). `dev:web` copies the machine-wide seed into this checkout
+# automatically; build or refresh that seed once with:
+#   bun run --filter='./packages/scout-for-lol' dev:seed
 S3_BUCKET_NAME=scout-beta
 
 # ── Optional: silence Sentry locally ──────────────────────────────────

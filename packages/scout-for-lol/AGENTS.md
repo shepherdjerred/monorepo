@@ -107,11 +107,46 @@ plaintext credentials are written to disk. You must be `op signin`'d.
 - While running, the deployed beta bot is disconnected from Discord (one
   gateway connection per token). Stop with Ctrl+C and beta reconnects within
   seconds.
+- Explore and every ScoutQL report read the **report lake**, not the database.
+  A checkout with no lake answers every question with zero rows and looks
+  broken rather than empty — see the shared seed below.
 - The BETA Discord app (`1311755320745394317`) must list
   `http://localhost:5180/api/auth/discord/callback` in its OAuth redirect
   URIs, otherwise the token exchange returns 400.
 - The bot only sees guilds it has been invited to. To populate the guild
   picker, make sure your test guild has the BETA bot in it.
+
+### Shared report-lake seed (multiple checkouts / parallel agents)
+
+`REPORT_LAKE_DIR` defaults to `./report-lake` **relative to the backend's
+cwd**, so every worktree and every Conductor workspace gets its own empty lake
+and would otherwise pay a full S3 walk each. A machine-wide seed at
+`~/.local/share/scout-for-lol/dev-seed/report-lake` (honours `XDG_DATA_HOME`)
+is built once and copied into each checkout.
+
+```bash
+bun run --filter='./packages/scout-for-lol' dev:seed                    # rebuild the seed from S3
+bun run --filter='./packages/scout-for-lol' dev:seed -- --from-checkout # publish this checkout's lake as the seed
+bun run --filter='./packages/scout-for-lol' dev:seed -- --status        # what the seed and this checkout hold
+```
+
+`dev:web` calls `adoptSeedIfUnseeded` before starting the backend: a checkout
+with no published build gets the seed copied in, one that already has a build
+is left alone, and a missing seed prints how to build one and boots anyway.
+
+- **The seed is a copy source, not a shared working directory.** A running
+  backend folds staged rows into a new build every 15 minutes and GCs old
+  builds, so several backends pointed at one directory would publish and
+  collect over each other. Do not "save space" by pointing `REPORT_LAKE_DIR`
+  at the seed.
+- **`CURRENT` naming an existing build directory is the seeded test**, not the
+  directory existing. Backend startup creates the four staging subdirectories,
+  so an unbuilt lake is indistinguishable from a built one by `ls` alone —
+  which is exactly how an empty lake gets mistaken for a broken query engine.
+- Copies land in `<lake>.seeding` and are renamed into place, so an interrupted
+  copy never leaves a partial tree behind a `CURRENT` that claims completeness.
+- `--from-checkout` exists because the rebuild is the expensive part: if any
+  checkout already has a good lake, publish that rather than re-walking S3.
 
 ### Local UI screenshots (no manual OAuth click-through)
 

@@ -1,4 +1,6 @@
 import { $ } from "bun";
+import path from "node:path";
+import { adoptSeedIfUnseeded } from "./dev-lake-seed.ts";
 import { unresolvedSecrets } from "./migration-core.ts";
 
 if (import.meta.main) {
@@ -13,6 +15,16 @@ if (import.meta.main) {
     `Applying Prisma migrations against ${Bun.env["DATABASE_URL"] ?? ""}`,
   );
   await $`bunx prisma migrate deploy`.cwd(`${root}/packages/backend`);
+
+  // Explore and every ScoutQL report read the lake, not the database, so a
+  // checkout without one answers every question with no rows. Copy the shared
+  // seed in before the backend starts and begins folding into it.
+  console.log(
+    await adoptSeedIfUnseeded(
+      Bun.env["REPORT_LAKE_DIR"] ??
+        path.join(root, "packages", "backend", "report-lake"),
+    ),
+  );
 
   const environment = { ...Bun.env, ENABLE_DEV_LOGIN: "true" };
   const backend = Bun.spawn(["bun", "--watch", "src/index.ts"], {
