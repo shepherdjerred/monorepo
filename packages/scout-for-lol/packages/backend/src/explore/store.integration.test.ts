@@ -474,11 +474,13 @@ describe("explore store — ownership", () => {
     ).rejects.toBeInstanceOf(ExploreNotFoundError);
   });
 
-  test("a stale currentLeafId cannot become a parent", async () => {
+  test("a stale currentLeafId is refused as a 404, not a database fault", async () => {
     // `deepestLeafFrom` returns the pointer unchanged when nothing descends
-    // from it, without checking it is a node at all, and `parentId` has no
-    // foreign key — so an unvalidated stale pointer is written silently and
-    // leaves the question hanging off an id no transcript walk reaches.
+    // from it, without checking it is a node at all. The foreign key on
+    // `parentId` refuses the write either way, so nothing is corrupted — but
+    // unguarded it arrives as a raw Prisma constraint violation, which this
+    // module does not classify and the route answers 500. Asserting the domain
+    // error is what pins it to the 404 a missing parent deserves.
     const first = await askAndAnswer({
       conversationId: null,
       question: "Which champion has the most games?",

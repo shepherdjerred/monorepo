@@ -314,9 +314,15 @@ export async function startExploreTurn(
   // conversation. `message` names one directly. `leaf` resolves
   // `currentLeafId`, and `deepestLeafFrom` returns that pointer unchanged when
   // nothing descends from it — without checking it is a node at all — so a
-  // stale pointer resolves to itself. `parentId` carries no foreign key, so an
-  // unchecked one is written silently and leaves a message hanging off an id
-  // that is not in the tree, where no transcript walk will ever reach it.
+  // stale pointer resolves to itself.
+  //
+  // The tree is not at risk: `parentId` carries a real foreign key
+  // (`ExploreMessage_parentId_fkey`, with `PRAGMA foreign_keys=ON`), so the row
+  // is refused rather than written. What the check buys is the right error. An
+  // unguarded stale pointer raises a raw Prisma constraint violation, which is
+  // neither of the errors this module classifies, so the route's catch-all
+  // answers 500 — a fault on our side — for what is only a parent that does not
+  // exist. Checking here makes it the 404 it always was.
   //
   // Deliberately strict here and lenient in `buildTranscript`, which resolves
   // the same pointer for reading: a stale pointer should still render a
