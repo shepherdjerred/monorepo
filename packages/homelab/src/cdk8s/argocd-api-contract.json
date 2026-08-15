@@ -1,0 +1,139 @@
+{
+  "generatedAt": "2026-08-14T23:30:53.873Z",
+  "server": "https://argocd.tailnet-1a49.ts.net",
+  "argocdVersion": "v3.4.5",
+  "cases": [
+    {
+      "name": "resource-absent-from-application",
+      "description": "A resource the revision introduces but the live tree does not carry. ArgoCD fails the lookup with codes.InvalidArgument (3), which the gRPC gateway renders as HTTP 400 — not 404 — so the message is the only signal that this means absent.",
+      "endpoint": "resource",
+      "request": {
+        "application": "argocd",
+        "query": {
+          "resourceName": "argocd-contract-probe-absent-job",
+          "kind": "Job",
+          "group": "batch",
+          "version": "v1",
+          "namespace": "argocd"
+        }
+      },
+      "expect": "absent",
+      "response": {
+        "status": 400,
+        "body": {
+          "error": "Job batch argocd-contract-probe-absent-job not found as part of application argocd",
+          "code": 3,
+          "message": "Job batch argocd-contract-probe-absent-job not found as part of application argocd"
+        }
+      }
+    },
+    {
+      "name": "resource-absent-core-group",
+      "description": "The same absence for a core-group resource. The empty group leaves a double space in the message, which is exactly the detail a hand-written fake gets wrong.",
+      "endpoint": "resource",
+      "request": {
+        "application": "argocd",
+        "query": {
+          "resourceName": "argocd-contract-probe-absent-configmap",
+          "kind": "ConfigMap",
+          "group": "",
+          "version": "v1",
+          "namespace": "argocd"
+        }
+      },
+      "expect": "absent",
+      "response": {
+        "status": 400,
+        "body": {
+          "error": "ConfigMap  argocd-contract-probe-absent-configmap not found as part of application argocd",
+          "code": 3,
+          "message": "ConfigMap  argocd-contract-probe-absent-configmap not found as part of application argocd"
+        }
+      }
+    },
+    {
+      "name": "resource-unknown-application",
+      "description": "An unknown Application. ArgoCD resolves RBAC through the project it cannot look up for a name that does not exist, so this is a permission denial and must never be read as absence.",
+      "endpoint": "resource",
+      "request": {
+        "application": "argocd-contract-probe-absent-application",
+        "query": {
+          "resourceName": "argocd-contract-probe-absent-configmap",
+          "kind": "ConfigMap",
+          "group": "",
+          "version": "v1",
+          "namespace": "argocd"
+        }
+      },
+      "expect": "error",
+      "response": {
+        "status": 403,
+        "body": {
+          "error": "permission denied",
+          "code": 7,
+          "message": "permission denied"
+        }
+      }
+    },
+    {
+      "name": "resource-malformed-query",
+      "description": "A request missing the required resourceName. Answered 5xx, so a broad '400 means absent' shortcut would not swallow it — but a broad 'non-200 means absent' one would.",
+      "endpoint": "resource",
+      "request": {
+        "application": "argocd",
+        "query": {
+          "kind": "ConfigMap",
+          "group": "",
+          "version": "v1"
+        }
+      },
+      "expect": "error",
+      "response": {
+        "status": 500,
+        "body": {
+          "error": "grpc: error while marshaling: proto: required field \"resourceName\" not set",
+          "code": 13,
+          "message": "grpc: error while marshaling: proto: required field \"resourceName\" not set"
+        }
+      }
+    },
+    {
+      "name": "application-unknown-with-project",
+      "description": "An unknown Application read through getApplication WITH a project. The project narrows the RBAC lookup, so this is the one place ArgoCD does answer a clean 404 — which is why delete-application's wait loop can rely on it.",
+      "endpoint": "application",
+      "request": {
+        "application": "argocd-contract-probe-absent-application",
+        "query": {
+          "project": "default"
+        }
+      },
+      "expect": "error",
+      "response": {
+        "status": 404,
+        "body": {
+          "error": "applications.argoproj.io \"argocd-contract-probe-absent-application\" not found",
+          "code": 5,
+          "message": "applications.argoproj.io \"argocd-contract-probe-absent-application\" not found"
+        }
+      }
+    },
+    {
+      "name": "application-unknown-without-project",
+      "description": "The same read without a project. getApplication does not send one, so a missing Application surfaces as a permission denial rather than a 404 — the reason its error mentions the possibility.",
+      "endpoint": "application",
+      "request": {
+        "application": "argocd-contract-probe-absent-application",
+        "query": {}
+      },
+      "expect": "error",
+      "response": {
+        "status": 403,
+        "body": {
+          "error": "permission denied",
+          "code": 7,
+          "message": "permission denied"
+        }
+      }
+    }
+  ]
+}

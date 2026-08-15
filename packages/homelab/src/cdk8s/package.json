@@ -26,6 +26,7 @@
     "diff": "bun run build && bun run scripts/helm-render.ts --diff",
     "audit:grafana": "bun run scripts/grafana-dashboard-audit.ts",
     "check:1password": "bun run scripts/check-1password-items.ts",
+    "argocd:contract": "bun run scripts/snapshot-argocd-api-contract.ts",
     "check:caddyfile": "bun run scripts/check-caddyfile.ts"
   },
   "dependencies": {
