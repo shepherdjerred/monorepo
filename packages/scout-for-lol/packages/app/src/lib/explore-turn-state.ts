@@ -110,6 +110,34 @@ export function markStopping(turn: ExplorePendingTurn): ExplorePendingTurn {
  * was already on screen when a regenerate began; a persisted question with no
  * answer under it is deliberately not enough.
  */
+/**
+ * When to re-read the transcript after a stop, or null when there is nothing
+ * to read: the conversation was never created, so no row exists to fetch.
+ *
+ * A stop before `started` arrives still needs one read. The server persists the
+ * question before it opens the stream, so by the time a stop is possible that
+ * row exists — while the copy on screen is the pending turn's optimistic one,
+ * which is cleared the moment the turn ends. Skipping the read there drops the
+ * question the user just asked until some unrelated refetch happens to run.
+ *
+ * That case needs only the one read: nothing streamed, so there is no salvage
+ * write to race, and `turnHasLanded` cannot judge arrival without a question id
+ * anyway. Once `started` has arrived a partial answer may still be being
+ * written, so those stops keep the bounded poll (~2.1s) — a salvage slower than
+ * that shows up on the next natural refetch instead.
+ */
+export function salvageRefreshDelays(
+  turn: ExplorePendingTurn,
+): { conversationId: string; delays: number[] } | null {
+  if (turn.conversationId === null) {
+    return null;
+  }
+  return {
+    conversationId: turn.conversationId,
+    delays: turn.questionMessageId === null ? [0] : [0, 600, 1500],
+  };
+}
+
 export function turnHasLanded(
   turn: ExplorePendingTurn,
   messages: ExploreMessage[],

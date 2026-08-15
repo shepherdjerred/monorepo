@@ -4,6 +4,7 @@ import {
   applyStreamEvent,
   createPendingTurn,
   markStopping,
+  salvageRefreshDelays,
   turnHasLanded,
   visiblePending,
 } from "#src/lib/explore-turn-state.ts";
@@ -182,5 +183,60 @@ describe("turnHasLanded", () => {
     expect(
       turnHasLanded(turn, [message({ id: QUESTION_ID, role: "user" })]),
     ).toBe(false);
+  });
+});
+
+describe("salvageRefreshDelays", () => {
+  test("still reads once when the stop beat the started event", () => {
+    // The regression. The server persists the question before it opens the
+    // stream, so a stop this early leaves that row on disk while the only copy
+    // on screen is the pending turn's, which is cleared as the turn ends.
+    // Skipping the read drops the question the user just asked.
+    const turn = createPendingTurn({
+      conversationId: CONVERSATION,
+      question: "Who wins?",
+      leafIdAtStart: null,
+    });
+
+    expect(turn.questionMessageId).toBeNull();
+    expect(salvageRefreshDelays(turn)).toEqual({
+      conversationId: CONVERSATION,
+      delays: [0],
+    });
+  });
+
+  test("polls a bounded few times once the turn has a question id", () => {
+    // Only then can a partial answer be mid-write, and only then can
+    // `turnHasLanded` judge whether it arrived.
+    const turn = applyStreamEvent(
+      createPendingTurn({
+        conversationId: CONVERSATION,
+        question: "Who wins?",
+        leafIdAtStart: null,
+      }),
+      {
+        type: "started",
+        runId: RUN_ID,
+        conversationId: CONVERSATION,
+        questionMessageId: QUESTION_ID,
+      },
+    );
+
+    expect(salvageRefreshDelays(turn)).toEqual({
+      conversationId: CONVERSATION,
+      delays: [0, 600, 1500],
+    });
+  });
+
+  test("reads nothing when the conversation was never created", () => {
+    // A brand-new conversation stopped before `started`: there is no id to
+    // query, so there is nothing to read rather than something being skipped.
+    const turn = createPendingTurn({
+      conversationId: null,
+      question: "Who wins?",
+      leafIdAtStart: null,
+    });
+
+    expect(salvageRefreshDelays(turn)).toBeNull();
   });
 });

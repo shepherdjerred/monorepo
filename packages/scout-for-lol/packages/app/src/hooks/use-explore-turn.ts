@@ -9,6 +9,7 @@ import {
   applyStreamEvent,
   createPendingTurn,
   markStopping,
+  salvageRefreshDelays,
   turnHasLanded,
   type ExplorePendingTurn,
 } from "#src/lib/explore-turn-state.ts";
@@ -102,17 +103,17 @@ export function useExploreTurn(params: {
 
   /**
    * A stop aborts the HTTP request, so the server's salvage write races the
-   * refetch. Poll a couple of times, bounded (~2.1s): a salvage slower than
-   * that shows up on the next natural refetch instead.
+   * refetch. `salvageRefreshDelays` decides how many reads this stop needs and
+   * whether it needs any at all.
    */
   const awaitSalvage = useCallback(
     async (turn: ExplorePendingTurn): Promise<void> => {
-      const conversationId = turn.conversationId;
-      if (conversationId === null || turn.questionMessageId === null) {
+      const plan = salvageRefreshDelays(turn);
+      if (plan === null) {
         return;
       }
+      const { conversationId, delays } = plan;
       applyTurn(markStopping(turn));
-      const delays = [0, 600, 1500];
       for (const delay of delays) {
         if (delay > 0) {
           await new Promise((resolve) => setTimeout(resolve, delay));
