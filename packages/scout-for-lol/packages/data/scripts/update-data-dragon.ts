@@ -1362,16 +1362,23 @@ async function main(): Promise<void> {
 
 async function updateSnapshots(): Promise<void> {
   const scoutRoot = `${import.meta.dir}/../../..`;
-  const repoRoot = `${import.meta.dir}/../../../../..`;
 
-  // Refresh the one root workspace install so Bun's isolated
-  // `node_modules/.bun/` snapshot picks up the freshly-downloaded assets.
-  // Package-local installs cannot resolve the repo's workspace dependencies.
-  // Without this refresh, snapshot tests miss any rune/icon Riot has renamed
-  // since the previous install (e.g. PhaseRush.png →
+  // NO install refresh here, deliberately. This used to run a second root
+  // `bun install --force` to defeat the content-hashed COPY the linker made at
+  // `node_modules/.bun/@scout-for-lol+data@…`, which otherwise served snapshot
+  // tests stale assets after Riot renamed an icon (PhaseRush.png →
   // StormraidersSurgeRuneIcon2.png in DDragon 16.9.1).
-  console.log("\n🔄 Refreshing workspace install for new assets...");
-  await $`cd ${repoRoot} && bun install --force`.quiet();
+  //
+  // The isolated-linker migration removed that copy: workspace packages are now
+  // plain symlinks to source (`backend/node_modules/@scout-for-lol/data ->
+  // ../../../data`, nothing under `node_modules/.bun/`), and assets resolve via
+  // `new URL(path, import.meta.url)`, which follows the symlink into the tree
+  // this script just wrote. Freshly-downloaded assets are already live.
+  //
+  // The refresh was not merely redundant — `bun install --force` means "request
+  // the latest versions from the registry", so it re-resolved dependencies and
+  // dirtied `bun.lock`, which the Data Dragon allowlist rejects. That failed
+  // every scheduled run from 2026-08-12.
 
   // Snapshots that depend on Data Dragon data
   const snapshotTests = [

@@ -6,6 +6,7 @@ import { installScoutWorkspace } from "./bot-clone.ts";
 import {
   changedFilesInPaths,
   getUnifiedDiff,
+  isGeneratedAtOnlyDiff,
   openSeasonRefreshPr,
 } from "./scout-season-refresh-git.ts";
 
@@ -28,29 +29,6 @@ export type ScoutShowcaseRefreshResult = {
   prUrl: string | undefined;
   outcome: "pr-created" | "no-diff" | "timestamp-only-no-pr";
 };
-
-/**
- * True when a unified diff's only content changes are the asset index's
- * `generatedAt` timestamp line. The generator stamps a fresh ISO timestamp on
- * every run (the sole nondeterminism in its output), so a run against
- * unchanged S3 sources dirties exactly that line — treat it as no drift
- * rather than opening a weekly churn PR. Precedent:
- * shouldCreateDataDragonPr's image-only suppression.
- */
-export function isGeneratedAtOnlyDiff(diff: string): boolean {
-  const changedLines = diff
-    .split("\n")
-    .filter(
-      (line) =>
-        (line.startsWith("+") || line.startsWith("-")) &&
-        !line.startsWith("+++") &&
-        !line.startsWith("---"),
-    );
-  if (changedLines.length === 0) {
-    return false;
-  }
-  return changedLines.every((line) => line.includes('"generatedAt":'));
-}
 
 export type ScoutShowcaseRefreshActivities =
   typeof scoutShowcaseRefreshActivities;
