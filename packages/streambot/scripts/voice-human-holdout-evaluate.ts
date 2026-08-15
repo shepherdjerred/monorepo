@@ -101,59 +101,68 @@ const [native, wasm] = await Promise.all([
   initializeLocalVoiceModelsForRuntime(assetsDir, "native"),
   initializeLocalVoiceModelsForRuntime(assetsDir, "wasm"),
 ]);
-let positivePasses = 0;
-let negativePasses = 0;
-let identical = true;
-for (const speaker of manifest.speakers) {
-  for (const clip of speaker.clips) {
-    const absolute = path.resolve(inputDir, clip.file);
-    if (!absolute.startsWith(`${inputDir}${path.sep}`)) {
-      throw new Error("Human holdout clip escapes its input directory");
-    }
-    const packets = await rawFileToPackets(
-      absolute,
-      Bun.env["FFMPEG_PATH"] ?? "ffmpeg",
-    );
-    const nativePackets = cloneDiscordOpusPackets(packets);
-    const wasmPackets = cloneDiscordOpusPackets(packets);
-    const [nativeResult, wasmResult] = await (async () => {
-      try {
-        return await Promise.all([
-          evaluateDiscordOpusPackets(native, nativePackets),
-          evaluateDiscordOpusPackets(wasm, wasmPackets),
-        ]);
-      } finally {
-        for (const packet of packets) packet.fill(0);
-        for (const packet of nativePackets) packet.fill(0);
-        for (const packet of wasmPackets) packet.fill(0);
-      }
-    })();
-    identical &&= nativeResult.activated === wasmResult.activated;
-    if (clip.category === "positive" && nativeResult.activated)
-      positivePasses += 1;
-    if (clip.category !== "positive" && !nativeResult.activated)
-      negativePasses += 1;
-  }
-}
-const report = {
-  version: 1,
-  evaluatedAt: new Date().toISOString(),
-  speakers: 3,
-  positivePasses,
-  positiveTotal: 15,
-  negativePasses,
-  negativeTotal: 15,
-  identicalClassifications: identical,
-  passed: positivePasses === 15 && negativePasses === 15 && identical,
-};
 const reportPath = path.resolve(
   inputDir,
   "..",
   "streambot-human-holdout-result.json",
 );
-await atomicWrite(reportPath, `${JSON.stringify(report, null, 2)}\n`);
-await Promise.all([native.close(), wasm.close()]);
-await rm(inputDir, { recursive: true });
+// Every exit from here on must still close both runtimes and delete the raw recordings: this
+// evaluator's privacy contract is that only the aggregate report outlives it, and a rejected
+// runtime or a failed validation must not leave private voice audio on disk.
+const report = await (async () => {
+  try {
+    let positivePasses = 0;
+    let negativePasses = 0;
+    let identical = true;
+    for (const speaker of manifest.speakers) {
+      for (const clip of speaker.clips) {
+        const absolute = path.resolve(inputDir, clip.file);
+        if (!absolute.startsWith(`${inputDir}${path.sep}`)) {
+          throw new Error("Human holdout clip escapes its input directory");
+        }
+        const packets = await rawFileToPackets(
+          absolute,
+          Bun.env["FFMPEG_PATH"] ?? "ffmpeg",
+        );
+        const nativePackets = cloneDiscordOpusPackets(packets);
+        const wasmPackets = cloneDiscordOpusPackets(packets);
+        const [nativeResult, wasmResult] = await (async () => {
+          try {
+            return await Promise.all([
+              evaluateDiscordOpusPackets(native, nativePackets),
+              evaluateDiscordOpusPackets(wasm, wasmPackets),
+            ]);
+          } finally {
+            for (const packet of packets) packet.fill(0);
+            for (const packet of nativePackets) packet.fill(0);
+            for (const packet of wasmPackets) packet.fill(0);
+          }
+        })();
+        identical &&= nativeResult.activated === wasmResult.activated;
+        if (clip.category === "positive" && nativeResult.activated)
+          positivePasses += 1;
+        if (clip.category !== "positive" && !nativeResult.activated)
+          negativePasses += 1;
+      }
+    }
+    const aggregate = {
+      version: 1,
+      evaluatedAt: new Date().toISOString(),
+      speakers: 3,
+      positivePasses,
+      positiveTotal: 15,
+      negativePasses,
+      negativeTotal: 15,
+      identicalClassifications: identical,
+      passed: positivePasses === 15 && negativePasses === 15 && identical,
+    };
+    await atomicWrite(reportPath, `${JSON.stringify(aggregate, null, 2)}\n`);
+    return aggregate;
+  } finally {
+    await Promise.all([native.close(), wasm.close()]);
+    await rm(inputDir, { recursive: true });
+  }
+})();
 process.stdout.write(
   `${JSON.stringify(report, null, 2)}\nrecordings deleted after aggregate report: ${reportPath}\n`,
 );

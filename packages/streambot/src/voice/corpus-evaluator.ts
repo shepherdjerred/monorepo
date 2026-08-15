@@ -78,9 +78,17 @@ export async function evaluateDiscordOpusPackets(
 ): Promise<DiscordOpusPipelineEvaluation> {
   let activated = false;
   const candidate = { detected: false };
+  const failure: { error: unknown } = { error: null };
   let packetTimeMs = 0;
   let endpointMs: number | null = null;
-  const localDecision = Promise.withResolvers<undefined>();
+  // The phrase verifier resolves asynchronously while `accept()` is synchronous. Draining the
+  // whole clip first would advance the simulated clock through the fixture's trailing silence
+  // before the turn could complete, so every activation would report the clip's end as its
+  // endpoint instead of the lifecycle's. Holding the feed for the verifier keeps the simulated
+  // timestamp on the frame the turn actually completed at.
+  const running: { verification: Promise<void> | null } = {
+    verification: null,
+  };
   const lifecycle = new VoiceAudioLifecycle({
     models,
     preRollMs: VOICE_WAKE_WINDOW_MS,
@@ -88,11 +96,11 @@ export async function evaluateDiscordOpusPackets(
     onCandidate: () => {
       candidate.detected = true;
     },
-    onLocalVerification: () => {
-      localDecision.resolve(undefined);
+    onLocalVerificationScheduled: (settled) => {
+      running.verification = settled;
     },
     onLocalVerificationError: (error) => {
-      localDecision.reject(error);
+      failure.error = error;
     },
     onWake: () => {
       activated = true;
@@ -103,16 +111,29 @@ export async function evaluateDiscordOpusPackets(
       return Promise.resolve();
     },
   });
+  const settleVerification = async (): Promise<void> => {
+    while (running.verification !== null) {
+      const inFlight = running.verification;
+      await inFlight;
+      if (running.verification === inFlight) running.verification = null;
+    }
+  };
   try {
     for (const [index, packet] of packets.entries()) {
       packetTimeMs = (index + 1) * 20;
       lifecycle.accept(audio(packet, index));
+      await settleVerification();
     }
     lifecycle.finishInput();
-    if (candidate.detected) await localDecision.promise;
+    await settleVerification();
     await Bun.sleep(0);
   } finally {
     lifecycle.close();
+  }
+  if (failure.error !== null) {
+    throw failure.error instanceof Error
+      ? failure.error
+      : new Error("Local wake verification failed", { cause: failure.error });
   }
   return { candidate: candidate.detected, activated, endpointMs };
 }

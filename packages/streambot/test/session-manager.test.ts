@@ -5,6 +5,8 @@ import path from "node:path";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
+import { buildPlaybackActors } from "@shepherdjerred/streambot/session/playback-actors.ts";
+import { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
 import type {
   UserbotEntry,
   UserbotProvider,
@@ -834,5 +836,47 @@ describe("SessionManager voice recovery policy", () => {
     expect(pool.acquireCount()).toBe(3);
 
     await manager.destroyAll();
+  });
+});
+
+describe("playback actors", () => {
+  test("the voice disconnect waits for a held assistant transaction", async () => {
+    const pool = fakePool(1);
+    const streamer = pool.streamers[0];
+    if (streamer === undefined) throw new Error("fake pool produced no bot");
+    let left = false;
+    const entry: UserbotEntry = {
+      userbot: {
+        ...streamer,
+        leaveVoice: () => {
+          left = true;
+          return Promise.resolve();
+        },
+      },
+      guildIds: new Set([GUILD]),
+      busy: false,
+    };
+    const hold = new TeardownHold();
+    const actors = buildPlaybackActors({
+      entry,
+      resolveSource: () => Promise.resolve(RESOLVED),
+      teardownHold: () => hold,
+    });
+    const release = hold.acquire(() => {
+      throw new Error("teardown must not run under a hold");
+    });
+
+    // A voice `stop` dispatches STOP from inside its own transaction: the machine reaches `leaving`
+    // while the assistant is still speaking its confirmation over this very voice connection.
+    const leaving = actors.leaveVoice(
+      { voice: { guildId: GUILD, channelId: CHANNEL_A } },
+      new AbortController().signal,
+    );
+    await Bun.sleep(0);
+    expect(left).toBe(false);
+
+    release();
+    await leaving;
+    expect(left).toBe(true);
   });
 });

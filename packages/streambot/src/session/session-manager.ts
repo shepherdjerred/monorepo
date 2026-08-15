@@ -6,10 +6,8 @@ import {
   createPosterFetcher,
   type PosterFetcher,
 } from "@shepherdjerred/streambot/metadata/tmdb.ts";
-import {
-  createPlaybackMachine,
-  type PlaybackActors,
-} from "@shepherdjerred/streambot/machine/playback-machine.ts";
+import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
+import { buildPlaybackActors } from "@shepherdjerred/streambot/session/playback-actors.ts";
 import type {
   ResolvedSource,
   ResolveSourceInput,
@@ -288,6 +286,16 @@ export class SessionManager {
       log.info("streamer detach notification with no active session", params);
       return;
     }
+    this.beginVoiceRecovery(session);
+  }
+
+  /**
+   * Abort the in-flight assistant turn first: one that outlives the reconnect delay keeps its
+   * teardown hold, so the dead session stays in `sessions` and the recovery timer mistakes it for
+   * a live replacement and skips the reconnect entirely.
+   */
+  private beginVoiceRecovery(session: Session): void {
+    session.voiceAssistant?.abortActiveTransaction("voice connection lost");
     void this.voiceRecovery.beginRecovery(session);
   }
 
@@ -306,12 +314,11 @@ export class SessionManager {
 
   private spawn(params: SpawnParams): Session {
     const { entry } = params;
-    const actors: PlaybackActors = {
-      joinVoice: entry.userbot.joinVoice,
+    const actors = buildPlaybackActors({
+      entry,
       resolveSource: this.deps.resolveSource,
-      runStream: entry.userbot.runStream,
-      leaveVoice: entry.userbot.leaveVoice,
-    };
+      teardownHold: () => session.teardownHold,
+    });
     const actor = createActor(createPlaybackMachine(actors), {
       input: params.input,
       inspect: createPlaybackInspector(
@@ -379,7 +386,7 @@ export class SessionManager {
     // Trigger 1: the fork's voice ws `close` event (fires even when the main gateway never
     // reports the streamer leaving — the silent-to-EOF case).
     entry.userbot.setVoiceCloseListener(() => {
-      void this.voiceRecovery.beginRecovery(session);
+      this.beginVoiceRecovery(session);
     });
     // Stall watchdog: ffmpeg alive but producing nothing → the machine's bounded stall recovery
     // (retry at position, pipeline ladder). Without this the machine would sit in `streaming`

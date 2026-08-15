@@ -61,6 +61,13 @@ export type VoiceAudioLifecycleOptions = {
   readonly onCandidate?: (evidence: WakeCandidateEvidence) => void;
   /** Called only after the phrase-specific verifier accepts the candidate. */
   readonly onWake?: () => void;
+  /**
+   * The phrase verifier was handed the rolling window, with the promise that settles when the
+   * verification has been fully applied to this turn. Offline evaluation uses it to hold its
+   * simulated clock still while the verifier runs, so a fixture's measured endpoint stays a
+   * property of the audio rather than of how fast ONNX inference happened to be.
+   */
+  readonly onLocalVerificationScheduled?: (settled: Promise<void>) => void;
   readonly onLocalVerification?: (
     evidence: LocalWakeVerificationEvidence,
   ) => void;
@@ -273,7 +280,11 @@ export class VoiceAudioLifecycle {
     pending.verificationStartedAtSamples = pending.postCandidateSamples;
     const verificationAudio = concatSamples(pending.pcm, pending.sampleCount);
     const startedAtMs = this.options.now?.() ?? Date.now();
-    void this.verify(pending, verificationAudio, startedAtMs);
+    // `verify` handles its own failures, so this settles for every outcome — including a
+    // superseded or closed turn, which reports nothing through the evidence callbacks.
+    const settled = this.verify(pending, verificationAudio, startedAtMs);
+    this.options.onLocalVerificationScheduled?.(settled);
+    void settled;
   }
 
   private async verify(

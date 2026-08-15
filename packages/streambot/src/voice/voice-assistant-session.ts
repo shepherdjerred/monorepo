@@ -123,9 +123,17 @@ export class VoiceAssistantSession {
     });
   }
 
-  close(): void {
-    this.activeTransaction?.abort(new Error("Voice assistant session closed"));
+  /**
+   * Cancel the in-flight turn. The transaction's `finally` releases its teardown hold, so a
+   * session whose voice connection died cannot stay registered past the reconnect window.
+   */
+  abortActiveTransaction(reason: string): void {
+    this.activeTransaction?.abort(new Error(reason));
     this.activeTransaction = null;
+  }
+
+  close(): void {
+    this.abortActiveTransaction("Voice assistant session closed");
     this.lifecycle.close();
   }
 }
