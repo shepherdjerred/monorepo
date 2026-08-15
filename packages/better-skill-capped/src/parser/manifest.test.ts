@@ -2,11 +2,42 @@ import { describe, expect, test } from "bun:test";
 import { ManifestSchema } from "./manifest.ts";
 import fixture from "./fixtures/manifest.json";
 
+function must<T>(value: T | undefined | null): T {
+  if (value === undefined || value === null) {
+    throw new Error("Expected value to be defined");
+  }
+  return value;
+}
+
+function withFirstVideoOverride(overrides: Record<string, unknown>): unknown {
+  const clone = structuredClone(fixture);
+  return {
+    ...clone,
+    videos: [
+      { ...must(clone.videos[0]), ...overrides },
+      ...clone.videos.slice(1),
+    ],
+  };
+}
+
+function withFirstCommentaryOverride(
+  overrides: Record<string, unknown>,
+): unknown {
+  const clone = structuredClone(fixture);
+  return {
+    ...clone,
+    commentaries: [
+      { ...must(clone.commentaries[0]), ...overrides },
+      ...clone.commentaries.slice(1),
+    ],
+  };
+}
+
 describe("ManifestSchema", () => {
   test("parses real manifest fixture", () => {
     const result = ManifestSchema.parse(fixture);
 
-    expect(result.timeStamp).toBe(1771681507372);
+    expect(result.timeStamp).toBe(1_771_681_507_372);
     expect(result.patch.patchVal).toBe("26.04");
     expect(result.videos).toHaveLength(3);
     expect(result.commentaries).toHaveLength(2);
@@ -20,7 +51,7 @@ describe("ManifestSchema", () => {
 
   test("parses video fields with enum role", () => {
     const result = ManifestSchema.parse(fixture);
-    const video = result.videos[0];
+    const video = must(result.videos[0]);
 
     expect(video.role).toBe("all");
     expect(video.title).toBe("The New Most Underrated Champion For Solo Queue");
@@ -33,7 +64,7 @@ describe("ManifestSchema", () => {
 
   test("parses commentary fields with enums and rune/item fields", () => {
     const result = ManifestSchema.parse(fixture);
-    const commentary = result.commentaries[0];
+    const commentary = must(result.commentaries[0]);
 
     expect(commentary.role).toBe("mid");
     expect(commentary.staff).toBe("Hector");
@@ -50,7 +81,7 @@ describe("ManifestSchema", () => {
 
   test("parses staff with playerPeakRank", () => {
     const result = ManifestSchema.parse(fixture);
-    const staff = result.staff[0];
+    const staff = must(result.staff[0]);
 
     expect(staff.name).toBe("Hector");
     expect(staff.playerPeakRank).toBe(10);
@@ -58,7 +89,7 @@ describe("ManifestSchema", () => {
 
   test("parses courses with all fields", () => {
     const result = ManifestSchema.parse(fixture);
-    const course = result.courses[0];
+    const course = must(result.courses[0]);
 
     expect(course.title).toBe("Meta Updates {all}");
     expect(course.courseImage3).toContain("https://");
@@ -71,7 +102,7 @@ describe("ManifestSchema", () => {
 
   test("parses course with optional groupingKey", () => {
     const result = ManifestSchema.parse(fixture);
-    const course = result.courses[1];
+    const course = must(result.courses[1]);
 
     expect(course.groupingKey).toBe("support-est-old");
     expect(course.tags).toEqual([
@@ -83,7 +114,7 @@ describe("ManifestSchema", () => {
 
   test("parses carousel entries", () => {
     const result = ManifestSchema.parse(fixture);
-    const entry = result.carousel[0];
+    const entry = must(result.carousel[0]);
 
     expect(entry.courseTitle).toContain("Jungling");
     expect(entry.page).toBe(1);
@@ -93,26 +124,25 @@ describe("ManifestSchema", () => {
 
   test("parses videosToCourses with chapter vids", () => {
     const result = ManifestSchema.parse(fixture);
-    const entry = result.videosToCourses["Meta Updates {all}"];
+    const entry = must(result.videosToCourses["Meta Updates {all}"]);
+    const chapter = must(entry.chapters[0]);
 
-    expect(entry).toBeDefined();
-    expect(entry!.chapters[0].title).toBe("Course Content");
-    expect(entry!.chapters[0].vids.length).toBeGreaterThan(0);
-    expect(entry!.chapters[0].vids[0].uuid).toBe("4sghs37h9j");
+    expect(chapter.title).toBe("Course Content");
+    expect(chapter.vids.length).toBeGreaterThan(0);
+    expect(must(chapter.vids[0]).uuid).toBe("4sghs37h9j");
   });
 
   test("parses videosToCourses vids with optional altTitle", () => {
     const result = ManifestSchema.parse(fixture);
-    const entry = result.videosToCourses["Chapter 1: Wave Control {support}"];
+    const entry = must(
+      result.videosToCourses["Chapter 1: Wave Control {support}"],
+    );
 
-    expect(entry).toBeDefined();
-    expect(entry!.chapters[0].vids[0].altTitle).toBe(
+    expect(must(must(entry.chapters[0]).vids[0]).altTitle).toBe(
       "Why Wave Control is Important for Supports",
     );
-    expect(
-      result.videosToCourses["Meta Updates {all}"]!.chapters[0].vids[0]
-        .altTitle,
-    ).toBeUndefined();
+    const metaEntry = must(result.videosToCourses["Meta Updates {all}"]);
+    expect(must(must(metaEntry.chapters[0]).vids[0]).altTitle).toBeUndefined();
   });
 
   test("handles thisWeekData as empty array", () => {
@@ -127,40 +157,34 @@ describe("ManifestSchema", () => {
   });
 
   test("rejects invalid role", () => {
-    const bad = structuredClone(fixture);
-    bad.videos[0].role = "assassin";
+    const bad = withFirstVideoOverride({ role: "assassin" });
     expect(() => ManifestSchema.parse(bad)).toThrow();
   });
 
   test("rejects negative durSec", () => {
-    const bad = structuredClone(fixture);
-    bad.videos[0].durSec = -1;
+    const bad = withFirstVideoOverride({ durSec: -1 });
     expect(() => ManifestSchema.parse(bad)).toThrow();
   });
 
   test("rejects non-integer k/d/a", () => {
-    const bad = structuredClone(fixture);
-    bad.commentaries[0].k = 1.5;
+    const bad = withFirstCommentaryOverride({ k: 1.5 });
     expect(() => ManifestSchema.parse(bad)).toThrow();
   });
 
   test("coerces empty string d to 0", () => {
-    const data = structuredClone(fixture);
-    (data.commentaries[0] as Record<string, unknown>).d = "";
+    const data = withFirstCommentaryOverride({ d: "" });
     const result = ManifestSchema.parse(data);
-    expect(result.commentaries[0].d).toBe(0);
+    expect(must(result.commentaries[0]).d).toBe(0);
   });
 
   test("normalizes numeric rune field to string", () => {
-    const data = structuredClone(fixture);
-    (data.commentaries[0] as Record<string, unknown>).rune3 = 3008;
+    const data = withFirstCommentaryOverride({ rune3: 3008 });
     const result = ManifestSchema.parse(data);
-    expect(result.commentaries[0].rune3).toBe("3008");
+    expect(must(result.commentaries[0]).rune3).toBe("3008");
   });
 
   test("rejects commentary with role 'all'", () => {
-    const bad = structuredClone(fixture);
-    (bad.commentaries[0] as Record<string, unknown>).role = "all";
+    const bad = withFirstCommentaryOverride({ role: "all" });
     expect(() => ManifestSchema.parse(bad)).toThrow();
   });
 });

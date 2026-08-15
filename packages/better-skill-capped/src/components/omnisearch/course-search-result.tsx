@@ -85,8 +85,9 @@ export function CourseSearchResult(
                 className="thumbnail"
                 onError={(e) => {
                   // Fallback to first video's thumbnail if course image fails
-                  if (course.videos.length > 0) {
-                    e.currentTarget.src = course.videos[0].video.imageUrl;
+                  const firstVideo = course.videos[0];
+                  if (firstVideo !== undefined) {
+                    e.currentTarget.src = firstVideo.video.imageUrl;
                   }
                 }}
               />

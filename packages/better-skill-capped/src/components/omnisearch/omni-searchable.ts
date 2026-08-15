@@ -2,9 +2,7 @@ import type { Commentary } from "#src/model/commentary";
 import type { Course } from "#src/model/course";
 import type { Video } from "#src/model/video";
 
-type OmniSearchable = Video | Course | Commentary;
-
-export default OmniSearchable;
+export type OmniSearchable = Video | Course | Commentary;
 
 export const searchableFields = [
   "title",

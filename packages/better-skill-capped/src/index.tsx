@@ -9,7 +9,7 @@ function setupTheme() {
   const prefersDark = globalThis.matchMedia(
     "(prefers-color-scheme: dark)",
   ).matches;
-  document.documentElement.dataset.theme = prefersDark ? "dark" : "light";
+  document.documentElement.dataset["theme"] = prefersDark ? "dark" : "light";
 }
 
 // Initial setup

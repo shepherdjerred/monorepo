@@ -33,7 +33,7 @@ export class Searchbar extends React.Component<FilterBarProps, FilterBarState> {
     this.props.onValueUpdate(event.target.value);
   }
 
-  render(): React.ReactNode {
+  override render(): React.ReactNode {
     return (
       <section className="hero searchbar is-small">
         <div className="hero-body">

@@ -202,7 +202,7 @@ export class Parser {
         return {
           title,
           uuid: course.uuid,
-          description: course.desc || undefined,
+          ...(course.desc === "" ? {} : { description: course.desc }),
           releaseDate: releaseDate,
           role: role,
           image: course.courseImage2,

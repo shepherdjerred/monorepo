@@ -63,8 +63,9 @@
       "project": ["src/**/*.{ts,tsx}"]
     },
     "packages/better-skill-capped": {
-      "entry": ["src/index.tsx"],
-      "project": ["src/**/*.{ts,tsx}"],
+      "entry": ["src/index.tsx", "vite.config.ts"],
+      "project": ["src/**/*.{ts,tsx}", "vite.config.ts"],
+      "ignoreDependencies": ["shadcn"],
       "vite": false
     },
     "packages/sjer.red": {

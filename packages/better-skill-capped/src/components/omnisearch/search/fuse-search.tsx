@@ -37,7 +37,7 @@ export class FuseSearch<T> extends React.PureComponent<
     };
   }
 
-  componentDidMount(): void {
+  override componentDidMount(): void {
     const results = this.getResults();
     this.setState((state) => {
       return {
@@ -48,7 +48,7 @@ export class FuseSearch<T> extends React.PureComponent<
     this.props.onResultsUpdate(results.map((result) => result.item));
   }
 
-  componentDidUpdate(prevProps: Readonly<FuseSearchProps<T>>): void {
+  override componentDidUpdate(prevProps: Readonly<FuseSearchProps<T>>): void {
     // This prevents us from rebuilding fuse if our items haven't changed
     // This happens a lot when a user is typing which results in updates to the "query" prop
     this.rebuildFuseIfNeeded(this.props.items, prevProps.items);
@@ -128,7 +128,7 @@ export class FuseSearch<T> extends React.PureComponent<
     }
   }
 
-  render(): React.ReactNode {
+  override render(): React.ReactNode {
     const { render } = this.props;
 
     const start = this.props.itemsPerPage * (this.props.page - 1);

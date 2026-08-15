@@ -15,10 +15,10 @@ const ErrorBoundary = Sentry.ErrorBoundary as unknown as React.ComponentType<
   React.PropsWithChildren<{ fallback: React.ReactNode; showDialog?: boolean }>
 >;
 import { OmniSearch } from "./omnisearch/omni-search.tsx";
-import type OmniSearchable from "./omnisearch/omni-searchable.ts";
+import type { OmniSearchable } from "./omnisearch/omni-searchable.ts";
 
 export type RouterProps = {
-  content?: Content;
+  content?: Content | undefined;
   bookmarks: Bookmark[];
   onToggleBookmark: (item: Bookmarkable) => void;
   watchStatuses: WatchStatus[];

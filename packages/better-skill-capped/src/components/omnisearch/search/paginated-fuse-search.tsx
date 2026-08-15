@@ -30,7 +30,7 @@ export default class PaginatedFuseSearch<T> extends React.PureComponent<
     };
   }
 
-  componentDidUpdate(
+  override componentDidUpdate(
     prevProps: Readonly<PaginatedFuseSearchProps<T>>,
     prevState: Readonly<PaginatedFuseSearchState<T>>,
   ): void {
@@ -48,7 +48,7 @@ export default class PaginatedFuseSearch<T> extends React.PureComponent<
     }
   }
 
-  render(): React.ReactNode {
+  override render(): React.ReactNode {
     const { query, items, fuseOptions, render, itemsPerPage } = this.props;
     const { currentPage, matches } = this.state;
 

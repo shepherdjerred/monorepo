@@ -20,10 +20,10 @@ import { ManifestLoader } from "#src/manifest-loader";
 import { Parser } from "#src/parser/parser";
 
 export type AppState = {
-  content?: Content;
-  bookmarkDatastore?: BookmarkDatastore;
+  content?: Content | undefined;
+  bookmarkDatastore?: BookmarkDatastore | undefined;
   bookmarks: Bookmark[];
-  watchStatusesDatastore?: WatchStatusDatastore;
+  watchStatusesDatastore?: WatchStatusDatastore | undefined;
   watchStatuses: WatchStatus[];
   isDownloadEnabled: boolean;
   isTipsModalVisible: boolean;
@@ -43,7 +43,7 @@ export default class App extends React.Component<unknown, AppState> {
     };
   }
 
-  componentDidMount(): void {
+  override componentDidMount(): void {
     void this.loadContent();
   }
 
@@ -163,7 +163,7 @@ export default class App extends React.Component<unknown, AppState> {
     });
   }
 
-  render(): React.ReactNode {
+  override render(): React.ReactNode {
     return (
       <React.Fragment>
         <ErrorBoundary

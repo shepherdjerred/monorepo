@@ -2,7 +2,7 @@ import type { Bookmarkable } from "#src/model/bookmark";
 import type { Watchable } from "#src/model/watch-status";
 import React from "react";
 import Search from "./search/search.tsx";
-import type OmniSearchable from "./omni-searchable.ts";
+import type { OmniSearchable } from "./omni-searchable.ts";
 import { searchableFields } from "./omni-searchable.ts";
 import { OmniSearchResult } from "./omni-search-result.tsx";
 import { TipsButton } from "#src/components/tips-button";

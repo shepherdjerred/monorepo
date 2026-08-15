@@ -14,7 +14,7 @@ import type { Bookmarkable } from "#src/model/bookmark";
 import Banner, { BannerType } from "#src/components/banner";
 import Type, { getType } from "#src/model/type";
 import { Role } from "#src/model/role";
-import type OmniSearchable from "#src/components/omnisearch/omni-searchable.ts";
+import type { OmniSearchable } from "#src/components/omnisearch/omni-searchable.ts";
 
 export type SearchProps<T extends OmniSearchable> = {
   items: T[];
@@ -77,7 +77,7 @@ export default class Search<
     });
   }
 
-  render(): React.ReactElement {
+  override render(): React.ReactElement {
     const {
       items,
       fuseOptions,

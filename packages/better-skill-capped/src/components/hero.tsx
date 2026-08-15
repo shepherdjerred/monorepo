@@ -51,7 +51,7 @@ export class Hero extends React.PureComponent<HeroProps, unknown> {
     }
   }
 
-  render(): React.ReactNode {
+  override render(): React.ReactNode {
     const cx = classNames.bind({});
     const sectionClasses: string = cx({
       hero: true,
