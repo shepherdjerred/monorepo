@@ -78,7 +78,7 @@ describe("getPatchChangeset", () => {
   test("parses the bundled seed asset", () => {
     const changeset = getPatchChangeset();
     expect(changeset).toBeDefined();
-    expect(changeset?.patch).toBe("26.14");
+    expect(changeset?.patch).toBe("26.16");
     expect(changeset?.overview.length).toBeGreaterThan(0);
     expect(changeset?.summary.length).toBeGreaterThanOrEqual(1);
   });
