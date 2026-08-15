@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Jayce": {
       "id": "Jayce",
@@ -10,7 +10,7 @@
       "title": "the Defender of Tomorrow",
       "image": {
         "full": "Jayce.png",
-        "sprite": "champion3.png",
+        "sprite": "champion1.png",
         "group": "champion",
         "x": 96,
         "y": 96,
@@ -528,7 +528,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "JayceToTheSkies.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 96,
             "y": 0,
@@ -682,7 +682,7 @@
           "rangeBurn": "285",
           "image": {
             "full": "JayceStaticField.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 144,
             "y": 0,
@@ -838,7 +838,7 @@
           "rangeBurn": "240",
           "image": {
             "full": "JayceThunderingBlow.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 192,
             "y": 0,
@@ -917,7 +917,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "JayceStanceHtG.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 240,
             "y": 0,
@@ -932,7 +932,7 @@
         "description": "When Jayce swaps weapons he gains Move Speed for a short duration.",
         "image": {
           "full": "Jayce_Passive.png",
-          "sprite": "passive3.png",
+          "sprite": "passive1.png",
           "group": "passive",
           "x": 96,
           "y": 96,

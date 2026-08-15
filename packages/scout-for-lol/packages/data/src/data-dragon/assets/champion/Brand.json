@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Brand": {
       "id": "Brand",
@@ -440,7 +440,7 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ spellbasedamage }} -> {{ spellbasedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },

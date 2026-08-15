@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Viego": {
       "id": "Viego",
@@ -10,7 +10,7 @@
       "title": "The Ruined King",
       "image": {
         "full": "Viego.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 96,
         "y": 0,
@@ -486,7 +486,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "ViegoQ.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 96,
             "y": 0,
@@ -625,7 +625,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "ViegoW.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 144,
             "y": 0,
@@ -768,7 +768,7 @@
           "rangeBurn": "750",
           "image": {
             "full": "ViegoE.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 192,
             "y": 0,
@@ -883,7 +883,7 @@
           "rangeBurn": "500",
           "image": {
             "full": "ViegoR.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 240,
             "y": 0,
@@ -898,7 +898,7 @@
         "description": "Enemies who fall before Viego become wraiths. By attacking a wraith, Viego temporarily seizes control of the dead enemy's body, healing for a percentage of his target's max health and gaining access to their basic abilities and items. He replaces their Ultimate with a free cast of his own.",
         "image": {
           "full": "Viego_Passive.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 96,
           "y": 0,

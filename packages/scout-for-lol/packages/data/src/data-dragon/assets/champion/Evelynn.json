@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Evelynn": {
       "id": "Evelynn",
@@ -661,10 +661,10 @@
               "Range"
             ],
             "effect": [
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ charmduration }} -> {{ charmdurationNL }}",
               "{{ monstercharm }} -> {{ monstercharmNL }}",
-              "{{ effect9amount*100.000000 }}% -> {{ effect9amountnl*100.000000 }}%",
-              "{{ e7 }} -> {{ e7NL }}",
+              "{{ mrshred*100.000000 }}% -> {{ mrshrednl*100.000000 }}%",
+              "{{ monsterdamage }} -> {{ monsterdamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ castrange }} -> {{ castrangeNL }}"
             ]
@@ -952,8 +952,8 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ effect1amount*2.400000 }} -> {{ effect1amountnl*2.400000 }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basedamage*2.400000 }} -> {{ basedamagenl*2.400000 }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Thresh": {
       "id": "Thresh",
@@ -10,7 +10,7 @@
       "title": "the Chain Warden",
       "image": {
         "full": "Thresh.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 384,
         "y": 48,
@@ -656,7 +656,7 @@
           "rangeBurn": "1075",
           "image": {
             "full": "ThreshQ.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 288,
             "y": 96,
@@ -799,7 +799,7 @@
           "rangeBurn": "950",
           "image": {
             "full": "ThreshW.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 336,
             "y": 96,
@@ -946,7 +946,7 @@
           "rangeBurn": "500",
           "image": {
             "full": "ThreshE.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 384,
             "y": 96,
@@ -1061,7 +1061,7 @@
           "rangeBurn": "450",
           "image": {
             "full": "ThreshRPenta.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 432,
             "y": 96,
@@ -1076,7 +1076,7 @@
         "description": "Thresh can harvest the souls of enemies that die near him, permanently granting him Armor and Ability Power.",
         "image": {
           "full": "Thresh_Passive.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 384,
           "y": 48,

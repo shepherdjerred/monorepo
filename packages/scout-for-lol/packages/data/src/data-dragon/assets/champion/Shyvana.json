@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Shyvana": {
       "id": "Shyvana",
@@ -10,7 +10,7 @@
       "title": "the Half-Dragon",
       "image": {
         "full": "Shyvana.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 96,
         "y": 0,
@@ -371,7 +371,7 @@
           "rangeBurn": "25000",
           "image": {
             "full": "ShyvanaQ.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 96,
             "y": 0,
@@ -514,7 +514,7 @@
           "rangeBurn": "350",
           "image": {
             "full": "ShyvanaW.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 144,
             "y": 0,
@@ -657,7 +657,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "ShyvanaE.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 192,
             "y": 0,
@@ -778,7 +778,7 @@
           "rangeBurn": "1050",
           "image": {
             "full": "ShyvanaR.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 240,
             "y": 0,
@@ -793,7 +793,7 @@
         "description": "Takedowns on enemy champions, large minions, and large monsters grant Shyvana Scalemail stacks, improving her defenses.",
         "image": {
           "full": "Shyvana_Passive.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 96,
           "y": 0,

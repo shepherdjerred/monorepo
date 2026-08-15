@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Kaisa": {
       "id": "Kaisa",
@@ -10,7 +10,7 @@
       "title": "Daughter of the Void",
       "image": {
         "full": "Kaisa.png",
-        "sprite": "champion3.png",
+        "sprite": "champion1.png",
         "group": "champion",
         "x": 240,
         "y": 96,
@@ -587,8 +587,8 @@
         "movespeed": 335,
         "armor": 25,
         "armorperlevel": 4.2,
-        "spellblock": 30,
-        "spellblockperlevel": 1.3,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 525,
         "hpregen": 4,
         "hpregenperlevel": 0.55,
@@ -734,7 +734,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "KaisaQ.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 192,
             "y": 48,
@@ -877,7 +877,7 @@
           "rangeBurn": "3000",
           "image": {
             "full": "KaisaW.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 240,
             "y": 48,
@@ -1020,7 +1020,7 @@
           "rangeBurn": "1",
           "image": {
             "full": "KaisaE.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 288,
             "y": 48,
@@ -1139,7 +1139,7 @@
           "rangeBurn": "2000/2500/3000",
           "image": {
             "full": "KaisaR.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 336,
             "y": 48,
@@ -1154,7 +1154,7 @@
         "description": "Kai'Sa's basic attacks stack Plasma, dealing increasing bonus magic damage. Allies' immobilizing effects help stack Plasma. Additionally, Kai'Sa's item purchases upgrade her basic spells to have more powerful properties.",
         "image": {
           "full": "Kaisa_Passive.png",
-          "sprite": "passive3.png",
+          "sprite": "passive1.png",
           "group": "passive",
           "x": 240,
           "y": 96,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Karma": {
       "id": "Karma",
@@ -10,7 +10,7 @@
       "title": "the Enlightened One",
       "image": {
         "full": "Karma.png",
-        "sprite": "champion3.png",
+        "sprite": "champion1.png",
         "group": "champion",
         "x": 336,
         "y": 96,
@@ -715,7 +715,7 @@
           "rangeBurn": "950",
           "image": {
             "full": "KarmaQ.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 96,
             "y": 96,
@@ -858,7 +858,7 @@
           "rangeBurn": "675",
           "image": {
             "full": "KarmaSpiritBind.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 144,
             "y": 96,
@@ -1001,7 +1001,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "KarmaSolKimShield.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 192,
             "y": 96,
@@ -1135,7 +1135,7 @@
           "rangeBurn": "1100",
           "image": {
             "full": "KarmaMantra.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 240,
             "y": 96,
@@ -1150,7 +1150,7 @@
         "description": "Karma's damaging abilities will reduce the cooldown of Mantra.",
         "image": {
           "full": "Karma_Passive.png",
-          "sprite": "passive3.png",
+          "sprite": "passive1.png",
           "group": "passive",
           "x": 336,
           "y": 96,

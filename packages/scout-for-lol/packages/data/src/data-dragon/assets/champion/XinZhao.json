@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "XinZhao": {
       "id": "XinZhao",
@@ -10,7 +10,7 @@
       "title": "the Seneschal of Demacia",
       "image": {
         "full": "XinZhao.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 432,
         "y": 0,
@@ -595,7 +595,7 @@
           "rangeBurn": "375",
           "image": {
             "full": "XinZhaoQ.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 0,
             "y": 144,
@@ -738,7 +738,7 @@
           "rangeBurn": "1000",
           "image": {
             "full": "XinZhaoW.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 48,
             "y": 144,
@@ -879,7 +879,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "XinZhaoE.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 96,
             "y": 144,
@@ -994,7 +994,7 @@
           "rangeBurn": "500",
           "image": {
             "full": "XinZhaoR.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 144,
             "y": 144,
@@ -1009,7 +1009,7 @@
         "description": "Every third attack deals bonus damage and heals Xin Zhao.",
         "image": {
           "full": "XinZhaoReworkP.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 432,
           "y": 0,

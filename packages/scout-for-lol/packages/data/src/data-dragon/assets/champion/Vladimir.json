@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Vladimir": {
       "id": "Vladimir",
@@ -10,7 +10,7 @@
       "title": "the Crimson Reaper",
       "image": {
         "full": "Vladimir.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 192,
         "y": 0,
@@ -460,7 +460,7 @@
           "id": "VladimirQ",
           "name": "Transfusion",
           "description": "Vladimir steals life from the target enemy. When Vladimir's resource is full, Transfusion will benefit from massively increased damage and healing for a brief time.",
-          "tooltip": "Vladimir drains his target's lifeforce, dealing <magicDamage>{{ basedamagetooltip }} magic damage</magicDamage> and restoring <healing>{{ basehealtooltip }} Health</healing>. After using this Ability twice, Vladimir gains <speed>{{ movementspeedonq2 }}% Move Speed</speed> for 0.5 seconds and empowers the next use of this Ability for {{ e8 }} seconds.<br /><br />The empowered version of this Ability deals <magicDamage>{{ empowereddamagetooltip }} magic damage</magicDamage> instead and restores an additional <healing>{{ empoweredhealtooltip }} plus {{ empoweredhealpercenttooltip }} missing Health</healing>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Vladimir drains his target's lifeforce, dealing <magicDamage>{{ basedamagetooltip }} magic damage</magicDamage> and restoring <healing>{{ basehealtooltip }} Health</healing>. After using this Ability twice, Vladimir gains <speed>{{ movementspeedonq2 }}% Move Speed</speed> for 0.5 seconds and empowers the next use of this Ability for {{ frenzyduration }} seconds.<br /><br />The empowered version of this Ability deals <magicDamage>{{ empowereddamagetooltip }} magic damage</magicDamage> instead and restores an additional <healing>{{ empoweredhealtooltip }} plus {{ empoweredhealpercenttooltip }} missing Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -468,8 +468,8 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ baseheal }} -> {{ basehealNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -590,7 +590,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "VladimirQ.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 0,
             "y": 48,
@@ -731,7 +731,7 @@
           "rangeBurn": "350",
           "image": {
             "full": "VladimirSanguinePool.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 48,
             "y": 48,
@@ -753,9 +753,9 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e3 }} -> {{ e3NL }}",
-              "{{ e0 }} -> {{ e0NL }}",
-              "{{ e9 }}% -> {{ e9NL }}%",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basemaxdamage }} -> {{ basemaxdamageNL }}",
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -876,26 +876,26 @@
           "rangeBurn": "600",
           "image": {
             "full": "VladimirE.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 96,
             "y": 48,
             "w": 48,
             "h": 48
           },
-          "resource": "Channeling Cost {{ e2 }}% of max Health ({{ chargehealthtooltip }})"
+          "resource": "Channeling Cost {{ maxhealthcost }}% of max Health ({{ chargehealthtooltip }})"
         },
         {
           "id": "VladimirHemoplague",
           "name": "Hemoplague",
           "description": "Vladimir infects an area with a virulent plague. Affected enemies take increased damage for the duration. After a few seconds, Hemoplague deals magic damage to infected enemies and heals Vladimir for each enemy Champion hit.",
-          "tooltip": "Vladimir creates a virulent plague, causing its victims to take {{ e2 }}% increased damage from all sources for {{ e4 }} seconds. After it expires, Vladimir deals <magicDamage>{{ damage }} magic damage</magicDamage> to all infected targets. Vladimir restores <healing>{{ damage }} Health</healing> if he hits a champion, and restores an additional <healing>{{ secondaryhealingtooltip }} Health</healing> for each champion beyond the first.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Vladimir creates a virulent plague, causing its victims to take {{ damageamp }}% increased damage from all sources for {{ duration }} seconds. After it expires, Vladimir deals <magicDamage>{{ damage }} magic damage</magicDamage> to all infected targets. Vladimir restores <healing>{{ damage }} Health</healing> if he hits a champion, and restores an additional <healing>{{ secondaryhealingtooltip }} Health</healing> for each champion beyond the first.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 3,
@@ -989,7 +989,7 @@
           "rangeBurn": "625",
           "image": {
             "full": "VladimirHemoplague.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 144,
             "y": 48,
@@ -1004,7 +1004,7 @@
         "description": "Every 30 points of bonus Health gives Vladimir 1 Ability Power and every 1 point of Ability Power gives Vladimir 1.6 bonus Health (does not stack with itself).",
         "image": {
           "full": "VladimirP.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 192,
           "y": 0,

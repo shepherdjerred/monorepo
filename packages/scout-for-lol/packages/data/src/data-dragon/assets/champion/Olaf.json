@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Olaf": {
       "id": "Olaf",
@@ -10,7 +10,7 @@
       "title": "the Berserker",
       "image": {
         "full": "Olaf.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 336,
         "y": 0,
@@ -559,7 +559,7 @@
           "rangeBurn": "1000",
           "image": {
             "full": "OlafAxeThrowCast.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 96,
             "y": 96,
@@ -702,7 +702,7 @@
           "rangeBurn": "700",
           "image": {
             "full": "OlafFrenziedStrikes.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 144,
             "y": 96,
@@ -843,7 +843,7 @@
           "rangeBurn": "325",
           "image": {
             "full": "OlafRecklessStrike.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 192,
             "y": 96,
@@ -962,7 +962,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "OlafRagnarok.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 240,
             "y": 96,
@@ -977,7 +977,7 @@
         "description": "Olaf gains Attack Speed and Life Steal based on his missing Health.",
         "image": {
           "full": "Olaf_Passive.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 336,
           "y": 0,

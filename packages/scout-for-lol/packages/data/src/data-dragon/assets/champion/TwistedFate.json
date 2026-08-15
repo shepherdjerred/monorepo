@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "TwistedFate": {
       "id": "TwistedFate",
@@ -10,7 +10,7 @@
       "title": "the Card Master",
       "image": {
         "full": "TwistedFate.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 96,
         "y": 96,
@@ -559,7 +559,7 @@
           "rangeBurn": "10000",
           "image": {
             "full": "WildCards.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 96,
             "y": 0,
@@ -710,7 +710,7 @@
           "rangeBurn": "200",
           "image": {
             "full": "PickACard.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 144,
             "y": 0,
@@ -851,7 +851,7 @@
           "rangeBurn": "0",
           "image": {
             "full": "CardmasterStack.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 192,
             "y": 0,
@@ -966,7 +966,7 @@
           "rangeBurn": "5500",
           "image": {
             "full": "Destiny.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 240,
             "y": 0,
@@ -981,7 +981,7 @@
         "description": "Upon killing a unit, Twisted Fate rolls his 'lucky' dice receiving 1 to 6 bonus gold.",
         "image": {
           "full": "Cardmaster_SealFate.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 96,
           "y": 96,

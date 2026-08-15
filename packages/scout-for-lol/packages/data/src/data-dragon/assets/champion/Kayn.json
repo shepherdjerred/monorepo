@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Kayn": {
       "id": "Kayn",
@@ -10,7 +10,7 @@
       "title": "the Shadow Reaper",
       "image": {
         "full": "Kayn.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 96,
         "y": 0,
@@ -405,7 +405,7 @@
           "rangeBurn": "350",
           "image": {
             "full": "KaynQ.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 96,
             "y": 0,
@@ -548,7 +548,7 @@
           "rangeBurn": "700",
           "image": {
             "full": "KaynW.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 144,
             "y": 0,
@@ -691,7 +691,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "KaynE.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 192,
             "y": 0,
@@ -808,7 +808,7 @@
           "rangeBurn": "550",
           "image": {
             "full": "KaynR.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 240,
             "y": 0,
@@ -823,7 +823,7 @@
         "description": "Kayn wields an ancient weapon and fights Rhaast, the darkin within it, for control. Either the <font color='#fe5c50'>Darkin</font> will triumph, or Kayn will master Rhaast and become the <font color='#8484fb'>Shadow Assassin</font>.<br><br><font color='#fe5c50'>Darkin:</font> Heal for a percentage of spell damage dealt to champions.<br><br><font color='#8484fb'>Shadow Assassin:</font> For the first few seconds in combat with enemy champions, deal bonus damage.",
         "image": {
           "full": "Kayn_Passive_Primary.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 96,
           "y": 0,

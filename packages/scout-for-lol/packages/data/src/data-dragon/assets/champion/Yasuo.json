@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Yasuo": {
       "id": "Yasuo",
@@ -10,7 +10,7 @@
       "title": "the Unforgiven",
       "image": {
         "full": "Yasuo.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 0,
         "y": 48,
@@ -856,7 +856,7 @@
           "rangeBurn": "475",
           "image": {
             "full": "YasuoQ1Wrapper.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 192,
             "y": 144,
@@ -876,7 +876,7 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e5 }} -> {{ e5NL }}",
+              "{{ width }} -> {{ widthNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -997,7 +997,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "YasuoW.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 240,
             "y": 144,
@@ -1010,7 +1010,7 @@
           "id": "YasuoE",
           "name": "Sweeping Blade",
           "description": "Dashes through target enemy, dealing magic damage. Each cast increases subsequent dash's damage, up to a max amount.<br><br>Cannot be re-cast on the same enemy for a few seconds.<br><br><font color='#99FF99'>If Steel Tempest is cast while dashing, it will strike as a circle.</font>",
-          "tooltip": "Yasuo dashes through a target, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Each use of this Ability grants <magicDamage>{{ bonusdamageperstack }}</magicDamage> bonus damage to subsequent uses for {{ stackduration }} seconds, stacking up to {{ maxstacks }} times.<br /><br />This Ability has a {{ e2 }} second per-target Cooldown.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Yasuo dashes through a target, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Each use of this Ability grants <magicDamage>{{ bonusdamageperstack }}</magicDamage> bonus damage to subsequent uses for {{ stackduration }} seconds, stacking up to {{ maxstacks }} times.<br /><br />This Ability has a {{ pertargetcooldown }} second per-target Cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -1019,8 +1019,8 @@
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ e2 }} -> {{ e2NL }}",
-              "{{ e3 }} -> {{ e3NL }}"
+              "{{ pertargetcooldown }} -> {{ pertargetcooldownNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
@@ -1140,7 +1140,7 @@
           "rangeBurn": "475",
           "image": {
             "full": "YasuoE.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 288,
             "y": 144,
@@ -1255,7 +1255,7 @@
           "rangeBurn": "1400",
           "image": {
             "full": "YasuoR.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 336,
             "y": 144,
@@ -1270,7 +1270,7 @@
         "description": "Yasuo's Critical Strike Chance is increased. Additionally, Yasuo builds toward a shield whenever he is moving. The shield triggers when he takes damage from a champion or monster.",
         "image": {
           "full": "Yasuo_Passive.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 0,
           "y": 48,

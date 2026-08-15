@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Smolder": {
       "id": "Smolder",
@@ -10,7 +10,7 @@
       "title": "the Fiery Fledgling",
       "image": {
         "full": "Smolder.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 336,
         "y": 0,
@@ -188,8 +188,8 @@
         "movespeed": 330,
         "armor": 24,
         "armorperlevel": 4,
-        "spellblock": 30,
-        "spellblockperlevel": 1.3,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 550,
         "hpregen": 3.75,
         "hpregenperlevel": 0.6,
@@ -335,7 +335,7 @@
           "rangeBurn": "550",
           "image": {
             "full": "SmolderQ.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 96,
             "y": 96,
@@ -480,7 +480,7 @@
           "rangeBurn": "1500",
           "image": {
             "full": "SmolderW.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 144,
             "y": 96,
@@ -621,7 +621,7 @@
           "rangeBurn": "700",
           "image": {
             "full": "SmolderE.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 192,
             "y": 96,
@@ -738,7 +738,7 @@
           "rangeBurn": "4200",
           "image": {
             "full": "SmolderR.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 240,
             "y": 96,
@@ -753,7 +753,7 @@
         "description": "Hitting champions with Abilities and killing enemies with Super Scorcher Breath grants a stack of Dragon Practice. Stacks increase the damage of Smolders basic Abilities.",
         "image": {
           "full": "Icons_Smolder_Passive.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 336,
           "y": 0,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Renekton": {
       "id": "Renekton",
@@ -10,7 +10,7 @@
       "title": "the Butcher of the Sands",
       "image": {
         "full": "Renekton.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 0,
         "y": 96,
@@ -583,7 +583,7 @@
           "rangeBurn": "325",
           "image": {
             "full": "RenektonCleave.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 192,
             "y": 144,
@@ -726,7 +726,7 @@
           "rangeBurn": "300",
           "image": {
             "full": "RenektonPreExecute.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 240,
             "y": 144,
@@ -871,7 +871,7 @@
           "rangeBurn": "450",
           "image": {
             "full": "RenektonSliceAndDice.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 288,
             "y": 144,
@@ -988,7 +988,7 @@
           "rangeBurn": "20",
           "image": {
             "full": "RenektonReignOfTheTyrant.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 336,
             "y": 144,
@@ -1003,7 +1003,7 @@
         "description": "Renekton's attacks generate Fury, increased when he is low on life. This Fury can empower his abilities with bonus effects.",
         "image": {
           "full": "Renekton_Passive.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 0,
           "y": 96,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Janna": {
       "id": "Janna",
@@ -10,7 +10,7 @@
       "title": "the Storm's Fury",
       "image": {
         "full": "Janna.png",
-        "sprite": "champion3.png",
+        "sprite": "champion1.png",
         "group": "champion",
         "x": 432,
         "y": 48,
@@ -651,7 +651,7 @@
           "rangeBurn": "1075",
           "image": {
             "full": "HowlingGale.png",
-            "sprite": "spell11.png",
+            "sprite": "spell5.png",
             "group": "spell",
             "x": 0,
             "y": 144,
@@ -798,7 +798,7 @@
           "rangeBurn": "4294967295",
           "image": {
             "full": "SowTheWind.png",
-            "sprite": "spell11.png",
+            "sprite": "spell5.png",
             "group": "spell",
             "x": 48,
             "y": 144,
@@ -943,7 +943,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "EyeOfTheStorm.png",
-            "sprite": "spell11.png",
+            "sprite": "spell5.png",
             "group": "spell",
             "x": 96,
             "y": 144,
@@ -956,7 +956,7 @@
           "id": "ReapTheWhirlwind",
           "name": "Monsoon",
           "description": "Janna surrounds herself in a magical storm, throwing enemies back. After the storm has settled, soothing winds heal nearby allies while the ability is active.",
-          "tooltip": "Janna summons a magical monsoon, <status>Knocking Back</status> nearby enemies then healing nearby allies for <healing>{{ totalheal }} Health</healing> over {{ e3 }} seconds. Moving or using an Ability ends the monsoon early.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Janna summons a magical monsoon, <status>Knocking Back</status> nearby enemies then healing nearby allies for <healing>{{ totalheal }} Health</healing> over {{ duration }} seconds. Moving or using an Ability ends the monsoon early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Heal Per Second",
@@ -1058,7 +1058,7 @@
           "rangeBurn": "725",
           "image": {
             "full": "ReapTheWhirlwind.png",
-            "sprite": "spell11.png",
+            "sprite": "spell5.png",
             "group": "spell",
             "x": 144,
             "y": 144,
@@ -1073,7 +1073,7 @@
         "description": "Janna's allies gain Move Speed moving towards her.<br><br>Janna deals a portion of bonus Move Speed as bonus magic damage on hit and with Zephyr.",
         "image": {
           "full": "JannaP.png",
-          "sprite": "passive3.png",
+          "sprite": "passive1.png",
           "group": "passive",
           "x": 432,
           "y": 48,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Irelia": {
       "id": "Irelia",
@@ -504,6 +504,13 @@
           "name": "Breadsticks Irelia (Pearl)",
           "chromas": false,
           "parentSkin": 63
+        },
+        {
+          "id": "39072",
+          "num": 72,
+          "name": "Porcelain Irelia (Lustrous)",
+          "chromas": false,
+          "parentSkin": 45
         }
       ],
       "lore": "The Noxian occupation of Ionia produced many heroes, none more unlikely than young Irelia of Navori. Trained in the ancient dances of her province, she adapted her art for war, using the graceful and carefully practised movements to levitate a host of deadly blades. After proving herself as a fighter, she was thrust into the role of resistance leader and figurehead, and to this day remains dedicated to the preservation of her homeland.",

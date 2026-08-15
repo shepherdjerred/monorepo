@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Zoe": {
       "id": "Zoe",
@@ -10,7 +10,7 @@
       "title": "the Aspect of Twilight",
       "image": {
         "full": "Zoe.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 48,
         "y": 96,
@@ -503,7 +503,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "ZoeQ.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 384,
             "y": 144,
@@ -646,7 +646,7 @@
           "rangeBurn": "3000/4500/6000/3000/3000",
           "image": {
             "full": "ZoeW.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 432,
             "y": 144,
@@ -791,7 +791,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "ZoeE.png",
-            "sprite": "spell24.png",
+            "sprite": "spell18.png",
             "group": "spell",
             "x": 0,
             "y": 0,
@@ -904,7 +904,7 @@
           "rangeBurn": "575",
           "image": {
             "full": "ZoeR.png",
-            "sprite": "spell24.png",
+            "sprite": "spell18.png",
             "group": "spell",
             "x": 48,
             "y": 0,
@@ -919,7 +919,7 @@
         "description": "Zoe's next basic attack after casting a spell deals bonus magic damage.",
         "image": {
           "full": "Zoe_P.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 48,
           "y": 96,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Neeko": {
       "id": "Neeko",
@@ -10,7 +10,7 @@
       "title": "the Curious Chameleon",
       "image": {
         "full": "Neeko.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 96,
         "y": 0,
@@ -541,7 +541,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "NeekoQ.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 96,
             "y": 0,
@@ -686,7 +686,7 @@
           "rangeBurn": "900",
           "image": {
             "full": "NeekoW.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 144,
             "y": 0,
@@ -833,7 +833,7 @@
           "rangeBurn": "1000",
           "image": {
             "full": "NeekoE.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 192,
             "y": 0,
@@ -948,7 +948,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "NeekoR.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 240,
             "y": 0,
@@ -963,7 +963,7 @@
         "description": "Neeko can look like an ally champion or as other units on the map. Receiving immobilizing crowd control, casting damaging spells, damaging enemy towers as a non-champion, or your disguise taking damage equal to its healthbar breaks the disguise.",
         "image": {
           "full": "Neeko_P.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 96,
           "y": 0,

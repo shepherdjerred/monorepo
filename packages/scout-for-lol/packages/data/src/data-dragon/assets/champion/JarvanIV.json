@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "JarvanIV": {
       "id": "JarvanIV",
@@ -10,7 +10,7 @@
       "title": "the Exemplar of Demacia",
       "image": {
         "full": "JarvanIV.png",
-        "sprite": "champion3.png",
+        "sprite": "champion1.png",
         "group": "champion",
         "x": 0,
         "y": 96,
@@ -569,7 +569,7 @@
           "rangeBurn": "770",
           "image": {
             "full": "JarvanIVDragonStrike.png",
-            "sprite": "spell11.png",
+            "sprite": "spell5.png",
             "group": "spell",
             "x": 192,
             "y": 144,
@@ -710,7 +710,7 @@
           "rangeBurn": "625",
           "image": {
             "full": "JarvanIVGoldenAegis.png",
-            "sprite": "spell11.png",
+            "sprite": "spell5.png",
             "group": "spell",
             "x": 240,
             "y": 144,
@@ -855,7 +855,7 @@
           "rangeBurn": "860",
           "image": {
             "full": "JarvanIVDemacianStandard.png",
-            "sprite": "spell11.png",
+            "sprite": "spell5.png",
             "group": "spell",
             "x": 288,
             "y": 144,
@@ -970,7 +970,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "JarvanIVCataclysm.png",
-            "sprite": "spell11.png",
+            "sprite": "spell5.png",
             "group": "spell",
             "x": 336,
             "y": 144,
@@ -985,7 +985,7 @@
         "description": "Jarvan's first basic attack on an enemy deals bonus physical damage based on their current Health. This effect cannot occur again on the same enemy for a few seconds.",
         "image": {
           "full": "JarvanIVP.png",
-          "sprite": "passive3.png",
+          "sprite": "passive1.png",
           "group": "passive",
           "x": 0,
           "y": 96,

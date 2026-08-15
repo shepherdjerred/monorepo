@@ -2474,6 +2474,15 @@
     "iconSmall": "assets/ux/cherry/augments/icons/nowyouseeme_small.png",
     "rarity": "silver",
     "dataValues": {
+      "CloneDuration": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
       "Cooldown": [
         5,
         5,
@@ -2484,13 +2493,13 @@
         0.25
       ],
       "MSBuffAmount": [
-        0.5,
-        0.5,
         0.75,
-        0.5,
-        0.5,
-        0.5,
-        0.5
+        0.75,
+        0.75,
+        0.75,
+        0.75,
+        0.75,
+        0.75
       ],
       "MSBuffDuration": [
         2,
@@ -5148,13 +5157,13 @@
         0.5
       ],
       "SnipeDistance": [
-        700,
-        700,
-        700,
-        700,
-        700,
-        700,
-        700
+        600,
+        600,
+        600,
+        600,
+        600,
+        600,
+        600
       ]
     },
     "calculations": {
@@ -6161,13 +6170,13 @@
         0.5
       ],
       "SnipeDistance": [
-        700,
-        700,
-        700,
-        700,
-        700,
-        700,
-        700
+        600,
+        600,
+        600,
+        600,
+        600,
+        600,
+        600
       ]
     },
     "calculations": {},
@@ -7927,8 +7936,8 @@
         3
       ],
       "ReviveArmTime": [
-        2,
-        2,
+        3,
+        3,
         3,
         3,
         3,
@@ -11800,7 +11809,7 @@
         "mFormulaParts": [
           {
             "__type": "StatByCoefficientCalculationPart",
-            "mCoefficient": 0.75,
+            "mCoefficient": 0.6000000238418579,
             "mStat": 2
           }
         ]
@@ -11810,7 +11819,7 @@
         "mFormulaParts": [
           {
             "__type": "StatByCoefficientCalculationPart",
-            "mCoefficient": 0.6000000238418579
+            "mCoefficient": 0.5
           }
         ]
       }
@@ -13683,8 +13692,8 @@
     "id": 365,
     "apiName": "GoHAbstainFromWealth",
     "name": "Abstain From Wealth",
-    "desc": "<healing>Restore @HealthRestorePercent@% of of the health</healing> you've sacrificed to Tahm Kench.<br><br>Gain <gold>+%i:goldCoins% @GoldToGrant@ gold</gold>.",
-    "tooltip": "<healing>Restore @HealthRestorePercent@% of of the health</healing> you've sacrificed to Tahm Kench.<br><br>Gain <gold>+%i:goldCoins% @GoldToGrant@ gold</gold>.",
+    "desc": "<healing>Restore @HealthRestorePercent@% of the health</healing> you've sacrificed to Tahm Kench.<br><br>Gain <gold>+%i:goldCoins% @GoldToGrant@ gold</gold>.",
+    "tooltip": "<healing>Restore @HealthRestorePercent@% of the health</healing> you've sacrificed to Tahm Kench.<br><br>Gain <gold>+%i:goldCoins% @GoldToGrant@ gold</gold>.",
     "iconLarge": "assets/ux/cherry/augments/icons/wealth_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/wealth_small.png",
     "rarity": "silver",
@@ -13716,8 +13725,8 @@
     "id": 366,
     "apiName": "GoHAbstainFromPower",
     "name": "Abstain From Power",
-    "desc": "<healing>Restore @HealthRestorePercent@% of of the health</healing> you've sacrificed to Tahm Kench.<br><br>Gain <keywordMajor>@AnvilsGranted@ Silver Stat Anvil</keywordMajor>.",
-    "tooltip": "<healing>Restore @HealthRestorePercent@% of of the health</healing> you've sacrificed to Tahm Kench.<br><br>Gain <keywordMajor>@AnvilsGranted@ Silver Stat Anvil</keywordMajor>.",
+    "desc": "<healing>Restore @HealthRestorePercent@% of the health</healing> you've sacrificed to Tahm Kench.<br><br>Gain <keywordMajor>@AnvilsGranted@ Silver Stat Anvil</keywordMajor>.",
+    "tooltip": "<healing>Restore @HealthRestorePercent@% of the health</healing> you've sacrificed to Tahm Kench.<br><br>Gain <keywordMajor>@AnvilsGranted@ Silver Stat Anvil</keywordMajor>.",
     "iconLarge": "assets/ux/cherry/augments/icons/power_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/power_small.png",
     "rarity": "silver",
@@ -13777,8 +13786,8 @@
     "id": 367,
     "apiName": "GoHAbstainFromRisk",
     "name": "Abstain From Risk",
-    "desc": "<healing>Restore @HealthRestorePercent@% of of the health</healing> you've sacrificed to Tahm Kench.<br><br>Instantly gain a <keywordMajor>%i:Augment% Silver Augment</keywordMajor>.",
-    "tooltip": "<healing>Restore @HealthRestorePercent@% of of the health</healing> you've sacrificed to Tahm Kench.<br><br>Instantly gain a <keywordMajor>%i:Augment% Silver Augment</keywordMajor>.",
+    "desc": "<healing>Restore @HealthRestorePercent@% of the health</healing> you've sacrificed to Tahm Kench.<br><br>Instantly gain a <keywordMajor>%i:Augment% Silver Augment</keywordMajor>.",
+    "tooltip": "<healing>Restore @HealthRestorePercent@% of the health</healing> you've sacrificed to Tahm Kench.<br><br>Instantly gain a <keywordMajor>%i:Augment% Silver Augment</keywordMajor>.",
     "iconLarge": "assets/ux/cherry/augments/icons/risk_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/risk_small.png",
     "rarity": "silver",

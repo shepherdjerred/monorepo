@@ -1000,11 +1000,11 @@
     },
     "3006": {
       "name": "Berserker's Greaves",
-      "description": "<mainText><stats><attention>25%</attention> Attack Speed<br><attention>45</attention> Move Speed</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention>30%</attention> Attack Speed<br><attention>45</attention> Move Speed</stats><br><br></mainText>",
       "plaintext": "Enhances Move Speed and Attack Speed",
       "stats": {
         "FlatMovementSpeedMod": 45,
-        "PercentAttackSpeedMod": 0.25
+        "PercentAttackSpeedMod": 0.3
       }
     },
     "3008": {
@@ -1276,11 +1276,11 @@
     },
     "3071": {
       "name": "Black Cleaver",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>400</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor by 6%</scaleArmor> for 6 seconds. (stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed>20 Move Speed</speed> for 2 seconds.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>400</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor by 6%</scaleArmor> for 6 seconds. (stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed> Move Speed</speed> for 2 seconds.</mainText>",
       "plaintext": "Dealing physical damage to enemy champions reduces their Armor",
       "stats": {
         "FlatHPPoolMod": 400,
-        "FlatPhysicalDamageMod": 40
+        "FlatPhysicalDamageMod": 45
       }
     },
     "3072": {
@@ -1330,10 +1330,10 @@
     },
     "3077": {
       "name": "Tiamat",
-      "description": "<mainText><stats><attention>20</attention> Attack Damage</stats><br><br><passive>Cleave</passive><br>Attacks deal <physicalDamage>physical damage</physicalDamage> to nearby enemies.<br><active>Crescent</active><br>Deal <physicalDamage>physical damage</physicalDamage> to enemies around you.</mainText>",
+      "description": "<mainText><stats><attention>25</attention> Attack Damage</stats><br><br><passive>Cleave</passive><br>Attacks deal <physicalDamage>physical damage</physicalDamage> to nearby enemies.<br><active>Crescent</active><br>Deal <physicalDamage>physical damage</physicalDamage> to enemies around you.</mainText>",
       "plaintext": "Melee attacks hit nearby enemies",
       "stats": {
-        "FlatPhysicalDamageMod": 20
+        "FlatPhysicalDamageMod": 25
       }
     },
     "3078": {
@@ -1372,12 +1372,12 @@
     },
     "3085": {
       "name": "Runaan's Hurricane",
-      "description": "<mainText><stats><attention>40%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance<br><attention>4%</attention> Move Speed</stats><br><br><passive>Wind's Fury</passive><br>Attacks fire bolts at 2 additional enemies near the target.<br>Each bolt deals <physicalDamage>physical damage</physicalDamage> and applies <OnHit>On-Hit</OnHit> effects.</mainText>",
+      "description": "<mainText><stats><attention>40%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance<br><attention>5%</attention> Move Speed</stats><br><br><passive>Wind's Fury</passive><br>Attacks fire bolts at 2 additional enemies near the target.<br>Each bolt deals <physicalDamage>physical damage</physicalDamage> and applies <OnHit>On-Hit</OnHit> effects.</mainText>",
       "plaintext": "Ranged attacks fire two bolts at nearby enemies",
       "stats": {
         "FlatCritChanceMod": 0.25,
         "PercentAttackSpeedMod": 0.4,
-        "PercentMovementSpeedMod": 0.04
+        "PercentMovementSpeedMod": 0.05
       }
     },
     "3086": {
@@ -1830,20 +1830,20 @@
     },
     "3172": {
       "name": "Gunmetal Greaves",
-      "description": "<mainText><stats><attention>40%</attention> Attack Speed<br><attention>45</attention> Move Speed<br><attention>5%</attention> Life Steal</stats><br><br><passive>Noxian Gait</passive><br>Attacks against Champions grant <speed>Move Speed</speed> <OnHit>On-Hit</OnHit> decaying over 2 seconds.</mainText>",
+      "description": "<mainText><stats><attention>45%</attention> Attack Speed<br><attention>45</attention> Move Speed<br><attention>5%</attention> Life Steal</stats><br><br></mainText>",
       "plaintext": "Mobility and Tenacity",
       "stats": {
         "FlatMovementSpeedMod": 45,
-        "PercentAttackSpeedMod": 0.4,
+        "PercentAttackSpeedMod": 0.45,
         "PercentLifeStealMod": 0.05
       }
     },
     "3173": {
       "name": "Chainlaced Crushers",
-      "description": "<mainText><stats><attention>30</attention> Magic Resist<br><attention>45</attention> Move Speed<br><attention>30%</attention> Tenacity</stats><br><br><passive>Noxian Persistence</passive> (0s)<br>After taking magic damage from a Champion, gain a <shield></shield> <magicDamage>magic</magicDamage> <shield>shield</shield> for 5 seconds.</mainText>",
+      "description": "<mainText><stats><attention>25</attention> Magic Resist<br><attention>45</attention> Move Speed<br><attention>30%</attention> Tenacity</stats><br><br><passive>Noxian Persistence</passive> (0s)<br>After taking magic damage from a Champion, gain a <shield></shield> <magicDamage>magic</magicDamage> <shield>shield</shield> for 5 seconds.</mainText>",
       "plaintext": "Increases Move Speed and Cooldown Reduction",
       "stats": {
-        "FlatSpellBlockMod": 30,
+        "FlatSpellBlockMod": 25,
         "FlatMovementSpeedMod": 45
       }
     },
@@ -1858,7 +1858,7 @@
     },
     "3175": {
       "name": "Spellslinger's Shoes",
-      "description": "<mainText><stats><attention>18</attention> Magic Penetration<br><attention>8%</attention> Magic Penetration<br><attention>45</attention> Move Speed</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention>20</attention> Magic Penetration<br><attention>8%</attention> Magic Penetration<br><attention>45</attention> Move Speed</stats><br><br></mainText>",
       "plaintext": "",
       "stats": {
         "FlatMovementSpeedMod": 45
@@ -2618,10 +2618,10 @@
     },
     "6610": {
       "name": "Sundered Sky",
-      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>400</attention> Health<br><attention>10</attention> Ability Haste</stats><br><br><passive>Lightshield Strike</passive><br>Your first Attack against a champion <attention>Critically Strikes</attention> and <healing>restores Health</healing>.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>450</attention> Health<br><attention>10</attention> Ability Haste</stats><br><br><passive>Lightshield Strike</passive><br>Your first Attack against a champion <attention>Critically Strikes</attention> and <healing>restores Health</healing>.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatHPPoolMod": 400,
+        "FlatHPPoolMod": 450,
         "FlatPhysicalDamageMod": 45
       }
     },
@@ -3883,11 +3883,11 @@
     },
     "223071": {
       "name": "Black Cleaver",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>350</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor by 6%</scaleArmor> for 6 seconds. (Stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed>20 Move Speed</speed> for 2 seconds.</mainText>",
+      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>350</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor by 6%</scaleArmor> for 6 seconds. (stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed> Move Speed</speed> for 2 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 350,
-        "FlatPhysicalDamageMod": 40
+        "FlatPhysicalDamageMod": 45
       }
     },
     "223072": {
@@ -4516,10 +4516,10 @@
     },
     "226610": {
       "name": "Sundered Sky",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>350</attention> Health<br><attention>10</attention> Ability Haste</stats><br><br><passive>Lightshield Strike</passive><br>Your first Attack against a champion <attention>Critically Strikes</attention> and <healing>restores Health</healing>.</mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>400</attention> Health<br><attention>10</attention> Ability Haste</stats><br><br><passive>Lightshield Strike</passive><br>Your first Attack against a champion <attention>Critically Strikes</attention> and <healing>restores Health</healing>.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatHPPoolMod": 350,
+        "FlatHPPoolMod": 400,
         "FlatPhysicalDamageMod": 40
       }
     },
@@ -4837,7 +4837,7 @@
     },
     "228005": {
       "name": "Obsidian Cleaver",
-      "description": "<mainText><stats><ornnBonus>70</ornnBonus> Attack Damage<br><ornnBonus>700</ornnBonus> Health<br><ornnBonus>40</ornnBonus> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor by 6%</scaleArmor> for 6 seconds. (stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed>20 Move Speed</speed> for 2 seconds.</mainText>",
+      "description": "<mainText><stats><ornnBonus>70</ornnBonus> Attack Damage<br><ornnBonus>700</ornnBonus> Health<br><ornnBonus>40</ornnBonus> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor by 6%</scaleArmor> for 6 seconds. (stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed> Move Speed</speed> for 2 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 700,
@@ -6197,7 +6197,7 @@
     },
     "773035": {
       "name": "Last Whisper",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage</stats><br><br><jadeUnique>Piercing Volley:</jadeUnique> You ignore <armorPen>35%</armorPen> of your opponent's armor.</mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage</stats><br><br><jadeUnique>Piercing Volley:</jadeUnique> You ignore <armorPen>35%</armorPen> of your opponent's <scaleArmor>Armor</scaleArmor>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 40
@@ -6464,7 +6464,7 @@
     },
     "773085": {
       "name": "Runaan's Hurricane",
-      "description": "<mainText><stats><attention>70%</attention> Attack Speed</stats><br><br><jadeUnique>Hurricane Volley:</jadeUnique> When Attacking, bolts are fired at up to 2 enemies near the target, each dealing each dealing 10 (<physicalDamage>50% of Attack Damage</physicalDamage>) physical damage. These bolts apply on-hit effects.</mainText>",
+      "description": "<mainText><stats><attention>70%</attention> Attack Speed</stats><br><br><jadeUnique>Hurricane Volley:</jadeUnique> When Attacking, bolts are fired at up to 2 enemies near the target, each dealing each dealing <physicalDamage> physical damage</physicalDamage>. These bolts apply on-hit effects.</mainText>",
       "plaintext": "",
       "stats": {
         "PercentAttackSpeedMod": 0.7
@@ -6640,7 +6640,7 @@
     },
     "773115": {
       "name": "Nashor's Tooth",
-      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>50%</attention> Attack Speed</stats><br><br>20% Cooldown Reduction</mainText>",
+      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>50%</attention> Attack Speed<br><attention>20%</attention> Cooldown Reduction</stats><br><br></mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 65,
@@ -6682,7 +6682,7 @@
     },
     "773128": {
       "name": "Deathfire Grasp",
-      "description": "<mainText><stats><attention>120</attention> Ability Power</stats><br><br>10% Cooldown Reduction<jadeUnique>Active</jadeUnique> 60s<br>Deals 15% of target champion's maximum Health in <magicDamage>magic damage</magicDamage> and increases all subsequent <magicDamage>magic damage</magicDamage> taken by the target by 20% for 4 seconds.</mainText>",
+      "description": "<mainText><stats><attention>120</attention> Ability Power<br><attention>10%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Active</jadeUnique> 60s<br>Deals 15% of target champion's maximum Health in <magicDamage>magic damage</magicDamage> and increases all subsequent <magicDamage>magic damage</magicDamage> taken by the target by 20% for 4 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 120
@@ -6905,7 +6905,7 @@
     },
     "773173": {
       "name": "Eleisa's Miracle",
-      "description": "<mainText><stats><attention>10</attention> Health Regen per 5 seconds<br><attention>15</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Aid:</jadeUnique> <spellName>Heal, Clairvoyance</spellName> and <spellName>Clarity</spellName> summoner spell cooldowns are reduced by 25%.<br><jadeUnique>Eleisa's Blessing:</jadeUnique> Upon gaining 3 levels with this item, all effects of this item become permanent, and this item is consumed.</mainText>",
+      "description": "<mainText><stats><attention>10</attention> Health Regen per 5 seconds<br><attention>15</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Aid:</jadeUnique> <spellName>Heal, Clairvoyance</spellName> and <spellName>Clarity</spellName> summoner spell cooldowns are reduced by 30%.<br><jadeUnique>Eleisa's Blessing:</jadeUnique> Upon gaining 3 levels with this item, all effects of this item become permanent, and this item is consumed.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPRegenMod": 2
@@ -6984,7 +6984,7 @@
     },
     "773222": {
       "name": "Mikael's Crucible",
-      "description": "<mainText><stats><attention>40</attention> Magic Resist<br><attention>7</attention> Health Regen per 5 seconds<br><attention>18</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Mana Font:</jadeUnique> Increases <scaleMana>Mana Regen</scaleMana> by 1% for every 1% of missing Mana.<jadeUnique>Active</jadeUnique> 180s<br>Removes all <status>Stuns, Slows, Taunts, Fears, Silences, Blinds,</status> and <status>Immobilizes</status> on an allied champion and <healing>Heals</healing> that champion for <healing>150</healing> (<scaleHealth>+10 of maximum Health</scaleHealth>).</mainText>",
+      "description": "<mainText><stats><attention>40</attention> Magic Resist<br><attention>7</attention> Health Regen per 5 seconds<br><attention>18</attention> Mana Regen per 5 seconds</stats><br><br><jadeUnique>Mana Font:</jadeUnique> Increases <scaleMana>Mana Regen</scaleMana> by 1% for every 1% of missing Mana.<jadeUnique>Active</jadeUnique> 180s<br>Removes all <status>Stuns, Slows, Taunts, Fears, Silences, Blinds,</status> and <status>Immobilizes</status> on an allied champion and <healing>Heals</healing> that champion for <healing>150</healing> (<scaleHealth>+10% of maximum Health</scaleHealth>).</mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 40,

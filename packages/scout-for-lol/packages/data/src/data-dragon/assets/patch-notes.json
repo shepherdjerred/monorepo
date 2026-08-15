@@ -1,137 +1,227 @@
 {
-  "patch": "26.14",
-  "title": "League of Legends Patch 26.14 Notes",
-  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-14-notes",
-  "date": "2026 07 19",
-  "overview": "Patch 26.14 is a broad balance pass timed to T1's championship celebration: a handful of mid-lane mages and enchanters get tuned, a few bruisers and marksmen shift, and the jungle sees a Blue Buff and Azir rework-adjacent quality-of-life change alongside a big buff-bar UI cleanup.",
+  "patch": "26.16",
+  "title": "League of Legends Patch 26.16 Notes",
+  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-16-notes",
+  "date": "2026 08 15",
+  "overview": "Patch 26.16 goes after the bot lane: roaming supports get their quest income throttled, every marksman gains base magic resistance to survive mage bot lanes, and Sundered Sky's grip on AD fighters is loosened with buffs spread across Black Cleaver, Eclipse and Sterak's Gage. Jungle pets scale better off AP and resistances to open the role to mages and tanks, while League Classic adds its ninja trio and Bravery Arena returns on a weekly rotation.",
   "themes": [
-    "Mid-lane mage tuning",
-    "Enchanter nerfs",
-    "Jungle QoL",
-    "Item nerfs"
+    "Support roam crackdown",
+    "ADC vs mage bot lane",
+    "AD fighter item spread",
+    "Jungle diversity"
   ],
   "summary": [
-    "Seraphine, Senna, and Nami enchanters get reshuffled — two nerfed, one buffed.",
-    "Corki, Mordekaiser, and Azir get buffed while Garen, Jayce, and Locke take nerfs.",
-    "Blue Buff now scales ability haste with level, and the buff bar was heavily decluttered.",
-    "Hextech Rocketbelt, Immortal Path, and Protoplasm Harness all got weaker."
+    "Every ADC now has 33 base MR (up from 30) — mage bot lanes lost their free lane-bully phase.",
+    "Support quest stacks burn faster off CS and the out-of-lane XP/gold penalty jumped to -33% until level 5, so roaming supports fall behind hard.",
+    "Sundered Sky's healing dropped to 90% base AD + 4% missing health while Black Cleaver, Eclipse, Sterak's Gage and Tiamat all got buffed — the one-item AD fighter build is over.",
+    "Poppy is now a tank, not a fighter: less base AD, less bonus AD scaling on Q, more max health scaling and a 16% resist W."
+  ],
+  "changelogHighlights": [
+    "League Classic adds Akali, Kennen and Shen with their original ability kits.",
+    "Bravery Arena returns on a weekly Wednesday schedule with Bravery and Crowd Favorites queues.",
+    "Arena and ARAM: Mayhem augment pools updated, including new Upgrade Sundered Sky and Upgrade Ravenous Hydra augments.",
+    "Bot lane rebalanced across supports, marksmen and AD fighter items."
   ],
   "champions": [
     {
       "direction": "adjustment",
       "magnitude": "moderate",
-      "summary": "Soldiers now proc on-hit runes at full value and R shoves jungle camps.",
-      "details": "W soldiers apply Scorch, Liandry's, Blackfire Torch, and Hextech Alternator at 100% instead of 50%, Conqueror gets 2 stacks, and R now knocks back jungle monsters — so your poke does real damage and you can wall off objectives.",
+      "summary": "Shield frontloading gutted, W turned into a stronger sustained tool.",
+      "details": "Her passive shield now scales 10/15/20/25% max health by level instead of a flat 20% and base mana rose to 375, while W's cooldown dropped to 12s at rank 1 with more bonus damage — support Camille loses her early durability, but top lane Camille trades better in extended fights.",
+      "name": "Camille"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "major",
+      "summary": "Rebuilt from AD bruiser into a tank.",
+      "details": "Base AD fell to 56 and Q's bonus AD ratio dropped to 75% while its max-health damage and monster cap went up and W's resistances rose to 16%, so building Black Cleaver-style damage is now clearly worse than stacking health and armor.",
+      "name": "Poppy"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "moderate",
+      "summary": "Q stacking rebalanced toward lane, away from jungle.",
+      "details": "Siphoning Strike now grants 4 stacks normally but only 10 on champions, large minions and monsters instead of 3/12 — clearing camps stacks Q noticeably slower, which mostly hurts jungle Nasus.",
+      "name": "Nasus"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "moderate",
+      "summary": "True Form attack speed and health growth cut.",
+      "details": "Health growth dropped to 105 and True Form attack speed now caps at 20% instead of 25%, so late-game Bel'Veth shreds objectives and squishies slower — though a new purple resource bar finally shows Remora stacks.",
+      "name": "Bel'Veth"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "Passive healing substantially increased.",
+      "details": "A Thousand Cuts now heals 67% post-mitigation with a 12-40 (+7% AP) cap instead of 50% and 10-25 (+6.5% AP), giving Gwen far better sustain through poke and extended top lane trades.",
+      "name": "Gwen"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "Ultimate hits harder and makes him tankier.",
+      "details": "Slicing Maelstrom now grants 25/50/75 resistances and deals up to 300/600/900 (+187.5% AP), so diving into a teamfight with R is both safer and considerably more lethal.",
+      "name": "Kennen"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "Q base damage up by 15 at all ranks.",
+      "details": "Conquering Sands now deals 75/95/115/135/155 base damage, which mainly improves Azir's early wave clear and poke before his items come online.",
       "name": "Azir"
-    },
-    {
-      "direction": "buff",
-      "magnitude": "minor",
-      "summary": "More AD growth and faster rocket recharge from autos.",
-      "details": "Base AD growth 2 → 2.5 and R rocket recharge from attacks improved to 2-6s from 2-4s, meaning more Big One rockets up over the course of a game.",
-      "name": "Corki"
-    },
-    {
-      "direction": "buff",
-      "magnitude": "moderate",
-      "summary": "Stronger E damage and a bigger stat steal on the ult.",
-      "details": "E scales to 60/80/100/120/140 (+45% AP) and Realm of Death steals 13% of stats instead of 10%, so every 1v1 death realm swings harder in your favor.",
-      "name": "Mordekaiser"
-    },
-    {
-      "direction": "buff",
-      "magnitude": "moderate",
-      "summary": "E now hits noticeably harder at higher ranks.",
-      "details": "Tidecaller's Blessing damage per hit rises to 20/35/50/65/80 from 20/30/40/50/60, adding real trade damage to your empowered auto-attacks.",
-      "name": "Nami"
-    },
-    {
-      "direction": "buff",
-      "magnitude": "minor",
-      "summary": "Higher base AD growth.",
-      "details": "Base AD growth 2.5 → 3, giving her steadier scaling auto damage through the game.",
-      "name": "Yunara"
-    },
-    {
-      "direction": "nerf",
-      "magnitude": "moderate",
-      "summary": "Demacian Justice deals less flat true damage.",
-      "details": "R base true damage drops to 125/200/275 from 150/250/350 (missing-health scaling unchanged), so your execute needs the enemy lower before it kills.",
-      "name": "Garen"
-    },
-    {
-      "direction": "nerf",
-      "magnitude": "moderate",
-      "summary": "Less passive move speed and a weaker hammer-form ult.",
-      "details": "Hextech Capacitor move speed 40 → 30 and Mercury Hammer R armor/MR down to 5/12/19/26, making him squishier and slipperier in melee form.",
-      "name": "Jayce"
-    },
-    {
-      "direction": "nerf",
-      "magnitude": "moderate",
-      "summary": "Q and W damage and uptime cut across the board.",
-      "details": "Q recast window 5s → 4s with lower base and mark damage, and W grey-health cap reduced to 40/70/100/130/160, so his poke-and-sustain pattern is meaningfully weaker.",
-      "name": "Locke"
-    },
-    {
-      "direction": "nerf",
-      "magnitude": "moderate",
-      "summary": "Lower crit modifier and weaker Q utility scaling.",
-      "details": "Passive crit damage modifier 85% → 80% and Q's AP slow ratio (7% per 100 AP) and heal ratio (35%) both drop, taming her scaling as an AP-leaning support carry.",
-      "name": "Senna"
-    },
-    {
-      "direction": "nerf",
-      "magnitude": "minor",
-      "summary": "Q poke scales less with AP.",
-      "details": "High Note AP ratio 50% → 40%, cutting into her lane poke and mid/late damage output.",
-      "name": "Seraphine"
     }
   ],
   "items": [
     {
-      "direction": "adjustment",
+      "direction": "nerf",
+      "magnitude": "major",
+      "summary": "Healing cut and recipe reworked.",
+      "details": "Healing dropped to 90% base AD (45% ranged) plus 4% missing health instead of 100%/6%, with the Ruby Crystal removed from the recipe for 450 health — the default first item on nearly every AD fighter is no longer an automatic pick.",
+      "name": "Sundered Sky"
+    },
+    {
+      "direction": "buff",
       "magnitude": "moderate",
-      "summary": "Rebuilt with more health, less AP, and a longer dash cooldown.",
-      "details": "Now builds from Hextech Alternator + Kindlegem + Ruby Crystal, with AP dropped to 60, health up to 350, and active cooldown lengthened to 50s — tankier but a weaker burst dash.",
-      "name": "Hextech Rocketbelt"
+      "summary": "45 AD now, but ranged users get half the move speed.",
+      "details": "Attack damage rose to 45 while Fervor's move speed splits into 20 melee / 10 ranged, making it a much stronger Sundered Sky alternative for melee bruisers specifically.",
+      "name": "Black Cleaver"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "More max-health damage, slightly smaller shield.",
+      "details": "The proc now deals 8% max health for melee (5% ranged) with a marginally weaker shield, so Eclipse is a better damage-first option against tanky lanes.",
+      "name": "Eclipse"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "Bonus AD conversion up to 50% of base AD.",
+      "details": "The extra attack damage from base AD rose from 45% to 50%, giving bruisers a bit more damage on an item they were already buying for the lifeline shield.",
+      "name": "Sterak's Gage"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "30% attack speed, 45% at tier 3.",
+      "details": "Five extra attack speed at both tiers makes the marksman boot noticeably better in the same patch ADCs got base MR — a clear signal to buy them early.",
+      "name": "Berserker's Greaves"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "Bolts hit for 65% AD and more move speed.",
+      "details": "Wind's Fury bolts jumped from 55% to 65% AD with 5% move speed, sharply improving wave clear and teamfight output on crit ADCs like Twitch, Sivir and Kog'Maw.",
+      "name": "Runaan's Hurricane"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "Magic penetration up to 20 flat.",
+      "details": "Two extra flat magic penetration slightly compensates mages for the ADC magic resistance buff, particularly in mid lane.",
+      "name": "Spellslinger's Shoes"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "minor",
+      "summary": "Better champion burn, worse jungle clear, costs more.",
+      "details": "Burn now scales 1.5% bonus health against champions but with reduced minion and monster modifiers and a 700g combine cost, so it's better in fights and worse as a clearing item.",
+      "name": "Sunfire Cape"
     },
     {
       "direction": "nerf",
       "magnitude": "minor",
-      "summary": "Less bonus damage above half HP and less healing below it.",
-      "details": "Above-50% damage bonus 5% → 4% and below-50% healing/shielding/regen bonus 15% → 12%, softening its bruiser sustain.",
-      "name": "Immortal Path"
+      "summary": "Magic resistance down to 25.",
+      "details": "Five fewer MR makes it a weaker defensive purchase, aimed at reducing how easily mid laners could shrug off magic damage.",
+      "name": "Chainlaced Crushers"
     },
     {
-      "direction": "nerf",
+      "direction": "buff",
       "magnitude": "minor",
-      "summary": "Pricier with a lower health/healing floor.",
-      "details": "Cost 2500 → 2600 and both bonus health and healing now start at 100 instead of 200, making early purchases less efficient.",
-      "name": "Protoplasm Harness"
+      "summary": "25 attack damage on the component.",
+      "details": "Five extra AD makes the Tiamat power spike stronger for anyone rushing Ravenous or Titanic Hydra.",
+      "name": "Tiamat"
     }
   ],
   "systems": [
     {
+      "direction": "nerf",
+      "magnitude": "major",
+      "summary": "Support quest punishes roaming and farming much harder.",
+      "details": "Stack consumption on CS rose to 18/21 while the out-of-lane minion XP and gold penalty went from -25% until level 3 to -33% until level 5, so supports who leave bot lane to act as a second jungler now pay for it in gold and levels.",
+      "area": "Support items"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "major",
+      "summary": "Every ADC gets 33 base MR with lower per-level growth.",
+      "details": "All 27 listed marksmen (plus Tristana, up from 28) move to 33 + 1.1 MR per level from 30 + 1.3, which is a direct early-game answer to mages and enchanters taking over bot lane.",
+      "area": "Marksmen"
+    },
+    {
       "direction": "buff",
       "magnitude": "moderate",
-      "summary": "Blue Buff now grants scaling ability haste.",
-      "details": "Blue Buff ability haste scales to 10/15/20 at levels 1/6/11 instead of a flat 10, giving AP junglers and mid laners more spell uptime as the game goes on.",
+      "summary": "Jungle pets scale off AP, resistances and health.",
+      "details": "Pet damage now scales 16% AP, 25% bonus armor, 25% bonus MR and 4% bonus health, letting mage and tank junglers clear at a competitive pace instead of being forced into AD bruiser builds.",
       "area": "Jungle"
     },
     {
-      "direction": "adjustment",
+      "direction": "nerf",
       "magnitude": "moderate",
-      "summary": "Major buff-bar cleanup and clearer remake votes.",
-      "details": "Redundant and ultra-short buffs are hidden, item buffs moved into the inventory display, and remake votes now start automatically with chat explaining who triggered them — so you can actually read your status bar in a fight.",
-      "area": "UI"
+      "summary": "Hail of Blades loses melee attack speed, gains scaling.",
+      "details": "Melee attack speed dropped from 120% to 90% while the true damage now scales 12% bonus AD and 10% AP, weakening the early roaming burst pattern the keystone enabled without hurting late-game users.",
+      "area": "Runes"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "Fleet Footwork heals for meaningfully more.",
+      "details": "Healing rose to 15-160 from 10-130, making the sustain keystone a real option again for lane bullies and poke-heavy matchups.",
+      "area": "Runes"
+    },
+    {
+      "direction": "new",
+      "magnitude": "major",
+      "summary": "Akali, Kennen and Shen join the mode.",
+      "details": "The three ninjas arrive with their original kits — Akali's energy-refunding Mark of the Assassin, Kennen's Mark of the Storm stun stacks, and Shen's global Stand United shield — expanding the Classic champion pool.",
+      "area": "League Classic"
     },
     {
       "direction": "adjustment",
-      "magnitude": "minor",
-      "summary": "Caitlyn Headshot no longer misfires in brush.",
-      "details": "A fix stops Caitlyn's Headshot from misfiring in brush, restoring her intended lane trading pattern.",
-      "area": "Bug Fixes"
+      "magnitude": "major",
+      "summary": "Gold, Homeguards, turrets and jungle all retuned.",
+      "details": "Ambient gold starts at 90s with lower minion values, Homeguards no longer exist before 15 minutes with shorter early death timers, turrets gained 500 health while AP damage to them was halved to 20%, and monster health scaling rose to 315% — so early leads matter more but snowballing through structures is slower.",
+      "area": "League Classic"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "moderate",
+      "summary": "Big balance pass plus new rune options.",
+      "details": "Tryndamere, Twitch, Blitzcrank, Heimerdinger, Warwick, Katarina and Janna were all cut back while Lux, Soraka, Skarner, Miss Fortune and Veigar were buffed, and eight new energy/AP/regen runes were added alongside placeholder rune power rising to 80%.",
+      "area": "League Classic"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "moderate",
+      "summary": "Augment pool reworked with two new upgrades.",
+      "details": "Upgrade Sundered Sky and Upgrade Ravenous Hydra were added, Nature is Healing was rebuilt with per-bush cooldowns, Shark Bait was buffed to 30% missing health damage, and Chain Reaction dropped from Prismatic to Gold — so familiar augment picks need re-evaluating.",
+      "area": "ARAM: Mayhem"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "moderate",
+      "summary": "Gnar, Rek'Sai and LeBlanc buffed; key augments retuned.",
+      "details": "Gnar now transforms without a Tired window, Rek'Sai's tunnels reuse almost instantly at max rank, LeBlanc's Q fully refunds cooldown, while Three Sacred Treasures ratios were cut and Now You See Me now spawns a decoy clone.",
+      "area": "Arena"
+    },
+    {
+      "direction": "new",
+      "magnitude": "moderate",
+      "summary": "Bravery Arena returns weekly.",
+      "details": "Every Wednesday players can queue for Bravery Arena, choosing between fully random champions or Crowd Favorites from their owned pool.",
+      "area": "Game modes"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Maokai": {
       "id": "Maokai",
@@ -10,7 +10,7 @@
       "title": "the Twisted Treant",
       "image": {
         "full": "Maokai.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 0,
         "y": 96,
@@ -441,7 +441,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "MaokaiQ.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 192,
             "y": 144,
@@ -584,7 +584,7 @@
           "rangeBurn": "525",
           "image": {
             "full": "MaokaiW.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 240,
             "y": 144,
@@ -729,7 +729,7 @@
           "rangeBurn": "1100",
           "image": {
             "full": "MaokaiE.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 288,
             "y": 144,
@@ -846,7 +846,7 @@
           "rangeBurn": "3000",
           "image": {
             "full": "MaokaiR.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 336,
             "y": 144,
@@ -861,7 +861,7 @@
         "description": "Maokai's basic attack also heals him and deals additional damage on a moderate cooldown. Each time Maokai casts a spell or is struck by an enemy's spell, this cooldown is reduced.",
         "image": {
           "full": "Maokai_Passive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 0,
           "y": 96,

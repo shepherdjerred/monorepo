@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Annie": {
       "id": "Annie",
@@ -894,7 +894,7 @@
           "id": "AnnieR",
           "name": "Summon: Tibbers",
           "description": "Annie wills her bear Tibbers to life, dealing damage to units in the area. Tibbers can attack and also burns enemies that stand near him.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Annie gains {{ rpercentpenbuff*100 }}% Magic Penetration.<br /><br />Annie summons her bear Tibbers, dealing <magicDamage>{{ initialburstdamage }} magic damage</magicDamage>. For the next {{ tibberslifetime }} seconds, Tibbers burns nearby enemies for <magicDamage>{{ tibbersauradamage }} magic damage per second</magicDamage>.<br /><br />Tibbers becomes enraged when summoned, if Annie stuns an enemy champion, and if Annie dies. When enraged, Tibbers gains <attackSpeed>275% Attack Speed</attackSpeed> and <speed>100% Move Speed</speed> decaying over 3 seconds.<br /><br /><recast>Recast:</recast> Manually issue orders to Tibbers.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Annie gains <magicPen>{{ rpercentpenbuff*100 }}% Magic Penetration</magicPen>.<br /><br />Annie summons her bear Tibbers, dealing <magicDamage>{{ initialburstdamage }} magic damage</magicDamage>. For the next {{ tibberslifetime }} seconds, Tibbers burns nearby enemies for <magicDamage>{{ tibbersauradamage }} magic damage per second</magicDamage>.<br /><br />Tibbers becomes enraged when summoned, if Annie stuns an enemy champion, and if Annie dies. When enraged, Tibbers gains <attackSpeed>275% Attack Speed</attackSpeed> and <speed>100% Move Speed</speed> decaying over 3 seconds.<br /><br /><recast>Recast:</recast> Manually issue orders to Tibbers.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Initial Damage",

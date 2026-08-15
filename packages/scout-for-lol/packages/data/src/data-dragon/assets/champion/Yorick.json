@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Yorick": {
       "id": "Yorick",
@@ -10,7 +10,7 @@
       "title": "Shepherd of Souls",
       "image": {
         "full": "Yorick.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 96,
         "y": 48,
@@ -602,7 +602,7 @@
           "rangeBurn": "0",
           "image": {
             "full": "YorickQ.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 96,
             "y": 0,
@@ -743,7 +743,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "YorickW.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 144,
             "y": 0,
@@ -890,7 +890,7 @@
           "rangeBurn": "700",
           "image": {
             "full": "YorickE.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 192,
             "y": 0,
@@ -1009,7 +1009,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "YorickR.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 240,
             "y": 0,
@@ -1024,7 +1024,7 @@
         "description": "<font color='#FF9900'>The Cursed Horde:</font> Yorick can summon Mist Walkers to swarm and attack nearby enemies.",
         "image": {
           "full": "Yorick_P.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 96,
           "y": 48,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Yone": {
       "id": "Yone",
@@ -10,7 +10,7 @@
       "title": "the Unforgotten",
       "image": {
         "full": "Yone.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 48,
         "y": 48,
@@ -707,7 +707,7 @@
           "rangeBurn": "450",
           "image": {
             "full": "YoneQ.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 384,
             "y": 144,
@@ -848,7 +848,7 @@
           "rangeBurn": "700",
           "image": {
             "full": "YoneW.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 432,
             "y": 144,
@@ -989,7 +989,7 @@
           "rangeBurn": "25000",
           "image": {
             "full": "YoneE.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 0,
             "y": 0,
@@ -1104,7 +1104,7 @@
           "rangeBurn": "1000",
           "image": {
             "full": "YoneR.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 48,
             "y": 0,
@@ -1119,7 +1119,7 @@
         "description": "Yone deals magic damage with every second Attack. In addition, his critical strike chance is increased.",
         "image": {
           "full": "YonePassive.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 48,
           "y": 48,

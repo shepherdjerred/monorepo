@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Lillia": {
       "id": "Lillia",
@@ -10,7 +10,7 @@
       "title": "the Bashful Bloom",
       "image": {
         "full": "Lillia.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 96,
         "y": 48,
@@ -557,7 +557,7 @@
           "rangeBurn": "450",
           "image": {
             "full": "LilliaQ.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 96,
             "y": 0,
@@ -698,7 +698,7 @@
           "rangeBurn": "500",
           "image": {
             "full": "LilliaW.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 144,
             "y": 0,
@@ -839,7 +839,7 @@
           "rangeBurn": "700",
           "image": {
             "full": "LilliaE.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 192,
             "y": 0,
@@ -954,7 +954,7 @@
           "rangeBurn": "1600",
           "image": {
             "full": "LilliaR.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 240,
             "y": 0,
@@ -969,7 +969,7 @@
         "description": "Hitting a champion or monster with a skill will deal additional max Health damage over time.",
         "image": {
           "full": "Lillia_Icon_Passive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 96,
           "y": 48,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Sett": {
       "id": "Sett",
@@ -10,7 +10,7 @@
       "title": "the Boss",
       "image": {
         "full": "Sett.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 432,
         "y": 96,
@@ -712,7 +712,7 @@
           "rangeBurn": "0",
           "image": {
             "full": "SettQ.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 0,
             "y": 144,
@@ -853,7 +853,7 @@
           "rangeBurn": "25000",
           "image": {
             "full": "SettW.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 48,
             "y": 144,
@@ -994,7 +994,7 @@
           "rangeBurn": "490",
           "image": {
             "full": "SettE.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 96,
             "y": 144,
@@ -1111,7 +1111,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "SettR.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 144,
             "y": 144,
@@ -1126,7 +1126,7 @@
         "description": "Sett's basic attacks alternate between left and right punch. Right punch is slightly stronger and faster. Sett also hates losing, gaining additional health regeneration based off of his missing health.",
         "image": {
           "full": "Sett_P.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 432,
           "y": 96,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Lulu": {
       "id": "Lulu",
@@ -10,7 +10,7 @@
       "title": "the Fae Sorceress",
       "image": {
         "full": "Lulu.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 288,
         "y": 48,
@@ -395,6 +395,68 @@
           "num": 55,
           "name": "Arcana Lulu",
           "chromas": false
+        },
+        {
+          "id": "117056",
+          "num": 56,
+          "name": "Faerie Court Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117057",
+          "num": 57,
+          "name": "Faerie Court Lulu (Ruby)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117058",
+          "num": 58,
+          "name": "Faerie Court Lulu (Emerald)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117059",
+          "num": 59,
+          "name": "Faerie Court Lulu (Catseye)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117060",
+          "num": 60,
+          "name": "Faerie Court Lulu (Pearl)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117061",
+          "num": 61,
+          "name": "Faerie Court Lulu (Turquoise)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117062",
+          "num": 62,
+          "name": "Faerie Court Lulu (Obsidian)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117063",
+          "num": 63,
+          "name": "Faerie Court Lulu (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117064",
+          "num": 64,
+          "name": "Faerie Court Lulu (Sapphire)",
+          "chromas": false,
+          "parentSkin": 56
         }
       ],
       "lore": "The yordle mage Lulu is known for conjuring dreamlike illusions and fanciful creatures as she roams Runeterra with her fairy companion Pix. Lulu shapes reality on a whim, warping the fabric of the world, and what she views as the constraints of this mundane, physical realm. While others might consider her magic at best unnatural, and at worst dangerous, she believes everyone could use a touch of enchantment.",
@@ -573,7 +635,7 @@
           "rangeBurn": "925",
           "image": {
             "full": "LuluQ.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 384,
             "y": 48,
@@ -586,7 +648,7 @@
           "id": "LuluW",
           "name": "Whimsy",
           "description": "If cast on an ally, grants them Attack Speed and Move Speed for a short time. If cast on an enemy, turns them into an adorable critter that can't attack or cast spells.",
-          "tooltip": "When used on an ally, Lulu grants <speed>{{ totalms }} Move Speed</speed> and <attackSpeed>{{ e7 }}% Attack Speed</attackSpeed> for {{ e5 }} seconds.<br /><br />When used on an enemy, Lulu <status>Polymorphs</status> them for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "When used on an ally, Lulu grants <speed>{{ totalms }} Move Speed</speed> and <attackSpeed>{{ asbonus*100 }}% Attack Speed</attackSpeed> for {{ msduration }} seconds.<br /><br />When used on an enemy, Lulu <status>Polymorphs</status> them for {{ ccduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Move Speed and Attack Speed Duration",
@@ -594,9 +656,9 @@
               "Polymorph Duration"
             ],
             "effect": [
-              "{{ e5 }} -> {{ e5NL }}",
-              "{{ effect7amount*100.000000 }}% -> {{ effect7amountnl*100.000000 }}%",
-              "{{ e3 }} -> {{ e3NL }}"
+              "{{ msduration }} -> {{ msdurationNL }}",
+              "{{ asbonus*100.000000 }}% -> {{ asbonusnl*100.000000 }}%",
+              "{{ ccduration }} -> {{ ccdurationNL }}"
             ]
           },
           "maxrank": 5,
@@ -662,11 +724,11 @@
               0.01
             ],
             [
-              20,
-              22.5,
-              25,
-              27.5,
-              30
+              0.2,
+              0.225,
+              0.25,
+              0.275,
+              0.3
             ],
             [
               0,
@@ -698,7 +760,7 @@
             "-60",
             "3/3.25/3.5/3.75/4",
             "0.01",
-            "20/22.5/25/27.5/30",
+            "0.2/0.225/0.25/0.275/0.3",
             "0",
             "0",
             "0"
@@ -716,7 +778,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "LuluW.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 432,
             "y": 48,
@@ -729,7 +791,7 @@
           "id": "LuluE",
           "name": "Help, Pix!",
           "description": "If cast on an ally, commands Pix to jump to an ally and shield them. He then follows them and aids their attacks. If cast on an enemy, commands Pix to jump to an enemy and damage them. He then follows them and grants you vision of that enemy.",
-          "tooltip": "When used on an ally, Pix jumps to them and grants <spellName>Pix, Faerie Companion</spellName> for {{ e1 }} seconds. If the ally is a champion, Pix also grants <shield>{{ totalshield }} Shield</shield> for {{ e7 }} seconds.<br /><br />When used on an enemy champion, Pix hampers them, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and granting <keywordStealth>True Sight</keywordStealth> of them for {{ e6 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "When used on an ally, Pix jumps to them and grants <spellName>Pix, Faerie Companion</spellName> for {{ pixonallyduration }} seconds. If the ally is a champion, Pix also grants <shield>{{ totalshield }} Shield</shield> for {{ shieldduration }} seconds.<br /><br />When used on an enemy champion, Pix hampers them, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and granting <keywordStealth>True Sight</keywordStealth> of them for {{ pixonenemyduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Shield Amount",
@@ -861,7 +923,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "LuluE.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 0,
             "y": 96,
@@ -978,7 +1040,7 @@
           "rangeBurn": "900",
           "image": {
             "full": "LuluR.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 48,
             "y": 96,
@@ -993,7 +1055,7 @@
         "description": "Pix fires magical bolts of energy whenever the champion he's following attacks another enemy unit. These bolts are homing, but can be intercepted by other units.",
         "image": {
           "full": "Lulu_PixFaerieCompanion.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 288,
           "y": 48,

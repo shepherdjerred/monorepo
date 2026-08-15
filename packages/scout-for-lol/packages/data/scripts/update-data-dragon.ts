@@ -335,6 +335,25 @@ async function fetchChampionList(version: string): Promise<ChampionListData> {
   const championListResponse = await fetchWithRetry(championListUrl);
   const data: unknown = await championListResponse.json();
   const championListData = ChampionListSchema.parse(data);
+
+  // Riot only populates the `Jade_`-prefixed League Classic entries in
+  // champion.json while the mode is featured; patch 16.16.1 dropped all 60 of
+  // them (233 champions -> 173) even though the mode's committed art and past
+  // match data still need to render. There is no live endpoint left to
+  // re-fetch them from, so carry the previously committed `Jade_` entries
+  // forward whenever a fresh fetch is missing one. `classic.ts` pairs each by
+  // `name` against its modern counterpart, which is stable across patches.
+  const previousChampionListFile = Bun.file(`${ASSETS_DIR}/champion.json`);
+  if (await previousChampionListFile.exists()) {
+    const previousData: unknown = await previousChampionListFile.json();
+    const previousChampionListData = ChampionListSchema.parse(previousData);
+    for (const [id, entry] of Object.entries(previousChampionListData.data)) {
+      if (entry.id.startsWith("Jade_") && !(id in championListData.data)) {
+        championListData.data[id] = entry;
+      }
+    }
+  }
+
   const championNames = Object.keys(championListData.data);
   console.log(`Found ${String(championNames.length)} champions`);
 

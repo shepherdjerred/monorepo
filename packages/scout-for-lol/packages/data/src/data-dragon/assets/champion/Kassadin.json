@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Kassadin": {
       "id": "Kassadin",
@@ -10,7 +10,7 @@
       "title": "the Void Walker",
       "image": {
         "full": "Kassadin.png",
-        "sprite": "champion3.png",
+        "sprite": "champion1.png",
         "group": "champion",
         "x": 432,
         "y": 96,
@@ -415,7 +415,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "NullLance.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 0,
             "y": 144,
@@ -558,7 +558,7 @@
           "rangeBurn": "1",
           "image": {
             "full": "NetherBlade.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 48,
             "y": 144,
@@ -703,7 +703,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "ForcePulse.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 96,
             "y": 144,
@@ -820,7 +820,7 @@
           "rangeBurn": "500",
           "image": {
             "full": "RiftWalk.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 144,
             "y": 144,
@@ -835,7 +835,7 @@
         "description": "Kassadin takes reduced magic damage and ignores unit collision.",
         "image": {
           "full": "Kassadin_Passive.png",
-          "sprite": "passive3.png",
+          "sprite": "passive1.png",
           "group": "passive",
           "x": 432,
           "y": 96,

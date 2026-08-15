@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Nilah": {
       "id": "Nilah",
@@ -10,7 +10,7 @@
       "title": "the Joy Unbound",
       "image": {
         "full": "Nilah.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 192,
         "y": 0,
@@ -393,7 +393,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "NilahQ.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 0,
             "y": 48,
@@ -536,7 +536,7 @@
           "rangeBurn": "150",
           "image": {
             "full": "NilahW.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 48,
             "y": 48,
@@ -677,7 +677,7 @@
           "rangeBurn": "550",
           "image": {
             "full": "NilahE.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 96,
             "y": 48,
@@ -794,7 +794,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "NilahR.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 144,
             "y": 48,
@@ -809,7 +809,7 @@
         "description": "Nilah gains increased experience from last-hitting minions along with the ability to enhance and share nearby healing and shielding from her allies.",
         "image": {
           "full": "NIlahP.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 192,
           "y": 0,

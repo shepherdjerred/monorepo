@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Zyra": {
       "id": "Zyra",
@@ -10,7 +10,7 @@
       "title": "Rise of the Thorns",
       "image": {
         "full": "Zyra.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 96,
         "y": 96,
@@ -704,7 +704,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "ZyraQ.png",
-            "sprite": "spell24.png",
+            "sprite": "spell18.png",
             "group": "spell",
             "x": 96,
             "y": 0,
@@ -843,7 +843,7 @@
           "rangeBurn": "850",
           "image": {
             "full": "ZyraW.png",
-            "sprite": "spell24.png",
+            "sprite": "spell18.png",
             "group": "spell",
             "x": 144,
             "y": 0,
@@ -986,7 +986,7 @@
           "rangeBurn": "1100",
           "image": {
             "full": "ZyraE.png",
-            "sprite": "spell24.png",
+            "sprite": "spell18.png",
             "group": "spell",
             "x": 192,
             "y": 0,
@@ -1101,7 +1101,7 @@
           "rangeBurn": "700",
           "image": {
             "full": "ZyraR.png",
-            "sprite": "spell24.png",
+            "sprite": "spell18.png",
             "group": "spell",
             "x": 240,
             "y": 0,
@@ -1116,7 +1116,7 @@
         "description": "Seeds spawn around Zyra periodically, becoming faster with level. Zyra can cast Deadly Spines or Grasping Roots near seeds to grow plants, who fight for Zyra.",
         "image": {
           "full": "ZyraP.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 96,
           "y": 96,

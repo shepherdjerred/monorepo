@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Xayah": {
       "id": "Xayah",
@@ -10,7 +10,7 @@
       "title": "the Rebel",
       "image": {
         "full": "Xayah.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 336,
         "y": 0,
@@ -490,8 +490,8 @@
         "movespeed": 330,
         "armor": 25,
         "armorperlevel": 4.2,
-        "spellblock": 30,
-        "spellblockperlevel": 1.3,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 525,
         "hpregen": 3.25,
         "hpregenperlevel": 0.75,
@@ -637,7 +637,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "XayahQ.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 96,
             "y": 96,
@@ -780,7 +780,7 @@
           "rangeBurn": "1000",
           "image": {
             "full": "XayahW.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 144,
             "y": 96,
@@ -921,7 +921,7 @@
           "rangeBurn": "2000",
           "image": {
             "full": "XayahE.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 192,
             "y": 96,
@@ -1036,7 +1036,7 @@
           "rangeBurn": "450",
           "image": {
             "full": "XayahR.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 240,
             "y": 96,
@@ -1051,7 +1051,7 @@
         "description": "After using an ability, Xayah's next basic attacks will hit all targets along their path and leave a <font color='#C200E1'>Feather</font>.",
         "image": {
           "full": "XayahPassive.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 336,
           "y": 0,

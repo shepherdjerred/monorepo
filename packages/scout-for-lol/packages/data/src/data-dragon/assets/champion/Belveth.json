@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Belveth": {
       "id": "Belveth",
@@ -216,6 +216,68 @@
           "name": "Primordian Bel'Veth (Abyssal)",
           "chromas": false,
           "parentSkin": 19
+        },
+        {
+          "id": "200029",
+          "num": 29,
+          "name": "Faerie Court Bel'Veth",
+          "chromas": true
+        },
+        {
+          "id": "200030",
+          "num": 30,
+          "name": "Faerie Court Bel'Veth (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "200031",
+          "num": 31,
+          "name": "Faerie Court Bel'Veth (Turquoise)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "200032",
+          "num": 32,
+          "name": "Faerie Court Bel'Veth (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "200033",
+          "num": 33,
+          "name": "Faerie Court Bel'Veth (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "200034",
+          "num": 34,
+          "name": "Faerie Court Bel'Veth (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "200035",
+          "num": 35,
+          "name": "Faerie Court Bel'Veth (Catseye)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "200036",
+          "num": 36,
+          "name": "Faerie Court Bel'Veth (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "200037",
+          "num": 37,
+          "name": "Faerie Court Bel'Veth (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
         }
       ],
       "lore": "A nightmarish empress created from the raw material of an entire devoured city, Bel'Veth is the end of Runeterra itself... and the beginning of a monstrous reality of her own design. Driven by epochs of repurposed history, knowledge, and memories from the world above, she voraciously feeds an ever-expanding need for new experiences and emotions, consuming all that crosses her path. Yet her wants could never be sated by only one world as she turns her hungry eyes toward the Void's old masters...",
@@ -234,7 +296,7 @@
       },
       "stats": {
         "hp": 580,
-        "hpperlevel": 110,
+        "hpperlevel": 105,
         "mp": 45,
         "mpperlevel": 0,
         "movespeed": 340,

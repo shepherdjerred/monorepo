@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Talon": {
       "id": "Talon",
@@ -10,7 +10,7 @@
       "title": "the Blade's Shadow",
       "image": {
         "full": "Talon.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 240,
         "y": 48,
@@ -603,7 +603,7 @@
           "rangeBurn": "575",
           "image": {
             "full": "TalonQ.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 192,
             "y": 48,
@@ -750,7 +750,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "TalonW.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 240,
             "y": 48,
@@ -889,7 +889,7 @@
           "rangeBurn": "725",
           "image": {
             "full": "TalonE.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 288,
             "y": 48,
@@ -1006,7 +1006,7 @@
           "rangeBurn": "550",
           "image": {
             "full": "TalonR.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 336,
             "y": 48,
@@ -1021,7 +1021,7 @@
         "description": "Talon's spells Wound champions and large monsters, stacking up to 3 times. When Talon attacks a champion with 3 stacks of Wound, they bleed for heavy damage over time.",
         "image": {
           "full": "TalonP.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 240,
           "y": 48,
