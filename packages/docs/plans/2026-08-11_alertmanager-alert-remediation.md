@@ -25,6 +25,9 @@ Kubernetes, logs, and storage state are the rollout acceptance oracle.
   configuration.
 - Accept an omitted `generatorURL` in Alertmanager snapshots, persist it as
   `null`, and retain the strict webhook contract.
+- Keep `Watchdog` and `InfoInhibitor` as non-paging control signals, but replace
+  the stock `InfoInhibitor` expression so pending info alerts do not activate
+  inhibition before Alertmanager receives them.
 
 ## Temporal and Home Assistant
 

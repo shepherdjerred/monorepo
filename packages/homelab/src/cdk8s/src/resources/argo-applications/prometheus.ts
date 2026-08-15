@@ -144,6 +144,9 @@ export async function createPrometheusApp(chart: Chart) {
     },
     defaultRules: {
       disabled: {
+        // Replaced by the local firing-only rule. The chart default also
+        // considers pending info alerts, which makes this control signal noisy.
+        InfoInhibitor: true,
         KubeMemoryOvercommit: true,
       },
     },

@@ -27,10 +27,24 @@ import { getDiscordPlaysGoalRuleGroups } from "./rules/discord-plays-goal.ts";
 import { getAlertDashboardRuleGroups } from "./rules/alert-dashboard.ts";
 import { createBuildkiteMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkite.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
+import { getAlertingControlRuleGroups } from "./rules/alerting-control.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
   createBuildkiteMonitoring(chart);
   createBuildkitdMonitoring(chart);
+
+  // Keep the control signal, but do not let pending informational alerts make
+  // InfoInhibitor fire before Alertmanager has received anything to inhibit.
+  new PrometheusRule(chart, "prometheus-alerting-control-rules", {
+    metadata: {
+      name: "prometheus-alerting-control-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getAlertingControlRuleGroups(),
+    },
+  });
 
   // Create Home Assistant rules
   new PrometheusRule(chart, "prometheus-homeassistant-rules", {
