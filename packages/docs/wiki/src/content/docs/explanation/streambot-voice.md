@@ -8,6 +8,13 @@ part stays local: each pooled streamer account uses permissive sherpa fragments 
 speaker, then a phrase-specific LiveKit/openWakeWord-compatible ONNX model verifies **Hey
 Streambot** over the rolling audio. It opens no OpenAI connection until both local layers pass.
 
+The whole cascade lives in
+[`src/voice/`](https://github.com/shepherdjerred/monorepo/tree/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice),
+with the per-session state machine in
+[`audio-lifecycle.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/audio-lifecycle.ts)
+and the cloud turn in
+[`realtime-agent.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/realtime-agent.ts).
+
 ```mermaid
 flowchart LR
   accTitle: Streambot hybrid voice command lifecycle
@@ -30,74 +37,56 @@ flowchart LR
   G[Separate Go Live<br/>movie audio and video] -. duck to 20% .-> R
 ```
 
+Exact variables, asset paths, and limits are in
+[Streambot voice configuration](/reference/streambot-voice/).
+
 ## Trust boundaries
 
-- Discord's SSRC mapping supplies the user identity; the model can never choose a user ID.
+The design assumption is that the model is untrusted input, not an authority. Every boundary below
+exists so that a compromised or merely confused model cannot exceed what the speaker could already
+do with a slash command.
+
+- Discord's SSRC mapping supplies the user identity; the model can never choose a user ID. Tools
+  bind the detected speaker in
+  [`voice-tools.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/voice-tools.ts).
 - `auto` searches the local library first, `local` cannot fall through, and `youtube` bypasses
-  local matches. Voice tools reject URLs and expose no web search or general-purpose capability.
+  local matches. Voice tools reject URLs and expose no web search or general-purpose capability;
+  the source rules live in
+  [`playback-command-service.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/commands/playback-command-service.ts).
 - Anyone may request media. Skip and seek retain requester-or-admin checks; stop remains admin-only.
-- One wake permits at most one mutating tool. Ambiguity produces a short retry request and no change.
-- The utterance ends locally, is capped at 15 seconds, and the full transaction is capped at 30.
-  Cloud verification is limited to a burst of two and five attempts per minute per playback
-  session, with a three-second cooldown after rejection. All PCM and verifier features are erased
-  after accepted, rejected, interrupted, and timed-out trials.
+  Voice reuses the same
+  [permission predicates](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/discord/permissions.ts)
+  as the slash commands rather than defining its own.
+- One wake permits at most one mutating tool, enforced by `VoiceMutationGate`. Ambiguity produces a
+  short retry request and no change.
+- The utterance ends locally and both it and the whole cloud transaction are capped. Cloud
+  verification is rate-limited per playback session by
+  [`cloud-verification-rate-limiter.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/cloud-verification-rate-limiter.ts),
+  with a cooldown after a rejected transcript. All PCM and verifier features are erased after
+  accepted, rejected, interrupted, and timed-out trials.
 
 ## Audio paths and privacy
 
 The normal Discord voice connection is opt-in bidirectional for Streambot: incoming DAVE audio is
 decrypted before the session receives it, and assistant Opus goes back through that same connection.
-The movie continues on the independent Go Live connection. During a reply Streambot applies a 20%
+The movie continues on the independent Go Live connection. During a reply Streambot applies a
 ducking multiplier, then restores the newest desired playback volume—even when volume changed while
-it was speaking or the Realtime call failed.
+it was speaking or the Realtime call failed. That restore-on-every-path behavior is the whole
+reason ducking is a multiplier over the desired volume rather than a saved-and-replayed value; see
+[`assistant-audio-output.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/streamer/assistant-audio-output.ts).
 
-Model assets are pinned into the image and checksum-verified at build time. Voice-enabled startup
-fails if the dedicated OpenAI key, KWS model, phrase-verifier manifest/checksums, ONNX runtime, or
-Silero VAD model is invalid. Each locally verified candidate is transcribed ephemerally with no
-prompt naming Streambot. A rejected prefix closes silently before `response.create`; an accepted
-prefix replaces the committed audio item with command-only text. SDK audio history and tracing are
-disabled. Metrics contain only bounded stage outcomes, usage, concurrency, and latency—never
-speakers, transcripts, or media queries. The OpenAI project should use zero-data retention when
-that control is available.
+Model assets are pinned into the image and checksum-verified at build time by
+[the Dockerfile's `voice-models` stage](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/Dockerfile).
+Voice-enabled startup fails if the dedicated OpenAI key, KWS model, phrase-verifier
+manifest/checksums, ONNX runtime, or Silero VAD model is invalid —
+[`local-models.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/local-models.ts)
+treats every one of those as fatal rather than degrading to a weaker gate.
 
-## Local microphone probe
-
-The macOS console probe answers “what would Streambot do if I said this?” without Discord or a
-playback session:
-
-```bash
-cd packages/streambot
-bun run voice:harness:prepare
-bun run voice:harness --list-devices
-OPENAI_API_KEY=... bun run voice:harness --device <index>
-```
-
-Enter starts or stops one recording. The probe prints sherpa candidate, local verification, OpenAI
-contact, transcript verification, diagnostic transcript, and typed playback arguments separately.
-Microphone audio still traverses the production Discord Opus codec, both local wake layers, Silero
-endpointing, transcript gate, Realtime prompt, schemas, and mutation gate. Only ingress and
-execution differ: AVFoundation replaces Discord, and a print-only command port replaces playback.
-By default nothing is saved, and these tuning trials do not count as the private human holdout.
-
-For an explicit debugging capture, add `--save-recordings`. The probe then writes the exact
-pre-Opus microphone input and the exact post-Opus/post-lifecycle audio committed to OpenAI as
-lossless 24 kHz mono WAVs under `.context/streambot-voice-recordings`, with peak/RMS levels for
-each. `--recordings-dir <path>` chooses another location and implies recording. Normal runs remain
-non-persistent; saved debug recordings are private local artifacts and never count as acceptance
-holdouts. Transcripts and tool queries are not saved.
-
-Saved samples can be replayed without OpenAI:
-
-```bash
-bun run voice:harness:evaluate \
-  --positive-dir ../../.context/streambot-voice-recordings \
-  --positive-pattern '^trial-' \
-  --negative-dir ../../.context/streambot-kws-negatives \
-  --runtime native
-```
-
-This command normalizes each file, encodes and decodes Discord Opus, and enters the production
-cascade. It reports sherpa candidates separately from local-verifier passes. Add `--runtime both
---require-perfect` for the blocking native/WASM gate.
+Each locally verified candidate is transcribed ephemerally with no prompt naming Streambot. A
+rejected prefix closes silently before `response.create`; an accepted prefix replaces the committed
+audio item with command-only text. SDK audio history and tracing are disabled. Metrics contain only
+bounded stage outcomes, usage, concurrency, and latency—never speakers, transcripts, or media
+queries. The OpenAI project should use zero-data retention when that control is available.
 
 ## Confidence before enablement
 
@@ -107,7 +96,9 @@ cutover—there is no guild allowlist—so four independent gates must pass firs
 1. A checked-in 400-clip generated corpus passes the exact Discord Opus → production decoder →
    sherpa KWS → phrase ONNX verifier → Silero VAD path in both native and WASM runtimes. Sherpa must
    nominate every ordinary positive; the local verifier must accept every ordinary positive,
-   reject every canonical negative, and retain at least 95% recall at 10 dB SNR.
+   reject every canonical negative, and retain at least 95% recall at 10 dB SNR. The thresholds are
+   executable, not prose:
+   [`corpus-evaluator.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/corpus-evaluator.ts).
 2. Three people supply a private 30-clip holdout under `.context`. All 15 wake commands must work
    through both local layers and final transcript verification, while all 15
    near-match/background clips produce no final wake, reply, or command. The recordings are deleted
@@ -128,12 +119,18 @@ same untouched post-Opus holdout. Neither result changes production assets or th
 state.
 
 The full phrase-verifier recipe and operator procedure live in
-`packages/streambot/voice-training/`. Packaging requires the minimum training counts, the complete
-ACAV100M general-speech artifact, and a generated positive smoke WAV. Both local runtimes must
-accept that checksum-pinned smoke sample; successfully loading an ONNX graph is insufficient.
+[`packages/streambot/voice-training/`](https://github.com/shepherdjerred/monorepo/tree/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/voice-training).
+Packaging requires the minimum training counts, the complete ACAV100M general-speech artifact, and
+a generated positive smoke WAV. Both local runtimes must accept that checksum-pinned smoke sample;
+successfully loading an ONNX graph is insufficient.
 
 The production image first requires both sherpa runtimes and the in-process phrase-verifier graph to
-complete inference as the deployment user; merely opening model files is not a successful smoke. It then evaluates
-the corpus as the deployment UID and keeps only an aggregate report and pass marker; none of the
-400 corpus clips ship at runtime. The emergency rollback is the same global kill switch set back to
-`false`.
+complete inference as the deployment user; merely opening model files is not a successful smoke. It
+then evaluates the corpus as the deployment UID and keeps only an aggregate report and pass marker;
+none of the 400 corpus clips ship at runtime. The emergency rollback is the same global kill switch
+set back to `false`.
+
+## Related
+
+- [Run the Streambot voice probe](/how-to/run-the-streambot-voice-probe/) — exercise the cascade from a macOS console
+- [Streambot voice configuration](/reference/streambot-voice/) — variables, model assets, and fixed limits

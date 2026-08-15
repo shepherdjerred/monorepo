@@ -434,7 +434,12 @@ export async function runRealtimeCommandTurn(
     failureStage = "response";
     session.transport.sendEvent({ type: "response.create" });
     await Promise.race([completed, interruption, sessionFailure]);
-    await input.assistantAudio.finish();
+    // `audio_stopped` only means Realtime finished generating. The sink still paces whatever it
+    // queued at 20 ms per packet, so leaving this await unraced lets a long or fast-generated
+    // reply drain past the transaction timeout — holding the duck down, the teardown hold open,
+    // and the lifecycle's input gate shut. On expiry the catch below cancels the sink, which
+    // truncates the queue and lets this drain settle within one packet.
+    await Promise.race([input.assistantAudio.finish(), interruption]);
     const inputAudio = audioTokenCount(session.usage.inputTokensDetails);
     const outputAudio = audioTokenCount(session.usage.outputTokensDetails);
     if (inputAudio > 0)

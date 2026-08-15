@@ -45,6 +45,34 @@ class DiscardAudio implements AssistantAudioSink {
   }
 }
 
+/** A sink whose paced drain never completes on its own — only cancellation ends it. */
+class StallingAudio implements AssistantAudioSink {
+  finishCount = 0;
+  cancelCount = 0;
+  private release: (() => void) | null = null;
+
+  constructor(private readonly onDrainStarted: () => void) {}
+
+  enqueue(): void {
+    /* the stalled drain never consumes anything */
+  }
+
+  finish(): Promise<void> {
+    this.finishCount += 1;
+    return new Promise<void>((resolve) => {
+      this.release = resolve;
+      this.onDrainStarted();
+    });
+  }
+
+  cancel(): Promise<void> {
+    this.cancelCount += 1;
+    this.release?.();
+    this.release = null;
+    return Promise.resolve();
+  }
+}
+
 function releaseTeardownHold(): void {
   /* No session teardown in this unit test. */
 }
@@ -113,7 +141,12 @@ function emitMarkerTurn(listener: (audio: ReceivedVoiceAudio) => void): void {
   listener({ userId: String(USER), ssrc: 1, opus: new Uint8Array([4]) });
 }
 
-function fixture() {
+// The paced reply drain now runs inside the transaction budget, so a fixture budget has to be
+// long enough for a real `PacedAssistantSender` to finish a short reply. Expiry-driven tests opt
+// into a deliberately tiny one.
+const EXPIRING_TRANSACTION_TIMEOUT_MS = 50;
+
+function fixture(transactionTimeoutMs = 1000) {
   const events: PlaybackEvent[] = [];
   const speaking: boolean[] = [];
   const replyPackets: Uint8Array[] = [];
@@ -125,7 +158,7 @@ function fixture() {
     VIDEOS_DIR: "/videos",
     VOICE_ASSISTANT_ENABLED: "true",
     OPENAI_API_KEY: "test-key",
-    VOICE_TRANSACTION_TIMEOUT_MS: "50",
+    VOICE_TRANSACTION_TIMEOUT_MS: String(transactionTimeoutMs),
   });
   const commandDeps: PlaybackCommandServiceDeps = {
     config,
@@ -218,7 +251,9 @@ async function run(
     | "disconnect"
     | "timeout" = "success",
 ) {
-  const context = fixture();
+  const context = fixture(
+    behavior === "timeout" ? EXPIRING_TRANSACTION_TIMEOUT_MS : undefined,
+  );
   const transport = new FakeRealtimeTransport([call], behavior);
   const promise = runRealtimeVoiceTurn(context.config.voice, {
     pcm16k: new Float32Array(1600),
@@ -446,6 +481,37 @@ describe("custom Realtime transport failure boundaries", () => {
     await expect(promise).rejects.toThrow("operator interruption");
     expect(transport.closeCount).toBe(1);
     expect(context.events).toHaveLength(0);
+  });
+
+  test("bounds the paced reply drain by the transaction timeout", async () => {
+    // `audio_stopped` only reports that generation finished; the sink keeps pacing its queue at
+    // 20 ms per packet. Awaiting that drain outside the interruption race let a long reply run
+    // past VOICE_TRANSACTION_TIMEOUT_MS while still ducked and still holding teardown.
+    const context = fixture();
+    const controller = new AbortController();
+    const audio = new StallingAudio(() => {
+      controller.abort(new Error("transaction expired mid-drain"));
+    });
+    const transport = new FakeRealtimeTransport(
+      [{ name: "skip", arguments: "{}" }],
+      "success",
+    );
+
+    const promise = runRealtimeCommandTurn(context.config.voice, {
+      pcm16k: new Float32Array(1600),
+      activatedAtMs: Date.now(),
+      commands: new DryRunVoiceCommandPort(),
+      assistantAudio: audio,
+      signal: controller.signal,
+      createTransport: () => transport,
+    });
+
+    await expect(promise).rejects.toThrow("transaction expired mid-drain");
+    expect(audio.finishCount).toBe(1);
+    // The sink is cancelled rather than left draining, which truncates its queue and lets the
+    // outstanding drain settle — restoring the duck and releasing the teardown hold.
+    expect(audio.cancelCount).toBe(1);
+    expect(transport.closeCount).toBe(1);
   });
 
   test("announces a failed transaction, preserves playback state, and returns to wake mode", async () => {
