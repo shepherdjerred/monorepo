@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Camille": {
       "id": "Camille",
@@ -405,7 +405,7 @@
       "stats": {
         "hp": 650,
         "hpperlevel": 99,
-        "mp": 339,
+        "mp": 375,
         "mpperlevel": 52,
         "movespeed": 340,
         "armor": 35,
@@ -589,13 +589,13 @@
           },
           "maxrank": 5,
           "cooldown": [
-            15,
-            14,
-            13,
             12,
-            11
+            11.5,
+            11,
+            10.5,
+            10
           ],
-          "cooldownBurn": "15/14/13/12/11",
+          "cooldownBurn": "12/11.5/11/10.5/10",
           "cost": [
             50,
             55,

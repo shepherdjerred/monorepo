@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "MissFortune": {
       "id": "MissFortune",
@@ -10,7 +10,7 @@
       "title": "the Bounty Hunter",
       "image": {
         "full": "MissFortune.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 192,
         "y": 96,
@@ -557,8 +557,8 @@
         "movespeed": 325,
         "armor": 25,
         "armorperlevel": 4,
-        "spellblock": 30,
-        "spellblockperlevel": 1.3,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 550,
         "hpregen": 3.75,
         "hpregenperlevel": 0.65,
@@ -704,7 +704,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "MissFortuneRicochetShot.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 0,
             "y": 48,
@@ -847,7 +847,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "MissFortuneViciousStrikes.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 48,
             "y": 48,
@@ -988,7 +988,7 @@
           "rangeBurn": "1000",
           "image": {
             "full": "MissFortuneScattershot.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 96,
             "y": 48,
@@ -1103,7 +1103,7 @@
           "rangeBurn": "25000",
           "image": {
             "full": "MissFortuneBulletTime.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 144,
             "y": 48,
@@ -1118,7 +1118,7 @@
         "description": "Miss Fortune deals bonus physical damage whenever she basic attacks a new target.",
         "image": {
           "full": "MissFortune_W.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 192,
           "y": 96,

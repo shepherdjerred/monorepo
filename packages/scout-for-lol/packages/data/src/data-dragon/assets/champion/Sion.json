@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Sion": {
       "id": "Sion",
@@ -10,7 +10,7 @@
       "title": "The Undead Juggernaut",
       "image": {
         "full": "Sion.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 192,
         "y": 0,
@@ -603,7 +603,7 @@
           "rangeBurn": "10000",
           "image": {
             "full": "SionQ.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 0,
             "y": 48,
@@ -750,7 +750,7 @@
           "rangeBurn": "500",
           "image": {
             "full": "SionW.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 48,
             "y": 48,
@@ -895,7 +895,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "SionE.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 96,
             "y": 48,
@@ -1014,7 +1014,7 @@
           "rangeBurn": "7500",
           "image": {
             "full": "SionR.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 144,
             "y": 48,
@@ -1029,7 +1029,7 @@
         "description": "After being killed, Sion will temporarily reanimate with rapidly decaying Health. His attacks become very rapid, heal him, and deal bonus damage based on his target's maximum Health.",
         "image": {
           "full": "Sion_Passive1.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 192,
           "y": 0,

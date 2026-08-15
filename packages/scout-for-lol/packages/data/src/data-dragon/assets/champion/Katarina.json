@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Katarina": {
       "id": "Katarina",
@@ -10,7 +10,7 @@
       "title": "the Sinister Blade",
       "image": {
         "full": "Katarina.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 0,
         "y": 0,
@@ -722,7 +722,7 @@
           "rangeBurn": "625",
           "image": {
             "full": "KatarinaQ.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 192,
             "y": 144,
@@ -735,14 +735,14 @@
           "id": "KatarinaW",
           "name": "Preparation",
           "description": "Katarina gains a burst of Move Speed, tossing a <font color='#FFF673'>Dagger</font> into the air directly above herself.",
-          "tooltip": "Katarina tosses a <keywordMajor>Dagger</keywordMajor> into the air and gains <speed>{{ e4 }}% Move Speed</speed> decaying over {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Katarina tosses a <keywordMajor>Dagger</keywordMajor> into the air and gains <speed>{{ movespeedamount }}% Move Speed</speed> decaying over {{ movespeedduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Move Speed",
               "Cooldown"
             ],
             "effect": [
-              "{{ e4 }}% -> {{ e4NL }}%",
+              "{{ movespeedamount }}% -> {{ movespeedamountNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -863,7 +863,7 @@
           "rangeBurn": "25000",
           "image": {
             "full": "KatarinaW.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 240,
             "y": 144,
@@ -1004,7 +1004,7 @@
           "rangeBurn": "725",
           "image": {
             "full": "KatarinaEWrapper.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 288,
             "y": 144,
@@ -1121,7 +1121,7 @@
           "rangeBurn": "550",
           "image": {
             "full": "KatarinaR.png",
-            "sprite": "spell12.png",
+            "sprite": "spell6.png",
             "group": "spell",
             "x": 336,
             "y": 144,
@@ -1136,7 +1136,7 @@
         "description": "Whenever an enemy champion dies that Katarina has damaged recently, her remaining ability cooldowns are dramatically reduced.<br><br>If Katarina picks up a <font color='#FFF673'>Dagger</font>, she uses it to slash through all nearby enemies, dealing magic damage.",
         "image": {
           "full": "Katarina_Passive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 0,
           "y": 0,

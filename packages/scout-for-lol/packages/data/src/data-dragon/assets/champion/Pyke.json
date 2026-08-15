@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Pyke": {
       "id": "Pyke",
@@ -10,7 +10,7 @@
       "title": "the Bloodharbor Ripper",
       "image": {
         "full": "Pyke.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 96,
         "y": 48,
@@ -782,7 +782,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "PykeQ.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 96,
             "y": 0,
@@ -921,7 +921,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "PykeW.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 144,
             "y": 0,
@@ -1062,7 +1062,7 @@
           "rangeBurn": "550",
           "image": {
             "full": "PykeE.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 192,
             "y": 0,
@@ -1175,7 +1175,7 @@
           "rangeBurn": "750",
           "image": {
             "full": "PykeR.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 240,
             "y": 0,
@@ -1190,7 +1190,7 @@
         "description": "When Pyke is hidden from enemies, he regenerates damage that he has recently taken from champions. Pyke also cannot gain extra Maximum Health from any source, and instead gains Bonus AD.",
         "image": {
           "full": "PykePassive.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 96,
           "y": 48,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Ziggs": {
       "id": "Ziggs",
@@ -10,7 +10,7 @@
       "title": "the Hexplosives Expert",
       "image": {
         "full": "Ziggs.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 432,
         "y": 48,
@@ -551,7 +551,7 @@
           "rangeBurn": "850",
           "image": {
             "full": "ZiggsQ.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 0,
             "y": 144,
@@ -694,7 +694,7 @@
           "rangeBurn": "1000",
           "image": {
             "full": "ZiggsW.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 48,
             "y": 144,
@@ -839,7 +839,7 @@
           "rangeBurn": "900",
           "image": {
             "full": "ZiggsE.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 96,
             "y": 144,
@@ -956,7 +956,7 @@
           "rangeBurn": "5000",
           "image": {
             "full": "ZiggsR.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 144,
             "y": 144,
@@ -971,7 +971,7 @@
         "description": "Periodically, Ziggs' next basic attack deals bonus magic damage. This cooldown is reduced whenever Ziggs uses an ability.",
         "image": {
           "full": "ZiggsPassiveReady.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 432,
           "y": 48,

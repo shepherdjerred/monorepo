@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Viktor": {
       "id": "Viktor",
@@ -10,7 +10,7 @@
       "title": "the Herald of the Arcane",
       "image": {
         "full": "Viktor.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 144,
         "y": 0,
@@ -427,7 +427,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "ViktorQ.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 288,
             "y": 0,
@@ -568,7 +568,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "ViktorW.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 336,
             "y": 0,
@@ -713,7 +713,7 @@
           "rangeBurn": "525",
           "image": {
             "full": "ViktorE.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 384,
             "y": 0,
@@ -830,7 +830,7 @@
           "rangeBurn": "700",
           "image": {
             "full": "ViktorR.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 432,
             "y": 0,
@@ -845,7 +845,7 @@
         "description": "Viktor gains Hex Fragments whenever he kills an enemy. With every 100 Hex Fragments he obtains, Viktor permanently augments an active ability. After upgrading all of his basic abilities, he can gather 100 Hex Fragments to augment his ultimate ability.",
         "image": {
           "full": "Viktor_Passive.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 144,
           "y": 0,

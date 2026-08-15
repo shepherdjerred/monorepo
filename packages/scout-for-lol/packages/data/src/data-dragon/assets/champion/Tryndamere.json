@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Tryndamere": {
       "id": "Tryndamere",
@@ -10,7 +10,7 @@
       "title": "the Barbarian King",
       "image": {
         "full": "Tryndamere.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 48,
         "y": 96,
@@ -514,7 +514,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "TryndamereQ.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 384,
             "y": 144,
@@ -655,7 +655,7 @@
           "rangeBurn": "850",
           "image": {
             "full": "TryndamereW.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 432,
             "y": 144,
@@ -796,7 +796,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "TryndamereE.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 0,
             "y": 0,
@@ -913,7 +913,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "UndyingRage.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 48,
             "y": 0,
@@ -928,7 +928,7 @@
         "description": "Tryndamere gains Fury for each attack, critical strike, and killing blow he makes. Fury passively increases his Critical Strike Chance and can be consumed with his Bloodlust spell.",
         "image": {
           "full": "Tryndamere_Passive.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 48,
           "y": 96,

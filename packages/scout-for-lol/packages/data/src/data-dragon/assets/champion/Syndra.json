@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Syndra": {
       "id": "Syndra",
@@ -10,7 +10,7 @@
       "title": "the Dark Sovereign",
       "image": {
         "full": "Syndra.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 96,
         "y": 48,
@@ -700,7 +700,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "SyndraQ.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 96,
             "y": 0,
@@ -843,7 +843,7 @@
           "rangeBurn": "925",
           "image": {
             "full": "SyndraW.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 144,
             "y": 0,
@@ -982,7 +982,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "SyndraE.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 192,
             "y": 0,
@@ -1099,7 +1099,7 @@
           "rangeBurn": "675",
           "image": {
             "full": "SyndraR.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 240,
             "y": 0,
@@ -1114,7 +1114,7 @@
         "description": "Syndra collects Splinters of Wrath from gaining levels and damaging enemies which upgrade her abilities.<br><br><font color='#FF9900'>Dark Sphere</font>: Syndra can hold an additional charge<br><font color='#FF9900'>Force of Will</font>: Bonus true damage.<br><font color='#FF9900'>Scatter the Weak</font>: Increased width and slows all targets<br><font color='#FF9900'>Unleashed Power</font>: Executes low health targets",
         "image": {
           "full": "SyndraPassive.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 96,
           "y": 48,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Morgana": {
       "id": "Morgana",
@@ -10,7 +10,7 @@
       "title": "the Fallen",
       "image": {
         "full": "Morgana.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 336,
         "y": 96,
@@ -755,7 +755,7 @@
           "rangeBurn": "1250",
           "image": {
             "full": "MorganaQ.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 96,
             "y": 96,
@@ -896,7 +896,7 @@
           "rangeBurn": "900",
           "image": {
             "full": "MorganaW.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 144,
             "y": 96,
@@ -1037,7 +1037,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "MorganaE.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 192,
             "y": 96,
@@ -1156,7 +1156,7 @@
           "rangeBurn": "625",
           "image": {
             "full": "MorganaR.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 240,
             "y": 96,
@@ -1171,7 +1171,7 @@
         "description": "Morgana drains spirit from her enemies, healing as she deals damage to champions, large minions, and medium and larger jungler monsters.",
         "image": {
           "full": "FallenAngel_Empathize.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 336,
           "y": 96,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Nami": {
       "id": "Nami",
@@ -10,7 +10,7 @@
       "title": "the Tidecaller",
       "image": {
         "full": "Nami.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 432,
         "y": 96,
@@ -658,7 +658,7 @@
           "rangeBurn": "875",
           "image": {
             "full": "NamiQ.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 0,
             "y": 144,
@@ -801,7 +801,7 @@
           "rangeBurn": "725",
           "image": {
             "full": "NamiW.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 48,
             "y": 144,
@@ -944,7 +944,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "NamiE.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 96,
             "y": 144,
@@ -1059,7 +1059,7 @@
           "rangeBurn": "2550",
           "image": {
             "full": "NamiR.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 144,
             "y": 144,
@@ -1074,7 +1074,7 @@
         "description": "When Nami's Abilities hit allied champions they gain Move Speed for a short duration.",
         "image": {
           "full": "NamiPassive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 432,
           "y": 96,

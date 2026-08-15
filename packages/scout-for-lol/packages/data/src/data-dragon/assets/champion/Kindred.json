@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Kindred": {
       "id": "Kindred",
@@ -10,7 +10,7 @@
       "title": "The Eternal Hunters",
       "image": {
         "full": "Kindred.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 240,
         "y": 0,
@@ -347,8 +347,8 @@
         "movespeed": 325,
         "armor": 29,
         "armorperlevel": 4.7,
-        "spellblock": 30,
-        "spellblockperlevel": 1.3,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 500,
         "hpregen": 7,
         "hpregenperlevel": 0.55,
@@ -494,7 +494,7 @@
           "rangeBurn": "340",
           "image": {
             "full": "KindredQ.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 192,
             "y": 48,
@@ -635,7 +635,7 @@
           "rangeBurn": "560",
           "image": {
             "full": "KindredW.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 240,
             "y": 48,
@@ -776,7 +776,7 @@
           "rangeBurn": "500",
           "image": {
             "full": "KindredEWrapper.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 288,
             "y": 48,
@@ -891,7 +891,7 @@
           "rangeBurn": "500",
           "image": {
             "full": "KindredR.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 336,
             "y": 48,
@@ -906,7 +906,7 @@
         "description": "Kindred can mark targets to Hunt. Successfully completing a Hunt permanently empowers Kindred's basic abilities. Every 4 hunts completed also increases Kindred's basic attack range.",
         "image": {
           "full": "Kindred_Passive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 240,
           "y": 0,

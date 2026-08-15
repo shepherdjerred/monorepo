@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Zed": {
       "id": "Zed",
@@ -10,7 +10,7 @@
       "title": "the Master of Shadows",
       "image": {
         "full": "Zed.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 336,
         "y": 48,
@@ -678,7 +678,7 @@
           "rangeBurn": "900",
           "image": {
             "full": "ZedQ.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 96,
             "y": 96,
@@ -691,7 +691,7 @@
           "id": "ZedW",
           "name": "Living Shadow",
           "description": "<font color='#FF9900'>Passive:</font> Zed gains energy whenever he and his shadows strike an enemy with the same ability. Energy can only be gained once per cast ability.<br><br><font color='#FF9900'>Active:</font> Zed's shadow dashes forward, remaining in place for a few seconds. Reactivating Living Shadow will cause Zed to switch positions with this shadow.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Zed gains <keywordMajor>{{ e3 }} Energy</keywordMajor> whenever he and his <keywordMajor>Shadows</keywordMajor> strike an enemy with the same Ability.<br /><br /><spellActive>Active:</spellActive> Zed's <keywordMajor>Shadow</keywordMajor> dashes forward, remaining in place for {{ e5 }} seconds. <recast>Recasting</recast> this Ability will cause Zed to switch positions with this <keywordMajor>Shadow</keywordMajor>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Zed gains <keywordMajor>{{ energyrestoredoublehit }} Energy</keywordMajor> whenever he and his <keywordMajor>Shadows</keywordMajor> strike an enemy with the same Ability.<br /><br /><spellActive>Active:</spellActive> Zed's <keywordMajor>Shadow</keywordMajor> dashes forward, remaining in place for {{ shadowdurationtooltip }} seconds. <recast>Recasting</recast> this Ability will cause Zed to switch positions with this <keywordMajor>Shadow</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Energy Return",
@@ -699,7 +699,7 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e3 }} -> {{ e3NL }}",
+              "{{ energyrestoredoublehit }} -> {{ energyrestoredoublehitNL }}",
               "{{ cost }} -> {{ costNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
@@ -732,11 +732,11 @@
               5.25
             ],
             [
-              0.2,
-              0.2,
-              0.2,
-              0.2,
-              0.2
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               30,
@@ -798,7 +798,7 @@
           "effectBurn": [
             null,
             "5.25",
-            "0.2",
+            "0",
             "30/35/40/45/50",
             "5.25",
             "5",
@@ -821,7 +821,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "ZedW.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 144,
             "y": 96,
@@ -964,7 +964,7 @@
           "rangeBurn": "290",
           "image": {
             "full": "ZedE.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 192,
             "y": 96,
@@ -1079,7 +1079,7 @@
           "rangeBurn": "625",
           "image": {
             "full": "ZedR.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 240,
             "y": 96,
@@ -1094,7 +1094,7 @@
         "description": "Zed's basic attacks against low health targets deals bonus Magic Damage. This effect can only occur once every few seconds against the same enemy champion.",
         "image": {
           "full": "ZedP.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 336,
           "y": 48,

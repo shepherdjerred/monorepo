@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Renata": {
       "id": "Renata",
@@ -10,7 +10,7 @@
       "title": "the Chem-Baroness",
       "image": {
         "full": "Renata.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 432,
         "y": 48,
@@ -405,7 +405,7 @@
           "rangeBurn": "900",
           "image": {
             "full": "RenataQ.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 0,
             "y": 144,
@@ -548,7 +548,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "RenataW.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 48,
             "y": 144,
@@ -693,7 +693,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "RenataE.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 96,
             "y": 144,
@@ -808,7 +808,7 @@
           "rangeBurn": "2000",
           "image": {
             "full": "RenataR.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 144,
             "y": 144,
@@ -823,7 +823,7 @@
         "description": "Renata's Attacks deal bonus damage and mark enemies. Renata's allies can damage marked enemies to deal bonus damage.",
         "image": {
           "full": "Renata_P.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 432,
           "y": 48,

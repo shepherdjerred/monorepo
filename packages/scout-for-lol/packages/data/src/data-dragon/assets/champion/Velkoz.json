@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Velkoz": {
       "id": "Velkoz",
@@ -10,7 +10,7 @@
       "title": "the Eye of the Void",
       "image": {
         "full": "Velkoz.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 432,
         "y": 96,
@@ -443,7 +443,7 @@
           "rangeBurn": "1050",
           "image": {
             "full": "VelkozQ.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 0,
             "y": 144,
@@ -588,7 +588,7 @@
           "rangeBurn": "1050",
           "image": {
             "full": "VelkozW.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 48,
             "y": 144,
@@ -731,7 +731,7 @@
           "rangeBurn": "810",
           "image": {
             "full": "VelkozE.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 96,
             "y": 144,
@@ -846,7 +846,7 @@
           "rangeBurn": "1575",
           "image": {
             "full": "VelkozR.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 144,
             "y": 144,
@@ -861,7 +861,7 @@
         "description": "Vel'Koz's abilities apply <keywordName>Organic Deconstruction</keywordName> to enemies on hit. If 3 stacks are accumulated, the enemy will take a burst of true damage.",
         "image": {
           "full": "VelKoz_Passive.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 432,
           "y": 96,

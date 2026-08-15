@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Nautilus": {
       "id": "Nautilus",
@@ -10,7 +10,7 @@
       "title": "the Titan of the Depths",
       "image": {
         "full": "Nautilus.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 48,
         "y": 0,
@@ -505,7 +505,7 @@
           "rangeBurn": "1150",
           "image": {
             "full": "NautilusAnchorDrag.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 384,
             "y": 144,
@@ -648,7 +648,7 @@
           "rangeBurn": "350",
           "image": {
             "full": "NautilusPiercingGaze.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 432,
             "y": 144,
@@ -795,7 +795,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "NautilusSplashZone.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 0,
             "y": 0,
@@ -914,7 +914,7 @@
           "rangeBurn": "825",
           "image": {
             "full": "NautilusGrandLine.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 48,
             "y": 0,
@@ -929,7 +929,7 @@
         "description": "Nautilus' first Attack against a target deals increased physical damage and roots them briefly.",
         "image": {
           "full": "Nautilus_StaggeringBlow.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 48,
           "y": 0,

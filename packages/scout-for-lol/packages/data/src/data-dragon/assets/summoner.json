@@ -1,6 +1,6 @@
 {
   "type": "summoner",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "SummonerBarrier": {
       "id": "SummonerBarrier",
@@ -1796,8 +1796,9 @@
       "key": "13",
       "summonerLevel": 6,
       "modes": [
-        "ARAM",
+        "KIWI",
         "FIRSTBLOOD",
+        "ARAM",
         "KIWI_JADE"
       ],
       "costType": "No Cost",

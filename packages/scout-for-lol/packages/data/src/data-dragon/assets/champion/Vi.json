@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Vi": {
       "id": "Vi",
@@ -10,7 +10,7 @@
       "title": "the Piltover Enforcer",
       "image": {
         "full": "Vi.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 48,
         "y": 0,
@@ -544,7 +544,7 @@
           "rangeBurn": "250",
           "image": {
             "full": "ViQ.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 384,
             "y": 144,
@@ -685,7 +685,7 @@
           "rangeBurn": "750",
           "image": {
             "full": "ViW.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 432,
             "y": 144,
@@ -828,7 +828,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "ViE.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 0,
             "y": 0,
@@ -943,7 +943,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "ViR.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 48,
             "y": 0,
@@ -958,7 +958,7 @@
         "description": "Vi charges a shield over time. The shield can be activated by hitting an enemy with an ability.",
         "image": {
           "full": "ViPassive.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 48,
           "y": 0,

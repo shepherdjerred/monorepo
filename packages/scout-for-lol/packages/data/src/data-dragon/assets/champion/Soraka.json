@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Soraka": {
       "id": "Soraka",
@@ -10,7 +10,7 @@
       "title": "the Starchild",
       "image": {
         "full": "Soraka.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 432,
         "y": 0,
@@ -626,7 +626,7 @@
           "rangeBurn": "810",
           "image": {
             "full": "SorakaQ.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 0,
             "y": 144,
@@ -771,7 +771,7 @@
           "rangeBurn": "550",
           "image": {
             "full": "SorakaW.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 48,
             "y": 144,
@@ -916,7 +916,7 @@
           "rangeBurn": "925",
           "image": {
             "full": "SorakaE.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 96,
             "y": 144,
@@ -1031,7 +1031,7 @@
           "rangeBurn": "25000",
           "image": {
             "full": "SorakaR.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 144,
             "y": 144,
@@ -1046,7 +1046,7 @@
         "description": "Soraka runs faster towards nearby low health allies.",
         "image": {
           "full": "Soraka_Passive.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 432,
           "y": 0,

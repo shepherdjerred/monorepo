@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Sivir": {
       "id": "Sivir",
@@ -10,7 +10,7 @@
       "title": "the Battle Mistress",
       "image": {
         "full": "Sivir.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 240,
         "y": 0,
@@ -596,8 +596,8 @@
         "movespeed": 335,
         "armor": 30,
         "armorperlevel": 4,
-        "spellblock": 30,
-        "spellblockperlevel": 1.3,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 500,
         "hpregen": 3.25,
         "hpregenperlevel": 0.55,
@@ -745,7 +745,7 @@
           "rangeBurn": "1200",
           "image": {
             "full": "SivirQ.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 192,
             "y": 48,
@@ -886,7 +886,7 @@
           "rangeBurn": "20",
           "image": {
             "full": "SivirW.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 240,
             "y": 48,
@@ -1027,7 +1027,7 @@
           "rangeBurn": "20",
           "image": {
             "full": "SivirE.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 288,
             "y": 48,
@@ -1144,7 +1144,7 @@
           "rangeBurn": "1000",
           "image": {
             "full": "SivirR.png",
-            "sprite": "spell19.png",
+            "sprite": "spell13.png",
             "group": "spell",
             "x": 336,
             "y": 48,
@@ -1159,7 +1159,7 @@
         "description": "Sivir gains a short burst of Move Speed when she attacks an enemy champion.",
         "image": {
           "full": "Sivir_Passive.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 240,
           "y": 0,

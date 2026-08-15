@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "LeeSin": {
       "id": "LeeSin",
@@ -10,7 +10,7 @@
       "title": "the Blind Monk",
       "image": {
         "full": "LeeSin.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 0,
         "y": 48,
@@ -741,7 +741,7 @@
           "rangeBurn": "1100",
           "image": {
             "full": "LeeSinQOne.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 192,
             "y": 144,
@@ -882,7 +882,7 @@
           "rangeBurn": "700",
           "image": {
             "full": "LeeSinWOne.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 240,
             "y": 144,
@@ -1023,7 +1023,7 @@
           "rangeBurn": "450",
           "image": {
             "full": "LeeSinEOne.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 288,
             "y": 144,
@@ -1140,7 +1140,7 @@
           "rangeBurn": "375",
           "image": {
             "full": "LeeSinR.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 336,
             "y": 144,
@@ -1155,7 +1155,7 @@
         "description": "After Lee Sin uses an ability, his next 2 basic attacks gain Attack Speed and return Energy.",
         "image": {
           "full": "LeeSinPassive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 0,
           "y": 48,

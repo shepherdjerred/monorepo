@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Taliyah": {
       "id": "Taliyah",
@@ -10,7 +10,7 @@
       "title": "the Stoneweaver",
       "image": {
         "full": "Taliyah.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 192,
         "y": 48,
@@ -370,7 +370,7 @@
           "rangeBurn": "1000",
           "image": {
             "full": "TaliyahQ.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 0,
             "y": 48,
@@ -511,7 +511,7 @@
           "rangeBurn": "900",
           "image": {
             "full": "TaliyahWVC.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 48,
             "y": 48,
@@ -652,7 +652,7 @@
           "rangeBurn": "950",
           "image": {
             "full": "TaliyahE.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 96,
             "y": 48,
@@ -767,7 +767,7 @@
           "rangeBurn": "2500/4500/6500",
           "image": {
             "full": "TaliyahR.png",
-            "sprite": "spell20.png",
+            "sprite": "spell14.png",
             "group": "spell",
             "x": 144,
             "y": 48,
@@ -782,7 +782,7 @@
         "description": "Taliyah gains Move Speed near walls.",
         "image": {
           "full": "Taliyah_Passive.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 192,
           "y": 48,

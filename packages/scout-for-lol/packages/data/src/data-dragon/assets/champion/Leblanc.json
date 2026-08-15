@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Leblanc": {
       "id": "Leblanc",
@@ -10,7 +10,7 @@
       "title": "the Deceiver",
       "image": {
         "full": "Leblanc.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 432,
         "y": 0,
@@ -610,7 +610,7 @@
           "rangeBurn": "700",
           "image": {
             "full": "LeblancQ.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 0,
             "y": 144,
@@ -753,7 +753,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "LeblancW.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 48,
             "y": 144,
@@ -896,7 +896,7 @@
           "rangeBurn": "925",
           "image": {
             "full": "LeblancE.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 96,
             "y": 144,
@@ -1015,7 +1015,7 @@
           "rangeBurn": "25000",
           "image": {
             "full": "LeblancR.png",
-            "sprite": "spell13.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 144,
             "y": 144,
@@ -1030,7 +1030,7 @@
         "description": "When LeBlanc drops below 40% Health, she becomes invisible for 1 second and creates a Mirror Image that deals no damage and lasts for up to 8 seconds.",
         "image": {
           "full": "LeblancP.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 432,
           "y": 0,

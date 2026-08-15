@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Mordekaiser": {
       "id": "Mordekaiser",
@@ -10,7 +10,7 @@
       "title": "the Iron Revenant",
       "image": {
         "full": "Mordekaiser.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 288,
         "y": 96,
@@ -584,7 +584,7 @@
           "rangeBurn": "675",
           "image": {
             "full": "MordekaiserQ.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 384,
             "y": 48,
@@ -725,7 +725,7 @@
           "rangeBurn": "25000",
           "image": {
             "full": "MordekaiserW.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 432,
             "y": 48,
@@ -738,7 +738,7 @@
           "id": "MordekaiserE",
           "name": "Death's Grasp",
           "description": "Mordekaiser pulls all enemies in an area.",
-          "tooltip": "<spellActive>Active:</spellActive> Pulls enemies in his direction, dealing <magicDamage>{{ totaldamage }} magic damage.</magicDamage>{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Mordekaiser gains <magicPen>{{ magicpen*100 }}% Magic Penetration</magicPen>.<br /><br /><spellActive>Active:</spellActive> Pulls enemies in his direction, dealing <magicDamage>{{ totaldamage }} magic damage.</magicDamage>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Percent Magic Penetration",
@@ -868,7 +868,7 @@
           "rangeBurn": "700",
           "image": {
             "full": "MordekaiserE.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 0,
             "y": 96,
@@ -981,7 +981,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "MordekaiserR.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 48,
             "y": 96,
@@ -996,7 +996,7 @@
         "description": "Mordekaiser gains a powerful damage aura and Move Speed after landing 3 attacks or spells against champions or monsters.",
         "image": {
           "full": "MordekaiserPassive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 288,
           "y": 96,

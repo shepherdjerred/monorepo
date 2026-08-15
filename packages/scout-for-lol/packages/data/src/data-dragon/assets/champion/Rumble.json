@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Rumble": {
       "id": "Rumble",
@@ -10,7 +10,7 @@
       "title": "the Mechanized Menace",
       "image": {
         "full": "Rumble.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 144,
         "y": 96,
@@ -416,7 +416,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "RumbleFlameThrower.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 288,
             "y": 0,
@@ -557,7 +557,7 @@
           "rangeBurn": "20",
           "image": {
             "full": "RumbleShield.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 336,
             "y": 0,
@@ -700,7 +700,7 @@
           "rangeBurn": "850",
           "image": {
             "full": "RumbleGrenade.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 384,
             "y": 0,
@@ -815,7 +815,7 @@
           "rangeBurn": "1750",
           "image": {
             "full": "RumbleCarpetBomb.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 432,
             "y": 0,
@@ -830,7 +830,7 @@
         "description": "Every spell Rumble casts gives him Heat. When he reaches 50% Heat he reaches Danger Zone, granting all his basic abilities bonus effects. When he reaches 100% Heat, he starts Overheating, gaining bonus Attack Speed and granting his basic attacks bonus damage, but making him unable to cast spells for a few seconds.",
         "image": {
           "full": "Rumble_JunkyardTitan1.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 144,
           "y": 96,

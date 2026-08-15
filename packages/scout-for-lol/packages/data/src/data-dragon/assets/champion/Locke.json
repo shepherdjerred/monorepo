@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Locke": {
       "id": "Locke",
@@ -10,7 +10,7 @@
       "title": "the Ashen Exorcist",
       "image": {
         "full": "Locke.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 192,
         "y": 48,
@@ -259,7 +259,7 @@
           "rangeBurn": "950",
           "image": {
             "full": "LockeQ.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 0,
             "y": 48,
@@ -402,7 +402,7 @@
           "rangeBurn": "250",
           "image": {
             "full": "LockeW.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 48,
             "y": 48,
@@ -545,7 +545,7 @@
           "rangeBurn": "425",
           "image": {
             "full": "LockeE.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 96,
             "y": 48,
@@ -558,7 +558,7 @@
           "id": "LockeR",
           "name": "Purgatory",
           "description": "Locke throws a binding artifact that deals damage and potentially executes enemies hit. Locke gains additional power for sealing away enemy champions.",
-          "tooltip": "Locke throws a binding artifact to a location, dealing <magicDamage>{{ damage }} magic damage</magicDamage> and <status>Slowing</status> enemies in the area by {{ slowamount*100 }}%, decaying over {{ slowduration }} seconds. The artifact marks enemies hit for {{ duration }} seconds, sealing away marked enemy champions brought below {{ executionthreshold*100 }}%, and resetting the duration of the mark on other affected champions.<br /><br />After the duration ends, if at least one champion was sealed, the artifact lands on the ground. Locke can pick up the artifact to permanently increase its execution threshold by {{ executethresholdperstack*100 }}%, and refund {{ cooldownreduction }}% of his current Cooldown, for each champion sealed.<br />{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Locke throws a binding artifact to a location, dealing <magicDamage>{{ damage }} magic damage</magicDamage> and <status>Slowing</status> enemies in the area by {{ slowamount*100 }}%, decaying over {{ slowduration }} seconds. The artifact marks enemies hit for {{ duration }} seconds, sealing away marked enemy champions brought below <spellName>{{ executetooltipcalc }}</spellName>, and resetting the duration of the mark on other affected champions.<br /><br />After the duration ends, if at least one champion was sealed, the artifact lands on the ground. Locke can pick up the artifact to permanently increase its execution threshold by {{ executethresholdperstack*100 }}%, and refund {{ cooldownreduction }}% of his total Cooldown, for each champion sealed.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
@@ -662,7 +662,7 @@
           "rangeBurn": "1000",
           "image": {
             "full": "LockeR.png",
-            "sprite": "spell14.png",
+            "sprite": "spell8.png",
             "group": "spell",
             "x": 144,
             "y": 48,
@@ -677,7 +677,7 @@
         "description": "Locke's attacks deal additional magic damage On-Hit, increased based on enemy missing Health.",
         "image": {
           "full": "Locke_Passive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 192,
           "y": 48,

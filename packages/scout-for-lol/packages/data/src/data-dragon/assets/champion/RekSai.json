@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "RekSai": {
       "id": "RekSai",
@@ -10,7 +10,7 @@
       "title": "the Void Burrower",
       "image": {
         "full": "RekSai.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 336,
         "y": 48,
@@ -445,7 +445,7 @@
           "rangeBurn": "325",
           "image": {
             "full": "RekSaiQ.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 96,
             "y": 96,
@@ -588,7 +588,7 @@
           "rangeBurn": "1650",
           "image": {
             "full": "RekSaiW.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 144,
             "y": 96,
@@ -733,7 +733,7 @@
           "rangeBurn": "250",
           "image": {
             "full": "RekSaiE.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 192,
             "y": 96,
@@ -850,7 +850,7 @@
           "rangeBurn": "1500",
           "image": {
             "full": "RekSaiR.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 240,
             "y": 96,
@@ -865,7 +865,7 @@
         "description": "Rek'Sai generates Fury by Attacking and hitting with basic Abilities. She consumes this Fury while Burrowed to restore health.",
         "image": {
           "full": "RekSai_Passive.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 336,
           "y": 48,

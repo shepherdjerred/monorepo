@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Ezreal": {
       "id": "Ezreal",
@@ -527,6 +527,13 @@
           "name": "Heavenscale Ezreal (Beacon)",
           "chromas": false,
           "parentSkin": 44
+        },
+        {
+          "id": "81077",
+          "num": 77,
+          "name": "Porcelain Protector Ezreal (Lustrous)",
+          "chromas": false,
+          "parentSkin": 25
         }
       ],
       "lore": "A dashing adventurer, unknowingly gifted in the magical arts, Ezreal raids long-lost catacombs, tangles with ancient curses, and overcomes seemingly impossible odds with ease. His courage and bravado knowing no bounds, he prefers to improvise his way out of any situation, relying partially on his wits, but mostly on his mystical Shuriman gauntlet, which he uses to unleash devastating arcane blasts. One thing is for sure—whenever Ezreal is around, trouble isn't too far behind. Or ahead. Probably everywhere.",
@@ -560,8 +567,8 @@
         "movespeed": 325,
         "armor": 24,
         "armorperlevel": 4.2,
-        "spellblock": 30,
-        "spellblockperlevel": 1.3,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 550,
         "hpregen": 4,
         "hpregenperlevel": 0.65,

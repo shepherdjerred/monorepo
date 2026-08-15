@@ -12,6 +12,27 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 08 15",
+    banner: "Updated for League patch 26.16",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.16",
+          "League Classic adds Akali, Kennen and Shen with their original ability kits.",
+          "Bravery Arena returns on a weekly Wednesday schedule with Bravery and Crowd Favorites queues.",
+          "Arena and ARAM: Mayhem augment pools updated, including new Upgrade Sundered Sky and Upgrade Ravenous Hydra augments.",
+          "Bot lane rebalanced across supports, marksmen and AD fighter items.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.16 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-16-notes",
+    },
+  }),
+  buildChangelogEntry({
     date: "2026 07 29",
     banner: "Updated for League patch 26.15",
     sections: [

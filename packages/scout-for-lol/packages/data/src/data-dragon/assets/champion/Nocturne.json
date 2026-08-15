@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Nocturne": {
       "id": "Nocturne",
@@ -10,7 +10,7 @@
       "title": "the Eternal Nightmare",
       "image": {
         "full": "Nocturne.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 240,
         "y": 0,
@@ -441,7 +441,7 @@
           "rangeBurn": "1125",
           "image": {
             "full": "NocturneDuskbringer.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 192,
             "y": 48,
@@ -582,7 +582,7 @@
           "rangeBurn": "20",
           "image": {
             "full": "NocturneShroudofDarkness.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 240,
             "y": 48,
@@ -727,7 +727,7 @@
           "rangeBurn": "425",
           "image": {
             "full": "NocturneUnspeakableHorror.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 288,
             "y": 48,
@@ -844,7 +844,7 @@
           "rangeBurn": "2500/3250/4000",
           "image": {
             "full": "NocturneParanoia.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 336,
             "y": 48,
@@ -859,7 +859,7 @@
         "description": "Every few seconds, Nocturne's next attack strikes surrounding enemies for bonus physical damage and heals himself. <br><br>Nocturne's basic attacks reduce this cooldown.",
         "image": {
           "full": "Nocturne_UmbraBlades.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 240,
           "y": 0,

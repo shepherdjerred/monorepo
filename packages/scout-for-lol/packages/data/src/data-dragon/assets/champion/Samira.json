@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Samira": {
       "id": "Samira",
@@ -10,7 +10,7 @@
       "title": "the Desert Rose",
       "image": {
         "full": "Samira.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 240,
         "y": 96,
@@ -329,8 +329,8 @@
         "movespeed": 335,
         "armor": 26,
         "armorperlevel": 4.7,
-        "spellblock": 30,
-        "spellblockperlevel": 1.3,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 500,
         "hpregen": 3.25,
         "hpregenperlevel": 0.55,
@@ -476,7 +476,7 @@
           "rangeBurn": "950",
           "image": {
             "full": "SamiraQ.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 192,
             "y": 48,
@@ -617,7 +617,7 @@
           "rangeBurn": "325",
           "image": {
             "full": "SamiraW.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 240,
             "y": 48,
@@ -760,7 +760,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "SamiraE.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 288,
             "y": 48,
@@ -873,7 +873,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "SamiraR.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 336,
             "y": 48,
@@ -888,7 +888,7 @@
         "description": "Samira builds a combo by hitting attacks or abilities unique from the previous hit. Samira's attacks in melee range deal additional magic damage. Samira's attacks against enemies affected by <status>Immobilizing</status> effects will dash her to her attack range. If the enemy is <status>Knocked Up</status>, she also keeps them <status>Knocked Up</status> briefly.",
         "image": {
           "full": "SamiraP.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 240,
           "y": 96,

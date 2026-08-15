@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Pantheon": {
       "id": "Pantheon",
@@ -10,7 +10,7 @@
       "title": "the Unbreakable Spear",
       "image": {
         "full": "Pantheon.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 0,
         "y": 48,
@@ -514,7 +514,7 @@
           "rangeBurn": "575",
           "image": {
             "full": "PantheonQ.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 192,
             "y": 144,
@@ -655,7 +655,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "PantheonW.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 240,
             "y": 144,
@@ -796,7 +796,7 @@
           "rangeBurn": "400",
           "image": {
             "full": "PantheonE.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 288,
             "y": 144,
@@ -913,7 +913,7 @@
           "rangeBurn": "5500",
           "image": {
             "full": "PantheonR.png",
-            "sprite": "spell16.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 336,
             "y": 144,
@@ -928,7 +928,7 @@
         "description": "Every few spells or attacks, Pantheon's next spell is empowered.",
         "image": {
           "full": "Pantheon_Passive.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 0,
           "y": 48,

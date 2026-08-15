@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Riven": {
       "id": "Riven",
@@ -10,7 +10,7 @@
       "title": "the Exile",
       "image": {
         "full": "Riven.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 96,
         "y": 96,
@@ -689,7 +689,7 @@
           "rangeBurn": "275",
           "image": {
             "full": "RivenTriCleave.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 96,
             "y": 0,
@@ -830,7 +830,7 @@
           "rangeBurn": "260",
           "image": {
             "full": "RivenMartyr.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 144,
             "y": 0,
@@ -971,7 +971,7 @@
           "rangeBurn": "250",
           "image": {
             "full": "RivenFeint.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 192,
             "y": 0,
@@ -1088,7 +1088,7 @@
           "rangeBurn": "200",
           "image": {
             "full": "RivenFengShuiEngine.png",
-            "sprite": "spell18.png",
+            "sprite": "spell12.png",
             "group": "spell",
             "x": 240,
             "y": 0,
@@ -1103,7 +1103,7 @@
         "description": "Riven's abilities charge her blade, and her basic attacks expend charges to deal an additional damage.",
         "image": {
           "full": "RivenRunicBlades.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 96,
           "y": 96,

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Volibear": {
       "id": "Volibear",
@@ -10,7 +10,7 @@
       "title": "the Relentless Storm",
       "image": {
         "full": "Volibear.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 240,
         "y": 0,
@@ -439,7 +439,7 @@
           "rangeBurn": "300",
           "image": {
             "full": "VolibearQ.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 192,
             "y": 48,
@@ -584,7 +584,7 @@
           "rangeBurn": "325",
           "image": {
             "full": "VolibearW.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 240,
             "y": 48,
@@ -727,7 +727,7 @@
           "rangeBurn": "1200",
           "image": {
             "full": "VolibearE.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 288,
             "y": 48,
@@ -846,7 +846,7 @@
           "rangeBurn": "550",
           "image": {
             "full": "VolibearR.png",
-            "sprite": "spell22.png",
+            "sprite": "spell16.png",
             "group": "spell",
             "x": 336,
             "y": 48,
@@ -861,7 +861,7 @@
         "description": "Volibear's Attacks and abilities grant Attack Speed, and eventually cause his Attacks to deal bonus magic damage to nearby enemies.",
         "image": {
           "full": "Volibear_Icon_P.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 240,
           "y": 0,

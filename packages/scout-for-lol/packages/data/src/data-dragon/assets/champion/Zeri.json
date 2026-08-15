@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Zeri": {
       "id": "Zeri",
@@ -10,7 +10,7 @@
       "title": "The Spark of Zaun",
       "image": {
         "full": "Zeri.png",
-        "sprite": "champion7.png",
+        "sprite": "champion5.png",
         "group": "champion",
         "x": 384,
         "y": 48,
@@ -363,8 +363,8 @@
         "movespeed": 330,
         "armor": 24,
         "armorperlevel": 4.2,
-        "spellblock": 30,
-        "spellblockperlevel": 1.3,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 550,
         "hpregen": 3.25,
         "hpregenperlevel": 0.7,
@@ -510,7 +510,7 @@
           "rangeBurn": "700",
           "image": {
             "full": "ZeriQ.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 288,
             "y": 96,
@@ -655,7 +655,7 @@
           "rangeBurn": "1150",
           "image": {
             "full": "ZeriW.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 336,
             "y": 96,
@@ -800,7 +800,7 @@
           "rangeBurn": "25000",
           "image": {
             "full": "ZeriE.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 384,
             "y": 96,
@@ -917,7 +917,7 @@
           "rangeBurn": "800",
           "image": {
             "full": "ZeriR.png",
-            "sprite": "spell23.png",
+            "sprite": "spell17.png",
             "group": "spell",
             "x": 432,
             "y": 96,
@@ -932,7 +932,7 @@
         "description": "Zeri's Attacks deal magic damage and are treated as Abilities. Moving and casting Burst Fire stores up energy in Zeri's Sparkpack. When fully charged her next Attack deals bonus damage.",
         "image": {
           "full": "ZeriP.png",
-          "sprite": "passive7.png",
+          "sprite": "passive5.png",
           "group": "passive",
           "x": 384,
           "y": 48,

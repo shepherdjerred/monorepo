@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Udyr": {
       "id": "Udyr",
@@ -10,7 +10,7 @@
       "title": "the Spirit Walker",
       "image": {
         "full": "Udyr.png",
-        "sprite": "champion6.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 192,
         "y": 96,
@@ -289,7 +289,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "UdyrQ.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 0,
             "y": 48,
@@ -445,7 +445,7 @@
           "rangeBurn": "0",
           "image": {
             "full": "UdyrW.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 48,
             "y": 48,
@@ -599,7 +599,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "UdyrE.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 96,
             "y": 48,
@@ -753,7 +753,7 @@
           "rangeBurn": "370",
           "image": {
             "full": "UdyrR.png",
-            "sprite": "spell21.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 144,
             "y": 48,
@@ -768,7 +768,7 @@
         "description": "Udyr has four basic Abilities that swap between Stances and can Recast an Ability to renew it with Ultimate benefits. Additionally, after using an Ability, Udyr's next two Attacks gain Attack Speed.",
         "image": {
           "full": "Udyr_P.png",
-          "sprite": "passive6.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 192,
           "y": 96,

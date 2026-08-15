@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "Rakan": {
       "id": "Rakan",
@@ -10,7 +10,7 @@
       "title": "The Charmer",
       "image": {
         "full": "Rakan.png",
-        "sprite": "champion5.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 240,
         "y": 48,
@@ -589,7 +589,7 @@
           "rangeBurn": "850",
           "image": {
             "full": "RakanQ.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 192,
             "y": 48,
@@ -732,7 +732,7 @@
           "rangeBurn": "600",
           "image": {
             "full": "RakanW.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 240,
             "y": 48,
@@ -875,7 +875,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "RakanE.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 288,
             "y": 48,
@@ -992,7 +992,7 @@
           "rangeBurn": "150",
           "image": {
             "full": "RakanR.png",
-            "sprite": "spell17.png",
+            "sprite": "spell11.png",
             "group": "spell",
             "x": 336,
             "y": 48,
@@ -1007,7 +1007,7 @@
         "description": "Rakan periodically gains a shield.",
         "image": {
           "full": "Rakan_P.png",
-          "sprite": "passive5.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 240,
           "y": 48,

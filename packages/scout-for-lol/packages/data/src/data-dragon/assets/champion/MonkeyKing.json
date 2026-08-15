@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.15.1",
+  "version": "16.16.1",
   "data": {
     "MonkeyKing": {
       "id": "MonkeyKing",
@@ -10,7 +10,7 @@
       "title": "the Monkey King",
       "image": {
         "full": "MonkeyKing.png",
-        "sprite": "champion4.png",
+        "sprite": "champion2.png",
         "group": "champion",
         "x": 240,
         "y": 96,
@@ -441,7 +441,7 @@
           "rangeBurn": "250/275/300/325/350",
           "image": {
             "full": "MonkeyKingDoubleAttack.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 192,
             "y": 48,
@@ -584,7 +584,7 @@
           "rangeBurn": "275",
           "image": {
             "full": "MonkeyKingDecoy.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 240,
             "y": 48,
@@ -729,7 +729,7 @@
           "rangeBurn": "650",
           "image": {
             "full": "MonkeyKingNimbus.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 288,
             "y": 48,
@@ -844,7 +844,7 @@
           "rangeBurn": "315",
           "image": {
             "full": "MonkeyKingSpinToWin.png",
-            "sprite": "spell15.png",
+            "sprite": "spell9.png",
             "group": "spell",
             "x": 336,
             "y": 48,
@@ -859,7 +859,7 @@
         "description": "Wukong gains stacking armor and max health regeneration while fighting champions and monsters.",
         "image": {
           "full": "MonkeyKingStoneSkin.png",
-          "sprite": "passive4.png",
+          "sprite": "passive2.png",
           "group": "passive",
           "x": 240,
           "y": 96,
