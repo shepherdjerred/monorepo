@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  exploreShareLink,
+  mintedAfterPersisted,
+  resolveShareToken,
+} from "#src/lib/explore-share-link.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 /**
@@ -19,6 +24,12 @@ function clipboardOrUndefined(): Clipboard | undefined {
  * cache, so there is no stale copy to forget to clear. `showShareLink` is the
  * one piece of real state — the link row appears only after an explicit share
  * click on *this* conversation.
+ *
+ * The token the share mutation just minted is held only until the invalidated
+ * query reports it back, because the read-back is a network round trip the user
+ * would otherwise wait through with nothing on screen — and one that can fail,
+ * stranding a share that succeeded. `explore-share-link.ts` holds both rules;
+ * this hook only applies them.
  */
 export function useExploreShare(params: {
   conversationId: string | null;
@@ -39,6 +50,7 @@ export function useExploreShare(params: {
   const [showShareLink, setShowShareLink] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mintedToken, setMintedToken] = useState<string | null>(null);
   const shareMutation = useMutation(trpc.explore.share.mutationOptions());
   const revokeMutation = useMutation(
     trpc.explore.revokeShare.mutationOptions(),
@@ -48,7 +60,16 @@ export function useExploreShare(params: {
     setShowShareLink(false);
     setCopied(false);
     setError(null);
+    setMintedToken(null);
   }, [params.conversationId]);
+
+  // Drop the bridge as soon as the query catches up, so the persisted value is
+  // the only thing keeping the link alive from then on.
+  useEffect(() => {
+    setMintedToken((minted) =>
+      mintedAfterPersisted({ minted, persisted: params.shareToken }),
+    );
+  }, [params.shareToken]);
 
   const refresh = useCallback(
     async (conversationId: string): Promise<void> => {
@@ -90,6 +111,7 @@ export function useExploreShare(params: {
           }
         }
         setCopied(didCopy);
+        setMintedToken(result.shareToken);
         setShowShareLink(true);
         await refresh(conversationId);
       } catch (shareError) {
@@ -111,6 +133,7 @@ export function useExploreShare(params: {
         await revokeMutation.mutateAsync({ conversationId });
         setShowShareLink(false);
         setCopied(false);
+        setMintedToken(null);
         await refresh(conversationId);
       } catch (revokeError) {
         setError(
@@ -123,10 +146,10 @@ export function useExploreShare(params: {
   }, [params.conversationId, refresh, revokeMutation]);
 
   return {
-    shareLink:
-      params.shareToken === null
-        ? null
-        : `${globalThis.location.origin}/app/explore/s/${params.shareToken}`,
+    shareLink: exploreShareLink(
+      globalThis.location.origin,
+      resolveShareToken({ persisted: params.shareToken, minted: mintedToken }),
+    ),
     showShareLink,
     copied,
     sharing: shareMutation.isPending,
