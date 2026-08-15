@@ -71,6 +71,11 @@ set -gx LINEAR_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixe
 # stored under. Deliberately shares the MCP gateway's project-scoped key.
 set -gx POSTHOG_CLI_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/POSTHOG_API_KEY" }}'
 set -gx POSTHOG_CLI_PROJECT_ID '549883'
+# Deliberately NOT named CLOUDFLARE_API_TOKEN. src/tofu/cloudflare authenticates
+# from that name ambiently, so exporting it globally would let a bare `tofu apply`
+# with no `op run` authenticate and apply instead of failing closed. ~/.local/bin/cf
+# maps this to CLOUDFLARE_API_TOKEN for its own process only.
+set -gx CF_API_TOKEN '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/vp4l6tpe2cly6q4w5aremgvnbe/credential" }}'
 # Loki and Prometheus are tailnet-only with no auth (loki runs auth_enabled:
 # false), so logcli and promtool need an address but no credential.
 set -gx LOKI_ADDR 'https://loki.tailnet-1a49.ts.net'
