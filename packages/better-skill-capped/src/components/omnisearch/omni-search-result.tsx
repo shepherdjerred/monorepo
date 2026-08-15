@@ -25,54 +25,59 @@ export function OmniSearchResult({
   matchedStrings,
   isDownloadEnabled,
 }: OmniSearchResultProps): React.ReactElement {
-  if ("videos" in item) {
-    const result = {
-      item,
-      matchedStrings: matchedStrings,
-    };
+  switch (item.kind) {
+    case "course": {
+      const result = {
+        item,
+        matchedStrings: matchedStrings,
+      };
 
-    return (
-      <CourseSearchResult
-        key={item.uuid}
-        result={result}
-        onToggleBookmark={() => {
-          onToggleBookmark(item);
-        }}
-        isBookmarked={(bookmarkable: Bookmarkable) =>
-          isBookmarked(bookmarkable)
-        }
-        onToggleWatchStatus={onToggleWatchStatus}
-        isWatched={(watchable: Watchable) => isWatched(watchable)}
-        isDownloadEnabled={isDownloadEnabled}
-      />
-    );
-  } else if ("matchLink" in item) {
-    const commentary = item;
-    return (
-      <CommentarySearchResult
-        key={commentary.uuid}
-        commentary={commentary}
-        isBookmarked={isBookmarked(commentary)}
-        isWatched={isWatched(commentary)}
-        onToggleBookmark={onToggleBookmark}
-        onToggleWatchStatus={onToggleWatchStatus}
-        matchedStrings={matchedStrings}
-        isDownloadEnabled={isDownloadEnabled}
-      />
-    );
-  } else {
-    const video = item;
-    return (
-      <VideoSearchResult
-        key={video.uuid}
-        video={video}
-        isBookmarked={isBookmarked(video)}
-        isWatched={isWatched(video)}
-        onToggleBookmark={onToggleBookmark}
-        onToggleWatchStatus={onToggleWatchStatus}
-        matchedStrings={matchedStrings}
-        isDownloadEnabled={isDownloadEnabled}
-      />
-    );
+      return (
+        <CourseSearchResult
+          key={item.uuid}
+          result={result}
+          onToggleBookmark={() => {
+            onToggleBookmark(item);
+          }}
+          isBookmarked={(bookmarkable: Bookmarkable) =>
+            isBookmarked(bookmarkable)
+          }
+          onToggleWatchStatus={onToggleWatchStatus}
+          isWatched={(watchable: Watchable) => isWatched(watchable)}
+          isDownloadEnabled={isDownloadEnabled}
+        />
+      );
+    }
+    case "commentary": {
+      return (
+        <CommentarySearchResult
+          key={item.uuid}
+          commentary={item}
+          isBookmarked={isBookmarked(item)}
+          isWatched={isWatched(item)}
+          onToggleBookmark={onToggleBookmark}
+          onToggleWatchStatus={onToggleWatchStatus}
+          matchedStrings={matchedStrings}
+          isDownloadEnabled={isDownloadEnabled}
+        />
+      );
+    }
+    case "video": {
+      return (
+        <VideoSearchResult
+          key={item.uuid}
+          video={item}
+          isBookmarked={isBookmarked(item)}
+          isWatched={isWatched(item)}
+          onToggleBookmark={onToggleBookmark}
+          onToggleWatchStatus={onToggleWatchStatus}
+          matchedStrings={matchedStrings}
+          isDownloadEnabled={isDownloadEnabled}
+        />
+      );
+    }
+    default: {
+      return item satisfies never;
+    }
   }
 }

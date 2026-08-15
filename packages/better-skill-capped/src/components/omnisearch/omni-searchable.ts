@@ -1,6 +1,4 @@
-import type { Commentary } from "#src/model/commentary";
-import type { Course } from "#src/model/course";
-import type { Video } from "#src/model/video";
+import type { Video, Course, Commentary } from "#src/model/content";
 
 export type OmniSearchable = Video | Course | Commentary;
 

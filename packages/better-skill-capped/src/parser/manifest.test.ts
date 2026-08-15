@@ -39,7 +39,7 @@ describe("ManifestSchema", () => {
 
     expect(result.timeStamp).toBe(1_771_681_507_372);
     expect(result.patch.patchVal).toBe("26.04");
-    expect(result.videos).toHaveLength(3);
+    expect(result.videos).toHaveLength(6);
     expect(result.commentaries).toHaveLength(2);
     expect(result.staff).toHaveLength(2);
     expect(result.courses).toHaveLength(2);
@@ -129,7 +129,7 @@ describe("ManifestSchema", () => {
 
     expect(chapter.title).toBe("Course Content");
     expect(chapter.vids.length).toBeGreaterThan(0);
-    expect(must(chapter.vids[0]).uuid).toBe("4sghs37h9j");
+    expect(must(chapter.vids[0]).uuid).toBe("4lt153z6bl");
   });
 
   test("parses videosToCourses vids with optional altTitle", () => {

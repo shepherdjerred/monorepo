@@ -6,14 +6,11 @@ import type { FuseSearchResult } from "./fuse-search.tsx";
 import { Container } from "#src/components/container";
 import FilterSelector from "#src/components/omnisearch/filter/filter-selector";
 import type { Filters } from "#src/components/omnisearch/filter/filters";
-import { isCommentary } from "#src/model/commentary";
-import { isCourse } from "#src/model/course";
-import { isVideo } from "#src/model/video";
 import type { Watchable } from "#src/model/watch-status";
 import type { Bookmarkable } from "#src/model/bookmark";
 import Banner, { BannerType } from "#src/components/banner";
-import Type, { getType } from "#src/model/type";
-import { Role } from "#src/model/role";
+import { KINDS } from "#src/model/content";
+import { ROLES } from "#src/model/role";
 import type { OmniSearchable } from "#src/components/omnisearch/omni-searchable.ts";
 
 export type SearchProps<T extends OmniSearchable> = {
@@ -38,15 +35,8 @@ export default class Search<
     super(props);
 
     const defaultFilters: Filters = {
-      roles: [
-        Role.ALL,
-        Role.ADC,
-        Role.TOP,
-        Role.SUPPORT,
-        Role.JUNGLE,
-        Role.MID,
-      ],
-      types: [Type.COURSE, Type.VIDEO, Type.COMMENTARY],
+      roles: [...ROLES],
+      types: [...KINDS],
       onlyBookmarked: false,
       onlyUnwatched: true,
       onlyWatched: false,
@@ -90,56 +80,12 @@ export default class Search<
     const { query, filters } = this.state;
 
     const filteredItems = items
-      .filter((item) => {
-        if (!(isVideo(item) || isCourse(item) || isCommentary(item))) {
-          return false;
-        }
-        return filters.roles.includes(item.role);
-      })
-      .filter((item) => {
-        if (filters.onlyBookmarked) {
-          return isVideo(item) || isCourse(item) || isCommentary(item)
-            ? isBookmarked(item)
-            : false;
-        } else {
-          return true;
-        }
-      })
-      .filter((item) => {
-        if (filters.onlyUnbookmarked) {
-          return isVideo(item) || isCourse(item) || isCommentary(item)
-            ? !isBookmarked(item)
-            : false;
-        } else {
-          return true;
-        }
-      })
-      .filter((item) => {
-        if (filters.onlyUnwatched) {
-          return isVideo(item) || isCourse(item) || isCommentary(item)
-            ? !isWatched(item)
-            : false;
-        } else {
-          return true;
-        }
-      })
-      .filter((item) => {
-        if (filters.onlyWatched) {
-          return isVideo(item) || isCourse(item) || isCommentary(item)
-            ? isWatched(item)
-            : false;
-        } else {
-          return true;
-        }
-      })
-      .filter((item) => {
-        if (isVideo(item) || isCourse(item) || isCommentary(item)) {
-          const type = getType(item);
-          return type !== undefined && filters.types.includes(type);
-        } else {
-          return false;
-        }
-      });
+      .filter((item) => filters.roles.includes(item.role))
+      .filter((item) => (filters.onlyBookmarked ? isBookmarked(item) : true))
+      .filter((item) => (filters.onlyUnbookmarked ? !isBookmarked(item) : true))
+      .filter((item) => (filters.onlyUnwatched ? !isWatched(item) : true))
+      .filter((item) => (filters.onlyWatched ? isWatched(item) : true))
+      .filter((item) => filters.types.includes(item.kind));
 
     return (
       <>

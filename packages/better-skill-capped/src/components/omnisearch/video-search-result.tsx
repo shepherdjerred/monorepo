@@ -1,6 +1,6 @@
-import { roleToString } from "#src/model/role";
+import { roleDisplayName } from "#src/model/role";
 import React from "react";
-import type { Video } from "#src/model/video";
+import type { Video } from "#src/model/content";
 import { ToggleWatchStatusButton } from "#src/components/toggle-watch-status-button";
 import { ToggleBookmarkButton } from "#src/components/bookmark-toggle-button";
 import type { Bookmarkable } from "#src/model/bookmark";
@@ -53,7 +53,7 @@ export function VideoSearchResult(
             <div className="tags">
               <span className="tag is-primary">Content Type: Video</span>
               <span className="tag is-primary is-light">
-                Role: {roleToString(video.role)}
+                Role: {roleDisplayName(video.role)}
               </span>
               <span
                 className="tag is-primary is-light"

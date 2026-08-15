@@ -1,10 +1,19 @@
 import { z } from "zod";
 import type { BookmarkDatastore } from "./bookmark-datastore.ts";
 import type { Bookmark, Bookmarkable } from "#src/model/bookmark";
-import type { Content } from "#src/model/content";
-import { isCommentary } from "#src/model/commentary";
-import { isVideo } from "#src/model/video";
-import { isCourse } from "#src/model/course";
+import type { Content, Kind } from "#src/model/content";
+
+// Stored bookmarks predate the `kind` discriminant, so raw items are
+// classified by shape one last time; the storage v2 migration removes this.
+function storedItemKind(item: Record<string, unknown>): Kind {
+  if ("matchLink" in item) {
+    return "commentary";
+  }
+  if ("videos" in item) {
+    return "course";
+  }
+  return "video";
+}
 
 const IDENTIFIER = "bookmarks";
 
@@ -38,15 +47,16 @@ export class LocalStorageBookmarkDatastore implements BookmarkDatastore {
     const updatedBookmarks: Bookmark[] = bookmarks.flatMap((bookmark) => {
       let matchedItem: Bookmarkable | undefined;
 
-      if (isCommentary(bookmark.item)) {
+      const kind = storedItemKind(bookmark.item);
+      if (kind === "commentary") {
         matchedItem = this.content.commentaries.find((commentary) => {
           return commentary.uuid === bookmark.item.uuid;
         });
-      } else if (isCourse(bookmark.item)) {
+      } else if (kind === "course") {
         matchedItem = this.content.courses.find((course) => {
           return course.uuid === bookmark.item.uuid;
         });
-      } else if (isVideo(bookmark.item)) {
+      } else {
         matchedItem = this.content.videos.find((video) => {
           return video.uuid === bookmark.item.uuid;
         });

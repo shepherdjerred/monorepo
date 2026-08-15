@@ -17,7 +17,7 @@ const ErrorBoundary = Sentry.ErrorBoundary as unknown as React.ComponentType<
   React.PropsWithChildren<{ fallback: React.ReactNode; showDialog?: boolean }>
 >;
 import { ManifestLoader } from "#src/manifest-loader";
-import { Parser } from "#src/parser/parser";
+import { parseManifest } from "#src/parser/parser";
 
 export type AppState = {
   content?: Content | undefined;
@@ -50,8 +50,7 @@ export default class App extends React.Component<unknown, AppState> {
   private async loadContent(): Promise<void> {
     const manifestLoader = new ManifestLoader();
     const manifest = await manifestLoader.load();
-    const parser = new Parser();
-    const content = parser.parse(manifest);
+    const content = parseManifest(manifest);
 
     const bookmarkDatastore: BookmarkDatastore =
       new LocalStorageBookmarkDatastore(content);

@@ -43,6 +43,39 @@
       "tId": 1,
       "tSS": "",
       "cSS": ""
+    },
+    {
+      "role": "support",
+      "title": "Wave Control Fundamentals $",
+      "desc": "Learn the basics of wave control.",
+      "rDate": 1718859600000,
+      "durSec": 512,
+      "uuid": "54q44khlyf",
+      "tId": 2,
+      "tSS": "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/wavectrl01.jpg",
+      "cSS": ""
+    },
+    {
+      "role": "support",
+      "title": "Shoving For Level 2",
+      "desc": "",
+      "rDate": 1718859600000,
+      "durSec": 431,
+      "uuid": "rfv2ryr5fh",
+      "tId": 3,
+      "tSS": "",
+      "cSS": ""
+    },
+    {
+      "role": "mid",
+      "title": "Orphan Video Without A Course",
+      "desc": "",
+      "rDate": 1718000000000,
+      "durSec": 300,
+      "uuid": "v0unmapped1",
+      "tId": 4,
+      "tSS": "",
+      "cSS": ""
     }
   ],
   "commentaries": [
@@ -181,9 +214,6 @@
           "title": "Course Content",
           "vids": [
             {
-              "uuid": "4sghs37h9j"
-            },
-            {
               "uuid": "4lt153z6bl"
             },
             {
@@ -191,33 +221,6 @@
             },
             {
               "uuid": "fc617w6xvd"
-            },
-            {
-              "uuid": "xh6rc35d1c"
-            },
-            {
-              "uuid": "glm62ndhpx"
-            },
-            {
-              "uuid": "svy3vqgscx"
-            },
-            {
-              "uuid": "b52lbwld98"
-            },
-            {
-              "uuid": "c7lgfxd5g5"
-            },
-            {
-              "uuid": "fy2ksjns75"
-            },
-            {
-              "uuid": "2r0c67cv2b"
-            },
-            {
-              "uuid": "q04hrtm0lg"
-            },
-            {
-              "uuid": "7xd743zqr2"
             }
           ]
         }
@@ -235,22 +238,6 @@
             {
               "uuid": "rfv2ryr5fh",
               "altTitle": "Shoving for Level 2 Advantage"
-            },
-            {
-              "uuid": "x5fp5p7cbf",
-              "altTitle": "Rebounding and Slowpushing"
-            },
-            {
-              "uuid": "j3zf6tcpqn",
-              "altTitle": "Freezing"
-            },
-            {
-              "uuid": "6rvlwtjhcx",
-              "altTitle": "Using Rebounds/Slowpushes to Setup Kills"
-            },
-            {
-              "uuid": "cw8ntj2qz2",
-              "altTitle": "Using Freezes to Setup Kills"
             }
           ]
         }

@@ -1,11 +1,11 @@
-import type { Course } from "#src/model/course";
+import type { Course } from "#src/model/content";
 import React from "react";
 import Highlighter from "react-highlight-words";
 import "./CourseSearchResult.css";
 import type { Watchable } from "#src/model/watch-status";
 import type { FuseSearchResult } from "./search/fuse-search.tsx";
 import { CourseSearchResultVideo } from "./course-search-result-video.tsx";
-import { roleToString } from "#src/model/role";
+import { roleDisplayName } from "#src/model/role";
 import { ToggleBookmarkButton } from "#src/components/bookmark-toggle-button";
 import { ToggleWatchStatusButton } from "#src/components/toggle-watch-status-button";
 import type { Bookmarkable } from "#src/model/bookmark";
@@ -64,7 +64,7 @@ export function CourseSearchResult(
             <div className="tags">
               <span className="tag is-primary">Content Type: Course</span>
               <span className="tag is-primary is-light">
-                Role: {roleToString(props.result.item.role)}
+                Role: {roleDisplayName(props.result.item.role)}
               </span>
               <span
                 className="tag is-primary is-light"

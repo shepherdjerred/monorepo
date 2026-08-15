@@ -5,7 +5,7 @@ import type { Role } from "#src/model/role";
 import WatchStatusSelector from "./watch-status-selector.tsx";
 import BookmarkStatusSelector from "./bookmark-status-selector.tsx";
 import TypeSelector from "./type-selector.tsx";
-import type Type from "#src/model/type";
+import type { Kind } from "#src/model/content";
 
 export type FilterSelectorProps = {
   filters: Filters;
@@ -48,7 +48,7 @@ export default function FilterSelector({
     onFiltersUpdate(newFilters);
   };
 
-  const updateFilterTypes = (newTypes: Type[]) => {
+  const updateFilterTypes = (newTypes: Kind[]) => {
     const newFilters = {
       ...filters,
       types: newTypes,

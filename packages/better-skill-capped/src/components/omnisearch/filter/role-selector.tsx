@@ -1,5 +1,5 @@
 import React from "react";
-import { Role } from "#src/model/role";
+import { ROLES, roleDisplayName, type Role } from "#src/model/role";
 
 export type RoleSelectorProps = {
   selectedRoles: Role[];
@@ -14,15 +14,10 @@ export default function RoleSelector({
     return selectedRoles.includes(role);
   };
 
-  const getNewRoles = (role: Role) => {
-    let newRoles = [...selectedRoles];
-    if (isChecked(role)) {
-      newRoles = newRoles.filter((candidate) => {
-        return candidate !== role;
-      });
-    } else {
-      newRoles.push(role);
-    }
+  const toggleRole = (role: Role) => {
+    const newRoles = isChecked(role)
+      ? selectedRoles.filter((candidate) => candidate !== role)
+      : [...selectedRoles, role];
     onRolesUpdate(newRoles);
   };
 
@@ -31,78 +26,20 @@ export default function RoleSelector({
       <p className="panel-heading">Roles</p>
       <div className="panel-block">
         <div className="control">
-          <div className="field">
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={isChecked(Role.TOP)}
-                onChange={() => {
-                  getNewRoles(Role.TOP);
-                }}
-              />{" "}
-              Top
-            </label>
-          </div>
-          <div className="field">
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={isChecked(Role.JUNGLE)}
-                onChange={() => {
-                  getNewRoles(Role.JUNGLE);
-                }}
-              />{" "}
-              Jungle
-            </label>
-          </div>
-          <div className="field">
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={isChecked(Role.MID)}
-                onChange={() => {
-                  getNewRoles(Role.MID);
-                }}
-              />{" "}
-              Mid
-            </label>
-          </div>
-          <div className="field">
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={isChecked(Role.ADC)}
-                onChange={() => {
-                  getNewRoles(Role.ADC);
-                }}
-              />{" "}
-              ADC
-            </label>
-          </div>
-          <div className="field">
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={isChecked(Role.SUPPORT)}
-                onChange={() => {
-                  getNewRoles(Role.SUPPORT);
-                }}
-              />{" "}
-              Support
-            </label>
-          </div>
-          <div className="field">
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={isChecked(Role.ALL)}
-                onChange={() => {
-                  getNewRoles(Role.ALL);
-                }}
-              />{" "}
-              Not Role Specific
-            </label>
-          </div>
+          {ROLES.map((role) => (
+            <div className="field" key={role}>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={isChecked(role)}
+                  onChange={() => {
+                    toggleRole(role);
+                  }}
+                />{" "}
+                {roleDisplayName(role)}
+              </label>
+            </div>
+          ))}
         </div>
       </div>
     </nav>

@@ -1,5 +1,4 @@
-import type { Video } from "#src/model/video";
-import type { Course } from "#src/model/course";
+import type { Video, Course } from "#src/model/content";
 import Highlighter from "react-highlight-words";
 import React from "react";
 import { getCourseVideoUrl, getStreamUrl } from "#src/utils/url-utilities";

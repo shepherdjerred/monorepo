@@ -1,9 +1,9 @@
 import type { Role } from "#src/model/role";
-import type Type from "#src/model/type";
+import type { Kind } from "#src/model/content";
 
 export type Filters = {
   roles: Role[];
-  types: Type[];
+  types: Kind[];
   onlyBookmarked: boolean;
   onlyUnwatched: boolean;
   onlyUnbookmarked: boolean;

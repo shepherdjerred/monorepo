@@ -1,9 +1,9 @@
-import { roleToString } from "#src/model/role";
+import { roleDisplayName } from "#src/model/role";
 import React from "react";
 import { getStreamUrl } from "#src/utils/url-utilities";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCloudDownloadAlt } from "@fortawesome/free-solid-svg-icons";
-import type { Commentary } from "#src/model/commentary";
+import type { Commentary } from "#src/model/content";
 import { ToggleBookmarkButton } from "#src/components/bookmark-toggle-button";
 import { ToggleWatchStatusButton } from "#src/components/toggle-watch-status-button";
 import type { Bookmarkable } from "#src/model/bookmark";
@@ -34,7 +34,7 @@ export function CommentarySearchResult(
     kills,
     deaths,
     assists,
-    gameLengthInMinutes,
+    gameLengthInSeconds,
     carry,
     type,
   } = commentary;
@@ -57,7 +57,7 @@ export function CommentarySearchResult(
             <div className="tags">
               <span className="tag is-primary">Content Type: Commentary</span>
               <span className="tag is-primary is-light">
-                Role: {roleToString(role)}
+                Role: {roleDisplayName(role)}
               </span>
               <span
                 className="tag is-primary is-light"
@@ -70,7 +70,8 @@ export function CommentarySearchResult(
                 K/D/A: {kills}/{deaths}/{assists}
               </span>
               <span className="tag">
-                Game Length: {gameLengthInMinutes} minutes
+                Game Length: {Math.floor(gameLengthInSeconds / 60)}m
+                {String(gameLengthInSeconds % 60).padStart(2, "0")}s
               </span>
               <span className="tag">Carry Amount: {carry}</span>
               <span className="tag">Account Type: {type}</span>
