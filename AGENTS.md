@@ -73,6 +73,24 @@ sandbox/                        # Personal scratch (not shipped, excluded from m
 - **Update docs with code** — When adding a CLI command or feature, update CLAUDE.md and the relevant skills in the same phase, not a later "polish" pass, so the integration points are usable as soon as the feature works. When a change alters a meaningful architecture boundary, operator workflow, or system rationale, also update the nearest human page under `packages/docs/wiki/src/content/docs/`.
 - **Shared data is language-neutral** — Cross-package shared data (catalogs, config) belongs in a language-neutral source of truth (JSON + JSON Schema), validated per-language (Zod in TS, Pydantic in Python). The repo has Bun and Python consumers; don't ship a TS-only module. If TS needs it browser- and node-safe, ship a built package with inlined JSON + `.d.ts`, not a `node:fs` read or a source-only JSON import.
 
+### Local 1Password and Cloudflare credential probes
+
+On the local macOS/Conductor machine, 1Password Desktop integration authenticates
+individual CLI operations through the desktop app and biometric approval. It does
+not necessarily create a persistent shell session. Therefore `op whoami` can
+return `account is not signed in` while the real operation succeeds. Do not run
+`op signin`, ask the user to paste a token, or stop based on `op whoami` alone:
+probe with `op vault list` or the exact `op item get`/`op read` needed by the task.
+
+The local `cf` wrapper receives `CF_API_TOKEN` from the shell environment and
+maps it to `CLOUDFLARE_API_TOKEN` only for the `cf` process. `cf auth list` only
+lists saved named profiles, so an empty list is expected when environment-token
+authentication is in use. Use `cf auth whoami` or a read-only API operation such
+as `cf accounts list` to test access. Keep authentication and authorization
+separate: a valid-token response followed by a 403 means the token lacks the
+requested Cloudflare permission (for example, `Account API Tokens Write`), not
+that 1Password is signed out. Never expose or persist the token value.
+
 ### ArgoCD root prune safety
 
 The homelab CI reconcile script must require an exact root `apps` chart

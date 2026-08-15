@@ -67,6 +67,32 @@ op item get "<item>" --vault "<vault>" --format json
   *is* a real token, so `op whoami` is meaningful there. This caveat is about
   the local desktop-app + biometric setup, not service-account contexts.
 
+## Cloudflare environment-token integration
+
+On the local macOS setup, the shell already exposes the Cloudflare credential as
+`CF_API_TOKEN`; the tracked `~/.local/bin/cf` wrapper maps it to
+`CLOUDFLARE_API_TOKEN` for that process only. Never print, paste, or persist the
+value. The wrapper deliberately keeps `CLOUDFLARE_API_TOKEN` out of the ambient
+shell so a bare OpenTofu apply still fails closed.
+
+`cf auth list` is not an authentication probe here. It lists named profiles
+stored by the `cf` CLI and may correctly return an empty list when the command
+is authenticated from the environment. Use `cf auth whoami`, which reports the
+environment-token source and validity, or the exact read-only operation needed:
+
+```bash
+cf auth whoami
+cf accounts list
+cf zones list
+```
+
+Treat a successful `cf auth whoami` or API read as proof that Cloudflare
+authentication works, regardless of `op whoami`. Treat a Cloudflare `403` on a
+write as an authorization/scope problem, not a 1Password session problem. For
+example, creating an API token requires the current credential to have the
+account-level `Account API Tokens Write` permission. Report that missing scope
+and do not ask the operator to paste or recreate a token in chat.
+
 ## CLI Commands
 
 ### Auto-Approved Commands
