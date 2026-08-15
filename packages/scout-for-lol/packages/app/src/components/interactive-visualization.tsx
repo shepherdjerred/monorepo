@@ -11,13 +11,17 @@ export function InteractiveVisualization(props: {
   compact?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const chartRef = useRef<echarts.ECharts | null>(null);
 
+  // Init once: canvas + ResizeObserver + dispose. Re-initialising per
+  // snapshot rebuilt every on-screen chart from scratch each time a turn's
+  // refetch produced fresh message objects — a visible flicker right when a
+  // new answer lands.
   useEffect(() => {
     const container = containerRef.current;
     if (container === null) return;
-    const snapshot = VisualizationSnapshotSchema.parse(props.snapshot);
     const chart = echarts.init(container, undefined, { renderer: "canvas" });
-    chart.setOption(visualizationSnapshotToOption(snapshot, "interactive"));
+    chartRef.current = chart;
     const observer = new ResizeObserver(() => {
       chart.resize();
     });
@@ -25,7 +29,23 @@ export function InteractiveVisualization(props: {
     return () => {
       observer.disconnect();
       chart.dispose();
+      chartRef.current = null;
     };
+  }, []);
+
+  // Apply options per snapshot. `notMerge` replaces the previous option
+  // outright — the old dispose+init had replace semantics, and a merge would
+  // keep stale series when a new snapshot has fewer. The Zod parse stays: it
+  // is the wire-data guard, and it runs once per distinct snapshot, not per
+  // streamed token.
+  useEffect(() => {
+    chartRef.current?.setOption(
+      visualizationSnapshotToOption(
+        VisualizationSnapshotSchema.parse(props.snapshot),
+        "interactive",
+      ),
+      { notMerge: true },
+    );
   }, [props.snapshot]);
 
   return (

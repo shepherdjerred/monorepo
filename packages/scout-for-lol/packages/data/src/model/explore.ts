@@ -30,6 +30,13 @@ export const EXPLORE_TIMEOUT_MS = 180_000;
 export const EXPLORE_MAX_HISTORY_TURNS = 8;
 export const EXPLORE_TITLE_MAX_LENGTH = 120;
 
+/** Caveat written onto a turn the asker deliberately stopped. */
+export const EXPLORE_STOPPED_CAVEAT =
+  "This answer was stopped before it finished.";
+/** Caveat written onto a turn an error interrupted mid-stream. */
+export const EXPLORE_INTERRUPTED_CAVEAT =
+  "This answer was interrupted by an error before it finished.";
+
 export const ExploreConversationIdSchema = z.uuid();
 export type ExploreConversationId = z.infer<typeof ExploreConversationIdSchema>;
 
@@ -49,23 +56,44 @@ export const ExploreQuestionSchema = z
   .max(EXPLORE_QUESTION_MAX_LENGTH);
 
 /**
- * One request covers all three ways a turn starts.
+ * Where a turn attaches in the conversation tree.
  *
- * | Flow       | `question` | `parentMessageId`                 |
- * | ---------- | ---------- | --------------------------------- |
- * | Ask        | set        | null (attach at the current leaf)  |
- * | Edit       | set        | the edited message's parent        |
- * | Regenerate | null       | the user message to answer again   |
+ * - `leaf`: continue the branch on screen (the server resolves the current
+ *   leaf).
+ * - `root`: fork the opening question — a new sibling with no parent. Needed
+ *   because the root's parentId IS null, so "the edited message's parent"
+ *   cannot name it.
+ * - `message`: attach under a specific message — an edit names the edited
+ *   question's parent; a regenerate names the question to answer again.
+ */
+export const ExploreAttachPointSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("leaf") }).strict(),
+  z.object({ kind: z.literal("root") }).strict(),
+  z.object({ kind: z.literal("message"), messageId: z.uuid() }).strict(),
+]);
+
+export type ExploreAttachPoint = z.infer<typeof ExploreAttachPointSchema>;
+
+/**
+ * One request covers all four ways a turn starts.
  *
- * A null `question` means "answer this existing user turn again", so the
- * parent must be a user message; the server rejects anything else.
+ * | Flow            | `question` | `attach`                                    |
+ * | --------------- | ---------- | ------------------------------------------- |
+ * | Ask             | set        | { kind: "leaf" }                            |
+ * | Edit (non-root) | set        | { kind: "message", messageId: parent's id } |
+ * | Edit (root)     | set        | { kind: "root" }                            |
+ * | Regenerate      | null       | { kind: "message", messageId: question id } |
+ *
+ * A null `question` means "answer this existing user turn again", so `attach`
+ * must name a user message; the server rejects anything else. A null
+ * `conversationId` starts a new conversation and ignores `attach` entirely.
  */
 export const ExploreTurnRequestSchema = z
   .object({
     /** Null starts a new conversation; the server mints the id. */
     conversationId: ExploreConversationIdSchema.nullable().default(null),
     question: ExploreQuestionSchema.nullable().default(null),
-    parentMessageId: z.uuid().nullable().default(null),
+    attach: ExploreAttachPointSchema.default({ kind: "leaf" }),
   })
   .strict();
 
@@ -199,6 +227,13 @@ export const ExploreStreamEventSchema = z.discriminatedUnion("type", [
       type: z.literal("started"),
       runId: z.uuid(),
       conversationId: ExploreConversationIdSchema,
+      /**
+       * The user message this turn answers: the freshly persisted question
+       * for ask/edit, the existing question for a regenerate. Lets the client
+       * stop rendering its optimistic copy the moment a refetch contains this
+       * id, and recognise a salvaged partial answer after a stop.
+       */
+      questionMessageId: z.uuid(),
     })
     .strict(),
   z

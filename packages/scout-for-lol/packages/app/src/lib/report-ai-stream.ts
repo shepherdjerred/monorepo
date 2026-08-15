@@ -1,11 +1,11 @@
 import {
   ReportAiEditRequestSchema,
-  ReportAiHttpErrorSchema,
   ReportAiStreamEventSchema,
   type ReportAiEditRequest,
   type ReportAiStreamEvent,
 } from "@scout-for-lol/data";
 import { postEventStream } from "#src/lib/sse-stream.ts";
+import { httpErrorMessage } from "#src/lib/stream-http-error.ts";
 import { readCsrfCookie } from "#src/lib/trpc.ts";
 
 export async function streamReportAiEdit(params: {
@@ -24,30 +24,4 @@ export async function streamReportAiEdit(params: {
       httpErrorMessage(response, text, "AI report request failed"),
     corruptedMessage: "The AI report stream was corrupted. Please try again.",
   });
-}
-
-/**
- * Prefer the server's structured error message, falling back to the raw body
- * and then to the status code.
- */
-export function httpErrorMessage(
-  response: Response,
-  text: string,
-  fallbackPrefix: string,
-): string {
-  if (text.length === 0) {
-    return `${fallbackPrefix} (${response.status.toString()}).`;
-  }
-  try {
-    const raw: unknown = JSON.parse(text);
-    const parsed = ReportAiHttpErrorSchema.safeParse(raw);
-    if (parsed.success) {
-      return parsed.data.error;
-    }
-  } catch (error) {
-    if (!(error instanceof SyntaxError)) {
-      throw error;
-    }
-  }
-  return text;
 }

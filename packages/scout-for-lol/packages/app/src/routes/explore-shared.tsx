@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router";
 import type { ExploreTranscript as Transcript } from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
 import { ExploreTranscript } from "#src/components/explore-transcript.tsx";
+import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import { fetchSharedTranscript } from "#src/lib/explore-stream.ts";
 
 /**
@@ -67,7 +68,9 @@ export function ExploreShared() {
 
   if (transcript === null) {
     return (
-      <p className="p-6 text-sm text-muted-foreground">Loading conversation…</p>
+      <div className="p-6">
+        <SectionSkeleton />
+      </div>
     );
   }
 

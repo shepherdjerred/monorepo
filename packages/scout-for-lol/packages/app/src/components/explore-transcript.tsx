@@ -1,25 +1,28 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import {
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Copy,
   Pencil,
   RefreshCw,
 } from "lucide-react";
-import {
-  formatReportDisplayValue,
-  REPORT_RENDER_KINDS,
-} from "@scout-for-lol/data";
+import { REPORT_RENDER_KINDS } from "@scout-for-lol/data";
 import type {
   ExploreMessage,
-  ReportAiPreviewSummary,
   VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "#src/components/ui/collapsible.tsx";
 import { Textarea } from "#src/components/ui/textarea.tsx";
 import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
+import { ReportResultTable } from "#src/components/report-result-table.tsx";
 
 /**
  * Renders one path through an explore conversation.
@@ -30,7 +33,9 @@ import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
  * evidence, collapsed by default so they do not compete with the answer.
  *
  * Actions are opt-in per callback, so the shared view gets the same rendering
- * with none of the controls simply by passing none of them.
+ * with none of the controls simply by passing none of them. The turns are
+ * memoized and the streaming turn renders in its own leaf, so a token
+ * arriving re-renders one small component rather than every prior message.
  */
 export type ExploreTranscriptActions = {
   onFollowUp?: (question: string) => void;
@@ -39,35 +44,57 @@ export type ExploreTranscriptActions = {
   onSelectVersion?: (messageId: string) => void;
 };
 
-export function ExploreTranscript(
-  props: {
-    messages: ExploreMessage[];
-    /** Prose streaming in for a turn that has not been persisted yet. */
-    pendingAnswer?: string | null;
-    pendingQuestion?: string | null;
-    activity?: string | null;
-  } & ExploreTranscriptActions,
-) {
+/** Stable identity so memoized turns don't re-render on the shared page. */
+const EMPTY_ACTIONS: ExploreTranscriptActions = {};
+
+export function ExploreTranscript(props: {
+  messages: ExploreMessage[];
+  /** Prose streaming in for a turn that has not been persisted yet. */
+  pendingAnswer?: string | null;
+  pendingQuestion?: string | null;
+  activity?: string | null;
+  actions?: ExploreTranscriptActions;
+}) {
+  const actions = props.actions ?? EMPTY_ACTIONS;
   return (
-    <div className="space-y-6">
+    <div role="log" aria-label="Conversation" className="space-y-6">
       {props.messages.map((message) =>
         message.role === "user" ? (
-          <UserTurn key={message.id} message={message} actions={props} />
+          <UserTurn key={message.id} message={message} actions={actions} />
         ) : (
-          <AssistantTurn key={message.id} message={message} actions={props} />
+          <AssistantTurn key={message.id} message={message} actions={actions} />
         ),
       )}
 
-      {props.pendingQuestion !== undefined &&
-        props.pendingQuestion !== null && (
-          <UserBubble content={props.pendingQuestion} />
-        )}
+      <PendingTurn
+        pendingQuestion={props.pendingQuestion ?? null}
+        pendingAnswer={props.pendingAnswer ?? null}
+        activity={props.activity ?? null}
+      />
+    </div>
+  );
+}
 
-      {props.pendingAnswer !== undefined && props.pendingAnswer !== null && (
+/**
+ * The streaming turn. Its own memoized leaf so per-token updates re-render
+ * only this, and a live region so assistive tech announces the answer as it
+ * arrives — the region stays mounted even when idle, because screen readers
+ * only announce additions to a region they registered before content came.
+ */
+const PendingTurn = memo(function PendingTurnView(props: {
+  pendingQuestion: string | null;
+  pendingAnswer: string | null;
+  activity: string | null;
+}) {
+  return (
+    <div aria-live="polite" className="space-y-6">
+      {props.pendingQuestion !== null && (
+        <UserBubble content={props.pendingQuestion} />
+      )}
+      {props.pendingAnswer !== null && (
         <MarkdownAnswer>{props.pendingAnswer}</MarkdownAnswer>
       )}
-
-      {props.activity !== undefined && props.activity !== null && (
+      {props.activity !== null && (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <span className="inline-block size-2 animate-pulse rounded-full bg-current" />
           {props.activity}
@@ -75,7 +102,7 @@ export function ExploreTranscript(
       )}
     </div>
   );
-}
+});
 
 function UserBubble(props: { content: string }) {
   return (
@@ -87,7 +114,7 @@ function UserBubble(props: { content: string }) {
   );
 }
 
-function UserTurn(props: {
+const UserTurn = memo(function UserTurnView(props: {
   message: ExploreMessage;
   actions: ExploreTranscriptActions;
 }) {
@@ -154,15 +181,13 @@ function UserTurn(props: {
       </div>
     </div>
   );
-}
+});
 
-function AssistantTurn(props: {
+const AssistantTurn = memo(function AssistantTurnView(props: {
   message: ExploreMessage;
   actions: ExploreTranscriptActions;
 }) {
   const { message, actions } = props;
-  const [showQuery, setShowQuery] = useState(false);
-  const [showTrace, setShowTrace] = useState(false);
   const chart = chartableSnapshot(message.visualization);
 
   return (
@@ -177,9 +202,16 @@ function AssistantTurn(props: {
         <InteractiveVisualization snapshot={chart} />
       )}
 
-      {chart === null && message.preview !== null && (
-        <PreviewTable preview={message.preview} />
-      )}
+      {chart === null &&
+        message.preview !== null &&
+        message.preview.rows.length > 0 && (
+          // Empty previews render nothing at all — the prose already says "no
+          // rows", and the shared table's empty-state box would restate it.
+          <ReportResultTable
+            columns={message.preview.columns}
+            rows={message.preview.rows}
+          />
+        )}
 
       {message.caveats.length > 0 && (
         <ul className="space-y-1 text-xs text-muted-foreground">
@@ -202,50 +234,37 @@ function AssistantTurn(props: {
             <RefreshCw className="size-3.5" />
           </IconButton>
         )}
-        {message.queryText !== null && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setShowQuery(!showQuery);
-            }}
-          >
-            {showQuery ? "Hide the query" : "Show the query"}
-          </Button>
-        )}
-        {message.trace.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setShowTrace(!showTrace);
-            }}
-          >
-            {showTrace
-              ? "Hide the steps"
-              : `Steps (${String(message.trace.length)})`}
-          </Button>
-        )}
+        <time
+          dateTime={message.createdAt}
+          title={TIME_FULL.format(new Date(message.createdAt))}
+          className="ml-auto text-xs text-muted-foreground"
+        >
+          {TIME_SHORT.format(new Date(message.createdAt))}
+        </time>
       </div>
 
-      {showQuery && message.queryText !== null && (
-        <pre className="overflow-x-auto rounded-md bg-muted p-3 text-xs">
-          <code>{message.queryText}</code>
-        </pre>
+      {message.queryText !== null && (
+        <Disclosure label="ScoutQL query">
+          <pre className="overflow-x-auto rounded-md bg-muted p-3 text-xs">
+            <code>{message.queryText}</code>
+          </pre>
+        </Disclosure>
       )}
 
-      {showTrace && (
-        <ol className="space-y-1 rounded-md border p-3 text-xs text-muted-foreground">
-          {message.trace.map((entry, index) => (
-            <li key={`${entry.toolName}-${String(index)}`}>
-              <span className={entry.ok ? "" : "text-destructive"}>
-                {entry.ok ? "✓" : "✕"}
-              </span>{" "}
-              <span className="font-medium">{entry.toolName}</span> —{" "}
-              {entry.message}
-            </li>
-          ))}
-        </ol>
+      {message.trace.length > 0 && (
+        <Disclosure label={`Steps (${String(message.trace.length)})`}>
+          <ol className="space-y-1 rounded-md border p-3 text-xs text-muted-foreground">
+            {message.trace.map((entry, index) => (
+              <li key={`${entry.toolName}-${String(index)}`}>
+                <span className={entry.ok ? "" : "text-destructive"}>
+                  {entry.ok ? "✓" : "✕"}
+                </span>{" "}
+                <span className="font-medium">{entry.toolName}</span> —{" "}
+                {entry.message}
+              </li>
+            ))}
+          </ol>
+        </Disclosure>
       )}
 
       {actions.onFollowUp !== undefined && message.followUps.length > 0 && (
@@ -265,6 +284,40 @@ function AssistantTurn(props: {
         </div>
       )}
     </div>
+  );
+});
+
+// Assistant turns show when each exchange happened; one stamp per exchange,
+// since the question sits directly above its answer. Hover for the full date.
+const TIME_FULL = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+const TIME_SHORT = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+/**
+ * Collapsed-by-default evidence. Radix supplies `aria-expanded`/`aria-controls`
+ * on the trigger, which the old hand-rolled show/hide buttons never had.
+ */
+function Disclosure(props: { label: string; children: React.ReactNode }) {
+  return (
+    <Collapsible className="space-y-2">
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" size="sm" className="group gap-1">
+          {props.label}
+          <ChevronDown
+            className="size-3.5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
+            aria-hidden="true"
+          />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>{props.children}</CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -379,58 +432,4 @@ function chartableSnapshot(
   }
   const kind = REPORT_RENDER_KINDS.find((entry) => entry.id === snapshot.kind);
   return kind?.isChart === true ? snapshot : null;
-}
-
-/**
- * Fallback table for answers whose render kind produced no chart (a plain
- * table or leaderboard). Bounded to what the preview carries.
- */
-function PreviewTable(props: { preview: ReportAiPreviewSummary }) {
-  const { preview } = props;
-  if (preview.rows.length === 0) {
-    return null;
-  }
-  // The first column describes the grouping dimension ("Player", "Champion"),
-  // and its value is the row label rather than an entry in `values` — so it
-  // heads the label cell instead of becoming a column of its own. Rendering it
-  // as a normal column produced a stray "Player" column of em-dashes.
-  const [labelColumn, ...metricColumns] = preview.columns;
-
-  return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50">
-          <tr>
-            <th className="px-3 py-2 text-left font-medium">
-              {labelColumn?.label ?? "Row"}
-            </th>
-            {metricColumns.map((column) => (
-              <th key={column.key} className="px-3 py-2 text-right font-medium">
-                {column.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {preview.rows.map((row) => (
-            <tr key={row.label} className="border-t">
-              <td className="px-3 py-2">{row.label}</td>
-              {metricColumns.map((column) => {
-                const value = row.values.find(
-                  (entry) => entry.column === column.key,
-                )?.value;
-                return (
-                  <td key={column.key} className="px-3 py-2 text-right">
-                    {value === undefined || value === null
-                      ? "—"
-                      : formatReportDisplayValue(column, value)}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
 }

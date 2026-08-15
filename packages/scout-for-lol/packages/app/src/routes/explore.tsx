@@ -1,23 +1,30 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Square } from "lucide-react";
-import type {
-  ExploreConversation,
-  ExploreStreamEvent,
-} from "@scout-for-lol/data";
+import { useNavigate } from "react-router";
+import type { ExploreConversation, ExploreMessage } from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
-import { Textarea } from "#src/components/ui/textarea.tsx";
+import { ExploreComposer } from "#src/components/explore-composer.tsx";
 import { ExploreHeader } from "#src/components/explore-header.tsx";
+import { ExploreShareRow } from "#src/components/explore-share.tsx";
 import { ExploreSidebar } from "#src/components/explore-sidebar.tsx";
-import { ExploreTranscript } from "#src/components/explore-transcript.tsx";
+import {
+  ExploreTranscript,
+  type ExploreTranscriptActions,
+} from "#src/components/explore-transcript.tsx";
 import { ConfirmDeleteDialog } from "#src/components/confirm-delete-dialog.tsx";
+import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
 import { RenameConversationDialog } from "#src/components/rename-conversation-dialog.tsx";
-import { streamExploreTurn } from "#src/lib/explore-stream.ts";
+import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import {
   conversationToMarkdown,
   downloadMarkdown,
   exportFilename,
 } from "#src/lib/explore-export.ts";
+import { visiblePending } from "#src/lib/explore-turn-state.ts";
+import { useExploreParams } from "#src/lib/route-params.ts";
+import { useExploreShare } from "#src/hooks/use-explore-share.ts";
+import { useExploreTurn } from "#src/hooks/use-explore-turn.ts";
+import { usePinnedScroll } from "#src/hooks/use-pinned-scroll.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 /**
@@ -25,27 +32,22 @@ import { useTRPC } from "#src/lib/trpc.ts";
  *
  * Turns stream over SSE while conversation management goes through tRPC, so
  * the transcript is authoritative on the server and this page only mirrors
- * it. After a turn finishes the conversation is refetched rather than patched
- * locally — the server owns ordering, ids, and which branch is current, and
- * duplicating that here is how a transcript drifts from what a share link
- * would show.
+ * it. The active conversation lives in the URL (`/explore/:conversationId`),
+ * so refresh, Back, and deep links keep their place; the in-flight turn's
+ * state lives in {@link useExploreTurn} and is keyed by conversation, so a
+ * stream never renders under a conversation it does not belong to.
  */
 export function Explore() {
+  const { conversationId: routeConversationId } = useExploreParams();
+  const conversationId = routeConversationId ?? null;
+  const navigate = useNavigate();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const [conversationId, setConversationId] = useState<string | null>(null);
-  const [question, setQuestion] = useState("");
-  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
-  const [pendingAnswer, setPendingAnswer] = useState<string | null>(null);
-  const [activity, setActivity] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [shareLink, setShareLink] = useState<string | null>(null);
+  const [restoredDraft, setRestoredDraft] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [renaming, setRenaming] = useState<ExploreConversation | null>(null);
   const [deleting, setDeleting] = useState<ExploreConversation | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
-  const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
   const {
     status,
@@ -57,166 +59,244 @@ export function Explore() {
     shared,
   } = useExploreConversation(conversationId);
 
-  const shareMutation = useMutation(trpc.explore.share.mutationOptions());
+  const turn = useExploreTurn({
+    conversationId,
+    onConversationStarted: (id) => {
+      // Replace, not push: the transient blank `/explore` should not be a
+      // Back stop in the middle of a conversation.
+      void navigate(`/explore/${id}`, { replace: true });
+    },
+    restoreQuestion: setRestoredDraft,
+  });
+
+  const share = useExploreShare({ conversationId, shareToken: shared });
+
+  const setLeafMutation = useMutation(trpc.explore.setLeaf.mutationOptions());
   const deleteMutation = useMutation(trpc.explore.delete.mutationOptions());
   const renameMutation = useMutation(trpc.explore.rename.mutationOptions());
-  const setLeafMutation = useMutation(trpc.explore.setLeaf.mutationOptions());
 
-  const refresh = useCallback(async () => {
+  const refreshList = useCallback(async (): Promise<void> => {
     await queryClient.invalidateQueries({
       queryKey: trpc.explore.list.queryKey(),
     });
-    await queryClient.invalidateQueries({
-      queryKey: trpc.explore.get.queryKey(),
-    });
-  }, [queryClient, trpc.explore.get, trpc.explore.list]);
+  }, [queryClient, trpc.explore.list]);
 
-  // Sharing is two steps that can each fail — mint the token, then hand the
-  // link to the clipboard, which a browser may refuse over permissions or not
-  // implement at all. The link is shown as soon as it exists, so a refused
-  // clipboard write costs the copy and not the share; failing silently would
-  // look exactly like a copy that worked.
-  const share = useCallback(
-    async (id: string) => {
-      setError(null);
-      try {
-        const result = await shareMutation.mutateAsync({ conversationId: id });
-        const link = `${globalThis.location.origin}/app/explore/s/${result.shareToken}`;
-        setShareLink(link);
-        await refresh();
-        await navigator.clipboard.writeText(link);
-      } catch (shareError) {
-        setError(
-          shareError instanceof Error ? shareError.message : String(shareError),
-        );
-      }
+  const refreshConversation = useCallback(
+    async (id: string): Promise<void> => {
+      await queryClient.invalidateQueries({
+        queryKey: trpc.explore.get.queryKey({ conversationId: id }),
+      });
+      await refreshList();
     },
-    [refresh, shareMutation],
-  );
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [transcript.data, pendingAnswer]);
-
-  // Grow the composer with its content instead of scrolling a fixed box.
-  useEffect(() => {
-    const textarea = composerRef.current;
-    if (textarea === null) {
-      return;
-    }
-    textarea.style.height = "auto";
-    textarea.style.height = `${String(Math.min(textarea.scrollHeight, 200))}px`;
-  }, [question]);
-
-  // Abandon an in-flight turn if the page unmounts.
-  useEffect(
-    () => () => {
-      abortRef.current?.abort();
-    },
-    [],
-  );
-
-  const runTurn = useCallback(
-    async (input: {
-      question: string | null;
-      parentMessageId: string | null;
-      displayQuestion: string | null;
-    }) => {
-      if (activity !== null) {
-        return;
-      }
-      const controller = new AbortController();
-      abortRef.current = controller;
-      setError(null);
-      setPendingQuestion(input.displayQuestion);
-      setPendingAnswer(null);
-      setActivity("Thinking…");
-
-      let answered: string | null = null;
-      try {
-        await streamExploreTurn({
-          input: {
-            conversationId,
-            question: input.question,
-            parentMessageId: input.parentMessageId,
-          },
-          signal: controller.signal,
-          onEvent: (event) => {
-            answered = applyStreamEvent(event, answered, {
-              setConversationId,
-              setActivity,
-              setPendingAnswer,
-              setError,
-            });
-          },
-        });
-      } catch (streamError) {
-        // A deliberate stop is not a failure — the server keeps whatever the
-        // answer had reached, so there is nothing to apologise for.
-        if (!controller.signal.aborted) {
-          setError(
-            streamError instanceof Error
-              ? streamError.message
-              : String(streamError),
-          );
-        }
-      } finally {
-        abortRef.current = null;
-        setActivity(null);
-        setPendingAnswer(null);
-        setPendingQuestion(null);
-        await refresh();
-      }
-    },
-    [activity, conversationId, refresh],
+    [queryClient, refreshList, trpc.explore.get],
   );
 
   const ask = useCallback(
     (text: string) => {
-      const trimmed = text.trim();
-      if (trimmed.length === 0) {
-        return;
-      }
-      setQuestion("");
-      void runTurn({
-        question: trimmed,
-        parentMessageId: null,
-        displayQuestion: trimmed,
+      setRestoredDraft(null);
+      void turn.runTurn({
+        question: text,
+        attach: { kind: "leaf" },
+        displayQuestion: text,
+        leafIdAtStart: messages.at(-1)?.id ?? null,
       });
     },
-    [runTurn],
+    [messages, turn],
   );
 
+  const handleEdit = useCallback(
+    (message: ExploreMessage, edited: string) => {
+      // Editing forks the question: a sibling under the same parent, or a
+      // new root when the edited question *is* the root — the fork a parent
+      // id cannot name, which is why `attach` exists.
+      void turn.runTurn({
+        question: edited,
+        attach:
+          message.parentId === null
+            ? { kind: "root" }
+            : { kind: "message", messageId: message.parentId },
+        displayQuestion: edited,
+        leafIdAtStart: messages.at(-1)?.id ?? null,
+      });
+    },
+    [messages, turn],
+  );
+
+  const handleRegenerate = useCallback(
+    (message: ExploreMessage) => {
+      // The parent of an answer is the question it belongs to.
+      if (message.parentId === null) {
+        return;
+      }
+      void turn.runTurn({
+        question: null,
+        attach: { kind: "message", messageId: message.parentId },
+        displayQuestion: null,
+        leafIdAtStart: messages.at(-1)?.id ?? null,
+      });
+    },
+    [messages, turn],
+  );
+
+  const handleSelectVersion = useCallback(
+    async (messageId: string): Promise<void> => {
+      if (conversationId === null) {
+        return;
+      }
+      setError(null);
+      try {
+        await setLeafMutation.mutateAsync({ conversationId, messageId });
+        await refreshConversation(conversationId);
+      } catch (mutationError) {
+        setError(errorText(mutationError));
+      }
+    },
+    [conversationId, refreshConversation, setLeafMutation],
+  );
+
+  const handleRename = useCallback(
+    async (conversation: ExploreConversation, nextTitle: string) => {
+      setError(null);
+      try {
+        await renameMutation.mutateAsync({
+          conversationId: conversation.id,
+          title: nextTitle,
+        });
+        // Close only on success — a stuck-open dialog with an error banner
+        // beats one that swallowed the failure.
+        setRenaming(null);
+        await refreshConversation(conversation.id);
+      } catch (mutationError) {
+        setError(errorText(mutationError));
+      }
+    },
+    [refreshConversation, renameMutation],
+  );
+
+  const handleDelete = useCallback(
+    async (conversation: ExploreConversation) => {
+      setError(null);
+      if (turn.pendingTurn?.conversationId === conversation.id) {
+        turn.abortForNavigation();
+      }
+      try {
+        await deleteMutation.mutateAsync({ conversationId: conversation.id });
+        setDeleting(null);
+        queryClient.removeQueries({
+          queryKey: trpc.explore.get.queryKey({
+            conversationId: conversation.id,
+          }),
+        });
+        if (conversation.id === conversationId) {
+          void navigate("/explore", { replace: true });
+        }
+        await refreshList();
+      } catch (mutationError) {
+        setError(errorText(mutationError));
+      }
+    },
+    [
+      conversationId,
+      deleteMutation,
+      navigate,
+      queryClient,
+      refreshList,
+      trpc.explore.get,
+      turn,
+    ],
+  );
+
+  const openConversation = useCallback(
+    (id: string | null) => {
+      if (turn.pendingTurn !== null) {
+        turn.abortForNavigation();
+      }
+      void navigate(id === null ? "/explore" : `/explore/${id}`);
+      setDrawerOpen(false);
+    },
+    [navigate, turn],
+  );
+
+  const transcriptActions = useMemo<ExploreTranscriptActions>(
+    () => ({
+      onFollowUp: ask,
+      onEdit: handleEdit,
+      onRegenerate: handleRegenerate,
+      onSelectVersion: (messageId) => {
+        void handleSelectVersion(messageId);
+      },
+    }),
+    [ask, handleEdit, handleRegenerate, handleSelectVersion],
+  );
+
+  const { pendingQuestion, pendingAnswer, activity } = visiblePending(
+    turn.pendingTurn,
+    conversationId,
+    messages,
+  );
+
+  const { bottomRef, scrollIfPinned } = usePinnedScroll();
+  useEffect(() => {
+    scrollIfPinned();
+  }, [transcript.data, pendingAnswer, activity, scrollIfPinned]);
+
   if (status.isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>;
+    return <SectionSkeleton />;
+  }
+
+  if (status.isError) {
+    // A failed availability check is not a denial — say so, and offer the
+    // narrow retry (just this query) rather than a whole-page reload.
+    return (
+      <div className="rounded-lg border border-destructive/40 bg-card p-8 text-center">
+        <h2 className="text-base font-semibold text-destructive">
+          Explore couldn&apos;t load
+        </h2>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+          Checking your access failed. You can try again — if it keeps
+          happening, reload the page.
+        </p>
+        <div className="mt-4 flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              void status.refetch();
+            }}
+          >
+            Try again
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   if (!enabled) {
     return (
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold tracking-tight">Explore</h2>
-        <p className="text-sm text-muted-foreground">
-          Explore is in a limited rollout and is not available on your account
-          yet.
-        </p>
-      </div>
+      <ForbiddenPanel
+        title="Explore isn't available yet"
+        message="Explore is in a limited rollout and is not available on your account yet."
+      />
     );
   }
+
+  const pageError = error ?? turn.error ?? share.error;
 
   const headerActions =
     conversationId !== null && messages.length > 0
       ? {
           shared: shared !== null,
+          sharing: share.sharing,
+          revoking: share.revoking,
           onExport: () => {
             downloadMarkdown(
               exportFilename(title),
               conversationToMarkdown(title, messages),
             );
           },
-          sharing: shareMutation.isPending,
-          onShare: () => {
-            void share(conversationId);
-          },
+          onShare: share.share,
+          onRevoke: share.revoke,
         }
       : undefined;
 
@@ -224,15 +304,9 @@ export function Explore() {
     <ExploreSidebar
       conversations={conversations.data ?? []}
       activeId={conversationId}
-      onSelect={(id) => {
-        setConversationId(id);
-        setShareLink(null);
-        setDrawerOpen(false);
-      }}
+      onSelect={openConversation}
       onNew={() => {
-        setConversationId(null);
-        setShareLink(null);
-        setDrawerOpen(false);
+        openConversation(null);
       }}
       onRename={setRenaming}
       onDelete={setDeleting}
@@ -284,138 +358,56 @@ export function Explore() {
           pendingQuestion={pendingQuestion}
           pendingAnswer={pendingAnswer}
           activity={activity}
-          onFollowUp={ask}
-          onEdit={(message, edited) => {
-            // Attach the new question beside the old one, so both survive.
-            void runTurn({
-              question: edited,
-              parentMessageId: message.parentId,
-              displayQuestion: edited,
-            });
-          }}
-          onRegenerate={(message) => {
-            // A null question means "answer this one again"; the parent of an
-            // answer is the question it belongs to.
-            void runTurn({
-              question: null,
-              parentMessageId: message.parentId,
-              displayQuestion: null,
-            });
-          }}
-          onSelectVersion={(messageId) => {
-            if (conversationId === null) {
-              return;
-            }
-            void (async () => {
-              await setLeafMutation.mutateAsync({ conversationId, messageId });
-              await refresh();
-            })();
-          }}
+          actions={transcriptActions}
         />
 
-        {error !== null && (
+        {pageError !== null && (
           <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">
-            {error}
+            {pageError}
           </p>
         )}
 
-        {shareLink !== null && (
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            Share link
-            <input
-              readOnly
-              value={shareLink}
-              onFocus={(event) => {
-                event.target.select();
-              }}
-              className="min-w-0 flex-1 rounded-md border bg-muted px-2 py-1 font-mono text-xs"
-            />
-          </label>
+        {share.showShareLink && share.shareLink !== null && (
+          <ExploreShareRow shareLink={share.shareLink} copied={share.copied} />
         )}
 
         <div ref={bottomRef} />
 
-        <form
-          className="flex items-end gap-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            ask(question);
-          }}
-        >
-          <Textarea
-            ref={composerRef}
-            value={question}
-            rows={1}
-            className="max-h-[200px] min-h-[42px] resize-none"
-            onChange={(event) => {
-              setQuestion(event.target.value);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                ask(question);
-              }
-            }}
-            placeholder="Ask a question about match data…"
-            disabled={activity !== null}
-          />
-          {activity === null ? (
-            <Button type="submit" disabled={question.trim().length === 0}>
-              Ask
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-1.5"
-              onClick={() => {
-                abortRef.current?.abort();
-              }}
-            >
-              <Square className="size-3.5" />
-              Stop
-            </Button>
-          )}
-        </form>
+        <ExploreComposer
+          active={turn.pendingTurn !== null}
+          restoredDraft={restoredDraft}
+          onAsk={ask}
+          onStop={turn.stop}
+        />
       </div>
 
       <RenameConversationDialog
         conversation={renaming}
+        pending={renameMutation.isPending}
         onClose={() => {
           setRenaming(null);
         }}
         onRename={(conversation, nextTitle) => {
-          void (async () => {
-            await renameMutation.mutateAsync({
-              conversationId: conversation.id,
-              title: nextTitle,
-            });
-            setRenaming(null);
-            await refresh();
-          })();
+          void handleRename(conversation, nextTitle);
         }}
       />
 
       <ConfirmDeleteDialog
         conversation={deleting}
+        pending={deleteMutation.isPending}
         onClose={() => {
           setDeleting(null);
         }}
         onConfirm={(conversation) => {
-          void (async () => {
-            await deleteMutation.mutateAsync({
-              conversationId: conversation.id,
-            });
-            if (conversation.id === conversationId) {
-              setConversationId(null);
-            }
-            setDeleting(null);
-            await refresh();
-          })();
+          void handleDelete(conversation);
         }}
       />
     </div>
   );
+}
+
+function errorText(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 /**
@@ -447,49 +439,6 @@ function useExploreConversation(conversationId: string | null) {
     title: transcript.data?.conversation.title ?? "Explore",
     shared: transcript.data?.conversation.shareToken ?? null,
   };
-}
-
-/**
- * Fold one stream event into page state, returning the answer text so far.
- *
- * Lifted out of the component so its switch does not count against the
- * route's complexity budget, and so the event handling reads on its own.
- */
-function applyStreamEvent(
-  event: ExploreStreamEvent,
-  answered: string | null,
-  setters: {
-    setConversationId: (id: string) => void;
-    setActivity: (message: string) => void;
-    setPendingAnswer: (text: string) => void;
-    setError: (message: string) => void;
-  },
-): string | null {
-  switch (event.type) {
-    case "started": {
-      setters.setConversationId(event.conversationId);
-      return answered;
-    }
-    case "tool_call": {
-      setters.setActivity(event.message);
-      return answered;
-    }
-    case "answer_delta": {
-      const next = (answered ?? "") + event.text;
-      setters.setPendingAnswer(next);
-      return next;
-    }
-    case "error": {
-      setters.setError(event.message);
-      return answered;
-    }
-    case "final":
-    case "preview":
-    case "tool_result":
-    case "done": {
-      return answered;
-    }
-  }
 }
 
 const EXAMPLES = [

@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import type { DiscordAccountId } from "@scout-for-lol/data";
+import type { DiscordAccountId, ExploreAttachPoint } from "@scout-for-lol/data";
 import { testAccountId } from "#src/testing/test-ids.ts";
 import {
   ExploreInvalidTurnError,
@@ -54,7 +54,7 @@ const ANSWER = {
 async function askAndAnswer(input: {
   conversationId: string | null;
   question: string;
-  parentMessageId?: string | null;
+  attach?: ExploreAttachPoint;
   answer?: string;
 }): Promise<{
   conversationId: string;
@@ -65,7 +65,7 @@ async function askAndAnswer(input: {
     conversationId: input.conversationId,
     userId,
     question: input.question,
-    parentMessageId: input.parentMessageId ?? null,
+    attach: input.attach ?? { kind: "leaf" },
   });
   const answer = await appendExploreAnswer(prisma, {
     conversationId: started.conversationId,
@@ -111,7 +111,7 @@ describe("explore store", () => {
       conversationId: first.conversationId,
       userId,
       question: "And by patch?",
-      parentMessageId: null,
+      attach: { kind: "leaf" },
     });
 
     expect(await path(first.conversationId)).toEqual([
@@ -126,7 +126,7 @@ describe("explore store", () => {
       conversationId: null,
       userId,
       question: "Which champion has the most games?",
-      parentMessageId: null,
+      attach: { kind: "leaf" },
     });
     expect(started.title).toBe("Which champion has the most games?");
 
@@ -195,7 +195,7 @@ describe("explore store — branching", () => {
     const edited = await askAndAnswer({
       conversationId: first.conversationId,
       question: "And by queue?",
-      parentMessageId: first.answerId,
+      attach: { kind: "message", messageId: first.answerId },
       answer: "ARAM skews it hard.",
     });
 
@@ -235,6 +235,56 @@ describe("explore store — branching", () => {
       "It shifts toward Caitlyn.",
     ]);
     expect(edited.answerId).not.toBe(second.answerId);
+  });
+
+  test("editing the opening question forks a second root", async () => {
+    const first = await askAndAnswer({
+      conversationId: null,
+      question: "Which champion has the most games?",
+    });
+
+    // The root's parentId is null, so only `kind: "root"` can express this
+    // fork — a parent id cannot name "no parent".
+    const edited = await askAndAnswer({
+      conversationId: first.conversationId,
+      question: "Which champion has the most wins?",
+      attach: { kind: "root" },
+      answer: "Caitlyn, narrowly.",
+    });
+
+    // The edited branch is what you land on…
+    expect(await path(first.conversationId)).toEqual([
+      "Which champion has the most wins?",
+      "Caitlyn, narrowly.",
+    ]);
+    // …and nothing was destroyed to get there.
+    expect(await prisma.exploreMessage.count()).toBe(4);
+
+    // Both opening questions are root siblings with version arrows.
+    const transcript = await loadExploreTranscript(
+      prisma,
+      first.conversationId,
+      userId,
+    );
+    const root = transcript?.messages[0];
+    expect(root?.parentId).toBeNull();
+    expect(root?.versionCount).toBe(2);
+    expect(root?.versionIndex).toBe(1);
+    expect(root?.siblingIds).toEqual([first.questionId, edited.questionId]);
+
+    // Switching back restores the original opening branch in full.
+    expect(
+      await setExploreLeaf(
+        prisma,
+        first.conversationId,
+        userId,
+        first.questionId,
+      ),
+    ).toBe(true);
+    expect(await path(first.conversationId)).toEqual([
+      "Which champion has the most games?",
+      ANSWER.answer,
+    ]);
   });
 
   test("regenerating forks the answer, not the question", async () => {
@@ -319,7 +369,7 @@ describe("explore store — branching", () => {
     await askAndAnswer({
       conversationId: first.conversationId,
       question: "And by queue?",
-      parentMessageId: first.answerId,
+      attach: { kind: "message", messageId: first.answerId },
       answer: "ARAM skews it hard.",
     });
 
@@ -419,7 +469,7 @@ describe("explore store — ownership", () => {
         conversationId: first.conversationId,
         userId: otherUserId,
         question: "Sneaking in.",
-        parentMessageId: null,
+        attach: { kind: "leaf" },
       }),
     ).rejects.toBeInstanceOf(ExploreNotFoundError);
   });
@@ -439,7 +489,7 @@ describe("explore store — ownership", () => {
         conversationId: first.conversationId,
         userId,
         question: "Grafting on.",
-        parentMessageId: other.answerId,
+        attach: { kind: "message", messageId: other.answerId },
       }),
     ).rejects.toBeInstanceOf(ExploreNotFoundError);
   });

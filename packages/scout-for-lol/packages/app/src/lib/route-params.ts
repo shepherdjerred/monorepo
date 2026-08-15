@@ -1,6 +1,10 @@
 import { useParams } from "react-router";
 import { z } from "zod";
-import { CompetitionIdSchema, ReportIdSchema } from "@scout-for-lol/data";
+import {
+  CompetitionIdSchema,
+  ExploreConversationIdSchema,
+  ReportIdSchema,
+} from "@scout-for-lol/data";
 
 /**
  * Zod schemas for the router-matched path params, plus hooks that
@@ -25,6 +29,11 @@ export const CompetitionParamsSchema = z.object({
 export const ReportParamsSchema = z.object({
   guildId: z.string().min(1),
   reportId: z.coerce.number().pipe(ReportIdSchema),
+});
+
+/** The segment is optional — `/explore` is the not-yet-created conversation. */
+export const ExploreParamsSchema = z.object({
+  conversationId: ExploreConversationIdSchema.optional(),
 });
 
 /**
@@ -66,4 +75,8 @@ export function useCompetitionParams(): z.infer<
 
 export function useReportParams(): z.infer<typeof ReportParamsSchema> {
   return parseRouteParams(ReportParamsSchema, useParams());
+}
+
+export function useExploreParams(): z.infer<typeof ExploreParamsSchema> {
+  return parseRouteParams(ExploreParamsSchema, useParams());
 }

@@ -8,6 +8,7 @@ import {
   VisualizationSnapshotSchema,
   type DiscordAccountId,
   type ExploreAnswer,
+  type ExploreAttachPoint,
   type ExploreConversation,
   type ExploreMessage,
   type ExploreTraceEntry,
@@ -261,9 +262,10 @@ export async function loadSharedExploreTranscript(
  * Written before the model runs so the question survives a failed or abandoned
  * turn — a conversation that loses what was asked is not resumable.
  *
- * `parentMessageId` decides whether this continues the conversation or forks
- * it: passing the parent of an existing question makes the new one a sibling,
- * which is how editing works.
+ * `attach` decides where the question lands: `leaf` continues the branch on
+ * screen, `message` forks a sibling under a named parent (how editing works),
+ * and `root` forks the opening question itself — the one fork a parent id
+ * cannot express, because the root's parent is null.
  */
 export async function startExploreTurn(
   prisma: ExtendedPrismaClient,
@@ -271,7 +273,7 @@ export async function startExploreTurn(
     conversationId: string | null;
     userId: DiscordAccountId;
     question: string;
-    parentMessageId: string | null;
+    attach: ExploreAttachPoint;
   },
 ): Promise<{ conversationId: string; title: string; messageId: string }> {
   if (input.conversationId === null) {
@@ -299,13 +301,19 @@ export async function startExploreTurn(
     throw new ExploreNotFoundError("Conversation not found.");
   }
 
+  // `root` forks the opening question (a new root sibling needs no ownership
+  // check — there is no parent to own); `message` must name a row in this
+  // conversation; `leaf` resolves from the conversation's own pointer.
   const parentId =
-    input.parentMessageId ??
-    deepestLeafFrom(existing.messages, existing.currentLeafId);
-  const parentBelongs =
-    parentId === null ||
-    existing.messages.some((message) => message.id === parentId);
-  if (!parentBelongs) {
+    input.attach.kind === "leaf"
+      ? deepestLeafFrom(existing.messages, existing.currentLeafId)
+      : input.attach.kind === "root"
+        ? null
+        : input.attach.messageId;
+  if (
+    input.attach.kind === "message" &&
+    !existing.messages.some((message) => message.id === parentId)
+  ) {
     throw new ExploreNotFoundError("Message not found.");
   }
 

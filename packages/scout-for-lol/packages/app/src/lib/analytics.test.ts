@@ -175,6 +175,21 @@ describe("normalizePath", () => {
     expect(normalizePath("/login")).toBe("/login");
     expect(normalizePath("/something/private")).toBe("/not-found");
   });
+
+  test("templates explore conversation ids", () => {
+    expect(normalizePath("/explore")).toBe("/explore");
+    expect(normalizePath("/explore/1b4e28ba-2fa1-41d2-883f-0016d3cca427")).toBe(
+      "/explore/:conversationId",
+    );
+  });
+
+  test("never lets a share token reach PostHog", () => {
+    // The token is the share credential; only the template may leave the app.
+    expect(normalizePath("/explore/s/8fb2f83f6a4e4f0f9d9c1c2d3e4f5a6b")).toBe(
+      "/explore/s/:shareToken",
+    );
+    expect(normalizePath("/explore/s")).toBe("/not-found");
+  });
 });
 
 describe("privacy settings", () => {
