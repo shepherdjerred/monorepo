@@ -2804,11 +2804,22 @@ async function activeRootReleasePhase(
  * divergence. The closing root sync uses `terminateAfterApplied`, so it returns
  * as soon as the operation reports applied, while `/api/v1/applications` is
  * served from the controller's informer cache — a single read can legitimately
- * still show the pre-restore spec. Deliberately a small fixed count rather than
- * the release timeout: a genuine divergence has to surface in seconds, not
- * after burning the full timeout on a tree that is already broken.
+ * still show the pre-restore spec.
+ *
+ * Widening the window cannot hide a real freeze: the release has finished by
+ * this point, so nothing is left to re-enable auto-sync, and a genuine
+ * divergence stays put however long we look. It is also free when the tree is
+ * correct, because the loop returns on the first matching read. The extra
+ * attempts are spent only to avoid failing a production release over a cache
+ * that was a few seconds behind, at the price of reporting a genuine freeze
+ * slightly later — a freeze that went unreported for ~1.5h before this check
+ * existed.
+ *
+ * Still a small fixed count rather than the release timeout, so a broken tree
+ * surfaces in about a minute at the default 10s poll interval instead of
+ * burning the whole release budget on a tree already known to be broken.
  */
-const AUTO_SYNC_SETTLE_ATTEMPTS = 3;
+const AUTO_SYNC_SETTLE_ATTEMPTS = 7;
 
 /**
  * Refuse to finish a release that left an Application's auto-sync policy

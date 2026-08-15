@@ -216,6 +216,31 @@ test("verify-auto-sync tolerates a live list that has not caught up", async () =
   }
 });
 
+test("verify-auto-sync absorbs a list that lags for several reads", async () => {
+  const stale = [liveItem("worker", { enabled: false })];
+  const { server, listRequests } = serveAutoSyncVerification({
+    manifests: [application("worker", { enabled: true })],
+    // Four stale reads before the restore shows up — more lag than a three
+    // attempt window could absorb, and well short of giving up.
+    listResponses: [
+      stale,
+      stale,
+      stale,
+      stale,
+      [liveItem("worker", { enabled: true })],
+    ],
+  });
+  try {
+    const { exitCode, stderr } = await runVerifyAutoSync(server.url.origin);
+
+    expect(stderr).toBe("");
+    expect(exitCode).toBe(0);
+    expect(listRequests()).toBe(5);
+  } finally {
+    await server.stop(true);
+  }
+});
+
 test("verify-auto-sync gives up on a divergence that never settles", async () => {
   const { server, listRequests } = serveAutoSyncVerification({
     manifests: [application("worker", { enabled: true })],
@@ -229,7 +254,7 @@ test("verify-auto-sync gives up on a divergence that never settles", async () =>
       '- worker: live {"enabled":false} declared {"enabled":true}',
     );
     // Bounded: it must not poll for the whole release timeout.
-    expect(listRequests()).toBe(3);
+    expect(listRequests()).toBe(7);
   } finally {
     await server.stop(true);
   }
