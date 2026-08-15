@@ -308,6 +308,25 @@ export async function createPrometheusApp(chart: Chart) {
               matchers: ['alert_dashboard_fallback = "true"'],
             },
             {
+              // The Alerts webhook is the dashboard itself, so its own
+              // namespace must retain an independent notification path while
+              // that service is unavailable. This covers Kubernetes rollout
+              // alerts and blackbox probe failures in addition to the explicit
+              // AlertDashboard* rules above.
+              receiver: "postal-fallback",
+              matchers: ['namespace = "alert-dashboard"'],
+            },
+            {
+              // Notification-health alerts cannot be delivered through the
+              // integration they are diagnosing. Keep these on Postal so a
+              // dashboard outage cannot turn Alertmanager's own failure alert
+              // into another failed webhook attempt.
+              receiver: "postal-fallback",
+              matchers: [
+                'alertname =~ "Alertmanager.*|PrometheusErrorSendingAlertsTo.*|PrometheusNotConnectedToAlertmanagers"',
+              ],
+            },
+            {
               receiver: "null",
               matchers: ['alertname = "Watchdog"'],
             },

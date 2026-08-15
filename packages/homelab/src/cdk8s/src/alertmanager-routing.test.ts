@@ -225,6 +225,30 @@ describe("Alerts route selection", () => {
         alert_dashboard_fallback: "true",
       }),
     ).toBe("postal-fallback");
+    expect(
+      resolveReceiver(route, {
+        alertname: "ServiceProbeDown",
+        namespace: "alert-dashboard",
+        severity: "warning",
+      }),
+    ).toBe("postal-fallback");
+  });
+
+  it("routes notification delivery health alerts to Postal", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "AlertmanagerFailedToSendAlerts",
+        namespace: "prometheus",
+        severity: "warning",
+      }),
+    ).toBe("postal-fallback");
+    expect(
+      resolveReceiver(route, {
+        alertname: "PrometheusErrorSendingAlertsToSomeAlertmanagers",
+        namespace: "prometheus",
+        severity: "warning",
+      }),
+    ).toBe("postal-fallback");
   });
 
   it("keeps Watchdog and info alerts suppressed", () => {
