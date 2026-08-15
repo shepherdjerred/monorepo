@@ -381,27 +381,27 @@ describe("explore turn accounting", () => {
   });
 });
 
-describe("explore salvage", () => {
-  /** Seed a conversation with just its opening question, returning both ids. */
-  async function seedQuestion(): Promise<{
-    conversationId: string;
-    questionId: string;
-  }> {
-    const conversation = await trpc.prisma.exploreConversation.create({
-      data: {
-        userId: owner,
-        title: "Champion win rates",
-        messages: { create: { role: "user", content: "Which champion wins?" } },
-      },
-      include: { messages: true },
-    });
-    const question = conversation.messages[0];
-    if (question === undefined) {
-      throw new Error("expected the seeded question");
-    }
-    return { conversationId: conversation.id, questionId: question.id };
+/** Seed a conversation with just its opening question, returning both ids. */
+async function seedQuestion(): Promise<{
+  conversationId: string;
+  questionId: string;
+}> {
+  const conversation = await trpc.prisma.exploreConversation.create({
+    data: {
+      userId: owner,
+      title: "Champion win rates",
+      messages: { create: { role: "user", content: "Which champion wins?" } },
+    },
+    include: { messages: true },
+  });
+  const question = conversation.messages[0];
+  if (question === undefined) {
+    throw new Error("expected the seeded question");
   }
+  return { conversationId: conversation.id, questionId: question.id };
+}
 
+describe("explore salvage", () => {
   test("a stopped turn with text is saved with the stop caveat", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
