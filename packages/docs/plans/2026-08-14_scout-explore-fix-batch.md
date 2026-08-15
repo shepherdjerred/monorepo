@@ -292,3 +292,23 @@ src/router-analytics-identity.test.ts src/components/explore-transcript.test.tsx
   the pure `explore-turn-state.ts` layer.
 - react-router v8 optional-segment assumption pinned by router.test.ts with a
   named two-route fallback.
+
+## Remaining
+
+- [ ] Run the live `dev-web` end-to-end pass with `EXPLORE_GUILD_ALLOWLIST`
+      set (eyeball list in Verification above) from an environment with
+      1Password + Discord OAuth.
+- [ ] Capture and attach PR media: GIF of edit-root forking and
+      Stop-preserves-answer, screenshot of share/revoke header states
+      (`toolkit pr asset 2179 …`).
+- [ ] Promote [PR #2179](https://github.com/shepherdjerred/monorepo/pull/2179)
+      from draft once the two items above are done.
+- [ ] After merge: mark this plan `complete` and move it to
+      `packages/docs/archive/completed/`.
+
+## Comment Log
+
+- 2026-08-14: Implementation landed on `claude/lol-frontend-app-a6d9aa`
+  (contract + backend salvage, turn lifecycle, routing, sharing, a11y,
+  perf/reuse); draft PR #2179 opened. Local verification complete; live
+  checks and media pending an authenticated environment.
