@@ -7,7 +7,10 @@ import {
   cloneDiscordOpusPackets,
   evaluateDiscordOpusPackets,
 } from "@shepherdjerred/streambot/voice/corpus-evaluator.ts";
-import { initializeLocalVoiceModelsForRuntime } from "@shepherdjerred/streambot/voice/local-models.ts";
+import {
+  initializeLocalVoiceModelsForRuntime,
+  type LocalVoiceModels,
+} from "@shepherdjerred/streambot/voice/local-models.ts";
 
 const ClipSchema = z.strictObject({
   file: z.string().min(1),
@@ -97,20 +100,31 @@ for (const speaker of manifest.speakers) {
     );
   }
 }
-const [native, wasm] = await Promise.all([
-  initializeLocalVoiceModelsForRuntime(assetsDir, "native"),
-  initializeLocalVoiceModelsForRuntime(assetsDir, "wasm"),
-]);
 const reportPath = path.resolve(
   inputDir,
   "..",
   "streambot-human-holdout-result.json",
 );
-// Every exit from here on must still close both runtimes and delete the raw recordings: this
-// evaluator's privacy contract is that only the aggregate report outlives it, and a rejected
-// runtime or a failed validation must not leave private voice audio on disk.
+// Every exit from here on must still close whatever opened and delete the raw recordings: this
+// evaluator's privacy contract is that only the aggregate report outlives it, so a runtime that
+// fails to initialize, a rejected clip, and a failed validation all have to clean up. Runtimes
+// open one at a time and register as they do, so a second failed initialization cannot strand a
+// first that already succeeded.
 const report = await (async () => {
+  const opened: LocalVoiceModels[] = [];
+  const openRuntime = async (
+    runtime: "native" | "wasm",
+  ): Promise<LocalVoiceModels> => {
+    const models = await initializeLocalVoiceModelsForRuntime(
+      assetsDir,
+      runtime,
+    );
+    opened.push(models);
+    return models;
+  };
   try {
+    const native = await openRuntime("native");
+    const wasm = await openRuntime("wasm");
     let positivePasses = 0;
     let negativePasses = 0;
     let identical = true;
@@ -159,7 +173,7 @@ const report = await (async () => {
     await atomicWrite(reportPath, `${JSON.stringify(aggregate, null, 2)}\n`);
     return aggregate;
   } finally {
-    await Promise.all([native.close(), wasm.close()]);
+    await Promise.all(opened.map((models) => models.close()));
     await rm(inputDir, { recursive: true });
   }
 })();
