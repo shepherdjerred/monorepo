@@ -330,7 +330,8 @@ OpenTofu/Terraform state for the `src/tofu/*` stacks is stored in **SeaweedFS** 
 
 `bun run r2:orphans` (in `src/cdk8s`) permanently deletes ZFS backup data from
 R2. It is a two-command, operator-driven flow — never wire it into automation.
-The commands and safety checks below are the canonical operator procedure.
+The canonical runbook is
+`packages/temporal/runbooks/velero-orphan-snapshot-remediation.md`.
 
 ```bash
 cd src/cdk8s
