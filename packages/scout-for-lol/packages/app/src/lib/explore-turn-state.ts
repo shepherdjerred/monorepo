@@ -111,6 +111,28 @@ export function markStopping(turn: ExplorePendingTurn): ExplorePendingTurn {
  * answer under it is deliberately not enough.
  */
 /**
+ * Whether the conversation a pending turn belongs to has left the screen.
+ *
+ * The two explicit callbacks that abandon a turn — picking another conversation
+ * and deleting this one — cannot see every way the route changes. Browser Back
+ * and Forward move it directly, and a run left going keeps holding the one
+ * active run the backend allows per user, blocking the next question.
+ *
+ * A turn whose conversation id is still null is never abandoned here: that is a
+ * brand-new conversation waiting for `started`, and the navigation that assigns
+ * its id would otherwise read as having navigated away from itself.
+ */
+export function pendingTurnLeftTheScreen(input: {
+  pendingConversationId: string | null;
+  routeConversationId: string | null;
+}): boolean {
+  return (
+    input.pendingConversationId !== null &&
+    input.pendingConversationId !== input.routeConversationId
+  );
+}
+
+/**
  * When to re-read the transcript after a stop, or null when there is nothing
  * to read: the conversation was never created, so no row exists to fetch.
  *

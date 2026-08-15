@@ -4,6 +4,7 @@ import {
   applyStreamEvent,
   createPendingTurn,
   markStopping,
+  pendingTurnLeftTheScreen,
   salvageRefreshDelays,
   turnHasLanded,
   visiblePending,
@@ -238,5 +239,54 @@ describe("salvageRefreshDelays", () => {
     });
 
     expect(salvageRefreshDelays(turn)).toBeNull();
+  });
+});
+
+describe("pendingTurnLeftTheScreen", () => {
+  test("abandons a turn whose conversation is no longer routed to", () => {
+    // The regression: only two callbacks abandon a turn, and Back/Forward goes
+    // through neither — leaving a run holding the one active run per user.
+    expect(
+      pendingTurnLeftTheScreen({
+        pendingConversationId: CONVERSATION,
+        routeConversationId: OTHER_CONVERSATION,
+      }),
+    ).toBe(true);
+  });
+
+  test("abandons a turn when the route goes back to the list", () => {
+    expect(
+      pendingTurnLeftTheScreen({
+        pendingConversationId: CONVERSATION,
+        routeConversationId: null,
+      }),
+    ).toBe(true);
+  });
+
+  test("keeps a turn on the conversation still on screen", () => {
+    expect(
+      pendingTurnLeftTheScreen({
+        pendingConversationId: CONVERSATION,
+        routeConversationId: CONVERSATION,
+      }),
+    ).toBe(false);
+  });
+
+  // The case that makes this a comparison rather than a plain inequality: a new
+  // conversation has no id until `started`, and the navigation that assigns one
+  // would otherwise look like navigating away from the turn itself.
+  test("never abandons a turn that has not been placed yet", () => {
+    expect(
+      pendingTurnLeftTheScreen({
+        pendingConversationId: null,
+        routeConversationId: CONVERSATION,
+      }),
+    ).toBe(false);
+    expect(
+      pendingTurnLeftTheScreen({
+        pendingConversationId: null,
+        routeConversationId: null,
+      }),
+    ).toBe(false);
   });
 });

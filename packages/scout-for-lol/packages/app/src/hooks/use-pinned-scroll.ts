@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, type RefObject } from "react";
+import { isScrolledToBottom } from "#src/lib/pinned-scroll.ts";
 
 /**
  * Follow the bottom of the page only while the reader is already there.
@@ -13,17 +14,25 @@ export function usePinnedScroll(): {
   scrollIfPinned: () => void;
 } {
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  // Optimistic only until the effect below measures; a reader who mounted
+  // part-way up is un-pinned before anything can scroll them.
   const pinnedRef = useRef(true);
 
   useEffect(() => {
-    const onScroll = (): void => {
-      pinnedRef.current =
-        window.innerHeight + window.scrollY >=
-        document.documentElement.scrollHeight - 120;
+    const measure = (): void => {
+      pinnedRef.current = isScrolledToBottom({
+        innerHeight: window.innerHeight,
+        scrollY: window.scrollY,
+        scrollHeight: document.documentElement.scrollHeight,
+      });
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    // Measure once on mount: the ref's initial value is a guess, and a scroll
+    // event may never come. Browser scroll restoration and links into the
+    // middle of a conversation both land here already scrolled away.
+    measure();
+    window.addEventListener("scroll", measure, { passive: true });
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", measure);
     };
   }, []);
 

@@ -20,7 +20,10 @@ import {
   downloadMarkdown,
   exportFilename,
 } from "#src/lib/explore-export.ts";
-import { visiblePending } from "#src/lib/explore-turn-state.ts";
+import {
+  pendingTurnLeftTheScreen,
+  visiblePending,
+} from "#src/lib/explore-turn-state.ts";
 import { useExploreParams } from "#src/lib/route-params.ts";
 import { useExploreShare } from "#src/hooks/use-explore-share.ts";
 import { useExploreTurn } from "#src/hooks/use-explore-turn.ts";
@@ -234,6 +237,22 @@ export function Explore() {
     conversationId,
     messages,
   );
+
+  // The backstop for every route change the explicit callbacks cannot see —
+  // Back and Forward above all, which move the param without passing through
+  // `openConversation` or `handleDelete`. Those callbacks stay: they abandon
+  // the turn synchronously before navigating, which is a frame earlier than a
+  // re-render can, and deleting a conversation must abort before the delete.
+  useEffect(() => {
+    if (
+      pendingTurnLeftTheScreen({
+        pendingConversationId: turn.pendingTurn?.conversationId ?? null,
+        routeConversationId: conversationId,
+      })
+    ) {
+      turn.abortForNavigation();
+    }
+  }, [conversationId, turn]);
 
   const { bottomRef, scrollIfPinned } = usePinnedScroll();
   useEffect(() => {
