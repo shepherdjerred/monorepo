@@ -368,13 +368,33 @@ function assertSectionsAreModelled(reviewBody: string): void {
   }
 }
 
+/**
+ * The review Qodo rendered, from its first divider on and without the daily tip.
+ *
+ * Qodo closes every review with a "Tip of the day" block fenced by its own HTML
+ * comments. That block is product chrome rather than review content, and it is
+ * wrapped in `<details>` — which the clean-review check reads as proof the
+ * comment renders findings. Left in, a review that genuinely found nothing looks
+ * like one whose findings failed to parse, and the gate rejects the comment
+ * instead of passing the PR. Removed before every layout check so the checks see
+ * only what Qodo reviewed.
+ */
+const QODO_DAILY_TIP =
+  /<!-- qodo-daily-tip:start -->[\s\S]*?<!-- qodo-daily-tip:end -->/giu;
+
+function reviewBodyOf(body: string): string {
+  return body
+    .slice(body.indexOf(QODO_DIVIDER_ALT))
+    .replaceAll(QODO_DAILY_TIP, "");
+}
+
 function assertParsedLayout(input: {
   body: string;
   expectedFindings: number;
   findings: readonly ReviewThread[];
   severitySections: number;
 }): void {
-  const reviewBody = input.body.slice(input.body.indexOf(QODO_DIVIDER_ALT));
+  const reviewBody = reviewBodyOf(input.body);
   assertSectionsAreModelled(reviewBody);
   if (
     input.findings.length === 0 &&
@@ -420,10 +440,7 @@ export function parseQodoIssueComment(
     severitySections,
   });
   assertContiguousNumbering(rendered);
-  assertNoFindingBeyondParsed(
-    comment.body.slice(comment.body.indexOf(QODO_DIVIDER_ALT)),
-    rendered,
-  );
+  assertNoFindingBeyondParsed(reviewBodyOf(comment.body), rendered);
 
   return dedupeRenderedFindings(rendered);
 }

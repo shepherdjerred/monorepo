@@ -113,6 +113,58 @@ describe("qodoProvider", () => {
     ).toEqual([]);
   });
 
+  // Qodo closes EVERY review with this block, so a fixture without it does not
+  // model a real comment. Observed on PR #2177, the first genuinely clean review
+  // this repository saw: the tip's `<details>` made the clean-review check
+  // conclude the comment must be rendering findings, and the gate rejected a PR
+  // Qodo had passed.
+  const DAILY_TIP = `<!-- qodo-daily-tip:start -->
+
+<details>
+<summary> Tip of the day</summary>
+
+<br/>
+
+<pre>💡 Did you know, you can turn on the rule miner</pre>
+
+<a href="https://docs.qodo.ai/tips-and-tricks">More tips ↗</a>
+
+</details>
+
+<img src="https://example/divider.svg" alt="Grey Divider">
+<!-- qodo-daily-tip:end -->`;
+
+  test("accepts a clean review carrying Qodo's daily-tip footer", () => {
+    expect(
+      parseQodoIssueComment({
+        ...comment,
+        body: `
+<h3>Code Review by Qodo</h3>
+<code>🐞 Bugs (0)</code> <code>📘 Rule violations (0)</code> <code>📎 Requirement gaps (0)</code>
+<img src="https://example/divider.svg" alt="Grey Divider">
+<img src="https://example/anteater.svg" width="20%">
+<h3>Great, no issues found!</h3>
+Qodo reviewed your code and found no material issues that require review
+<img src="https://example/divider.svg" alt="Grey Divider">
+${DAILY_TIP}
+`,
+      }),
+    ).toEqual([]);
+  });
+
+  test("still parses findings when the daily-tip footer follows them", () => {
+    // The tip rides along on finding-bearing reviews too, so stripping it must
+    // not disturb the findings rendered above it.
+    expect(
+      parseQodoIssueComment({
+        ...comment,
+        body: `${comment.body}
+${DAILY_TIP}
+`,
+      }),
+    ).toHaveLength(3);
+  });
+
   test("treats categories Qodo omits from the header as zero", () => {
     expect(
       parseQodoIssueComment({
