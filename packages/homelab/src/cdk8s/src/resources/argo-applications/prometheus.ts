@@ -312,18 +312,40 @@ export async function createPrometheusApp(chart: Chart) {
               // namespace must retain an independent notification path while
               // that service is unavailable. This covers Kubernetes rollout
               // alerts and blackbox probe failures in addition to the explicit
-              // AlertDashboard* rules above.
-              receiver: "postal-fallback",
-              matchers: ['namespace = "alert-dashboard"'],
-            },
-            {
-              // Notification-health alerts cannot be delivered through the
-              // integration they are diagnosing. Keep these on Postal so a
-              // dashboard outage cannot turn Alertmanager's own failure alert
-              // into another failed webhook attempt.
+              // AlertDashboard* rules above. Constrained to warning/critical so
+              // it cannot outrun the info/Watchdog suppression routes below by
+              // matching first — an info-level alert in this namespace must
+              // still land on the null receiver.
               receiver: "postal-fallback",
               matchers: [
-                'alertname =~ "Alertmanager.*|PrometheusErrorSendingAlertsTo.*|PrometheusNotConnectedToAlertmanagers"',
+                'namespace = "alert-dashboard"',
+                'severity =~ "critical|warning"',
+              ],
+            },
+            {
+              // AlertmanagerFailedToSendAlerts fires once per failed
+              // notification integration. Only route the webhook integration's
+              // failures here — that's the one this fallback exists to
+              // diagnose. Email-integration failures must stay on the normal
+              // Alerts receiver: routing a "Postal is broken" diagnostic
+              // through Postal itself would mean it never arrives.
+              receiver: "postal-fallback",
+              matchers: [
+                'alertname = "AlertmanagerFailedToSendAlerts"',
+                'integration = "webhook"',
+              ],
+            },
+            {
+              // Prometheus-to-Alertmanager connectivity alerts diagnose the
+              // webhook delivery path itself and cannot be delivered through
+              // it. Deliberately an explicit alertname list, not `Alertmanager.*`
+              // — that wildcard would also capture unrelated cluster/config
+              // health alerts (e.g. AlertmanagerConfigInconsistent) that have
+              // nothing to do with notification delivery and should notify
+              // through the normal Alerts receiver like any other alert.
+              receiver: "postal-fallback",
+              matchers: [
+                'alertname =~ "PrometheusErrorSendingAlertsTo.*|PrometheusNotConnectedToAlertmanagers"',
               ],
             },
             {

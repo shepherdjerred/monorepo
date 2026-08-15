@@ -234,12 +234,23 @@ describe("Alerts route selection", () => {
     ).toBe("postal-fallback");
   });
 
-  it("routes notification delivery health alerts to Postal", () => {
+  it("keeps info-level dashboard-namespace alerts suppressed instead of paging Postal", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "SomethingInfo",
+        namespace: "alert-dashboard",
+        severity: "info",
+      }),
+    ).toBe("null");
+  });
+
+  it("routes only webhook-integration delivery failures to Postal", () => {
     expect(
       resolveReceiver(route, {
         alertname: "AlertmanagerFailedToSendAlerts",
         namespace: "prometheus",
         severity: "warning",
+        integration: "webhook",
       }),
     ).toBe("postal-fallback");
     expect(
@@ -249,6 +260,27 @@ describe("Alerts route selection", () => {
         severity: "warning",
       }),
     ).toBe("postal-fallback");
+  });
+
+  it("keeps email-integration delivery failures off the broken Postal path", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "AlertmanagerFailedToSendAlerts",
+        namespace: "monitoring",
+        severity: "warning",
+        integration: "email",
+      }),
+    ).toBe("alerts");
+  });
+
+  it("does not blanket-route unrelated Alertmanager health alerts to Postal", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "AlertmanagerConfigInconsistent",
+        namespace: "monitoring",
+        severity: "critical",
+      }),
+    ).toBe("alerts");
   });
 
   it("keeps Watchdog and info alerts suppressed", () => {
