@@ -12,12 +12,17 @@
  *  1. scout    — the root workspace installs, the llm-models producer builds
  *                and resolves from scout's data package, and a plain
  *                `bun test` on the report package passes.
- *  2. snapshot — `update-data-dragon.ts --snapshots-only`, the exact
- *                install-refresh (second root `bun install --force`) + snapshot-
- *                test step that failed in scout-data-dragon-weekly-refresh
- *                even after the (1) fix, because that second install wasn't
- *                isolated from the pod's shared, persistent Bun cache. See
- *                packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md.
+ *  2. snapshot — `update-data-dragon.ts --snapshots-only`, the snapshot-test
+ *                step that failed in scout-data-dragon-weekly-refresh even
+ *                after the (1) fix. It historically also covered a second root
+ *                `bun install --force` that wasn't isolated from the pod's
+ *                shared Bun cache (see
+ *                packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md);
+ *                that install has since been removed — workspace packages are
+ *                symlinked, so nothing needed reinstalling, and `--force`
+ *                re-resolved the registry and dirtied bun.lock. The leg now
+ *                asserts the snapshot tests still pass with NO install between
+ *                the asset download and the tests reading them.
  *  3. hooks    — the hook-free root install leaves no git hooks, a simulated
  *                agentic plain `bun install` arms none either (the root
  *                `prepare` script that armed lefthook in the 2026-07-12
@@ -246,7 +251,7 @@ async function rehearseGlitterContextRefresh(repoDir: string): Promise<void> {
 
 async function rehearseSnapshotRefresh(repoDir: string): Promise<void> {
   console.error(
-    "[rehearsal] snapshot: update-data-dragon --snapshots-only (second install + snapshot test)",
+    "[rehearsal] snapshot: update-data-dragon --snapshots-only (no install refresh + snapshot test)",
   );
   await runCommand(["bun", "run", "update-data-dragon", "--snapshots-only"], {
     cwd: `${repoDir}/${DATA_PACKAGE}`,
@@ -255,7 +260,7 @@ async function rehearseSnapshotRefresh(repoDir: string): Promise<void> {
       BUN_INSTALL_CACHE_DIR: botCloneCacheDir(repoDir),
     },
   });
-  console.error("[rehearsal] snapshot: install-refresh + snapshot test OK");
+  console.error("[rehearsal] snapshot: snapshot test OK (no install refresh)");
 }
 
 async function armedHookNames(repoDir: string): Promise<string[]> {

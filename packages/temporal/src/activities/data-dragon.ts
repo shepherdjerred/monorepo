@@ -13,6 +13,7 @@ import {
 import {
   LanePriorUpdateConfigSchema,
   lanePriorPrBodyLines,
+  revertGeneratedAtOnlyLanePriorChanges,
   updateLanePriors,
   type LanePriorUpdateConfig,
 } from "./data-dragon-lane-priors.ts";
@@ -362,12 +363,11 @@ export const dataDragonActivities = {
           // failing validation. Clear it at the subprocess boundary so Scout
           // falls back to its own default instead of inheriting pod config.
           //
-          // BUN_INSTALL_CACHE_DIR is set here (not just by
-          // installScoutWorkspace above) because update-data-dragon.ts's own
-          // snapshot-refresh step shells out to a SECOND root `bun install
-          // --force` internally via Bun's `$` — which inherits this
-          // process's env — so this one override reaches that nested call
-          // too, keeping it isolated from the pod-wide shared cache.
+          // BUN_INSTALL_CACHE_DIR pins ANY bun subprocess this updater spawns
+          // to the per-clone cache rather than the pod-wide shared one. Its
+          // original target (a second root `bun install --force` inside
+          // update-data-dragon.ts) is gone, but the isolation should not depend
+          // on the updater never installing again.
           env: {
             ENVIRONMENT: undefined,
             BUN_INSTALL_CACHE_DIR: botCloneCacheDir(repoDir),
@@ -379,6 +379,10 @@ export const dataDragonActivities = {
         rawConfig: input.lanePriors,
         runCommand,
       });
+      const reverted = await revertGeneratedAtOnlyLanePriorChanges(repoDir);
+      if (reverted.length > 0) {
+        jsonLog("info", "Reverted lane-prior timestamp churn", { reverted });
+      }
 
       const changes = await changedFiles(repoDir);
       const files = changes.map((change) => change.path);

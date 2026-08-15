@@ -107,6 +107,54 @@ export async function getUnifiedDiff(
   );
 }
 
+/**
+ * True when a unified diff's only content changes are a generator's
+ * `generatedAt` timestamp line. Several committed artifacts in this repo are
+ * deterministic apart from that stamp, so a run against unchanged sources
+ * dirties exactly that line — treat it as no drift rather than opening a churn
+ * PR every week. Shared by the marketing-showcase refresh and the Data Dragon
+ * lane-prior artifacts. Precedent: shouldCreateDataDragonPr's image-only
+ * suppression.
+ *
+ * An empty diff returns false: "nothing changed" is not a timestamp-only
+ * change, and callers distinguish the two.
+ */
+export function isGeneratedAtOnlyDiff(diff: string): boolean {
+  const changedLines = diff
+    .split("\n")
+    .filter(
+      (line) =>
+        (line.startsWith("+") || line.startsWith("-")) &&
+        !line.startsWith("+++") &&
+        !line.startsWith("---"),
+    );
+  if (changedLines.length === 0) {
+    return false;
+  }
+  return changedLines.every((line) => line.includes('"generatedAt":'));
+}
+
+/**
+ * Restore any of `paths` whose working-tree diff is nothing but a `generatedAt`
+ * stamp, leaving genuinely-changed files alone. Each path is diffed on its own:
+ * a combined diff would let one file's real change mask another's pure churn.
+ */
+export async function revertGeneratedAtOnlyChanges(
+  repoDir: string,
+  paths: readonly string[],
+): Promise<string[]> {
+  const reverted: string[] = [];
+  for (const path of paths) {
+    const diff = await getUnifiedDiff(repoDir, [path]);
+    if (!isGeneratedAtOnlyDiff(diff)) {
+      continue;
+    }
+    await runCommand(["git", "checkout", "--", path], { cwd: repoDir });
+    reverted.push(path);
+  }
+  return reverted;
+}
+
 export type OpenPrInput = {
   repoDir: string;
   tempDir: string;
