@@ -2,6 +2,8 @@ import { stepCountIs, ToolLoopAgent } from "ai";
 import {
   generateValidatedObject,
   openRouterWebSearchTool,
+  StructuredOutputExhaustionError,
+  type GenerateValidatedObjectResult,
 } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 import type { MonarchCategory } from "../monarch/types.ts";
@@ -180,18 +182,55 @@ async function runToolLoop(
       finishReason: step.finishReason,
     })),
   ).slice(-60_000);
-  const finalized = await generateValidatedObject(openRouter, {
-    model: modelId,
-    schema: Tier3ResultSchema,
-    schemaName: "monarch_tier3_classification",
-    system:
-      "Classify the transaction using only the recorded tool evidence. Return the exact requested structured result.",
-    prompt: `${prompt}\n\nRecorded tool evidence:\n${evidence}`,
-    workload: "monarch.tier3.finalize",
-    maxOutputTokens: 4096,
+  const finalized = await finalizeTier3({
+    runtime: openRouter,
+    modelId,
+    tracker,
+    prompt,
+    evidence,
   });
-  tracker?.record(finalized.usage.tokens.input, finalized.usage.tokens.output);
   return finalized.object;
+}
+
+/**
+ * Runs the structured finalizer and records its usage on both outcomes. Every
+ * semantic attempt is billable, and `classifySingleTier3` swallows the
+ * exhaustion error to keep processing the run, so charging only the success
+ * path would leave the end-of-run usage and estimated-cost summary silently
+ * missing every attempt spent on transactions that failed to classify.
+ */
+export async function finalizeTier3(input: {
+  runtime: ReturnType<typeof getRuntime>;
+  modelId: string;
+  tracker: ReturnType<typeof getTracker>;
+  prompt: string;
+  evidence: string;
+}): Promise<GenerateValidatedObjectResult<typeof Tier3ResultSchema>> {
+  try {
+    const finalized = await generateValidatedObject(input.runtime, {
+      model: input.modelId,
+      schema: Tier3ResultSchema,
+      schemaName: "monarch_tier3_classification",
+      system:
+        "Classify the transaction using only the recorded tool evidence. Return the exact requested structured result.",
+      prompt: `${input.prompt}\n\nRecorded tool evidence:\n${input.evidence}`,
+      workload: "monarch.tier3.finalize",
+      maxOutputTokens: 4096,
+    });
+    input.tracker?.record(
+      finalized.usage.tokens.input,
+      finalized.usage.tokens.output,
+    );
+    return finalized;
+  } catch (error: unknown) {
+    if (error instanceof StructuredOutputExhaustionError) {
+      input.tracker?.record(
+        error.usage.tokens.input,
+        error.usage.tokens.output,
+      );
+    }
+    throw error;
+  }
 }
 
 async function classifySingleTier3(

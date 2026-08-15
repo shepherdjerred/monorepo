@@ -200,6 +200,15 @@ export async function spawnGoalCodex(
           throw new Error(event.message);
         }
       }
+      // A stream that ends without an agent_message produced no report. Exit
+      // code 0 would make GoalManager mark the goal `completed` and announce
+      // it in Discord while readFinalReport says Codex wrote nothing, so treat
+      // the missing final message as a provider failure instead.
+      if (finalResponse.trim() === "") {
+        throw new Error(
+          "Codex SDK stream completed without a final agent message",
+        );
+      }
       await Bun.write(outputPath, finalResponse, { createPath: true });
       return 0;
     } catch (error: unknown) {

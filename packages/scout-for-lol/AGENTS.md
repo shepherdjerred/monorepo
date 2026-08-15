@@ -176,7 +176,7 @@ The full operator workflow (flags and examples in `packages/evals/README.md`):
 Run the deterministic browser suite with
 `bunx turbo run test:e2e --filter=@scout-for-lol/evals`. It uses a test-only
 in-memory store and the production-built Hono/tRPC/React path; it never reads the
-operator's eval database or calls Beta, S3, or OpenAI. Keep the suite
+operator's eval database or calls Beta, S3, or OpenRouter. Keep the suite
 single-worker unless each mutating scenario is moved to an isolated store.
 
 ### Desktop Package
