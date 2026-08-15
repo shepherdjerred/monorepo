@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Download, Menu, Share2 } from "lucide-react";
+import { Download, Link2Off, Menu, Share2 } from "lucide-react";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   Sheet,
@@ -21,8 +21,10 @@ export function ExploreHeader(props: {
   actions?: {
     shared: boolean;
     sharing: boolean;
+    revoking: boolean;
     onExport: () => void;
     onShare: () => void;
+    onRevoke: () => void;
   };
 }) {
   return (
@@ -71,6 +73,19 @@ export function ExploreHeader(props: {
             <Share2 className="size-4" />
             {props.actions.shared ? "Copy link" : "Share"}
           </Button>
+          {props.actions.shared && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="size-8 p-0"
+              aria-label="Stop sharing"
+              title="Stop sharing"
+              disabled={props.actions.revoking}
+              onClick={props.actions.onRevoke}
+            >
+              <Link2Off className="size-4" />
+            </Button>
+          )}
         </div>
       )}
     </div>

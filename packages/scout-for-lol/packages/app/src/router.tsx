@@ -31,6 +31,7 @@ import {
   auditLoader,
   competitionDetailLoader,
   competitionsLoader,
+  exploreLoader,
   guildLoader,
   playerDetailLoader,
   playersLoader,
@@ -167,7 +168,15 @@ export const routes: RouteObject[] = [
         errorElement: <RouteErrorPanel />,
         children: [
           { index: true, element: <GuildPicker /> },
-          { path: "explore", element: <Explore /> },
+          // One route with an optional segment, not two siblings: navigating
+          // `/explore` → `/explore/:id` when the stream's `started` event
+          // mints a conversation must not remount Explore mid-turn.
+          {
+            path: "explore/:conversationId?",
+            element: <Explore />,
+            loader: exploreLoader,
+            errorElement: <RouteErrorPanel />,
+          },
           { path: "welcome", element: <OnboardingWizard /> },
           { path: "installed", element: <InstallLanding /> },
           {

@@ -1,7 +1,9 @@
 import * as Sentry from "@sentry/bun";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
+  EXPLORE_INTERRUPTED_CAVEAT,
   EXPLORE_REQUEST_MAX_BYTES,
+  EXPLORE_STOPPED_CAVEAT,
   EXPLORE_TIMEOUT_MS,
   ExploreHttpErrorSchema,
   ExploreShareTokenSchema,
@@ -14,7 +16,7 @@ import {
   type ExploreTraceEntry,
   type ExploreTurnRequest,
 } from "@scout-for-lol/data";
-import { prisma } from "#src/database/index.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import {
   getExploreQuotaStatus,
@@ -229,6 +231,7 @@ function runExploreTurnStream(input: {
     type: "started",
     runId: ticket.runId,
     conversationId: started.conversationId,
+    questionMessageId: started.messageId,
   });
 
   // Accumulated as the run goes so a stopped turn can still be saved, and
@@ -278,10 +281,20 @@ function runExploreTurnStream(input: {
       });
     } catch (error) {
       runStatus = abortController.signal.aborted ? "cancelled" : "error";
-      // A stopped turn keeps whatever it had already said. Discarding it
-      // would leave a question with no answer under it, which reads as a
-      // bug rather than as a deliberate stop.
+      // An interrupted turn keeps whatever it had already said — a deliberate
+      // stop and a mid-stream failure alike. Discarding the prose would leave
+      // a question with no answer under it, which reads as a bug rather than
+      // as an interruption.
       //
+      // A non-abort failure is a real error the client will only see as a
+      // caveat (salvage emits `final`, not `error`), so the detail goes to
+      // logs and Sentry here rather than vanishing entirely.
+      if (!abortController.signal.aborted) {
+        logger.error("Explore turn failed mid-stream", errorMessage(error));
+        Sentry.captureException(error, {
+          tags: { source: "explore-turn-run" },
+        });
+      }
       // Guarded on its own because this is a real database write inside a
       // catch block: a throw here would escape the catch, skip both terminal
       // events, and surface as an unhandled rejection from the voided async
@@ -290,7 +303,7 @@ function runExploreTurnStream(input: {
       // about what happened.
       let salvaged: ExploreMessage | null = null;
       try {
-        salvaged = await persistPartialAnswer({
+        salvaged = await persistPartialAnswer(prisma, {
           aborted: abortController.signal.aborted,
           conversationId: started.conversationId,
           parentMessageId: started.messageId,
@@ -381,9 +394,10 @@ async function handleSharedTranscript(
  * Work out which question this turn answers, creating it when the request
  * carries new text.
  *
- * `parentMessageId` is the attach point: null continues the branch on screen,
- * an existing question's parent forks a sibling (an edit), and the question
- * itself with no new text means answer it again (a regenerate).
+ * `attach` is the attach point: `leaf` continues the branch on screen,
+ * `message` forks a sibling under a named parent (an edit), `root` forks the
+ * opening question, and a named message with no new text means answer it
+ * again (a regenerate).
  */
 async function resolveTurnTarget(
   input: ExploreTurnRequest,
@@ -395,7 +409,7 @@ async function resolveTurnTarget(
   question: string;
 }> {
   if (input.question === null) {
-    if (input.conversationId === null || input.parentMessageId === null) {
+    if (input.conversationId === null || input.attach.kind !== "message") {
       throw new ExploreInvalidTurnError(
         "Answering again needs an existing question.",
       );
@@ -403,7 +417,7 @@ async function resolveTurnTarget(
     return await resolveRegenerateTarget(prisma, {
       conversationId: input.conversationId,
       userId: identity.userId,
-      parentMessageId: input.parentMessageId,
+      parentMessageId: input.attach.messageId,
     });
   }
 
@@ -411,35 +425,41 @@ async function resolveTurnTarget(
     conversationId: input.conversationId,
     userId: identity.userId,
     question: input.question,
-    parentMessageId: input.parentMessageId,
+    attach: input.attach,
   });
   return { ...started, question: input.question };
 }
 
 /**
- * Save what a stopped turn had already produced.
+ * Save what an interrupted turn had already produced — a deliberate stop or a
+ * mid-stream failure, distinguished only by the caveat.
  *
- * Only for a deliberate stop with text in hand: a turn that failed outright
- * has nothing worth keeping, and persisting an empty answer would just put a
- * blank bubble under the question.
+ * Only refuses when there is no text: persisting an empty answer would just
+ * put a blank bubble under the question. Exported with an explicit client so
+ * tests can drive the salvage semantics without streaming a turn.
  */
-async function persistPartialAnswer(input: {
-  aborted: boolean;
-  conversationId: string;
-  parentMessageId: string;
-  text: string;
-  trace: ExploreTraceEntry[];
-}): Promise<ExploreMessage | null> {
-  if (!input.aborted || input.text.trim().length === 0) {
+export async function persistPartialAnswer(
+  client: ExtendedPrismaClient,
+  input: {
+    aborted: boolean;
+    conversationId: string;
+    parentMessageId: string;
+    text: string;
+    trace: ExploreTraceEntry[];
+  },
+): Promise<ExploreMessage | null> {
+  if (input.text.trim().length === 0) {
     return null;
   }
-  return await appendExploreAnswer(prisma, {
+  return await appendExploreAnswer(client, {
     conversationId: input.conversationId,
     parentMessageId: input.parentMessageId,
     answer: {
       answer: clampAnswer(input.text),
       queryText: null,
-      caveats: ["This answer was stopped before it finished."],
+      caveats: [
+        input.aborted ? EXPLORE_STOPPED_CAVEAT : EXPLORE_INTERRUPTED_CAVEAT,
+      ],
       followUps: [],
     },
     preview: null,

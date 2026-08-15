@@ -1,5 +1,9 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { CompetitionIdSchema, ReportIdSchema } from "@scout-for-lol/data";
+import {
+  CompetitionIdSchema,
+  ExploreConversationIdSchema,
+  ReportIdSchema,
+} from "@scout-for-lol/data";
 import { queryClient } from "#src/lib/query-client.ts";
 import { trpcOptions } from "#src/lib/trpc-options.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
@@ -125,6 +129,19 @@ export function reportDetailLoader({ params }: LoaderFunctionArgs): null {
   if (!parsed.success) return null;
   void queryClient.prefetchQuery(
     trpcOptions.report.get.queryOptions({ guildId, reportId: parsed.data }),
+  );
+  return null;
+}
+
+export function exploreLoader({ params }: LoaderFunctionArgs): null {
+  void queryClient.prefetchQuery(trpcOptions.explore.status.queryOptions());
+  void queryClient.prefetchQuery(trpcOptions.explore.list.queryOptions());
+  const { conversationId } = params;
+  if (conversationId === undefined) return null;
+  const parsed = ExploreConversationIdSchema.safeParse(conversationId);
+  if (!parsed.success) return null;
+  void queryClient.prefetchQuery(
+    trpcOptions.explore.get.queryOptions({ conversationId: parsed.data }),
   );
   return null;
 }

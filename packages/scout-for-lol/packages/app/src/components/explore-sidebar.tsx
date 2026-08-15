@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { MoreHorizontal, Plus, Search } from "lucide-react";
 import type { ExploreConversation } from "@scout-for-lol/data";
 import { Button } from "#src/components/ui/button.tsx";
@@ -14,9 +14,11 @@ import {
  * The conversation list.
  *
  * Rendered twice — as a fixed column on desktop and inside a drawer on mobile
- * — so it takes its state from the page rather than owning any.
+ * — so it takes its state from the page rather than owning any. Memoized so
+ * composer keystrokes and streamed tokens don't re-render every row's
+ * dropdown; the page passes stable callbacks to keep that effective.
  */
-export function ExploreSidebar(props: {
+export const ExploreSidebar = memo(function ExploreSidebarView(props: {
   conversations: ExploreConversation[];
   activeId: string | null;
   onSelect: (conversationId: string) => void;
@@ -121,7 +123,7 @@ export function ExploreSidebar(props: {
       </div>
     </div>
   );
-}
+});
 
 function filterByTitle(
   conversations: ExploreConversation[],

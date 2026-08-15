@@ -13,6 +13,11 @@ const KNOWN_URLS = [
   "/",
   "/welcome",
   "/installed",
+  // The pair pins react-router's optional-segment support (`:conversationId?`)
+  // — if an upgrade drops it, these fail before any user hits a blank page.
+  "/explore",
+  "/explore/1b4e28ba-2fa1-41d2-883f-0016d3cca427",
+  "/explore/s/some-share-token",
   "/g/1/subscriptions",
   "/g/1/players",
   "/g/1/players/Alias",

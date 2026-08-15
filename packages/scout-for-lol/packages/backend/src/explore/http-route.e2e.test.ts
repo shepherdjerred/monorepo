@@ -13,12 +13,15 @@ import { z } from "zod";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  EXPLORE_INTERRUPTED_CAVEAT,
+  EXPLORE_STOPPED_CAVEAT,
 } from "@scout-for-lol/data";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 
 const trpc = await createOfflineTrpcHarness("explore-http-e2e");
-const { handleExploreRoute } = await import("#src/explore/http-route.ts");
+const { handleExploreRoute, persistPartialAnswer } =
+  await import("#src/explore/http-route.ts");
 
 const allowedGuild = DiscordGuildIdSchema.parse("100000000000009401");
 const otherGuild = DiscordGuildIdSchema.parse("100000000000009402");
@@ -282,7 +285,6 @@ describe("explore turn accounting", () => {
         headers: await authedHeaders(),
         body: JSON.stringify({
           conversationId: conversation.id,
-          parentMessageId: null,
           question: "And by patch?",
         }),
       }),
@@ -319,7 +321,6 @@ describe("explore turn accounting", () => {
           // be a 400 at schema-parse time, before the ticket exists — a
           // different path that never risked the quota.
           conversationId: "00000000-0000-4000-8000-000000000000",
-          parentMessageId: null,
           question: "Who wins?",
         }),
       }),
@@ -335,6 +336,122 @@ describe("explore turn accounting", () => {
     );
     // And the concurrency slot came back too.
     expect(getExploreQuotaStatus({ userId: owner }).activeRun).toBe(false);
+  });
+
+  /**
+   * A regenerate must name the question to answer again. `attach` kinds other
+   * than `message` have no meaning without new question text, and letting one
+   * through would silently answer whatever the current leaf happens to be.
+   */
+  test("a regenerate that names no message is rejected as invalid", async () => {
+    resetExploreRateLimitStateForTests();
+    const conversation = await trpc.prisma.exploreConversation.create({
+      data: {
+        userId: owner,
+        title: "Champion win rates",
+        messages: { create: { role: "user", content: "Which champion wins?" } },
+      },
+    });
+    const before = getExploreQuotaStatus({ userId: owner }).quota;
+
+    const url = new URL("http://localhost/api/explore/stream");
+    const response = await handleExploreRoute(
+      new Request(url.toString(), {
+        method: "POST",
+        headers: await authedHeaders(),
+        body: JSON.stringify({
+          conversationId: conversation.id,
+          question: null,
+          attach: { kind: "leaf" },
+        }),
+      }),
+      url,
+      cors,
+    );
+
+    expect(response?.status).toBe(400);
+    const body = ErrorBody.parse(await response?.json());
+    expect(body.error).toMatch(/existing question/i);
+
+    const after = getExploreQuotaStatus({ userId: owner }).quota;
+    expect(after.map((entry) => entry.remaining)).toEqual(
+      before.map((entry) => entry.remaining),
+    );
+    expect(getExploreQuotaStatus({ userId: owner }).activeRun).toBe(false);
+  });
+});
+
+/** Seed a conversation with just its opening question, returning both ids. */
+async function seedQuestion(): Promise<{
+  conversationId: string;
+  questionId: string;
+}> {
+  const conversation = await trpc.prisma.exploreConversation.create({
+    data: {
+      userId: owner,
+      title: "Champion win rates",
+      messages: { create: { role: "user", content: "Which champion wins?" } },
+    },
+    include: { messages: true },
+  });
+  const question = conversation.messages[0];
+  if (question === undefined) {
+    throw new Error("expected the seeded question");
+  }
+  return { conversationId: conversation.id, questionId: question.id };
+}
+
+describe("explore salvage", () => {
+  test("a stopped turn with text is saved with the stop caveat", async () => {
+    const seeded = await seedQuestion();
+    const salvaged = await persistPartialAnswer(trpc.prisma, {
+      aborted: true,
+      conversationId: seeded.conversationId,
+      parentMessageId: seeded.questionId,
+      text: "Jinx is ahead so far…",
+      trace: [],
+    });
+
+    expect(salvaged?.parentId).toBe(seeded.questionId);
+    expect(salvaged?.content).toBe("Jinx is ahead so far…");
+    expect(salvaged?.caveats).toEqual([EXPLORE_STOPPED_CAVEAT]);
+    expect(salvaged?.queryText).toBeNull();
+    expect(salvaged?.preview).toBeNull();
+    expect(salvaged?.visualization).toBeNull();
+  });
+
+  test("an errored turn with streamed text is saved with the interrupted caveat", async () => {
+    const seeded = await seedQuestion();
+    const salvaged = await persistPartialAnswer(trpc.prisma, {
+      aborted: false,
+      conversationId: seeded.conversationId,
+      parentMessageId: seeded.questionId,
+      text: "Jinx is ahead so far…",
+      trace: [],
+    });
+
+    expect(salvaged?.caveats).toEqual([EXPLORE_INTERRUPTED_CAVEAT]);
+    // The salvage row is on the path — the reader lands on it, not a bare
+    // question.
+    const conversation = await trpc.prisma.exploreConversation.findUnique({
+      where: { id: seeded.conversationId },
+      select: { currentLeafId: true },
+    });
+    expect(conversation?.currentLeafId).toBe(salvaged?.id ?? "");
+  });
+
+  test("an errored turn with no text saves nothing", async () => {
+    const seeded = await seedQuestion();
+    const salvaged = await persistPartialAnswer(trpc.prisma, {
+      aborted: false,
+      conversationId: seeded.conversationId,
+      parentMessageId: seeded.questionId,
+      text: "   ",
+      trace: [],
+    });
+
+    expect(salvaged).toBeNull();
+    expect(await trpc.prisma.exploreMessage.count()).toBe(1);
   });
 });
 

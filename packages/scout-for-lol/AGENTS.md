@@ -574,6 +574,15 @@ Two sources **refuse** global scope rather than answering wrongly:
   question), while editing forks the **question**. That is why the version
   arrows land where a reader expects them, and why messages carry `siblingIds`
   rather than only a count — a count cannot say which message "previous" is.
+  Turn requests carry an `attach` point (`leaf`/`root`/`message`) rather than
+  a nullable parent id: editing the _opening_ question forks a sibling
+  **root**, and the root's parent is null, so a nullable field cannot say
+  "fork at root" without colliding with "continue at the leaf".
+- A stopped **or errored** turn keeps whatever prose it had already streamed
+  as a caveated partial answer (`EXPLORE_STOPPED_CAVEAT` /
+  `EXPLORE_INTERRUPTED_CAVEAT` in `@scout-for-lol/data`); only a turn that
+  said nothing salvages nothing. The raw error behind an interrupted turn
+  goes to logs and Sentry, not the transcript.
 - The full ScoutQL registry is exposed as-is; there is no restricted dialect.
   Adding one properly needs a registry projection _plus_ a compile-time
   rejection path, because hiding an item from `get_report_language` alone would
