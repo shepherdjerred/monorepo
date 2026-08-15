@@ -106,6 +106,11 @@ export function recordTokenUsage(
   );
 }
 
+/** For tests: read the tokens charged to each window. */
+export function budgetUsageForTests(): { hourly: number; daily: number } {
+  return { hourly: hourly.tokensUsed, daily: daily.tokensUsed };
+}
+
 /** For tests: reset both windows to zero. */
 export function resetBudgetStateForTests(): void {
   hourly.startedAt = Date.now();

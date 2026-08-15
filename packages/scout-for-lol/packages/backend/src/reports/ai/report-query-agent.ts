@@ -1,7 +1,6 @@
 import { stepCountIs, tool, ToolLoopAgent } from "ai";
 import * as Sentry from "@sentry/bun";
 import { z } from "zod";
-import { generateValidatedObject } from "@shepherdjerred/llm-runtime";
 import {
   formatReportQuery,
   parseAndCompile,
@@ -25,7 +24,7 @@ import {
   scoutReportAiTokensUsedTotal,
 } from "#src/metrics/report-ai.ts";
 import { emitReportAgentStreamChunk } from "#src/reports/ai/report-query-agent-stream.ts";
-import { ValidatedReportAiFinalDraftSchema } from "#src/reports/ai/report-query-final-schema.ts";
+import { finalizeReportDraft } from "#src/reports/ai/report-query-finalizer.ts";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
@@ -107,29 +106,14 @@ export async function streamReportQueryAgent(
     })),
   ).slice(-80_000);
   assertWithinBudget();
-  const finalized = await generateValidatedObject(runtime, {
+  const finalized = await finalizeReportDraft({
+    runtime,
     model,
-    schema: ValidatedReportAiFinalDraftSchema,
-    schemaName: "scout_report_query_draft",
-    system:
-      "Finalize a ScoutQL report draft using only the recorded tool-loop evidence. Do not call tools or invent validation/preview results. Return warnings for unresolved limitations.",
-    prompt: `${buildUserPrompt(params.input)}\n\nRecorded tool-loop evidence:\n${evidence}`,
-    workload: "scout.report-query.finalize",
-    sessionId: params.runId,
+    runId: params.runId,
+    prompt: buildUserPrompt(params.input),
+    evidence,
     abortSignal: params.abortSignal,
-    maxOutputTokens: REPORT_AI_MAX_OUTPUT_TOKENS,
   });
-  const finalizerInputTokens = finalized.usage.tokens.input;
-  const finalizerOutputTokens = finalized.usage.tokens.output;
-  scoutReportAiTokensUsedTotal.inc(
-    { model, kind: "prompt" },
-    finalizerInputTokens,
-  );
-  scoutReportAiTokensUsedTotal.inc(
-    { model, kind: "completion" },
-    finalizerOutputTokens,
-  );
-  recordTokenUsage(finalizerInputTokens, finalizerOutputTokens, model);
 
   const draft = finalized.object;
   parseAndCompile(draft.queryText);
