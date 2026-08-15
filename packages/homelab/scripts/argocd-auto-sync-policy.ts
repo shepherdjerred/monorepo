@@ -94,6 +94,7 @@ export function autoSyncPolicyDivergences(
   liveApplications: unknown,
 ): readonly string[] {
   const declared = new Map<string, string>();
+  const seen = new Set<string>();
   for (const manifestSource of renderedManifests) {
     const parsed: unknown = JSON.parse(manifestSource);
     if (RenderedKindSchema.parse(parsed).kind !== "Application") {
@@ -102,6 +103,18 @@ export function autoSyncPolicyDivergences(
     // Parsed strictly, not leniently: a rendered Application that does not fit
     // this shape is a malformed root revision, not something to skip past.
     const application = ApplicationPolicySchema.parse(parsed);
+    // Checked before the absent-policy skip below, because a repeated name is
+    // malformed whatever its policy says: one namespace cannot hold two
+    // Applications under one name, so a revision rendering both is broken at
+    // the source. Left unchecked the second silently wins, and the comparison
+    // then reports agreement it reached against a policy the release never
+    // declared — the same quiet wrong answer the strict parse above refuses.
+    if (seen.has(application.metadata.name)) {
+      throw new Error(
+        `Rendered revision declares Application ${application.metadata.name} more than once`,
+      );
+    }
+    seen.add(application.metadata.name);
     const policy = describeAutoSyncPolicy(application.spec?.syncPolicy);
     if (policy === AUTO_SYNC_POLICY_ABSENT) {
       continue;

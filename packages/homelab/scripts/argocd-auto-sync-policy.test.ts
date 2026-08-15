@@ -176,6 +176,55 @@ test("skips manifests that are not Applications", () => {
   expect(divergences).toEqual([]);
 });
 
+test("rejects a revision declaring one Application twice", () => {
+  expect(() =>
+    autoSyncPolicyDivergences(
+      [
+        application("worker", { automated: { enabled: true } }),
+        application("worker", { automated: { enabled: false } }),
+      ],
+      liveList([
+        { name: "worker", syncPolicy: { automated: { enabled: false } } },
+      ]),
+    ),
+  ).toThrow("declares Application worker more than once");
+});
+
+// The duplicate guard sits before the absent-policy skip, so a repeat still
+// fails when the copy that would have been skipped is the second one. Left to
+// the skip, this pair would pass silently.
+test("rejects a duplicate whose second copy declares no policy", () => {
+  expect(() =>
+    autoSyncPolicyDivergences(
+      [
+        application("worker", { automated: { enabled: true } }),
+        application("worker"),
+      ],
+      liveList([
+        { name: "worker", syncPolicy: { automated: { enabled: false } } },
+      ]),
+    ),
+  ).toThrow("declares Application worker more than once");
+});
+
+// Two DIFFERENT Applications are the ordinary case the guard must not touch.
+test("accepts a revision declaring two distinct Applications", () => {
+  const divergences = autoSyncPolicyDivergences(
+    [
+      application("worker", { automated: { enabled: true } }),
+      application("other", { automated: { enabled: true } }),
+    ],
+    liveList([
+      { name: "worker", syncPolicy: { automated: { enabled: false } } },
+      { name: "other", syncPolicy: { automated: { enabled: true } } },
+    ]),
+  );
+
+  expect(divergences).toEqual([
+    'worker: live {"enabled":false} declared {"enabled":true}',
+  ]);
+});
+
 // A manifest that names no kind cannot be judged "not an Application" — the
 // skip above is for manifests that say what they are. Silently passing over one
 // would drop a real Application from the comparison and report agreement the
