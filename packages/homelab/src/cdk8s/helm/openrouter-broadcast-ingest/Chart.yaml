@@ -1,0 +1,6 @@
+apiVersion: v2
+name: openrouter-broadcast-ingest
+description: OpenRouter broadcast ingest service
+type: application
+version: "$version"
+appVersion: "$appVersion"
