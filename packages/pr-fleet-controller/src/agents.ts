@@ -22,6 +22,7 @@ import { runRecordedWorkerAttempt } from "./recorded-worker-attempt.ts";
 import {
   captureTelemetryOperation,
   isTelemetryCaptureError,
+  withCorrelatedTrace,
 } from "./controller-telemetry.ts";
 import type { FleetModel } from "./model-resolution.ts";
 
@@ -133,6 +134,15 @@ Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")
     const traceId = captureTelemetryOperation("worker trace correlation", () =>
       this.#telemetry.traceId("worker", prNumber, generation, "1"),
     );
+    // A W3C span ID is 16 hex characters; the recorder's trace IDs are 32, so
+    // take a deterministic half for the synthetic parent this turn runs under.
+    const traceSpanId = captureTelemetryOperation(
+      "worker trace span correlation",
+      () =>
+        this.#telemetry
+          .traceId("worker-span", prNumber, generation, "1")
+          .slice(0, 16),
+    );
     const correlation = {
       traceId,
       ...(tickId === undefined ? {} : { tickId }),
@@ -158,43 +168,52 @@ Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")
         traceContext: { traceId },
       }),
     });
-    const outcome = await runRecordedWorkerAttempt({
-      attempt: 1,
-      prompt,
-      telemetry: this.#telemetry,
-      correlation,
-      run: async () => {
-        const result = await agent.generate({
+    // Every model and tool span this turn emits inherits the correlation trace
+    // ID, so the dashboard can join them to this PR's transcript.
+    const outcome = await withCorrelatedTrace(
+      { traceId, spanId: traceSpanId },
+      () =>
+        runRecordedWorkerAttempt({
+          attempt: 1,
           prompt,
-          abortSignal: signal,
-        });
-        const evidenceJson = JSON.stringify(
-          result.steps.map((step) => ({
-            text: step.text,
-            toolCalls: step.toolCalls,
-            toolResults: step.toolResults,
-            finishReason: step.finishReason,
-          })),
-        );
-        const evidence =
-          evidenceJson.length <= 120_000
-            ? evidenceJson
-            : `${evidenceJson.slice(0, 30_000)}\n...[bounded]...\n${evidenceJson.slice(-90_000)}`;
-        const finalized = await generateValidatedObject(this.#model.runtime, {
-          model: this.#model.id,
-          schema: WorkerResultSchema,
-          schemaName: "pr_fleet_worker_result",
-          system:
-            "Produce the final PR Fleet WorkerResult using only the recorded tool-loop evidence. Do not call tools, invent effects, or claim publication that is absent from evidence.",
-          prompt: `${prompt}\n\nRecorded tool-loop evidence:\n${evidence}`,
-          workload: "pr-fleet.worker.finalize",
-          sessionId: `${this.#telemetry.runId}:${prNumber}:${generation}`,
-          traceContext: { traceId },
-          abortSignal: signal,
-        });
-        return coerceWorkerResult({ object: finalized.object });
-      },
-    });
+          telemetry: this.#telemetry,
+          correlation,
+          run: async () => {
+            const result = await agent.generate({
+              prompt,
+              abortSignal: signal,
+            });
+            const evidenceJson = JSON.stringify(
+              result.steps.map((step) => ({
+                text: step.text,
+                toolCalls: step.toolCalls,
+                toolResults: step.toolResults,
+                finishReason: step.finishReason,
+              })),
+            );
+            const evidence =
+              evidenceJson.length <= 120_000
+                ? evidenceJson
+                : `${evidenceJson.slice(0, 30_000)}\n...[bounded]...\n${evidenceJson.slice(-90_000)}`;
+            const finalized = await generateValidatedObject(
+              this.#model.runtime,
+              {
+                model: this.#model.id,
+                schema: WorkerResultSchema,
+                schemaName: "pr_fleet_worker_result",
+                system:
+                  "Produce the final PR Fleet WorkerResult using only the recorded tool-loop evidence. Do not call tools, invent effects, or claim publication that is absent from evidence.",
+                prompt: `${prompt}\n\nRecorded tool-loop evidence:\n${evidence}`,
+                workload: "pr-fleet.worker.finalize",
+                sessionId: `${this.#telemetry.runId}:${prNumber}:${generation}`,
+                traceContext: { traceId },
+                abortSignal: signal,
+              },
+            );
+            return coerceWorkerResult({ object: finalized.object });
+          },
+        }),
+    );
     if (outcome.status === "completed") {
       return outcome.result;
     }
