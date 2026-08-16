@@ -11,6 +11,14 @@ description: |
 
 Complete GitHub operations via `gh` CLI and GitHub API. This skill replaces GitHub MCP server functionality, providing CLI/API equivalents for all operations.
 
+## Monorepo workflow guard
+
+In `shepherdjerred/monorepo`, `git-spice-helper` is authoritative for every
+feature branch and PR. Use `gh` here for inspection, review comments, and other
+explicitly requested GitHub operations; do not create branches, create feature
+PRs, or merge them with the generic `gh` examples below. Load
+`git-spice-helper` before any branch or feature-PR mutation.
+
 ## MCP Tool Equivalents Reference
 
 | MCP Tool                     | CLI/API Equivalent                                                 |
@@ -361,6 +369,10 @@ gh pr view 123 --comments
 
 ### Create Pull Request
 
+For `shepherdjerred/monorepo`, use `git-spice branch submit` or
+`git-spice stack submit` instead. The commands below are for repositories that
+do not use git-spice.
+
 ```bash
 # Interactive
 gh pr create
@@ -454,6 +466,10 @@ gh api /repos/{owner}/{repo}/pulls/123/comments --jq '.[] | {user: .user.login, 
 ```
 
 ### Merge Pull Request
+
+For `shepherdjerred/monorepo`, merging is handled through the repository's
+approved git-spice workflow and explicit human/operator action. Do not use
+these generic commands for feature work in this repository.
 
 ```bash
 # Merge (default method)
@@ -710,13 +726,13 @@ gh api graphql -f query='
 
 ## Common Workflows
 
-### Complete PR Workflow
+### Complete PR Workflow (repositories without git-spice)
 
 ```bash
 # Create branch and make changes
 git checkout -b feature/new-thing
 # ... make changes ...
-git add . && git commit -m "Add new feature"
+git add path/to/changed-file && git commit -m "Add new feature"
 git push -u origin feature/new-thing
 
 # Create PR

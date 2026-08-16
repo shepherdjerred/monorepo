@@ -1,4 +1,14 @@
-import { describe, expect, test } from "bun:test";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  test,
+} from "bun:test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import {
   closeSeasonRefreshPr,
   isGeneratedAtOnlyDiff,
@@ -7,6 +17,7 @@ import {
   runCommand,
   type GitCommandRunner,
 } from "./scout-season-refresh-git.ts";
+import { gitProcessEnvironment } from "#lib/pr-review-workdir.ts";
 
 const TIMESTAMP_ONLY_DIFF = [
   "diff --git a/packages/scout-for-lol/packages/frontend/src/data/generated/scout-showcase-assets.json b/packages/scout-for-lol/packages/frontend/src/data/generated/scout-showcase-assets.json",
@@ -71,19 +82,19 @@ describe("isGeneratedAtOnlyDiff", () => {
 const ARTIFACT = "packages/scout-for-lol/packages/data/a.generated.json";
 const REPORT = "packages/scout-for-lol/packages/data/b.generated.json";
 
-function stampOnlyDiff(path: string): string {
+function stampOnlyDiff(artifactPath: string): string {
   return [
-    `--- a/${path}`,
-    `+++ b/${path}`,
+    `--- a/${artifactPath}`,
+    `+++ b/${artifactPath}`,
     '-  "generatedAt": "2026-05-16T20:00:21.251Z",',
     '+  "generatedAt": "2026-08-14T13:05:00.000Z",',
   ].join("\n");
 }
 
-function realDiff(path: string): string {
+function realDiff(artifactPath: string): string {
   return [
-    `--- a/${path}`,
-    `+++ b/${path}`,
+    `--- a/${artifactPath}`,
+    `+++ b/${artifactPath}`,
     '-  "matchCount": 621,',
     '+  "matchCount": 640,',
   ].join("\n");
@@ -94,30 +105,74 @@ function realDiff(path: string): string {
  * drive it through a temp git repo rather than a stub — which also proves the
  * `git checkout --` actually restores the file.
  */
+const repositories: string[] = [];
+let restoreGitEnv: (() => void) | undefined;
+
+beforeAll(() => {
+  // The code under test spawns git through its own runCommand, which inherits
+  // this process's environment — so the isolation has to be applied here, not
+  // just to the setup commands. Without it these tests read the operator's
+  // ~/.gitconfig: an ~/.gitignore git cannot expand aborts `git status`, and
+  // commit.gpgsign or core.hooksPath change what a seed commit even does.
+  // Reuse the isolation production already applies to its own git calls
+  // (gitProcessEnvironment), so the tests exercise the same contract rather
+  // than a second definition that can drift from it.
+  const hermetic = gitProcessEnvironment({});
+  const managed = [
+    "HOME",
+    "GIT_CONFIG_GLOBAL",
+    "GIT_CONFIG_NOSYSTEM",
+    "GIT_TERMINAL_PROMPT",
+  ];
+  const previous = new Map(managed.map((key) => [key, Bun.env[key]]));
+  for (const key of managed) {
+    const value = hermetic[key];
+    if (value !== undefined) Bun.env[key] = value;
+  }
+  restoreGitEnv = () => {
+    for (const [key, value] of previous) {
+      // Assigning undefined would store the literal string "undefined".
+      if (value === undefined) Reflect.deleteProperty(Bun.env, key);
+      else Bun.env[key] = value;
+    }
+  };
+});
+
+afterAll(() => {
+  restoreGitEnv?.();
+});
+
+// Cleanup belongs here rather than at the end of each test body: a failing
+// assertion aborts the body, so an in-body cleanup leaks the directory on
+// exactly the runs worth re-running.
+afterEach(async () => {
+  await Promise.all(
+    repositories.splice(0).map(async (directory) => {
+      await rm(directory, { recursive: true, force: true });
+    }),
+  );
+});
+
 async function withRepo(
   contents: Record<string, string>,
   edits: Record<string, string>,
 ): Promise<string> {
-  const dir = `${Bun.env["TMPDIR"] ?? "/tmp"}/revert-stamp-${crypto.randomUUID()}`;
-  await runCommand(["mkdir", "-p", dir], { cwd: "/tmp" });
+  const dir = await mkdtemp(path.join(tmpdir(), "revert-stamp-"));
+  repositories.push(dir);
   await runCommand(["git", "init", "-q"], { cwd: dir });
   await runCommand(["git", "config", "user.email", "t@example.com"], {
     cwd: dir,
   });
   await runCommand(["git", "config", "user.name", "T"], { cwd: dir });
-  for (const [path, body] of Object.entries(contents)) {
-    await runCommand(
-      ["mkdir", "-p", `${dir}/${path.split("/").slice(0, -1).join("/")}`],
-      { cwd: dir },
-    );
-    await Bun.write(`${dir}/${path}`, body);
+  for (const [filePath, body] of Object.entries(contents)) {
+    await Bun.write(`${dir}/${filePath}`, body);
   }
   await runCommand(["git", "add", "--", ...Object.keys(contents)], {
     cwd: dir,
   });
   await runCommand(["git", "commit", "-qm", "seed"], { cwd: dir });
-  for (const [path, body] of Object.entries(edits)) {
-    await Bun.write(`${dir}/${path}`, body);
+  for (const [filePath, body] of Object.entries(edits)) {
+    await Bun.write(`${dir}/${filePath}`, body);
   }
   return dir;
 }
@@ -152,8 +207,6 @@ describe("revertGeneratedAtOnlyChanges", () => {
     });
     expect(status).not.toContain(ARTIFACT);
     expect(status).toContain(REPORT);
-
-    await runCommand(["rm", "-rf", dir], { cwd: "/tmp" });
   });
 
   test("is a no-op when nothing changed", async () => {
@@ -163,8 +216,6 @@ describe("revertGeneratedAtOnlyChanges", () => {
     const dir = await withRepo(seed, {});
 
     expect(await revertGeneratedAtOnlyChanges(dir, [ARTIFACT])).toEqual([]);
-
-    await runCommand(["rm", "-rf", dir], { cwd: "/tmp" });
   });
 
   test("diffs each path separately so one real change cannot mask another's churn", () => {

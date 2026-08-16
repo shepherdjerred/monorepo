@@ -17,6 +17,7 @@ import {
   resolveLakeFiles,
   scalarParam,
   type BoundParam,
+  type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
 
 /**
@@ -132,6 +133,252 @@ export async function fetchTeamRowsForMatches(options: {
   return await withDuckDBConnection(async (session) => {
     const rows = await session.run(sql, bindParams(session, source.params));
     return rows.map((row) => TeamRowSchema.parse(row));
+  });
+}
+
+/** DuckDB returns integer aggregates as BIGINT; normalise to number. */
+const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
+
+/**
+ * Resolve the lake and build a matches source for one predicate.
+ * `undefined` means the lake has no files yet — callers return [].
+ */
+async function matchesSourceFor(
+  lakeDir: string | undefined,
+  predicate: SqlFragment,
+): Promise<SqlFragment | undefined> {
+  const files = await resolveLakeFiles(lakeDir ?? resolveLakeDir());
+  return buildMatchesSource(files, predicate);
+}
+
+/** Run `sql` over a built source and parse every row with `schema`. */
+async function runLakeQuery<T>(options: {
+  source: SqlFragment;
+  sql: string;
+  extraParams?: BoundParam[];
+  schema: z.ZodType<T>;
+}): Promise<T[]> {
+  return await withDuckDBConnection(async (session) => {
+    const rows = await session.run(
+      options.sql,
+      bindParams(session, [
+        ...options.source.params,
+        ...(options.extraParams ?? []),
+      ]),
+    );
+    return rows.map((row) => options.schema.parse(row));
+  });
+}
+
+/**
+ * `puuid IN (…)` plus an optional queue filter — the predicate shared by every
+ * per-player profile read. The puuid list is the caller's whole authorization
+ * surface; see {@link fetchPlayerMatchHistory}.
+ */
+function playerPredicate(options: {
+  puuids: string[];
+  queue?: string;
+}): SqlFragment {
+  const sql = ["puuid IN (SELECT unnest(?))"];
+  const params: BoundParam[] = [listParam(options.puuids)];
+  if (options.queue !== undefined) {
+    sql.push("queue = ?");
+    params.push(scalarParam(options.queue));
+  }
+  return { sql: sql.join(" AND "), params };
+}
+
+/**
+ * One match as played by a tracked player, newest first.
+ *
+ * Deduped to one row per `match_id`: a Scout `Player` owns several `Account`s,
+ * and `mergePlayers` can leave one Player holding two PUUIDs that appear in the
+ * same game. Without the QUALIFY that match would be listed — and counted in
+ * every aggregate below — twice.
+ */
+const PlayerMatchHistoryRowSchema = z.object({
+  match_id: z.string(),
+  puuid: z.string(),
+  game_creation_ms: LakeIntSchema,
+  game_duration_seconds: LakeIntSchema,
+  queue: z.string().nullable(),
+  queue_id: LakeIntSchema,
+  champion_id: LakeIntSchema,
+  champion_name: z.string(),
+  team_position: z.string(),
+  team_id: LakeIntSchema,
+  win: z.boolean(),
+  kills: LakeIntSchema,
+  deaths: LakeIntSchema,
+  assists: LakeIntSchema,
+  creep_score: LakeIntSchema,
+  gold_earned: LakeIntSchema,
+  total_damage_dealt_to_champions: LakeIntSchema,
+  vision_score: LakeIntSchema,
+  time_played: LakeIntSchema,
+});
+
+export type LakePlayerMatchHistoryRow = z.infer<
+  typeof PlayerMatchHistoryRowSchema
+>;
+
+/** One row per match, newest first — `puuid` deduped as described above. */
+const DEDUPE_TO_ONE_ROW_PER_MATCH =
+  "QUALIFY row_number() OVER (PARTITION BY match_id ORDER BY puuid) = 1";
+
+export type MatchHistoryCursor = {
+  gameCreationMs: number;
+  matchId: string;
+};
+
+/**
+ * A page of a player's match history across ALL of their accounts.
+ *
+ * `puuids` is the caller's whole authorization surface — the matches parquet
+ * carries no `server_id`, so this function cannot tell a guild's account from
+ * anyone else's. Callers must resolve the puuid list within the requesting
+ * guild; see `player.router.ts`.
+ *
+ * Keyset pagination on `(game_creation_at, match_id)` rather than OFFSET, so a
+ * match ingested mid-scroll cannot shift the page boundary and duplicate a row.
+ */
+export async function fetchPlayerMatchHistory(options: {
+  puuids: string[];
+  limit: number;
+  cursor?: MatchHistoryCursor;
+  queue?: string;
+  lakeDir?: string;
+}): Promise<LakePlayerMatchHistoryRow[]> {
+  if (options.puuids.length === 0) {
+    return [];
+  }
+  const predicate = playerPredicate(options);
+  const clauses = [predicate.sql];
+  const params = [...predicate.params];
+  if (options.cursor !== undefined) {
+    clauses.push(
+      "(epoch_ms(game_creation_at) < ? OR (epoch_ms(game_creation_at) = ? AND match_id < ?))",
+    );
+    params.push(
+      scalarParam(options.cursor.gameCreationMs),
+      scalarParam(options.cursor.gameCreationMs),
+      scalarParam(options.cursor.matchId),
+    );
+  }
+
+  const source = await matchesSourceFor(options.lakeDir, {
+    sql: clauses.join(" AND "),
+    params,
+  });
+  if (source === undefined) {
+    return [];
+  }
+  return await runLakeQuery({
+    source,
+    sql:
+      `SELECT match_id, puuid, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
+      `game_duration_seconds, queue, queue_id, champion_id, champion_name, ` +
+      `team_position, team_id, win, kills, deaths, assists, creep_score, ` +
+      `gold_earned, total_damage_dealt_to_champions, vision_score, time_played ` +
+      `FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH} ` +
+      `ORDER BY game_creation_ms DESC, match_id DESC LIMIT ?`,
+    extraParams: [scalarParam(Math.floor(options.limit))],
+    schema: PlayerMatchHistoryRowSchema,
+  });
+}
+
+const ChampionPoolRowSchema = z.object({
+  champion_id: LakeIntSchema,
+  champion_name: z.string(),
+  games: LakeIntSchema,
+  wins: LakeIntSchema,
+  kills: LakeIntSchema,
+  deaths: LakeIntSchema,
+  assists: LakeIntSchema,
+  creep_score: LakeIntSchema,
+  time_played: LakeIntSchema,
+});
+
+export type LakeChampionPoolRow = z.infer<typeof ChampionPoolRowSchema>;
+
+/**
+ * Per-champion totals across all of a player's accounts, most-played first.
+ *
+ * Returns raw totals, not rates: the caller derives win rate / KDA / CS-min so
+ * that minimum-sample suppression is decided once, in one place, against the
+ * `games` count rather than re-derived per metric.
+ *
+ * Same authorization contract as {@link fetchPlayerMatchHistory}.
+ */
+export async function fetchPlayerChampionPool(options: {
+  puuids: string[];
+  queue?: string;
+  lakeDir?: string;
+}): Promise<LakeChampionPoolRow[]> {
+  if (options.puuids.length === 0) {
+    return [];
+  }
+  const source = await matchesSourceFor(
+    options.lakeDir,
+    playerPredicate(options),
+  );
+  if (source === undefined) {
+    return [];
+  }
+  return await runLakeQuery({
+    source,
+    sql:
+      `SELECT champion_id, champion_name, count(*) AS games, ` +
+      `sum(CASE WHEN win THEN 1 ELSE 0 END)::BIGINT AS wins, ` +
+      `sum(kills)::BIGINT AS kills, sum(deaths)::BIGINT AS deaths, ` +
+      `sum(assists)::BIGINT AS assists, sum(creep_score)::BIGINT AS creep_score, ` +
+      `sum(time_played)::BIGINT AS time_played ` +
+      `FROM (SELECT * FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH}) ` +
+      `GROUP BY champion_id, champion_name ORDER BY games DESC, champion_name ASC`,
+    schema: ChampionPoolRowSchema,
+  });
+}
+
+const TeamTotalsRowSchema = z.object({
+  match_id: z.string(),
+  team_id: LakeIntSchema,
+  team_kills: LakeIntSchema,
+  team_damage_to_champions: LakeIntSchema,
+});
+
+export type LakeTeamTotalsRow = z.infer<typeof TeamTotalsRowSchema>;
+
+/**
+ * Per-team kill and damage totals for the given matches — the denominators for
+ * kill participation and damage share.
+ *
+ * This deliberately filters on `match_id` ONLY, never on the player's puuid.
+ * The source predicate is pushed down into the parquet scan, so a puuid-filtered
+ * source contains just that one participant: summing it would yield the player's
+ * own kills as the "team" total and a participation of exactly 1.0 every game.
+ * Filtering by match alone is what makes all ten participants visible.
+ */
+export async function fetchTeamTotalsForMatches(options: {
+  matchIds: string[];
+  lakeDir?: string;
+}): Promise<LakeTeamTotalsRow[]> {
+  if (options.matchIds.length === 0) {
+    return [];
+  }
+  const source = await matchesSourceFor(options.lakeDir, {
+    sql: "match_id IN (SELECT unnest(?))",
+    params: [listParam(options.matchIds)],
+  });
+  if (source === undefined) {
+    return [];
+  }
+  return await runLakeQuery({
+    source,
+    sql:
+      `SELECT match_id, team_id, sum(kills)::BIGINT AS team_kills, ` +
+      `sum(total_damage_dealt_to_champions)::BIGINT AS team_damage_to_champions ` +
+      `FROM (${source.sql}) GROUP BY match_id, team_id`,
+    schema: TeamTotalsRowSchema,
   });
 }
 

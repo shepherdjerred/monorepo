@@ -24,6 +24,12 @@ import {
   updateAccount,
 } from "#src/lib/player-admin/account-mutations.ts";
 import {
+  PlayerMatchHistoryInput,
+  PlayerProfileInput,
+  getPlayerMatchHistory,
+  getPlayerProfileSummary,
+} from "#src/lib/player-profile/queries.ts";
+import {
   LinkDiscordInput,
   MergePlayersInput,
   RenamePlayerInput,
@@ -43,6 +49,18 @@ export const playerRouter = router({
   getPlayer: guildProcedure("players", "read")
     .input(PlayerLookupInput)
     .query(async ({ ctx, input }) => getPlayer(input, ctx.permissions)),
+
+  // Profile reads reuse players:read rather than introducing a `matches`
+  // resource: roles are presets over per-permission grant rows and VIEWER is a
+  // hardcoded list, so a new resource would leave every existing viewer grant
+  // without it and silently downgrade those grants to "custom".
+  profileSummary: guildProcedure("players", "read")
+    .input(PlayerProfileInput)
+    .query(async ({ input }) => getPlayerProfileSummary(input)),
+
+  matchHistory: guildProcedure("players", "read")
+    .input(PlayerMatchHistoryInput)
+    .query(async ({ input }) => getPlayerMatchHistory(input)),
 
   getCurrentLinkedPlayer: guildProcedure("players", "read")
     .input(GuildIdInput)

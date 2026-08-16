@@ -6,6 +6,7 @@ import { trace } from "@opentelemetry/api";
 import { loadRunBundle } from "@shepherdjerred/pr-fleet-controller/src/run-inspection.ts";
 import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/run-recorder.ts";
 import { createFleetTelemetryRuntime } from "@shepherdjerred/pr-fleet-controller/src/telemetry-runtime.ts";
+import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";
 
 let stateDirectory: string | undefined;
 
@@ -14,6 +15,51 @@ afterEach(async () => {
     await rm(stateDirectory, { recursive: true, force: true });
     stateDirectory = undefined;
   }
+  // This suite registers process-global OpenTelemetry state. Leaving it
+  // registered leaks into every other file of `bun test src test`, where the
+  // symptom is silent: later spans route into a shut-down processor whose
+  // target directory this hook just deleted.
+  resetOtelGlobals();
+});
+
+async function createRecorder(): Promise<RunRecorder> {
+  stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-otel-"));
+  return await RunRecorder.create({
+    stateDirectory,
+    controllerVersion: "0.1.0",
+    controllerCommit: "a".repeat(40),
+    controllerSourceDirty: false,
+    controllerSourceFingerprint: "b".repeat(64),
+    model: "gpt-5.6-sol",
+    repository: "example/repository",
+    checkout: "/repo",
+    worktreeRoot: "/repo/worktrees",
+    maxWorkers: 1,
+  });
+}
+
+test("a second runtime can register after the first shuts down", async () => {
+  // setGlobalTracerProvider is one-shot while a provider stays registered, so
+  // a shutdown that only disables the context manager makes every later
+  // runtime in the process throw "already registered" — and any span emitted
+  // in between lands in the dead processor.
+  const firstRecorder = await createRecorder();
+  const first = await createFleetTelemetryRuntime(firstRecorder);
+  await first.shutdown();
+
+  const secondRecorder = await createRecorder();
+  const second = await createFleetTelemetryRuntime(secondRecorder);
+  const span = trace.getTracer("pr-fleet-test").startSpan("gen_ai.chat");
+  span.setAttribute("gen_ai.system", "openrouter");
+  span.end();
+  await second.shutdown();
+
+  // The span must be in the SECOND runtime's file: routing into the first,
+  // shut-down processor is the failure this guards, and it is silent.
+  expect(await Bun.file(secondRecorder.paths.spans).text()).toContain(
+    '"name":"gen_ai.chat"',
+  );
+  await rm(firstRecorder.paths.runDirectory, { recursive: true, force: true });
 });
 
 test("writes and digest-verifies private spans.jsonl", async () => {

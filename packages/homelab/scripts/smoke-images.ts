@@ -4,7 +4,7 @@
  *
  * Boots each freshly-built `<name>:dev` image and asserts on startup behavior,
  * translating the old Dagger smoke tests (smokeTestCaddyS3Proxy,
- * smokeTestObsidianHeadless, smokeTestMcpGateway, plus a redlib boot check) into
+ * smokeTestObsidianHeadless, plus a redlib boot check) into
  * a dependency-free Bun script.
  *
  * Each check runs a container via `docker run`, inspects stdout/stderr/exit code,
@@ -267,124 +267,6 @@ async function smokeObsidianHeadless(): Promise<SmokeResult> {
 }
 
 /**
- * Smoke test mcp-gateway.
- * Verifies: the Node runtime and supported GitHub MCP server are present, the
- * prebuilt edstem-mcp entrypoint exists and parses (`node --check`), and every
- * production dependency survived `npm prune --omit=dev`.
- */
-async function smokeMcpGateway(): Promise<SmokeResult> {
-  const image = "mcp-gateway:dev";
-  const name = "smoke-mcp-gateway";
-  await forceRemove(name);
-  try {
-    const node = await run([
-      "docker",
-      "run",
-      "--rm",
-      "--name",
-      name,
-      "--entrypoint",
-      "node",
-      image,
-      "--version",
-    ]);
-    if (node.exitCode !== 0) {
-      return {
-        image,
-        ok: false,
-        detail: `node --version exited ${String(node.exitCode)}\n${node.stderr}`,
-      };
-    }
-
-    const githubMcp = await run([
-      "docker",
-      "run",
-      "--rm",
-      "--name",
-      `${name}-github`,
-      "--entrypoint",
-      "github-mcp-server",
-      image,
-      "--version",
-    ]);
-    if (githubMcp.exitCode !== 0) {
-      return {
-        image,
-        ok: false,
-        detail: `github-mcp-server --version exited ${String(githubMcp.exitCode)}\n${githubMcp.stderr}`,
-      };
-    }
-
-    // Entrypoint exists and parses.
-    const check = await run([
-      "docker",
-      "run",
-      "--rm",
-      "--name",
-      `${name}-check`,
-      "--entrypoint",
-      "sh",
-      image,
-      "-c",
-      "test -f /opt/edstem-mcp/dist/index.js && node --check /opt/edstem-mcp/dist/index.js && echo 'edstem-mcp entrypoint OK'",
-    ]);
-    if (
-      check.exitCode !== 0 ||
-      !check.stdout.includes("edstem-mcp entrypoint OK")
-    ) {
-      return {
-        image,
-        ok: false,
-        detail: `edstem-mcp entrypoint check failed (exit ${String(check.exitCode)})\n${check.stdout}\n${check.stderr}`,
-      };
-    }
-
-    // Every prod dependency survived `npm prune --omit=dev`. `node --check` only
-    // parses the entry; it never exercises the import graph, so a prod dep
-    // misclassified as a devDependency upstream would pass syntax checks yet crash
-    // on first real invocation. edstem-mcp is ESM, so verify dep presence directly.
-    const deps = await run([
-      "docker",
-      "run",
-      "--rm",
-      "--name",
-      `${name}-deps`,
-      "--entrypoint",
-      "node",
-      image,
-      "--input-type=module",
-      "-e",
-      [
-        "import { readFileSync, existsSync } from 'node:fs';",
-        "const pkg = JSON.parse(readFileSync('/opt/edstem-mcp/package.json', 'utf8'));",
-        "const deps = Object.keys(pkg.dependencies ?? {});",
-        "const missing = deps.filter((d) => !existsSync(`/opt/edstem-mcp/node_modules/${d}`));",
-        "if (missing.length) { console.error('missing prod deps after prune:', missing); process.exit(1); }",
-        "console.log(`all ${deps.length} prod deps present after prune`);",
-      ].join("\n"),
-    ]);
-    if (deps.exitCode !== 0) {
-      return {
-        image,
-        ok: false,
-        detail: `prod-dep presence check failed (exit ${String(deps.exitCode)})\n${deps.stdout}\n${deps.stderr}`,
-      };
-    }
-
-    return {
-      image,
-      ok: true,
-      detail: `node=${node.stdout.trim()}; ${githubMcp.stdout.trim()}; edstem-mcp entrypoint parses; ${deps.stdout.trim()}`,
-    };
-  } finally {
-    await forceRemove(name);
-    await forceRemove(`${name}-github`);
-    await forceRemove(`${name}-check`);
-    await forceRemove(`${name}-deps`);
-  }
-}
-
-/**
  * Smoke test redlib.
  * Verifies: the redlib binary boots, binds its HTTP port, and serves a request.
  * redlib serves an HTTP frontend; the boot check confirms the built binary runs
@@ -457,7 +339,6 @@ async function main(): Promise<void> {
   const checks: Array<{ label: string; fn: () => Promise<SmokeResult> }> = [
     { label: "caddy-s3proxy", fn: smokeCaddyS3Proxy },
     { label: "obsidian-headless", fn: smokeObsidianHeadless },
-    { label: "mcp-gateway", fn: smokeMcpGateway },
     { label: "redlib", fn: smokeRedlib },
   ];
 

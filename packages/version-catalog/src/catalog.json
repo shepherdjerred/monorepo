@@ -152,7 +152,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9585@sha256:e4ce19f372a478e0a04a3a0e50a91488102d22e0d74de0479f303d2358c729fc",
+      "value": "2.0.0-9722@sha256:6c7d6c5a4e01626c7b484cbf17c53bcaf5c7e4300ab139f3b1dae2e1b545a2ed",
       "notes": [
         "not managed by renovate — built from packages/streambot; CI's version commit-back fills the",
         "real tag@digest after the first image push. Seed digest is a placeholder until then."
@@ -650,7 +650,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9656@sha256:613d14bad6cdb2299f8499dcc78a273354d3c8eb643d8d41cafd04f1124990cc",
+      "value": "2.0.0-9726@sha256:064e354b2c2f5285a753cf798731f0dfe6c29174b5a7ac3b0426ed15eeefb28b",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -682,7 +682,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9585@sha256:1d8d8d0fdad997467fd5f779d87da3a36effcf0911fedcc20634e1608a8dc0db",
+      "value": "2.0.0-9722@sha256:f3763dedf5d293df1af82302643a0514f54b7d601cd1bd6fa0120d78306987e1",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -705,7 +705,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9585@sha256:097443c2f69c2a94e90ca3dfab892bbf5a088427c4b11c491d3270881daed736",
+      "value": "2.0.0-9722@sha256:aba79a5a8f99f77c55988729c4bc6fec28937b56536072e1dbc073e651a5d19d",
       "notes": ["not managed by renovate"]
     },
     {
@@ -715,7 +715,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9585@sha256:41a53349f1cdc6ad04a448bd224856e507c97646c73d61b7d1fc84146c2cd544",
+      "value": "2.0.0-9722@sha256:cb60d72061e04b701d1bb40da946c7fa37295d6ba94bd6a65a8b9ac18c827891",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -730,7 +730,7 @@
       },
       "value": "2.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
       "notes": [
-        "not managed by renovate \u2014 pre-first-publish placeholder. The main image",
+        "not managed by renovate — pre-first-publish placeholder. The main image",
         "release injects the built digest into chart synthesis and version",
         "commit-back replaces this pin before a later release can use source state."
       ]
@@ -742,7 +742,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9653@sha256:017f15284a9f9778f98ce4c93d600d27b391faf265c6f2bd935e2ecfbb96b6fb",
+      "value": "2.0.0-9722@sha256:d52445578c8dc853a82d8d6d77881a24ddedee64a4d12e82bbbf7897f2f68279",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful scout-evals image push."
@@ -755,7 +755,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9585@sha256:699e077cd3a62da32dd8f2f4c3959b8726e2d6b6a223df5ef7a95029e01bf15b",
+      "value": "2.0.0-9722@sha256:1b85da78df46b7349662cc37d3981b75fa20912dc728eaf2c390d7d3ffaf802f",
       "notes": ["not managed by renovate"]
     },
     {
@@ -765,7 +765,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9585@sha256:e34636c20f60b17342a6d46effe084b1f495d77c8b4e611a150f0e09fa6797bf",
+      "value": "2.0.0-9722@sha256:570e232bb4f7c646e0f63647431075bc62ae5c1536614c112f8c0135436f7891",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful image push."
@@ -1210,45 +1210,6 @@
       "value": "1.29.1-alpine@sha256:42a516af16b852e33b7682d5ef8acbd5d13fe08fecadc7ed98605ba5e3b26ab8"
     },
     {
-      "name": "tbxark/mcp-proxy",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://ghcr.io",
-        "versioning": "semver"
-      },
-      "value": "v0.43.2@sha256:70c0e02d39c4c0898e610b3a30954f7930628fa6f4fb447bad14c32382a25879"
-    },
-    {
-      "name": "@r-huijts/canvas-mcp",
-      "category": "upstream",
-      "artifactType": "package",
-      "management": {
-        "managed": true,
-        "datasource": "npm",
-        "versioning": "npm"
-      },
-      "value": "1.3.0",
-      "notes": [
-        "mcp-gateway downstream npm MCP servers. Pinned + Renovate-tracked so cold",
-        "starts are reproducible instead of `npx -y` grabbing latest. Substituted",
-        "into mcp-gateway/config.json at synth time."
-      ]
-    },
-    {
-      "name": "@automatearmy/email-reader-mcp",
-      "category": "upstream",
-      "artifactType": "package",
-      "management": {
-        "managed": true,
-        "datasource": "npm",
-        "versioning": "npm"
-      },
-      "value": "1.0.3"
-    },
-    {
       "name": "bugsink/bugsink",
       "category": "upstream",
       "artifactType": "image",
@@ -1293,7 +1254,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9585@sha256:50eb0373bdcd5fc8c96b53f92527c0c3a807b220a09ec8b5b9b12b3533f37f77",
+      "value": "2.0.0-9722@sha256:f902db78ba65a8bc80594c6d0ef081204ff642a313121c84e423a86c5ce2a982",
       "notes": [
         "Custom tasknotes-server image - TaskNotes API server for mobile app",
         "not managed by renovate"
@@ -1309,19 +1270,6 @@
       "value": "2.0.0-6529@sha256:fd1e89af7747c0b0ad2c650c6eab0c60452464e83dfcfb3bedbf967f15e7e645",
       "notes": [
         "Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync",
-        "not managed by renovate"
-      ]
-    },
-    {
-      "name": "shepherdjerred/mcp-gateway",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-6690@sha256:719ad2ddcf05af01be975f984cb2ef8a3139302724e6d2cb01111cb50b348aa9",
-      "notes": [
-        "Custom mcp-gateway image - tbxark/mcp-proxy + prebuilt edstem-mcp (rob-9/edstem-mcp)",
         "not managed by renovate"
       ]
     },
@@ -1368,7 +1316,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9654@sha256:5d7572a7fe9522bc691aa145f77bfc6c1ab71c5b4672bfe1306e842d7701f8bb",
+      "value": "2.0.0-9726@sha256:1a7d2e125b2b5409f12b659b5bcace63f753c6db1717a335e282f7e3c66c0be6",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1381,7 +1329,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9585@sha256:0618fd84fe618b381c41ba87d1aaf157eb016a3f635ab94a4d609ef1d11b4c6a",
+      "value": "2.0.0-9722@sha256:991a3b5a171bdb1e35d33a5631e6775caf1689af30bb90f2e41e7bc8b129d892",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"

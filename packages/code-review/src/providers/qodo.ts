@@ -165,6 +165,108 @@ function findingTitle(summary: string): string {
     .trim();
 }
 
+/**
+ * The human-readable description Qodo renders for a finding — what a reader
+ * actually compares when deciding whether two entries are the same problem.
+ */
+function findingDescription(findingBody: string): string {
+  const described = /<pre>([\s\S]*?)<\/pre>/iu.exec(findingBody);
+  return (
+    (described?.[1] ?? findingBody)
+      .replaceAll(/<[^>]*>/gu, "")
+      // Evidence permalinks embed the commit Qodo read, so two renderings of
+      // one finding differ by SHA alone — the same normalisation identityOf
+      // applies, and required here for findings rendered without a <pre>.
+      .replaceAll(/\b[0-9a-f]{40}\b/giu, "<commit>")
+      .replaceAll(BLOCKQUOTE_MARKER, "")
+      .replaceAll(/\s+/gu, "")
+  );
+}
+
+/** Marks a finding resolved without changing what finding it is. */
+export const QODO_RESOLVED_CHIP = "<code>☑ resolved</code>";
+
+/**
+ * Mark the finding titled `title` resolved, in place, in Qodo's review comment.
+ *
+ * Qodo does not strike a finding it has re-read and no longer reports — it
+ * re-lists it verbatim — so an operator who has verified a finding is fixed or
+ * wrong has no way to clear the gate except by editing this comment. The chip
+ * form is load-bearing: `identityOf` strips `<code>☑ …</code>`, so writing the
+ * marker as a chip resolves the finding WITHOUT forking its identity from the
+ * copies Qodo re-appends on later reviews. A bare `☑` in the title would fork
+ * it, leaving every earlier copy unresolved and still blocking.
+ *
+ * Returns the edited body, or null when no finding matches — callers must not
+ * silently no-op an operator's dismissal.
+ */
+export function markQodoFindingResolved(
+  body: string,
+  title: string,
+): string | null {
+  const summaries = [
+    ...body.matchAll(/<summary>\s*\d+\.[\s\S]*?<\/summary>/giu),
+  ];
+  const candidates = summaries
+    .map((match, index) => {
+      const block = match[0];
+      const summary = block.slice("<summary>".length, -"</summary>".length);
+      const bodyStart = match.index + block.length;
+      const nextSummary = summaries[index + 1]?.index ?? body.length;
+      const ruleIndex = body.indexOf("<hr/>", bodyStart);
+      const findingBody = body.slice(
+        bodyStart,
+        ruleIndex === -1 || ruleIndex > nextSummary ? nextSummary : ruleIndex,
+      );
+      return {
+        start: match.index,
+        block,
+        summary,
+        identity: findingDescription(findingBody),
+      };
+    })
+    .filter((candidate) => findingTitle(candidate.summary) === title);
+  if (candidates.length === 0) return null;
+
+  // Qodo re-appends its whole review, so one finding routinely appears several
+  // times and every copy must be marked — the gate counts an unmarked copy as
+  // still blocking. Copies are recognised by title + description rather than
+  // by `identityOf`: that hashes the whole rendering, and two copies of one
+  // finding have been observed differing only by a markdown heading level in
+  // the agent prompt. Distinct findings that merely share a headline have
+  // different descriptions, and resolving one of those on the operator's
+  // behalf would clear something they never verified — so that still refuses.
+  if (new Set(candidates.map((candidate) => candidate.identity)).size > 1) {
+    throw new Error(
+      `"${title}" matches ${String(candidates.length)} different findings in the review comment; ` +
+        `resolve them from the PR so the right one is chosen deliberately.`,
+    );
+  }
+  if (candidates.every((candidate) => candidate.block.includes("☑"))) {
+    return body;
+  }
+
+  // Rewrite back-to-front so each splice leaves earlier offsets valid.
+  let edited = body;
+  for (const candidate of [...candidates].reverse()) {
+    if (candidate.block.includes("☑")) continue;
+    const chipIndex = candidate.block.indexOf("<code>");
+    const insertAt =
+      chipIndex === -1
+        ? candidate.block.length - "</summary>".length
+        : chipIndex;
+    const replacement =
+      candidate.block.slice(0, insertAt) +
+      `${QODO_RESOLVED_CHIP} ` +
+      candidate.block.slice(insertAt);
+    edited =
+      edited.slice(0, candidate.start) +
+      replacement +
+      edited.slice(candidate.start + candidate.block.length);
+  }
+  return edited;
+}
+
 function parseSeveritySection(
   section: string,
   priority: 1 | 2 | 3,

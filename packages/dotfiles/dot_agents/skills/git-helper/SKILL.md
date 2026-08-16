@@ -11,7 +11,9 @@ Inspect first, preserve user work, and use the repository's owning branch workfl
 
 In `shepherdjerred/monorepo`, every PR — human or agent, new or existing — is a git-spice stack. Load `git-spice-helper` first; it is authoritative for branch creation, restacking, and publishing.
 
-Load `worktree-workflow` before creating an isolated worktree. Do not use a bare `gh pr create` or hand-written rebase in place of the owning stack tool.
+When working in Conductor, use the provided isolated workspace; do not create a
+second worktree unless the user explicitly asks for one. Do not use a bare
+`gh pr create` or hand-written rebase in place of the owning stack tool.
 
 ## Current baseline
 

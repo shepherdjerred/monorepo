@@ -15,7 +15,8 @@
     "./wrappers/claude-agent": "./src/claude-agent-wrapper.ts",
     "./wrappers/codex": "./src/codex-trace.ts",
     "./codex-jsonl": "./src/codex-jsonl.ts",
-    "./wrappers/text-stream": "./src/text-stream-wrapper.ts"
+    "./wrappers/text-stream": "./src/text-stream-wrapper.ts",
+    "./otel-globals": "./src/otel-globals.ts"
   },
   "scripts": {
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
@@ -31,6 +32,7 @@
   "dependencies": {
     "@ai-sdk/otel": "^1.0.58",
     "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/api-logs": "^0.221.0",
     "@opentelemetry/core": "^2.7.1",
     "@opentelemetry/sdk-trace-base": "^2.9.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { hermeticGitEnv } from "./lib/test-git.ts";
 
 import {
   generatedBuildNumberFromSubject,
@@ -67,6 +68,8 @@ function batch(
 
 async function git(repo: string, args: string[]): Promise<string> {
   const proc = Bun.spawn(["git", "-C", repo, ...args], {
+    // Isolated from the operator's ~/.gitconfig — see hermeticGitEnv.
+    env: hermeticGitEnv(repo),
     stdout: "pipe",
     stderr: "pipe",
   });

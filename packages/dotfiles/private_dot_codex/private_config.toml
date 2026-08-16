@@ -69,16 +69,6 @@ last_updated = "2026-06-01T18:47:47Z"
 source_type = "local"
 source = "/Users/jerred/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
-[mcp_servers.mcp-gateway-fastmail]
-command = "npx"
-args = ["-y", "mcp-remote", "https://mcp-gateway.tailnet-1a49.ts.net/fastmail/sse", "--transport", "sse-only"]
-enabled = false
-
-[mcp_servers.mcp-gateway-github]
-command = "npx"
-args = ["-y", "mcp-remote", "https://mcp-gateway.tailnet-1a49.ts.net/github/sse", "--transport", "sse-only"]
-enabled = false
-
 [mcp_servers.node_repl]
 args = []
 command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"

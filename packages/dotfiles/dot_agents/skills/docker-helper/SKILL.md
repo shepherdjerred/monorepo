@@ -777,8 +777,12 @@ docker run -it --rm --entrypoint sh "$IMAGE"
 IMAGE="myregistry/myapp"
 VERSION="1.0.0"
 
-# Create builder if not exists
-docker buildx create --name multiarch --use 2>/dev/null || true
+# Create or select the builder explicitly
+if docker buildx inspect multiarch; then
+  docker buildx use multiarch
+else
+  docker buildx create --name multiarch --use
+fi
 
 # Build and push for multiple architectures
 docker buildx build \

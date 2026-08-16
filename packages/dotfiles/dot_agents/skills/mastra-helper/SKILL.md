@@ -20,10 +20,10 @@ description: |
 
 ```bash
 # Create new Mastra project
-npm create mastra@latest
+bunx create-mastra@latest
 
 # Or add to existing project
-npm install @mastra/core
+bun add @mastra/core
 ```
 
 ## Core Concepts

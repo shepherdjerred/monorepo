@@ -160,6 +160,27 @@ describe("evaluateGate", () => {
     expect(d.message).toContain("P2");
   });
 
+  test("names the finding when the thread carries a title", () => {
+    // Comment-parsed findings carry a title; listing only the path forces the
+    // operator to open GitHub to learn what is blocking.
+    const d = evaluateGate({
+      ...base,
+      reviewState: "reviewed",
+      threads: [thread({ title: "S3 fetch lacks timeout" })],
+    });
+    expect(d.message).toContain("S3 fetch lacks timeout");
+    expect(d.message).toContain("src/x.ts:10");
+  });
+
+  test("omits the title separator for a thread without one", () => {
+    const d = evaluateGate({
+      ...base,
+      reviewState: "reviewed",
+      threads: [thread({})],
+    });
+    expect(d.message).toContain("P2 src/x.ts:10");
+  });
+
   test("passes on a skip with the reason in the message", () => {
     const d = evaluateGate({
       ...base,

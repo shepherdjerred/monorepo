@@ -29,15 +29,12 @@ description: |
 ### Create New Project
 
 ```bash
-# npm
-npm create vite@latest my-app -- --template react-ts
-
 # Bun
 bun create vite my-app --template react-ts
 
 cd my-app
-npm install  # or bun install
-npm run dev
+bun install
+bun run dev
 ```
 
 ### Templates Available

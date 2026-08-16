@@ -556,7 +556,6 @@ observability, ingress, or child-resource signal.
 | `kyverno-policies`             | `kyverno-policies`             | Policy app synced; Kyverno shows no rejected/invalid policy resources; any policy preventing expected deploys is Red for the affected app.                                                  |
 | `loki`                         | `loki`                         | Loki, gateway, cache, and canary workloads ready; Loki ingress proxy ready; Section 6 log queries return data.                                                                              |
 | `mc-router`                    | `mc-router`                    | Router deployment ready; NodePort/service routes Minecraft hostnames; if any running Minecraft server is unreachable through the router, mark that server Red.                              |
-| `mcp-gateway`                  | `mcp-gateway`                  | Deployment ready; Tailscale ingress proxy ready; TCP readiness on port 9090 passes; logs show configured MCP backends start without credential/auth failures.                               |
 | `media`                        | `media`                        | All media deployments ready; Tailscale proxies ready; Plex and qBittorrent ServiceMonitors scrape; `QBitTorrentFirewalled` is Red; individual \*arr UI failures are Yellow/Red by service.  |
 | `minecraft-shuxin`             | `minecraft-shuxin`             | Desired replicas currently `0` is Green/idle; if scaled up, StatefulSet ready, Minecraft/RCON reachable, and Bluemap ingress proxy ready.                                                   |
 | `minecraft-sjerred`            | `minecraft-sjerred`            | Desired replicas currently `0` is Green/idle; if scaled up, StatefulSet ready, Minecraft/RCON reachable, and Bluemap ingress proxy ready.                                                   |
@@ -588,7 +587,7 @@ observability, ingress, or child-resource signal.
 
 Some apps intentionally have no app-native metrics. For these, the matrix uses
 workload readiness, logs, ingress response, Bugsink, and dependency checks:
-`birmel`, `ddns`, `freshrss`, `golink`, `mcp-gateway`, `redlib`,
+`birmel`, `ddns`, `freshrss`, `golink`, `redlib`,
 `starlight-karma-bot-*`, `syncthing`, and idle game servers.
 Report them as Green only after the row-specific non-metric check passes.
 

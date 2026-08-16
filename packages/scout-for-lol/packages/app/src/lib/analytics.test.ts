@@ -159,6 +159,11 @@ describe("normalizePath", () => {
     expect(normalizePath("/g/123/players/SomeAlias")).toBe(
       "/g/:guildId/players/:alias",
     );
+    // The manage tab is a sub-route; knownRoute is a closed allowlist, so
+    // omitting it would report every manage pageview as /not-found.
+    expect(normalizePath("/g/123/players/SomeAlias/manage")).toBe(
+      "/g/:guildId/players/:alias/manage",
+    );
     expect(normalizePath("/g/123/reports/45/edit")).toBe(
       "/g/:guildId/reports/:reportId/edit",
     );

@@ -252,6 +252,49 @@ If a command legitimately needs error handling, handle the specific error explic
 
 ## Commands
 
+### Linear and PostHog CLIs
+
+The macOS dotfiles install both vendor CLIs and load their credentials from
+1Password through the Fish template. Load the matching concise skill for the
+schema-first workflow and dated deep references. Do not paste or print either
+token, and do not use an interactive login as the normal setup path.
+
+For Linear, verify the ambient credential and workspace first:
+
+```bash
+linear --version
+linear auth whoami
+linear issue id                 # resolve the issue attached to the branch
+linear issue view SJ-123        # inspect an issue
+linear issue list --team <key>  # list assigned/open work
+```
+
+The configured workspace is `sjerred` (`monorepo`). Use
+`--workspace sjerred` when the current directory or default workspace is
+ambiguous. Linear owns plans, TODOs, review queues, and follow-ups; use the
+`linear-helper` skill before creating or changing work, and keep feature PRs on
+the repository's git-spice workflow. `issue id` needs a branch identifier, and
+issue/cycle lists need `--team <key>` unless the repository has a default team.
+
+For PostHog, use the agent-first API surface rather than `posthog-cli login`:
+
+```bash
+posthog-cli --version
+posthog-cli api search read-data-schema
+posthog-cli api info read-data-schema
+posthog-cli api call read-data-schema '{"query":{"kind":"events"}}'
+```
+
+The shell supplies `POSTHOG_CLI_API_KEY` and project `549883`. Before any
+analytics query, discover the event/property schema; before a mutation, inspect
+the tool with `info`, drill into every hinted schema field, validate with
+`--dry-run`, and pass `--confirm` only for the exact user-authorized target.
+Read `posthog-helper` for the complete workflow. Source-side analytics checks
+and a successful capture response do not prove that PostHog stored an event;
+use the live API/Live Events for runtime acceptance.
+
+### General repository commands
+
 ```bash
 # Local iteration: run only the package tasks relevant to the change
 bunx turbo run <task> --filter=<pkg>   # e.g. bunx turbo run typecheck --filter=birmel
@@ -399,9 +442,41 @@ transcripts into the repository, commits, logs, or chat.
 
 ### Example History Queries
 
-There is no single cross-client history index, so combine the read-only queries
-below. The seven-day examples use a rolling window; use explicit start and end
-dates when “last week” means a calendar week.
+`toolkit history` provides the preferred local cross-client index. Install its
+macOS LaunchAgent once; it polls the documented stores every 30 seconds and
+keeps a private, rebuildable FTS5 index under `~/.toolkit/history/`. Search is
+read-only and does not run live GitHub, deployment, Kubernetes, or cloud checks.
+
+```bash
+# Install and start background ingestion.
+toolkit history daemon install
+
+# “What did I work on last week?” (rolling seven-day window).
+toolkit history recent --since 7d
+
+# “Didn't I solve this before?”
+toolkit history search "argocd prune" --since 90d --include-excerpts
+
+# Inspect source coverage and ingestion errors.
+toolkit history sources
+toolkit history daemon status
+
+# “What's the status of X?” — history finds prior context; verify current truth separately.
+toolkit history search "X" --since 30d
+toolkit deployed <service-or-commit>
+toolkit pr health <PR_NUMBER>
+```
+
+Use `--source conductor|claude|codex|cursor|opencode-conductor|opencode-standalone`
+to narrow a search and `--json` for agent-readable output. `--include-excerpts`
+reopens source stores read-only for bounded excerpts; complete transcript bodies
+are not copied into the index. The LaunchAgent, index, socket, state, and logs
+are user-private. Never index or print standalone OpenCode's `auth.json`.
+
+The commands below remain useful as a read-only fallback when the index has not
+been installed or a client has changed its internal schema. The seven-day
+examples use a rolling window; use explicit start and end dates when “last week”
+means a calendar week.
 
 To find recent work across the main stores:
 
@@ -516,6 +591,46 @@ Local and CI verification deliberately have different scopes:
 
 Run `bun run verify` locally only when explicitly reproducing CI or modifying
 the verification machinery itself. There is no `pre-push` hook.
+
+### CI credentials — `check-ci-env`
+
+`scripts/check-ci-env.ts` (the `//#check-ci-env` turbo task, in `bun run
+verify`) asserts every env var a Buildkite step's scripts `requireEnv` is
+actually provided to that step. It reads the committed vault snapshot, so it
+needs no 1Password access.
+
+The gap it closes: steps take `buildkite-ci-secrets` through `envFrom`, which
+`check-1password-items` cannot see — a script requiring a field the item does
+not carry passed every gate and only failed on `main` after merge. When it
+fires, either add the field to the item **and refresh the vault snapshot**, set
+it in the step's `env`, or assign it in the step's command. Requirements the
+analysis cannot read statically (a non-literal `requireEnv`, or one gated
+behind a flag the step passes) go in the two exception tables at the top of the
+script, each with its reason.
+
+### Blocked review gate — `review-findings`
+
+```bash
+GH_TOKEN=$(gh auth token) bun scripts/review-findings.ts list <pr>
+```
+
+Lists every finding blocking the required Qodo gate with its title, severity
+and location. Run it **before** pushing a fix: a fix pushed without resolving
+its thread only surfaces at the end of a ~7-minute gate cycle.
+
+Qodo re-lists a finding it no longer stands behind rather than striking it, so
+a PR whose findings are all fixed or all wrong can stay blocked indefinitely.
+For that case only, after verifying a finding is fixed at this head or
+incorrect:
+
+```bash
+… review-findings.ts dismiss <pr> --finding "<title>" --reason "<why>"
+… review-findings.ts resolve-thread <pr> --thread <id> --reason "<why>"
+```
+
+Both require a reason and record it in a single audit comment on the PR, so a
+dismissal is a reviewable decision rather than an invisible edit to a bot's
+comment. Neither is automatic and neither runs in CI.
 
 ## PR Fleet Controller
 

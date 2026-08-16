@@ -62,6 +62,11 @@ Commands:
   discord wait <CH>          Block until a matching message arrives
   discord slash <CH> <BOT> <CMD> [ARGS...]  Invoke another bot's slash command
   discord voice join|leave|states           Voice presence + who's streaming
+
+  history search <QUERY>                     Search local agent history
+  history recent                            Show recent indexed work
+  history sources                           Show source/index status
+  history daemon install|start|stop|status   Manage background ingestion
   discord guilds|channels    Discovery
   discord whoami             Daemon identities + uptime
 
@@ -89,6 +94,9 @@ Examples:
   toolkit screenshot stocks-sjer-red /
   toolkit alerts list
   toolkit gf dashboards
+  toolkit history daemon install
+  toolkit history recent --since 7d
+  toolkit history search "kubernetes" --since 30d
 `);
 }
 
@@ -150,6 +158,11 @@ async function main(): Promise<void> {
     case "discord": {
       const { handleDiscordCommand } = await import("./handlers/discord.ts");
       await handleDiscordCommand(subcommand, args.slice(2));
+      break;
+    }
+    case "history": {
+      const { handleHistoryCommand } = await import("./handlers/history.ts");
+      await handleHistoryCommand(subcommand, args.slice(2));
       break;
     }
     default:

@@ -37,6 +37,7 @@ src/
 │   ├── alerts.ts         # toolkit alerts
 │   ├── bugsink.ts        # toolkit bugsink
 │   ├── grafana.ts        # toolkit gf
+│   ├── history.ts        # toolkit history
 │   └── screenshot.ts     # toolkit screenshot
 ├── commands/
 │   ├── pr/               # PR subcommands
@@ -44,6 +45,7 @@ src/
 │   ├── alerts.ts         # Alert ledger subcommands
 │   ├── bugsink/          # Bugsink subcommands
 │   ├── grafana/          # Grafana subcommands
+│   ├── history/          # Local agent-history commands
 │   └── screenshot/       # `screenshot` orchestration
 └── lib/
     ├── github/           # GitHub API via gh CLI
@@ -53,6 +55,7 @@ src/
     ├── grafana/          # Grafana REST API client
     ├── pinchtab-cli/     # PinchTab CLI wrapper (screenshot's browser driver)
     ├── screenshot/       # Package registry + dev-server lifecycle
+    ├── history/          # Local agent-history index, source adapters, daemon
     └── output/           # Output formatting
 ```
 
@@ -173,6 +176,44 @@ Design notes encoded in the code:
   with `--external ffmpeg-static` (an optional native dep of a voice transitive).
 
 The agent-facing how-to lives in the `discord` skill.
+
+## `history` — search local agent conversations
+
+`toolkit history` searches a private, local FTS5 index built from Conductor,
+Claude Code, Codex, Cursor, bundled OpenCode, and standalone OpenCode. It is a
+historical recollection tool: it never calls GitHub, ArgoCD, Kubernetes, or
+other live services.
+
+```bash
+toolkit history daemon install
+toolkit history recent --since 7d
+toolkit history search "kubernetes ingress" --since 30d --include-excerpts
+toolkit history sources --json
+toolkit history daemon status --json
+toolkit history daemon reindex
+```
+
+The daemon is a user-scoped macOS LaunchAgent named
+`com.jerred.toolkit-history`. It polls every 30 seconds, owns writes to
+`~/.toolkit/history/index.sqlite`, and exposes a 0600 Unix socket for status and
+reindex requests. The index uses a contentless FTS5 table plus metadata; full
+transcript bodies are never stored in ordinary index tables. Excerpts are
+loaded read-only from the original source only when `--include-excerpts` is
+requested.
+
+Runtime files are private: `index.sqlite`, `daemon.sock`, `state.json`, and
+`logs/` are under `~/.toolkit/history/`; the plist is
+`~/Library/LaunchAgents/com.jerred.toolkit-history.plist`. `daemon stop` unloads
+the job without deleting the plist, while `daemon uninstall` unloads and
+removes it. LaunchAgent installation is macOS-only.
+
+Source adapters must inspect only documented conversation tables/files, fail
+with a source-specific schema error when a client changes, and report that
+error through `history sources` rather than silently claiming coverage. Never
+read standalone OpenCode `~/.local/share/opencode/auth.json`; credentials must
+not enter the index, excerpts, logs, tests, or commits. Source SQLite files and
+JSONL transcripts are always opened/read-only. Use the history skill for the
+full command recipes and source boundaries.
 
 ## `pr asset` — PR media host
 
