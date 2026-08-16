@@ -106,6 +106,18 @@
         ".buildkite/scripts/select-image-targets.ts"
       ]
     },
+    // Every env var a pipeline step's scripts require must be provided by that
+    // step. Reads the committed vault snapshot (hashes only), never 1Password.
+    "//#check-ci-env": {
+      "inputs": [
+        ".buildkite/pipeline.yml",
+        "scripts/**",
+        "!scripts/node_modules/**",
+        "packages/homelab/scripts/**",
+        "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
+        "packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts"
+      ]
+    },
     "//#check-script-migrations": {
       "inputs": [
         "scripts/script-migrations.json",

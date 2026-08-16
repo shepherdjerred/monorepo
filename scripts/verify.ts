@@ -7,6 +7,7 @@ const turboTasks = [
   "check-suppressions",
   "check-ai-architecture",
   "check-patched-deps",
+  "check-ci-env",
   "check-script-migrations",
   "script-coverage",
   "markdownlint",
