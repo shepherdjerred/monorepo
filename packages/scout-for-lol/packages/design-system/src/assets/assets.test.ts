@@ -21,6 +21,9 @@ describe("browser-safe Scout asset contract", () => {
     expect(() => normalizeBrowserChampionKey("Aatrox%20")).toThrow(
       "Unknown champion key Aatrox%20",
     );
+    expect(() => normalizeBrowserChampionKey("Aatrox%ZZ")).toThrow(
+      "Unknown champion key Aatrox%ZZ",
+    );
   });
 
   test("resolves versioned same-origin game and shared rank URLs", () => {

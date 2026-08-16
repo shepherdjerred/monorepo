@@ -38,11 +38,15 @@ type ScoutThemeContextValue = {
 
 const ScoutThemeContext = createContext<ScoutThemeContextValue | null>(null);
 
+export function systemColorSchemeMediaQuery(
+  matchMedia: typeof globalThis.matchMedia | undefined,
+): MediaQueryList | null {
+  if (typeof matchMedia !== "function") return null;
+  return matchMedia("(prefers-color-scheme: dark)");
+}
+
 function systemPrefersDark(): boolean {
-  return (
-    typeof globalThis.matchMedia === "function" &&
-    globalThis.matchMedia("(prefers-color-scheme: dark)").matches
-  );
+  return systemColorSchemeMediaQuery(globalThis.matchMedia)?.matches ?? false;
 }
 
 function initialPreference(): ScoutThemePreferenceV1 {
@@ -68,7 +72,8 @@ export function ScoutThemeProvider(props: {
   const resolvedMode = resolveScoutMode(preference.mode, systemDark);
 
   useEffect(() => {
-    const media = globalThis.matchMedia("(prefers-color-scheme: dark)");
+    const media = systemColorSchemeMediaQuery(globalThis.matchMedia);
+    if (media === null) return;
     const onChange = (event: MediaQueryListEvent): void => {
       setSystemDark(event.matches);
     };

@@ -41,6 +41,15 @@ function sourceForUrl(url: string): string | undefined {
   return undefined;
 }
 
+export function decodeScoutAssetRequestUrl(url: string): string | null {
+  try {
+    return decodeURIComponent(url);
+  } catch (error) {
+    if (error instanceof URIError) return null;
+    throw error;
+  }
+}
+
 function configureAssetServer(middlewares: Connect.Server): void {
   middlewares.use((request, response, next) => {
     const url = request.url?.split("?")[0];
@@ -53,8 +62,8 @@ function configureAssetServer(middlewares: Connect.Server): void {
       next();
       return;
     }
-    const decodedUrl = decodeURIComponent(url);
-    if (decodedUrl.includes("..")) {
+    const decodedUrl = decodeScoutAssetRequestUrl(url);
+    if (decodedUrl === null || decodedUrl.includes("..")) {
       response.statusCode = 400;
       response.end("Invalid asset path");
       return;

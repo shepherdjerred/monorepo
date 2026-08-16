@@ -76,7 +76,17 @@ export function normalizeBrowserChampionKey(value: string | number): string {
     }
     return key;
   }
-  const decoded = value.includes("%") ? decodeURIComponent(value) : value;
+  let decoded = value;
+  if (value.includes("%")) {
+    try {
+      decoded = decodeURIComponent(value);
+    } catch (error) {
+      if (error instanceof URIError) {
+        throw new Error(`Unknown champion key ${value}`, { cause: error });
+      }
+      throw error;
+    }
+  }
   const key = championKeyByLowercase.get(decoded.toLowerCase());
   if (key === undefined) {
     throw new Error(`Unknown champion key ${value}`);
