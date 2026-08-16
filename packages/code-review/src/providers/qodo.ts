@@ -171,14 +171,18 @@ function parseSeveritySection(
 ): RenderedFinding[] {
   const findings: RenderedFinding[] = [];
   const summaries = [
-    ...section.matchAll(/<summary>(\s*(\d+)\.[\s\S]*?)<\/summary>/giu),
+    ...section.matchAll(/<summary>\s*\d+\.[\s\S]*?<\/summary>/giu),
   ];
   for (const [index, summaryMatch] of summaries.entries()) {
-    const summary = summaryMatch[1];
-    const numberText = summaryMatch[2];
-    if (summary === undefined || numberText === undefined) {
+    const summary = summaryMatch[0].slice(
+      "<summary>".length,
+      -"</summary>".length,
+    );
+    const numberSeparatorIndex = summary.indexOf(".");
+    if (numberSeparatorIndex <= 0) {
       throw new Error("Qodo finding summary could not be located");
     }
+    const numberText = summary.slice(0, numberSeparatorIndex).trim();
     const nextSummaryIndex = summaries[index + 1]?.index ?? section.length;
     const bodyStart = summaryMatch.index + summaryMatch[0].length;
     // Qodo closes each finding with a rule. Stopping there keeps the container
@@ -316,7 +320,7 @@ function assertContiguousNumbering(rendered: readonly RenderedFinding[]): void {
  * Qodo renders it.
  */
 const LOOSE_FINDING_OPENER =
-  /<(?:summary|strong|b|p|h[1-6])[^>]*>\s*(\d+)\.\s/giu;
+  /<(?:summary|strong|b|p|h[1-6])[^>]*>\s*\d+\.\s/giu;
 
 /**
  * Prove the parser reached every finding row the comment renders.

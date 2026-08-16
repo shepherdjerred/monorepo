@@ -3,7 +3,7 @@
 /** @jsxFrag React.Fragment */
 import React from "react";
 import type { RenderFunctionInput } from "astro-opengraph-images";
-import { ScoutEmblem } from "@scout-for-lol/design-system/brand";
+import { ScoutEmblem as ScoutSatoriEmblem } from "@scout-for-lol/design-system/satori/brand";
 import { scoutThemes } from "@scout-for-lol/design-system/themes";
 
 // This file is imported directly by `astro.config.mjs`, so Astro's config
@@ -61,7 +61,7 @@ export function ogTemplate({
             color: colors.primary,
           }}
         >
-          <ScoutEmblem width={62} height={62} />
+          <ScoutSatoriEmblem width={62} height={62} />
         </div>
         <div
           style={{
