@@ -3,14 +3,47 @@ resource "cloudflare_zone" "clauderon_com" {
   name    = "clauderon.com"
 }
 
-# Apex CNAME to Cloudflare Tunnel
-resource "cloudflare_dns_record" "clauderon_com_cname_apex" {
+# The archived site is retired. Cloudflare's edge serves the redirect before
+# any origin fetch, so the discard address is never actually contacted.
+resource "cloudflare_dns_record" "clauderon_com_apex" {
   zone_id = cloudflare_zone.clauderon_com.id
   ttl     = 1
   name    = "clauderon.com"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  type    = "AAAA"
+  content = "100::"
   proxied = true
+}
+
+resource "cloudflare_dns_record" "clauderon_com_www" {
+  zone_id = cloudflare_zone.clauderon_com.id
+  ttl     = 1
+  name    = "www"
+  type    = "AAAA"
+  content = "100::"
+  proxied = true
+}
+
+resource "cloudflare_ruleset" "clauderon_com_redirect" {
+  zone_id = cloudflare_zone.clauderon_com.id
+  name    = "clauderon.com to sjer.red"
+  kind    = "zone"
+  phase   = "http_request_dynamic_redirect"
+
+  rules = [{
+    ref         = "clauderon_to_sjer_red"
+    description = "Redirect the retired Clauderon site to sjer.red"
+    expression  = "(http.host eq \"clauderon.com\" or http.host eq \"www.clauderon.com\")"
+    action      = "redirect"
+    action_parameters = {
+      from_value = {
+        status_code           = 301
+        preserve_query_string = true
+        target_url = {
+          value = "https://sjer.red"
+        }
+      }
+    }
+  }]
 }
 
 # Email security

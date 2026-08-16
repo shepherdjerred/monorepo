@@ -129,7 +129,6 @@ export const staticSites: StaticSiteConfig[] = [
     // hard refresh gets the trailing-slash redirect and then a 404 page.
     spaFallbacks: [{ pathPrefix: "/course/*", fallbackPath: "/index.html" }],
   },
-  { hostname: "clauderon.com", bucket: "clauderon" },
   { hostname: "ts-mc.net", bucket: "ts-mc" },
   { hostname: "ppl.glitter-boys.com", bucket: "glitter-boys-ppl" },
   { hostname: "cook.sjer.red", bucket: "cook" },

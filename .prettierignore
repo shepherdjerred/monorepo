@@ -39,8 +39,6 @@ packages/discord-plays-mario-kart/wasm-src/
 packages/discord-plays-mario-kart/packages/backend/assets/n64wasm/
 
 # Generated
-packages/clauderon/mobile/src/types/generated/
-packages/clauderon/web/shared/src/generated/
 packages/scout-for-lol/packages/backend/generated/
 
 # Codegen output (Prisma etc.) — `generate` turbo-task outputs, never hand-formatted

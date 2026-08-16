@@ -8,7 +8,6 @@ Completed or superseded projects, kept read-only for reference. Do not modify; e
 - [cashly](cashly/) — money-tracking concept monorepo (React web, shared core, CLI)
 - [castle-casters](castle-casters/) — Quoridor with a medieval fantasy theme (university capstone)
 - [castle-casters-web-rewrite](castle-casters-web-rewrite/) — web rewrite of Castle Casters
-- [clauderon](clauderon/) — Rust session manager for isolated Claude Code / Codex sessions in Docker
 - [devcontainers-features](devcontainers-features/) — devcontainer feature definitions (Earthly)
 - [discord](discord/) — earlier Discord bot monorepo: karma, LoL match tracking, music
 - [docblocs](docblocs/) — document templating system with a custom AST (TypeScript)
