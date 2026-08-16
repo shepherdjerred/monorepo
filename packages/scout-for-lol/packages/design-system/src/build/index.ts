@@ -1,6 +1,6 @@
 import { createReadStream } from "node:fs";
 import { cp, mkdir, stat, writeFile } from "node:fs/promises";
-import { extname, resolve } from "node:path";
+import { extname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gameAssetManifest } from "@scout-for-lol/data/browser-assets";
 import type { Connect, Plugin } from "vite";
@@ -24,20 +24,50 @@ function mimeType(path: string): string {
   return "application/octet-stream";
 }
 
+export function resolveScoutAssetSource(
+  root: string,
+  relativePath: string,
+): string | undefined {
+  if (relativePath.length === 0 || isAbsolute(relativePath)) return undefined;
+  const source = resolve(root, relativePath);
+  const pathFromRoot = relative(root, source);
+  if (
+    pathFromRoot === "" ||
+    pathFromRoot === ".." ||
+    pathFromRoot.startsWith(`..${sep}`) ||
+    isAbsolute(pathFromRoot)
+  ) {
+    return undefined;
+  }
+  return source;
+}
+
 function sourceForUrl(url: string): string | undefined {
   const gamePrefix = `/assets/scout/game/${gameAssetManifest.sourceVersion}/`;
   if (url.startsWith(gamePrefix)) {
-    return resolve(dataAssetsRoot, url.slice(gamePrefix.length));
+    return resolveScoutAssetSource(
+      dataAssetsRoot,
+      url.slice(gamePrefix.length),
+    );
   }
   const fontPrefix = "/assets/scout/fonts/";
   if (url.startsWith(fontPrefix))
-    return resolve(ownedAssetsRoot, "fonts", url.slice(fontPrefix.length));
+    return resolveScoutAssetSource(
+      resolve(ownedAssetsRoot, "fonts"),
+      url.slice(fontPrefix.length),
+    );
   const ranksPrefix = "/assets/scout/shared/ranks/";
   if (url.startsWith(ranksPrefix))
-    return resolve(ownedAssetsRoot, "ranks", url.slice(ranksPrefix.length));
+    return resolveScoutAssetSource(
+      resolve(ownedAssetsRoot, "ranks"),
+      url.slice(ranksPrefix.length),
+    );
   const brandPrefix = "/assets/scout/brand/";
   if (url.startsWith(brandPrefix) && !url.endsWith("theme-bootstrap.js"))
-    return resolve(ownedAssetsRoot, "brand", url.slice(brandPrefix.length));
+    return resolveScoutAssetSource(
+      resolve(ownedAssetsRoot, "brand"),
+      url.slice(brandPrefix.length),
+    );
   return undefined;
 }
 
@@ -48,6 +78,12 @@ export function decodeScoutAssetRequestUrl(url: string): string | null {
     if (error instanceof URIError) return null;
     throw error;
   }
+}
+
+export function scoutAssetStreamFailureAction(
+  headersSent: boolean,
+): "not-found" | "destroy" {
+  return headersSent ? "destroy" : "not-found";
 }
 
 function configureAssetServer(middlewares: Connect.Server): void {
@@ -76,7 +112,19 @@ function configureAssetServer(middlewares: Connect.Server): void {
     void stat(source)
       .then(() => {
         response.setHeader("content-type", mimeType(source));
-        createReadStream(source).pipe(response);
+        const stream = createReadStream(source);
+        stream.on("error", () => {
+          if (scoutAssetStreamFailureAction(response.headersSent) === "destroy") {
+            response.destroy();
+            return;
+          }
+          response.statusCode = 404;
+          response.end("Not found");
+        });
+        response.on("close", () => {
+          stream.destroy();
+        });
+        stream.pipe(response);
       })
       .catch(() => {
         response.statusCode = 404;
