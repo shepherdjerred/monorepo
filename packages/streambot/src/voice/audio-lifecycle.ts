@@ -8,6 +8,8 @@ import type {
 } from "@shepherdjerred/streambot/voice/local-models.ts";
 import { voiceTurnDeliveryFailuresTotal } from "@shepherdjerred/streambot/observability/metrics.ts";
 import {
+  VOICE_DTX_GAP_MS,
+  VOICE_DTX_TICK_MS,
   VOICE_FRAGMENT_TAIL_MARGIN_MS,
   VOICE_FRAGMENT_TAIL_MS,
   VOICE_VERIFICATION_DELAY_MS,
@@ -56,6 +58,9 @@ type PendingTurn = {
   verificationRunning: boolean;
   inputEnded: boolean;
   timer: ReturnType<typeof setTimeout>;
+  /** Wall-clock arrival of the last real packet; synthetic silence never refreshes it. */
+  lastPacketAtMs: number;
+  stopSilenceTicker: () => void;
 };
 
 export type CompletedVoiceTurn = {
@@ -95,7 +100,30 @@ export type VoiceAudioLifecycleOptions = {
   readonly onTurn: (turn: CompletedVoiceTurn) => Promise<void>;
   readonly now?: () => number;
   readonly createDecoder?: () => Pick<DiscordOpusDecoder, "decode" | "close">;
+  /**
+   * Repeating wall-clock ticker, active ONLY while a candidate is pending. Discord clients
+   * negotiate DTX and stop sending RTP during silence, so a purely packet-driven pipeline would
+   * never endpoint a live turn. Returns the stop function. Packet-clocked offline harnesses
+   * (corpus evaluation) must inject an inert ticker; if the ticker never fires, behavior degrades
+   * to the bounded max-utterance timeout — never to extra cloud calls.
+   */
+  readonly createSilenceTicker?: (
+    onTick: () => void,
+    intervalMs: number,
+  ) => () => void;
+  readonly dtxGapMs?: number;
+  readonly dtxTickMs?: number;
 };
+
+function defaultSilenceTicker(
+  onTick: () => void,
+  intervalMs: number,
+): () => void {
+  const timer = setInterval(onTick, intervalMs);
+  return () => {
+    clearInterval(timer);
+  };
+}
 
 function concatSamples(
   parts: readonly Float32Array[],
@@ -164,6 +192,9 @@ export class VoiceAudioLifecycle {
       }
       return;
     }
+    // Only real packets refresh the DTX clock; injected silence and finishInput padding must not,
+    // or a silent stream would keep itself alive.
+    this.pending.lastPacketAtMs = this.options.now?.() ?? Date.now();
     this.acceptPending(samples);
   }
 
@@ -271,14 +302,42 @@ export class VoiceAudioLifecycle {
       timer: setTimeout(() => {
         this.finishPending(pending, "timeout");
       }, this.options.maxUtteranceMs),
+      lastPacketAtMs: detectedAtMs,
+      stopSilenceTicker: () => {
+        /* replaced below once the pending turn is registered */
+      },
     };
     this.pending = pending;
+    const createTicker =
+      this.options.createSilenceTicker ?? defaultSilenceTicker;
+    pending.stopSilenceTicker = createTicker(() => {
+      this.onSilenceTick(pending);
+    }, this.options.dtxTickMs ?? VOICE_DTX_TICK_MS);
     for (const [otherUserId, state] of this.speakers) {
       if (otherUserId !== userId) {
         this.clearSpeaker(state);
         this.speakers.delete(otherUserId);
       }
     }
+  }
+
+  /**
+   * DTX endpointing: once no real packet has arrived for the gap threshold, the remote client has
+   * stopped its RTP stream, so feed wall-clock silence through the normal pending path. That
+   * advances the verification window (a wake whose tail fell into DTX silence still verifies) and
+   * the Silero VAD (which needs 0.65 s of actual silence input to complete), exactly as trailing
+   * packets would. A rejected verifier still discards the turn, so injection can never create
+   * cloud traffic that real speech would not have.
+   */
+  private onSilenceTick(pending: PendingTurn): void {
+    if (this.pending !== pending || this.closed) return;
+    const nowMs = this.options.now?.() ?? Date.now();
+    const gapMs = this.options.dtxGapMs ?? VOICE_DTX_GAP_MS;
+    if (nowMs - pending.lastPacketAtMs < gapMs) return;
+    const tickMs = this.options.dtxTickMs ?? VOICE_DTX_TICK_MS;
+    this.acceptPending(
+      new Float32Array(Math.ceil((tickMs / 1000) * SAMPLE_RATE)),
+    );
   }
 
   private acceptPending(samples: Float32Array): void {
@@ -437,6 +496,7 @@ export class VoiceAudioLifecycle {
     if (this.pending !== pending) return;
     this.pending = null;
     clearTimeout(pending.timer);
+    pending.stopSilenceTicker();
     pending.vad.flush();
     pending.vad.close();
     if (!pending.localVerified || !pending.sawSpeech) {
@@ -477,6 +537,7 @@ export class VoiceAudioLifecycle {
   private discardPending(pending: PendingTurn): void {
     if (this.pending === pending) this.pending = null;
     clearTimeout(pending.timer);
+    pending.stopSilenceTicker();
     pending.vad.close();
     clearParts(pending.pcm);
   }

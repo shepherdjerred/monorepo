@@ -78,6 +78,19 @@ function audio(opus: Uint8Array, index: number): ReceivedVoiceAudio {
  * Every caller needs it for the same reason — a turn that is still pending when the feed stops
  * is silently discarded by `close()`.
  */
+/**
+ * Offline evaluation is packet-clocked and clips carry their own recorded silence; the wall-clock
+ * DTX ticker would inject extra silence whenever ONNX inference ran slow, making measured
+ * endpoints a property of machine speed instead of the audio.
+ */
+function inertSilenceTickerStop(): void {
+  /* nothing to stop: the inert ticker never started anything */
+}
+
+function inertSilenceTicker(): () => void {
+  return inertSilenceTickerStop;
+}
+
 function verificationBarrier(): {
   readonly onScheduled: (settled: Promise<void>) => void;
   readonly settle: () => Promise<void>;
@@ -118,6 +131,7 @@ export async function evaluateDiscordOpusPackets(
     models,
     preRollMs: VOICE_WAKE_WINDOW_MS,
     maxUtteranceMs: 15_000,
+    createSilenceTicker: inertSilenceTicker,
     onCandidate: () => {
       candidate.detected = true;
     },
@@ -222,6 +236,7 @@ async function negativeSoak(
     models,
     preRollMs: VOICE_WAKE_WINDOW_MS,
     maxUtteranceMs: 15_000,
+    createSilenceTicker: inertSilenceTicker,
     onLocalVerificationScheduled: verification.onScheduled,
     onWake: () => {
       activations += 1;

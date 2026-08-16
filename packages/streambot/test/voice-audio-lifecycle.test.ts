@@ -364,6 +364,201 @@ describe("VoiceAudioLifecycle endpointing and cleanup", () => {
   });
 });
 
+type TickerHarness = {
+  nowMs: { value: number };
+  tick: () => void;
+  created: () => number;
+  stopped: () => number;
+  createSilenceTicker: (onTick: () => void, intervalMs: number) => () => void;
+  now: () => number;
+};
+
+function tickerHarness(): TickerHarness {
+  const nowMs = { value: 0 };
+  let onTick: (() => void) | null = null;
+  let created = 0;
+  let stopped = 0;
+  const stop = (): void => {
+    stopped += 1;
+  };
+  return {
+    nowMs,
+    tick: () => {
+      if (onTick === null) throw new Error("no silence ticker is active");
+      onTick();
+    },
+    created: () => created,
+    stopped: () => stopped,
+    createSilenceTicker: (callback) => {
+      created += 1;
+      onTick = callback;
+      return stop;
+    },
+    now: () => nowMs.value,
+  };
+}
+
+describe("VoiceAudioLifecycle DTX endpointing", () => {
+  test("endpoints on wall-clock silence when the client's DTX stops the packet stream", async () => {
+    const ticker = tickerHarness();
+    const turns: { userId: string; sampleCount: number }[] = [];
+    const lifecycle = new VoiceAudioLifecycle({
+      // vadEndsOn 0: the fake VAD completes on a silence chunk, like Silero after real silence.
+      models: fakeModels(2, 0),
+      preRollMs: 1200,
+      maxUtteranceMs: 15_000,
+      verificationDelayMs: 0,
+      postVerificationMs: 0,
+      now: ticker.now,
+      createSilenceTicker: ticker.createSilenceTicker,
+      createDecoder: () => ({
+        decode: (opus) => new Float32Array([opus[0] ?? 0]),
+        close: () => {
+          /* fake has no decoder handle */
+        },
+      }),
+      onTurn: async (turn) => {
+        turns.push({ userId: turn.userId, sampleCount: turn.pcm16k.length });
+      },
+    });
+
+    lifecycle.accept(audio("speaker-a", 2));
+    lifecycle.accept(audio("speaker-a", 3));
+    await Bun.sleep(0);
+    // The speaker stopped talking: no more packets ever arrive. Without silence injection this
+    // turn could only end at the 15 s max-utterance timeout.
+    expect(turns).toEqual([]);
+
+    ticker.nowMs.value += 200;
+    ticker.tick();
+    await Promise.resolve();
+    expect(turns).toEqual([{ userId: "speaker-a", sampleCount: 1602 }]);
+    expect(ticker.stopped()).toBe(1);
+    lifecycle.close();
+  });
+
+  test("fills the verification window from wall-clock silence so a wake in DTX still verifies", async () => {
+    const ticker = tickerHarness();
+    let verificationCalls = 0;
+    const turns: string[] = [];
+    const models = fakeModels(2, 0);
+    const lifecycle = new VoiceAudioLifecycle({
+      models: {
+        ...models,
+        verifyWakePhrase: (samples) => {
+          verificationCalls += 1;
+          return models.verifyWakePhrase(samples);
+        },
+      },
+      preRollMs: 1200,
+      maxUtteranceMs: 15_000,
+      // 200 ms of post-candidate audio required before the verifier can score.
+      verificationDelayMs: 200,
+      postVerificationMs: 0,
+      now: ticker.now,
+      createSilenceTicker: ticker.createSilenceTicker,
+      createDecoder: () => ({
+        decode: (opus) => new Float32Array([opus[0] ?? 0]),
+        close: () => {
+          /* fake has no decoder handle */
+        },
+      }),
+      onTurn: async (turn) => {
+        turns.push(turn.userId);
+      },
+    });
+
+    lifecycle.accept(audio("speaker-a", 2));
+    lifecycle.accept(audio("speaker-a", 3));
+    expect(verificationCalls).toBe(0);
+
+    // DTX silence fills the remaining window; the wake is not lost.
+    ticker.nowMs.value += 200;
+    ticker.tick();
+    ticker.tick();
+    await Bun.sleep(0);
+    expect(verificationCalls).toBe(1);
+    expect(turns).toEqual(["speaker-a"]);
+    lifecycle.close();
+  });
+
+  test("creates no ticker before a candidate and stops it on rejection and close", async () => {
+    const ticker = tickerHarness();
+    const models = fakeModels(2, 0);
+    const lifecycle = new VoiceAudioLifecycle({
+      models: {
+        ...models,
+        verifyWakePhrase: () => Promise.resolve({ accepted: false, score: 0 }),
+      },
+      preRollMs: 1200,
+      maxUtteranceMs: 15_000,
+      verificationDelayMs: 0,
+      postVerificationMs: 0,
+      now: ticker.now,
+      createSilenceTicker: ticker.createSilenceTicker,
+      createDecoder: () => ({
+        decode: (opus) => new Float32Array([opus[0] ?? 0]),
+        close: () => {
+          /* fake has no decoder handle */
+        },
+      }),
+      onTurn: () => Promise.reject(new Error("rejected wake reached command")),
+    });
+
+    lifecycle.accept(audio("speaker-a", 1));
+    expect(ticker.created()).toBe(0);
+
+    lifecycle.accept(audio("speaker-a", 2));
+    expect(ticker.created()).toBe(1);
+    lifecycle.accept(audio("speaker-a", 3));
+    await Bun.sleep(0);
+    expect(ticker.stopped()).toBe(1);
+
+    lifecycle.accept(audio("speaker-a", 2));
+    expect(ticker.created()).toBe(2);
+    lifecycle.close();
+    expect(ticker.stopped()).toBe(2);
+  });
+
+  test("injects nothing while packets are still arriving within the gap threshold", async () => {
+    const ticker = tickerHarness();
+    let verificationCalls = 0;
+    const models = fakeModels(2, 0);
+    const lifecycle = new VoiceAudioLifecycle({
+      models: {
+        ...models,
+        verifyWakePhrase: (samples) => {
+          verificationCalls += 1;
+          return models.verifyWakePhrase(samples);
+        },
+      },
+      preRollMs: 1200,
+      maxUtteranceMs: 15_000,
+      verificationDelayMs: 200,
+      postVerificationMs: 0,
+      now: ticker.now,
+      createSilenceTicker: ticker.createSilenceTicker,
+      createDecoder: () => ({
+        decode: (opus) => new Float32Array([opus[0] ?? 0]),
+        close: () => {
+          /* fake has no decoder handle */
+        },
+      }),
+      onTurn: () => Promise.reject(new Error("no turn should complete")),
+    });
+
+    lifecycle.accept(audio("speaker-a", 2));
+    // Jitter, not DTX: the gap is below the threshold, so a tick injects nothing and the
+    // verification window stays unfilled.
+    ticker.nowMs.value += 50;
+    ticker.tick();
+    ticker.tick();
+    await Bun.sleep(0);
+    expect(verificationCalls).toBe(0);
+    lifecycle.close();
+  });
+});
+
 describe("VoiceAudioLifecycle failure containment", () => {
   test("rebuilds a speaker whose decoder throws instead of wedging wake detection", async () => {
     const decodeErrors: unknown[] = [];

@@ -37,6 +37,12 @@ flowchart LR
   G[Separate Go Live<br/>movie audio and video] -. duck to 20% .-> R
 ```
 
+Endpointing cannot be purely packet-driven: Discord clients negotiate DTX and stop sending RTP at
+the end of speech, so while a candidate is pending the lifecycle runs a wall-clock ticker and,
+after a missing-packet gap, feeds synthetic silence through the same path real trailing silence
+would take. A broken ticker degrades to the bounded max-utterance timeout, never to extra cloud
+calls.
+
 Exact variables, asset paths, and limits are in
 [Streambot voice configuration](/reference/streambot-voice/).
 

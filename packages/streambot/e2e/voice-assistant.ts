@@ -24,6 +24,7 @@ import {
   runToolMatrix,
   type VoiceAcceptanceContext,
 } from "./voice-assistant-scenarios.ts";
+import { runDtxEndpoint } from "./voice-assistant-dtx.ts";
 import { runInvalidCredentialIsolation } from "./voice-assistant-failures.ts";
 import {
   BASELINE_CLIP,
@@ -65,12 +66,13 @@ async function runScenarios(context: VoiceAcceptanceContext): Promise<void> {
   }
   await runConcurrentIsolation(context);
   await runAuthorizationAndQueries(context);
+  await runDtxEndpoint(context);
   await runToolMatrix(context);
   await runOverlappingSpeakers(context);
   await runNegativeSoak(context);
   await runStopAndTeardown(context);
   process.stdout.write(
-    "PASS attributed DAVE replies, exact metric deltas, source restrictions, all voice tools, authorization, overlapping-speaker locking, negative soak, stop confirmation, and same-guild isolation\n",
+    "PASS attributed DAVE replies, exact metric deltas, source restrictions, DTX endpointing, all voice tools, authorization, overlapping-speaker locking, negative soak, stop confirmation, and same-guild isolation\n",
   );
 }
 
