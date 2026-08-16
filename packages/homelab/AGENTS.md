@@ -336,14 +336,24 @@ The canonical runbook is
 ```bash
 cd src/cdk8s
 # 1. Read-only: write the candidate manifest, then review it by hand.
-op run -- bun run r2:orphans -- inspect --manifest /tmp/r2-orphans.json
+op run -- bun run r2:orphans -- inspect \
+  --manifest /tmp/r2-orphans.json \
+  --hold-backup <reviewed-backup-name>
 # 2. Destructive: re-observes and revalidates before every deletion.
-op run -- bun run r2:orphans -- apply --manifest /tmp/r2-orphans.json --apply
+op run -- bun run r2:orphans -- apply \
+  --manifest /tmp/r2-orphans.json \
+  --hold-backup <reviewed-backup-name> \
+  --apply
 ```
 
 - `inspect` is read-only and rejects the destructive flags. `apply` requires an
   explicit `--apply`, plus either an interactive typed confirmation phrase or
   `--yes` (mandatory when stdin is not a TTY).
+- `--hold-backup` may be repeated. Holds are recorded in the versioned
+  manifest, included in the protected set, and excluded from bulk deletion.
+  Apply requires the exact same hold list. Use `--only-backup` with a fresh
+  inspect/apply pair when one held prefix is later approved as a separate
+  single-prefix cleanup.
 - A prefix is a candidate only if it has no live Velero `Backup` CR, no R2
   metadata, and no object newer than 24 hours. The manifest is revalidated
   against freshly observed state before the run and again before each

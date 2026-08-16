@@ -101,14 +101,23 @@ Generate a reviewed manifest with the operator-only cleanup tool:
 
 ```bash
 cd packages/homelab/src/cdk8s
-op run -- bun run r2:orphans -- inspect --manifest /tmp/r2-orphans.json
+op run -- bun run r2:orphans -- inspect \
+  --manifest /tmp/r2-orphans.json \
+  --hold-backup 6hourly-backup-20260728001550
 ```
 
 The manifest protects the union of live `Backup` CR names and backup metadata
 under `torvalds/backups/`. It only proposes per-backup prefixes under
 `zfspv-incr/backups/` whose newest object is more than 24 hours old. Review
 every candidate, byte count, object count, and newest timestamp before
-continuing.
+continuing. `--hold-backup` may be repeated; held prefixes are recorded in the
+manifest, shown as protected, and excluded from bulk deletion. The hold must
+exist in the R2 listing or inspection fails closed.
+
+For a separately reviewed single-prefix cleanup, use `--only-backup` on both
+`inspect` and `apply`. It requires that the selected prefix exists, is older
+than the 24-hour fence, and is not protected by live Velero metadata or a
+`Backup` CR.
 
 ## Step 3: Sanity-check before destroying
 
@@ -175,6 +184,7 @@ Apply exactly the reviewed manifest:
 cd packages/homelab/src/cdk8s
 op run -- bun run r2:orphans -- apply \
   --manifest /tmp/r2-orphans.json \
+  --hold-backup 6hourly-backup-20260728001550 \
   --apply
 ```
 
@@ -182,7 +192,39 @@ The command re-lists live Backup CRs, backup metadata, and every ZFS backup
 object before deleting anything and again before each prefix. Any drift from
 the reviewed manifest aborts the operation. Non-interactive use additionally
 requires `--yes`. After deletion it verifies that no object remains under any
-approved prefix.
+approved prefix. The hold list must exactly match the inspection command.
+
+When a held R2 prefix is intentionally paired with a local orphan snapshot,
+complete the bulk cleanup first, then create and apply a single-prefix
+manifest:
+
+```bash
+op run -- bun run r2:orphans -- inspect \
+  --manifest /tmp/r2-held.json \
+  --only-backup 6hourly-backup-20260728001550
+op run -- bun run r2:orphans -- apply \
+  --manifest /tmp/r2-held.json \
+  --only-backup 6hourly-backup-20260728001550 \
+  --apply \
+  --yes
+```
+
+Only after the guarded R2 command succeeds, destroy the exact local snapshot
+that was reviewed with it. Do not delete the dataset, PV, or PVC:
+
+```bash
+NODE_POD=$(kubectl -n openebs get pod \
+  -l role=openebs-zfs,app=openebs-zfs-node \
+  --field-selector spec.nodeName=torvalds \
+  -o jsonpath='{.items[0].metadata.name}')
+kubectl -n openebs exec -i "$NODE_POD" \
+  -c openebs-zfs-plugin -- \
+  zfs destroy \
+  'zfspv-pool-nvme/pvc-22eaf2de-13ce-402a-ac35-cdaf006cb438@6hourly-backup-20260728001550'
+```
+
+If R2 deletion fails, do not destroy the local snapshot. If the local destroy
+fails after R2 deletion, preserve the dataset and report the exact residual.
 
 ## Step 6: Verify post-prune state
 

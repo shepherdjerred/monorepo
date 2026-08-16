@@ -202,3 +202,73 @@ describe("R2 orphan cleanup manifest", () => {
     );
   });
 });
+
+describe("R2 orphan cleanup safety options", () => {
+  test("holds an existing prefix out of the deletion manifest", () => {
+    const manifest = buildR2OrphanManifest({
+      observedAt,
+      storage,
+      zfsObjects: [
+        {
+          key: "zfspv-incr/backups/held/chunk",
+          size: 1,
+          lastModified: "2026-08-09T00:00:00.000Z",
+        },
+        {
+          key: "zfspv-incr/backups/orphan/chunk",
+          size: 2,
+          lastModified: "2026-08-09T00:00:00.000Z",
+        },
+      ],
+      liveBackupNames: [],
+      metadataBackupNames: ["unrelated"],
+      heldBackupNames: ["held"],
+    });
+
+    expect(manifest.heldBackupNames).toEqual(["held"]);
+    expect(manifest.protectedBackupNames).toEqual(["held", "unrelated"]);
+    expect(
+      manifest.candidates.map((candidate) => candidate.backupName),
+    ).toEqual(["orphan"]);
+  });
+
+  test("rejects a missing hold", () => {
+    expect(() =>
+      buildR2OrphanManifest({
+        observedAt,
+        storage,
+        zfsObjects: [],
+        liveBackupNames: [],
+        metadataBackupNames: [],
+        heldBackupNames: ["missing"],
+      }),
+    ).toThrow("Held R2 backup prefix is missing");
+  });
+
+  test("selects exactly one eligible backup prefix", () => {
+    const manifest = buildR2OrphanManifest({
+      observedAt,
+      storage,
+      zfsObjects: [
+        {
+          key: "zfspv-incr/backups/selected/chunk",
+          size: 1,
+          lastModified: "2026-08-09T00:00:00.000Z",
+        },
+        {
+          key: "zfspv-incr/backups/other/chunk",
+          size: 2,
+          lastModified: "2026-08-09T00:00:00.000Z",
+        },
+      ],
+      liveBackupNames: [],
+      metadataBackupNames: ["unrelated"],
+      onlyBackupName: "selected",
+    });
+
+    expect(manifest.onlyBackupName).toBe("selected");
+    expect(
+      manifest.candidates.map((candidate) => candidate.backupName),
+    ).toEqual(["selected"]);
+  });
+});
