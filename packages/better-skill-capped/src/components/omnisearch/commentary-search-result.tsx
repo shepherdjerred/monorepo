@@ -69,10 +69,12 @@ export function CommentarySearchResult(
               <span className="tag">
                 K/D/A: {kills}/{deaths}/{assists}
               </span>
-              <span className="tag">
-                Game Length: {Math.floor(gameLengthInSeconds / 60)}m
-                {String(gameLengthInSeconds % 60).padStart(2, "0")}s
-              </span>
+              {gameLengthInSeconds !== undefined && (
+                <span className="tag">
+                  Game Length: {Math.floor(gameLengthInSeconds / 60)}m
+                  {String(gameLengthInSeconds % 60).padStart(2, "0")}s
+                </span>
+              )}
               <span className="tag">Carry Amount: {carry}</span>
               <span className="tag">Account Type: {type}</span>
             </div>

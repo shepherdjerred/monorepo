@@ -32,7 +32,10 @@ export type Commentary = ItemBase & {
   kills: number;
   deaths: number;
   assists: number;
-  gameLengthInSeconds: number;
+  // Absent when the manifest's free-text `gameTime` is unreadable; see
+  // `parseGameTime`. Modelled as missing rather than defaulted to 0 so the UI
+  // omits the tag instead of claiming a 0m00s game.
+  gameLengthInSeconds?: number | undefined;
   carry: string;
   type: string;
 };

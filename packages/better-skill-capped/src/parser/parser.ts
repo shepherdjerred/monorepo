@@ -72,11 +72,17 @@ export function parseDate(input: number): Date {
  * Game times arrive as "27m26s", but the production manifest also contains
  * typo'd variants ("23m35", "27m17m", "33m11ss", trailing spaces). Minutes
  * always lead; anything after the second number is upstream noise.
+ *
+ * `gameTime` is free text nobody validates upstream, and the variants above
+ * are evidence that its spelling keeps drifting. An unrecognized value is
+ * therefore expected boundary noise, not a broken caller contract, so this
+ * returns `undefined` rather than throwing: a single unreadable commentary
+ * loses its own game-length tag instead of aborting the entire content load.
  */
-export function parseGameTime(input: string): number {
+export function parseGameTime(input: string): number | undefined {
   const match = /^(\d+)m(?:(\d+)[a-z]*)?\s*$/.exec(input.trim());
   if (match === null) {
-    throw new Error(`Unparseable game time: ${JSON.stringify(input)}`);
+    return undefined;
   }
   const minutes = Number.parseInt(match[1] ?? "0", 10);
   const seconds = Number.parseInt(match[2] ?? "0", 10);
@@ -153,6 +159,7 @@ function parseCourses(
 // removed every commentary from the app. The card UI renders the matchup as
 // the heading, so derive the title from it instead of filtering.
 function parseCommentary(commentary: ManifestCommentary): Commentary {
+  const gameLengthInSeconds = parseGameTime(commentary.gameTime);
   return {
     kind: "commentary",
     role: parseRole(commentary.role),
@@ -173,7 +180,7 @@ function parseCommentary(commentary: ManifestCommentary): Commentary {
     kills: commentary.k,
     deaths: commentary.d,
     assists: commentary.a,
-    gameLengthInSeconds: parseGameTime(commentary.gameTime),
+    ...(gameLengthInSeconds === undefined ? {} : { gameLengthInSeconds }),
     carry: commentary.carry,
     type: commentary.type,
   };

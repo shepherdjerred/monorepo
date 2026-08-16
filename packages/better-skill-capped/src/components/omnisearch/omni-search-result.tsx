@@ -77,7 +77,13 @@ export function OmniSearchResult({
       );
     }
     default: {
-      return item satisfies never;
+      // `item` is `never` here, so reaching this arm means a producer emitted
+      // a kind outside the discriminated union. `satisfies never` is erased at
+      // compile time, so returning it handed React the raw object and crashed
+      // rendering with an unrelated error. Throw at the point of failure.
+      throw new Error(
+        `Unknown OmniSearchable kind: ${JSON.stringify(item satisfies never)}`,
+      );
     }
   }
 }

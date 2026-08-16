@@ -118,6 +118,38 @@ describe("parseManifest", () => {
     expect(video.releaseDate.getTime()).toBe(1_771_135_200_000);
   });
 
+  // Regression: `gameTime` is unvalidated free text upstream, and parsing it
+  // used to throw. Because nothing between here and `App.loadContent` catches,
+  // one unreadable commentary blanked the entire app.
+  test("keeps loading every item when one commentary's game time is unreadable", () => {
+    const clone = structuredClone(fixture);
+    must(clone.commentaries[0]).gameTime = "unreadable";
+    const content = parseManifest(ManifestSchema.parse(clone));
+
+    expect(content.commentaries).toHaveLength(fixture.commentaries.length);
+    expect(content.videos.length + content.unmappedVideos.length).toBe(
+      fixture.videos.length,
+    );
+
+    const broken = must(
+      content.commentaries.find(
+        (commentary) => commentary.uuid === "89vr3hw8qk",
+      ),
+    );
+    // Absent, not zero — a 0m00s tag would assert a game length we never read.
+    expect(broken.gameLengthInSeconds).toBeUndefined();
+    expect("gameLengthInSeconds" in broken).toBe(false);
+    // The rest of the broken commentary still parses.
+    expect(broken.title).toBe("Kai'Sa vs Fizz");
+
+    const healthy = must(
+      content.commentaries.find(
+        (commentary) => commentary.uuid === "wrlky8mjty",
+      ),
+    );
+    expect(healthy.gameLengthInSeconds).toBe(20 * 60 + 9);
+  });
+
   test("throws when a course references a video missing from the manifest", () => {
     const clone = structuredClone(fixture);
     const entry = must(clone.videosToCourses["Meta Updates {all}"]);
@@ -146,9 +178,9 @@ describe("parseGameTime", () => {
     expect(parseGameTime("27m17m")).toBe(1637);
   });
 
-  test("throws on unrecognizable input", () => {
-    expect(() => parseGameTime("garbage")).toThrow(/Unparseable game time/);
-    expect(() => parseGameTime("")).toThrow(/Unparseable game time/);
+  test("returns undefined on unrecognizable input", () => {
+    expect(parseGameTime("garbage")).toBeUndefined();
+    expect(parseGameTime("")).toBeUndefined();
   });
 });
 
