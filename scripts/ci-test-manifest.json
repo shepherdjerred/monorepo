@@ -348,7 +348,8 @@
             "--configuration",
             "Release",
             "--property:RestoreLockedMode=true"
-          ]
+          ],
+          "coverageConfig": "coverage.settings.xml"
         },
         {
           "runner": "dotnet",
@@ -357,7 +358,8 @@
             "--configuration",
             "Release",
             "--property:RestoreLockedMode=true"
-          ]
+          ],
+          "coverageConfig": "coverage.settings.xml"
         }
       ]
     },

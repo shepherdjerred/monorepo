@@ -7,6 +7,7 @@ import type {
 } from "./coverage-reporting.ts";
 
 const instrumentableSourcePattern = /\.[cm]?[jt]sx?$/;
+const reportedSourcePattern = /\.[cm]?[jt]sx?$|\.cs$/;
 const uncoveredSourceExtensions = new Set([
   ".astro",
   ".c",
@@ -33,8 +34,8 @@ const uncoveredSourceExtensions = new Set([
 ]);
 const excludedSourceDirectoryPattern =
   /(?:^|\/)(?:__fixtures__|__tests__|build|coverage|dist|fixtures|generated|node_modules|test|tests)(?:\/|$)/;
-const excludedInstrumentableSourcePattern =
-  /\.(?:d|spec|test|stories)\.[cm]?[jt]sx?$|(?:^|\/)[^/]+\.config\.[cm]?[jt]sx?$/;
+const excludedReportedSourcePattern =
+  /\.(?:d|spec|test|stories)\.(?:[cm]?[jt]sx?|cs)$|(?:^|\/)[^/]+\.config\.[cm]?[jt]sx?$/;
 const sourceMetricNames = [
   "lines",
   "functions",
@@ -61,9 +62,13 @@ export function coverableWorkspaceSources(
     workspaceDirectories,
     trackedFiles,
     (file) =>
-      instrumentableSourcePattern.test(file) &&
-      !excludedInstrumentableSourcePattern.test(file),
+      reportedSourcePattern.test(file) &&
+      !excludedReportedSourcePattern.test(file),
   );
+}
+
+export function isInstrumentableSource(source: string): boolean {
+  return instrumentableSourcePattern.test(source);
 }
 
 export function uncoveredWorkspaceSources(
@@ -130,11 +135,21 @@ export function resolveCoverageSource(
   workspaceDirectory: string,
   source: string,
 ): string {
-  if (path.isAbsolute(source)) {
-    return path.normalize(source);
-  }
   const normalizedSource = normalizeRepositoryPath(source);
   const normalizedWorkspace = normalizeRepositoryPath(workspaceDirectory);
+  const absoluteLike =
+    path.isAbsolute(source) || /^[A-Za-z]:\//u.test(normalizedSource);
+  if (absoluteLike) {
+    const workspaceMarker = `/${normalizedWorkspace}/`;
+    const workspaceIndex = normalizedSource.lastIndexOf(workspaceMarker);
+    if (workspaceIndex !== -1) {
+      return path.resolve(
+        repositoryRoot,
+        normalizedSource.slice(workspaceIndex + 1),
+      );
+    }
+    return path.normalize(source);
+  }
   if (
     normalizedSource === normalizedWorkspace ||
     normalizedSource.startsWith(`${normalizedWorkspace}/`)

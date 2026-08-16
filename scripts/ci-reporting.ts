@@ -1,6 +1,7 @@
 import XMLBuilder from "fast-xml-builder";
 import { XMLParser } from "fast-xml-parser";
 import { SyntaxValidator } from "fast-xml-validator";
+import path from "node:path";
 import { z } from "zod";
 
 const StepSchema = z.discriminatedUnion("runner", [
@@ -39,6 +40,7 @@ const StepSchema = z.discriminatedUnion("runner", [
       runner: z.literal("dotnet"),
       name: z.string().min(1).optional(),
       args: z.array(z.string()).min(1),
+      coverageConfig: z.string().min(1).optional(),
     })
     .strict(),
   z
@@ -107,6 +109,7 @@ export const TestManifestSchema = z
 
 export type TestManifest = z.infer<typeof TestManifestSchema>;
 export type TestStep = z.infer<typeof StepSchema>;
+type DotnetTestStep = Extract<TestStep, { runner: "dotnet" }>;
 
 type CompleteJUnitReportOptions = {
   runner: TestStep["runner"];
@@ -166,6 +169,42 @@ export function reportedWorkspacesForReports(
 
 export function testStepReportName(step: TestStep, index: number): string {
   return step.name ?? `${step.runner}-${(index + 1).toString()}`;
+}
+
+export function coverageArtifactFilename(step: TestStep): string | undefined {
+  switch (step.runner) {
+    case "bun":
+    case "vitest":
+      return "lcov.info";
+    case "go":
+      return "coverage.out";
+    case "dotnet":
+      return step.coverageConfig === undefined
+        ? undefined
+        : "coverage.cobertura.xml";
+    case "cargo":
+    case "command":
+      return undefined;
+  }
+}
+
+export function dotnetCoverageArguments(
+  step: DotnetTestStep,
+  rawCoverageDirectory: string,
+  workingDirectory: string,
+): string[] {
+  if (step.coverageConfig === undefined) {
+    return [];
+  }
+  return [
+    "--coverage",
+    "--coverage-output",
+    path.join(rawCoverageDirectory, "coverage.cobertura.xml"),
+    "--coverage-output-format",
+    "cobertura",
+    "--coverage-settings",
+    path.resolve(workingDirectory, step.coverageConfig),
+  ];
 }
 
 function stepTargetPaths(step: TestStep): readonly string[] {

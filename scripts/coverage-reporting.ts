@@ -1,3 +1,5 @@
+import { parseCobertura as parseCoberturaReport } from "./coverage-cobertura.ts";
+
 export type CoverageMetric = {
   covered: number;
   total: number;
@@ -24,6 +26,10 @@ const coverageMetricNames = [
   "functions",
   "branches",
 ] satisfies readonly CoverageMetricName[];
+
+export function parseCobertura(contents: string): CoverageReport {
+  return parseCoberturaReport(contents);
+}
 
 export type CoveragePoint = {
   metric: CoverageMetricName;
