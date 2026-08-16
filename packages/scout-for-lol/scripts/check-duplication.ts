@@ -4,7 +4,6 @@
  *
  * This script runs jscpd and enforces:
  * - Aggregate duplication threshold: 12%
- * - Per-file duplication threshold: 10%
  * - Detects duplication at function/block level (minLines: 9)
  */
 
@@ -43,13 +42,9 @@ const JscpdDuplicateSchema = z.object({
   fragment: z.string(),
 });
 
-const JscpdFormatSchema = z.object({
-  sources: z.record(z.string(), JscpdFileStatsSchema),
-});
-
 const JscpdStatisticsSchema = z.object({
   detectionDate: z.string(),
-  formats: z.record(z.string(), JscpdFormatSchema),
+  formats: z.record(z.string(), JscpdFileStatsSchema),
   total: JscpdFileStatsSchema,
 });
 
@@ -58,7 +53,6 @@ const JscpdResultSchema = z.object({
   duplicates: z.array(JscpdDuplicateSchema),
 });
 
-type JscpdFileStats = z.infer<typeof JscpdFileStatsSchema>;
 type JscpdResult = z.infer<typeof JscpdResultSchema>;
 
 async function readJscpdResult(filePath: string): Promise<JscpdResult> {
@@ -76,7 +70,6 @@ function relativePath(from: string, to: string): string {
 }
 
 const AGGREGATE_THRESHOLD = 12;
-const PER_FILE_THRESHOLD = 100; // Effectively disabled - only aggregate threshold enforced
 const WORKSPACE_ROOT = new URL("..", import.meta.url).pathname.replace(
   /\/$/,
   "",
@@ -121,67 +114,15 @@ async function main(): Promise<void> {
     console.log(`   ✅ PASS\n`);
   }
 
-  // Collect per-file statistics from jscpd output
-  const fileStats = new Map<string, JscpdFileStats>();
-
-  for (const [, format] of Object.entries(statistics.formats)) {
-    for (const [filePath, stats] of Object.entries(format.sources)) {
-      fileStats.set(filePath, stats);
-    }
-  }
-
-  // Check per-file thresholds
-  console.log(
-    `📄 Per-File Duplication Analysis (threshold: ${PER_FILE_THRESHOLD.toString()}%):\n`,
-  );
-
-  const failedFiles: {
-    file: string;
-    percentage: number;
-    duplicatedLines: number;
-    totalLines: number;
-  }[] = [];
-
-  for (const [file, stats] of fileStats.entries()) {
-    const percentage = stats.percentage;
-
-    if (percentage > PER_FILE_THRESHOLD) {
-      failedFiles.push({
-        file,
-        percentage,
-        duplicatedLines: stats.duplicatedLines,
-        totalLines: stats.lines,
-      });
-    }
-  }
-
-  if (failedFiles.length > 0) {
+  console.log("📄 Per-Format Duplication Analysis:\n");
+  for (const [format, stats] of Object.entries(statistics.formats).toSorted(
+    ([firstFormat], [secondFormat]) => firstFormat.localeCompare(secondFormat),
+  )) {
     console.log(
-      `❌ ${failedFiles.length.toString()} file(s) exceed ${PER_FILE_THRESHOLD.toString()}% duplication:\n`,
+      `   ${format}: ${stats.percentage.toFixed(2)}% duplicated (${stats.duplicatedLines.toString()}/${stats.lines.toString()} lines across ${stats.sources.toString()} files)`,
     );
-
-    // Sort by percentage descending
-    const sortedFailedFiles = failedFiles.toSorted(
-      (a, b) => b.percentage - a.percentage,
-    );
-
-    for (const failure of sortedFailedFiles) {
-      const relPath = relativePath(WORKSPACE_ROOT, failure.file);
-      const stats = fileStats.get(failure.file);
-
-      console.log(`   ${relPath}`);
-      console.log(
-        `   ${failure.percentage.toFixed(2)}% duplicated (${failure.duplicatedLines.toString()}/${failure.totalLines.toString()} lines)`,
-      );
-
-      if (stats) {
-        console.log(`   ${stats.clones.toString()} duplicate block(s) found`);
-      }
-      console.log();
-    }
-  } else {
-    console.log("✅ All files pass per-file duplication threshold\n");
   }
+  console.log();
 
   // Show summary of worst offenders
   if (duplicates.length > 0) {
@@ -208,18 +149,11 @@ async function main(): Promise<void> {
 
   // Final result
   console.log("━".repeat(80));
-  if (aggregateFailed || failedFiles.length > 0) {
+  if (aggregateFailed) {
     console.log("\n❌ DUPLICATION CHECK FAILED\n");
-    if (aggregateFailed) {
-      console.log(
-        `   - Aggregate duplication: ${aggregatePercentage.toFixed(2)}% > ${AGGREGATE_THRESHOLD.toString()}%`,
-      );
-    }
-    if (failedFiles.length > 0) {
-      console.log(
-        `   - ${failedFiles.length.toString()} file(s) exceed ${PER_FILE_THRESHOLD.toString()}% per-file threshold`,
-      );
-    }
+    console.log(
+      `   - Aggregate duplication: ${aggregatePercentage.toFixed(2)}% > ${AGGREGATE_THRESHOLD.toString()}%`,
+    );
     console.log("\n💡 View detailed report: jscpd-report/html/index.html\n");
     process.exit(1);
   }
@@ -228,9 +162,7 @@ async function main(): Promise<void> {
   console.log(
     `   - Aggregate duplication: ${aggregatePercentage.toFixed(2)}% ≤ ${AGGREGATE_THRESHOLD.toString()}%`,
   );
-  console.log(
-    `   - All files ≤ ${PER_FILE_THRESHOLD.toString()}% per-file duplication`,
-  );
+  console.log("   - Format-level statistics were parsed from the jscpd report");
   console.log("\n💡 View detailed report: jscpd-report/html/index.html\n");
 }
 

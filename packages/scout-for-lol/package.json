@@ -3,9 +3,11 @@
   "private": true,
   "scripts": {
     "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p tsconfig.scripts.json",
+    "format": "cd ../.. && prettier --check packages/scout-for-lol",
     "test": "bun test ./scripts",
     "test:coverage": "bun test --coverage-reporter=text --coverage-reporter=lcov --coverage-dir=coverage --config ../../scripts/bunfig.coverage.toml --coverage scripts/create-minimal-png.test.ts scripts/dev-lake-seed.test.ts scripts/dev-web.test.ts scripts/install-pkgs.test.ts",
     "lint": "eslint scripts",
+    "knip": "knip --config ../../knip.json --workspace scout-for-lol --workspace '@scout-for-lol/*' --no-config-hints",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p tsconfig.scripts.json",
     "dev:web": "op run --env-file=./dev-web.env.tpl -- bun scripts/dev-web.ts",
     "dev:seed": "bun scripts/dev-seed.ts",
@@ -38,6 +40,7 @@
     "jiti": "^2.7.0",
     "jscpd": "^5.0.14",
     "knip": "^6.29.0",
+    "prettier": "3.8.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0"
   },
