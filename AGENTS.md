@@ -367,6 +367,40 @@ Renovate cannot run the generator).
 
 Optional tools (warned if missing): helm, swift, swiftlint, swiftformat, typeshare, go, golangci-lint, mvn, gitleaks, shellcheck.
 
+## Agent Conversation History and Work Logs
+
+Agent conversations and work logs are local, private application data. They are not
+repository artifacts and may contain credentials or other sensitive prompts. Read
+these stores only as needed, prefer the client UI when available, and never copy raw
+transcripts into the repository, commits, logs, or chat.
+
+- Conductor user settings: `~/.conductor/settings.toml`.
+- Conductor chats: `~/Library/Application Support/com.conductor.app/conductor.db`,
+  especially the `sessions` and `session_messages` tables. Conductor documents this
+  application-data directory as the local chat store: <https://www.conductor.build/docs/reference/privacy>.
+- OpenCode bundled with Conductor: `~/Library/Application Support/com.conductor.app/opencode/opencode.db`.
+- Claude Code transcripts: `~/.claude/projects/<encoded-project-path>/*.jsonl`,
+  including `subagents/`. Supporting task and plan artifacts live under
+  `~/.claude/tasks/` and `~/.claude/plans/`.
+- Codex history: `~/.codex/thread_history_*.sqlite` contains structured thread
+  history; `~/.codex/history.jsonl` contains prompt history; and
+  `~/.codex/sqlite/codex-dev.db` contains the local thread catalog. PR-fleet session
+  notes are under `~/.codex/controller_state/sessions/`.
+- Cursor history and indexes: `~/Library/Application Support/Cursor/User/globalStorage/conversation-search.db`,
+  related `state.vscdb` files under `globalStorage` and `workspaceStorage`, and
+  workspace metadata under `~/.cursor/projects/`. Cursor's internal storage format
+  is version-sensitive; the search database is an index, not necessarily the full
+  transcript source.
+- Standalone OpenCode: conversations are in `~/.local/share/opencode/opencode.db`,
+  logs are in `~/.local/share/opencode/log/`, and configuration is in
+  `~/.config/opencode/`. `~/.local/share/opencode/auth.json` contains credentials:
+  never print, copy, commit, or paste its contents.
+
+SQLite databases, caches, indexes, and sidecar/event-outbox files are
+version-sensitive and should be inspected read-only. `.context/` is workspace
+collaboration scratch space, not a canonical transcript archive. Do not treat
+diagnostic logs or transient sidecar files as the primary conversation history.
+
 ## Verification
 
 Local and CI verification deliberately have different scopes:
