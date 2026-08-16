@@ -2,11 +2,23 @@ import * as DropdownPrimitive from "@radix-ui/react-dropdown-menu";
 import { Check, ChevronRight, Circle } from "lucide-react";
 import { forwardRef, type HTMLAttributes } from "react";
 import { cn } from "#src/lib/cn.ts";
+import { useScoutPortalContainer } from "./portal.tsx";
 
 export const DropdownMenu = DropdownPrimitive.Root;
 export const DropdownMenuTrigger = DropdownPrimitive.Trigger;
 export const DropdownMenuGroup = DropdownPrimitive.Group;
-export const DropdownMenuPortal = DropdownPrimitive.Portal;
+export function DropdownMenuPortal({
+  container,
+  ...props
+}: React.ComponentProps<typeof DropdownPrimitive.Portal>) {
+  const sharedContainer = useScoutPortalContainer();
+  return (
+    <DropdownPrimitive.Portal
+      container={container ?? sharedContainer}
+      {...props}
+    />
+  );
+}
 export const DropdownMenuSub = DropdownPrimitive.Sub;
 export const DropdownMenuRadioGroup = DropdownPrimitive.RadioGroup;
 
@@ -14,27 +26,27 @@ export const DropdownMenuContent = forwardRef<
   React.ComponentRef<typeof DropdownPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownPrimitive.Content>
 >(({ className, sideOffset = 6, ...props }, ref) => (
-  <DropdownPrimitive.Portal>
+  <DropdownMenuPortal>
     <DropdownPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}
       className={cn("scout-menu", className)}
       {...props}
     />
-  </DropdownPrimitive.Portal>
+  </DropdownMenuPortal>
 ));
 DropdownMenuContent.displayName = "DropdownMenuContent";
 export const DropdownMenuSubContent = forwardRef<
   React.ComponentRef<typeof DropdownPrimitive.SubContent>,
   React.ComponentPropsWithoutRef<typeof DropdownPrimitive.SubContent>
 >(({ className, ...props }, ref) => (
-  <DropdownPrimitive.Portal>
+  <DropdownMenuPortal>
     <DropdownPrimitive.SubContent
       ref={ref}
       className={cn("scout-menu", className)}
       {...props}
     />
-  </DropdownPrimitive.Portal>
+  </DropdownMenuPortal>
 ));
 DropdownMenuSubContent.displayName = "DropdownMenuSubContent";
 export const DropdownMenuItem = forwardRef<

@@ -1,7 +1,4 @@
 import { useMutation } from "@tanstack/react-query";
-import { LogOutIcon, UserPlusIcon, UsersIcon } from "lucide-react";
-import { toast } from "sonner";
-import type { CustomNightSnapshot } from "@scout-for-lol/data";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,20 +9,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { AvailabilityPanel } from "@/components/availability-panel";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { GamePanel } from "@/components/game-panel";
-import { ManagePlayers } from "@/components/manage-players";
-import { Progress } from "@/components/ui/progress";
-import { RecruitingPanel } from "@/components/recruiting-panel";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@scout-for-lol/design-system/components/alert-dialog";
+import { Badge } from "@scout-for-lol/design-system/components/badge";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import { Progress } from "@scout-for-lol/design-system/components/progress";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@scout-for-lol/design-system/components/tabs";
+import { toast } from "@scout-for-lol/design-system/components/toaster";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@scout-for-lol/design-system/components/tooltip";
+import { ThemeMenu } from "@scout-for-lol/design-system/runtime/theme-menu";
+import { LogOutIcon, UserPlusIcon, UsersIcon } from "lucide-react";
+import type { CustomNightSnapshot } from "@scout-for-lol/data";
+import { AvailabilityPanel } from "@/components/availability-panel";
+import { GamePanel } from "@/components/game-panel";
+import { ManagePlayers } from "@/components/manage-players";
+import { RecruitingPanel } from "@/components/recruiting-panel";
 import { useActivitySession } from "@/lib/activity-session";
 import { useTRPC } from "@/lib/activity-api";
 import {
@@ -68,7 +74,7 @@ export function CustomsDashboard({
   };
   return (
     <main className="mx-auto min-h-dvh w-full max-w-6xl space-y-4 p-3 sm:p-5">
-      <header className="rounded-xl bg-activity-surface p-4 ring-1 ring-activity-ink/10">
+      <header className="rounded-xl bg-scout-surface p-4 ring-1 ring-scout-ink/10">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -77,23 +83,22 @@ export function CustomsDashboard({
               </h1>
               <Badge variant="secondary">{snapshot.state}</Badge>
             </div>
-            <p className="mt-1 text-sm text-activity-muted-ink">
+            <p className="mt-1 text-sm text-scout-subtle">
               {snapshot.recruitmentCounts.ready.toString()}/10 ready ·{" "}
               {snapshot.recruitmentCounts.maybe.toString()} maybe ·{" "}
               {snapshot.recruitmentCounts.away.toString()} away
             </p>
           </div>
           <div className="activity-layout-header-actions flex flex-wrap gap-2">
+            <ThemeMenu />
             <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    variant="outline"
-                    onClick={() => void session.sdk.invite()}
-                  />
-                }
-              >
-                <UserPlusIcon /> Invite
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => void session.sdk.invite()}
+                >
+                  <UserPlusIcon /> Invite
+                </Button>
               </TooltipTrigger>
               <TooltipContent>
                 Invite Discord members into this Activity
@@ -123,7 +128,7 @@ export function CustomsDashboard({
             hostControl ? (
               <RecruitingPanel snapshot={snapshot} />
             ) : (
-              <div className="rounded-xl border p-6 text-center text-sm text-activity-muted-ink">
+              <div className="rounded-xl border p-6 text-center text-sm text-scout-subtle">
                 Waiting for the host to choose the roster.
               </div>
             )
@@ -148,10 +153,10 @@ export function CustomsDashboard({
           <AvailabilityPanel snapshot={snapshot} participant={participant} />
           {hostControl && (
             <AlertDialog>
-              <AlertDialogTrigger
-                render={<Button className="w-full" variant="destructive" />}
-              >
-                <LogOutIcon /> End night
+              <AlertDialogTrigger asChild>
+                <Button className="w-full" variant="destructive">
+                  <LogOutIcon /> End night
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>

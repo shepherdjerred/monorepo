@@ -109,24 +109,6 @@ async function startActivitySession(): Promise<ActivitySession> {
   };
 }
 
-function applyDiscordTheme(): () => void {
-  // The Discord SDK does not expose a theme event; Discord's official Activity
-  // example uses prefers-color-scheme. Keep the attribute Activity-local so
-  // this surface never mutates Scout web's canonical theme state.
-  const media = globalThis.matchMedia("(prefers-color-scheme: dark)");
-  const update = () => {
-    document.documentElement.dataset["activityTheme"] = media.matches
-      ? "dark"
-      : "light";
-  };
-  update();
-  media.addEventListener("change", update);
-  return () => {
-    media.removeEventListener("change", update);
-    delete document.documentElement.dataset["activityTheme"];
-  };
-}
-
 function layoutName(layoutMode: ActivityLayoutMode): string {
   switch (layoutMode) {
     case 0:
@@ -158,7 +140,6 @@ export function ActivitySessionProvider({ children }: { children: ReactNode }) {
     const lifecycle = new AbortController();
     let stopLayout: (() => Promise<void>) | undefined;
     let stopParticipants: (() => Promise<void>) | undefined;
-    const stopTheme = applyDiscordTheme();
     void (async () => {
       try {
         const session = await startActivitySession();
@@ -206,7 +187,6 @@ export function ActivitySessionProvider({ children }: { children: ReactNode }) {
     })();
     return () => {
       lifecycle.abort();
-      stopTheme();
       if (stopLayout !== undefined) void stopLayout();
       if (stopParticipants !== undefined) void stopParticipants();
     };
@@ -282,7 +262,7 @@ export function ActivitySessionProvider({ children }: { children: ReactNode }) {
           <h1 className="font-heading text-xl font-semibold">
             Couldn’t open Customs
           </h1>
-          <p className="mt-2 max-w-md text-sm text-activity-muted-ink">
+          <p className="mt-2 max-w-md text-sm text-scout-subtle">
             {state.message}
           </p>
         </div>

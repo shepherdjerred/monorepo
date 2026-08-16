@@ -42,5 +42,11 @@ describe("Scout theme contrast", () => {
         );
       }
     });
+
+    test(`${name} exposes distinct semantic team-side colors`, () => {
+      expect(theme.colors.teamBlue).toMatch(/^#[\dA-F]{6}$/i);
+      expect(theme.colors.teamRed).toMatch(/^#[\dA-F]{6}$/i);
+      expect(theme.colors.teamBlue).not.toBe(theme.colors.teamRed);
+    });
   }
 });

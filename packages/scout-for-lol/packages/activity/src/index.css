@@ -1,90 +1,42 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-
-@custom-variant dark (&:is([data-activity-theme="dark"] *));
+@import "@scout-for-lol/design-system/styles.css";
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
-  --color-activity-canvas: var(--background);
-  --color-activity-ink: var(--foreground);
-  --color-activity-surface: var(--card);
-  --color-activity-overlay: var(--popover);
-  --color-activity-brand: var(--primary);
-  --color-activity-on-brand: var(--primary-foreground);
-  --color-activity-secondary: var(--secondary);
-  --color-activity-on-secondary: var(--secondary-foreground);
-  --color-activity-subtle: var(--muted);
-  --color-activity-muted-ink: var(--muted-foreground);
-  --color-activity-accent: var(--accent);
-  --color-activity-on-accent: var(--accent-foreground);
-  --color-activity-danger: var(--destructive);
-  --color-activity-line: var(--border);
-  --color-activity-field: var(--input);
-  --color-activity-focus: var(--ring);
-  --radius-sm: calc(var(--radius) * 0.65);
-  --radius-md: calc(var(--radius) * 0.82);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.35);
+  --font-heading: var(--scout-font-display);
+  --font-sans: var(--scout-font-body);
+  --color-scout-canvas: var(--scout-color-canvas);
+  --color-scout-surface: var(--scout-color-surface);
+  --color-scout-raised: var(--scout-color-surface-raised);
+  --color-scout-hover: var(--scout-color-interactive-hover);
+  --color-scout-ink: var(--scout-color-text);
+  --color-scout-subtle: var(--scout-color-text-muted);
+  --color-scout-brand: var(--scout-color-primary);
+  --color-scout-brand-ink: var(--scout-color-primary-text);
+  --color-scout-accent: var(--scout-color-accent);
+  --color-scout-accent-ink: var(--scout-color-accent-text);
+  --color-scout-danger: var(--scout-color-danger);
+  --color-scout-danger-ink: var(--scout-color-danger-text);
+  --color-scout-success: var(--scout-color-success);
+  --color-scout-border: var(--scout-color-border);
+  --color-scout-focus: var(--scout-color-focus);
+  --color-scout-team-blue: var(--scout-color-team-blue);
+  --color-scout-team-red: var(--scout-color-team-red);
+  --radius-sm: var(--scout-radius-small);
+  --radius-md: var(--scout-radius-medium);
+  --radius-lg: var(--scout-radius-large);
+  --radius-xl: var(--scout-radius-large);
 }
 
 :root {
-  color-scheme: light;
-  --background: oklch(0.97 0.012 246);
-  --foreground: oklch(0.2 0.025 251);
-  --card: oklch(0.995 0.005 246);
-  --card-foreground: var(--foreground);
-  --popover: oklch(0.995 0.005 246);
-  --popover-foreground: var(--foreground);
-  --primary: oklch(0.61 0.16 240);
-  --primary-foreground: oklch(0.99 0.005 246);
-  --secondary: oklch(0.92 0.025 242);
-  --secondary-foreground: oklch(0.27 0.04 245);
-  --muted: oklch(0.93 0.012 246);
-  --muted-foreground: oklch(0.51 0.03 246);
-  --accent: oklch(0.9 0.045 195);
-  --accent-foreground: oklch(0.24 0.05 220);
-  --destructive: oklch(0.59 0.22 27);
-  --border: oklch(0.86 0.025 246);
-  --input: oklch(0.86 0.025 246);
-  --ring: oklch(0.61 0.16 240);
-  --team-a: oklch(0.62 0.17 245);
-  --team-b: oklch(0.63 0.19 25);
-  --radius: 0.75rem;
   --activity-safe-top: env(safe-area-inset-top, 0px);
   --activity-safe-right: env(safe-area-inset-right, 0px);
   --activity-safe-bottom: env(safe-area-inset-bottom, 0px);
   --activity-safe-left: env(safe-area-inset-left, 0px);
 }
 
-html[data-activity-theme="dark"] {
-  color-scheme: dark;
-  --background: oklch(0.16 0.026 255);
-  --foreground: oklch(0.95 0.012 245);
-  --card: oklch(0.2 0.03 253);
-  --card-foreground: var(--foreground);
-  --popover: oklch(0.21 0.03 253);
-  --popover-foreground: var(--foreground);
-  --primary: oklch(0.72 0.15 227);
-  --primary-foreground: oklch(0.17 0.03 255);
-  --secondary: oklch(0.27 0.035 252);
-  --secondary-foreground: oklch(0.94 0.012 245);
-  --muted: oklch(0.25 0.027 252);
-  --muted-foreground: oklch(0.72 0.025 246);
-  --accent: oklch(0.31 0.055 210);
-  --accent-foreground: oklch(0.94 0.012 245);
-  --destructive: oklch(0.68 0.2 25);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.72 0.15 227);
-  --team-a: oklch(0.72 0.16 245);
-  --team-b: oklch(0.72 0.17 29);
-}
-
 @layer base {
   * {
-    @apply border-activity-line outline-activity-focus/50;
+    @apply border-scout-border outline-scout-focus/50;
   }
 
   html,
@@ -94,7 +46,7 @@ html[data-activity-theme="dark"] {
   }
 
   body {
-    @apply m-0 bg-activity-canvas font-sans text-activity-ink antialiased;
+    @apply m-0 bg-scout-canvas font-sans text-scout-ink antialiased;
     min-width: 320px;
   }
 
@@ -115,6 +67,8 @@ html[data-activity-theme="dark"] {
     var(--activity-safe-bottom) var(--activity-safe-left);
   z-index: 100;
   pointer-events: none;
+  overflow: clip;
+  transform: translateZ(0);
 }
 
 #activity-overlay-root > * {
@@ -133,7 +87,8 @@ html[data-activity-theme="dark"] {
 }
 
 html[data-discord-layout="pip"] .activity-layout-header-actions,
-html[data-discord-layout="pip"] .activity-layout-secondary {
+html[data-discord-layout="pip"] .activity-layout-secondary,
+html[data-discord-layout="pip"] .activity-layout-theme {
   display: none;
 }
 

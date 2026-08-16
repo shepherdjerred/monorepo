@@ -30,6 +30,8 @@ const ColorsSchema = z.object({
   info: HexColorSchema,
   infoText: HexColorSchema,
   overlay: HexColorSchema,
+  teamBlue: HexColorSchema,
+  teamRed: HexColorSchema,
   chart1: HexColorSchema,
   chart2: HexColorSchema,
   chart3: HexColorSchema,

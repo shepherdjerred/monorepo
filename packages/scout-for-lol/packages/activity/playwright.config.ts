@@ -20,6 +20,8 @@ export default defineConfig({
         ],
       ]
     : "list",
+  snapshotDir: "./e2e",
+  snapshotPathTemplate: "{snapshotDir}/{testFilePath}-snapshots/{arg}{ext}",
   use: {
     baseURL: "http://127.0.0.1:5181/customs/",
     trace: "retain-on-failure",

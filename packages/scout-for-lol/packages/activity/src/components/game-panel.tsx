@@ -1,26 +1,26 @@
 import { useMutation } from "@tanstack/react-query";
-import {
-  CheckIcon,
-  ClipboardIcon,
-  RotateCcwIcon,
-  Volume2Icon,
-} from "lucide-react";
-import { toast } from "sonner";
-import type {
-  CustomIntermissionChoice,
-  CustomNightSnapshot,
-} from "@scout-for-lol/data";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@scout-for-lol/design-system/components/badge";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@scout-for-lol/design-system/components/card";
+import { Separator } from "@scout-for-lol/design-system/components/separator";
+import { toast } from "@scout-for-lol/design-system/components/toaster";
+import {
+  CheckIcon,
+  ClipboardIcon,
+  RotateCcwIcon,
+  Volume2Icon,
+} from "lucide-react";
+import type {
+  CustomIntermissionChoice,
+  CustomNightSnapshot,
+} from "@scout-for-lol/data";
 import { DraftPlayerCard } from "@/components/player-card";
-import { Separator } from "@/components/ui/separator";
 import { RosterCorrections } from "@/components/roster-corrections";
 import { useActivitySession } from "@/lib/activity-session";
 import { useTRPC } from "@/lib/activity-api";
@@ -91,7 +91,7 @@ function IntermissionPanel({
       </CardHeader>
       <CardContent className="grid gap-2 sm:grid-cols-2">
         {game.repeatChampionWarnings.length > 0 && (
-          <div className="col-span-full rounded-lg border border-activity-danger/40 p-3 text-sm">
+          <div className="col-span-full rounded-lg border border-scout-danger/40 p-3 text-sm">
             {game.repeatChampionWarnings.map((warning) => (
               <p key={warning}>{warning}</p>
             ))}
@@ -186,7 +186,7 @@ function ActiveGamePanel({
         )}
 
         {game.state === "CODE_PENDING" && (
-          <div className="rounded-lg border border-activity-danger/40 p-4">
+          <div className="rounded-lg border border-scout-danger/40 p-4">
             <p className="text-sm">
               Tournament code creation is pending or failed.
             </p>
@@ -202,8 +202,8 @@ function ActiveGamePanel({
         )}
 
         {game.tournamentCode !== null && (
-          <div className="space-y-3 rounded-lg bg-activity-subtle p-4 text-center">
-            <p className="text-xs uppercase tracking-wide text-activity-muted-ink">
+          <div className="space-y-3 rounded-lg bg-scout-hover p-4 text-center">
+            <p className="text-xs uppercase tracking-wide text-scout-subtle">
               Tournament code
             </p>
             <code className="block break-all text-lg font-semibold">
@@ -224,9 +224,9 @@ function ActiveGamePanel({
         {!game.voiceReady &&
           !game.voiceOverride &&
           (game.state === "CODE_PENDING" || game.state === "LOBBY_READY") && (
-            <div className="rounded-lg border border-activity-danger/40 p-4 text-sm">
+            <div className="rounded-lg border border-scout-danger/40 p-4 text-sm">
               <p className="font-medium">Voice needs attention</p>
-              <p className="mt-1 text-activity-muted-ink">
+              <p className="mt-1 text-scout-subtle">
                 {game.voiceError ??
                   "Voice arrangement did not finish for this revision."}
               </p>
@@ -333,7 +333,7 @@ function DraftSection({
   return (
     <>
       {game.state === "DRAFTING" && (
-        <div className="rounded-lg bg-activity-subtle p-3 text-center text-sm">
+        <div className="rounded-lg bg-scout-hover p-3 text-center text-sm">
           {canPick
             ? "Your pick—choose a player"
             : `Waiting for ${activeCaptainLabel} to pick`}
@@ -346,7 +346,7 @@ function DraftSection({
       </div>
       {unpicked.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-activity-muted-ink">
+          <p className="text-xs font-medium uppercase tracking-wide text-scout-subtle">
             Available
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -445,13 +445,11 @@ function TeamColumn({
     ) ?? [];
   return (
     <section aria-label={`Team ${team}`} className="space-y-2">
-      <h3
-        className={
-          team === "A"
-            ? "font-semibold text-[var(--team-a)]"
-            : "font-semibold text-[var(--team-b)]"
-        }
-      >
+      <h3 className="flex items-center gap-2 font-semibold">
+        <span
+          aria-hidden="true"
+          className={`size-2.5 rounded-full ${team === "A" ? "bg-scout-team-blue" : "bg-scout-team-red"}`}
+        />
         Team {team} · {team === "A" ? "Blue" : "Red"}
       </h3>
       {participants.map((participant) => (

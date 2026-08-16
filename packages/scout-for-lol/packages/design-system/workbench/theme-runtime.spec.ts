@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 test("theme changes synchronize between tabs", async ({ context, page }) => {
@@ -68,4 +69,45 @@ test("catalog controls preserve keyboard, focus, and accessible state", async ({
 
   await page.getByRole("tab", { name: "Details" }).click();
   await expect(page.getByText("Stable semantics across skins.")).toBeVisible();
+});
+
+test("promoted Activity controls preserve overlays, dismissal, and accessibility", async ({
+  page,
+}) => {
+  await page.goto("/promoted-controls");
+
+  const tooltipTrigger = page.getByRole("button", { name: "Roster help" });
+  await tooltipTrigger.focus();
+  await expect(page.getByRole("tooltip")).toHaveText("First ten ready players");
+
+  const alertTrigger = page.getByRole("button", {
+    name: "End custom night",
+  });
+  await alertTrigger.click();
+  await expect(
+    page.getByRole("alertdialog", { name: "End this custom night?" }),
+  ).toBeVisible();
+  const alertAccessibility = await new AxeBuilder({ page }).analyze();
+  expect(alertAccessibility.violations).toEqual([]);
+  await page.getByRole("button", { name: "Keep playing" }).click();
+  await expect(alertTrigger).toBeFocused();
+
+  const drawerTrigger = page.getByRole("button", {
+    name: "Open mobile roster",
+  });
+  await drawerTrigger.click();
+  await expect(
+    page.getByRole("dialog", { name: "Mobile roster" }),
+  ).toBeVisible();
+  const drawerAccessibility = await new AxeBuilder({ page })
+    // Base UI adds role=button only to these hidden focus guards in WebKit so
+    // VoiceOver's virtual cursor participates in the focus trap.
+    .exclude("[data-base-ui-focus-guard]")
+    .analyze();
+  expect(drawerAccessibility.violations).toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(drawerTrigger).toBeFocused();
+
+  await page.getByRole("button", { name: "Show toast" }).click();
+  await expect(page.getByText("Custom night created")).toBeVisible();
 });

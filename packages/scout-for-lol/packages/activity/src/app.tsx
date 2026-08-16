@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@scout-for-lol/design-system/components/skeleton";
+import { Toaster } from "@scout-for-lol/design-system/components/toaster";
 import { useEffect } from "react";
 import { CustomsDashboard } from "@/components/customs-dashboard";
 import { JoinNight } from "@/components/join-night";
 import { StartNight } from "@/components/start-night";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Toaster } from "@/components/ui/sonner";
 import { useCustomSocket } from "@/hooks/use-custom-socket";
 import { useActivitySession } from "@/lib/activity-session";
 import { useTRPC } from "@/lib/activity-api";

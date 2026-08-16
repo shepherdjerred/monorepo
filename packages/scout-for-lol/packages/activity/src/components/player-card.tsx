@@ -1,12 +1,15 @@
 import { CheckIcon, Clock3Icon, ShieldIcon } from "lucide-react";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@scout-for-lol/design-system/components/avatar";
+import { Badge } from "@scout-for-lol/design-system/components/badge";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import type {
   CustomGameParticipant,
   CustomNightParticipant,
 } from "@scout-for-lol/data";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 function initials(name: string): string {
   return name
@@ -37,18 +40,18 @@ export function NightPlayerCard({
         <span className="block truncate font-medium">
           {participant.displayName}
         </span>
-        <span className="block truncate text-xs text-activity-muted-ink">
+        <span className="block truncate text-xs text-scout-subtle">
           {participant.playerAlias ?? "Scout mapping needed"}
         </span>
       </span>
       {participant.held && (
-        <ShieldIcon aria-label="Held" className="text-activity-brand" />
+        <ShieldIcon aria-label="Held" className="text-scout-brand" />
       )}
       {participant.awayUntil !== null && (
-        <Clock3Icon aria-label="Away" className="text-activity-muted-ink" />
+        <Clock3Icon aria-label="Away" className="text-scout-subtle" />
       )}
       {selected === true && (
-        <CheckIcon aria-label="Selected" className="text-activity-brand" />
+        <CheckIcon aria-label="Selected" className="text-scout-brand" />
       )}
     </>
   );
@@ -57,10 +60,9 @@ export function NightPlayerCard({
       <Button
         type="button"
         variant="outline"
-        className={cn(
-          "h-auto w-full justify-start gap-3 p-3",
-          selected === true && "border-activity-brand bg-activity-brand/10",
-        )}
+        className={`h-auto w-full justify-start gap-3 p-3 ${
+          selected === true ? "border-scout-brand bg-scout-brand/10" : ""
+        }`}
         aria-pressed={selected ?? false}
         onClick={onSelect}
       >
@@ -88,11 +90,13 @@ export function DraftPlayerCard({
     <Button
       type="button"
       variant="outline"
-      className={cn(
-        "h-auto w-full justify-start gap-3 p-3",
-        participant.team === "A" && "border-[var(--team-a)]/60",
-        participant.team === "B" && "border-[var(--team-b)]/60",
-      )}
+      className={`h-auto w-full justify-start gap-3 p-3 ${
+        participant.team === "A"
+          ? "border-scout-team-blue/60"
+          : participant.team === "B"
+            ? "border-scout-team-red/60"
+            : ""
+      }`}
       disabled={!canPick}
       onClick={onPick}
     >

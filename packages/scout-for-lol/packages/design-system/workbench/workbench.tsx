@@ -76,6 +76,12 @@ function colorTokenVariable(name: string): string {
   return `var(--scout-color-${name.replaceAll(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()})`;
 }
 
+function foundationColorEntries() {
+  return Object.entries(scoutThemes["modern-dark"].colors).filter(
+    ([name]) => name !== "teamBlue" && name !== "teamRed",
+  );
+}
+
 export function Workbench() {
   return (
     <div className="scout-page-frame">
@@ -93,19 +99,17 @@ export function Workbench() {
           <Section className="workbench-section">
             <h2>Foundations</h2>
             <Grid>
-              {Object.entries(scoutThemes["modern-dark"].colors).map(
-                ([name, value]) => (
-                  <div key={name} className="workbench-swatch">
-                    <span
-                      className="workbench-swatch__color"
-                      style={{ background: colorTokenVariable(name) }}
-                      aria-hidden="true"
-                    />
-                    <strong>{name}</strong>
-                    <span>{value} reference</span>
-                  </div>
-                ),
-              )}
+              {foundationColorEntries().map(([name, value]) => (
+                <div key={name} className="workbench-swatch">
+                  <span
+                    className="workbench-swatch__color"
+                    style={{ background: colorTokenVariable(name) }}
+                    aria-hidden="true"
+                  />
+                  <strong>{name}</strong>
+                  <span>{value} reference</span>
+                </div>
+              ))}
             </Grid>
           </Section>
           <Section className="workbench-section">

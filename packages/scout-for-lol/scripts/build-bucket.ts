@@ -83,16 +83,15 @@ await $`rm -rf ${docsTarget}`;
 await $`cp -R ${docsDist} ${docsTarget}`;
 
 const copiedIndex = `${target}/index.html`;
+const copiedActivityIndex = `${activityTarget}/index.html`;
 if (!(await Bun.file(copiedIndex).exists())) {
   throw new Error(`copy failed: ${copiedIndex} missing after copy`);
 }
 if (!(await Bun.file(`${docsTarget}/index.html`).exists())) {
   throw new Error(`copy failed: ${docsTarget}/index.html missing after copy`);
 }
-if (!(await Bun.file(`${activityTarget}/index.html`).exists())) {
-  throw new Error(
-    `copy failed: ${activityTarget}/index.html missing after copy`,
-  );
+if (!(await Bun.file(copiedActivityIndex).exists())) {
+  throw new Error(`copy failed: ${copiedActivityIndex} missing after copy`);
 }
 
 await verifyScoutAssetBucket(frontendDist);
@@ -101,6 +100,7 @@ const bootstrapPath = "/assets/scout/brand/theme-bootstrap.js";
 for (const entrypoint of [
   frontendIndex,
   copiedIndex,
+  copiedActivityIndex,
   `${docsTarget}/index.html`,
 ]) {
   const html = await Bun.file(entrypoint).text();

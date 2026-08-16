@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@scout-for-lol/design-system/components/dialog";
 import {
   Drawer,
   DrawerContent,
@@ -15,7 +15,7 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
+} from "@scout-for-lol/design-system/components/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 export function ResponsiveOverlay({
@@ -33,8 +33,8 @@ export function ResponsiveOverlay({
   if (desktop) {
     return (
       <Dialog>
-        <DialogTrigger render={<Button variant="outline" />}>
-          {label}
+        <DialogTrigger asChild>
+          <Button variant="outline">{label}</Button>
         </DialogTrigger>
         <DialogContent className="max-w-lg">
           <DialogHeader>

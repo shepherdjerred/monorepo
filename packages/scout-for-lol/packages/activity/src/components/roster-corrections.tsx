@@ -1,16 +1,16 @@
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { toast } from "sonner";
-import type { CustomNightSnapshot } from "@scout-for-lol/data";
-import { Button } from "@/components/ui/button";
-import { ResponsiveOverlay } from "@/components/responsive-overlay";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@scout-for-lol/design-system/components/select";
+import { toast } from "@scout-for-lol/design-system/components/toaster";
+import { useState } from "react";
+import type { CustomNightSnapshot } from "@scout-for-lol/data";
+import { ResponsiveOverlay } from "@/components/responsive-overlay";
 import { useTRPC } from "@/lib/activity-api";
 import {
   mutationErrorText,
@@ -72,7 +72,7 @@ export function RosterCorrections({
         <div className="grid gap-2 text-sm font-medium">
           <span id="outgoing-player-label">Outgoing player</span>
           <Select
-            value={outgoingDiscordId}
+            value={outgoingDiscordId ?? ""}
             onValueChange={setOutgoingDiscordId}
           >
             <SelectTrigger
@@ -96,7 +96,7 @@ export function RosterCorrections({
         <div className="grid gap-2 text-sm font-medium">
           <span id="incoming-player-label">Incoming player</span>
           <Select
-            value={incomingDiscordId}
+            value={incomingDiscordId ?? ""}
             onValueChange={setIncomingDiscordId}
           >
             <SelectTrigger

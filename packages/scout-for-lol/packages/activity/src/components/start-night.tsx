@@ -1,23 +1,24 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { CustomCreateNightInputSchema } from "@scout-for-lol/data";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from "@scout-for-lol/design-system/components/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@scout-for-lol/design-system/components/select";
+import { Skeleton } from "@scout-for-lol/design-system/components/skeleton";
+import { toast } from "@scout-for-lol/design-system/components/toaster";
+import { ThemeMenu } from "@scout-for-lol/design-system/runtime/theme-menu";
+import { useEffect, useState } from "react";
+import { CustomCreateNightInputSchema } from "@scout-for-lol/data";
 import { useActivitySession } from "@/lib/activity-session";
 import { useTRPC } from "@/lib/activity-api";
 import {
@@ -67,12 +68,15 @@ export function StartNight() {
   return (
     <main className="grid min-h-dvh place-items-center p-4">
       <Card className="w-full max-w-lg">
-        <CardHeader>
+        <CardHeader className="relative pr-16">
           <CardTitle>Start a custom night</CardTitle>
           <CardDescription>
             One shared night can hold several back-to-back games. Anyone in this
             allowlisted server may start it.
           </CardDescription>
+          <div className="activity-layout-theme absolute top-3 right-3">
+            <ThemeMenu />
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {voiceChannels.isPending ? (
@@ -81,7 +85,7 @@ export function StartNight() {
             <div className="grid gap-2 text-sm font-medium">
               <span id="voice-lobby-label">Voice lobby</span>
               <Select
-                value={voiceLobbyChannelId}
+                value={voiceLobbyChannelId ?? ""}
                 onValueChange={setVoiceLobbyChannelId}
               >
                 <SelectTrigger

@@ -1,11 +1,12 @@
 import { fileURLToPath, URL } from "node:url";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { scoutAssetsPlugin } from "@scout-for-lol/design-system/build";
 import { defineConfig } from "vite";
 
 export default defineConfig({
   base: "/customs/",
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), scoutAssetsPlugin()],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },

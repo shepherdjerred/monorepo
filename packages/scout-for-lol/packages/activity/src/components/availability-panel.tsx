@@ -1,22 +1,31 @@
 import { useMutation } from "@tanstack/react-query";
-import { Clock3Icon, LogInIcon } from "lucide-react";
-import { toast } from "sonner";
+import { Badge } from "@scout-for-lol/design-system/components/badge";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
-  CustomAvailabilitySchema,
-  type CustomNightParticipant,
-  type CustomNightSnapshot,
-} from "@scout-for-lol/data";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@scout-for-lol/design-system/components/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+} from "@scout-for-lol/design-system/components/select";
+import { toast } from "@scout-for-lol/design-system/components/toaster";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@scout-for-lol/design-system/components/toggle-group";
+import { Clock3Icon, LogInIcon } from "lucide-react";
+import { z } from "zod";
+import {
+  CustomAvailabilitySchema,
+  type CustomNightParticipant,
+  type CustomNightSnapshot,
+} from "@scout-for-lol/data";
 import { useTRPC } from "@/lib/activity-api";
 import {
   mutationErrorText,
@@ -62,8 +71,7 @@ export function AvailabilityPanel({
       toast.error(mutationErrorText(error));
     }
   };
-  const setAvailability = (values: string[]) => {
-    const next = values.at(-1);
+  const setAvailability = (next: string) => {
     const parsed = CustomAvailabilitySchema.safeParse(next);
     if (!parsed.success || parsed.data === participant.availability) return;
     void mutate(
@@ -100,8 +108,9 @@ export function AvailabilityPanel({
       </CardHeader>
       <CardContent className="space-y-4">
         <ToggleGroup
+          type="single"
           className="grid w-full grid-cols-2 sm:grid-cols-4"
-          value={[participant.availability]}
+          value={participant.availability}
           onValueChange={setAvailability}
           aria-label="Availability"
         >
@@ -146,14 +155,17 @@ export function AvailabilityPanel({
           <div className="grid gap-2 text-sm font-medium">
             <span id="customs-account-label">NA1 account for Customs</span>
             <Select
-              value={participant.selectedAccountId}
+              value={participant.selectedAccountId?.toString() ?? ""}
               onValueChange={(accountId) => {
-                if (accountId === null) return;
                 void mutate(
                   account.mutateAsync({
                     nightId: snapshot.id,
                     expectedRevision: snapshot.revision,
-                    accountId,
+                    accountId: z.coerce
+                      .number()
+                      .int()
+                      .positive()
+                      .parse(accountId),
                   }),
                 );
               }}
@@ -168,7 +180,7 @@ export function AvailabilityPanel({
                 {participant.accounts.map((candidate) => (
                   <SelectItem
                     key={candidate.accountId}
-                    value={candidate.accountId}
+                    value={candidate.accountId.toString()}
                   >
                     {candidate.riotGameName ?? participant.playerAlias}#
                     {candidate.riotTagLine ?? "NA1"}
@@ -179,7 +191,7 @@ export function AvailabilityPanel({
           </div>
         )}
         {participant.playerId === null && (
-          <p className="text-sm text-activity-danger">
+          <p className="text-sm text-scout-danger">
             Link a Scout player and NA1 account before the roster can lock.
           </p>
         )}

@@ -133,6 +133,7 @@ function snapshot(
 async function installDiscordAdapter(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const sockets: EventTarget[] = [];
+    const layoutListeners = new Set<(layoutMode: -1 | 0 | 1 | 2) => void>();
     class TestWebSocket extends EventTarget {
       constructor() {
         super();
@@ -163,6 +164,18 @@ async function installDiscordAdapter(page: Page): Promise<void> {
     window.addEventListener("scout-test-close-sockets", () => {
       for (const socket of sockets) socket.dispatchEvent(new Event("close"));
     });
+    window.addEventListener("scout-test-layout", (event) => {
+      if (!(event instanceof CustomEvent)) return;
+      if (
+        event.detail !== -1 &&
+        event.detail !== 0 &&
+        event.detail !== 1 &&
+        event.detail !== 2
+      ) {
+        throw new Error("Invalid test layout mode");
+      }
+      for (const listener of layoutListeners) listener(event.detail);
+    });
     window.scoutCustomsSdkAdapter = {
       clientId: "123456789012345678",
       instanceId: "instance-1",
@@ -179,8 +192,11 @@ async function installDiscordAdapter(page: Page): Promise<void> {
       setReadyPresence: async () => {},
       connectedParticipantCount: async () => 4,
       subscribeLayout: async (listener) => {
+        layoutListeners.add(listener);
         window.setTimeout(() => listener(2), 0);
-        return async () => {};
+        return async () => {
+          layoutListeners.delete(listener);
+        };
       },
       subscribeParticipants: async (listener) => {
         window.setTimeout(() => listener(6), 0);
@@ -260,7 +276,11 @@ test("renders recruitment, tracks Discord layout, reconnects, and rejects stale 
   await expect(page.getByText("10 eligible · 0 more needed")).toBeVisible();
   await expect(page.getByText("6 viewing")).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute(
-    "data-activity-theme",
+    "data-scout-skin",
+    "modern",
+  );
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-scout-mode",
     "light",
   );
   await expect(page.locator("html")).toHaveAttribute(
@@ -296,6 +316,59 @@ test("renders recruitment, tracks Discord layout, reconnects, and rejects stale 
   await expect(
     page.getByRole("heading", { name: "Updated Guild Customs" }),
   ).toBeVisible();
+
+  await page.evaluate(() => {
+    window.dispatchEvent(new CustomEvent("scout-test-layout", { detail: 1 }));
+  });
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-discord-layout",
+    "pip",
+  );
+  await expect(
+    page.getByRole("button", { name: "Choose Scout theme" }),
+  ).toBeHidden();
+});
+
+test("persists the shared Scout theme and follows system appearance", async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await mockBackend(page, snapshot());
+  await page.goto("./");
+
+  await expect(page.locator("html")).toHaveAttribute("data-scout-mode", "dark");
+  await page.getByRole("button", { name: "Choose Scout theme" }).click();
+  await expect(
+    page.locator("#activity-overlay-root").getByText("Appearance"),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Classic" }).click();
+  await page.getByRole("button", { name: "Light" }).click();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-scout-skin",
+    "classic",
+  );
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-scout-mode",
+    "light",
+  );
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-scout-skin",
+    "classic",
+  );
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-scout-mode",
+    "light",
+  );
+
+  await page.getByRole("button", { name: "Choose Scout theme" }).click();
+  await page.getByRole("button", { name: "System" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-scout-mode", "dark");
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-scout-mode",
+    "light",
+  );
 });
 
 test("lets only the active captain make the next accessible draft pick", async ({
@@ -327,6 +400,7 @@ test("lets only the active captain make the next accessible draft pick", async (
 test("offers substitutions when retained teams await locking", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   const retainedGame = game();
   retainedGame.state = "CAPTAINS_SET";
   retainedGame.activeCaptain = null;
@@ -347,4 +421,74 @@ test("offers substitutions when retained teams await locking", async ({
   await expect(
     page.getByRole("button", { name: "Substitute player" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Choose Scout theme" }).click();
+  await page.getByRole("button", { name: "Classic" }).click();
+  await page.getByRole("button", { name: "Dark" }).click();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-scout-skin",
+    "classic",
+  );
+  await expect(page.locator("html")).toHaveAttribute("data-scout-mode", "dark");
+  await page.getByRole("button", { name: "Substitute player" }).click();
+  const substitutionDialog = page
+    .locator("#activity-overlay-root")
+    .getByRole("dialog", { name: "Roster substitution" });
+  await expect(substitutionDialog).toBeVisible();
+  await expect(substitutionDialog).toBeInViewport();
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("button", { name: "Substitute player" }),
+  ).toBeFocused();
 });
+
+const visualThemes = [
+  { skin: "modern", mode: "light" },
+  { skin: "modern", mode: "dark" },
+  { skin: "classic", mode: "light" },
+  { skin: "classic", mode: "dark" },
+] as const;
+const visualLayouts = [
+  { name: "desktop", width: 1280, height: 900 },
+  { name: "mobile", width: 390, height: 844 },
+] as const;
+const visualStates = ["recruiting", "drafting"] as const;
+
+for (const theme of visualThemes) {
+  for (const layout of visualLayouts) {
+    for (const visualState of visualStates) {
+      test(`visual ${visualState} in ${theme.skin} ${theme.mode} on ${layout.name}`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({
+          width: layout.width,
+          height: layout.height,
+        });
+        await page.addInitScript((preference) => {
+          localStorage.setItem(
+            "scout-theme-v1",
+            JSON.stringify({ version: 1, ...preference }),
+          );
+        }, theme);
+        await mockBackend(
+          page,
+          visualState === "drafting"
+            ? snapshot({ state: "DRAFTING", currentGame: game() })
+            : snapshot(),
+        );
+        await page.goto("./");
+        await expect(
+          page.getByRole("heading", { name: "Test Guild Customs" }),
+        ).toBeVisible();
+        if (visualState === "drafting") {
+          await expect(
+            page.getByText("Your pick—choose a player"),
+          ).toBeVisible();
+        }
+        await expect(page).toHaveScreenshot(
+          `customs-${visualState}-${theme.skin}-${theme.mode}-${layout.name}.png`,
+          { animations: "disabled", fullPage: true },
+        );
+      });
+    }
+  }
+}

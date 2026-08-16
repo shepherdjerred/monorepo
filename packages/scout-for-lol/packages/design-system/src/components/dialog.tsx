@@ -2,11 +2,23 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { forwardRef, type HTMLAttributes } from "react";
 import { cn } from "#src/lib/cn.ts";
+import { useScoutPortalContainer } from "./portal.tsx";
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogClose = DialogPrimitive.Close;
-export const DialogPortal = DialogPrimitive.Portal;
+export function DialogPortal({
+  container,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+  const sharedContainer = useScoutPortalContainer();
+  return (
+    <DialogPrimitive.Portal
+      container={container ?? sharedContainer}
+      {...props}
+    />
+  );
+}
 export const DialogOverlay = forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>

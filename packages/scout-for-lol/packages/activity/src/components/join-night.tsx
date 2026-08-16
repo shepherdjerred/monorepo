@@ -1,7 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
-import type { CustomNightSnapshot } from "@scout-for-lol/data";
-import { Button } from "@/components/ui/button";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
   CardContent,
@@ -9,8 +7,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+} from "@scout-for-lol/design-system/components/card";
+import { Separator } from "@scout-for-lol/design-system/components/separator";
+import { toast } from "@scout-for-lol/design-system/components/toaster";
+import { ThemeMenu } from "@scout-for-lol/design-system/runtime/theme-menu";
+import type { CustomNightSnapshot } from "@scout-for-lol/data";
 import { useActivitySession } from "@/lib/activity-session";
 import { useTRPC } from "@/lib/activity-api";
 import {
@@ -38,12 +39,15 @@ export function JoinNight({ snapshot }: { snapshot: CustomNightSnapshot }) {
   return (
     <main className="grid min-h-dvh place-items-center p-4">
       <Card className="w-full max-w-xl">
-        <CardHeader>
+        <CardHeader className="relative pr-16">
           <CardTitle>Join {snapshot.guildName} customs</CardTitle>
           <CardDescription>
             Hi {session.identity.displayName}. Joining—not merely opening this
             Activity—records your consent.
           </CardDescription>
+          <div className="activity-layout-theme absolute top-3 right-3">
+            <ThemeMenu />
+          </div>
         </CardHeader>
         <CardContent className="space-y-4 text-sm leading-relaxed">
           <p>
@@ -56,7 +60,7 @@ export function JoinNight({ snapshot }: { snapshot: CustomNightSnapshot }) {
             delete or anonymize your Customs records on request.
           </p>
           <Separator />
-          <p className="text-xs text-activity-muted-ink">
+          <p className="text-xs text-scout-subtle">
             Scout Customs isn’t endorsed by Riot Games and doesn’t reflect the
             views or opinions of Riot Games or anyone officially involved in
             producing or managing Riot Games properties. Riot Games, and all

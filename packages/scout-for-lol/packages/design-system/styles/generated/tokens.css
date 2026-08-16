@@ -24,6 +24,8 @@
   --scout-color-info: #005a82;
   --scout-color-info-text: #ffffff;
   --scout-color-overlay: #010a1399;
+  --scout-color-team-blue: #60c8e4;
+  --scout-color-team-red: #ad3138;
   --scout-color-chart1: #005a82;
   --scout-color-chart2: #c89b3c;
   --scout-color-chart3: #0f7b6c;
@@ -72,6 +74,8 @@
   --scout-color-info: #14759b;
   --scout-color-info-text: #ffffff;
   --scout-color-overlay: #010a13cc;
+  --scout-color-team-blue: #60c8e4;
+  --scout-color-team-red: #d9574d;
   --scout-color-chart1: #0ac8b9;
   --scout-color-chart2: #c8aa6e;
   --scout-color-chart3: #68b455;
@@ -120,6 +124,8 @@
   --scout-color-info: #1b5070;
   --scout-color-info-text: #ffffff;
   --scout-color-overlay: #06111bb3;
+  --scout-color-team-blue: #2d6892;
+  --scout-color-team-red: #992e1e;
   --scout-color-chart1: #1b344d;
   --scout-color-chart2: #992e1e;
   --scout-color-chart3: #536b2d;
@@ -168,6 +174,8 @@
   --scout-color-info: #2d6892;
   --scout-color-info-text: #ffffff;
   --scout-color-overlay: #02070ccc;
+  --scout-color-team-blue: #4a8db9;
+  --scout-color-team-red: #c15c48;
   --scout-color-chart1: #bf9869;
   --scout-color-chart2: #4a8db9;
   --scout-color-chart3: #6c9b55;

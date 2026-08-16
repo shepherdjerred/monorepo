@@ -21,7 +21,12 @@ import {
   type ScoutThemePreferenceV1,
 } from "./theme.ts";
 
-export type ScoutThemeSurface = "marketing" | "docs" | "app" | "workbench";
+export type ScoutThemeSurface =
+  | "marketing"
+  | "docs"
+  | "app"
+  | "activity"
+  | "workbench";
 export type ScoutThemeChangedPayload = {
   skin: ScoutSkin;
   mode_preference: ScoutModePreference;
