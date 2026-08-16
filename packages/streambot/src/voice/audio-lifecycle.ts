@@ -7,6 +7,8 @@ import type {
   VoiceActivityDetector,
 } from "@shepherdjerred/streambot/voice/local-models.ts";
 import { voiceTurnDeliveryFailuresTotal } from "@shepherdjerred/streambot/observability/metrics.ts";
+import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
+import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import {
   VOICE_DTX_GAP_MS,
   VOICE_DTX_TICK_MS,
@@ -15,6 +17,7 @@ import {
   VOICE_VERIFICATION_DELAY_MS,
 } from "@shepherdjerred/streambot/voice/constants.ts";
 
+const log = logger.child("voice-lifecycle");
 const SAMPLE_RATE = 16_000;
 const DEFAULT_POST_VERIFICATION_MS = 300;
 
@@ -520,13 +523,17 @@ export class VoiceAudioLifecycle {
   private async deliver(turn: CompletedVoiceTurn): Promise<void> {
     try {
       await this.options.onTurn(turn);
-    } catch {
+    } catch (error) {
       // Started with `void`, so a rejection here has nowhere to go and becomes
       // an unhandled rejection. Not every onTurn failure is caught by the turn
       // itself: VoiceAssistantSession runs UserIdSchema.parse and holdTeardown
-      // *before* its own try/catch, so those throw straight past it. Count it
-      // and let the finally below still release the transaction.
+      // *before* its own try/catch, so those throw straight past it. Count and
+      // log it (no user or transcript context, by design) and let the finally
+      // below still release the transaction.
       voiceTurnDeliveryFailuresTotal.inc();
+      log.error("voice turn delivery failed", {
+        error: getErrorMessage(error),
+      });
     } finally {
       turn.pcm16k.fill(0);
       this.transactionRunning = false;
