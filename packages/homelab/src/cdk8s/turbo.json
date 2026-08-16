@@ -8,6 +8,10 @@
       "inputs": [
         "src/**/*.ts",
         "scripts/check-1password-items.ts",
+        // The checker's hashing and operator-key derivation live here, so a
+        // change to them must invalidate this task like a change to the
+        // checker itself.
+        "scripts/onepassword-lib.ts",
         "onepassword-vault-snapshot.json"
       ]
     },

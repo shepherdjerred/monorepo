@@ -164,8 +164,12 @@ async function probePr(
             priority: thread.priority,
             isResolved: thread.isResolved,
             isOutdated: thread.isOutdated,
+            // Title and url make the dump readable on its own; without them a
+            // probe of a blocked PR says only which files were complained about.
+            title: thread.title,
             path: thread.path,
             line: thread.line,
+            url: thread.url,
           })),
         },
       },

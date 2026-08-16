@@ -31,6 +31,12 @@ import {
 } from "./onepassword-lib.ts";
 
 const ITEM_PATH_RE = /^vaults\/([^/]+)\/items\/(.+)$/;
+/**
+ * How long a snapshot may go unrefreshed before this check says so. Long
+ * enough that a quiet vault does not nag, short enough that a snapshot from
+ * before a credential change is called out.
+ */
+const SNAPSHOT_MAX_AGE_DAYS = 45;
 
 type OpItemRef = { namespace: string; name: string; itemPath: string };
 /** ns -> secretName -> specific data keys read from that secret. */
@@ -311,6 +317,43 @@ async function main(): Promise<void> {
     `check-1password-items: OK — ${String(opItems.length)} item references and ${String(fieldsChecked)} ` +
       `field references verified against the vault snapshot (${String(snapshot.items.length)} items).`,
   );
+  warnIfSnapshotIsStale(snapshot.generatedAt);
 }
 
-await main();
+/**
+ * This check is only as truthful as the snapshot it reads. A field added or
+ * populated in 1Password after the last refresh is invisible here, so a clean
+ * result on a months-old snapshot means "nothing contradicts a stale record",
+ * not "the vault agrees". Warn rather than fail: the snapshot legitimately
+ * ages between vault changes, and failing on the calendar would redden PRs
+ * that touched nothing related.
+ */
+export function snapshotStalenessWarning(
+  generatedAt: string,
+  now: Date,
+  maxAgeDays = SNAPSHOT_MAX_AGE_DAYS,
+): string | null {
+  const generated = Date.parse(generatedAt);
+  if (Number.isNaN(generated)) {
+    return `vault snapshot has an unparseable generatedAt (${generatedAt}); refresh it with snapshot-1password-vault.ts.`;
+  }
+  const ageDays = Math.floor(
+    (now.getTime() - generated) / (24 * 60 * 60 * 1000),
+  );
+  if (ageDays <= maxAgeDays) return null;
+  return (
+    `vault snapshot is ${String(ageDays)} days old (generated ${generatedAt}). ` +
+    `Fields added or populated since then are invisible to this check — refresh it with snapshot-1password-vault.ts.`
+  );
+}
+
+function warnIfSnapshotIsStale(generatedAt: string): void {
+  const warning = snapshotStalenessWarning(generatedAt, new Date());
+  if (warning !== null) console.warn(`check-1password-items: ${warning}`);
+}
+
+// Guarded so the pure helpers above can be imported by tests without the
+// checker synthesizing the whole cdk8s app as a side effect of the import.
+if (import.meta.main) {
+  await main();
+}

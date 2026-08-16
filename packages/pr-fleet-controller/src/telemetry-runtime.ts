@@ -33,6 +33,9 @@ export async function createFleetTelemetryRuntime(
     // context.disable() both disables our manager and unregisters it, so the
     // global API falls back to the noop manager instead of delegating to a
     // disabled AsyncLocalStorage (which wedges later context.with callers).
+    // The tracer provider is left alone here: this branch means someone
+    // else's provider holds the global, and unregistering it would be this
+    // failed runtime tearing down a live one.
     context.disable();
     await processor.shutdown();
     throw new Error("OpenTelemetry tracer provider is already registered");
@@ -47,8 +50,14 @@ export async function createFleetTelemetryRuntime(
       try {
         await provider.shutdown();
       } finally {
-        // Unregister rather than merely disable: a disabled ALS manager left
-        // as the global would break every later context.with caller.
+        // Unregister BOTH globals rather than merely disabling them. A
+        // disabled ALS manager left registered breaks every later
+        // context.with caller, and a shut-down tracer provider left
+        // registered is worse: `setGlobalTracerProvider` is one-shot, so the
+        // next runtime in this process cannot register at all, and every span
+        // in the meantime routes into a processor whose target file has
+        // already been cleaned up ("Cannot write a span after shutdown").
+        trace.disable();
         context.disable();
         await recorder.secureRunArtifacts();
       }
