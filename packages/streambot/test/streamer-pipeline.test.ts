@@ -250,3 +250,46 @@ describe("StreambotStreamer pipeline options", () => {
     await run;
   });
 });
+
+// The single most important assertion for a feature that can be globally disabled: the flag
+// must reach the Discord voice join as receiveAudio, and default to off.
+async function joinAndCaptureReceiveAudio(over: EnvLookup): Promise<boolean> {
+  let received: boolean | null = null;
+  const streamer = new StreambotStreamer(
+    USER_TOKEN,
+    loadConfig(env(over)),
+    Date.now,
+    {
+      joinStreamerVoice: (options) => {
+        received = options.receiveAudio;
+        return Promise.resolve({
+          lastVoiceCloseInfo: () => null,
+          release: () => null,
+          record: () => false,
+          retain: () => ({
+            lastVoiceCloseInfo: () => null,
+            release: () => null,
+          }),
+        });
+      },
+    },
+  );
+  await streamer.joinVoice(VOICE);
+  if (received === null) throw new Error("joinStreamerVoice was not called");
+  return received;
+}
+
+describe("voice receive gate", () => {
+  test("voice disabled (default) joins send-only", async () => {
+    await expect(joinAndCaptureReceiveAudio({})).resolves.toBe(false);
+  });
+
+  test("voice enabled opts the join into receive audio", async () => {
+    await expect(
+      joinAndCaptureReceiveAudio({
+        VOICE_ASSISTANT_ENABLED: "true",
+        OPENAI_API_KEY: "test-key",
+      }),
+    ).resolves.toBe(true);
+  });
+});

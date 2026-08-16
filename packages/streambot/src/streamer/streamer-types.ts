@@ -1,4 +1,5 @@
 import type { createSeekablePlayer } from "@shepherdjerred/discord-video-stream";
+import type { joinStreamerVoice } from "@shepherdjerred/streambot/streamer/join-voice.ts";
 import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
 import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
 import type {
@@ -24,6 +25,8 @@ export type StreamObserverFactory = typeof createStreamObserver;
 export type StreamerDependencies = {
   createPlayer?: PlayerFactory;
   createObserver?: StreamObserverFactory;
+  /** Test seam for the voice-join boundary, where `receiveAudio` mirrors `voice.enabled`. */
+  joinStreamerVoice?: typeof joinStreamerVoice;
 };
 
 /**

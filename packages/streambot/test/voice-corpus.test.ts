@@ -15,7 +15,10 @@ import {
   generateVoiceCorpus,
   type SyntheticTtsClient,
 } from "@shepherdjerred/streambot/voice/corpus-generator.ts";
-import { verifyVoiceCorpus } from "@shepherdjerred/streambot/voice/corpus-io.ts";
+import {
+  DEFAULT_VOICE_CORPUS_DIR,
+  verifyVoiceCorpus,
+} from "@shepherdjerred/streambot/voice/corpus-io.ts";
 import { cloneDiscordOpusPackets } from "@shepherdjerred/streambot/voice/corpus-evaluator.ts";
 
 describe("Discord Opus fixture container", () => {
@@ -149,5 +152,15 @@ describe("voice corpus generation", () => {
     } finally {
       await rm(directory, { recursive: true });
     }
+  });
+});
+
+describe("committed voice corpus", () => {
+  test("all 400 clips verify against their manifest checksums", async () => {
+    // requireComplete (the default) enforces the canonical clip count. This is the only place
+    // outside the operator acceptance run that proves the committed fixtures are intact — a
+    // corrupted clip must fail bun test, not surface mid-acceptance.
+    const verified = await verifyVoiceCorpus(DEFAULT_VOICE_CORPUS_DIR);
+    expect(verified.clipCount).toBe(400);
   });
 });

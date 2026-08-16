@@ -76,6 +76,7 @@ export class StreambotStreamer implements StreamerLike {
   private readonly now: () => number;
   private readonly createPlayer: PlayerFactory;
   private readonly createObserver: StreamObserverFactory;
+  private readonly joinStreamerVoice: typeof joinStreamerVoice;
   private player: Player | null = null;
   private lastPlaybackPositionSeconds = 0;
   private segmentStartOffsetSeconds = 0;
@@ -112,6 +113,10 @@ export class StreambotStreamer implements StreamerLike {
       typeof dependencies === "function"
         ? createStreamObserver
         : (dependencies.createObserver ?? createStreamObserver);
+    this.joinStreamerVoice =
+      typeof dependencies === "function"
+        ? joinStreamerVoice
+        : (dependencies.joinStreamerVoice ?? joinStreamerVoice);
     this.client = new Client();
     this.streamer = new Streamer(this.client);
     this.assistantOutput = new AssistantAudioOutput(
@@ -301,7 +306,7 @@ export class StreambotStreamer implements StreamerLike {
   readonly joinVoice = async (input: JoinVoiceInput): Promise<VoiceHandle> => {
     this.voiceCloseTracker?.release();
     this.voiceCloseTracker = null;
-    this.voiceCloseTracker = await joinStreamerVoice({
+    this.voiceCloseTracker = await this.joinStreamerVoice({
       streamer: this.streamer,
       input,
       receiveAudio: this.config.voice.enabled,
