@@ -3,7 +3,7 @@ import {
   generateFullMatchReview,
   getDefaultStageConfigs,
   type ModelConfig,
-  type OpenAIClient,
+  type TextGenerationClient,
   type PipelineTraces,
   type PipelineStagesConfig,
 } from "@scout-for-lol/data";
@@ -49,7 +49,7 @@ type MaterializedGenerationSource = {
 
 type MaterializationDependencies = {
   corpus: BetaCorpus;
-  openai: OpenAIClient;
+  textClient: TextGenerationClient;
   s3: S3Client;
 };
 
@@ -134,6 +134,40 @@ export function buildMaterializedGeneration({
     outputTokens: trace.tokensCompletion ?? null,
     promptRevision: sha256(`${systemPrompt}\0${userPrompt}`),
     renderedPrompts,
+    ...(trace.transport === undefined ? {} : { transport: trace.transport }),
+    ...(trace.openRouter === undefined
+      ? {}
+      : {
+          openRouterMetadata: {
+            requestedModel: trace.openRouter.requestedModel,
+            fallbackAttempts: trace.openRouter.fallbackAttempts,
+            routerMetadataPresent: trace.openRouter.routerMetadataPresent,
+            attempts: trace.openRouter.attempts.map((attempt) => ({
+              ...attempt,
+            })),
+            ...(trace.openRouter.generationId === undefined
+              ? {}
+              : { generationId: trace.openRouter.generationId }),
+            ...(trace.openRouter.resolvedModel === undefined
+              ? {}
+              : { resolvedModel: trace.openRouter.resolvedModel }),
+            ...(trace.openRouter.upstreamProvider === undefined
+              ? {}
+              : { upstreamProvider: trace.openRouter.upstreamProvider }),
+            ...(trace.openRouter.route === undefined
+              ? {}
+              : { route: trace.openRouter.route }),
+            ...(trace.openRouter.region === undefined
+              ? {}
+              : { region: trace.openRouter.region }),
+            ...(trace.openRouter.actualCostUsd === undefined
+              ? {}
+              : { actualCostUsd: trace.openRouter.actualCostUsd }),
+            ...(trace.openRouter.upstreamCostUsd === undefined
+              ? {}
+              : { upstreamCostUsd: trace.openRouter.upstreamCostUsd }),
+          },
+        }),
   };
 }
 
@@ -177,7 +211,7 @@ export async function materializeCase(
   const laneContext = loadLaneContext(targetPlayer.lane);
   const stages = textOnlyStages();
   const output = await generateFullMatchReview({
-    clients: { openai: dependencies.openai },
+    clients: { text: dependencies.textClient },
     match: {
       processed: processedMatch,
       raw: source.rawMatch,

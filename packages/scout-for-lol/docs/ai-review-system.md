@@ -320,19 +320,18 @@ To reduce costs and stay within limits:
 
 ### Environment Variables
 
-| Variable         | Required | Description                        |
-| ---------------- | -------- | ---------------------------------- |
-| `OPENAI_API_KEY` | No       | Enables AI features                |
-| `GEMINI_API_KEY` | No       | Google Gemini (not currently used) |
+| Variable             | Required | Description                        |
+| -------------------- | -------- | ---------------------------------- |
+| `OPENROUTER_API_KEY` | No       | Enables text and image AI features |
 
 ### Fallback Behavior
 
-| Missing Config   | Behavior                        |
-| ---------------- | ------------------------------- |
-| No OpenAI key    | Skip analysis, post report only |
-| Analysis fails   | Continue with report            |
-| Art prompt fails | Continue without art            |
-| Image gen fails  | Continue without image          |
+| Missing Config    | Behavior                        |
+| ----------------- | ------------------------------- |
+| No OpenRouter key | Skip analysis, post report only |
+| Analysis fails    | Continue with report            |
+| Art prompt fails  | Continue without art            |
+| Image gen fails   | Continue without image          |
 
 ## Extending the System
 

@@ -7,7 +7,7 @@ import type {
 import type { CostcoMatchResult } from "./matcher.ts";
 import { loadCostcoOrders } from "./scraper.ts";
 import { matchCostcoTransactions } from "./matcher.ts";
-import { classifyAmazonBatch, computeSplits } from "../classifier/claude.ts";
+import { classifyAmazonBatch, computeSplits } from "../classifier/llm.ts";
 import {
   getCachedClassification,
   cacheClassifications,

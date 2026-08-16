@@ -9,8 +9,7 @@
 // original fix is exactly this assertion, codified.
 import { describe, expect, test, beforeAll, afterAll } from "bun:test";
 import * as Sentry from "@sentry/bun";
-import { trace, context, propagation, metrics } from "@opentelemetry/api";
-import { logs as logsAPI } from "@opentelemetry/api-logs";
+import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";
 import { initializeTracing, shutdownTracing, withSpan } from "./tracing.ts";
 
 describe("OTLP tracing integration", () => {
@@ -56,15 +55,7 @@ describe("OTLP tracing integration", () => {
   afterAll(async () => {
     await server.stop(true);
     // Reset OTel global API state so a sibling test file can re-register.
-    trace.disable();
-    context.disable();
-    propagation.disable();
-    metrics.disable();
-    logsAPI.disable();
-    // NodeSDK.start() also registers a global MeterProvider; reset it too or
-    // the next file's initializeTracing() logs "Attempted duplicate
-    // registration of API: metrics".
-    metrics.disable();
+    resetOtelGlobals();
   });
 
   test("initializeTracing + withSpan POSTs to /v1/traces", async () => {

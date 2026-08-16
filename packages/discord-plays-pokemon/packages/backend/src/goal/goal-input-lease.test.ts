@@ -18,7 +18,6 @@ function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
     enabled: true,
     model: "gpt-5.6-luna",
     reasoning_effort: "medium",
-    codex_binary: "codex",
     runtime_directory: runtimeDirectory,
     screenshot_dir: "screenshots",
     state_path: "goal-state.json",
@@ -97,17 +96,17 @@ const START_INPUT = {
 };
 
 describe("GoalManager input lease", () => {
-  const originalOpenAiKey = Bun.env.OPENAI_API_KEY;
+  const originalCodexAccessToken = Bun.env.CODEX_ACCESS_TOKEN;
 
   beforeEach(() => {
-    Bun.env.OPENAI_API_KEY = "test-key";
+    Bun.env.CODEX_ACCESS_TOKEN = "test-key";
   });
 
   afterEach(() => {
-    if (originalOpenAiKey === undefined) {
-      delete Bun.env.OPENAI_API_KEY;
+    if (originalCodexAccessToken === undefined) {
+      delete Bun.env.CODEX_ACCESS_TOKEN;
     } else {
-      Bun.env.OPENAI_API_KEY = originalOpenAiKey;
+      Bun.env.CODEX_ACCESS_TOKEN = originalCodexAccessToken;
     }
   });
 

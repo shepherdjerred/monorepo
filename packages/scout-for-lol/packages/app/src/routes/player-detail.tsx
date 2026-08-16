@@ -24,6 +24,7 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import { PlayerHeaderActions } from "#src/components/player-header-actions.tsx";
+import { PlayerTabsNav } from "#src/components/player-tabs-nav.tsx";
 import {
   CompetitionSection,
   PlayerAccountsTable,
@@ -210,7 +211,10 @@ export function PlayerDetail() {
     void queryClient.invalidateQueries({
       queryKey: trpc.player.listPlayers.pathKey(),
     });
-    void navigate(`/g/${guildId}/players/${encodeURIComponent(nextAlias)}`);
+    // Stay on the manage tab — the user was mid-administration.
+    void navigate(
+      `/g/${guildId}/players/${encodeURIComponent(nextAlias)}/manage`,
+    );
   }
 
   const unlinkMutation = useMutation(
@@ -287,6 +291,8 @@ export function PlayerDetail() {
           }}
         />
       </div>
+
+      <PlayerTabsNav guildId={guildId} alias={alias} />
 
       {actionError !== null && (
         <p className="text-sm text-scout-danger">{actionError}</p>

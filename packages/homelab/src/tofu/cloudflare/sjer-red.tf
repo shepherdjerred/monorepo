@@ -303,6 +303,15 @@ resource "cloudflare_dns_record" "sjer_red_cname_birmel_oauth" {
   proxied = true
 }
 
+resource "cloudflare_dns_record" "sjer_red_cname_openrouter_broadcast" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "openrouter-broadcast"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 resource "cloudflare_dns_record" "sjer_red_cname_webring" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1

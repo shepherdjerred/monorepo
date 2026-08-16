@@ -1,4 +1,3 @@
-import { zodResponseFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod/v4";
 import {
   AgentTaskEvidenceCollectorsV2Schema,
@@ -374,25 +373,21 @@ export type AgentTaskStartResult =
 export const AGENT_TASK_CLAUDE_SCHEMA_VERSION = "draft-07-v1";
 
 export type AgentTaskOutputContractFailureReason =
-  | "is-error"
   | "missing-structured-output"
-  | "invalid-result-envelope"
   | "invalid-structured-output";
 
-export type ClaudeOutputContractDiagnostics = {
-  resultSubtype: string | undefined;
-  resultMessageKeys: readonly string[];
+export type AgentTaskOutputContractDiagnostics = {
   schemaFingerprint: string;
   finalTextExcerpt: string | undefined;
 };
 
 export class AgentTaskOutputContractError extends Error {
   readonly reason: AgentTaskOutputContractFailureReason;
-  readonly diagnostics: ClaudeOutputContractDiagnostics;
+  readonly diagnostics: AgentTaskOutputContractDiagnostics;
 
   constructor(
     reason: AgentTaskOutputContractFailureReason,
-    diagnostics: ClaudeOutputContractDiagnostics,
+    diagnostics: AgentTaskOutputContractDiagnostics,
     message: string,
     options?: ErrorOptions,
   ) {
@@ -403,25 +398,16 @@ export class AgentTaskOutputContractError extends Error {
   }
 }
 
-// Codex's `--output-schema` is OpenAI's own CLI and requires OpenAI
-// Structured-Outputs "strict mode": every field in `required`, optional
+// Codex structured output requires every field in `required`, with optional
 // fields modeled as nullable rather than absent. `AgentTaskWireResultPayloadSchema`
-// (below) exists to produce exactly that dialect for Codex only.
+// exists to produce exactly that dialect for Codex SDK runs.
 export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX: Record<string, unknown> = z
   .record(z.string(), z.unknown())
-  .parse(
-    zodResponseFormat(AgentTaskWireResultPayloadSchema, "agent_task_result")
-      .json_schema.schema,
-  );
+  .parse(z.toJSONSchema(AgentTaskWireResultPayloadSchema));
 
 export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX_V2: Record<string, unknown> = z
   .record(z.string(), z.unknown())
-  .parse(
-    zodResponseFormat(
-      AgentTaskWireResultPayloadV2Schema,
-      "agent_task_result_v2",
-    ).json_schema.schema,
-  );
+  .parse(z.toJSONSchema(AgentTaskWireResultPayloadV2Schema));
 
 // Claude's `--json-schema` contract is intentionally independent from Codex's
 // strict wire schema. Draft-07 is the provider's documented compatibility
@@ -441,9 +427,8 @@ const agentTaskClaudeJsonSchemaV2 = stripClaudeSchemaAnnotations(
 export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE_V2: Record<string, unknown> =
   z.record(z.string(), z.unknown()).parse(agentTaskClaudeJsonSchemaV2);
 
+// buildAgentTaskSdkConfig fingerprints whichever schema a run actually sends,
+// so the value logged with a contract failure always matches the live request.
 export const AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT = jsonSchemaFingerprint(
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE,
-);
-export const AGENT_TASK_CLAUDE_SCHEMA_V2_FINGERPRINT = jsonSchemaFingerprint(
-  AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE_V2,
 );

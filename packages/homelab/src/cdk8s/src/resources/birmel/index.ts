@@ -21,6 +21,7 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 
 export function createBirmelDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "birmel", {
@@ -140,28 +141,29 @@ export function createBirmelDeployment(chart: Chart) {
           key: "DISCORD_CLIENT_ID",
         }),
 
-        // OpenAI configuration
-        OPENAI_API_KEY: EnvValue.fromSecretValue({
+        // OpenRouter ordinary inference
+        OPENROUTER_API_KEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
-            "birmel-openai-api-key-secret",
+            "birmel-openrouter-api-key-secret",
             onePasswordItem.name,
           ),
-          key: "OPENAI_API_KEY",
+          key: "OPENROUTER_API_KEY",
         }),
-        OPENAI_MODEL: EnvValue.fromValue("gpt-5.6-sol"),
-        OPENAI_CLASSIFIER_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
-        OPENAI_REASONING_EFFORT: EnvValue.fromValue("medium"),
-        OPENAI_TEXT_VERBOSITY: EnvValue.fromValue("low"),
+        LLM_MODEL: EnvValue.fromValue("gpt-5.6-sol"),
+        LLM_CLASSIFIER_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
+        LLM_MEMORY_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
+        LLM_EMBEDDING_MODEL: EnvValue.fromValue("text-embedding-3-small"),
+        LLM_REASONING_EFFORT: EnvValue.fromValue("medium"),
 
-        // Anthropic configuration
-        ANTHROPIC_API_KEY: EnvValue.fromSecretValue({
+        // Claude Agent SDK editor auth
+        CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
-            "birmel-anthropic-api-key-secret",
+            "birmel-claude-oauth-secret",
             onePasswordItem.name,
           ),
-          key: "ANTHROPIC_API_KEY",
+          key: "CLAUDE_CODE_OAUTH_TOKEN",
         }),
 
         // Database paths
@@ -279,6 +281,17 @@ export function createBirmelDeployment(chart: Chart) {
     ports: [{ port: 4112, name: "oauth" }],
   });
 
+  const healthService = new Service(chart, "birmel-health-service", {
+    metadata: { labels: { app: "birmel-health" } },
+    selector: deployment,
+    ports: [{ port: 8080, name: "metrics" }],
+  });
+  createServiceMonitor(chart, {
+    name: "birmel",
+    matchLabels: { app: "birmel-health" },
+    port: "metrics",
+  });
+
   // "/" has no route (404); /health is the OAuth server's health check
   // (packages/birmel/src/editor/oauth-server.ts). Both registrations below
   // share the same backend probe, so probePath must be identical.
@@ -295,4 +308,6 @@ export function createBirmelDeployment(chart: Chart) {
     probePath: "/health",
     publicProbePath: "/health",
   });
+
+  return { deployment, healthService, oauthService };
 }

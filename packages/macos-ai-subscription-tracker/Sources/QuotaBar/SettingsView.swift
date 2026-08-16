@@ -4,11 +4,16 @@ import SwiftUI
 
 struct SettingsView: View {
   @Bindable var model: QuotaBarModel
+  @Bindable var apiModel: APIPlatformModel
   let manualCredentials: ManualCredentialStore
+  let openRouterCredentials: OpenRouterCredentialStore
   @Bindable var launchAtLogin: LaunchAtLoginController
   @State private var drafts: [ProviderID: String] = [:]
   @State private var overriddenProviders: Set<ProviderID> = []
   @State private var credentialMessage: String?
+  @State private var openRouterDraft = ""
+  @State private var hasOpenRouterCredential = false
+  @State private var openRouterCredentialMessage: String?
 
   var body: some View {
     Form {
@@ -16,11 +21,45 @@ struct SettingsView: View {
       refreshSection
       loginSection
       credentialSection
+      openRouterCredentialSection
     }
     .formStyle(.grouped)
-    .frame(width: 520, height: 560)
+    .frame(width: 520, height: 680)
     .task { await loadCredentialStatus() }
     .onAppear { launchAtLogin.refresh() }
+  }
+
+  private var openRouterCredentialSection: some View {
+    Section("API platform") {
+      Text(
+        "Enter an OpenRouter Management API key to read credits, workspaces, and API-key usage. "
+          + "Brim only sends read-only requests; the key remains in your login Keychain."
+      )
+      .font(.caption)
+      .foregroundStyle(.secondary)
+      if let url = URL(string: "https://openrouter.ai/settings/management-keys") {
+        Link("OpenRouter Management API keys", destination: url)
+      }
+      VStack(alignment: .leading, spacing: 5) {
+        HStack {
+          SecureField("OpenRouter Management API key", text: $openRouterDraft)
+          Button("Save") { saveOpenRouterCredential() }
+            .disabled(openRouterDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+          Button("Remove") { removeOpenRouterCredential() }
+            .disabled(!hasOpenRouterCredential)
+        }
+        if hasOpenRouterCredential {
+          Label("Management API key saved in Keychain", systemImage: "key.fill")
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        }
+      }
+      if let openRouterCredentialMessage {
+        Text(openRouterCredentialMessage)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+    }
   }
 
   private var providerSection: some View {
@@ -159,6 +198,39 @@ struct SettingsView: View {
         }
       } catch {
         credentialMessage = "Keychain status unavailable."
+      }
+    }
+    do {
+      hasOpenRouterCredential = try await openRouterCredentials.token() != nil
+    } catch {
+      openRouterCredentialMessage = "OpenRouter Keychain status unavailable."
+    }
+  }
+
+  private func saveOpenRouterCredential() {
+    let token = openRouterDraft
+    Task {
+      do {
+        try await openRouterCredentials.save(token)
+        hasOpenRouterCredential = true
+        openRouterDraft = ""
+        openRouterCredentialMessage = "Saved OpenRouter Management API key."
+        await apiModel.handleCredentialChange()
+      } catch {
+        openRouterCredentialMessage = error.localizedDescription
+      }
+    }
+  }
+
+  private func removeOpenRouterCredential() {
+    Task {
+      do {
+        try await openRouterCredentials.remove()
+        hasOpenRouterCredential = false
+        openRouterCredentialMessage = "Removed OpenRouter Management API key."
+        await apiModel.handleCredentialChange()
+      } catch {
+        openRouterCredentialMessage = error.localizedDescription
       }
     }
   }

@@ -136,7 +136,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
           "http://prometheus-grafana.prometheus.svc.cluster.local:80",
         ),
         POSTAL_HOST: EnvValue.fromValue(
-          "http://postal-web-service.postal.svc.cluster.local:5000",
+          "http://postal-postal-web-service.postal.svc.cluster.local:5000",
         ),
         EMAIL_ENABLED: EnvValue.fromSecretValue({
           secret,

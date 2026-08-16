@@ -17,7 +17,7 @@
     "build": "bun build ./src/index.ts --compile --external ffmpeg-static --outfile=dist/toolkit",
     "test": "bun run test:unit",
     "test:coverage": "bun test --coverage-reporter=text --coverage-reporter=lcov --coverage-dir=coverage --config ../../scripts/bunfig.coverage.toml --coverage scripts/install.test.ts",
-    "test:unit": "bun test test/lib test/bugsink test/s3 test/deployed test/screenshot scripts",
+    "test:unit": "bun test test/lib test/bugsink test/s3 test/deployed test/screenshot test/history scripts",
     "install:local": "bun scripts/install.ts",
     "test:integration": "bun test test-integration",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",

@@ -13,10 +13,6 @@ const PATCH: RiotPatch = {
 
 const DATE = new Date("2026-07-01T12:00:00Z");
 
-function claudeStdout(analysis: unknown): string {
-  return JSON.stringify({ result: JSON.stringify(analysis) });
-}
-
 const VALID_ANALYSIS = {
   overview: "A jungle-focused patch.",
   themes: ["jungle buffs"],
@@ -61,11 +57,7 @@ describe("buildAnalysisPrompt", () => {
 
 describe("parsePatchAnalysis", () => {
   test("merges deterministic patch metadata into a validated changeset", () => {
-    const changeset = parsePatchAnalysis(
-      claudeStdout(VALID_ANALYSIS),
-      PATCH,
-      DATE,
-    );
+    const changeset = parsePatchAnalysis(VALID_ANALYSIS, PATCH, DATE);
     expect(changeset.patch).toBe("26.13");
     expect(changeset.title).toBe(PATCH.title);
     expect(changeset.url).toBe(PATCH.url);
@@ -79,11 +71,7 @@ describe("parsePatchAnalysis", () => {
       ...VALID_ANALYSIS,
       changelogHighlights: ["Ranked 5v5 is now supported"],
     };
-    const changeset = parsePatchAnalysis(
-      claudeStdout(withHighlights),
-      PATCH,
-      DATE,
-    );
+    const changeset = parsePatchAnalysis(withHighlights, PATCH, DATE);
     expect(changeset.changelogHighlights).toEqual([
       "Ranked 5v5 is now supported",
     ]);
@@ -91,30 +79,26 @@ describe("parsePatchAnalysis", () => {
 
   test("defaults changelogHighlights to [] when the model omits it", () => {
     // VALID_ANALYSIS has no changelogHighlights — the common data-only patch.
-    const changeset = parsePatchAnalysis(
-      claudeStdout(VALID_ANALYSIS),
-      PATCH,
-      DATE,
-    );
+    const changeset = parsePatchAnalysis(VALID_ANALYSIS, PATCH, DATE);
     expect(changeset.changelogHighlights).toEqual([]);
   });
 
-  test("tolerates a fenced code block around the JSON", () => {
-    const stdout = JSON.stringify({
-      result: "```json\n" + JSON.stringify(VALID_ANALYSIS) + "\n```",
-    });
-    const changeset = parsePatchAnalysis(stdout, PATCH, DATE);
-    expect(changeset.overview).toBe("A jungle-focused patch.");
+  test("rejects prose and fenced JSON", () => {
+    expect(() =>
+      parsePatchAnalysis(
+        "```json\n" + JSON.stringify(VALID_ANALYSIS) + "\n```",
+        PATCH,
+        DATE,
+      ),
+    ).toThrow();
   });
 
   test("throws when the model output violates the schema", () => {
     const bad = { ...VALID_ANALYSIS, summary: [] };
-    expect(() => parsePatchAnalysis(claudeStdout(bad), PATCH, DATE)).toThrow();
+    expect(() => parsePatchAnalysis(bad, PATCH, DATE)).toThrow();
   });
 
-  test("throws when the result field is missing", () => {
-    expect(() =>
-      parsePatchAnalysis(JSON.stringify({ nope: true }), PATCH, DATE),
-    ).toThrow();
+  test("throws when the structured object is missing", () => {
+    expect(() => parsePatchAnalysis(undefined, PATCH, DATE)).toThrow();
   });
 });

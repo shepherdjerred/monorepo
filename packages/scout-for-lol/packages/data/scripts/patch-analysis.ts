@@ -5,10 +5,12 @@
 // can't get the load-bearing facts wrong.
 //
 // Prompt building and output parsing are split out so they're unit-testable; the
-// `claude -p` spawn is the only impure part. The `update-data-dragon` caller
+// Claude Agent SDK call is the only impure part. The `update-data-dragon` caller
 // treats a failure as non-fatal (it still ships the asset PR, just without a
 // refreshed changeset).
 
+import { query } from "@anthropic-ai/claude-agent-sdk";
+import { traceClaudeAgent } from "@shepherdjerred/llm-observability/wrappers/claude-agent";
 import { z } from "zod";
 import type { RiotPatch } from "./riot-patch.ts";
 import {
@@ -20,11 +22,8 @@ import { formatDateForChangelog } from "./update-changelog.ts";
 // Structured extraction is a bigger reasoning task than the old one-line
 // highlights, so use the strongest model. This runs at most weekly.
 const MODEL = "claude-opus-5";
-const MAX_TURNS = "8";
+const MAX_TURNS = 8;
 const TIMEOUT_MS = 240_000;
-
-// `claude -p --output-format json` wraps the final assistant text in `.result`.
-const ClaudeResultSchema = z.object({ result: z.string() });
 
 // The fields Claude fills in — patch/title/url/date are added deterministically.
 const AnalysisOutputSchema = PatchChangesetSchema.omit({
@@ -32,6 +31,15 @@ const AnalysisOutputSchema = PatchChangesetSchema.omit({
   title: true,
   url: true,
   date: true,
+});
+const AnalysisOutputJsonSchema: Record<string, unknown> = z
+  .record(z.string(), z.unknown())
+  .parse(z.toJSONSchema(AnalysisOutputSchema, { target: "draft-7" }));
+const ClaudeResultSchema = z.looseObject({
+  type: z.literal("result"),
+  subtype: z.literal("success"),
+  is_error: z.literal(false),
+  structured_output: z.unknown(),
 });
 
 export function buildAnalysisPrompt(patch: RiotPatch): string {
@@ -79,48 +87,17 @@ export function buildAnalysisPrompt(patch: RiotPatch): string {
   ].join("\n");
 }
 
-function extractJsonObject(text: string): unknown {
-  const trimmed = text.trim();
-  const fence = /```(?:json)?\s*([\s\S]*?)\s*```/.exec(trimmed);
-  const candidate = (fence?.[1] ?? trimmed).trim();
-  try {
-    return JSON.parse(candidate);
-  } catch {
-    const objectMatch = /\{[\s\S]*\}/.exec(candidate);
-    if (objectMatch !== null) {
-      return JSON.parse(objectMatch[0]);
-    }
-    throw new Error(
-      `no JSON object found in Claude output: ${candidate.slice(0, 160)}`,
-    );
-  }
-}
-
 /**
- * Parse `claude -p --output-format json` stdout into a validated changeset,
+ * Parse Claude Agent SDK structured output into a validated changeset,
  * merging the deterministic patch/title/url/date. Throws on any spec violation
  * so the caller falls back rather than shipping an off-spec asset.
  */
 export function parsePatchAnalysis(
-  stdout: string,
+  structuredOutput: unknown,
   patch: RiotPatch,
   date: Date,
 ): PatchChangeset {
-  let wrapper: unknown;
-  try {
-    wrapper = JSON.parse(stdout);
-  } catch {
-    throw new Error("Claude patch analysis: stdout was not JSON");
-  }
-  const parsedWrapper = ClaudeResultSchema.safeParse(wrapper);
-  if (!parsedWrapper.success) {
-    throw new Error(
-      "Claude patch analysis: response is missing a `result` field",
-    );
-  }
-  const analysis = AnalysisOutputSchema.parse(
-    extractJsonObject(parsedWrapper.data.result),
-  );
+  const analysis = AnalysisOutputSchema.parse(structuredOutput);
   return PatchChangesetSchema.parse({
     ...analysis,
     patch: patch.patch,
@@ -132,43 +109,78 @@ export function parsePatchAnalysis(
 
 /**
  * Ask Claude to read the patch notes and produce the structured changeset.
- * Throws on any failure (claude missing, non-zero exit, unparseable/off-spec
- * output) so the caller can skip the refresh.
+ * Throws on any SDK or output-contract failure so the caller can skip the
+ * refresh. The final object comes only from schema-backed structured output;
+ * prose and fenced JSON are never parsed.
  */
 export async function analyzePatch(
   patch: RiotPatch,
   date: Date = new Date(),
 ): Promise<PatchChangeset> {
-  // `--allowed-tools WebFetch` is the actual tool-surface constraint: the model
-  // can only ever invoke WebFetch (a single HTTP read of the patch-notes URL),
-  // nothing else. `--dangerously-skip-permissions` only suppresses the
-  // *interactive* per-tool-call approval prompt, which is unavoidable for a
-  // headless `claude -p` run (there's no TTY to answer it); it does not widen
-  // the allow-list. Same combination the temporal `claude -p` activities use.
-  const proc = Bun.spawn(
-    [
-      "claude",
-      "-p",
-      buildAnalysisPrompt(patch),
-      "--output-format",
-      "json",
-      "--allowed-tools",
-      "WebFetch",
-      "--dangerously-skip-permissions",
-      "--max-turns",
-      MAX_TURNS,
-      "--model",
-      MODEL,
-    ],
-    { stdout: "pipe", stderr: "pipe", timeout: TIMEOUT_MS },
+  const claudeToken = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
+  if (claudeToken === undefined || claudeToken === "") {
+    throw new Error("CLAUDE_CODE_OAUTH_TOKEN is required for patch analysis");
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => {
+    controller.abort(new Error("Claude patch analysis timed out"));
+  }, TIMEOUT_MS);
+  const prompt = buildAnalysisPrompt(patch);
+  const environment: Record<string, string | undefined> = {
+    ...Bun.env,
+    ANTHROPIC_API_KEY: undefined,
+    CLAUDE_AGENT_SDK_CLIENT_APP: "scout-patch-analysis/1.0",
+    CLAUDE_CODE_OAUTH_TOKEN: claudeToken,
+  };
+  let result: z.infer<typeof ClaudeResultSchema> | undefined;
+  const messages = traceClaudeAgent(
+    {
+      service: "scout-data",
+      callSite: "patch-analysis",
+      request: {
+        model: MODEL,
+        prompt,
+        options: {
+          maxTurns: MAX_TURNS,
+          outputSchema: AnalysisOutputJsonSchema,
+        },
+      },
+    },
+    () =>
+      query({
+        prompt,
+        options: {
+          abortController: controller,
+          allowedTools: ["WebFetch"],
+          allowDangerouslySkipPermissions: true,
+          env: environment,
+          executable: "bun",
+          maxTurns: MAX_TURNS,
+          model: MODEL,
+          outputFormat: {
+            type: "json_schema",
+            schema: AnalysisOutputJsonSchema,
+          },
+          permissionMode: "bypassPermissions",
+          persistSession: false,
+          tools: ["WebFetch"],
+        },
+      }),
   );
-  const stdout = await new Response(proc.stdout).text();
-  const exitCode = await proc.exited;
-  if (exitCode !== 0) {
-    const stderr = await new Response(proc.stderr).text();
+  try {
+    for await (const message of messages) {
+      const parsed = ClaudeResultSchema.safeParse(message);
+      if (parsed.success) {
+        result = parsed.data;
+      }
+    }
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (result === undefined) {
     throw new Error(
-      `claude exited ${String(exitCode)}: ${stderr.slice(0, 300)}`,
+      "Claude patch analysis completed without valid structured output",
     );
   }
-  return parsePatchAnalysis(stdout, patch, date);
+  return parsePatchAnalysis(result.structured_output, patch, date);
 }

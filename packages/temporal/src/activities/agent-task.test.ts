@@ -1,63 +1,94 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, it } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { ApplicationFailure } from "@temporalio/activity";
 import { register } from "#observability/metrics.ts";
-import type { AgentTaskInput } from "#shared/agent-task.ts";
+import type { AgentTaskInput, AgentTaskProvider } from "#shared/agent-task.ts";
 import { agentTaskCollectorReceiptId } from "#shared/agent-task-evidence-contract.ts";
 import type { ReportEvidenceReceiptV1 } from "#shared/report.ts";
 import { redactSecrets } from "#shared/redact.ts";
-import type { AgentTaskCommand } from "./agent-task-command.ts";
-import type { AgentProviderCredentialBrokerFactory } from "./agent-provider-credential-broker.ts";
 import { createAgentTaskActivities } from "./agent-task.ts";
+import {
+  AgentTaskSdkExecutionError,
+  type AgentTaskSdkResult,
+  type AgentTaskSdkRunInput,
+} from "./agent-task-sdk.ts";
 import {
   agentTaskSecretTokens,
   envForEvidenceCollector,
   envForProvider,
+  envForTrustedAgent,
   readAgentTaskMountedSecretTokens,
 } from "./agent-task-env.ts";
 
-const TEST_BROKER = {
-  baseUrl: "http://127.0.0.1:45678",
-  clientToken: "ephemeral-broker-token",
-};
-const testCredentialBrokerFactory: AgentProviderCredentialBrokerFactory =
-  () => ({
-    ...TEST_BROKER,
-    stop: () => Promise.resolve(),
-  });
+type SdkRunner = (input: AgentTaskSdkRunInput) => Promise<AgentTaskSdkResult>;
+
+function sdkResult(
+  provider: AgentTaskProvider,
+  output: unknown,
+  evidenceEvents: unknown[] = [],
+): AgentTaskSdkResult {
+  return {
+    output,
+    finalText: typeof output === "string" ? output : JSON.stringify(output),
+    evidenceEvents,
+    provider,
+    model: "test-model",
+    durationMs: 25,
+    sessionId: "test-session",
+    usage: {
+      inputTokens: 10,
+      cachedInputTokens: 2,
+      cacheWriteInputTokens: 0,
+      outputTokens: 5,
+      reasoningTokens: 1,
+    },
+    costUsd: provider === "claude" ? 0.01 : undefined,
+    eventCount: 2,
+    firstEventLatencyMs: 5,
+    maxIdleMs: 10,
+    generationStarted: true,
+    possiblyAppliedEffects: false,
+  };
+}
 
 function createTestAgentTaskActivities(
-  commandBuilder: Parameters<typeof createAgentTaskActivities>[0],
+  sdkRunner: SdkRunner,
   evidenceCollector: (
     input: AgentTaskInput,
     workdir: string,
   ) => Promise<ReportEvidenceReceiptV1[]> = () => Promise.resolve([]),
 ) {
-  return createAgentTaskActivities(
-    commandBuilder,
-    testCredentialBrokerFactory,
-    evidenceCollector,
-  );
+  return createAgentTaskActivities(sdkRunner, evidenceCollector);
 }
 
-const testAgentTaskActivities = createTestAgentTaskActivities(
-  async (
-    _input: AgentTaskInput,
-    workdir: string,
-  ): Promise<AgentTaskCommand> => {
-    const outputPath = path.join(workdir, "agent-task-output.json");
-    const code = [
-      `await Bun.write(${JSON.stringify(outputPath)}, JSON.stringify({ markdown: "task complete", followUp: null, cancelCron: null, cancelReason: null }));`,
-    ].join("\n");
-    return {
-      args: ["bun", "--eval", code],
-      model: "test-model",
-      outputPath,
-      prompt: "Return a short report.",
-    };
-  },
-);
+async function testWorkdir(): Promise<string> {
+  return await mkdtemp(path.join(os.tmpdir(), "agent-task-test-"));
+}
+
+// runAgent builds a real provider environment, which fails fast without the
+// provider's subscription credential.
+const originalClaudeCredential = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
+const originalCodexCredential = Bun.env["CODEX_ACCESS_TOKEN"];
+
+beforeAll(() => {
+  Bun.env["CLAUDE_CODE_OAUTH_TOKEN"] = "test-claude-subscription-credential";
+  Bun.env["CODEX_ACCESS_TOKEN"] = "test-codex-subscription-credential";
+});
+
+afterAll(() => {
+  if (originalClaudeCredential === undefined) {
+    delete Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
+  } else {
+    Bun.env["CLAUDE_CODE_OAUTH_TOKEN"] = originalClaudeCredential;
+  }
+  if (originalCodexCredential === undefined) {
+    delete Bun.env["CODEX_ACCESS_TOKEN"];
+  } else {
+    Bun.env["CODEX_ACCESS_TOKEN"] = originalCodexCredential;
+  }
+});
 
 const baseInput: AgentTaskInput = {
   title: "Metric placement test",
@@ -65,10 +96,7 @@ const baseInput: AgentTaskInput = {
   provider: "codex",
   mode: "report-only",
   allowSelfCancel: false,
-  repo: {
-    fullName: "shepherdjerred/monorepo",
-    ref: "main",
-  },
+  repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
 };
 
 const claudeInput: AgentTaskInput = {
@@ -77,10 +105,7 @@ const claudeInput: AgentTaskInput = {
   provider: "claude",
   mode: "report-only",
   allowSelfCancel: false,
-  repo: {
-    fullName: "shepherdjerred/monorepo",
-    ref: "main",
-  },
+  repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
 };
 
 const v2Input: AgentTaskInput = {
@@ -107,34 +132,25 @@ const v2Input: AgentTaskInput = {
   provider: "codex",
   mode: "report-only",
   allowSelfCancel: false,
-  repo: {
-    fullName: "shepherdjerred/monorepo",
-    ref: "main",
-  },
+  repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
 };
-
-function claudeResultMessageCommand(
-  resultMessage: Record<string, unknown>,
-): (input: AgentTaskInput, workdir: string) => Promise<AgentTaskCommand> {
-  return async (_input: AgentTaskInput, _workdir: string) => ({
-    args: [
-      "bun",
-      "--eval",
-      `console.log(${JSON.stringify(JSON.stringify(resultMessage))});`,
-    ],
-    model: "test-model",
-    outputPath: undefined,
-    prompt: "Return a short report.",
-  });
-}
 
 describe("agentTaskActivities", () => {
   it("records a successful run after agent output parses", async () => {
-    const workdir = await mkdtemp(path.join(os.tmpdir(), "agent-task-test-"));
+    const activities = createTestAgentTaskActivities((input) =>
+      Promise.resolve(
+        sdkResult(input.config.provider, {
+          markdown: "task complete",
+          followUp: null,
+          cancelCron: null,
+          cancelReason: null,
+        }),
+      ),
+    );
 
-    const result = await testAgentTaskActivities.runAgentTask({
+    const result = await activities.runAgentTask({
       input: baseInput,
-      workdir,
+      workdir: await testWorkdir(),
     });
 
     if (result.contractVersion !== 1) {
@@ -147,19 +163,16 @@ describe("agentTaskActivities", () => {
     );
   });
 
-  it("records a successful run after Claude structured_output parses", async () => {
-    const claudeActivities = createTestAgentTaskActivities(
-      claudeResultMessageCommand({
-        type: "result",
-        is_error: false,
-        structured_output: { markdown: "claude task complete" },
-      }),
+  it("records a successful run after Claude structured output parses", async () => {
+    const activities = createTestAgentTaskActivities(() =>
+      Promise.resolve(
+        sdkResult("claude", { markdown: "claude task complete" }),
+      ),
     );
-    const workdir = await mkdtemp(path.join(os.tmpdir(), "agent-task-test-"));
 
-    const result = await claudeActivities.runAgentTask({
+    const result = await activities.runAgentTask({
       input: claudeInput,
-      workdir,
+      workdir: await testWorkdir(),
     });
 
     if (result.contractVersion !== 1) {
@@ -174,71 +187,60 @@ describe("agentTaskActivities", () => {
 
   it("finalizes v2 output against receipts captured during investigation", async () => {
     const phases: string[] = [];
+    const allowedToolsByPhase = new Map<string, readonly string[]>();
     const collectorReceiptId = agentTaskCollectorReceiptId(
       "service-health",
       "service-health-command",
     );
+    const commandEvent = {
+      type: "item.completed",
+      item: {
+        id: "command-1",
+        type: "command_execution",
+        command: "service-health --json",
+        aggregated_output: '{"healthy":true}',
+        exit_code: 0,
+        status: "completed",
+      },
+    };
     const activities = createTestAgentTaskActivities(
-      async (_input, workdir, phase): Promise<AgentTaskCommand> => {
-        if (phase === undefined) {
-          throw new Error("two-phase test requires an explicit phase");
-        }
-        phases.push(phase.kind);
-        const outputPath = path.join(workdir, `${phase.kind}.json`);
-        const evidenceReceiptIds =
-          phase.kind === "finalization" ? [collectorReceiptId] : [];
-        if (phase.kind === "finalization") {
-          expect(phase.evidence.map((receipt) => receipt.id)).toEqual([
-            "command-1",
-            collectorReceiptId,
-          ]);
-          expect(phase.preliminary.headline).toBe(
+      (input) => {
+        const phase = input.config.phase;
+        phases.push(phase);
+        allowedToolsByPhase.set(phase, input.config.allowedTools);
+        const finalizing = phase === "finalization";
+        if (finalizing) {
+          expect(input.config.prompt).toContain("Captured evidence catalog:");
+          expect(input.config.prompt).toContain(collectorReceiptId);
+          expect(input.config.prompt).toContain(
             "Preliminary service assessment.",
           );
         }
-        const payload = {
-          headline:
-            phase.kind === "finalization"
-              ? "The service is healthy."
-              : "Preliminary service assessment.",
-          checks: [
+        return Promise.resolve(
+          sdkResult(
+            "codex",
             {
-              id: "service-health",
-              status: "passed",
-              summary: "The command succeeded.",
-              evidenceReceiptIds,
+              headline: finalizing
+                ? "The service is healthy."
+                : "Preliminary service assessment.",
+              checks: [
+                {
+                  id: "service-health",
+                  status: "passed",
+                  summary: "The command succeeded.",
+                  evidenceReceiptIds: finalizing ? [collectorReceiptId] : [],
+                },
+              ],
+              findings: [],
+              limitations: [],
+              actions: [],
+              synthesis: null,
+              followUp: null,
+              retirementRecommendation: null,
             },
-          ],
-          findings: [],
-          limitations: [],
-          actions: [],
-          synthesis: null,
-          followUp: null,
-          retirementRecommendation: null,
-        };
-        const event = {
-          type: "item.completed",
-          item: {
-            id: "command-1",
-            type: "command_execution",
-            command: "service-health --json",
-            aggregated_output: '{"healthy":true}',
-            exit_code: 0,
-            status: "completed",
-          },
-        };
-        const code = [
-          ...(phase.kind === "investigation"
-            ? [`console.log(${JSON.stringify(JSON.stringify(event))});`]
-            : []),
-          `await Bun.write(${JSON.stringify(outputPath)}, ${JSON.stringify(JSON.stringify(payload))});`,
-        ].join("\n");
-        return {
-          args: ["bun", "--eval", code],
-          model: "test-model",
-          outputPath,
-          prompt: `${phase.kind} prompt`,
-        };
+            finalizing ? [] : [commandEvent],
+          ),
+        );
       },
       () =>
         Promise.resolve([
@@ -255,7 +257,7 @@ describe("agentTaskActivities", () => {
           },
         ]),
     );
-    const workdir = await mkdtemp(path.join(os.tmpdir(), "agent-task-test-"));
+    const workdir = await testWorkdir();
 
     const investigation = await activities.investigateAgentTask({
       input: v2Input,
@@ -268,11 +270,15 @@ describe("agentTaskActivities", () => {
     });
 
     expect(phases).toEqual(["investigation", "finalization"]);
+    // Finalization may only reason over the captured catalog, so it gets no tools.
+    expect(allowedToolsByPhase.get("finalization")).toEqual([]);
+    expect(allowedToolsByPhase.get("investigation")?.length).toBeGreaterThan(0);
     expect(result.payload.checks[0]?.evidenceReceiptIds).toEqual([
       collectorReceiptId,
     ]);
     expect(result.evidence[0]).toMatchObject({
       id: "command-1",
+      origin: "provider",
       status: "success",
       command: "service-health --json",
     });
@@ -285,33 +291,88 @@ describe("agentTaskActivities", () => {
 });
 
 describe("agent task runtime support", () => {
-  it("throws a distinct error when claude reports is_error=true", async () => {
-    const claudeActivities = createTestAgentTaskActivities(
-      claudeResultMessageCommand({
-        type: "result",
-        is_error: true,
-        result: "hit max turns",
-      }),
-    );
-    const workdir = await mkdtemp(path.join(os.tmpdir(), "agent-task-test-"));
+  it("makes a completed SDK failure non-retryable", async () => {
+    const activities = createTestAgentTaskActivities(() => {
+      throw new AgentTaskSdkExecutionError("hit max turns", {
+        provider: "claude",
+        generationStarted: true,
+        possiblyAppliedEffects: false,
+        authOrQuotaFailure: false,
+      });
+    });
 
     let caught: unknown;
     try {
-      await claudeActivities.runAgentTask({ input: claudeInput, workdir });
+      await activities.runAgentTask({
+        input: claudeInput,
+        workdir: await testWorkdir(),
+      });
     } catch (error: unknown) {
       caught = error;
     }
-    expect(caught).toBeInstanceOf(Error);
-    const message = caught instanceof Error ? caught.message : "";
-    expect(message).toMatch(/is_error=true/);
-    expect(message).not.toMatch(/no structured output/);
+    expect(caught).toBeInstanceOf(ApplicationFailure);
+    expect(
+      caught instanceof ApplicationFailure ? caught.nonRetryable : false,
+    ).toBe(true);
+    expect(caught instanceof Error ? caught.message : "").toContain(
+      "hit max turns",
+    );
   });
 
-  it("redacts a distinct Codex API key", async () => {
-    const codexApiKey = "codex-distinct-secret";
+  it("never retries an agent whose structured output violates the contract", async () => {
+    const activities = createTestAgentTaskActivities(() =>
+      Promise.resolve(sdkResult("claude", { markdown: "" })),
+    );
+
+    let caught: unknown;
+    try {
+      await activities.runAgentTask({
+        input: claudeInput,
+        workdir: await testWorkdir(),
+      });
+    } catch (error: unknown) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(ApplicationFailure);
+    expect(
+      caught instanceof ApplicationFailure ? caught.nonRetryable : false,
+    ).toBe(true);
+    expect(caught instanceof ApplicationFailure ? caught.type : undefined).toBe(
+      "AgentSdkOutputContractFailure",
+    );
+    const exposition = await register.metrics();
+    expect(exposition).toMatch(
+      /agent_task_output_contract_failures_total\{[^}]*reason="invalid-structured-output"/,
+    );
+  });
+
+  it("reports a missing structured output as a contract failure, never as prose", async () => {
+    const activities = createTestAgentTaskActivities(() =>
+      Promise.resolve(sdkResult("claude", undefined)),
+    );
+
+    let caught: unknown;
+    try {
+      await activities.runAgentTask({
+        input: claudeInput,
+        workdir: await testWorkdir(),
+      });
+    } catch (error: unknown) {
+      caught = error;
+    }
+    expect(caught instanceof Error ? caught.message : "").toContain(
+      "missing-structured-output",
+    );
+    const exposition = await register.metrics();
+    expect(exposition).toMatch(
+      /agent_task_output_contract_failures_total\{[^}]*reason="missing-structured-output"/,
+    );
+  });
+
+  it("redacts native SDK subscription tokens and operational credentials", () => {
+    const codexAccessToken = "codex-distinct-secret";
     const tokens = agentTaskSecretTokens("github-token", {
-      CODEX_API_KEY: codexApiKey,
-      OPENAI_API_KEY: "openai-distinct-secret",
+      CODEX_ACCESS_TOKEN: codexAccessToken,
       HA_TOKEN: "ha-distinct-secret",
       AWS_SECRET_ACCESS_KEY: "aws-distinct-secret",
       AGENT_TASK_API_TOKEN: "agent-task-distinct-secret",
@@ -322,7 +383,7 @@ describe("agent task runtime support", () => {
         "https://sentry-public@sentry.example/42?token=sentry-query-secret",
     });
 
-    expect(tokens).toContain(codexApiKey);
+    expect(tokens).toContain(codexAccessToken);
     expect(tokens).toContain("ha-distinct-secret");
     expect(tokens).toContain("aws-distinct-secret");
     expect(tokens).toContain("agent-task-distinct-secret");
@@ -353,28 +414,16 @@ describe("agent task runtime support", () => {
       await rm(tokenPath);
     }
   });
+});
 
-  it("replaces Codex credentials with the ephemeral broker token", async () => {
-    expect(
-      envForProvider("codex", "/tmp/agent-home", TEST_BROKER, {
-        OPENAI_API_KEY: "openai-key",
-        CODEX_API_KEY: "codex-key",
-      }),
-    ).toEqual({
-      CODEX_API_KEY: "ephemeral-broker-token",
-      HOME: "/tmp/agent-home",
-    });
-  });
-
+describe("agent task environment boundary", () => {
   it("gives declared collectors no provider or delivery credentials", () => {
     expect(
       envForEvidenceCollector("/tmp/collector-home", {
         PATH: "/usr/bin",
         PROMETHEUS_URL: "http://prometheus.local",
-        ANTHROPIC_API_KEY: "anthropic-secret",
         CLAUDE_CODE_OAUTH_TOKEN: "claude-secret",
-        OPENAI_API_KEY: "openai-secret",
-        CODEX_API_KEY: "codex-secret",
+        CODEX_ACCESS_TOKEN: "codex-secret",
         POSTAL_API_KEY: "postal-secret",
         AGENT_TASK_API_TOKEN: "api-secret",
       }),
@@ -385,107 +434,142 @@ describe("agent task runtime support", () => {
     });
   });
 
-  it("allows only Claude auth and non-secret read-only runtime configuration", async () => {
-    const environment = envForProvider(
-      "claude",
-      "/tmp/agent-home",
-      TEST_BROKER,
-      {
-        PATH: "/usr/bin",
-        HOME: "/home/worker",
-        CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
-        PROMETHEUS_URL: "http://prometheus.local",
-        ALERT_DASHBOARD_URL: "http://alerts.local",
-        KUBERNETES_SERVICE_HOST: "10.0.0.1",
-        POSTAL_API_KEY: "postal-secret",
-        POSTAL_HOST: "https://postal.example.test",
-        RECIPIENT_EMAIL: "recipient@example.test",
-        SENDER_EMAIL: "sender@example.test",
-        AGENT_TASK_API_TOKEN: "agent-task-api-secret",
-        GRAFANA_API_KEY: "grafana-secret",
-        ARGOCD_AUTH_TOKEN: "argocd-secret",
-        CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-        SAFE_VALUE: "not-allowlisted",
-        ANTHROPIC_API_KEY: "anthropic-key",
-        OPENAI_API_KEY: "other-provider-key",
-        CODEX_API_KEY: "other-provider-key",
-        GH_TOKEN: "personal-token",
-        GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
-        GITHUB_APP_PRIVATE_KEY: "private-key",
-      },
-    );
+  it("allows only Claude auth and non-secret read-only runtime configuration", () => {
+    const environment = envForProvider("claude", "/tmp/agent-home", {
+      PATH: "/usr/bin",
+      HOME: "/home/worker",
+      CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
+      PROMETHEUS_URL: "http://prometheus.local",
+      ALERT_DASHBOARD_URL: "http://alerts.local",
+      KUBERNETES_SERVICE_HOST: "10.0.0.1",
+      POSTAL_API_KEY: "postal-secret",
+      POSTAL_HOST: "https://postal.example.test",
+      RECIPIENT_EMAIL: "recipient@example.test",
+      SENDER_EMAIL: "sender@example.test",
+      AGENT_TASK_API_TOKEN: "agent-task-api-secret",
+      GRAFANA_API_KEY: "grafana-secret",
+      ARGOCD_AUTH_TOKEN: "argocd-secret",
+      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
+      SAFE_VALUE: "not-allowlisted",
+      CODEX_ACCESS_TOKEN: "other-provider-credential",
+      GH_TOKEN: "personal-token",
+      GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
+      GITHUB_APP_PRIVATE_KEY: "private-key",
+    });
 
     expect(environment).toEqual({
       PATH: "/usr/bin",
       HOME: "/tmp/agent-home",
-      ANTHROPIC_BASE_URL: "http://127.0.0.1:45678",
-      ANTHROPIC_AUTH_TOKEN: "ephemeral-broker-token",
-      CLAUDE_CODE_USE_GATEWAY: "1",
+      CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
       PROMETHEUS_URL: "http://prometheus.local",
       ALERT_DASHBOARD_URL: "http://alerts.local",
       KUBERNETES_SERVICE_HOST: "10.0.0.1",
     });
-    expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
-    expect(environment).not.toHaveProperty("CLAUDE_CODE_OAUTH_TOKEN");
+    expect(environment).not.toHaveProperty("CODEX_ACCESS_TOKEN");
     expect(environment).not.toHaveProperty("POSTAL_API_KEY");
     expect(environment).not.toHaveProperty("POSTAL_HOST");
     expect(environment).not.toHaveProperty("RECIPIENT_EMAIL");
     expect(environment).not.toHaveProperty("SENDER_EMAIL");
     expect(environment).not.toHaveProperty("AGENT_TASK_API_TOKEN");
+    expect(environment).not.toHaveProperty("GH_TOKEN");
     expect(environment).not.toHaveProperty("GITHUB_PERSONAL_ACCESS_TOKEN");
     expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
-    expect(environment).not.toHaveProperty("OPENAI_API_KEY");
-    expect(environment).not.toHaveProperty("CODEX_API_KEY");
     expect(environment).not.toHaveProperty("GRAFANA_API_KEY");
     expect(environment).not.toHaveProperty("ARGOCD_AUTH_TOKEN");
     expect(environment).not.toHaveProperty("CLOUDFLARE_API_TOKEN");
     expect(environment).not.toHaveProperty("SAFE_VALUE");
   });
 
-  it("allows only Codex auth and non-secret read-only runtime configuration", async () => {
-    const environment = envForProvider(
-      "codex",
-      "/tmp/agent-home",
-      TEST_BROKER,
-      {
-        PATH: "/usr/bin",
-        HOME: "/home/worker",
-        CODEX_API_KEY: "codex-key",
-        OPENAI_API_KEY: "openai-key",
-        ALERT_DASHBOARD_URL: "http://alerts.local",
-        POSTAL_API_KEY: "postal-secret",
-        SENDER_EMAIL: "sender@example.test",
-        GITHUB_WEBHOOK_SECRET: "webhook-secret",
-        BUGSINK_TOKEN: "bugsink-secret",
-        GRAFANA_API_KEY: "grafana-secret",
-        ARGOCD_AUTH_TOKEN: "argocd-secret",
-        CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-        ANTHROPIC_API_KEY: "anthropic-key",
-        CLAUDE_CODE_OAUTH_TOKEN: "other-provider-key",
-        GH_TOKEN: "personal-token",
-        GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
-        GITHUB_APP_PRIVATE_KEY: "private-key",
-      },
-    );
+  it("allows only Codex auth and non-secret read-only runtime configuration", () => {
+    const environment = envForProvider("codex", "/tmp/agent-home", {
+      PATH: "/usr/bin",
+      HOME: "/home/worker",
+      CODEX_ACCESS_TOKEN: "codex-credential",
+      ALERT_DASHBOARD_URL: "http://alerts.local",
+      POSTAL_API_KEY: "postal-secret",
+      SENDER_EMAIL: "sender@example.test",
+      GITHUB_WEBHOOK_SECRET: "webhook-secret",
+      BUGSINK_TOKEN: "bugsink-secret",
+      GRAFANA_API_KEY: "grafana-secret",
+      CLAUDE_CODE_OAUTH_TOKEN: "other-provider-credential",
+      GH_TOKEN: "personal-token",
+      GITHUB_APP_PRIVATE_KEY: "private-key",
+    });
 
     expect(environment).toEqual({
       PATH: "/usr/bin",
       HOME: "/tmp/agent-home",
-      CODEX_API_KEY: "ephemeral-broker-token",
+      CODEX_ACCESS_TOKEN: "codex-credential",
       ALERT_DASHBOARD_URL: "http://alerts.local",
     });
-    expect(environment).not.toHaveProperty("GITHUB_PERSONAL_ACCESS_TOKEN");
+    expect(environment).not.toHaveProperty("CLAUDE_CODE_OAUTH_TOKEN");
+    expect(environment).not.toHaveProperty("GH_TOKEN");
     expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
     expect(environment).not.toHaveProperty("POSTAL_API_KEY");
     expect(environment).not.toHaveProperty("SENDER_EMAIL");
     expect(environment).not.toHaveProperty("GITHUB_WEBHOOK_SECRET");
     expect(environment).not.toHaveProperty("BUGSINK_TOKEN");
     expect(environment).not.toHaveProperty("GRAFANA_API_KEY");
-    expect(environment).not.toHaveProperty("ARGOCD_AUTH_TOKEN");
-    expect(environment).not.toHaveProperty("CLOUDFLARE_API_TOKEN");
+  });
+
+  it("gives a trusted agent its operational credentials but only its own provider credential", () => {
+    const environment = envForTrustedAgent(
+      { CLAUDE_CODE_OAUTH_TOKEN: "claude-credential", GH_TOKEN: "minted" },
+      {
+        PATH: "/usr/bin",
+        // The audit genuinely needs these to inspect live state.
+        GRAFANA_API_KEY: "grafana-secret",
+        ARGOCD_AUTH_TOKEN: "argocd-secret",
+        BUGSINK_TOKEN: "bugsink-secret",
+        TALOSCONFIG: "/etc/talos/config",
+        // An unrelated provider credential the worker happens to hold. A
+        // trusted agent has Bash, so inheriting this would make it
+        // exfiltratable by a mistaken or injected command.
+        CODEX_ACCESS_TOKEN: "codex-credential",
+        OPENROUTER_API_KEY: "openrouter-key",
+        ANTHROPIC_API_KEY: "anthropic-key",
+        // Replaced by the minted installation token.
+        GH_TOKEN: "worker-token",
+        GITHUB_APP_PRIVATE_KEY: "private-key",
+        // Delivery stays in the parent.
+        POSTAL_API_KEY: "postal-secret",
+        RECIPIENT_EMAIL: "recipient@example.test",
+      },
+    );
+
+    expect(environment).toEqual({
+      PATH: "/usr/bin",
+      GRAFANA_API_KEY: "grafana-secret",
+      ARGOCD_AUTH_TOKEN: "argocd-secret",
+      BUGSINK_TOKEN: "bugsink-secret",
+      TALOSCONFIG: "/etc/talos/config",
+      CLAUDE_CODE_OAUTH_TOKEN: "claude-credential",
+      GH_TOKEN: "minted",
+    });
+    expect(environment).not.toHaveProperty("CODEX_ACCESS_TOKEN");
+    expect(environment).not.toHaveProperty("OPENROUTER_API_KEY");
     expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
-    expect(environment).not.toHaveProperty("CLAUDE_CODE_OAUTH_TOKEN");
-    expect(environment).not.toHaveProperty("OPENAI_API_KEY");
-    expect(environment).not.toHaveProperty("GH_TOKEN");
+    expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
+    expect(environment).not.toHaveProperty("POSTAL_API_KEY");
+    expect(environment).not.toHaveProperty("RECIPIENT_EMAIL");
+  });
+
+  it("gives a trusted Codex agent no Claude subscription credential", () => {
+    expect(
+      envForTrustedAgent(
+        { CODEX_ACCESS_TOKEN: "codex-credential" },
+        {
+          PATH: "/usr/bin",
+          CLAUDE_CODE_OAUTH_TOKEN: "claude-credential",
+          CODEX_ACCESS_TOKEN: "worker-codex-credential",
+        },
+      ),
+    ).toEqual({ PATH: "/usr/bin", CODEX_ACCESS_TOKEN: "codex-credential" });
+  });
+
+  it("fails fast when the provider's subscription credential is missing", () => {
+    expect(() =>
+      envForProvider("codex", "/tmp/agent-home", { PATH: "/usr/bin" }),
+    ).toThrow("CODEX_ACCESS_TOKEN is required for codex agent tasks");
   });
 });

@@ -203,6 +203,11 @@
       "steps": [{ "runner": "bun", "args": ["test"] }]
     },
     {
+      "package": "@shepherdjerred/llm-runtime",
+      "directory": "packages/llm-runtime",
+      "steps": [{ "runner": "bun", "args": ["test"] }]
+    },
+    {
       "package": "@shepherdjerred/llm-observability",
       "directory": "packages/llm-observability",
       "steps": [
@@ -217,10 +222,15 @@
       ],
       "excludedSuites": [
         {
-          "path": "test/e2e/openai-archive.e2e.test.ts",
+          "path": "test/e2e/gateway-archive.e2e.test.ts",
           "reason": "Service-backed observability E2E; requires the Tempo and MinIO containers provided only by the dedicated docker-e2e lanes. Full reporting is deliberately test-only and does not stand up service containers."
         }
       ]
+    },
+    {
+      "package": "@shepherdjerred/openrouter-broadcast-ingest",
+      "directory": "packages/openrouter-broadcast-ingest",
+      "steps": [{ "runner": "bun", "args": ["test"] }]
     },
     {
       "package": "@shepherdjerred/monarch",
@@ -338,7 +348,8 @@
             "--configuration",
             "Release",
             "--property:RestoreLockedMode=true"
-          ]
+          ],
+          "coverageConfig": "coverage.settings.xml"
         },
         {
           "runner": "dotnet",
@@ -347,7 +358,8 @@
             "--configuration",
             "Release",
             "--property:RestoreLockedMode=true"
-          ]
+          ],
+          "coverageConfig": "coverage.settings.xml"
         }
       ]
     },

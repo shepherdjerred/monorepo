@@ -5,7 +5,7 @@ import {
   RawTimelineSchema,
   type ArenaMatch,
   type CompletedMatch,
-  type OpenAIClient,
+  type TextGenerationClient,
   type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
@@ -18,8 +18,8 @@ import {
 } from "#src/alerts/provider-metrics.ts";
 import { PROVIDER_ISSUE_KINDS } from "#src/alerts/provider-issue-kinds.ts";
 
-let openaiClient: OpenAIClient | undefined;
-let geminiClient: unknown;
+let textClient: TextGenerationClient | undefined;
+let imageClient: unknown;
 const capturedExceptionInputs: unknown[] = [];
 const savedPipelineArtifacts: string[] = [];
 const captureException = mock((error: unknown) => {
@@ -27,8 +27,8 @@ const captureException = mock((error: unknown) => {
 });
 
 void mock.module("../ai-clients.ts", () => ({
-  getOpenAIClient: () => openaiClient,
-  getGeminiClient: () => geminiClient,
+  getTextGenerationClient: () => textClient,
+  getImageGenerationClient: () => imageClient,
 }));
 
 void mock.module("#src/storage/pipeline-s3.ts", () => ({
@@ -95,14 +95,10 @@ const MINIMAL_RAW_TIMELINE: RawTimeline = RawTimelineSchema.parse({
   },
 });
 
-function buildThrowingOpenAIClient(error: unknown): OpenAIClient {
+function buildThrowingTextClient(error: unknown): TextGenerationClient {
   return {
-    chat: {
-      completions: {
-        create: async () => {
-          throw error;
-        },
-      },
+    generate: async () => {
+      throw error;
     },
   };
 }
@@ -114,7 +110,7 @@ async function getProviderIssueActiveValue(
   return metric.values.find((value) => {
     return (
       value.labels.app === "scout-for-lol" &&
-      value.labels.provider === "openai" &&
+      value.labels.provider === "openrouter" &&
       value.labels.kind === kind &&
       value.labels.source === "match_review"
     );
@@ -122,15 +118,15 @@ async function getProviderIssueActiveValue(
 }
 
 beforeEach(() => {
-  openaiClient = undefined;
-  geminiClient = undefined;
+  textClient = undefined;
+  imageClient = undefined;
   capturedExceptionInputs.length = 0;
   savedPipelineArtifacts.length = 0;
   captureException.mockClear();
   for (const kind of PROVIDER_ISSUE_KINDS) {
     resolveProviderIssue({
       app: "scout-for-lol",
-      provider: "openai",
+      provider: "openrouter",
       kind,
       source: "match_review",
     });
@@ -329,13 +325,13 @@ describe("generateMatchReview", () => {
     });
   });
 
-  describe("when OpenAI operational errors occur", () => {
+  describe("when OpenRouter operational errors occur", () => {
     test("records budget-exceeded provider issues without capturing to Sentry", async () => {
       const error = new Error(
-        "OpenAI hourly token budget exceeded: 2000000 / 2000000",
+        "LLM hourly token budget exceeded: 2000000 / 2000000",
       );
-      error.name = "OpenAIBudgetExceeded";
-      openaiClient = buildThrowingOpenAIClient(error);
+      error.name = "LlmBudgetExceeded";
+      textClient = buildThrowingTextClient(error);
 
       const review = await generateMatchReview({
         match: buildCompletedMatchFixture(),
@@ -351,7 +347,7 @@ describe("generateMatchReview", () => {
     });
 
     test("records context-limit provider issues without capturing to Sentry", async () => {
-      openaiClient = buildThrowingOpenAIClient({
+      textClient = buildThrowingTextClient({
         status: 400,
         error: {
           message:

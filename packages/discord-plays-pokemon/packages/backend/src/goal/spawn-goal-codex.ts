@@ -1,23 +1,25 @@
-// Spawns the Codex goal process and wires JSONL → OTel blackbox tracing.
-// Kept out of GoalManager so that file stays under the max-lines lint cap.
+// Runs the Codex SDK goal turn and adapts its event stream to the historical
+// process-like lifecycle plus additive v2 codex.jsonl representation.
 
 import path from "node:path";
+import { Codex, type ThreadEvent } from "@openai/codex-sdk";
 import { logger } from "#src/logger.ts";
 import type { Config } from "#src/config/schema.ts";
 import {
   createCodexJsonlParser,
-  pumpCodexStdout,
   type CodexJsonlParser,
 } from "@shepherdjerred/llm-observability/codex-jsonl";
 import { prepareRuntimeTools, buildEnvironment } from "./goal-runtime-env.ts";
 import {
-  buildCodexArgs,
+  buildDeveloperInstructions,
   buildTracePrompt,
+  buildUserPrompt,
   type PromptContext,
 } from "./codex-command.ts";
 import { attachCodexTrace, type CodexTrace } from "./codex-trace.ts";
-import { streamToLog } from "./goal-process-helpers.ts";
 import type { GoalProcess, GoalProcessSpawner } from "./goal-types.ts";
+
+export const CODEX_JSONL_SCHEMA_VERSION = 2;
 
 export type SpawnGoalCodexInput = {
   config: Config["game"]["goal"];
@@ -26,11 +28,9 @@ export type SpawnGoalCodexInput = {
   goal: string;
   requestedBy: string;
   promptContext: PromptContext;
-  spawner: GoalProcessSpawner;
-  // Subscribed BEFORE the stdout pump starts so no early agent_message is
-  // lost (post-spawn subscribers race the pump and can miss everything when
-  // stdout drains fast). Used to forward milestones to Discord.
+  spawner: GoalProcessSpawner | undefined;
   onAgentMessage?: (text: string) => void;
+  onEventLine: ((line: string) => Promise<void> | void) | undefined;
 };
 
 export type SpawnedGoalCodex = {
@@ -40,6 +40,29 @@ export type SpawnedGoalCodex = {
   trace: CodexTrace;
   outputPath: string;
 };
+
+function codexEventLine(event: ThreadEvent): string {
+  return JSON.stringify({
+    ...event,
+    schema_version: CODEX_JSONL_SCHEMA_VERSION,
+    transport: "codex_sdk",
+  });
+}
+
+function fixtureProcess(
+  input: SpawnGoalCodexInput,
+  outputPath: string,
+  runtimeDirectory: string,
+  environment: Record<string, string>,
+): GoalProcess | undefined {
+  if (input.spawner === undefined) {
+    return undefined;
+  }
+  return input.spawner(
+    ["codex-sdk-fixture", "--output-last-message", outputPath],
+    { cwd: runtimeDirectory, env: environment },
+  );
+}
 
 export async function spawnGoalCodex(
   input: SpawnGoalCodexInput,
@@ -61,27 +84,13 @@ export async function spawnGoalCodex(
     screenshotDirectory,
     `${input.goalId}-final.txt`,
   );
-  const args = buildCodexArgs({
-    config: {
-      codexBinary: input.config.codex_binary,
-      model: input.config.model,
-      reasoningEffort: input.config.reasoning_effort,
-    },
-    goal: input.goal,
+  const environment = buildEnvironment({
     runtimeDirectory,
-    outputPath,
-    context: input.promptContext,
-  });
-  const process = input.spawner(args, {
-    cwd: runtimeDirectory,
-    env: buildEnvironment({
-      runtimeDirectory,
-      helperDirectory,
-      controlHost: input.config.control_host,
-      controlPort: input.config.control_port,
-      controlToken: input.controlToken,
-      goalId: input.goalId,
-    }),
+    helperDirectory,
+    controlHost: input.config.control_host,
+    controlPort: input.config.control_port,
+    controlToken: input.controlToken,
+    goalId: input.goalId,
   });
   const jsonl = createCodexJsonlParser({
     warn: (message) => {
@@ -91,8 +100,6 @@ export async function spawnGoalCodex(
       logger.info(message);
     },
   });
-  // Archive both model-visible roles for blackbox review. The final command
-  // argument alone contains only the untrusted user-role message.
   const trace = attachCodexTrace(jsonl, {
     goalId: input.goalId,
     goal: input.goal,
@@ -101,16 +108,131 @@ export async function spawnGoalCodex(
     gameStateSummary: input.promptContext.gameStateSummary,
     initialPrompt: buildTracePrompt(input.goal, input.promptContext),
   });
-  const onAgentMessage = input.onAgentMessage;
-  if (onAgentMessage !== undefined) {
+  if (input.onAgentMessage !== undefined) {
     jsonl.subscribe((event) => {
       if (event.kind === "agent_message") {
-        onAgentMessage(event.text);
+        input.onAgentMessage?.(event.text);
       }
     });
   }
-  // Drain stdout fully before reading jsonl.total() in observeProcess.
-  const stdoutPump = pumpCodexStdout(process.stdout, jsonl);
-  void streamToLog(process.stderr, "stderr");
-  return { process, jsonl, stdoutPump, trace, outputPath };
+
+  const fixture = fixtureProcess(
+    input,
+    outputPath,
+    runtimeDirectory,
+    environment,
+  );
+  if (fixture !== undefined) {
+    const stdoutPump =
+      fixture.stdout === null
+        ? Promise.resolve()
+        : (async () => {
+            const text = await new Response(fixture.stdout).text();
+            for (const line of text.split("\n")) {
+              if (line.length > 0) {
+                jsonl.push(`${line}\n`);
+                await input.onEventLine?.(line);
+              }
+            }
+            jsonl.finish();
+          })();
+    const process: GoalProcess = {
+      stdout: fixture.stdout,
+      stderr: fixture.stderr,
+      exited: (async () => {
+        const exitCode = await fixture.exited;
+        await stdoutPump;
+        return exitCode;
+      })(),
+      kill() {
+        fixture.kill();
+      },
+    };
+    return { process, jsonl, stdoutPump, trace, outputPath };
+  }
+
+  const abortController = new AbortController();
+  const execution = (async (): Promise<number> => {
+    let finalResponse = "";
+    try {
+      const streamed = await trace.run(async () => {
+        const codex = new Codex({
+          env: environment,
+          config: {
+            developer_instructions: buildDeveloperInstructions(),
+            project_doc_max_bytes: 0,
+            features: {
+              apps: false,
+              plugins: false,
+              multi_agent: false,
+            },
+          },
+        });
+        const thread = codex.startThread({
+          approvalPolicy: "never",
+          model: input.config.model,
+          modelReasoningEffort: input.config.reasoning_effort,
+          networkAccessEnabled: true,
+          sandboxMode: "danger-full-access",
+          skipGitRepoCheck: true,
+          webSearchMode: "disabled",
+          workingDirectory: runtimeDirectory,
+        });
+        return await thread.runStreamed(
+          buildUserPrompt(input.goal, input.promptContext),
+          { signal: abortController.signal },
+        );
+      });
+      for await (const event of streamed.events) {
+        const line = codexEventLine(event);
+        jsonl.push(`${line}\n`);
+        await input.onEventLine?.(line);
+        if (
+          event.type === "item.completed" &&
+          event.item.type === "agent_message"
+        ) {
+          finalResponse = event.item.text;
+        }
+        if (event.type === "turn.failed") {
+          throw new Error(event.error.message);
+        }
+        if (event.type === "error") {
+          throw new Error(event.message);
+        }
+      }
+      // A stream that ends without an agent_message produced no report. Exit
+      // code 0 would make GoalManager mark the goal `completed` and announce
+      // it in Discord while readFinalReport says Codex wrote nothing, so treat
+      // the missing final message as a provider failure instead.
+      if (finalResponse.trim() === "") {
+        throw new Error(
+          "Codex SDK stream completed without a final agent message",
+        );
+      }
+      await Bun.write(outputPath, finalResponse, { createPath: true });
+      return 0;
+    } catch (error: unknown) {
+      logger.error(
+        `goal Codex SDK failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return abortController.signal.aborted ? 143 : 1;
+    } finally {
+      jsonl.finish();
+    }
+  })();
+  const process: GoalProcess = {
+    stdout: null,
+    stderr: null,
+    exited: execution,
+    kill() {
+      abortController.abort(new Error("Pokémon goal SDK run cancelled"));
+    },
+  };
+  return {
+    process,
+    jsonl,
+    stdoutPump: Promise.resolve(),
+    trace,
+    outputPath,
+  };
 }

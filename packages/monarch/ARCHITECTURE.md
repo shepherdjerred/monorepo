@@ -2,7 +2,7 @@
 
 ## Overview
 
-Monarch is an AI-powered transaction categorizer for [Monarch Money](https://www.monarchmoney.com/). It fetches transactions via the Monarch API, enriches them with data from external sources (Amazon orders, Venmo payments, Apple receipts, etc.), classifies them using Claude, and optionally applies the changes back.
+Monarch is an AI-powered transaction categorizer for [Monarch Money](https://www.monarchmoney.com/). It fetches transactions via the Monarch API, enriches them with data from external sources (Amazon orders, Venmo payments, Apple receipts, etc.), classifies them through the shared OpenRouter runtime, and optionally applies the changes back.
 
 ## Pipeline
 
@@ -10,7 +10,7 @@ Monarch is an AI-powered transaction categorizer for [Monarch Money](https://www
 1. Fetch transactions & categories from Monarch API
 2. Separate transactions by merchant into deep paths
 3. Deep classification (merchant-specific logic with external data)
-4. Week-based classification (Claude AI with temporal context + web search)
+4. Week-based classification (OpenRouter with temporal context + web search)
 5. Display summary
 6. Apply changes or save to file
 ```
@@ -56,13 +56,13 @@ All matchers share a common pattern:
 
 #### Classification Strategies
 
-- **Claude AI batch**: Amazon and Costco send item lists to Claude for per-item classification. Batch size 20, Amazon uses 3 concurrent batches.
+- **OpenRouter batch**: Amazon and Costco send item lists to the configured model for per-item classification. Batch size 20, Amazon uses 3 concurrent batches.
 - **Rule-based**: Apple uses keyword matching (icloud -> Software, apple music -> Entertainment). Bilt uses Conservice charge type IDs. USAA and SCL use hardcoded split ratios.
-- **Claude AI single**: Venmo sends matched payments with notes to Claude for classification.
+- **OpenRouter single**: Venmo sends matched payments with notes to the configured model for classification.
 
 ### Phase 3: Resolved Map
 
-After deep classification, `buildResolvedMap()` in `src/lib/enrichment.ts` creates a `Map<transactionId, ResolvedTransaction>` from all deep path results. This prevents double-classification -- resolved transactions appear as `[RESOLVED]` in week prompts so Claude skips them.
+After deep classification, `buildResolvedMap()` in `src/lib/enrichment.ts` creates a `Map<transactionId, ResolvedTransaction>` from all deep path results. This prevents double-classification -- resolved transactions appear as `[RESOLVED]` in week prompts so the model skips them.
 
 ### Phase 4: Week-Based Classification
 
@@ -84,7 +84,7 @@ All transactions (regular + deep path) are grouped into ISO 8601 weeks (Monday-S
 
 #### Web Search
 
-When `--skip-research` is NOT set (default), `callClaude()` passes the Anthropic built-in web search tool (`web_search_20250305`, max 20 uses per call). Claude can search the web to identify unfamiliar merchants before classifying. This is transparent to all callers.
+When `--skip-research` is not set (default), the research pass uses OpenRouter's provider-defined web-search tool with at most 20 results. Its bounded evidence is passed to a tool-free Zod finalizer; semantic repair retries only the finalizer. Tier 3 combines three-result server search with the local merchant-history, nearby-transaction, and category-info AI SDK tools.
 
 ### Phase 5: Apply
 
@@ -114,8 +114,8 @@ src/
 │   │   ├── types.ts               # MonarchTransaction, MonarchCategory (Zod schemas)
 │   │   └── weeks.ts               # ISO week grouping + sliding windows
 │   │
-│   ├── classifier/                 # Claude AI integration
-│   │   ├── claude.ts              # Anthropic SDK client, retry, web search, computeSplits()
+│   ├── classifier/                 # OpenRouter and AI SDK integration
+│   │   ├── llm.ts                 # Shared runtime, bounded research, structured finalization
 │   │   ├── prompt.ts              # Prompt construction (week, Amazon, Venmo)
 │   │   ├── cache.ts               # Order + week classification cache
 │   │   └── types.ts               # ProposedChange, response schemas, Confidence
@@ -212,16 +212,16 @@ All caches live in `~/.monarch-cache/`:
 | `week-classifications.json`       | Week classification results by `weekKey:txnIds` | Until txn set changes |
 | `venmo.json`                      | Parsed Venmo CSV data                           | Permanent             |
 
-## Claude Integration
+## LLM Integration
 
-All Claude calls go through `callClaude()` in `src/lib/classifier/claude.ts`:
+Ordinary inference goes through `@shepherdjerred/llm-runtime` and `src/lib/classifier/llm.ts`:
 
-- Model: `claude-sonnet-5` (configurable via `--model`)
+- Model: stable catalog ID `claude-sonnet-5` by default (configurable via `--model`)
 - Max tokens: 16,384
-- API retries: 5 attempts with jittered exponential backoff (429, 529, 5xx)
-- Parse retries: 2 attempts for JSON/Zod validation failures
-- Web search: Optional `web_search_20250305` tool (max 20 uses/call)
-- Response handling: Extracts text from interleaved content blocks (web search produces tool_use/result blocks alongside text)
+- Transport retries: two for retryable network, 429, and 5xx failures
+- Semantic attempts: three total through strict `Output.object` and Zod validation
+- Web search: optional OpenRouter server tool (20 batch results; 3 tier-3 results)
+- Response handling: no prose or fenced-JSON parsing and no response healing
 - Usage tracking: Records input/output tokens per call for cost estimation
 
 ### Prompt Structure
@@ -234,7 +234,7 @@ The week prompt sends transactions grouped by week with surrounding context:
 [RESOLVED -> SPLIT] 2026-02-19 | -$89.99 | Amazon | USB Hub -> Electronics, Dog Food -> Pets
 ```
 
-Claude responds with JSON matching transaction indices to categories with confidence levels.
+The finalizer returns schema-validated transaction indices, categories, and confidence levels.
 
 ## Data Flow
 
@@ -251,8 +251,8 @@ separateDeepPaths()
         v                                v
 groupByWeek() ---> buildWeekWindows() ---> classifyWeek() ---> ProposedChange[]
                                                |
-                                         callClaude()
-                                         (+ web search)
+                                      OpenRouter research
+                                      + Zod finalizer
                                                |
                                                v
                                     allChanges[] ---> applyChanges()

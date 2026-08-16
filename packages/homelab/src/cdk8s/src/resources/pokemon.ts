@@ -128,14 +128,11 @@ export function createPokemonDeployment(chart: Chart) {
         OTLP_ENDPOINT: EnvValue.fromValue(
           "http://tempo.tempo.svc.cluster.local:4318",
         ),
-        // Codex goal-mode auth. The app accepts CODEX_ACCESS_TOKEN (OAuth),
-        // CODEX_API_KEY / OPENAI_API_KEY (direct API, interchangeable via
-        // `CODEX_API_KEY ?? OPENAI_API_KEY`), or a mounted auth.json — any one
-        // suffices. We use OPENAI_API_KEY; it's wired as the single required
-        // secret (no optional secrets). To switch auth methods, swap this ref.
-        OPENAI_API_KEY: EnvValue.fromSecretValue({
+        // Codex SDK goal-mode OAuth. Direct provider API keys are deliberately
+        // absent; a mounted auth cache remains valid for local development.
+        CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({
           secret,
-          key: "OPENAI_API_KEY",
+          key: "CODEX_ACCESS_TOKEN",
         }),
         // LLM observability: every Codex goal turn, tool call, and screenshot
         // gets archived to SeaweedFS by the LlmArchiveSpanProcessor wired in

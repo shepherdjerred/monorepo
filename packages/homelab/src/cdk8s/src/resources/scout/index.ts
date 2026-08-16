@@ -181,8 +181,8 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         ? "https://scout-for-lol.com"
         : "https://beta.scout-for-lol.com",
     ),
-    OPENAI_HOURLY_TOKEN_BUDGET: EnvValue.fromValue("2000000"),
-    OPENAI_DAILY_TOKEN_BUDGET: EnvValue.fromValue("20000000"),
+    LLM_HOURLY_TOKEN_BUDGET: EnvValue.fromValue("2000000"),
+    LLM_DAILY_TOKEN_BUDGET: EnvValue.fromValue("20000000"),
   };
 
   // Add AI secrets only for beta stage
@@ -196,21 +196,13 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
           // empty list denies everyone, so this must be present for anyone to
           // reach /app/explore.
           EXPLORE_GUILD_ALLOWLIST: EnvValue.fromValue("1337623164146155593"),
-          OPENAI_API_KEY: EnvValue.fromSecretValue({
+          OPENROUTER_API_KEY: EnvValue.fromSecretValue({
             secret: Secret.fromSecretName(
               chart,
-              "openai-api-key-secret",
+              "openrouter-api-key-secret",
               onePasswordItem.name,
             ),
-            key: "OPENAI_API_KEY",
-          }),
-          GEMINI_API_KEY: EnvValue.fromSecretValue({
-            secret: Secret.fromSecretName(
-              chart,
-              "gemini-api-key-secret",
-              onePasswordItem.name,
-            ),
-            key: "GEMINI_API_KEY",
+            key: "OPENROUTER_API_KEY",
           }),
         }
       : baseEnvVariables;

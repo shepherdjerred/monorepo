@@ -15,14 +15,17 @@ yourself.
 
 ```bash
 bun run pr:fleet \
-  --model <provider>/<model-id> \
+  --model <catalog-model-id> \
   --author shepherdjerred
 ```
 
 `--author` adds your own drafts to the fleet and keeps bot-authored PRs out.
 Drop it to take every open PR.
 
-Pick one model; it powers both the conversational master and every worker.
+Set `OPENROUTER_API_KEY` before starting the controller. Pick one stable model
+ID from the repository catalog; that exact model powers both the conversational
+master and every worker through OpenRouter. OpenRouter may fall back between
+upstream providers, but the controller never changes model identity silently.
 
 ## 2. Watch it
 

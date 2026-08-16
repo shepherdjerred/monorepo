@@ -7,7 +7,7 @@ import type {
 import type { MatchResult } from "./matcher.ts";
 import { scrapeAmazonOrders } from "./scraper.ts";
 import { matchAmazonOrders } from "./matcher.ts";
-import { classifyAmazonBatch, computeSplits } from "../classifier/claude.ts";
+import { classifyAmazonBatch, computeSplits } from "../classifier/llm.ts";
 import {
   getCachedClassification,
   cacheClassifications,

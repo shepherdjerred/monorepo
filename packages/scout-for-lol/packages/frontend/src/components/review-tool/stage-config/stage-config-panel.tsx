@@ -77,7 +77,7 @@ function getDefaultPrompts(stageName: PromptStageName): {
         user: IMAGE_DESCRIPTION_USER_PROMPT,
       };
     case "imageGeneration":
-      // Image generation only has a user prompt (Gemini doesn't use system prompts)
+      // Image generation uses a single OpenRouter image prompt.
       return { user: IMAGE_GENERATION_USER_PROMPT };
   }
 }

@@ -7,14 +7,16 @@ export function seedProviderIssueMetrics(metrics: {
   errorsTotal: Counter<ProviderIssueLabel>;
   issueActive: Gauge<ProviderIssueLabel>;
 }): void {
-  for (const kind of PROVIDER_ISSUE_KINDS) {
-    const labels = {
-      app: "scout-for-lol",
-      provider: "openai",
-      kind,
-      source: "match_review",
-    };
-    metrics.errorsTotal.inc(labels, 0);
-    metrics.issueActive.set(labels, 0);
+  for (const provider of ["openrouter", "openai", "gemini"] as const) {
+    for (const kind of PROVIDER_ISSUE_KINDS) {
+      const labels = {
+        app: "scout-for-lol",
+        provider,
+        kind,
+        source: "match_review",
+      };
+      metrics.errorsTotal.inc(labels, 0);
+      metrics.issueActive.set(labels, 0);
+    }
   }
 }

@@ -166,6 +166,8 @@ describe("SQLite setup and migrations", () => {
         durationMs: null,
         inputTokens: null,
         outputTokens: null,
+        transport: null,
+        openRouterMetadataJson: null,
       }),
     ).toThrow(/unexpectedPromptStage/);
   });

@@ -1,7 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { isProviderAuthor } from "../identity.ts";
 import type { ReviewThread } from "../types.ts";
-import { qodoProvider, parseQodoIssueComment } from "./qodo.ts";
+import {
+  markQodoFindingResolved,
+  qodoProvider,
+  parseQodoIssueComment,
+} from "./qodo.ts";
 
 const comment = {
   updatedAt: "2026-08-09T12:00:00Z",
@@ -342,6 +346,75 @@ function soleFinding(body: string): ReviewThread {
   if (finding === undefined) throw new Error("expected one finding");
   return finding;
 }
+
+describe("markQodoFindingResolved", () => {
+  test("resolves only the named finding", () => {
+    const edited = markQodoFindingResolved(comment.body, "Consent cache");
+    if (edited === null) throw new Error("expected an edit");
+    const byTitle = new Map(
+      parseQodoIssueComment({ ...comment, body: edited }).map((finding) => [
+        finding.title,
+        finding.isResolved,
+      ]),
+    );
+    expect(byTitle.get("Consent cache")).toBe(true);
+    expect(byTitle.get("Stale wording")).toBe(false);
+  });
+
+  test("keeps the finding's identity so re-appended copies still collapse", () => {
+    // The chip form is the whole point: identityOf strips `<code>☑ …</code>`,
+    // so a dismissal must not fork the finding away from the unstruck copies
+    // Qodo re-appends — that would leave the older copy blocking forever.
+    const body = reviewWithQuotedContext(
+      ">## Issue Context",
+      ">## Issue Context",
+    );
+    const edited = markQodoFindingResolved(body, "Stale artifact");
+    if (edited === null) throw new Error("expected an edit");
+    const findings = parseQodoIssueComment({ ...comment, body: edited });
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.isResolved).toBe(true);
+  });
+
+  test("is idempotent on an already-resolved finding", () => {
+    const once = markQodoFindingResolved(comment.body, "Consent cache");
+    if (once === null) throw new Error("expected an edit");
+    const twice = markQodoFindingResolved(once, "Consent cache");
+    expect(twice).toBe(once);
+  });
+
+  test("marks every re-appended copy of one finding, not just the first", () => {
+    // Qodo re-appends its whole review, so a finding routinely appears twice.
+    // The gate dedupes by identity, so leaving the other copy unmarked leaves
+    // the finding blocking — the dismissal would look applied and do nothing.
+    const body = reviewWithQuotedContext(
+      ">## Issue Context",
+      ">## Issue Context",
+    );
+    const edited = markQodoFindingResolved(body, "Stale artifact");
+    if (edited === null) throw new Error("expected an edit");
+    expect([...edited.matchAll(/☑/gu)]).toHaveLength(2);
+    const findings = parseQodoIssueComment({ ...comment, body: edited });
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.isResolved).toBe(true);
+  });
+
+  test("refuses when one title covers two genuinely different findings", () => {
+    // Same headline, different bodies: picking one would resolve something the
+    // operator never verified and leave the other unreachable.
+    const twoDistinct = comment.body.replace(
+      "<summary>  2. Stale wording <code>📝 Documentation</code></summary>",
+      "<summary>  2. Consent cache <code>📝 Documentation</code></summary>",
+    );
+    expect(() => markQodoFindingResolved(twoDistinct, "Consent cache")).toThrow(
+      "different findings",
+    );
+  });
+
+  test("returns null rather than silently no-opping an unknown title", () => {
+    expect(markQodoFindingResolved(comment.body, "Not a finding")).toBeNull();
+  });
+});
 
 describe("qodo re-review copies", () => {
   test("collapses the copies Qodo re-appends on each re-review", () => {

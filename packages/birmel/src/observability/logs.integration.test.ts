@@ -10,7 +10,7 @@
 // empty or the body doesn't contain a traceId, and the test fails.
 Bun.env["DISCORD_TOKEN"] ??= "test-token";
 Bun.env["DISCORD_CLIENT_ID"] ??= "123456789012345678";
-Bun.env["OPENAI_API_KEY"] ??= "test-key";
+Bun.env["OPENROUTER_API_KEY"] ??= "test-key";
 Bun.env["TELEMETRY_ENABLED"] = "true";
 Bun.env["TELEMETRY_SERVICE_NAME"] = "birmel-test";
 Bun.env["SENTRY_ENABLED"] = "true";
@@ -19,8 +19,7 @@ Bun.env["SENTRY_ENVIRONMENT"] = "development";
 Bun.env["SENTRY_TRACES_SAMPLE_RATE"] = "0";
 
 import { describe, expect, test, beforeAll, afterAll } from "bun:test";
-import { trace, context, propagation } from "@opentelemetry/api";
-import { logs as logsAPI } from "@opentelemetry/api-logs";
+import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";
 import { resetConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { initializeObservability, shutdownObservability } from "./index.ts";
 import { withSpan } from "./tracing.ts";
@@ -77,10 +76,7 @@ describe("OTLP logs integration", () => {
     ]);
     // Reset OTel global API state so a sibling test file (the trace
     // integration test) can re-register its own providers cleanly.
-    trace.disable();
-    context.disable();
-    propagation.disable();
-    logsAPI.disable();
+    resetOtelGlobals();
   });
 
   test("logger.info inside withSpan POSTs an OTLP log with traceId attached", async () => {

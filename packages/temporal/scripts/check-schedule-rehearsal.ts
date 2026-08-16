@@ -138,8 +138,14 @@ async function main(): Promise<void> {
     const rehearsalEnv: Record<string, string> = {
       BUN_INSTALL_CACHE_DIR: bunCacheDir,
     };
+    // The source manifest may be selected through an alternate Git index
+    // during local validation. The scratch repository must always own its
+    // index, just like the clean CI checkout this rehearsal models.
     await run(
       [
+        "env",
+        "-u",
+        "GIT_INDEX_FILE",
         "bun",
         "run",
         REHEARSAL_SCRIPT,

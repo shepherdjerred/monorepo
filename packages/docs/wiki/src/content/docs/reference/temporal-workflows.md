@@ -9,7 +9,7 @@ Every workflow the Temporal worker runs — scheduled, event-driven,
 operator-started, or spawned as a child.
 
 **Brain** is what makes the decisions: **deterministic** code, an **LLM** call,
-or an **agent** subprocess with tools.
+or a native **agent SDK** run with tools.
 
 Cron times are `America/Los_Angeles` wall-clock. Source:
 [`src/workflows/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/temporal/src/workflows).
@@ -25,6 +25,12 @@ Cron times are `America/Los_Angeles` wall-clock. Source:
 | pokeemerald-data    | daily 04:30 | deterministic                    | PR                                                                          |
 | CI I/O impact       | daily 09:00 | deterministic                    | heartbeat email                                                             |
 | protobufjs v8 watch | Mon 09:00   | deterministic                    | heartbeat email                                                             |
+
+Ordinary LLM summaries use the shared OpenRouter runtime. The deterministic
+`llm-catalog-refresh` sync compares the reviewable repository catalog with
+models.dev, LiteLLM, and OpenRouter's text, image, and embedding catalogs. It
+fails when a current ordinary-inference route disappears instead of silently
+changing model identity.
 
 ## Scout
 

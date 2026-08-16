@@ -191,6 +191,24 @@ export const MIGRATIONS: readonly Migration[] = [
       );
     `,
   },
+  {
+    version: 4,
+    name: "generation_openrouter_metadata",
+    sql: `
+      ALTER TABLE generations
+      ADD COLUMN transport TEXT
+      CHECK (transport IS NULL OR transport = 'openrouter');
+
+      ALTER TABLE generations
+      ADD COLUMN openrouter_metadata_json TEXT
+      CHECK (
+        openrouter_metadata_json IS NULL OR (
+          json_valid(openrouter_metadata_json)
+          AND json_type(openrouter_metadata_json) = 'object'
+        )
+      );
+    `,
+  },
 ] as const;
 
 function validateMigrationOrder(): void {

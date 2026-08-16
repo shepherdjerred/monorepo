@@ -43,23 +43,22 @@ send `[FAILED]` before Temporal records the failure.
 ## 3. Check the contract held
 
 Claude's output is a versioned provider contract. The worker sends the v2
-draft-07 plain-optional schema inline and accepts only the CLI result message's
-`structured_output` field.
+draft-07 plain-optional schema through the Claude Agent SDK and accepts only
+its structured result.
 
 A successful process that returns no `structured_output` is a failure. Prose and
 fenced JSON are not fallback formats.
 
 On a contract failure, the logs and traces carry a bounded redacted final-text
-excerpt, the result subtype and keys, and the schema fingerprint. The Prometheus
-counter uses bounded reason labels only, so read the logs for the specific
-cause.
+excerpt and the schema fingerprint. The Prometheus counter uses bounded reason
+labels only, so read the logs for the specific cause.
 
 ## If it fails
 
 | Symptom                               | Look at                                                                                                 |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | No workflow started                   | Temporal address, TLS flag, OAuth token                                                                 |
-| Workflow failed with a contract error | the schema fingerprint in logs; the pinned Claude Code version                                          |
+| Workflow failed with a contract error | the schema fingerprint in logs; the pinned Claude Agent SDK contract                                    |
 | Workflow succeeded, no email          | shared report delivery and S3 acceptance state                                                          |
 | Partial canary reports clean          | evidence normalization and required-check coverage                                                      |
 | Failure canary has no email           | failure-report-before-rethrow path                                                                      |

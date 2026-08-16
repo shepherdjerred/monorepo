@@ -66,7 +66,12 @@ export function buildE2eHarness(serviceName: string): E2eHarness {
     }),
     spanProcessors: [archive],
   });
-  // Set global so wrappers' getLlmTracer() picks this up.
+  // Set global so wrappers' getLlmTracer() picks this up. `setGlobalTracerProvider`
+  // is one-shot per process: it silently refuses while another provider is still
+  // registered, so a second harness in the same `bun test` run would export its
+  // spans through the previous (already shut-down) provider. Unregister first so
+  // each harness genuinely owns the global for its lifetime.
+  trace.disable();
   trace.setGlobalTracerProvider(provider);
 
   return {
@@ -78,6 +83,9 @@ export function buildE2eHarness(serviceName: string): E2eHarness {
     async shutdown() {
       await archive.shutdown();
       await provider.shutdown();
+      // Leaving a shut-down provider registered routes every later span in the
+      // process into it, where `onEnd` records "cannot write after shutdown".
+      trace.disable();
     },
   };
 }

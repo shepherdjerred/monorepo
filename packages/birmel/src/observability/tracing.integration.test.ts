@@ -10,7 +10,7 @@
 // inside initializeTracing() but pinning here avoids any module-load surprise.
 Bun.env["DISCORD_TOKEN"] ??= "test-token";
 Bun.env["DISCORD_CLIENT_ID"] ??= "123456789012345678";
-Bun.env["OPENAI_API_KEY"] ??= "test-key";
+Bun.env["OPENROUTER_API_KEY"] ??= "test-key";
 Bun.env["TELEMETRY_ENABLED"] = "true";
 Bun.env["TELEMETRY_SERVICE_NAME"] = "birmel-test";
 // Sentry stays enabled with an unreachable DSN so we actually exercise the
@@ -21,8 +21,7 @@ Bun.env["SENTRY_ENVIRONMENT"] = "development";
 Bun.env["SENTRY_TRACES_SAMPLE_RATE"] = "0";
 
 import { describe, expect, test, beforeAll, afterAll } from "bun:test";
-import { trace, context, propagation } from "@opentelemetry/api";
-import { logs as logsAPI } from "@opentelemetry/api-logs";
+import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";
 import { resetConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { initializeObservability, shutdownObservability } from "./index.ts";
 import { withSpan } from "./tracing.ts";
@@ -67,10 +66,7 @@ describe("OTLP tracing integration", () => {
     // Reset OTel global API state so sibling test files can re-register
     // cleanly. Without this, `setGlobalXProvider` calls in later files
     // silently no-op against our shut-down providers.
-    trace.disable();
-    context.disable();
-    propagation.disable();
-    logsAPI.disable();
+    resetOtelGlobals();
   });
 
   test("initializeObservability + withSpan POSTs to /v1/traces", async () => {

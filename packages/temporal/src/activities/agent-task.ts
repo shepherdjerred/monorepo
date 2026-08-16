@@ -1,53 +1,52 @@
-import { agentSubprocessFailure } from "#activities/agent-task-failures.ts";
+import { ApplicationFailure } from "@temporalio/activity";
 import {
   agentSubprocessIdleSeconds,
-  agentSubprocessSoftKillsTotal,
   agentTaskRunsTotal,
-  agentTaskSubprocessDurationSeconds,
-  agentTaskSubprocessExitTotal,
+  agentTaskSdkDurationSeconds,
+  agentTaskSdkRunsTotal,
 } from "#observability/metrics.ts";
 import { withSpan } from "#observability/tracing.ts";
-import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
+import { buildAgentTaskSdkConfig } from "#activities/agent-task-sdk-config.ts";
+import {
+  AgentTaskSdkExecutionError,
+  runAgentTaskSdk,
+  type AgentTaskSdkResult,
+  type AgentTaskSdkRunInput,
+} from "#activities/agent-task-sdk.ts";
 import {
   collectDeclaredAgentTaskEvidence,
   mergeAgentTaskEvidence,
 } from "#activities/agent-task-evidence-collectors.ts";
-import {
-  startAgentProviderCredentialBroker,
-  type AgentProviderCredentialBrokerFactory,
-} from "#activities/agent-provider-credential-broker.ts";
 import {
   createAgentTaskSecretTokenState,
   AgentTaskSecretRedactionController,
   envForProvider,
   refreshAgentTaskSecretTokenStateInBackground,
 } from "#activities/agent-task-env.ts";
-import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
-import { providerSubprocessCommand } from "#shared/agent-subprocess-identity.ts";
-import { summarizeClaudeStreamLine } from "#shared/claude-result.ts";
-import type { AgentTaskPromptPhase } from "#shared/agent-task-prompt.ts";
+import {
+  SINGLE_AGENT_TASK_PROMPT_PHASE,
+  type AgentTaskPromptPhase,
+} from "#shared/agent-task-prompt.ts";
 import {
   AgentTaskInputSchema,
+  AgentTaskResultPayloadSchema,
+  AgentTaskResultPayloadV2Schema,
   type AgentTaskInput,
   type AgentTaskProvider,
   type AgentTaskResultPayload,
-  AgentTaskResultPayloadSchema,
-  AgentTaskResultPayloadV2Schema,
   type AgentTaskResultPayloadV2,
 } from "#shared/agent-task.ts";
 import { extractAgentTaskEvidenceReceipts } from "#shared/agent-task-evidence.ts";
 import type { ReportEvidenceReceiptV1 } from "#shared/report.ts";
 import { redactSecrets } from "#shared/redact.ts";
-import { startAgentTaskLlmTrace } from "#activities/agent-task-llm-trace.ts";
-import type { TrackedAgentResult } from "#shared/agent-subprocess.ts";
 import {
   activityCancellationSignalOrUndefined,
   captureWithContext,
   currentWorkflowType,
-  enforceAgentTaskSecretRedactionHealth,
   jsonLog,
   safeHeartbeat,
   startToCloseTimeoutMsOrUndefined,
+  throwIfAgentTaskSecretRedactionFailed,
 } from "#activities/agent-task-runtime.ts";
 import { decodeAgentTaskPayload } from "#activities/agent-task-result.ts";
 import { prepareAgentTaskWorkdir } from "#activities/agent-task-workdir.ts";
@@ -58,8 +57,10 @@ import {
   sendEmail,
   sendFailureReport,
 } from "./agent-task-side-activities.ts";
+
 const HEARTBEAT_INTERVAL_MS = 10_000;
 const MOUNTED_SECRET_REFRESH_INTERVAL_MS = 10_000;
+const TEMPORAL_TIMEOUT_HEADROOM_MS = 15_000;
 
 export type RunAgentTaskInput = {
   input: AgentTaskInput;
@@ -67,6 +68,7 @@ export type RunAgentTaskInput = {
   phase?: AgentTaskPromptPhase;
   recordSuccess?: boolean;
 };
+
 type RunAgentTaskResultBase = {
   provider: AgentTaskProvider;
   model: string;
@@ -90,337 +92,312 @@ export type FinalizeAgentTaskInput = RunAgentTaskInput & {
   investigation: RunAgentTaskResultV2;
 };
 
+type AgentTaskSdkRunner = (
+  input: AgentTaskSdkRunInput,
+) => Promise<AgentTaskSdkResult>;
+
+function timeoutAbortController(startToCloseTimeoutMs: number | undefined): {
+  controller: AbortController;
+  timer: ReturnType<typeof setTimeout> | undefined;
+} {
+  const controller = new AbortController();
+  if (startToCloseTimeoutMs === undefined) {
+    return { controller, timer: undefined };
+  }
+  const timeoutMs = Math.max(
+    1,
+    startToCloseTimeoutMs - TEMPORAL_TIMEOUT_HEADROOM_MS,
+  );
+  const timer = setTimeout(() => {
+    controller.abort(
+      new Error("Agent SDK run stopped before Temporal start-to-close timeout"),
+    );
+  }, timeoutMs);
+  return { controller, timer };
+}
+
+function asNonRetryableSdkFailure(error: AgentTaskSdkExecutionError): Error {
+  if (
+    !error.authOrQuotaFailure &&
+    !error.generationStarted &&
+    !error.possiblyAppliedEffects
+  ) {
+    return error;
+  }
+  return ApplicationFailure.create({
+    message: error.message,
+    cause: error,
+    nonRetryable: true,
+    type: error.authOrQuotaFailure
+      ? "AgentSdkAuthOrQuotaFailure"
+      : "AgentSdkPossiblyAppliedFailure",
+  });
+}
+
 async function runAgent(
   input: RunAgentTaskInput,
-  commandBuilder: typeof buildAgentTaskCommand,
-  credentialBrokerFactory: AgentProviderCredentialBrokerFactory,
+  sdkRunner: AgentTaskSdkRunner,
 ): Promise<RunAgentTaskResult> {
   const parsed = AgentTaskInputSchema.parse(input.input);
   const provider = parsed.provider;
-  const phase = input.phase ?? { kind: "single" };
-  const credentialBroker = credentialBrokerFactory(provider);
-  try {
-    const command = await commandBuilder(
-      parsed,
-      input.workdir,
-      phase,
-      credentialBroker.baseUrl,
-    );
-    const workflowType = currentWorkflowType();
-    return await withSpan(
-      "agent-task.run-agent",
-      {
-        "agent.provider": provider,
-        "agent.title": parsed.title,
-        "agent.model": command.model,
-        "agent.workdir": input.workdir,
-        "agent.timeout_minutes": parsed.agentTimeoutMinutes ?? 0,
-        "agent.max_turns": parsed.maxTurns ?? 0,
-        "agent.phase": phase.kind,
-      },
-      async (span) => {
-        jsonLog("info", "Invoking agent task", {
-          phase: "spawn",
+  const phase = input.phase ?? SINGLE_AGENT_TASK_PROMPT_PHASE;
+  const config = buildAgentTaskSdkConfig(parsed, input.workdir, phase);
+  const workflowType = currentWorkflowType();
+  return withSpan(
+    "agent-task.run-agent",
+    {
+      "agent.provider": provider,
+      "agent.title": parsed.title,
+      "agent.model": config.model,
+      "agent.runtime": provider === "claude" ? "claude_agent_sdk" : "codex_sdk",
+      "agent.workdir": input.workdir,
+      "agent.timeout_minutes": parsed.agentTimeoutMinutes ?? 0,
+      "agent.max_turns": config.maxTurns,
+      "agent.phase": config.phase,
+      "agent.contract_version": config.contractVersion,
+    },
+    async (span) => {
+      jsonLog("info", "Invoking native agent SDK task", {
+        phase: "start",
+        provider,
+        title: parsed.title,
+        model: config.model,
+        workdir: input.workdir,
+        agentTimeoutMinutes: parsed.agentTimeoutMinutes,
+        maxTurns: config.maxTurns,
+        agentPhase: config.phase,
+        contractVersion: config.contractVersion,
+      });
+      const startedAtMs = Date.now();
+      const secretTokenState = await createAgentTaskSecretTokenState(undefined);
+      const redactionFailureController = new AgentTaskSecretRedactionController(
+        () => {
+          jsonLog("error", "Unable to refresh mounted agent-task secrets", {
+            phase: "secret-redaction",
+          });
+        },
+      );
+      const timeout = timeoutAbortController(
+        startToCloseTimeoutMsOrUndefined(),
+      );
+      const activityCancellationSignal =
+        activityCancellationSignalOrUndefined();
+      const signals = [
+        redactionFailureController.abortController.signal,
+        timeout.controller.signal,
+        ...(activityCancellationSignal === undefined
+          ? []
+          : [activityCancellationSignal]),
+      ];
+      const cancellationSignal = AbortSignal.any(signals);
+      let lastEventAtMs = Date.now();
+      let maxIdleMs = 0;
+      let eventCount = 0;
+
+      const mountedSecretRefreshTimer = setInterval(() => {
+        void refreshAgentTaskSecretTokenStateInBackground(
+          secretTokenState,
+          (error) => {
+            redactionFailureController.record(error);
+          },
+        );
+      }, MOUNTED_SECRET_REFRESH_INTERVAL_MS);
+      const heartbeatTimer = setInterval(() => {
+        const now = Date.now();
+        const idleMs = now - lastEventAtMs;
+        maxIdleMs = Math.max(maxIdleMs, idleMs);
+        const heartbeat = { eventCount, idleMs };
+        safeHeartbeat({ phase: "agent-sdk", provider, ...heartbeat });
+        jsonLog("info", "agent SDK heartbeat", {
+          phase: "agent-sdk",
           provider,
-          title: parsed.title,
-          model: command.model,
-          workdir: input.workdir,
-          agentTimeoutMinutes: parsed.agentTimeoutMinutes,
-          maxTurns: parsed.maxTurns,
+          ...heartbeat,
         });
-        const secretTokenState =
-          await createAgentTaskSecretTokenState(undefined);
-        const secretTokens = secretTokenState.tokens;
-        secretTokens.push(credentialBroker.clientToken);
-        const redactionFailureController =
-          new AgentTaskSecretRedactionController(
-            jsonLog.bind(
-              null,
-              "error",
-              "Unable to refresh mounted agent-task secrets",
-              {
-                phase: "secret-redaction",
-              },
-            ),
-          );
-        const activityCancellationSignal =
-          activityCancellationSignalOrUndefined();
-        const cancellationSignal =
-          activityCancellationSignal === undefined
-            ? redactionFailureController.abortController.signal
-            : AbortSignal.any([
-                activityCancellationSignal,
-                redactionFailureController.abortController.signal,
-              ]);
-        const llmStartMs = Date.now();
-        const llmTrace = startAgentTaskLlmTrace({
-          provider,
-          callSite: "agent-task",
-          model: command.model,
-          prompt: command.prompt,
-          options: {
-            maxTurns: parsed.maxTurns,
-            title: parsed.title,
-            mode: parsed.mode,
+        span.addEvent("agent.heartbeat", heartbeat);
+      }, HEARTBEAT_INTERVAL_MS);
+
+      let result: AgentTaskSdkResult;
+      try {
+        result = await sdkRunner({
+          config,
+          env: envForProvider(provider, input.workdir),
+          signal: cancellationSignal,
+          redactTokens: secretTokenState.tokens,
+          beforeEvent: async () =>
+            redactionFailureController.failure === undefined &&
+            redactionFailureController.refreshBeforeOutput(secretTokenState),
+          onEvent: (event) => {
+            eventCount += 1;
+            lastEventAtMs = Date.now();
+            maxIdleMs = Math.max(maxIdleMs, event.idleMs);
+            jsonLog("info", "agent SDK event", {
+              phase: "agent-event",
+              provider,
+              type: event.type,
+              elapsedMs: event.elapsedMs,
+              idleMs: event.idleMs,
+            });
+            span.addEvent("agent.event", {
+              type: event.type,
+              elapsedMs: event.elapsedMs,
+              idleMs: event.idleMs,
+            });
           },
           warn: (message) => {
-            jsonLog("warning", message, { phase: "llm-trace" });
+            jsonLog("warning", message, { phase: "llm-trace", provider });
           },
         });
-        const refreshSecretsInBackground = (): void => {
-          void refreshAgentTaskSecretTokenStateInBackground(
-            secretTokenState,
-            (error) => {
-              redactionFailureController.record(error);
-            },
-          );
-        };
-        const mountedSecretRefreshTimer = setInterval(
-          refreshSecretsInBackground,
-          MOUNTED_SECRET_REFRESH_INTERVAL_MS,
-        );
-        const refreshSecretsBeforeOutput = async (): Promise<boolean> => {
-          // Refresh immediately before every stdout chunk. The periodic refresh
-          // is only a liveness aid; this boundary closes the rotation-to-output
-          // race before a diagnostic excerpt is retained.
-          if (redactionFailureController.failure !== undefined) {
-            return false;
-          }
-          return redactionFailureController.refreshBeforeOutput(
-            secretTokenState,
-          );
-        };
-        let result: TrackedAgentResult;
-        try {
-          result = await runTrackedAgentSubprocess(
-            {
-              command: providerSubprocessCommand(command.args),
-              cwd: input.workdir,
-              env: envForProvider(provider, input.workdir, credentialBroker),
-              redactTokens: secretTokens,
-              beforeOutput: refreshSecretsBeforeOutput,
-              startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),
-              cancellationSignal,
-              heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
-              onHeartbeat: (beat) => {
-                safeHeartbeat({ phase: "agent", provider, ...beat });
-                jsonLog("info", "agent heartbeat", {
-                  phase: "agent",
-                  provider,
-                  ...beat,
-                });
-                span.addEvent("agent.heartbeat", {
-                  elapsedMs: beat.elapsedMs,
-                  idleMs: beat.idleMs,
-                });
-              },
-              onSoftKill: (event) => {
-                jsonLog("warning", "agent soft-kill", {
-                  phase: "soft-kill",
-                  provider,
-                  ...event,
-                });
-                span.addEvent("agent.soft-kill", {
-                  elapsedMs: event.elapsedMs,
-                  idleMs: event.idleMs,
-                  maxIdleMs: event.maxIdleMs,
-                });
-                agentSubprocessSoftKillsTotal.inc({
-                  workflow_type: workflowType,
-                  reason: "pre_temporal_timeout",
-                });
-              },
-              onSigkillEscalation: (event) => {
-                jsonLog("warning", "agent sigkill escalation", {
-                  phase: "sigkill",
-                  provider,
-                  ...event,
-                });
-                agentSubprocessSoftKillsTotal.inc({
-                  workflow_type: workflowType,
-                  reason: "escalated_sigkill",
-                });
-              },
-              onStdoutLine: (line) => {
-                llmTrace.pushStdoutLine(line);
-                const event = summarizeClaudeStreamLine(line);
-                if (event !== undefined) {
-                  jsonLog("info", "agent event", {
-                    phase: "agent-event",
-                    provider,
-                    ...event,
-                  });
-                  span.addEvent("agent.event", { type: event.type });
-                }
-              },
-              onStderrLine: (line) => {
-                jsonLog("info", "agent stderr", { provider, line });
-              },
-              onCancellation: (state) => {
-                jsonLog(
-                  "warning",
-                  "Agent task cancellation requested; killing subprocess",
-                  {
-                    provider,
-                    title: parsed.title,
-                    model: command.model,
-                    ...state,
-                  },
-                );
-              },
-            },
-            redactSecrets,
-          );
-        } finally {
-          clearInterval(mountedSecretRefreshTimer);
-          // Close codex spans on every exit path (incl. spawn failure) so a
-          // crashed run still shows up in Tempo with whatever turns completed.
-          llmTrace.close();
-        }
-        try {
-          await secretTokenState.refresh();
-        } catch (error: unknown) {
-          redactionFailureController.record(error);
-        }
-
-        enforceAgentTaskSecretRedactionHealth({
-          llmTrace,
-          failure: redactionFailureController.failure,
-          result,
+      } catch (error: unknown) {
+        agentTaskRunsTotal.inc({ provider, outcome: "sdk_failed" });
+        agentTaskSdkRunsTotal.inc({
           provider,
-          startTimeMs: llmStartMs,
+          model: config.model,
+          outcome: "failed",
         });
+        const classified =
+          error instanceof AgentTaskSdkExecutionError
+            ? asNonRetryableSdkFailure(error)
+            : error;
+        captureWithContext(classified, {
+          provider,
+          model: config.model,
+          phase: "agent-sdk",
+          generationStarted:
+            error instanceof AgentTaskSdkExecutionError
+              ? error.generationStarted
+              : undefined,
+          possiblyAppliedEffects:
+            error instanceof AgentTaskSdkExecutionError
+              ? error.possiblyAppliedEffects
+              : undefined,
+        });
+        throw classified;
+      } finally {
+        clearInterval(mountedSecretRefreshTimer);
+        clearInterval(heartbeatTimer);
+        if (timeout.timer !== undefined) {
+          clearTimeout(timeout.timer);
+        }
+      }
 
-        // Post-hoc Claude spans retain raw stdout in the LLM archive. Check the
-        // final redaction state first so a refresh failure can never archive a
-        // newly rotated credential from that raw buffer. Keep the raw stdout for
-        // contract parsing below, but pass a token-redacted copy to the archive
-        // so credentials that are not covered by the observability package's
-        // generic patterns cannot be persisted. Other failed runs are still
-        // traced because their stdout is safe to retain.
-        llmTrace.record({
-          stdout: redactSecrets(result.stdout, secretTokens),
-          exitCode: result.exitCode,
-          startTimeMs: llmStartMs,
+      try {
+        await secretTokenState.refresh();
+      } catch (error: unknown) {
+        redactionFailureController.record(error);
+      }
+      throwIfAgentTaskSecretRedactionFailed(
+        redactionFailureController.failure,
+        {
+          provider,
           durationMs: result.durationMs,
-        });
+          signal: cancellationSignal.aborted ? "aborted" : "none",
+        },
+      );
 
-        const cancelled = result.signal === "SIGTERM";
-        agentSubprocessIdleSeconds.observe(
-          { workflow_type: workflowType },
-          result.maxIdleMs / 1000,
-        );
-        agentTaskSubprocessDurationSeconds.observe(
-          {
-            provider,
-            model: command.model,
-            exit_code: cancelled ? "cancelled" : String(result.exitCode),
-          },
-          result.durationMs / 1000,
-        );
-        agentTaskSubprocessExitTotal.inc({
+      agentSubprocessIdleSeconds.observe(
+        { workflow_type: workflowType },
+        Math.max(maxIdleMs, result.maxIdleMs) / 1000,
+      );
+      agentTaskSdkDurationSeconds.observe(
+        { provider, model: config.model, outcome: "success" },
+        result.durationMs / 1000,
+      );
+      agentTaskSdkRunsTotal.inc({
+        provider,
+        model: config.model,
+        outcome: "success",
+      });
+      span.setAttributes({
+        "agent.duration_ms": result.durationMs,
+        "agent.max_idle_ms": result.maxIdleMs,
+        "agent.event_count": result.eventCount,
+        "agent.generation_started": result.generationStarted,
+        "agent.possibly_applied_effects": result.possiblyAppliedEffects,
+        "gen_ai.usage.input_tokens": result.usage.inputTokens,
+        "gen_ai.usage.output_tokens": result.usage.outputTokens,
+        "gen_ai.usage.cache_read_input_tokens": result.usage.cachedInputTokens,
+        "gen_ai.usage.cache_write_input_tokens":
+          result.usage.cacheWriteInputTokens,
+        "gen_ai.usage.reasoning_tokens": result.usage.reasoningTokens,
+      });
+      if (result.sessionId !== undefined) {
+        span.setAttribute("gen_ai.conversation.id", result.sessionId);
+      }
+      if (result.costUsd !== undefined) {
+        span.setAttribute("gen_ai.usage.cost", result.costUsd);
+      }
+
+      const redactTokens = secretTokenState.tokens;
+      let decodedPayload: AgentTaskResultPayload | AgentTaskResultPayloadV2;
+      try {
+        decodedPayload = decodeAgentTaskPayload({
           provider,
-          exit_code: cancelled ? "cancelled" : String(result.exitCode),
-        });
-        span.setAttribute("agent.duration_ms", result.durationMs);
-        span.setAttribute("agent.max_idle_ms", result.maxIdleMs);
-        span.setAttribute("agent.exit_code", result.exitCode);
-        span.setAttribute("agent.signal", result.signal);
-
-        jsonLog("info", "agent exited", {
-          phase: "exited",
-          provider,
-          elapsedMs: result.durationMs,
-          exitCode: result.exitCode,
-          signal: result.signal,
-          maxIdleMs: result.maxIdleMs,
-          firstOutputLatencyMs: result.firstOutputLatencyMs,
-          sigkillEscalated: result.sigkillEscalated,
-          lastLine: result.lastLine,
-        });
-
-        if (cancelled) {
-          agentTaskRunsTotal.inc({ provider, outcome: "cancelled" });
-          const error = new Error(`${provider} agent task cancelled`);
-          captureWithContext(error, {
-            provider,
-            durationMs: result.durationMs,
-            maxIdleMs: result.maxIdleMs,
-            firstOutputLatencyMs: result.firstOutputLatencyMs,
-            signal: result.signal,
-            lastLine: result.lastLine,
-          });
-          throw error;
-        }
-
-        if (result.exitCode !== 0) {
-          agentTaskRunsTotal.inc({ provider, outcome: "subprocess_failed" });
-          const error = agentSubprocessFailure(provider, result);
-          captureWithContext(error, {
-            provider,
-            durationMs: result.durationMs,
-            maxIdleMs: result.maxIdleMs,
-            firstOutputLatencyMs: result.firstOutputLatencyMs,
-            signal: result.signal,
-            lastLine: result.lastLine,
-          });
-          throw error;
-        }
-
-        const contractVersion = parsed.contractVersion === 2 ? 2 : 1;
-        const decodedPayload = await decodeAgentTaskPayload({
-          provider,
-          stdout: result.stdout,
-          outputPath: command.outputPath,
-          contractVersion,
+          structuredOutput: result.output,
+          finalText: result.finalText,
+          schemaFingerprint: config.schemaFingerprint,
+          contractVersion: config.contractVersion,
           durationMs: result.durationMs,
-          redact: (excerpt) => redactSecrets(excerpt, secretTokens),
+          redact: (value) => redactSecrets(value, redactTokens),
         });
-        if (input.recordSuccess !== false) {
-          agentTaskRunsTotal.inc({ provider, outcome: "success" });
-        }
-
-        const evidence = extractAgentTaskEvidenceReceipts(
-          result.stdout,
-          provider,
-          new Date().toISOString(),
-          (value) => redactSecrets(value, secretTokens),
-        );
-
-        jsonLog("info", "Agent task completed", {
-          provider,
-          title: parsed.title,
-          durationMs: result.durationMs,
-          contractVersion,
-          evidenceReceiptCount: evidence.length,
+      } catch (error: unknown) {
+        // The agent already spent its tokens and may already have run tools.
+        // Replaying it cannot fix an invalid schema, so fail the activity for
+        // good rather than letting Temporal retry an effectful run.
+        throw ApplicationFailure.create({
+          message: `${provider} native agent completed, but its structured output failed validation: ${error instanceof Error ? error.message : String(error)}`,
+          ...(error instanceof Error ? { cause: error } : {}),
+          nonRetryable: true,
+          type: "AgentSdkOutputContractFailure",
         });
+      }
+      if (input.recordSuccess !== false) {
+        agentTaskRunsTotal.inc({ provider, outcome: "success" });
+      }
 
-        const base = {
-          provider,
-          model: command.model,
-          durationMs: result.durationMs,
-          startedAt: new Date(llmStartMs).toISOString(),
-          evidence,
-        };
-        if (contractVersion === 2) {
-          return {
-            ...base,
-            contractVersion: 2,
-            payload: AgentTaskResultPayloadV2Schema.parse(decodedPayload),
-          };
-        }
-        const payload = AgentTaskResultPayloadSchema.parse(decodedPayload);
+      // Receipts come from the SDK's own already-redacted event stream, so a
+      // claimed tool call that never produced an event cannot be cited.
+      const evidence = extractAgentTaskEvidenceReceipts(
+        result.evidenceEvents,
+        provider,
+        new Date().toISOString(),
+        (value) => redactSecrets(value, redactTokens),
+      );
+
+      jsonLog("info", "Agent task completed", {
+        provider,
+        title: parsed.title,
+        model: config.model,
+        durationMs: result.durationMs,
+        sessionId: result.sessionId,
+        tokens: result.usage,
+        costUsd: result.costUsd,
+        contractVersion: config.contractVersion,
+        evidenceReceiptCount: evidence.length,
+      });
+
+      const base = {
+        provider,
+        model: config.model,
+        durationMs: result.durationMs,
+        startedAt: new Date(startedAtMs).toISOString(),
+        evidence,
+      };
+      if (config.contractVersion === 2) {
         return {
           ...base,
-          ...payload,
-          contractVersion: 1,
-          payload,
+          contractVersion: 2,
+          payload: AgentTaskResultPayloadV2Schema.parse(decodedPayload),
         };
-      },
-    );
-  } finally {
-    await credentialBroker.stop();
-  }
+      }
+      const payload = AgentTaskResultPayloadSchema.parse(decodedPayload);
+      return {
+        ...base,
+        ...payload,
+        contractVersion: 1,
+        payload,
+      };
+    },
+  );
 }
 
 function requireV2Result(result: RunAgentTaskResult): RunAgentTaskResultV2 {
@@ -432,8 +409,7 @@ function requireV2Result(result: RunAgentTaskResult): RunAgentTaskResultV2 {
 
 async function investigateAgentTask(
   input: RunAgentTaskInput,
-  commandBuilder: typeof buildAgentTaskCommand,
-  credentialBrokerFactory: AgentProviderCredentialBrokerFactory,
+  sdkRunner: AgentTaskSdkRunner,
   evidenceCollector: typeof collectDeclaredAgentTaskEvidence,
 ): Promise<RunAgentTaskResultV2> {
   const investigation = requireV2Result(
@@ -443,8 +419,7 @@ async function investigateAgentTask(
         phase: { kind: "investigation" },
         recordSuccess: false,
       },
-      commandBuilder,
-      credentialBrokerFactory,
+      sdkRunner,
     ),
   );
   const declaredEvidence = await evidenceCollector(input.input, input.workdir);
@@ -456,8 +431,7 @@ async function investigateAgentTask(
 
 async function finalizeAgentTask(
   input: FinalizeAgentTaskInput,
-  commandBuilder: typeof buildAgentTaskCommand,
-  credentialBrokerFactory: AgentProviderCredentialBrokerFactory,
+  sdkRunner: AgentTaskSdkRunner,
 ): Promise<RunAgentTaskResultV2> {
   const finalized = requireV2Result(
     await runAgent(
@@ -470,8 +444,7 @@ async function finalizeAgentTask(
           preliminary: input.investigation.payload,
         },
       },
-      commandBuilder,
-      credentialBrokerFactory,
+      sdkRunner,
     ),
   );
   return {
@@ -483,23 +456,16 @@ async function finalizeAgentTask(
 }
 
 export function createAgentTaskActivities(
-  commandBuilder: typeof buildAgentTaskCommand = buildAgentTaskCommand,
-  credentialBrokerFactory: AgentProviderCredentialBrokerFactory = startAgentProviderCredentialBroker,
+  sdkRunner: AgentTaskSdkRunner = runAgentTaskSdk,
   evidenceCollector: typeof collectDeclaredAgentTaskEvidence = collectDeclaredAgentTaskEvidence,
 ) {
   return {
     prepareAgentTaskWorkdir,
-    runAgentTask: (input: RunAgentTaskInput) =>
-      runAgent(input, commandBuilder, credentialBrokerFactory),
+    runAgentTask: (input: RunAgentTaskInput) => runAgent(input, sdkRunner),
     investigateAgentTask: (input: RunAgentTaskInput) =>
-      investigateAgentTask(
-        input,
-        commandBuilder,
-        credentialBrokerFactory,
-        evidenceCollector,
-      ),
+      investigateAgentTask(input, sdkRunner, evidenceCollector),
     finalizeAgentTask: (input: FinalizeAgentTaskInput) =>
-      finalizeAgentTask(input, commandBuilder, credentialBrokerFactory),
+      finalizeAgentTask(input, sdkRunner),
     sendAgentTaskEmail: sendEmail,
     sendAgentTaskFailureReport: sendFailureReport,
     scheduleAgentTaskFollowUp: scheduleFollowUp,

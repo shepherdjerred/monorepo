@@ -1,8 +1,23 @@
+import { query } from "@anthropic-ai/claude-agent-sdk";
+import { Codex } from "@openai/codex-sdk";
 import { z } from "zod";
 
 import { runAllowExit, type RunOptions, type RunResult } from "./run.ts";
 
 const CODEX_MODEL = "gpt-5.6-sol";
+// Every inference credential the release lane's environment may carry. The
+// refiner strips all of them and hands back only the one provider it is about
+// to launch, so neither agent can reach the other's subscription.
+const AGENT_CREDENTIAL_ENVIRONMENT = [
+  "ANTHROPIC_API_KEY",
+  "CLAUDE_CODE_OAUTH_TOKEN",
+  "CODEX_ACCESS_TOKEN",
+  "CODEX_ACCOUNT_ID",
+  "CODEX_API_KEY",
+  "CODEX_ID_TOKEN",
+  "CODEX_REFRESH_TOKEN",
+  "OPENAI_API_KEY",
+];
 const OUTPUT_TAIL_LIMIT = 16_384;
 const CLAUDE_QUOTA_PATTERN =
   /\b(?:hit|reached|exceeded) (?:your )?(?:weekly|monthly|usage)(?: usage)? limit\b/i;
@@ -11,13 +26,14 @@ const REFINER_RESULT_END = "<!-- /release-refiner-result -->";
 
 const ClaudeResultSchema = z
   .object({
+    type: z.literal("result"),
+    subtype: z.string(),
     is_error: z.boolean(),
-    // The CLI emits `api_error_status: null` on a successful (non-error) result,
-    // so this must accept null — `.optional()` (number | undefined) rejects it and
-    // silently fails parsing of an otherwise-valid success payload. It is only read
-    // as `=== 429` on a non-zero exit (see isClaudeQuotaExhaustion).
     api_error_status: z.number().nullish(),
     result: z.string().optional(),
+    errors: z.array(z.string()).optional(),
+    total_cost_usd: z.number().optional(),
+    num_turns: z.number().int().nonnegative().optional(),
   })
   .loose();
 
@@ -80,75 +96,19 @@ export type RunReleaseRefinerInput = {
   prompt: string;
   env: Record<string, string>;
   claudeToken: string;
-  openAiApiKey: string;
+  codexAccessToken: string;
   execute?: RefinerCommandRunner;
+  runClaude?: ReleaseAgentRunner;
+  runCodex?: ReleaseAgentRunner;
 };
 
-function claudeCommand(prompt: string): string[] {
-  return [
-    "claude",
-    "-p",
-    prompt,
-    "--output-format",
-    "json",
-    "--allowed-tools",
-    "Bash,Read,Edit,Write,Grep,Glob",
-    "--dangerously-skip-permissions",
-    "--max-turns",
-    "80",
-    "--model",
-    "claude-opus-5",
-  ];
-}
+export type ReleaseAgentOutcome =
+  | { kind: "completed"; output: string }
+  | { kind: "quota-exhausted"; detail: string };
 
-function codexCommand(prompt: string, root: string): string[] {
-  return [
-    "bun",
-    "--no-install",
-    "run",
-    "--cwd",
-    "scripts",
-    "release-refiner:codex",
-    "--",
-    "exec",
-    "--dangerously-bypass-approvals-and-sandbox",
-    "--ignore-user-config",
-    "--ignore-rules",
-    "--disable",
-    "apps",
-    "--disable",
-    "plugins",
-    "--disable",
-    "multi_agent",
-    "--ephemeral",
-    "--skip-git-repo-check",
-    "--color",
-    "never",
-    "--cd",
-    root,
-    "--model",
-    CODEX_MODEL,
-    "--config",
-    'model_reasoning_effort="medium"',
-    prompt,
-  ];
-}
-
-function parseClaudeResult(
-  stdout: string,
-): z.infer<typeof ClaudeResultSchema> | null {
-  const trimmed = stdout.trim();
-  if (trimmed === "") return null;
-  try {
-    const raw: unknown = JSON.parse(trimmed);
-    const parsed = ClaudeResultSchema.safeParse(raw);
-    return parsed.success ? parsed.data : null;
-  } catch {
-    // Malformed output is never a fallback signal. The original command
-    // failure propagates below, preserving fail-closed behavior.
-    return null;
-  }
-}
+export type ReleaseAgentRunner = (
+  input: RunReleaseRefinerInput,
+) => Promise<ReleaseAgentOutcome>;
 
 function parseReleaseRefinerResult(
   output: string,
@@ -174,14 +134,16 @@ function parseReleaseRefinerResult(
   }
 }
 
-export function isClaudeQuotaExhaustion(result: RunResult): boolean {
-  if (result.exitCode === 0) return false;
-  const parsed = parseClaudeResult(result.stdout);
+export function isClaudeQuotaExhaustion(result: unknown): boolean {
+  const parsed = ClaudeResultSchema.safeParse(result);
+  if (!parsed.success) return false;
+  const detail = [parsed.data.result, ...(parsed.data.errors ?? [])]
+    .filter((value) => value !== undefined)
+    .join("; ");
   return (
-    parsed?.is_error === true &&
-    parsed.api_error_status === 429 &&
-    parsed.result !== undefined &&
-    CLAUDE_QUOTA_PATTERN.test(parsed.result)
+    parsed.data.is_error &&
+    parsed.data.api_error_status === 429 &&
+    CLAUDE_QUOTA_PATTERN.test(detail)
   );
 }
 
@@ -221,31 +183,144 @@ function commandFailure(provider: string, result: RunResult): Error {
   );
 }
 
-async function runCodex(
-  input: RunReleaseRefinerInput,
-  execute: RefinerCommandRunner,
-): Promise<z.infer<typeof ReleaseRefinerResultSchema>> {
-  const result = await execute(codexCommand(input.prompt, input.root), {
-    cwd: input.root,
-    capture: true,
-    env: {
-      ...input.env,
-      CODEX_API_KEY: input.openAiApiKey,
-    },
-    unsetEnv: [
-      "OPENAI_API_KEY",
-      "CODEX_ACCESS_TOKEN",
-      "CODEX_REFRESH_TOKEN",
-      "CODEX_ID_TOKEN",
-      "CODEX_ACCOUNT_ID",
-      "CLAUDE_CODE_OAUTH_TOKEN",
-      "ANTHROPIC_API_KEY",
-    ],
-  });
-  if (result.exitCode !== 0) {
-    throw commandFailure("Codex", result);
+/**
+ * Non-secret process and TLS settings the refiner agents inherit from the CI
+ * image. This is an allowlist, not a denylist, for the same reason
+ * `envForProvider` is one in packages/temporal: these agents run with Bash and
+ * network access, so anything reachable from their environment is exfiltratable
+ * by a prompt-injected or merely mistaken command. The main-only release lane
+ * runs with `GITHUB_APP_PRIVATE_KEY` set — `setupGitAuth()` requires it — so a
+ * denylist of inference credentials would hand the agent a long-lived GitHub
+ * App key it has no use for, along with every other CI secret nobody thought to
+ * enumerate. The agent needs `PATH`, TLS/proxy settings, the minted `GH_TOKEN`
+ * askpass environment, and its own provider credential; nothing else.
+ */
+const AGENT_PROCESS_ENVIRONMENT_KEYS = new Set([
+  // Claude is launched with `executable: "bun"`, resolvable only through the CI
+  // image's mise PATH. Without this the lane dies before refinement starts.
+  "PATH",
+  "HOME",
+  "SHELL",
+  "TERM",
+  "TMPDIR",
+  "TZ",
+  "LANG",
+  "LC_ALL",
+  "SSL_CERT_DIR",
+  "SSL_CERT_FILE",
+  "NODE_EXTRA_CA_CERTS",
+  "HTTP_PROXY",
+  "HTTPS_PROXY",
+  "NO_PROXY",
+  "http_proxy",
+  "https_proxy",
+  "no_proxy",
+]);
+
+/**
+ * Build a native SDK environment for the release refiner.
+ *
+ * Both SDKs replace the child environment wholesale rather than layering onto
+ * `process.env` the way `run()` does, so passing only the git-auth env would
+ * drop the CI image's mise `PATH`. Copy only the allowlisted process/TLS
+ * settings, then add the git auth and the single provider credential this run
+ * needs.
+ */
+export function refinerSdkEnv(
+  input: Pick<RunReleaseRefinerInput, "env">,
+  credentials: Readonly<Record<string, string>>,
+  sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
+): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(sourceEnv)) {
+    if (typeof value !== "string") continue;
+    if (!AGENT_PROCESS_ENVIRONMENT_KEYS.has(key)) continue;
+    env[key] = value;
   }
-  return requireSuccessfulResult("Codex", result.stdout);
+  return { ...env, ...input.env, ...credentials };
+}
+
+async function runClaudeAgentSdk(
+  input: RunReleaseRefinerInput,
+): Promise<ReleaseAgentOutcome> {
+  const messages = query({
+    prompt: input.prompt,
+    options: {
+      allowedTools: ["Bash", "Read", "Edit", "Write", "Grep", "Glob"],
+      allowDangerouslySkipPermissions: true,
+      cwd: input.root,
+      env: refinerSdkEnv(input, {
+        CLAUDE_CODE_OAUTH_TOKEN: input.claudeToken,
+        IS_SANDBOX: "1",
+      }),
+      executable: "bun",
+      maxTurns: 80,
+      model: "claude-opus-5",
+      permissionMode: "bypassPermissions",
+      persistSession: false,
+      tools: ["Bash", "Read", "Edit", "Write", "Grep", "Glob"],
+    },
+  });
+  let result: z.infer<typeof ClaudeResultSchema> | undefined;
+  try {
+    for await (const message of messages) {
+      if (message.type === "result") {
+        result = ClaudeResultSchema.parse(message);
+      }
+    }
+  } finally {
+    messages.close();
+  }
+  if (result === undefined) {
+    throw new Error("Claude Agent SDK completed without a result event");
+  }
+  if (isClaudeQuotaExhaustion(result)) {
+    return {
+      kind: "quota-exhausted",
+      detail: result.result ?? result.errors?.join("; ") ?? "usage limit",
+    };
+  }
+  if (result.is_error || result.subtype !== "success") {
+    throw new Error(
+      `Claude release refiner failed: ${result.errors?.join("; ") ?? result.result ?? result.subtype}`,
+    );
+  }
+  if (result.result === undefined) {
+    throw new Error("Claude release refiner returned no result text");
+  }
+  console.log(
+    `Claude release refiner completed (${String(result.num_turns ?? 0)} turns, $${(result.total_cost_usd ?? 0).toFixed(4)}).`,
+  );
+  return { kind: "completed", output: result.result };
+}
+
+async function runCodexSdk(
+  input: RunReleaseRefinerInput,
+): Promise<ReleaseAgentOutcome> {
+  const codex = new Codex({
+    env: refinerSdkEnv(input, {
+      CODEX_ACCESS_TOKEN: input.codexAccessToken,
+    }),
+    config: {
+      project_doc_max_bytes: 0,
+      features: { apps: false, plugins: false, multi_agent: false },
+    },
+  });
+  const thread = codex.startThread({
+    approvalPolicy: "never",
+    model: CODEX_MODEL,
+    modelReasoningEffort: "medium",
+    networkAccessEnabled: true,
+    sandboxMode: "danger-full-access",
+    skipGitRepoCheck: true,
+    webSearchMode: "disabled",
+    workingDirectory: input.root,
+  });
+  const result = await thread.run(input.prompt);
+  console.log(
+    `Codex release refiner completed (${String(result.usage?.input_tokens ?? 0)} input tokens, ${String(result.usage?.output_tokens ?? 0)} output tokens).`,
+  );
+  return { kind: "completed", output: result.finalResponse };
 }
 
 function packageChangelog(
@@ -270,16 +345,7 @@ async function verifiedCommand(
     cwd: input.root,
     capture: true,
     env: input.env,
-    unsetEnv: [
-      "OPENAI_API_KEY",
-      "CODEX_API_KEY",
-      "CODEX_ACCESS_TOKEN",
-      "CODEX_REFRESH_TOKEN",
-      "CODEX_ID_TOKEN",
-      "CODEX_ACCOUNT_ID",
-      "CLAUDE_CODE_OAUTH_TOKEN",
-      "ANTHROPIC_API_KEY",
-    ],
+    unsetEnv: AGENT_CREDENTIAL_ENVIRONMENT,
   });
   if (result.exitCode !== 0) {
     throw commandFailure("Release refiner verification", result);
@@ -385,46 +451,21 @@ export async function runReleaseRefiner(
     return "none";
   }
 
-  const claude = await execute(claudeCommand(input.prompt), {
-    cwd: input.root,
-    capture: true,
-    env: {
-      ...input.env,
-      CLAUDE_CODE_OAUTH_TOKEN: input.claudeToken,
-      IS_SANDBOX: "1",
-    },
-    unsetEnv: [
-      "OPENAI_API_KEY",
-      "CODEX_API_KEY",
-      "CODEX_ACCESS_TOKEN",
-      "CODEX_REFRESH_TOKEN",
-      "CODEX_ID_TOKEN",
-      "CODEX_ACCOUNT_ID",
-      "ANTHROPIC_API_KEY",
-    ],
-  });
-  if (claude.exitCode === 0) {
-    const parsed = parseClaudeResult(claude.stdout);
-    if (parsed === null || parsed.is_error || parsed.result === undefined) {
-      throw new Error(
-        "Claude release refiner exited 0 without a valid non-error JSON result" +
-          (claude.stdout.trim() === ""
-            ? ""
-            : `\n--- stdout (tail) ---\n${outputTail(claude.stdout)}`),
-      );
-    }
-    const result = requireSuccessfulResult("Claude", parsed.result);
+  const claude = await (input.runClaude ?? runClaudeAgentSdk)(input);
+  if (claude.kind === "completed") {
+    const result = requireSuccessfulResult("Claude", claude.output);
     await verifyReleaseRefinerResult(input, result, execute);
     return "claude";
-  }
-  if (!isClaudeQuotaExhaustion(claude)) {
-    throw commandFailure("Claude", claude);
   }
 
   console.warn(
     `Claude release refiner quota is exhausted; falling back to Codex ${CODEX_MODEL}.`,
   );
-  const result = await runCodex(input, execute);
+  const codex = await (input.runCodex ?? runCodexSdk)(input);
+  if (codex.kind !== "completed") {
+    throw new Error("Codex release refiner unexpectedly reported quota status");
+  }
+  const result = requireSuccessfulResult("Codex", codex.output);
   await verifyReleaseRefinerResult(input, result, execute);
   return "codex";
 }

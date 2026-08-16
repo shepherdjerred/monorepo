@@ -7,6 +7,7 @@
     "bunfig.toml",
     "patches/**",
     "scripts/ci-reporting.ts",
+    "scripts/coverage-cobertura.ts",
     "scripts/ci-test-manifest.json",
     "scripts/run-ci-test.ts"
   ],
@@ -84,6 +85,18 @@
     "//#check-suppressions": {
       "inputs": ["scripts/**", "!scripts/node_modules/**"]
     },
+    "//#check-ai-architecture": {
+      "inputs": [
+        "package.json",
+        ".buildkite/**",
+        "packages/**",
+        "scripts/**",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!packages/docs/**",
+        "!packages/dotfiles/dot_agents/skills/**"
+      ]
+    },
     "//#check-patched-deps": {
       "inputs": [
         "package.json",
@@ -92,6 +105,23 @@
         "packages/**/patches/*.patch",
         "scripts/check-patched-deps.ts",
         ".buildkite/scripts/select-image-targets.ts"
+      ]
+    },
+    // Every env var a pipeline step's scripts require must be provided by that
+    // step. Reads the committed vault snapshot (hashes only), never 1Password.
+    "//#check-ci-env": {
+      // Every tree requiredEnvFrom may analyze has to be hashed, not just the
+      // pipeline: the checker treats literal `.buildkite/scripts/*.ts`
+      // commands as entry points and follows their imports, so a requireEnv
+      // added there would otherwise reuse a green cached result.
+      "inputs": [
+        ".buildkite/pipeline.yml",
+        ".buildkite/scripts/**",
+        "scripts/**",
+        "!scripts/node_modules/**",
+        "packages/homelab/scripts/**",
+        "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
+        "packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts"
       ]
     },
     "//#check-script-migrations": {

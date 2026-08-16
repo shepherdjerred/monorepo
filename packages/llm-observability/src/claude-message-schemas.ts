@@ -1,10 +1,8 @@
-// Zod schemas for Claude Code's NDJSON message stream. The Agent SDK
-// (`query({...})` messages) and the CLI (`claude -p --output-format
-// json|stream-json`) emit the same shapes: a `system/init` header, N
-// `assistant` messages, and a terminal `result` message carrying usage and
-// cost. Both `claude-agent-wrapper.ts` and `claude-cli-wrapper.ts` parse
-// with these; keep them permissive (all fields optional) so CLI version
-// drift degrades to missing attributes instead of dropped spans.
+// Zod schemas for Claude Agent SDK messages. The active `query({...})` stream
+// and historical CLI fixtures share a `system/init` header, N `assistant`
+// messages, and a terminal `result` message carrying usage and cost. Keep the
+// schemas permissive so additive SDK fields degrade to missing attributes
+// instead of dropped spans.
 
 import { z } from "zod";
 

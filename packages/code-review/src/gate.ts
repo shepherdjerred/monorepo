@@ -49,6 +49,14 @@ export function isBlocking(
   );
 }
 
+/**
+ * One blocking thread as a reader needs it: what the finding is, then where.
+ *
+ * The title matters most and is why this is not just a location. Findings
+ * parsed from a provider's issue comment carry one (threads opened on a diff
+ * do not), so without it a failing gate lists file paths and the operator has
+ * to open GitHub to learn what any of them are actually complaining about.
+ */
 function describeThread(thread: ReviewThread): string {
   const location =
     thread.path === null
@@ -56,8 +64,9 @@ function describeThread(thread: ReviewThread): string {
       : thread.line === null
         ? thread.path
         : `${thread.path}:${String(thread.line)}`;
+  const title = thread.title === null ? "" : `${thread.title} — `;
   const url = thread.url === null ? "" : ` — ${thread.url}`;
-  return `${location}${url}`;
+  return `${title}${location}${url}`;
 }
 
 export function evaluateGate(input: {

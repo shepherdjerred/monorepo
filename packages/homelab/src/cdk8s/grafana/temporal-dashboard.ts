@@ -222,15 +222,14 @@ export function createTemporalDashboard() {
         h: 8,
       }),
       // -----------------------------------------------------------------
-      // Agent subprocesses row (y >= 68) — covers the long-running
-      // claude -p subprocesses spawned by agent-task (homelab-audit) so a
-      // hang or wall-hit pattern is visible at a glance.
+      // Agent execution row (y >= 68). Historical subprocess series stay on
+      // the panels while native SDK series provide post-cutover continuity.
       // -----------------------------------------------------------------
       timeseriesPanel({
         id: 300,
-        title: "Agent Subprocess Wall-clock p50 / p95 / p99",
+        title: "Homelab Agent Wall-clock p50 / p95 / p99",
         description:
-          "Wall-clock duration distribution of long-running claude -p subprocesses (homelab-audit), 7d window. A p99 that pegs at the activity startToCloseTimeout means the subprocess is wedged; instrumentation captures the soft-kill + last stderr line so the next line below in Loki has the hang signature.",
+          "Wall-clock duration distribution of homelab-audit Claude Agent SDK runs over 7d. The historical metric name is retained across the native SDK cutover so the timeline remains continuous.",
         targets: [
           {
             expr: "histogram_quantile(0.5, sum by (le) (rate(homelab_audit_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
@@ -253,13 +252,17 @@ export function createTemporalDashboard() {
       }),
       timeseriesPanel({
         id: 301,
-        title: "Agent Subprocess Exits by Signal",
+        title: "Agent Failures by Runtime",
         description:
-          "How agent subprocesses terminate: natural (exit code 0), SIGINT (our pre-emptive soft-kill at T-90s), SIGTERM (Temporal activity wall hit). A high SIGTERM rate means our soft-kill timing is wrong or the subprocess ignores SIGINT; a SIGINT spike correlates with the AgentSubprocessSoftKill alert.",
+          "Native SDK failures plus historical pre-cutover subprocess exits. Separate targets preserve the old series while making current failures visible.",
         targets: [
           {
+            expr: 'sum by (provider, outcome) (increase(agent_task_sdk_runs_total{outcome!="success"}[1h])) or on() vector(0)',
+            legend: "SDK {{provider}} {{outcome}}",
+          },
+          {
             expr: 'sum by (provider, exit_code) (increase(agent_task_subprocess_exit_total{exit_code!="0"}[1h])) or on() vector(0)',
-            legend: "agent-task {{provider}} exit_code={{exit_code}}",
+            legend: "historical CLI {{provider}} exit_code={{exit_code}}",
           },
         ],
         x: 12,
@@ -269,9 +272,9 @@ export function createTemporalDashboard() {
       }),
       timeseriesPanel({
         id: 302,
-        title: "Agent Subprocess Max Idle Seconds (p95, 1h)",
+        title: "Agent Progress-event Idle Seconds (p95, 1h)",
         description:
-          "p95 of the longest stderr-silent stretch per agent subprocess run over the last hour. A subprocess that's working emits stderr periodically; a wedged tool call (slow WebFetch / hung kubectl / API retry loop) is silent. Histogram-backed so concurrent runs all contribute observations instead of overwriting one another. Drill down via Loki on the `lastStderrLine` field to see what was last running before the silence.",
+          "p95 of the longest period without a native SDK progress event over the last hour. The historical metric name is retained; histogram shape ensures concurrent runs all contribute observations.",
         targets: [
           {
             expr: "histogram_quantile(0.95, sum by (workflow_type, le) (rate(agent_subprocess_idle_seconds_bucket[1h]))) or on() vector(0)",
@@ -286,9 +289,9 @@ export function createTemporalDashboard() {
       }),
       statPanel({
         id: 303,
-        title: "Agent Soft-Kills (1h)",
+        title: "Historical CLI Soft-Kills (1h)",
         description:
-          "Pre-emptive SIGINT kills sent by the activity at T-90s before Temporal's startToCloseTimeout. Every tick means a subprocess was about to be hard-SIGTERM'd and the activity intervened to capture diagnostic state. Drives the AgentSubprocessSoftKill ticket alert.",
+          "Pre-cutover CLI SIGINT soft-kills retained for historical investigation. Native SDK cancellation is reported through SDK and common LLM outcome metrics.",
         expr: "sum by (workflow_type) (increase(agent_subprocess_soft_kills_total[1h])) or on() vector(0)",
         legend: "{{workflow_type}}",
         x: 12,

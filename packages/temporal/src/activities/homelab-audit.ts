@@ -1,4 +1,4 @@
-import { Context } from "@temporalio/activity";
+import { ApplicationFailure, Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
 import {
   homelabAuditEmailSentTotal,
@@ -8,23 +8,31 @@ import {
 } from "#observability/metrics.ts";
 import { getTraceContext } from "#observability/tracing.ts";
 import { emitOtel } from "#observability/log.ts";
-import { parseClaudeResultMessage } from "#shared/claude-result.ts";
-import { traceClaudeCli } from "@shepherdjerred/llm-observability/wrappers/claude-cli";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
-import { isReportDeliveryBoundaryEnvironmentKey } from "#activities/agent-task-env.ts";
 import {
   buildAuditPrompt,
   loadRunbook,
   type SectionsFilter,
 } from "./homelab-audit-prompts.ts";
 import { extractAuditSubjectCounts } from "#shared/markdown-to-html.ts";
-import { redactSecrets } from "#shared/redact.ts";
 import {
   createActivityReportEnvelope,
   deliverReport,
 } from "./report-delivery.ts";
 import { synthesizeHomelabAuditEvidence } from "./homelab-audit-synthesis.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import {
+  createAgentTaskSecretTokenState,
+  envForTrustedAgent,
+} from "./agent-task-env.ts";
+import {
+  activityCancellationSignalOrUndefined,
+  startToCloseTimeoutMsOrUndefined,
+} from "./agent-task-runtime.ts";
+import {
+  ClaudeAgentSdkRunError,
+  runClaudeAgentSdk,
+} from "./claude-agent-sdk-runner.ts";
 import {
   archiveAuditBody,
   archiveAuditMetadata,
@@ -48,16 +56,18 @@ const DEFAULT_MAX_TURNS = 80;
 // Audit hits a wide tool surface (kubectl, talosctl, toolkit, tofu, gh) so we
 // allow Bash + Read + Grep + Glob + the GitHub MCP namespace if it's wired up
 // later. The actual security bound is layered:
-//   1. The Bun.spawn env (no API key, only OAuth token + audit creds).
+//   1. The Agent SDK env (subscription OAuth + audit creds, no direct API key).
 //   2. The cluster RBAC bound to the temporal-worker SA — strict read-only via
 //      `temporal-worker-audit-reader` (see homelab/.../audit-rbac.ts).
 //   3. The prompt itself, which forbids state-mutating commands.
-// `--allowed-tools` narrows the model's tool selection at the CLI layer.
-// `--dangerously-skip-permissions` only suppresses the *interactive*
-// per-tool-call prompt (necessary for headless `claude -p`); it does not
-// remove the allow-list. `--permission-mode acceptEdits` is redundant in
-// this combination but is kept for parity with `pr-agent.ts`.
-const ALLOWED_TOOLS = "Bash,Read,Grep,Glob,WebFetch,mcp__github__*";
+const ALLOWED_TOOLS = [
+  "Bash",
+  "Read",
+  "Grep",
+  "Glob",
+  "WebFetch",
+  "mcp__github__*",
+] as const;
 
 export type HomelabAuditAgentInput = {
   /** ISO date for the audit. Defaults to today (UTC) when undefined. */
@@ -150,66 +160,23 @@ function safeHeartbeat(payload: Record<string, unknown>): void {
   }
 }
 
-// Every secret the audit subprocess can plausibly leak through stderr — any
-// 401 response, curl -v handshake, argocd verbose, or upstream library that
-// echoes a header. Listed in priority order; redactSecrets is O(N tokens × M
-// chars) so a fixed handful is fine.
-function auditSecretTokens(
-  githubAppToken: string | undefined,
-): readonly (string | undefined)[] {
-  return [
-    Bun.env["CLAUDE_CODE_OAUTH_TOKEN"],
-    Bun.env["ANTHROPIC_API_KEY"],
-    Bun.env["BUGSINK_TOKEN"],
-    Bun.env["GRAFANA_API_KEY"],
-    Bun.env["ARGOCD_AUTH_TOKEN"],
-    Bun.env["CLOUDFLARE_API_TOKEN"],
-    Bun.env["BUILDKITE_API_TOKEN"],
-    Bun.env["AWS_ACCESS_KEY_ID"],
-    Bun.env["AWS_SECRET_ACCESS_KEY"],
-    Bun.env["GITHUB_PERSONAL_ACCESS_TOKEN"],
-    Bun.env["GITHUB_APP_PRIVATE_KEY"],
-    githubAppToken,
-    Bun.env["POSTAL_API_KEY"],
-  ];
-}
-
-function buildAuditAgentEnv(
-  claudeToken: string,
-  githubAppToken: string,
-): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(Bun.env)) {
-    if (typeof value !== "string") {
-      continue;
-    }
-    if (
-      key === "GH_TOKEN" ||
-      key === "GITHUB_PERSONAL_ACCESS_TOKEN" ||
-      key.startsWith("GITHUB_APP_") ||
-      isReportDeliveryBoundaryEnvironmentKey(key)
-    ) {
-      continue;
-    }
-    env[key] = value;
-  }
-  env["CLAUDE_CODE_OAUTH_TOKEN"] = claudeToken;
-  env["GH_TOKEN"] = githubAppToken;
-  return env;
-}
-
 function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/**
- * Spawn `claude -p` with the audit prompt and return its markdown body.
- *
- * Matches the lifecycle pattern from packages/temporal/src/activities/pr-agent.ts:
- * stderr line pump with token redaction, 10s activity heartbeats, JSON result
- * parsing, Sentry capture on failure, and Prometheus metrics for duration /
- * tokens / exit code.
- */
+function nonRetryableClaudeFailure(
+  error: ClaudeAgentSdkRunError,
+): ApplicationFailure {
+  return ApplicationFailure.create({
+    message: error.message,
+    cause: error,
+    nonRetryable: true,
+    type: error.possiblyAppliedEffects
+      ? "HomelabAuditPossiblyAppliedFailure"
+      : "HomelabAuditBilledGenerationFailure",
+  });
+}
+
 async function runAuditAgent(
   input: HomelabAuditAgentInput,
 ): Promise<HomelabAuditAgentResult> {
@@ -222,7 +189,6 @@ async function runAuditAgent(
   const sections = input.sections ?? "all";
   const model = input.model ?? DEFAULT_MODEL;
   const maxTurns = input.maxTurns ?? DEFAULT_MAX_TURNS;
-
   const runbook = await loadRunbook();
   const prompt = buildAuditPrompt({
     date,
@@ -231,205 +197,164 @@ async function runAuditAgent(
     toolingPreflightMarkdown: input.toolingPreflightMarkdown,
   });
 
-  const args = [
-    "claude",
-    "-p",
-    prompt,
-    "--output-format",
-    "json",
-    "--allowed-tools",
-    ALLOWED_TOOLS,
-    "--permission-mode",
-    "acceptEdits",
-    "--dangerously-skip-permissions",
-    "--max-turns",
-    String(maxTurns),
-    "--model",
-    model,
-  ];
-
-  jsonLog("info", "Invoking claude -p for homelab audit", {
+  jsonLog("info", "Invoking Claude Agent SDK for homelab audit", {
     date,
-    sections: Array.isArray(sections) ? sections : sections,
+    sections,
     model,
     maxTurns,
   });
 
   const githubTokenResult = await createGitHubAppInstallationToken();
+  const secretState = await createAgentTaskSecretTokenState(
+    githubTokenResult.token,
+  );
+  const activitySignal = activityCancellationSignalOrUndefined();
+  const timeoutController = new AbortController();
+  const timeoutMs = startToCloseTimeoutMsOrUndefined();
+  const timeoutTimer =
+    timeoutMs === undefined
+      ? undefined
+      : setTimeout(
+          () => {
+            timeoutController.abort(
+              new Error(
+                "Homelab audit stopped before Temporal start-to-close timeout",
+              ),
+            );
+          },
+          Math.max(1, timeoutMs - 15_000),
+        );
+  const signal = AbortSignal.any([
+    timeoutController.signal,
+    ...(activitySignal === undefined ? [] : [activitySignal]),
+  ]);
   const startMs = Date.now();
-  const proc = Bun.spawn(args, {
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-    env: buildAuditAgentEnv(claudeToken, githubTokenResult.token),
-  });
-
+  let eventCount = 0;
   const heartbeat = setInterval(() => {
-    safeHeartbeat({ phase: "agent", elapsedMs: Date.now() - startMs });
+    safeHeartbeat({
+      phase: "claude-agent-sdk",
+      elapsedMs: Date.now() - startMs,
+      eventCount,
+    });
   }, HEARTBEAT_INTERVAL_MS);
 
-  const secretTokens = auditSecretTokens(githubTokenResult.token);
-  const stderrPump = (async () => {
-    const reader = proc.stderr.getReader();
-    const decoder = new TextDecoder();
-    let buf = "";
-    try {
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) {
-          break;
-        }
-        buf += decoder.decode(value, { stream: true });
-        const lines = buf.split("\n");
-        buf = lines.pop() ?? "";
-        for (const line of lines) {
-          if (line.length === 0) {
-            continue;
-          }
-          jsonLog("info", "claude stderr", {
-            line: redactSecrets(line, secretTokens),
-          });
-        }
-      }
-      if (buf.length > 0) {
-        jsonLog("info", "claude stderr", {
-          line: redactSecrets(buf, secretTokens),
-        });
-      }
-    } catch (error: unknown) {
-      jsonLog("warning", "stderr pump error", {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  })();
-
-  let stdout: string;
-  let exitCode: number;
+  let result;
   try {
-    [stdout, , exitCode] = await Promise.all([
-      new Response(proc.stdout).text(),
-      stderrPump,
-      proc.exited,
-    ]);
-  } finally {
-    clearInterval(heartbeat);
-  }
-
-  const durationMs = Date.now() - startMs;
-  const durationSeconds = durationMs / 1000;
-
-  homelabAuditSubprocessDurationSeconds.observe(
-    { model, exit_code: String(exitCode) },
-    durationSeconds,
-  );
-  homelabAuditSubprocessExitTotal.inc({ exit_code: String(exitCode) });
-
-  // Post-hoc gen_ai span (archived to S3 by the span processor) — before the
-  // failure checks so failed runs are traced too.
-  traceClaudeCli(
-    {
+    result = await runClaudeAgentSdk({
       service: "temporal",
       callSite: "homelab-audit",
-      request: {
-        model,
-        prompt,
-        options: { date, sections, maxTurns },
+      prompt,
+      model,
+      maxTurns,
+      cwd: process.cwd(),
+      allowedTools: ALLOWED_TOOLS,
+      env: envForTrustedAgent({
+        CLAUDE_CODE_OAUTH_TOKEN: claudeToken,
+        GH_TOKEN: githubTokenResult.token,
+      }),
+      signal,
+      redactTokens: secretState.tokens,
+      beforeEvent: async () => {
+        try {
+          await secretState.refresh();
+          return true;
+        } catch {
+          return false;
+        }
       },
-    },
-    {
-      stdout,
-      exitCode,
-      startTimeMs: startMs,
-      endTimeMs: startMs + durationMs,
-    },
-    {
-      warn: (message) => {
-        jsonLog("warning", message, { phase: "claude-cli-trace" });
+      onEvent: (event) => {
+        eventCount += 1;
+        safeHeartbeat({
+          phase: "claude-agent-sdk",
+          elapsedMs: event.elapsedMs,
+          eventCount,
+          eventType: event.type,
+        });
+        jsonLog("info", "homelab audit agent event", {
+          eventType: event.type,
+          elapsedMs: event.elapsedMs,
+        });
       },
-    },
+    });
+  } catch (error: unknown) {
+    homelabAuditSubprocessExitTotal.inc({ exit_code: "sdk_failed" });
+    const classified =
+      error instanceof ClaudeAgentSdkRunError && error.generationStarted
+        ? nonRetryableClaudeFailure(error)
+        : error;
+    captureWithContext(classified, {
+      model,
+      durationMs: Date.now() - startMs,
+      runtime: "claude_agent_sdk",
+      generationStarted:
+        error instanceof ClaudeAgentSdkRunError
+          ? error.generationStarted
+          : undefined,
+      possiblyAppliedEffects:
+        error instanceof ClaudeAgentSdkRunError
+          ? error.possiblyAppliedEffects
+          : undefined,
+    });
+    throw classified;
+  } finally {
+    clearInterval(heartbeat);
+    if (timeoutTimer !== undefined) {
+      clearTimeout(timeoutTimer);
+    }
+  }
+
+  const markdown = result.resultText.trim();
+  if (markdown.length === 0) {
+    const error = ApplicationFailure.nonRetryable(
+      "Claude Agent SDK returned an empty homelab audit after a completed generation",
+      "HomelabAuditOutputContractFailure",
+    );
+    captureWithContext(error, {
+      durationMs: result.durationMs,
+      sessionId: result.sessionId,
+    });
+    throw error;
+  }
+
+  homelabAuditSubprocessDurationSeconds.observe(
+    { model, exit_code: "sdk_success" },
+    result.durationMs / 1000,
+  );
+  homelabAuditSubprocessExitTotal.inc({ exit_code: "sdk_success" });
+  homelabAuditTokensTotal.inc(
+    { model, direction: "input" },
+    result.usage.inputTokens,
+  );
+  homelabAuditTokensTotal.inc(
+    { model, direction: "output" },
+    result.usage.outputTokens,
+  );
+  homelabAuditTokensTotal.inc(
+    { model, direction: "cache_create" },
+    result.usage.cacheCreationInputTokens,
+  );
+  homelabAuditTokensTotal.inc(
+    { model, direction: "cache_read" },
+    result.usage.cacheReadInputTokens,
   );
 
-  if (exitCode !== 0) {
-    const e = new Error(
-      `claude -p exited with code ${String(exitCode)} for homelab audit`,
-    );
-    captureWithContext(e, { exitCode, durationMs });
-    throw e;
-  }
-
-  let resultMsg;
-  try {
-    resultMsg = parseClaudeResultMessage(stdout);
-  } catch (error: unknown) {
-    captureWithContext(error, { stdoutHead: stdout.slice(0, 500) });
-    throw new Error(
-      `Failed to parse claude --output-format json result: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
-  }
-
-  if (resultMsg.is_error === true) {
-    const e = new Error(
-      `claude -p reported is_error=true for homelab audit: ${resultMsg.result ?? "(no result text)"}`,
-    );
-    captureWithContext(e);
-    throw e;
-  }
-
-  const usage = resultMsg.usage;
-  if (usage !== undefined) {
-    if (usage.input_tokens !== undefined) {
-      homelabAuditTokensTotal.inc(
-        { model, direction: "input" },
-        usage.input_tokens,
-      );
-    }
-    if (usage.output_tokens !== undefined) {
-      homelabAuditTokensTotal.inc(
-        { model, direction: "output" },
-        usage.output_tokens,
-      );
-    }
-    if (usage.cache_creation_input_tokens !== undefined) {
-      homelabAuditTokensTotal.inc(
-        { model, direction: "cache_create" },
-        usage.cache_creation_input_tokens,
-      );
-    }
-    if (usage.cache_read_input_tokens !== undefined) {
-      homelabAuditTokensTotal.inc(
-        { model, direction: "cache_read" },
-        usage.cache_read_input_tokens,
-      );
-    }
-  }
-
-  const markdown = (resultMsg.result ?? "").trim();
-  if (markdown.length === 0) {
-    const e = new Error(
-      "claude -p returned empty result for homelab audit — nothing to email",
-    );
-    captureWithContext(e, { exitCode, durationMs });
-    throw e;
-  }
-
   jsonLog("info", "homelab audit agent completed", {
-    durationMs,
-    exitCode,
-    costUsd: resultMsg.total_cost_usd,
-    numTurns: resultMsg.num_turns,
+    runtime: "claude_agent_sdk",
+    durationMs: result.durationMs,
+    costUsd: result.costUsd,
+    numTurns: result.numTurns,
+    sessionId: result.sessionId,
     markdownLength: markdown.length,
   });
 
   return {
     markdown,
-    durationMs,
-    numTurns: resultMsg.num_turns,
-    totalCostUsd: resultMsg.total_cost_usd,
+    durationMs: result.durationMs,
+    numTurns: result.numTurns,
+    totalCostUsd: result.costUsd,
     model,
   };
 }
-
 async function sendAuditEmail(
   input: HomelabAuditEmailInput,
 ): Promise<HomelabAuditEmailResult> {

@@ -1,7 +1,9 @@
+import { trace } from "@opentelemetry/api";
 import { test, expect, beforeAll } from "bun:test";
 import { createCodexJsonlParser, type CodexEvent } from "#src/codex-jsonl.ts";
 import { attachCodexTrace } from "#src/codex-trace.ts";
 import { exporter } from "./otel-test-provider.ts";
+import { Registry } from "prom-client";
 
 // Real `codex exec --json` output captured 2026-07-04 (codex-cli 0.142.5).
 let codexFixture = "";
@@ -54,14 +56,14 @@ test("attachCodexTrace emits run + turn spans with gen_ai attributes", () => {
   });
   parser.push(codexFixture);
   parser.finish();
-  codexTrace.end();
+  codexTrace.end("success");
 
   const spans = exporter.getFinishedSpans();
   const names = spans.map((s) => s.name).toSorted();
   expect(names).toEqual(["codex.agent.run", "codex.agent.turn"]);
 
   const turn = spans.find((s) => s.name === "codex.agent.turn")!;
-  expect(turn.attributes["gen_ai.system"]).toBe("openai");
+  expect(turn.attributes["gen_ai.system"]).toBe("codex_cli");
   expect(turn.attributes["gen_ai.request.model"]).toBe("gpt-5.2-codex");
   expect(turn.attributes["llm.service"]).toBe("temporal");
   expect(turn.attributes["llm.call_site"]).toBe("agent-task");
@@ -76,8 +78,51 @@ test("attachCodexTrace emits run + turn spans with gen_ai attributes", () => {
   );
 
   const root = spans.find((s) => s.name === "codex.agent.run")!;
-  expect(root.attributes["gen_ai.system"]).toBe("openai");
+  expect(root.attributes["gen_ai.system"]).toBe("codex_cli");
   expect(root.attributes["llm.call_site"]).toBe("agent-task");
+});
+
+test("attachCodexTrace records standard native SDK metrics", async () => {
+  const metricsRegister = new Registry();
+  const parser = createCodexJsonlParser();
+  const codexTrace = attachCodexTrace(parser, {
+    service: "temporal",
+    callSite: "agent-task",
+    model: "gpt-5.6-luna",
+    system: "codex_sdk",
+    metricsRegister,
+  });
+  parser.push(codexFixture);
+  parser.finish();
+  codexTrace.end("success");
+
+  const metrics = await metricsRegister.metrics();
+  expect(metrics).toContain('provider="codex_sdk"');
+  expect(metrics).toContain('model="gpt-5.6-luna"');
+  expect(metrics).toContain('outcome="success"');
+  expect(metrics).toContain('type="reasoning"');
+  expect(metrics).toContain('type="catalog"');
+});
+
+test("attachCodexTrace runs SDK work beneath its repository-owned span", () => {
+  exporter.reset();
+  const parser = createCodexJsonlParser();
+  const codexTrace = attachCodexTrace(parser, {
+    service: "temporal",
+    callSite: "agent-task",
+    model: "gpt-5.6-luna",
+    system: "codex_sdk",
+  });
+  const activeSpanId = codexTrace.run(
+    () => trace.getActiveSpan()?.spanContext().spanId,
+  );
+  codexTrace.end("success");
+
+  const root = exporter
+    .getFinishedSpans()
+    .find((span) => span.name === "codex.agent.run");
+  expect(root).toBeDefined();
+  expect(activeSpanId).toBe(root?.spanContext().spanId);
 });
 
 test("attachCodexTrace honors span prefix, root attrs, and tool events", () => {
@@ -102,7 +147,7 @@ test("attachCodexTrace honors span prefix, root attrs, and tool events", () => {
     },
   ];
   parser.push(lines.map((l) => JSON.stringify(l)).join("\n") + "\n");
-  codexTrace.end();
+  codexTrace.end("success");
 
   const spans = exporter.getFinishedSpans();
   const names = spans.map((s) => s.name).toSorted();
@@ -161,7 +206,7 @@ test("handles modern item-based command_execution events (codex 0.13x+)", () => 
     { type: "turn.completed", usage: { input_tokens: 5, output_tokens: 2 } },
   ];
   parser.push(lines.map((l) => JSON.stringify(l)).join("\n") + "\n");
-  codexTrace.end();
+  codexTrace.end("success");
 
   const spans = exporter.getFinishedSpans();
   const tool = spans.find((s) => s.name === "pokemon.goal.tool");
@@ -175,7 +220,7 @@ test("handles modern item-based command_execution events (codex 0.13x+)", () => 
 
   // Finding #3: identity + correlation attrs must live on the tool span itself
   // (OTel does not inherit them), so archived tool bodies stay attributable.
-  expect(tool!.attributes["gen_ai.system"]).toBe("openai");
+  expect(tool!.attributes["gen_ai.system"]).toBe("codex_cli");
   expect(tool!.attributes["gen_ai.request.model"]).toBe("gpt-5.6-luna");
   expect(tool!.attributes["llm.service"]).toBe("discord-plays-pokemon");
   expect(tool!.attributes["llm.call_site"]).toBe("goal-run");
@@ -217,7 +262,7 @@ test("redacts credentials from tool command, stdout, and stderr", () => {
     },
   ];
   parser.push(lines.map((l) => JSON.stringify(l)).join("\n") + "\n");
-  codexTrace.end();
+  codexTrace.end("success");
   delete Bun.env["OPENAI_API_KEY"];
 
   const tool = exporter
@@ -248,8 +293,8 @@ test("end() is idempotent and closes dangling turn/tool spans", () => {
       command: "sleep 999",
     })}\n`,
   );
-  codexTrace.end();
-  codexTrace.end();
+  codexTrace.end("success");
+  codexTrace.end("success");
 
   const spans = exporter.getFinishedSpans();
   // run + dangling turn + dangling tool, each ended exactly once.

@@ -19,15 +19,12 @@ export async function emitReportAgentStreamChunk(
       break;
     }
     case "text-delta": {
-      // The report editor deliberately shows the raw model output — with
-      // structured output on, that is the JSON being assembled — in a
-      // monospace scratch box, so text deltas are exactly what it wants.
+      // The report editor deliberately shows the raw model output in a
+      // monospace scratch box, so text deltas are exactly what it wants. This
+      // agent's tool loop runs without an `output:` spec — the draft is
+      // finalized separately by generateValidatedObject once the loop ends —
+      // so a delta here is the model's own text, not JSON being assembled.
       await emit({ type: "draft_delta", text: chunk.text });
-      break;
-    }
-    case "object": {
-      // The parsed snapshot is explore's concern; this editor renders the
-      // final draft from getFullOutput() once the run completes.
       break;
     }
     case "tool-call": {

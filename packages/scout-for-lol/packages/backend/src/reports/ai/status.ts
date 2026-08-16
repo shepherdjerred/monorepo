@@ -11,7 +11,7 @@ export function getReportAiEditStatus(params: {
   guildId: DiscordGuildId;
   userId: DiscordAccountId;
 }): ReportAiEditStatus {
-  const model = configuration.reportAiModel ?? "openai/gpt-5.6-sol";
+  const model = configuration.reportAiModel ?? "gpt-5.6-sol";
   const featureEnabled = getFlag("ai_reports_enabled", {
     server: params.guildId,
     user: params.userId,
@@ -20,12 +20,11 @@ export function getReportAiEditStatus(params: {
     server: params.guildId,
     user: params.userId,
   });
-  const hasRequiredProviderKey =
-    !model.startsWith("openai/") || configuration.openaiApiKey !== undefined;
+  const hasRequiredProviderKey = configuration.openRouterApiKey !== undefined;
   const disabledReason = featureEnabled
     ? hasRequiredProviderKey
       ? null
-      : "OPENAI_API_KEY is not configured."
+      : "OPENROUTER_API_KEY is not configured."
     : "AI report editing is not enabled for this server.";
   const quota = getReportAiQuotaStatus(params, Date.now(), { exempt });
 

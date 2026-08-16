@@ -140,6 +140,32 @@ export const ExploreAnswerSchema = z
 export type ExploreAnswer = z.infer<typeof ExploreAnswerSchema>;
 
 /**
+ * The same answer contract, shaped for a strict structured-output request.
+ *
+ * The runtime asks OpenRouter for `structuredOutputs: { strict: true }`, and
+ * OpenAI's strict mode requires *every* property to appear in `required` —
+ * a field carrying `.default()` is emitted as optional and the provider
+ * rejects the whole request with `invalid_json_schema`
+ * ("'required' ... must include every key in properties"). That is a hard 400
+ * on every turn, not a soft downgrade, so the defaults cannot live on the wire.
+ *
+ * The model must therefore supply all four keys; `queryText` stays nullable
+ * because a follow-up answered from the transcript legitimately ran no query,
+ * and empty arrays express "no caveats/follow-ups". Parse the result through
+ * `ExploreAnswerSchema` to land in the domain type — the defaults there become
+ * no-ops once every key is present, so the two schemas cannot drift apart in
+ * what they accept.
+ */
+export const ExploreAnswerWireSchema = z
+  .object({
+    answer: z.string().trim().min(1).max(EXPLORE_ANSWER_MAX_LENGTH),
+    queryText: ReportQueryTextSchema.nullable(),
+    caveats: z.array(z.string().trim().min(1).max(300)).max(5),
+    followUps: z.array(z.string().trim().min(1).max(200)).max(3),
+  })
+  .strict();
+
+/**
  * One step the agent took, kept so a reader can audit how an answer was
  * reached rather than taking the prose on trust.
  */

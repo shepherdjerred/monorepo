@@ -283,5 +283,5 @@ git-spice rebase abort               # (gs rba) revert to the pre-rebase state
 - `references/config.md` — the `spice.*` git-config keys used here and worth knowing.
 - Official docs: <https://abhinav.github.io/git-spice/> · FAQ (PR-per-branch
   rationale): <https://abhinav.github.io/git-spice/resources/faq/>
-- Related skills: `git-helper` (general git), `gh-helper` (PR
-  reviews/comments/merge), `pr-health` / `pr-monitor`.
+- Related skills: `git-helper` (general git) and `gh-helper` (PR
+  reviews/comments/merge).

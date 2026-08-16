@@ -47,7 +47,7 @@ Examples:
   bun run src/league/review/test-reviews.ts --s3 --show-prompt
 
 Environment:
-  OPENAI_API_KEY         Required for AI review generation
+  OPENROUTER_API_KEY     Required for AI review generation
   S3_BUCKET_NAME         Required for S3 access
 `);
 }

@@ -27,5 +27,4 @@ yarn-error.log*
 .aws-sam
 bin/
 
-.playwright-mcp
 .claude/settings.local.json

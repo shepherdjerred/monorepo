@@ -153,6 +153,38 @@ toolkit discord daemon start --ttl 30m
 toolkit discord send 123456789012345678 "hello"
 ```
 
+### `history` — search local agent conversations
+
+`history` maintains a private local index of Conductor, Claude Code, Codex,
+Cursor, bundled OpenCode, and standalone OpenCode conversations. Install the
+macOS LaunchAgent once; search itself only reads the index and never performs
+live service checks.
+
+| Command                                                           | Description                              |
+| ----------------------------------------------------------------- | ---------------------------------------- |
+| `history search <QUERY> [--since 7d] [--source NAME] [--limit N]` | Search indexed work                      |
+| `history search <QUERY> --include-excerpts`                       | Add bounded read-only source excerpts    |
+| `history recent [--since 7d] [--limit N]`                         | List recent indexed sessions             |
+| `history sources [--json]`                                        | Show source availability and scan errors |
+| `history daemon install`                                          | Install and start the macOS LaunchAgent  |
+| `history daemon status\|reindex`                                  | Inspect or refresh ingestion             |
+| `history daemon stop\|start\|uninstall`                           | Manage the LaunchAgent lifecycle         |
+
+```bash
+toolkit history daemon install
+toolkit history recent --since 7d
+toolkit history search "didn't I solve this before" --since 90d --include-excerpts
+toolkit history sources
+```
+
+The rebuildable index is `~/.toolkit/history/index.sqlite`; daemon state,
+socket, and logs are in that private directory. The LaunchAgent is
+`~/Library/LaunchAgents/com.jerred.toolkit-history.plist`. Transcript bodies
+are not copied into ordinary index tables, and standalone OpenCode's
+`~/.local/share/opencode/auth.json` is never read or indexed. Use `deployed`,
+`pr health`, or the relevant live client to verify current status after using
+history for context.
+
 ## Environment variables
 
 | Variable              | Description                                                      |

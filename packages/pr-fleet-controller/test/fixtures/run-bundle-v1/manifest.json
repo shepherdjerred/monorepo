@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "runId": "legacy-v1-fixture",
+  "createdAt": "2026-08-01T00:00:00.000Z",
+  "controllerVersion": "0.1.0",
+  "controllerCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "controllerSourceDirty": false,
+  "controllerSourceFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "controllerSourceResolved": false,
+  "model": "openai/gpt-5.6-terra",
+  "repository": "shepherdjerred/monorepo",
+  "checkout": "/legacy/repo",
+  "worktreeRoot": "/legacy/worktrees",
+  "maxWorkers": 1,
+  "author": null,
+  "files": {
+    "events": "events.jsonl",
+    "summary": "summary.json",
+    "mastra": "mastra.db",
+    "observability": "observability.duckdb"
+  },
+  "capture": {
+    "localOnly": true,
+    "redactedBeforePersistence": true,
+    "retention": "indefinite"
+  }
+}

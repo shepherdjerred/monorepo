@@ -1,38 +1,44 @@
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
-export type OpenAIProviderOptions = {
-  openai: {
-    store: false;
-    include: ["reasoning.encrypted_content"];
+export type OpenRouterProviderOptions = {
+  openrouter: {
     parallelToolCalls: false;
-    reasoningEffort: "minimal" | "low" | "medium" | "high";
-    textVerbosity: "low" | "medium" | "high";
+    reasoning: {
+      effort: "minimal" | "low" | "medium" | "high";
+      exclude: false;
+    };
+    verbosity?: "low" | "medium" | "high";
   };
 };
 
-export type OpenAIProviderOverrides = {
+export type OpenRouterProviderOverrides = {
   reasoningEffort?: "minimal" | "low" | "medium" | "high";
   textVerbosity?: "low" | "medium" | "high";
 };
 
 /**
- * Every turn is self-contained. OpenAI must not retain responses or connect a
- * call to a previous turn. Encrypted reasoning is returned inline so each
- * stateless follow-up inside one tool loop can include its required reasoning
- * item, and tools run serially so one turn cannot emit parallel side effects.
+ * Tools run serially so one turn cannot emit parallel side effects. OpenRouter
+ * may route between upstream providers, but the runtime keeps the selected
+ * catalog model exact and denies data collection.
+ *
+ * The provider spreads every `openrouter` key into the request body, so a
+ * stored job's text-verbosity setting maps to OpenRouter's `verbosity`
+ * request field rather than being silently dropped.
  */
-export function getOpenAIProviderOptions(
-  overrides: OpenAIProviderOverrides = {},
-): OpenAIProviderOptions {
+export function getOpenRouterProviderOptions(
+  overrides: OpenRouterProviderOverrides = {},
+): OpenRouterProviderOptions {
   const config = getConfig();
   return {
-    openai: {
-      store: false,
-      include: ["reasoning.encrypted_content"],
+    openrouter: {
       parallelToolCalls: false,
-      reasoningEffort:
-        overrides.reasoningEffort ?? config.openai.reasoningEffort,
-      textVerbosity: overrides.textVerbosity ?? config.openai.textVerbosity,
+      reasoning: {
+        effort: overrides.reasoningEffort ?? config.openRouter.reasoningEffort,
+        exclude: false,
+      },
+      ...(overrides.textVerbosity === undefined
+        ? {}
+        : { verbosity: overrides.textVerbosity }),
     },
   };
 }

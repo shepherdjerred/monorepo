@@ -2,8 +2,11 @@ import { describe, expect, test } from "bun:test";
 
 import {
   isClaudeQuotaExhaustion,
+  refinerSdkEnv,
   runReleaseRefiner,
   type RefinerCommandRunner,
+  type ReleaseAgentOutcome,
+  type RunReleaseRefinerInput,
 } from "./release-refiner.ts";
 import type { RunResult } from "./run.ts";
 
@@ -18,26 +21,6 @@ const pendingReleasePrList: RunResult = {
 };
 const noOpenReleasePrList: RunResult = {
   stdout: "[]",
-  stderr: "",
-  exitCode: 0,
-};
-
-const claudeSuccess: RunResult = {
-  stdout: JSON.stringify({
-    type: "result",
-    subtype: "success",
-    is_error: false,
-    // The real CLI includes `api_error_status: null` on a successful result.
-    // Keep it here so the fixture matches the production contract (its absence
-    // is exactly what let the `.optional()`-rejects-null regression ship green).
-    api_error_status: null,
-    result: refinedEnvelope,
-  }),
-  stderr: "",
-  exitCode: 0,
-};
-const codexSuccess: RunResult = {
-  stdout: refinedEnvelope,
   stderr: "",
   exitCode: 0,
 };
@@ -72,69 +55,86 @@ const refinerCommit: RunResult = {
   stderr: "",
   exitCode: 0,
 };
-const quota: RunResult = {
-  stdout: JSON.stringify({
-    type: "result",
-    subtype: "success",
-    is_error: true,
-    api_error_status: 429,
-    result: "You've hit your weekly limit · resets Jul 30, 12am (UTC)",
-  }),
-  stderr: "",
-  exitCode: 1,
-};
 
 type RecordedCall = {
   command: string[];
   env: Record<string, string>;
   unsetEnv: string[];
 };
+type AgentStep =
+  | { provider: "claude" | "codex"; outcome: ReleaseAgentOutcome }
+  | { provider: "claude" | "codex"; error: Error };
+type HarnessInput = {
+  agentSteps?: AgentStep[];
+  commandResults?: RunResult[];
+  preflight?: RunResult;
+};
 
-function runner(
-  results: RunResult[],
-  calls: RecordedCall[],
-  preflightResult = pendingReleasePrList,
-): RefinerCommandRunner {
+function completed(output: string): ReleaseAgentOutcome {
+  return { kind: "completed", output };
+}
+
+function harness(options: HarnessInput = {}): {
+  input: RunReleaseRefinerInput;
+  calls: RecordedCall[];
+  agentProviders: ("claude" | "codex")[];
+} {
+  const calls: RecordedCall[] = [];
+  const commandResults = [...(options.commandResults ?? [])];
+  const agentSteps = [...(options.agentSteps ?? [])];
+  const agentProviders: ("claude" | "codex")[] = [];
   let preflightHandled = false;
-  return (command, options) => {
+  const execute: RefinerCommandRunner = (command, runOptions) => {
     calls.push({
       command,
-      env: options.env ?? {},
-      unsetEnv: options.unsetEnv ?? [],
+      env: runOptions.env ?? {},
+      unsetEnv: runOptions.unsetEnv ?? [],
     });
     if (!preflightHandled) {
       preflightHandled = true;
-      return Promise.resolve(preflightResult);
+      return Promise.resolve(options.preflight ?? pendingReleasePrList);
     }
-    const result = results.shift();
+    const result = commandResults.shift();
     if (result === undefined) {
       throw new Error("test runner received an unexpected command");
     }
     return Promise.resolve(result);
   };
-}
-
-function input(execute: RefinerCommandRunner) {
-  return {
+  const runAgent = (
+    provider: "claude" | "codex",
+    received: RunReleaseRefinerInput,
+  ): Promise<ReleaseAgentOutcome> => {
+    expect(received.claudeToken).toBe("claude-token");
+    expect(received.codexAccessToken).toBe("codex-credential");
+    agentProviders.push(provider);
+    const step = agentSteps.shift();
+    if (step?.provider !== provider) {
+      throw new Error(`unexpected ${provider} SDK invocation`);
+    }
+    if ("error" in step) throw step.error;
+    return Promise.resolve(step.outcome);
+  };
+  const input: RunReleaseRefinerInput = {
     root: "/workspace",
     prompt: "refine the release notes",
     env: { GH_TOKEN: "github-token", GIT_ASKPASS: "/tmp/askpass" },
     claudeToken: "claude-token",
-    openAiApiKey: "openai-key",
+    codexAccessToken: "codex-credential",
     execute,
+    runClaude: (received) => runAgent("claude", received),
+    runCodex: (received) => runAgent("codex", received),
   };
+  return { input, calls, agentProviders };
 }
 
 describe("release refiner provider selection", () => {
-  test("skips both providers when release-please produced no pending PR", async () => {
-    const calls: RecordedCall[] = [];
-    const provider = await runReleaseRefiner(
-      input(runner([], calls, noOpenReleasePrList)),
-    );
+  test("skips both SDKs when release-please produced no pending PR", async () => {
+    const testHarness = harness({ preflight: noOpenReleasePrList });
 
-    expect(provider).toBe("none");
-    expect(calls).toHaveLength(1);
-    expect(calls[0]?.command).toEqual([
+    expect(await runReleaseRefiner(testHarness.input)).toBe("none");
+    expect(testHarness.agentProviders).toEqual([]);
+    expect(testHarness.calls).toHaveLength(1);
+    expect(testHarness.calls[0]?.command).toEqual([
       "gh",
       "pr",
       "list",
@@ -151,181 +151,86 @@ describe("release refiner provider selection", () => {
       "--limit",
       "1",
     ]);
-    expect(calls[0]?.env["CLAUDE_CODE_OAUTH_TOKEN"]).toBeUndefined();
-    expect(calls[0]?.env["CODEX_API_KEY"]).toBeUndefined();
   });
 
-  test("uses Claude when the primary refiner succeeds", async () => {
-    const calls: RecordedCall[] = [];
-    const provider = await runReleaseRefiner(
-      input(runner([claudeSuccess, releasePr, refinerCommit], calls)),
-    );
+  test("uses Claude Agent SDK when the primary refiner succeeds", async () => {
+    const testHarness = harness({
+      agentSteps: [{ provider: "claude", outcome: completed(refinedEnvelope) }],
+      commandResults: [releasePr, refinerCommit],
+    });
 
-    expect(provider).toBe("claude");
-    expect(calls).toHaveLength(4);
-    expect(calls[1]?.command[0]).toBe("claude");
-    expect(calls[1]?.env["CLAUDE_CODE_OAUTH_TOKEN"]).toBe("claude-token");
-    expect(calls[1]?.env["CODEX_API_KEY"]).toBeUndefined();
-    expect(calls[1]?.unsetEnv).toEqual([
-      "OPENAI_API_KEY",
-      "CODEX_API_KEY",
-      "CODEX_ACCESS_TOKEN",
-      "CODEX_REFRESH_TOKEN",
-      "CODEX_ID_TOKEN",
-      "CODEX_ACCOUNT_ID",
-      "ANTHROPIC_API_KEY",
+    expect(await runReleaseRefiner(testHarness.input)).toBe("claude");
+    expect(testHarness.agentProviders).toEqual(["claude"]);
+    expect(testHarness.calls.map((call) => call.command[0])).toEqual([
+      "gh",
+      "gh",
+      "gh",
     ]);
-    expect(calls[2]?.command).toEqual([
+    expect(testHarness.calls[1]?.command.slice(0, 3)).toEqual([
       "gh",
       "pr",
       "view",
-      "1720",
-      "--repo",
-      "shepherdjerred/monorepo",
-      "--json",
-      "number,state,baseRefName,headRefName,headRefOid,labels,body",
-    ]);
-    expect(calls[3]?.command).toEqual([
-      "gh",
-      "api",
-      `repos/shepherdjerred/monorepo/commits/${refinedCommitSha}`,
     ]);
   });
 
-  test("accepts a success result whose api_error_status is null", async () => {
-    // Regression guard, independent of the shared claudeSuccess fixture: the CLI
-    // emits `api_error_status: null` on a non-error result. Under the old
-    // `z.number().optional()` schema this failed to parse and the exit-0 branch
-    // threw "exited 0 without a valid non-error JSON result".
-    const claudeSuccessNullApiError: RunResult = {
-      stdout: JSON.stringify({
-        type: "result",
-        subtype: "success",
-        is_error: false,
-        api_error_status: null,
-        result: refinedEnvelope,
-      }),
-      stderr: "",
-      exitCode: 0,
-    };
-    const calls: RecordedCall[] = [];
-    const provider = await runReleaseRefiner(
-      input(
-        runner([claudeSuccessNullApiError, releasePr, refinerCommit], calls),
-      ),
-    );
+  test("falls back to Codex SDK only for validated Claude quota", async () => {
+    const testHarness = harness({
+      agentSteps: [
+        {
+          provider: "claude",
+          outcome: {
+            kind: "quota-exhausted",
+            detail: "You've hit your weekly limit",
+          },
+        },
+        { provider: "codex", outcome: completed(refinedEnvelope) },
+      ],
+      commandResults: [releasePr, refinerCommit],
+    });
 
-    expect(provider).toBe("claude");
-  });
-
-  test("falls back to Codex only for a validated Claude usage quota", async () => {
-    const calls: RecordedCall[] = [];
-    const provider = await runReleaseRefiner(
-      input(runner([quota, codexSuccess, releasePr, refinerCommit], calls)),
+    expect(await runReleaseRefiner(testHarness.input)).toBe("codex");
+    expect(testHarness.agentProviders).toEqual(["claude", "codex"]);
+    expect(testHarness.calls.every((call) => call.command[0] === "gh")).toBe(
+      true,
     );
-
-    expect(provider).toBe("codex");
-    expect(calls).toHaveLength(5);
-    expect(calls[2]?.command.slice(0, 7)).toEqual([
-      "bun",
-      "--no-install",
-      "run",
-      "--cwd",
-      "scripts",
-      "release-refiner:codex",
-      "--",
-    ]);
-    expect(calls[2]?.command).toContain("gpt-5.6-sol");
-    expect(calls[2]?.command).toContain(
-      "--dangerously-bypass-approvals-and-sandbox",
-    );
-    expect(calls[2]?.command).toContain("--ephemeral");
-    expect(calls[2]?.command).toContain("--skip-git-repo-check");
-    expect(calls[2]?.env["CODEX_API_KEY"]).toBe("openai-key");
-    expect(calls[2]?.env["CLAUDE_CODE_OAUTH_TOKEN"]).toBeUndefined();
-    expect(calls[2]?.unsetEnv).toEqual([
-      "OPENAI_API_KEY",
-      "CODEX_ACCESS_TOKEN",
-      "CODEX_REFRESH_TOKEN",
-      "CODEX_ID_TOKEN",
-      "CODEX_ACCOUNT_ID",
-      "CLAUDE_CODE_OAUTH_TOKEN",
-      "ANTHROPIC_API_KEY",
-    ]);
   });
 
   test("independently verifies a no-open-release-pr result", async () => {
-    const calls: RecordedCall[] = [];
-    const provider = await runReleaseRefiner(
-      input(
-        runner(
-          [
-            {
-              stdout: JSON.stringify({
-                is_error: false,
-                result: noOpenReleasePrEnvelope,
-              }),
-              stderr: "",
-              exitCode: 0,
-            },
-            { stdout: "[]", stderr: "", exitCode: 0 },
-          ],
-          calls,
-        ),
-      ),
-    );
+    const testHarness = harness({
+      agentSteps: [
+        { provider: "claude", outcome: completed(noOpenReleasePrEnvelope) },
+      ],
+      commandResults: [noOpenReleasePrList],
+    });
 
-    expect(provider).toBe("claude");
-    expect(calls).toHaveLength(3);
-    expect(calls[2]?.command).toEqual([
+    expect(await runReleaseRefiner(testHarness.input)).toBe("claude");
+    expect(testHarness.calls).toHaveLength(2);
+    expect(testHarness.calls[1]?.command.slice(0, 3)).toEqual([
       "gh",
       "pr",
       "list",
-      "--repo",
-      "shepherdjerred/monorepo",
-      "--base",
-      "main",
-      "--label",
-      "autorelease: pending",
-      "--state",
-      "open",
-      "--json",
-      "number",
-      "--limit",
-      "1",
     ]);
   });
 });
 
 describe("release refiner remote verification", () => {
   test("rejects a no-open result when GitHub has a pending release PR", async () => {
-    const calls: RecordedCall[] = [];
-    const execute = runner(
-      [
-        {
-          stdout: JSON.stringify({
-            is_error: false,
-            result: noOpenReleasePrEnvelope,
-          }),
-          stderr: "",
-          exitCode: 0,
-        },
-        { stdout: JSON.stringify([{ number: 1720 }]), stderr: "", exitCode: 0 },
+    const testHarness = harness({
+      agentSteps: [
+        { provider: "claude", outcome: completed(noOpenReleasePrEnvelope) },
       ],
-      calls,
-    );
+      commandResults: [pendingReleasePrList],
+    });
 
-    await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
+    await expect(runReleaseRefiner(testHarness.input)).rejects.toThrow(
       "reported no open release PR, but GitHub has one",
     );
-    expect(calls).toHaveLength(3);
   });
 
   test("rejects a refined result that does not match the release PR head", async () => {
-    const calls: RecordedCall[] = [];
-    const execute = runner(
-      [
-        claudeSuccess,
+    const testHarness = harness({
+      agentSteps: [{ provider: "claude", outcome: completed(refinedEnvelope) }],
+      commandResults: [
         {
           ...releasePr,
           stdout: JSON.stringify({
@@ -339,20 +244,17 @@ describe("release refiner remote verification", () => {
           }),
         },
       ],
-      calls,
-    );
+    });
 
-    await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
+    await expect(runReleaseRefiner(testHarness.input)).rejects.toThrow(
       "does not match the open pending release PR head",
     );
-    expect(calls).toHaveLength(3);
   });
 
   test("rejects a refined result whose remote commit changed other files", async () => {
-    const calls: RecordedCall[] = [];
-    const execute = runner(
-      [
-        claudeSuccess,
+    const testHarness = harness({
+      agentSteps: [{ provider: "claude", outcome: completed(refinedEnvelope) }],
+      commandResults: [
         releasePr,
         {
           ...refinerCommit,
@@ -369,138 +271,220 @@ describe("release refiner remote verification", () => {
           }),
         },
       ],
-      calls,
-    );
+    });
 
-    await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
+    await expect(runReleaseRefiner(testHarness.input)).rejects.toThrow(
       "does not match the remote refiner commit and PR body",
     );
-    expect(calls).toHaveLength(4);
   });
 });
 
 describe("release refiner failure handling", () => {
-  test("does not treat an arbitrary 429 as usage exhaustion", () => {
+  test("recognizes only a parsed 429 usage-limit result", () => {
     expect(
       isClaudeQuotaExhaustion({
-        stdout: JSON.stringify({
-          is_error: true,
-          api_error_status: 429,
-          result: "Requests are temporarily rate limited",
-        }),
-        stderr: "",
-        exitCode: 1,
+        type: "result",
+        subtype: "success",
+        is_error: true,
+        api_error_status: 429,
+        result: "You've hit your weekly limit · resets Jul 30, 12am (UTC)",
+      }),
+    ).toBe(true);
+    expect(
+      isClaudeQuotaExhaustion({
+        type: "result",
+        subtype: "error_during_execution",
+        is_error: true,
+        api_error_status: 429,
+        errors: ["Requests are temporarily rate limited"],
       }),
     ).toBe(false);
+    expect(isClaudeQuotaExhaustion("not-json")).toBe(false);
   });
 
-  test("fails closed on a malformed zero-exit Claude result", async () => {
-    const calls: RecordedCall[] = [];
-    const execute = runner(
-      [{ stdout: "not-json", stderr: "", exitCode: 0 }],
-      calls,
-    );
+  test("fails closed on malformed successful Claude output", async () => {
+    const testHarness = harness({
+      agentSteps: [{ provider: "claude", outcome: completed("not-json") }],
+    });
 
-    await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
-      "without a valid non-error JSON result",
+    await expect(runReleaseRefiner(testHarness.input)).rejects.toThrow(
+      "without a valid success envelope",
     );
-    expect(calls).toHaveLength(2);
+    expect(testHarness.agentProviders).toEqual(["claude"]);
   });
 
-  test("fails closed when Claude exits zero with a hard-failure envelope", async () => {
-    const calls: RecordedCall[] = [];
-    const execute = runner(
-      [
+  test("does not fall back on unknown Claude SDK failures", async () => {
+    const testHarness = harness({
+      agentSteps: [
+        { provider: "claude", error: new Error("authentication failed") },
+      ],
+    });
+
+    await expect(runReleaseRefiner(testHarness.input)).rejects.toThrow(
+      "authentication failed",
+    );
+    expect(testHarness.agentProviders).toEqual(["claude"]);
+  });
+
+  test("fails closed when the Codex SDK fallback fails", async () => {
+    const testHarness = harness({
+      agentSteps: [
         {
-          stdout: JSON.stringify({
-            is_error: false,
-            result:
-              '<!-- release-refiner-result -->{"status":"hard-failure-missing-gh"}<!-- /release-refiner-result -->',
-          }),
-          stderr: "",
-          exitCode: 0,
+          provider: "claude",
+          outcome: { kind: "quota-exhausted", detail: "weekly limit" },
+        },
+        { provider: "codex", error: new Error("Codex quota unavailable") },
+      ],
+    });
+
+    await expect(runReleaseRefiner(testHarness.input)).rejects.toThrow(
+      "Codex quota unavailable",
+    );
+    expect(testHarness.agentProviders).toEqual(["claude", "codex"]);
+  });
+
+  test("fails closed when Codex returns an invalid result envelope", async () => {
+    const testHarness = harness({
+      agentSteps: [
+        {
+          provider: "claude",
+          outcome: { kind: "quota-exhausted", detail: "weekly limit" },
+        },
+        {
+          provider: "codex",
+          outcome: completed("Done: release notes could not be refined"),
         },
       ],
-      calls,
-    );
+    });
 
-    await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
-      "Claude release refiner exited 0 without a valid success envelope",
-    );
-    expect(calls).toHaveLength(2);
-  });
-
-  test("fails closed on malformed or unknown Claude errors", async () => {
-    const calls: RecordedCall[] = [];
-    const execute = runner(
-      [{ stdout: "not-json", stderr: "authentication failed", exitCode: 1 }],
-      calls,
-    );
-
-    await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
-      "Claude release refiner failed",
-    );
-    expect(calls).toHaveLength(2);
-  });
-
-  test("fails closed when the Codex fallback fails", async () => {
-    const calls: RecordedCall[] = [];
-    const execute = runner(
-      [
-        quota,
-        {
-          stdout: "",
-          stderr: "OpenAI quota unavailable",
-          exitCode: 1,
-        },
-      ],
-      calls,
-    );
-
-    await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
-      "Codex release refiner failed",
-    );
-    expect(calls).toHaveLength(3);
-  });
-
-  test("fails closed when Codex exits zero with a hard-failure envelope", async () => {
-    const calls: RecordedCall[] = [];
-    const execute = runner(
-      [
-        quota,
-        {
-          stdout:
-            '<!-- release-refiner-result -->{"status":"hard-failure-missing-gh","error":"gh missing"}<!-- /release-refiner-result -->',
-          stderr: "",
-          exitCode: 0,
-        },
-      ],
-      calls,
-    );
-
-    await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
+    await expect(runReleaseRefiner(testHarness.input)).rejects.toThrow(
       "Codex release refiner exited 0 without a valid success envelope",
     );
-    expect(calls).toHaveLength(3);
+  });
+});
+
+describe("refinerSdkEnv", () => {
+  const gitAuth = {
+    env: {
+      GH_TOKEN: "minted-token",
+      GIT_ASKPASS: "/tmp/git-askpass.sh",
+      GIT_TERMINAL_PROMPT: "0",
+    },
+  };
+
+  test("withholds CI secrets the agent has no use for", () => {
+    // The main-only release lane runs with GITHUB_APP_PRIVATE_KEY set because
+    // setupGitAuth() needs it, and these agents have Bash plus network access.
+    // The environment is an allowlist so a secret nobody enumerated cannot ride
+    // along into a prompt-injectable agent.
+    const environment = refinerSdkEnv(
+      gitAuth,
+      { CLAUDE_CODE_OAUTH_TOKEN: "claude-credential" },
+      {
+        PATH: "/usr/bin",
+        GITHUB_APP_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----",
+        GITHUB_APP_ID: "12345",
+        GITHUB_APP_INSTALLATION_ID: "67890",
+        BUILDKITE_AGENT_ACCESS_TOKEN: "agent-token",
+        AWS_SECRET_ACCESS_KEY: "seaweedfs-secret",
+        SOME_FUTURE_CI_SECRET: "not-yet-invented",
+      },
+    );
+
+    for (const withheld of [
+      "GITHUB_APP_PRIVATE_KEY",
+      "GITHUB_APP_ID",
+      "GITHUB_APP_INSTALLATION_ID",
+      "BUILDKITE_AGENT_ACCESS_TOKEN",
+      "AWS_SECRET_ACCESS_KEY",
+      "SOME_FUTURE_CI_SECRET",
+    ]) {
+      expect(environment[withheld]).toBeUndefined();
+    }
+    // Only the allowlisted process settings, the git auth, and this run's own
+    // provider credential survive.
+    expect(Object.keys(environment).toSorted()).toEqual([
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "GH_TOKEN",
+      "GIT_ASKPASS",
+      "GIT_TERMINAL_PROMPT",
+      "PATH",
+    ]);
   });
 
-  test("fails closed when Codex exits zero without a result envelope", async () => {
-    const calls: RecordedCall[] = [];
-    const execute = runner(
-      [
-        quota,
+  test("keeps the TLS and proxy settings an agent needs to reach its provider", () => {
+    expect(
+      refinerSdkEnv(
+        gitAuth,
+        {},
         {
-          stdout: "Done: release notes could not be refined",
-          stderr: "",
-          exitCode: 0,
+          PATH: "/usr/bin",
+          HOME: "/root",
+          NODE_EXTRA_CA_CERTS: "/etc/ssl/ci.pem",
+          HTTPS_PROXY: "http://proxy:3128",
+          NO_PROXY: "localhost",
         },
-      ],
-      calls,
+      ),
+    ).toMatchObject({
+      PATH: "/usr/bin",
+      HOME: "/root",
+      NODE_EXTRA_CA_CERTS: "/etc/ssl/ci.pem",
+      HTTPS_PROXY: "http://proxy:3128",
+      NO_PROXY: "localhost",
+    });
+  });
+
+  test("preserves the CI image PATH the SDK needs to spawn bun", () => {
+    // Both SDKs replace the environment wholesale; without this the release
+    // lane dies with an executable-not-found before refinement.
+    expect(
+      refinerSdkEnv(gitAuth, {}, { PATH: "/opt/mise/shims:/usr/bin" })["PATH"],
+    ).toBe("/opt/mise/shims:/usr/bin");
+  });
+
+  test("layers git auth and the launched provider's credential on top", () => {
+    expect(
+      refinerSdkEnv(
+        gitAuth,
+        { CLAUDE_CODE_OAUTH_TOKEN: "claude-credential", IS_SANDBOX: "1" },
+        { PATH: "/usr/bin", GH_TOKEN: "worker-token" },
+      ),
+    ).toEqual({
+      PATH: "/usr/bin",
+      GH_TOKEN: "minted-token",
+      GIT_ASKPASS: "/tmp/git-askpass.sh",
+      GIT_TERMINAL_PROMPT: "0",
+      CLAUDE_CODE_OAUTH_TOKEN: "claude-credential",
+      IS_SANDBOX: "1",
+    });
+  });
+
+  test("strips every inference credential the launched provider did not ask for", () => {
+    const environment = refinerSdkEnv(
+      gitAuth,
+      { CODEX_ACCESS_TOKEN: "codex-credential" },
+      {
+        PATH: "/usr/bin",
+        ANTHROPIC_API_KEY: "anthropic-key",
+        CLAUDE_CODE_OAUTH_TOKEN: "claude-credential",
+        CODEX_ACCESS_TOKEN: "worker-codex-credential",
+        CODEX_API_KEY: "codex-key",
+        CODEX_ID_TOKEN: "codex-id",
+        CODEX_REFRESH_TOKEN: "codex-refresh",
+        OPENAI_API_KEY: "openai-key",
+      },
     );
 
-    await expect(runReleaseRefiner(input(execute))).rejects.toThrow(
-      "Codex release refiner exited 0 without a valid success envelope",
-    );
-    expect(calls).toHaveLength(3);
+    expect(environment["CODEX_ACCESS_TOKEN"]).toBe("codex-credential");
+    for (const stripped of [
+      "ANTHROPIC_API_KEY",
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "CODEX_API_KEY",
+      "CODEX_ID_TOKEN",
+      "CODEX_REFRESH_TOKEN",
+      "OPENAI_API_KEY",
+    ]) {
+      expect(environment).not.toHaveProperty(stripped);
+    }
   });
 });

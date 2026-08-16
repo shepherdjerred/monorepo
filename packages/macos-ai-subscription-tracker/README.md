@@ -14,9 +14,8 @@ for Grok ($470/month total). This is a reminder, not provider billing data.
 The compact subscription view sorts providers by their tightest current quota,
 keeps each quota and reset on one line, and uses pressure colors only for low or
 critical remaining usage. Cached values remain visible but dimmed and stale.
-The disabled `API & routers` segment records the intended future navigation;
-developer API credentials, router usage, balances, and rate limits are not yet
-supported.
+The `API & routers` segment currently reports OpenRouter credits and API-key
+spend across all workspaces.
 
 ## Build and install
 
@@ -122,12 +121,26 @@ not stable public APIs. Their adapters validate responses and show an explicit
 unavailable/stale state when a provider changes shape. Claude and Codex use
 their authenticated subscription usage surfaces; Kimi Code uses its coding
 subscription surface, not a Kimi Open Platform API key; Grok uses subscription
-usage and credits, not xAI developer API rate limits. API billing cards and
-developer API rate limits are intentionally outside the v1 scope.
+usage and credits, not xAI developer API rate limits. Non-OpenRouter API billing
+cards and developer API rate limits remain outside the v1 scope.
 
 Codex also reads the authenticated reset-credit surface read-only. Available
 banked resets are shown individually with their expiration dates; Brim does
 not redeem or consume them.
+
+### OpenRouter API reporting
+
+The API view requires an OpenRouter Management API key entered manually in
+Settings. Brim stores this key in a dedicated login-Keychain entry and only
+performs read-only requests for credits, workspaces, and API-key usage. Brim
+does not create, update, disable, or delete OpenRouter keys.
+
+The view shows credits remaining, monthly API-key spend, and a projected
+month-end spend. Monthly spend is the sum of OpenRouter's current-month
+usage_monthly and estimated byok_usage_monthly values across every workspace
+and API key, including disabled keys. The projection uses the current Mac-local
+calendar pace against OpenRouter's authoritative monthly usage period. Chatroom
+and Fusion activity is outside this first API-key reporting slice.
 
 Provider contracts are isolated in focused files under `Sources/QuotaBarCore`.
 Claude and Codex endpoints are authenticated subscription web surfaces, while

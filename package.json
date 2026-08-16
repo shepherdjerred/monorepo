@@ -46,7 +46,9 @@
     "pyright": "bun scripts/pyright-check.ts",
     "tunnel-dns-coverage": "bun scripts/check-tunnel-dns-coverage.ts",
     "check-suppressions": "bun scripts/check-suppressions.ts",
+    "check-ai-architecture": "bun scripts/check-ai-architecture.ts",
     "check-patched-deps": "bun scripts/check-patched-deps.ts",
+    "check-ci-env": "bun scripts/check-ci-env.ts",
     "check-script-migrations": "bun scripts/check-script-migrations.ts",
     "script-coverage": "bun scripts/check-script-coverage.ts"
   },
@@ -91,7 +93,9 @@
     "packages/leetcode",
     "packages/llm-models",
     "packages/llm-observability",
+    "packages/llm-runtime",
     "packages/macos-ai-subscription-tracker",
+    "packages/openrouter-broadcast-ingest",
     "packages/monarch",
     "packages/pr-fleet-controller",
     "packages/pr-fleet-controller/packages/web",
@@ -178,13 +182,13 @@
     "astro@7.1.5": "patches/astro@7.1.5.patch",
     "bun-types@1.3.14": "patches/bun-types@1.3.14.patch",
     "discord-player-youtubei@2.0.0": "patches/discord-player-youtubei@2.0.0.patch",
-    "gray-matter@4.0.3": "patches/gray-matter@4.0.3.patch",
     "markdown-it@10.0.0": "patches/markdown-it@10.0.0.patch",
     "markdown-it@14.1.1": "patches/markdown-it@14.1.1.patch",
     "markdown-it@14.3.0": "patches/markdown-it@14.3.0.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "react-native-worklets@0.11.3": "patches/react-native-worklets@0.11.3.patch",
-    "twisted@1.82.0": "patches/twisted@1.82.0.patch"
+    "twisted@1.82.0": "patches/twisted@1.82.0.patch",
+    "@openrouter/ai-sdk-provider@3.0.0": "patches/@openrouter%2Fai-sdk-provider@3.0.0.patch"
   },
   "packageManager": "bun@1.3.14"
 }

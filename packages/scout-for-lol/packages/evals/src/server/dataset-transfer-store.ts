@@ -6,10 +6,7 @@ import {
   validateDatasetExport,
 } from "#server/dataset-transfer.ts";
 import { styleGenerationSetRevision } from "#server/freshness.ts";
-import {
-  INSERT_GENERATION_SQL,
-  parseGenerationRow,
-} from "#server/generation.ts";
+import { insertGeneration, parseGenerationRow } from "#server/generation.ts";
 import { DATASET_SUMMARY_SQL } from "#server/store-queries.ts";
 import {
   CaseArtifactSchema,
@@ -120,7 +117,9 @@ function readDatasetExportSnapshot(
            rendered_prompts_json AS renderedPromptsJson,
            duration_ms AS durationMs,
            input_tokens AS inputTokens,
-           output_tokens AS outputTokens
+           output_tokens AS outputTokens,
+           transport,
+           openrouter_metadata_json AS openRouterMetadataJson
          FROM generations
          WHERE case_id = ?
          ORDER BY sequence`,
@@ -282,20 +281,7 @@ function insertImportedDataset(
 
     for (const record of evalCase.generations) {
       const { generation, rating } = record;
-      database
-        .query(INSERT_GENERATION_SQL)
-        .run(
-          generation.id,
-          evalCase.id,
-          generation.outputText,
-          generation.model,
-          generation.promptRevision,
-          JSON.stringify(generation.renderedPrompts),
-          generation.durationMs,
-          generation.inputTokens,
-          generation.outputTokens,
-          dataset.createdAt,
-        );
+      insertGeneration(database, evalCase.id, generation, dataset.createdAt);
       if (rating !== null) {
         database
           .query(

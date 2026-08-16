@@ -41,8 +41,8 @@ export const DiscordConfigSchema = z.object({
   clientId: DiscordIdSchema,
 });
 
-export const OpenAIConfigSchema = z.object({
-  apiKey: z.string().min(1, "OPENAI_API_KEY is required"),
+export const OpenRouterConfigSchema = z.object({
+  apiKey: z.string().min(1, "OPENROUTER_API_KEY is required"),
   model: z.string().trim().min(1).default("gpt-5.6-sol"),
   classifierModel: z.string().trim().min(1).default("gpt-5.4-nano"),
   memoryModel: z.string().trim().min(1).default("gpt-5.4-nano"),
@@ -50,7 +50,6 @@ export const OpenAIConfigSchema = z.object({
   reasoningEffort: z
     .enum(["minimal", "low", "medium", "high"])
     .default("medium"),
-  textVerbosity: z.enum(["low", "medium", "high"]).default("low"),
   maxTokens: z.number().int().positive().default(4096),
 });
 
@@ -85,7 +84,6 @@ export const DailyPostsConfigSchema = z.object({
 export const ExternalApisSchema = z.object({
   newsApiKey: z.string().optional(),
   riotApiKey: z.string().optional(),
-  webSearchProvider: z.enum(["openai", "duckduckgo"]).default("openai"),
 });
 
 export const LoggingConfigSchema = z.object({
@@ -120,7 +118,7 @@ export const PersonaConfigSchema = z.object({
  * After the bot has been directly engaged in a channel (an @mention or wake
  * word), it stays "engaged" for `engagementWindowMs`. While engaged, each
  * subsequent allowed-user message is run through a cheap GPT-nano classifier
- * (`openai.classifierModel`) to decide whether to respond — enabling natural
+ * (`openRouter.classifierModel`) to decide whether to respond — enabling natural
  * follow-up without re-pinging. Transcript bounds control how much recent
  * channel history is fed to the classifier and the main agent.
  */
@@ -222,7 +220,7 @@ export const HealthConfigSchema = z.object({
 
 export const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
-  openai: OpenAIConfigSchema,
+  openRouter: OpenRouterConfigSchema,
   agent: AgentConfigSchema,
   authority: AuthorityConfigSchema,
   telemetry: TelemetryConfigSchema,
@@ -244,7 +242,7 @@ export const ConfigSchema = z.object({
 
 export type Config = z.infer<typeof ConfigSchema>;
 export type DiscordConfig = z.infer<typeof DiscordConfigSchema>;
-export type OpenAIConfig = z.infer<typeof OpenAIConfigSchema>;
+export type OpenRouterConfig = z.infer<typeof OpenRouterConfigSchema>;
 export type AgentConfig = z.infer<typeof AgentConfigSchema>;
 export type AuthorityConfig = z.infer<typeof AuthorityConfigSchema>;
 export type TelemetryConfig = z.infer<typeof TelemetryConfigSchema>;

@@ -8,10 +8,11 @@
 import type { ArenaMatch, CompletedMatch } from "#src/model/index.ts";
 import type { RawMatch } from "#src/league/raw-match.schema.ts";
 import type {
-  OpenAIClient,
+  TextGenerationClient,
   ModelConfig,
   StageTrace,
   ImageGenerationTrace,
+  ImageGenerationClient,
 } from "./pipeline-types.ts";
 import type { Personality } from "./prompts.ts";
 import {
@@ -19,8 +20,6 @@ import {
   selectRandomImagePrompts,
 } from "./prompts.ts";
 import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
-import type { GoogleGenerativeAI } from "@google/generative-ai";
-import { z } from "zod";
 import {
   friendGroupHistory,
   relationshipContextText,
@@ -28,7 +27,7 @@ import {
 import {
   minifyJson,
   replacePromptVariables,
-  callOpenAI,
+  callTextModel,
 } from "./pipeline-utils.ts";
 const FRIEND_GROUP_HISTORY = friendGroupHistory.trim();
 const RELATIONSHIP_GRAPH = relationshipContextText();
@@ -54,7 +53,7 @@ export async function generateMatchSummary(params: {
   match: CompletedMatch | ArenaMatch;
   rawMatch: RawMatch;
   playerIndex: number;
-  client: OpenAIClient;
+  client: TextGenerationClient;
   model: ModelConfig;
   systemPrompt: string;
   userPrompt: string;
@@ -93,7 +92,7 @@ export async function generateMatchSummary(params: {
     }),
   });
 
-  return callOpenAI({
+  return callTextModel({
     client,
     model,
     systemPrompt,
@@ -135,7 +134,7 @@ export async function generateReviewTextStage(params: {
   timelineSummary?: string;
   playerHistory?: string;
   patchNotes?: string;
-  client: OpenAIClient;
+  client: TextGenerationClient;
   model: ModelConfig;
   systemPrompt: string;
   userPrompt: string;
@@ -188,7 +187,7 @@ export async function generateReviewTextStage(params: {
     RELATIONSHIP_GRAPH,
   });
 
-  const { text, trace } = await callOpenAI({
+  const { text, trace } = await callTextModel({
     client,
     model,
     systemPrompt,
@@ -233,7 +232,7 @@ function buildImageInspirationsSection(selectedPrompts: string[]): string {
 export async function generateImageDescription(params: {
   reviewText: string;
   artStyle: string;
-  client: OpenAIClient;
+  client: TextGenerationClient;
   model: ModelConfig;
   systemPrompt: string;
   userPrompt: string;
@@ -263,7 +262,7 @@ export async function generateImageDescription(params: {
     IMAGE_INSPIRATIONS: imageInspirations,
   });
 
-  const { text, trace } = await callOpenAI({
+  const { text, trace } = await callTextModel({
     client,
     model,
     systemPrompt,
@@ -274,52 +273,29 @@ export async function generateImageDescription(params: {
 }
 
 // ============================================================================
-// Stage 4: Image Generation (Gemini)
+// Stage 4: Image Generation
 // ============================================================================
 
-const GeminiImagePartSchema = z
-  .object({
-    inlineData: z.object({
-      data: z.string(),
-    }),
-  })
-  .loose();
-
-const GeminiResponseSchema = z
-  .object({
-    response: z.object({
-      candidates: z.array(
-        z.object({
-          content: z.object({
-            parts: z.array(GeminiImagePartSchema),
-          }),
-        }),
-      ),
-    }),
-  })
-  .loose();
-
 /**
- * Stage 4: Generate image from description using Gemini
+ * Stage 4: Generate image from description through the injected client.
  *
  * Takes the image description and generates an actual image.
  */
 export async function generateImage(params: {
   imageDescription: string;
-  geminiClient: GoogleGenerativeAI;
+  client: ImageGenerationClient;
   model: string;
   timeoutMs: number;
   userPrompt: string;
 }): Promise<{ imageBase64: string; trace: ImageGenerationTrace }> {
   const {
     imageDescription,
-    geminiClient,
+    client,
     model,
     timeoutMs,
     userPrompt: userPromptTemplate,
   } = params;
 
-  const geminiModel = geminiClient.getGenerativeModel({ model });
   // Replace variables in prompt template
   // Note: ART_STYLE is already embedded in IMAGE_DESCRIPTION from step 3
   const prompt = replacePromptVariables(userPromptTemplate, {
@@ -328,43 +304,14 @@ export async function generateImage(params: {
 
   const startTime = Date.now();
 
-  // Add timeout protection
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => {
-      reject(
-        new Error(`Gemini API call timed out after ${timeoutMs.toString()}ms`),
-      );
-    }, timeoutMs);
+  const result = await client.generate({
+    model,
+    prompt,
+    timeoutMs,
+    workload: "scout.review.image",
   });
-
-  const resultRaw = await Promise.race([
-    geminiModel.generateContent(prompt),
-    timeoutPromise,
-  ]);
   const durationMs = Date.now() - startTime;
-
-  const result = GeminiResponseSchema.parse(resultRaw);
-
-  if (result.response.candidates.length === 0) {
-    throw new Error("No candidates returned from Gemini");
-  }
-
-  const firstCandidate = result.response.candidates[0];
-  if (!firstCandidate) {
-    throw new Error("No candidates returned from Gemini");
-  }
-
-  const parts = firstCandidate.content.parts;
-  if (parts.length === 0) {
-    throw new Error("No parts found in response");
-  }
-
-  const imagePart = parts[0];
-  if (!imagePart) {
-    throw new Error("No image part found in response");
-  }
-
-  const imageBase64 = imagePart.inlineData.data;
+  const imageBase64 = result.imageBase64;
   if (imageBase64.length === 0) {
     throw new Error("Empty image data in response");
   }

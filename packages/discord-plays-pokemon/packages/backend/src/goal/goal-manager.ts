@@ -12,7 +12,6 @@ import { GoalIntervalReporter } from "./goal-progress.ts";
 import { formatHistoryForPrompt } from "./history-summary.ts";
 import { computeCost, formatCostLine } from "./pricing.ts";
 import { spawnGoalCodex } from "./spawn-goal-codex.ts";
-
 import { appendToHistory, type CompletedGoal } from "./goal-history.ts";
 import type {
   GoalMessageSender,
@@ -30,7 +29,6 @@ import {
   recordGoalUsage,
 } from "./goal-metrics.ts";
 import { loadGoalHistory, persistGoalState } from "./goal-state-store.ts";
-
 type ActiveGoal = {
   state: GoalState;
   process: GoalProcess;
@@ -51,6 +49,7 @@ type GoalManagerOptions = {
   controlToken: string;
   sendMessage: GoalMessageSender;
   spawner?: GoalProcessSpawner;
+  onCodexEventLine?: (line: string) => Promise<void> | void;
   now?: () => Date;
   // Live snapshot readers called once at goal start to seed the prompt's
   // game-state + spatial blocks. Model refreshes via `pokemonctl state`,
@@ -67,12 +66,10 @@ type GoalManagerOptions = {
   // without real delays.
   checkpointRetry?: CheckpointRetry;
 };
-
-import { defaultSpawner, settleGoalProcess } from "./goal-process-helpers.ts";
+import { settleGoalProcess } from "./goal-process-helpers.ts";
 import { noOpAcquireInputLease, oneShot } from "./goal-lease-helpers.ts";
 import { defaultCheckpointRetry, saveOnGoalEnd } from "./goal-checkpoint.ts";
 import type { CheckpointRetry } from "./goal-checkpoint.ts";
-
 export class GoalManager {
   private active: ActiveGoal | undefined;
   private terminating: ActiveGoal | undefined;
@@ -81,7 +78,8 @@ export class GoalManager {
   private readonly config: Config["game"]["goal"];
   private readonly controlToken: string;
   private readonly sendMessage: GoalMessageSender;
-  private readonly spawner: GoalProcessSpawner;
+  private readonly spawner: GoalProcessSpawner | undefined;
+  private readonly onCodexEventLine: GoalManagerOptions["onCodexEventLine"];
   private readonly now: () => Date;
   private readonly snapshotProvider: () => GameSnapshot | null;
   private readonly spatialSnapshotProvider: () => SpatialSnapshot | null;
@@ -105,7 +103,8 @@ export class GoalManager {
     this.config = options.config;
     this.controlToken = options.controlToken;
     this.sendMessage = options.sendMessage;
-    this.spawner = options.spawner ?? defaultSpawner;
+    this.spawner = options.spawner;
+    this.onCodexEventLine = options.onCodexEventLine;
     this.now = options.now ?? (() => new Date());
     this.snapshotProvider = options.snapshotProvider ?? (() => null);
     this.spatialSnapshotProvider =
@@ -205,7 +204,7 @@ export class GoalManager {
       return {
         kind: "missing_credential",
         content:
-          "Goal mode requires CODEX_API_KEY, CODEX_ACCESS_TOKEN, OPENAI_API_KEY, or a mounted Codex auth cache in the Pokemon runtime.",
+          "Goal mode requires CODEX_ACCESS_TOKEN or a mounted Codex auth cache in the Pokemon runtime.",
         ephemeral: true,
       };
     }
@@ -268,6 +267,7 @@ export class GoalManager {
           memory,
         },
         spawner: this.spawner,
+        onEventLine: this.onCodexEventLine,
         onAgentMessage: reporter.onAgentMessage,
       });
     } catch (error) {
@@ -302,7 +302,7 @@ export class GoalManager {
         );
       } finally {
         releaseInputLease();
-        spawned.trace.end();
+        spawned.trace.end("error");
       }
       throw error;
     }
@@ -421,7 +421,7 @@ export class GoalManager {
       });
     } finally {
       claimed.releaseInputLease();
-      claimed.trace.end();
+      claimed.trace.end(claimed.state.exitCode === 0 ? "success" : "error");
       if (this.terminating === claimed) this.terminating = undefined;
     }
   }
@@ -449,7 +449,7 @@ export class GoalManager {
       });
     } finally {
       active.releaseInputLease();
-      active.trace.end();
+      active.trace.end("error");
       if (this.terminating === active) this.terminating = undefined;
     }
   }
@@ -479,7 +479,7 @@ export class GoalManager {
       }
     } finally {
       active.releaseInputLease();
-      active.trace.end();
+      active.trace.end("cancelled");
       if (this.terminating === active) this.terminating = undefined;
     }
   }

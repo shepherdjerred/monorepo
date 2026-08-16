@@ -1,7 +1,6 @@
-import { openai } from "@ai-sdk/openai";
-import { generateText, Output } from "ai";
 import { z } from "zod";
-import { getOpenAIProviderOptions } from "@shepherdjerred/birmel/agent-runtime/provider-options.ts";
+import { generateValidatedObject } from "@shepherdjerred/llm-runtime";
+import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { buildConfiguredPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
@@ -36,25 +35,28 @@ export async function classifyShouldRespond(
     },
     async (span) => {
       try {
-        const result = await generateText({
-          model: openai(config.openai.classifierModel),
+        const result = await generateValidatedObject(getLlmRuntime(), {
+          model: config.openRouter.classifierModel,
           system:
             "Decide whether the elected persona should reply to the latest Discord message. Reply only when it is directed at the assistant or naturally continues the assistant's active conversation. Ignore unrelated side chatter.",
           prompt: `${buildConfiguredPersonaProjection(input.persona, config.persona.enabled)}\n\nRecent conversation:\n${input.transcript.length === 0 ? "(none)" : input.transcript}\n\nLatest message:\n${input.latestMessage}`,
-          output: Output.object({ schema: ClassificationSchema }),
-          timeout: config.agent.routerTimeoutMs,
-          providerOptions: getOpenAIProviderOptions(),
+          schema: ClassificationSchema,
+          schemaName: "birmel_should_respond",
+          workload: "birmel.admission.classify",
+          sessionId: input.channelId,
+          reasoningEffort: config.openRouter.reasoningEffort,
+          abortSignal: AbortSignal.timeout(config.agent.routerTimeoutMs),
         });
         span.setAttribute(
           "birmel.admission.should_respond",
-          result.output.shouldRespond,
+          result.object.shouldRespond,
         );
         logger.debug("Admission classifier decision", {
           channelId: input.channelId,
           personaId: input.persona,
-          shouldRespond: result.output.shouldRespond,
+          shouldRespond: result.object.shouldRespond,
         });
-        return result.output.shouldRespond;
+        return result.object.shouldRespond;
       } catch (error) {
         span.setAttribute("birmel.admission.should_respond", false);
         span.setAttribute(

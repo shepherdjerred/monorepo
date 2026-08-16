@@ -1,25 +1,11 @@
 import { beforeAll, afterAll, mock } from "bun:test";
 
-// Mock @ai-sdk/openai
-type ModelFn = (model: string) => { provider: string; model: string };
-type OpenaiMock = ModelFn & { chat: ModelFn; responses: ModelFn };
-const mockOpenai: OpenaiMock = Object.assign(
-  (model: string) => ({ provider: "openai", model }),
-  {
-    chat: (model: string) => ({ provider: "openai.chat", model }),
-    responses: (model: string) => ({ provider: "openai.responses", model }),
-  },
-);
-void mock.module("@ai-sdk/openai", () => ({
-  openai: mockOpenai,
-}));
-
 // Mock environment variables for testing
 beforeAll(() => {
   Bun.env["DISCORD_TOKEN"] = "test-discord-token";
   Bun.env["DISCORD_CLIENT_ID"] = "123456789012345678";
-  Bun.env["ANTHROPIC_API_KEY"] = "test-anthropic-key";
-  Bun.env["OPENAI_API_KEY"] = "test-openai-key";
+  Bun.env["CLAUDE_CODE_OAUTH_TOKEN"] = "test-claude-oauth-token";
+  Bun.env["OPENROUTER_API_KEY"] = "test-openrouter-key";
 });
 
 afterAll(() => {

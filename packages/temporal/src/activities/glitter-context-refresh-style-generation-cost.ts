@@ -1,7 +1,7 @@
 import type { StyleCard } from "@shepherdjerred/glitter-context/schema";
 import {
-  estimatedCallCostUsd,
   inputTokenUpperBound,
+  worstCaseGenerationCostUsd,
 } from "./glitter-context-refresh-budget.ts";
 import {
   buildStyleEvidenceChunks,
@@ -56,7 +56,10 @@ export function estimateStyleGenerationCost(
   const extractionCost = chunks.reduce((total, chunk) => {
     const prompt = prompts.chunkPrompt({ candidate: input.candidate, chunk });
     const initialInputTokens = inputTokenUpperBound(prompt);
-    const initialCall = estimatedCallCostUsd({
+    // Each call is priced at the same worst case the budget reserves before it
+    // runs, so the preflight estimate can never be lower than what
+    // `authorizeUncachedCall` will demand.
+    const initialCall = worstCaseGenerationCostUsd({
       model: EXTRACTION_MODEL,
       inputTokenUpperBound: initialInputTokens,
       outputTokenUpperBound: EXTRACTION_MAX_OUTPUT_TOKENS,
@@ -64,7 +67,7 @@ export function estimateStyleGenerationCost(
     // Every repair attempt also serializes the prior summary (bounded by the
     // output cap) and the validation error back into its request, so its input
     // is larger than the initial call's.
-    const repairCall = estimatedCallCostUsd({
+    const repairCall = worstCaseGenerationCostUsd({
       model: EXTRACTION_MODEL,
       inputTokenUpperBound: initialInputTokens + EXTRACTION_MAX_OUTPUT_TOKENS,
       outputTokenUpperBound: EXTRACTION_MAX_OUTPUT_TOKENS,
@@ -80,34 +83,26 @@ export function estimateStyleGenerationCost(
   const synthesisInputUpperBound =
     inputTokenUpperBound(synthesisBase) +
     chunks.length * EXTRACTION_MAX_OUTPUT_TOKENS;
-  // A truncated synthesis is billed as two separate calls: the base cap and
-  // one retry at the higher ceiling. Include both in the preflight estimate.
-  const synthesisInitialCall =
-    estimatedCallCostUsd({
-      model: SYNTHESIS_MODEL,
-      inputTokenUpperBound: synthesisInputUpperBound,
-      outputTokenUpperBound: SYNTHESIS_MAX_OUTPUT_TOKENS,
-    }) +
-    estimatedCallCostUsd({
-      model: SYNTHESIS_MODEL,
-      inputTokenUpperBound: synthesisInputUpperBound,
-      outputTokenUpperBound: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-    });
+  // A truncated synthesis retries at the higher ceiling, so every semantic
+  // attempt after the first is priced against that ceiling.
+  const synthesisInitialCall = worstCaseGenerationCostUsd({
+    model: SYNTHESIS_MODEL,
+    inputTokenUpperBound: synthesisInputUpperBound,
+    outputTokenUpperBound: SYNTHESIS_MAX_OUTPUT_TOKENS,
+    semanticRetryOutputTokenUpperBound:
+      SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+  });
   // A synthesis repair likewise serializes the prior synthesis (bounded by the
   // retry ceiling) plus the error into its request, and may incur the same retry.
   const synthesisRepairInput =
     synthesisInputUpperBound + SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS;
-  const synthesisRepairCall =
-    estimatedCallCostUsd({
-      model: SYNTHESIS_MODEL,
-      inputTokenUpperBound: synthesisRepairInput,
-      outputTokenUpperBound: SYNTHESIS_MAX_OUTPUT_TOKENS,
-    }) +
-    estimatedCallCostUsd({
-      model: SYNTHESIS_MODEL,
-      inputTokenUpperBound: synthesisRepairInput,
-      outputTokenUpperBound: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-    });
+  const synthesisRepairCall = worstCaseGenerationCostUsd({
+    model: SYNTHESIS_MODEL,
+    inputTokenUpperBound: synthesisRepairInput,
+    outputTokenUpperBound: SYNTHESIS_MAX_OUTPUT_TOKENS,
+    semanticRetryOutputTokenUpperBound:
+      SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+  });
   return (
     extractionCost +
     synthesisInitialCall +

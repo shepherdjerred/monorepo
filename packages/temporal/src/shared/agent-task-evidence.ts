@@ -60,14 +60,6 @@ export type NormalizedAgentTaskV2Result = {
   followUp: AgentTaskResultPayloadV2["followUp"];
 };
 
-function parseLine(line: string): unknown {
-  try {
-    return JSON.parse(line);
-  } catch {
-    return undefined;
-  }
-}
-
 function stringifyEvidence(value: unknown): string {
   if (typeof value === "string") return value;
   return JSON.stringify(value);
@@ -103,14 +95,14 @@ function toolUseSource(tool: ToolUse): {
 }
 
 function extractClaudeReceipts(
-  stdout: string,
+  events: readonly unknown[],
   observedAt: string,
   redact: (value: string) => string,
 ): ReportEvidenceReceiptV1[] {
   const uses = new Map<string, ToolUse>();
   const receipts: ReportEvidenceReceiptV1[] = [];
-  for (const line of stdout.split("\n")) {
-    const event = ClaudeEventSchema.safeParse(parseLine(line));
+  for (const rawEvent of events) {
+    const event = ClaudeEventSchema.safeParse(rawEvent);
     if (!event.success) continue;
     for (const content of event.data.message?.content ?? []) {
       if (
@@ -152,13 +144,13 @@ function extractClaudeReceipts(
 }
 
 function extractCodexReceipts(
-  stdout: string,
+  events: readonly unknown[],
   observedAt: string,
   redact: (value: string) => string,
 ): ReportEvidenceReceiptV1[] {
   const receipts: ReportEvidenceReceiptV1[] = [];
-  for (const line of stdout.split("\n")) {
-    const event = CodexCommandEventSchema.safeParse(parseLine(line));
+  for (const rawEvent of events) {
+    const event = CodexCommandEventSchema.safeParse(rawEvent);
     if (!event.success) continue;
     const output = redact(event.data.item.aggregated_output ?? "");
     const excerpt = bounded(output);
@@ -181,15 +173,17 @@ function extractCodexReceipts(
   return receipts;
 }
 
+// Receipts are derived from the native SDK's already-redacted event stream, so
+// a provider tool call that never produced an event cannot be cited later.
 export function extractAgentTaskEvidenceReceipts(
-  stdout: string,
+  events: readonly unknown[],
   provider: AgentTaskProvider,
   observedAt: string,
   redact: (value: string) => string,
 ): ReportEvidenceReceiptV1[] {
   return provider === "claude"
-    ? extractClaudeReceipts(stdout, observedAt, redact)
-    : extractCodexReceipts(stdout, observedAt, redact);
+    ? extractClaudeReceipts(events, observedAt, redact)
+    : extractCodexReceipts(events, observedAt, redact);
 }
 
 function deriveAgentTaskVerdict(

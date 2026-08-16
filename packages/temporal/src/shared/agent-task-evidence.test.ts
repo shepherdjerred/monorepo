@@ -63,7 +63,7 @@ function v2Payload(evidenceReceiptIds: string[]): AgentTaskResultPayloadV2 {
 
 describe("agent task evidence receipts", () => {
   test("extracts Claude tool results by tool-use id", () => {
-    const stdout = [
+    const events = [
       {
         type: "assistant",
         message: {
@@ -90,11 +90,9 @@ describe("agent task evidence receipts", () => {
           ],
         },
       },
-    ]
-      .map((event) => JSON.stringify(event))
-      .join("\n");
+    ];
     const receipts = extractAgentTaskEvidenceReceipts(
-      stdout,
+      events,
       "claude",
       OBSERVED_AT,
       (value) => value,
@@ -112,7 +110,7 @@ describe("agent task evidence receipts", () => {
 
   test("redacts commands, URLs, and output before retaining receipts", () => {
     const secret = "secret-token-value";
-    const stdout = [
+    const events = [
       {
         type: "assistant",
         message: {
@@ -142,11 +140,9 @@ describe("agent task evidence receipts", () => {
           ],
         },
       },
-    ]
-      .map((event) => JSON.stringify(event))
-      .join("\n");
+    ];
     const receipts = extractAgentTaskEvidenceReceipts(
-      stdout,
+      events,
       "claude",
       OBSERVED_AT,
       (value) => value.replaceAll(secret, "***"),
@@ -156,19 +152,21 @@ describe("agent task evidence receipts", () => {
   });
 
   test("extracts Codex command completion receipts", () => {
-    const stdout = JSON.stringify({
-      type: "item.completed",
-      item: {
-        id: "item-1",
-        type: "command_execution",
-        command: "kubectl get pods",
-        aggregated_output: "pod Running",
-        exit_code: 0,
-        status: "completed",
+    const events = [
+      {
+        type: "item.completed",
+        item: {
+          id: "item-1",
+          type: "command_execution",
+          command: "kubectl get pods",
+          aggregated_output: "pod Running",
+          exit_code: 0,
+          status: "completed",
+        },
       },
-    });
+    ];
     const receipts = extractAgentTaskEvidenceReceipts(
-      stdout,
+      events,
       "codex",
       OBSERVED_AT,
       (value) => value,

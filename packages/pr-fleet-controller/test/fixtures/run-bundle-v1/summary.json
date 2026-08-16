@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "runId": "legacy-v1-fixture",
+  "status": "completed",
+  "finishedAt": "2026-08-01T00:00:04.000Z",
+  "durationMs": 4000,
+  "eventCount": 4,
+  "lastHash": "3dc830e9d541d166871f859b30a1daa4ad68bcce6edffd6943692c8c6b6a1d67",
+  "countsByKind": {
+    "run.started": 1,
+    "shutdown.started": 1,
+    "shutdown.completed": 1,
+    "run.completed": 1
+  },
+  "artifacts": {
+    "mastra": {
+      "state": "present",
+      "bytes": 14,
+      "sha256": "09bce446fe61249f97593a430f40e633e5f120bd1943f110bfc0026e05dff5f3"
+    },
+    "observability": {
+      "state": "present",
+      "bytes": 21,
+      "sha256": "90f8de4f7cb98bad08b821d958bd3dab552aee02014ed2b95f5d68062b1ef6a8"
+    }
+  },
+  "finalSnapshot": {
+    "open": 0,
+    "green": 0,
+    "active": 0,
+    "queued": 0,
+    "pending": 0,
+    "waiting": 0,
+    "paused": 0,
+    "prs": []
+  },
+  "error": null
+}

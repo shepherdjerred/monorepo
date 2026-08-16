@@ -1,12 +1,14 @@
 import path from "node:path";
 import {
   sanitizeWorkspace,
+  coverageArtifactFilename,
   testStepReportName,
   TestManifestSchema,
 } from "./ci-reporting.ts";
 import { sumCoverageMetrics } from "./coverage-metrics.ts";
 import {
   coveragePercentage,
+  parseCobertura,
   parseGoCover,
   parseLcov,
   summarizeCoverageReports,
@@ -17,6 +19,7 @@ import {
 } from "./coverage-reporting.ts";
 import {
   coverableWorkspaceSources,
+  isInstrumentableSource,
   initialSourceCoverage,
   resolveCoverageSource,
   sourceCoverageSupplement,
@@ -87,6 +90,7 @@ async function collect(
 
 await collect("**/lcov.info", parseLcov);
 await collect("**/coverage.out", parseGoCover);
+await collect("**/coverage.cobertura.xml", parseCobertura);
 
 if (requireComplete) {
   const missing: string[] = [];
@@ -95,12 +99,15 @@ if (requireComplete) {
       if (step.runner === "cargo" || step.runner === "command") {
         continue;
       }
-      const extension = step.runner === "go" ? "coverage.out" : "lcov.info";
+      const artifactFilename = coverageArtifactFilename(step);
+      if (artifactFilename === undefined) {
+        continue;
+      }
       const expectedPath = path.join(
         rawDirectory,
         sanitizeWorkspace(workspace.package),
         testStepReportName(step, index),
-        extension,
+        artifactFilename,
       );
       if (!(await Bun.file(expectedPath).exists())) {
         missing.push(path.relative(repositoryRoot, expectedPath));
@@ -206,6 +213,9 @@ for (const workspace of summarizedWorkspaces) {
     }
   }
   for (const source of coverableSources) {
+    if (!isInstrumentableSource(source)) {
+      continue;
+    }
     const absoluteSource = path.resolve(repositoryRoot, source);
     workspaceReports.push(
       sourceCoverageSupplement(

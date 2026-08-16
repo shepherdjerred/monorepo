@@ -31,6 +31,7 @@
     "@opentelemetry/sdk-node": "^0.221.0",
     "@opentelemetry/sdk-trace-base": "^2.7.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
+    "@openai/codex-sdk": "0.147.0",
     "@shepherdjerred/discord-plays-core": "workspace:*",
     "@shepherdjerred/discord-stream-lifecycle": "workspace:*",
     "@shepherdjerred/discord-video-stream": "workspace:*",

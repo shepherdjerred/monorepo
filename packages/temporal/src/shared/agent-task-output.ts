@@ -1,11 +1,4 @@
 import {
-  claudeDiagnostics,
-  contractErrorMessage,
-  malformedClaudeDiagnostics,
-} from "./agent-task-claude-diagnostics.ts";
-import {
-  AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT,
-  AGENT_TASK_CLAUDE_SCHEMA_V2_FINGERPRINT,
   AgentTaskFollowUpSchema,
   AgentTaskFollowUpV2Schema,
   AgentTaskOutputContractError,
@@ -15,17 +8,14 @@ import {
   AgentTaskWireResultPayloadV2Schema,
   type AgentTaskFollowUp,
   type AgentTaskFollowUpV2,
+  type AgentTaskOutputContractDiagnostics,
+  type AgentTaskOutputContractFailureReason,
   type AgentTaskProvider,
   type AgentTaskResultPayload,
   type AgentTaskResultPayloadV2,
   type AgentTaskWireResultPayload,
   type AgentTaskWireResultPayloadV2,
-  type ClaudeOutputContractDiagnostics,
 } from "./agent-task.ts";
-import {
-  parseClaudeResultMessage,
-  type ClaudeResultMessage,
-} from "./claude-result.ts";
 
 function normalizeAgentTaskFollowUp(
   followUp: AgentTaskWireResultPayload["followUp"],
@@ -126,79 +116,71 @@ export function parseAgentTaskResultPayload(
   }
 }
 
-function parseClaudeContractInput(
-  stdout: string,
-  redactExcerpt: (value: string) => string,
-  schemaFingerprint: string,
-): {
-  resultMessage: ClaudeResultMessage;
-  diagnostics: ClaudeOutputContractDiagnostics;
-  structuredOutput: unknown;
-} {
-  let resultMessage: ClaudeResultMessage;
-  try {
-    resultMessage = parseClaudeResultMessage(stdout);
-  } catch (error: unknown) {
-    const diagnostics = malformedClaudeDiagnostics(
-      stdout,
-      schemaFingerprint,
-      redactExcerpt,
-    );
-    throw new AgentTaskOutputContractError(
-      "invalid-result-envelope",
-      diagnostics,
-      `${contractErrorMessage("invalid-result-envelope", diagnostics)}: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
+export function boundedFinalTextExcerpt(
+  result: string | undefined,
+  redact: (value: string) => string,
+): string | undefined {
+  if (result === undefined) {
+    return undefined;
   }
-  const diagnostics = claudeDiagnostics(
-    resultMessage,
-    schemaFingerprint,
-    redactExcerpt,
-  );
-  return {
-    resultMessage,
-    diagnostics,
-    structuredOutput: resultMessage.structured_output,
-  };
+  const normalized = redact(result).replaceAll(/\s+/g, " ").trim();
+  return normalized.length <= 240 ? normalized : `${normalized.slice(0, 240)}…`;
 }
 
-export function parseClaudeAgentTaskResult(
-  stdout: string,
-  redactExcerpt: (value: string) => string = (value) => value,
-  contractVersion: 1 | 2 = 1,
-): AgentTaskResultPayload | AgentTaskResultPayloadV2 {
-  const schemaFingerprint =
-    contractVersion === 2
-      ? AGENT_TASK_CLAUDE_SCHEMA_V2_FINGERPRINT
-      : AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT;
-  const { resultMessage, diagnostics, structuredOutput } =
-    parseClaudeContractInput(stdout, redactExcerpt, schemaFingerprint);
-  if (resultMessage.is_error === true) {
-    throw new AgentTaskOutputContractError(
-      "is-error",
-      diagnostics,
-      contractErrorMessage("is-error", diagnostics),
-    );
-  }
-  if (structuredOutput === undefined) {
+function contractErrorMessage(
+  provider: AgentTaskProvider,
+  reason: AgentTaskOutputContractFailureReason,
+  diagnostics: AgentTaskOutputContractDiagnostics,
+): string {
+  return [
+    `${provider} structured-output contract failure: ${reason}`,
+    `schemaFingerprint=${diagnostics.schemaFingerprint}`,
+    `finalTextExcerpt=${diagnostics.finalTextExcerpt ?? "(none)"}`,
+  ].join(" ");
+}
+
+/**
+ * Validate the structured output a native agent SDK returned for its declared
+ * output schema. Prose is never a fallback: a run that finished without
+ * schema-valid structured output is a contract failure, not a partial result.
+ */
+export function parseAgentTaskStructuredOutput(input: {
+  provider: AgentTaskProvider;
+  structuredOutput: unknown;
+  contractVersion: 1 | 2;
+  schemaFingerprint: string;
+  finalText: string | undefined;
+  redactExcerpt: (value: string) => string;
+}): AgentTaskResultPayload | AgentTaskResultPayloadV2 {
+  const diagnostics: AgentTaskOutputContractDiagnostics = {
+    schemaFingerprint: input.schemaFingerprint,
+    finalTextExcerpt: boundedFinalTextExcerpt(
+      input.finalText,
+      input.redactExcerpt,
+    ),
+  };
+  if (input.structuredOutput === undefined) {
     throw new AgentTaskOutputContractError(
       "missing-structured-output",
       diagnostics,
-      contractErrorMessage("missing-structured-output", diagnostics),
+      contractErrorMessage(
+        input.provider,
+        "missing-structured-output",
+        diagnostics,
+      ),
     );
   }
   try {
     return parseAgentTaskResultPayload(
-      structuredOutput,
-      "claude",
-      contractVersion,
+      input.structuredOutput,
+      input.provider,
+      input.contractVersion,
     );
   } catch (error: unknown) {
     throw new AgentTaskOutputContractError(
       "invalid-structured-output",
       diagnostics,
-      `${contractErrorMessage("invalid-structured-output", diagnostics)}: ${error instanceof Error ? error.message : String(error)}`,
+      `${contractErrorMessage(input.provider, "invalid-structured-output", diagnostics)}: ${error instanceof Error ? error.message : String(error)}`,
       { cause: error },
     );
   }

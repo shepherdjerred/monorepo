@@ -15,15 +15,20 @@ import {
   GENESIS_EVENT_HASH,
   JsonValueSchema,
   RecordedRunEventSchema,
+  RecordedRunEventV2Schema,
   RUN_BUNDLE_SCHEMA_VERSION,
   RunEventPayloadSchema,
   RunManifestSchema,
+  RunManifestV2Schema,
   RunSummarySchema,
+  RunSummaryV2Schema,
   UnsignedRunEventSchema,
+  UnsignedRunEventV2Schema,
   type RecordedRunEvent,
   type RunEventCorrelation,
   type RunEventKind,
   type RunManifest,
+  type RunManifestV2,
   type RunSummary,
 } from "./run-events.ts";
 import { hashEvent } from "./run-hashing.ts";
@@ -55,8 +60,7 @@ export type RunPaths = {
   summary: string;
   mastra: string;
   observability: string;
-  // Best-effort live-reasoning mirror. Not a manifest file and not hash-chained;
-  // see SpanJsonlExporter. DuckDB observability remains the authoritative store.
+  // Authoritative redacted OpenTelemetry artifact, digest-verified at replay.
   spans: string;
   controlSocket: string;
 };
@@ -82,7 +86,7 @@ export type CreateRunRecorderOptions = {
 
 type RunRecorderConstructorOptions = {
   paths: RunPaths;
-  manifest: RunManifest;
+  manifest: RunManifestV2;
   now: () => Date;
   secretValues: readonly string[];
   eventsFile: SynchronousEventFile;
@@ -172,7 +176,7 @@ function parseJson(text: string): unknown {
 export class RunRecorder implements FleetTelemetry {
   readonly runId: string;
   readonly paths: RunPaths;
-  manifest: RunManifest;
+  manifest: RunManifestV2;
   readonly #eventsFile: SynchronousEventFile;
   readonly #now: () => Date;
   readonly #createdAt: Date;
@@ -181,7 +185,7 @@ export class RunRecorder implements FleetTelemetry {
   #sequence = 0;
   #lastHash = GENESIS_EVENT_HASH;
   #closed = false;
-  #sidecarsRequired = false;
+  #telemetryArtifactRequired = false;
   readonly #writeEvent: SynchronousFileSinkWriter;
   #finalizationPromise: Promise<RunSummary> | undefined;
 
@@ -218,7 +222,7 @@ export class RunRecorder implements FleetTelemetry {
       spans: path.join(runDirectory, "spans.jsonl"),
       controlSocket: path.join(runDirectory, "control.sock"),
     };
-    const manifest = RunManifestSchema.parse({
+    const manifest = RunManifestV2Schema.parse({
       schemaVersion: RUN_BUNDLE_SCHEMA_VERSION,
       runId,
       createdAt: createdAt.toISOString(),
@@ -236,8 +240,7 @@ export class RunRecorder implements FleetTelemetry {
       files: {
         events: "events.jsonl",
         summary: "summary.json",
-        mastra: "mastra.db",
-        observability: "observability.duckdb",
+        spans: "spans.jsonl",
       },
       capture: {
         localOnly: true,
@@ -265,8 +268,8 @@ export class RunRecorder implements FleetTelemetry {
     this.#secretValues = values;
   }
 
-  requireSidecars(): void {
-    this.#sidecarsRequired = true;
+  requireTelemetryArtifact(): void {
+    this.#telemetryArtifactRequired = true;
   }
 
   async initializeController(controller: {
@@ -284,7 +287,7 @@ export class RunRecorder implements FleetTelemetry {
     if (this.manifest.controllerSourceResolved) {
       throw new Error("Controller source provenance is already resolved");
     }
-    const manifest = RunManifestSchema.parse({
+    const manifest = RunManifestV2Schema.parse({
       ...this.manifest,
       ...controller,
       controllerSourceResolved: true,
@@ -341,7 +344,7 @@ export class RunRecorder implements FleetTelemetry {
     const redactedPayload = RunEventPayloadSchema.parse(
       this.redact(manifestBoundPayload),
     );
-    const unsigned = UnsignedRunEventSchema.parse({
+    const unsigned = UnsignedRunEventV2Schema.parse({
       schemaVersion: RUN_BUNDLE_SCHEMA_VERSION,
       runId: this.runId,
       sequence: this.#sequence + 1,
@@ -351,7 +354,7 @@ export class RunRecorder implements FleetTelemetry {
       correlation,
       payload: redactedPayload,
     });
-    const event = RecordedRunEventSchema.parse({
+    const event = RecordedRunEventV2Schema.parse({
       ...unsigned,
       hash: hashEvent(unsigned),
     });
@@ -385,15 +388,12 @@ export class RunRecorder implements FleetTelemetry {
     if (this.#closed) {
       return readRunSummary(this.paths.runDirectory);
     }
-    const artifacts = await describeRunArtifacts(this.paths);
+    const artifacts = await describeRunArtifacts({ spans: this.paths.spans });
     if (
-      this.#sidecarsRequired &&
-      (artifacts.mastra.state !== "present" ||
-        artifacts.observability.state !== "present")
+      this.#telemetryArtifactRequired &&
+      artifacts.spans.state !== "present"
     ) {
-      throw new Error(
-        "Initialized controller run is missing a required database sidecar",
-      );
+      throw new Error("Initialized controller run is missing spans.jsonl");
     }
     const kind = status === "completed" ? "run.completed" : "run.failed";
     const finishedAt = this.#now();
@@ -413,7 +413,7 @@ export class RunRecorder implements FleetTelemetry {
     this.#eventsFile.close();
     this.#closed = true;
     const countsByKind = Object.fromEntries(this.#counts);
-    const summary = RunSummarySchema.parse({
+    const summary = RunSummaryV2Schema.parse({
       schemaVersion: RUN_BUNDLE_SCHEMA_VERSION,
       runId: this.runId,
       status,

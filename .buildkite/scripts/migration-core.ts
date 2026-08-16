@@ -17,7 +17,6 @@ const applicationTargets = [
 const infrastructureTargets = [
   "caddy-s3proxy",
   "obsidian-headless",
-  "mcp-gateway",
   "redlib",
 ] as const;
 

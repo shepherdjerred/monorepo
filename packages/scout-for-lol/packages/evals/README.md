@@ -57,7 +57,7 @@ is fixed to `scout-beta`; tracked profiles are resolved from the synced Beta
 corpus snapshot rather than accepted from the spec.
 
 ```bash
-AWS_PROFILE=seaweedfs OPENAI_API_KEY=... \
+AWS_PROFILE=seaweedfs OPENROUTER_API_KEY=... \
   bun run --filter=@scout-for-lol/evals materialize -- \
   --spec ./calibration-20.json
 ```
@@ -77,7 +77,7 @@ Vite bundle.
 
 ## Push A Draft To The Hosted Instance
 
-Materialization stays local (it needs `OPENAI_API_KEY`, AWS credentials, and
+Materialization stays local (it needs `OPENROUTER_API_KEY`, AWS credentials, and
 the Beta corpus snapshot), but rating happens on the hosted app. Move a
 locally-materialized draft over the tailnet with:
 
@@ -130,7 +130,7 @@ refuses to overwrite an existing output file.
 
 The Playwright suite runs the production-built client against the real
 Hono/tRPC/SQLite stack with deterministic, in-memory fixtures. It does not read
-the local eval database or call Beta, S3, or OpenAI.
+the local eval database or call Beta, S3, or OpenRouter.
 
 ```bash
 bunx turbo run test:e2e --filter=@scout-for-lol/evals

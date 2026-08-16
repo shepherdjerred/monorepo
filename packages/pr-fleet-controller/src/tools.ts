@@ -1,4 +1,4 @@
-import { createTool } from "@mastra/core/tools";
+import { tool as defineTool } from "ai";
 import { z } from "zod";
 import { validateWorkerCommand } from "./command-policy.ts";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
@@ -55,7 +55,7 @@ export function createWorkerTools(
   options: {
     signal: AbortSignal;
     // Additional env-var names to scrub from validation/setup subprocesses
-    // beyond the credential heuristic — the operator's `--api-key-env` name.
+    // beyond the credential heuristic.
     extraSecretNames?: readonly string[];
     telemetry?: FleetTelemetry;
     parentCorrelation?: () => RunEventCorrelation;
@@ -83,8 +83,7 @@ export function createWorkerTools(
   };
 
   return {
-    get_pr_context: createTool({
-      id: "get_pr_context",
+    get_pr_context: defineTool({
       description:
         "Get the current normalized PR identity, evidence, and ownership.",
       inputSchema: z.object({}),
@@ -106,8 +105,7 @@ export function createWorkerTools(
         runRecordedTool(tool, input, toolContext, run),
       assertNotWaitingForAnswer,
     }),
-    read_file: createTool({
-      id: "read_file",
+    read_file: defineTool({
       description: "Read a UTF-8 file beneath the assigned worktree.",
       inputSchema: z.object({ path: z.string().min(1) }),
       outputSchema: z.object({ path: z.string(), content: z.string() }),
@@ -120,8 +118,7 @@ export function createWorkerTools(
           };
         }),
     }),
-    grep_files: createTool({
-      id: "grep_files",
+    grep_files: defineTool({
       description: "Search text beneath the assigned worktree with ripgrep.",
       inputSchema: z.object({
         pattern: z.string().min(1),
@@ -145,8 +142,7 @@ export function createWorkerTools(
           };
         }),
     }),
-    git_status: createTool({
-      id: "git_status",
+    git_status: defineTool({
       description: "Read porcelain Git status in the assigned worktree.",
       inputSchema: z.object({}),
       outputSchema: z.object({ output: z.string() }),
@@ -161,8 +157,7 @@ export function createWorkerTools(
           return { output: result.stdout };
         }),
     }),
-    git_diff: createTool({
-      id: "git_diff",
+    git_diff: defineTool({
       description: "Read the bounded unstaged Git diff.",
       inputSchema: z.object({}),
       outputSchema: z.object({ output: z.string() }),
@@ -177,8 +172,7 @@ export function createWorkerTools(
           return { output: result.stdout.slice(0, 100_000) };
         }),
     }),
-    apply_patch: createTool({
-      id: "apply_patch",
+    apply_patch: defineTool({
       description:
         "Apply a unified patch whose paths are inside the assigned worktree.",
       inputSchema: z.object({ patch: z.string().min(1) }),
@@ -234,8 +228,7 @@ export function createWorkerTools(
       record: (tool, input, run) =>
         runRecordedTool(tool, input, toolContext, run),
     }),
-    request_lease: createTool({
-      id: "request_lease",
+    request_lease: defineTool({
       description: "Request setup, heavy-command, or stack-write authority.",
       inputSchema: z.object({ kind: LeaseKindSchema }),
       outputSchema: z.object({ granted: z.boolean() }),
@@ -268,8 +261,7 @@ export function createWorkerTools(
       record: (tool, input, run) =>
         runRecordedTool(tool, input, toolContext, run),
     }),
-    run_local_command: createTool({
-      id: "run_local_command",
+    run_local_command: defineTool({
       description:
         "Run an approved local build, test, lint, typecheck, generator, or search command.",
       inputSchema: z.object({
@@ -320,8 +312,7 @@ export function createWorkerTools(
           }
         }),
     }),
-    publish_fix: createTool({
-      id: "publish_fix",
+    publish_fix: defineTool({
       description:
         "Publish explicit changed paths through hooks and git-spice from an exact-head worktree. Use the inherited-commit tool first when local commits are ahead of the captured PR head.",
       inputSchema: z.object({

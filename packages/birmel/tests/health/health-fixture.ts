@@ -66,7 +66,7 @@ if (databaseUnavailable) {
 delete Bun.env["DATABASE_PATH"];
 Bun.env["DISCORD_TOKEN"] = "health-test-token";
 Bun.env["DISCORD_CLIENT_ID"] = "100000000000000001";
-Bun.env["OPENAI_API_KEY"] = "health-test-openai-key";
+Bun.env["OPENROUTER_API_KEY"] = "health-test-openrouter-key";
 Bun.env["TELEMETRY_ENABLED"] = "false";
 
 const { getDiscordClient, destroyDiscordClient } =
@@ -83,9 +83,10 @@ startHealthServer({
 });
 
 try {
-  const [liveResponse, readyResponse] = await Promise.all([
+  const [liveResponse, readyResponse, metricsResponse] = await Promise.all([
     fetch(`http://127.0.0.1:${String(input.port)}/live`),
     fetch(`http://127.0.0.1:${String(input.port)}/ready`),
+    fetch(`http://127.0.0.1:${String(input.port)}/metrics`),
   ]);
   const liveBody: unknown = await liveResponse.json();
   const readyBody: unknown = await readyResponse.json();
@@ -93,6 +94,10 @@ try {
     JSON.stringify({
       healthFixture: true,
       live: { status: liveResponse.status, body: liveBody },
+      metrics: {
+        status: metricsResponse.status,
+        body: await metricsResponse.text(),
+      },
       ready: { status: readyResponse.status, body: readyBody },
     }),
   );

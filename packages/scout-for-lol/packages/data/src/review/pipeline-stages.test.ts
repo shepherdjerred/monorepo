@@ -8,7 +8,10 @@ import {
 } from "@shepherdjerred/glitter-context";
 
 import { generateReviewTextStage } from "#src/review/pipeline-stages.ts";
-import type { OpenAIClient, ModelConfig } from "#src/review/pipeline-types.ts";
+import type {
+  TextGenerationClient,
+  ModelConfig,
+} from "#src/review/pipeline-types.ts";
 import type { Personality } from "#src/review/prompts.ts";
 import { type CompletedMatch, CompletedMatchSchema } from "#src/model/match.ts";
 import { LeaguePuuidSchema } from "#src/model/league-account.ts";
@@ -105,27 +108,28 @@ type RecordedCall = {
 };
 
 function buildRecordingClient(): {
-  client: OpenAIClient;
+  client: TextGenerationClient;
   calls: RecordedCall[];
 } {
   const calls: RecordedCall[] = [];
-  const client: OpenAIClient = {
-    chat: {
-      completions: {
-        create: async (params) => {
-          calls.push({ model: params.model, messages: params.messages });
-          await Promise.resolve();
-          return {
-            choices: [
-              {
-                message: { content: "stub review text" },
-                finish_reason: "stop",
-              },
-            ],
-            usage: { prompt_tokens: 10, completion_tokens: 5 },
-          };
-        },
-      },
+  const client: TextGenerationClient = {
+    generate: async (params) => {
+      calls.push({
+        model: params.model,
+        messages: [
+          ...(params.systemPrompt === undefined
+            ? []
+            : [{ role: "system" as const, content: params.systemPrompt }]),
+          { role: "user", content: params.userPrompt },
+        ],
+      });
+      await Promise.resolve();
+      return {
+        text: "stub review text",
+        finishReason: "stop",
+        inputTokens: 10,
+        outputTokens: 5,
+      };
     },
   };
   return { client, calls };

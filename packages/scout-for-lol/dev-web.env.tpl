@@ -36,9 +36,11 @@ JWT_SIGNING_SECRET=local-dev-only-jwt-signing-secret-not-for-any-deployed-env
 WEB_APP_ORIGIN=http://localhost:5180
 
 # ── AI (report editor + explore) ──────────────────────────────────────
-# Both agents default to an OpenAI model, so without this every AI turn fails
-# at the model call. Same BETA item as the secrets above.
-OPENAI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/OPENAI_API_KEY
+# Every model call now goes through OpenRouter, so without this the backend
+# still starts (unresolvedSecrets() does not validate the AI key) but every
+# report-editor and Explore turn fails at the model call. Same BETA item as the
+# secrets above, and the same field the deployed beta backend reads.
+OPENROUTER_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/OPENROUTER_API_KEY
 
 # Explore is gated on membership of an allowlisted Discord server, and an empty
 # list denies everyone. Left unset here because the right value is whichever

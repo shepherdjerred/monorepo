@@ -13,10 +13,10 @@ import type {
 import { runEnrichmentPipeline } from "./lib/enrichment/pipeline.ts";
 import { promptConfirm, applyChanges } from "./lib/apply.ts";
 import {
-  initClaude,
+  initLlm,
   setWebSearchEnabled,
   getUsageSummary,
-} from "./lib/classifier/claude.ts";
+} from "./lib/classifier/llm.ts";
 import { classifyTier1 } from "./lib/classifier/tier1.ts";
 import { classifyTier2 } from "./lib/classifier/tier2.ts";
 import {
@@ -128,7 +128,7 @@ async function main(): Promise<void> {
   if (config.verbose) setLogLevel("debug");
 
   await initMonarch();
-  initClaude(config.anthropicApiKey, config.model);
+  initLlm(config.openRouterApiKey, config.model);
   setWebSearchEnabled(!config.skipResearch);
   const hints = await loadHints();
 

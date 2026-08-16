@@ -364,7 +364,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "homelab-audit-daily failed two days in a row",
             description: escapePrometheusTemplate(
-              "The homelab-audit subprocess has exited non-zero {{ $value }} time(s) in the last 48h. The runbook agent is hitting the 45-min activity wall. Check Loki for the agent's `phase=soft-kill` line + `lastStderrLine` to identify the long-poling step.",
+              "The homelab-audit agent has failed {{ $value }} time(s) in the last 48h. The historical metric name is retained across the native Claude Agent SDK cutover. Check the correlated agent SDK logs and trace for the failure phase.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -376,17 +376,16 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
-          // Soft-kills are the leading indicator of hung subprocesses: any
-          // tick means a SIGINT had to be sent because the wall was 90s
-          // away. Ticket (info), not page — the run still produces evidence
-          // and the existing failure alerts cover outage.
+          // Retain the historical CLI soft-kill alert while old series remain
+          // queryable. Native SDK cancellation is covered by current SDK and
+          // common LLM outcome metrics.
           alert: "AgentSubprocessSoftKill",
           annotations: {
             summary: escapePrometheusTemplate(
-              "Agent subprocess for {{ $labels.workflow_type }} was soft-killed",
+              "Historical agent CLI for {{ $labels.workflow_type }} was soft-killed",
             ),
             description: escapePrometheusTemplate(
-              "The activity sent SIGINT to its agent subprocess for {{ $labels.workflow_type }} {{ $value }} time(s) in the last 1h because Temporal's activity wall was 90s away. The corresponding run's `phase=soft-kill` Loki line is the diagnostic capture point.",
+              "A pre-cutover agent CLI soft-kill series for {{ $labels.workflow_type }} increased {{ $value }} time(s) in the last 1h. Native SDK cancellation uses SDK and common LLM outcome metrics.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

@@ -1,5 +1,4 @@
-import { Agent } from "@mastra/core/agent";
-import { createTool } from "@mastra/core/tools";
+import { Output, stepCountIs, tool, ToolLoopAgent } from "ai";
 import { z } from "zod";
 import {
   EXPLORE_MAX_HISTORY_TURNS,
@@ -8,6 +7,8 @@ import {
   EXPLORE_MAX_STEPS,
   EXPLORE_MAX_TOOL_CALLS,
   ExploreAnswerSchema,
+  ExploreAnswerWireSchema,
+  modelSupportsParameter,
   ReportQueryTextSchema,
   type ExploreAnswer,
   type ExploreMessage,
@@ -18,9 +19,11 @@ import {
 import configuration from "#src/configuration.ts";
 import { prisma } from "#src/database/index.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
+import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   createExploreStreamState,
+  emitExploreAnswerSnapshot,
   emitExploreStreamChunk,
 } from "#src/explore/stream.ts";
 import {
@@ -73,9 +76,11 @@ export async function streamExploreAgent(
   params: ExploreAgentParams,
 ): Promise<ExploreAgentResult> {
   const model = configuration.exploreModel;
-  if (model.startsWith("openai/")) {
-    assertWithinBudget();
+  const runtime = getOpenRouterRuntime();
+  if (runtime === undefined) {
+    throw new Error("OPENROUTER_API_KEY is required for explore");
   }
+  assertWithinBudget();
 
   const state: RunState = {
     toolCalls: 0,
@@ -84,50 +89,59 @@ export async function streamExploreAgent(
     lastVisualization: null,
   };
 
-  const agent = new Agent({
+  const agent = new ToolLoopAgent({
     id: "scout-explore-agent",
-    name: "Scout explore agent",
     instructions: exploreAgentInstructions(),
-    model,
+    model: runtime.languageModel(model, ["tools"]),
     tools: createExploreTools(params, state),
+    stopWhen: stepCountIs(EXPLORE_MAX_STEPS),
+    // Most current models (every GPT-5.x, most Claude) declare
+    // supportsTemperature: false, and the runtime asks OpenRouter for
+    // `require_parameters` whenever a call needs tools or structured output.
+    // Sending temperature to a model that does not accept it therefore leaves
+    // zero eligible endpoints and the whole turn fails with a 404 "No endpoints
+    // found that can handle the requested parameters" — not a soft downgrade.
+    ...(modelSupportsParameter(model, "temperature")
+      ? { temperature: 0.2 }
+      : {}),
+    maxOutputTokens: EXPLORE_MAX_OUTPUT_TOKENS,
+    output: Output.object({ schema: ExploreAnswerWireSchema }),
+    ...runtime.callOptions({
+      workload: "scout.explore",
+      sessionId: params.runId,
+    }),
   });
 
-  const stream = await agent.stream(buildMessages(params), {
-    runId: params.runId,
-    maxSteps: EXPLORE_MAX_STEPS,
-    toolChoice: "auto",
+  const stream = await agent.stream({
+    messages: buildMessages(params),
     abortSignal: params.abortSignal,
-    modelSettings: {
-      temperature: 0.2,
-      maxOutputTokens: EXPLORE_MAX_OUTPUT_TOKENS,
-    },
-    structuredOutput: {
-      schema: ExploreAnswerSchema,
-      jsonPromptInjection: true,
-    },
   });
 
-  // Drained to completion on purpose. Cancelling a Mastra evented stream
-  // calls removeAllListeners() on the shared emitter, which would silently
-  // starve every other consumer of the same run — so never break out early.
+  // Two readers, drained concurrently and to completion on purpose.
+  //
+  // The AI SDK splits what Mastra multiplexed: tool and step parts arrive on
+  // `stream`, while progressively-parsed structured output arrives on
+  // `partialOutputStream`. The prose the page renders comes from the latter —
+  // a `text-delta` part is raw JSON here.
+  //
+  // Neither loop may exit early and both must be consumed: they are views over
+  // one underlying run, so abandoning either stalls the other once its buffer
+  // fills, and the turn would hang rather than fail.
   const streamState = createExploreStreamState();
-  const reader = stream.fullStream.getReader();
-  try {
-    let read = await reader.read();
-    while (!read.done) {
-      await emitExploreStreamChunk(read.value, params.emit, streamState);
-      read = await reader.read();
-    }
-  } finally {
-    reader.releaseLock();
-  }
+  await Promise.all([
+    (async () => {
+      for await (const chunk of stream.stream) {
+        await emitExploreStreamChunk(chunk, params.emit);
+      }
+    })(),
+    (async () => {
+      for await (const snapshot of stream.partialOutputStream) {
+        await emitExploreAnswerSnapshot(snapshot, params.emit, streamState);
+      }
+    })(),
+  ]);
 
-  const output = await stream.getFullOutput();
-  if (output.error !== undefined) {
-    throw output.error;
-  }
-
-  const answer = ExploreAnswerSchema.parse(output.object);
+  const answer = ExploreAnswerSchema.parse(await stream.output);
 
   // Streaming depends on the model emitting `answer` early enough for the
   // partial snapshots to carry it. If that ever stops holding — a reordered
@@ -141,14 +155,12 @@ export async function streamExploreAgent(
     );
   }
 
-  const usage = output.totalUsage;
+  const usage = await stream.usage;
   const inputTokens = usage.inputTokens ?? 0;
   const outputTokens = usage.outputTokens ?? 0;
   scoutExploreTokensUsedTotal.inc({ model, kind: "prompt" }, inputTokens);
   scoutExploreTokensUsedTotal.inc({ model, kind: "completion" }, outputTokens);
-  if (model.startsWith("openai/")) {
-    recordTokenUsage(inputTokens, outputTokens, model);
-  }
+  recordTokenUsage(inputTokens, outputTokens, model);
 
   return {
     answer,
@@ -209,8 +221,7 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
     }
   };
 
-  const runReportQuery = createTool({
-    id: "run_report_query",
+  const runReportQuery = tool({
     description:
       "Run a valid ScoutQL query against all ingested match data and return the resulting rows. Every statistic you state must come from a result of this tool.",
     inputSchema: z.object({ queryText: ReportQueryTextSchema }).strict(),

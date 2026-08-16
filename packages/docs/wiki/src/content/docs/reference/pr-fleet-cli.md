@@ -19,25 +19,26 @@ Commands for the PR fleet controller. Package:
 
 ## `pr:fleet`
 
-| Flag                      | Value                                                  |
-| ------------------------- | ------------------------------------------------------ |
-| `--model <provider>/<id>` | required; powers both the master and every worker      |
-| `--repo <owner/name>`     | repository; defaults to `shepherdjerred/monorepo`      |
-| `--checkout <path>`       | main checkout; defaults to the current Git root        |
-| `--worktree-root <path>`  | fleet worktree root                                    |
-| `--max-workers <1..5>`    | worker limit; defaults to `5`                          |
-| `--author <login>`        | include that login's drafts; excludes bot-authored PRs |
-| `--base-url <url>`        | endpoint required by `openai-compatible/<model>`       |
-| `--api-key-env <name>`    | API-key environment variable for a compatible endpoint |
-| `--review-provider <id>`  | hosted review provider; defaults to `codex`            |
-| `--state-dir <path>`      | override the run-bundle location                       |
-| `--no-ui`                 | do not build or spawn the web dashboard                |
-| `--ui-port <port>`        | pin the dashboard port                                 |
-| `--no-open`               | start the dashboard without opening a browser          |
-| `--help`                  | print usage, flags, and interactive commands           |
+| Flag                         | Value                                                  |
+| ---------------------------- | ------------------------------------------------------ |
+| `--model <catalog-model-id>` | required; powers both the master and every worker      |
+| `--repo <owner/name>`        | repository; defaults to `shepherdjerred/monorepo`      |
+| `--checkout <path>`          | main checkout; defaults to the current Git root        |
+| `--worktree-root <path>`     | fleet worktree root                                    |
+| `--max-workers <1..5>`       | worker limit; defaults to `5`                          |
+| `--author <login>`           | include that login's drafts; excludes bot-authored PRs |
+| `--review-provider <id>`     | hosted review provider; defaults to `codex`            |
+| `--state-dir <path>`         | override the run-bundle location                       |
+| `--no-ui`                    | do not build or spawn the web dashboard                |
+| `--ui-port <port>`           | pin the dashboard port                                 |
+| `--no-open`                  | start the dashboard without opening a browser          |
+| `--help`                     | print usage, flags, and interactive commands           |
 
-One selected API model powers both the conversational master and every bounded
-worker, so the controller is provider-neutral.
+Set `OPENROUTER_API_KEY` before starting the controller. The model must be a
+stable ID from `@shepherdjerred/llm-models` with OpenRouter tool and
+structured-output capabilities. One exact catalog model powers the master and
+every bounded worker. OpenRouter may choose another upstream provider for that
+model, but it may not silently substitute another model.
 
 ## In-session controls
 

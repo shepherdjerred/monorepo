@@ -20,12 +20,12 @@ export type TraceTextStreamFinal = {
 
 /**
  * Wrap a streaming-text call that yields chunks but doesn't expose a typed
- * SDK response (e.g. VoltAgent's `streamText`). The caller passes a thunk
+ * SDK response. The caller passes a thunk
  * that consumes the stream and returns the accumulated text plus any usage
  * data it can extract.
  *
  *   const result = await traceTextStream(
- *     { service: "birmel", callSite: "voltagent-router", system: "openai",
+ *     { service: "example", callSite: "stream", system: "gateway",
  *       model: config.openai.model, input },
  *     async () => {
  *       let accumulated = "";

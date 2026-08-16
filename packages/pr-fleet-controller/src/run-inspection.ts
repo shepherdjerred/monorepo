@@ -1,6 +1,9 @@
 import path from "node:path";
+import { z } from "zod";
 import {
   JsonValueSchema,
+  RunArtifactsV1Schema,
+  RunArtifactsV2Schema,
   RunEventPayloadSchema,
   RunSummarySchema,
   type JsonValue,
@@ -27,12 +30,14 @@ const BODY_FIELD_PATTERN =
   /^(?:body|change|content|context|description|error|escalation|freeText|header|label|lastAction|line|log|message|messages|output|patch|prompt|question|reason|response|stack|stderr|stdout|text)$/i;
 const BODY_ARRAY_FIELD_PATTERN =
   /^(?:args|blockers|changes|hardFailures|reviewFindings|validation)$/i;
-const RunTerminalPayloadSchema = RunSummarySchema.pick({
-  status: true,
-  finishedAt: true,
-  durationMs: true,
-  error: true,
-  artifacts: true,
+const RunTerminalPayloadSchema = z.object({
+  status: z.enum(["completed", "failed"]),
+  finishedAt: z.iso.datetime(),
+  durationMs: z.number().int().nonnegative(),
+  error: z
+    .object({ message: z.string(), stack: z.string().optional() })
+    .nullable(),
+  artifacts: z.union([RunArtifactsV1Schema, RunArtifactsV2Schema]),
 });
 
 export type RunBundle = {
@@ -71,10 +76,14 @@ export type ReplayReport = {
 export async function loadRunBundle(runDirectory: string): Promise<RunBundle> {
   const manifest = await readRunManifest(runDirectory);
   const summary = await readRunSummary(runDirectory);
+  if (manifest.schemaVersion !== summary.schemaVersion) {
+    throw new Error("Manifest and summary schema versions differ");
+  }
   await verifyRunArtifacts(
     {
-      mastra: path.join(runDirectory, manifest.files.mastra),
-      observability: path.join(runDirectory, manifest.files.observability),
+      mastra: path.join(runDirectory, "mastra.db"),
+      observability: path.join(runDirectory, "observability.duckdb"),
+      spans: path.join(runDirectory, "spans.jsonl"),
     },
     summary.artifacts,
   );
@@ -255,11 +264,27 @@ function countKinds(events: RecordedRunEvent[]): Record<string, number> {
   );
 }
 
+function verifyBundleSchemaVersions(bundle: RunBundle): void {
+  const { manifest, summary, events } = bundle;
+  if (summary.schemaVersion !== manifest.schemaVersion) {
+    throw new Error("Manifest and summary schema versions differ");
+  }
+  const schemaMismatch = events.find(
+    (event) => event.schemaVersion !== manifest.schemaVersion,
+  );
+  if (schemaMismatch !== undefined) {
+    throw new Error(
+      `Event ${String(schemaMismatch.sequence)} schema version does not match the manifest`,
+    );
+  }
+}
+
 function verifyBundleMetadata(
   bundle: RunBundle,
   options: { currentControllerVersion: string; allowVersionMismatch: boolean },
 ): Record<string, number> {
   const { manifest, summary, events } = bundle;
+  verifyBundleSchemaVersions(bundle);
   if (
     !options.allowVersionMismatch &&
     manifest.controllerVersion !== options.currentControllerVersion

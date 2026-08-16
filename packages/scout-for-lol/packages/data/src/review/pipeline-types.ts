@@ -8,7 +8,6 @@
  * - Observable with full trace output
  */
 
-import type { GoogleGenerativeAI } from "@google/generative-ai";
 import type { ArenaMatch, CompletedMatch } from "#src/model/index.ts";
 import type { RawMatch } from "#src/league/raw-match.schema.ts";
 import type { RawTimeline } from "#src/league/raw-timeline.schema.ts";
@@ -86,32 +85,52 @@ export type PipelineStagesConfig = {
 // ============================================================================
 
 /**
- * OpenAI client interface - minimal interface for dependency injection
+ * Provider-neutral text-generation boundary for dependency injection.
  */
-export type OpenAIClient = {
-  chat: {
-    completions: {
-      create: (params: {
-        model: string;
-        messages: { role: "system" | "user" | "assistant"; content: string }[];
-        max_completion_tokens: number;
-        temperature?: number;
-        top_p?: number;
-      }) => Promise<{
-        choices: {
-          message: {
-            content: string | null;
-            refusal?: string | null;
-          };
-          finish_reason?: string | null;
-        }[];
-        usage?: {
-          prompt_tokens?: number;
-          completion_tokens?: number;
-        };
-      }>;
-    };
-  };
+export type TextGenerationClient = {
+  generate: (params: {
+    model: string;
+    systemPrompt?: string;
+    userPrompt: string;
+    maxOutputTokens: number;
+    temperature?: number;
+    topP?: number;
+    workload: string;
+  }) => Promise<{
+    text: string;
+    finishReason: string | undefined;
+    inputTokens: number | undefined;
+    outputTokens: number | undefined;
+    openRouter?: OpenRouterGenerationMetadata | undefined;
+  }>;
+};
+
+export type OpenRouterGenerationMetadata = {
+  generationId?: string | undefined;
+  requestedModel: string;
+  resolvedModel?: string | undefined;
+  upstreamProvider?: string | undefined;
+  route?: string | undefined;
+  region?: string | undefined;
+  fallbackAttempts: number;
+  attempts: readonly {
+    provider: string;
+    model: string;
+    status: number;
+  }[];
+  actualCostUsd?: number | undefined;
+  upstreamCostUsd?: number | undefined;
+  routerMetadataPresent: boolean;
+};
+
+/** Provider-neutral image-generation boundary for dependency injection. */
+export type ImageGenerationClient = {
+  generate: (params: {
+    model: string;
+    prompt: string;
+    timeoutMs: number;
+    workload: string;
+  }) => Promise<{ imageBase64: string }>;
 };
 
 /**
@@ -160,10 +179,10 @@ export type PipelinePromptsInput = {
  * AI clients input for the pipeline
  */
 export type PipelineClientsInput = {
-  /** OpenAI client for text generation */
-  openai: OpenAIClient;
-  /** Gemini client for image generation (optional) */
-  gemini?: GoogleGenerativeAI;
+  /** OpenRouter-backed client for text generation. */
+  text: TextGenerationClient;
+  /** OpenRouter-backed client for image generation (optional). */
+  image?: ImageGenerationClient;
 };
 
 /**
@@ -189,7 +208,7 @@ export type ReviewPipelineInput = {
 // ============================================================================
 
 /**
- * Trace for a text generation stage (OpenAI call)
+ * Trace for a provider-neutral text generation stage.
  */
 export type StageTrace = {
   request: {
@@ -203,10 +222,12 @@ export type StageTrace = {
   durationMs: number;
   tokensPrompt?: number;
   tokensCompletion?: number;
+  transport?: "openrouter";
+  openRouter?: OpenRouterGenerationMetadata;
 };
 
 /**
- * Trace for image generation stage (Gemini call)
+ * Trace for an image generation stage.
  */
 export type ImageGenerationTrace = {
   request: {

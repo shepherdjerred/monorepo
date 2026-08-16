@@ -43,7 +43,6 @@ const GITHUB_TOKEN_EXCLUSIONS = [
   "GLANCE_TEST_",
   "@modelcontextprotocol",
   "server-github expects",
-  "mcp-gateway",
   "YOUR_GITHUB_TOKEN",
   "env:GITHUB_TOKEN",
   "CHANGELOG.md",

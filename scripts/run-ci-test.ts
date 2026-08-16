@@ -3,6 +3,8 @@ import {
   applyDefaultEnvironment,
   cargoTestJUnit,
   completeJUnitReport,
+  coverageArtifactFilename,
+  dotnetCoverageArguments,
   removeExistingReport,
   sanitizeWorkspace,
   testStepReportName,
@@ -165,11 +167,15 @@ async function commandForStep(
       if (project === undefined) {
         throw new Error("A .NET test project is required.");
       }
+      const coverageArguments = coverageEnabled
+        ? dotnetCoverageArguments(step, rawCoverageDirectory, process.cwd())
+        : [];
       return [
         await pinnedDotnetExecutable(),
         "test",
         path.resolve(process.cwd(), project),
         ...argumentsList,
+        ...coverageArguments,
         "--report-junit",
         "--report-junit-filename",
         reportPath,
@@ -184,17 +190,10 @@ function expectedCoveragePath(
   step: TestStep,
   rawCoverageDirectory: string,
 ): string | undefined {
-  switch (step.runner) {
-    case "bun":
-    case "vitest":
-      return path.join(rawCoverageDirectory, "lcov.info");
-    case "go":
-      return path.join(rawCoverageDirectory, "coverage.out");
-    case "cargo":
-    case "dotnet":
-    case "command":
-      return undefined;
-  }
+  const artifactFilename = coverageArtifactFilename(step);
+  return artifactFilename === undefined
+    ? undefined
+    : path.join(rawCoverageDirectory, artifactFilename);
 }
 
 function fallbackBunCoveragePath(step: TestStep): string | undefined {
@@ -210,9 +209,7 @@ for (const [index, step] of workspace.steps.entries()) {
   const rawCoverageDirectory = coverageDirectory(step, index);
   if (
     coverageEnabled &&
-    step.runner !== "cargo" &&
-    step.runner !== "dotnet" &&
-    step.runner !== "command"
+    expectedCoveragePath(step, rawCoverageDirectory) !== undefined
   ) {
     await Bun.$`mkdir -p ${rawCoverageDirectory}`;
   }

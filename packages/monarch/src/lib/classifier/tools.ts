@@ -1,5 +1,5 @@
+import { tool, type ToolSet } from "ai";
 import { z } from "zod";
-import type Anthropic from "@anthropic-ai/sdk";
 import type { MonarchTransaction } from "../monarch/types.ts";
 import type { MerchantKnowledge } from "../knowledge/types.ts";
 import type { CategoryDefinition } from "../knowledge/types.ts";
@@ -10,93 +10,41 @@ export type ToolContext = {
   categoryDefinitions: CategoryDefinition[];
 };
 
-export const TIER3_TOOLS: Anthropic.Messages.Tool[] = [
-  {
-    name: "merchant_history",
-    description:
-      "Look up how a merchant has been categorized historically. Returns category distribution and transaction count.",
-    input_schema: {
-      type: "object" as const,
-      properties: {
-        merchant_name: {
-          type: "string",
-          description: "The merchant name to look up",
-        },
-      },
-      required: ["merchant_name"],
-    },
-  },
-  {
-    name: "nearby_transactions",
-    description:
-      "Find transactions near a given date (within 3 days) to provide temporal context. Useful for understanding what a payment might be for based on surrounding transactions.",
-    input_schema: {
-      type: "object" as const,
-      properties: {
-        date: {
-          type: "string",
-          description: "The date to search around (YYYY-MM-DD format)",
-        },
-        days_range: {
-          type: "number",
-          description: "Number of days before and after to search (default: 3)",
-        },
-      },
-      required: ["date"],
-    },
-  },
-  {
-    name: "category_info",
-    description:
-      "Get detailed information about a category including its description, examples, and what does NOT belong in it.",
-    input_schema: {
-      type: "object" as const,
-      properties: {
-        category_name: {
-          type: "string",
-          description: "The category name to look up",
-        },
-      },
-      required: ["category_name"],
-    },
-  },
-];
-
-const MerchantHistoryInput = z.object({ merchant_name: z.string() });
+const MerchantHistoryInput = z.object({ merchantName: z.string() });
 const NearbyTransactionsInput = z.object({
   date: z.string(),
-  days_range: z.number().optional(),
+  daysRange: z.number().optional(),
 });
-const CategoryInfoInput = z.object({ category_name: z.string() });
+const CategoryInfoInput = z.object({ categoryName: z.string() });
 
-export function handleToolCall(
-  toolName: string,
-  input: unknown,
-  context: ToolContext,
-): string {
-  switch (toolName) {
-    case "merchant_history": {
-      const parsed = MerchantHistoryInput.safeParse(input);
-      if (!parsed.success) return `Invalid input: ${parsed.error.message}`;
-      return handleMerchantHistory(parsed.data.merchant_name, context);
-    }
-    case "nearby_transactions": {
-      const parsed = NearbyTransactionsInput.safeParse(input);
-      if (!parsed.success) return `Invalid input: ${parsed.error.message}`;
-      return handleNearbyTransactions(
-        parsed.data.date,
-        parsed.data.days_range ?? 3,
-        context,
-      );
-    }
-    case "category_info": {
-      const parsed = CategoryInfoInput.safeParse(input);
-      if (!parsed.success) return `Invalid input: ${parsed.error.message}`;
-      return handleCategoryInfo(parsed.data.category_name, context);
-    }
-    default:
-      return `Unknown tool: ${toolName}`;
-  }
+export function createTier3Tools(context: ToolContext): ToolSet {
+  const merchantHistory = tool({
+    description:
+      "Look up how a merchant has been categorized historically. Returns category distribution and transaction count.",
+    inputSchema: MerchantHistoryInput,
+    outputSchema: z.string(),
+    execute: ({ merchantName }) => handleMerchantHistory(merchantName, context),
+  });
+  const nearbyTransactions = tool({
+    description:
+      "Find transactions near a given date (within 3 days) to provide temporal context. Useful for understanding what a payment might be for based on surrounding transactions.",
+    inputSchema: NearbyTransactionsInput,
+    outputSchema: z.string(),
+    execute: ({ date, daysRange }) =>
+      handleNearbyTransactions(date, daysRange ?? 3, context),
+  });
+  const categoryInfo = tool({
+    description:
+      "Get detailed information about a category including its description, examples, and what does NOT belong in it.",
+    inputSchema: CategoryInfoInput,
+    outputSchema: z.string(),
+    execute: ({ categoryName }) => handleCategoryInfo(categoryName, context),
+  });
+  return {
+    merchant_history: merchantHistory,
+    nearby_transactions: nearbyTransactions,
+    category_info: categoryInfo,
+  };
 }
 
 function handleMerchantHistory(
