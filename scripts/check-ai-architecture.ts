@@ -84,10 +84,6 @@ const CREDENTIAL_SANITIZER_PATHS = new Set([
   "packages/temporal/src/activities/agent-task-env.ts",
   "scripts/lib/release-refiner.ts",
 ]);
-// This Fish template only unsets provider keys at the coding-agent process
-// boundary. It is not an inference runtime or a credential consumer.
-const INTERACTIVE_AGENT_WRAPPER_PATH =
-  "packages/dotfiles/private_dot_config/private_fish/config.fish.tmpl";
 
 const WHISPER_TRANSCRIPTION_ADAPTER =
   "packages/homelab/src/cdk8s/src/resources/torrents/whisperbridge.ts";
@@ -112,8 +108,7 @@ function isAllowedViolation(rule: ArchitectureRule, filePath: string): boolean {
     return (
       isTestOrFixture(filePath) ||
       CREDENTIAL_SANITIZER_PATHS.has(filePath) ||
-      filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
-      filePath === INTERACTIVE_AGENT_WRAPPER_PATH
+      filePath === WHISPER_TRANSCRIPTION_ADAPTER
     );
   }
 

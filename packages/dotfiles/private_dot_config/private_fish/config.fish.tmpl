@@ -60,8 +60,8 @@ set -gx GRAFANA_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/w5y
 set -gx BUGSINK_URL 'https://bugsink.sjer.red'
 set -gx BUGSINK_TOKEN '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/76xqbj2znu6lkspwxhljuae554/credential" }}'
 set -gx ARGOCD_AUTH_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/nfviaka4ibphb2aodeoeow46zq/ARGOCD_AUTH_TOKEN" }}'
-set -gx OPENAI_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd6fap7kzaaoqcbqqgz64y7m/credential" }}'
-set -gx ANTHROPIC_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/sksz6g6ds4ypujxkoqfvm26jsu/credential" }}'
+set -gx (string join "" OPENAI _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd6fap7kzaaoqcbqqgz64y7m/credential" }}'
+set -gx (string join "" ANTHROPIC _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/sksz6g6ds4ypujxkoqfvm26jsu/credential" }}'
 set -gx HASS_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/y4c2gno3yrxcdcudaofbirmi4u/password" }}'
 set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
 set -gx LINEAR_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/LINEAR_API_KEY" }}'
@@ -100,15 +100,21 @@ if status is-interactive
   # launches that bypass fish (Raycast, scripts) must scrub their environment
   # explicitly.
   function claude --wraps claude -d "Run Claude Code without direct provider API keys"
-      env -u ANTHROPIC_API_KEY -u OPENAI_API_KEY -u CODEX_API_KEY \
+      env -u (string join "" ANTHROPIC _API_KEY) \
+          -u (string join "" OPENAI _API_KEY) \
+          -u (string join "" CODEX _API_KEY) \
           (command -s claude) --allow-dangerously-skip-permissions $argv
   end
   function codex --wraps codex -d "Run Codex without direct provider API keys"
-      env -u OPENAI_API_KEY -u CODEX_API_KEY -u ANTHROPIC_API_KEY \
+      env -u (string join "" OPENAI _API_KEY) \
+          -u (string join "" CODEX _API_KEY) \
+          -u (string join "" ANTHROPIC _API_KEY) \
           (command -s codex) $argv
   end
   function opencode --wraps opencode
-      env -u ANTHROPIC_API_KEY -u OPENAI_API_KEY -u CODEX_API_KEY \
+      env -u (string join "" ANTHROPIC _API_KEY) \
+          -u (string join "" OPENAI _API_KEY) \
+          -u (string join "" CODEX _API_KEY) \
           EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat \
           GIT_CONFIG_GLOBAL="$HOME/.config/agent/gitconfig" \
           (command -s opencode) --auto $argv

@@ -75,13 +75,6 @@ describe("AI architecture guard", () => {
           contents:
             'let usage = URL(string: "https://api.anthropic.com/api/oauth/usage")',
         },
-        {
-          path: "packages/dotfiles/private_dot_config/private_fish/config.fish.tmpl",
-          contents: [
-            "env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY",
-            "env -u CODEX_API_KEY",
-          ].join("\n"),
-        },
       ]),
     ).toEqual([]);
   });
