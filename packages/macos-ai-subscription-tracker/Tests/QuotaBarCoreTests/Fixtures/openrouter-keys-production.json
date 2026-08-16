@@ -1,0 +1,12 @@
+{
+  "data": [
+    {
+      "usage_monthly": 2.5,
+      "byok_usage_monthly": 0.5
+    },
+    {
+      "usage_monthly": 1.0,
+      "byok_usage_monthly": 0.25
+    }
+  ]
+}
