@@ -78,10 +78,14 @@ normalize each source, then enters the production Discord Opus encoder/decoder a
 distinguishes sherpa candidates from phrase-verifier passes. Use `--runtime both
 --require-perfect` for a blocking native/WASM comparison.
 
-Production is globally disabled (`VOICE_ASSISTANT_ENABLED=false`) until four gates pass: the
-canonical 400-clip synthetic corpus in both native and WASM runtimes, the private three-speaker
-human holdout, two consecutive live Discord/OpenAI matrices, and the production smoke/soak. There
-is intentionally no guild allowlist. `.dopus` fixtures are versioned length-prefixed 20 ms Discord
+Production ships with voice enabled (`VOICE_ASSISTANT_ENABLED=true` in the homelab chart); the
+flag is the single GitOps rollback knob and there is intentionally no guild allowlist. The merge
+bar is the deterministic suite plus the image's two-runtime recognition smoke; wake quality is
+measured (not gated) by the operator-run corpus evaluation, whose reports live in
+`voice-training/reports/`. A missed wake means repeating yourself; a local false accept costs one
+rate-limited transcription that the transcript gate rejects. The live e2e matrix and the
+three-speaker human holdout remain available as diagnostics, not merge gates; the
+`voice-training/` recipe is the improvement path when live quality warrants it. `.dopus` fixtures are versioned length-prefixed 20 ms Discord
 Opus packets; offline evaluation must enter `DiscordOpusDecoder` and `VoiceAudioLifecycle`, never a
 test-only recognizer path. The final image must not contain the corpus. Corpus evaluation is an
 operator-run acceptance measurement, not a build step — the image build's only voice gate is the

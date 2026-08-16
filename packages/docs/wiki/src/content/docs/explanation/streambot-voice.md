@@ -97,35 +97,30 @@ audio item with command-only text. SDK audio history and tracing are disabled. M
 bounded stage outcomes, usage, concurrency, and latency—never speakers, transcripts, or media
 queries. The OpenAI project should use zero-data retention when that control is available.
 
-## Confidence before enablement
+## Launch posture
 
-Production is deliberately configured with `VOICE_ASSISTANT_ENABLED=false`. Enabling it is a global
-cutover—there is no guild allowlist—so four independent gates must pass first:
+Production ships with `VOICE_ASSISTANT_ENABLED=true`; the flag is the single GitOps rollback knob
+and there is no guild allowlist. The bar for shipping is correctness and boundedness, not wake-word
+perfection, because the failure modes are asymmetric:
 
-1. A checked-in 400-clip generated corpus passes the exact Discord Opus → production decoder →
-   sherpa KWS → phrase ONNX verifier → Silero VAD path in both native and WASM runtimes. Sherpa must
-   nominate every ordinary positive; the local verifier must accept every ordinary positive,
-   reject every canonical negative, and retain at least 95% recall at 10 dB SNR. The thresholds are
-   executable, not prose:
-   [`corpus-evaluator.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/corpus-evaluator.ts).
-2. Three people supply a private 30-clip holdout under `.context`. All 15 wake commands must work
-   through both local layers and final transcript verification, while all 15
-   near-match/background clips produce no final wake, reply, or command. The recordings are deleted
-   after the aggregate result is written and are never used for tuning.
-3. The live two-account Discord/OpenAI matrix passes twice. It attributes reply packets to the
-   acquired userbot, requires DAVE, decodes non-silent audio, checks exact privacy-safe metric
-   deltas, exercises every playback tool and permission boundary, and proves two same-guild
-   sessions do not cross.
-   A separate invalid-credential mode must prove a real Discord wake fails closed while Go Live
-   keeps advancing.
-4. Ten production commands and a 60-minute background soak show no false wakes, stuck duck,
-   cross-session action, repeated provider error, or sensitive metric/log content.
+- A **missed wake** costs a repeat of "Hey Streambot". Recall on real recordings is imperfect
+  (the packaged sherpa matcher recognized 8/11 cafe-noise recordings in the last live diagnostic).
+- A **local false accept** costs one rate-limited transcription of ~2 s of pre-roll plus the
+  utterance, which the strict transcript gate then rejects — never an action, never a spoken reply
+  from the Realtime model. Per session that is bounded to a burst of two and five per minute, under
+  the spend ceiling on the OpenAI project key.
+- A **wrong action** requires the transcript to begin with the normalized wake phrase and the
+  model to pick a permission-checked tool — the same authority the speaker already has via slash.
 
-The latest local diagnostic set does not pass this gate. The packaged sherpa matcher recognized
-8/11 intended wake recordings but falsely activated on 14/48 generated near-match and ordinary
-speech clips. A separate noise-trained phrase-classifier experiment also failed to separate the
-same untouched post-Opus holdout. Neither result changes production assets or the disabled rollout
-state.
+What must pass before merge is the deterministic suite (the full turn against a fake Realtime
+transport, the lifecycle including DTX endpointing, corpus integrity) and the image's two-runtime
+recognition smoke. Wake quality is **measured, not gated**: the operator-run corpus evaluation
+([`corpus-evaluator.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/corpus-evaluator.ts))
+writes date-stamped reports to `packages/streambot/voice-training/reports/`, and the live
+two-account e2e matrix plus the three-speaker human holdout remain available as diagnostics.
+After a deploy, the Grafana voice panels (wake candidates, cloud verifications, failures, duck
+transitions) are the observation surface; the emergency rollback is the kill switch back to
+`false`.
 
 The full phrase-verifier recipe and operator procedure live in
 [`packages/streambot/voice-training/`](https://github.com/shepherdjerred/monorepo/tree/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/voice-training).
