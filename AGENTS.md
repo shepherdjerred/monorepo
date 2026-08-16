@@ -517,6 +517,46 @@ Local and CI verification deliberately have different scopes:
 Run `bun run verify` locally only when explicitly reproducing CI or modifying
 the verification machinery itself. There is no `pre-push` hook.
 
+### CI credentials — `check-ci-env`
+
+`scripts/check-ci-env.ts` (the `//#check-ci-env` turbo task, in `bun run
+verify`) asserts every env var a Buildkite step's scripts `requireEnv` is
+actually provided to that step. It reads the committed vault snapshot, so it
+needs no 1Password access.
+
+The gap it closes: steps take `buildkite-ci-secrets` through `envFrom`, which
+`check-1password-items` cannot see — a script requiring a field the item does
+not carry passed every gate and only failed on `main` after merge. When it
+fires, either add the field to the item **and refresh the vault snapshot**, set
+it in the step's `env`, or assign it in the step's command. Requirements the
+analysis cannot read statically (a non-literal `requireEnv`, or one gated
+behind a flag the step passes) go in the two exception tables at the top of the
+script, each with its reason.
+
+### Blocked review gate — `review-findings`
+
+```bash
+GH_TOKEN=$(gh auth token) bun scripts/review-findings.ts list <pr>
+```
+
+Lists every finding blocking the required Qodo gate with its title, severity
+and location. Run it **before** pushing a fix: a fix pushed without resolving
+its thread only surfaces at the end of a ~7-minute gate cycle.
+
+Qodo re-lists a finding it no longer stands behind rather than striking it, so
+a PR whose findings are all fixed or all wrong can stay blocked indefinitely.
+For that case only, after verifying a finding is fixed at this head or
+incorrect:
+
+```bash
+… review-findings.ts dismiss <pr> --finding "<title>" --reason "<why>"
+… review-findings.ts resolve-thread <pr> --thread <id> --reason "<why>"
+```
+
+Both require a reason and record it in a single audit comment on the PR, so a
+dismissal is a reviewable decision rather than an invisible edit to a bot's
+comment. Neither is automatic and neither runs in CI.
+
 ## PR Fleet Controller
 
 `bun run pr:fleet --model <catalog-model-id> [--author <login>]` starts the

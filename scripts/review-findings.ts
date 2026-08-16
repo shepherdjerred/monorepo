@@ -280,13 +280,24 @@ async function dismissCommand(
       `${provider.displayName} has posted no review comment on ${repo}#${String(prNumber)}.`,
     );
   }
-  const edited = markQodoFindingResolved(review.body, finding);
+  const commentId = commentIdFromUrl(review.url);
+  // Re-read immediately before editing rather than trusting the snapshot
+  // resolveReviewState fetched. The PATCH replaces the whole body, so a
+  // re-review landing in between would be silently overwritten — erasing
+  // findings Qodo had just reported.
+  const fresh = CommentSchema.loose().parse(
+    await githubJson(
+      "GET",
+      `${GITHUB_API}/repos/${repo}/issues/comments/${String(commentId)}`,
+      token,
+    ),
+  );
+  const edited = markQodoFindingResolved(fresh.body, finding);
   if (edited === null) {
     throw new Error(
       `no finding titled "${finding}" in the review comment. Run \`list\` to see the exact titles.`,
     );
   }
-  const commentId = commentIdFromUrl(review.url);
   await githubJson(
     "PATCH",
     `${GITHUB_API}/repos/${repo}/issues/comments/${String(commentId)}`,
@@ -364,6 +375,61 @@ async function recordDismissal(
   );
 }
 
+const ThreadOwnerSchema = z.object({
+  data: z
+    .object({
+      node: z
+        .object({
+          pullRequest: z.object({
+            number: z.number(),
+            repository: z.object({ nameWithOwner: z.string() }),
+          }),
+        })
+        .nullish(),
+    })
+    .nullish(),
+});
+
+async function assertThreadBelongsToPr(input: {
+  repo: string;
+  prNumber: number;
+  token: string;
+  threadId: string;
+}): Promise<void> {
+  const response = await fetch(`${GITHUB_API}/graphql`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${input.token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query:
+        "query($id: ID!) { node(id: $id) { ... on PullRequestReviewThread { pullRequest { number repository { nameWithOwner } } } } }",
+      variables: { id: input.threadId },
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(
+      `could not read thread ${input.threadId}: ${String(response.status)} ${response.statusText}`,
+    );
+  }
+  const owner = ThreadOwnerSchema.parse(await response.json()).data?.node
+    ?.pullRequest;
+  if (owner === undefined) {
+    throw new Error(
+      `${input.threadId} is not a pull request review thread on ${input.repo}.`,
+    );
+  }
+  if (
+    owner.number !== input.prNumber ||
+    owner.repository.nameWithOwner !== input.repo
+  ) {
+    throw new Error(
+      `${input.threadId} belongs to ${owner.repository.nameWithOwner}#${String(owner.number)}, not ${input.repo}#${String(input.prNumber)}.`,
+    );
+  }
+}
+
 async function resolveThreadCommand(
   repo: string,
   prNumber: number,
@@ -377,6 +443,10 @@ async function resolveThreadCommand(
       'resolve-thread requires --thread <id> and a non-empty --reason "<why>".',
     );
   }
+  // A thread id copied from another PR is a valid node id, so resolving it
+  // blind would close an unrelated thread and record the dismissal against
+  // this PR. Confirm ownership before mutating anything.
+  await assertThreadBelongsToPr({ repo, prNumber, token, threadId });
   const response = await fetch(`${GITHUB_API}/graphql`, {
     method: "POST",
     headers: {

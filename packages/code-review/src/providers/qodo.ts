@@ -186,28 +186,40 @@ export function markQodoFindingResolved(
   body: string,
   title: string,
 ): string | null {
-  for (const match of body.matchAll(
-    /<summary>\s*\d+\.[\s\S]*?<\/summary>/giu,
-  )) {
-    const block = match[0];
-    const summary = block.slice("<summary>".length, -"</summary>".length);
-    if (findingTitle(summary) !== title) continue;
-    // Already resolved: report success rather than writing a second chip.
-    if (summary.includes("☑")) return body;
-    const chipIndex = block.indexOf("<code>");
-    const insertAt =
-      chipIndex === -1 ? block.length - "</summary>".length : chipIndex;
-    const edited =
-      block.slice(0, insertAt) +
-      `${QODO_RESOLVED_CHIP} ` +
-      block.slice(insertAt);
-    return (
-      body.slice(0, match.index) +
-      edited +
-      body.slice(match.index + block.length)
+  const matches = [
+    ...body.matchAll(/<summary>\s*\d+\.[\s\S]*?<\/summary>/giu),
+  ].filter((match) =>
+    (() => {
+      const summary = match[0].slice("<summary>".length, -"</summary>".length);
+      return findingTitle(summary) === title;
+    })(),
+  );
+  // Two findings can share a headline. Editing the first would resolve one the
+  // operator may not have verified and leave the other unreachable — worse, if
+  // the first is already resolved this would report success having done
+  // nothing. Refuse instead of guessing which one was meant.
+  const unresolved = matches.filter(
+    (match) => !match[0].includes("☑") && !/<s>[\s\S]*?<\/s>/iu.test(match[0]),
+  );
+  if (matches.length > 1 && unresolved.length !== 1) {
+    throw new Error(
+      `"${title}" matches ${String(matches.length)} findings in the review comment; ` +
+        `resolve them from the PR instead so the right one is chosen deliberately.`,
     );
   }
-  return null;
+  const match = unresolved[0] ?? matches[0];
+  if (match === undefined) return null;
+  const block = match[0];
+  // Already resolved: report success rather than writing a second chip.
+  if (block.includes("☑")) return body;
+  const chipIndex = block.indexOf("<code>");
+  const insertAt =
+    chipIndex === -1 ? block.length - "</summary>".length : chipIndex;
+  const edited =
+    block.slice(0, insertAt) + `${QODO_RESOLVED_CHIP} ` + block.slice(insertAt);
+  return (
+    body.slice(0, match.index) + edited + body.slice(match.index + block.length)
+  );
 }
 
 function parseSeveritySection(
