@@ -2,9 +2,11 @@ import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-  LeaguePuuidSchema,
-  type BucksPoolParticipant,
 } from "@scout-for-lol/data/index.ts";
+import {
+  bucksTestPuuid,
+  bucksTestRoster,
+} from "#src/testing/bucks-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { placeBet, type PlaceBetInput } from "#src/betting/place-bet.ts";
 import { SEED_GRANT } from "#src/betting/constants.ts";
@@ -16,24 +18,8 @@ const BETTOR = DiscordAccountIdSchema.parse("160509172704739328");
 const STRANGER = DiscordAccountIdSchema.parse("160509172704739399");
 const MATCH_ID = "NA1_5000000001";
 
-function puuidFor(index: number) {
-  return LeaguePuuidSchema.parse(
-    `p${index.toString().padStart(2, "0")}`.padEnd(78, "x"),
-  );
-}
-
-const SUBJECT_PUUID = puuidFor(0);
-const ENEMY_PUUID = puuidFor(5);
-
-function roster(): BucksPoolParticipant[] {
-  return Array.from({ length: 10 }, (_unused, index) => ({
-    puuid: puuidFor(index),
-    teamId: index < 5 ? (100 as const) : (200 as const),
-    championId: 1 + index,
-    riotId: `Player${index.toString()}#NA1`,
-    trackedAlias: index === 0 ? "jerred" : index === 5 ? "bryan" : undefined,
-  }));
-}
+const SUBJECT_PUUID = bucksTestPuuid(0);
+const ENEMY_PUUID = bucksTestPuuid(5);
 
 /** Place a bet with the standard fixture values, overriding what the test
  * cares about. */
@@ -90,7 +76,7 @@ beforeEach(async () => {
       detectedAt: new Date(Date.now() - 60_000),
       closesAt: new Date(Date.now() + 5 * 60_000),
       queueType: "solo",
-      roster: JSON.stringify({ participants: roster() }),
+      roster: JSON.stringify({ participants: bucksTestRoster() }),
     },
   });
 });
@@ -203,7 +189,7 @@ describe("placeBet — refusing a position", () => {
   });
 
   test("refuses a subject who is not in this game", async () => {
-    const result = await bet({ subjectPuuid: puuidFor(42) });
+    const result = await bet({ subjectPuuid: bucksTestPuuid(42) });
     if (result.kind !== "unknown_subject") {
       throw new Error("expected an unknown subject");
     }
