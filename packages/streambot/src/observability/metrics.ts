@@ -406,6 +406,12 @@ export const voiceReplyPacketsTotal = new Counter({
   registers: [register],
 });
 
+export const voiceTurnDeliveryFailuresTotal = new Counter({
+  name: "streambot_voice_turn_delivery_failures_total",
+  help: "Voice turns whose delivery threw before the turn's own error handling",
+  registers: [register],
+});
+
 export const voiceReplySendFailuresTotal = new Counter({
   name: "streambot_voice_reply_send_failures_total",
   help: "Assistant Opus sends that failed, normally a voice disconnect mid-reply",

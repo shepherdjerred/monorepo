@@ -6,6 +6,7 @@ import type {
   LocalVoiceModels,
   VoiceActivityDetector,
 } from "@shepherdjerred/streambot/voice/local-models.ts";
+import { voiceTurnDeliveryFailuresTotal } from "@shepherdjerred/streambot/observability/metrics.ts";
 import {
   VOICE_FRAGMENT_TAIL_MARGIN_MS,
   VOICE_FRAGMENT_TAIL_MS,
@@ -437,6 +438,13 @@ export class VoiceAudioLifecycle {
   private async deliver(turn: CompletedVoiceTurn): Promise<void> {
     try {
       await this.options.onTurn(turn);
+    } catch {
+      // Started with `void`, so a rejection here has nowhere to go and becomes
+      // an unhandled rejection. Not every onTurn failure is caught by the turn
+      // itself: VoiceAssistantSession runs UserIdSchema.parse and holdTeardown
+      // *before* its own try/catch, so those throw straight past it. Count it
+      // and let the finally below still release the transaction.
+      voiceTurnDeliveryFailuresTotal.inc();
     } finally {
       turn.pcm16k.fill(0);
       this.transactionRunning = false;

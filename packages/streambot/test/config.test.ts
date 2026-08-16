@@ -157,3 +157,32 @@ describe("loadConfig", () => {
     ).toThrow("Invalid streambot configuration");
   });
 });
+
+describe("empty environment variables", () => {
+  test("an explicitly-empty OPENAI_API_KEY is treated as unset", () => {
+    // `openAiApiKey` is `z.string().min(1).optional()`, so passing "" straight
+    // through fails validation and crashes startup — on deployments that never
+    // enable voice at all, which is what makes it a real foot-gun.
+    const config = loadConfig({ ...VALID, OPENAI_API_KEY: "" });
+
+    expect(config.voice.openAiApiKey).toBeUndefined();
+    expect(config.voice.enabled).toBe(false);
+  });
+
+  test("an explicitly-empty VOICE_ASSETS_DIR falls back to the default", () => {
+    // `.default()` only applies to undefined, so "" would reach `.min(1)` and
+    // throw rather than yielding the default.
+    const config = loadConfig({ ...VALID, VOICE_ASSETS_DIR: "" });
+
+    expect(config.voice.assetsDir).toBe("/opt/streambot/voice");
+  });
+
+  test("a real OPENAI_API_KEY still comes through", () => {
+    const config = loadConfig({
+      ...VALID,
+      OPENAI_API_KEY: "sk-not-a-real-key",
+    });
+
+    expect(config.voice.openAiApiKey).toBe("sk-not-a-real-key");
+  });
+});

@@ -27,6 +27,15 @@ function num(value: string | undefined): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+function str(value: string | undefined): string | undefined {
+  // An explicitly-empty environment variable means "unset", not "the empty
+  // string". Several schema fields are `.min(1)`, so passing "" through fails
+  // validation and crashes startup — including on deployments that never turn
+  // the corresponding feature on. A `.default()` does not rescue it either,
+  // since defaults only apply to undefined.
+  return value === undefined || value === "" ? undefined : value;
+}
+
 function bool(value: string | undefined): boolean | undefined {
   if (value === undefined) {
     return undefined;
@@ -66,11 +75,11 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
     },
     voice: {
       enabled: bool(env["VOICE_ASSISTANT_ENABLED"]),
-      openAiApiKey: env["OPENAI_API_KEY"],
+      openAiApiKey: str(env["OPENAI_API_KEY"]),
       model: env["VOICE_MODEL"],
       assistantVoice: env["VOICE_ASSISTANT_VOICE"],
       wakePhrase: env["VOICE_WAKE_PHRASE"],
-      assetsDir: env["VOICE_ASSETS_DIR"],
+      assetsDir: str(env["VOICE_ASSETS_DIR"]),
       runtime: env["VOICE_KWS_RUNTIME"],
       preRollMs: num(env["VOICE_PRE_ROLL_MS"]),
       maxUtteranceMs: num(env["VOICE_MAX_UTTERANCE_MS"]),
