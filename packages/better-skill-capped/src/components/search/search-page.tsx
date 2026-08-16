@@ -1,28 +1,35 @@
-import React, { useState } from "react";
+import React from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import type { IFuseOptions } from "fuse.js";
-import { Searchbar } from "./search/searchbar.tsx";
-import PaginatedFuseSearch from "./search/paginated-fuse-search.tsx";
-import { Container } from "#src/components/container";
-import FilterSelector from "./filter/filter-selector.tsx";
-import type { Filters } from "./filter/filters.ts";
-import type { OmniSearchable } from "./omni-searchable.ts";
-import { searchableFields } from "./omni-searchable.ts";
-import { OmniSearchResult } from "./omni-search-result.tsx";
-import { TipsButton } from "#src/components/tips-button";
-import { TipsModal } from "#src/components/modal/tips-modal";
-import Banner, { BannerType } from "#src/components/banner";
+import { SearchBar } from "./search-bar.tsx";
+import { ResultList } from "./result-list.tsx";
+import { FilterPanel } from "./filter-panel.tsx";
+import type { Filters } from "./filters.ts";
+import { ContentCard } from "#src/components/content/content-card";
+import { ScoutBanner } from "#src/components/layout/scout-banner";
+import { TipsDialog } from "#src/components/layout/tips-dialog";
+import type { ContentItem } from "#src/model/content";
 import { KINDS } from "#src/model/content";
 import { ROLES } from "#src/model/role";
 import { useContent } from "#src/hooks/use-content";
 import { useBookmarks } from "#src/hooks/use-bookmarks";
 import { useWatchStatus } from "#src/hooks/use-watch-status";
-import { useDownloadEnabled } from "#src/hooks/use-download-enabled";
 
 const routeApi = getRouteApi("/");
 
-const FUSE_OPTIONS: IFuseOptions<OmniSearchable> = {
-  keys: searchableFields,
+const SEARCHABLE_FIELDS = [
+  "title",
+  "description",
+  "alternateTitle",
+  "videos.video.title",
+  "videos.video.altTitle",
+  "video.title",
+  "video.description",
+  "video.alternateTitle",
+];
+
+const FUSE_OPTIONS: IFuseOptions<ContentItem> = {
+  keys: SEARCHABLE_FIELDS,
   minMatchCharLength: 2,
   threshold: 0.3,
   useExtendedSearch: true,
@@ -33,10 +40,12 @@ const FUSE_OPTIONS: IFuseOptions<OmniSearchable> = {
 
 const ITEMS_PER_PAGE = 20;
 
-export function OmniSearch(): React.ReactElement {
+export function SearchPage(): React.ReactElement {
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const { content, error } = useContent();
+  const { isBookmarked, toggle: toggleBookmark } = useBookmarks();
+  const { isWatched, toggle: toggleWatchStatus } = useWatchStatus();
 
   // A failed manifest fetch/parse leaves `content` undefined, which would
   // render as an empty catalog. Surface it to the route error boundary
@@ -44,12 +53,8 @@ export function OmniSearch(): React.ReactElement {
   if (error !== null) {
     throw error;
   }
-  const { isBookmarked, toggle: toggleBookmark } = useBookmarks();
-  const { isWatched, toggle: toggleWatchStatus } = useWatchStatus();
-  const isDownloadEnabled = useDownloadEnabled();
-  const [isTipsModalVisible, setTipsModalVisible] = useState(false);
 
-  const items: OmniSearchable[] = React.useMemo(() => {
+  const items: ContentItem[] = React.useMemo(() => {
     if (content === undefined) {
       return [];
     }
@@ -117,8 +122,8 @@ export function OmniSearch(): React.ReactElement {
     });
   };
 
-  // The selectors render "no filter" as everything checked.
-  const selectorFilters: Filters = {
+  // The filter panel renders "no filter" as everything checked.
+  const panelFilters: Filters = {
     ...filters,
     roles: filters.roles.length === 0 ? [...ROLES] : filters.roles,
     types: filters.types.length === 0 ? [...KINDS] : filters.types,
@@ -126,18 +131,8 @@ export function OmniSearch(): React.ReactElement {
 
   return (
     <>
-      <TipsModal
-        isVisible={isTipsModalVisible}
-        onClose={() => {
-          setTipsModalVisible(false);
-        }}
-      />
-      <TipsButton
-        onClick={() => {
-          setTipsModalVisible(true);
-        }}
-      />
-      <Searchbar
+      <TipsDialog />
+      <SearchBar
         value={search.q}
         onValueUpdate={(newValue) => {
           void navigate({
@@ -147,47 +142,43 @@ export function OmniSearch(): React.ReactElement {
         }}
         placeholder="Search for courses, videos, or game commentary"
       />
-      <Container
-        sidebar={
-          <FilterSelector
-            filters={selectorFilters}
+      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 md:grid-cols-[14rem_1fr]">
+        <aside>
+          <FilterPanel
+            filters={panelFilters}
             onFiltersUpdate={onFiltersUpdate}
           />
-        }
-      >
-        <Banner type={BannerType.Warning}>
-          Check out <a href="https://scout-for-lol.com/">Scout</a> - a Discord
-          bot that notifies you when friends finish League matches with detailed
-          post-match reports!
-        </Banner>
-        <PaginatedFuseSearch
-          query={search.q}
-          items={filteredItems}
-          fuseOptions={FUSE_OPTIONS}
-          render={(result) => (
-            <OmniSearchResult
-              key={result.item.uuid}
-              item={result.item}
-              isWatched={isWatched}
-              isBookmarked={isBookmarked}
-              onToggleBookmark={toggleBookmark}
-              onToggleWatchStatus={toggleWatchStatus}
-              matchedStrings={result.matchedStrings}
-              isDownloadEnabled={isDownloadEnabled}
-            />
-          )}
-          itemsPerPage={ITEMS_PER_PAGE}
-          page={search.page}
-          onPageChange={(newPage) => {
-            // Scrolling here (the event handler) rather than in an effect —
-            // scrollRestoration only manages full-navigation scroll.
-            window.scrollTo(0, 0);
-            void navigate({
-              search: (previous) => ({ ...previous, page: newPage }),
-            });
-          }}
-        />
-      </Container>
+        </aside>
+        <main className="min-w-0">
+          <ScoutBanner />
+          <ResultList
+            query={search.q}
+            items={filteredItems}
+            fuseOptions={FUSE_OPTIONS}
+            render={(result) => (
+              <ContentCard
+                key={result.item.uuid}
+                item={result.item}
+                matchedStrings={result.matchedStrings}
+                isWatched={isWatched}
+                isBookmarked={isBookmarked}
+                onToggleBookmark={toggleBookmark}
+                onToggleWatchStatus={toggleWatchStatus}
+              />
+            )}
+            itemsPerPage={ITEMS_PER_PAGE}
+            page={search.page}
+            onPageChange={(newPage) => {
+              // Scrolling here (the event handler) rather than in an effect —
+              // scrollRestoration only manages full-navigation scroll.
+              window.scrollTo(0, 0);
+              void navigate({
+                search: (previous) => ({ ...previous, page: newPage }),
+              });
+            }}
+          />
+        </main>
+      </div>
     </>
   );
 }

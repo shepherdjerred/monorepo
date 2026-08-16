@@ -1,9 +1,0 @@
-@media (prefers-color-scheme: dark) {
-  .modal-card-body {
-    background-color: #242424 !important;
-  }
-
-  .modal-background {
-    background-color: rgba(0, 0, 0, 0.86) !important;
-  }
-}

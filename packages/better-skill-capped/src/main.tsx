@@ -1,25 +1,9 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import App from "./components/app.tsx";
-import "./bulma.sass";
 import * as Sentry from "@sentry/react";
+import App from "./components/app.tsx";
 import { migrateStorage } from "./storage/migrate.ts";
-
-// Set up dark mode based on system preference
-function setupTheme() {
-  const prefersDark = globalThis.matchMedia(
-    "(prefers-color-scheme: dark)",
-  ).matches;
-  document.documentElement.dataset["theme"] = prefersDark ? "dark" : "light";
-}
-
-// Initial setup
-setupTheme();
-
-// Listen for system theme changes
-globalThis
-  .matchMedia("(prefers-color-scheme: dark)")
-  .addEventListener("change", setupTheme);
+import "#styles/globals.css";
 
 // VITE_SENTRY_RELEASE is not currently injected for this package (the deploy
 // entry has no buildEnvVars), so release is undefined until that changes.
