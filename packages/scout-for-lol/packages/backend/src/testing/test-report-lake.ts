@@ -42,6 +42,10 @@ export type TestLakeMatchFact = {
   assists: number;
   gameDurationSeconds?: number;
   timePlayedSeconds?: number;
+  /** Override to make per-participant damage vary, e.g. for damage-share tests. */
+  totalDamageDealtToChampions?: number;
+  /** Override to make per-participant CS vary, e.g. for CS-per-minute tests. */
+  creepScore?: number;
   teamId?: number;
   /** Arena subteam (1-8); leave unset for non-Arena queues. */
   playerSubteamId?: number;
@@ -108,13 +112,13 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
       fact.deaths === 0
         ? fact.kills + fact.assists
         : (fact.kills + fact.assists) / fact.deaths,
-    creep_score: 150,
+    creep_score: fact.creepScore ?? 150,
     total_minions_killed: 140,
     neutral_minions_killed: 10,
     gold_earned: 10_000,
     gold_spent: 9500,
     total_damage_dealt: 50_000,
-    total_damage_dealt_to_champions: 12_000,
+    total_damage_dealt_to_champions: fact.totalDamageDealtToChampions ?? 12_000,
     total_damage_taken: 20_000,
     damage_self_mitigated: 8000,
     damage_dealt_to_objectives: 4000,
