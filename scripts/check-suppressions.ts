@@ -76,6 +76,12 @@ const EXCLUDED_FILES = [
   "AGENTS.md",
   "CLAUDE.md",
   "packages/docs/wiki/",
+  // Package-local documentation moved out of packages/docs/ (the working-document
+  // system retired in favor of Linear): operator runbooks and setup guides are prose,
+  // not automation code, and legitimately show example shell commands containing
+  // banned-pattern text (e.g. the Velero runbook's `zfs list ... 2>/dev/null`).
+  "packages/temporal/runbooks/",
+  "packages/macos-ai-subscription-tracker/docs/",
   // Agent prompts are prose that PROHIBITS the banned patterns by name
   // (e.g. refine-release-please.md tells the agent never to `git add -A`).
   "scripts/prompts/",
