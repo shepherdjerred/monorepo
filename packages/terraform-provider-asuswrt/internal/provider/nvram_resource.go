@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -14,8 +15,9 @@ import (
 )
 
 var (
-	_ resource.Resource              = &nvramResource{}
-	_ resource.ResourceWithConfigure = &nvramResource{}
+	_ resource.Resource                = &nvramResource{}
+	_ resource.ResourceWithConfigure   = &nvramResource{}
+	_ resource.ResourceWithImportState = &nvramResource{}
 )
 
 type nvramResource struct {
@@ -149,4 +151,9 @@ func (r *nvramResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to clear NVRAM", err.Error())
 	}
+}
+
+// ImportState imports an NVRAM pair by its key. Read then populates the value.
+func (r *nvramResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("key"), req, resp)
 }

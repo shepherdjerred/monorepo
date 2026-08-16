@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -15,8 +16,9 @@ import (
 )
 
 var (
-	_ resource.Resource              = &dhcpStaticLeaseResource{}
-	_ resource.ResourceWithConfigure = &dhcpStaticLeaseResource{}
+	_ resource.Resource                = &dhcpStaticLeaseResource{}
+	_ resource.ResourceWithConfigure   = &dhcpStaticLeaseResource{}
+	_ resource.ResourceWithImportState = &dhcpStaticLeaseResource{}
 )
 
 type dhcpStaticLeaseResource struct {
@@ -48,14 +50,18 @@ func (r *dhcpStaticLeaseResource) Schema(_ context.Context, _ resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: packedFieldValidators(),
 			},
 			"ip": schema.StringAttribute{
 				Description: "Static IP address to assign.",
 				Required:    true,
+				Validators:  packedFieldValidators(),
 			},
 			"hostname": schema.StringAttribute{
 				Description: "Optional hostname for the lease.",
 				Optional:    true,
+				Computed:    true,
+				Validators:  packedFieldValidators(),
 			},
 		},
 	}
@@ -84,31 +90,71 @@ func (r *dhcpStaticLeaseResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	// The config hostname (null when omitted) distinguishes an explicitly
+	// configured value — including an explicit "" — from an omitted
+	// Optional+Computed attribute. See the post-apply resolution below.
+	var config dhcpStaticLeaseResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	mac := strings.ToUpper(plan.MAC.ValueString())
 
-	entries, hostnames, err := r.readLeases(ctx)
+	// Serialize the whole read-modify-write against dhcp_staticlist so a
+	// concurrent apply on another lease can't read the same list and clobber
+	// this edit when it writes back.
+	unlockList := r.client.LockList("dhcp_staticlist")
+	defer unlockList()
+
+	entries, err := r.readLeases(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read DHCP leases", err.Error())
 
 		return
 	}
 
-	entries = append(entries, client.DHCPStaticEntry{
-		MAC: mac,
-		IP:  plan.IP.ValueString(),
-	})
+	// An unknown hostname the user actually configured must not be coerced to
+	// "": that writes an empty hostname into dhcp_staticlist, clearing whatever
+	// the router had, and then records "" in state as though the configuration
+	// asked for it. Terraform normally resolves configured values before apply,
+	// so reaching here means a broken caller contract — say so rather than
+	// silently writing the wrong value to a router.
+	if plan.Hostname.IsUnknown() && !config.Hostname.IsNull() {
+		resp.Diagnostics.AddError(
+			"Unknown DHCP lease hostname",
+			"hostname is configured but still unknown at apply time. Writing it would clear the router's hostname for this lease and record a value the configuration never specified.",
+		)
 
-	if !plan.Hostname.IsNull() && plan.Hostname.ValueString() != "" {
-		hostnames[mac] = plan.Hostname.ValueString()
+		return
 	}
 
-	if err := r.writeLeases(ctx, entries, hostnames); err != nil {
+	hostname := ""
+	if !plan.Hostname.IsNull() && !plan.Hostname.IsUnknown() {
+		hostname = plan.Hostname.ValueString()
+	}
+
+	entries = append(entries, client.DHCPStaticEntry{MAC: mac, IP: plan.IP.ValueString(), Hostname: hostname})
+
+	if err := r.writeLeases(ctx, entries); err != nil {
 		resp.Diagnostics.AddError("Failed to write DHCP leases", err.Error())
 
 		return
 	}
 
 	plan.MAC = types.StringValue(mac)
+
+	// hostname is Optional+Computed. When the user configured it (config
+	// non-null), echo back exactly what they set — including an explicit "" —
+	// or Terraform rejects the apply as producing an inconsistent result. When
+	// omitted (config null), resolve to null using the empty-means-null
+	// convention so a later Read doesn't immediately report drift.
+	if config.Hostname.IsNull() {
+		plan.Hostname = types.StringNull()
+	} else {
+		plan.Hostname = types.StringValue(hostname)
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -123,35 +169,35 @@ func (r *dhcpStaticLeaseResource) Read(ctx context.Context, req resource.ReadReq
 
 	mac := strings.ToUpper(state.MAC.ValueString())
 
-	entries, hostnames, err := r.readLeases(ctx)
+	entries, err := r.readLeases(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read DHCP leases", err.Error())
 
 		return
 	}
 
-	found := false
+	var found *client.DHCPStaticEntry
 
-	for _, e := range entries {
-		if strings.EqualFold(e.MAC, mac) {
-			state.IP = types.StringValue(e.IP)
-			found = true
+	for i := range entries {
+		if strings.EqualFold(entries[i].MAC, mac) {
+			found = &entries[i]
 
 			break
 		}
 	}
 
-	if !found {
+	if found == nil {
 		resp.State.RemoveResource(ctx)
 
 		return
 	}
 
-	if hostname, ok := hostnames[mac]; ok && hostname != "" {
-		state.Hostname = types.StringValue(hostname)
-	} else if !state.Hostname.IsNull() {
-		state.Hostname = types.StringNull()
-	}
+	state.IP = types.StringValue(found.IP)
+
+	// Hostname lives in dhcp_staticlist field 4 (there is no dhcp_hostnames key
+	// on this firmware), and follows the same empty-value rule as every other
+	// Optional+Computed string on this provider.
+	state.Hostname = resolveOptionalRead(state.Hostname, found.Hostname)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -164,30 +210,40 @@ func (r *dhcpStaticLeaseResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// hostname is Optional+Computed: when omitted, refresh fills it from the
+	// router and planning carries that value forward, so the planned value alone
+	// cannot say whether the operator configured it. Only the config can.
+	var config dhcpStaticLeaseResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	mac := strings.ToUpper(plan.MAC.ValueString())
 
-	entries, hostnames, err := r.readLeases(ctx)
+	// Serialize the whole read-modify-write against dhcp_staticlist so a
+	// concurrent apply on another lease can't read the same list and clobber
+	// this edit when it writes back.
+	unlockList := r.client.LockList("dhcp_staticlist")
+	defer unlockList()
+
+	entries, err := r.readLeases(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read DHCP leases", err.Error())
 
 		return
 	}
 
-	for i, e := range entries {
-		if strings.EqualFold(e.MAC, mac) {
-			entries[i].IP = plan.IP.ValueString()
+	for i := range entries {
+		if strings.EqualFold(entries[i].MAC, mac) {
+			applyLeasePlan(&entries[i], &plan, &config)
 
 			break
 		}
 	}
 
-	if !plan.Hostname.IsNull() && plan.Hostname.ValueString() != "" {
-		hostnames[mac] = plan.Hostname.ValueString()
-	} else {
-		delete(hostnames, mac)
-	}
-
-	if err := r.writeLeases(ctx, entries, hostnames); err != nil {
+	if err := r.writeLeases(ctx, entries); err != nil {
 		resp.Diagnostics.AddError("Failed to write DHCP leases", err.Error())
 
 		return
@@ -208,7 +264,13 @@ func (r *dhcpStaticLeaseResource) Delete(ctx context.Context, req resource.Delet
 
 	mac := strings.ToUpper(state.MAC.ValueString())
 
-	entries, hostnames, err := r.readLeases(ctx)
+	// Serialize the whole read-modify-write against dhcp_staticlist so a
+	// concurrent apply on another lease can't read the same list and clobber
+	// this edit when it writes back.
+	unlockList := r.client.LockList("dhcp_staticlist")
+	defer unlockList()
+
+	entries, err := r.readLeases(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read DHCP leases", err.Error())
 
@@ -223,33 +285,56 @@ func (r *dhcpStaticLeaseResource) Delete(ctx context.Context, req resource.Delet
 		}
 	}
 
-	delete(hostnames, mac)
-
-	if err := r.writeLeases(ctx, filtered, hostnames); err != nil {
+	if err := r.writeLeases(ctx, filtered); err != nil {
 		resp.Diagnostics.AddError("Failed to write DHCP leases", err.Error())
 	}
 }
 
-func (r *dhcpStaticLeaseResource) readLeases(ctx context.Context) ([]client.DHCPStaticEntry, map[string]string, error) {
-	result, err := r.client.NvramGet(ctx, []string{"dhcp_staticlist", "dhcp_hostnames"})
-	if err != nil {
-		return nil, nil, fmt.Errorf("reading DHCP NVRAM: %w", err)
-	}
-
-	entries := client.ParseDHCPStaticList(result["dhcp_staticlist"])
-	hostnames := client.ParseDHCPHostnames(result["dhcp_hostnames"])
-
-	return entries, hostnames, nil
+// ImportState imports a DHCP static lease by its MAC address. The MAC is
+// normalized to uppercase to match the resource's canonical form; Read then
+// populates the IP and hostname from the router.
+func (r *dhcpStaticLeaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("mac"), strings.ToUpper(strings.TrimSpace(req.ID)))...)
 }
 
-func (r *dhcpStaticLeaseResource) writeLeases(ctx context.Context, entries []client.DHCPStaticEntry, hostnames map[string]string) error {
+// applyLeasePlan updates a freshly-read lease entry from the plan, leaving
+// field 3 (DNS) untouched because this provider does not model it.
+//
+// The hostname is written only when the operator configured one. It is
+// Optional+Computed, so when omitted refresh fills it from the router and
+// planning carries that value forward — writing it back would push a possibly
+// stale snapshot, and with a saved plan or -refresh=false an IP-only change
+// would revert a newer out-of-band hostname (or clear it when state was null).
+// Leaving it alone keeps the router's value; a later refreshed plan converges.
+func applyLeasePlan(entry *client.DHCPStaticEntry, plan, config *dhcpStaticLeaseResourceModel) {
+	entry.IP = plan.IP.ValueString()
+
+	if !config.Hostname.IsNull() && !plan.Hostname.IsUnknown() {
+		entry.Hostname = plan.Hostname.ValueString()
+	}
+}
+
+func (r *dhcpStaticLeaseResource) readLeases(ctx context.Context) ([]client.DHCPStaticEntry, error) {
+	val, err := r.client.NvramGetSingle(ctx, "dhcp_staticlist")
+	if err != nil {
+		return nil, fmt.Errorf("reading dhcp_staticlist: %w", err)
+	}
+
+	entries, err := client.ParseDHCPStaticList(val)
+	if err != nil {
+		return nil, fmt.Errorf("reading dhcp_staticlist: %w", err)
+	}
+
+	return entries, nil
+}
+
+func (r *dhcpStaticLeaseResource) writeLeases(ctx context.Context, entries []client.DHCPStaticEntry) error {
 	values := map[string]string{
 		"dhcp_staticlist": client.SerializeDHCPStaticList(entries),
-		"dhcp_hostnames":  client.SerializeDHCPHostnames(hostnames),
 	}
 
 	if err := r.client.NvramSet(ctx, values, client.ServiceDNSMasq); err != nil {
-		return fmt.Errorf("writing DHCP NVRAM: %w", err)
+		return fmt.Errorf("writing dhcp_staticlist: %w", err)
 	}
 
 	return nil

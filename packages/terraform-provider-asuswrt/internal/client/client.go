@@ -35,7 +35,16 @@ type Client struct {
 	httpClient *http.Client
 	token      string
 	baseURL    string
-	mu         sync.Mutex
+	// mu serializes individual HTTP requests (login + doRequest).
+	mu sync.Mutex
+	// listLocks serializes whole read-modify-write transactions against a
+	// packed NVRAM list (keyed by the NVRAM key, e.g. "dhcp_staticlist").
+	// mu only covers a single HTTP request, so without this two concurrent
+	// resource applies that each read → edit → write the same packed list
+	// could both read the same value and the last writer would clobber the
+	// other's edit. listLocksMu guards the map itself.
+	listLocksMu sync.Mutex
+	listLocks   map[string]*sync.Mutex
 }
 
 // New creates a new Client from the given config.
@@ -66,7 +75,29 @@ func New(cfg Config) *Client {
 		config:     cfg,
 		httpClient: &http.Client{Transport: transport},
 		baseURL:    fmt.Sprintf("%s://%s:%d", scheme, cfg.Host, port),
+		listLocks:  make(map[string]*sync.Mutex),
 	}
+}
+
+// LockList acquires the per-key transaction lock for a packed NVRAM list and
+// returns a release func. Callers MUST wrap an entire read-modify-write of the
+// list (read → edit → write) with it — typically `defer c.LockList(key)()` at
+// the top of the operation — so concurrent applies against the same list
+// serialize. mu alone only guards a single HTTP request, so without this two
+// resources editing the same packed list could both read the same value and the
+// last writer would clobber the other's edit.
+func (c *Client) LockList(key string) func() {
+	c.listLocksMu.Lock()
+	m, ok := c.listLocks[key]
+	if !ok {
+		m = &sync.Mutex{}
+		c.listLocks[key] = m
+	}
+	c.listLocksMu.Unlock()
+
+	m.Lock()
+
+	return m.Unlock
 }
 
 // login authenticates against /login.cgi and stores the asus_token.

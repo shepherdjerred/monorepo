@@ -45,6 +45,25 @@ resource "asuswrt_port_forward" "http" {
 }`,
 				Check: resource.TestCheckResourceAttr("asuswrt_port_forward.http", "external_port", "8080"),
 			},
+			// Import by rule name and verify state matches.
+			{
+				ResourceName:                         "asuswrt_port_forward.http",
+				ImportState:                          true,
+				ImportStateId:                        "HTTP",
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
+			},
+			// A padded ID must import too. Read matches with strings.EqualFold,
+			// which tolerates case but not surrounding whitespace, so without
+			// trimming in ImportState this finds no rule and the resource is
+			// dropped from state instead of failing loudly.
+			{
+				ResourceName:                         "asuswrt_port_forward.http",
+				ImportState:                          true,
+				ImportStateId:                        "  HTTP  ",
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
+			},
 		},
 	})
 }

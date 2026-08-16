@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -15,8 +16,9 @@ import (
 )
 
 var (
-	_ resource.Resource              = &portForwardResource{}
-	_ resource.ResourceWithConfigure = &portForwardResource{}
+	_ resource.Resource                = &portForwardResource{}
+	_ resource.ResourceWithConfigure   = &portForwardResource{}
+	_ resource.ResourceWithImportState = &portForwardResource{}
 )
 
 type portForwardResource struct {
@@ -51,26 +53,32 @@ func (r *portForwardResource) Schema(_ context.Context, _ resource.SchemaRequest
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: packedFieldValidators(),
 			},
 			"protocol": schema.StringAttribute{
 				Description: "Protocol: tcp, udp, or both.",
 				Required:    true,
+				Validators:  packedFieldValidators(),
 			},
 			"external_port": schema.StringAttribute{
 				Description: "External port or range (e.g., 80 or 8080:8090).",
 				Required:    true,
+				Validators:  packedFieldValidators(),
 			},
 			"internal_ip": schema.StringAttribute{
 				Description: "Internal destination IP address.",
 				Required:    true,
+				Validators:  packedFieldValidators(),
 			},
 			"internal_port": schema.StringAttribute{
 				Description: "Internal destination port.",
 				Required:    true,
+				Validators:  packedFieldValidators(),
 			},
 			"source_ip": schema.StringAttribute{
 				Description: "Restrict to source IP, MAC, or IP range. Empty means any.",
 				Optional:    true,
+				Validators:  packedFieldValidators(),
 			},
 		},
 	}
@@ -98,6 +106,12 @@ func (r *portForwardResource) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Serialize the whole read-modify-write against vts_rulelist so a concurrent
+	// apply on another rule can't read the same list and clobber this edit when
+	// it writes back.
+	unlockList := r.client.LockList("vts_rulelist")
+	defer unlockList()
 
 	entries, err := r.readRules(ctx)
 	if err != nil {
@@ -141,6 +155,14 @@ func (r *portForwardResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
+	// findRuleByName matches case-insensitively, so an import of "http" binds to
+	// a live rule named "HTTP" — the two name the same rule. Keep the spelling
+	// already in state rather than adopting the router's: `name` is the identity
+	// and RequiresReplace, so rewriting it to a casing the configuration does
+	// not use makes every subsequent plan propose destroying and recreating a
+	// rule that differs only in case. Casing is not semantic here, so it must
+	// not be allowed to produce a diff.
+
 	state.Protocol = types.StringValue(entry.Protocol)
 	state.ExternalPort = types.StringValue(entry.ExternalPort)
 	state.InternalIP = types.StringValue(entry.InternalIP)
@@ -163,6 +185,12 @@ func (r *portForwardResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Serialize the whole read-modify-write against vts_rulelist so a concurrent
+	// apply on another rule can't read the same list and clobber this edit when
+	// it writes back.
+	unlockList := r.client.LockList("vts_rulelist")
+	defer unlockList()
+
 	entries, err := r.readRules(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read port forward rules", err.Error())
@@ -171,11 +199,12 @@ func (r *portForwardResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	name := plan.Name.ValueString()
-	newEntry := r.planToEntry(&plan)
 
-	for i, e := range entries {
-		if strings.EqualFold(e.Name, name) {
-			entries[i] = newEntry
+	for i := range entries {
+		if strings.EqualFold(entries[i].Name, name) {
+			// Overwrite in place rather than replacing the parsed entry, so
+			// the router's trailing fields on this rule survive the rewrite.
+			applyPlanToEntry(&entries[i], &plan)
 
 			break
 		}
@@ -198,6 +227,12 @@ func (r *portForwardResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
+	// Serialize the whole read-modify-write against vts_rulelist so a concurrent
+	// apply on another rule can't read the same list and clobber this edit when
+	// it writes back.
+	unlockList := r.client.LockList("vts_rulelist")
+	defer unlockList()
+
 	entries, err := r.readRules(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read port forward rules", err.Error())
@@ -208,9 +243,9 @@ func (r *portForwardResource) Delete(ctx context.Context, req resource.DeleteReq
 	name := state.Name.ValueString()
 	filtered := make([]client.PortForwardEntry, 0, len(entries))
 
-	for _, e := range entries {
-		if !strings.EqualFold(e.Name, name) {
-			filtered = append(filtered, e)
+	for i := range entries {
+		if !strings.EqualFold(entries[i].Name, name) {
+			filtered = append(filtered, entries[i])
 		}
 	}
 
@@ -225,7 +260,12 @@ func (r *portForwardResource) readRules(ctx context.Context) ([]client.PortForwa
 		return nil, fmt.Errorf("reading vts_rulelist: %w", err)
 	}
 
-	return client.ParseVTSRuleList(val), nil
+	entries, err := client.ParseVTSRuleList(val)
+	if err != nil {
+		return nil, fmt.Errorf("reading vts_rulelist: %w", err)
+	}
+
+	return entries, nil
 }
 
 func (r *portForwardResource) writeRules(ctx context.Context, entries []client.PortForwardEntry) error {
@@ -246,26 +286,49 @@ func (r *portForwardResource) writeRules(ctx context.Context, entries []client.P
 	return nil
 }
 
-func (r *portForwardResource) planToEntry(plan *portForwardResourceModel) client.PortForwardEntry {
-	entry := client.PortForwardEntry{
-		Name:         plan.Name.ValueString(),
-		ExternalPort: plan.ExternalPort.ValueString(),
-		InternalIP:   plan.InternalIP.ValueString(),
-		InternalPort: plan.InternalPort.ValueString(),
-		Protocol:     plan.Protocol.ValueString(),
-	}
+// applyPlanToEntry overwrites exactly the fields this provider models, leaving
+// everything else on the entry untouched.
+//
+// Update must not replace a parsed entry wholesale: the router's own trailing
+// fields live in Extra/HasExtra, the plan knows nothing about them, and the
+// whole list is re-serialized on every write. Overwriting in place keeps those
+// fields, and keeps doing so if the client ever preserves more of them.
+func applyPlanToEntry(entry *client.PortForwardEntry, plan *portForwardResourceModel) {
+	entry.Name = plan.Name.ValueString()
+	entry.ExternalPort = plan.ExternalPort.ValueString()
+	entry.InternalIP = plan.InternalIP.ValueString()
+	entry.InternalPort = plan.InternalPort.ValueString()
+	entry.Protocol = plan.Protocol.ValueString()
 
+	// Assigned unconditionally so clearing source_ip in config clears it on the
+	// router rather than leaving the previous restriction in place.
+	entry.SourceIP = ""
 	if !plan.SourceIP.IsNull() {
 		entry.SourceIP = plan.SourceIP.ValueString()
 	}
+}
+
+func (r *portForwardResource) planToEntry(plan *portForwardResourceModel) client.PortForwardEntry {
+	var entry client.PortForwardEntry
+
+	applyPlanToEntry(&entry, plan)
 
 	return entry
 }
 
+// ImportState imports a port forward rule by its name. Read then populates the
+// remaining attributes from the router.
+func (r *portForwardResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Trim as the DHCP lease and wireless importers do. Read finds the rule
+	// with strings.EqualFold, which tolerates case but not padding, so an ID
+	// like "Plex " would match nothing and drop the resource from state.
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), strings.TrimSpace(req.ID))...)
+}
+
 // findRuleByName searches for a port forward rule by name (case-insensitive).
 func findRuleByName(entries []client.PortForwardEntry, name string) *client.PortForwardEntry {
-	for i, e := range entries {
-		if strings.EqualFold(e.Name, name) {
+	for i := range entries {
+		if strings.EqualFold(entries[i].Name, name) {
 			return &entries[i]
 		}
 	}

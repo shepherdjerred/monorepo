@@ -7,10 +7,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/shepherdjerred/monorepo/packages/terraform-provider-asuswrt/internal/client"
 )
@@ -461,5 +464,68 @@ func TestClientNvramGetSingleMissingKey(t *testing.T) {
 
 	if val != "" {
 		t.Errorf("expected empty string, got %q", val)
+	}
+}
+
+// TestClientLockListSerializesSameKey verifies that concurrent holders of the
+// same packed-list key never overlap, so a read-modify-write wrapped in
+// LockList cannot be clobbered by a concurrent apply on the same list.
+func TestClientLockListSerializesSameKey(t *testing.T) {
+	t.Parallel()
+
+	c := client.New(client.Config{Host: "192.0.2.1"})
+
+	var inside, overlaps atomic.Int32
+
+	var wg sync.WaitGroup
+
+	for range 50 {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			unlock := c.LockList("dhcp_staticlist")
+			defer unlock()
+
+			if inside.Add(1) != 1 {
+				overlaps.Add(1)
+			}
+
+			runtime.Gosched()
+			inside.Add(-1)
+		}()
+	}
+
+	wg.Wait()
+
+	if got := overlaps.Load(); got != 0 {
+		t.Fatalf("LockList allowed %d overlapping critical sections for the same key", got)
+	}
+}
+
+// TestClientLockListIndependentKeys verifies that different keys use
+// independent locks, so a held lock on one list does not block another.
+func TestClientLockListIndependentKeys(t *testing.T) {
+	t.Parallel()
+
+	c := client.New(client.Config{Host: "192.0.2.1"})
+
+	unlockA := c.LockList("dhcp_staticlist")
+	defer unlockA()
+
+	// A second, distinct key must be acquirable while the first is held.
+	done := make(chan struct{})
+
+	go func() {
+		unlockB := c.LockList("vts_rulelist")
+		unlockB()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("LockList on a distinct key blocked on an unrelated held lock")
 	}
 }

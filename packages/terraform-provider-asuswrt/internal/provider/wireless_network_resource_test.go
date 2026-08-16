@@ -1,6 +1,7 @@
 package provider_test
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -43,6 +44,63 @@ resource "asuswrt_wireless_network" "wifi24" {
   wpa_passphrase = "supersecret123"
 }`,
 				Check: resource.TestCheckResourceAttr("asuswrt_wireless_network.wifi24", "ssid", "UpdatedWiFi"),
+			},
+			// Import by band index. wpa_passphrase is write-only (never read),
+			// so it is excluded from the state-equality check.
+			{
+				ResourceName:            "asuswrt_wireless_network.wifi24",
+				ImportState:             true,
+				ImportStateId:           "0",
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wpa_passphrase"},
+			},
+		},
+	})
+}
+
+// TestAccWirelessNetworkResource_importRejectsUnknownBand pins the import
+// existence check. A missing NVRAM key reads back as an empty string rather
+// than an error, so without the check these imports would succeed against a
+// radio that does not exist and leave the required attributes empty.
+func TestAccWirelessNetworkResource_importRejectsUnknownBand(t *testing.T) {
+	t.Parallel()
+	router := newMockRouter()
+	server := startMockServer(t, router)
+	cfg := providerConfig(server.URL)
+
+	wifi := cfg + `
+resource "asuswrt_wireless_network" "wifi24" {
+  band      = 0
+  ssid      = "MyWiFi"
+  auth_mode = "psk2"
+}`
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: wifi},
+			{
+				// Band 99 has no radio: wl99_ssid is absent.
+				Config:        wifi,
+				ResourceName:  "asuswrt_wireless_network.wifi24",
+				ImportState:   true,
+				ImportStateId: "99",
+				ExpectError:   regexp.MustCompile(`no radio for band 99`),
+			},
+			{
+				Config:        wifi,
+				ResourceName:  "asuswrt_wireless_network.wifi24",
+				ImportState:   true,
+				ImportStateId: "-1",
+				ExpectError:   regexp.MustCompile(`cannot be negative`),
+			},
+			{
+				// The real band still imports.
+				Config:            wifi,
+				ResourceName:      "asuswrt_wireless_network.wifi24",
+				ImportState:       true,
+				ImportStateId:     "0",
+				ImportStateVerify: true,
 			},
 		},
 	})
