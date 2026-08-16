@@ -46,18 +46,7 @@ const posthogSessionReplay =
       image={image}
       noindex={noindex}
     />
-    <script is:inline>
-      // Initialize dark mode before page renders to prevent flash
-      if (
-        localStorage.theme === "dark" ||
-        (!("theme" in localStorage) &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches)
-      ) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    </script>
+    <script is:inline src="/assets/scout/brand/theme-bootstrap.js"></script>
     <script
       is:inline
       defer
@@ -74,7 +63,7 @@ const posthogSessionReplay =
     </script>
     <MarketingTracking />
   </head>
-  <body class="text-slate-950 dark:text-white">
+  <body>
     <slot />
   </body>
 </html>

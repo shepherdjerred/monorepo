@@ -13,11 +13,11 @@ export function ConfigActions({
   onReset,
 }: ConfigActionsProps) {
   return (
-    <div className="p-6 mt-8 border-t border-surface-200">
+    <div className="p-6 mt-8 border-t border-scout-border">
       <div className="flex gap-3 flex-wrap">
         <button
           onClick={onExport}
-          className="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+          className="px-5 py-2.5 bg-scout-success text-scout-success-ink rounded-lg hover:bg-scout-success transition-colors flex items-center gap-2"
           title="Export settings, custom personalities, and art styles"
         >
           <svg
@@ -37,7 +37,7 @@ export function ConfigActions({
         </button>
         <button
           onClick={onImport}
-          className="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+          className="px-5 py-2.5 bg-scout-accent text-scout-accent-ink rounded-lg hover:bg-scout-accent transition-colors flex items-center gap-2"
           title="Import config from JSON"
         >
           <svg
@@ -57,7 +57,7 @@ export function ConfigActions({
         </button>
         <button
           onClick={onReset}
-          className="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+          className="px-5 py-2.5 bg-scout-danger text-scout-danger-ink rounded-lg hover:bg-scout-danger transition-colors flex items-center gap-2"
           title="Reset settings to defaults"
         >
           <svg

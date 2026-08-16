@@ -52,33 +52,35 @@ export function MatchList({
               }}
               className={`rounded p-2 transition-colors cursor-pointer ${
                 isSelected
-                  ? "bg-brand-100 border-2 border-brand-500"
-                  : "bg-surface-50 hover:bg-surface-100 border-2 border-transparent"
+                  ? "bg-scout-raised border-2 border-scout-brand"
+                  : "bg-scout-raised hover:bg-scout-raised border-2 border-transparent"
               }`}
             >
               <div className="flex justify-between items-start mb-1">
                 <div className="flex items-center gap-2">
-                  <div className="text-xs font-medium text-surface-900">
+                  <div className="text-xs font-medium text-scout-ink">
                     {championNameToDisplayName(match.champion)}
                   </div>
-                  <div className="text-xs text-surface-500">({match.lane})</div>
+                  <div className="text-xs text-scout-subtle">
+                    ({match.lane})
+                  </div>
                 </div>
                 {isSelected && (
-                  <div className="text-xs font-semibold text-brand-600">
+                  <div className="text-xs font-semibold text-scout-brand">
                     ✓ Selected
                   </div>
                 )}
               </div>
-              <div className="text-xs text-surface-600 space-y-0.5">
+              <div className="text-xs text-scout-subtle space-y-0.5">
                 <div>{match.playerName}</div>
                 <div className="flex justify-between">
                   <span className="capitalize">{match.queueType}</span>
                   <span
                     className={
                       match.outcome.includes("Victory")
-                        ? "text-green-600"
+                        ? "text-scout-success"
                         : match.outcome.includes("Defeat")
-                          ? "text-red-600"
+                          ? "text-scout-danger"
                           : ""
                     }
                   >

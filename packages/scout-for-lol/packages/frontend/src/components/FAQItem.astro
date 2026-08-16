@@ -1,16 +1,14 @@
 ---
+import { FAQItem } from "@scout-for-lol/design-system/marketing";
+
 interface Props {
   question: string;
 }
 
 const { question } = Astro.props;
+const value = question.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
 ---
 
-<div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-  <h3 class="font-semibold text-gray-900 dark:text-white mb-3">
-    {question}
-  </h3>
-  <div class="text-gray-600 dark:text-gray-300">
-    <slot />
-  </div>
-</div>
+<FAQItem value={value} question={question} client:visible>
+  <slot />
+</FAQItem>

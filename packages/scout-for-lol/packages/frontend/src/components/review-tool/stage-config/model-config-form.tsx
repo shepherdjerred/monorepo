@@ -1,5 +1,5 @@
-import { Input } from "#src/components/review-tool/ui/input.tsx";
-import { Label } from "#src/components/review-tool/ui/label.tsx";
+import { Input } from "@scout-for-lol/design-system/components/input";
+import { Label } from "@scout-for-lol/design-system/components/label";
 import type { ModelConfig } from "#src/lib/review-tool/config/schema.ts";
 import { modelSupportsParameter } from "@scout-for-lol/data";
 import type { ChangeEvent } from "react";
@@ -57,7 +57,9 @@ export function ModelConfigForm({ value, onChange }: ModelConfigFormProps) {
         <Label htmlFor="temperature">
           Temperature
           {!supportsTemperature && (
-            <span className="ml-1 text-xs text-amber-600">(unsupported)</span>
+            <span className="ml-1 text-xs text-scout-warning">
+              (unsupported)
+            </span>
           )}
         </Label>
         <Input
@@ -82,7 +84,9 @@ export function ModelConfigForm({ value, onChange }: ModelConfigFormProps) {
         <Label htmlFor="topP">
           Top P
           {!supportsTopP && (
-            <span className="ml-1 text-xs text-amber-600">(unsupported)</span>
+            <span className="ml-1 text-xs text-scout-warning">
+              (unsupported)
+            </span>
           )}
         </Label>
         <Input

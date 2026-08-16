@@ -56,11 +56,11 @@ function ReviewHeader({
   return (
     <div className="flex justify-between items-start mb-6">
       <div>
-        <h2 className="text-xl font-semibold text-surface-900">
+        <h2 className="text-xl font-semibold text-scout-ink">
           Generated Review
         </h2>
         {viewingHistory && (
-          <p className="text-xs text-surface-500 mt-1 flex items-center gap-1">
+          <p className="text-xs text-scout-subtle mt-1 flex items-center gap-1">
             <svg
               className="w-3 h-3"
               fill="none"
@@ -78,7 +78,7 @@ function ReviewHeader({
           </p>
         )}
         {isGenerating && (
-          <p className="text-xs text-victory-600 mt-1 flex items-center gap-1">
+          <p className="text-xs text-scout-warning mt-1 flex items-center gap-1">
             <svg
               className="w-3 h-3 animate-spin"
               fill="none"
@@ -98,7 +98,7 @@ function ReviewHeader({
       </div>
       <button
         onClick={onGenerate}
-        className="flex items-center gap-2 px-5 py-2.5 bg-black text-white hover:bg-brand-700 text-black font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 active:scale-95"
+        className="flex items-center gap-2 px-5 py-2.5 bg-scout-brand text-scout-brand-ink hover:bg-scout-brand font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 active:scale-95"
       >
         <svg
           className="w-5 h-5"
@@ -163,13 +163,13 @@ function SuccessResultContent({
         cost={cost}
         imageModel={config.imageGeneration.model}
       />
-      <div className="mt-4 space-y-2 rounded-xl border border-surface-200/50 bg-white p-4 shadow-sm">
+      <div className="mt-4 space-y-2 rounded-xl border border-scout-border/50 bg-scout-surface p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm font-semibold text-surface-900">
+            <div className="text-sm font-semibold text-scout-ink">
               Pipeline traces
             </div>
-            <p className="text-xs text-surface-500">
+            <p className="text-xs text-scout-subtle">
               Raw prompts, responses, and timings from each stage.
             </p>
           </div>

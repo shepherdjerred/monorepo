@@ -17,8 +17,8 @@ export function ResultRating({
   onNotesChange,
 }: ResultRatingProps) {
   return (
-    <div className="p-4 bg-surface-50 rounded border border-surface-200">
-      <h3 className="text-sm font-semibold text-surface-700 mb-3">
+    <div className="p-4 bg-scout-raised rounded border border-scout-border">
+      <h3 className="text-sm font-semibold text-scout-ink mb-3">
         Rate this generation
       </h3>
       <div className="mb-3">
@@ -39,7 +39,7 @@ export function ResultRating({
       <div>
         <label
           htmlFor="rating-notes"
-          className="block text-xs font-medium text-surface-600 mb-1"
+          className="block text-xs font-medium text-scout-subtle mb-1"
         >
           Notes (optional)
         </label>
@@ -56,7 +56,7 @@ export function ResultRating({
             })();
           }}
           placeholder="What did you like or dislike about this generation?"
-          className="w-full px-3 py-2 text-sm bg-white text-surface-900 border border-surface-300 rounded focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-vertical placeholder:text-surface-400"
+          className="w-full px-3 py-2 text-sm bg-scout-surface text-scout-ink border border-scout-border rounded focus:outline-none focus:ring-2 focus:ring-scout-focus focus:border-transparent resize-vertical placeholder:text-scout-subtle"
           rows={2}
         />
       </div>

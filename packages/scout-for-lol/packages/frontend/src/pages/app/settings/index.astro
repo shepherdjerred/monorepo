@@ -6,22 +6,22 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
   <div class="p-8">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-white">Settings</h1>
-      <p class="mt-2 text-slate-400">Manage your account and API tokens</p>
+      <h1 class="text-3xl font-bold text-scout-ink">Settings</h1>
+      <p class="mt-2 text-scout-subtle">Manage your account and API tokens</p>
     </div>
 
     <!-- Settings Navigation -->
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <a
         href="/app/settings/tokens"
-        class="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/50 p-6 transition-colors hover:border-slate-700 hover:bg-slate-900"
+        class="flex items-center gap-4 rounded-xl border border-scout-border bg-scout-canvas/50 p-6 transition-colors hover:border-scout-border hover:bg-scout-canvas"
       >
         <div
-          class="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20"
+          class="flex h-12 w-12 items-center justify-center rounded-lg bg-scout-warning/20"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6 text-amber-400"
+            class="h-6 w-6 text-scout-warning"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -35,14 +35,14 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
           </svg>
         </div>
         <div>
-          <p class="font-medium text-white">API Tokens</p>
-          <p class="text-sm text-slate-400">
+          <p class="font-medium text-scout-ink">API Tokens</p>
+          <p class="text-sm text-scout-subtle">
             Manage tokens for desktop clients
           </p>
         </div>
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="ml-auto h-5 w-5 text-slate-500"
+          class="ml-auto h-5 w-5 text-scout-subtle"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -56,14 +56,14 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
       </a>
 
       <div
-        class="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/50 p-6 opacity-50"
+        class="flex items-center gap-4 rounded-xl border border-scout-border bg-scout-canvas/50 p-6 opacity-50"
       >
         <div
-          class="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-700/50"
+          class="flex h-12 w-12 items-center justify-center rounded-lg bg-scout-canvas/50"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6 text-slate-500"
+            class="h-6 w-6 text-scout-subtle"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -77,20 +77,20 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
           </svg>
         </div>
         <div>
-          <p class="font-medium text-slate-400">Notifications</p>
-          <p class="text-sm text-slate-500">Coming soon</p>
+          <p class="font-medium text-scout-subtle">Notifications</p>
+          <p class="text-sm text-scout-subtle">Coming soon</p>
         </div>
       </div>
 
       <div
-        class="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/50 p-6 opacity-50"
+        class="flex items-center gap-4 rounded-xl border border-scout-border bg-scout-canvas/50 p-6 opacity-50"
       >
         <div
-          class="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-700/50"
+          class="flex h-12 w-12 items-center justify-center rounded-lg bg-scout-canvas/50"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6 text-slate-500"
+            class="h-6 w-6 text-scout-subtle"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -104,30 +104,33 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
           </svg>
         </div>
         <div>
-          <p class="font-medium text-slate-400">Privacy</p>
-          <p class="text-sm text-slate-500">Coming soon</p>
+          <p class="font-medium text-scout-subtle">Privacy</p>
+          <p class="text-sm text-scout-subtle">Coming soon</p>
         </div>
       </div>
     </div>
 
     <!-- Account Info -->
     <div class="mt-8">
-      <h2 class="mb-4 text-lg font-semibold text-white">Account</h2>
-      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+      <h2 class="mb-4 text-lg font-semibold text-scout-ink">Account</h2>
+      <div class="rounded-xl border border-scout-border bg-scout-canvas/50 p-6">
         <div class="flex items-center gap-4">
-          <div id="account-avatar" class="h-16 w-16 rounded-full bg-slate-700">
+          <div
+            id="account-avatar"
+            class="h-16 w-16 rounded-full bg-scout-canvas"
+          >
           </div>
           <div>
-            <p class="text-lg font-medium text-white" id="account-username">
+            <p class="text-lg font-medium text-scout-ink" id="account-username">
               Loading...
             </p>
-            <p class="text-sm text-slate-400" id="account-id">
+            <p class="text-sm text-scout-subtle" id="account-id">
               Discord ID: ...
             </p>
           </div>
         </div>
-        <div class="mt-6 border-t border-slate-800 pt-6">
-          <p class="text-sm text-slate-400">
+        <div class="mt-6 border-t border-scout-border pt-6">
+          <p class="text-sm text-scout-subtle">
             Member since <span id="account-created">...</span>
           </p>
         </div>
@@ -136,17 +139,19 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
 
     <!-- Danger Zone -->
     <div class="mt-8">
-      <h2 class="mb-4 text-lg font-semibold text-red-400">Danger Zone</h2>
-      <div class="rounded-xl border border-red-500/30 bg-red-500/5 p-6">
+      <h2 class="mb-4 text-lg font-semibold text-scout-danger">Danger Zone</h2>
+      <div
+        class="rounded-xl border border-scout-danger/30 bg-scout-danger/5 p-6"
+      >
         <div class="flex items-center justify-between">
           <div>
-            <p class="font-medium text-white">Delete Account</p>
-            <p class="text-sm text-slate-400">
+            <p class="font-medium text-scout-ink">Delete Account</p>
+            <p class="text-sm text-scout-subtle">
               Permanently delete your account and all data
             </p>
           </div>
           <button
-            class="rounded-lg border border-red-500/50 bg-transparent px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10"
+            class="rounded-lg border border-scout-danger/50 bg-transparent px-4 py-2 text-sm font-medium text-scout-danger transition-colors hover:bg-scout-danger/10"
             disabled
           >
             Coming Soon

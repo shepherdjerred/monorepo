@@ -3,6 +3,7 @@
  */
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 import { championNameToDisplayName } from "@scout-for-lol/data";
+import { ChampionPortrait } from "@scout-for-lol/design-system/assets";
 import type { ReviewConfig } from "#src/lib/review-tool/config/schema.ts";
 
 /**
@@ -15,7 +16,7 @@ function getMatchDisplayInfo(match: CompletedMatch | ArenaMatch) {
       alias: "Unknown",
       champion: "???",
       outcomeText: "",
-      outcomeClass: "text-surface-500",
+      outcomeClass: "text-scout-subtle",
     };
   }
 
@@ -29,17 +30,17 @@ function getMatchDisplayInfo(match: CompletedMatch | ArenaMatch) {
       const outcomeText = `#${String(placement)}`;
       const outcomeClass =
         placement === 1
-          ? "text-victory-600"
+          ? "text-scout-warning"
           : placement === 8
-            ? "text-defeat-600"
-            : "text-surface-500";
+            ? "text-scout-danger"
+            : "text-scout-subtle";
       return { alias, champion, outcomeText, outcomeClass };
     }
     return {
       alias,
       champion,
       outcomeText: "",
-      outcomeClass: "text-surface-500",
+      outcomeClass: "text-scout-subtle",
     };
   }
 
@@ -48,14 +49,19 @@ function getMatchDisplayInfo(match: CompletedMatch | ArenaMatch) {
     const outcome = player.outcome;
     const outcomeClass =
       outcome === "Victory"
-        ? "text-victory-600"
+        ? "text-scout-warning"
         : outcome === "Defeat"
-          ? "text-defeat-600"
-          : "text-surface-500";
+          ? "text-scout-danger"
+          : "text-scout-subtle";
     return { alias, champion, outcomeText: outcome, outcomeClass };
   }
 
-  return { alias, champion, outcomeText: "", outcomeClass: "text-surface-500" };
+  return {
+    alias,
+    champion,
+    outcomeText: "",
+    outcomeClass: "text-scout-subtle",
+  };
 }
 
 /**
@@ -64,23 +70,27 @@ function getMatchDisplayInfo(match: CompletedMatch | ArenaMatch) {
 function SelectedMatchDisplay(props: { match: CompletedMatch | ArenaMatch }) {
   const { match } = props;
   const info = getMatchDisplayInfo(match);
+  const champion = match.players[0]?.champion.championName ?? "unknown";
 
   return (
     <div className="flex items-center gap-3">
-      <div className="text-black w-10 h-10 rounded-lg bg-gradient-to-br from-surface-300 to-surface-400 flex items-center justify-center font-bold text-sm">
-        {info.champion.slice(0, 2).toUpperCase()}
-      </div>
+      <ChampionPortrait
+        champion={champion}
+        alt={`${info.champion} portrait`}
+        optional
+        className="h-10 w-10 rounded-lg"
+      />
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-surface-900 truncate">
+        <div className="font-semibold text-scout-ink truncate">
           {info.alias}
         </div>
-        <div className="text-xs text-surface-600 flex items-center gap-1.5">
+        <div className="text-xs text-scout-subtle flex items-center gap-1.5">
           <span>{info.champion}</span>
-          <span className="text-surface-300">•</span>
+          <span className="text-scout-subtle">•</span>
           <span className={info.outcomeClass}>{info.outcomeText}</span>
           {match.queueType && (
             <>
-              <span className="text-surface-300">•</span>
+              <span className="text-scout-subtle">•</span>
               <span className="capitalize">
                 {match.queueType.replaceAll("_", " ")}
               </span>
@@ -106,37 +116,37 @@ export function MatchAndReviewerInfo(props: MatchAndReviewerInfoProps) {
   return (
     <div className="mb-4 grid grid-cols-2 gap-4">
       {/* Selected Match */}
-      <div className="p-3 rounded-lg bg-surface-50 border border-surface-200">
-        <div className="text-xs font-medium text-surface-500 uppercase tracking-wide mb-2">
+      <div className="p-3 rounded-lg bg-scout-raised border border-scout-border">
+        <div className="text-xs font-medium text-scout-subtle uppercase tracking-wide mb-2">
           Selected Match
         </div>
         {match ? (
           <SelectedMatchDisplay match={match} />
         ) : (
-          <div className="text-sm text-surface-400 italic">
+          <div className="text-sm text-scout-subtle italic">
             No match selected
           </div>
         )}
       </div>
 
       {/* Reviewer */}
-      <div className="p-3 rounded-lg bg-surface-50 border border-surface-200">
-        <div className="text-xs font-medium text-surface-500 uppercase tracking-wide mb-2">
+      <div className="p-3 rounded-lg bg-scout-raised border border-scout-border">
+        <div className="text-xs font-medium text-scout-subtle uppercase tracking-wide mb-2">
           Reviewer
         </div>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-black font-bold text-lg">
+          <div className="w-10 h-10 rounded-lg bg-scout-brand text-scout-brand-ink flex items-center justify-center font-bold text-lg">
             {config.prompts.personalityId === "random"
               ? "?"
               : config.prompts.personalityId.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-surface-900 truncate">
+            <div className="font-semibold text-scout-ink truncate">
               {config.prompts.personalityId === "random"
                 ? "Random Personality"
                 : config.prompts.personalityId}
             </div>
-            <div className="text-xs text-surface-600">
+            <div className="text-xs text-scout-subtle">
               {config.prompts.personalityId === "random"
                 ? "Will pick a random reviewer"
                 : (config.prompts.customPersonality?.metadata.name ??

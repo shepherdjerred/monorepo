@@ -20,46 +20,46 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
   const { total, count } = snapshot;
 
   return (
-    <div className="bg-white rounded-lg border border-surface-200 p-4">
-      <h3 className="text-lg font-semibold text-surface-900 mb-4">
+    <div className="bg-scout-surface rounded-lg border border-scout-border p-4">
+      <h3 className="text-lg font-semibold text-scout-ink mb-4">
         Session Costs
       </h3>
 
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-sm text-surface-600">Total Requests:</span>
-          <span className="font-mono text-sm font-medium text-surface-900">
+          <span className="text-sm text-scout-subtle">Total Requests:</span>
+          <span className="font-mono text-sm font-medium text-scout-ink">
             {count}
           </span>
         </div>
 
-        <div className="border-t border-surface-200 pt-3 space-y-2">
+        <div className="border-t border-scout-border pt-3 space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-surface-600">Text Input:</span>
-            <span className="font-mono text-sm text-surface-900">
+            <span className="text-sm text-scout-subtle">Text Input:</span>
+            <span className="font-mono text-sm text-scout-ink">
               {formatCost(total.textInputCost)}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm text-surface-600">Text Output:</span>
-            <span className="font-mono text-sm text-surface-900">
+            <span className="text-sm text-scout-subtle">Text Output:</span>
+            <span className="font-mono text-sm text-scout-ink">
               {formatCost(total.textOutputCost)}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm text-surface-600">Images:</span>
-            <span className="font-mono text-sm text-surface-900">
+            <span className="text-sm text-scout-subtle">Images:</span>
+            <span className="font-mono text-sm text-scout-ink">
               {formatCost(total.imageCost)}
             </span>
           </div>
         </div>
 
-        <div className="border-t-2 border-surface-300 pt-3">
+        <div className="border-t-2 border-scout-border pt-3">
           <div className="flex justify-between items-center">
-            <span className="text-base font-semibold text-surface-900">
+            <span className="text-base font-semibold text-scout-ink">
               Total:
             </span>
-            <span className="font-mono text-lg font-bold text-brand-600">
+            <span className="font-mono text-lg font-bold text-scout-brand">
               {formatCost(total.totalCost)}
             </span>
           </div>
@@ -79,7 +79,7 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
                 URL.revokeObjectURL(url);
               })();
             }}
-            className="flex-1 px-3 py-2 bg-black text-white rounded hover:bg-brand-700 transition-colors text-sm"
+            className="flex-1 px-3 py-2 bg-scout-brand text-scout-brand-ink rounded hover:bg-scout-brand transition-colors text-sm"
           >
             Export Report
           </button>
@@ -89,7 +89,7 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
                 void costTracker.clear();
               }
             }}
-            className="flex-1 px-3 py-2 bg-defeat-600 text-white bg-black rounded hover:bg-defeat-700 transition-colors text-sm"
+            className="flex-1 px-3 py-2 bg-scout-danger text-scout-danger-ink rounded hover:bg-scout-danger transition-colors text-sm"
           >
             Clear History
           </button>

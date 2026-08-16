@@ -59,8 +59,8 @@ export function PromptSettings({
 
   return (
     <div>
-      <div className="w-full px-4 py-3 flex justify-between items-center bg-surface-50">
-        <span className="font-semibold text-surface-900 text-sm">
+      <div className="w-full px-4 py-3 flex justify-between items-center bg-scout-raised">
+        <span className="font-semibold text-scout-ink text-sm">
           Prompts & Personality
         </span>
       </div>
@@ -69,7 +69,7 @@ export function PromptSettings({
           <div>
             <label
               htmlFor="base-prompt"
-              className="block text-sm font-medium text-surface-700 mb-1"
+              className="block text-sm font-medium text-scout-ink mb-1"
             >
               Base Prompt
             </label>
@@ -83,7 +83,7 @@ export function PromptSettings({
                 });
               }}
               rows={12}
-              className="w-full px-3 py-2 text-xs bg-white text-surface-900 border border-surface-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-mono placeholder:text-surface-400"
+              className="w-full px-3 py-2 text-xs bg-scout-surface text-scout-ink border border-scout-border rounded-lg focus:ring-2 focus:ring-scout-focus focus:border-scout-brand font-mono placeholder:text-scout-subtle"
               placeholder="Base prompt template..."
             />
             <button
@@ -93,7 +93,7 @@ export function PromptSettings({
                   prompts: { ...config.prompts, basePrompt: getBasePrompt() },
                 });
               }}
-              className="mt-2 text-sm text-brand-600 hover:text-blue-700"
+              className="mt-2 text-sm text-scout-brand hover:text-scout-brand"
             >
               Reset to Default
             </button>

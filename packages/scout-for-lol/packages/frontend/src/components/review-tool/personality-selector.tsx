@@ -50,12 +50,12 @@ export function PersonalitySelector({
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <label className="block text-sm font-medium text-surface-700">
+        <label className="block text-sm font-medium text-scout-ink">
           Personalities ({personalities.length})
         </label>
         <button
           onClick={onCreateNew}
-          className="text-xs text-brand-600 hover:text-brand-700 font-medium"
+          className="text-xs text-scout-brand hover:text-scout-brand font-medium"
         >
           + Create New
         </button>
@@ -66,18 +66,18 @@ export function PersonalitySelector({
           onClick={onSelectRandom}
           className={`
             w-full p-3 rounded-lg border transition-colors text-left
-            ${selectedPersonalityId === "random" ? "border-brand-500 bg-brand-50" : "border-surface-200 bg-white hover:border-surface-300"}
+            ${selectedPersonalityId === "random" ? "border-scout-brand bg-scout-raised" : "border-scout-border bg-scout-surface hover:border-scout-border"}
           `}
         >
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-medium text-surface-900">Random</h4>
-              <p className="text-xs text-surface-600">
+              <h4 className="text-sm font-medium text-scout-ink">Random</h4>
+              <p className="text-xs text-scout-subtle">
                 Pick a random personality for each review
               </p>
             </div>
             {selectedPersonalityId === "random" && (
-              <span className="text-brand-600 text-xs flex items-center gap-1">
+              <span className="text-scout-brand text-xs flex items-center gap-1">
                 <svg
                   className="w-3.5 h-3.5"
                   fill="currentColor"
@@ -116,22 +116,22 @@ export function PersonalitySelector({
               }}
               className={`
                 p-3 rounded-lg border transition-colors cursor-pointer
-                ${isSelected ? "border-brand-500 bg-brand-50" : "border-surface-200 bg-white hover:border-surface-300 hover:bg-surface-50"}
+                ${isSelected ? "border-scout-brand bg-scout-raised" : "border-scout-border bg-scout-surface hover:border-scout-border hover:bg-scout-raised"}
               `}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-sm font-medium text-surface-900">
+                    <h4 className="text-sm font-medium text-scout-ink">
                       {personality.metadata.name}
                     </h4>
                     {isCustom && (
-                      <span className="px-1.5 py-0.5 bg-brand-100 text-brand-700 text-xs rounded">
+                      <span className="px-1.5 py-0.5 bg-scout-raised text-scout-brand text-xs rounded">
                         Custom
                       </span>
                     )}
                     {isSelected && (
-                      <span className="text-brand-600 flex items-center">
+                      <span className="text-scout-brand flex items-center">
                         <svg
                           className="w-3.5 h-3.5"
                           fill="currentColor"
@@ -146,7 +146,7 @@ export function PersonalitySelector({
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-surface-600">
+                  <p className="text-xs text-scout-subtle">
                     {personality.instructions.slice(0, 80)}
                     {personality.instructions.length > 80 ? "..." : ""}
                   </p>
@@ -164,7 +164,7 @@ export function PersonalitySelector({
                         onClick={() => {
                           onEdit(personality, false);
                         }}
-                        className="px-2 py-1 bg-surface-100 text-surface-700 text-xs rounded hover:bg-surface-200 border border-surface-300"
+                        className="px-2 py-1 bg-scout-raised text-scout-ink text-xs rounded hover:bg-scout-raised border border-scout-border"
                         title="Edit this personality"
                       >
                         Edit
@@ -173,7 +173,7 @@ export function PersonalitySelector({
                         onClick={() => {
                           onEdit(personality, true);
                         }}
-                        className="px-2 py-1 bg-surface-100 text-surface-700 text-xs rounded hover:bg-surface-200 border border-surface-300"
+                        className="px-2 py-1 bg-scout-raised text-scout-ink text-xs rounded hover:bg-scout-raised border border-scout-border"
                         title="Create a copy"
                       >
                         Copy
@@ -182,7 +182,7 @@ export function PersonalitySelector({
                         onClick={() => {
                           void onDelete(personality.id);
                         }}
-                        className="px-2 py-1 bg-defeat-100 text-defeat-700 text-xs rounded hover:bg-defeat-200 border border-defeat-300"
+                        className="px-2 py-1 bg-scout-danger text-scout-danger text-xs rounded hover:bg-scout-danger border border-scout-danger"
                         title="Delete this personality"
                       >
                         Del
@@ -194,7 +194,7 @@ export function PersonalitySelector({
                         onClick={() => {
                           onEdit(personality, true);
                         }}
-                        className="px-2 py-1 bg-surface-100 text-surface-700 text-xs rounded hover:bg-surface-200 border border-surface-300"
+                        className="px-2 py-1 bg-scout-raised text-scout-ink text-xs rounded hover:bg-scout-raised border border-scout-border"
                         title="Edit a copy of this personality"
                       >
                         Edit
@@ -203,7 +203,7 @@ export function PersonalitySelector({
                         onClick={() => {
                           onEdit(personality, true);
                         }}
-                        className="px-2 py-1 bg-surface-100 text-surface-700 text-xs rounded hover:bg-surface-200 border border-surface-300"
+                        className="px-2 py-1 bg-scout-raised text-scout-ink text-xs rounded hover:bg-scout-raised border border-scout-border"
                         title="Create a copy"
                       >
                         Copy

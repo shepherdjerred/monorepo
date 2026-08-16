@@ -68,10 +68,10 @@ export function ConfigModal({
         onClose={onClose}
         maxWidthClassName="max-w-2xl"
         footer={
-          <div className="sticky bottom-0 bg-surface-50 border-t border-surface-200 px-6 py-4 flex justify-between items-center">
+          <div className="sticky bottom-0 bg-scout-raised border-t border-scout-border px-6 py-4 flex justify-between items-center">
             <button
               onClick={handleResetClick}
-              className="px-4 py-2 bg-defeat-600 text-white rounded-lg hover:bg-defeat-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-scout-danger text-scout-danger-ink rounded-lg hover:bg-scout-danger transition-colors flex items-center gap-2"
               title="Reset all settings except API keys, cache, and cost data"
             >
               <svg
@@ -91,7 +91,7 @@ export function ConfigModal({
             </button>
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
+              className="px-4 py-2 bg-scout-brand text-scout-brand-ink rounded-lg hover:bg-scout-brand transition-colors"
             >
               Done
             </button>
@@ -110,7 +110,7 @@ export function ConfigModal({
           <div
             role="button"
             tabIndex={0}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 bg-scout-overlay backdrop-blur-sm"
             onClick={handleResetCancel}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
@@ -123,13 +123,13 @@ export function ConfigModal({
             <div
               role="dialog"
               aria-modal="true"
-              className="relative bg-white rounded-lg shadow-xl max-w-md w-full"
+              className="relative bg-scout-surface rounded-lg shadow-xl max-w-md w-full"
             >
               <div className="p-6">
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0">
                     <svg
-                      className="w-10 h-10 text-defeat-600"
+                      className="w-10 h-10 text-scout-danger"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -143,13 +143,13 @@ export function ConfigModal({
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-surface-900 mb-2">
+                    <h3 className="text-lg font-semibold text-scout-ink mb-2">
                       Reset to Defaults?
                     </h3>
-                    <p className="text-sm text-surface-600 mb-3">
+                    <p className="text-sm text-scout-subtle mb-3">
                       This will clear the following data:
                     </p>
-                    <ul className="text-sm text-surface-600 space-y-1 mb-3 list-disc list-inside">
+                    <ul className="text-sm text-scout-subtle space-y-1 mb-3 list-disc list-inside">
                       {preview.configs > 0 && (
                         <li>
                           {preview.configs} saved configuration
@@ -176,24 +176,24 @@ export function ConfigModal({
                       )}
 
                       {!hasDataToReset && (
-                        <li className="text-surface-400 italic">
+                        <li className="text-scout-subtle italic">
                           No custom data found
                         </li>
                       )}
                     </ul>
-                    <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded p-2 mb-3">
+                    <p className="text-sm text-scout-success bg-scout-success border border-scout-success rounded p-2 mb-3">
                       ✓ API keys, cache, and cost data will be preserved
                     </p>
-                    <p className="text-sm text-surface-600 font-medium">
+                    <p className="text-sm text-scout-subtle font-medium">
                       This cannot be undone. Continue?
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="bg-surface-50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
+              <div className="bg-scout-raised px-6 py-4 flex justify-end gap-3 rounded-b-lg">
                 <button
                   onClick={handleResetCancel}
-                  className="px-4 py-2 bg-surface-300 text-surface-700 rounded-lg hover:bg-surface-400 transition-colors"
+                  className="px-4 py-2 bg-scout-canvas text-scout-ink rounded-lg hover:bg-scout-canvas transition-colors"
                 >
                   Cancel
                 </button>
@@ -201,7 +201,7 @@ export function ConfigModal({
                   onClick={() => {
                     void handleResetConfirm();
                   }}
-                  className="px-4 py-2 bg-defeat-600 text-white rounded-lg hover:bg-defeat-700 transition-colors"
+                  className="px-4 py-2 bg-scout-danger text-scout-danger-ink rounded-lg hover:bg-scout-danger transition-colors"
                 >
                   Reset to Defaults
                 </button>

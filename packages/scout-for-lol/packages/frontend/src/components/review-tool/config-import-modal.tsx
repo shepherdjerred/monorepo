@@ -116,16 +116,16 @@ export function ConfigImportModal({
       onClose={handleClose}
       maxWidthClassName="max-w-3xl"
       footer={
-        <div className="sticky bottom-0 bg-surface-50 border-t border-surface-200 px-6 py-4 flex justify-end gap-3">
+        <div className="sticky bottom-0 bg-scout-raised border-t border-scout-border px-6 py-4 flex justify-end gap-3">
           <button
             onClick={handleClose}
-            className="px-4 py-2 bg-surface-300 text-surface-700 rounded-lg hover:bg-surface-400 transition-colors"
+            className="px-4 py-2 bg-scout-canvas text-scout-ink rounded-lg hover:bg-scout-canvas transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleImport}
-            className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 bg-scout-brand text-scout-brand-ink rounded-lg hover:bg-scout-brand transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             disabled={!parsedBundle}
           >
             <svg
@@ -152,7 +152,7 @@ export function ConfigImportModal({
         <div>
           <label
             htmlFor="upload-config-file"
-            className="block text-sm font-medium text-surface-700 mb-2"
+            className="block text-sm font-medium text-scout-ink mb-2"
           >
             Upload Config File
           </label>
@@ -161,12 +161,12 @@ export function ConfigImportModal({
             type="file"
             accept=".json"
             onChange={(e) => void handleFileUpload(e)}
-            className="block w-full text-sm text-surface-500
+            className="block w-full text-sm text-scout-subtle
                   file:mr-4 file:py-2 file:px-4
                   file:rounded-lg file:border-0
                   file:text-sm file:font-semibold
-                  file:bg-blue-50 file:text-blue-700
-                  hover:file:bg-blue-100
+                  file:bg-scout-raised file:text-scout-brand
+                  hover:file:bg-scout-raised
                   cursor-pointer"
           />
         </div>
@@ -175,7 +175,7 @@ export function ConfigImportModal({
         <div>
           <label
             htmlFor="or-paste-json"
-            className="block text-sm font-medium text-surface-700 mb-2"
+            className="block text-sm font-medium text-scout-ink mb-2"
           >
             Or Paste JSON
           </label>
@@ -186,11 +186,11 @@ export function ConfigImportModal({
               setJsonInput(e.target.value);
             }}
             placeholder="Paste your config JSON here..."
-            className="w-full h-32 px-3 py-2 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono text-sm"
+            className="w-full h-32 px-3 py-2 border border-scout-border rounded-lg focus:outline-none focus:ring-2 focus:ring-scout-focus font-mono text-sm"
           />
           <button
             onClick={handleParseJSON}
-            className="mt-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-2 px-4 py-2 bg-scout-brand text-scout-brand-ink rounded-lg hover:bg-scout-brand transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!jsonInput.trim()}
           >
             Parse JSON
@@ -199,21 +199,23 @@ export function ConfigImportModal({
 
         {/* Parse Error */}
         {parseError !== null && parseError.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-sm text-red-800 font-medium">
+          <div className="bg-scout-danger border border-scout-danger rounded-lg p-4">
+            <p className="text-sm text-scout-danger font-medium">
               Failed to parse JSON:
             </p>
-            <p className="text-sm text-red-700 mt-1 font-mono">{parseError}</p>
+            <p className="text-sm text-scout-danger mt-1 font-mono">
+              {parseError}
+            </p>
           </div>
         )}
 
         {/* Summary */}
         {summary && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm font-semibold text-blue-900 mb-2">
+          <div className="bg-scout-raised border border-scout-brand rounded-lg p-4">
+            <p className="text-sm font-semibold text-scout-brand mb-2">
               Config Bundle Summary:
             </p>
-            <ul className="text-sm text-blue-800 space-y-1">
+            <ul className="text-sm text-scout-brand space-y-1">
               <li>
                 • Exported: {new Date(summary.exportedAt).toLocaleString()}
               </li>
@@ -230,7 +232,7 @@ export function ConfigImportModal({
         {/* Import Options */}
         {parsedBundle && (
           <div className="space-y-3">
-            <p className="text-sm font-medium text-surface-700">
+            <p className="text-sm font-medium text-scout-ink">
               Import Options:
             </p>
 
@@ -241,9 +243,9 @@ export function ConfigImportModal({
                 onChange={(e) => {
                   setImportTabConfig(e.target.checked);
                 }}
-                className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
+                className="w-4 h-4 text-scout-brand rounded focus:ring-2 focus:ring-scout-focus"
               />
-              <span className="text-sm text-surface-700">
+              <span className="text-sm text-scout-ink">
                 Import Settings (text/image generation, prompts)
               </span>
             </label>
@@ -255,9 +257,9 @@ export function ConfigImportModal({
                 onChange={(e) => {
                   setImportPersonalities(e.target.checked);
                 }}
-                className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
+                className="w-4 h-4 text-scout-brand rounded focus:ring-2 focus:ring-scout-focus"
               />
-              <span className="text-sm text-surface-700">
+              <span className="text-sm text-scout-ink">
                 Import Custom Personalities ({summary?.personalitiesCount ?? 0})
               </span>
             </label>
@@ -269,14 +271,14 @@ export function ConfigImportModal({
                 onChange={(e) => {
                   setImportArtStyles(e.target.checked);
                 }}
-                className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
+                className="w-4 h-4 text-scout-brand rounded focus:ring-2 focus:ring-scout-focus"
               />
-              <span className="text-sm text-surface-700">
+              <span className="text-sm text-scout-ink">
                 Import Custom Art Styles ({summary?.artStylesCount ?? 0})
               </span>
             </label>
 
-            <div className="pt-2 border-t border-surface-200">
+            <div className="pt-2 border-t border-scout-border">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -284,13 +286,13 @@ export function ConfigImportModal({
                   onChange={(e) => {
                     setMergeWithExisting(e.target.checked);
                   }}
-                  className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
+                  className="w-4 h-4 text-scout-brand rounded focus:ring-2 focus:ring-scout-focus"
                 />
-                <span className="text-sm text-surface-700 font-medium">
+                <span className="text-sm text-scout-ink font-medium">
                   Merge with existing data (uncheck to replace)
                 </span>
               </label>
-              <p className="text-xs text-surface-500 ml-6 mt-1">
+              <p className="text-xs text-scout-subtle ml-6 mt-1">
                 {mergeWithExisting
                   ? "New items will be added, existing items will be kept"
                   : "All existing custom data will be replaced"}

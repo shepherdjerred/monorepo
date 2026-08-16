@@ -32,8 +32,8 @@ export function ActiveGenerationsPanel({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-surface-200 p-4">
-      <h3 className="text-lg font-bold text-surface-900 mb-3">
+    <div className="bg-scout-surface rounded-lg border border-scout-border p-4">
+      <h3 className="text-lg font-bold text-scout-ink mb-3">
         In Progress ({activeGenerations.size})
       </h3>
       <div className="space-y-2">
@@ -54,18 +54,18 @@ export function ActiveGenerationsPanel({
               }}
               className={`w-full text-left p-3 rounded border transition-colors ${
                 isSelected
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-yellow-200 bg-yellow-50 hover:bg-yellow-100"
+                  ? "border-scout-brand bg-scout-raised"
+                  : "border-scout-warning bg-scout-warning hover:bg-scout-warning"
               }`}
             >
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-600" />
-                  <span className="text-yellow-600 text-xs font-semibold">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-scout-warning" />
+                  <span className="text-scout-warning text-xs font-semibold">
                     GENERATING
                   </span>
                 </div>
-                <span className="text-xs text-surface-500 tabular-nums">
+                <span className="text-xs text-scout-subtle tabular-nums">
                   {elapsedSeconds}s
                 </span>
               </div>

@@ -17,15 +17,15 @@ export function MatchLoadingState({
   }
 
   return (
-    <div className="text-center py-2 text-sm text-surface-600">
+    <div className="text-center py-2 text-sm text-scout-subtle">
       {loadingProgress ? (
         <div className="space-y-2">
           <div>
             Loading matches... {loadingProgress.current}/{loadingProgress.total}
           </div>
-          <div className="w-full bg-surface-200 rounded-full h-2">
+          <div className="w-full bg-scout-raised rounded-full h-2">
             <div
-              className="bg-brand-600 h-2 rounded-full transition-all duration-300"
+              className="bg-scout-brand h-2 rounded-full transition-all duration-300"
               style={{
                 width: `${((loadingProgress.current / loadingProgress.total) * 100).toString()}%`,
               }}
@@ -33,7 +33,7 @@ export function MatchLoadingState({
           </div>
           <button
             onClick={onCancel}
-            className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+            className="px-3 py-1 text-xs bg-scout-danger text-scout-danger-ink rounded hover:bg-scout-danger"
           >
             Cancel
           </button>

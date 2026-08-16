@@ -3,9 +3,9 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "#src/components/review-tool/ui/card.tsx";
-import { Label } from "#src/components/review-tool/ui/label.tsx";
-import { Switch } from "#src/components/review-tool/ui/switch.tsx";
+} from "@scout-for-lol/design-system/components/card";
+import { Label } from "@scout-for-lol/design-system/components/label";
+import { Switch } from "@scout-for-lol/design-system/components/switch";
 import type {
   ReviewTextStageConfig,
   StageConfig,
@@ -94,15 +94,15 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
           <div>
             <CardTitle>{title}</CardTitle>
             {description !== undefined && description.length > 0 && (
-              <p className="mt-1 text-xs text-surface-600">{description}</p>
+              <p className="mt-1 text-xs text-scout-subtle">{description}</p>
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Label className="text-xs text-surface-600">Enabled</Label>
+            <Label className="text-xs text-scout-subtle">Enabled</Label>
             <Switch
               checked={config.enabled}
-              onChange={(e) => {
-                onChange({ ...config, enabled: e.target.checked });
+              onCheckedChange={(enabled) => {
+                onChange({ ...config, enabled });
               }}
               aria-label={`${title} enabled`}
             />
@@ -118,12 +118,12 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
 
           {/* System Prompt Editor */}
           {defaults.system !== undefined && defaults.system.length > 0 && (
-            <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
+            <div className="flex items-center justify-between rounded-md border border-scout-border px-3 py-2">
               <div>
-                <Label className="text-xs text-surface-600">
+                <Label className="text-xs text-scout-subtle">
                   System prompt
                 </Label>
-                <p className="text-xs text-surface-500">
+                <p className="text-xs text-scout-subtle">
                   Instructions for the AI model (context, formatting rules).
                 </p>
               </div>
@@ -142,12 +142,12 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
 
           {/* User Prompt Editor */}
           {defaults.user !== undefined && defaults.user.length > 0 && (
-            <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
+            <div className="flex items-center justify-between rounded-md border border-scout-border px-3 py-2">
               <div>
-                <Label className="text-xs text-surface-600">
+                <Label className="text-xs text-scout-subtle">
                   User prompt template
                 </Label>
-                <p className="text-xs text-surface-500">
+                <p className="text-xs text-scout-subtle">
                   Template with variables that get replaced with match data.
                 </p>
               </div>
@@ -176,7 +176,7 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
         <div>
           <CardTitle>{title}</CardTitle>
           {description !== undefined && description.length > 0 && (
-            <p className="mt-1 text-xs text-surface-600">{description}</p>
+            <p className="mt-1 text-xs text-scout-subtle">{description}</p>
           )}
         </div>
       </CardHeader>
@@ -190,10 +190,10 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
 
         {/* System Prompt Editor */}
         {defaults.system !== undefined && defaults.system.length > 0 && (
-          <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
+          <div className="flex items-center justify-between rounded-md border border-scout-border px-3 py-2">
             <div>
-              <Label className="text-xs text-surface-600">System prompt</Label>
-              <p className="text-xs text-surface-500">
+              <Label className="text-xs text-scout-subtle">System prompt</Label>
+              <p className="text-xs text-scout-subtle">
                 Instructions for the AI model (context, formatting rules).
               </p>
             </div>
@@ -212,12 +212,12 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
 
         {/* User Prompt Editor */}
         {defaults.user !== undefined && defaults.user.length > 0 && (
-          <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
+          <div className="flex items-center justify-between rounded-md border border-scout-border px-3 py-2">
             <div>
-              <Label className="text-xs text-surface-600">
+              <Label className="text-xs text-scout-subtle">
                 User prompt template
               </Label>
-              <p className="text-xs text-surface-500">
+              <p className="text-xs text-scout-subtle">
                 Template with variables that get replaced with match data.
               </p>
             </div>

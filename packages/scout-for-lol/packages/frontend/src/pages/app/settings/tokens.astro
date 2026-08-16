@@ -8,7 +8,10 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
     <div class="mb-8 flex items-center justify-between">
       <div>
         <div class="flex items-center gap-3">
-          <a href="/app/settings" class="text-slate-400 hover:text-slate-300">
+          <a
+            href="/app/settings"
+            class="text-scout-subtle hover:text-scout-subtle"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-5 w-5"
@@ -23,15 +26,15 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
                 d="M15 19l-7-7 7-7"></path>
             </svg>
           </a>
-          <h1 class="text-3xl font-bold text-white">API Tokens</h1>
+          <h1 class="text-3xl font-bold text-scout-ink">API Tokens</h1>
         </div>
-        <p class="mt-2 text-slate-400">
+        <p class="mt-2 text-scout-subtle">
           Create and manage API tokens for the desktop client
         </p>
       </div>
       <button
         id="create-token-btn"
-        class="flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2 font-medium text-white transition-colors hover:bg-indigo-600"
+        class="flex items-center gap-2 rounded-lg bg-scout-brand px-4 py-2 font-medium text-scout-brand-ink transition-colors hover:bg-scout-brand"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -51,9 +54,11 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
     </div>
 
     <!-- Instructions -->
-    <div class="mb-8 rounded-xl border border-slate-800 bg-slate-900/50 p-6">
-      <h2 class="mb-4 font-semibold text-white">How to use API tokens</h2>
-      <ol class="list-inside list-decimal space-y-2 text-sm text-slate-400">
+    <div
+      class="mb-8 rounded-xl border border-scout-border bg-scout-canvas/50 p-6"
+    >
+      <h2 class="mb-4 font-semibold text-scout-ink">How to use API tokens</h2>
+      <ol class="list-inside list-decimal space-y-2 text-sm text-scout-subtle">
         <li>Create a new API token with a descriptive name</li>
         <li>Copy the token immediately - it will only be shown once</li>
         <li>Open the Scout desktop app and go to "Backend Connection"</li>
@@ -65,32 +70,32 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
     <!-- New Token Form (Hidden by default) -->
     <div
       id="create-token-form"
-      class="mb-8 hidden rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-6"
+      class="mb-8 hidden rounded-xl border border-scout-brand/30 bg-scout-brand/5 p-6"
     >
-      <h2 class="mb-4 font-semibold text-white">Create New Token</h2>
+      <h2 class="mb-4 font-semibold text-scout-ink">Create New Token</h2>
       <div class="space-y-4">
         <div>
           <label
             for="token-name"
-            class="mb-2 block text-sm font-medium text-slate-300"
+            class="mb-2 block text-sm font-medium text-scout-subtle"
             >Token Name</label
           >
           <input
             type="text"
             id="token-name"
             placeholder="e.g., My Gaming PC"
-            class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            class="w-full rounded-lg border border-scout-border bg-scout-canvas px-4 py-2 text-scout-ink placeholder:text-scout-subtle focus:border-scout-brand focus:outline-none focus:ring-1 focus:ring-scout-focus"
           />
         </div>
         <div>
           <label
             for="token-expiry"
-            class="mb-2 block text-sm font-medium text-slate-300"
+            class="mb-2 block text-sm font-medium text-scout-subtle"
             >Expiration</label
           >
           <select
             id="token-expiry"
-            class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            class="w-full rounded-lg border border-scout-border bg-scout-canvas px-4 py-2 text-scout-ink focus:border-scout-brand focus:outline-none focus:ring-1 focus:ring-scout-focus"
           >
             <option value="">Never expires</option>
             <option value="30">30 days</option>
@@ -101,13 +106,13 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
         <div class="flex gap-3">
           <button
             id="submit-token-btn"
-            class="rounded-lg bg-indigo-500 px-4 py-2 font-medium text-white transition-colors hover:bg-indigo-600"
+            class="rounded-lg bg-scout-brand px-4 py-2 font-medium text-scout-brand-ink transition-colors hover:bg-scout-brand"
           >
             Create Token
           </button>
           <button
             id="cancel-token-btn"
-            class="rounded-lg border border-slate-700 px-4 py-2 font-medium text-slate-300 transition-colors hover:bg-slate-800"
+            class="rounded-lg border border-scout-border px-4 py-2 font-medium text-scout-subtle transition-colors hover:bg-scout-canvas"
           >
             Cancel
           </button>
@@ -118,15 +123,15 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
     <!-- New Token Display (Hidden by default) -->
     <div
       id="new-token-display"
-      class="mb-8 hidden rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6"
+      class="mb-8 hidden rounded-xl border border-scout-success/30 bg-scout-success/5 p-6"
     >
       <div class="flex items-start gap-4">
         <div
-          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-scout-success/20"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5 text-emerald-400"
+            class="h-5 w-5 text-scout-success"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -139,10 +144,10 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
           </svg>
         </div>
         <div class="flex-1">
-          <h3 class="font-semibold text-emerald-400">
+          <h3 class="font-semibold text-scout-success">
             Token Created Successfully
           </h3>
-          <p class="mt-1 text-sm text-slate-400">
+          <p class="mt-1 text-sm text-scout-subtle">
             Copy this token now - it won't be shown again!
           </p>
           <div class="mt-4 flex items-center gap-2">
@@ -150,11 +155,11 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
               type="text"
               id="new-token-value"
               readonly
-              class="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 font-mono text-sm text-white"
+              class="flex-1 rounded-lg border border-scout-border bg-scout-canvas px-4 py-2 font-mono text-sm text-scout-ink"
             />
             <button
               id="copy-token-btn"
-              class="flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-600"
+              class="flex items-center gap-2 rounded-lg bg-scout-canvas px-4 py-2 text-sm font-medium text-scout-ink transition-colors hover:bg-scout-canvas"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -175,7 +180,7 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
           </div>
           <button
             id="dismiss-new-token-btn"
-            class="mt-4 text-sm text-slate-400 hover:text-slate-300"
+            class="mt-4 text-sm text-scout-subtle hover:text-scout-subtle"
           >
             I've copied the token
           </button>
@@ -185,14 +190,14 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
 
     <!-- Tokens List -->
     <div>
-      <h2 class="mb-4 text-lg font-semibold text-white">Your Tokens</h2>
+      <h2 class="mb-4 text-lg font-semibold text-scout-ink">Your Tokens</h2>
 
       <div
         id="tokens-loading"
-        class="flex items-center justify-center rounded-xl border border-slate-800 bg-slate-900/50 p-8"
+        class="flex items-center justify-center rounded-xl border border-scout-border bg-scout-canvas/50 p-8"
       >
         <svg
-          class="h-5 w-5 animate-spin text-slate-400"
+          class="h-5 w-5 animate-spin text-scout-subtle"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -214,11 +219,11 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
 
       <div
         id="tokens-empty"
-        class="hidden rounded-xl border border-slate-800 bg-slate-900/50 p-8 text-center"
+        class="hidden rounded-xl border border-scout-border bg-scout-canvas/50 p-8 text-center"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="mx-auto h-12 w-12 text-slate-600"
+          class="mx-auto h-12 w-12 text-scout-subtle"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -230,8 +235,8 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
             d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
           ></path>
         </svg>
-        <p class="mt-4 text-slate-400">No API tokens yet</p>
-        <p class="text-sm text-slate-500">
+        <p class="mt-4 text-scout-subtle">No API tokens yet</p>
+        <p class="text-sm text-scout-subtle">
           Create a token to connect the desktop client
         </p>
       </div>
@@ -288,16 +293,16 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
     tokensList.innerHTML = tokens
       .map(
         (token) => `
-    <div class="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+    <div class="flex items-center justify-between rounded-xl border border-scout-border bg-scout-canvas/50 p-6">
       <div class="flex items-center gap-4">
-        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-scout-warning/20">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-scout-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
           </svg>
         </div>
         <div>
-          <p class="font-medium text-white">${escapeHtml(token.name)}</p>
-          <div class="flex items-center gap-4 text-sm text-slate-400">
+          <p class="font-medium text-scout-ink">${escapeHtml(token.name)}</p>
+          <div class="flex items-center gap-4 text-sm text-scout-subtle">
             <span>Created ${formatDate(token.createdAt)}</span>
             ${token.lastUsedAt ? `<span>Last used ${formatDate(token.lastUsedAt)}</span>` : "<span>Never used</span>"}
             ${token.expiresAt ? `<span>Expires ${formatDate(token.expiresAt)}</span>` : ""}
@@ -305,7 +310,7 @@ import AppLayout from "../../../layouts/app/AppLayout.astro";
         </div>
       </div>
       <button
-        class="revoke-token-btn rounded-lg border border-red-500/50 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10"
+        class="revoke-token-btn rounded-lg border border-scout-danger/50 px-4 py-2 text-sm font-medium text-scout-danger transition-colors hover:bg-scout-danger/10"
         data-token-id="${token.id}"
       >
         Revoke

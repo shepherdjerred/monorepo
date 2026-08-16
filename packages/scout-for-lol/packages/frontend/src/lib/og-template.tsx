@@ -3,6 +3,8 @@
 /** @jsxFrag React.Fragment */
 import React from "react";
 import type { RenderFunctionInput } from "astro-opengraph-images";
+import { ScoutEmblem } from "@scout-for-lol/design-system/brand";
+import { scoutThemes } from "@scout-for-lol/design-system/themes";
 
 // This file is imported directly by `astro.config.mjs`, so Astro's config
 // loader (esbuild) transpiles it on the fly. In CI's container that transpile
@@ -14,9 +16,8 @@ import type { RenderFunctionInput } from "astro-opengraph-images";
 // independent of the ambient transpile mode. Do not remove them.
 //
 // Branded Open Graph template rendered by astro-opengraph-images (Satori).
-// Mirrors the marketing site's identity: indigo→violet gradient, the gradient
-// "S" badge from the Navbar, page title in Beaufort for LoL, description in
-// Spiegel. Fonts are registered in astro.config.mjs and referenced by name.
+// Uses the same resolved modern-dark tokens, emblem, and font bytes as the
+// shared browser design system. Fonts are registered in astro.config.mjs.
 //
 // Satori constraints: every element with more than one child must set
 // `display: flex`; there is no `gap` support (use margins); text needs an
@@ -27,6 +28,7 @@ export function ogTemplate({
 }: RenderFunctionInput): React.ReactNode {
   const hasDescription =
     typeof description === "string" && description.length > 0;
+  const colors = scoutThemes["modern-dark"].colors;
   return (
     <div
       style={{
@@ -35,11 +37,10 @@ export function ogTemplate({
         width: "100%",
         height: "100%",
         padding: "80px",
-        color: "#ffffff",
+        color: colors.text,
         fontFamily: "Spiegel",
-        backgroundColor: "#312e81",
-        backgroundImage:
-          "linear-gradient(135deg, #4338ca 0%, #6d28d9 55%, #7c3aed 100%)",
+        backgroundColor: colors.canvas,
+        backgroundImage: `linear-gradient(135deg, ${colors.canvas} 0%, ${colors.surface} 55%, ${colors.primary} 100%)`,
       }}
     >
       {/* Brand row */}
@@ -51,15 +52,16 @@ export function ogTemplate({
             justifyContent: "center",
             width: "84px",
             height: "84px",
-            borderRadius: "20px",
-            backgroundImage: "linear-gradient(135deg, #2563eb, #9333ea)",
+            borderRadius: "12px",
+            border: `2px solid ${colors.primary}`,
+            backgroundColor: colors.surface,
             fontFamily: "Beaufort for LoL",
             fontWeight: 700,
             fontSize: "48px",
-            color: "#ffffff",
+            color: colors.primary,
           }}
         >
-          S
+          <ScoutEmblem width={62} height={62} />
         </div>
         <div
           style={{
@@ -67,7 +69,7 @@ export function ogTemplate({
             fontFamily: "Spiegel",
             fontWeight: 600,
             fontSize: "34px",
-            color: "rgba(255,255,255,0.92)",
+            color: colors.text,
           }}
         >
           scout-for-lol.com
@@ -106,7 +108,7 @@ export function ogTemplate({
             fontWeight: 400,
             fontSize: "36px",
             lineHeight: 1.35,
-            color: "rgba(255,255,255,0.85)",
+            color: colors.textMuted,
           }}
         >
           {description}

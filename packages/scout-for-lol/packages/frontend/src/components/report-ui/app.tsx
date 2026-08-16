@@ -28,7 +28,9 @@ const formInputStyle: React.CSSProperties = {
   width: "100%",
   padding: "8px",
   borderRadius: "4px",
-  border: "1px solid #ccc",
+  border: "1px solid var(--scout-color-border)",
+  color: "var(--scout-color-text)",
+  backgroundColor: "var(--scout-color-surface)",
   boxSizing: "border-box",
 };
 
@@ -116,12 +118,18 @@ export function App() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#f9fafb" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        color: "var(--scout-color-text)",
+        backgroundColor: "var(--scout-color-canvas)",
+      }}
+    >
       {/* Header with tabs */}
       <div
         style={{
-          backgroundColor: "white",
-          borderBottom: "2px solid #e5e7eb",
+          backgroundColor: "var(--scout-color-surface)",
+          borderBottom: "2px solid var(--scout-color-border)",
           padding: "0 20px",
         }}
       >
@@ -138,7 +146,7 @@ export function App() {
             style={{
               fontSize: "20px",
               fontWeight: 700,
-              color: "#1f2937",
+              color: "var(--scout-color-text)",
               margin: "16px 0",
             }}
           >
@@ -151,10 +159,10 @@ export function App() {
               }}
               style={{
                 padding: "12px 20px",
-                backgroundColor: "#3b82f6",
-                color: "white",
+                backgroundColor: "var(--scout-color-primary)",
+                color: "var(--scout-color-primary-text)",
                 border: "none",
-                borderBottom: "2px solid #3b82f6",
+                borderBottom: "2px solid var(--scout-color-primary)",
                 cursor: "pointer",
                 fontSize: "14px",
                 fontWeight: 600,
@@ -170,7 +178,12 @@ export function App() {
       {/* Content area */}
       <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}>
         <h2 style={{ marginBottom: "8px" }}>Match Viewer</h2>
-        <p style={{ color: "#6b7280", marginBottom: "24px" }}>
+        <p
+          style={{
+            color: "var(--scout-color-text-muted)",
+            marginBottom: "24px",
+          }}
+        >
           Browser-compatible report viewer for Scout for LoL
         </p>
 
@@ -195,7 +208,7 @@ export function App() {
               padding: "8px 12px",
               fontSize: "14px",
               borderRadius: "4px",
-              border: "1px solid #ccc",
+              border: "1px solid var(--scout-color-border)",
               cursor: "pointer",
             }}
           >
@@ -213,8 +226,8 @@ export function App() {
             marginBottom: "20px",
             padding: "15px",
             borderRadius: "4px",
-            backgroundColor: "#f5f5f5",
-            border: "1px solid #ddd",
+            backgroundColor: "var(--scout-color-surface-raised)",
+            border: "1px solid var(--scout-color-border)",
           }}
         >
           <h3 style={{ marginTop: 0 }}>Fetch Real Match from Riot API</h3>
@@ -235,7 +248,7 @@ export function App() {
                 marginBottom: "10px",
               }}
             />
-            <small style={{ color: "#666" }}>
+            <small style={{ color: "var(--scout-color-text-muted)" }}>
               Get a token at{" "}
               <a
                 href="https://developer.riotgames.com"
@@ -291,8 +304,10 @@ export function App() {
             disabled={isLoading}
             style={{
               padding: "10px 20px",
-              backgroundColor: isLoading ? "#ccc" : "#0066cc",
-              color: "white",
+              backgroundColor: isLoading
+                ? "var(--scout-color-interactive-disabled)"
+                : "var(--scout-color-primary)",
+              color: "var(--scout-color-primary-text)",
               border: "none",
               borderRadius: "4px",
               cursor: isLoading ? "default" : "pointer",
@@ -305,7 +320,11 @@ export function App() {
 
           {error !== null && error.length > 0 && (
             <div
-              style={{ marginTop: "10px", color: "#d32f2f", fontSize: "14px" }}
+              style={{
+                marginTop: "10px",
+                color: "var(--scout-color-danger)",
+                fontSize: "14px",
+              }}
             >
               ⚠️ {error}
             </div>
@@ -313,7 +332,14 @@ export function App() {
         </div>
 
         <section>
-          <h2 style={{ fontSize: "14px", color: "#999" }}>Preview</h2>
+          <h2
+            style={{
+              fontSize: "14px",
+              color: "var(--scout-color-text-muted)",
+            }}
+          >
+            Preview
+          </h2>
           <div
             style={{
               zoom: 0.6,

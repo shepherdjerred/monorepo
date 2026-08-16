@@ -12,6 +12,8 @@
 // `<route>/index.png`. We compute it inline rather than importing the package
 // barrel, which would bundle the whole Satori/jsdom integration into every
 // page's SSR chunk.
+import { scoutThemes } from "@scout-for-lol/design-system/themes";
+
 interface Props {
   title: string;
   description: string;
@@ -32,6 +34,7 @@ const generatedOgPath = Astro.url.pathname.endsWith("/")
 const ogImage = new URL(image ?? generatedOgPath, Astro.site).toString();
 
 const siteName = "Scout for League of Legends";
+const themeColor = scoutThemes["modern-dark"].colors.canvas;
 
 // Fixed, application-level description for the SoftwareApplication schema.
 // The per-page `description` prop describes the individual page, not the app,
@@ -60,11 +63,11 @@ const structuredData = {
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="generator" content={Astro.generator} />
-<meta name="theme-color" content="#4f46e5" />
+<meta name="theme-color" content={themeColor} />
 {noindex && <meta name="robots" content="noindex, nofollow" />}
 
 {/* Icons */}
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" type="image/svg+xml" href="/assets/scout/brand/emblem.svg" />
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />

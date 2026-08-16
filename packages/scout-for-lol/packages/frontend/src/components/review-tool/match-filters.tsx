@@ -32,7 +32,7 @@ export function MatchFilters({
         <div>
           <label
             htmlFor="queue-type"
-            className="block text-sm font-medium text-surface-700 mb-1"
+            className="block text-sm font-medium text-scout-ink mb-1"
           >
             Queue Type
           </label>
@@ -42,7 +42,7 @@ export function MatchFilters({
             onChange={(e) => {
               onQueueTypeChange(e.target.value);
             }}
-            className="w-full px-2 py-1.5 text-sm bg-white text-surface-900 border border-surface-300 rounded"
+            className="w-full px-2 py-1.5 text-sm bg-scout-surface text-scout-ink border border-scout-border rounded"
           >
             <option value="all">All</option>
             <option value="solo">Ranked Solo</option>
@@ -56,7 +56,7 @@ export function MatchFilters({
         <div>
           <label
             htmlFor="lane"
-            className="block text-sm font-medium text-surface-700 mb-1"
+            className="block text-sm font-medium text-scout-ink mb-1"
           >
             Lane
           </label>
@@ -66,7 +66,7 @@ export function MatchFilters({
             onChange={(e) => {
               onLaneChange(e.target.value);
             }}
-            className="w-full px-2 py-1.5 text-sm bg-white text-surface-900 border border-surface-300 rounded"
+            className="w-full px-2 py-1.5 text-sm bg-scout-surface text-scout-ink border border-scout-border rounded"
           >
             <option value="all">All</option>
             <option value="top">Top</option>
@@ -80,7 +80,7 @@ export function MatchFilters({
         <div>
           <label
             htmlFor="outcome"
-            className="block text-sm font-medium text-surface-700 mb-1"
+            className="block text-sm font-medium text-scout-ink mb-1"
           >
             Outcome
           </label>
@@ -90,7 +90,7 @@ export function MatchFilters({
             onChange={(e) => {
               onOutcomeChange(e.target.value);
             }}
-            className="w-full px-2 py-1.5 text-sm bg-white text-surface-900 border border-surface-300 rounded"
+            className="w-full px-2 py-1.5 text-sm bg-scout-surface text-scout-ink border border-scout-border rounded"
           >
             <option value="all">All</option>
             <option value="victory">Victory</option>
@@ -102,7 +102,7 @@ export function MatchFilters({
       <div>
         <label
           htmlFor="player-game-name"
-          className="block text-sm font-medium text-surface-700 mb-1"
+          className="block text-sm font-medium text-scout-ink mb-1"
         >
           Player (Game Name)
         </label>
@@ -114,14 +114,14 @@ export function MatchFilters({
           onChange={(e) => {
             onPlayerChange(e.target.value);
           }}
-          className="w-full px-2 py-1.5 text-sm bg-white text-surface-900 border border-surface-300 rounded"
+          className="w-full px-2 py-1.5 text-sm bg-scout-surface text-scout-ink border border-scout-border rounded"
         />
       </div>
 
       <div>
         <label
           htmlFor="champion"
-          className="block text-sm font-medium text-surface-700 mb-1"
+          className="block text-sm font-medium text-scout-ink mb-1"
         >
           Champion
         </label>
@@ -133,7 +133,7 @@ export function MatchFilters({
           onChange={(e) => {
             onChampionChange(e.target.value);
           }}
-          className="w-full px-2 py-1.5 text-sm bg-white text-surface-900 border border-surface-300 rounded"
+          className="w-full px-2 py-1.5 text-sm bg-scout-surface text-scout-ink border border-scout-border rounded"
         />
       </div>
     </div>

@@ -32,7 +32,9 @@ const {
 } = Astro.props;
 ---
 
-<div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 items-center">
+<div
+  class="scout-image-feature grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 items-center"
+>
   <div
     class={imagePosition === "right"
       ? "order-2 lg:order-1"
@@ -43,14 +45,14 @@ const {
         <img
           src={imageSrc}
           alt={imageAlt}
-          class="w-full h-auto rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
+          class="w-full h-auto rounded-xl shadow-xl ring-1 ring-scout-border/10 ring-scout-border"
           loading="lazy"
         />
       ) : (
         <Image
           src={imageSrc}
           alt={imageAlt}
-          class="w-full h-auto rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
+          class="w-full h-auto rounded-xl shadow-xl ring-1 ring-scout-border/10 ring-scout-border"
           loading="lazy"
         />
       )
@@ -72,20 +74,20 @@ const {
         </div>
       )
     }
-    <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+    <h3 class="text-3xl font-bold text-scout-ink mb-4">
       {title}
     </h3>
-    <p class="text-lg text-gray-600 dark:text-gray-300 mb-4">
+    <p class="text-lg text-scout-subtle mb-4">
       {description}
     </p>
     {
       checklist.length > 0 && (
-        <ul class="space-y-2 text-gray-600 dark:text-gray-300">
+        <ul class="space-y-2 text-scout-subtle ">
           {checklist.map((item) => (
             <li class="flex items-start">
               <Icon
                 name="heroicons:check-circle"
-                class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 shrink-0"
+                class="h-6 w-6 text-scout-brand mr-2 shrink-0"
               />
               <span>{item}</span>
             </li>

@@ -30,7 +30,7 @@ export function ReviewToolModal({
       <div
         role="button"
         tabIndex={0}
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-all"
+        className="fixed inset-0 bg-scout-overlay backdrop-blur-sm transition-all"
         onClick={onClose}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -45,17 +45,17 @@ export function ReviewToolModal({
         <div
           role="dialog"
           aria-modal="true"
-          className={`relative bg-white rounded-lg shadow-xl w-full max-h-[90vh] overflow-y-auto ${maxWidthClassName}`}
+          className={`relative bg-scout-surface rounded-lg shadow-xl w-full max-h-[90vh] overflow-y-auto ${maxWidthClassName}`}
         >
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-surface-200 px-6 py-4 flex items-center justify-between">
+          <div className="sticky top-0 bg-scout-surface border-b border-scout-border px-6 py-4 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-surface-900">{title}</h2>
-              <p className="text-sm text-surface-500 mt-1">{subtitle}</p>
+              <h2 className="text-xl font-bold text-scout-ink">{title}</h2>
+              <p className="text-sm text-scout-subtle mt-1">{subtitle}</p>
             </div>
             <button
               onClick={onClose}
-              className="text-surface-400 hover:text-surface-600 transition-colors"
+              className="text-scout-subtle hover:text-scout-subtle transition-colors"
               title="Close"
             >
               <svg

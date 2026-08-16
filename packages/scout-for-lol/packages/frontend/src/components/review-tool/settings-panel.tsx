@@ -209,22 +209,22 @@ export function SettingsPanel({ config, onChange }: SettingsPanelProps) {
 
   return (
     <div className="card p-0 overflow-hidden">
-      <div className="px-6 py-4 border-b border-surface-200/50">
-        <h2 className="text-lg font-semibold text-surface-900">
+      <div className="px-6 py-4 border-b border-scout-border/50">
+        <h2 className="text-lg font-semibold text-scout-ink">
           Generation Settings
         </h2>
-        <p className="text-sm text-surface-500 mt-0.5">
+        <p className="text-sm text-scout-subtle mt-0.5">
           Configure how reviews are generated
         </p>
       </div>
 
-      <div className="divide-y divide-surface-200/50">
-        <div className="px-4 py-5 bg-surface-50">
+      <div className="divide-y border-scout-border/50">
+        <div className="px-4 py-5 bg-scout-raised">
           <div className="mb-3">
-            <h3 className="text-base font-semibold text-surface-900">
+            <h3 className="text-base font-semibold text-scout-ink">
               Pipeline stages
             </h3>
-            <p className="text-sm text-surface-500">
+            <p className="text-sm text-scout-subtle">
               Configure the unified review pipeline stages used by frontend and
               backend.
             </p>

@@ -8,7 +8,7 @@ interface Props {
   iconColor?: string | undefined;
 }
 
-const { title, description, icon, iconColor = "bg-indigo-600" } = Astro.props;
+const { title, description, icon, iconColor = "bg-scout-brand" } = Astro.props;
 
 // Determine if icon is an astro-icon name or HTML
 const isIconName = icon && !icon.includes("<");
