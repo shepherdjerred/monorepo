@@ -61,8 +61,6 @@ set -gx GRAFANA_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/w5y
 set -gx BUGSINK_URL 'https://bugsink.sjer.red'
 set -gx BUGSINK_TOKEN '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/76xqbj2znu6lkspwxhljuae554/credential" }}'
 set -gx ARGOCD_AUTH_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/nfviaka4ibphb2aodeoeow46zq/ARGOCD_AUTH_TOKEN" }}'
-set -gx (string join "" OPENAI _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd6fap7kzaaoqcbqqgz64y7m/credential" }}'
-set -gx (string join "" ANTHROPIC _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/sksz6g6ds4ypujxkoqfvm26jsu/credential" }}'
 set -gx HASS_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/y4c2gno3yrxcdcudaofbirmi4u/password" }}'
 set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
 set -gx LINEAR_API_KEY '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/iixelnobjabehkgxhl3ekacdy4/LINEAR_API_KEY" }}'
@@ -94,6 +92,10 @@ set -gx PROMETHEUS_URL 'https://prometheus.tailnet-1a49.ts.net'
 set -gx POSTHOG_CLI_PROJECT_ID '549883'
 {{ end -}}
 if status is-interactive
+  {{ if lookPath "op" -}}
+  set -gx (string join "" OPENAI _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/v2kd6fap7kzaaoqcbqqgz64y7m/credential" }}'
+  set -gx (string join "" ANTHROPIC _API_KEY) '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/sksz6g6ds4ypujxkoqfvm26jsu/credential" }}'
+  {{ end -}}
   # Keep provider API keys available to ordinary tools, but coding-agent
   # wrappers explicitly remove direct API credentials. Claude and Codex
   # therefore use their subscription/auth-file flows; OpenCode uses its
@@ -101,12 +103,20 @@ if status is-interactive
   # launches that bypass fish (Raycast, scripts) must scrub their environment
   # explicitly.
   function codex --wraps codex -d "Run Codex without direct provider API keys"
+      if not command -q codex
+          echo "codex is not installed or not on PATH" >&2
+          return 127
+      end
       env -u (string join "" OPENAI _API_KEY) \
           -u (string join "" CODEX _API_KEY) \
           -u (string join "" ANTHROPIC _API_KEY) \
           (command -s codex) $argv
   end
   function opencode --wraps opencode
+      if not command -q opencode
+          echo "opencode is not installed or not on PATH" >&2
+          return 127
+      end
       env -u (string join "" ANTHROPIC _API_KEY) \
           -u (string join "" OPENAI _API_KEY) \
           -u (string join "" CODEX _API_KEY) \
