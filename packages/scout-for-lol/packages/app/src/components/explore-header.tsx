@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import { Download, Link2Off, Menu, Share2 } from "lucide-react";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Sheet,
   SheetContent,
   SheetTitle,
   SheetTrigger,
-} from "#src/components/ui/sheet.tsx";
+} from "@scout-for-lol/design-system/components/sheet";
 
 /**
  * Title row: the mobile drawer trigger, the conversation name, and the

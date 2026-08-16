@@ -1,6 +1,9 @@
 import { useState } from "react";
-import { Button } from "#src/components/ui/button.tsx";
-import { Card, CardContent } from "#src/components/ui/card.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import {
+  Card,
+  CardContent,
+} from "@scout-for-lol/design-system/components/card";
 import { SubscriptionFields } from "#src/components/subscription-fields.tsx";
 import {
   emptySubscriptionValue,
@@ -87,7 +90,7 @@ export function OnboardingSubscribeStep(props: {
           <Card>
             <CardContent className="space-y-1 p-4">
               <p className="text-sm font-medium">Tracking so far</p>
-              <ul className="list-inside list-disc text-sm text-muted-foreground">
+              <ul className="list-inside list-disc text-sm text-scout-subtle">
                 {props.existingSubs.map((sub) => (
                   <li key={`${sub.alias}-${sub.channelId}`}>{sub.alias}</li>
                 ))}
@@ -106,7 +109,7 @@ export function OnboardingSubscribeStep(props: {
           />
 
           {error !== null && (
-            <p className="text-sm text-destructive">{error}</p>
+            <p className="text-sm text-scout-danger">{error}</p>
           )}
 
           <div className="flex items-center justify-between">

@@ -1,13 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { ScoutThemeProvider } from "@scout-for-lol/design-system/runtime";
 import { RouterProvider } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
 import { TRPCProvider, trpcClient } from "#src/lib/trpc.ts";
 import { queryClient } from "#src/lib/query-client.ts";
 import { createAppRouter } from "#src/router.tsx";
-import { ThemeProvider } from "#src/lib/use-theme.tsx";
-import { initAnalytics } from "#src/lib/analytics.ts";
+import { initAnalytics, track } from "#src/lib/analytics.ts";
 import "#src/styles/global.css";
 
 // VITE_SENTRY_RELEASE is injected at build time by the CI site-deploy step
@@ -66,12 +66,17 @@ const router = createAppRouter();
 
 createRoot(container).render(
   <StrictMode>
-    <ThemeProvider>
+    <ScoutThemeProvider
+      surface="app"
+      onThemeChanged={(payload) => {
+        track("theme_changed", payload);
+      }}
+    >
       <QueryClientProvider client={queryClient}>
         <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
           <RouterProvider router={router} />
         </TRPCProvider>
       </QueryClientProvider>
-    </ThemeProvider>
+    </ScoutThemeProvider>
   </StrictMode>,
 );

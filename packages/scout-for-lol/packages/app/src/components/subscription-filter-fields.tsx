@@ -10,12 +10,12 @@ import {
   type SubscriptionFilterSpec,
 } from "@scout-for-lol/data";
 import { Check, ChevronDown, Minus } from "lucide-react";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "#src/components/ui/popover.tsx";
+} from "@scout-for-lol/design-system/components/popover";
 import { cn } from "#src/lib/cn.ts";
 
 /** Build a filter spec from a set of queues (empty selection = null). */
@@ -103,8 +103,8 @@ function EntryRow(props: {
       type="button"
       aria-pressed={props.isPartial ? "mixed" : props.isSelected}
       className={cn(
-        "flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
-        note !== undefined && "text-muted-foreground",
+        "flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-sm hover:bg-scout-accent hover:text-scout-accent-ink",
+        note !== undefined && "text-scout-subtle",
       )}
       onClick={() => {
         props.onToggle(props.entry);
@@ -191,7 +191,7 @@ export function SubscriptionFilterFields(props: {
       >
         {unavailableCount > 0 && (
           <>
-            <label className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground">
+            <label className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-xs text-scout-subtle hover:bg-scout-accent hover:text-scout-accent-ink">
               <input
                 type="checkbox"
                 checked={showUnavailable}
@@ -207,7 +207,7 @@ export function SubscriptionFilterFields(props: {
         <button
           type="button"
           className={cn(
-            "flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
+            "flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-sm hover:bg-scout-accent hover:text-scout-accent-ink",
             selected.length === 0 && "font-medium",
           )}
           onClick={() => {

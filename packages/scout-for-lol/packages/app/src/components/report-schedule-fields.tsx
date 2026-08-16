@@ -5,15 +5,15 @@ import {
   CronPresets,
   ReportScheduleTimezoneSchema,
 } from "@scout-for-lol/data/model/competition-cron.ts";
-import { Input } from "#src/components/ui/input.tsx";
-import { Label } from "#src/components/ui/label.tsx";
+import { Input } from "@scout-for-lol/design-system/components/input";
+import { Label } from "@scout-for-lol/design-system/components/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "#src/components/ui/select.tsx";
+} from "@scout-for-lol/design-system/components/select";
 import { TimezoneSelect } from "#src/components/timezone-select.tsx";
 
 const CUSTOM_SCHEDULE = "custom";
@@ -120,7 +120,7 @@ export function ReportScheduleFields(props: {
               props.onCronChange(event.target.value);
             }}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-scout-subtle">
             Runs at most once per day — exactly one minute and one hour (e.g.{" "}
             <code>30 18 * * 1</code>).
           </p>
@@ -128,10 +128,8 @@ export function ReportScheduleFields(props: {
       )}
       {upcoming.ok ? (
         <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground">
-            Next 3 runs
-          </p>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <p className="text-xs font-medium text-scout-subtle">Next 3 runs</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-scout-subtle">
             {upcoming.dates.map((date) => (
               <span
                 key={date.toISOString()}
@@ -143,7 +141,7 @@ export function ReportScheduleFields(props: {
           </div>
         </div>
       ) : (
-        <p className="text-xs text-destructive">{upcoming.message}</p>
+        <p className="text-xs text-scout-danger">{upcoming.message}</p>
       )}
     </div>
   );

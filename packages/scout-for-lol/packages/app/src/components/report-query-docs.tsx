@@ -14,7 +14,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "#src/components/ui/card.tsx";
+} from "@scout-for-lol/design-system/components/card";
 
 const GRAMMAR =
   "SELECT <metric|expression [AS alias]>, … FROM <source> [WHERE <row filter> AND …] GROUP BY <field>[, <field>] [HAVING <output> <operator> <value>] [ANALYZE LAST <days> DAYS | BETWEEN '<date>' AND '<date>'] [BUCKET BY AUTO|DAY|WEEK|MONTH|PATCH] [COMPARE TO PREVIOUS PERIOD | BETWEEN '<date>' AND '<date>'] [IN TIME ZONE '<IANA zone>'] [ORDER BY <output|label> ASC|DESC] [LIMIT <n>] [RENDER <kind> [WITH (<options>)]]";
@@ -29,8 +29,8 @@ function DefinitionList(props: { items: DefinitionItem[] }) {
           key={item.term}
           className="grid grid-cols-[minmax(8rem,auto)_1fr] gap-3"
         >
-          <dt className="font-mono text-xs text-foreground">{item.term}</dt>
-          <dd className="text-xs text-muted-foreground">{item.description}</dd>
+          <dt className="font-mono text-xs text-scout-ink">{item.term}</dt>
+          <dd className="text-xs text-scout-subtle">{item.description}</dd>
         </div>
       ))}
     </dl>
@@ -58,10 +58,10 @@ export function ReportQueryDocs() {
           <CardTitle className="text-sm">Syntax</CardTitle>
         </CardHeader>
         <CardContent>
-          <pre className="overflow-auto whitespace-pre-wrap rounded-md bg-muted/50 p-3 text-xs">
+          <pre className="overflow-auto whitespace-pre-wrap rounded-md bg-scout-hover/50 p-3 text-xs">
             {GRAMMAR}
           </pre>
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="mt-2 text-xs text-scout-subtle">
             Keywords are case-insensitive. WHERE filters raw rows; HAVING
             filters aggregates and aliases. Arithmetic supports parentheses and
             <span className="font-mono"> + − × ÷</span>. Temporal grouping uses

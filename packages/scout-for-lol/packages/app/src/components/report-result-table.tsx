@@ -10,7 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#src/components/ui/table.tsx";
+} from "@scout-for-lol/design-system/components/table";
 
 // Accepts both the AI preview rows (non-null values) and the live tRPC preview
 // rows, whose values are nullable when a column is absent for a row.
@@ -46,7 +46,7 @@ export function ReportResultTable(props: {
 }) {
   if (props.rows.length === 0) {
     return (
-      <div className="rounded-md border border-border p-4 text-sm text-muted-foreground">
+      <div className="rounded-md border border-border p-4 text-sm text-scout-subtle">
         No rows matched this query.
       </div>
     );
@@ -95,7 +95,7 @@ function SnapshotSparklines(props: { snapshot: VisualizationSnapshot }) {
         const values = series.points.map((point) => point.value);
         return (
           <div key={series.id} className="rounded-md border border-border p-2">
-            <div className="mb-1 truncate text-xs text-muted-foreground">
+            <div className="mb-1 truncate text-xs text-scout-subtle">
               {series.label}
             </div>
             <svg

@@ -8,7 +8,7 @@ import {
   reportOnboardingOutcome,
   reportOnboardingStep,
 } from "#src/lib/funnel.ts";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   initialOnboardingState,
   onboardingReducer,
@@ -116,7 +116,7 @@ export function OnboardingWizard() {
     if (guildId === null) {
       return (
         <div className="mx-auto max-w-2xl space-y-3 py-8">
-          <p className="text-sm text-destructive">No server selected.</p>
+          <p className="text-sm text-scout-danger">No server selected.</p>
           <Button
             onClick={() => {
               dispatch({ type: "goto", step: "install" });

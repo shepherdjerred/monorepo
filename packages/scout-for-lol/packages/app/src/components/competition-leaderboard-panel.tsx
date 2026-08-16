@@ -13,10 +13,10 @@ import { analyticsMeta } from "#src/lib/analytics.ts";
 import { competitionAnalysisDateInput } from "#src/lib/competition-analysis-date.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { ChartImage } from "#src/components/chart-image.tsx";
 import { Section } from "#src/components/section.tsx";
-import { Input } from "#src/components/ui/input.tsx";
+import { Input } from "@scout-for-lol/design-system/components/input";
 import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
 import {
   Table,
@@ -25,7 +25,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#src/components/ui/table.tsx";
+} from "@scout-for-lol/design-system/components/table";
 
 function formatScore(score: unknown): string {
   const rankResult = RankSchema.safeParse(score);
@@ -208,7 +208,7 @@ function AnalysisControls(props: {
           Selected period
         </Button>
         <select
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+          className="h-9 rounded-md border border-scout-border bg-scout-canvas px-2 text-sm"
           value={props.preset}
           onChange={(event) => {
             props.onPresetChange(parsePreset(event.target.value));
@@ -275,21 +275,21 @@ function StandingsStatus(props: {
   return (
     <>
       {props.analysisError !== undefined && (
-        <p className="text-sm text-destructive">{props.analysisError}</p>
+        <p className="text-sm text-scout-danger">{props.analysisError}</p>
       )}
       {props.refreshError !== undefined && (
-        <p className="text-sm text-destructive">{props.refreshError}</p>
+        <p className="text-sm text-scout-danger">{props.refreshError}</p>
       )}
       {props.status === "DRAFT" && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-scout-subtle">
           Standings appear once the competition starts.
         </p>
       )}
       {props.status !== "DRAFT" && props.isLoading && (
-        <p className="text-sm text-muted-foreground">Loading standings…</p>
+        <p className="text-sm text-scout-subtle">Loading standings…</p>
       )}
       {props.status !== "DRAFT" && props.isEmpty && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-scout-subtle">
           No standings computed yet.
           {props.status === "ACTIVE"
             ? " Click “Refresh standings” to generate them."
@@ -336,7 +336,7 @@ function OfficialStandings(props: {
     return null;
   return (
     <>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-scout-subtle">
         Updated {formatDate(props.leaderboard.calculatedAt)}
       </p>
       <StandingsTable entries={props.leaderboard.entries} />
@@ -364,7 +364,7 @@ function PeriodAnalysis(props: {
       {props.analysis.visualization !== null && (
         <InteractiveVisualization snapshot={props.analysis.visualization} />
       )}
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-scout-subtle">
         {props.analysis.rowsScanned.toLocaleString()} analysis rows scanned
       </p>
     </>

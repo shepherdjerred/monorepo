@@ -55,19 +55,19 @@ const COMPONENTS: Components = {
     // react-markdown gives fenced blocks a language class and inline code
     // none, which is the only signal available to tell them apart here.
     className === undefined ? (
-      <code className="rounded bg-muted px-1 py-0.5 text-[0.85em]">
+      <code className="rounded bg-scout-hover px-1 py-0.5 text-[0.85em]">
         {children}
       </code>
     ) : (
       <code className={className}>{children}</code>
     ),
   pre: ({ children }) => (
-    <pre className="mb-3 overflow-x-auto rounded-md bg-muted p-3 text-xs last:mb-0">
+    <pre className="mb-3 overflow-x-auto rounded-md bg-scout-hover p-3 text-xs last:mb-0">
       {children}
     </pre>
   ),
   blockquote: ({ children }) => (
-    <blockquote className="mb-3 border-l-2 pl-3 text-muted-foreground last:mb-0">
+    <blockquote className="mb-3 border-l-2 pl-3 text-scout-subtle last:mb-0">
       {children}
     </blockquote>
   ),
@@ -76,7 +76,9 @@ const COMPONENTS: Components = {
       <table className="w-full text-sm">{children}</table>
     </div>
   ),
-  thead: ({ children }) => <thead className="bg-muted/50">{children}</thead>,
+  thead: ({ children }) => (
+    <thead className="bg-scout-hover/50">{children}</thead>
+  ),
   th: ({ children }) => (
     <th className="px-3 py-2 text-left font-medium">{children}</th>
   ),

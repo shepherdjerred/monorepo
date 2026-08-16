@@ -12,13 +12,13 @@ import { formatDate, channelLabel } from "#src/lib/format.ts";
 import { summarizeCriteria } from "#src/lib/criteria-summary.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { useCompetitionParams } from "#src/lib/route-params.ts";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "#src/components/ui/card.tsx";
+} from "@scout-for-lol/design-system/components/card";
 import { CompetitionStatusBadge } from "#src/components/status-badge.tsx";
 import { CompetitionLeaderboardPanel } from "#src/components/competition-leaderboard-panel.tsx";
 import { CompetitionParticipantsPanel } from "#src/components/competition-participants-panel.tsx";
@@ -106,7 +106,7 @@ export function CompetitionDetail() {
       </div>
 
       {cancelMutation.error && (
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-scout-danger">
           {cancelMutation.error.message}
         </p>
       )}
@@ -117,20 +117,20 @@ export function CompetitionDetail() {
             <CardTitle>Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <p className="text-muted-foreground">{competition.description}</p>
+            <p className="text-scout-subtle">{competition.description}</p>
             <div>
-              <span className="text-muted-foreground">Visibility</span>
+              <span className="text-scout-subtle">Visibility</span>
               <p>{visibilityToString(competition.visibility)}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-scout-subtle">
                 {visibilityDescription(competition.visibility)}
               </p>
             </div>
             <div>
-              <span className="text-muted-foreground">Channel</span>
+              <span className="text-scout-subtle">Channel</span>
               <p>{channelLabel(channelsQuery.data, competition.channelId)}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Max participants</span>
+              <span className="text-scout-subtle">Max participants</span>
               <p>{competition.maxParticipants}</p>
             </div>
           </CardContent>
@@ -142,15 +142,15 @@ export function CompetitionDetail() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div>
-              <span className="text-muted-foreground">Start</span>
+              <span className="text-scout-subtle">Start</span>
               <p>{formatDate(competition.startDate)}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">End</span>
+              <span className="text-scout-subtle">End</span>
               <p>{formatDate(competition.endDate)}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Update schedule</span>
+              <span className="text-scout-subtle">Update schedule</span>
               <p className="font-mono text-xs">
                 {competition.updateCronExpression ?? "default"}
               </p>
@@ -193,7 +193,7 @@ export function CompetitionDetail() {
         }}
       />
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-scout-subtle">
         Need to change criteria or dates?{" "}
         {competition.status === "DRAFT" ? (
           <button

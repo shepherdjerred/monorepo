@@ -17,8 +17,8 @@ import {
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta, track } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { Button } from "#src/components/ui/button.tsx";
-import { Badge } from "#src/components/ui/badge.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import { Badge } from "@scout-for-lol/design-system/components/badge";
 import {
   missingPermissionFromError,
   permissionLabel,
@@ -30,7 +30,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "#src/components/ui/select.tsx";
+} from "@scout-for-lol/design-system/components/select";
 import {
   Table,
   TableBody,
@@ -38,7 +38,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#src/components/ui/table.tsx";
+} from "@scout-for-lol/design-system/components/table";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 import { useGuildParams } from "#src/lib/route-params.ts";
 
@@ -86,7 +86,7 @@ function PermissionChecklist(props: {
         return (
           <div
             key={key}
-            className="flex items-start gap-2 text-sm text-muted-foreground"
+            className="flex items-start gap-2 text-sm text-scout-subtle"
           >
             <input
               id={inputId}
@@ -107,7 +107,7 @@ function PermissionChecklist(props: {
               }}
             />
             <label htmlFor={inputId}>
-              <span className="block text-foreground">
+              <span className="block text-scout-ink">
                 {permissionLabel(permission)}
               </span>
               <span className="font-mono text-xs">{key}</span>
@@ -180,16 +180,16 @@ export function GuildAccess() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold tracking-tight">Access</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm text-scout-subtle">
           Grant members scoped access to this server. Discord admins always have
           full access and aren&apos;t listed here.
         </p>
       </div>
 
       {canGrant && (
-        <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4">
+        <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-scout-surface p-4">
           <div className="min-w-[16rem] flex-1 space-y-1">
-            <span className="block text-xs font-medium text-muted-foreground">
+            <span className="block text-xs font-medium text-scout-subtle">
               Member
             </span>
             <DiscordMemberCombobox
@@ -199,7 +199,7 @@ export function GuildAccess() {
             />
           </div>
           <div className="space-y-1">
-            <span className="block text-xs font-medium text-muted-foreground">
+            <span className="block text-xs font-medium text-scout-subtle">
               Role
             </span>
             <Select
@@ -279,7 +279,7 @@ export function GuildAccess() {
         (() => {
           const missing = missingPermissionFromError(mutationError);
           return (
-            <p className="text-sm text-destructive">
+            <p className="text-sm text-scout-danger">
               {missing
                 ? `You need "${permissionLabel(missing)}" to do that.`
                 : mutationError.message}
@@ -301,7 +301,7 @@ export function GuildAccess() {
             <TableRow>
               <TableCell
                 colSpan={4}
-                className="text-center text-sm text-muted-foreground"
+                className="text-center text-sm text-scout-subtle"
               >
                 No members have been granted access yet.
               </TableCell>
@@ -394,7 +394,7 @@ export function GuildAccess() {
                       <Badge>{roleLabel(member.role)}</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-sm text-scout-subtle">
                     <span>{member.permissions.length}</span>
                     {member.role === "custom" && (
                       <span className="mt-1 block max-w-md text-xs">

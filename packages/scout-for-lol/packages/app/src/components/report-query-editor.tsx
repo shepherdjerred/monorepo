@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import type * as Monaco from "monaco-editor";
 import Editor, { type OnChange } from "@monaco-editor/react";
+import { useScoutTheme } from "@scout-for-lol/design-system/runtime";
 import "#src/lib/monaco-setup.ts";
 import {
   registerScoutQlLanguage,
@@ -16,6 +17,7 @@ export default function ReportQueryEditor(props: {
   value: string;
   onChange: (value: string) => void;
 }) {
+  const { resolvedMode } = useScoutTheme();
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
 
@@ -51,7 +53,7 @@ export default function ReportQueryEditor(props: {
       <Editor
         height="180px"
         language={SCOUTQL_LANGUAGE_ID}
-        theme="vs-dark"
+        theme={resolvedMode === "dark" ? "vs-dark" : "vs"}
         value={props.value}
         onChange={handleChange}
         onMount={handleMount}

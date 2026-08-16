@@ -1,4 +1,4 @@
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 
 /**
  * "Load more" button for cursor-paginated lists. Renders nothing when there

@@ -15,13 +15,13 @@ import { nextRiotIdPollInterval } from "#src/lib/riot-id-poll.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { usePlayerParams } from "#src/lib/route-params.ts";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "#src/components/ui/card.tsx";
+} from "@scout-for-lol/design-system/components/card";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import { PlayerHeaderActions } from "#src/components/player-header-actions.tsx";
 import {
@@ -105,11 +105,11 @@ function PlayerSummaryCards(props: {
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-[max-content_1fr] items-baseline gap-x-4 gap-y-2 text-sm">
-            <dt className="text-muted-foreground">Linked user</dt>
+            <dt className="text-scout-subtle">Linked user</dt>
             <dd>
               <DiscordUser id={player.discordId} name={player.discordUser} />
             </dd>
-            <dt className="text-muted-foreground">Created by</dt>
+            <dt className="text-scout-subtle">Created by</dt>
             <dd>
               <DiscordUser
                 id={player.creatorDiscordId}
@@ -126,9 +126,9 @@ function PlayerSummaryCards(props: {
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-[max-content_1fr] items-baseline gap-x-4 gap-y-2 text-sm">
-            <dt className="text-muted-foreground">Player ID</dt>
+            <dt className="text-scout-subtle">Player ID</dt>
             <dd>{player.id}</dd>
-            <dt className="text-muted-foreground">Created</dt>
+            <dt className="text-scout-subtle">Created</dt>
             <dd>{formatDate(player.createdTime)}</dd>
           </dl>
         </CardContent>
@@ -140,11 +140,11 @@ function PlayerSummaryCards(props: {
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-[max-content_1fr] items-baseline gap-x-4 gap-y-2 text-sm">
-            <dt className="text-muted-foreground">Accounts</dt>
+            <dt className="text-scout-subtle">Accounts</dt>
             <dd>{player.accounts.length}</dd>
-            <dt className="text-muted-foreground">Subscriptions</dt>
+            <dt className="text-scout-subtle">Subscriptions</dt>
             <dd>{player.subscriptions.length}</dd>
-            <dt className="text-muted-foreground">Competitions</dt>
+            <dt className="text-scout-subtle">Competitions</dt>
             <dd>{props.competitionCount}</dd>
           </dl>
         </CardContent>
@@ -266,7 +266,7 @@ export function PlayerDetail() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">{alias}</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-scout-subtle">
             Updated {formatDate(player.updatedTime)}
           </p>
         </div>
@@ -289,7 +289,7 @@ export function PlayerDetail() {
       </div>
 
       {actionError !== null && (
-        <p className="text-sm text-destructive">{actionError}</p>
+        <p className="text-sm text-scout-danger">{actionError}</p>
       )}
 
       <PlayerSummaryCards

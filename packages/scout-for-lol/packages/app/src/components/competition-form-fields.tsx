@@ -6,16 +6,16 @@ import {
   visibilityDescription,
   type CompetitionVisibility,
 } from "@scout-for-lol/data";
-import { Button } from "#src/components/ui/button.tsx";
-import { Input } from "#src/components/ui/input.tsx";
-import { Label } from "#src/components/ui/label.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import { Input } from "@scout-for-lol/design-system/components/input";
+import { Label } from "@scout-for-lol/design-system/components/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "#src/components/ui/select.tsx";
+} from "@scout-for-lol/design-system/components/select";
 import {
   CompetitionDatesFields,
   type DatesState,
@@ -66,7 +66,7 @@ export function CompetitionFormFields(props: {
   return (
     <form onSubmit={props.onSubmit} className="space-y-4">
       {locked && (
-        <p className="rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+        <p className="rounded-md border border-border bg-scout-hover/40 p-3 text-sm text-scout-subtle">
           This competition has started — criteria, dates, and visibility are
           locked. You can still edit the title, description, channel, and
           increase the participant cap.
@@ -140,7 +140,7 @@ export function CompetitionFormFields(props: {
                 <SelectItem key={option} value={option}>
                   <span className="flex flex-col">
                     <span>{visibilityToString(option)}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-scout-subtle">
                       {visibilityDescription(option)}
                     </span>
                   </span>
@@ -183,7 +183,7 @@ export function CompetitionFormFields(props: {
         }}
       />
 
-      {error !== null && <p className="text-sm text-destructive">{error}</p>}
+      {error !== null && <p className="text-sm text-scout-danger">{error}</p>}
 
       <div className="flex gap-2">
         <Button asChild variant="outline" type="button">

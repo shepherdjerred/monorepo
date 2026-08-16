@@ -8,6 +8,7 @@ import {
 } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, useEffect, type ReactNode } from "react";
+import { ProductSubnavigation } from "@scout-for-lol/design-system/layout";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import type { Permission } from "@scout-for-lol/data";
 import {
@@ -107,7 +108,7 @@ export function GuildWorkspace() {
   if (guildId === undefined) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
-        <p className="text-sm text-destructive">Missing guild id</p>
+        <p className="text-sm text-scout-danger">Missing guild id</p>
       </div>
     );
   }
@@ -135,11 +136,31 @@ export function GuildWorkspace() {
   const accessDenied = !isLoading && !hasAccess;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:py-12">
-      <div className="space-y-3">
+    <>
+      {visibleNav.length > 0 && (
+        <ProductSubnavigation>
+          {visibleNav.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                cn(
+                  "rounded-md px-3 py-2 text-sm font-medium",
+                  isActive
+                    ? "bg-scout-brand text-scout-brand-ink"
+                    : "text-scout-subtle hover:bg-scout-accent hover:text-scout-accent-ink",
+                )
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </ProductSubnavigation>
+      )}
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:py-12">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-medium uppercase text-muted-foreground">
+            <p className="text-xs font-medium uppercase text-scout-subtle">
               Guild
             </p>
             <h1 className="text-lg font-semibold tracking-tight">
@@ -149,60 +170,39 @@ export function GuildWorkspace() {
           <div className="flex items-center gap-3">
             <Link
               to="/welcome"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="text-sm font-medium text-scout-subtle hover:text-scout-ink"
             >
               Setup guide
             </Link>
             <NavLink
               to="/"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="text-sm font-medium text-scout-subtle hover:text-scout-ink"
             >
               Change guild
             </NavLink>
           </div>
         </div>
-        {visibleNav.length > 0 && (
-          <nav className="flex flex-wrap gap-2 border-b border-border pb-2">
-            {visibleNav.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  cn(
-                    "rounded-md px-3 py-2 text-sm font-medium",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                  )
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
+        {error === null ? (
+          accessDenied ? (
+            <ForbiddenPanel
+              title="No access to this server"
+              message="You aren't a member of this server, or a Scout admin hasn't granted you access yet."
+            />
+          ) : sectionForbidden ? (
+            <ForbiddenPanel
+              title={`No access to ${activeNav.label}`}
+              message={`Ask a Scout admin to grant you ${activeNav.label} access.`}
+            />
+          ) : (
+            <Suspense fallback={<SectionSkeleton />}>
+              <Outlet />
+            </Suspense>
+          )
+        ) : (
+          <PermissionLoadError error={error} />
         )}
       </div>
-
-      {error === null ? (
-        accessDenied ? (
-          <ForbiddenPanel
-            title="No access to this server"
-            message="You aren't a member of this server, or a Scout admin hasn't granted you access yet."
-          />
-        ) : sectionForbidden ? (
-          <ForbiddenPanel
-            title={`No access to ${activeNav.label}`}
-            message={`Ask a Scout admin to grant you ${activeNav.label} access.`}
-          />
-        ) : (
-          <Suspense fallback={<SectionSkeleton />}>
-            <Outlet />
-          </Suspense>
-        )
-      ) : (
-        <PermissionLoadError error={error} />
-      )}
-    </div>
+    </>
   );
 }
 
@@ -267,11 +267,11 @@ export function GuildPermissionsGate(props: {
 
 function PermissionLoadError(props: { error: QueryError }) {
   return (
-    <div className="rounded-lg border border-destructive/40 bg-card p-8 text-center">
-      <h2 className="text-base font-semibold text-destructive">
+    <div className="rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center">
+      <h2 className="text-base font-semibold text-scout-danger">
         Unable to load access
       </h2>
-      <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+      <p className="mx-auto mt-2 max-w-sm text-sm text-scout-subtle">
         {props.error.message}
       </p>
     </div>

@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "#src/components/ui/card.tsx";
+} from "@scout-for-lol/design-system/components/card";
 import {
   isOnboardingComplete,
   isOnboardingSeen,
@@ -121,13 +121,13 @@ export function GuildPicker() {
         <div className="flex items-center gap-3">
           <Link
             to="/explore"
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="text-sm text-scout-subtle hover:text-scout-ink"
           >
             Explore
           </Link>
           <Link
             to="/welcome"
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="text-sm text-scout-subtle hover:text-scout-ink"
           >
             Setup guide
           </Link>
@@ -141,10 +141,10 @@ export function GuildPicker() {
           <li key={g.id}>
             <Link
               to={`/g/${g.id}`}
-              className="flex items-center gap-3 rounded-md border border-border bg-card p-3 text-card-foreground transition-colors hover:bg-accent"
+              className="flex items-center gap-3 rounded-md border border-border bg-scout-surface p-3 text-scout-ink transition-colors hover:bg-scout-accent"
             >
               {g.icon === null ? (
-                <div className="h-8 w-8 shrink-0 rounded-md bg-muted" />
+                <div className="h-8 w-8 shrink-0 rounded-md bg-scout-hover" />
               ) : (
                 <img
                   src={`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64`}
@@ -156,7 +156,7 @@ export function GuildPicker() {
               )}
               <span className="flex-1 truncate font-medium">{g.name}</span>
               {g.isOwner && (
-                <span className="text-xs text-muted-foreground">owner</span>
+                <span className="text-xs text-scout-subtle">owner</span>
               )}
             </Link>
           </li>

@@ -1,5 +1,8 @@
-import { Button, type ButtonProps } from "#src/components/ui/button.tsx";
-import { DialogFooter } from "#src/components/ui/dialog.tsx";
+import {
+  Button,
+  type ButtonProps,
+} from "@scout-for-lol/design-system/components/button";
+import { DialogFooter } from "@scout-for-lol/design-system/components/dialog";
 
 /**
  * The inline validation error every mutation dialog renders directly above its
@@ -9,7 +12,7 @@ import { DialogFooter } from "#src/components/ui/dialog.tsx";
 export function DialogFormError(props: { error: string | null }) {
   if (props.error === null) return null;
   return (
-    <p role="alert" className="text-sm text-destructive">
+    <p role="alert" className="text-sm text-scout-danger">
       {props.error}
     </p>
   );

@@ -3,8 +3,8 @@ import { RiotIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { regionLabel, type RegionValue } from "#src/lib/regions.ts";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
-import { Combobox } from "#src/components/ui/combobox.tsx";
-import { Badge } from "#src/components/ui/badge.tsx";
+import { Combobox } from "@scout-for-lol/design-system/components/combobox";
+import { Badge } from "@scout-for-lol/design-system/components/badge";
 
 type RiotItem =
   | { kind: "resolved"; gameName: string; tagLine: string; region: string }
@@ -114,16 +114,16 @@ export function RiotIdCombobox(props: {
       renderItem={(item) =>
         item.kind === "resolved" ? (
           <span className="flex w-full items-center gap-2">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center text-emerald-600 dark:text-emerald-400">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--scout-color-success)]">
               ✓
             </span>
             <span className="truncate">
               {item.gameName}
-              <span className="text-muted-foreground">#{item.tagLine}</span>
+              <span className="text-scout-subtle">#{item.tagLine}</span>
             </span>
             <span className="ml-auto flex shrink-0 items-center gap-1.5">
               <Badge variant="secondary">{regionLabel(item.region)}</Badge>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs text-[var(--scout-color-success)]">
                 Exact match
               </span>
             </span>
@@ -131,7 +131,7 @@ export function RiotIdCombobox(props: {
         ) : (
           <span className="flex w-full items-center gap-2">
             {item.avatar === null ? (
-              <span className="h-5 w-5 shrink-0 rounded-full bg-muted" />
+              <span className="h-5 w-5 shrink-0 rounded-full bg-scout-hover" />
             ) : (
               <img
                 src={item.avatar}
@@ -143,16 +143,16 @@ export function RiotIdCombobox(props: {
             )}
             <span className="truncate">
               {item.gameName}
-              <span className="text-muted-foreground">#{item.tagLine}</span>
+              <span className="text-scout-subtle">#{item.tagLine}</span>
               {item.tier !== null && (
-                <span className="text-muted-foreground"> · {item.tier}</span>
+                <span className="text-scout-subtle"> · {item.tier}</span>
               )}
             </span>
             {/* Region is shown on every row so a same-name account on another
                 region is never mistaken for the exact match above. */}
             <span className="ml-auto flex shrink-0 items-center gap-1.5">
               <Badge variant="secondary">{regionLabel(item.region)}</Badge>
-              <span className="text-xs text-muted-foreground">Suggestion</span>
+              <span className="text-xs text-scout-subtle">Suggestion</span>
             </span>
           </span>
         )

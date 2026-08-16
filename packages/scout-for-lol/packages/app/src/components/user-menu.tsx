@@ -1,61 +1,15 @@
-import {
-  Bug,
-  ChevronDown,
-  ExternalLink,
-  LogOut,
-  Monitor,
-  Moon,
-  Sun,
-} from "lucide-react";
-import { Button } from "#src/components/ui/button.tsx";
+import { Bug, ChevronDown, ExternalLink, LogOut } from "lucide-react";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "#src/components/ui/dropdown-menu.tsx";
+} from "@scout-for-lol/design-system/components/dropdown-menu";
 import { SUPPORT_URL } from "#src/lib/support.ts";
-import { useTheme, type ThemePreference } from "#src/lib/use-theme.tsx";
 import { resetIdentity, trackAndFlush } from "#src/lib/analytics.ts";
-
-type ThemeOption = {
-  value: ThemePreference;
-  label: string;
-  icon: typeof Sun;
-};
-
-const SYSTEM_THEME_OPTION: ThemeOption = {
-  value: "system",
-  label: "System",
-  icon: Monitor,
-};
-
-const THEME_OPTIONS: readonly ThemeOption[] = [
-  { value: "light", label: "Light", icon: Sun },
-  SYSTEM_THEME_OPTION,
-  { value: "dark", label: "Dark", icon: Moon },
-];
-
-function getThemeOption(value: ThemePreference): ThemeOption {
-  return (
-    THEME_OPTIONS.find((option) => option.value === value) ??
-    SYSTEM_THEME_OPTION
-  );
-}
-
-function parseThemePreference(value: string): ThemePreference {
-  if (value === "light" || value === "dark" || value === "system") {
-    return value;
-  }
-  throw new Error(`Unexpected theme preference: ${value}`);
-}
 
 async function logout() {
   // Flush the sign-out event before we navigate away — the `location.assign`
@@ -79,14 +33,10 @@ async function logout() {
 }
 
 /**
- * Account dropdown anchored to the navbar's `@username`. Holds the theme
- * selector, the bug/feature-request link, and sign-out.
+ * Account dropdown anchored to the navbar's `@username`. Theme selection lives
+ * in the global navbar so it is available consistently on every surface.
  */
 export function UserMenu(props: { username: string }) {
-  const { preference, setPreference } = useTheme();
-  const currentTheme = getThemeOption(preference);
-  const CurrentThemeIcon = currentTheme.icon;
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -102,43 +52,10 @@ export function UserMenu(props: { username: string }) {
       <DropdownMenuContent align="end" sideOffset={8} className="w-56">
         <DropdownMenuLabel className="font-normal">
           <span className="block text-sm font-medium">@{props.username}</span>
-          <span className="block text-xs text-muted-foreground">
+          <span className="block text-xs text-scout-subtle">
             Signed in with Discord
           </span>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger className="gap-2">
-            <CurrentThemeIcon className="h-4 w-4" aria-hidden="true" />
-            <span>Theme</span>
-            <span className="ml-auto mr-1 text-xs text-muted-foreground">
-              {currentTheme.label}
-            </span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="w-36">
-            <DropdownMenuRadioGroup
-              value={preference}
-              onValueChange={(value) => {
-                setPreference(parseThemePreference(value));
-              }}
-            >
-              {THEME_OPTIONS.map((option) => {
-                const Icon = option.icon;
-
-                return (
-                  <DropdownMenuRadioItem
-                    key={option.value}
-                    value={option.value}
-                    className="gap-2"
-                  >
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                    <span>{option.label}</span>
-                  </DropdownMenuRadioItem>
-                );
-              })}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <a href={SUPPORT_URL} target="_blank" rel="noreferrer">

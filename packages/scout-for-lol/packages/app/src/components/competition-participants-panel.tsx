@@ -13,7 +13,7 @@ import { analyticsMeta } from "#src/lib/analytics.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
 import { Section } from "#src/components/section.tsx";
@@ -24,7 +24,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#src/components/ui/table.tsx";
+} from "@scout-for-lol/design-system/components/table";
 
 type Participant = {
   id: number;
@@ -149,17 +149,17 @@ export function CompetitionParticipantsPanel(props: {
               Add all members
             </Button>
             {visibility === "SERVER_WIDE" && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-scout-subtle">
                 Server-wide competitions include everyone automatically.
               </span>
             )}
           </div>
         )}
 
-        {error !== null && <p className="text-sm text-destructive">{error}</p>}
+        {error !== null && <p className="text-sm text-scout-danger">{error}</p>}
 
         {participants.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No participants yet.</p>
+          <p className="text-sm text-scout-subtle">No participants yet.</p>
         ) : (
           <Table>
             <TableHeader>
@@ -180,13 +180,13 @@ export function CompetitionParticipantsPanel(props: {
                         <DiscordUser
                           id={participant.discordId}
                           name={names.resolve(participant.discordId)}
-                          className="text-xs text-muted-foreground"
+                          className="text-xs text-scout-subtle"
                         />
                       </span>
                     )}
                   </TableCell>
                   <TableCell>{statusLabel(participant.status)}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-scout-subtle">
                     {formatDate(participant.joinedAt)}
                   </TableCell>
                   <TableCell>

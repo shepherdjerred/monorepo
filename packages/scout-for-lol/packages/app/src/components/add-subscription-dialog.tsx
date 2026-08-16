@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "#src/components/ui/dialog.tsx";
+} from "@scout-for-lol/design-system/components/dialog";
 import {
   DialogFormError,
   DialogFormFooter,

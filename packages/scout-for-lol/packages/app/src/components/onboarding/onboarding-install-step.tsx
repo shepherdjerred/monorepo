@@ -1,5 +1,8 @@
-import { Button } from "#src/components/ui/button.tsx";
-import { Card, CardContent } from "#src/components/ui/card.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import {
+  Card,
+  CardContent,
+} from "@scout-for-lol/design-system/components/card";
 import {
   discordInviteUrl,
   DISCORD_INSTALL_REDIRECTS_BACK,
@@ -24,7 +27,7 @@ export function OnboardingInstallStep(props: {
       <div className="space-y-4">
         <Card>
           <CardContent className="space-y-3 p-4">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-scout-subtle">
               {DISCORD_INSTALL_REDIRECTS_BACK ? (
                 <>
                   Pick a server and approve permissions (you need{" "}
@@ -58,7 +61,7 @@ export function OnboardingInstallStep(props: {
         </Card>
 
         {hasGuilds ? (
-          <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/30 p-3">
+          <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-scout-hover/30 p-3">
             <p className="text-sm">
               Scout is in {props.guildCount.toString()}{" "}
               {props.guildCount === 1 ? "server" : "servers"} you manage.
@@ -67,7 +70,7 @@ export function OnboardingInstallStep(props: {
           </div>
         ) : (
           <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-scout-subtle">
               {props.isLoading
                 ? "Checking your servers…"
                 : "Already added it? Refresh to continue."}

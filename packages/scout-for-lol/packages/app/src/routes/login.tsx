@@ -1,5 +1,5 @@
 import { useSearchParams } from "react-router";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { trackOutboundClick } from "#src/lib/analytics.ts";
 
 /**
@@ -22,12 +22,12 @@ export function Login() {
           <h1 className="text-2xl font-semibold tracking-tight">
             Scout for LoL
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-scout-subtle">
             Sign in with Discord to manage your guild&apos;s subscriptions.
           </p>
         </div>
         {error !== null && (
-          <p className="text-sm text-destructive">{describeError(error)}</p>
+          <p className="text-sm text-scout-danger">{describeError(error)}</p>
         )}
         <Button asChild size="lg" className="w-full">
           <a

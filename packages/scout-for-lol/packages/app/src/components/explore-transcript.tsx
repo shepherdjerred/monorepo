@@ -13,13 +13,13 @@ import type {
   ExploreMessage,
   VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "#src/components/ui/collapsible.tsx";
-import { Textarea } from "#src/components/ui/textarea.tsx";
+} from "@scout-for-lol/design-system/components/collapsible";
+import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
 import { ReportResultTable } from "#src/components/report-result-table.tsx";
@@ -95,7 +95,7 @@ const PendingTurn = memo(function PendingTurnView(props: {
         <MarkdownAnswer>{props.pendingAnswer}</MarkdownAnswer>
       )}
       {props.activity !== null && (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+        <p className="flex items-center gap-2 text-sm text-scout-subtle">
           <span className="inline-block size-2 animate-pulse rounded-full bg-current" />
           {props.activity}
         </p>
@@ -107,7 +107,7 @@ const PendingTurn = memo(function PendingTurnView(props: {
 function UserBubble(props: { content: string }) {
   return (
     <div className="flex justify-end">
-      <p className="max-w-[80%] rounded-lg bg-muted px-3 py-2 text-sm whitespace-pre-wrap">
+      <p className="max-w-[80%] rounded-lg bg-scout-hover px-3 py-2 text-sm whitespace-pre-wrap">
         {props.content}
       </p>
     </div>
@@ -214,7 +214,7 @@ const AssistantTurn = memo(function AssistantTurnView(props: {
         )}
 
       {message.caveats.length > 0 && (
-        <ul className="space-y-1 text-xs text-muted-foreground">
+        <ul className="space-y-1 text-xs text-scout-subtle">
           {message.caveats.map((caveat) => (
             <li key={caveat}>• {caveat}</li>
           ))}
@@ -237,7 +237,7 @@ const AssistantTurn = memo(function AssistantTurnView(props: {
         <time
           dateTime={message.createdAt}
           title={TIME_FULL.format(new Date(message.createdAt))}
-          className="ml-auto text-xs text-muted-foreground"
+          className="ml-auto text-xs text-scout-subtle"
         >
           {TIME_SHORT.format(new Date(message.createdAt))}
         </time>
@@ -245,7 +245,7 @@ const AssistantTurn = memo(function AssistantTurnView(props: {
 
       {message.queryText !== null && (
         <Disclosure label="ScoutQL query">
-          <pre className="overflow-x-auto rounded-md bg-muted p-3 text-xs">
+          <pre className="overflow-x-auto rounded-md bg-scout-hover p-3 text-xs">
             <code>{message.queryText}</code>
           </pre>
         </Disclosure>
@@ -253,10 +253,10 @@ const AssistantTurn = memo(function AssistantTurnView(props: {
 
       {message.trace.length > 0 && (
         <Disclosure label={`Steps (${String(message.trace.length)})`}>
-          <ol className="space-y-1 rounded-md border p-3 text-xs text-muted-foreground">
+          <ol className="space-y-1 rounded-md border p-3 text-xs text-scout-subtle">
             {message.trace.map((entry, index) => (
               <li key={`${entry.toolName}-${String(index)}`}>
-                <span className={entry.ok ? "" : "text-destructive"}>
+                <span className={entry.ok ? "" : "text-scout-danger"}>
                   {entry.ok ? "✓" : "✕"}
                 </span>{" "}
                 <span className="font-medium">{entry.toolName}</span> —{" "}
@@ -311,7 +311,7 @@ function Disclosure(props: { label: string; children: React.ReactNode }) {
         <Button variant="ghost" size="sm" className="group gap-1">
           {props.label}
           <ChevronDown
-            className="size-3.5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
+            className="size-3.5 text-scout-subtle transition-transform group-data-[state=open]:rotate-180"
             aria-hidden="true"
           />
         </Button>
@@ -339,7 +339,7 @@ function VersionSwitcher(props: {
   const previous = message.siblingIds[message.versionIndex - 1];
   const next = message.siblingIds[message.versionIndex + 1];
   return (
-    <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+    <span className="flex items-center gap-0.5 text-xs text-scout-subtle">
       <IconButton
         label="Previous version"
         disabled={previous === undefined}

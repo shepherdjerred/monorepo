@@ -4,7 +4,7 @@ import { RiotIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
-import { Label } from "#src/components/ui/label.tsx";
+import { Label } from "@scout-for-lol/design-system/components/label";
 import { RegionSelect } from "#src/components/region-select.tsx";
 import { RiotIdCombobox } from "#src/components/riot-id-combobox.tsx";
 import {
@@ -13,7 +13,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "#src/components/ui/dialog.tsx";
+} from "@scout-for-lol/design-system/components/dialog";
 import {
   DialogFormError,
   DialogFormFooter,

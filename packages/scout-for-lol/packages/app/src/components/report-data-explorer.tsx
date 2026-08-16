@@ -6,15 +6,15 @@ import {
   REPORT_GROUP_BYS,
   REPORT_METRICS,
 } from "@scout-for-lol/data";
-import { Button } from "#src/components/ui/button.tsx";
-import { Input } from "#src/components/ui/input.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import { Input } from "@scout-for-lol/design-system/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "#src/components/ui/select.tsx";
+} from "@scout-for-lol/design-system/components/select";
 import {
   Table,
   TableBody,
@@ -22,7 +22,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#src/components/ui/table.tsx";
+} from "@scout-for-lol/design-system/components/table";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
 
@@ -111,7 +111,7 @@ export function ReportDataExplorer(props: {
     <section className="space-y-4 border-t border-border pt-6">
       <div>
         <h3 className="text-base font-semibold">Data explorer</h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-scout-subtle">
           {table?.description ?? "Loading report data schema…"}
         </p>
       </div>
@@ -144,7 +144,7 @@ export function ReportDataExplorer(props: {
         <div className="space-y-2">
           {columnGroups(table?.columns ?? []).map(([group, columns]) => (
             <fieldset key={group} className="space-y-1">
-              <legend className="text-xs font-medium text-muted-foreground">
+              <legend className="text-xs font-medium text-scout-subtle">
                 {group}
               </legend>
               <div className="flex flex-wrap gap-2">
@@ -343,7 +343,7 @@ export function ReportDataExplorer(props: {
       </div>
 
       {browseQuery.error !== null && (
-        <p className="text-sm text-destructive">{browseQuery.error.message}</p>
+        <p className="text-sm text-scout-danger">{browseQuery.error.message}</p>
       )}
       <div className="overflow-x-auto rounded-md border border-border">
         <Table>
@@ -369,7 +369,7 @@ export function ReportDataExplorer(props: {
         </Table>
       </div>
       {browseQuery.isPending && (
-        <p role="status" className="text-sm text-muted-foreground">
+        <p role="status" className="text-sm text-scout-subtle">
           Loading rows…
         </p>
       )}

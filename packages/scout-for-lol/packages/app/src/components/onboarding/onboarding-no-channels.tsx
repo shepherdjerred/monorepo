@@ -1,5 +1,8 @@
-import { Button } from "#src/components/ui/button.tsx";
-import { Card, CardContent } from "#src/components/ui/card.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import {
+  Card,
+  CardContent,
+} from "@scout-for-lol/design-system/components/card";
 
 /**
  * Blocking notice shown in the subscribe / report / competition steps when
@@ -10,7 +13,7 @@ export function OnboardingNoChannels(props: { onBack: () => void }) {
   return (
     <div className="space-y-4">
       <Card>
-        <CardContent className="p-4 text-sm text-muted-foreground">
+        <CardContent className="p-4 text-sm text-scout-subtle">
           Scout can&apos;t see any channel it&apos;s allowed to post in. In your
           server settings, give the Scout bot access to a text channel (View
           Channel + Send Messages), then come back and refresh this page.

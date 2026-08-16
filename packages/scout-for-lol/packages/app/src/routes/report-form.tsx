@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ReportIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { ReportQueryPreview } from "#src/components/report-query-preview.tsx";
 import {
   buildReportPayload,
@@ -98,7 +98,7 @@ export function ReportForm() {
   );
 
   if (guildId === undefined || (isEdit && !idResult.success)) {
-    return <p className="text-sm text-destructive">Invalid report route.</p>;
+    return <p className="text-sm text-scout-danger">Invalid report route.</p>;
   }
 
   function handleSubmit(event: React.SyntheticEvent) {
@@ -167,7 +167,7 @@ export function ReportForm() {
           />
 
           {error !== null && (
-            <p className="text-sm text-destructive">{error}</p>
+            <p className="text-sm text-scout-danger">{error}</p>
           )}
 
           <div className="flex gap-2">

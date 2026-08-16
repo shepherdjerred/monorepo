@@ -9,15 +9,15 @@ import {
   markFeedbackSubmitted,
 } from "#src/lib/feedback-storage.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
-import { Textarea } from "#src/components/ui/textarea.tsx";
-import { Label } from "#src/components/ui/label.tsx";
+import { Textarea } from "@scout-for-lol/design-system/components/textarea";
+import { Label } from "@scout-for-lol/design-system/components/label";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "#src/components/ui/dialog.tsx";
+} from "@scout-for-lol/design-system/components/dialog";
 import {
   DialogFormError,
   DialogFormFooter,
@@ -118,12 +118,12 @@ export function FeedbackPrompt() {
 
   return (
     <>
-      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground shadow-md">
+      <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border border-border bg-scout-surface px-3 py-1.5 text-xs text-scout-subtle shadow-md">
         <MessageSquare className="h-3.5 w-3.5 shrink-0" />
         <span>How&apos;s Scout working out?</span>
         <button
           type="button"
-          className="font-medium text-foreground underline-offset-2 hover:underline"
+          className="font-medium text-scout-ink underline-offset-2 hover:underline"
           onClick={() => {
             track("feedback_shown");
             setOpen(true);
@@ -134,7 +134,7 @@ export function FeedbackPrompt() {
         <button
           type="button"
           aria-label="Dismiss"
-          className="text-sm leading-none text-muted-foreground hover:text-foreground"
+          className="text-sm leading-none text-scout-subtle hover:text-scout-ink"
           onClick={dismiss}
         >
           ×

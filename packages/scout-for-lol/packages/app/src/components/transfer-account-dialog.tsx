@@ -10,8 +10,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "#src/components/ui/dialog.tsx";
-import { Label } from "#src/components/ui/label.tsx";
+} from "@scout-for-lol/design-system/components/dialog";
+import { Label } from "@scout-for-lol/design-system/components/label";
 import {
   DialogFormError,
   DialogFormFooter,

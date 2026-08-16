@@ -2,7 +2,7 @@ import {
   queueDisplayLabels,
   subscriptionFilterQueues,
 } from "@scout-for-lol/data";
-import { Badge } from "#src/components/ui/badge.tsx";
+import { Badge } from "@scout-for-lol/design-system/components/badge";
 
 /**
  * Queue filters as compact badges: up to two, then a "+N more" summary.

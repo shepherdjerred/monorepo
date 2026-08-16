@@ -8,8 +8,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "#src/components/ui/card.tsx";
-import { Button } from "#src/components/ui/button.tsx";
+} from "@scout-for-lol/design-system/components/card";
+import { Button } from "@scout-for-lol/design-system/components/button";
 
 export function CompetitionPresets(props: {
   onUsePreset: (example: CompetitionExample) => void;
@@ -36,7 +36,7 @@ export function CompetitionPresets(props: {
                 <span className="block text-sm font-medium leading-5">
                   {example.label}
                 </span>
-                <span className="block text-xs font-normal leading-4 text-muted-foreground">
+                <span className="block text-xs font-normal leading-4 text-scout-subtle">
                   {example.description}
                 </span>
               </span>

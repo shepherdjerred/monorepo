@@ -4,8 +4,8 @@ import { RegionSelect } from "#src/components/region-select.tsx";
 import { RiotIdCombobox } from "#src/components/riot-id-combobox.tsx";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
 import { SubscriptionFilterFields } from "#src/components/subscription-filter-fields.tsx";
-import { Input } from "#src/components/ui/input.tsx";
-import { Label } from "#src/components/ui/label.tsx";
+import { Input } from "@scout-for-lol/design-system/components/input";
+import { Label } from "@scout-for-lol/design-system/components/label";
 import { findRegion, regionLabel } from "#src/lib/regions.ts";
 import {
   Select,
@@ -13,7 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "#src/components/ui/select.tsx";
+} from "@scout-for-lol/design-system/components/select";
 
 /**
  * Presentational subscription form fields (channel / region / Riot ID /
@@ -73,7 +73,7 @@ export function SubscriptionFields(props: {
           }}
         />
         {regionNotice !== null && (
-          <p className="text-xs text-muted-foreground" role="status">
+          <p className="text-xs text-scout-subtle" role="status">
             {regionNotice}
           </p>
         )}
@@ -81,7 +81,7 @@ export function SubscriptionFields(props: {
 
       <div className="space-y-2">
         <Label htmlFor={`${idPrefix}-riot-id`}>
-          Riot ID <span className="text-muted-foreground">(name#TAG)</span>
+          Riot ID <span className="text-scout-subtle">(name#TAG)</span>
         </Label>
         <RiotIdCombobox
           id={`${idPrefix}-riot-id`}
@@ -127,7 +127,7 @@ export function SubscriptionFields(props: {
 
       <div className="space-y-2">
         <Label htmlFor={`${idPrefix}-discord`}>
-          Discord user <span className="text-muted-foreground">(optional)</span>
+          Discord user <span className="text-scout-subtle">(optional)</span>
         </Label>
         <DiscordMemberCombobox
           id={`${idPrefix}-discord`}
@@ -137,7 +137,7 @@ export function SubscriptionFields(props: {
             onChange({ ...value, discordUserId });
           }}
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-scout-subtle">
           Links a <em>new</em> player to this Discord user. Existing players
           keep their current link — manage it from the player page.
         </p>
@@ -146,7 +146,7 @@ export function SubscriptionFields(props: {
       <div className="space-y-2">
         <Label htmlFor={`${idPrefix}-queues`}>
           Notify for{" "}
-          <span className="text-muted-foreground">(all queues if empty)</span>
+          <span className="text-scout-subtle">(all queues if empty)</span>
         </Label>
         <SubscriptionFilterFields
           id={`${idPrefix}-queues`}

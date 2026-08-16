@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import type { ExploreConversation, ExploreMessage } from "@scout-for-lol/data";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { ExploreComposer } from "#src/components/explore-composer.tsx";
 import { ExploreHeader } from "#src/components/explore-header.tsx";
 import { ExploreShareRow } from "#src/components/explore-share.tsx";
@@ -267,11 +267,11 @@ export function Explore() {
     // A failed availability check is not a denial — say so, and offer the
     // narrow retry (just this query) rather than a whole-page reload.
     return (
-      <div className="rounded-lg border border-destructive/40 bg-card p-8 text-center">
-        <h2 className="text-base font-semibold text-destructive">
+      <div className="rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center">
+        <h2 className="text-base font-semibold text-scout-danger">
           Explore couldn&apos;t load
         </h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+        <p className="mx-auto mt-2 max-w-sm text-sm text-scout-subtle">
           Checking your access failed. You can try again — if it keeps
           happening, reload the page.
         </p>
@@ -351,7 +351,7 @@ export function Explore() {
               Ask about champions, queues, positions, patches, or players across
               every match Scout has ingested.
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-scout-subtle">
               This is not the whole League ladder — it is the games of tracked
               players and everyone who was in them.
             </p>
@@ -381,7 +381,7 @@ export function Explore() {
         />
 
         {pageError !== null && (
-          <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">
+          <p className="rounded-md border border-scout-danger/40 bg-scout-danger/10 px-3 py-2 text-sm">
             {pageError}
           </p>
         )}

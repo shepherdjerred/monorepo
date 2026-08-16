@@ -1,8 +1,7 @@
 import { Suspense } from "react";
-import { Link, Navigate, Outlet, useLocation } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { UserMenu } from "#src/components/user-menu.tsx";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 
 /**
@@ -38,28 +37,8 @@ export function RequireSession() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="font-semibold tracking-tight">
-              Scout
-            </Link>
-            <Link
-              to="/"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Guilds
-            </Link>
-          </div>
-          <UserMenu username={user.username} />
-        </div>
-      </header>
-      <main className="flex-1">
-        <Suspense fallback={<SectionSkeleton />}>
-          <Outlet />
-        </Suspense>
-      </main>
-    </div>
+    <Suspense fallback={<SectionSkeleton />}>
+      <Outlet />
+    </Suspense>
   );
 }

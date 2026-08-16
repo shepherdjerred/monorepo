@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   buildReportPayload,
   EMPTY_REPORT_STATE,
@@ -80,7 +80,7 @@ export function OnboardingReportStep(props: {
           channels={props.channels}
           queryEditorDisclosure="collapsed"
         />
-        {error !== null && <p className="text-sm text-destructive">{error}</p>}
+        {error !== null && <p className="text-sm text-scout-danger">{error}</p>}
         <div className="flex items-center justify-between">
           <Button variant="ghost" type="button" onClick={props.onBack}>
             ← Back
