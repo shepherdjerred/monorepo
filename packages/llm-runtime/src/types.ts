@@ -176,7 +176,12 @@ export type GenerateValidatedObjectResult<SCHEMA extends z.ZodType> = {
   attempts: readonly StructuredOutputAttempt[];
 };
 
-export class StructuredOutputExhaustionError extends Error {
+/**
+ * Base for structured-output failures that already consumed billable tokens.
+ * Callers that meter budgets must charge `usage` for these errors even though
+ * no object was produced.
+ */
+export class StructuredOutputUsageError extends Error {
   readonly attempts: readonly StructuredOutputAttempt[];
   readonly usage: AggregateOpenRouterUsage;
 
@@ -184,10 +189,40 @@ export class StructuredOutputExhaustionError extends Error {
     message: string,
     attempts: readonly StructuredOutputAttempt[],
     usage: AggregateOpenRouterUsage,
+    options?: ErrorOptions,
   ) {
-    super(message);
-    this.name = "StructuredOutputExhaustionError";
+    super(message, options);
+    this.name = "StructuredOutputUsageError";
     this.attempts = attempts;
     this.usage = usage;
+  }
+}
+
+export class StructuredOutputExhaustionError extends StructuredOutputUsageError {
+  constructor(
+    message: string,
+    attempts: readonly StructuredOutputAttempt[],
+    usage: AggregateOpenRouterUsage,
+  ) {
+    super(message, attempts, usage);
+    this.name = "StructuredOutputExhaustionError";
+  }
+}
+
+/**
+ * A transport failure (429/5xx/network) that interrupted the semantic retry
+ * loop after at least one earlier attempt already billed tokens. The original
+ * transport error is preserved as `cause`; retry classification that inspects
+ * the transport layer should unwrap it.
+ */
+export class StructuredOutputTransportError extends StructuredOutputUsageError {
+  constructor(
+    message: string,
+    attempts: readonly StructuredOutputAttempt[],
+    usage: AggregateOpenRouterUsage,
+    options?: ErrorOptions,
+  ) {
+    super(message, attempts, usage, options);
+    this.name = "StructuredOutputTransportError";
   }
 }

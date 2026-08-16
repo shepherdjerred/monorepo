@@ -1,6 +1,6 @@
 import {
   generateValidatedObject,
-  StructuredOutputExhaustionError,
+  StructuredOutputUsageError,
   type GenerateValidatedObjectResult,
   type OpenRouterRuntime,
 } from "@shepherdjerred/llm-runtime";
@@ -58,7 +58,7 @@ export async function finalizeReportDraft(input: {
     chargeFinalizerTokens(input.model, finalized.usage.tokens);
     return finalized;
   } catch (error: unknown) {
-    if (error instanceof StructuredOutputExhaustionError) {
+    if (error instanceof StructuredOutputUsageError) {
       chargeFinalizerTokens(input.model, error.usage.tokens);
     }
     throw error;

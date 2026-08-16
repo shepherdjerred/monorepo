@@ -21,6 +21,7 @@ import {
   MAX_CORRECTIVE_PROMPT_CHARS,
   MAX_SEMANTIC_ATTEMPTS,
   StructuredOutputExhaustionError,
+  StructuredOutputTransportError,
   type AggregateOpenRouterUsage,
   type GenerateValidatedObjectInput,
   type GenerateValidatedObjectResult,
@@ -303,6 +304,17 @@ export async function generateValidatedObject<SCHEMA extends z.ZodType>(
               model: input.model,
               outcome: "transport_error",
             });
+            // A transport failure after a billable semantic attempt must not
+            // discard the tokens those attempts already spent: budget-metering
+            // callers only see usage on the thrown error.
+            if (attempts.some((prior) => prior.outcome === "semantic-error")) {
+              throw new StructuredOutputTransportError(
+                `Transport failure on semantic attempt ${String(semanticAttempt)} for ${input.workload} after earlier billable attempts`,
+                attempts,
+                aggregateUsage(attempts),
+                { cause: error },
+              );
+            }
             throw error;
           }
           if (!NoObjectGeneratedError.isInstance(error)) throw error;

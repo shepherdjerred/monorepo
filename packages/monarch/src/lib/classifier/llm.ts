@@ -2,6 +2,7 @@ import { generateText } from "ai";
 import {
   createOpenRouterRuntime,
   generateValidatedObject,
+  StructuredOutputUsageError,
   openRouterWebSearchTool,
   type OpenRouterRuntime,
 } from "@shepherdjerred/llm-runtime";
@@ -129,15 +130,26 @@ export async function callLlmAndParseWithUsage<T>(
 ): Promise<{ result: T; usage: LlmResponse["usage"] }> {
   const openRouter = getRuntime();
   const research = await researchPrompt(prompt);
-  const finalized = await generateValidatedObject(openRouter, {
-    model: modelId,
-    schema,
-    schemaName: "monarch_classification",
-    system: buildSystemPrompt(),
-    prompt: `${prompt}\n\nResearch evidence:\n${research.evidence}`,
-    workload: "monarch.classification.finalize",
-    maxOutputTokens: 16_384,
-  });
+  let finalized;
+  try {
+    finalized = await generateValidatedObject(openRouter, {
+      model: modelId,
+      schema,
+      schemaName: "monarch_classification",
+      system: buildSystemPrompt(),
+      prompt: `${prompt}\n\nResearch evidence:\n${research.evidence}`,
+      workload: "monarch.classification.finalize",
+      maxOutputTokens: 16_384,
+    });
+  } catch (error: unknown) {
+    // Exhausted or transport-interrupted finalizations still billed every
+    // semantic attempt; without this the end-of-run usage and cost summary
+    // silently omits them.
+    if (error instanceof StructuredOutputUsageError) {
+      tracker?.record(error.usage.tokens.input, error.usage.tokens.output);
+    }
+    throw error;
+  }
   const usage = {
     inputTokens: research.usage.inputTokens + finalized.usage.tokens.input,
     outputTokens: research.usage.outputTokens + finalized.usage.tokens.output,

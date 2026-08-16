@@ -11,6 +11,8 @@ import {
   MAX_SEMANTIC_ATTEMPTS as INNER_MAX_SEMANTIC_ATTEMPTS,
   REQUIRED_MODEL_CAPABILITIES as INNER_REQUIRED_MODEL_CAPABILITIES,
   StructuredOutputExhaustionError as InnerStructuredOutputExhaustionError,
+  StructuredOutputTransportError as InnerStructuredOutputTransportError,
+  StructuredOutputUsageError as InnerStructuredOutputUsageError,
   type AggregateOpenRouterUsage as InnerAggregateOpenRouterUsage,
   type CallOptionsInput as InnerCallOptionsInput,
   type GenerateValidatedObjectInput as InnerGenerateValidatedObjectInput,
@@ -42,7 +44,33 @@ export const MAX_CORRECTIVE_PROMPT_CHARS: number = passthrough(
 );
 export type RequiredModelCapability =
   (typeof REQUIRED_MODEL_CAPABILITIES)[number];
-export class StructuredOutputExhaustionError extends InnerStructuredOutputExhaustionError {}
+/**
+ * Public base for structured-output failures that already consumed billable
+ * tokens (exhaustion or mid-retry transport failure). Budget-metering callers
+ * charge `error.usage` on `error instanceof StructuredOutputUsageError`.
+ */
+export class StructuredOutputUsageError extends InnerStructuredOutputUsageError {}
+export class StructuredOutputExhaustionError extends StructuredOutputUsageError {
+  constructor(
+    message: string,
+    attempts: InnerStructuredOutputUsageError["attempts"],
+    usage: InnerStructuredOutputUsageError["usage"],
+  ) {
+    super(message, attempts, usage);
+    this.name = "StructuredOutputExhaustionError";
+  }
+}
+export class StructuredOutputTransportError extends StructuredOutputUsageError {
+  constructor(
+    message: string,
+    attempts: InnerStructuredOutputUsageError["attempts"],
+    usage: InnerStructuredOutputUsageError["usage"],
+    options?: ErrorOptions,
+  ) {
+    super(message, attempts, usage, options);
+    this.name = "StructuredOutputTransportError";
+  }
+}
 export type AggregateOpenRouterUsage = Identity<InnerAggregateOpenRouterUsage>;
 export type CallOptionsInput = Identity<InnerCallOptionsInput>;
 export type GenerateValidatedObjectInput<SCHEMA extends z.ZodType> = Identity<
@@ -114,6 +142,14 @@ export async function generateValidatedObject<SCHEMA extends z.ZodType>(
         error.message,
         error.attempts,
         error.usage,
+      );
+    }
+    if (error instanceof InnerStructuredOutputTransportError) {
+      throw new StructuredOutputTransportError(
+        error.message,
+        error.attempts,
+        error.usage,
+        { cause: error.cause },
       );
     }
     throw error;

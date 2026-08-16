@@ -16,9 +16,22 @@ const ProviderToolIdentitySchema = z.object({
  * OpenRouter provider v3 currently marks its server-side web-search tool as
  * non-executable in its public type. AI SDK 7 therefore requires an execute
  * callback even though OpenRouter performs the search. Preserve the provider
- * tool identity and return any server-supplied results if AI SDK asks for a
- * local continuation.
+ * tool identity and return the server-supplied results if AI SDK asks for a
+ * local continuation. A continuation WITHOUT server-supplied results means the
+ * provider did not execute the search; returning [] there would silently turn
+ * missing evidence into "no evidence", so it throws instead.
  */
+export function executeWebSearchContinuation(
+  input: z.infer<typeof WebSearchResultSchema>,
+): readonly unknown[] {
+  if (input.results === undefined) {
+    throw new Error(
+      "OpenRouter web_search continuation arrived without server-supplied results; the provider did not execute the search",
+    );
+  }
+  return input.results;
+}
+
 export function openRouterWebSearchTool(
   runtime: OpenRouterRuntime,
   maxResults: number,
@@ -33,7 +46,6 @@ export function openRouterWebSearchTool(
     isProviderExecuted: false,
     inputSchema: WebSearchResultSchema,
     outputSchema: z.array(z.unknown()),
-    execute: (input: z.infer<typeof WebSearchResultSchema>) =>
-      input.results ?? [],
+    execute: executeWebSearchContinuation,
   };
 }

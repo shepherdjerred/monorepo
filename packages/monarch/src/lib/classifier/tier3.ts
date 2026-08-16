@@ -1,8 +1,8 @@
 import { stepCountIs, ToolLoopAgent } from "ai";
 import {
   generateValidatedObject,
+  StructuredOutputUsageError,
   openRouterWebSearchTool,
-  StructuredOutputExhaustionError,
   type GenerateValidatedObjectResult,
 } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
@@ -223,7 +223,7 @@ export async function finalizeTier3(input: {
     );
     return finalized;
   } catch (error: unknown) {
-    if (error instanceof StructuredOutputExhaustionError) {
+    if (error instanceof StructuredOutputUsageError) {
       input.tracker?.record(
         error.usage.tokens.input,
         error.usage.tokens.output,

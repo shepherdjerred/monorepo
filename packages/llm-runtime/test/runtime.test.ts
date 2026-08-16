@@ -8,10 +8,13 @@ import {
   generateValidatedObject,
   MAX_CORRECTIVE_PROMPT_CHARS,
   openRouterWebSearchTool,
+  StructuredOutputUsageError,
   parseOpenRouterMetadata,
   StructuredOutputExhaustionError,
+  StructuredOutputTransportError,
   type OpenRouterRuntimeLogRecord,
 } from "@shepherdjerred/llm-runtime";
+import { executeWebSearchContinuation } from "#src/openrouter-tools.ts";
 
 const RequestBodySchema = z
   .object({
@@ -156,6 +159,21 @@ describe("catalog-aware runtime", () => {
         .loose()
         .parse(requestBody).tools,
     ).toEqual([{ type: "openrouter:web_search", max_results: 3 }]);
+  });
+
+  test("web-search local continuation without provider results fails loudly", () => {
+    // Server-supplied results pass through untouched, including a genuine
+    // empty result set; an absent results field means the provider never
+    // executed the search and must not be silently coerced to "no evidence".
+    expect(
+      executeWebSearchContinuation({
+        results: [{ url: "https://example.com" }],
+      }),
+    ).toEqual([{ url: "https://example.com" }]);
+    expect(executeWebSearchContinuation({ results: [] })).toEqual([]);
+    expect(() => executeWebSearchContinuation({})).toThrow(
+      "without server-supplied results",
+    );
   });
 
   test("logs correlated accounting metadata without request or response bodies", async () => {
@@ -525,7 +543,91 @@ describe("generateValidatedObject retries", () => {
     ).rejects.toThrow();
     expect(requestCount).toBe(2);
   });
+});
 
+describe("generateValidatedObject transport failures", () => {
+  test("wraps a mid-retry transport failure with the usage already charged", async () => {
+    let requestCount = 0;
+    const runtime = createOpenRouterRuntime({
+      apiKey: "test-key",
+      service: "test",
+      appName: "test",
+      fetch: () => {
+        requestCount += 1;
+        if (requestCount === 1) {
+          return Promise.resolve(openRouterResponse('{"count":"bad"}'));
+        }
+        return Promise.resolve(
+          Response.json(
+            { error: { code: 503, message: "provider unavailable" } },
+            { status: 503, headers: { "Retry-After": "0" } },
+          ),
+        );
+      },
+    });
+    let thrown: unknown;
+
+    try {
+      await generateValidatedObject(runtime, {
+        model: "gpt-5.6-luna",
+        schema: z.object({ count: z.number().int() }),
+        schemaName: "CountResult",
+        prompt: "Return a count.",
+        workload: "transport-after-semantic-test",
+      });
+    } catch (error: unknown) {
+      thrown = error;
+    }
+
+    // The first attempt billed a semantic failure; the 503 on the corrective
+    // attempt must not discard that spend from budget-metering callers.
+    expect(thrown).toBeInstanceOf(StructuredOutputTransportError);
+    if (!(thrown instanceof StructuredOutputTransportError)) {
+      throw new Error("expected structured-output transport error");
+    }
+    expect(thrown instanceof StructuredOutputUsageError).toBe(true);
+    expect(thrown.attempts.map((attempt) => attempt.outcome)).toEqual([
+      "semantic-error",
+      "transport-error",
+    ]);
+    expect(thrown.usage.tokens.total).toBe(16);
+    expect(thrown.cause).toBeDefined();
+  });
+
+  test("first-attempt transport failures still throw the raw error", async () => {
+    const runtime = createOpenRouterRuntime({
+      apiKey: "test-key",
+      service: "test",
+      appName: "test",
+      fetch: () =>
+        Promise.resolve(
+          Response.json(
+            { error: { code: 503, message: "provider unavailable" } },
+            { status: 503, headers: { "Retry-After": "0" } },
+          ),
+        ),
+    });
+
+    // No billable prior attempt exists, so callers keep the untouched
+    // transport error their retry classification already understands.
+    let thrown: unknown;
+    try {
+      await generateValidatedObject(runtime, {
+        model: "gpt-5.6-luna",
+        schema: z.object({ count: z.number().int() }),
+        schemaName: "CountResult",
+        prompt: "Return a count.",
+        workload: "transport-first-attempt-test",
+      });
+    } catch (error: unknown) {
+      thrown = error;
+    }
+    expect(thrown).toBeDefined();
+    expect(thrown instanceof StructuredOutputTransportError).toBe(false);
+  });
+});
+
+describe("generateValidatedObject exhaustion", () => {
   test("throws typed exhaustion with every charged semantic attempt", async () => {
     const runtime = createOpenRouterRuntime({
       apiKey: "test-key",
