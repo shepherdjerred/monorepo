@@ -2,9 +2,7 @@
 id: plan-2026-08-15-scout-explore-conversation-ux
 type: plan
 status: complete
-board: true
-verification: agent
-disposition: active
+board: false
 ---
 
 # Explore: fix the conversation UX

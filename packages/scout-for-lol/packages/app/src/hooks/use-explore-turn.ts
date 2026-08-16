@@ -89,6 +89,21 @@ export function useExploreTurn(params: {
     });
   }, [queryClient, trpc.explore.list]);
 
+  /**
+   * Re-read the rate-limit allowance, which only `explore.status` carries.
+   *
+   * Every turn that reached the server spends from it — including one that was
+   * stopped or that failed mid-stream, neither of which emits `final` — so this
+   * is driven by the turn ending rather than by any single event. Without it
+   * the counter on screen keeps showing the allowance as it was when the page
+   * loaded, and claims capacity right up to a server-side rejection.
+   */
+  const refreshQuota = useCallback(async (): Promise<void> => {
+    await queryClient.invalidateQueries({
+      queryKey: trpc.explore.status.queryKey(),
+    });
+  }, [queryClient, trpc.explore.status]);
+
   const refreshConversation = useCallback(
     async (conversationId: string): Promise<void> => {
       await queryClient.invalidateQueries({
@@ -225,11 +240,12 @@ export function useExploreTurn(params: {
               await refreshConversation(turn.conversationId);
             }
           }
+          await refreshQuota();
           applyTurn(null);
         }
       }
     },
-    [applyTurn, awaitSalvage, params, refreshConversation],
+    [applyTurn, awaitSalvage, params, refreshConversation, refreshQuota],
   );
 
   const stop = useCallback((): void => {

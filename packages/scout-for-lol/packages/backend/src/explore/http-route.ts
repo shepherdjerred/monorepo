@@ -330,13 +330,14 @@ function runExploreTurnStream(input: {
       });
       // Only ever changes anything on a conversation still carrying its
       // question-derived placeholder, so follow-up turns and manual renames
-      // both leave it alone.
+      // both leave it alone. `started.title` is the conversation's *current*
+      // title, not necessarily that placeholder, so the comparison is made
+      // inside `applyGeneratedTitle` against the opening question instead.
       const title =
         result.answer.title === null
           ? started.title
           : await applyGeneratedTitle(prisma, {
               conversationId: started.conversationId,
-              placeholder: started.title,
               title: result.answer.title,
             });
       ticket.finish();

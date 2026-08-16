@@ -505,20 +505,51 @@ export async function deleteExploreConversation(
  * Conditioned on the placeholder still being in place, in one statement rather
  * than a read-then-write: that makes it self-limiting to the first turn and
  * makes it impossible to clobber a rename, without either check racing.
+ *
+ * The placeholder is derived here rather than taken from the caller, and that
+ * is the whole guard. A caller holding "the conversation's title" holds the
+ * placeholder only on the very first turn; on every later one it holds whatever
+ * the title has since become, so passing it in made the predicate compare a
+ * value to itself and match unconditionally — replacing established generated
+ * titles and manual renames alike. Recomputing it from the opening question
+ * leaves no way to ask the wrong question.
  */
 export async function applyGeneratedTitle(
   prisma: ExtendedPrismaClient,
-  input: { conversationId: string; placeholder: string; title: string },
+  input: { conversationId: string; title: string },
 ): Promise<string> {
+  const conversation = await prisma.exploreConversation.findUnique({
+    where: { id: input.conversationId },
+    include: {
+      // The earliest root is the question `startExploreTurn` named the
+      // conversation after. Editing the opening question forks a *sibling*
+      // root rather than replacing it, so ordering matters.
+      messages: {
+        where: { parentId: null, role: "user" },
+        orderBy: { createdAt: "asc" },
+        take: 1,
+      },
+    },
+  });
+  if (conversation === null) {
+    throw new ExploreNotFoundError("Conversation not found.");
+  }
+  const opening = conversation.messages[0];
+  if (opening === undefined) {
+    throw new Error(
+      `Explore conversation ${input.conversationId} has no opening question.`,
+    );
+  }
+  const placeholder = titleFromQuestion(opening.content);
   const title = titleFromQuestion(input.title);
-  if (title.length === 0 || title === input.placeholder) {
-    return input.placeholder;
+  if (title === placeholder || title.length === 0) {
+    return conversation.title;
   }
   const result = await prisma.exploreConversation.updateMany({
-    where: { id: input.conversationId, title: input.placeholder },
+    where: { id: input.conversationId, title: placeholder },
     data: { title },
   });
-  return result.count > 0 ? title : input.placeholder;
+  return result.count > 0 ? title : conversation.title;
 }
 
 export async function renameExploreConversation(

@@ -532,7 +532,9 @@ describe("explore store — ownership", () => {
     ).toBe(true);
     expect(await prisma.exploreMessage.count()).toBe(0);
   });
+});
 
+describe("explore store — titles", () => {
   test("a long question is truncated into a usable title", () => {
     const title = titleFromQuestion(`  ${"a".repeat(400)}  `);
     expect(title).toHaveLength(120);
@@ -549,7 +551,6 @@ describe("explore store — ownership", () => {
 
     const applied = await applyGeneratedTitle(prisma, {
       conversationId: started.conversationId,
-      placeholder: started.title,
       title: "Top win rates by champion",
     });
 
@@ -576,11 +577,12 @@ describe("explore store — ownership", () => {
 
     const applied = await applyGeneratedTitle(prisma, {
       conversationId: started.conversationId,
-      placeholder: started.title,
       title: "Top win rates by champion",
     });
 
-    expect(applied).toBe(started.title);
+    // Reports the title that is actually on the row, not the placeholder the
+    // conversation has already moved off.
+    expect(applied).toBe("Mine");
     const row = await prisma.exploreConversation.findUniqueOrThrow({
       where: { id: started.conversationId },
     });
@@ -596,22 +598,89 @@ describe("explore store — ownership", () => {
     });
     await applyGeneratedTitle(prisma, {
       conversationId: started.conversationId,
-      placeholder: started.title,
       title: "Top win rates by champion",
     });
 
-    // The follow-up still carries the original placeholder, which no longer
-    // matches, so its title is ignored.
+    // The placeholder derived from the opening question no longer matches the
+    // row, so the follow-up's title is ignored.
     const applied = await applyGeneratedTitle(prisma, {
       conversationId: started.conversationId,
-      placeholder: started.title,
       title: "Something else entirely",
     });
 
-    expect(applied).toBe(started.title);
+    expect(applied).toBe("Top win rates by champion");
     const row = await prisma.exploreConversation.findUniqueOrThrow({
       where: { id: started.conversationId },
     });
     expect(row.title).toBe("Top win rates by champion");
+  });
+
+  test("a real follow-up turn cannot replace an established title", async () => {
+    // Drives the turn the route actually runs rather than replaying the first
+    // turn's placeholder by hand. That difference is the bug this pins: the
+    // route holds `startExploreTurn`'s title, which on a follow-up is the
+    // *established* one, so a caller-supplied placeholder matched itself and
+    // overwrote the title on every later turn.
+    const first = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "Which champions have the highest win rate?",
+      attach: { kind: "leaf" },
+    });
+    await applyGeneratedTitle(prisma, {
+      conversationId: first.conversationId,
+      title: "Top win rates by champion",
+    });
+
+    const followUp = await startExploreTurn(prisma, {
+      conversationId: first.conversationId,
+      userId,
+      question: "And by position?",
+      attach: { kind: "leaf" },
+    });
+    expect(followUp.title).toBe("Top win rates by champion");
+
+    const applied = await applyGeneratedTitle(prisma, {
+      conversationId: followUp.conversationId,
+      title: "Win rates by position",
+    });
+
+    expect(applied).toBe("Top win rates by champion");
+    const row = await prisma.exploreConversation.findUniqueOrThrow({
+      where: { id: first.conversationId },
+    });
+    expect(row.title).toBe("Top win rates by champion");
+  });
+
+  test("a manual rename survives a later turn's generated title", async () => {
+    const first = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "Which champions have the highest win rate?",
+      attach: { kind: "leaf" },
+    });
+    await renameExploreConversation(
+      prisma,
+      first.conversationId,
+      userId,
+      "Mine",
+    );
+
+    const followUp = await startExploreTurn(prisma, {
+      conversationId: first.conversationId,
+      userId,
+      question: "And by position?",
+      attach: { kind: "leaf" },
+    });
+    const applied = await applyGeneratedTitle(prisma, {
+      conversationId: followUp.conversationId,
+      title: "Win rates by position",
+    });
+
+    expect(applied).toBe("Mine");
+    const row = await prisma.exploreConversation.findUniqueOrThrow({
+      where: { id: first.conversationId },
+    });
+    expect(row.title).toBe("Mine");
   });
 });

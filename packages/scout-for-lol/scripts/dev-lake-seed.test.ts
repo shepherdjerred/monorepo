@@ -6,6 +6,7 @@ import {
   adoptSeedIfUnseeded,
   copySeedInto,
   publishedBuildId,
+  resolveBackendLakeDir,
   seedLakeDir,
 } from "./dev-lake-seed.ts";
 
@@ -123,4 +124,29 @@ test("discards staging left behind by an interrupted copy", async () => {
 
   expect(await publishedBuildId(lake)).toBe("seed-0001");
   expect(await Bun.file(`${lake}.seeding/CURRENT`).exists()).toBe(false);
+});
+
+test("resolves a relative REPORT_LAKE_DIR against the backend's cwd, not the caller's", () => {
+  // The whole point: `dev:web` runs from the Scout package root while the
+  // backend runs from `packages/backend`, so seeding the caller-relative path
+  // would copy into — and, since the copy removes the destination first, delete
+  // — a directory the backend never opens.
+  expect(
+    resolveBackendLakeDir("/repo/packages/backend", "./alternate-lake"),
+  ).toBe("/repo/packages/backend/alternate-lake");
+});
+
+test("uses the backend's own default when REPORT_LAKE_DIR is unset or empty", () => {
+  expect(resolveBackendLakeDir("/repo/packages/backend", undefined)).toBe(
+    "/repo/packages/backend/report-lake",
+  );
+  expect(resolveBackendLakeDir("/repo/packages/backend", "")).toBe(
+    "/repo/packages/backend/report-lake",
+  );
+});
+
+test("leaves an absolute REPORT_LAKE_DIR exactly where it points", () => {
+  expect(
+    resolveBackendLakeDir("/repo/packages/backend", "/srv/shared/report-lake"),
+  ).toBe("/srv/shared/report-lake");
 });

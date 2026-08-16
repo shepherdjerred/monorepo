@@ -134,6 +134,13 @@ bun run --filter='./packages/scout-for-lol' dev:seed -- --status        # what t
 with no published build gets the seed copied in, one that already has a build
 is left alone, and a missing seed prints how to build one and boots anyway.
 
+- **`dev:web` resolves `REPORT_LAKE_DIR` against the backend's cwd, then passes
+  the absolute result to the backend.** `dev:web` itself runs from the Scout
+  package root, so a relative value would otherwise name one directory to the
+  seeding copy and a different one to the backend that reads it — a lake that
+  reports as seeded and still answers with no rows. It matters more than a
+  wasted copy: the copy removes its destination before renaming the staged tree
+  in, so a caller-relative path deletes a directory nobody chose.
 - **The seed is a copy source, not a shared working directory.** A running
   backend folds staged rows into a new build every 15 minutes and GCs old
   builds, so several backends pointed at one directory would publish and

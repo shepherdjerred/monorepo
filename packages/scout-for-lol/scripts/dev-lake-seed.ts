@@ -33,6 +33,31 @@ export function seedLakeDir(): string {
 }
 
 /**
+ * The absolute directory the backend will actually open for `REPORT_LAKE_DIR`.
+ *
+ * The backend reads that variable as a plain string and defaults it to
+ * `./report-lake`, so a relative value is resolved against *its* cwd —
+ * `packages/backend` — not against whoever set it. Anything seeding the lake
+ * before the backend starts runs from a different cwd, so it has to resolve the
+ * value the same way or it operates on a directory the backend never reads.
+ *
+ * That is not just a wasted copy: `copySeedInto` removes the destination before
+ * renaming the staged tree into place, so a mis-resolved relative path deletes
+ * a directory nobody asked it to touch. Resolve once, then hand the absolute
+ * result to the backend as well, so the two processes cannot disagree.
+ */
+export function resolveBackendLakeDir(
+  backendCwd: string,
+  configured: string | undefined,
+): string {
+  const value =
+    configured !== undefined && configured.length > 0
+      ? configured
+      : "./report-lake";
+  return path.resolve(backendCwd, value);
+}
+
+/**
  * Whether a lake directory holds a build a query could actually read.
  *
  * The four staging subdirectories are created on backend startup, so a
