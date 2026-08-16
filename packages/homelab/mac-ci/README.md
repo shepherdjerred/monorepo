@@ -1,178 +1,212 @@
-# mac-ci — Mac Mini Buildkite agent
+# mac-ci — native macOS Buildkite agent
 
-Provisions a Mac Mini as a Buildkite CI agent on the **`macos`** queue, for
-native Swift/Xcode builds that cannot run in the Linux in-cluster path.
+This directory provisions the Apple Silicon Buildkite agent behind the
+`macos` queue. The queue is an active, serial native CI surface for QuotaBar
+and TaskNotes; Linux verification and every Kubernetes-backed lane remain on
+the default queue.
 
-> **Status: dormant.** The monorepo's CI pipeline is live — the static
-> [`.buildkite/pipeline.yml`](../../../.buildkite/pipeline.yml) runs every PR
-> and main build on the Linux in-cluster (`agent-stack-k8s`) queue — but no
-> macOS agent is registered and the pipeline has no macOS-queue steps. The
-> `macos` cluster queue still exists in Tofu
-> (`src/tofu/buildkite/cluster.tf`). macOS-only suites (e.g.
-> `packages/macos-ai-subscription-tracker`'s `verify:macos`) therefore remain
-> local-only developer/release gates. Run `bootstrap.sh` on the Mini to
-> register an agent; that is independent of adding a step and worth doing
-> first. Reactivation is tracked in Linear.
+The host is deliberately separate from the personal Chezmoi workstation
+layer. The repository defines its toolchain, native jobs validate that
+toolchain, and jobs never install or upgrade host software.
 
-This is a **thin, headless-appliance** setup — deliberately separate from the
-personal chezmoi dotfiles layer (`packages/dotfiles/`, which is for
-workstations). Provisioning is a single idempotent shell script plus a few
-documented manual steps; there's no Ansible/Nix/chezmoi involved.
+## Execution and security boundary
 
-## Why this exists
+Affected PR code runs natively as the logged-in `jerred` user in an unlocked
+GUI session. This is not container or VM isolation: the code can access that
+user's filesystem and any resources already available to the session.
+`git-clean-flags=-ffxdq` cleans each checkout, but it does not change this
+trust boundary.
 
-CI runs in-cluster via `agent-stack-k8s` on the Talos nodes — all Linux. There
-is no macOS execution surface. Swift builds need real macOS. The Mac Mini is
-that surface.
+Native steps therefore have a deliberately narrow Buildkite surface:
 
-## What runs where
+- `agents.queue` is exactly `macos`.
+- No Kubernetes plugin, pod metadata, or cluster-secret environment is
+  attached.
+- All native jobs share `concurrency_group: monorepo/macos-native` with
+  concurrency one.
+- Every native job waits for Linux `verify`, has a timeout, and is a hard gate.
+- Only one Apple Development identity is installed. Developer ID,
+  notarization, release, iOS simulator, CocoaPods, Maestro, and device
+  credentials are out of scope.
 
-| Layer         | Mechanism                              | Notes                                                                                                                                    |
-| ------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Host packages | `bootstrap.sh` → Homebrew              | `buildkite-agent`, `swiftlint`, `tailscale`                                                                                              |
-| Power         | `bootstrap.sh` → `pmset`               | never sleep (`sleep 0`, `disksleep 0`, `displaysleep 0`, `powernap 0`, `womp 1`, `autorestart 1`) — a sleeping agent drops off Buildkite |
-| Agent daemon  | `brew services` (LaunchAgent)          | user context (keychain/Xcode-friendly); needs auto-login for headless boot                                                               |
-| Queue         | Tofu `buildkite_cluster_queue "macos"` | `src/tofu/buildkite/cluster.tf`                                                                                                          |
-| Job routing   | per-step `agents.queue = "macos"`      | steps added directly to the static `.buildkite/pipeline.yml`                                                                             |
+## What runs
+
+| Lane               | PR step / main step                             | Timeout | Work                                                                                         |
+| ------------------ | ----------------------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
+| `quotabar-macos`   | `quotabar-macos-pr` / `quotabar-macos-main`     | 45 min  | Complete `verify:macos` suite                                                                |
+| `tasknotes-native` | `tasknotes-native-pr` / `tasknotes-native-main` | 90 min  | Swift binding verification, macOS verify/analyze, and all signed TaskNotes UI test scenarios |
+
+Product paths select their own lane. Changes to the native pipeline,
+toolchain, preflight, or this host configuration select both. Unrelated paths
+select neither lane.
 
 ## First-time setup
 
-1. **Apply the Tofu queue** (creates the `macos` queue in the Buildkite cluster):
+### 1. Bootstrap packages and the agent
 
-   ```bash
-   cd packages/homelab/src/tofu
-   op run --env-file=buildkite/.env -- tofu -chdir=buildkite apply
-   ```
-
-2. **Run the bootstrap on the Mac** (needs the agent token from 1Password —
-   the same per-cluster token the in-cluster agents use):
-
-   ```bash
-   # On the Mac Mini, from a checkout of this repo:
-   BUILDKITE_AGENT_TOKEN="$(op read 'op://<vault>/Buildkite Agent Token/<field>')" \
-     ./packages/homelab/mac-ci/bootstrap.sh
-   ```
-
-   The script installs Homebrew (if missing), the packages above, writes
-   `$(brew --prefix)/etc/buildkite-agent/buildkite-agent.cfg` (tagged
-   `queue=macos`, `chmod 600`), saves the existing power profile to
-   `/var/db/buildkite-mac-ci-pmset-before`, applies the **never-sleep `pmset`
-   profile** (prompts for sudo), and starts the agent. Re-running is safe and
-   preserves the first saved profile.
-
-   The `pmset` step is what keeps a Mac Mini from dropping off Buildkite: a
-   sleeping host disconnects its agent and hangs any dispatched job. It forces
-   `sleep 0` / `disksleep 0` / `displaysleep 0` / `powernap 0` / `womp 1` /
-   `autorestart 1` — the same six settings `restore-power.sh` puts back.
-   Verify afterward with `pmset -g custom` (look for `sleep 0`).
-
-3. **Join the tailnet** (manual — needs interactive auth):
-
-   ```bash
-   sudo tailscaled install-system-daemon
-   sudo tailscale up
-   ```
-
-   Optionally tag the device in `src/tofu/tailscale/acl.tf`.
-
-4. **Enable auto-login** for headless reboots: System Settings → Users &
-   Groups → Automatically log in as … . The agent runs as a **LaunchAgent**
-   (user session), so it only starts after login — auto-login makes that
-   happen on boot without a keyboard attached.
-
-5. **Verify the agent is connected**: on the Buildkite agents page for the
-   `sjerred` organization (requires login) it should show up with the
-   `queue=macos` tag. Locally: `brew services info buildkite-agent`.
-
-## Activating the first job
-
-**No macOS step exists in CI right now.** The original SwiftLint step and its
-`MACOS_CI_ENABLED` gate lived in the dynamic pipeline generator
-(`scripts/ci/src/steps/per-package.ts`), which was deleted when CI was
-replatformed to the static `.buildkite/pipeline.yml` — there is no generator
-and no activation env var any more. Nothing dispatches to the `macos` queue
-until a step is re-added there. Candidate suites: the `verify:macos` suite for
-`packages/macos-ai-subscription-tracker`, the `tasks-for-obsidian` Maestro e2e
-suite, and the tasknotes-server differential test — reactivation is tracked in
-Linear.
-
-To wire it up — do this only **after both** of the following hold, so a matching
-PR never hangs on a missing, sleeping, or disconnected agent:
-
-- the agent shows connected (step 5 above), **and**
-- **agent-offline health monitoring — or fail-fast dispatch protection — is in
-  place.** A one-time connected check is not enough on its own: `soft_fail` only
-  rescues a command that fails _after_ an agent accepts the job, so if the sole
-  Mini later sleeps or drops off the tailnet, a dispatched `queue=macos` job sits
-  queued with no agent and the required aggregate `buildkite/monorepo/pr` status
-  stays **pending forever** on every matching PR. This is the open prerequisite
-  tracked in Linear ("Add agent-offline health monitoring before making a
-  Mac-only check required").
-
-1. Add a step to `.buildkite/pipeline.yml` with `agents: { queue: "macos" }`,
-   `soft_fail: true`, an `if:` gating it to PR builds, and an
-   `if_changed.include` list scoped to `packages/tasks-for-obsidian/**` — not
-   just `.../ios/**`, since the `lint:swift` task it runs is defined in
-   `packages/tasks-for-obsidian/package.json` and configured in
-   `packages/tasks-for-obsidian/turbo.json`, both outside `ios/`, and a
-   future `.swiftlint.yml` would likely sit at the package root too. Path
-   filters are `if_changed:`, not `if:` (`if:` only evaluates boolean
-   build/pipeline expressions and can't match a changed-file glob; see the
-   neighboring `playwright-e2e-pr` step for the `if:` + `if_changed:` pattern
-   to copy). Include the same global CI/toolchain closure that step's
-   `if_changed.include` carries (`.buildkite/**`, `.mise.toml`, `bun.lock`,
-   `bunfig.toml`, `package.json`, `patches/**`, `turbo.json`) alongside the
-   package path, so a change to the macOS step itself or the shared toolchain
-   still runs it. `bootstrap.sh` installs `swiftlint` but not `bun`, so this
-   step can't invoke the `lint:swift` package script directly — run
-   `swiftlint`'s own command scoped to the package directory instead:
-   `cd packages/tasks-for-obsidian &&
-swiftlint lint --strict --quiet ios/TasksForObsidian ios/TasksWidget` — or
-   the iOS build / Maestro suite, which likely does need `bun`/Xcode
-   provisioned (add those to `bootstrap.sh` if so) — as the command. Not a
-   bare `swiftlint --strict` from the repo root: that has no input paths and
-   would also lint the 155 unrelated Swift files under `sandbox/archive`. It
-   executes on the agent's native checkout, **not** via the kubernetes
-   plugin the Linux steps use.
-2. Leave it `soft_fail: true` until it's green, then drop `soft_fail`. Dropping
-   `soft_fail` turns the step into a merge gate — a red macOS step then fails the
-   required aggregate `buildkite/monorepo/pr` check — so don't drop it until the
-   agent-offline protection called out above is actually in place. Do **not** add
-   a macOS-specific _required_ status check to gate merges. Buildkite does emit a
-   per-step `buildkite/monorepo/pr/<step>` context alongside the aggregate (see
-   the other steps' contexts on any PR build), so a landed macOS step _would_
-   produce its own context — but only `buildkite/monorepo/pr` (plus
-   `ci/merge-conflict`) is **required**, and required checks are managed solely in
-   `src/tofu/github/rulesets.tf`. The real hazard is ordering: requiring a context
-   before its producer step has landed on `main` blocks every PR until it does, so
-   any such change must be producer-first (land the step, then require the
-   context — see `packages/homelab/AGENTS.md`). And it's unnecessary here anyway:
-   once `soft_fail` is removed, a red macOS step already fails the existing
-   required aggregate check.
-
-> **Note:** there's no `.swiftlint.yml` in `packages/tasks-for-obsidian/ios`
-> yet, so `swiftlint --strict` runs with defaults — expect to either add a
-> config or fix violations on the first real run. `soft_fail: true` keeps the
-> build green while that's shaken out.
-
-## Security posture
-
-Unlike the in-cluster agents (ephemeral pods), macOS jobs run **natively** on a
-persistent host as your user — untrusted PR code touches the real filesystem.
-`git-clean-flags="-ffxdq"` scrubs the working tree between builds, but there's
-no container isolation. If that matters, layer **Tart** (ephemeral macOS VMs
-per job) on top later — orthogonal to this setup.
-
-## Teardown
+From a clean checkout on the Mac, fetch the existing Buildkite cluster agent
+token without persisting it and run:
 
 ```bash
-brew services stop buildkite/buildkite/buildkite-agent
-brew uninstall buildkite/buildkite/buildkite-agent
-# Restore the exact pre-bootstrap values for every setting bootstrap.sh
-# changed: sleep, disksleep, displaysleep, powernap, womp, and autorestart.
-# This intentionally fails if the saved profile is unavailable rather than
-# guessing stock defaults for a host that might have been customized.
-./packages/homelab/mac-ci/restore-power.sh
-# Then remove any macos-queue step from .buildkite/pipeline.yml and, if the
-# queue is no longer wanted, remove it from cluster.tf and `tofu apply`.
+BUILDKITE_AGENT_TOKEN="$(op read 'op://<vault>/Buildkite Agent Token/<field>')" \
+  ./packages/homelab/mac-ci/bootstrap.sh
 ```
+
+The bootstrap:
+
+- installs `buildkite-agent@3`, `mise`, `xcodes`, XcodeGen, SwiftLint, and
+  Tailscale with Homebrew;
+- installs the Bun and Rust versions pinned by the root `.mise.toml`;
+- configures the per-user Buildkite LaunchAgent on `queue=macos`;
+- saves the original AC power profile and disables system/disk sleep while
+  allowing display sleep after ten minutes.
+
+Re-running it is safe. Native jobs use a per-user Bun cache and explicitly
+remove the Linux-only shared-cache and Turbo variables they inherit from the
+pipeline document.
+
+### 2. Join the tailnet
+
+Enrollment requires interactive authentication:
+
+```bash
+sudo tailscaled install-system-daemon
+sudo tailscale up
+```
+
+The tailnet is an administration path, not a requirement exposed to native
+job code.
+
+### 3. Install the pinned Xcode
+
+The root [`.xcode-version`](../../../.xcode-version) is authoritative. Install
+its Apple Silicon build with [xcodes](https://github.com/XcodesOrg/xcodes),
+select it, complete Apple's first-launch setup, and immediately remove the
+download credentials:
+
+```bash
+XCODE_VERSION="$(tr -d '[:space:]' < .xcode-version)"
+xcodes install "$XCODE_VERSION" --architecture arm64
+xcodes select "$XCODE_VERSION"
+sudo xcodebuild -license accept
+sudo xcodebuild -runFirstLaunch
+xcodes signout
+xcodebuild -version
+xcode-select -p
+```
+
+The last two commands must report the pinned version and a full
+`Xcode.app/Contents/Developer` path, not Command Line Tools.
+
+### 4. Enable FileVault and configure the login session
+
+Enable FileVault in System Settings and choose a personal recovery key rather
+than iCloud recovery. Before rebooting, store that key in a dedicated
+1Password item used only for this Mac. Do not place the key in this repository,
+the Buildkite environment, or a shell-history command.
+
+Keep automatic login disabled. FileVault requires a human to unlock the disk
+and log in after a cold boot, so the native agent is intentionally offline
+until that happens. While the node is online:
+
+- set Lock Screen → Start Screen Saver when inactive to **Never**;
+- set Lock Screen → Require password after screen saver begins or display is
+  turned off to **Never**;
+- leave display sleep enabled; the bootstrap keeps system and disk sleep off.
+
+This unlocked session is part of the accepted native-code security boundary.
+
+### 5. Issue the CI Apple Development certificate
+
+In Keychain Access, use Certificate Assistant → Request a Certificate From a
+Certificate Authority to create a CSR on this Mac. Issue one dedicated
+**Apple Development** certificate from the Apple Developer portal and import
+it into the `jerred` login keychain. The private key must remain in that
+keychain; do not export it and do not install Developer ID certificates.
+
+Verify that exactly one valid identity is visible:
+
+```bash
+security find-identity -v -p codesigning
+```
+
+The native preflight rejects zero identities, multiple identities, expired
+identities, and distribution identities for TaskNotes.
+
+### 6. Approve the signed TaskNotes UI runner
+
+From a clean checkout, discover the certificate fingerprint through the same
+preflight CI uses and run the UI suite once:
+
+```bash
+. .buildkite/scripts/macos-native-env.sh
+TASKNOTES_UITEST_IDENTITY="$(bun --no-install .buildkite/scripts/macos-native-preflight.ts tasknotes)"
+export TASKNOTES_UITEST_IDENTITY
+bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci
+```
+
+The first hotkey scenario fails with an actionable Accessibility message.
+Open System Settings → Privacy & Security → Accessibility and approve the
+generated `TaskNotesUITests-Runner`. Then clean the derived data and pass the
+complete suite twice:
+
+```bash
+xcodebuild -project packages/tasknotes-macos/TaskNotes.xcodeproj \
+  -scheme TaskNotes -derivedDataPath packages/tasknotes-macos/.build/xcode clean
+bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci
+xcodebuild -project packages/tasknotes-macos/TaskNotes.xcodeproj \
+  -scheme TaskNotes -derivedDataPath packages/tasknotes-macos/.build/xcode clean
+bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci
+```
+
+Two clean signed runs prove that the TCC grant follows the stable certificate
+instead of an ad-hoc build hash.
+
+### 7. Reboot acceptance
+
+Reboot once. Confirm the agent remains offline at the FileVault login screen,
+then manually unlock and log in. After login, confirm:
+
+```bash
+brew services info buildkite-agent@3
+pmset -g custom
+bun --no-install .buildkite/scripts/macos-native-preflight.ts quotabar
+```
+
+The service must be running, system/disk sleep must remain disabled, and the
+GUI session must satisfy the native preflight.
+
+## Native preflight
+
+`.buildkite/scripts/macos-native-preflight.ts` is read-only. Every job requires:
+
+- Darwin on `arm64`;
+- the exact Xcode from `.xcode-version` selected as a full Xcode installation;
+- Bun 1.3.14 and Rust 1.97.1 selected through `mise`;
+- XcodeGen and SwiftLint;
+- active FileVault and the Buildkite user as the console user;
+- at least 40 GiB free in the checkout filesystem;
+- for TaskNotes only, exactly one valid Apple Development identity.
+
+For TaskNotes, the preflight prints the discovered certificate fingerprint to
+stdout. `mac:e2e:ci` requires that explicit value and passes it only to the UI
+test runner's code-signing setting.
+
+## Operations
+
+The Buildkite agent is a per-user LaunchAgent because UI automation,
+Accessibility trust, and the login keychain all require the GUI user context.
+If the Mac is powered off or waiting at FileVault login, matching hard jobs
+remain queued until an operator logs in. This is expected; do not weaken the
+steps with `soft_fail` or move signing material into a daemon context.
+
+To restore the power profile and remove the agent:
+
+```bash
+brew services stop buildkite/buildkite/buildkite-agent@3
+brew uninstall buildkite/buildkite/buildkite-agent@3
+./packages/homelab/mac-ci/restore-power.sh
+```
+
+The restore script requires the exact pre-bootstrap profile saved in
+`/var/db/buildkite-mac-ci-pmset-before`; it fails instead of guessing defaults.

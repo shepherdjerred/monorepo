@@ -48,6 +48,8 @@ const GLOBAL_IF_CHANGED = [
   '".buildkite/scripts/upload-pipeline.sh"',
 ];
 const PATH_GATED_PR_KEYS = new Set([
+  "quotabar-macos-pr",
+  "tasknotes-native-pr",
   "playwright-e2e-pr",
   "resume-build-pr",
   "docker-e2e-pr",
@@ -55,6 +57,12 @@ const PATH_GATED_PR_KEYS = new Set([
   "semgrep",
   "images-pr",
   "pr-dryrun",
+]);
+const NATIVE_STEP_KEYS = new Set([
+  "quotabar-macos-pr",
+  "quotabar-macos-main",
+  "tasknotes-native-pr",
+  "tasknotes-native-main",
 ]);
 const pipeline = await Bun.file(PIPELINE_PATH).text();
 const lines = pipeline.split("\n");
@@ -82,6 +90,7 @@ const { stepStarts, keys, stepBlocks } = collectStepBlocks(lines, {
   sharedPodAnchors: SHARED_POD_ANCHORS,
   checkoutContainerAlias: CHECKOUT_CONTAINER_ALIAS,
   pathGatedPrKeys: PATH_GATED_PR_KEYS,
+  nativeStepKeys: NATIVE_STEP_KEYS,
   globalIfChanged: GLOBAL_IF_CHANGED,
 });
 
@@ -487,5 +496,5 @@ await validateImageMigrationContracts(pipeline, bakeImages);
 await validateCaddySmokeContracts();
 
 console.log(
-  `[validate-pipeline] ${keys.size.toString()} command steps have unique keys, exact pod labels, and bounded installs`,
+  `[validate-pipeline] ${keys.size.toString()} command steps have unique keys, classified execution surfaces, and bounded installs`,
 );
