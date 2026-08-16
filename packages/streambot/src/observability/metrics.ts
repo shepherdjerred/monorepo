@@ -418,6 +418,12 @@ export const voiceReplySendFailuresTotal = new Counter({
   registers: [register],
 });
 
+export const voiceDecodeErrorsTotal = new Counter({
+  name: "streambot_voice_decode_errors_total",
+  help: "Speaker Opus decode failures; the speaker's decoder state is rebuilt on the next packet",
+  registers: [register],
+});
+
 export const voiceDuckTransitionsTotal = new Counter({
   name: "streambot_voice_duck_transitions_total",
   help: "Assistant duck state transitions, without session or user labels",

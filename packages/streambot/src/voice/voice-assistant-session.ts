@@ -15,6 +15,7 @@ import type { DiscordOpusDecoder } from "@shepherdjerred/discord-video-stream";
 import {
   voiceActivationStageLatencySeconds,
   voiceCloudVerificationRateLimitsTotal,
+  voiceDecodeErrorsTotal,
   voiceLocalVerificationsTotal,
   voiceTranscriptVerificationsTotal,
   voiceTurnsTotal,
@@ -68,6 +69,12 @@ export class VoiceAssistantSession {
       onLocalVerificationError: (error) => {
         voiceLocalVerificationsTotal.inc({ outcome: "error" });
         log.error("local wake verification failed", {
+          error: getErrorMessage(error),
+        });
+      },
+      onDecodeError: (error) => {
+        voiceDecodeErrorsTotal.inc();
+        log.error("speaker opus decode failed; speaker state rebuilt", {
           error: getErrorMessage(error),
         });
       },

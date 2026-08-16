@@ -363,3 +363,124 @@ describe("VoiceAudioLifecycle endpointing and cleanup", () => {
     lifecycle.close();
   });
 });
+
+describe("VoiceAudioLifecycle failure containment", () => {
+  test("rebuilds a speaker whose decoder throws instead of wedging wake detection", async () => {
+    const decodeErrors: unknown[] = [];
+    const turns: string[] = [];
+    let decodeCalls = 0;
+    const lifecycle = new VoiceAudioLifecycle({
+      models: fakeModels(2, 4),
+      preRollMs: 1200,
+      maxUtteranceMs: 15_000,
+      verificationDelayMs: 0,
+      postVerificationMs: 0,
+      createDecoder: () => ({
+        decode: (opus) => {
+          decodeCalls += 1;
+          if (decodeCalls === 1) throw new Error("wedged libav context");
+          return new Float32Array([opus[0] ?? 0]);
+        },
+        close: () => {
+          /* fake has no decoder handle */
+        },
+      }),
+      onDecodeError: (error) => decodeErrors.push(error),
+      onTurn: async (turn) => {
+        turns.push(turn.userId);
+      },
+    });
+
+    lifecycle.accept(audio("speaker-a", 1));
+    expect(decodeErrors).toHaveLength(1);
+    expect(turns).toEqual([]);
+
+    // The next packets rebuild the speaker's decoder/detector and a wake still completes.
+    lifecycle.accept(audio("speaker-a", 2));
+    lifecycle.accept(audio("speaker-a", 3));
+    lifecycle.accept(audio("speaker-a", 4));
+    await Promise.resolve();
+    expect(turns).toEqual(["speaker-a"]);
+    lifecycle.close();
+  });
+
+  test("a fragment missing from the tail table throws before any turn state is provisioned", async () => {
+    const turns: string[] = [];
+    let vads = 0;
+    let vadCloses = 0;
+    const models = fakeModels(2, 4);
+    const lifecycle = new VoiceAudioLifecycle({
+      models: {
+        ...models,
+        createKeywordDetector: () => ({
+          accept: (samples) =>
+            samples[0] === 2
+              ? {
+                  detector: "sherpa",
+                  phrase: "UNDECLARED_FRAGMENT",
+                  score: null,
+                  // A timestamp forces the per-fragment tail path, which must reject an
+                  // undeclared fragment.
+                  fragmentEndSeconds: 0.5,
+                }
+              : samples[0] === 5
+                ? {
+                    detector: "sherpa",
+                    phrase: "HEY",
+                    score: null,
+                    fragmentEndSeconds: null,
+                  }
+                : null,
+          reset: () => {
+            /* fake has no retained keyword state */
+          },
+          close: () => {
+            /* fake has no native handle */
+          },
+        }),
+        createVad: () => {
+          vads += 1;
+          const vad = models.createVad();
+          return {
+            ...vad,
+            close: () => {
+              vadCloses += 1;
+              vad.close();
+            },
+          };
+        },
+      },
+      preRollMs: 1200,
+      maxUtteranceMs: 15_000,
+      verificationDelayMs: 0,
+      postVerificationMs: 0,
+      createDecoder: () => ({
+        decode: (opus) => new Float32Array([opus[0] ?? 0]),
+        close: () => {
+          /* fake has no decoder handle */
+        },
+      }),
+      onTurn: async (turn) => {
+        turns.push(turn.userId);
+      },
+    });
+
+    // The packaging bug fails loudly, before a VAD or a max-utterance timer exists.
+    expect(() => {
+      lifecycle.accept(audio("speaker-a", 2));
+    }).toThrow("No verification tail is defined for fragment");
+    expect(vads).toBe(0);
+    expect(turns).toEqual([]);
+
+    // The lifecycle is still coherent: a later declared wake completes normally, and no stray
+    // timer from the failed provision exists to time it out.
+    lifecycle.accept(audio("speaker-a", 5));
+    lifecycle.accept(audio("speaker-a", 3));
+    lifecycle.accept(audio("speaker-a", 4));
+    await Promise.resolve();
+    expect(turns).toEqual(["speaker-a"]);
+    expect(vads).toBe(1);
+    lifecycle.close();
+    expect(vadCloses).toBe(1);
+  });
+});

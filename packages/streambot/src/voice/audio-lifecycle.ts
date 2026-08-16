@@ -85,6 +85,12 @@ export type VoiceAudioLifecycleOptions = {
     evidence: LocalWakeVerificationEvidence,
   ) => void;
   readonly onLocalVerificationError?: (error: unknown) => void;
+  /**
+   * The speaker's Opus decoder threw. The speaker's state is destroyed so the next packet
+   * rebuilds it — without this, a wedged decoder context would disable wake detection for that
+   * speaker forever, because the only other reset path requires a successful decode.
+   */
+  readonly onDecodeError?: (error: unknown) => void;
   readonly onAbandoned?: (reason: "timeout" | "empty" | "closed") => void;
   readonly onTurn: (turn: CompletedVoiceTurn) => Promise<void>;
   readonly now?: () => number;
@@ -134,6 +140,13 @@ export class VoiceAudioLifecycle {
     let decoded: Float32Array;
     try {
       decoded = speaker.decoder.decode(audio.opus);
+    } catch (error) {
+      // Recovery at a network-input boundary: malformed or undecodable Opus wedges the libav
+      // context. Destroy this speaker's state so the next packet rebuilds it, and report loudly.
+      this.clearSpeaker(speaker);
+      this.speakers.delete(audio.userId);
+      this.options.onDecodeError?.(error);
+      return;
     } finally {
       audio.opus.fill(0);
     }
@@ -221,6 +234,13 @@ export class VoiceAudioLifecycle {
       detectedAtMs,
     };
     this.options.onCandidate?.(candidate);
+    // Computed before anything below is allocated or mutated: it throws on a fragment missing
+    // from the tail table, and throwing after the VAD exists or the timer is armed would leak
+    // both while `this.pending` stays unset.
+    const verificationTargetSamples = this.verificationTargetSamples(
+      speaker,
+      match,
+    );
     const vad = this.options.models.createVad();
     const pcm = speaker.rolling;
     const sampleCount = speaker.rollingSamples;
@@ -230,18 +250,14 @@ export class VoiceAudioLifecycle {
     const vadCompleted = sawSpeech && vad.hasCompletedSpeech();
     speaker.rolling = [];
     speaker.rollingSamples = 0;
-    const timer = setTimeout(() => {
-      const pending = this.pending;
-      if (pending !== null) this.finishPending(pending, "timeout");
-    }, this.options.maxUtteranceMs);
-    this.pending = {
+    const pending: PendingTurn = {
       userId,
       candidate,
       vad,
       pcm,
       sampleCount,
       postCandidateSamples: 0,
-      verificationTargetSamples: this.verificationTargetSamples(speaker, match),
+      verificationTargetSamples,
       verificationStartedAtSamples: 0,
       postVerificationSamples: 0,
       sawSpeech,
@@ -249,8 +265,14 @@ export class VoiceAudioLifecycle {
       localVerified: false,
       verificationRunning: false,
       inputEnded: false,
-      timer,
+      // The closure captures its own turn rather than re-reading this.pending, so a stray timer
+      // can never time out an unrelated later turn; finishPending's identity check then makes a
+      // stale firing a no-op.
+      timer: setTimeout(() => {
+        this.finishPending(pending, "timeout");
+      }, this.options.maxUtteranceMs),
     };
+    this.pending = pending;
     for (const [otherUserId, state] of this.speakers) {
       if (otherUserId !== userId) {
         this.clearSpeaker(state);
