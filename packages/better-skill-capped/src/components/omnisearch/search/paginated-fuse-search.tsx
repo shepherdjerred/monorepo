@@ -25,15 +25,22 @@ export default function PaginatedFuseSearch<T>({
 }: PaginatedFuseSearchProps<T>): React.ReactElement {
   const results = useFuseSearch(items, query, fuseOptions);
 
-  const start = itemsPerPage * (page - 1);
+  // An empty result set still has one (empty) page, so the controls always
+  // have a valid range to render.
+  const numberOfPages = Math.max(1, Math.ceil(results.length / itemsPerPage));
+  // `page` comes from the URL and can be hand-edited or left stale by a
+  // filter change, so clamp it rather than rendering an empty slice while
+  // results exist.
+  const safePage = Math.min(Math.max(page, 1), numberOfPages);
+
+  const start = itemsPerPage * (safePage - 1);
   const pageResults = results.slice(start, start + itemsPerPage);
-  const numberOfPages = Math.ceil(results.length / itemsPerPage);
 
   return (
     <>
       {pageResults.map((result) => render(result))}
       <PaginationControls
-        currentPage={page}
+        currentPage={safePage}
         lastPage={numberOfPages}
         onPageChange={onPageChange}
       />

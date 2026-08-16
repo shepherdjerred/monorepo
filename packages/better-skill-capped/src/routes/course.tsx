@@ -13,10 +13,16 @@ import { NotFound, rootRoute } from "./root.tsx";
 
 function CoursePage(): React.ReactElement {
   const { courseUuid } = courseRoute.useParams();
-  const { content, isLoading } = useContent();
+  const { content, isLoading, error } = useContent();
   const { isBookmarked, toggle: toggleBookmark } = useBookmarks();
   const { isWatched, toggle: toggleWatchStatus } = useWatchStatus();
   const isDownloadEnabled = useDownloadEnabled();
+
+  // Match `/`: a failed manifest fetch/parse goes to the router error boundary
+  // so `defaultOnCatch` reports it, rather than rendering as a missing course.
+  if (error !== null) {
+    throw error;
+  }
 
   if (content === undefined) {
     return (

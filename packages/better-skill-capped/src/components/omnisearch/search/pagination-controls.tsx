@@ -164,7 +164,7 @@ export default function PaginationControls({
   }
 
   const previousButton =
-    firstPage === currentPage ? (
+    currentPage <= firstPage ? (
       <button
         className="pagination-previous button"
         disabled
@@ -186,7 +186,7 @@ export default function PaginationControls({
     );
 
   const nextButton =
-    lastPage === currentPage ? (
+    currentPage >= lastPage ? (
       <button
         className="pagination-next button"
         disabled

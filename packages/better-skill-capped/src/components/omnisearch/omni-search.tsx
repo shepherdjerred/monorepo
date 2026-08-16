@@ -70,39 +70,57 @@ export function OmniSearch(): React.ReactElement {
     bookmarked: search.bookmarked,
   };
 
-  const filteredItems = items
-    .filter(
-      (item) => filters.roles.length === 0 || filters.roles.includes(item.role),
-    )
-    .filter(
-      (item) => filters.types.length === 0 || filters.types.includes(item.kind),
-    )
-    .filter((item) => {
-      switch (filters.watched) {
-        case "watched": {
-          return isWatched(item);
-        }
-        case "unwatched": {
-          return !isWatched(item);
-        }
-        case "any": {
-          return true;
-        }
-      }
-    })
-    .filter((item) => {
-      switch (filters.bookmarked) {
-        case "bookmarked": {
-          return isBookmarked(item);
-        }
-        case "unbookmarked": {
-          return !isBookmarked(item);
-        }
-        case "any": {
-          return true;
-        }
-      }
-    });
+  // `useFuseSearch` rebuilds its index whenever the `items` identity changes,
+  // so this must stay referentially stable across query/page-only updates —
+  // otherwise every keystroke rebuilds the index. Filtering does not read
+  // `search.q` or `search.page`, so neither belongs in the dependency list.
+  const filteredItems = React.useMemo(
+    () =>
+      items
+        .filter(
+          (item) =>
+            filters.roles.length === 0 || filters.roles.includes(item.role),
+        )
+        .filter(
+          (item) =>
+            filters.types.length === 0 || filters.types.includes(item.kind),
+        )
+        .filter((item) => {
+          switch (filters.watched) {
+            case "watched": {
+              return isWatched(item);
+            }
+            case "unwatched": {
+              return !isWatched(item);
+            }
+            case "any": {
+              return true;
+            }
+          }
+        })
+        .filter((item) => {
+          switch (filters.bookmarked) {
+            case "bookmarked": {
+              return isBookmarked(item);
+            }
+            case "unbookmarked": {
+              return !isBookmarked(item);
+            }
+            case "any": {
+              return true;
+            }
+          }
+        }),
+    [
+      items,
+      filters.roles,
+      filters.types,
+      filters.watched,
+      filters.bookmarked,
+      isWatched,
+      isBookmarked,
+    ],
+  );
 
   const onFiltersUpdate = (newFilters: Filters) => {
     void navigate({
