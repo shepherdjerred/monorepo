@@ -664,7 +664,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
-      "value": "2.0.0-8810@sha256:d0783d718761e852b2f5798a234170e6f720be921aa59ee37cc86b1b8e53c6a2",
+      "value": "2.0.0-9495@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
       "notes": [
         "Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>",
         "tag is minted by the scout-tag-release CI step only after site version",
@@ -696,7 +696,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/starlight-karma-bot"
       },
-      "value": "2.0.0-8772@sha256:bb187d4427d4cda30e559d249e7b717fcda7f6e459c6b7141461fd8df14390bc"
+      "value": "2.0.0-9414@sha256:e162c7086de402321f7b076ac580e220257d280d3afa7c122836be7073468420"
     },
     {
       "name": "shepherdjerred/birmel",
