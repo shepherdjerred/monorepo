@@ -1,0 +1,132 @@
+name: MailMateCodeFill
+
+options:
+  bundleIdPrefix: com.sjerred
+  deploymentTarget:
+    macOS: "26.0"
+  xcodeVersion: "27.0"
+  defaultConfig: Debug
+
+configs:
+  Debug: debug
+  Release: release
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 63ZAG7X889
+
+targets:
+  MailMateCodeFill:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/MailMateCodeFillApp
+      - path: Sources/MailMateCodeFillShared
+    resources:
+      - path: MailMateCodeFill.mmBundle
+        type: folder
+    info:
+      path: Resources/AppInfo.plist
+      properties:
+        CFBundleDisplayName: MailMate CodeFill
+        CFBundleName: MailMateCodeFill
+        LSApplicationCategoryType: public.app-category.utilities
+        NSHumanReadableCopyright: Copyright © 2026 Sjerred
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sjerred.MailMateCodeFill
+        PRODUCT_NAME: MailMateCodeFill
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 63ZAG7X889
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
+    dependencies:
+      - target: MailMateCodeFillProvider
+        embed: true
+      - target: MailMateCodeFillHelper
+    postCompileScripts:
+      - name: Embed MailMate helper
+        basedOnDependencyAnalysis: false
+        script: |
+          helper="${BUILT_PRODUCTS_DIR}/MailMateCodeFillHelper.app"
+          destination="${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers/MailMateCodeFillHelper.app"
+          test -x "$helper/Contents/MacOS/MailMateCodeFillHelper"
+          /bin/mkdir -p "${destination%/*}"
+          /usr/bin/ditto "$helper" "$destination"
+          /usr/bin/ditto "$SRCROOT/MailMateCodeFill.mmBundle" "${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Resources/MailMateCodeFill.mmBundle"
+    entitlements:
+      path: Entitlements/MailMateCodeFill.entitlements
+      properties:
+        com.apple.developer.authentication-services.autofill-credential-provider: true
+        com.apple.security.application-groups:
+          - 63ZAG7X889.com.sjerred.MailMateCodeFill
+
+  MailMateCodeFillProvider:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Sources/MailMateCodeFillProvider
+      - path: Sources/MailMateCodeFillShared
+    info:
+      path: Resources/ProviderInfo.plist
+      properties:
+        CFBundleDisplayName: MailMate CodeFill
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.authentication-services-credential-provider-ui
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).CredentialProviderViewController
+          NSExtensionAttributes:
+            ASCredentialProviderExtensionCapabilities:
+              ProvidesOneTimeCodes: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sjerred.MailMateCodeFill.Provider
+        PRODUCT_NAME: MailMateCodeFillProvider
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 63ZAG7X889
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
+    entitlements:
+      path: Entitlements/MailMateCodeFillProvider.entitlements
+      properties:
+        com.apple.developer.authentication-services.autofill-credential-provider: true
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups:
+          - 63ZAG7X889.com.sjerred.MailMateCodeFill
+
+  MailMateCodeFillHelper:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/MailMateCodeFillHelper
+      - path: Sources/MailMateCodeFillShared
+    info:
+      path: Sources/MailMateCodeFillHelper/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sjerred.MailMateCodeFillHelper
+        PRODUCT_NAME: MailMateCodeFillHelper
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 63ZAG7X889
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
+    entitlements:
+      path: Entitlements/MailMateCodeFillHelper.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups:
+          - 63ZAG7X889.com.sjerred.MailMateCodeFill
+
+  MailMateCodeFillTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/MailMateCodeFillTests
+    dependencies:
+      - target: MailMateCodeFill
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sjerred.MailMateCodeFill.Tests
+        SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"

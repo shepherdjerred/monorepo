@@ -1,0 +1,773 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		054A279AB2E61E0ACBEE8AFB /* OTPParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF859A74A641EFF9188B19F /* OTPParserTests.swift */; };
+		16EFDF299D0BAE1911CA0E8C /* OTPModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514669AAD7CE069C9CF49E70 /* OTPModels.swift */; };
+		1D287F2FE365C7784B8B7C93 /* CodeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1DF4D5ACB8931CF6D31F6 /* CodeStore.swift */; };
+		1DF8F81D4C25A26F2B3435A9 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67E0C72FFC05440C0A75D0E7 /* AppConfiguration.swift */; };
+		22275B46439290A4BECB3CAD /* MailMateCodeFillProvider.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9B7865E153D27BA6BCF3AE30 /* MailMateCodeFillProvider.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2531F0F7B3B86FB81ABFE47E /* CredentialIdentityBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848A1C1104E3A80B53F4D954 /* CredentialIdentityBuilder.swift */; };
+		2E0B634FB64028F0617E35F7 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85D4A6CE94A2DA1D014E7835 /* SetupView.swift */; };
+		34BBD58354FAEAEC3F744E3B /* OTPParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA52D6E35587E22EF19F4B2D /* OTPParser.swift */; };
+		44E79DD1A78E42FF75E56728 /* CredentialProviderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B01512968767127DE1619C8 /* CredentialProviderViewController.swift */; };
+		54AEAA959F3760CB010F0630 /* Observability.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED962E3566943066E4D39675 /* Observability.swift */; };
+		752B8A8A94B543391CB0F334 /* ObservabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0570BF7241D957A38484B53 /* ObservabilityTests.swift */; };
+		85CC5488D58129688699E516 /* OTPParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA52D6E35587E22EF19F4B2D /* OTPParser.swift */; };
+		8766AFDE60F3A40173AC72AB /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67E0C72FFC05440C0A75D0E7 /* AppConfiguration.swift */; };
+		8846B27D21D5BEF1979817CF /* Observability.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED962E3566943066E4D39675 /* Observability.swift */; };
+		8C36D74B795ACACE7EA1A790 /* CodeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1DF4D5ACB8931CF6D31F6 /* CodeStore.swift */; };
+		9CDDE75B806CE7D53F193477 /* MailMateCodeFillApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367DC880DB97EDF15BD0F01D /* MailMateCodeFillApp.swift */; };
+		A039FB9BC0473C72D2D285A9 /* Observability.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED962E3566943066E4D39675 /* Observability.swift */; };
+		A7D1B881628B73277A760F8B /* OTPModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514669AAD7CE069C9CF49E70 /* OTPModels.swift */; };
+		B5890295E9F9DC935B68B3EC /* OTPModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514669AAD7CE069C9CF49E70 /* OTPModels.swift */; };
+		B7D06D567EB26318C773B12C /* verification-code.txt in Resources */ = {isa = PBXBuildFile; fileRef = 6CC5B0032DA9ECEABE0911B1 /* verification-code.txt */; };
+		C0F85BC89ABB1CE75C132D2D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C302BED0C5F3BBA86EB23E66 /* main.swift */; };
+		D0C853254F8836A5D41AE1F9 /* CodeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1DF4D5ACB8931CF6D31F6 /* CodeStore.swift */; };
+		D4CFAE80F8B1752DE481D4F5 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67E0C72FFC05440C0A75D0E7 /* AppConfiguration.swift */; };
+		DF8290113709CF5EF03645B9 /* MailMateCodeFillHelper.app in Resources */ = {isa = PBXBuildFile; fileRef = 2D25BFF6E1431BDC62928CED /* MailMateCodeFillHelper.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		E687874377181E92C2755F3C /* CodeStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2162C39609ACB996090EEE09 /* CodeStoreTests.swift */; };
+		EF4D9BB0AFD73CF2C6F27363 /* CredentialIdentityBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C780930F93BA47172712185 /* CredentialIdentityBuilder.swift */; };
+		FD45A83E034BEAAFAECAD98E /* OTPParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA52D6E35587E22EF19F4B2D /* OTPParser.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		289B9534C01B6ABF9D0E58EF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A65ECF4E3027C9C58DA1B02D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 01E23525E3E128D146DA3F2A;
+			remoteInfo = MailMateCodeFillProvider;
+		};
+		64E213EA62572FE0F3CAFAF6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A65ECF4E3027C9C58DA1B02D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 927376E29F75A29E85F1A915;
+			remoteInfo = MailMateCodeFill;
+		};
+		A3D917C847E66E021608A9C0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A65ECF4E3027C9C58DA1B02D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 47E2ADECA51743BFF365390E;
+			remoteInfo = MailMateCodeFillHelper;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3560A28C755440A5BFDD406F /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				22275B46439290A4BECB3CAD /* MailMateCodeFillProvider.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		2162C39609ACB996090EEE09 /* CodeStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeStoreTests.swift; sourceTree = "<group>"; };
+		2D25BFF6E1431BDC62928CED /* MailMateCodeFillHelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MailMateCodeFillHelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		367DC880DB97EDF15BD0F01D /* MailMateCodeFillApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailMateCodeFillApp.swift; sourceTree = "<group>"; };
+		3C780930F93BA47172712185 /* CredentialIdentityBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialIdentityBuilder.swift; sourceTree = "<group>"; };
+		514669AAD7CE069C9CF49E70 /* OTPModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPModels.swift; sourceTree = "<group>"; };
+		666C94685CB2D2152ADA6EA1 /* MailMateCodeFillTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MailMateCodeFillTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		67E0C72FFC05440C0A75D0E7 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
+		6CC5B0032DA9ECEABE0911B1 /* verification-code.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "verification-code.txt"; sourceTree = "<group>"; };
+		7B01512968767127DE1619C8 /* CredentialProviderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialProviderViewController.swift; sourceTree = "<group>"; };
+		7B26601A647BA1218732D36D /* MailMateCodeFill.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MailMateCodeFill.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		848A1C1104E3A80B53F4D954 /* CredentialIdentityBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialIdentityBuilder.swift; sourceTree = "<group>"; };
+		85D4A6CE94A2DA1D014E7835 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
+		9B7865E153D27BA6BCF3AE30 /* MailMateCodeFillProvider.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MailMateCodeFillProvider.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		ADA1DF4D5ACB8931CF6D31F6 /* CodeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeStore.swift; sourceTree = "<group>"; };
+		BA52D6E35587E22EF19F4B2D /* OTPParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPParser.swift; sourceTree = "<group>"; };
+		C302BED0C5F3BBA86EB23E66 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		DBB81E7862B2FD5F5FD698D9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		E0570BF7241D957A38484B53 /* ObservabilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservabilityTests.swift; sourceTree = "<group>"; };
+		EBF859A74A641EFF9188B19F /* OTPParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPParserTests.swift; sourceTree = "<group>"; };
+		ED962E3566943066E4D39675 /* Observability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Observability.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		3B3776929497716F4E891A4D = {
+			isa = PBXGroup;
+			children = (
+				FB8B8E696D6688B38C7C415F /* MailMateCodeFillApp */,
+				994F8DD94CE91F5DEA25E7C2 /* MailMateCodeFillHelper */,
+				FF225E39C0C89126A4084A91 /* MailMateCodeFillProvider */,
+				836E60D15B2C85A05231DA1D /* MailMateCodeFillShared */,
+				94DC50A66D0D877E93AD8D52 /* MailMateCodeFillTests */,
+				7093EFBBE0F7F8AB881D55F3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		7093EFBBE0F7F8AB881D55F3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7B26601A647BA1218732D36D /* MailMateCodeFill.app */,
+				2D25BFF6E1431BDC62928CED /* MailMateCodeFillHelper.app */,
+				9B7865E153D27BA6BCF3AE30 /* MailMateCodeFillProvider.appex */,
+				666C94685CB2D2152ADA6EA1 /* MailMateCodeFillTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		836E60D15B2C85A05231DA1D /* MailMateCodeFillShared */ = {
+			isa = PBXGroup;
+			children = (
+				67E0C72FFC05440C0A75D0E7 /* AppConfiguration.swift */,
+				ADA1DF4D5ACB8931CF6D31F6 /* CodeStore.swift */,
+				ED962E3566943066E4D39675 /* Observability.swift */,
+				514669AAD7CE069C9CF49E70 /* OTPModels.swift */,
+				BA52D6E35587E22EF19F4B2D /* OTPParser.swift */,
+			);
+			name = MailMateCodeFillShared;
+			path = Sources/MailMateCodeFillShared;
+			sourceTree = "<group>";
+		};
+		94DC50A66D0D877E93AD8D52 /* MailMateCodeFillTests */ = {
+			isa = PBXGroup;
+			children = (
+				2162C39609ACB996090EEE09 /* CodeStoreTests.swift */,
+				E0570BF7241D957A38484B53 /* ObservabilityTests.swift */,
+				EBF859A74A641EFF9188B19F /* OTPParserTests.swift */,
+				BB2B74491246697B939FE064 /* Fixtures */,
+			);
+			name = MailMateCodeFillTests;
+			path = Tests/MailMateCodeFillTests;
+			sourceTree = "<group>";
+		};
+		994F8DD94CE91F5DEA25E7C2 /* MailMateCodeFillHelper */ = {
+			isa = PBXGroup;
+			children = (
+				DBB81E7862B2FD5F5FD698D9 /* Info.plist */,
+				C302BED0C5F3BBA86EB23E66 /* main.swift */,
+			);
+			name = MailMateCodeFillHelper;
+			path = Sources/MailMateCodeFillHelper;
+			sourceTree = "<group>";
+		};
+		BB2B74491246697B939FE064 /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				6CC5B0032DA9ECEABE0911B1 /* verification-code.txt */,
+			);
+			path = Fixtures;
+			sourceTree = "<group>";
+		};
+		FB8B8E696D6688B38C7C415F /* MailMateCodeFillApp */ = {
+			isa = PBXGroup;
+			children = (
+				848A1C1104E3A80B53F4D954 /* CredentialIdentityBuilder.swift */,
+				367DC880DB97EDF15BD0F01D /* MailMateCodeFillApp.swift */,
+				85D4A6CE94A2DA1D014E7835 /* SetupView.swift */,
+			);
+			name = MailMateCodeFillApp;
+			path = Sources/MailMateCodeFillApp;
+			sourceTree = "<group>";
+		};
+		FF225E39C0C89126A4084A91 /* MailMateCodeFillProvider */ = {
+			isa = PBXGroup;
+			children = (
+				3C780930F93BA47172712185 /* CredentialIdentityBuilder.swift */,
+				7B01512968767127DE1619C8 /* CredentialProviderViewController.swift */,
+			);
+			name = MailMateCodeFillProvider;
+			path = Sources/MailMateCodeFillProvider;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		01E23525E3E128D146DA3F2A /* MailMateCodeFillProvider */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0F98A0BD9BE210B66363AB2A /* Build configuration list for PBXNativeTarget "MailMateCodeFillProvider" */;
+			buildPhases = (
+				F65AAC70D6DFBE3FAC940792 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MailMateCodeFillProvider;
+			packageProductDependencies = (
+			);
+			productName = MailMateCodeFillProvider;
+			productReference = 9B7865E153D27BA6BCF3AE30 /* MailMateCodeFillProvider.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		31E4A89B2297F65ED98B41D9 /* MailMateCodeFillTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 93D4071DC6FFD087DD5298B2 /* Build configuration list for PBXNativeTarget "MailMateCodeFillTests" */;
+			buildPhases = (
+				57FC65EF994584D43A1013B1 /* Sources */,
+				C6CFD63FC9FBD35514FC1D61 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CCDB6E61E4BFB2D36E3E4355 /* PBXTargetDependency */,
+			);
+			name = MailMateCodeFillTests;
+			packageProductDependencies = (
+			);
+			productName = MailMateCodeFillTests;
+			productReference = 666C94685CB2D2152ADA6EA1 /* MailMateCodeFillTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		47E2ADECA51743BFF365390E /* MailMateCodeFillHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7247510000621266F3815E42 /* Build configuration list for PBXNativeTarget "MailMateCodeFillHelper" */;
+			buildPhases = (
+				9CE4E5BBFC4F2C01D09E6123 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MailMateCodeFillHelper;
+			packageProductDependencies = (
+			);
+			productName = MailMateCodeFillHelper;
+			productReference = 2D25BFF6E1431BDC62928CED /* MailMateCodeFillHelper.app */;
+			productType = "com.apple.product-type.application";
+		};
+		927376E29F75A29E85F1A915 /* MailMateCodeFill */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 415C829E6D32B4FCA612865A /* Build configuration list for PBXNativeTarget "MailMateCodeFill" */;
+			buildPhases = (
+				4A11239F7C63AE9221F56903 /* Sources */,
+				494A70711DB567E5E5907217 /* Embed MailMate helper */,
+				758085E9BD9629709D0D4652 /* Resources */,
+				3560A28C755440A5BFDD406F /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				052421DF3282F348DBEAA728 /* PBXTargetDependency */,
+				7A8C23F6CBE4DD436B329942 /* PBXTargetDependency */,
+			);
+			name = MailMateCodeFill;
+			packageProductDependencies = (
+			);
+			productName = MailMateCodeFill;
+			productReference = 7B26601A647BA1218732D36D /* MailMateCodeFill.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A65ECF4E3027C9C58DA1B02D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2700;
+			};
+			buildConfigurationList = 921CF97B2EA2F1F5270D4C9D /* Build configuration list for PBXProject "MailMateCodeFill" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 3B3776929497716F4E891A4D;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 7093EFBBE0F7F8AB881D55F3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				927376E29F75A29E85F1A915 /* MailMateCodeFill */,
+				01E23525E3E128D146DA3F2A /* MailMateCodeFillProvider */,
+				47E2ADECA51743BFF365390E /* MailMateCodeFillHelper */,
+				31E4A89B2297F65ED98B41D9 /* MailMateCodeFillTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		758085E9BD9629709D0D4652 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DF8290113709CF5EF03645B9 /* MailMateCodeFillHelper.app in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C6CFD63FC9FBD35514FC1D61 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B7D06D567EB26318C773B12C /* verification-code.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		494A70711DB567E5E5907217 /* Embed MailMate helper */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed MailMate helper";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "helper=\"${BUILT_PRODUCTS_DIR}/MailMateCodeFillHelper.app\"\ndestination=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers/MailMateCodeFillHelper.app\"\ntest -x \"$helper/Contents/MacOS/MailMateCodeFillHelper\"\n/bin/mkdir -p \"${destination%/*}\"\n/usr/bin/ditto \"$helper\" \"$destination\"\n/usr/bin/ditto \"$SRCROOT/MailMateCodeFill.mmBundle\" \"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Resources/MailMateCodeFill.mmBundle\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4A11239F7C63AE9221F56903 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8766AFDE60F3A40173AC72AB /* AppConfiguration.swift in Sources */,
+				1D287F2FE365C7784B8B7C93 /* CodeStore.swift in Sources */,
+				2531F0F7B3B86FB81ABFE47E /* CredentialIdentityBuilder.swift in Sources */,
+				9CDDE75B806CE7D53F193477 /* MailMateCodeFillApp.swift in Sources */,
+				A7D1B881628B73277A760F8B /* OTPModels.swift in Sources */,
+				34BBD58354FAEAEC3F744E3B /* OTPParser.swift in Sources */,
+				A039FB9BC0473C72D2D285A9 /* Observability.swift in Sources */,
+				2E0B634FB64028F0617E35F7 /* SetupView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		57FC65EF994584D43A1013B1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E687874377181E92C2755F3C /* CodeStoreTests.swift in Sources */,
+				054A279AB2E61E0ACBEE8AFB /* OTPParserTests.swift in Sources */,
+				752B8A8A94B543391CB0F334 /* ObservabilityTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9CE4E5BBFC4F2C01D09E6123 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4CFAE80F8B1752DE481D4F5 /* AppConfiguration.swift in Sources */,
+				D0C853254F8836A5D41AE1F9 /* CodeStore.swift in Sources */,
+				B5890295E9F9DC935B68B3EC /* OTPModels.swift in Sources */,
+				FD45A83E034BEAAFAECAD98E /* OTPParser.swift in Sources */,
+				8846B27D21D5BEF1979817CF /* Observability.swift in Sources */,
+				C0F85BC89ABB1CE75C132D2D /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F65AAC70D6DFBE3FAC940792 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1DF8F81D4C25A26F2B3435A9 /* AppConfiguration.swift in Sources */,
+				8C36D74B795ACACE7EA1A790 /* CodeStore.swift in Sources */,
+				EF4D9BB0AFD73CF2C6F27363 /* CredentialIdentityBuilder.swift in Sources */,
+				44E79DD1A78E42FF75E56728 /* CredentialProviderViewController.swift in Sources */,
+				16EFDF299D0BAE1911CA0E8C /* OTPModels.swift in Sources */,
+				85CC5488D58129688699E516 /* OTPParser.swift in Sources */,
+				54AEAA959F3760CB010F0630 /* Observability.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		052421DF3282F348DBEAA728 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 01E23525E3E128D146DA3F2A /* MailMateCodeFillProvider */;
+			targetProxy = 289B9534C01B6ABF9D0E58EF /* PBXContainerItemProxy */;
+		};
+		7A8C23F6CBE4DD436B329942 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 47E2ADECA51743BFF365390E /* MailMateCodeFillHelper */;
+			targetProxy = A3D917C847E66E021608A9C0 /* PBXContainerItemProxy */;
+		};
+		CCDB6E61E4BFB2D36E3E4355 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 927376E29F75A29E85F1A915 /* MailMateCodeFill */;
+			targetProxy = 64E213EA62572FE0F3CAFAF6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		063757C38F28D916587B6D44 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Entitlements/MailMateCodeFillProvider.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 63ZAG7X889;
+				INFOPLIST_FILE = Resources/ProviderInfo.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjerred.MailMateCodeFill.Provider;
+				PRODUCT_NAME = MailMateCodeFillProvider;
+				SDKROOT = macosx;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+			};
+			name = Debug;
+		};
+		097AE9ED10CA03428A3BFAD5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Entitlements/MailMateCodeFillHelper.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 63ZAG7X889;
+				INFOPLIST_FILE = Sources/MailMateCodeFillHelper/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjerred.MailMateCodeFillHelper;
+				PRODUCT_NAME = MailMateCodeFillHelper;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+			};
+			name = Release;
+		};
+		1F5D077CA5BA1B2CCF485291 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 63ZAG7X889;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		5300F273305CC193CE4F7D05 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Entitlements/MailMateCodeFillProvider.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = 63ZAG7X889;
+				INFOPLIST_FILE = Resources/ProviderInfo.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjerred.MailMateCodeFill.Provider;
+				PRODUCT_NAME = MailMateCodeFillProvider;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = com.sjerred.MailMateCodeFill.Provider;
+				SDKROOT = macosx;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+			};
+			name = Release;
+		};
+		7DD625A78EF9260196706EE6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Entitlements/MailMateCodeFill.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 63ZAG7X889;
+				INFOPLIST_FILE = Resources/AppInfo.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjerred.MailMateCodeFill;
+				PRODUCT_NAME = MailMateCodeFill;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+			};
+			name = Debug;
+		};
+		B1900DF37396F765CA109160 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 63ZAG7X889;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		B39F62AE53B53E0131545EA6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Entitlements/MailMateCodeFillHelper.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 63ZAG7X889;
+				INFOPLIST_FILE = Sources/MailMateCodeFillHelper/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjerred.MailMateCodeFillHelper;
+				PRODUCT_NAME = MailMateCodeFillHelper;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+			};
+			name = Debug;
+		};
+		E827BB0102DD416E9A244ECB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 63ZAG7X889;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjerred.MailMateCodeFill.Tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MailMateCodeFill.app/Contents/MacOS/MailMateCodeFill";
+			};
+			name = Debug;
+		};
+		E94117C9F793C6C6E70CB16A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 63ZAG7X889;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjerred.MailMateCodeFill.Tests;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MailMateCodeFill.app/Contents/MacOS/MailMateCodeFill";
+			};
+			name = Release;
+		};
+		F7FA44D3025CA7DB8175C372 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Entitlements/MailMateCodeFill.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = 63ZAG7X889;
+				INFOPLIST_FILE = Resources/AppInfo.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sjerred.MailMateCodeFill;
+				PRODUCT_NAME = MailMateCodeFill;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = com.sjerred.MailMateCodeFill;
+				SDKROOT = macosx;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0F98A0BD9BE210B66363AB2A /* Build configuration list for PBXNativeTarget "MailMateCodeFillProvider" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				063757C38F28D916587B6D44 /* Debug */,
+				5300F273305CC193CE4F7D05 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		415C829E6D32B4FCA612865A /* Build configuration list for PBXNativeTarget "MailMateCodeFill" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7DD625A78EF9260196706EE6 /* Debug */,
+				F7FA44D3025CA7DB8175C372 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7247510000621266F3815E42 /* Build configuration list for PBXNativeTarget "MailMateCodeFillHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B39F62AE53B53E0131545EA6 /* Debug */,
+				097AE9ED10CA03428A3BFAD5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		921CF97B2EA2F1F5270D4C9D /* Build configuration list for PBXProject "MailMateCodeFill" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1900DF37396F765CA109160 /* Debug */,
+				1F5D077CA5BA1B2CCF485291 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		93D4071DC6FFD087DD5298B2 /* Build configuration list for PBXNativeTarget "MailMateCodeFillTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E827BB0102DD416E9A244ECB /* Debug */,
+				E94117C9F793C6C6E70CB16A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A65ECF4E3027C9C58DA1B02D /* Project object */;
+}
