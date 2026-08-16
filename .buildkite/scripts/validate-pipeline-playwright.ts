@@ -20,7 +20,7 @@ export function validatePlaywrightLanes(
     // (@scout-for-lol/evals). Alerts contributes its own browser suite and
     // remains in the install closure.
     const install =
-      ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter scout-for-lol --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'";
+      ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter '@shepherdjerred/birmel' --filter scout-for-lol --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'";
     if (!hasTrimmedLine(block, install)) {
       fail(
         `Playwright lane ${key} is missing exact filtered install ${install}`,
@@ -51,6 +51,13 @@ export function validatePlaywrightLanes(
       "bun --no-install scripts/namespace-playwright-reports.ts",
       `Playwright lane ${key} does not namespace its Playwright JUnit report before upload`,
     );
+    if (key === "playwright-e2e-main") {
+      requireIncludes(
+        block,
+        "SCOUT_DESIGN_AUDIT_MODE=nightly SCOUT_DESIGN_AUDIT_BASE_URL=https://scout-for-lol.com",
+        "Playwright main lane must configure the Scout audit origin before nightly mode",
+      );
+    }
     for (const forbidden of [
       "playwright install",
       "bun.zip",
