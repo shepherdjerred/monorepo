@@ -165,6 +165,51 @@ function findingTitle(summary: string): string {
     .trim();
 }
 
+/** Marks a finding resolved without changing what finding it is. */
+export const QODO_RESOLVED_CHIP = "<code>☑ resolved</code>";
+
+/**
+ * Mark the finding titled `title` resolved, in place, in Qodo's review comment.
+ *
+ * Qodo does not strike a finding it has re-read and no longer reports — it
+ * re-lists it verbatim — so an operator who has verified a finding is fixed or
+ * wrong has no way to clear the gate except by editing this comment. The chip
+ * form is load-bearing: `identityOf` strips `<code>☑ …</code>`, so writing the
+ * marker as a chip resolves the finding WITHOUT forking its identity from the
+ * copies Qodo re-appends on later reviews. A bare `☑` in the title would fork
+ * it, leaving every earlier copy unresolved and still blocking.
+ *
+ * Returns the edited body, or null when no finding matches — callers must not
+ * silently no-op an operator's dismissal.
+ */
+export function markQodoFindingResolved(
+  body: string,
+  title: string,
+): string | null {
+  for (const match of body.matchAll(
+    /<summary>\s*\d+\.[\s\S]*?<\/summary>/giu,
+  )) {
+    const block = match[0];
+    const summary = block.slice("<summary>".length, -"</summary>".length);
+    if (findingTitle(summary) !== title) continue;
+    // Already resolved: report success rather than writing a second chip.
+    if (summary.includes("☑")) return body;
+    const chipIndex = block.indexOf("<code>");
+    const insertAt =
+      chipIndex === -1 ? block.length - "</summary>".length : chipIndex;
+    const edited =
+      block.slice(0, insertAt) +
+      `${QODO_RESOLVED_CHIP} ` +
+      block.slice(insertAt);
+    return (
+      body.slice(0, match.index) +
+      edited +
+      body.slice(match.index + block.length)
+    );
+  }
+  return null;
+}
+
 function parseSeveritySection(
   section: string,
   priority: 1 | 2 | 3,
