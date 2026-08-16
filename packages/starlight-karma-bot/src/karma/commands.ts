@@ -9,6 +9,8 @@ import {
   userMention,
 } from "discord.js";
 import { prisma } from "#src/db/index.ts";
+import configuration from "#src/configuration.ts";
+import { canConfigureKarma } from "#src/karma/authorization.ts";
 import { karmaAmountFor, KARMA_GIVE_AMOUNT } from "#src/karma/scoring.ts";
 import { handleKarmaLeaderboard } from "#src/karma/leaderboard.ts";
 import {
@@ -332,8 +334,15 @@ async function handleKarmaConfig(interaction: ChatInputCommandInteraction) {
   if (guildId === null) {
     return;
   }
+  const hasManageGuild =
+    interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) ===
+    true;
   if (
-    interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) !== true
+    !canConfigureKarma({
+      userId: interaction.user.id,
+      adminUserId: configuration.karmaAdminUserId,
+      hasManageGuild,
+    })
   ) {
     await interaction.reply({
       content: "You need the Manage Server permission to change karma config.",

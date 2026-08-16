@@ -120,6 +120,9 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
           key: "DISCORD_TOKEN",
         }),
         APPLICATION_ID: EnvValue.fromValue(applicationId),
+        // The bot owner may configure recaps without holding Manage Server in
+        // the guild. This is an identity, not a credential.
+        KARMA_ADMIN_USER_ID: EnvValue.fromValue("160509172704739328"),
         DATA_DIR: EnvValue.fromValue("/data"),
         // Prisma-native database, backfilled on first boot from the legacy
         // TypeORM `glitter.sqlite`.

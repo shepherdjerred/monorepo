@@ -14,6 +14,8 @@ export default {
   port: env.get("PORT").default("8000").asPortNumber(),
   discordToken: env.get("DISCORD_TOKEN").required().asString(),
   applicationId: env.get("APPLICATION_ID").required().asString(),
+  /** Discord user ID allowed to configure recaps without Manage Server. */
+  karmaAdminUserId: env.get("KARMA_ADMIN_USER_ID").default("").asString(),
   /** Emoji that awards karma when reacted with. A unicode character matches by
    *  name; a custom guild emoji matches by its snowflake id. */
   karmaEmoji: env.get("KARMA_EMOJI").default("⭐").asString(),

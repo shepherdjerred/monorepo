@@ -58,23 +58,29 @@ bun run health     # health check against a running instance
 
 Everything lives under one `/karma` slash command (defined in `src/karma/command-definitions.ts`):
 
-| Subcommand    | Description                                                                                            |
-| ------------- | ------------------------------------------------------------------------------------------------------ |
-| `give`        | Give karma to someone, with an optional reason (max 200 chars) and amount (1, 2, or 3; default 1)      |
-| `leaderboard` | Server rankings, with `type` (received / most generous) and `period` (all time, this year, this month) |
-| `check`       | See how much karma someone has (defaults to you)                                                       |
-| `stats`       | A karma profile: totals, rank, and who gives you most                                                  |
-| `why`         | See what someone earned their karma for                                                                |
-| `search`      | Search karma reasons for a word or phrase                                                              |
-| `undo`        | Take back the karma you just gave                                                                      |
-| `config`      | Configure the scheduled recap: channel, enabled, and a UTC cron expression (requires Manage Server)    |
-| `history`     | View recent changes to a person's karma                                                                |
+| Subcommand    | Description                                                                                                      |
+| ------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `give`        | Give karma to someone, with an optional reason (max 200 chars) and amount (1, 2, or 3; default 1)                |
+| `leaderboard` | Server rankings, with `type` (received / most generous) and `period` (all time, this year, this month)           |
+| `check`       | See how much karma someone has (defaults to you)                                                                 |
+| `stats`       | A karma profile: totals, rank, and who gives you most                                                            |
+| `why`         | See what someone earned their karma for                                                                          |
+| `search`      | Search karma reasons for a word or phrase                                                                        |
+| `undo`        | Take back the karma you just gave                                                                                |
+| `config`      | Configure the scheduled recap: channel, enabled, and a UTC cron expression (requires Manage Server or bot admin) |
+| `history`     | View recent changes to a person's karma                                                                          |
 
 Karma can also be given by reacting with the karma emoji (`KARMA_EMOJI`, default a star) or via **Apps → Give Karma** on any message.
 
 ## Scheduled recap
 
-The bot posts a periodic recap (leaderboard top 5, most generous, and a slice of the reason archive) without anyone typing a command. `src/karma/recap.ts` polls for due guilds once a minute and advances the next-fire timestamp even when posting fails, so a deleted channel is not retried forever. The schedule is a per-guild cron expression evaluated in UTC (`src/karma/recap-schedule.ts`, default `0 17 * * 5` — Fridays 17:00 UTC), configured with `/karma config`.
+The bot posts a periodic recap (leaderboard top 5, most generous, and up to
+three historical entries from the same Monday-Sunday calendar week in an older year)
+without anyone typing a command. `src/karma/recap.ts` polls for due guilds once
+a minute and advances the next-fire timestamp even when posting fails, so a
+deleted channel is not retried forever. The schedule is a per-guild cron
+expression evaluated in UTC (`src/karma/recap-schedule.ts`, default `0 17 * * 5`
+— Fridays 17:00 UTC), configured with `/karma config`.
 
 ## Milestones and reason filters
 
@@ -123,6 +129,8 @@ Optional environment variables:
 
 - `SENTRY_DSN`: Sentry DSN for error tracking
 - `PORT`: Server port (default: 8000)
+- `KARMA_ADMIN_USER_ID`: Discord user ID allowed to configure recaps without
+  the Manage Server permission
 - `LEGACY_DATABASE_PATH`: **upgrades only** — see below. Leave it unset on a
   fresh install.
 - `KARMA_EMOJI`: emoji that awards karma when reacted with (default `⭐`). A
