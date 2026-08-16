@@ -670,3 +670,223 @@ model AuditLog {
   @@index([serverId, createdAt])
   @@index([actorDiscordId, createdAt])
 }
+
+// ============================================================================
+// Bryan Bucks — friendly betting economy
+//
+// Gated per guild by the `betting_enabled` flag. Players earn Bucks for ranked
+// games and stake them on whether a tracked player wins an in-progress game.
+// Payouts are parimutuel. No monetary value; nothing transfers to real goods.
+// ============================================================================
+
+// A Bryan Bucks wallet: one per (guild, Discord user).
+//
+// Scoped per guild because `Player`, `Subscription`, and the `betting_enabled`
+// flag are all per guild. A global wallet would let Bucks earned in an opted-in
+// server be spent in one that never opted in.
+//
+// `balance` is a STORED column, not a ledger sum. This does NOT contradict the
+// DmAuditLog "derive, never store" rule: that rule exists because a counter
+// written AFTER a non-transactional side effect (a Discord send) goes stale if
+// its write fails. Here the balance mutation and its BucksLedgerEntry commit in
+// the SAME prisma.$transaction, through the single chokepoint in
+// src/betting/ledger.ts, so they cannot disagree.
+//
+// Storing it is also the only way to check affordability atomically on this
+// stack. `SELECT SUM(delta)` then `INSERT` is a read-then-write inside a WAL
+// transaction, and the libsql adapter opens a deferred BEGIN — a concurrent
+// committer yields SQLITE_BUSY_SNAPSHOT, which `busy_timeout` does NOT retry.
+// One guarded `UPDATE ... WHERE balance >= :stake` is the whole check.
+//
+// `reconcileBucksBalances()` re-derives from the ledger and reports drift
+// rather than trusting this column.
+model BucksAccount {
+  id        Int      @id @default(autoincrement())
+  serverId  String
+  discordId String
+  balance   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ledgerEntries BucksLedgerEntry[]
+  bets          BucksBet[]
+
+  @@unique([serverId, discordId])
+  @@index([serverId, balance])
+}
+
+// Append-only ledger. Every Buck anyone holds is the sum of these rows.
+//
+// This is what answers "how did they get these points": `kind` says why,
+// `matchId` says which game, `predictedTeamId`/`actualWinningTeamId` say what
+// was predicted versus what happened, and `context` carries the participant
+// snapshot frozen at write time. Player rows are renameable, untrackable, and
+// prunable — a ledger that re-derives its own explanation is not a ledger.
+model BucksLedgerEntry {
+  id             Int          @id @default(autoincrement())
+  bucksAccountId Int
+  bucksAccount   BucksAccount @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
+
+  // Signed change. Negative = stake placed. Positive = earning, payout, refund,
+  // or the one-time seed grant. Never zero.
+  delta Int
+
+  // Balance AFTER this delta, as of the committing transaction. Makes an audit
+  // read one query, and localizes any drift to a specific row.
+  balanceAfter Int
+
+  // BucksLedgerKind (@scout-for-lol/data): seed | earn_game | earn_win |
+  // earn_mvp | bet_stake | bet_payout | bet_refund | adjustment.
+  // Not a Prisma enum — the SQLite provider has none. Zod-validated on write
+  // and on read.
+  kind String
+
+  // Platform-qualified Riot match ID. Null only for seed/adjustment.
+  matchId String?
+
+  betId Int?
+  bet   BucksBet? @relation(fields: [betId], references: [id])
+
+  // Riot team IDs (100/200). Both null for seed/earn_*/adjustment.
+  // `actualWinningTeamId` is also null for bet_stake (unknown at bet time) and
+  // for a refund on a voided match (there is no winner).
+  predictedTeamId     Int?
+  actualWinningTeamId Int?
+
+  // JSON, BucksLedgerContextSchema. Frozen at write time.
+  context String
+
+  createdAt DateTime @default(now())
+
+  @@index([bucksAccountId, createdAt])
+  @@index([matchId])
+}
+
+// One user's position on one match in one guild.
+//
+// Parimutuel: the stake is DEBITED at bet time, so the pool is real Bucks
+// rather than a promise, and the payout is computed at settlement from pool
+// totals.
+model BucksBet {
+  id             Int            @id @default(autoincrement())
+  poolId         Int
+  pool           BucksMatchPool @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  bucksAccountId Int
+  bucksAccount   BucksAccount   @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
+
+  // Riot team ID the user is backing: 100 or 200.
+  predictedTeamId Int
+
+  // Whose outcome the user framed the bet around, for display only. Every 5v5
+  // position reduces to a team, so this never affects settlement.
+  subjectPuuid String
+
+  // Running total staked. Adding to a position increments this; each increment
+  // writes its own bet_stake ledger row.
+  stake Int
+
+  // BucksBetOutcome: pending | won | lost | refunded.
+  // Deliberately not named `status` — brand-prisma-types would type it
+  // ParticipantStatus.
+  betOutcome String @default("pending")
+
+  // Gross Bucks returned: stake + winnings, the full stake on a refund, or 0 on
+  // a loss. Null while pending.
+  payout    Int?
+  settledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ledgerEntries BucksLedgerEntry[]
+
+  // One position per user per pool. Betting the OTHER side is refused rather
+  // than netted: a hedged position has no parimutuel meaning and makes "what
+  // did they predict" unanswerable.
+  @@unique([poolId, bucksAccountId])
+  @@index([poolId, predictedTeamId])
+}
+
+// The betting market for one Riot match in one guild.
+//
+// Per guild, not per match: one match can be announced in several guilds, and
+// paying guild A's winners out of guild B's losers would be wrong.
+//
+// Not a column on ActiveGame — that row has a 3-hour TTL and is swept every
+// poll, and staked Bucks must outlive it.
+model BucksMatchPool {
+  id       Int    @id @default(autoincrement())
+  matchId  String
+  serverId String
+
+  // Copied from ActiveGame so the window does not depend on a row the TTL
+  // sweep deletes.
+  detectedAt DateTime
+
+  // STORED rather than computed, so changing BETTING_WINDOW_MS cannot
+  // retroactively move a window a user was already shown.
+  closesAt DateTime
+
+  queueType String?
+
+  // JSON, BucksPoolRosterSchema: both teams as seen on the loading screen.
+  // Frozen at pool creation — this is what the bettor actually saw.
+  roster String
+
+  // JSON [{ channelId, messageId }] for THIS guild, recorded after the prematch
+  // send so the close sweep can edit exactly the right messages without
+  // re-deriving channel -> guild.
+  messageRefs String @default("[]")
+
+  // BucksPoolState: open | closed | settled | voided.
+  //
+  // Advanced only by guarded conditional updates. This column IS the settlement
+  // idempotency token — unlike MatchAiAttempt, which must be marked BEFORE its
+  // call because OpenAI spend is external and cannot join a database
+  // transaction. Every side effect here is local, so the state transition
+  // commits WITH the payouts. A separate marker table would reintroduce the
+  // exact "marked but didn't happen" window it was invented to close.
+  poolState String @default("open")
+
+  // Riot team ID that won. Non-null iff poolState == "settled".
+  winningTeamId Int?
+
+  // BucksVoidReason: remake | no_counterparty | expired | unsupported_mode.
+  // Non-null iff poolState == "voided".
+  voidReason String?
+
+  // Serialized Prediction, for the postmatch recap and later calibration.
+  predictionJson String?
+
+  settledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bets BucksBet[]
+
+  @@unique([matchId, serverId])
+  @@index([poolState, closesAt])
+  @@index([matchId])
+}
+
+// Exactly-once marker for Bucks EARNINGS on a (match, guild).
+//
+// Created inside the same transaction as the earn ledger rows, as its FIRST
+// statement: the create is a write (so it takes the SQLite write lock) and its
+// composite primary key is the race guard. A concurrent duplicate hits P2002
+// and rolls back rather than double-awarding. This is what makes
+// `recoverMissedMatches()` and gap-detection replays safe.
+//
+// Earnings need their own marker because, unlike settlement, they have no
+// natural per-(match, guild) row to carry the state.
+model BucksMatchEarning {
+  matchId   String
+  serverId  String
+  awardedAt DateTime @default(now())
+
+  // Number of ledger rows written, so reconciliation is one comparison.
+  entryCount Int
+
+  @@id([matchId, serverId])
+}

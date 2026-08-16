@@ -139,6 +139,7 @@ export type FlagName =
   | "ai_reports_enabled"
   | "ai_reports_unlimited"
   | "ai_reviews_enabled"
+  | "betting_enabled"
   | "debug";
 
 /**
@@ -159,6 +160,20 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     overrides: [{ value: true, attributes: { user: ME } }],
   },
   ai_reviews_enabled: {
+    default: false,
+    overrides: [
+      {
+        value: true,
+        attributes: { server: MY_SERVER },
+      },
+    ],
+  },
+  // Bryan Bucks. Gates the whole betting economy: pool creation, bet placement,
+  // settlement announcements, AND earning. Earning is gated deliberately — an
+  // ungated economy would accrue silently in every server, and enabling the
+  // flag later would hand out a surprise backlog. The trade is that enabling it
+  // starts a guild at zero with no backfill.
+  betting_enabled: {
     default: false,
     overrides: [
       {
