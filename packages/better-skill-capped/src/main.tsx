@@ -20,7 +20,9 @@ Sentry.init({
 });
 
 // One-time localStorage migration (legacy caches and v1 bookmark/watch-status
-// shapes) must complete before anything reads the stores.
+// shapes) must complete before anything reads the stores. It runs on
+// `safeStorage`, so a browser that blocks or has exhausted site storage cannot
+// throw here and leave the page blank before React ever mounts.
 migrateStorage();
 
 const container = document.querySelector("#root");

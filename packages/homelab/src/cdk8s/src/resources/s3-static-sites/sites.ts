@@ -121,7 +121,14 @@ export const staticSites: StaticSiteConfig[] = [
     spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
     responseHeaders: { "Content-Security-Policy": scoutCsp },
   },
-  { hostname: "better-skill-capped.com", bucket: "better-skill-capped" },
+  {
+    hostname: "better-skill-capped.com",
+    bucket: "better-skill-capped",
+    // `/course/<uuid>` is a client-side TanStack Router route, so the bucket has
+    // no object at that key. Without the fallback a shared course link or a
+    // hard refresh gets the trailing-slash redirect and then a 404 page.
+    spaFallbacks: [{ pathPrefix: "/course/*", fallbackPath: "/index.html" }],
+  },
   { hostname: "clauderon.com", bucket: "clauderon" },
   { hostname: "ts-mc.net", bucket: "ts-mc" },
   { hostname: "ppl.glitter-boys.com", bucket: "glitter-boys-ppl" },

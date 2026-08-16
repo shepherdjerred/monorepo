@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/react";
 import { z } from "zod";
 import type { Kind } from "#src/model/content";
-import type { StringStore } from "#src/lib/local-store";
+import { safeStorage, type StringStore } from "#src/lib/safe-storage";
 import type { StoredBookmark, StoredWatchStatus } from "./schemas.ts";
 import {
   BOOKMARKS_KEY,
@@ -50,10 +50,11 @@ function toIsoDate(input: string): string {
  *   succeeds.
  * - Outright-corrupt legacy data is copied to a backup key (never silently
  *   wiped), the v2 store starts empty, and the failure is reported.
+ *
+ * Runs against `safeStorage`, so a browser that blocks or has exhausted
+ * localStorage cannot make this pre-render call throw and blank the app.
  */
-export function migrateStorage(
-  storage: StringStore = globalThis.localStorage,
-): void {
+export function migrateStorage(storage: StringStore = safeStorage): void {
   storage.removeItem(LEGACY_KEYS.content);
   storage.removeItem(LEGACY_KEYS.contentTimestamp);
 

@@ -3,14 +3,17 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import { z } from "zod";
 import { MANIFEST_SCHEMA_VERSION } from "#src/parser/manifest";
 import { QUERY_CACHE_KEY } from "#src/storage/keys";
+import { safeStorage } from "#src/lib/safe-storage";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       // A ZodError here means persisted manifest data no longer matches the
       // schema; drop the persisted cache so the next load refetches cleanly.
+      // Eviction goes through `safeStorage`: an error handler that itself
+      // throws would replace a recoverable schema drift with a hard failure.
       if (error instanceof z.ZodError) {
-        globalThis.localStorage.removeItem(QUERY_CACHE_KEY);
+        safeStorage.removeItem(QUERY_CACHE_KEY);
       }
     },
   }),
@@ -27,7 +30,7 @@ export const queryClient = new QueryClient({
 
 export const persistOptions = {
   persister: createAsyncStoragePersister({
-    storage: globalThis.localStorage,
+    storage: safeStorage,
     key: QUERY_CACHE_KEY,
   }),
   maxAge: 24 * 60 * 60 * 1000,

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { StringStore } from "#src/lib/local-store";
+import type { StringStore } from "#src/lib/safe-storage";
 import { migrateStorage } from "./migrate.ts";
 import { parseStoredBookmarks, parseStoredWatchStatuses } from "./schemas.ts";
 import { BOOKMARKS_KEY, WATCH_STATUS_KEY, legacyBackupKey } from "./keys.ts";

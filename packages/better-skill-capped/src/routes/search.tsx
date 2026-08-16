@@ -135,6 +135,39 @@ export function parseSearchParams(input: SearchParamsInput): SearchParams {
   };
 }
 
+/**
+ * `sort` reorders results; it never narrows them, so it is the one search param
+ * that does not count as a filter here.
+ */
+type FilterParams = Omit<SearchParams, "sort">;
+
+/**
+ * True when the URL asks for the unfiltered catalog's first page — the only
+ * state in which the recommended rail is showing the same content set the
+ * results below it came from.
+ *
+ * The `Record<keyof FilterParams, boolean>` is the point: a new search param
+ * fails to compile until it is classified here, so a future filter cannot
+ * silently leave the rail contradicting the active filters (which is exactly
+ * how `watched`, `bookmarked`, `carry`, and `ctype` were missed).
+ */
+export function isUnfilteredFirstPage(params: SearchParams): boolean {
+  const atDefault: Record<keyof FilterParams, boolean> = {
+    q: params.q === SEARCH_DEFAULTS.q,
+    kind: params.kind.length === 0,
+    role: params.role.length === 0,
+    champion: params.champion.length === 0,
+    staff: params.staff.length === 0,
+    tag: params.tag.length === 0,
+    carry: params.carry.length === 0,
+    ctype: params.ctype.length === 0,
+    watched: params.watched === SEARCH_DEFAULTS.watched,
+    bookmarked: params.bookmarked === SEARCH_DEFAULTS.bookmarked,
+    page: params.page === SEARCH_DEFAULTS.page,
+  };
+  return Object.values(atDefault).every(Boolean);
+}
+
 export const searchRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",

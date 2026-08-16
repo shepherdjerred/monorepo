@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { safeStorage } from "#src/lib/safe-storage";
 import { DOWNLOAD_FLAG_KEY } from "#src/storage/keys";
 
 function subscribe(listener: () => void): () => void {
@@ -14,7 +15,7 @@ function subscribe(listener: () => void): () => void {
 }
 
 function getSnapshot(): boolean {
-  return globalThis.localStorage.getItem(DOWNLOAD_FLAG_KEY) === "true";
+  return safeStorage.getItem(DOWNLOAD_FLAG_KEY) === "true";
 }
 
 /**

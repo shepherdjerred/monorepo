@@ -6,9 +6,11 @@
  * - The read path never writes: corrupt data yields `parse`'s fallback in
  *   memory only, so a transient parse issue can never destroy stored data.
  * - Cross-tab sync comes from the window `storage` event.
+ * - Storage itself is reached through `safeStorage`, so a blocked or full
+ *   localStorage degrades to in-memory state instead of throwing during render.
  */
 
-export type StringStore = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+import { safeStorage, type StringStore } from "./safe-storage.ts";
 
 export type LocalStore<T> = {
   getSnapshot: () => T;
@@ -26,7 +28,7 @@ export function createLocalStore<T>(options: {
   storage?: StringStore;
 }): LocalStore<T> {
   const { key, parse, empty } = options;
-  const storage = options.storage ?? globalThis.localStorage;
+  const storage = options.storage ?? safeStorage;
   const listeners = new Set<() => void>();
   let cachedRaw: string | null | undefined;
   let cachedValue: T = empty;

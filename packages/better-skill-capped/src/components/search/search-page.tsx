@@ -14,6 +14,7 @@ import { useSearch } from "#src/search/use-search";
 import { getHighlightTerms } from "#src/search/highlight";
 import { buildChampionAliases } from "#src/search/normalize";
 import type { SearchParams } from "#src/routes/search";
+import { isUnfilteredFirstPage } from "#src/routes/search";
 import type { SortOption } from "#src/search/run-search";
 
 const routeApi = getRouteApi("/");
@@ -68,6 +69,22 @@ export function SearchPage(): React.ReactElement {
     [deferredQ, championAliases],
   );
 
+  // `runSearch` clamps an out-of-range `page` (a stale link, a hand-edited URL,
+  // or a filter change that shrank the result set) so the user still sees
+  // results. Write the clamped page back so the URL keeps being the source of
+  // truth — otherwise ?page=99 stays shareable while page 3 is on screen.
+  // `replace` keeps the bogus page out of history, and the mismatch guard makes
+  // the effect a no-op on the next render rather than a navigation loop.
+  const clampedPage = result?.page;
+  React.useEffect(() => {
+    if (clampedPage !== undefined && clampedPage !== search.page) {
+      void navigate({
+        search: (previous) => ({ ...previous, page: clampedPage }),
+        replace: true,
+      });
+    }
+  }, [clampedPage, search.page, navigate]);
+
   const updateSearch = (updated: Partial<SearchParams>) => {
     void navigate({
       search: (previous) => ({ ...previous, ...updated, page: 1 }),
@@ -101,17 +118,7 @@ export function SearchPage(): React.ReactElement {
         </aside>
         <main className="min-w-0">
           <ScoutBanner />
-          <RecommendedRail
-            visible={
-              search.q === "" &&
-              search.kind.length === 0 &&
-              search.role.length === 0 &&
-              search.champion.length === 0 &&
-              search.staff.length === 0 &&
-              search.tag.length === 0 &&
-              search.page === 1
-            }
-          />
+          <RecommendedRail visible={isUnfilteredFirstPage(search)} />
           <ActiveFilters params={search} onChange={updateSearch} />
           <div className="mb-3 flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">

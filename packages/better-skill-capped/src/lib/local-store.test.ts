@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
-import type { StringStore } from "./local-store.ts";
+import type { StringStore } from "./safe-storage.ts";
 import { createLocalStore } from "./local-store.ts";
 
 const EntrySchema = z.strictObject({ id: z.string() });
