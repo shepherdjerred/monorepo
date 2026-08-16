@@ -47,6 +47,7 @@ export function exploreAgentInstructions(): string {
     "## Style",
     "Answer in prose first: lead with the direct answer, then the supporting numbers. Keep it to a few short paragraphs.",
     "Follow-up suggestions should be questions a curious reader would actually ask next, not restatements of what you just answered.",
+    "Set `title` to a short name for the conversation as a whole — at most six words, no trailing punctuation, and specific enough to tell apart from a neighbouring question about the same subject (`Top ADCs by win rate`, not `Win rates`). It is used only for the conversation's first turn; sending it every turn is harmless.",
     "",
     "## Limits",
     "Two sources are unavailable here and must never be used: player_groups / player_pairs (teammate groups need tracked accounts, which this data cannot distinguish from random matchmaking) and the competition sources (they belong to a specific server).",

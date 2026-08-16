@@ -180,6 +180,47 @@ wraps this into one call:
 toolkit screenshot scout-app /app/ --discord-id 160509172704739328
 ```
 
+#### `DEV_USER_GUILDS` — dev-only Discord membership (needed for `/app/explore`)
+
+A dev-login session carries **no Discord OAuth token**, so anything that
+resolves the caller's servers cannot answer for it: `fetchUserGuilds` calls
+`getFreshUserAccessToken(user)` and fails as `token_refresh_failed` →
+`UNAUTHORIZED`. That is why dev-login alone gets you the guild picker's empty
+state and, on `/app/explore`, the "Explore couldn't load" panel rather than the
+page — `explore.status` converts only `FORBIDDEN` into `enabled: false`, so an
+auth failure rethrows.
+
+`DEV_USER_GUILDS` is a comma-separated list of Discord server ids that stands in
+for Discord's answer, as owner + `ADMINISTRATOR` (a member-only stand-in would
+block every management screen it exists to reach):
+
+```bash
+DEV_USER_GUILDS=1337623164146155593 \
+EXPLORE_GUILD_ALLOWLIST=1337623164146155593 \
+  bun run --filter='./packages/scout-for-lol' dev:web
+```
+
+The two are separate on purpose and both are needed: `EXPLORE_GUILD_ALLOWLIST`
+is the real product gate (which servers may use Explore), `DEV_USER_GUILDS` is
+the fake answer to "which servers is this user in". Setting only the allowlist
+denies you; setting only the membership leaves the allowlist empty, which
+denies everyone.
+
+- **Honoured only when `environment === "dev"` AND `enableDevLogin`**
+  (`devGuildOverride` in `src/lib/discord-rest.ts`), the same pair that binds
+  the server to loopback. All three conditions are required and each fails
+  closed on its own: `ENVIRONMENT` defaults to `"dev"` when unset, so gating on
+  environment alone would fail _open_ on a deploy that forgot to set it;
+  `ENABLE_DEV_LOGIN` defaults off; and an empty list means "no override" rather
+  than "no guilds", so an omitted config changes nothing.
+- **It replaces the membership lookup, not the gate.** The session cookie, CSRF,
+  and `EXPLORE_GUILD_ALLOWLIST` all still apply — this only answers the question
+  a tokenless dev session cannot ask Discord.
+- The backend logs a one-time warning when it takes effect, so a faked
+  membership is never silent in the logs.
+- The gate conditions are unit-tested in `src/lib/discord-rest.test.ts`,
+  including each refusal — an accept-only test would not catch the fail-open.
+
 This does not, by itself, reproduce every possible backend-driven state —
 see the `screenshot` skill's Limitations section (no network-response
 mocking in v1).
@@ -783,9 +824,13 @@ Canada. There is no monetary component and nothing transfers to real goods.
 
 ### Local testing without Discord login or a real Discord backing
 
-There is **no runtime auth bypass** (no `SKIP_AUTH`/`DEV_AUTH` flag), and the web
-mutations are gated by a signed session cookie + CSRF + `assertGuildAdmin` (which
-calls Discord). To exercise the web/tRPC surface offline, use one of these — both
+There is **no blanket auth bypass** (no `SKIP_AUTH`/`DEV_AUTH` flag): the web
+mutations are gated by a signed session cookie + CSRF + `assertGuildAdmin`
+(which calls Discord). The one narrow, dev-only exception is `DEV_USER_GUILDS`,
+documented under **Web UI** above — it substitutes for the Discord _membership
+lookup_ only, and never for the session, CSRF, or the allowlist itself.
+
+To exercise the web/tRPC surface offline, use one of these — both
 run fully in-process against an isolated SQLite copy of `template.db`, no OAuth,
 no Discord API:
 

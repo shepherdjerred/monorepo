@@ -42,8 +42,10 @@ OPENAI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/OPENAI
 
 # Explore is gated on membership of an allowlisted Discord server, and an empty
 # list denies everyone. Left unset here because the right value is whichever
-# server you test in — export it for the session instead:
-#   EXPLORE_GUILD_ALLOWLIST=<your guild id> bun run dev:web
+# server you test in — export it for the session instead. A dev-login session
+# has no Discord OAuth token, so pair it with DEV_USER_GUILDS (dev-only, see
+# AGENTS.md) or the membership lookup fails and Explore refuses to load:
+#   DEV_USER_GUILDS=<id> EXPLORE_GUILD_ALLOWLIST=<id> bun run dev:web
 
 # ── Riot / DB / storage ───────────────────────────────────────────────
 RIOT_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/RIOT_API_KEY

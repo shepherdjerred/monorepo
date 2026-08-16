@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { createSseWriter } from "#src/explore/http-route.ts";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
   ExploreAnswerSchema,
@@ -35,5 +36,85 @@ describe("clampAnswer", () => {
         followUps: [],
       }).answer,
     ).toBe(clamped);
+  });
+});
+
+/** Mirrors the runtime: writing to a closed controller throws. */
+function fakeController() {
+  const chunks: string[] = [];
+  let closed = false;
+  const decoder = new TextDecoder();
+  return {
+    chunks,
+    isClosed: () => closed,
+    enqueue(chunk: Uint8Array) {
+      if (closed) {
+        throw new TypeError("Invalid state: Controller is already closed");
+      }
+      chunks.push(decoder.decode(chunk));
+    },
+    close() {
+      if (closed) {
+        throw new TypeError("Invalid state: Controller is already closed");
+      }
+      closed = true;
+    },
+  };
+}
+
+/**
+ * The write end of a turn's SSE response.
+ *
+ * The bug this pins: a client that navigates away, closes the tab, or switches
+ * conversations mid-turn leaves the runtime to close the controller, and the
+ * teardown then wrote into it. `enqueue` throws synchronously there, and the
+ * run is a voided async IIFE, so it escaped as an unhandled promise rejection
+ * on an entirely ordinary user action.
+ */
+describe("createSseWriter", () => {
+  test("writes events as SSE frames", () => {
+    const controller = fakeController();
+    createSseWriter(controller).emit({ type: "done" });
+
+    expect(controller.chunks).toEqual([
+      'event: done\ndata: {"type":"done"}\n\n',
+    ]);
+  });
+
+  test("a disconnected client silently drops later events", () => {
+    const controller = fakeController();
+    const writer = createSseWriter(controller);
+
+    // What the runtime does when the client goes away, then what the run's
+    // teardown does immediately afterwards.
+    controller.close();
+    writer.disconnected();
+
+    expect(() => {
+      writer.emit({ type: "done" });
+    }).not.toThrow();
+    expect(controller.chunks).toEqual([]);
+  });
+
+  test("a disconnected client is not closed a second time", () => {
+    const controller = fakeController();
+    const writer = createSseWriter(controller);
+    controller.close();
+    writer.disconnected();
+
+    expect(() => {
+      writer.finish({ type: "done" });
+    }).not.toThrow();
+  });
+
+  test("finishing closes the stream and refuses further writes", () => {
+    const controller = fakeController();
+    const writer = createSseWriter(controller);
+
+    writer.finish({ type: "done" });
+    writer.emit({ type: "done" });
+
+    expect(controller.isClosed()).toBe(true);
+    expect(controller.chunks).toHaveLength(1);
   });
 });

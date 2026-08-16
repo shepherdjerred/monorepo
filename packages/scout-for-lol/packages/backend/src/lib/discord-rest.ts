@@ -212,6 +212,47 @@ const guildsCache = new Map<string, CachedGuilds>();
 const GUILDS_CACHE_TTL_MS = 5 * 60 * 1000;
 
 /**
+ * The dev-only stand-in for Discord's answer, or null to ask Discord.
+ *
+ * Pure and fully parameterised so the gate is testable without touching the
+ * environment — the whole point of this function is the conditions under which
+ * it returns something, so those conditions cannot be the untested part.
+ *
+ * All three conditions are required, and each one alone fails closed:
+ * `ENVIRONMENT` defaults to `"dev"` when unset, so environment alone would
+ * fail *open* on a deploy that forgot to set it; `enableDevLogin` defaults off
+ * and already restricts the server to loopback; and an empty id list means no
+ * override rather than "no guilds", so an omitted config changes nothing.
+ */
+export function devGuildOverride(input: {
+  environment: string;
+  enableDevLogin: boolean;
+  guildIds: string[];
+}): PartialGuild[] | null {
+  if (input.environment !== "dev" || !input.enableDevLogin) {
+    return null;
+  }
+  const ids = input.guildIds
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+  if (ids.length === 0) {
+    return null;
+  }
+  // Owner + ADMINISTRATOR so the guild picker and `assertGuildAdmin` behave as
+  // they would for a server you actually run; a member-only stand-in would
+  // block every management screen this exists to let you reach.
+  return ids.map((id) => ({
+    id,
+    name: `Dev Guild ${id}`,
+    icon: null,
+    owner: true,
+    permissions: ADMINISTRATOR_BIT.toString(),
+  }));
+}
+
+let loggedDevGuildOverride = false;
+
+/**
  * The guilds the signed-in user belongs to, as reported by Discord.
  *
  * An empty array means Discord authoritatively said "no guilds". Every failure
@@ -219,8 +260,27 @@ const GUILDS_CACHE_TTL_MS = 5 * 60 * 1000;
  * must not treat an unreachable upstream as an empty membership list, because
  * that is what previously surfaced a Discord outage to the user as the flatly
  * wrong "You are not a member of that guild".
+ *
+ * In dev, `DEV_USER_GUILDS` short-circuits this entirely — a dev-login session
+ * has no Discord OAuth token, so there is nothing to ask Discord with.
  */
 export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
+  const override = devGuildOverride({
+    environment: configuration.environment,
+    enableDevLogin: configuration.enableDevLogin,
+    guildIds: configuration.devUserGuilds,
+  });
+  if (override !== null) {
+    if (!loggedDevGuildOverride) {
+      loggedDevGuildOverride = true;
+      logger.warn(
+        "DEV_USER_GUILDS is set: Discord server membership is faked for every signed-in user. Dev only.",
+        { guildIds: override.map((guild) => guild.id) },
+      );
+    }
+    return override;
+  }
+
   const cached = guildsCache.get(user.discordId);
   if (cached !== undefined) {
     if (Date.now() - cached.fetchedAt < GUILDS_CACHE_TTL_MS) {

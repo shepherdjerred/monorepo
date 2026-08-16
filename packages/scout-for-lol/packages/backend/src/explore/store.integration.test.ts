@@ -16,6 +16,7 @@ import {
   setExploreLeaf,
   shareExploreConversation,
   startExploreTurn,
+  applyGeneratedTitle,
   titleFromQuestion,
 } from "#src/explore/store.ts";
 
@@ -45,6 +46,7 @@ afterAll(async () => {
 
 const ANSWER = {
   answer: "Jinx has the most games in this data.",
+  title: null,
   queryText: "SELECT champion, games FROM match_participants GROUP BY champion",
   caveats: ["Only 12 games."],
   followUps: ["How does that change by patch?"],
@@ -535,5 +537,81 @@ describe("explore store — ownership", () => {
     const title = titleFromQuestion(`  ${"a".repeat(400)}  `);
     expect(title).toHaveLength(120);
     expect(title.endsWith("…")).toBe(true);
+  });
+
+  test("the agent's title replaces the question-derived placeholder", async () => {
+    const started = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "Which champions have the highest win rate?",
+      attach: { kind: "leaf" },
+    });
+
+    const applied = await applyGeneratedTitle(prisma, {
+      conversationId: started.conversationId,
+      placeholder: started.title,
+      title: "Top win rates by champion",
+    });
+
+    expect(applied).toBe("Top win rates by champion");
+    const row = await prisma.exploreConversation.findUniqueOrThrow({
+      where: { id: started.conversationId },
+    });
+    expect(row.title).toBe("Top win rates by champion");
+  });
+
+  test("a title arriving after a rename does not clobber it", async () => {
+    const started = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "Which champions have the highest win rate?",
+      attach: { kind: "leaf" },
+    });
+    await renameExploreConversation(
+      prisma,
+      started.conversationId,
+      userId,
+      "Mine",
+    );
+
+    const applied = await applyGeneratedTitle(prisma, {
+      conversationId: started.conversationId,
+      placeholder: started.title,
+      title: "Top win rates by champion",
+    });
+
+    expect(applied).toBe(started.title);
+    const row = await prisma.exploreConversation.findUniqueOrThrow({
+      where: { id: started.conversationId },
+    });
+    expect(row.title).toBe("Mine");
+  });
+
+  test("a second turn's title leaves the established one alone", async () => {
+    const started = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "Which champions have the highest win rate?",
+      attach: { kind: "leaf" },
+    });
+    await applyGeneratedTitle(prisma, {
+      conversationId: started.conversationId,
+      placeholder: started.title,
+      title: "Top win rates by champion",
+    });
+
+    // The follow-up still carries the original placeholder, which no longer
+    // matches, so its title is ignored.
+    const applied = await applyGeneratedTitle(prisma, {
+      conversationId: started.conversationId,
+      placeholder: started.title,
+      title: "Something else entirely",
+    });
+
+    expect(applied).toBe(started.title);
+    const row = await prisma.exploreConversation.findUniqueOrThrow({
+      where: { id: started.conversationId },
+    });
+    expect(row.title).toBe("Top win rates by champion");
   });
 });

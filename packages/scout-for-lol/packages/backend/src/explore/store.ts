@@ -492,6 +492,35 @@ export async function deleteExploreConversation(
   return result.count > 0;
 }
 
+/**
+ * Replace the placeholder title with the one the agent produced.
+ *
+ * `titleFromQuestion` gives a conversation a name the instant it exists, so
+ * the sidebar is never blank while the first turn streams; this swaps in the
+ * model's summary once that turn finishes. The agent already runs structured
+ * output, so the title rides along with the answer and costs no extra
+ * completion — and it is written having seen the whole first exchange rather
+ * than the question alone.
+ *
+ * Conditioned on the placeholder still being in place, in one statement rather
+ * than a read-then-write: that makes it self-limiting to the first turn and
+ * makes it impossible to clobber a rename, without either check racing.
+ */
+export async function applyGeneratedTitle(
+  prisma: ExtendedPrismaClient,
+  input: { conversationId: string; placeholder: string; title: string },
+): Promise<string> {
+  const title = titleFromQuestion(input.title);
+  if (title.length === 0 || title === input.placeholder) {
+    return input.placeholder;
+  }
+  const result = await prisma.exploreConversation.updateMany({
+    where: { id: input.conversationId, title: input.placeholder },
+    data: { title },
+  });
+  return result.count > 0 ? title : input.placeholder;
+}
+
 export async function renameExploreConversation(
   prisma: ExtendedPrismaClient,
   conversationId: string,

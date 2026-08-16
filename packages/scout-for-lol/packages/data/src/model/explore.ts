@@ -109,6 +109,24 @@ export type ExploreTurnRequest = z.infer<typeof ExploreTurnRequestSchema>;
 export const ExploreAnswerSchema = z
   .object({
     answer: z.string().trim().min(1).max(EXPLORE_ANSWER_MAX_LENGTH),
+    /**
+     * A short name for the whole conversation, used only for its first turn.
+     *
+     * Deliberately not first: `answer` must stay the first field or streaming
+     * stops (a partial snapshot only carries the keys emitted so far), which
+     * is why this is appended rather than placed where it reads best.
+     *
+     * Bounded generously and nullable on purpose — a tight `max()` would turn
+     * an over-long title into a schema failure that costs the reader the whole
+     * answer. The backend clamps for display instead.
+     */
+    title: z
+      .string()
+      .trim()
+      .min(1)
+      .max(EXPLORE_TITLE_MAX_LENGTH)
+      .nullable()
+      .default(null),
     queryText: ReportQueryTextSchema.nullable().default(null),
     /**
      * Limits a reader needs to judge the answer — small samples, a corpus

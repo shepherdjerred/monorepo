@@ -12,7 +12,9 @@ import { describe, it, expect, mock, afterEach } from "bun:test";
 import type { User } from "#generated/prisma/client/index.js";
 import {
   DiscordUpstreamError,
+  devGuildOverride,
   fetchUserGuilds,
+  hasAdministrator,
 } from "#src/lib/discord-rest.ts";
 import { testAccountId } from "#src/testing/test-ids.ts";
 
@@ -152,5 +154,81 @@ describe("fetchUserGuilds", () => {
       ),
     );
     expect(error).toMatchObject({ reason: "token_refresh_failed" });
+  });
+});
+
+/**
+ * The dev-only membership stand-in.
+ *
+ * Every condition is tested for *refusing* as well as accepting, because each
+ * one is what stops this reaching a deployed environment: `ENVIRONMENT`
+ * defaults to "dev" when unset, so the environment check alone fails open.
+ */
+describe("devGuildOverride", () => {
+  const guildIds = ["1337623164146155593"];
+
+  it("stands in for Discord when dev, dev-login, and ids all line up", () => {
+    const guilds = devGuildOverride({
+      environment: "dev",
+      enableDevLogin: true,
+      guildIds,
+    });
+    expect(guilds).toEqual([
+      {
+        id: "1337623164146155593",
+        name: "Dev Guild 1337623164146155593",
+        icon: null,
+        owner: true,
+        permissions: "8",
+      },
+    ]);
+  });
+
+  it("grants administrator so management screens are reachable", () => {
+    const guilds = devGuildOverride({
+      environment: "dev",
+      enableDevLogin: true,
+      guildIds,
+    });
+    expect(hasAdministrator(guilds?.[0]?.permissions ?? "0")).toBe(true);
+  });
+
+  it("refuses outside dev even with dev-login on", () => {
+    for (const environment of ["beta", "prod"]) {
+      expect(
+        devGuildOverride({ environment, enableDevLogin: true, guildIds }),
+      ).toBeNull();
+    }
+  });
+
+  it("refuses in dev without the explicit dev-login flag", () => {
+    expect(
+      devGuildOverride({
+        environment: "dev",
+        enableDevLogin: false,
+        guildIds,
+      }),
+    ).toBeNull();
+  });
+
+  it("treats an empty or blank list as no override, not as no guilds", () => {
+    for (const ids of [[], [""], ["  "]]) {
+      expect(
+        devGuildOverride({
+          environment: "dev",
+          enableDevLogin: true,
+          guildIds: ids,
+        }),
+      ).toBeNull();
+    }
+  });
+
+  it("ignores surrounding whitespace from a comma-separated env var", () => {
+    const guilds = devGuildOverride({
+      environment: "dev",
+      enableDevLogin: true,
+      guildIds: [" 111 ", "", "222"],
+    });
+    expect(guilds?.map((guild) => guild.id)).toEqual(["111", "222"]);
   });
 });

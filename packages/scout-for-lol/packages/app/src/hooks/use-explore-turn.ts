@@ -32,6 +32,13 @@ function readSeq(ref: { current: number }): number {
 }
 
 /**
+ * Re-reads of a conversation abandoned mid-turn, spaced to outlast the race
+ * between the client's abort and the server's salvage write. Mirrors the
+ * delays `salvageRefreshDelays` uses for a stop.
+ */
+const ABANDONED_TURN_REFRESH_DELAYS = [0, 600, 1500];
+
+/**
  * Owns one in-flight explore turn: the streaming request, the pending-turn
  * state the transcript renders from, and the teardown that keeps the answer
  * on screen until the persisted transcript actually contains it.
@@ -246,9 +253,18 @@ export function useExploreTurn(params: {
     applyTurn(null);
     const conversationId = turn.conversationId;
     if (conversationId !== null) {
-      setTimeout(() => {
-        void refreshConversation(conversationId);
-      }, 1000);
+      // The same bounded poll a stop uses, for the same reason: the abort and
+      // the server's salvage write race, and one fixed delay either fires
+      // before the write lands or waits longer than it needed to. Leaving the
+      // screen changes where the answer should be *rendered*, not whether it
+      // should be *fetched* — a conversation the reader may well come back to
+      // must not keep a question with nothing under it.
+      void (async () => {
+        for (const delay of ABANDONED_TURN_REFRESH_DELAYS) {
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          await refreshConversation(conversationId);
+        }
+      })();
     }
   }, [applyTurn, refreshConversation]);
 
