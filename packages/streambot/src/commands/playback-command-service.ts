@@ -59,6 +59,13 @@ export type PlaybackCommandServiceDeps = {
 export class PlaybackCommandBoundaryError extends Error {}
 
 /**
+ * A blocked-source denial. Unlike ordinary boundary errors it fires a public side effect (the
+ * shame announce) before throwing, so the voice mutation gate must NOT be released for it — a
+ * retry in the same wake could repeat the announce or slip a second mutation in.
+ */
+export class PlaybackCommandBlockedError extends PlaybackCommandBoundaryError {}
+
+/**
  * What a mutating command actually did, alongside its speakable message. Callers branch on the
  * outcome — never on the English text, which the voice assistant paraphrases and this service is
  * free to reword.
@@ -250,7 +257,7 @@ export class PlaybackCommandService {
    */
   private async announceBlocked(userId: UserId): Promise<never> {
     await this.deps.announce(shameMessage(userId));
-    throw new PlaybackCommandBoundaryError("Nope. That's not allowed.");
+    throw new PlaybackCommandBlockedError("Nope. That's not allowed.");
   }
 
   remove(userId: UserId, position: number): PlaybackCommandResult {

@@ -1,6 +1,7 @@
 import { tool } from "@openai/agents/realtime";
 import { z } from "zod";
 import {
+  PlaybackCommandBlockedError,
   PlaybackCommandBoundaryError,
   type PlaybackCommandService,
 } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
@@ -221,7 +222,11 @@ export function createStreambotVoiceTools(
       return result;
     } catch (error) {
       if (error instanceof PlaybackCommandBoundaryError) {
-        if (mutating) mutationGate.release();
+        // A blocked-source denial already fired its public shame announce, so its wake stays
+        // burned; only side-effect-free boundary failures earn a corrected retry.
+        if (mutating && !(error instanceof PlaybackCommandBlockedError)) {
+          mutationGate.release();
+        }
         voiceToolCallsTotal.inc({ tool: name, outcome: "denied" });
         return error.message;
       }

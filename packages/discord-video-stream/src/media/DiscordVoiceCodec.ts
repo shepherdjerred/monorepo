@@ -212,18 +212,23 @@ export class DiscordOpusEncoder {
   }
 
   public encode(pcm24k: Uint8Array): Uint8Array[] {
-    this.pendingPcm = concatBytes([this.pendingPcm, pcm24k]);
+    // Cursor-based drain: re-slicing the remaining buffer per 20 ms frame copies the whole tail
+    // every iteration — O(n²) when a caller enqueues a large clip at once. resample() copies its
+    // input into an ffmpeg frame buffer, so subarray views are safe here.
+    const buffered = concatBytes([this.pendingPcm, pcm24k]);
     const inputBytesPerFrame = (OPENAI_SAMPLE_RATE / 50) * 2;
     const packets: Uint8Array[] = [];
-    while (this.pendingPcm.byteLength >= inputBytesPerFrame) {
-      const inputBytes = this.pendingPcm.slice(0, inputBytesPerFrame);
-      this.pendingPcm = this.pendingPcm.slice(inputBytesPerFrame);
+    let offset = 0;
+    while (buffered.byteLength - offset >= inputBytesPerFrame) {
+      const inputBytes = buffered.subarray(offset, offset + inputBytesPerFrame);
+      offset += inputBytesPerFrame;
       this.pendingFloat = concatBytes([
         this.pendingFloat,
         this.resample(inputBytes),
       ]);
       packets.push(...this.encodeAvailableFrames());
     }
+    this.pendingPcm = buffered.slice(offset);
     return packets;
   }
 
@@ -292,9 +297,10 @@ export class DiscordOpusEncoder {
   private encodeAvailableFrames(): Uint8Array[] {
     const frameBytes = DISCORD_FRAME_SAMPLES * DISCORD_CHANNELS * 4;
     const packets: Uint8Array[] = [];
-    while (this.pendingFloat.byteLength >= frameBytes) {
-      const input = this.pendingFloat.slice(0, frameBytes);
-      this.pendingFloat = this.pendingFloat.slice(frameBytes);
+    let offset = 0;
+    while (this.pendingFloat.byteLength - offset >= frameBytes) {
+      const input = this.pendingFloat.subarray(offset, offset + frameBytes);
+      offset += frameBytes;
       const frame = Frame.fromAudioBuffer(Buffer.from(input), {
         format: AV_SAMPLE_FMT_FLT,
         nbSamples: DISCORD_FRAME_SAMPLES,
@@ -311,6 +317,7 @@ export class DiscordOpusEncoder {
       }
       packets.push(...this.receivePackets());
     }
+    if (offset > 0) this.pendingFloat = this.pendingFloat.slice(offset);
     return packets;
   }
 

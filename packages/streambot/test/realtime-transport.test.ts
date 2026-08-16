@@ -450,6 +450,42 @@ describe("custom Realtime transport", () => {
     ).toBe(true);
     expect(context.events).toHaveLength(1);
   });
+
+  test("a blocked source burns the wake even though it is a boundary denial", async () => {
+    const context = fixture();
+    const transport = new FakeRealtimeTransport([
+      {
+        name: "play",
+        arguments: JSON.stringify({
+          query: "porn compilation",
+          source: "youtube",
+          placement: "queue",
+        }),
+      },
+      { name: "skip", arguments: "{}" },
+    ]);
+    await runRealtimeVoiceTurn(context.config.voice, {
+      pcm16k: new Float32Array(1600),
+      activatedAtMs: Date.now(),
+      userId: USER,
+      service: context.service,
+      streamer: context.streamer,
+      createTransport: () => transport,
+    });
+    // The shame announce already fired publicly, so unlike an innocent boundary failure this
+    // denial keeps the mutation gate claimed: the follow-up skip is refused and nothing runs.
+    // (Output order is a fake-transport scheduling detail — play resolves async after skip.)
+    expect(transport.functionOutputs).toHaveLength(2);
+    expect(
+      transport.functionOutputs.some((output) => output.includes("Nope")),
+    ).toBe(true);
+    expect(
+      transport.functionOutputs.some((output) =>
+        output.includes("Only one playback change"),
+      ),
+    ).toBe(true);
+    expect(context.events).toHaveLength(0);
+  });
 });
 
 describe("custom Realtime transport failure boundaries", () => {
