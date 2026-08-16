@@ -42,6 +42,14 @@ export function buildArchiveKey(
 }
 
 /**
+ * Bound on every archive S3 request. Uploads are multi-megabyte gzipped
+ * bodies to an in-cluster SeaweedFS endpoint, so 30s is generous headroom
+ * while still guaranteeing span export and Broadcast ingestion cannot hang
+ * on a stalled connection.
+ */
+const S3_REQUEST_TIMEOUT_MS = 30_000;
+
+/**
  * Gzip the JSON payload and PUT it to S3. Returns a ref describing the upload.
  *
  * Never throws: a failed upload is reported via `status: "failed"` + `error`
@@ -241,6 +249,12 @@ async function signedS3Request(
       ...(body === undefined ? {} : { "Content-Type": "application/gzip" }),
     },
     ...(body === undefined ? {} : { body: new Uint8Array(body) }),
+    // A hung S3 endpoint must not stall span export or Broadcast ingestion
+    // indefinitely: the span processor awaits uploads before forwarding, and
+    // ingest awaits receipt reads in its request handler. Upload callers treat
+    // the abort as a failed (best-effort) upload; exists/read callers let it
+    // propagate so "unavailable" is never read as "missing".
+    signal: AbortSignal.timeout(S3_REQUEST_TIMEOUT_MS),
   });
   return response;
 }
