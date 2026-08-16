@@ -9,10 +9,10 @@ import { createLogger } from "#src/logger.ts";
 import { fetchRecentGamesForPuuids } from "#src/reports/duckdb/lake-reads.ts";
 import {
   predictWin,
-  type Prediction,
   type PredictionForm,
   type PredictionParticipant,
 } from "#src/betting/prediction.ts";
+import type { BucksPrediction } from "@scout-for-lol/data";
 
 const logger = createLogger("betting-prediction-inputs");
 
@@ -137,7 +137,7 @@ export async function buildPrediction(input: {
   loadingScreenData: LoadingScreenData;
   subject: { puuid: string; alias: string; team: Team; championName: string };
   matchId: string;
-}): Promise<Prediction | undefined> {
+}): Promise<BucksPrediction | undefined> {
   const { loadingScreenData } = input;
   if (loadingScreenData.layout !== "standard") {
     return undefined;
@@ -155,10 +155,16 @@ export async function buildPrediction(input: {
     excludeMatchId: input.matchId,
   });
 
-  return predictWin({
-    subjectAlias: input.subject.alias,
-    participants,
-    recentForm,
-    championForm,
-  });
+  // The stored prediction records which side it was made about, so a later
+  // reader (the post-match recap, or a calibration pass) never has to guess
+  // whether "63%" meant blue or red.
+  return {
+    ...predictWin({
+      subjectAlias: input.subject.alias,
+      participants,
+      recentForm,
+      championForm,
+    }),
+    subjectTeamId: input.subject.team === "blue" ? 100 : 200,
+  };
 }

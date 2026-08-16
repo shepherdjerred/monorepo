@@ -1,4 +1,5 @@
 import { checkMatchHistory } from "#src/league/tasks/postmatch/match-history-polling.ts";
+import { voidStaleBettingPools } from "#src/betting/sweep.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("tasks-postmatch");
@@ -9,6 +10,10 @@ export async function checkPostMatch() {
 
   try {
     await checkMatchHistory();
+
+    // Refund any pool whose match never produced a result. Without this,
+    // staked Bucks from a lost match would be silently destroyed.
+    await voidStaleBettingPools();
 
     const executionTime = Date.now() - startTime;
     logger.info(

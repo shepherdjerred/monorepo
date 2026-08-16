@@ -1,6 +1,6 @@
 import configuration from "#src/configuration.ts";
 import { Client, GatewayIntentBits } from "discord.js";
-import { handleCommands } from "#src/discord/commands/index.ts";
+import { handleInteractions } from "#src/discord/interactions.ts";
 import {
   discordConnectionStatus,
   discordGuildsGauge,
@@ -105,7 +105,7 @@ client.on("ready", (readyClient) => {
     discordLatency.set(readyClient.ws.ping);
   }, 30_000); // Update every 30 seconds
 
-  handleCommands(readyClient);
+  handleInteractions(readyClient);
   logger.info("⚡ Discord command handler initialized");
 });
 

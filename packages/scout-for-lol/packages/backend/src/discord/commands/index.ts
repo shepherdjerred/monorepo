@@ -1,4 +1,4 @@
-import type { Client, Interaction } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "#src/logger.ts";
 import {
@@ -17,19 +17,17 @@ import { executeTrack } from "#src/discord/commands/track.ts";
 
 const logger = createLogger("discord-commands");
 
-export function handleCommands(client: Client): void {
-  logger.info("⚡ Setting up lightweight Discord command handlers");
-
-  client.on("interactionCreate", (interaction) => {
-    void handleInteraction(interaction);
-  });
-}
-
-async function handleInteraction(interaction: Interaction): Promise<void> {
-  if (!interaction.isChatInputCommand()) {
-    return;
-  }
-
+/**
+ * Dispatch one chat-input command.
+ *
+ * The `interactionCreate` registration lives in `discord/interactions.ts`,
+ * which routes buttons here alongside commands. This module owns command
+ * dispatch only — it used to own the event too, and early-returned on anything
+ * that was not a chat-input command, which silently dropped every component.
+ */
+export async function handleChatInputCommand(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
   const startTime = Date.now();
   const commandName = interaction.commandName;
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);

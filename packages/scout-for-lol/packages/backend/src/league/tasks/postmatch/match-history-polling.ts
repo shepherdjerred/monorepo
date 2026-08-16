@@ -40,14 +40,13 @@ import {
 } from "#src/league/tasks/postmatch/match-processing.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
+import { announceSettlements } from "#src/betting/announce.ts";
+import { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
 import { uniqueBy } from "remeda";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
-import {
-  setLastSuccessfulPollAt,
-  getLastSuccessfulPollAt,
-} from "#src/league/tasks/recovery/app-state.ts";
-import { fetchMatchIdsForTimeRange } from "#src/league/tasks/recovery/backfill-to-s3.ts";
+import { setLastSuccessfulPollAt } from "#src/league/tasks/recovery/app-state.ts";
 import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
+import { recoverMissedMatches } from "#src/league/tasks/postmatch/gap-recovery.ts";
 import { getPrematchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 
@@ -210,6 +209,10 @@ async function processMatchAndUpdatePlayers(
     return;
   }
 
+  // After the S3 gate and OUTSIDE `!silent`: Bucks are owed for the game even
+  // when no Discord message is worth sending. See settleAndAwardBucks.
+  const bucks = await settleAndAwardBucks(matchData);
+
   if (!silent) {
     // Report generation runs only AFTER the durable copy succeeded. A
     // downstream failure (satori render crash, OpenAI error, Discord send
@@ -218,6 +221,10 @@ async function processMatchAndUpdatePlayers(
     // would re-run the whole AI pipeline and burn tokens for nothing.
     try {
       await processMatch(matchData, allTrackedPlayers);
+      // Announced after the report so it reads as a follow-up, and as its own
+      // message rather than appended to the report's content, which the AI
+      // review already owns and which is delivered to every guild at once.
+      await announceSettlements({ matchId, ...bucks });
     } catch (error) {
       logger.error(
         `[processMatch] ❌ processMatch threw for ${matchId} — cursor will still advance (durable S3 copy already saved)`,
@@ -326,73 +333,6 @@ async function collectNewMatches(
   }
 
   return playersWithMatches;
-}
-
-type GapRecoveryResult = {
-  discordMatchIds: MatchId[];
-  backfillMatchIds: MatchId[];
-};
-
-/**
- * When a gap is detected (lastProcessedMatchId not in recent history),
- * fetch all missed matches via paginated time-range API and split into
- * Discord (most recent) and backfill (rest, oldest first) buckets.
- */
-async function recoverMissedMatches(
-  player: PlayerConfigEntry,
-  fallbackMatchIds: MatchId[],
-): Promise<GapRecoveryResult> {
-  const puuid = player.league.leagueAccount.puuid;
-  const lastPollAt = await getLastSuccessfulPollAt();
-
-  if (!lastPollAt) {
-    // No lastPollAt — first startup, just process the most recent
-    return {
-      discordMatchIds: fallbackMatchIds.slice(0, 1),
-      backfillMatchIds: [],
-    };
-  }
-
-  const startEpoch = Math.floor(lastPollAt.getTime() / 1000);
-  const endEpoch = Math.floor(Date.now() / 1000);
-
-  logger.info(
-    `[${player.alias}] 🔄 Gap detected, fetching all missed matches since ${lastPollAt.toISOString()}`,
-  );
-
-  const allMissedMatchIds = await fetchMatchIdsForTimeRange(
-    puuid,
-    player.league.leagueAccount.region,
-    startEpoch,
-    endEpoch,
-  );
-
-  const mostRecent = allMissedMatchIds[0];
-  if (!mostRecent) {
-    // No matches in the time window — player has been inactive but the
-    // cursor is stuck on a match outside the recent 5. Don't fire a Discord
-    // alert on the stale fallback match (could be hours/days old). Send it
-    // through silent backfill so the cursor advances and we stop detecting a
-    // gap every minute.
-    logger.info(
-      `[${player.alias}] 🛑 No matches in time window; sending fallback to silent backfill to advance cursor`,
-    );
-    return {
-      discordMatchIds: [],
-      backfillMatchIds: fallbackMatchIds.slice(0, 1),
-    };
-  }
-
-  // Most recent match (index 0) gets Discord notification
-  const discordMatchIds = [mostRecent];
-  // Rest are backfill-only (reversed to process oldest first)
-  const backfillMatchIds = allMissedMatchIds.slice(1).reverse();
-
-  logger.info(
-    `[${player.alias}] 📦 ${discordMatchIds.length.toString()} match(es) for Discord, ${backfillMatchIds.length.toString()} for backfill`,
-  );
-
-  return { discordMatchIds, backfillMatchIds };
 }
 
 /**

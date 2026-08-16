@@ -35,6 +35,20 @@ export const discordCommandsTotal = new Counter({
 });
 
 /**
+ * Message components (buttons) received, by custom-ID namespace.
+ *
+ * Separate from commands because an ignored component is a normal outcome —
+ * another feature's button, or a stale ID from an older deploy — and folding
+ * that into the command counter would make its error rate meaningless.
+ */
+export const discordComponentsTotal = new Counter({
+  name: "discord_components_total",
+  help: "Total number of Discord message component interactions received",
+  labelNames: ["namespace", "status"] as const,
+  registers: [registry],
+});
+
+/**
  * Duration of Discord command execution in seconds
  */
 export const discordCommandDuration = new Histogram({
