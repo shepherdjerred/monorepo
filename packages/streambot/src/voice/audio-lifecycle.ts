@@ -6,9 +6,13 @@ import type {
   LocalVoiceModels,
   VoiceActivityDetector,
 } from "@shepherdjerred/streambot/voice/local-models.ts";
+import {
+  VOICE_FRAGMENT_TAIL_MARGIN_MS,
+  VOICE_FRAGMENT_TAIL_MS,
+  VOICE_VERIFICATION_DELAY_MS,
+} from "@shepherdjerred/streambot/voice/constants.ts";
 
 const SAMPLE_RATE = 16_000;
-const DEFAULT_PROVISIONAL_MS = 1250;
 const DEFAULT_POST_VERIFICATION_MS = 300;
 
 type SpeakerState = {
@@ -16,6 +20,11 @@ type SpeakerState = {
   readonly keyword: KeywordDetector;
   rolling: Float32Array[];
   rollingSamples: number;
+  /**
+   * Samples fed to the keyword detector since its stream was last reset. sherpa's timestamps are
+   * stream-relative, so this is what converts them into a position in the audio we are holding.
+   */
+  keywordStreamSamples: number;
 };
 
 export type WakeCandidateEvidence = KeywordDetectionEvidence & {
@@ -36,6 +45,8 @@ type PendingTurn = {
   pcm: Float32Array[];
   sampleCount: number;
   postCandidateSamples: number;
+  /** Post-candidate samples to collect before the verification window closes. */
+  readonly verificationTargetSamples: number;
   verificationStartedAtSamples: number;
   postVerificationSamples: number;
   sawSpeech: boolean;
@@ -56,7 +67,8 @@ export type VoiceAudioLifecycleOptions = {
   readonly models: LocalVoiceModels;
   readonly preRollMs: number;
   readonly maxUtteranceMs: number;
-  readonly provisionalMs?: number;
+  /** Fallback wait when a runtime reports no fragment timestamp. See `voice/constants.ts`. */
+  readonly verificationDelayMs?: number;
   readonly postVerificationMs?: number;
   readonly onCandidate?: (evidence: WakeCandidateEvidence) => void;
   /** Called only after the phrase-specific verifier accepts the candidate. */
@@ -129,8 +141,13 @@ export class VoiceAudioLifecycle {
     decoded.fill(0);
     if (this.pending === null) {
       this.pushRolling(speaker, samples);
+      speaker.keywordStreamSamples += samples.length;
       const match = speaker.keyword.accept(samples);
-      if (match !== null) this.provision(audio.userId, speaker, match);
+      if (match !== null) {
+        this.provision(audio.userId, speaker, match);
+        // sherpa resets its stream on a match, so its timestamps restart from here.
+        speaker.keywordStreamSamples = 0;
+      }
       return;
     }
     this.acceptPending(samples);
@@ -140,10 +157,11 @@ export class VoiceAudioLifecycle {
   finishInput(): void {
     if (this.closed || this.transactionRunning || this.pending === null) return;
     this.pending.inputEnded = true;
-    const missingProvisionalSamples =
-      this.provisionalSamples() - this.pending.postCandidateSamples;
-    if (missingProvisionalSamples > 0) {
-      this.acceptPending(new Float32Array(missingProvisionalSamples));
+    const missingSamples =
+      this.pending.verificationTargetSamples -
+      this.pending.postCandidateSamples;
+    if (missingSamples > 0) {
+      this.acceptPending(new Float32Array(missingSamples));
       return;
     }
     if (!this.pending.verificationRunning && !this.pending.localVerified) {
@@ -171,6 +189,7 @@ export class VoiceAudioLifecycle {
       keyword: this.options.models.createKeywordDetector(),
       rolling: [],
       rollingSamples: 0,
+      keywordStreamSamples: 0,
     };
     this.speakers.set(userId, created);
     return created;
@@ -221,6 +240,7 @@ export class VoiceAudioLifecycle {
       pcm,
       sampleCount,
       postCandidateSamples: 0,
+      verificationTargetSamples: this.verificationTargetSamples(speaker, match),
       verificationStartedAtSamples: 0,
       postVerificationSamples: 0,
       sawSpeech,
@@ -256,22 +276,55 @@ export class VoiceAudioLifecycle {
     if (pending.sawSpeech && pending.vad.hasCompletedSpeech()) {
       pending.vadCompleted = true;
     }
-    const provisionalSamples = this.provisionalSamples();
     if (
       !pending.localVerified &&
       !pending.verificationRunning &&
-      pending.postCandidateSamples >= provisionalSamples
+      pending.postCandidateSamples >= pending.verificationTargetSamples
     ) {
       this.startVerification(pending);
     }
     this.maybeFinish(pending, "vad");
   }
 
-  private provisionalSamples(): number {
-    return Math.ceil(
-      ((this.options.provisionalMs ?? DEFAULT_PROVISIONAL_MS) / 1000) *
-        SAMPLE_RATE,
+  /**
+   * How much more audio to collect before scoring the phrase verifier.
+   *
+   * Anchored to the fragment's own timestamp rather than to sherpa's emission: the decoder can
+   * report a match hundreds of milliseconds after the audio, by a margin that varies more than the
+   * verifier's whole tolerance. Each fragment also ends at a different point in the phrase, so the
+   * remaining tail is per-fragment. A runtime that reports no timestamp falls back to the fixed
+   * delay, which is set to the measured zero-false-accept point.
+   */
+  private verificationTargetSamples(
+    speaker: SpeakerState,
+    match: KeywordDetectionEvidence,
+  ): number {
+    if (match.fragmentEndSeconds === null) {
+      return Math.ceil(
+        ((this.options.verificationDelayMs ?? VOICE_VERIFICATION_DELAY_MS) /
+          1000) *
+          SAMPLE_RATE,
+      );
+    }
+    const tailMs = VOICE_FRAGMENT_TAIL_MS[match.phrase];
+    if (tailMs === undefined) {
+      // The keyword file and the tail table are one contract; a fragment in one and not the other
+      // is a packaging bug, not a runtime condition to paper over.
+      throw new Error(
+        `No verification tail is defined for fragment ${match.phrase}`,
+      );
+    }
+    const tailSamples = Math.ceil(
+      ((tailMs + VOICE_FRAGMENT_TAIL_MARGIN_MS) / 1000) * SAMPLE_RATE,
     );
+    const fragmentEndSamples = Math.round(
+      match.fragmentEndSeconds * SAMPLE_RATE,
+    );
+    const alreadyCollected = Math.max(
+      0,
+      speaker.keywordStreamSamples - fragmentEndSamples,
+    );
+    return Math.max(0, tailSamples - alreadyCollected);
   }
 
   private startVerification(pending: PendingTurn): void {

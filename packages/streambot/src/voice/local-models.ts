@@ -23,6 +23,14 @@ export type KeywordDetectionEvidence = {
   readonly phrase: string;
   /** sherpa's streaming KWS result does not expose its internal confidence. */
   readonly score: number | null;
+  /**
+   * When the matched fragment's last token began, in seconds since this detector's stream was last
+   * reset. sherpa emits a decision well AFTER the audio it matched (~280 ms on the packaged smoke
+   * fixture, and variable with decoder state), so emission time cannot locate the phrase. This
+   * timestamp can: it lets the lifecycle close the verification window a fixed distance past the
+   * audio itself rather than past the decision. `null` when the runtime reports no timestamps.
+   */
+  readonly fragmentEndSeconds: number | null;
 };
 
 export type VoiceActivityDetector = {
@@ -261,6 +269,19 @@ export async function validateVoiceAssets(
   return { ...paths, wakeThreshold: manifest.threshold };
 }
 
+/**
+ * Last token start time from a sherpa KWS result, or null when the runtime reports none.
+ * The raw JSON carries `timestamps` (seconds, stream-relative) alongside `tokens`; both native and
+ * WASM return the same shape, and neither is typed by its bindings.
+ */
+function fragmentEndSeconds(result: unknown): number | null {
+  if (typeof result !== "object" || result === null) return null;
+  const timestamps = Reflect.get(result, "timestamps");
+  if (!Array.isArray(timestamps) || timestamps.length === 0) return null;
+  const last = timestamps.at(-1);
+  return typeof last === "number" && Number.isFinite(last) ? last : null;
+}
+
 function modelConfig(assets: AssetPaths) {
   return {
     transducer: {
@@ -324,6 +345,7 @@ async function createNativeModels(
             detector: "sherpa",
             phrase: result.keyword,
             score: null,
+            fragmentEndSeconds: fragmentEndSeconds(result),
           };
         },
         reset: () => {
@@ -388,6 +410,7 @@ async function createWasmModels(
             detector: "sherpa",
             phrase: result.keyword,
             score: null,
+            fragmentEndSeconds: fragmentEndSeconds(result),
           };
         },
         reset: () => {

@@ -15,7 +15,12 @@ function markerModels(wake: boolean): LocalVoiceModels {
     createKeywordDetector: () => ({
       accept: (samples) =>
         wake && samples.some((sample) => Math.abs(sample) > 0.01)
-          ? { detector: "sherpa", phrase: "HEY", score: null }
+          ? {
+              detector: "sherpa",
+              phrase: "HEY",
+              score: null,
+              fragmentEndSeconds: null,
+            }
           : null,
       reset: () => {
         /* Stateless test detector. */

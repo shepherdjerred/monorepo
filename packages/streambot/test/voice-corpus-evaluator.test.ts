@@ -42,7 +42,12 @@ function pacedModels(verificationDelayMs: number): LocalVoiceModels {
       accept: () => {
         keywordAccepts += 1;
         return keywordAccepts === CANDIDATE_PACKET
-          ? { detector: "sherpa", phrase: "HEY_STREAMBOT", score: null }
+          ? {
+              detector: "sherpa",
+              phrase: "HEY_STREAMBOT",
+              score: null,
+              fragmentEndSeconds: null,
+            }
           : null;
       },
       reset: () => {

@@ -14,7 +14,12 @@ function fakeModels(wakeOn: number, vadEndsOn: number): LocalVoiceModels {
     createKeywordDetector: () => ({
       accept: (samples) =>
         samples[0] === wakeOn
-          ? { detector: "sherpa", phrase: "HEY", score: null }
+          ? {
+              detector: "sherpa",
+              phrase: "HEY",
+              score: null,
+              fragmentEndSeconds: null,
+            }
           : null,
       reset: () => {
         /* fake has no retained keyword state */
@@ -99,6 +104,7 @@ describe("VoiceAudioLifecycle", () => {
         detector: "sherpa",
         phrase: "HEY",
         score: null,
+        fragmentEndSeconds: null,
         userId: "speaker-a",
         detectedAtMs: 42,
       },
@@ -117,7 +123,7 @@ describe("VoiceAudioLifecycle", () => {
       models: fakeModels(2, 4),
       preRollMs: 1200,
       maxUtteranceMs: 15_000,
-      provisionalMs: 0,
+      verificationDelayMs: 0,
       postVerificationMs: 0,
       createDecoder: () => ({
         decode: (opus) => new Float32Array([opus[0] ?? 0]),
@@ -146,7 +152,7 @@ describe("VoiceAudioLifecycle", () => {
       models: fakeModels(2, 4),
       preRollMs: 0,
       maxUtteranceMs: 15_000,
-      provisionalMs: 0,
+      verificationDelayMs: 0,
       postVerificationMs: 0,
       createDecoder: () => ({
         decode: (opus) => new Float32Array([opus[0] ?? 0]),
@@ -176,7 +182,7 @@ describe("VoiceAudioLifecycle", () => {
       models: fakeModels(2, 4),
       preRollMs: 1200,
       maxUtteranceMs: 15_000,
-      provisionalMs: 0,
+      verificationDelayMs: 0,
       postVerificationMs: 0,
       createDecoder: () => ({
         decode: (opus) => new Float32Array([opus[0] ?? 0]),
@@ -249,7 +255,12 @@ describe("VoiceAudioLifecycle endpointing and cleanup", () => {
         createKeywordDetector: () => ({
           accept: (samples) =>
             samples[0] === 2
-              ? { detector: "sherpa", phrase: "HEY", score: null }
+              ? {
+                  detector: "sherpa",
+                  phrase: "HEY",
+                  score: null,
+                  fragmentEndSeconds: null,
+                }
               : null,
           reset: () => {
             /* fake has no retained keyword state */
@@ -283,7 +294,7 @@ describe("VoiceAudioLifecycle endpointing and cleanup", () => {
       },
       preRollMs: 1200,
       maxUtteranceMs: 15_000,
-      provisionalMs: 0,
+      verificationDelayMs: 0,
       postVerificationMs: 0,
       createDecoder: () => ({
         decode: (opus) => new Float32Array([opus[0] ?? 0]),
@@ -334,7 +345,7 @@ describe("VoiceAudioLifecycle endpointing and cleanup", () => {
       },
       preRollMs: 0,
       maxUtteranceMs: 1,
-      provisionalMs: 0,
+      verificationDelayMs: 0,
       postVerificationMs: 0,
       createDecoder: () => ({
         decode: (opus) => new Float32Array([opus[0] ?? 0]),

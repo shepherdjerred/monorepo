@@ -87,7 +87,12 @@ function markerModels(): LocalVoiceModels {
     createKeywordDetector: () => ({
       accept: (samples) =>
         samples[0] === 2
-          ? { detector: "sherpa", phrase: "HEY", score: null }
+          ? {
+              detector: "sherpa",
+              phrase: "HEY",
+              score: null,
+              fragmentEndSeconds: null,
+            }
           : null,
       reset: () => {
         /* Stateless marker detector. */
