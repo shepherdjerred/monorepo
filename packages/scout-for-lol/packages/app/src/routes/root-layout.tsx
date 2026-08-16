@@ -19,6 +19,10 @@ import { FeedbackPrompt } from "#src/components/feedback-prompt.tsx";
 import { UserMenu } from "#src/components/user-menu.tsx";
 import { buildInfo } from "#src/lib/build-info.ts";
 
+export function appGlobalPath(pathname: string): string {
+  return `/app${pathname}`;
+}
+
 /**
  * Top-level chrome shared by every route (login included): the contract
  * mismatch banner above the routed content and the build-identity footer below
@@ -66,7 +70,7 @@ export function RootLayout() {
     <div className="scout-page-frame">
       <GlobalNavbar
         signedIn={username !== undefined}
-        currentPath={location.pathname}
+        currentPath={appGlobalPath(location.pathname)}
         guildAccess={
           username === undefined ? undefined : (
             <a className="scout-navbar__link" href="/app/">
