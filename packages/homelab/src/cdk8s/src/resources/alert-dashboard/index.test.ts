@@ -60,6 +60,8 @@ const DeploymentSchema = z.object({
 
 const DATA_PATH = "/data";
 const DATABASE_URL = "file:/data/alert-dashboard.db";
+const POSTAL_HOST =
+  "http://postal-postal-web-service.postal.svc.cluster.local:5000";
 
 function synthesizeDeployment(): z.infer<typeof DeploymentSchema> {
   const app = new App();
@@ -122,5 +124,17 @@ describe("Alert Dashboard deployment", () => {
         seccompProfile: { type: "RuntimeDefault" },
       });
     }
+  });
+
+  test("uses the rendered Postal web service for email delivery", () => {
+    const podSpec = synthesizeDeployment().spec.template.spec;
+    const dashboardContainer = podSpec.containers.find(
+      (container) => container.name === "alert-dashboard",
+    );
+
+    expect(
+      dashboardContainer?.env?.find((entry) => entry.name === "POSTAL_HOST")
+        ?.value,
+    ).toBe(POSTAL_HOST);
   });
 });
