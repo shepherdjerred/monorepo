@@ -463,7 +463,15 @@ func (r *wirelessNetworkResource) resolveBandwidthCode(ctx context.Context, band
 	}
 
 	if cur == "" {
-		return 0, nil
+		// Code 0 encodes as an empty width suffix, so returning it here would
+		// write a bare channel and let the radio fall back to auto — the exact
+		// narrowing this function exists to avoid. With no current width to
+		// preserve there is nothing to fall back to, so say so rather than
+		// quietly changing the radio.
+		return 0, fmt.Errorf(
+			"router reported no current bandwidth for %s, so writing a channel would omit the width and narrow the radio; set bandwidth explicitly",
+			key,
+		)
 	}
 
 	code, err := strconv.Atoi(cur)

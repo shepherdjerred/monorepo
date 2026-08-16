@@ -115,6 +115,21 @@ func (r *dhcpStaticLeaseResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	// An unknown hostname the user actually configured must not be coerced to
+	// "": that writes an empty hostname into dhcp_staticlist, clearing whatever
+	// the router had, and then records "" in state as though the configuration
+	// asked for it. Terraform normally resolves configured values before apply,
+	// so reaching here means a broken caller contract — say so rather than
+	// silently writing the wrong value to a router.
+	if plan.Hostname.IsUnknown() && !config.Hostname.IsNull() {
+		resp.Diagnostics.AddError(
+			"Unknown DHCP lease hostname",
+			"hostname is configured but still unknown at apply time. Writing it would clear the router's hostname for this lease and record a value the configuration never specified.",
+		)
+
+		return
+	}
+
 	hostname := ""
 	if !plan.Hostname.IsNull() && !plan.Hostname.IsUnknown() {
 		hostname = plan.Hostname.ValueString()
