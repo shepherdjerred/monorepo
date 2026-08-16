@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+/**
+ * Bump this whenever ManifestSchema changes shape. It is baked into the
+ * TanStack Query key and the localStorage persister buster, so a schema
+ * change discards the persisted manifest cache and refetches instead of
+ * crashing on a strict parse of stale cached data.
+ */
+export const MANIFEST_SCHEMA_VERSION = "manifest-v1";
+
 const RoleSchema = z.enum(["all", "mid", "adc", "jungle", "top", "support"]);
 
 const LaneRoleSchema = RoleSchema.exclude(["all"]);

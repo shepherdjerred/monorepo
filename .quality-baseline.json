@@ -1,7 +1,6 @@
 {
   "eslint-disable": {
-    "packages/better-skill-capped/src/components/app.tsx": 1,
-    "packages/better-skill-capped/src/components/router.tsx": 1,
+    "packages/better-skill-capped/src/router.tsx": 1,
     "packages/better-skill-capped/src/vite-env.d.ts": 1,
     "packages/scout-for-lol/packages/app/src/vite-env.d.ts": 1,
     "packages/discord-plays-pokemon/packages/frontend/src/main.tsx": 1,
