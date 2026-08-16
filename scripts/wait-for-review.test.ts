@@ -53,6 +53,27 @@ export function reviewGateStepTimeoutSeconds(pipeline: string): number {
   throw new Error("pipeline.yml has no review-gate step");
 }
 
+/** The `review-gate` step's command block, as its lines. */
+export function reviewGateStepCommand(pipeline: string): string[] {
+  const lines = pipeline.split("\n");
+  const starts = lines.flatMap((line, index) =>
+    line.startsWith("  - label:") ? [index] : [],
+  );
+  for (const [position, start] of starts.entries()) {
+    const block = lines.slice(start, starts[position + 1] ?? lines.length);
+    if (!block.some((line) => line.trim() === "key: review-gate")) continue;
+    const commandAt = block.findIndex((line) => line.trim() === "command: |");
+    if (commandAt === -1) throw new Error("review-gate declares no command");
+    const body: string[] = [];
+    for (const line of block.slice(commandAt + 1)) {
+      if (line.trim() !== "" && !line.startsWith("      ")) break;
+      body.push(line.trim());
+    }
+    return body.filter((line) => line !== "");
+  }
+  throw new Error("pipeline.yml has no review-gate step");
+}
+
 /**
  * How long the step spends on `toolchain.sh` and the filtered install before
  * wait-for-review.ts starts counting. Nothing bounds that preamble — a cold or
@@ -109,5 +130,35 @@ describe("review gate timeout budget", () => {
     // the 1200s budget had already failed the gate.
     const slowestCompleted = 1834;
     expect(DEFAULT_TIMEOUT_SECONDS).toBeGreaterThan(slowestCompleted);
+  });
+});
+
+// The gate reads only GitHub state, never the PR's diff, so running it from the
+// PR's checkout buys nothing and costs correctness: `code-review` is a
+// workspace dependency, so the branch supplied its own grader. PR #1389 read 0
+// blocking findings against current main and 3 against its own 22-commit-stale
+// parser, and no change to that PR could have cleared it.
+describe("review gate source", () => {
+  test("does not run the pull request's own copy of the gate", async () => {
+    const pipeline = await Bun.file(
+      `${import.meta.dir}/../.buildkite/pipeline.yml`,
+    ).text();
+    const command = reviewGateStepCommand(pipeline);
+    expect(command).not.toContain(
+      "bun --no-install scripts/wait-for-review.ts",
+    );
+    expect(command.some((line) => line.includes("review-gate.sh"))).toBe(true);
+  });
+
+  test("the gate script checks out a ref and runs the gate from it", async () => {
+    const script = await Bun.file(
+      `${import.meta.dir}/../.buildkite/scripts/review-gate.sh`,
+    ).text();
+    expect(script).toContain("git worktree add");
+    expect(script).toContain("REVIEW_GATE_REF:-main");
+    expect(script).toContain("scripts/wait-for-review.ts");
+    // The commit actually used has to reach the signal event, or a count still
+    // cannot be attributed to the parser that produced it.
+    expect(script).toContain("REVIEW_GATE_PARSER_COMMIT");
   });
 });

@@ -36,6 +36,7 @@ describe("formatSignalEvent", () => {
     timed_out: false,
     stale_reaction: false,
     decision: "failed",
+    parser_commit: "5f6d0a42b7c1e3d9a8f04b2c6e1d7a3f9b0c5e28",
   });
 
   test("emits a single structured line with the component and event fields", () => {
