@@ -183,12 +183,23 @@ export async function openBettingPoolsForPrematch(
   return opened;
 }
 
+const MESSAGE_REF_ATTEMPTS = 3;
+const MESSAGE_REF_BACKOFF_MS = 250;
+
 /**
- * Record which message carries this guild's buttons, so the close sweep can
- * disable exactly the right ones without re-deriving channel-to-guild.
+ * Record which message carries this guild's buttons.
  *
- * Best-effort: losing this only costs the cosmetic disable, since closure is
- * enforced at bet time against `closesAt`.
+ * Two things read this back, and only one of them is cosmetic. The close sweep
+ * uses it to grey out exactly the right buttons, which closure at bet time
+ * against `closesAt` already enforces anyway — but `announceSettlements` also
+ * uses it as the *only* record of where a pool's bettors are watching. Losing
+ * the write therefore costs the settlement message, and that summary is
+ * one-shot: `settleBettingForMatch` returns nothing for an already-settled
+ * pool, so nothing later can notice the omission and re-send.
+ *
+ * Hence a bounded retry and an error-level report rather than a shrug. It still
+ * must not throw: this runs inside prematch delivery, where a betting failure
+ * may not take the loading screen down with it.
  */
 export async function recordPoolMessageRefs(
   input: {
@@ -198,20 +209,35 @@ export async function recordPoolMessageRefs(
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
-  try {
-    await prismaClient.bucksMatchPool.update({
-      where: {
-        matchId_serverId: { matchId: input.matchId, serverId: input.serverId },
-      },
-      data: { messageRefs: JSON.stringify(input.refs) },
-    });
-  } catch (error) {
-    logger.warn(
-      `⚠️ Could not record Bryan Bucks message refs for ${input.matchId}:`,
-      error,
-    );
-    Sentry.captureException(error, {
-      tags: { source: "betting-record-message-refs", matchId: input.matchId },
-    });
+  for (let attempt = 1; attempt <= MESSAGE_REF_ATTEMPTS; attempt++) {
+    try {
+      await prismaClient.bucksMatchPool.update({
+        where: {
+          matchId_serverId: {
+            matchId: input.matchId,
+            serverId: input.serverId,
+          },
+        },
+        data: { messageRefs: JSON.stringify(input.refs) },
+      });
+      return;
+    } catch (error) {
+      if (attempt < MESSAGE_REF_ATTEMPTS) {
+        const delayMs = MESSAGE_REF_BACKOFF_MS * 2 ** (attempt - 1);
+        logger.warn(
+          `⚠️ Attempt ${attempt.toString()}/${MESSAGE_REF_ATTEMPTS.toString()} to record Bryan Bucks message refs for ${input.matchId} failed; retrying in ${delayMs.toString()}ms:`,
+          error,
+        );
+        await Bun.sleep(delayMs);
+        continue;
+      }
+      logger.error(
+        `❌ Could not record Bryan Bucks message refs for ${input.matchId} — this pool's settlement announcement now has nowhere to go:`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: { source: "betting-record-message-refs", matchId: input.matchId },
+      });
+    }
   }
 }

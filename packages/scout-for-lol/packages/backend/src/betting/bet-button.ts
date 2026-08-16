@@ -7,7 +7,7 @@ import {
 import { BUCKS_SCOPE_NOTE } from "#src/betting/constants.ts";
 import { parseBucksCustomId } from "#src/betting/custom-id.ts";
 import { placeBet, type PlaceBetResult } from "#src/betting/place-bet.ts";
-import { cancelBet } from "#src/betting/cancel-bet.ts";
+import { cancelBet, type CancelBetResult } from "#src/betting/cancel-bet.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -53,10 +53,28 @@ export function describeResult(
       return `🤔 That player isn't in this game. Try: ${result.validAliases.join(", ")}.`;
     case "invalid_stake":
       return `💱 Stakes must be between ${result.min.toString()} and ${result.max.toString()} BB.`;
+    case "stake_cap":
+      return `💱 You already have **${result.existingStake.toString()} BB** on this game, and a single position tops out at **${result.max.toString()} BB**.`;
     case "insufficient":
       return `💸 You have **${result.balance.toString()} BB** but need **${result.needed.toString()} BB**.`;
     case "side_conflict":
       return "↔️ You already backed the other side of this game. Cancel your bet first.";
+  }
+}
+
+/** Same framing as `describeResult`, for the cancel half of the button row.
+ * A closed window is reported as itself: telling someone with a live stake that
+ * they have no bet is both wrong and alarming. */
+export function describeCancel(result: CancelBetResult): string {
+  switch (result.kind) {
+    case "cancelled":
+      return `↩️ Bet cancelled. **${result.refunded.toString()} BB** returned; balance **${result.balanceAfter.toString()} BB**.`;
+    case "window_closed":
+      return "⏰ Betting has closed for this game, so positions are locked in. Yours settles when the game ends.";
+    case "no_bet":
+      return "🤷 You don't have a bet to cancel on this game.";
+    case "no_pool":
+      return "🚫 There's no Bryan Bucks market for this game.";
   }
 }
 
@@ -128,11 +146,7 @@ export async function handleBetButton(
       { matchId: parsed.matchId, serverId, discordId },
       prismaClient,
     );
-    await interaction.editReply({
-      content: cancelled.cancelled
-        ? `↩️ Bet cancelled. **${cancelled.refunded.toString()} BB** returned; balance **${cancelled.balanceAfter.toString()} BB**.`
-        : "🤷 You don't have a bet to cancel on this game.",
-    });
+    await interaction.editReply({ content: describeCancel(cancelled) });
     return;
   }
 

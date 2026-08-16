@@ -184,6 +184,37 @@ export async function announceSettlements(
       });
 
       const refs = BucksMessageRefsSchema.parse(JSON.parse(pool.messageRefs));
+      if (refs.length === 0) {
+        // No recorded message means no destination, and there is no second
+        // chance: the pool has committed as settled, so a later pass returns no
+        // summary for it. Whoever was owed something here was paid and will
+        // never be told. That happens when the prematch message never landed in
+        // this guild, or when recording its refs failed outright — which is
+        // exactly why `recordPoolMessageRefs` is not the cosmetic write it once
+        // claimed to be, and why this is reported rather than shrugged off.
+        //
+        // Deliberately not redirected to some other channel: the pool's own
+        // message is where its bettors are watching, and substituting a guess
+        // would post a guild's payouts somewhere nobody opted into. A pool that
+        // owed nobody anything is not worth reporting.
+        const owedSomeone =
+          summary.bets.length > 0 ||
+          input.earnings.some((award) => award.serverId === summary.serverId);
+        if (owedSomeone) {
+          logger.error(
+            `❌ Settled Bryan Bucks pool ${summary.matchId} in guild ${summary.serverId} has no recorded message — the settlement was paid but cannot be announced`,
+          );
+          Sentry.captureMessage(
+            "Bryan Bucks settlement had nowhere to announce",
+            {
+              level: "error",
+              tags: { source: "betting-announce", matchId: summary.matchId },
+              extra: { serverId: summary.serverId },
+            },
+          );
+        }
+        continue;
+      }
       const guildId = DiscordGuildIdSchema.parse(summary.serverId);
 
       for (const ref of refs) {
