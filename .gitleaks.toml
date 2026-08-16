@@ -43,6 +43,8 @@ paths = [
   '''packages/dotfiles/dot_agents/skills/grafana-helper/SKILL\.md''',
   # Cloudflare operator Helm chart URL contains "apikey" substring
   '''packages/homelab/src/cdk8s/src/resources/argo-applications/cloudflare-operator\.ts''',
+  # 1Password item IDs are non-secret metadata references in the bot registry
+  '''packages/homelab/src/tofu/discord/bot-registry\.json''',
   # Spectator API test data — encryptionKey is a Riot game session key, not a secret
   '''packages/scout-for-lol/.*/testdata/spectator-.*\.json''',
   # Local build/cache output (gitignored; never committed). The old CI scanned a

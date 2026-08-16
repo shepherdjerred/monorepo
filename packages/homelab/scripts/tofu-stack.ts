@@ -22,14 +22,13 @@
  *   TF_VAR_AVISTAZ_PID, TF_VAR_ANIMEZ_PASSWORD, TF_VAR_ANIMEZ_PID,
  */
 
-import { existsSync } from "node:fs";
 import {
   run,
   runAllowExit,
   requireEnv,
   optionalEnv,
-} from "../../../scripts/lib/run.ts";
-import { runMain } from "../../../scripts/lib/transient.ts";
+} from "@shepherdjerred/root-scripts/lib/run.ts";
+import { runMain } from "@shepherdjerred/root-scripts/lib/transient.ts";
 
 /** homelab package root = two levels up from this script (packages/homelab). */
 function homelabRoot(): string {
@@ -67,7 +66,58 @@ const OPTIONAL_SECRET_ENV: readonly [source: string, target: string][] = [
   ["AVISTAZ_PID", "TF_VAR_avistaz_pid"],
   ["ANIMEZ_PASSWORD", "TF_VAR_animez_password"],
   ["ANIMEZ_PID", "TF_VAR_animez_pid"],
+  [
+    "TOFU_STATE_ENCRYPTION_PASSPHRASE",
+    "TF_VAR_tofu_state_encryption_passphrase",
+  ],
+  ["OP_CONNECT_TOKEN", "OP_CONNECT_TOKEN"],
+  ["OP_CONNECT_URL", "TF_VAR_op_connect_url"],
+  ["OPENAI_ADMIN_KEY", "OPENAI_ADMIN_KEY"],
+  ["ANTHROPIC_ADMIN_KEY", "ANTHROPIC_ADMIN_KEY"],
+  ["OPENROUTER_API_KEY", "OPENROUTER_API_KEY"],
+  ["DISCORD_BOTS_JSON", "TF_VAR_discord_bots"],
+  ["DISCORD_BOT_TOKENS_JSON", "TF_VAR_discord_bot_tokens"],
+  ["DISCORD_PROVIDER_NAMES_JSON", "TF_VAR_discord_provider_names"],
+  ["OPENAI_PROJECTS_JSON", "TF_VAR_openai_projects"],
+  ["OPENAI_SERVICE_ACCOUNTS_JSON", "TF_VAR_openai_service_accounts"],
+  ["OPENAI_ORGANIZATION_USERS_JSON", "TF_VAR_openai_organization_users"],
+  ["OPENAI_PROJECT_USERS_JSON", "TF_VAR_openai_project_users"],
+  ["OPENAI_PROJECT_SPEND_ALERTS_JSON", "TF_VAR_openai_project_spend_alerts"],
+  ["ANTHROPIC_WORKSPACES_JSON", "TF_VAR_anthropic_workspaces"],
+  ["ANTHROPIC_API_KEYS_JSON", "TF_VAR_anthropic_api_keys"],
+  ["ANTHROPIC_WORKSPACE_MEMBERS_JSON", "TF_VAR_anthropic_workspace_members"],
+  ["ANTHROPIC_INVITES_JSON", "TF_VAR_anthropic_invites"],
+  ["OPENROUTER_WORKSPACES_JSON", "TF_VAR_openrouter_workspaces"],
+  ["OPENROUTER_GUARDRAILS_JSON", "TF_VAR_openrouter_guardrails"],
+  ["OPENROUTER_API_KEYS_JSON", "TF_VAR_openrouter_api_keys"],
+  ["OPENROUTER_BYOK_CREDENTIALS_JSON", "TF_VAR_openrouter_byok_credentials"],
+  ["OPENROUTER_BYOK_KEYS_JSON", "TF_VAR_openrouter_byok_keys"],
 ];
+
+/** Build the local filesystem mirror needed by the in-repository BYOK provider. */
+async function configureLocalOpenRouterProvider(
+  env: Record<string, string>,
+): Promise<void> {
+  const providerRoot = `${homelabRoot()}/../../terraform-provider-openrouter-byok`;
+  const tempRoot = `${Bun.env["TMPDIR"] ?? "/tmp"}/monorepo-openrouter-byok-${process.pid.toString()}`;
+  const goosResult = await run(["go", "env", "GOOS"], { capture: true });
+  const goarchResult = await run(["go", "env", "GOARCH"], { capture: true });
+  const goos = goosResult.stdout.trim();
+  const goarch = goarchResult.stdout.trim();
+  const mirrorRoot = `${tempRoot}/mirror/registry.opentofu.org/shepherdjerred/openrouter-byok/0.1.0/${goos}_${goarch}`;
+  await run(["mkdir", "-p", mirrorRoot]);
+  const binaryPath = `${mirrorRoot}/terraform-provider-openrouter-byok_v0.1.0`;
+  await run(
+    ["go", "build", "-trimpath", "-buildvcs=false", "-o", binaryPath, "."],
+    { cwd: providerRoot, env },
+  );
+  const cliConfigPath = `${tempRoot}/tofu.tfrc`;
+  await Bun.write(
+    cliConfigPath,
+    `provider_installation {\n  filesystem_mirror {\n    path = "${tempRoot}/mirror"\n    include = ["registry.opentofu.org/shepherdjerred/openrouter-byok"]\n  }\n  direct {}\n}\n`,
+  );
+  env["TF_CLI_CONFIG_FILE"] = cliConfigPath;
+}
 
 /** Build the env the tofu subprocess runs with. */
 function buildTofuEnv(stack: string): Record<string, string> {
@@ -123,7 +173,7 @@ async function main(): Promise<void> {
 
   const root = homelabRoot();
   const stackDir = `${root}/${STACKS_REL}/${stack}`;
-  if (!existsSync(stackDir)) {
+  if (!(await Bun.file(`${stackDir}/providers.tf`).exists())) {
     throw new Error(`Unknown stack: ${stack} (no dir at ${stackDir})`);
   }
 
@@ -138,6 +188,10 @@ async function main(): Promise<void> {
   }
 
   const env = buildTofuEnv(stack);
+
+  if (stack === "openrouter") {
+    await configureLocalOpenRouterProvider(env);
+  }
 
   // `tofu init` — NOTE: the old code wrapped init in a bounded retry loop to
   // survive slow provider-registry / GitHub release CDN responses. That retry

@@ -127,6 +127,7 @@
     "packages/tasks-for-obsidian",
     "packages/temporal",
     "packages/terraform-provider-asuswrt",
+    "packages/terraform-provider-openrouter-byok",
     "packages/toolkit",
     "packages/trmnl-dashboard",
     "packages/version-catalog",

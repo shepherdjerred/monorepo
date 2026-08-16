@@ -1,0 +1,12 @@
+{
+  "name": "@shepherdjerred/terraform-provider-openrouter-byok",
+  "private": true,
+  "description": "Typed OpenRouter BYOK OpenTofu provider",
+  "scripts": {
+    "build": "go build ./...",
+    "test": "go test ./...",
+    "lint": "golangci-lint run",
+    "typecheck": "go vet ./...",
+    "test:ci": "bun ../../scripts/run-ci-test.ts"
+  }
+}

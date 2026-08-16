@@ -698,6 +698,7 @@
     "packages/homelab": {
       "name": "homelab",
       "dependencies": {
+        "@shepherdjerred/root-scripts": "workspace:*",
         "yaml": "^2.8.3",
         "zod": "^4.4.3",
       },
@@ -1693,6 +1694,9 @@
     },
     "packages/terraform-provider-asuswrt": {
       "name": "@shepherdjerred/terraform-provider-asuswrt",
+    },
+    "packages/terraform-provider-openrouter-byok": {
+      "name": "@shepherdjerred/terraform-provider-openrouter-byok",
     },
     "packages/toolkit": {
       "name": "@shepherdjerred/toolkit",
@@ -3631,6 +3635,8 @@
     "@shepherdjerred/temporal": ["@shepherdjerred/temporal@workspace:packages/temporal"],
 
     "@shepherdjerred/terraform-provider-asuswrt": ["@shepherdjerred/terraform-provider-asuswrt@workspace:packages/terraform-provider-asuswrt"],
+
+    "@shepherdjerred/terraform-provider-openrouter-byok": ["@shepherdjerred/terraform-provider-openrouter-byok@workspace:packages/terraform-provider-openrouter-byok"],
 
     "@shepherdjerred/toolkit": ["@shepherdjerred/toolkit@workspace:packages/toolkit"],
 

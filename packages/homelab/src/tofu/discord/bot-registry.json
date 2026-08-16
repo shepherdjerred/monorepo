@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "True Discord bot applications eligible for the import-only OpenTofu stack. Userbots and selfbots are deliberately absent.",
+  "bots": [
+    {
+      "name": "birmel",
+      "application_name": "Byan",
+      "expected_application_id": "1452172134498701455",
+      "onepassword_item": "w5c27dzybxor3j6dzl7lub2soe",
+      "managed_settings": [
+        "description",
+        "custom_install_url",
+        "interactions_endpoint_url",
+        "role_connections_verification_url",
+        "tags"
+      ]
+    },
+    {
+      "name": "starlight-beta",
+      "application_name": "Starlight Beta",
+      "expected_application_id": "1092616671388254248",
+      "onepassword_item": "tdxe6cq7ozhv7cesfvnlkl5gh4",
+      "managed_settings": [
+        "description",
+        "custom_install_url",
+        "interactions_endpoint_url",
+        "role_connections_verification_url",
+        "tags"
+      ]
+    },
+    {
+      "name": "starlight-prod",
+      "application_name": "Starlight",
+      "expected_application_id": "716834761418735638",
+      "onepassword_item": "cmp6si6n5syhr4smxew3qfcmfi",
+      "managed_settings": [
+        "description",
+        "custom_install_url",
+        "interactions_endpoint_url",
+        "role_connections_verification_url",
+        "tags"
+      ]
+    },
+    {
+      "name": "scout-beta",
+      "application_name": "Scout (beta)",
+      "expected_application_id": "1311755320745394317",
+      "onepassword_item": "rtu44pohnp5ixdp2njuv5f6t2e",
+      "managed_settings": [
+        "description",
+        "custom_install_url",
+        "interactions_endpoint_url",
+        "role_connections_verification_url",
+        "tags"
+      ]
+    },
+    {
+      "name": "scout-prod",
+      "application_name": "Scout",
+      "expected_application_id": "1182800769188110366",
+      "onepassword_item": "pacrc4wfbtct4y3qazkvazop5a",
+      "managed_settings": [
+        "description",
+        "custom_install_url",
+        "interactions_endpoint_url",
+        "role_connections_verification_url",
+        "tags"
+      ]
+    },
+    {
+      "name": "minecraft",
+      "application_name": "Minecraft",
+      "expected_application_id": "1119453338468089868",
+      "onepassword_item": "q37vet77dfggoqbvu4bqle3gje",
+      "managed_settings": [
+        "description",
+        "custom_install_url",
+        "interactions_endpoint_url",
+        "role_connections_verification_url",
+        "tags"
+      ]
+    }
+  ]
+}
