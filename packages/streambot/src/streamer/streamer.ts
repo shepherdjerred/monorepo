@@ -72,13 +72,19 @@ export class StreambotStreamer implements StreamerLike {
   private readonly streamer: Streamer;
   /** This userbot's account token (one per pool entry). */
   private readonly userToken: UserToken;
+  /** Only `config.stream.*` and `config.voice.*` are read here; the discord token comes from {@link userToken}. */
   private readonly config: Pick<Config, "stream" | "voice">;
+  /** Injectable clock (ms) so position tracking is deterministic in tests. */
   private readonly now: () => number;
+  /** Injectable player factory (defaults to the fork's real one) so tests can supply a fake. */
   private readonly createPlayer: PlayerFactory;
+  /** Injectable observer factory so startup and seek races are deterministic in tests. */
   private readonly createObserver: StreamObserverFactory;
   private readonly joinStreamerVoice: typeof joinStreamerVoice;
   private player: Player | null = null;
+  /** Last known playback offset (seconds), captured per segment so a HW→SW retry can resume there. */
   private lastPlaybackPositionSeconds = 0;
+  /** Offset (seconds) the current segment started playing at (initial resume seek or last live seek). */
   private segmentStartOffsetSeconds = 0;
   /**
    * Seek target visible to the synchronously-starting observer before the replacement attach
@@ -89,9 +95,13 @@ export class StreambotStreamer implements StreamerLike {
   private pendingSeekPreviousPositionSeconds: number | null = null;
   /** Monotonic owner for overlapping seek completions; only the newest request may update anchors. */
   private seekGeneration = 0;
+  /** Wall-clock (ms) when the current segment began playing; null when nothing is playing. */
   private segmentStartedAtMs: number | null = null;
+  /** Close state for the current connection; retained recovery leases outlive pool reuse. */
   private voiceCloseTracker: VoiceCloseTracker | null = null;
+  /** Session-layer callback for Discord-side voice closes; cleared between sessions. */
   private voiceCloseListener: ((info: VoiceCloseInfo) => void) | null = null;
+  /** Session-layer callback for mid-stream ffmpeg stalls; cleared between sessions. */
   private stallListener: ((info: StallInfo) => void) | null = null;
   private voiceAudioListener: ((audio: ReceivedVoiceAudio) => void) | null =
     null;
@@ -189,6 +199,7 @@ export class StreambotStreamer implements StreamerLike {
     }
     await Promise.resolve();
   }
+  /** Apply a volume percentage (0-200) to the live stream; false when nothing is playing. */
   async setVolume(percent: number): Promise<boolean> {
     return this.assistantOutput.setVolume(percent);
   }
@@ -209,6 +220,7 @@ export class StreambotStreamer implements StreamerLike {
   ): void {
     this.voiceAudioListener = listener;
   }
+  /** Seek the live stream to an absolute offset (seconds); false when nothing is playing. */
   async seek(seconds: number): Promise<boolean> {
     if (this.player === null) {
       return false;
@@ -217,6 +229,9 @@ export class StreambotStreamer implements StreamerLike {
     const target = Math.max(0, seconds);
     const previousPositionSeconds = this.getPosition();
     const seekGeneration = ++this.seekGeneration;
+    // The replacement observer can begin synchronously inside player.seek(), so expose the target
+    // to stall accounting immediately. Do not commit the public position anchor until the real
+    // player confirms its replacement pipeline attached successfully.
     this.pendingSeekOffsetSeconds = target;
     this.pendingSeekPreviousPositionSeconds = previousPositionSeconds;
     try {
@@ -225,6 +240,9 @@ export class StreambotStreamer implements StreamerLike {
       if (this.seekGeneration === seekGeneration && this.player === player) {
         this.pendingSeekOffsetSeconds = null;
         this.pendingSeekPreviousPositionSeconds = null;
+        // A replacement attach failure also rejects player.finished. If the playback owner won that
+        // race, it has already cleared this.player and stopped the clock; do not restart a clock for
+        // dead media while the machine prepares recovery.
         if (previousPositionSeconds !== null) {
           this.segmentStartOffsetSeconds = previousPositionSeconds;
           this.segmentStartedAtMs = this.now();
@@ -273,6 +291,7 @@ export class StreambotStreamer implements StreamerLike {
   setStallListener(listener: ((info: StallInfo) => void) | null): void {
     this.stallListener = listener;
   }
+  /** Revoke ownership from every in-flight seek and clear its shared public-position state. */
   private invalidatePendingSeek(): void {
     this.seekGeneration += 1;
     this.pendingSeekOffsetSeconds = null;

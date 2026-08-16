@@ -53,7 +53,7 @@ function fakeModels(wakeOn: number, vadEndsOn: number): LocalVoiceModels {
 }
 
 describe("VoiceAudioLifecycle", () => {
-  test("holds a typed candidate for 1.25 seconds, rejects locally, and zeros verifier audio", async () => {
+  test("holds a typed candidate for the fallback window, rejects locally, and zeros verifier audio", async () => {
     let nowMs = 42;
     let verificationCalls = 0;
     const verificationAudio: { value: Float32Array | null } = { value: null };

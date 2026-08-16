@@ -38,6 +38,9 @@ export async function joinStreamerVoice(options: {
     throw new Error("voice connection missing after joinVoice resolved");
   }
   const activeConnection = connection;
+  // Surface Discord-side connection deaths (the fork emits `close` for non-resumable,
+  // remotely-initiated closes). VoiceConnection also relays its active Go-Live child's close,
+  // so this one observer covers either transport without a listener-installation race.
   function detach(): void {
     activeConnection.off("close", onConnectionClose);
     activeConnection.off("audio", onConnectionAudio);
@@ -50,6 +53,9 @@ export async function joinStreamerVoice(options: {
       deliberate: info.deliberate,
       atMs: options.now(),
     };
+    // Once Discord has explicitly disconnected the streamer, a later transient close from the
+    // other media transport must not erase that classification. A late deliberate close may,
+    // however, replace the transient signal that started recovery.
     if (!tracker.record(close)) return;
     log.warn("Discord media connection closed", {
       guildId: options.input.guildId,

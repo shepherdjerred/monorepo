@@ -23,7 +23,7 @@ flowchart LR
   D[Discord normal voice<br/>identified Opus] --> L[Local decode and<br/>per-speaker pre-roll]
   L --> K{Permissive sherpa<br/>phrase or fragment?}
   K -->|no| L
-  K -->|candidate| S[Lock triggering speaker<br/>for 1.25 seconds]
+  K -->|candidate| S[Lock triggering speaker<br/>until the fragment tail elapses]
   S --> W{Phrase-specific<br/>local ONNX verifier}
   W -->|reject| L
   W -->|pass| V[Silero VAD from candidate<br/>ends command]
@@ -89,6 +89,9 @@ manifest/checksums, ONNX runtime, or Silero VAD model is invalid —
 treats every one of those as fatal rather than degrading to a weaker gate.
 
 Each locally verified candidate is transcribed ephemerally with no prompt naming Streambot. A
+local false accept therefore transmits the ~2 s pre-roll plus the utterance to the transcription
+endpoint before the transcript gate rejects it and the turn closes. Queue and now-playing tool
+results sent to OpenAI are requester-anonymous: no Discord user IDs leave the process. A
 rejected prefix closes silently before `response.create`; an accepted prefix replaces the committed
 audio item with command-only text. SDK audio history and tracing are disabled. Metrics contain only
 bounded stage outcomes, usage, concurrency, and latency—never speakers, transcripts, or media
