@@ -664,7 +664,7 @@ describe("local Realtime probe", () => {
     expect(context.result.mutated).toBe(false);
   });
 
-  test("refuses URLs and rejects a second mutation without recording either", async () => {
+  test("refuses URLs, releases the burned wake, and allows a corrected retry", async () => {
     const context = await runLocal(
       [
         {
@@ -679,13 +679,15 @@ describe("local Realtime probe", () => {
       ],
       "Hey Streambot, play this URL and skip.",
     );
-    expect(context.commands.invocations).toEqual([]);
     expect(context.transport.functionOutputs).toHaveLength(2);
     expect(context.transport.functionOutputs[0]).toContain(
       "Say a title instead of a URL",
     );
-    expect(context.transport.functionOutputs[1]).toContain(
-      "Only one playback change",
-    );
+    // The boundary failure happened before any mutation, so it releases the one-mutation gate
+    // and the corrected follow-up executes instead of burning the whole wake.
+    expect(context.commands.invocations).toEqual([
+      { name: "skip", arguments: {} },
+    ]);
+    expect(context.result.mutated).toBe(true);
   });
 });

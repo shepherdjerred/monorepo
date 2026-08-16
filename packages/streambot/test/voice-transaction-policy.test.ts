@@ -17,6 +17,15 @@ describe("voice transaction policy", () => {
     expect(gate.hasMutated).toBe(true);
   });
 
+  test("release undoes a boundary-failed claim so a corrected retry can run", () => {
+    const gate = new VoiceMutationGate();
+    expect(gate.claim()).toBe(true);
+    gate.release();
+    expect(gate.hasMutated).toBe(false);
+    expect(gate.claim()).toBe(true);
+    expect(gate.claim()).toBe(false);
+  });
+
   test("exposes only the bounded Streambot tool surface", () => {
     const service = new PlaybackCommandService({
       config: loadConfig({

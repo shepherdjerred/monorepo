@@ -102,6 +102,16 @@ export class VoiceMutationGate {
     return true;
   }
 
+  /**
+   * Undo a claim whose operation failed at the input boundary, before any playback mutation —
+   * every PlaybackCommandBoundaryError throws pre-dispatch, so the model may retry with corrected
+   * arguments instead of burning the whole wake on one bad guess. Never released for unknown
+   * errors: those may have landed after a dispatch, and a burned wake is safer than two mutations.
+   */
+  release(): void {
+    this.mutated = false;
+  }
+
   get hasMutated(): boolean {
     return this.mutated;
   }
@@ -134,6 +144,7 @@ export function createStreambotVoiceTools(
       return result;
     } catch (error) {
       if (error instanceof PlaybackCommandBoundaryError) {
+        if (mutating) mutationGate.release();
         voiceToolCallsTotal.inc({ tool: name, outcome: "denied" });
         return error.message;
       }
