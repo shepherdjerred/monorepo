@@ -373,43 +373,44 @@ func TestVTSRuleListRoundTrip(t *testing.T) {
 	}
 }
 
-// The following tests assert that Serialize produces exactly what the router's
-// own web-UI JavaScript builder emits — an INDEPENDENT oracle (the firmware
-// spec), not a round-trip through our own parser. This is the strongest
-// write-path check available without applying to real hardware.
+// The following tests assert that Encode*ForWrite produces exactly what the
+// router's own web-UI JavaScript builder submits — an INDEPENDENT oracle (the
+// firmware spec), not a round-trip through our own parser.
 //
 // DHCP builder (Advanced_DHCP_Content.asp):
 //   dhcp_staticlist += "<" + mac + ">" + ip + ">" + dns + ">" + hostname
 // VTS builder (Advanced_VirtualServer_Content.asp):
 //   value += "<" + name + ">" + extPort + ">" + intIP + ">" + intPort + ">" + proto + ">" + srcIP
-// (angle brackets are stored as the &#60/&#62 entity tokens on the wire.)
+// appGet.cgi returns those angle brackets as &#60/&#62, but apply.cgi expects the
+// literal builder output. Submitting the read representation double-escapes
+// the ampersands and corrupts the list.
 
-func TestSerializeDHCPStaticListMatchesFirmwareBuilder(t *testing.T) {
+func TestEncodeDHCPStaticListForWriteMatchesFirmwareBuilder(t *testing.T) {
 	t.Parallel()
 
-	got := client.SerializeDHCPStaticList([]client.DHCPStaticEntry{
+	got := client.EncodeDHCPStaticListForWrite([]client.DHCPStaticEntry{
 		{MAC: "AA:BB:CC:DD:EE:FF", IP: "192.168.1.100"},                                 // no DNS/hostname
 		{MAC: "11:22:33:44:55:66", IP: "192.168.1.50", DNS: "1.1.1.1", Hostname: "nas"}, // all fields
 	})
 
-	want := lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100" + gt + gt +
-		lt + "11:22:33:44:55:66" + gt + "192.168.1.50" + gt + "1.1.1.1" + gt + "nas"
+	want := "<AA:BB:CC:DD:EE:FF>192.168.1.100>>" +
+		"<11:22:33:44:55:66>192.168.1.50>1.1.1.1>nas"
 
 	if got != want {
 		t.Errorf("serialize != firmware builder format:\n want = %q\n got  = %q", want, got)
 	}
 }
 
-func TestSerializeVTSRuleListMatchesFirmwareBuilder(t *testing.T) {
+func TestEncodeVTSRuleListForWriteMatchesFirmwareBuilder(t *testing.T) {
 	t.Parallel()
 
-	got := client.SerializeVTSRuleList([]client.PortForwardEntry{
+	got := client.EncodeVTSRuleListForWrite([]client.PortForwardEntry{
 		{Name: "HTTP", ExternalPort: "80", InternalIP: "192.168.1.100", InternalPort: "80", Protocol: "tcp"},                       // empty src → trailing delimiter
 		{Name: "SSH", ExternalPort: "2222", InternalIP: "192.168.1.50", InternalPort: "22", Protocol: "tcp", SourceIP: "10.0.0.1"}, // src set
 	})
 
-	want := lt + "HTTP" + gt + "80" + gt + "192.168.1.100" + gt + "80" + gt + "tcp" + gt +
-		lt + "SSH" + gt + "2222" + gt + "192.168.1.50" + gt + "22" + gt + "tcp" + gt + "10.0.0.1"
+	want := "<HTTP>80>192.168.1.100>80>tcp>" +
+		"<SSH>2222>192.168.1.50>22>tcp>10.0.0.1"
 
 	if got != want {
 		t.Errorf("serialize != firmware builder format:\n want = %q\n got  = %q", want, got)

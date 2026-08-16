@@ -10,15 +10,16 @@ import (
 	"github.com/shepherdjerred/monorepo/packages/terraform-provider-asuswrt/internal/client"
 )
 
-// packedFieldValidator rejects values containing the tokens Asuswrt uses to
-// delimit packed NVRAM lists.
+// packedFieldValidator rejects values containing either representation Asuswrt
+// uses to delimit packed NVRAM lists.
 //
 // Those lists are flat strings with no escape mechanism: the firmware's own
-// parsers split on the literal "&#60" and "&#62" tokens, so a value carrying
-// one is simply not representable. Serializing it anyway would shift every
-// following field, or fabricate an entry, on the next read — and because a
-// mutation rewrites the whole list, that corrupted shape gets written back to
-// the router and can destroy unrelated rules.
+// appGet.cgi returns "&#60"/"&#62", while apply.cgi accepts literal '<'/'>' as
+// built by the firmware UI. A value carrying any of them is not representable.
+// Serializing it anyway would shift every following field, or fabricate an
+// entry, on the next read — and because a mutation rewrites the whole list,
+// that corrupted shape gets written back to the router and can destroy
+// unrelated rules.
 //
 // Escaping is not an option: any scheme we invented would be unknown to the
 // firmware, which reads these same keys. Rejecting at plan time is the only

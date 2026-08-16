@@ -6,7 +6,7 @@ custom `terraform-provider-asuswrt` (built from `packages/terraform-provider-asu
 | Alias      | Device       | IP            | Mode   | Managed here                                                            |
 | ---------- | ------------ | ------------- | ------ | ----------------------------------------------------------------------- |
 | `router`   | RT-AX88U Pro | 192.168.1.1   | router | system, DHCP static leases, port-forwards, wireless wl0/wl1             |
-| `ap_ax88u` | RT-AX88U     | 192.168.1.213 | AP     | system, wireless wl0/wl1                                                |
+| `ap_ax88u` | RT-AX88U     | 192.168.1.214 | AP     | system, wireless wl0/wl1                                                |
 | `ap_be86u` | RT-BE86U     | 192.168.1.2   | AP     | system (wireless deferred — see `docs/todos/asuswrt-be86u-wireless.md`) |
 
 ## Local-run only (NOT in CI)
