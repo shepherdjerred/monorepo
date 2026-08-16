@@ -164,6 +164,7 @@ Use that persona's social judgment, but never invent evidence. Extract stable ru
         schemaName: "birmel_memory_candidates",
         workload: "birmel.memory.extract",
         sessionId: options.turn.channelId,
+        reasoningEffort: config.openRouter.reasoningEffort,
         abortSignal: AbortSignal.timeout(config.agent.responseTimeoutMs),
       });
       const candidates = attachExtractionProvenance({

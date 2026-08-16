@@ -1,5 +1,10 @@
 import type { LanguageModelUsage, ProviderMetadata } from "ai";
-import { costForTextUsage, getPricing } from "@shepherdjerred/llm-models";
+import {
+  costForTextUsage,
+  getPricing,
+  type TextPricing,
+  type TextUsage,
+} from "@shepherdjerred/llm-models";
 import { z } from "zod";
 import type {
   OpenRouterCallMetadata,
@@ -35,7 +40,10 @@ const ResponseBodySchema = z
         completion_tokens: z.number().int().nonnegative().optional(),
         total_tokens: z.number().int().nonnegative().optional(),
         prompt_tokens_details: z
-          .object({ cached_tokens: z.number().int().nonnegative().optional() })
+          .object({
+            cached_tokens: z.number().int().nonnegative().optional(),
+            cache_write_tokens: z.number().int().nonnegative().optional(),
+          })
           .loose()
           .optional(),
         completion_tokens_details: z
@@ -97,6 +105,7 @@ const ZERO_TOKENS: OpenRouterTokenBreakdown = {
   input: 0,
   output: 0,
   cachedInput: 0,
+  cacheWrite: 0,
   reasoning: 0,
   total: 0,
 };
@@ -109,6 +118,7 @@ export function tokenBreakdown(
     input: usage.inputTokens ?? 0,
     output: usage.outputTokens ?? 0,
     cachedInput: usage.inputTokenDetails.cacheReadTokens ?? 0,
+    cacheWrite: usage.inputTokenDetails.cacheWriteTokens ?? 0,
     reasoning: usage.outputTokenDetails.reasoningTokens ?? 0,
     total: usage.totalTokens ?? 0,
   };
@@ -122,6 +132,7 @@ export function addTokenBreakdown(
     input: left.input + right.input,
     output: left.output + right.output,
     cachedInput: left.cachedInput + right.cachedInput,
+    cacheWrite: left.cacheWrite + right.cacheWrite,
     reasoning: left.reasoning + right.reasoning,
     total: left.total + right.total,
   };
@@ -197,6 +208,58 @@ function routingFields(input: {
   };
 }
 
+/**
+ * Map our normalized breakdown onto the billing convention the requested
+ * model's catalog entry actually declares.
+ *
+ * Anthropic entries price cache reads (`cacheRead`) and cache creations
+ * (`cacheWrite`) with their own rates and expect `inputTokens` to exclude both;
+ * OpenAI entries price a `cachedInput` subset of an inclusive `inputTokens`.
+ * Sending cache reads as `cachedInputTokens` for an Anthropic model would fall
+ * back to `pricing.input` — a 10x overcharge on Claude cache reads — and would
+ * silently drop cache-creation cost entirely.
+ *
+ * Cache writes are omitted on the OpenAI path on purpose: OpenAI's prompt cache
+ * has no separately billed write, so those entries declare no `cacheWrite`
+ * rate and upstream reports no `cache_write_tokens` for them.
+ */
+function textUsageForPricing(
+  pricing: TextPricing,
+  tokens: OpenRouterTokenBreakdown,
+): TextUsage {
+  if (pricing.cacheRead !== undefined || pricing.cacheWrite !== undefined) {
+    return {
+      inputTokens: Math.max(0, tokens.input - tokens.cachedInput),
+      outputTokens: tokens.output,
+      cacheReadTokens: tokens.cachedInput,
+      cacheWriteTokens: tokens.cacheWrite,
+    };
+  }
+  return {
+    inputTokens: tokens.input,
+    outputTokens: tokens.output,
+    cachedInputTokens: tokens.cachedInput,
+  };
+}
+
+function catalogCost(
+  body: ParsedResponseBody | undefined,
+  requestedModel: string,
+  tokens: OpenRouterTokenBreakdown,
+): number | undefined {
+  const pricing = getPricing(requestedModel);
+  if (pricing === undefined) return undefined;
+  if (pricing.modality === "image") {
+    return body?.data === undefined
+      ? undefined
+      : pricing.perImage * body.data.length;
+  }
+  if (tokens.total === 0 && tokens.input === 0 && tokens.output === 0) {
+    return undefined;
+  }
+  return costForTextUsage(requestedModel, textUsageForPricing(pricing, tokens));
+}
+
 function costFields(
   provider: ParsedProviderData,
   body: ParsedResponseBody | undefined,
@@ -206,22 +269,9 @@ function costFields(
   OpenRouterCallMetadata,
   "actualCostUsd" | "catalogCostUsd" | "upstreamCostUsd"
 > {
-  const pricing = getPricing(requestedModel);
-  const catalogCostUsd =
-    pricing?.modality === "image"
-      ? body?.data === undefined
-        ? undefined
-        : pricing.perImage * body.data.length
-      : tokens.total === 0 && tokens.input === 0 && tokens.output === 0
-        ? undefined
-        : costForTextUsage(requestedModel, {
-            inputTokens: tokens.input,
-            outputTokens: tokens.output,
-            cachedInputTokens: tokens.cachedInput,
-          });
   return {
     actualCostUsd: provider?.usage?.cost ?? body?.usage?.cost,
-    catalogCostUsd,
+    catalogCostUsd: catalogCost(body, requestedModel, tokens),
     upstreamCostUsd:
       provider?.usage?.costDetails?.upstreamInferenceCost ??
       body?.usage?.cost_details?.upstream_inference_cost,
@@ -236,6 +286,7 @@ function responseTokenBreakdown(
     input: inputTokens(usage, body),
     output: outputTokens(usage, body),
     cachedInput: cachedInputTokens(usage, body),
+    cacheWrite: cacheWriteTokens(usage, body),
     reasoning: reasoningTokens(usage, body),
     total: totalTokens(usage, body),
   };
@@ -262,6 +313,17 @@ function cachedInputTokens(
   return (
     usage?.inputTokenDetails.cacheReadTokens ??
     body?.usage?.prompt_tokens_details?.cached_tokens ??
+    0
+  );
+}
+
+function cacheWriteTokens(
+  usage: LanguageModelUsage | undefined,
+  body: ParsedResponseBody | undefined,
+): number {
+  return (
+    usage?.inputTokenDetails.cacheWriteTokens ??
+    body?.usage?.prompt_tokens_details?.cache_write_tokens ??
     0
   );
 }

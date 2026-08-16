@@ -32,6 +32,7 @@ async function defaultRouteModel(request: RouteRequest): Promise<unknown> {
     schemaName: "birmel_route_decision",
     workload: "birmel.route",
     sessionId: request.turn.channelId,
+    reasoningEffort: config.openRouter.reasoningEffort,
     abortSignal: AbortSignal.timeout(config.agent.routerTimeoutMs),
   });
   return result.object;

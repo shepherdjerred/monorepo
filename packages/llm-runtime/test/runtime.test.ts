@@ -1,5 +1,6 @@
 import { generateText } from "ai";
 import { describe, expect, test } from "bun:test";
+import { getPricing } from "@shepherdjerred/llm-models";
 import { Registry } from "prom-client";
 import { z } from "zod";
 import {
@@ -279,10 +280,58 @@ describe("OpenRouter metadata", () => {
       input: 20,
       output: 7,
       cachedInput: 5,
+      cacheWrite: 0,
       reasoning: 3,
       total: 27,
     });
     expect(metadata.catalogCostUsd).toBeDefined();
+  });
+
+  test("prices Anthropic cache reads and writes with their catalog rates", () => {
+    // claude-sonnet-5: input 3, output 15, cacheRead 0.3, cacheWrite 3.75 per 1M.
+    const metadata = parseOpenRouterMetadata({
+      requestedModel: "claude-sonnet-5",
+      responseBody: {
+        usage: {
+          prompt_tokens: 1_000_000,
+          completion_tokens: 0,
+          total_tokens: 1_000_000,
+          prompt_tokens_details: {
+            cached_tokens: 800_000,
+            cache_write_tokens: 100_000,
+          },
+        },
+      },
+    });
+
+    expect(metadata.tokens.cachedInput).toBe(800_000);
+    expect(metadata.tokens.cacheWrite).toBe(100_000);
+    // 200k uncached @ $3 + 800k cache-read @ $0.30 + 100k cache-write @ $3.75.
+    expect(metadata.catalogCostUsd).toBeCloseTo(0.6 + 0.24 + 0.375, 10);
+  });
+
+  test("prices OpenAI cached input as a subset of the inclusive prompt count", () => {
+    // gpt-5.4-nano declares `cachedInput`, so cache reads stay inside `input`.
+    const metadata = parseOpenRouterMetadata({
+      requestedModel: "gpt-5.4-nano",
+      responseBody: {
+        usage: {
+          prompt_tokens: 1_000_000,
+          completion_tokens: 0,
+          total_tokens: 1_000_000,
+          prompt_tokens_details: { cached_tokens: 800_000 },
+        },
+      },
+    });
+
+    const pricing = getPricing("gpt-5.4-nano");
+    if (pricing?.modality !== "text" || pricing.cachedInput === undefined) {
+      throw new Error("gpt-5.4-nano must declare OpenAI cached-input pricing");
+    }
+    expect(metadata.catalogCostUsd).toBeCloseTo(
+      (200_000 * pricing.input + 800_000 * pricing.cachedInput) / 1_000_000,
+      10,
+    );
   });
 
   test("infers fallback count from additive attempts when attempt is absent", () => {

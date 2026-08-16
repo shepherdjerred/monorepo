@@ -113,6 +113,10 @@ export function recordRouterResponse(
     metadata.tokens.cachedInput,
   );
   metrics.tokens.inc(
+    { ...labels, type: "cache_write" },
+    metadata.tokens.cacheWrite,
+  );
+  metrics.tokens.inc(
     { ...labels, type: "reasoning" },
     metadata.tokens.reasoning,
   );
@@ -217,6 +221,10 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
     metrics.tokens.inc(
       { ...labels, type: "cached_input" },
       metadata.tokens.cachedInput,
+    );
+    metrics.tokens.inc(
+      { ...labels, type: "cache_write" },
+      metadata.tokens.cacheWrite,
     );
     metrics.tokens.inc(
       { ...labels, type: "reasoning" },

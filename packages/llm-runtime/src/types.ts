@@ -23,6 +23,7 @@ export type OpenRouterRuntimeLogRecord = {
   inputTokens: number;
   outputTokens: number;
   cachedInputTokens: number;
+  cacheWriteTokens: number;
   reasoningTokens: number;
   totalTokens: number;
   actualCostUsd?: number | undefined;
@@ -90,10 +91,16 @@ export type CallOptionsInput = {
   observationId?: string | undefined;
 };
 
+/**
+ * The AI SDK's normalized usage shape: `input` counts every prompt token
+ * including cache reads, `cachedInput` is the cache-read subset of it, and
+ * `cacheWrite` counts cache-creation tokens the upstream reports separately.
+ */
 export type OpenRouterTokenBreakdown = {
   input: number;
   output: number;
   cachedInput: number;
+  cacheWrite: number;
   reasoning: number;
   total: number;
 };

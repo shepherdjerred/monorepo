@@ -44,6 +44,7 @@ export async function classifyShouldRespond(
           schemaName: "birmel_should_respond",
           workload: "birmel.admission.classify",
           sessionId: input.channelId,
+          reasoningEffort: config.openRouter.reasoningEffort,
           abortSignal: AbortSignal.timeout(config.agent.routerTimeoutMs),
         });
         span.setAttribute(
