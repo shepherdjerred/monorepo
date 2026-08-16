@@ -261,3 +261,29 @@ test` turns correctly executed no playback tool, but diagnostic Realtime transcr
   phrase-verifier assets, and the corpus verifier remains blocked on the absent 400-clip manifest.
   No accepted classifier, corpus, human holdout, or live Discord result exists yet, so production
   remains disabled.
+- 2026-08-16: Trained the canonical recipe to completion on Apple Silicon (MPS), packaged the
+  verifier, generated the corpus, and measured the cascade end to end. The classifier itself is
+  good on its own distribution: 94.4% recall at 0.000 FPPH on 23.4 validation hours, optimal
+  threshold 0.70, AUT 0.0002 — well past the rejected prototype's 65.3% at 0.058. Packaging
+  attests 120,000 positives and 120,000 adversarial negatives against the full 16.09 GiB ACAV100M
+  artifact, and the Linux image `voice-smoke` stage now passes on both runtimes.
+- 2026-08-16: Found and fixed a wake-window alignment defect that made local verification score
+  audio the model had never been shown. The verifier scores the last two seconds it is handed and
+  trains end-aligned, but the lifecycle closed its window 1250 ms after sherpa _emitted_ a
+  candidate, leaving the phrase ~915 ms from the edge; measured tolerance collapses from 0.98 to a
+  0.002 floor past ~350 ms. Proof it was integration and not training: the verifier rejects its own
+  packaged smoke fixture through the production path and accepts it when called directly. No fixed
+  delay fixes it — sherpa reports a match a variable ~280 ms after the audio, and its six fragments
+  end at different points in the phrase — so the window is now anchored to sherpa's per-token
+  timestamps plus a per-fragment tail. Real cafe recall went 0/11 to 5/11; a swept fixed delay
+  never beat 1/11.
+- 2026-08-16: Corpus evaluation over all 400 clips plus the two-hour negative soak does NOT pass,
+  and the gap is not a threshold tweak. Native/WASM: clean positive recall 0.800/0.794 (gate 1.0),
+  stress >=10 dB 0.700/0.675 (gate 0.95), negative activations 24/160, endpoint violations
+  201/203, and the runtimes do not classify identically — a hard invariant, not a tunable bar. The
+  soak fired 80 times in two hours, i.e. 40 false wakes per hour in an idle room, well under the
+  per-session limiter's 300/hour so that limiter never binds. 80% recall is on synthetic clips of
+  the phrase the model trained on, which is the friendly case. Recommendation recorded: the local
+  verifier does not discriminate well enough to run unattended, and the next step is replacing it
+  (Picovoice Porcupine's free tier, or a local ASR such as Moonshine/Whisper-tiny transcribing the
+  candidate window) rather than another training cycle. Production remains disabled.

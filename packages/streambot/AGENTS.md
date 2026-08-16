@@ -35,7 +35,17 @@ When `VOICE_ASSISTANT_ENABLED=true`, each active playback session also owns one 
 assistant (`src/voice/`). The normal Discord voice connection receives DAVE-decrypted, identified
 speaker Opus; Go Live remains the separate movie transport. Permissive sherpa phrase/fragment
 matches provisionally lock one speaker, then a phrase-specific in-process ONNX verifier decides
-from the two-second rolling window. Silero starts at the candidate boundary. Only after both local
+from the two-second rolling window. That window is an **alignment contract**, not a buffer size:
+the verifier scores the last two seconds it is handed and was trained with the phrase end-aligned
+(+/-200 ms jitter), so the wake phrase must finish near the window's end. It is therefore anchored
+to sherpa's per-token `timestamps` plus a per-fragment tail (`VOICE_FRAGMENT_TAIL_MS`), never to a
+fixed delay after sherpa's emission — the decoder reports a match a variable ~280 ms after the
+audio it matched, and the six declared fragments end at very different points in the phrase
+(`HEY` leaves most of "streambot" unsaid; `STREAMBOT` and `BOT` end with it). Closing the window a
+constant time after emission put every real wake at the classifier's 0.002 floor and produced 0/11
+live recall while end-aligned offline evaluation read 94%. A runtime reporting no timestamp falls
+back to a fixed delay set to the measured zero-false-accept point, so the failure direction is
+"no wake" rather than unbounded cloud calls. Silero starts at the candidate boundary. Only after both local
 layers pass does a fresh official Realtime SDK WebSocket commit audio to unprompted English
 `gpt-transcribe`. A rejected leading wake prefix closes silently. An accepted prefix deletes the
 audio conversation item, inserts command-only text, and permits one `gpt-realtime-2.1`/`marin`
@@ -81,7 +91,13 @@ utterances, 40,000 adversarial near-matches, 25 hours of general negative speech
 human holdout inclusion, and it must contain the SHA-256 of all three ONNX assets. Do not package
 the rejected prototype or weaken these minima to make a smoke pass. Per playback session, cloud
 verification allows a burst of two and five attempts per rolling minute; a transcript rejection
-adds a three-second cooldown.
+adds a three-second cooldown. These bound bursts, not spend: the production ceiling lives on the
+OpenAI project token, so exhausting it is an expected recurring state. `quota-errors.ts` classifies
+OpenAI's documented spend refusals (`insufficient_quota`, `billing_hard_limit_reached`) apart from
+transient failures — a bare HTTP 429 is ordinary throttling and must not match — and the session
+then announces once with accurate wording, counts a `quota` transcript outcome, and holds the
+limiter in a bounded backoff so later wakes never open a connection. A refused request bills
+nothing, so the backoff self-heals at period rollover without operator action.
 Train from LiveKit commit `95448a7559c453fcd87645bd67b247ffb45f85b0` with
 `voice-training/streambot-cascade.yaml`, select the threshold only on the synthetic tuning split,
 then run `bun run voice:verifier:package --livekit-dir <checkout> --model-dir <run>
