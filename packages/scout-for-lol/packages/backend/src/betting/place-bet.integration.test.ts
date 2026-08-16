@@ -16,6 +16,7 @@ import {
 } from "#src/testing/bucks-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { placeBet, type PlaceBetInput } from "#src/betting/place-bet.ts";
+import { cancelBet } from "#src/betting/cancel-bet.ts";
 import { MAX_STAKE, SEED_GRANT } from "#src/betting/constants.ts";
 import {
   addFlagOverride,
@@ -201,6 +202,36 @@ describe("placeBet — refusing a position", () => {
   test("refuses a bet on a pool that is no longer open", async () => {
     await db.bucksMatchPool.updateMany({ data: { poolState: "settled" } });
     expect(await betKind()).toBe("window_closed");
+  });
+
+  test("tells a bettor their position is locked once the window closes", async () => {
+    await bet({ stake: 5 });
+    await db.bucksMatchPool.updateMany({
+      data: { closesAt: new Date(Date.now() - 1000) },
+    });
+
+    const result = await cancelBet(
+      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      db,
+    );
+    expect(result.kind).toBe("window_closed");
+  });
+
+  test("tells a non-bettor they have no bet, not that one is locked", async () => {
+    // A wallet with no stake in this pool: the claim below still fails because
+    // the window is shut, but answering `window_closed` would describe a
+    // position this user never took.
+    await bet({ stake: 5 });
+    await db.bucksBet.deleteMany();
+    await db.bucksMatchPool.updateMany({
+      data: { closesAt: new Date(Date.now() - 1000) },
+    });
+
+    const result = await cancelBet(
+      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      db,
+    );
+    expect(result.kind).toBe("no_bet");
   });
 
   test("refuses a Discord user with no linked player in this guild", async () => {

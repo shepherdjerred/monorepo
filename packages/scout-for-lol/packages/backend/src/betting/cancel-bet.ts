@@ -84,8 +84,19 @@ export async function cancelBet(
       // The pool row was read moments ago and nothing deletes pools, so the
       // only way to miss it here is the predicate: the window has passed or the
       // pool has already left `open`. That is a different answer from "you have
-      // no bet", and the caller renders it as one.
-      return { kind: "window_closed" };
+      // no bet", and the caller renders it as one — but only for someone who
+      // actually has a stake. Telling a non-bettor their position is locked
+      // describes a bet they never placed, so check before claiming that.
+      const locked = await tx.bucksBet.findUnique({
+        where: {
+          poolId_bucksAccountId: {
+            poolId: pool.id,
+            bucksAccountId: account.id,
+          },
+        },
+        select: { id: true },
+      });
+      return locked === null ? { kind: "no_bet" } : { kind: "window_closed" };
     }
 
     const bet = await tx.bucksBet.findUnique({
