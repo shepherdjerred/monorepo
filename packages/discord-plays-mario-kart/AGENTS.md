@@ -108,8 +108,8 @@ I/O share one Node event loop, starving ffmpeg below realtime in prod →
 hit 3.47 GB ≈ 188s of lag, OOM risk vs the 4 GB limit). Fix (PR #1274):
 `shouldDropFrame` drops the newest frame once the queue exceeds
 `MAX_SINK_BUFFER_BYTES` (~3 frames) — bounds latency, degrades fps. Restoring
-full 30fps under load needs the emulator on a Worker thread
-(`packages/docs/todos/mk64-emulator-worker-thread.md`).
+full 30fps under load needs the emulator on a Worker thread; that follow-up is
+tracked in Linear.
 
 Diagnosis: `stream_sink_buffer_bytes` growing unbounded is the smoking gun;
 `stream_ffmpeg_speed_ratio` < 1 sustained; the `e2e:perf` harness drives only
@@ -146,8 +146,7 @@ A second video path for the people actually driving: the same overlay-composited
 frames go to a second ffmpeg, out as Annex-B H.264, over the `/video` WebSocket,
 into a `VideoDecoder` on a canvas in the controller page. It skips Discord's
 voice leg and its ~85 ms client de-jitter buffer — the largest remaining term in
-the press-to-glass budget. Design and measurements:
-`packages/docs/plans/2026-08-08_mk64-driver-feed.md`.
+the press-to-glass budget.
 
 Load-bearing details:
 

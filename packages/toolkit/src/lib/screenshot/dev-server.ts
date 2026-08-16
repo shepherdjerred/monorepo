@@ -106,9 +106,9 @@ export async function ensureDevServer(
   }
   // `detached` puts the child in its own process group so `stop()` can signal
   // the whole tree (dev commands spawn descendants — see stop()).
-  // `BROWSER=none` stops a dev command that auto-opens a browser (docs-board's
-  // dev.ts runs `vite --open`) from popping the user's default browser — Vite
-  // honors this env var — since we drive an isolated PinchTab tab instead.
+  // `BROWSER=none` stops a dev command that auto-opens a browser from popping
+  // the user's default browser — Vite honors this env var — since we drive an
+  // isolated PinchTab tab instead.
   const proc = Bun.spawn(entry.devCommand, {
     cwd: `${root}/${entry.cwd}`,
     env: { ...Bun.env, ...options.envOverrides, BROWSER: "none" },
@@ -134,8 +134,8 @@ export async function ensureDevServer(
   const stderrDone = readStream(proc.stderr);
 
   const stop = async () => {
-    // The dev command may spawn descendants (docs-board's dev.ts starts
-    // separate API + Vite children; scout's dev-web.ts starts backend + Vite).
+    // The dev command may spawn descendants (scout's dev-web.ts starts backend
+    // and Vite).
     // The child is a group leader (spawned `detached`), so signal the whole
     // group with a negative PID — killing only `bun run` would orphan those
     // servers and leave their ports occupied for the next run.

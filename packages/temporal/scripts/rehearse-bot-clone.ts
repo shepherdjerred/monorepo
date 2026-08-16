@@ -16,9 +16,8 @@
  *                step that failed in scout-data-dragon-weekly-refresh even
  *                after the (1) fix. It historically also covered a second root
  *                `bun install --force` that wasn't isolated from the pod's
- *                shared Bun cache (see
- *                packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md);
- *                that install has since been removed — workspace packages are
+ *                shared Bun cache. That install has since been removed —
+ *                workspace packages are
  *                symlinked, so nothing needed reinstalling, and `--force`
  *                re-resolved the registry and dirtied bun.lock. The leg now
  *                asserts the snapshot tests still pass with NO install between

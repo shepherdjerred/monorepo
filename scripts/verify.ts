@@ -4,7 +4,6 @@ const turboTasks = [
   "test:ci",
   "coverage:portable",
   "lint",
-  "check-todos",
   "check-suppressions",
   "check-patched-deps",
   "check-script-migrations",

@@ -81,16 +81,6 @@
     // Inputs are scoped so each check only re-runs when files it actually
     // reads change. Explicit input globs hash gitignored files too, so the
     // big generated dirs are negated wherever a broad glob is needed.
-    "//#check-todos": {
-      "inputs": [
-        "packages/docs/**",
-        "packages/**/*.ts",
-        "!packages/**/node_modules/**",
-        "packages/docs-board/src/cli/check-docs.ts",
-        "packages/docs-board/src/server/document-store.ts",
-        "packages/docs-board/src/shared/**"
-      ]
-    },
     "//#check-suppressions": {
       "inputs": ["scripts/**", "!scripts/node_modules/**"]
     },

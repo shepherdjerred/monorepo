@@ -15,7 +15,6 @@ import { z } from "zod";
  *
  * Pipeline: TypeScript → CDK8s synth → YAML (dist/) → Helm chart → ArgoCD helm template → K8s
  *
- * See: packages/docs/guides/2026-04-04_helm-escaping-pipeline.md
  */
 
 const HELM_DIR = path.join(import.meta.dir, "../helm");

@@ -1,9 +1,8 @@
 # packages/tasknotes-macos
 
-The native macOS TaskNotes client, over the shared Rust core in
-`packages/tasknotes-core`. Phase 7 of
-`packages/docs/plans/2026-08-08_tasknotes-native-macos-app.md`, which is the
-canonical spec — read it before changing anything structural here.
+The native macOS TaskNotes client over the shared Rust core in
+`packages/tasknotes-core`. This file and the package source define the current
+structural contract.
 
 Bundle identifier: **`red.sjer.tasknotes.mac`**. Deployment target: **macOS 15**.
 

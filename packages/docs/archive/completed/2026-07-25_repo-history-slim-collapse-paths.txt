@@ -1,4 +1,0 @@
-literal:packages/scout-for-lol/packages/data/src/data-dragon/assets/img/champion-loading/
-literal:packages/scout-for-lol/packages/frontend/public/generated/scout-showcase/
-literal:packages/scout-for-lol/packages/report/src/html/__snapshots__/
-glob:packages/scout-for-lol/packages/report/src/html/**/__snapshots__/*

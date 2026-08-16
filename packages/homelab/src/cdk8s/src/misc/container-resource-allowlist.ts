@@ -5,9 +5,8 @@
  * Enforced both ways by src/container-resources.test.ts: containers missing
  * requests must be listed here, and stale entries fail the test.
  *
- * These are non-critical, evictable-by-design workloads per the 2026-06-12
- * right-sizing audit (packages/docs/plans/2026-06-12_k8s-resource-rightsizing.md):
- * under memory pressure they are the correct first victims, ahead of
+ * These are non-critical, evictable-by-design workloads. Under memory
+ * pressure they are the correct first victims, ahead of
  * storage/GitOps/monitoring infra which carries explicit requests.
  */
 export const BEST_EFFORT_CONTAINER_ALLOWLIST: ReadonlySet<string> = new Set([

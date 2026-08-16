@@ -3,7 +3,6 @@
   "private": true,
   "scripts": {
     "verify": "bun scripts/verify.ts",
-    "docs:board": "bun run --cwd packages/docs-board launch",
     "pr:fleet": "bunx turbo run build --filter=@shepherdjerred/pr-fleet-web && bun run --cwd packages/pr-fleet-controller start",
     "pr:fleet:inspect": "bun run --cwd packages/pr-fleet-controller inspect",
     "pr:fleet:replay": "bun run --cwd packages/pr-fleet-controller replay",
@@ -46,7 +45,6 @@
     "ruff": "uvx ruff check .",
     "pyright": "bun scripts/pyright-check.ts",
     "tunnel-dns-coverage": "bun scripts/check-tunnel-dns-coverage.ts",
-    "check-todos": "bun run packages/docs-board/src/cli/check-docs.ts",
     "check-suppressions": "bun scripts/check-suppressions.ts",
     "check-patched-deps": "bun scripts/check-patched-deps.ts",
     "check-script-migrations": "bun scripts/check-script-migrations.ts",
@@ -81,7 +79,6 @@
     "packages/discord-plays-pokemon/packages/frontend",
     "packages/discord-stream-lifecycle",
     "packages/discord-video-stream",
-    "packages/docs-board",
     "packages/docs/wiki",
     "packages/dotfiles",
     "packages/eslint-config",

@@ -9,10 +9,9 @@ import XCTest
 /// Accessibility grant; see `AGENTS.md` › Running the end-to-end tests.
 ///
 /// ⚠️ **These flows deliberately do not call `performAccessibilityAudit()`**,
-/// and the reasoning is recorded in
-/// `packages/docs/todos/macos-accessibility-audit.md`. The audit found real
-/// problems and two of them are fixed; what it cannot do here is be a *gate*.
-/// Its findings bottom out in two things this project cannot act on — SwiftUI's
+/// because the audit found real problems but cannot remain a useful *gate*.
+/// Two actionable findings are fixed; the remainder bottom out in
+/// things this project cannot act on — SwiftUI's
 /// own undescribed container scaffolding, and contrast on a window titlebar and
 /// on a deliberately de-emphasised retired row. Excluding categories until the
 /// remainder passes is the same move as narrowing an assertion until it holds,

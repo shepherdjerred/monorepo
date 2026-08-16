@@ -16,8 +16,7 @@ export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
         // minimal performance impact below ~80%. The existing zfs-maintenance
         // workflow (scrub + autotrim) doesn't reduce fragmentation, and real
         // defrag (zfs send/recv into a fresh dataset) is expensive per-volume.
-        // Raised thresholds to action levels per
-        // packages/docs/decisions/2026-05-05_zfs-fragmentation-acceptance.md.
+        // Thresholds are raised to action levels for SSD pools.
         {
           alert: "ZfsPoolHighFragmentation",
           annotations: {

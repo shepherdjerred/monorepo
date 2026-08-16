@@ -159,7 +159,7 @@ export function handleRequest(
       controllerRttMs.observe(e.request.rttMs);
     })
     .with({ request: { kind: "login" } }, (e) => {
-      // TODO(todo:mario-kart-web-auth): real auth. Identity is cosmetic; seats gate control.
+      // Identity is cosmetic; seats gate control. Real auth is tracked in Linear.
       const player = { discordId: "id", discordUsername: "username" };
       const response: LoginResponse = { kind: "login", value: player };
       e.socket.emit("response", response);

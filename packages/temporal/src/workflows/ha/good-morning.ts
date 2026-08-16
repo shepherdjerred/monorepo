@@ -36,8 +36,7 @@ const HOME_ZONE = "zone.home" as const;
 // The INF-V1 floor heater's true max is 40°C. Upstream kgelinas/Mysa_HA capped
 // it at 30°C (issue #16); the fix (PR #18) was closed unmerged and upstream is
 // stale, so the GitOps-managed Mysa integration carries a checked-in
-// setpoint-limit patch that exposes the device's real range. See
-// packages/docs/archive/completed/2026-05-05_mysa-max-temp-cap.md. The morning
+// setpoint-limit patch that exposes the device's real range. The morning
 // target is now 30°C (was 40°C until 2026-07) — warm feet without the
 // multi-hour 40°C preheat, and only on cold mornings (see shouldHeatFloor).
 const MORNING_HEAT_TEMP_C = 30;

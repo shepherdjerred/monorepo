@@ -157,7 +157,7 @@ describe("selectImageTargets", () => {
   });
 
   test("selects nothing for unrelated documentation", async () => {
-    expect(await select(["packages/docs/guides/example.md"])).toEqual([]);
+    expect(await select(["README.md"])).toEqual([]);
   });
 });
 
@@ -570,7 +570,7 @@ describe("selection reasons", () => {
 
   test("an unselecting change yields an empty report", async () => {
     const { targets, report } = await selectImageTargetsWithReasons(
-      ["packages/docs/guides/example.md"],
+      ["README.md"],
       REPO_ROOT,
     );
     expect(targets).toEqual([]);

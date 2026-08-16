@@ -299,7 +299,7 @@ const sitePaths = {
     "packages/stocks-sjer-red",
     ...deployScripts,
   ],
-  "site-wiki": [...workspacePaths, "packages/docs", ...deployScripts],
+  "site-wiki": [...workspacePaths, "packages/docs/wiki", ...deployScripts],
   "site-better-skill-capped": [
     ...workspacePaths,
     "packages/better-skill-capped",
@@ -341,7 +341,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/astro-opengraph-images",
     "packages/webring",
     "packages/eslint-config",
-    "packages/docs",
+    "packages/docs/wiki",
     "packages/scout-for-lol/eslint.config.ts",
     "packages/scout-for-lol/tsconfig.base.json",
     "packages/scout-for-lol/packages/data",

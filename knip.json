@@ -14,17 +14,6 @@
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
-    "packages/docs-board": {
-      "entry": [
-        "src/client/main.tsx",
-        "src/server/index.ts",
-        "src/dev.ts",
-        "src/cli/*.ts",
-        "vite.config.ts"
-      ],
-      "project": ["src/**/*.{ts,tsx}", "vite.config.ts"],
-      "ignoreDependencies": ["shadcn"]
-    },
     "packages/alert-dashboard": {
       "entry": [
         "src/client/main.tsx",
@@ -346,7 +335,6 @@
     "packages/cooklang-for-obsidian/**",
     "packages/tasks-for-obsidian/**",
     "packages/bun-decompile/**",
-    "packages/docs/**",
     "poc/**",
     "scripts/observability/local-stack/**"
   ],

@@ -110,8 +110,7 @@ export function App() {
   // backend already coalesces per-seat latest-state before the emulator tick
   // (worker-emulator pendingInput). The former ~16ms setTimeout coalesce
   // added up to one output frame of input latency for no practical rate
-  // reduction (2026-08-03 latency plan,
-  // packages/docs/plans/2026-08-03_mk64-latency-full-surface.md). press() and
+  // reduction. press() and
   // release() no-op on non-edges, so every emit is a genuine state change.
   const emitState = useCallback(() => {
     const s = seatRef.current;

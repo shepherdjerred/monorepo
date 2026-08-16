@@ -234,9 +234,8 @@ export const scoutSeasonRefreshTokensTotal = new Counter({
 // velero-orphan-audit workflow metrics
 //
 // Detection-only metrics for orphan ZFS snapshots created by the Velero
-// re-deploy pathology. See:
-//   - packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md
-//   - packages/docs/guides/2026-05-05_velero-orphan-snapshot-remediation.md
+// re-deploy pathology. Operator remediation lives in
+// `runbooks/velero-orphan-snapshot-remediation.md`.
 // ---------------------------------------------------------------------------
 
 export const veleroOrphanAuditRunsTotal = new Counter({
@@ -308,8 +307,7 @@ export const workflowOutcomeTotal = new Counter({
 // ---------------------------------------------------------------------------
 // PR merge-conflict check (`ci/merge-conflict` status on every open PR).
 // Triggered by push-to-main (kind=all-prs) and PR events (kind=single-pr).
-// One observation per posted commit-status (the unit the PR UI shows). See
-// packages/docs/plans/2026-06-14_pr-merge-conflict-check.md.
+// One observation per posted commit-status (the unit the PR UI shows).
 // ---------------------------------------------------------------------------
 
 export const prMergeConflictCheckTotal = new Counter({

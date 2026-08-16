@@ -72,8 +72,7 @@ src/
 ## `deployed` — is my commit/service live on the homelab?
 
 `toolkit deployed [<selector>] [--commit <ref>] [--json] [--no-cluster] [--no-github]`
-automates the manual trace in
-`packages/docs/guides/2026-04-06_is-commit-deployed.md`: it follows a commit
+automates the manual deployment trace: it follows a commit
 through the **two-build** pipeline (feature merge → version-commit-back bump →
 the bump's own build does cdk8s synth + helm push + ArgoCD sync) and reports,
 per affected service/variant, whether it's actually running.

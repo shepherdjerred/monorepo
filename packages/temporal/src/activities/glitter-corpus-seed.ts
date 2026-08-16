@@ -21,8 +21,7 @@ import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
 import { putImmutableObject } from "./glitter-corpus-storage.ts";
 
 const EXPECTED_SEED_MESSAGES = 76_762;
-// Independent acceptance pins for the ONE trusted archive (see
-// packages/docs/guides/2026-07-26_glitter-discord-corpus-operations.md). The
+// Independent acceptance pins for the ONE trusted archive. The
 // row count alone is not identity: a truncated or substituted archive can
 // preserve 76,762 unique IDs while changing message text, authors, timestamps,
 // or IDs. Production (`--upload=true`) imports must match both the archive

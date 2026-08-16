@@ -49,7 +49,6 @@ describe("CI task summary", () => {
     expect(taskCategory("lint:helm")).toBe("lint");
     expect(taskCategory("build")).toBe("build");
     expect(taskCategory("generate")).toBe("generate");
-    expect(taskCategory("check-todos")).toBe("quality");
   });
 
   test("records state, cache, duration, and Buildkite links", () => {

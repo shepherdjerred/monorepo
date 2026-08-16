@@ -23,11 +23,8 @@ import { kubectlExecInPod } from "#shared/kubectl-exec.ts";
 // Velero deployment whose deletion path failed to run during teardown.
 //
 // R2 detection is intentionally NOT included here because the worker's S3
-// credentials are scoped to SeaweedFS, not R2. The remediation runbook
-// (packages/docs/guides/2026-05-05_velero-orphan-snapshot-remediation.md)
-// covers the manual R2 check using extracted Velero credentials.
-//
-// See: packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md
+// credentials are scoped to SeaweedFS, not R2. The package-local remediation
+// runbook covers the manual R2 check using extracted Velero credentials.
 
 const NAMESPACE_OPENEBS = "openebs";
 const ZFS_NODE_LABEL = "role=openebs-zfs,app=openebs-zfs-node";

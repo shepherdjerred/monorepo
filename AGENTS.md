@@ -21,7 +21,7 @@ packages/
 ├── cooklang-for-obsidian/      # Cooklang Obsidian plugin
 ├── cooklang-rich-preview/      # Cooklang rich link preview site
 ├── discord-plays-pokemon/      # Discord Plays Pokemon (headless emulator + Go-Live stream)
-├── docs/                       # AI working docs plus the nested human-first wiki
+├── docs/wiki/                  # Human-first public systems wiki
 ├── dotfiles/                   # Dotfiles & shell config (chezmoi source)
 ├── eslint-config/              # Shared ESLint flat config (workspace-internal)
 ├── fonts/                      # Custom fonts
@@ -170,8 +170,7 @@ apply repo-wide; per-package `AGENTS.md` files add more.
   swallowed errors where fail-fast is required; defensive guards that hide a broken
   caller contract; suppressions of build/lint/CI errors; the banned automation
   patterns (`|| true`, `2>/dev/null`, `git add -A`, tokens written to files, …).
-- **Process invariants.** `TODO(todo:<id>)` markers need a matching
-  `packages/docs/todos/<id>.md`; `temporal-agent-task` blocks must match the schema;
+- **Process invariants.** `temporal-agent-task` blocks must match the schema;
   prefer Bun-runtime APIs; ensure Prisma teardown in tests; follow the K8s/cdk8s
   and git-spice conventions.
 - **Severity discipline.** Only flag genuine issues (P0–P2); skip nits and anything
@@ -208,98 +207,24 @@ Do not create per-session journals or append session summaries to repository
 documents. Ordinary Q&A, investigations, and small fixes need no documentation
 artifact solely because an agent worked on them.
 
-Create a **plan** (`packages/docs/plans/<YYYY-MM-DD>_<kebab-slug>.md`) only when
-the design itself is durable: plan mode was used, the work has substantive
-design choices, or future implementation needs a decision-complete handoff.
-Architecture, decisions, guides, and TODOs remain appropriate when the content
-belongs to those durable categories independently of the current session.
+Track plans, open work, human-review queues, and implementation follow-ups in
+Linear. Do not add a parallel repository-local workflow-document system.
 
 The human wiki (`packages/docs/wiki/`) is structured on
 [Diátaxis](https://diataxis.fr/): every page is exactly one of a tutorial,
 how-to guide, reference, or explanation, and never a blend. Load the `diataxis`
 skill before authoring there.
 
-### Plans and durable context
-
 - The primary artifact for a code-changing session is a pull request. Create a
   draft PR from the feature branch as soon as it contains a coherent first commit,
   and promote it to ready for review only after verification is complete.
-- Keep every agent-created write, including an implementation plan, in the
-  active checkout. Do not leave duplicate or partial work in another checkout.
-- When plan mode supplies an approved plan, mirror it into `packages/docs/plans/`
-  using the dated naming convention before implementation.
-- Record unfinished work in the relevant durable document, the PR description,
-  or the final response; do not create a journal just for handoff.
-- Plans use canonical YAML frontmatter with `id`, `type`, `status`, and `board`,
-  remain raw Markdown, and are not individually indexed.
-- When a plan reaches `status: complete` and its work ships, move it to
-  `packages/docs/archive/completed/`.
-- See `packages/docs/AGENTS.md` for the durable documentation taxonomy.
+- Keep every agent-created write in the active checkout. Do not leave duplicate
+  or partial work in another checkout.
+- Record unfinished work in Linear, the PR description, or the final response;
+  do not create a journal just for handoff.
 
 Repository lifecycle hooks are scoped to local CLI runtimes and must exit
 immediately in hosted or web environments.
-
-## TODO Documentation
-
-`packages/docs/todos/` is for **general issue tracking** — deferred work, acceptance-testing gaps, post-merge verifications, and any thread that needs to outlive a single session. It is not limited to source-code markers; most todos will have no marker at all.
-
-- Every source marker (`TODO(todo:<kebab-id>)`, `FIXME(todo:<kebab-id>)`, `XXX(todo:<kebab-id>)`) MUST have a matching `packages/docs/todos/<kebab-id>.md`. This direction is enforced.
-- General issue todos may exist with no source marker. Use kebab-case ids; the filename (sans `.md`) is the id.
-- TODO docs use the canonical docs frontmatter. Set `type: todo`, `board: true`, a workflow `status` (`planned`, `in-progress`, `awaiting-human`, or `complete`), `verification`, and `disposition`; use `origin` only when the referenced source is durable, and add `source_marker: true` only when a code marker exists.
-- Active work uses unchecked tasks in `## Remaining`. Work ready for delayed signoff uses `status: awaiting-human` plus `## Human Verification`. Append steering notes and status audit entries under `## Comment Log`.
-- When resolved, remove any matching source marker and archive the complete TODO to `packages/docs/archive/completed/` in the same commit.
-- `bun run check-todos` enforces the complete docs model, including the source-marker → TODO invariant, frontmatter, semantic headings, workflow sections, IDs, and archival rules.
-
-## Temporal Agent Follow-ups
-
-When a doc captures a follow-up that should be checked later, schedule it explicitly with a `temporal-agent-task` block and the Temporal trigger script. A document may contain multiple blocks when a rollout needs checks at different times; `--from-doc` validates all of them before connecting and schedules them in document order. Use report-only tasks by default; they may inspect current state and email results, but must not edit files, open PRs/issues, or mutate live systems.
-
-```md
-<!-- temporal-agent-task
-{
-  "contractVersion": 2,
-  "title": "Recheck Birmel post-deploy metrics",
-  "provider": "claude",
-  "mode": "report-only",
-  "runAt": "2026-05-31T09:00:00-07:00",
-  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
-  "checks": [
-    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Every current Birmel target reports up=1.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}", "expectation": { "kind": "numeric", "operator": "eq", "threshold": 1, "quantifier": "all" } }] }
-  ],
-  "source": {
-    "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
-  },
-  "prompt": "Pull the metrics from the Post-deploy verification section. Email whether each check is green or still red, with links/evidence."
-}
--->
-```
-
-New tasks use `contractVersion: 2`, declare every required and optional check,
-and provide independently executed evidence collectors for each check. Every
-collector also declares a source-defined expectation. The worker evaluates that
-predicate itself; a model cannot turn adverse evidence into a passing check. For
-recurring checks, replace `runAt` with `cron` and include a stable `scheduleId`. Schedules are evaluated in
-`America/Los_Angeles`. Agents may recommend retirement, but only a human may
-pause or remove a schedule. To create/update the task locally as an operator:
-
-```bash
-cd packages/temporal
-TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/guides/<doc>.md
-```
-
-Do not expose general-purpose Temporal scheduling as a public ingress path. Public creation must go through the authenticated `/agent-tasks` HTTP API with `Authorization: Bearer $AGENT_TASK_API_TOKEN`. A narrowly scoped, separately authenticated webhook may start a fixed workflow when its route, input schema, workflow ID, and authorization token are dedicated to that automation and covered by equivalent tests.
-
-For the deployed Claude structured-output contract, run the production-only
-canary from `packages/temporal` after the worker image is live:
-
-```bash
-TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
-  bun run canary:agent-task
-```
-
-It uses the real `agent-task` queue and deployed OAuth authentication, and the
-tagged report-only email must arrive before the production-verification TODO
-can be closed. A local dry run is not equivalent.
 
 ## Automation Code — Banned Patterns
 
@@ -443,7 +368,7 @@ Local and CI verification deliberately have different scopes:
    endings, merge markers, environment-variable names, file size, and the
    staged-diff automation rules. It does not run the root Turbo graph.
 3. Buildkite runs the exhaustive root `bun run verify` graph for every PR and
-   for `main`: build, typecheck, test, lint, todos, suppressions, markdownlint,
+   for `main`: build, typecheck, test, lint, suppressions, markdownlint,
    Prettier, shellcheck, Knip, Gitleaks, ruff/pyright, Helm/Talos/1Password, and
    the remaining repository gates. The excluded site packages run in their
    dedicated Buildkite lanes, so the overall pipeline remains the
@@ -452,8 +377,7 @@ Local and CI verification deliberately have different scopes:
    `lint:swift` (SwiftLint) runs in CI. The homelab's macOS Buildkite agent
    (`packages/homelab/mac-ci/`) is dormant, so
    `cd packages/macos-ai-subscription-tracker && bun run verify:macos` stays a
-   local-only developer/release gate until that capacity is reactivated; see
-   `packages/docs/todos/mac-mini-buildkite-agent.md`.
+   local-only developer/release gate until that capacity is reactivated.
 
 Run `bun run verify` locally only when explicitly reproducing CI or modifying
 the verification machinery itself. There is no `pre-push` hook.
@@ -500,7 +424,7 @@ Each package has its own AGENTS.md with specific instructions:
 - `packages/toolkit/AGENTS.md` - CLI developer tools (pr, pd, bugsink, grafana)
 - `packages/tasks-for-obsidian/AGENTS.md` - React Native task app, including native capture/detail, saved views, and bulk task organization
 - `packages/tasknotes-macos/AGENTS.md` - Native macOS app (Swift posture, macOS-only tasks)
-- `packages/docs/` - AI working docs plus `wiki/`, the human-first explanation layer (see `monorepo-docs` skill)
+- `packages/docs/wiki/` - human-first public systems wiki
 
 ### TaskNotes shared core
 
@@ -517,8 +441,6 @@ client are meant to share. Three rules matter more than the rest:
 - **`@tasknotes/fixtures` is the oracle, not test data.** The same JSON scenarios and recurrence
   corpus are executed by both the TypeScript and Rust implementations; that is what keeps them from
   drifting. A fixture that disagrees with an implementation is a finding, never a file to edit.
-
-Design and phase history live in `packages/docs/plans/2026-08-08_tasknotes-native-macos-app.md`.
 
 ## PR Media & Demo Artifacts — `public.sjer.red`
 

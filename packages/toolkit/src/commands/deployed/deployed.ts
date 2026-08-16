@@ -1,7 +1,7 @@
 /**
  * `toolkit deployed` — trace a commit through the homelab deploy pipeline and
  * report, per affected service/variant, whether it's actually running on the
- * cluster. See packages/docs/guides/2026-04-06_is-commit-deployed.md.
+ * cluster.
  */
 import { formatJson } from "#lib/output/formatter.ts";
 import {

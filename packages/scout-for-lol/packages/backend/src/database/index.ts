@@ -25,7 +25,6 @@ const basePrisma = new PrismaClient({
   // behavior — Date parameters bind as INTEGER ms. The adapter default
   // (`iso8601`) binds as TEXT, which triggers a SQLite type-affinity bug when
   // comparing against legacy INTEGER columns: `INTEGER <= TEXT` is always TRUE.
-  // See packages/docs/plans/ entry for the libsql DateTime drift incident.
   adapter: new PrismaLibSql(
     { url: Bun.env["DATABASE_URL"] ?? "file:./db.sqlite" },
     { timestampFormat: "unixepoch-ms" },

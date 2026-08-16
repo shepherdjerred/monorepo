@@ -350,10 +350,8 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
   ];
 }
 
-// Detection layer for the Velero orphan-snapshot pathology — populated
-// by the velero-orphan-audit Temporal workflow's daily run. See
-// packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md
-// and packages/docs/guides/2026-05-05_velero-orphan-snapshot-remediation.md.
+// Detection layer for the Velero orphan-snapshot pathology, populated by the
+// velero-orphan-audit Temporal workflow's daily run.
 function getVeleroOrphanSnapshotRuleGroup(): PrometheusRuleSpecGroups {
   return {
     name: "velero-orphan-snapshots",
@@ -363,7 +361,7 @@ function getVeleroOrphanSnapshotRuleGroup(): PrometheusRuleSpecGroups {
         annotations: {
           summary: "Velero orphan ZFS snapshots detected",
           message: escapePrometheusTemplate(
-            "Velero orphan local ZFS snapshots present: {{ $value }} snapshot(s) cluster-wide have no matching live Velero Backup CR. Run the remediation runbook at packages/docs/guides/2026-05-05_velero-orphan-snapshot-remediation.md.",
+            "Velero orphan local ZFS snapshots present: {{ $value }} snapshot(s) cluster-wide have no matching live Velero Backup CR. Run packages/temporal/runbooks/velero-orphan-snapshot-remediation.md.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

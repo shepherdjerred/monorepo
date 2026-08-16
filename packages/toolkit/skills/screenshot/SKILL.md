@@ -41,7 +41,7 @@ toolkit screenshot --list          # print the registry
 
 Zero-auth packages (`packages/toolkit/src/lib/screenshot/catalog.ts`):
 `sjer-red`, `stocks-sjer-red`, `cooklang-rich-preview`, `better-skill-capped`,
-`docs-board`, `scout-marketing`, `mario-kart-frontend`, `pokemon-frontend`.
+`scout-marketing`, `mario-kart-frontend`, `pokemon-frontend`.
 
 Auth-gated: `scout-app` (`packages/scout-for-lol`) — boots the full
 `dev:web` stack (backend + Vite) and signs in via the backend's

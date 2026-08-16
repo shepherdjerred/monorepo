@@ -10,8 +10,7 @@ native Swift/Xcode builds that cannot run in the Linux in-cluster path.
 > `macos` cluster queue still exists in Tofu
 > (`src/tofu/buildkite/cluster.tf`). macOS-only suites (e.g.
 > `packages/macos-ai-subscription-tracker`'s `verify:macos`) therefore remain
-> local-only developer/release gates. Reactivation is tracked in
-> [`packages/docs/todos/mac-mini-buildkite-agent.md`](../../docs/todos/mac-mini-buildkite-agent.md).
+> local-only developer/release gates. Reactivation is tracked in Linear.
 
 This is a **thin, headless-appliance** setup — deliberately separate from the
 personal chezmoi dotfiles layer (`packages/dotfiles/`, which is for

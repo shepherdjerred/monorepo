@@ -33,7 +33,7 @@ resource "github_repository_ruleset" "monorepo_main" {
       # whenever main moves (singleton workflow) or a PR head moves
       # (per-PR workflow). The activity NEVER reads GitHub's `mergeable`
       # field — local 3-way merge is deterministic; GitHub's lazy field is
-      # not. See packages/docs/plans/2026-06-14_pr-merge-conflict-check.md.
+      # not.
       #
       # ROLLOUT ORDERING — do NOT `tofu apply` this line until BOTH:
       #   (1) the temporal worker pod is running the merge-conflict activity

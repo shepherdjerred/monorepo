@@ -49,9 +49,7 @@ immediately. Cron expressions are evaluated in `America/Los_Angeles`.
   "checks": [
     { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Every current Birmel target reports up=1.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}", "expectation": { "kind": "numeric", "operator": "eq", "threshold": 1, "quantifier": "all" } }] }
   ],
-  "source": {
-    "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
-  },
+  "source": { "note": "Birmel post-deploy follow-up in Linear" },
   "prompt": "Pull the metrics from the Post-deploy verification section. Email whether each check is green or still red, with links/evidence."
 }
 -->
@@ -59,11 +57,11 @@ immediately. Cron expressions are evaluated in `America/Los_Angeles`.
 
 ## Submission surfaces
 
-| Surface      | Entry point                                                       | Auth                                          |
-| ------------ | ----------------------------------------------------------------- | --------------------------------------------- |
-| Doc block    | `<!-- temporal-agent-task { … } -->` in any `packages/docs/` file | none — operator runs the CLI                  |
-| Operator CLI | `bun run scripts/schedule-agent-task.ts --from-doc <path>`        | port-forwarded Temporal                       |
-| HTTP API     | `POST /agent-tasks` on `temporal-agent-tasks.sjer.red`            | `Authorization: Bearer $AGENT_TASK_API_TOKEN` |
+| Surface      | Entry point                                                | Auth                                          |
+| ------------ | ---------------------------------------------------------- | --------------------------------------------- |
+| Doc block    | `<!-- temporal-agent-task { … } -->` in any Markdown file  | none — operator runs the CLI                  |
+| Operator CLI | `bun run scripts/schedule-agent-task.ts --from-doc <path>` | port-forwarded Temporal                       |
+| HTTP API     | `POST /agent-tasks` on `temporal-agent-tasks.sjer.red`     | `Authorization: Bearer $AGENT_TASK_API_TOKEN` |
 
 One document may contain multiple task blocks. The CLI validates every block as
 v2 before connecting and schedules them in document order. It also accepts

@@ -3,8 +3,7 @@
 // spamming input on the web UI drops frames for everyone. The test runs four
 // scenarios — 1p/4p × idle/spam — against the *real* socket.io -> handleRequest
 // -> emulator path, using a real ROM, and asserts hard thresholds on the
-// already-instrumented Prometheus metrics. See
-// packages/docs/plans/2026-06-13_mk64-perf-test.md for the design.
+// already-instrumented Prometheus metrics.
 //
 // Topology: the parent process spawns one CHILD subprocess per scenario so
 // each gets a fresh emscripten/WASM global (it can't safely be re-init'd

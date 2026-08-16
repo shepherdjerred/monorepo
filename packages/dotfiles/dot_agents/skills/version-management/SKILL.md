@@ -300,7 +300,7 @@ The project uses Renovate for automated updates:
 
 ### Never silence upstream-blocked items
 
-Do **not** add `packageRules` with `enabled: false` to `renovate.json` to suppress dashboard items that are blocked by an upstream peer/compat issue. Silencing hides a live constraint (same failure mode as swallowing exceptions) and requires remembering to remove the rule later. Instead, leave the item surfaced, document the block and its unblock condition in a tracking doc (`packages/docs/plans/*`), and re-probe each session until it clears. "Blocked for months" is not a reason to silence — a still-blocked dashboard is correctly reporting reality.
+Do **not** add `packageRules` with `enabled: false` to `renovate.json` to suppress dashboard items that are blocked by an upstream peer/compat issue. Silencing hides a live constraint (same failure mode as swallowing exceptions) and requires remembering to remove the rule later. Instead, leave the item surfaced, document the block and its unblock condition in Linear, and re-probe each session until it clears. "Blocked for months" is not a reason to silence — a still-blocked dashboard is correctly reporting reality.
 
 ## Best Practices
 

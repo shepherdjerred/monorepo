@@ -1,8 +1,7 @@
 // Emulator Worker entrypoint (spawned by WorkerEmulator). Owns the N64Emulator
 // — wasm core, paced tick loop, input latching, audio drain, RDRAM snapshots,
 // MEMFS save persistence — so the synchronous ~12–30ms runMainLoop runs OFF the
-// main thread, leaving the main event loop free for ffmpeg/stream I/O. See
-// packages/docs/plans/2026-07-26_mk64-emulator-worker-thread.md.
+// main thread, leaving the main event loop free for ffmpeg/stream I/O.
 //
 // Environment note: Bun Workers have `process` but no `importScripts`/
 // `window`, so the emscripten glue evaluates with ENVIRONMENT_IS_NODE exactly

@@ -3,34 +3,11 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/docs/**/*.md",
-        "!$TURBO_ROOT$/packages/docs/wiki/dist/**"
-      ],
       "outputs": ["dist/**"]
     },
-    "typecheck": {
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/docs/**/*.md",
-        "!$TURBO_ROOT$/packages/docs/wiki/dist/**"
-      ]
-    },
-    "test": {
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/docs/**/*.md",
-        "!$TURBO_ROOT$/packages/docs/wiki/dist/**"
-      ]
-    },
-    "test:ci": {
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/docs/**/*.md",
-        "!$TURBO_ROOT$/packages/docs/wiki/dist/**"
-      ]
-    },
+    "typecheck": {},
+    "test": {},
+    "test:ci": {},
     "test:e2e": {
       "dependsOn": ["build", "^build"],
       "cache": false,

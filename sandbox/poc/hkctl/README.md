@@ -3,7 +3,7 @@
 Reads and mutates Apple Home state (rooms, accessory names, room assignments,
 accessory/room removal) from the terminal, via `HMHomeManager`. Built during the
 2026-07-09 HomeKit "great refresh" (see
-`packages/docs/plans/…ha-registry-cleanup` / archive) as a self-owned
+the Home Assistant registry-cleanup work tracked in Linear) as a self-owned
 replacement for HomeClaw.
 
 Apple ships no public HomeKit API for macOS: the only write path is the HomeKit

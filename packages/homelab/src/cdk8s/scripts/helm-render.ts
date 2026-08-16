@@ -12,7 +12,6 @@
  *   --diff    Pipe rendered YAML to kubectl diff
  *   --chart <name>  Process a single chart instead of all
  *
- * See: packages/docs/guides/2026-04-04_helm-escaping-pipeline.md
  */
 import { Glob } from "bun";
 import { mkdtemp, rm } from "node:fs/promises";

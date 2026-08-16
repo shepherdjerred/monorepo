@@ -59,6 +59,3 @@ targets require a macOS host with Xcode.
 Lint policy (no `#[allow]`, no unwrap/panic behind the FFI, deny `as` casts,
 deterministic iteration) is encoded in `Cargo.toml` workspace lints,
 `clippy.toml`, and `deny.toml` — the comments there are the rationale.
-
-Design and phase history:
-[packages/docs/plans/2026-08-08_tasknotes-native-macos-app.md](../docs/plans/2026-08-08_tasknotes-native-macos-app.md).

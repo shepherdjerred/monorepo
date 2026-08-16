@@ -174,7 +174,7 @@ Workflow:
 - `AGENT_TASK_API_TOKEN` — required bearer token for the authenticated `/agent-tasks` scheduling API on port 9467
 - `SLEEP_WEBHOOK_TOKEN` — bearer token for the direct iOS sleep webhook on port 9469; the listener is skipped when unset (local/dev workers can omit it)
 - `SLEEP_WEBHOOK_PORT` — port for the direct sleep webhook (default `9469`)
-- `RUNBOOK_PATH` — local override for the homelab-audit runbook (defaults to fetching `https://raw.githubusercontent.com/.../packages/docs/guides/2026-04-04_homelab-audit-runbook.md`)
+- `RUNBOOK_PATH` — local override for the homelab-audit runbook (defaults to the bundled `runbooks/homelab-audit.md`)
 - `ALERT_DASHBOARD_URL` — in-cluster Alerts API URL (homelab audit)
 - `BUGSINK_URL`, `BUGSINK_TOKEN` — Bugsink REST API base + token (homelab audit)
 - `GRAFANA_URL`, `GRAFANA_API_KEY` — Grafana base + API key (PromQL/Loki via the `/api/datasources/proxy/<id>/...` endpoints)
@@ -223,7 +223,7 @@ Create/update a task from a doc block locally as an operator:
 
 ```bash
 cd packages/temporal
-TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/guides/example.md
+TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc /tmp/agent-task.md
 ```
 
 `--from-doc` validates every `temporal-agent-task` block before connecting and
@@ -276,8 +276,8 @@ This production-only contract check starts one real `agentTaskWorkflow` on the
 must complete through the deployed Claude parser and deliver the tagged
 `[agent-task-canary]` report-only email. It does not accept or forward a local
 OAuth token; authentication is verified in the deployed worker. Keep
-`packages/docs/todos/homelab-audit-agent-task-production-verification.md` open
-until the canary and independent seven-day agent-task queue bake pass; the
+Do not consider production acceptance complete until the canary and independent
+seven-day agent-task queue bake pass; the
 deterministic daily homelab audit no longer exercises this provider contract.
 
 After shared reporting changes, also run `bun run

@@ -13,7 +13,6 @@ import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s
  * 3. Home Assistant Jinja2 → pre-escaped in source YAML files
  * 4. Embedded scripts with {{ (e.g. Python f-strings) → manual .replaceAll()
  *
- * See: packages/docs/guides/2026-04-04_helm-escaping-pipeline.md
  */
 export function escapeGoTemplate(template: string): string {
   return template;

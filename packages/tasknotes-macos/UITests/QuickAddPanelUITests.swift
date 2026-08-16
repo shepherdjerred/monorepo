@@ -95,9 +95,8 @@ final class QuickAddPanelUITests: XCTestCase {
         // `NSHostingView` wrapper above the SwiftUI root was a bare `Group` that
         // no SwiftUI modifier could reach. But it cannot stay as the gate: the
         // audit is app-wide (`XCUIElement` has no `performAccessibilityAudit`),
-        // so it re-reports every main-window finding that
-        // `packages/docs/todos/macos-accessibility-audit.md` already ruled
-        // unactionable — window-titlebar contrast, `NavigationSplitView`'s own
+        // so it re-reports every main-window finding already ruled unactionable
+        // — window-titlebar contrast, `NavigationSplitView`'s own
         // unlabelled columns. That is why no other flow in this suite gates on
         // it either.
         //

@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   buildAuditPrompt,
   filterRunbookSections,
+  loadRunbook,
 } from "./homelab-audit-prompts.ts";
 
 const SAMPLE_RUNBOOK = `# Homelab Audit Runbook
@@ -28,6 +29,14 @@ toolkit bugsink issues
 
 argocd app list
 `;
+
+describe("loadRunbook", () => {
+  it("loads the runbook bundled with the Temporal package", async () => {
+    expect(await loadRunbook()).toContain(
+      "# Homelab Infrastructure Audit Runbook",
+    );
+  });
+});
 
 describe("filterRunbookSections", () => {
   it("returns the input unchanged for `all`", () => {

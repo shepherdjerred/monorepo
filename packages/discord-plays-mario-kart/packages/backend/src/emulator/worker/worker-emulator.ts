@@ -3,8 +3,7 @@
 // input, screenshots, save persistence) while the N64Emulator itself — and its
 // synchronous ~12–30ms-per-frame wasm stepping — runs on a Worker thread. That
 // leaves this (main) event loop free for ffmpeg stdin/stdout, demux, and the
-// Discord RTP send, which is what restores full-rate streaming. See
-// packages/docs/plans/2026-07-26_mk64-emulator-worker-thread.md.
+// Discord RTP send, which is what restores full-rate streaming.
 import * as Sentry from "@sentry/bun";
 import type { PlayerInputState } from "@discord-plays-mario-kart/common";
 import type { Mk64Snapshot } from "#src/emulator/mk64-memory.ts";

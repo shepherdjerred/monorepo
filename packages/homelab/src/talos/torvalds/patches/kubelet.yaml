@@ -34,8 +34,7 @@ machine:
       # Sum of ceilings must leave real physical slack: kubepods (capacity-48Gi
       # = 77.4Gi) + ARC 16 + slab burst fits in 125.4Gi physical with this value.
       # If ZfsArcHitRateLow fires sustained, raise zfs_arc_max and this value in
-      # lockstep. See
-      # packages/docs/archive/completed/2026-07-10_torvalds-memory-rightsize.md.
+      # lockstep.
       systemReserved:
         cpu: "4"
         memory: "40Gi"
@@ -98,9 +97,7 @@ machine:
       # adding the cgroup paths above (sourced from Talos's own constants, not
       # guessed) and live-verified working: kubelet came up Running/OK
       # immediately, and the resulting cgroup limits matched exactly (see comment
-      # above). See the original investigation,
-      # the original investigation, and
-      # packages/docs/plans/2026-07-10_torvalds-kubelet-cgroup-enforcement.md.
+      # above).
       podPidsLimit: 4096
       enforceNodeAllocatable:
         - pods

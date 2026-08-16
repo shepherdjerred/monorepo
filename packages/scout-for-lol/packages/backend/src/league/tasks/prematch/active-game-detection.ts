@@ -335,8 +335,7 @@ export async function checkActiveGames(
         // Find ALL tracked players in this game's participants.
         // KNOWN LIMITATION: matched by puuid only, so privacy-scrubbed players
         // (null puuid in Spectator-V5) are not matched here and are dropped from
-        // the pre-match notification/image. Accepted data loss — see
-        // packages/docs/decisions/2026-06-07_scout-arena-prematch-scrubbed-players.md
+        // the pre-match notification/image. This is accepted data loss.
         const trackedPlayersInGame: PlayerConfigEntry[] =
           allPlayerConfigs.filter((p) =>
             gameInfo.participants.some(

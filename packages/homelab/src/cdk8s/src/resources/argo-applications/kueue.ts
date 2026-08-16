@@ -28,8 +28,7 @@ leaderElection:
   resourceName: c1f6bfd2.kueue.x-k8s.io
   # Defaults (15s lease / 10s renew) lost leadership ~every 10-15 min under
   # CI load on the shared single node (19 restarts on 2026-07-18 alone —
-  # each one a webhook outage that wedged or phantomed CI jobs; see
-  # packages/docs/todos/torvalds-controller-restart-churn.md). Generous
+  # each one a webhook outage that wedged or phantomed CI jobs). Generous
   # deadlines are safe on a single-replica install: there is no competing
   # candidate, so slow renewal beats process suicide.
   leaseDuration: 60s

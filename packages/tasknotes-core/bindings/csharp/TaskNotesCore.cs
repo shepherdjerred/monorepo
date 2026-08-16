@@ -5117,8 +5117,8 @@ static class _UniFFILib {
         }
         {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_date_add_days();
-            if (checksum != 34460) {
-                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_add_days` checksum `34460`, library returned `{checksum}`");
+            if (checksum != 10102) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_date_add_days` checksum `10102`, library returned `{checksum}`");
             }
         }
         {
@@ -16783,7 +16783,7 @@ internal static class TaskNotesCoreMethods {
     ///
     /// Exported because a shell computing it itself is date arithmetic in a place
     /// with a clock and a timezone nearby, which is precisely how the off-by-one in
-    /// `packages/docs/todos/recurrence-local-utc-off-by-one.md` happened: adding a
+    /// The local/UTC recurrence bug happened by adding a
     /// day's worth of *milliseconds* to an instant is 23 or 25 hours across a DST
     /// boundary, and every host date API offers that shape first. Civil-date
     /// arithmetic has no instant in it, so there is no offset to get wrong.

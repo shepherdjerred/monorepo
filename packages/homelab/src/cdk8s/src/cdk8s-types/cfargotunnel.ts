@@ -8,8 +8,6 @@
 //     -o jsonpath='{.spec.versions[?(@.name=="v1alpha1")].schema.openAPIV3Schema}'
 //   kubectl get crd tunnelbindings.networking.cfargotunnel.com \
 //     -o jsonpath='{.spec.versions[?(@.name=="v1alpha1")].schema.openAPIV3Schema}'
-//
-// Background: packages/docs/plans/2026-05-26_cdk8s-cfargotunnel-strict-types.md
 
 import {
   ApiObject,

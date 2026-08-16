@@ -117,11 +117,6 @@
       "steps": [{ "runner": "bun" }]
     },
     {
-      "package": "@shepherdjerred/docs-board",
-      "directory": "packages/docs-board",
-      "steps": [{ "runner": "bun" }]
-    },
-    {
       "package": "@shepherdjerred/docs-wiki",
       "directory": "packages/docs/wiki",
       "steps": [{ "runner": "bun", "args": ["src"] }]
@@ -529,7 +524,7 @@
     {
       "package": "@shepherdjerred/quotabar",
       "directory": "packages/macos-ai-subscription-tracker",
-      "reason": "The Swift build/test/coverage suite requires macOS and has no Buildkite lane today - the homelab macOS agent (packages/homelab/mac-ci/) is dormant, so verify:macos is a local-only developer/release gate, not a CI gate. Linux CI runs only the portable lint:swift (SwiftLint) task. Tracked in packages/docs/todos/mac-mini-buildkite-agent.md."
+      "reason": "The Swift build/test/coverage suite requires macOS and has no Buildkite lane today - the homelab macOS agent (packages/homelab/mac-ci/) is dormant, so verify:macos is a local-only developer/release gate, not a CI gate. Linux CI runs only the portable lint:swift (SwiftLint) task."
     },
     {
       "package": "sjer.red",

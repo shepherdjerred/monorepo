@@ -10,7 +10,7 @@
  * the instant `react-dom/client` is imported when its version does not exactly
  * match the installed `react`. This is a *runtime* throw — it survives
  * `tsc`, `vite build`, eslint, and tests, and only blows up in the browser
- * (blank page). See packages/docs/plans for the mariokart.sjer.red post-mortem.
+ * (blank page). This check preserves the repository-wide fix for that failure.
  *
  * This check enforces, across every `bun.lock` in the repo, that packages which
  * must move in lockstep resolve to compatible versions. The rule only applies

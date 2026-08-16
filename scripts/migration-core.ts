@@ -122,8 +122,6 @@ const environmentVariableExcludedPaths = new Set([
   "scripts/check-env-var-names.test.ts",
   "scripts/check-env-var-names.ts",
   "scripts/environment-variable-rules.ts",
-  "packages/docs/decisions/2026-03-27_env-var-naming-convention.md",
-  "packages/docs/guides/2026-04-04_homelab-health-audit-2.md",
 ]);
 
 export function isSearchableEnvironmentVariablePath(path: string): boolean {
@@ -131,8 +129,7 @@ export function isSearchableEnvironmentVariablePath(path: string): boolean {
     path.startsWith("sandbox/archive/") ||
     path.startsWith("sandbox/practice/") ||
     path.startsWith(".build/") ||
-    path.includes("/generated/") ||
-    path.startsWith("packages/docs/archive/")
+    path.includes("/generated/")
   ) {
     return false;
   }

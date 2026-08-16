@@ -1,15 +1,12 @@
 /**
  * The runbook is the single source of truth for what the audit covers.
- * Live in the repo at `packages/docs/guides/2026-04-04_homelab-audit-runbook.md`.
- *
- * Fetched at activity startup over HTTPS so runbook edits take effect on the
- * next scheduled run without a worker redeploy. Local dev overrides via
- * `RUNBOOK_PATH` to point at the in-tree copy.
+ * It ships with the Temporal worker at `runbooks/homelab-audit.md`.
+ * Local development can override it with `RUNBOOK_PATH`.
  */
-const RUNBOOK_URL =
-  "https://raw.githubusercontent.com/shepherdjerred/monorepo/main/packages/docs/guides/2026-04-04_homelab-audit-runbook.md";
-
-const RUNBOOK_FETCH_TIMEOUT_MS = 15_000;
+const DEFAULT_RUNBOOK_URL = new URL(
+  "../../runbooks/homelab-audit.md",
+  import.meta.url,
+);
 
 export type SectionsFilter = readonly number[] | "all";
 
@@ -26,18 +23,11 @@ export type BuildAuditPromptInput = {
 
 export async function loadRunbook(): Promise<string> {
   const localPath = Bun.env["RUNBOOK_PATH"];
-  if (localPath !== undefined && localPath !== "") {
-    return await Bun.file(localPath).text();
-  }
-  const response = await fetch(RUNBOOK_URL, {
-    signal: AbortSignal.timeout(RUNBOOK_FETCH_TIMEOUT_MS),
-  });
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch homelab audit runbook (HTTP ${String(response.status)}): ${RUNBOOK_URL}`,
-    );
-  }
-  return await response.text();
+  const source =
+    localPath === undefined || localPath === ""
+      ? DEFAULT_RUNBOOK_URL
+      : localPath;
+  return await Bun.file(source).text();
 }
 
 /**

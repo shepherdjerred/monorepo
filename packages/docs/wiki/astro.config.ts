@@ -6,7 +6,7 @@ import mermaid from "astro-mermaid";
 
 import { wikiLinksPlugin } from "./src/lib/wiki-links.ts";
 
-const docsRoot = new URL("../", import.meta.url).pathname;
+const wikiRoot = new URL("./", import.meta.url).pathname;
 
 export default defineConfig({
   build: {
@@ -25,14 +25,8 @@ export default defineConfig({
         securityLevel: "strict",
       },
     }),
-    sitemap({
-      filter: (page) => !new URL(page).pathname.startsWith("/working/"),
-    }),
+    sitemap(),
     starlight({
-      components: {
-        MarkdownContent: "./src/components/markdown-content.astro",
-        PageTitle: "./src/components/page-title.astro",
-      },
       customCss: ["./src/styles/custom.css"],
       description:
         "A terse, visual map of Jerred's monorepo, infrastructure, and engineering decisions.",
@@ -63,10 +57,6 @@ export default defineConfig({
           items: [{ autogenerate: { directory: "explanation" } }],
           label: "Concepts",
         },
-        {
-          items: [{ label: "Working material", link: "/working/" }],
-          label: "Provenance",
-        },
       ],
       social: [
         {
@@ -80,7 +70,7 @@ export default defineConfig({
   ],
   markdown: {
     processor: satteri({
-      mdastPlugins: [wikiLinksPlugin(docsRoot)],
+      mdastPlugins: [wikiLinksPlugin(wikiRoot)],
     }),
   },
   output: "static",
@@ -90,8 +80,8 @@ export default defineConfig({
   // redirect rather than 404.
   redirects: {
     "/birmel": "/explanation/birmel/",
-    // Plane was retired; the page is preserved at
-    // packages/docs/archive/plane/, which the wiki does not publish.
+    // Plane was retired; preserve its old routes by redirecting them to the
+    // current homelab overview.
     "/explanation/homelab/plane": "/explanation/homelab/overview/",
     "/homelab/alerts": "/explanation/homelab/alerts/",
     "/homelab/buildkite-admission": "/explanation/homelab/buildkite-admission/",

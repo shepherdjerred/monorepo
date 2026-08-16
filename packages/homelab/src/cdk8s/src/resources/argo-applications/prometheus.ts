@@ -206,7 +206,7 @@ export async function createPrometheusApp(chart: Chart) {
         // storms (OOMKilled x5, e.g. 06:07:15Z) — exactly when its resolves
         // matter most. A real request keeps its score low so it survives storms;
         // the limit keeps it from becoming a problem itself (normal usage
-        // ~50-100Mi). See packages/docs/archive/completed/2026-07-10_torvalds-memory-rightsize.md.
+        // ~50-100Mi).
         resources: {
           requests: {
             cpu: "50m",

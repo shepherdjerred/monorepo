@@ -35,18 +35,6 @@ describe("agent-task Markdown blocks", () => {
     ]);
   });
 
-  it("validates all three capacity-rollout follow-ups", async () => {
-    const path = new URL(
-      "../../../docs/todos/homelab-capacity-rollout-acceptance.md",
-      import.meta.url,
-    );
-    const inputs = parseAgentTaskInputsFromMarkdown(
-      await Bun.file(path).text(),
-    );
-    expect(inputs).toHaveLength(3);
-    expect(inputs.every((input) => input.mode === "report-only")).toBe(true);
-  });
-
   it("fails if a later block is malformed", () => {
     expect(() =>
       parseAgentTaskInputsFromMarkdown(
