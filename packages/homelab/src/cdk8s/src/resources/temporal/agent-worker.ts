@@ -163,9 +163,12 @@ ip6tables -L OUTPUT -n`,
           limit: Cpu.millis(1500),
         },
         memory: {
-          // The 30d working-set peak is ~505MiB. Keep a rounded 768MiB
-          // request and 1GiB limit for task bursts without reserving the 3GiB
-          // used by the larger core and glitter workers.
+          // The 30d working-set peak is ~505MiB, and that peak is a real bound
+          // because the agent-task worker pins maxConcurrentActivityTaskExecutions
+          // to 1 (packages/temporal/src/worker.ts), so overlapping scheduled
+          // tasks queue instead of multiplying provider subprocesses. Keep a
+          // rounded 768MiB request and 1GiB limit for task bursts without
+          // reserving the 3GiB used by the larger core and glitter workers.
           request: Size.mebibytes(768),
           limit: Size.gibibytes(1),
         },

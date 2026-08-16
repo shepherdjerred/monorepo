@@ -276,12 +276,28 @@ async function main(): Promise<void> {
     // account. Queue isolation therefore covers both head-of-line blocking and
     // Kubernetes authorization; the agent pod has read-only audit RBAC and no
     // namespace-scoped exec roles.
+    //
+    // Activity concurrency stays 1: each agent activity spawns a Claude/Codex
+    // provider subprocess, so overlapping independently scheduled tasks would
+    // multiply the pod's peak RSS. Serializing makes the observed single-run
+    // working set an actual bound for the deployment's memory limit (see
+    // packages/homelab/src/cdk8s/src/resources/temporal/agent-worker.ts).
+    // Agent activities set no scheduleToStartTimeout, so a queued task waits
+    // for the slot instead of failing. Workflow-task concurrency must be ≥2
+    // when sticky cache is on — Core rejects max_cached_workflows>0 with a
+    // single workflow-task poller/slot.
     const agentTaskWorker = await Worker.create({
       ...commonWorkerOptions,
       taskQueue: TASK_QUEUES.AGENT_TASK,
+      maxConcurrentActivityTaskExecutions: 1,
+      maxConcurrentWorkflowTaskExecutions: 2,
     });
     workers.push(agentTaskWorker);
-    jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.AGENT_TASK });
+    jsonLog("info", "Worker created", {
+      taskQueue: TASK_QUEUES.AGENT_TASK,
+      maxConcurrentActivityTaskExecutions: 1,
+      maxConcurrentWorkflowTaskExecutions: 2,
+    });
   }
 
   if (workerRoleRunsGlitter(role)) {
