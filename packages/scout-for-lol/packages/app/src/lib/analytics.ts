@@ -448,7 +448,7 @@ export function normalizePath(pathname: string): string {
     .replace(/^\/explore\/s\/[^/]+/, "/explore/s/:shareToken")
     .replace(/^\/explore\/(?!s(?:\/|$))[^/]+/, "/explore/:conversationId");
   const knownRoute =
-    /^(?:\/|\/(?:login|welcome|installed)|\/explore(?:\/(?::conversationId|s\/:shareToken))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?)?)?)$/;
+    /^(?:\/|\/(?:login|welcome|installed)|\/explore(?:\/(?::conversationId|s\/:shareToken))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?)?)?)$/;
   return knownRoute.test(normalized) ? normalized : "/not-found";
 }
 
