@@ -84,7 +84,7 @@ export const SEASONS: Record<SeasonId, SeasonData> = {
   },
   "2026_SEASON_3_ACT_1": {
     id: "2026_SEASON_3_ACT_1",
-    displayName: "League Classic (Act 1)",
+    displayName: "Classic (Act 1)",
     startDate: new Date("2026-07-29T12:00:00-07:00"),
     endDate: new Date("2026-09-22T23:59:59-07:00"),
   },

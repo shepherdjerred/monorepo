@@ -310,17 +310,19 @@ export function GuildAccess() {
             members.map((member) => (
               <Fragment key={member.discordUserId}>
                 <TableRow>
-                  <TableCell className="flex items-center gap-2">
-                    {member.avatar !== null && (
-                      <img
-                        src={member.avatar}
-                        alt=""
-                        width={20}
-                        height={20}
-                        className="h-5 w-5 rounded-full"
-                      />
-                    )}
-                    <span className="truncate">{member.username}</span>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {member.avatar !== null && (
+                        <img
+                          src={member.avatar}
+                          alt=""
+                          width={20}
+                          height={20}
+                          className="h-5 w-5 rounded-full"
+                        />
+                      )}
+                      <span className="truncate">{member.username}</span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     {canGrant ? (

@@ -135,7 +135,7 @@ describe("seasons", () => {
 
       expect(choices).toEqual([
         {
-          name: "League Classic (Act 1)",
+          name: "Classic (Act 1)",
           value: "2026_SEASON_3_ACT_1",
         },
       ]);

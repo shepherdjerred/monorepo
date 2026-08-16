@@ -114,6 +114,7 @@ export function GlobalNavbar(props: {
   guildAccess?: ReactNode | undefined;
   getStartedTrackingEvent?: string | undefined;
   getStartedLocation?: string | undefined;
+  showGetStarted?: boolean | undefined;
   origins?: ScoutSurfaceOrigins | undefined;
 }) {
   return (
@@ -132,9 +133,8 @@ export function GlobalNavbar(props: {
           {props.utility}
           {props.guildAccess}
           <ThemeMenu />
-          {props.signedIn === true ? (
-            props.accountMenu
-          ) : (
+          {props.signedIn === true ? props.accountMenu : null}
+          {props.signedIn !== true && props.showGetStarted !== false ? (
             <Button asChild size="sm">
               <a
                 href={surfaceHref(props.origins?.app, "/app/login")}
@@ -144,7 +144,7 @@ export function GlobalNavbar(props: {
                 Get Started
               </a>
             </Button>
-          )}
+          ) : null}
           <div className="scout-mobile-nav">
             <Sheet>
               <SheetTrigger asChild>
@@ -203,10 +203,7 @@ export function GlobalFooter(props: {
             GitHub
           </a>
         </div>
-        <p>
-          Scout is an independent League of Legends companion created by Jerred
-          Shepherd.
-        </p>
+        <p>Scout is an independent League of Legends companion.</p>
         <p>
           Scout isn’t endorsed by Riot Games and doesn’t reflect the views or
           opinions of Riot Games or anyone officially involved in producing or

@@ -35,7 +35,7 @@
   "scripts": {
     "astro": "astro",
     "build": "astro build && bun run scripts/emit-shared-assets.ts",
-    "dev": "astro dev",
+    "dev": "NODE_ENV=development astro dev",
     "format": "prettier --check .",
     "lint": "astro check && eslint src",
     "preview": "astro preview",

@@ -41,8 +41,8 @@ function makeZone(id: string): Zone {
 
 const LOCAL_ZONE = new Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-// The short "common" group pinned to the top of an unfiltered list: the user's
-// own zone, UTC, then the previously hard-coded shortlist.
+// Keep the user's zone, UTC, and common North American/European/Asia-Pacific
+// zones present even if the platform's IANA catalog omits one of them.
 const PINNED_IDS = [
   ...new Set([
     LOCAL_ZONE,
@@ -115,14 +115,13 @@ export function TimezoneSelect(props: {
   }, [selectedLabel]);
 
   const trimmed = query.trim();
-  // "Resting" = the input still shows the current selection (or is empty) and
-  // the user hasn't started a fresh search, so we surface the pinned group.
-  const resting = trimmed.length === 0 || query === selectedLabel;
-  const items = resting
-    ? PINNED_ZONES
-    : SEARCHABLE_ZONES.filter((zone) =>
-        zone.id.toLowerCase().includes(trimmed.toLowerCase()),
-      );
+  // Show the complete IANA catalog from the first focus, while keeping the
+  // user's zone and UTC near the top through the catalog's offset ordering.
+  // The shared combobox caps the visible list and scrolls it, so comprehensive
+  // coverage does not turn the form into a page-length menu.
+  const items = SEARCHABLE_ZONES.filter((zone) =>
+    zone.id.toLowerCase().includes(trimmed.toLowerCase()),
+  );
 
   return (
     <Combobox<Zone>

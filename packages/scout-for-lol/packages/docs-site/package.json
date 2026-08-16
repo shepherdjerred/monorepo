@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "description": "User documentation for Scout for League of Legends",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "NODE_ENV=development astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "typecheck": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",

@@ -23,13 +23,25 @@ interface Props {
   title: string;
   subtitle?: string;
   showGradient?: boolean;
+  size?: "home" | "page";
   ctaButtons?: HeroCtaButton[];
 }
 
-const { title, subtitle, showGradient = true, ctaButtons = [] } = Astro.props;
+const {
+  title,
+  subtitle,
+  showGradient = true,
+  size = "page",
+  ctaButtons = [],
+} = Astro.props;
 ---
 
-<div class="scout-hero scout-section relative isolate px-6 lg:px-8">
+<div
+  class:list={[
+    "scout-hero scout-section relative isolate px-6 lg:px-8",
+    size === "home" && "flex min-h-[calc(100svh-7rem)] items-center",
+  ]}
+>
   {
     showGradient && (
       <div
@@ -44,7 +56,12 @@ const { title, subtitle, showGradient = true, ctaButtons = [] } = Astro.props;
     )
   }
 
-  <div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+  <div
+    class:list={[
+      "mx-auto max-w-2xl",
+      size === "home" ? "py-20 sm:py-28 lg:py-32" : "py-16 sm:py-20",
+    ]}
+  >
     <div class="text-center">
       <h1
         class="text-balance text-5xl font-semibold tracking-tight text-scout-ink sm:text-7xl"

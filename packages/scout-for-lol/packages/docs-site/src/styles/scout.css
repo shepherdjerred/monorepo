@@ -5,7 +5,10 @@
   --sl-font-system: var(--scout-font-body);
   --sl-color-accent-low: var(--scout-color-interactive-hover);
   --sl-color-accent: var(--scout-color-primary);
-  --sl-color-accent-high: var(--scout-color-primary-text);
+  --sl-color-accent-high: var(--scout-color-primary);
+  --sl-color-text-accent: var(--scout-color-primary);
+  --sl-color-text-invert: var(--scout-color-primary-text);
+  --sl-color-bg-accent: var(--scout-color-primary);
   --sl-color-white: var(--scout-color-text);
   --sl-color-gray-1: var(--scout-color-text);
   --sl-color-gray-2: var(--scout-color-text-muted);
@@ -39,4 +42,60 @@
 
 .sl-markdown-content :is(h1, h2, h3, h4, h5, h6) {
   font-family: var(--scout-font-display);
+}
+
+.sl-link-button {
+  border-radius: var(--scout-radius-medium);
+  font-family: var(--scout-font-body);
+  font-weight: 600;
+}
+
+.sl-link-button.primary {
+  color: var(--scout-color-primary-text);
+  background: var(--scout-color-primary);
+  border-color: var(--scout-color-primary);
+}
+
+.sl-link-button.secondary {
+  color: var(--scout-color-text);
+  background: var(--scout-color-surface);
+  border-color: var(--scout-color-border);
+}
+
+.sl-link-button.secondary:hover {
+  color: var(--scout-color-text);
+  background: var(--scout-color-interactive-hover);
+}
+
+:root:not([data-has-sidebar]) .scout-footer,
+:root[data-has-sidebar] .scout-footer {
+  width: 100vw;
+  margin-inline-start: calc(50% - 50vw + var(--sl-content-pad-x));
+}
+
+:root[data-has-sidebar] .scout-footer {
+  /* Fixed docs navigation stays above the full-width footer at page end. */
+  position: relative;
+  z-index: 0;
+}
+
+@media (min-width: 50rem) {
+  :root[data-has-sidebar] .scout-footer .scout-container {
+    width: min(calc(100vw - var(--sl-content-inline-start) - 2rem), 75rem);
+    margin-inline: calc(
+        var(--sl-content-inline-start) + var(--sl-content-pad-x)
+      )
+      auto;
+  }
+
+  :root[data-has-sidebar][data-has-toc] .scout-footer .scout-container {
+    width: min(
+      calc(100vw - (2 * var(--sl-content-inline-start)) - 2rem),
+      75rem
+    );
+  }
+}
+
+:root:not([data-has-sidebar]) {
+  --sl-main-pad: 0;
 }

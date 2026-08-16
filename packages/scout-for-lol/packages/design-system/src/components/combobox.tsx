@@ -92,11 +92,12 @@ export function Combobox<T>(props: ComboboxProps<T>) {
         />
       </PopoverAnchor>
       <PopoverContent
+        className="scout-combobox__content"
         onOpenAutoFocus={(event) => {
           event.preventDefault();
         }}
       >
-        <ul id={listId} role="listbox">
+        <ul id={listId} role="listbox" className="scout-combobox__list">
           {props.isLoading && props.items.length === 0 ? (
             <li className="scout-muted">Searching…</li>
           ) : (

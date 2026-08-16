@@ -27,54 +27,63 @@ interface Props {
 }
 
 const { title, description, variant = "indigo", buttons = [] } = Astro.props;
-const bgClass = variant === "indigo" ? "bg-scout-brand " : "bg-scout-surface ";
-const titleClass = variant === "indigo" ? "text-scout-ink" : "text-scout-ink ";
+const titleClass =
+  variant === "indigo" ? "text-scout-brand-ink" : "text-scout-ink";
 const descClass =
-  variant === "indigo" ? "text-scout-brand " : "text-scout-subtle ";
+  variant === "indigo" ? "text-scout-brand-ink" : "text-scout-subtle";
 ---
 
-<div class={`scout-cta scout-panel ${bgClass}`}>
-  <div class="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
-    <div class="mx-auto max-w-2xl text-center">
-      <h2
-        class={`text-balance text-4xl font-semibold tracking-tight ${titleClass} sm:text-5xl`}
-      >
-        {title}
-      </h2>
-      {
-        description && (
-          <p class={`mx-auto mt-6 max-w-xl text-lg/8 ${descClass}`}>
-            {description}
-          </p>
-        )
-      }
-      {
-        buttons.length > 0 && (
-          <div class="mt-10 flex items-center justify-center gap-x-6">
-            {buttons.map((button) =>
-              button.trackingEvent === undefined ? (
-                <Button
-                  href={button.href}
-                  variant={button.variant === "secondary" ? "text" : "primary"}
-                  color={variant === "indigo" ? "white" : "indigo"}
-                >
-                  {button.text}
-                </Button>
-              ) : (
-                <Button
-                  href={button.href}
-                  variant={button.variant === "secondary" ? "text" : "primary"}
-                  color={variant === "indigo" ? "white" : "indigo"}
-                  trackingEvent={button.trackingEvent}
-                  trackingLocation={button.trackingLocation}
-                >
-                  {button.text}
-                </Button>
-              ),
-            )}
-          </div>
-        )
-      }
+<div class="px-6 py-16 sm:py-24 lg:px-8">
+  <div
+    class="scout-cta scout-panel mx-auto max-w-5xl rounded-2xl"
+    data-variant={variant}
+  >
+    <div class="w-full px-2 py-6 sm:px-6 sm:py-10">
+      <div class="mx-auto max-w-2xl text-center">
+        <h2
+          class={`text-balance text-4xl font-semibold tracking-tight ${titleClass} sm:text-5xl`}
+        >
+          {title}
+        </h2>
+        {
+          description && (
+            <p class={`mx-auto mt-6 max-w-xl text-lg/8 ${descClass}`}>
+              {description}
+            </p>
+          )
+        }
+        {
+          buttons.length > 0 && (
+            <div class="mt-10 flex items-center justify-center gap-x-6">
+              {buttons.map((button) =>
+                button.trackingEvent === undefined ? (
+                  <Button
+                    href={button.href}
+                    variant={
+                      button.variant === "secondary" ? "text" : "primary"
+                    }
+                    color={variant === "indigo" ? "white" : "indigo"}
+                  >
+                    {button.text}
+                  </Button>
+                ) : (
+                  <Button
+                    href={button.href}
+                    variant={
+                      button.variant === "secondary" ? "text" : "primary"
+                    }
+                    color={variant === "indigo" ? "white" : "indigo"}
+                    trackingEvent={button.trackingEvent}
+                    trackingLocation={button.trackingLocation}
+                  >
+                    {button.text}
+                  </Button>
+                ),
+              )}
+            </div>
+          )
+        }
+      </div>
     </div>
   </div>
 </div>

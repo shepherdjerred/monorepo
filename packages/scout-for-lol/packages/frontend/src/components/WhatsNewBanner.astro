@@ -11,15 +11,12 @@ const latestEntry = changelog[0];
 
 {
   latestEntry && (
-    <div class="scout-announcement bg-scout-brand text-scout-brand-ink relative z-40">
+    <div class="scout-announcement relative z-40">
       <div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between gap-x-6">
           <div class="flex items-center gap-x-3 min-w-0 flex-1">
-            <Icon
-              name="heroicons:megaphone"
-              class="h-5 w-5 flex-none text-scout-ink"
-            />
-            <p class="text-sm leading-6 text-scout-ink truncate">
+            <Icon name="heroicons:megaphone" class="h-5 w-5 flex-none" />
+            <p class="text-sm leading-6 truncate">
               <strong class="font-semibold">
                 What's New - {formatChangelogDate(latestEntry)}:
               </strong>{" "}
@@ -31,7 +28,7 @@ const latestEntry = changelog[0];
           </div>
           <a
             href="/whatsnew"
-            class="inline-flex min-h-[44px] flex-none items-center text-sm font-semibold text-scout-ink hover:text-scout-ink transition-colors whitespace-nowrap"
+            class="inline-flex min-h-[44px] flex-none items-center text-sm font-semibold transition-opacity hover:opacity-75 whitespace-nowrap"
           >
             View all <span aria-hidden="true">&rarr;</span>
           </a>

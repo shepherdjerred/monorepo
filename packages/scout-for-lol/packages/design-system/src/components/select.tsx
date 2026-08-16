@@ -16,7 +16,7 @@ export const SelectTrigger = forwardRef<
     {...props}
   >
     {children}
-    <SelectPrimitive.Icon>
+    <SelectPrimitive.Icon className="scout-select-icon">
       <ChevronDown aria-hidden="true" size={16} />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
@@ -25,16 +25,24 @@ SelectTrigger.displayName = "SelectTrigger";
 export const SelectScrollUpButton = forwardRef<
   React.ComponentRef<typeof SelectPrimitive.ScrollUpButton>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>
->((props, ref) => (
-  <SelectPrimitive.ScrollUpButton ref={ref} {...props}>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.ScrollUpButton
+    ref={ref}
+    className={cn("scout-select-scroll-button", className)}
+    {...props}
+  >
     <ChevronUp aria-hidden="true" size={16} />
   </SelectPrimitive.ScrollUpButton>
 ));
 export const SelectScrollDownButton = forwardRef<
   React.ComponentRef<typeof SelectPrimitive.ScrollDownButton>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton>
->((props, ref) => (
-  <SelectPrimitive.ScrollDownButton ref={ref} {...props}>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.ScrollDownButton
+    ref={ref}
+    className={cn("scout-select-scroll-button", className)}
+    {...props}
+  >
     <ChevronDown aria-hidden="true" size={16} />
   </SelectPrimitive.ScrollDownButton>
 ));
@@ -50,7 +58,9 @@ export const SelectContent = forwardRef<
       {...props}
     >
       <SelectScrollUpButton />
-      <SelectPrimitive.Viewport>{children}</SelectPrimitive.Viewport>
+      <SelectPrimitive.Viewport className="scout-select-viewport">
+        {children}
+      </SelectPrimitive.Viewport>
       <SelectScrollDownButton />
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>

@@ -353,7 +353,7 @@ export function Explore() {
     // The page needs its own container: RootLayout provides none, and without
     // one the transcript ran edge-to-edge at the viewport's full width — the
     // same conversation the shared page renders at `max-w-3xl`.
-    <div className="mx-auto flex max-w-6xl gap-6 px-4 py-8">
+    <div className="mx-auto flex min-h-screen max-w-6xl gap-6 px-4 py-8 sm:px-6 sm:py-10">
       {/* Sticky because the document is the scroll container: the sidebar's
           own `h-full`/`overflow-y-auto` are inert against a page that scrolls
           as a whole, so the conversation list scrolled away with the content. */}
