@@ -8,8 +8,7 @@
 // the OTel logs API stops auto-attaching span context — `logPosts` stays
 // empty or the body doesn't contain a traceId, and the test fails.
 import { describe, expect, test, beforeAll, afterAll } from "bun:test";
-import { trace, context, propagation, metrics } from "@opentelemetry/api";
-import { logs as logsAPI } from "@opentelemetry/api-logs";
+import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";
 import { initializeTracing, shutdownTracing, withSpan } from "./tracing.ts";
 import { log } from "./log.ts";
 
@@ -61,15 +60,7 @@ describe("OTLP logs integration", () => {
     // its own providers cleanly. `setGlobalXProvider` is a one-shot
     // registration; without these `disable()` calls the next file sees
     // our shut-down providers and silently no-ops on emit.
-    trace.disable();
-    context.disable();
-    propagation.disable();
-    metrics.disable();
-    logsAPI.disable();
-    // NodeSDK.start() also registers a global MeterProvider; reset it too or
-    // the next file's initializeTracing() logs "Attempted duplicate
-    // registration of API: metrics".
-    metrics.disable();
+    resetOtelGlobals();
   });
 
   test("log() inside withSpan POSTs an OTLP log with traceId attached", async () => {
