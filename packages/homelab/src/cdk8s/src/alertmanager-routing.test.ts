@@ -225,6 +225,73 @@ describe("Alerts route selection", () => {
         alert_dashboard_fallback: "true",
       }),
     ).toBe("postal-fallback");
+    expect(
+      resolveReceiver(route, {
+        alertname: "ServiceProbeDown",
+        namespace: "alert-dashboard",
+        severity: "warning",
+      }),
+    ).toBe("postal-fallback");
+  });
+
+  it("keeps info-level dashboard-namespace alerts suppressed instead of paging Postal", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "SomethingInfo",
+        namespace: "alert-dashboard",
+        severity: "info",
+      }),
+    ).toBe("null");
+  });
+
+  it("routes only webhook-integration delivery failures to Postal", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "AlertmanagerFailedToSendAlerts",
+        namespace: "prometheus",
+        severity: "warning",
+        integration: "webhook",
+      }),
+    ).toBe("postal-fallback");
+    expect(
+      resolveReceiver(route, {
+        alertname: "PrometheusErrorSendingAlertsToSomeAlertmanagers",
+        namespace: "prometheus",
+        severity: "warning",
+      }),
+    ).toBe("postal-fallback");
+  });
+
+  it("routes the cluster-wide webhook delivery-failure alert to Postal alongside its single-instance sibling", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "AlertmanagerClusterFailedToSendAlerts",
+        namespace: "prometheus",
+        severity: "critical",
+        integration: "webhook",
+      }),
+    ).toBe("postal-fallback");
+  });
+
+  it("keeps email-integration delivery failures off the broken Postal path", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "AlertmanagerFailedToSendAlerts",
+        namespace: "monitoring",
+        severity: "warning",
+        integration: "email",
+      }),
+    ).toBe("alerts");
+  });
+
+  it("does not blanket-route unrelated Alertmanager health alerts to Postal", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "AlertmanagerConfigInconsistent",
+        namespace: "monitoring",
+        severity: "critical",
+      }),
+    ).toBe("alerts");
   });
 
   it("keeps Watchdog and info alerts suppressed", () => {
