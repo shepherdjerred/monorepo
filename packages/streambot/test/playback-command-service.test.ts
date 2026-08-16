@@ -16,6 +16,7 @@ function createService(overrides: Partial<PlaybackView> = {}) {
   const events: PlaybackEvent[] = [];
   const resolvedKinds: string[] = [];
   const seeks: number[] = [];
+  const announcements: string[] = [];
   const view: PlaybackView = {
     state: "streaming",
     current: {
@@ -63,8 +64,12 @@ function createService(overrides: Partial<PlaybackView> = {}) {
         chapters: [],
       });
     },
+    announce: (message) => {
+      announcements.push(message);
+      return Promise.resolve();
+    },
   });
-  return { service, events, resolvedKinds, seeks };
+  return { service, events, resolvedKinds, seeks, announcements };
 }
 
 describe("PlaybackCommandService", () => {
@@ -120,6 +125,42 @@ describe("PlaybackCommandService", () => {
     expect(events).toEqual([]);
   });
 
+  test("blocked sources shame publicly and deny tersely by voice", async () => {
+    const { service, events, announcements } = createService();
+    await expect(
+      service.play({
+        query: "porn compilation",
+        source: "youtube",
+        placement: "queue",
+        userId: USER,
+      }),
+    ).rejects.toThrow("Nope. That's not allowed.");
+    // Same public shaming as slash; the spoken denial never repeats the block reason.
+    expect(announcements).toHaveLength(1);
+    expect(announcements[0]).toContain(`<@${USER}>`);
+    expect(events).toEqual([]);
+  });
+
+  test("voice queue reads carry no requester mentions", () => {
+    const { service } = createService({
+      queue: [
+        {
+          title: "Queued Movie",
+          requesterId: OTHER,
+          chapters: [],
+          kind: "file",
+          sourceId: "file:/queued.mkv",
+          durationSeconds: 60,
+        },
+      ],
+    });
+    // These strings are sent to OpenAI as tool results; Discord user IDs stay in-process.
+    expect(service.getQueue()).toContain("Queued Movie");
+    expect(service.getQueue()).not.toContain("<@");
+    expect(service.getNowPlaying()).toContain("Current");
+    expect(service.getNowPlaying()).not.toContain("<@");
+  });
+
   test("keeps requester and admin authorization authoritative", () => {
     const { service, events } = createService();
     expect(() => service.skip(OTHER)).toThrow("requester or an admin");
@@ -170,6 +211,7 @@ describe("PlaybackCommandService", () => {
       library: () => [],
       setVolume: () => Promise.resolve(true),
       seek: () => Promise.resolve(true),
+      announce: () => Promise.resolve(),
       resolvePlaySource: async () => {
         controller.abort();
         return {

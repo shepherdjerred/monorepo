@@ -199,6 +199,7 @@ function fixture(transactionTimeoutMs = 1000) {
         ffmpegInput: "https://media.invalid/video",
         chapters: [],
       }),
+    announce: () => Promise.resolve(),
   };
   const service = new PlaybackCommandService(commandDeps);
   const streamer: StreamerLike = {
@@ -564,6 +565,49 @@ describe("custom Realtime transport failure boundaries", () => {
     expect(transportIndex).toBe(2);
     expect(transports[1]?.closeCount).toBe(1);
     expect(context.events).toHaveLength(0);
+    assistant.close();
+  });
+
+  test("peer userbot audio never reaches the wake detector", async () => {
+    const context = fixture();
+    const peerId = "300000000000000001";
+    const config = loadConfig({
+      BOT_TOKEN: "bot",
+      USER_TOKENS: "userbot",
+      ADMIN_IDS: String(USER),
+      VIDEOS_DIR: "/videos",
+      VOICE_ASSISTANT_ENABLED: "true",
+      OPENAI_API_KEY: "test-key",
+      PEER_USERBOT_IDS: peerId,
+    });
+    let transportConstructions = 0;
+    const assistant = new VoiceAssistantSession({
+      config,
+      models: markerModels(),
+      streamer: context.streamer,
+      commands: context.commandDeps,
+      announce: () => Promise.resolve(),
+      holdTeardown: holdTeardownForTest,
+      createDecoder: markerDecoder,
+      createRealtimeTransport: () => {
+        transportConstructions += 1;
+        return new FakeRealtimeTransport([]);
+      },
+    });
+    const listener = context.voiceListener();
+    if (listener === null) throw new Error("Voice listener was not installed");
+    // A peer bot speaking the wake markers is dropped (and its payload zeroed) before the
+    // detector; the same markers from a human complete a turn.
+    const peerPacket = new Uint8Array([2]);
+    listener({ userId: peerId, ssrc: 9, opus: peerPacket });
+    expect(peerPacket[0]).toBe(0);
+    listener({ userId: peerId, ssrc: 9, opus: new Uint8Array([4]) });
+    await Bun.sleep(30);
+    expect(transportConstructions).toBe(0);
+
+    emitMarkerTurn(listener);
+    await Bun.sleep(60);
+    expect(transportConstructions).toBe(1);
     assistant.close();
   });
 

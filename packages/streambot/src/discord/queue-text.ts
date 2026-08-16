@@ -61,12 +61,25 @@ export function chaptersText(view: PlaybackView): string {
   return `**Chapters for ${current.title}:**\n${lines.join("\n")}`;
 }
 
-export function nowPlayingText(view: PlaybackView): string {
+export type QueueTextOptions = {
+  /**
+   * Render requester mentions. The voice path passes false: these strings are sent to OpenAI as
+   * tool results, and requester user IDs must not leave the process for a spoken summary.
+   */
+  readonly mentions?: boolean;
+};
+
+export function nowPlayingText(
+  view: PlaybackView,
+  options: QueueTextOptions = {},
+): string {
   if (view.current === null) {
     return "Nothing is playing.";
   }
   const lines = [
-    `**Now playing:** ${view.current.title} (requested by <@${view.current.requesterId}>)`,
+    (options.mentions ?? true)
+      ? `**Now playing:** ${view.current.title} (requested by <@${view.current.requesterId}>)`
+      : `**Now playing:** ${view.current.title}`,
   ];
   if (view.positionSeconds !== null) {
     const time = formatTimecode(view.positionSeconds);
@@ -81,13 +94,20 @@ export function nowPlayingText(view: PlaybackView): string {
   return lines.join("\n");
 }
 
-export function queueText(view: PlaybackView): string {
+export function queueText(
+  view: PlaybackView,
+  options: QueueTextOptions = {},
+): string {
   const lines: string[] = [];
   if (view.current !== null) {
     lines.push(`**Now:** ${view.current.title}`);
   }
   view.queue.slice(0, MAX_LIST).forEach((item, index) => {
-    lines.push(`${String(index + 1)}. ${item.title} (<@${item.requesterId}>)`);
+    lines.push(
+      (options.mentions ?? true)
+        ? `${String(index + 1)}. ${item.title} (<@${item.requesterId}>)`
+        : `${String(index + 1)}. ${item.title}`,
+    );
   });
   if (view.queue.length > MAX_LIST) {
     lines.push(`…and ${String(view.queue.length - MAX_LIST)} more`);

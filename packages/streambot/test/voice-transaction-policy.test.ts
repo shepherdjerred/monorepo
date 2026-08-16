@@ -46,6 +46,7 @@ describe("voice transaction policy", () => {
       setVolume: () => Promise.resolve(true),
       seek: () => Promise.resolve(true),
       resolvePlaySource: () => Promise.reject(new Error("unused")),
+      announce: () => Promise.resolve(),
     });
     const tools = createStreambotVoiceTools(
       bindPlaybackVoiceCommandPort(

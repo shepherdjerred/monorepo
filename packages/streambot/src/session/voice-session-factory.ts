@@ -30,6 +30,7 @@ export function createSessionVoiceAssistant(
       setVolume: (percent) => userbot.setVolume(percent),
       seek: (seconds) => userbot.seek(seconds),
       resolvePlaySource: deps.resolvePlaySource,
+      announce: (message) => deps.announce(session.statusChannelId, message),
     },
     announce: (message) => deps.announce(session.statusChannelId, message),
     holdTeardown: () => session.teardownHold.acquire(),

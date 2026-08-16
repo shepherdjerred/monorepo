@@ -7,6 +7,11 @@ import {
   classifyPlayError,
   isHttpUrl,
 } from "@shepherdjerred/streambot/discord/resolve.ts";
+import {
+  BlockedSourceError,
+  isBlockedSource,
+  shameMessage,
+} from "@shepherdjerred/streambot/moderation/adult-block.ts";
 import { formatTimecode } from "@shepherdjerred/streambot/discord/timecode.ts";
 import {
   nowPlayingText,
@@ -44,6 +49,8 @@ export type PlaybackCommandServiceDeps = {
     source: Source,
     signal: AbortSignal,
   ) => Promise<ResolvedSource>;
+  /** Public status-channel announcement, used for blocked-source shaming parity with slash. */
+  readonly announce: (message: string) => Promise<void>;
 };
 
 export class PlaybackCommandBoundaryError extends Error {}
@@ -91,6 +98,9 @@ export class PlaybackCommandService {
     input.signal?.throwIfAborted();
     const query = normalizeVoicePlayQuery(input.query);
     const source = this.selectSource(query, input.source);
+    if (isBlockedSource(source)) {
+      await this.announceBlocked(input.userId);
+    }
     let preResolved: ResolvedSource | undefined;
     if (source.kind !== "file") {
       try {
@@ -104,6 +114,9 @@ export class PlaybackCommandService {
         preResolved = await this.deps.resolvePlaySource(source, signal);
         signal.throwIfAborted();
       } catch (error) {
+        if (error instanceof BlockedSourceError) {
+          await this.announceBlocked(input.userId);
+        }
         throw new PlaybackCommandBoundaryError(
           classifyPlayError(error, source.kind),
         );
@@ -216,11 +229,20 @@ export class PlaybackCommandService {
   }
 
   getQueue(): string {
-    return queueText(this.deps.view());
+    return queueText(this.deps.view(), { mentions: false });
   }
 
   getNowPlaying(): string {
-    return nowPlayingText(this.deps.view());
+    return nowPlayingText(this.deps.view(), { mentions: false });
+  }
+
+  /**
+   * Same public shaming as the slash path, then a terse denial: the assistant reads boundary
+   * messages aloud, and the block reason must not be spoken over voice.
+   */
+  private async announceBlocked(userId: UserId): Promise<never> {
+    await this.deps.announce(shameMessage(userId));
+    throw new PlaybackCommandBoundaryError("Nope. That's not allowed.");
   }
 
   private selectSource(query: string, requested: VoicePlaySource): Source {

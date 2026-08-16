@@ -145,7 +145,17 @@ export class VoiceAssistantSession {
         ? {}
         : { createDecoder: options.createDecoder }),
     });
+    // Peer userbots (other in-house bots sharing the channel) are real user accounts whose
+    // audio would otherwise reach the wake detector and could trigger commands attributed to
+    // their IDs. Zero-and-drop preserves the erase-everything invariant.
+    const peerUserbotIds = new Set<string>(
+      options.config.discord.peerUserbotIds,
+    );
     options.streamer.setVoiceAudioListener((audio) => {
+      if (peerUserbotIds.has(audio.userId)) {
+        audio.opus.fill(0);
+        return;
+      }
       this.lifecycle.accept(audio);
     });
   }
