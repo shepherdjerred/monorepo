@@ -14,12 +14,14 @@ import { bold, ChannelType, time, userMention } from "discord.js";
 import client from "#src/discord/client.ts";
 import { prisma } from "#src/db/index.ts";
 import { getLeaderboard } from "#src/karma/queries.ts";
+import { isInHistoricalUtcWeek } from "#src/karma/recap-history.ts";
 import { humanReasonFilter } from "#src/karma/reason-filters.ts";
 import { computeNextRecapAt } from "#src/karma/recap-schedule.ts";
 import { SingleFlight } from "#src/karma/single-flight.ts";
 
 const POLL_INTERVAL_MS = 60_000;
 const RECAP_TOP_N = 5;
+const HISTORICAL_ENTRY_LIMIT = 3;
 
 /** Guilds whose recap is due. A null `nextRecapAt` counts as due — that is the
  *  self-heal path for a row enabled before a time was ever computed. */
@@ -39,10 +41,10 @@ async function displayName(id: string): Promise<string> {
   return user.username;
 }
 
-/** Karma given on this calendar day in any previous year.
+/** Karma given during this calendar week in any previous year.
  *  The archive is the bot's most valuable and least used asset: 362 entries
  *  going back to 2023, 89% of them carrying a human-written reason. */
-async function onThisDay(guildId: string, now: Date) {
+async function onThisWeek(guildId: string, now: Date) {
   const rows = await prisma.karma.findMany({
     where: {
       guildId,
@@ -57,11 +59,7 @@ async function onThisDay(guildId: string, now: Date) {
       receiverId: true,
     },
   });
-  return rows.filter(
-    (row) =>
-      row.datetime.getUTCMonth() === now.getUTCMonth() &&
-      row.datetime.getUTCDate() === now.getUTCDate(),
-  );
+  return rows.filter((row) => isInHistoricalUtcWeek(row.datetime, now));
 }
 
 export async function buildRecap(
@@ -71,7 +69,7 @@ export async function buildRecap(
   const [received, given, memories] = await Promise.all([
     getLeaderboard({ guildId, kind: "received", period: "month", now }),
     getLeaderboard({ guildId, kind: "given", period: "month", now }),
-    onThisDay(guildId, now),
+    onThisWeek(guildId, now),
   ]);
 
   if (received.length === 0 && given.length === 0 && memories.length === 0) {
@@ -102,10 +100,15 @@ export async function buildRecap(
     sections.push(`\nMost generous this month:\n${lines.join("\n")}`);
   }
 
-  const memory = memories[0];
-  if (memory !== undefined) {
+  const historicalEntries = memories.slice(0, HISTORICAL_ENTRY_LIMIT);
+  if (historicalEntries.length > 0) {
     sections.push(
-      `\nOn this day, ${time(memory.datetime, "D")}:\n${userMention(memory.giverId)} gave ${userMention(memory.receiverId)} karma for \`${memory.reason ?? ""}\``,
+      `\nThis week in karma:\n${historicalEntries
+        .map(
+          (entry) =>
+            `${time(entry.datetime, "D")}: ${userMention(entry.giverId)} gave ${userMention(entry.receiverId)} karma for \`${entry.reason ?? ""}\``,
+        )
+        .join("\n")}`,
     );
   }
 

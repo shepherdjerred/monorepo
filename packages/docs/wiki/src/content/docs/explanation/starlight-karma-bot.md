@@ -95,11 +95,12 @@ making the same milestone eligible again.
 
 ## The recap posts without being asked
 
-A guild owner points the recap at a channel with `/karma config` (requires
-Manage Server). A dispatcher polls once a minute for guilds whose next fire time
-has passed, posts the month's top receivers and top givers plus an "on this
-day" entry from the archive, then advances the next fire time from the guild's
-CRON expression.
+A guild owner points the recap at a channel with `/karma config` (or the
+configured bot admin, who does not need Manage Server). A dispatcher polls once
+a minute for guilds whose next fire time has passed, posts the month's top
+receivers and top givers plus up to three historical entries from the same
+calendar week in an older year, then advances the next fire time from the
+guild's CRON expression.
 
 It advances that timestamp **even when posting fails**. Otherwise a deleted
 channel or a revoked permission turns into a retry every single minute forever.
