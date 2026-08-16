@@ -427,6 +427,25 @@ describe("agent task payload normalization", () => {
     ).toEqual({ markdown: "complete" });
   });
 
+  it("accepts the codex SDK's raw agent_message text (codex)", () => {
+    // runCodexSdk deliberately assigns the final agent_message text verbatim to
+    // `output`, leaving decoding to this contract step. That only works because
+    // a string is JSON-parsed here before schema validation, so pin it: if this
+    // ever stopped accepting a string, every Codex-backed agent task would fail
+    // the output contract as a non-retryable AgentSdkOutputContractFailure.
+    expect(
+      parseAgentTaskResultPayload(
+        JSON.stringify({
+          markdown: "complete",
+          followUp: null,
+          cancelCron: null,
+          cancelReason: null,
+        }),
+        "codex",
+      ),
+    ).toEqual({ markdown: "complete" });
+  });
+
   it("parses a minimal plain payload directly (claude)", () => {
     expect(
       parseAgentTaskResultPayload({ markdown: "claude minimal" }, "claude"),
