@@ -624,11 +624,23 @@ seven global commands; `guildScopedCommandGroups` (same file) maps a flag to a
 payload, and `discord/rest.ts` resolves it through `listGuildsWithFlagEnabled`
 and PUTs to `applicationGuildCommands` for each. A globally registered
 flag-gated command would sit in the picker of every guild Scout is in and do
-nothing there. Two consequences worth knowing: a guild PUT **replaces** that
+nothing there. Three consequences worth knowing. A guild PUT **replaces** that
 guild's whole command list for the app, so groups are merged per guild before
-sending; and a guild the running bot is not in fails with `MISSING_ACCESS`,
-which is logged and skipped rather than fatal — otherwise the prod deployment
-would crash-loop over a command only beta serves.
+sending. A guild the running bot is not in fails with `MISSING_ACCESS`, which is
+logged and skipped rather than fatal — otherwise the prod deployment would
+crash-loop over a command only beta serves; every _other_ failure propagates and
+exits, because startup reporting success over a guild whose registration was
+rejected leaves that guild without `/bb` until someone redeploys.
+
+And **registration reconciles, it does not only register.** Because the PUT is a
+replacement, it is also the only way to take a command back, so the loop runs
+over `listGuildsWithFlagDeclared` — every guild the flag names in _either_
+direction — and sends an empty payload to the ones it is switched off for.
+Visiting only the enabled guilds left `/bb` in a disabled guild's picker
+indefinitely. The corollary is a contract on withdrawal: **switch a guild's
+override to `value: false`; do not delete the entry.** A deleted override leaves
+no record that the guild was ever targeted, and nothing on either side can then
+tell it apart from a guild that never had the feature.
 
 The scope wording lives once in `BUCKS_SCOPE_TAG` / `BUCKS_SCOPE_NOTE`
 (`betting/constants.ts`) — use those rather than writing new copy, so the
@@ -665,6 +677,14 @@ Canada. There is no monetary component and nothing transfers to real goods.
   join a transaction — every side effect here is local, so the transition
   commits with the payouts. `settleBettingForMatch` returns a summary only for
   pools _this_ call settled, which is what stops a duplicate announcement.
+- **The settlement summary is one-shot, so its delivery gets its own error
+  boundary.** Because a later pass returns nothing for an already-settled pool,
+  anything that discards the summary discards it permanently. Two places this
+  bites, both fixed and both easy to reintroduce: `announceSettlements` must not
+  share a `try` with report generation in `processMatchAndUpdatePlayers` — a
+  satori crash or a failed report send would take the settlement message with it
+  — and inside it each `messageRefs` entry is sent under its own `catch`, so one
+  dead channel cannot swallow the guilds behind it in the loop.
 - **Settle and award outside the Discord path.** `settleAndAwardBucks` is called
   from `processMatchAndUpdatePlayers`, after the S3 ingest gate and outside
   `if (!silent)`. `processMatch` returns early with no subscribed channel and
@@ -689,7 +709,16 @@ Canada. There is no monetary component and nothing transfers to real goods.
   into the pool's frozen snapshot, so they survive a restart and stay inside
   Discord's 100-character cap. Parsing never throws — it is an unauthenticated
   surface, and every field is re-validated against server state before a Buck
-  moves.
+  moves. But **not throwing is not the same as not answering**: `isBucksCustomId`
+  is only a prefix check, so once `routeButton` claims a `bb:` interaction it owes
+  Discord an acknowledgement within seconds or the clicker is shown "This
+  interaction failed". An ID that is claimed by namespace and then fails to parse
+  is closed out with a silent `deferUpdate()` and counted as `bb/malformed`, never
+  as `bb/success`.
+- **The prediction verdict declines the coin flip.** The formula has no intercept,
+  so exactly `0.500` is a supported result meaning "no call" — not a call that the
+  subject loses. `predictionVerdict` returns nothing for it, because scoring it
+  makes the recap claim a direction the stored sentence never took.
 
 ## Database (Prisma)
 

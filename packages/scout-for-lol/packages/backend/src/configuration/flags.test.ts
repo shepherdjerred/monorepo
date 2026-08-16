@@ -6,6 +6,7 @@ import {
 import {
   addFlagOverride,
   getFlag,
+  listGuildsWithFlagDeclared,
   listGuildsWithFlagEnabled,
   MY_SERVER,
   resetFlagOverrides,
@@ -71,4 +72,48 @@ describe("listGuildsWithFlagEnabled", () => {
   // so any test here would be asserting against a flag that cannot exist. The
   // guard stays because returning [] for such a flag would quietly unregister
   // its command everywhere, which is far worse than a loud failure.
+});
+
+describe("listGuildsWithFlagDeclared", () => {
+  test("returns the guild a flag is switched on for", () => {
+    resetFlagOverrides("betting_enabled");
+    expect(listGuildsWithFlagDeclared("betting_enabled")).toEqual([MY_SERVER]);
+  });
+
+  // The whole reason this exists next to `listGuildsWithFlagEnabled`. Guild
+  // command registration is a PUT that REPLACES a guild's command list, so a
+  // guild whose flag was switched off has to stay in the reconciliation set —
+  // visiting only the enabled guilds leaves Discord serving the command there
+  // forever.
+  test("keeps a guild whose override switches the flag off", () => {
+    addFlagOverride("debug", false, { server: OTHER_GUILD });
+
+    expect(listGuildsWithFlagEnabled("debug")).not.toContain(OTHER_GUILD);
+    expect(listGuildsWithFlagDeclared("debug")).toContain(OTHER_GUILD);
+  });
+
+  test("is a superset of the enabled list", () => {
+    addFlagOverride("debug", true, { server: MY_SERVER });
+    addFlagOverride("debug", false, { server: OTHER_GUILD });
+
+    const declared = listGuildsWithFlagDeclared("debug");
+    for (const guild of listGuildsWithFlagEnabled("debug")) {
+      expect(declared).toContain(guild);
+    }
+  });
+
+  test("ignores an override scoped to one person in a guild", () => {
+    // Same rule as the enabled list: `{ server, user }` says something about a
+    // member, not about the guild, so it must not pull the guild into a
+    // reconciliation that would clear that guild's commands.
+    addFlagOverride("debug", false, { server: OTHER_GUILD, user: SOMEONE });
+    expect(listGuildsWithFlagDeclared("debug")).not.toContain(OTHER_GUILD);
+  });
+
+  test("does not repeat a guild declared twice", () => {
+    addFlagOverride("debug", true, { server: OTHER_GUILD });
+    addFlagOverride("debug", false, { server: OTHER_GUILD });
+    const guilds = listGuildsWithFlagDeclared("debug");
+    expect(guilds.filter((guild) => guild === OTHER_GUILD)).toHaveLength(1);
+  });
 });

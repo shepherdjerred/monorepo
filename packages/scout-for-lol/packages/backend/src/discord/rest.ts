@@ -10,7 +10,10 @@ import {
   commandPayload,
   guildScopedCommandGroups,
 } from "#src/discord/commands/definitions.ts";
-import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
+import {
+  listGuildsWithFlagDeclared,
+  listGuildsWithFlagEnabled,
+} from "#src/configuration/flags.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("discord-rest");
@@ -44,29 +47,46 @@ function discordErrorCode(error: unknown): number | undefined {
 }
 
 /**
- * Register per-guild commands for the guilds their flag is enabled in.
+ * Reconcile per-guild commands against the flags that own them.
  *
- * Groups are merged by guild before sending, because a guild PUT **replaces**
- * that guild's entire command list for this application — two separate PUTs to
- * the same guild would leave only the last one's commands.
+ * **Reconcile, not register.** A guild PUT *replaces* that guild's entire
+ * command list for this application, which is why groups are merged per guild
+ * before sending — but it is also the only way to take a command back. So the
+ * loop runs over every guild any group's flag *declares* (see
+ * `listGuildsWithFlagDeclared`), not only the ones it is enabled in, and a
+ * guild whose flag was switched off is visited with an empty payload. Sending
+ * to enabled guilds alone left a disabled command sitting in its guild's picker
+ * indefinitely, answering nothing, until the next unrelated deploy that
+ * happened to re-add the flag.
  *
- * A failure here is logged and skipped rather than fatal, unlike the global
- * registration above. The expected failure is `MISSING_ACCESS`: a flag names a
- * guild that this particular bot is not in, which is normal when the same flag
- * registry is shared by the beta and prod applications and only one of them was
- * invited. Exiting on that would crash-loop the other deployment over a
- * command it was never going to serve.
+ * The corollary is the withdrawal contract stated on `listGuildsWithFlagDeclared`:
+ * switch a guild's override to `false`, do not delete it, or there is nothing
+ * left to reconcile against.
+ *
+ * `MISSING_ACCESS` is logged and skipped: a flag names a guild that this
+ * particular bot is not in, which is normal when the same flag registry is
+ * shared by the beta and prod applications and only one of them was invited.
+ * Exiting on that would crash-loop the other deployment over a command it was
+ * never going to serve. Every *other* failure — an invalid payload, a rejected
+ * token, a 5xx — is a real registration failure that no later poll retries, so
+ * it propagates to the caller's exit path rather than letting startup report
+ * success over a guild that has no commands.
  */
 async function registerGuildScopedCommands(): Promise<void> {
   const byGuild = new Map<string, RESTPostAPIApplicationCommandsJSONBody[]>();
   for (const group of guildScopedCommandGroups) {
+    // Declared first, so a guild the flag is off for still gets an entry — an
+    // empty payload, which is exactly the PUT that removes the command.
+    for (const guildId of listGuildsWithFlagDeclared(group.flag)) {
+      byGuild.set(guildId, byGuild.get(guildId) ?? []);
+    }
     for (const guildId of listGuildsWithFlagEnabled(group.flag)) {
       byGuild.set(guildId, [...(byGuild.get(guildId) ?? []), ...group.payload]);
     }
   }
 
   if (byGuild.size === 0) {
-    logger.info("📭 No guild-scoped commands to register");
+    logger.info("📭 No guild-scoped commands declared");
     return;
   }
 
@@ -77,21 +97,22 @@ async function registerGuildScopedCommands(): Promise<void> {
         Routes.applicationGuildCommands(configuration.applicationId, guildId),
         { body: payload },
       );
-      logger.info(`✅ Registered [${names}] in guild ${guildId}`);
+      logger.info(
+        payload.length === 0
+          ? `🧹 Cleared guild-scoped commands in guild ${guildId} — its flag is off`
+          : `✅ Registered [${names}] in guild ${guildId}`,
+      );
     } catch (error) {
       if (discordErrorCode(error) === MISSING_ACCESS) {
-        logger.info(
-          `⏭️  Skipping [${names}] for guild ${guildId} — this bot is not in it`,
-        );
+        logger.info(`⏭️  Skipping guild ${guildId} — this bot is not in it`);
         continue;
       }
-      logger.error(
-        `❌ Failed to register [${names}] in guild ${guildId}:`,
-        error,
+      // Wrapped rather than bare, so the outer handler's Sentry event still
+      // names the guild and the payload the bare Discord error would not.
+      throw new Error(
+        `Failed to reconcile guild-scoped commands [${names}] in guild ${guildId}`,
+        { cause: error },
       );
-      Sentry.captureException(error, {
-        tags: { source: "discord-guild-command-registration", guildId },
-      });
     }
   }
 }

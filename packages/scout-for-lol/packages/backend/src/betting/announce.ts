@@ -40,14 +40,31 @@ function formatPrediction(raw: string | null): string | undefined {
   return parsed.success ? parsed.data.sentence : undefined;
 }
 
-function predictionVerdict(
+/** The coin flip. The prediction formula has no intercept, so a symmetric lobby
+ * returns exactly this — a supported result, not a rounding artifact. */
+const COIN_FLIP = 0.5;
+
+/**
+ * Score the stored prediction against the result, or return nothing.
+ *
+ * Exactly `0.500` is a *declined* call, not a call that the subject loses:
+ * `prediction.ts` has no intercept, so a symmetric lobby lands here by design.
+ * Reading it with `> 0.5` alone made the sentence retroactively claim a
+ * direction it never took — "Scout was wrong." after a win, "Scout called it."
+ * after a loss — from a forecast that said 50/50.
+ */
+export function predictionVerdict(
   prediction: BucksPrediction | undefined,
   winningTeamId: number | undefined,
 ): string | undefined {
-  if (winningTeamId === undefined || prediction === undefined) {
+  if (
+    winningTeamId === undefined ||
+    prediction === undefined ||
+    prediction.winProbability === COIN_FLIP
+  ) {
     return undefined;
   }
-  const predictedWin = prediction.winProbability > 0.5;
+  const predictedWin = prediction.winProbability > COIN_FLIP;
   const subjectWon = prediction.subjectTeamId === winningTeamId;
   return predictedWin === subjectWon ? "Scout called it." : "Scout was wrong.";
 }
@@ -170,15 +187,33 @@ export async function announceSettlements(
       const guildId = DiscordGuildIdSchema.parse(summary.serverId);
 
       for (const ref of refs) {
-        await send(
-          {
-            content: body,
-            // A fifteen-person settlement must not ping fifteen people.
-            allowedMentions: { parse: [] },
-          },
-          DiscordChannelIdSchema.parse(ref.channelId),
-          guildId,
-        );
+        // Isolated per channel. The pool has already committed as settled and a
+        // later pass returns no summary, so this delivery is one-shot: letting
+        // a stale or no-longer-writable first ref throw would silently discard
+        // the settlement for every healthy channel behind it.
+        try {
+          await send(
+            {
+              content: body,
+              // A fifteen-person settlement must not ping fifteen people.
+              allowedMentions: { parse: [] },
+            },
+            DiscordChannelIdSchema.parse(ref.channelId),
+            guildId,
+          );
+        } catch (error) {
+          logger.error(
+            `❌ Could not deliver the Bryan Bucks settlement for ${summary.matchId} to channel ${ref.channelId}:`,
+            error,
+          );
+          Sentry.captureException(error, {
+            tags: {
+              source: "betting-announce",
+              matchId: summary.matchId,
+              channelId: ref.channelId,
+            },
+          });
+        }
       }
     } catch (error) {
       logger.error(

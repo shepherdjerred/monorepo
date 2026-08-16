@@ -276,6 +276,28 @@ async function settleOnePool(input: {
   classificationVoid: BucksVoidReason | undefined;
 }): Promise<SettlementSummary | undefined> {
   return await input.prismaClient.$transaction(async (tx) => {
+    const settledAt = new Date();
+
+    // FIRST statement, exactly as in `placeBet`. A conditional update both
+    // proves no other tick has settled this pool and upgrades the transaction
+    // to a writer in one round trip, so every read below is protected by the
+    // lock we now hold.
+    //
+    // Reading the bets first would establish a deferred read snapshot, and a
+    // concurrent `placeBet` or close sweep committing before this write would
+    // fail the upgrade with SQLITE_BUSY_SNAPSHOT — which `busy_timeout` does
+    // not retry. `settleBettingForMatch` swallows that, the match cursor still
+    // advances, and the pool is eventually refunded as stale instead of paying
+    // its winners.
+    const claim = await tx.bucksMatchPool.updateMany({
+      where: { id: input.poolId, poolState: { in: ["open", "closed"] } },
+      data: { updatedAt: settledAt },
+    });
+    if (claim.count !== 1) {
+      // Another tick already settled this pool.
+      return;
+    }
+
     const rows = await tx.bucksBet.findMany({
       where: { poolId: input.poolId, betOutcome: "pending" },
       select: {
@@ -303,23 +325,19 @@ async function settleOnePool(input: {
       voidReason,
     });
 
-    // The claim, and the FIRST write of this transaction: it both proves no
-    // other tick has settled this pool and takes the write lock for everything
-    // below.
-    const claim = await tx.bucksMatchPool.updateMany({
-      where: { id: input.poolId, poolState: { in: ["open", "closed"] } },
+    // The terminal state. Unconditional: the claim above already established
+    // that this transaction owns the pool, and it holds the write lock until
+    // commit, so no `where` clause can add anything here.
+    await tx.bucksMatchPool.update({
+      where: { id: input.poolId },
       data: {
         poolState: voidReason === undefined ? "settled" : "voided",
         winningTeamId:
           voidReason === undefined ? (input.winningTeamId ?? null) : null,
         voidReason: voidReason ?? null,
-        settledAt: new Date(),
+        settledAt,
       },
     });
-    if (claim.count !== 1) {
-      // Another tick already settled this pool.
-      return;
-    }
 
     for (const bet of settled.bets) {
       await creditBet(tx, {

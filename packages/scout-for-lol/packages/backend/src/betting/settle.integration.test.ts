@@ -196,6 +196,43 @@ describe("settleBettingForMatch", () => {
     expect(await db.bucksLedgerEntry.count()).toBe(entriesAfterFirst);
   });
 
+  // The invariant from AGENTS.md: "the first statement of every mutating
+  // transaction is a guarded conditional write". Asserted structurally because
+  // the failure it prevents cannot be produced on demand — reading the bets
+  // first opens a deferred WAL snapshot, and a concurrent `placeBet` or close
+  // sweep committing before the pool update fails the write upgrade with
+  // SQLITE_BUSY_SNAPSHOT, which `busy_timeout` does not retry.
+  // `settleBettingForMatch` swallows that error and the cursor still advances,
+  // so the pool is eventually refunded as stale instead of paying its winners.
+  test("claims the pool before reading a single bet", async () => {
+    await makeTwoSidedPool();
+
+    const operations: string[] = [];
+    const recording = db.$extends({
+      query: {
+        $allModels: {
+          async $allOperations({ model, operation, args, query }) {
+            operations.push(`${model}.${operation}`);
+            return await query(args);
+          },
+        },
+      },
+    });
+
+    const settled = await settleBettingForMatch(fixture, recording);
+    expect(settled).toHaveLength(1);
+
+    // Everything the transaction does, from the pool lookup onwards. The first
+    // statement inside the transaction — i.e. the first one after the outer
+    // findMany that discovers the pools — must be the guarded claim.
+    const inTransaction = operations.slice(1);
+    expect(inTransaction[0]).toBe("BucksMatchPool.updateMany");
+    expect(inTransaction).toContain("BucksBet.findMany");
+    expect(inTransaction.indexOf("BucksMatchPool.updateMany")).toBeLessThan(
+      inTransaction.indexOf("BucksBet.findMany"),
+    );
+  });
+
   test("refunds everyone when one side attracted no stake", async () => {
     const pool = await makePool(SERVER_A);
     const only = await makeBettor({

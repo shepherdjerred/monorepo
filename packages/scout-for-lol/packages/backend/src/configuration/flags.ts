@@ -354,6 +354,43 @@ export function getFlag(
  * would unregister it everywhere.
  */
 export function listGuildsWithFlagEnabled(name: FlagName): DiscordGuildId[] {
+  return listWholeGuildOverrides(name, (value) => value);
+}
+
+/**
+ * Every guild a flag carries a whole-guild override for, in **either**
+ * direction.
+ *
+ * The superset of `listGuildsWithFlagEnabled`, and the reconciliation set for
+ * guild-scoped command registration: registering is a PUT that *replaces* a
+ * guild's command list, so a guild whose flag was switched off has to be
+ * visited with an empty payload or Discord keeps serving the command forever.
+ * Only the enabled list can say where a command belongs; only this one can say
+ * where it no longer does.
+ *
+ * The consequence is a contract on how a guild-scoped feature is withdrawn:
+ * flip its override to `value: false` rather than deleting the entry. A deleted
+ * entry leaves no record that the guild was ever targeted, and nothing here or
+ * in Discord can then tell that guild apart from one that never had it.
+ *
+ * @throws for the same reason `listGuildsWithFlagEnabled` does.
+ */
+export function listGuildsWithFlagDeclared(name: FlagName): DiscordGuildId[] {
+  return listWholeGuildOverrides(name, () => true);
+}
+
+/**
+ * Guilds named by an override whose *sole* attribute is `server` and whose
+ * value the caller accepts.
+ *
+ * The specificity check is the point: a more specific override such as
+ * `{ server, user }` enables the flag for one person in that guild, which is
+ * not the same as the guild having the feature.
+ */
+function listWholeGuildOverrides(
+  name: FlagName,
+  accept: (value: boolean) => boolean,
+): DiscordGuildId[] {
   const config = FLAG_REGISTRY[name];
   if (config.default) {
     throw new Error(
@@ -363,7 +400,7 @@ export function listGuildsWithFlagEnabled(name: FlagName): DiscordGuildId[] {
 
   const guilds = new Set<DiscordGuildId>();
   for (const override of config.overrides) {
-    if (!override.value) {
+    if (!accept(override.value)) {
       continue;
     }
     const server = override.attributes.server;

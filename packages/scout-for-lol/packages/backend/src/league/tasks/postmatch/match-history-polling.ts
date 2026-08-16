@@ -221,10 +221,6 @@ async function processMatchAndUpdatePlayers(
     // would re-run the whole AI pipeline and burn tokens for nothing.
     try {
       await processMatch(matchData, allTrackedPlayers);
-      // Announced after the report so it reads as a follow-up, and as its own
-      // message rather than appended to the report's content, which the AI
-      // review already owns and which is delivered to every guild at once.
-      await announceSettlements({ matchId, ...bucks });
     } catch (error) {
       logger.error(
         `[processMatch] ❌ processMatch threw for ${matchId} — cursor will still advance (durable S3 copy already saved)`,
@@ -234,6 +230,17 @@ async function processMatchAndUpdatePlayers(
         tags: { source: "process-match-throw", matchId },
       });
     }
+
+    // Announced after the report so it reads as a follow-up, and as its own
+    // message rather than appended to the report's content, which the AI review
+    // already owns and which is delivered to every guild at once.
+    //
+    // Its own error boundary, NOT the report's: the pool is already committed
+    // as settled and a later pass returns no summary, so this announcement is
+    // one-shot. Sharing a `try` with report generation and Discord delivery
+    // meant a render crash or a failed send discarded the settlement summary
+    // outright, and the bettors were never told what happened to their stakes.
+    await announceSettlements({ matchId, ...bucks });
   }
 
   // Mark as processed
