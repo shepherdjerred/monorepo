@@ -594,6 +594,49 @@ describe("generateValidatedObject transport failures", () => {
     expect(thrown.cause).toBeDefined();
   });
 
+  test("wraps an immediate API failure that follows a billable attempt", async () => {
+    let requestCount = 0;
+    const runtime = createOpenRouterRuntime({
+      apiKey: "test-key",
+      service: "test",
+      appName: "test",
+      fetch: () => {
+        requestCount += 1;
+        if (requestCount === 1) {
+          return Promise.resolve(openRouterResponse('{"count":"bad"}'));
+        }
+        return Promise.resolve(
+          Response.json(
+            { error: { code: 402, message: "insufficient credits" } },
+            { status: 402 },
+          ),
+        );
+      },
+    });
+    let thrown: unknown;
+
+    try {
+      await generateValidatedObject(runtime, {
+        model: "gpt-5.6-luna",
+        schema: z.object({ count: z.number().int() }),
+        schemaName: "CountResult",
+        prompt: "Return a count.",
+        workload: "immediate-after-semantic-test",
+      });
+    } catch (error: unknown) {
+      thrown = error;
+    }
+
+    // A 402 right after the first billable call drained the balance is the
+    // exact moment budget metering must still see that first attempt's spend.
+    expect(thrown).toBeInstanceOf(StructuredOutputTransportError);
+    if (!(thrown instanceof StructuredOutputTransportError)) {
+      throw new Error("expected structured-output transport error");
+    }
+    expect(thrown.usage.tokens.total).toBe(16);
+    expect(thrown.cause).toBeDefined();
+  });
+
   test("first-attempt transport failures still throw the raw error", async () => {
     const runtime = createOpenRouterRuntime({
       apiKey: "test-key",

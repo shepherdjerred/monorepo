@@ -210,10 +210,12 @@ export class StructuredOutputExhaustionError extends StructuredOutputUsageError 
 }
 
 /**
- * A transport failure (429/5xx/network) that interrupted the semantic retry
- * loop after at least one earlier attempt already billed tokens. The original
- * transport error is preserved as `cause`; retry classification that inspects
- * the transport layer should unwrap it.
+ * A provider-call failure — transport (429/5xx/network) or immediate API
+ * (400–404) — that interrupted the semantic retry loop after at least one
+ * earlier attempt already billed tokens. The original error is preserved as
+ * `cause`; retry classification that inspects the transport layer should
+ * unwrap it. A failure on the FIRST attempt is rethrown raw instead, since
+ * nothing billable preceded it.
  */
 export class StructuredOutputTransportError extends StructuredOutputUsageError {
   constructor(

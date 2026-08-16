@@ -290,7 +290,21 @@ export async function generateValidatedObject<SCHEMA extends z.ZodType>(
           };
         } catch (error: unknown) {
           const observation = await runtime.responseObservation(observationId);
-          if (isImmediateFailure(error)) throw error;
+          if (isImmediateFailure(error)) {
+            // A 400–404 on a corrective attempt (e.g. a 402 after the first
+            // billable call drained the balance) still follows billable
+            // attempts; discarding their usage would let budget-metering
+            // callers undercount exactly when the account is under pressure.
+            if (attempts.some((prior) => prior.outcome === "semantic-error")) {
+              throw new StructuredOutputTransportError(
+                `Provider call failed on semantic attempt ${String(semanticAttempt)} for ${input.workload} after earlier billable attempts`,
+                attempts,
+                aggregateUsage(attempts),
+                { cause: error },
+              );
+            }
+            throw error;
+          }
           if (isTransportFailure(error)) {
             attempts.push({
               attempt: semanticAttempt,
