@@ -258,6 +258,27 @@ function codexUsage(usage: CodexUsage | undefined): AgentTaskSdkUsage {
   };
 }
 
+/**
+ * `turn.completed` usage is per-turn, not cumulative — the shared Codex JSONL
+ * parser sums it the same way — so a multi-turn run must aggregate every turn
+ * or the activity-level usage undercounts all but the last turn.
+ */
+function addCodexUsage(
+  left: CodexUsage | undefined,
+  right: CodexUsage,
+): CodexUsage {
+  if (left === undefined) return right;
+  return {
+    input_tokens: left.input_tokens + right.input_tokens,
+    cached_input_tokens: left.cached_input_tokens + right.cached_input_tokens,
+    cache_write_input_tokens:
+      left.cache_write_input_tokens + right.cache_write_input_tokens,
+    output_tokens: left.output_tokens + right.output_tokens,
+    reasoning_output_tokens:
+      left.reasoning_output_tokens + right.reasoning_output_tokens,
+  };
+}
+
 function codexEventMayApplyEffect(event: ThreadEvent): boolean {
   if (event.type !== "item.started" && event.type !== "item.completed") {
     return false;
@@ -358,7 +379,7 @@ async function runCodexSdk(
           sessionId = event.thread_id;
           break;
         case "turn.completed":
-          usage = event.usage;
+          usage = addCodexUsage(usage, event.usage);
           break;
         case "turn.failed":
           throw new Error(event.error.message);

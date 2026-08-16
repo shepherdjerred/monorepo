@@ -3,10 +3,12 @@ import { costForTextUsage } from "@shepherdjerred/llm-models";
 import {
   generateValidatedObject,
   StructuredOutputExhaustionError,
+  StructuredOutputUsageError,
 } from "@shepherdjerred/llm-runtime";
 import { ApplicationFailure } from "@temporalio/common";
 import type { GenerationBudget } from "./glitter-context-refresh-budget.ts";
 import {
+  BilledGenerationInterruptedError,
   GenerationUsageSchema,
   type GenerationArtifactResult,
   type GenerationUsage,
@@ -153,6 +155,23 @@ export async function generateGlitterObject<SCHEMA extends z.ZodType>(input: {
       missingParsedError: input.exhaustionError,
     });
   } catch (error: unknown) {
+    if (
+      error instanceof StructuredOutputUsageError &&
+      !(error instanceof StructuredOutputExhaustionError)
+    ) {
+      // A transport or immediate API failure interrupted the retry loop after
+      // billable attempts. Convert to the cache layer's typed error so the
+      // spend is persisted as a receipt before the activity fails.
+      throw new BilledGenerationInterruptedError(
+        error.message,
+        generationUsage({
+          model: input.model,
+          tokens: error.usage.tokens,
+          actualCostUsd: error.usage.actualCostUsd,
+        }),
+        { cause: error },
+      );
+    }
     if (!(error instanceof StructuredOutputExhaustionError)) throw error;
     const lastAttempt = error.attempts.at(-1);
     const exhaustedByLength = error.attempts.some(
