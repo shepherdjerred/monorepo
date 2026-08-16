@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import * as Sentry from "@sentry/react";
 import { useQueryClient } from "@tanstack/react-query";
 import type {
   ExploreAttachPoint,
@@ -276,9 +277,18 @@ export function useExploreTurn(params: {
       // should be *fetched* — a conversation the reader may well come back to
       // must not keep a question with nothing under it.
       void (async () => {
-        for (const delay of ABANDONED_TURN_REFRESH_DELAYS) {
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          await refreshConversation(conversationId);
+        try {
+          for (const delay of ABANDONED_TURN_REFRESH_DELAYS) {
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            await refreshConversation(conversationId);
+          }
+        } catch (refreshError) {
+          // Nothing is on screen to show this in — the reader already left
+          // the conversation — but a catch-up that dies still leaves a
+          // question with nothing under it, which is the state this loop
+          // exists to prevent. Report it rather than letting it surface as an
+          // unhandled rejection nobody attributes to Explore.
+          Sentry.captureException(refreshError);
         }
       })();
     }

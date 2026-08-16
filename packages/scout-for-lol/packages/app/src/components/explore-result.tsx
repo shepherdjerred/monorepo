@@ -59,6 +59,9 @@ export function SingleRowResult(props: {
       ? []
       : [
           {
+            // Two columns may share a display label; `key` is what actually
+            // identifies the column, so it is what React must list on.
+            key: column.key,
             label: column.label,
             text: formatReportDisplayValue(column, value),
           },
@@ -77,7 +80,7 @@ export function SingleRowResult(props: {
   return (
     <dl className="flex flex-wrap gap-6 rounded-md border p-4">
       {figures.map((figure) => (
-        <div key={figure.label} className="min-w-24">
+        <div key={figure.key} className="min-w-24">
           <dt className="text-xs text-muted-foreground">{figure.label}</dt>
           <dd className="text-2xl font-semibold tabular-nums">{figure.text}</dd>
         </div>
