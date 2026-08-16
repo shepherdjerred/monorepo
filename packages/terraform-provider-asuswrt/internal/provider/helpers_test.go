@@ -1000,7 +1000,8 @@ func TestSetConfiguredWirelessValues(t *testing.T) {
 // system field is filled from the router by refresh and carried into the plan,
 // so it is indistinguishable from a configured one by value alone. Writing every
 // known planned value would push that snapshot back to the router and, with a
-// saved plan or -refresh=false, revert a newer out-of-band value.
+// saved plan or -refresh=false, revert a newer out-of-band value. Configured
+// fields are compared against the router's live values, never prior state.
 func TestCollectSystemChanges(t *testing.T) {
 	t.Parallel()
 
@@ -1008,7 +1009,8 @@ func TestCollectSystemChanges(t *testing.T) {
 		name         string
 		plan         systemResourceModel
 		config       systemResourceModel
-		prior        *systemResourceModel
+		live         map[string]string
+		isUpdate     bool
 		wantValues   map[string]string
 		wantServices []string
 	}{
@@ -1019,37 +1021,64 @@ func TestCollectSystemChanges(t *testing.T) {
 				Timezone: types.StringValue("UTC"),
 			},
 			config: systemResourceModel{Timezone: types.StringValue("UTC")},
-			prior: &systemResourceModel{
-				Hostname: types.StringValue("SetOutOfBand"),
-				Timezone: types.StringValue("EST5EDT,M3.2.0,M11.1.0"),
+			live: map[string]string{
+				"lan_hostname": "SetOutOfBand",
+				"time_zone":    "EST5EDT,M3.2.0,M11.1.0",
 			},
+			isUpdate:     true,
 			wantValues:   map[string]string{"time_zone": "UTC"},
 			wantServices: []string{client.ServiceTime},
 		},
 		{
-			name: "update with nothing configured or changed writes nothing",
+			name: "update with nothing configured writes nothing",
 			plan: systemResourceModel{
 				Hostname: types.StringValue("SetOutOfBand"),
 				Timezone: types.StringValue("UTC"),
 			},
 			config: systemResourceModel{},
-			prior: &systemResourceModel{
-				Hostname: types.StringValue("SetOutOfBand"),
-				Timezone: types.StringValue("UTC"),
+			live: map[string]string{
+				"lan_hostname": "SetOutOfBand",
+				"time_zone":    "UTC",
 			},
+			isUpdate:     true,
 			wantValues:   map[string]string{},
 			wantServices: nil,
 		},
 		{
-			// Reasserting it would be exactly as stale as writing an
-			// unconfigured field, and could not be paired with a restart
-			// without bouncing net_and_phy on every unrelated update.
-			name:         "update skips a configured but unchanged field",
+			// The router already agrees, so there is nothing to enforce and
+			// nothing to restart — no bouncing net_and_phy on an unrelated update.
+			name:         "update skips a configured field the router already matches",
 			plan:         systemResourceModel{Hostname: types.StringValue("MyRouter")},
 			config:       systemResourceModel{Hostname: types.StringValue("MyRouter")},
-			prior:        &systemResourceModel{Hostname: types.StringValue("MyRouter")},
+			live:         map[string]string{"lan_hostname": "MyRouter"},
+			isUpdate:     true,
 			wantValues:   map[string]string{},
 			wantServices: nil,
+		},
+		{
+			// Regression: with a saved plan or -refresh=false the plan can equal
+			// stale prior state while the router has drifted. Skipping the write
+			// would leave the drift for the post-apply read to pull into the
+			// configured attribute, which Terraform rejects as an inconsistent
+			// result. The live value is what decides.
+			name:         "update reasserts a configured field the router drifted away from",
+			plan:         systemResourceModel{Hostname: types.StringValue("MyRouter")},
+			config:       systemResourceModel{Hostname: types.StringValue("MyRouter")},
+			live:         map[string]string{"lan_hostname": "DriftedOutOfBand"},
+			isUpdate:     true,
+			wantValues:   map[string]string{"lan_hostname": "MyRouter"},
+			wantServices: []string{client.ServiceNetAndPhy},
+		},
+		{
+			// A key the router did not report cannot be compared; enforcing the
+			// operator's configuration is the safe direction.
+			name:         "update writes a configured field missing from the live read",
+			plan:         systemResourceModel{Hostname: types.StringValue("MyRouter")},
+			config:       systemResourceModel{Hostname: types.StringValue("MyRouter")},
+			live:         map[string]string{},
+			isUpdate:     true,
+			wantValues:   map[string]string{"lan_hostname": "MyRouter"},
+			wantServices: []string{client.ServiceNetAndPhy},
 		},
 		{
 			// Every written value carries its restart: the write set and the
@@ -1057,7 +1086,8 @@ func TestCollectSystemChanges(t *testing.T) {
 			name:         "update writes and restarts a changed configured field",
 			plan:         systemResourceModel{Hostname: types.StringValue("NewName")},
 			config:       systemResourceModel{Hostname: types.StringValue("NewName")},
-			prior:        &systemResourceModel{Hostname: types.StringValue("OldName")},
+			live:         map[string]string{"lan_hostname": "OldName"},
+			isUpdate:     true,
 			wantValues:   map[string]string{"lan_hostname": "NewName"},
 			wantServices: []string{client.ServiceNetAndPhy},
 		},
@@ -1071,10 +1101,11 @@ func TestCollectSystemChanges(t *testing.T) {
 				NTPServer0: types.StringValue("pool.ntp.org"),
 				NTPServer1: types.StringValue("time.cloudflare.com"),
 			},
-			prior: &systemResourceModel{
-				NTPServer0: types.StringValue("old0"),
-				NTPServer1: types.StringValue("old1"),
+			live: map[string]string{
+				"ntp_server0": "old0",
+				"ntp_server1": "old1",
 			},
+			isUpdate: true,
 			wantValues: map[string]string{
 				"ntp_server0": "pool.ntp.org",
 				"ntp_server1": "time.cloudflare.com",
@@ -1088,7 +1119,7 @@ func TestCollectSystemChanges(t *testing.T) {
 				Timezone: types.StringUnknown(),
 			},
 			config:       systemResourceModel{Hostname: types.StringValue("MyRouter")},
-			prior:        nil,
+			isUpdate:     false,
 			wantValues:   map[string]string{"lan_hostname": "MyRouter"},
 			wantServices: []string{client.ServiceNetAndPhy},
 		},
@@ -1098,9 +1129,9 @@ func TestCollectSystemChanges(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			mappings := buildSystemMappings(&tt.plan, &tt.config, tt.prior)
+			mappings := buildSystemMappings(&tt.plan, &tt.config)
 
-			values, services := collectSystemChanges(mappings, tt.prior != nil)
+			values, services := collectSystemChanges(mappings, tt.live, tt.isUpdate)
 
 			if !reflect.DeepEqual(values, tt.wantValues) {
 				t.Errorf("values = %v, want %v", values, tt.wantValues)
