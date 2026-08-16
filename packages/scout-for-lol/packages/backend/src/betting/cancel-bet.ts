@@ -22,7 +22,8 @@ export type CancelBetResult =
   | { kind: "cancelled"; refunded: number; balanceAfter: number }
   | { kind: "no_pool" }
   | { kind: "no_bet" }
-  | { kind: "window_closed" };
+  | { kind: "window_closed" }
+  | { kind: "already_resolved"; poolState: "settled" | "voided" };
 
 /**
  * Withdraw a position while the window is still open.
@@ -96,7 +97,26 @@ export async function cancelBet(
         },
         select: { id: true },
       });
-      return locked === null ? { kind: "no_bet" } : { kind: "window_closed" };
+      if (locked === null) {
+        return { kind: "no_bet" };
+      }
+      // "Locked in, settles when the game ends" is only true while the pool is
+      // still awaiting a result. The claim also fails once the pool has left
+      // `open` for good, and telling someone their stake is pending after it
+      // already paid out — or was voided and refunded — describes the wrong
+      // event. Re-read the state rather than reusing the row fetched above,
+      // which predates this transaction.
+      const current = await tx.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true },
+      });
+      if (current.poolState === "settled") {
+        return { kind: "already_resolved", poolState: "settled" };
+      }
+      if (current.poolState === "voided") {
+        return { kind: "already_resolved", poolState: "voided" };
+      }
+      return { kind: "window_closed" };
     }
 
     const bet = await tx.bucksBet.findUnique({

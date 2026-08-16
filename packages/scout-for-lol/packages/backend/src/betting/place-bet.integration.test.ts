@@ -217,6 +217,37 @@ describe("placeBet — refusing a position", () => {
     expect(result.kind).toBe("window_closed");
   });
 
+  test("tells a bettor a settled game has already resolved, not that it is pending", async () => {
+    // The claim fails for two different reasons — window shut, or the pool has
+    // left `open` for good — and answering both with "settles when the game
+    // ends" describes a payout that already happened.
+    await bet({ stake: 5 });
+    await db.bucksMatchPool.updateMany({ data: { poolState: "settled" } });
+
+    const result = await cancelBet(
+      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      db,
+    );
+    if (result.kind !== "already_resolved") {
+      throw new Error(`expected already_resolved, got ${result.kind}`);
+    }
+    expect(result.poolState).toBe("settled");
+  });
+
+  test("distinguishes a voided market from a settled one", async () => {
+    await bet({ stake: 5 });
+    await db.bucksMatchPool.updateMany({ data: { poolState: "voided" } });
+
+    const result = await cancelBet(
+      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      db,
+    );
+    if (result.kind !== "already_resolved") {
+      throw new Error(`expected already_resolved, got ${result.kind}`);
+    }
+    expect(result.poolState).toBe("voided");
+  });
+
   test("tells a non-bettor they have no bet, not that one is locked", async () => {
     // A wallet with no stake in this pool: the claim below still fails because
     // the window is shut, but answering `window_closed` would describe a
