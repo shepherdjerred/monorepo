@@ -5,7 +5,7 @@
 Before doing ANY work, scan the available skills list for relevant skills and LOAD THEM. This is not optional.
 
 - **ALWAYS load matching skills first** - If the task involves a technology that has a skill (Docker, Terraform, Kubernetes, Git, TypeScript, etc.), load that skill BEFORE taking any action. Do not attempt to solve the problem without the skill.
-- **Use MCP tools first** - When MCP servers provide relevant functionality, prefer them over manual approaches
+- **Use supported CLIs first** - Prefer `linear`, `posthog-cli`, `gh`, and `git-spice` for service and workflow operations. Do not introduce package-local MCP configuration; use MCP only when a user explicitly selects a top-level integration.
 - **Leverage plugins** - Check available plugins before implementing something from scratch
 - **Web access — lightpanda, PinchTab, Docling, or similar** - For plain page/docs fetches, use [Lightpanda](https://github.com/lightpanda-io/browser): `lightpanda fetch --dump markdown --strip-mode full --log-level fatal <url>` (see the `lightpanda-browser` skill). For sites that block Lightpanda or need interaction (clicking, form filling, screenshots), use [PinchTab](https://github.com/pinchtab/pinchtab) — load the `pinchtab-helper` skill first. For document extraction (PDF/DOCX/etc.), use [Docling](https://github.com/docling-project/docling) per the PDF Extraction section below. Other similar tools are fine when they fit better.
 - **Look deeper** - If CI is failing, a build tool is erroring, or infrastructure has issues, don't just report the surface error. Load the relevant skill and investigate the root cause. The user wants solutions, not descriptions of problems.
@@ -59,7 +59,7 @@ These apply to all work — code, infrastructure, configuration, CI pipelines, s
 
 - **Never poll with `sleep N && <cmd>`** (e.g. `sleep 90 && gh pr checks`). The harness blocks sleep-then-command, so these calls just fail and waste turns. Foreground `sleep` to "wait" is also blocked.
 - To wait on something that changes over time, use the right mechanism instead:
-  - **PRs / CI** → the `pr-monitor` skill (it drives a PR through reviews and conflicts, plus CI in repos that have it), or `pr-health` for a one-shot status.
+  - **PRs / CI** → use the repository's `git-spice-helper` workflow for branch and PR operations; use `gh`/Buildkite directly for read-only status checks.
   - **A condition you can re-check** → the `Monitor` tool (an until-loop), or a **background Bash task** (`run_in_background: true`) that re-invokes you when it exits.
   - **A fixed future time / recurring check** → `ScheduleWakeup` (dynamic `/loop`) or a scheduled agent.
 - Harness-tracked background work (background Bash, spawned agents, workflows) re-invokes you on completion — do **not** add a short-interval poll to check on it.

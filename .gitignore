@@ -34,9 +34,6 @@ packages/**/.vscode/settings.json
 # Playwright test results
 test-results/
 
-# Playwright MCP logs
-.playwright-mcp/
-
 # discord-plays-pokemon workspace build artifacts
 packages/dpp/
 

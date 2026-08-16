@@ -7,7 +7,7 @@ dist/
 *.tsbuildinfo
 .eslintcache
 
-# MCP credentials cache
+# Cursor cache
 .cursor/cache/
 .claude/settings.local.json
 

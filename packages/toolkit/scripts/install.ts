@@ -32,17 +32,13 @@ if (import.meta.main) {
     ],
     root,
   );
-  await Promise.all([
-    mkdir(`${home}/.local/bin`, { recursive: true }),
-    mkdir(`${home}/.claude/skills/pr-health`, { recursive: true }),
-  ]);
+  await Promise.all([mkdir(`${home}/.local/bin`, { recursive: true })]);
   await rm(paths.binary, { force: true });
   await Bun.write(paths.binary, Bun.file(`${root}/dist/toolkit`));
   await chmod(paths.binary, 0o755);
   if (process.platform === "darwin") {
     await run(["codesign", "--force", "--sign", "-", paths.binary], root);
   }
-  await Bun.write(paths.skill, Bun.file(`${root}/skills/pr-health/SKILL.md`));
   await rm(paths.legacyBinary, { force: true });
   console.log(`Installed toolkit to ${paths.binary}`);
 }

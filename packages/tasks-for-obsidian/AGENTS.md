@@ -148,13 +148,6 @@ Then the human tells you: "read /tmp/ios-build.log" or "read /tmp/metro.log" etc
 - **Xcode console**: For native Swift/ObjC logs — human opens `ios/TasksForObsidian.xcworkspace` in Xcode and runs from there.
 - **Shake gesture / Cmd+D in simulator**: Opens React Native dev menu (reload, DevTools, performance monitor).
 
-### MCP servers (optional, for full "closing the loop")
-
-These let you directly build, see screenshots, and interact with the simulator:
-
-- **XcodeBuildMCP** (`github.com/getsentry/XcodeBuildMCP`): Structured JSON build/test output instead of raw xcodebuild logs. Prevents context overflow.
-- **ios-simulator-mcp** (`github.com/joshuayoes/ios-simulator-mcp`): Take screenshots, tap elements, read accessibility tree from the simulator.
-
 ## Simulator Commands
 
 ```bash

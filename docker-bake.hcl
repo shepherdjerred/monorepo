@@ -201,7 +201,7 @@ target "discord-plays-mario-kart" {
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────
 group "infra" {
-  targets = ["caddy-s3proxy", "obsidian-headless", "mcp-gateway", "redlib"]
+  targets = ["caddy-s3proxy", "obsidian-headless", "redlib"]
 }
 
 target "caddy-s3proxy" {
@@ -219,14 +219,6 @@ target "obsidian-headless" {
   tags       = imagetags("obsidian-headless")
   cache-from = cachefrom("obsidian-headless")
   cache-to   = cacheto("obsidian-headless")
-}
-
-target "mcp-gateway" {
-  context    = "packages/homelab/images/mcp-gateway"
-  target     = "image"
-  tags       = imagetags("mcp-gateway")
-  cache-from = cachefrom("mcp-gateway")
-  cache-to   = cacheto("mcp-gateway")
 }
 
 target "redlib" {

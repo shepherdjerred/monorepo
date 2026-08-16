@@ -56,7 +56,6 @@ import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resour
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/kueue.ts";
 import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createCpuPowerCap } from "@shepherdjerred/homelab/cdk8s/src/resources/cpu-power-cap.ts";
-import { createMcpGatewayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/mcp-gateway.ts";
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/bugsink.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tasknotes.ts";
 import { createRelayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/relay.ts";
@@ -170,7 +169,6 @@ export async function createAppsChart(app: App) {
   createMarioKartApp(chart);
   createGickupApp(chart);
   createGrafanaDbApp(chart);
-  createMcpGatewayApp(chart);
   createBugsinkApp(chart);
   createTasknotesApp(chart);
   createRelayApp(chart);
