@@ -399,9 +399,41 @@ transcripts into the repository, commits, logs, or chat.
 
 ### Example History Queries
 
-There is no single cross-client history index, so combine the read-only queries
-below. The seven-day examples use a rolling window; use explicit start and end
-dates when “last week” means a calendar week.
+`toolkit history` provides the preferred local cross-client index. Install its
+macOS LaunchAgent once; it polls the documented stores every 30 seconds and
+keeps a private, rebuildable FTS5 index under `~/.toolkit/history/`. Search is
+read-only and does not run live GitHub, deployment, Kubernetes, or cloud checks.
+
+```bash
+# Install and start background ingestion.
+toolkit history daemon install
+
+# “What did I work on last week?” (rolling seven-day window).
+toolkit history recent --since 7d
+
+# “Didn't I solve this before?”
+toolkit history search "argocd prune" --since 90d --include-excerpts
+
+# Inspect source coverage and ingestion errors.
+toolkit history sources
+toolkit history daemon status
+
+# “What's the status of X?” — history finds prior context; verify current truth separately.
+toolkit history search "X" --since 30d
+toolkit deployed <service-or-commit>
+toolkit pr health <PR_NUMBER>
+```
+
+Use `--source conductor|claude|codex|cursor|opencode-conductor|opencode-standalone`
+to narrow a search and `--json` for agent-readable output. `--include-excerpts`
+reopens source stores read-only for bounded excerpts; complete transcript bodies
+are not copied into the index. The LaunchAgent, index, socket, state, and logs
+are user-private. Never index or print standalone OpenCode's `auth.json`.
+
+The commands below remain useful as a read-only fallback when the index has not
+been installed or a client has changed its internal schema. The seven-day
+examples use a rolling window; use explicit start and end dates when “last week”
+means a calendar week.
 
 To find recent work across the main stores:
 
