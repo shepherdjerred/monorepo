@@ -67,12 +67,14 @@ FROM base AS runtime
 # so copying the whole install root between same-rooted stages is safe. Kept
 # BEFORE the source COPY so a source edit doesn't re-push this layer.
 COPY --from=prod-deps /app/ /app/
-# Scoped source closure (fonts for satori live inside the report package).
+# Scoped source closure. Report Satori imports resolve through the shared
+# design-system package, which also owns the exact font and rank-crest bytes.
 COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
   packages/scout-for-lol/packages/backend \
   packages/scout-for-lol/packages/data \
+  packages/scout-for-lol/packages/design-system \
   packages/scout-for-lol/packages/report \
   packages/llm-models \
   packages/llm-observability \
