@@ -1,4 +1,4 @@
-import { createTool } from "@mastra/core/tools";
+import { tool as defineTool } from "ai";
 import { z } from "zod";
 import {
   collectInheritedWipEvidence,
@@ -132,8 +132,7 @@ async function requireCurrentCompletedRestack(
 export function createWorkerRestackTools(options: RestackToolOptions) {
   const { store, pr, environment, signal, record } = options;
   return {
-    start_restack: createTool({
-      id: "start_restack",
+    start_restack: defineTool({
       description:
         "Start a git-spice branch restack while retaining the stack write lease.",
       inputSchema: z.object({}),
@@ -176,8 +175,7 @@ export function createWorkerRestackTools(options: RestackToolOptions) {
           return { completed: true, output };
         }),
     }),
-    continue_restack: createTool({
-      id: "continue_restack",
+    continue_restack: defineTool({
       description:
         "Stage explicit resolved conflict paths and continue the git-spice rebase.",
       inputSchema: z.object({
@@ -217,8 +215,7 @@ export function createWorkerRestackTools(options: RestackToolOptions) {
           return { completed: true, output };
         }),
     }),
-    publish_restack: createTool({
-      id: "publish_restack",
+    publish_restack: defineTool({
       description:
         "Publish a completed restack and request one current-head hosted review.",
       inputSchema: z.object({}),

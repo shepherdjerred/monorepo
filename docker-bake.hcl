@@ -85,6 +85,7 @@ group "app" {
     "scout-evals",
     "discord-plays-pokemon",
     "discord-plays-mario-kart",
+    "openrouter-broadcast-ingest",
   ]
 }
 
@@ -119,6 +120,14 @@ target "tasknotes-server" {
   tags       = imagetags("tasknotes-server")
   cache-from = cachefrom("tasknotes-server")
   cache-to   = cacheto("tasknotes-server")
+}
+
+target "openrouter-broadcast-ingest" {
+  inherits   = ["_app"]
+  dockerfile = "packages/openrouter-broadcast-ingest/Dockerfile"
+  tags       = imagetags("openrouter-broadcast-ingest")
+  cache-from = cachefrom("openrouter-broadcast-ingest")
+  cache-to   = cacheto("openrouter-broadcast-ingest")
 }
 
 target "scout-evals" {

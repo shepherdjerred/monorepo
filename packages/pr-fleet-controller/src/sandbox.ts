@@ -267,7 +267,7 @@ ${writes.join("\n")}`;
 
 // Strip credential-bearing env vars from a subprocess environment. The name
 // heuristic catches conventional credential vars, but a controller can be
-// configured with an arbitrarily-named key var (`--api-key-env LLM_ACCESS`);
+// configured with an arbitrarily-named key var;
 // that configured name is passed via `extraSecretNames` so it is ALWAYS removed
 // even when it does not match the heuristic — otherwise the model credential
 // would leak into validation and setup subprocess environments.

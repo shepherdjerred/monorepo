@@ -1,3 +1,4 @@
+import { context, trace, TraceFlags, type Context } from "@opentelemetry/api";
 import type { FleetTelemetry } from "./ports.ts";
 import type {
   FleetSnapshot,
@@ -27,6 +28,42 @@ export function captureTelemetryOperation<T>(
   } catch (error) {
     throw new TelemetryCaptureError(operation, error);
   }
+}
+
+/**
+ * Runs `operation` inside an OpenTelemetry context carrying the recorder's
+ * correlation trace ID.
+ *
+ * `FleetTelemetry.traceId()` is a sha256 truncated to 32 hex characters — a
+ * valid W3C trace ID by construction. Supplying it only through
+ * `callOptions.traceContext` puts it in the OpenRouter request metadata but
+ * leaves the local trace untouched, and the AI SDK integration starts its spans
+ * from `context.active()`. Without this graft each model and tool call becomes
+ * its own root trace with a random ID, so the dashboard's `tracePrNumbers`
+ * lookup — which joins a span to its PR by trace ID — misses, and a worker's
+ * spans land in the fleet timeline instead of that PR's transcript.
+ *
+ * Grafting onto a remote span context rather than starting a real span keeps
+ * the deterministic recorder ID authoritative, so a captured run stays
+ * byte-for-byte replayable.
+ */
+export function correlatedTraceContext(ids: {
+  traceId: string;
+  spanId: string;
+}): Context {
+  return trace.setSpanContext(context.active(), {
+    traceId: ids.traceId,
+    spanId: ids.spanId,
+    traceFlags: TraceFlags.SAMPLED,
+    isRemote: true,
+  });
+}
+
+export function withCorrelatedTrace<T>(
+  ids: { traceId: string; spanId: string },
+  operation: () => Promise<T>,
+): Promise<T> {
+  return context.with(correlatedTraceContext(ids), operation);
 }
 
 export function isTelemetryCaptureError(error: unknown): boolean {

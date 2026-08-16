@@ -1,4 +1,4 @@
-import { Context } from "@temporalio/activity";
+import { ApplicationFailure, Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
 import {
   scoutSeasonRefreshSubprocessExitTotal,
@@ -6,16 +6,33 @@ import {
 } from "#observability/metrics.ts";
 import { getTraceContext } from "#observability/tracing.ts";
 import { emitOtel } from "#observability/log.ts";
-import { parseClaudeResultMessage } from "#shared/claude-result.ts";
-import { traceClaudeCli } from "@shepherdjerred/llm-observability/wrappers/claude-cli";
-import { redactSecrets } from "#shared/redact.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
+import {
+  createAgentTaskSecretTokenState,
+  envForTrustedAgent,
+} from "./agent-task-env.ts";
+import {
+  activityCancellationSignalOrUndefined,
+  startToCloseTimeoutMsOrUndefined,
+} from "./agent-task-runtime.ts";
+import {
+  ClaudeAgentSdkRunError,
+  runClaudeAgentSdk,
+} from "./claude-agent-sdk-runner.ts";
 import { buildSeasonRefreshPrompt } from "./scout-season-refresh-prompt.ts";
 
 const COMPONENT = "scout-season-refresh";
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
-const ALLOWED_TOOLS = "WebFetch,WebSearch,Read,Edit,Bash,Glob,Grep";
+const ALLOWED_TOOLS = [
+  "WebFetch",
+  "WebSearch",
+  "Read",
+  "Edit",
+  "Bash",
+  "Glob",
+  "Grep",
+] as const;
 
 export type ClaudeRunInput = {
   workdir: string;
@@ -92,95 +109,31 @@ function safeHeartbeat(payload: Record<string, unknown>): void {
   }
 }
 
-function secretTokens(): readonly (string | undefined)[] {
-  return [
-    Bun.env["CLAUDE_CODE_OAUTH_TOKEN"],
-    Bun.env["ANTHROPIC_API_KEY"],
-    Bun.env["GITHUB_PERSONAL_ACCESS_TOKEN"],
-    Bun.env["GITHUB_APP_PRIVATE_KEY"],
-  ];
-}
-
-function buildSubprocessEnv(claudeToken: string): Record<string, string> {
-  // Strip ANTHROPIC_API_KEY so the CLI uses the OAuth subscription rather
-  // than billing direct-API credits. Matches pr-agent.ts.
-  const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(Bun.env)) {
-    if (key === "ANTHROPIC_API_KEY") continue;
-    if (key === "GH_TOKEN" || key === "GITHUB_PERSONAL_ACCESS_TOKEN") continue;
-    if (key.startsWith("GITHUB_APP_")) continue;
-    if (typeof value === "string") env[key] = value;
-  }
-  env["CLAUDE_CODE_OAUTH_TOKEN"] = claudeToken;
-  return env;
-}
-
-async function pumpStderr(
-  stream: ReadableStream<Uint8Array>,
-  tokens: readonly (string | undefined)[],
-): Promise<void> {
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  let buf = "";
-  try {
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split("\n");
-      buf = lines.pop() ?? "";
-      for (const line of lines) {
-        if (line.length === 0) continue;
-        jsonLog("info", "claude stderr", {
-          line: redactSecrets(line, tokens),
-        });
-      }
-    }
-    if (buf.length > 0) {
-      jsonLog("info", "claude stderr", {
-        line: redactSecrets(buf, tokens),
-      });
-    }
-  } catch (error: unknown) {
-    jsonLog("warning", "stderr pump error", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-}
-
 function recordTokenUsage(
   model: string,
   usage: {
-    input_tokens?: number | undefined;
-    output_tokens?: number | undefined;
-    cache_creation_input_tokens?: number | undefined;
-    cache_read_input_tokens?: number | undefined;
+    inputTokens: number;
+    outputTokens: number;
+    cacheCreationInputTokens: number;
+    cacheReadInputTokens: number;
   },
 ): void {
-  if (usage.input_tokens !== undefined) {
-    scoutSeasonRefreshTokensTotal.inc(
-      { model, direction: "input" },
-      usage.input_tokens,
-    );
-  }
-  if (usage.output_tokens !== undefined) {
-    scoutSeasonRefreshTokensTotal.inc(
-      { model, direction: "output" },
-      usage.output_tokens,
-    );
-  }
-  if (usage.cache_creation_input_tokens !== undefined) {
-    scoutSeasonRefreshTokensTotal.inc(
-      { model, direction: "cache_create" },
-      usage.cache_creation_input_tokens,
-    );
-  }
-  if (usage.cache_read_input_tokens !== undefined) {
-    scoutSeasonRefreshTokensTotal.inc(
-      { model, direction: "cache_read" },
-      usage.cache_read_input_tokens,
-    );
-  }
+  scoutSeasonRefreshTokensTotal.inc(
+    { model, direction: "input" },
+    usage.inputTokens,
+  );
+  scoutSeasonRefreshTokensTotal.inc(
+    { model, direction: "output" },
+    usage.outputTokens,
+  );
+  scoutSeasonRefreshTokensTotal.inc(
+    { model, direction: "cache_create" },
+    usage.cacheCreationInputTokens,
+  );
+  scoutSeasonRefreshTokensTotal.inc(
+    { model, direction: "cache_read" },
+    usage.cacheReadInputTokens,
+  );
 }
 
 export async function runClaude(
@@ -200,111 +153,127 @@ export async function runClaude(
     noDriftSentinel: input.noDriftSentinel,
     driftedSentinel: input.driftedSentinel,
   });
-
-  const args = [
-    "claude",
-    "-p",
-    prompt,
-    "--output-format",
-    "json",
-    "--allowed-tools",
-    ALLOWED_TOOLS,
-    "--permission-mode",
-    "acceptEdits",
-    "--dangerously-skip-permissions",
-    "--add-dir",
-    input.workdir,
-    "--max-turns",
-    String(input.maxTurns),
-    "--model",
-    input.model,
-  ];
-
-  jsonLog("info", "Invoking claude -p for scout-season-refresh", {
+  jsonLog("info", "Invoking Claude Agent SDK for scout-season-refresh", {
     workdir: input.workdir,
     model: input.model,
     maxTurns: input.maxTurns,
   });
 
+  const secretState = await createAgentTaskSecretTokenState(undefined);
+  const activitySignal = activityCancellationSignalOrUndefined();
+  const timeoutController = new AbortController();
+  const timeoutMs = startToCloseTimeoutMsOrUndefined();
+  const timeoutTimer =
+    timeoutMs === undefined
+      ? undefined
+      : setTimeout(
+          () => {
+            timeoutController.abort(
+              new Error(
+                "Season refresh stopped before Temporal start-to-close timeout",
+              ),
+            );
+          },
+          Math.max(1, timeoutMs - 15_000),
+        );
+  const signal = AbortSignal.any([
+    timeoutController.signal,
+    ...(activitySignal === undefined ? [] : [activitySignal]),
+  ]);
   const startMs = Date.now();
-  const proc = Bun.spawn(args, {
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-    cwd: input.workdir,
-    env: buildSubprocessEnv(claudeToken),
-  });
-
+  let eventCount = 0;
   const heartbeat = setInterval(() => {
-    safeHeartbeat({ phase: "claude", elapsedMs: Date.now() - startMs });
+    safeHeartbeat({
+      phase: "claude-agent-sdk",
+      elapsedMs: Date.now() - startMs,
+      eventCount,
+    });
   }, HEARTBEAT_INTERVAL_MS);
 
-  let stdout: string;
-  let exitCode: number;
+  let result;
   try {
-    [stdout, , exitCode] = await Promise.all([
-      new Response(proc.stdout).text(),
-      pumpStderr(proc.stderr, secretTokens()),
-      proc.exited,
-    ]);
-  } finally {
-    clearInterval(heartbeat);
-  }
-
-  const durationMs = Date.now() - startMs;
-  scoutSeasonRefreshSubprocessExitTotal.inc({ exit_code: String(exitCode) });
-
-  // Post-hoc gen_ai span (archived to S3 by the span processor) — before the
-  // failure checks so failed runs are traced too.
-  traceClaudeCli(
-    {
+    result = await runClaudeAgentSdk({
       service: "temporal",
       callSite: "scout-season-refresh",
-      request: {
-        model: input.model,
-        prompt,
-        options: { maxTurns: input.maxTurns },
+      prompt,
+      model: input.model,
+      maxTurns: input.maxTurns,
+      cwd: input.workdir,
+      allowedTools: ALLOWED_TOOLS,
+      env: envForTrustedAgent({ CLAUDE_CODE_OAUTH_TOKEN: claudeToken }),
+      signal,
+      redactTokens: secretState.tokens,
+      beforeEvent: async () => {
+        try {
+          await secretState.refresh();
+          return true;
+        } catch {
+          return false;
+        }
       },
-    },
-    {
-      stdout,
-      exitCode,
-      startTimeMs: startMs,
-      endTimeMs: startMs + durationMs,
-    },
-    {
-      warn: (message) => {
-        jsonLog("warning", message, { phase: "claude-cli-trace" });
+      onEvent: (event) => {
+        eventCount += 1;
+        safeHeartbeat({
+          phase: "claude-agent-sdk",
+          elapsedMs: event.elapsedMs,
+          eventCount,
+          eventType: event.type,
+        });
+        jsonLog("info", "season refresh agent event", {
+          eventType: event.type,
+          elapsedMs: event.elapsedMs,
+        });
       },
-    },
-  );
-
-  if (exitCode !== 0) {
-    const e = new Error(
-      `claude -p exited with code ${String(exitCode)} for scout-season-refresh`,
-    );
-    captureWithContext(e, { exitCode, durationMs });
-    throw e;
+    });
+  } catch (error: unknown) {
+    scoutSeasonRefreshSubprocessExitTotal.inc({ exit_code: "sdk_failed" });
+    const classified =
+      error instanceof ClaudeAgentSdkRunError && error.generationStarted
+        ? ApplicationFailure.create({
+            message: error.message,
+            cause: error,
+            nonRetryable: true,
+            type: error.possiblyAppliedEffects
+              ? "ScoutSeasonRefreshPossiblyAppliedFailure"
+              : "ScoutSeasonRefreshBilledGenerationFailure",
+          })
+        : error;
+    captureWithContext(classified, {
+      runtime: "claude_agent_sdk",
+      durationMs: Date.now() - startMs,
+      generationStarted:
+        error instanceof ClaudeAgentSdkRunError
+          ? error.generationStarted
+          : undefined,
+      possiblyAppliedEffects:
+        error instanceof ClaudeAgentSdkRunError
+          ? error.possiblyAppliedEffects
+          : undefined,
+    });
+    throw classified;
+  } finally {
+    clearInterval(heartbeat);
+    if (timeoutTimer !== undefined) {
+      clearTimeout(timeoutTimer);
+    }
   }
 
-  const resultMsg = parseClaudeResultMessage(stdout);
-  if (resultMsg.is_error === true) {
-    const e = new Error(
-      `claude -p reported is_error=true for scout-season-refresh: ${resultMsg.result ?? "(no result text)"}`,
-    );
-    captureWithContext(e);
-    throw e;
-  }
-
-  if (resultMsg.usage !== undefined) {
-    recordTokenUsage(input.model, resultMsg.usage);
-  }
+  scoutSeasonRefreshSubprocessExitTotal.inc({ exit_code: "sdk_success" });
+  recordTokenUsage(input.model, result.usage);
+  jsonLog("info", "Scout season refresh agent completed", {
+    runtime: "claude_agent_sdk",
+    sessionId: result.sessionId,
+    durationMs: result.durationMs,
+    costUsd: result.costUsd,
+    numTurns: result.numTurns,
+    resultLength: result.resultText.length,
+  });
 
   return {
-    exitCode,
-    durationMs,
-    costUsd: resultMsg.total_cost_usd,
-    numTurns: resultMsg.num_turns,
-    resultText: resultMsg.result ?? "",
+    exitCode: 0,
+    durationMs: result.durationMs,
+    costUsd: result.costUsd,
+    numTurns: result.numTurns,
+    resultText: result.resultText,
   };
 }

@@ -1,7 +1,7 @@
 {
   "name": "@shepherdjerred/monarch",
   "version": "0.1.0",
-  "description": "Monarch Money transaction classifier using Claude AI + Amazon order matching",
+  "description": "Monarch Money transaction classifier using OpenRouter + Amazon order matching",
   "type": "module",
   "bin": {
     "monarch-classify": "./src/index.ts"
@@ -17,8 +17,9 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.115.0",
+    "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/llm-models": "workspace:*",
+    "ai": "7.0.59",
     "pdfjs-dist": "^6.2.108",
     "playwright": "1.62.0",
     "zod": "^4.4.3"

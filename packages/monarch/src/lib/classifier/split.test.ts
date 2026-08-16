@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { computeSplits } from "./claude.ts";
+import { computeSplits } from "./llm.ts";
 
 describe("computeSplits", () => {
   test("no proration when items sum to transaction total", () => {

@@ -40,6 +40,12 @@ export const ModelPricingSchema = z.discriminatedUnion("modality", [
 export type ModelPricing = z.infer<typeof ModelPricingSchema>;
 
 export const ModelCapabilitiesSchema = z.strictObject({
+  inputModalities: z.array(z.enum(["text", "image", "audio", "video"])),
+  outputModalities: z.array(z.enum(["text", "image", "embedding"])),
+  tools: z.boolean(),
+  structuredOutputs: z.boolean(),
+  webSearch: z.boolean(),
+  reasoning: z.boolean(),
   supportsTemperature: z.boolean(),
   supportsTopP: z.boolean(),
   maxTokens: z.number().int().positive().optional(),
@@ -47,6 +53,31 @@ export const ModelCapabilitiesSchema = z.strictObject({
   effortTiers: z.array(z.string()).optional(),
 });
 export type ModelCapabilities = z.infer<typeof ModelCapabilitiesSchema>;
+
+export const OpenRouterEndpointSchema = z.enum([
+  "language",
+  "embedding",
+  "image",
+]);
+export type OpenRouterEndpoint = z.infer<typeof OpenRouterEndpointSchema>;
+
+export const OpenRouterRouteSchema = z.strictObject({
+  modelId: z.string().min(1),
+  endpoint: OpenRouterEndpointSchema,
+});
+export type OpenRouterRoute = z.infer<typeof OpenRouterRouteSchema>;
+
+export const NativeSdkRouteSchema = z.strictObject({
+  modelId: z.string().min(1),
+});
+export type NativeSdkRoute = z.infer<typeof NativeSdkRouteSchema>;
+
+export const ModelRoutesSchema = z.strictObject({
+  openRouter: OpenRouterRouteSchema.optional(),
+  claudeAgentSdk: NativeSdkRouteSchema.optional(),
+  codexSdk: NativeSdkRouteSchema.optional(),
+});
+export type ModelRoutes = z.infer<typeof ModelRoutesSchema>;
 
 export const ModelStatusSchema = z.enum(["current", "preview", "deprecated"]);
 export type ModelStatus = z.infer<typeof ModelStatusSchema>;
@@ -117,6 +148,7 @@ export const ModelEntrySchema = z.strictObject({
     )
     .optional(),
   capabilities: ModelCapabilitiesSchema,
+  routes: ModelRoutesSchema,
   status: ModelStatusSchema,
   category: z.string().optional(),
 });
@@ -154,6 +186,64 @@ export function getModel(id: string): ModelEntry | undefined {
 
 export function getPricing(id: string): ModelPricing | undefined {
   return MODELS[id]?.pricing;
+}
+
+export function getOpenRouterRoute(id: string): OpenRouterRoute | undefined {
+  return MODELS[id]?.routes.openRouter;
+}
+
+// A gateway route is not guaranteed to be unique: a dated snapshot and its
+// undated alias can share one OpenRouter model (anthropic/claude-haiku-4.5 is
+// reached by both claude-haiku-4-5 and claude-haiku-4-5-20251001). A
+// first-match reverse lookup would attribute every dated run to the alias, so
+// ambiguous routes resolve to nothing and callers fall back to the raw route
+// id — an unresolved route is recoverable, a confidently wrong one is not.
+const CATALOG_IDS_BY_OPEN_ROUTER_ROUTE = ((): ReadonlyMap<
+  string,
+  readonly string[]
+> => {
+  const byRoute = new Map<string, string[]>();
+  for (const model of Object.values(MODELS)) {
+    const routeModelId = model.routes.openRouter?.modelId;
+    if (routeModelId === undefined) continue;
+    const ids = byRoute.get(routeModelId) ?? [];
+    ids.push(model.id);
+    byRoute.set(routeModelId, ids);
+  }
+  return byRoute;
+})();
+
+/**
+ * Resolve a gateway route back to the repository's stable catalog id.
+ *
+ * Returns undefined when the route is unknown *or* when more than one catalog
+ * entry claims it, so attribution never reports the wrong model.
+ */
+export function modelIdForOpenRouterRoute(
+  routeModelId: string,
+): string | undefined {
+  const ids = CATALOG_IDS_BY_OPEN_ROUTER_ROUTE.get(routeModelId);
+  return ids?.length === 1 ? ids[0] : undefined;
+}
+
+export function requireOpenRouterRoute(
+  id: string,
+  endpoint?: OpenRouterEndpoint,
+): OpenRouterRoute {
+  const model = getModel(id);
+  if (model === undefined) {
+    throw new Error(`Unknown model id: ${id}`);
+  }
+  const route = model.routes.openRouter;
+  if (route === undefined) {
+    throw new Error(`Model ${id} has no OpenRouter route`);
+  }
+  if (endpoint !== undefined && route.endpoint !== endpoint) {
+    throw new Error(
+      `Model ${id} uses OpenRouter ${route.endpoint}, not ${endpoint}`,
+    );
+  }
+  return route;
 }
 
 /** Per-token (not per-1M) text pricing, for callers that accumulate raw token counts (e.g. monarch). */

@@ -169,6 +169,26 @@ export const HumanRatingSchema = z.strictObject({
   note: z.string().max(2000),
 });
 
+export const OpenRouterGenerationMetadataSchema = z.strictObject({
+  generationId: z.string().min(1).optional(),
+  requestedModel: z.string().min(1),
+  resolvedModel: z.string().min(1).optional(),
+  upstreamProvider: z.string().min(1).optional(),
+  route: z.string().min(1).optional(),
+  region: z.string().min(1).optional(),
+  fallbackAttempts: z.number().int().nonnegative(),
+  attempts: z.array(
+    z.strictObject({
+      provider: z.string().min(1),
+      model: z.string().min(1),
+      status: z.number().int(),
+    }),
+  ),
+  actualCostUsd: z.number().nonnegative().optional(),
+  upstreamCostUsd: z.number().nonnegative().optional(),
+  routerMetadataPresent: z.boolean(),
+});
+
 export const GenerationSchema = z.strictObject({
   id: GenerationIdSchema,
   outputText: z.string().min(1),
@@ -178,6 +198,8 @@ export const GenerationSchema = z.strictObject({
   durationMs: z.number().int().nonnegative().nullable(),
   inputTokens: z.number().int().nonnegative().nullable(),
   outputTokens: z.number().int().nonnegative().nullable(),
+  transport: z.literal("openrouter").optional(),
+  openRouterMetadata: OpenRouterGenerationMetadataSchema.optional(),
 });
 
 export const RecordGenerationInputSchema = GenerationSchema.omit({

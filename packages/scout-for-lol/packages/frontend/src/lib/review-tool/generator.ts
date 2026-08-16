@@ -7,8 +7,6 @@
  * 3. Calls the unified generateFullMatchReview() pipeline
  * 4. Returns results with traces for UI display
  */
-import OpenAI from "openai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
   generateFullMatchReview,
   type ArenaMatch,
@@ -41,6 +39,7 @@ import {
   getLaneContext,
 } from "./prompts.ts";
 import { convertStagesToDataPackageFormat } from "./stages-converter.ts";
+import { createReviewWorkbenchClients } from "./openrouter-clients.ts";
 
 export type GenerationStep =
   | "timeline-summary"
@@ -238,7 +237,7 @@ export type GenerateMatchReviewParams = {
  */
 function buildEnabledStagesList(
   stages: PipelineStagesConfig,
-  hasGeminiClient: boolean,
+  hasImageClient: boolean,
 ): GenerationStep[] {
   const enabledStages: GenerationStep[] = [];
   if (stages.timelineSummary.enabled) {
@@ -251,7 +250,7 @@ function buildEnabledStagesList(
   if (stages.imageDescription.enabled) {
     enabledStages.push("image-description");
   }
-  if (hasGeminiClient && stages.imageGeneration.enabled) {
+  if (hasImageClient && stages.imageGeneration.enabled) {
     enabledStages.push("image-generation");
   }
   return enabledStages;
@@ -267,9 +266,8 @@ export async function generateMatchReview(
   const startTime = Date.now();
 
   try {
-    // Validate OpenAI API key
-    if (config.api.openaiApiKey === undefined) {
-      throw new Error("OpenAI API key is required");
+    if (config.api.openRouterApiKey === undefined) {
+      throw new Error("OpenRouter API key is required");
     }
 
     // Get personality from config
@@ -290,20 +288,7 @@ export async function generateMatchReview(
           : undefined;
     const laneContext = config.prompts.laneContext ?? getLaneContext(lane);
 
-    // Initialize OpenAI client
-    const openaiClient = new OpenAI({
-      apiKey: config.api.openaiApiKey,
-      dangerouslyAllowBrowser: true,
-    });
-
-    // Initialize Gemini client if API key provided
-    let geminiClient: GoogleGenerativeAI | undefined;
-    if (
-      config.api.geminiApiKey !== undefined &&
-      config.api.geminiApiKey.length > 0
-    ) {
-      geminiClient = new GoogleGenerativeAI(config.api.geminiApiKey);
-    }
+    const clients = createReviewWorkbenchClients(config.api.openRouterApiKey);
 
     // Get stage configs
     const stages = getStagesConfig(config);
@@ -319,11 +304,9 @@ export async function generateMatchReview(
     const clientsInput: Parameters<
       typeof generateFullMatchReview
     >[0]["clients"] = {
-      openai: openaiClient,
+      text: clients.text,
+      image: clients.image,
     };
-    if (geminiClient !== undefined) {
-      clientsInput.gemini = geminiClient;
-    }
 
     // Build prompts input
     const promptsInput: Parameters<
@@ -334,10 +317,7 @@ export async function generateMatchReview(
     };
 
     // Count enabled stages for completion tracking
-    const enabledStages = buildEnabledStagesList(
-      stages,
-      geminiClient !== undefined,
-    );
+    const enabledStages = buildEnabledStagesList(stages, true);
 
     // Build pipeline input, conditionally including onProgress to satisfy exactOptionalPropertyTypes
     const pipelineInput: Parameters<typeof generateFullMatchReview>[0] = {

@@ -1,5 +1,4 @@
-import { Agent } from "@mastra/core/agent";
-import { createTool } from "@mastra/core/tools";
+import { stepCountIs, tool, ToolLoopAgent } from "ai";
 import * as Sentry from "@sentry/bun";
 import { z } from "zod";
 import {
@@ -9,7 +8,7 @@ import {
   REPORT_AI_MAX_PREVIEW_CALLS,
   REPORT_AI_MAX_STEPS,
   REPORT_AI_MAX_TOOL_CALLS,
-  ReportAiFinalDraftSchema,
+  modelSupportsParameter,
   ReportQueryTextSchema,
   type ReportAiEditRequest,
   type ReportAiFinalDraft,
@@ -26,8 +25,10 @@ import {
   scoutReportAiTokensUsedTotal,
 } from "#src/metrics/report-ai.ts";
 import { emitReportAgentStreamChunk } from "#src/reports/ai/report-query-agent-stream.ts";
+import { finalizeReportDraft } from "#src/reports/ai/report-query-finalizer.ts";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import {
   createFormatTool,
@@ -53,51 +54,75 @@ type RunState = {
 export async function streamReportQueryAgent(
   params: ReportQueryAgentParams,
 ): Promise<ReportAiFinalDraft> {
-  const model = configuration.reportAiModel ?? "openai/gpt-5.6-sol";
-  if (model.startsWith("openai/")) {
-    assertWithinBudget();
+  const model = configuration.reportAiModel ?? "gpt-5.6-sol";
+  const runtime = getOpenRouterRuntime();
+  if (runtime === undefined) {
+    throw new Error("OPENROUTER_API_KEY is required for report editing");
   }
+  assertWithinBudget();
 
-  const agent = new Agent({
+  const agent = new ToolLoopAgent({
     id: "scout-report-query-agent",
-    name: "Scout report query agent",
     instructions: reportAgentInstructions(),
-    model,
+    model: runtime.languageModel(model, ["tools"]),
     tools: createReportQueryTools(params),
+    stopWhen: stepCountIs(REPORT_AI_MAX_STEPS),
+    prepareStep: ({ stepNumber }) =>
+      stepNumber >= REPORT_AI_MAX_STEPS - 1
+        ? { activeTools: [], toolChoice: "none" }
+        : undefined,
+    // See explore/agent.ts: most current models declare
+    // supportsTemperature: false, and the runtime requests
+    // `require_parameters` for tool calls, so sending temperature to such a
+    // model leaves zero eligible OpenRouter endpoints and 404s the whole run.
+    ...(modelSupportsParameter(model, "temperature")
+      ? { temperature: 0.2 }
+      : {}),
+    maxOutputTokens: REPORT_AI_MAX_OUTPUT_TOKENS,
+    ...runtime.callOptions({
+      workload: "scout.report-query.tool-loop",
+      sessionId: params.runId,
+    }),
   });
 
-  const stream = await agent.stream(buildUserPrompt(params.input), {
-    runId: params.runId,
-    maxSteps: REPORT_AI_MAX_STEPS,
-    toolChoice: "auto",
+  const stream = await agent.stream({
+    prompt: buildUserPrompt(params.input),
     abortSignal: params.abortSignal,
-    modelSettings: {
-      temperature: 0.2,
-      maxOutputTokens: REPORT_AI_MAX_OUTPUT_TOKENS,
-    },
-    structuredOutput: {
-      schema: ReportAiFinalDraftSchema,
-      jsonPromptInjection: true,
-    },
   });
 
-  const reader = stream.fullStream.getReader();
-  try {
-    let read = await reader.read();
-    while (!read.done) {
-      await emitReportAgentStreamChunk(read.value, params.emit);
-      read = await reader.read();
-    }
-  } finally {
-    reader.releaseLock();
+  for await (const chunk of stream.stream) {
+    await emitReportAgentStreamChunk(chunk, params.emit);
   }
 
-  const output = await stream.getFullOutput();
-  if (output.error !== undefined) {
-    throw output.error;
-  }
+  const [steps, toolLoopUsage] = await Promise.all([
+    stream.steps,
+    stream.usage,
+  ]);
+  const inputTokens = toolLoopUsage.inputTokens ?? 0;
+  const outputTokens = toolLoopUsage.outputTokens ?? 0;
+  scoutReportAiTokensUsedTotal.inc({ model, kind: "prompt" }, inputTokens);
+  scoutReportAiTokensUsedTotal.inc({ model, kind: "completion" }, outputTokens);
+  recordTokenUsage(inputTokens, outputTokens, model);
 
-  const draft = ReportAiFinalDraftSchema.parse(output.object);
+  const evidence = JSON.stringify(
+    steps.map((step) => ({
+      text: step.text,
+      toolCalls: step.toolCalls,
+      toolResults: step.toolResults,
+      finishReason: step.finishReason,
+    })),
+  ).slice(-80_000);
+  assertWithinBudget();
+  const finalized = await finalizeReportDraft({
+    runtime,
+    model,
+    runId: params.runId,
+    prompt: buildUserPrompt(params.input),
+    evidence,
+    abortSignal: params.abortSignal,
+  });
+
+  const draft = finalized.object;
   parseAndCompile(draft.queryText);
   const formattedQueryText = formatReportQuery(draft.queryText);
   if (formattedQueryText.length === 0) {
@@ -121,15 +146,6 @@ export async function streamReportQueryAgent(
     });
   }
 
-  const usage = output.totalUsage;
-  const inputTokens = usage.inputTokens ?? 0;
-  const outputTokens = usage.outputTokens ?? 0;
-  scoutReportAiTokensUsedTotal.inc({ model, kind: "prompt" }, inputTokens);
-  scoutReportAiTokensUsedTotal.inc({ model, kind: "completion" }, outputTokens);
-  if (model.startsWith("openai/")) {
-    recordTokenUsage(inputTokens, outputTokens, model);
-  }
-
   return { ...draft, queryText: formattedQueryText };
 }
 
@@ -142,8 +158,7 @@ function createReportQueryTools(params: ReportQueryAgentParams) {
 
   const validateReportQuery = createValidateTool(track);
 
-  const previewReportQuery = createTool({
-    id: "preview_report_query",
+  const previewReportQuery = tool({
     description:
       "Run a bounded preview of a valid ScoutQL report query against this server's report data.",
     inputSchema: z

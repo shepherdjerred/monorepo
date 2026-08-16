@@ -527,7 +527,7 @@ describe("createTool", () => {
   beforeEach(() => {
     Bun.env["DISCORD_CLIENT_ID"] = "100000000000000001";
     Bun.env["DISCORD_TOKEN"] = "test-discord-token";
-    Bun.env["OPENAI_API_KEY"] = "test-openai-key";
+    Bun.env["OPENROUTER_API_KEY"] = "test-openrouter-key";
     resetConfig();
   });
 
@@ -622,7 +622,7 @@ describe("createTool cancellation", () => {
   beforeEach(() => {
     Bun.env["DISCORD_CLIENT_ID"] = "100000000000000001";
     Bun.env["DISCORD_TOKEN"] = "test-discord-token";
-    Bun.env["OPENAI_API_KEY"] = "test-openai-key";
+    Bun.env["OPENROUTER_API_KEY"] = "test-openrouter-key";
     resetConfig();
   });
 

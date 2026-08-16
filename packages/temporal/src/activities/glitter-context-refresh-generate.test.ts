@@ -1,5 +1,4 @@
 import { describe, expect, mock, test } from "bun:test";
-import { zodResponseFormat } from "openai/helpers/zod";
 import {
   PersonSchema,
   StyleCardSchema,
@@ -11,7 +10,7 @@ import {
   StyleChunkSummarySchema,
   StyleSynthesisSchema,
 } from "./glitter-context-refresh-style-schemas.ts";
-import * as glitterOpenai from "./glitter-context-refresh-openai.ts";
+import * as glitterLlm from "./glitter-context-refresh-llm.ts";
 import {
   sanitizeChunkSummary,
   validateChunkSummary,
@@ -150,13 +149,11 @@ const firstTimestamp = CurrentMessageSchema.parse(messages[0]).timestamp;
 const lastTimestamp = CurrentMessageSchema.parse(messages.at(-1)).timestamp;
 
 describe("Glitter generated style-card schemas", () => {
-  test("convert to OpenAI strict Structured Outputs schemas", () => {
-    expect(() =>
-      zodResponseFormat(StyleChunkSummarySchema, "style_chunk_summary"),
-    ).not.toThrow();
-    expect(() =>
-      zodResponseFormat(StyleSynthesisSchema, "style_card_synthesis"),
-    ).not.toThrow();
+  test("use strict Zod contracts for OpenRouter structured output", () => {
+    expect(StyleChunkSummarySchema.safeParse(goodChunkSummary).success).toBe(
+      true,
+    );
+    expect(StyleSynthesisSchema.safeParse(synthesis).success).toBe(true);
   });
 
   test("finalizes a V2 card while preserving reviewed prose verbatim", () => {
@@ -305,46 +302,47 @@ const partiallyBadChunkSummary = {
   representativeMessages: [],
 };
 
-const mockUsage = { prompt_tokens: 100, completion_tokens: 50 };
+const mockUsage = {
+  inputTokens: 100,
+  outputTokens: 50,
+  cachedInputTokens: 0,
+  costUsd: 0.001,
+};
 
 let chunkResponder: (call: number) => unknown = () => goodChunkSummary;
 let chunkCallCount = 0;
 let recordedSeeds: number[] = [];
 // Synthesis calls whose max_completion_tokens is below this threshold report a
 // length truncation (0 = never truncate).
-let synthesisTruncateBelowTokens = 0;
-let recordedSynthesisMaxTokens: number[] = [];
+let recordedSynthesisTokenLimits: {
+  initial: number;
+  semanticRetry: number | undefined;
+}[] = [];
 let lastGenerationBudget: GenerationBudget | undefined;
 
-await mock.module("./glitter-context-refresh-openai.ts", () => ({
-  ...glitterOpenai,
-  parseGlitterCompletion: (
-    callSite: string,
-    params: { seed: number; max_completion_tokens: number },
-  ) => {
-    if (callSite.startsWith("glitter-style-chunk")) {
-      recordedSeeds.push(params.seed);
+await mock.module("./glitter-context-refresh-llm.ts", () => ({
+  ...glitterLlm,
+  generateGlitterObject: (input: {
+    workload: string;
+    seed: number;
+    maxOutputTokens: number;
+    semanticRetryMaxOutputTokens?: number | undefined;
+  }) => {
+    if (input.workload.startsWith("glitter-style-chunk")) {
+      recordedSeeds.push(input.seed);
       const parsed = chunkResponder(chunkCallCount);
       chunkCallCount += 1;
       return Promise.resolve({
-        choices: [{ message: { parsed, content: null } }],
+        response: { outcome: "success" as const, value: parsed },
         usage: mockUsage,
       });
     }
-    recordedSynthesisMaxTokens.push(params.max_completion_tokens);
-    if (params.max_completion_tokens < synthesisTruncateBelowTokens) {
-      return Promise.resolve({
-        choices: [
-          {
-            finish_reason: "length",
-            message: { parsed: null, content: "truncated" },
-          },
-        ],
-        usage: mockUsage,
-      });
-    }
+    recordedSynthesisTokenLimits.push({
+      initial: input.maxOutputTokens,
+      semanticRetry: input.semanticRetryMaxOutputTokens,
+    });
     return Promise.resolve({
-      choices: [{ message: { parsed: synthesis, content: null } }],
+      response: { outcome: "success" as const, value: synthesis },
       usage: mockUsage,
     });
   },
@@ -437,24 +435,18 @@ describe("Glitter extraction repair loop", () => {
 });
 
 describe("Glitter synthesis truncation retry", () => {
-  test("retries synthesis at a higher token cap on a length truncation", async () => {
-    recordedSynthesisMaxTokens = [];
-    // The base 28k call reports a length truncation; only the 40k retry ceiling
-    // succeeds.
-    synthesisTruncateBelowTokens = 40_000;
-    try {
-      const result = await generateWithStubbedModel(() => goodChunkSummary);
-      expect(result.schemaVersion).toBe(2);
-      // Base call at the 28k cap truncated, then the run retried at the ceiling.
-      expect(recordedSynthesisMaxTokens).toContain(28_000);
-      expect(recordedSynthesisMaxTokens).toContain(40_000);
-      const synthesisArtifactKeys = lastGenerationBudget
-        ?.summary()
-        .artifactKeys.filter((key) => key.includes("glitter-style-synthesis"));
-      expect(synthesisArtifactKeys).toHaveLength(2);
-    } finally {
-      synthesisTruncateBelowTokens = 0;
-    }
+  test("raises the token cap inside the bounded semantic retry budget", async () => {
+    recordedSynthesisTokenLimits = [];
+    const result = await generateWithStubbedModel(() => goodChunkSummary);
+    expect(result.schemaVersion).toBe(2);
+    expect(recordedSynthesisTokenLimits).toContainEqual({
+      initial: 28_000,
+      semanticRetry: 40_000,
+    });
+    const synthesisArtifactKeys = lastGenerationBudget
+      ?.summary()
+      .artifactKeys.filter((key) => key.includes("glitter-style-synthesis"));
+    expect(synthesisArtifactKeys).toHaveLength(1);
   });
 });
 

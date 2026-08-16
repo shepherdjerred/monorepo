@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * Parse Mastra agent stream chunks into a small neutral shape.
+ * Parse AI SDK agent stream chunks into a small neutral shape.
  *
  * The wire shape belongs to the model provider, so it is validated in one
  * place and every agent maps the result onto its own stream events. Chunks
@@ -13,39 +13,30 @@ import { z } from "zod";
  */
 
 const AgentStreamChunkSchema = z.discriminatedUnion("type", [
-  z.looseObject({ type: z.literal("step-start") }),
+  z.looseObject({ type: z.literal("start-step") }),
   z.looseObject({
     type: z.literal("text-delta"),
-    payload: z.looseObject({ text: z.string() }),
+    text: z.string(),
   }),
   z.looseObject({
     type: z.literal("tool-call"),
-    payload: z.looseObject({ toolName: z.string() }),
+    toolName: z.string(),
   }),
+  // The AI SDK reports a failed tool as its own `tool-error` part rather than
+  // as a `tool-result` carrying a flag, so a `tool-result` that arrives at all
+  // succeeded.
   z.looseObject({
     type: z.literal("tool-result"),
-    payload: z.looseObject({
-      toolName: z.string(),
-      isError: z.boolean().optional(),
-    }),
+    toolName: z.string(),
   }),
   z.looseObject({
     type: z.literal("tool-error"),
-    payload: z.looseObject({
-      toolName: z.string(),
-      error: z.unknown(),
-    }),
+    toolName: z.string(),
+    error: z.unknown(),
   }),
   z.looseObject({
     type: z.literal("error"),
-    payload: z.looseObject({ error: z.unknown() }),
-  }),
-  // Unlike every chunk above, the partial object rides at the top level rather
-  // than under `payload` — see the `type: 'object'` member of AgentChunkType in
-  // @mastra/core dist/stream/types.d.ts.
-  z.looseObject({
-    type: z.literal("object"),
-    object: z.unknown(),
+    error: z.unknown(),
   }),
 ]);
 
@@ -54,19 +45,17 @@ export type AgentStreamChunk =
   | { kind: "text-delta"; text: string }
   | { kind: "tool-call"; toolName: string }
   | { kind: "tool-result"; toolName: string; ok: boolean }
-  | { kind: "tool-error"; toolName: string; message: string }
-  /**
-   * A progressively-completed snapshot of the structured output.
-   *
-   * When an agent runs with `structuredOutput`, Mastra parses the JSON the
-   * model is emitting — repairing the truncation mid-stream — and emits a
-   * whole snapshot per text delta. Consumers that want readable prose want
-   * this, not `text-delta`, which carries the raw JSON.
-   *
-   * A snapshot only contains the keys the model has emitted so far, so a
-   * field's position in the schema decides how early it starts streaming.
-   */
-  | { kind: "object"; object: unknown };
+  | { kind: "tool-error"; toolName: string; message: string };
+
+/**
+ * Note on structured output: there is deliberately no `object` member here.
+ *
+ * The AI SDK delivers progressively-parsed structured output on a *separate*
+ * `partialOutputStream`, never as a part on the wire stream — so a snapshot is
+ * not a wire chunk and cannot be parsed out of one. Consumers that want
+ * readable prose read that second stream directly; `text-delta` on this stream
+ * carries the raw JSON being assembled, not prose.
+ */
 
 /**
  * Returns null for chunks that carry nothing an agent needs to act on.
@@ -81,36 +70,33 @@ export function parseAgentStreamChunk(
   }
   const chunk = parsed.data;
   switch (chunk.type) {
-    case "step-start": {
+    case "start-step": {
       return { kind: "step-start" };
     }
     case "text-delta": {
-      return chunk.payload.text.length > 0
-        ? { kind: "text-delta", text: chunk.payload.text }
+      return chunk.text.length > 0
+        ? { kind: "text-delta", text: chunk.text }
         : null;
     }
     case "tool-call": {
-      return { kind: "tool-call", toolName: chunk.payload.toolName };
+      return { kind: "tool-call", toolName: chunk.toolName };
     }
     case "tool-result": {
       return {
         kind: "tool-result",
-        toolName: chunk.payload.toolName,
-        ok: chunk.payload.isError !== true,
+        toolName: chunk.toolName,
+        ok: true,
       };
     }
     case "tool-error": {
       return {
         kind: "tool-error",
-        toolName: chunk.payload.toolName,
-        message: agentStreamErrorMessage(chunk.payload.error),
+        toolName: chunk.toolName,
+        message: agentStreamErrorMessage(chunk.error),
       };
     }
-    case "object": {
-      return { kind: "object", object: chunk.object };
-    }
     case "error": {
-      throw new Error(agentStreamErrorMessage(chunk.payload.error));
+      throw new Error(agentStreamErrorMessage(chunk.error));
     }
   }
 }

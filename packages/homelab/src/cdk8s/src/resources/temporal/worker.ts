@@ -227,7 +227,7 @@ export function createTemporalWorkerDeployment(
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         TEMPORAL_WORKER_ROLE: EnvValue.fromValue("core"),
         ENVIRONMENT: EnvValue.fromValue("production"),
-        // Keep headless Claude subprocesses from starting optional traffic or updates.
+        // Keep headless Claude Agent SDK sessions from starting optional traffic or updates.
         CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: EnvValue.fromValue("1"),
         DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
         // OpenTelemetry tracing → Tempo. initializeTracing() in worker.ts
@@ -296,10 +296,11 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "GITHUB_WEBHOOK_SECRET",
         }),
-        // Claude Code subscription OAuth token — sole auth for every `claude -p`
-        // subprocess (homelab synthesis, generic agent-task, Scout season).
-        // All work bills against the subscription; ANTHROPIC_API_KEY is
-        // deliberately absent so a leaked key can't start direct-API billing.
+        // Claude Code subscription OAuth token — sole auth for every Claude
+        // Agent SDK run (homelab synthesis, generic agent-task, Scout season).
+        // All work bills against the subscription; no direct-provider
+        // inference key is wired here, so a leak cannot start direct-API
+        // billing. Ordinary inference goes through OPENROUTER_API_KEY below.
         CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
           secret,
           key: "CLAUDE_CODE_OAUTH_TOKEN",
@@ -333,16 +334,15 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "SENTRY_DSN",
         }),
-        // OpenAI. Codex CLI 0.139+ authenticates via CODEX_API_KEY only —
-        // OPENAI_API_KEY alone yields "401 Missing bearer" on /v1/responses.
-        // Same 1P field; no second secret.
-        OPENAI_API_KEY: EnvValue.fromSecretValue({
+        // OpenRouter ordinary inference and Codex SDK agent auth are separate,
+        // service-scoped credentials. No direct provider API key is injected.
+        OPENROUTER_API_KEY: EnvValue.fromSecretValue({
           secret,
-          key: "OPENAI_API_KEY",
+          key: "OPENROUTER_API_KEY",
         }),
-        CODEX_API_KEY: EnvValue.fromSecretValue({
+        CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({
           secret,
-          key: "OPENAI_API_KEY",
+          key: "CODEX_ACCESS_TOKEN",
         }),
         // Postal email
         POSTAL_HOST: EnvValue.fromSecretValue({ secret, key: "POSTAL_HOST" }),
@@ -404,13 +404,11 @@ export function createTemporalWorkerDeployment(
         secret,
         key: "CLAUDE_CODE_OAUTH_TOKEN",
       }),
-      OPENAI_API_KEY: EnvValue.fromSecretValue({
+      // Codex SDK subscription token. The agent worker holds one credential
+      // per provider and no direct-provider inference key.
+      CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({
         secret,
-        key: "OPENAI_API_KEY",
-      }),
-      CODEX_API_KEY: EnvValue.fromSecretValue({
-        secret,
-        key: "OPENAI_API_KEY",
+        key: "CODEX_ACCESS_TOKEN",
       }),
       PROMETHEUS_URL: EnvValue.fromValue(
         "http://prometheus-kube-prometheus-prometheus.prometheus:9090",

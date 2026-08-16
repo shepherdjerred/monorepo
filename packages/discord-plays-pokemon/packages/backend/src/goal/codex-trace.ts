@@ -6,6 +6,7 @@
 import { attachCodexTrace as attachSharedCodexTrace } from "@shepherdjerred/llm-observability/wrappers/codex";
 import type { CodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
 import { logger } from "#src/logger.ts";
+import { registry } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 
 export type CodexTraceOptions = {
   // Stable id for this goal run, used to correlate all spans + S3 artifacts.
@@ -22,9 +23,11 @@ export type CodexTraceOptions = {
 };
 
 export type CodexTrace = {
+  // Run the native SDK operation beneath the repository-owned goal span.
+  run: <T>(operation: () => T) => T;
   // Closes the root span (call once when the goal exits — completed, failed,
   // timeout, replaced, shutdown). Idempotent.
-  end: () => void;
+  end: (outcome: "success" | "error" | "cancelled") => void;
 };
 
 export function attachCodexTrace(
@@ -35,6 +38,7 @@ export function attachCodexTrace(
     service: "discord-plays-pokemon",
     callSite: "goal-run",
     model: options.model,
+    system: "codex_sdk",
     spanPrefix: "pokemon.goal",
     toolAttributePrefix: "pokemon.tool",
     rootAttributes: {
@@ -44,6 +48,8 @@ export function attachCodexTrace(
       "pokemon.goal.game_state": options.gameStateSummary,
     },
     initialPrompt: options.initialPrompt,
+    metricsRegister: registry,
+    workload: "goal-run",
     logger: {
       warn: (message) => {
         logger.warn(message);

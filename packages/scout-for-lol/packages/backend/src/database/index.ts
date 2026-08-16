@@ -405,7 +405,7 @@ export async function updateLastCheckedAt(
 /**
  * Returns true if the AI review pipeline has already been entered for this
  * match (success or crash). Used to short-circuit re-entry so a single match
- * never burns OpenAI tokens twice.
+ * never burns LLM tokens twice.
  */
 export async function hasAiBeenAttempted(
   matchId: MatchId,
@@ -420,7 +420,7 @@ export async function hasAiBeenAttempted(
 
 /**
  * Marks an AI-review attempt for `matchId`. Must be called BEFORE the first
- * OpenAI call so a mid-pipeline crash still leaves a row behind. Idempotent
+ * model call so a mid-pipeline crash still leaves a row behind. Idempotent
  * via upsert in case of races.
  */
 export async function markAiAttempted(

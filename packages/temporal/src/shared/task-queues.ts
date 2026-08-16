@@ -5,7 +5,7 @@ export const TASK_QUEUES = {
   SCOUT: "scout",
   /**
    * Delayed and recurring report-only agent tasks. Kept off DEFAULT so
-   * long-running Claude/Codex subprocesses do not block HA/event cron work.
+   * long-running Claude/Codex SDK sessions do not block HA/event cron work.
    */
   AGENT_TASK: "agent-task",
   /**

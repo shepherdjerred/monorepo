@@ -26,7 +26,7 @@ export function ImageGenerationPanel({
         <div>
           <CardTitle>Stage 4: Image Generation</CardTitle>
           <p className="mt-1 text-xs text-scout-subtle">
-            Gemini image generation settings
+            OpenRouter image generation settings
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -77,7 +77,7 @@ export function ImageGenerationPanel({
               User prompt template
             </Label>
             <p className="text-xs text-scout-subtle">
-              Template for the Gemini image generation request.
+              Template for the OpenRouter image generation request.
             </p>
           </div>
           <PromptEditor

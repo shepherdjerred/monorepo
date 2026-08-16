@@ -27,7 +27,10 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import * as Sentry from "@sentry/bun";
 import { selectRandomPersonality, getLaneContext } from "./prompts.ts";
-import { getOpenAIClient, getGeminiClient } from "./ai-clients.ts";
+import {
+  getImageGenerationClient,
+  getTextGenerationClient,
+} from "./ai-clients.ts";
 import { buildPlayerHistoryContext } from "./player-history.ts";
 import {
   savePipelineTracesToS3,
@@ -35,7 +38,7 @@ import {
 } from "#src/storage/pipeline-s3.ts";
 import { createLogger } from "#src/logger.ts";
 import {
-  classifyOpenAIProviderIssue,
+  classifyLlmProviderIssue,
   recordProviderIssue,
   resolveProviderIssue,
 } from "#src/alerts/provider-metrics.ts";
@@ -174,32 +177,32 @@ async function buildDynamicReviewContext(parameters: {
   return { playerHistory: history.text, patchNotes };
 }
 
-function didReportOpenAIProviderIssue(
+function didReportLlmProviderIssue(
   error: unknown,
   context: {
     matchId: MatchId;
   },
 ): boolean {
-  const providerIssueKind = classifyOpenAIProviderIssue(error);
+  const providerIssueKind = classifyLlmProviderIssue(error);
   if (providerIssueKind === null) return false;
 
   recordProviderIssue({
     app: "scout-for-lol",
-    provider: "openai",
+    provider: "openrouter",
     kind: providerIssueKind,
     source: "match_review",
   });
   logger.warn(
-    `OpenAI provider issue while generating AI review for ${context.matchId}: ${providerIssueKind}`,
+    `OpenRouter provider issue while generating AI review for ${context.matchId}: ${providerIssueKind}`,
   );
   return true;
 }
 
-function resolveOpenAIProviderIssues(): void {
+function resolveLlmProviderIssues(): void {
   for (const kind of PROVIDER_ISSUE_KINDS) {
     resolveProviderIssue({
       app: "scout-for-lol",
-      provider: "openai",
+      provider: "openrouter",
       kind,
       source: "match_review",
     });
@@ -249,13 +252,15 @@ export async function generateMatchReview(
   const selectedPlayer = requireSelectedReviewPlayer(match, playerIndex);
 
   // Initialize clients
-  const openaiClient = getOpenAIClient();
-  if (!openaiClient) {
-    logger.info("OpenAI API key not configured, skipping review generation");
+  const textClient = getTextGenerationClient();
+  if (textClient === undefined) {
+    logger.info(
+      "OpenRouter API key not configured, skipping review generation",
+    );
     return undefined;
   }
 
-  const geminiClient = getGeminiClient();
+  const imageClient = getImageGenerationClient();
 
   const playerName = selectedPlayer.playerConfig.alias;
   if (!playerName) {
@@ -310,10 +315,10 @@ export async function generateMatchReview(
   // Build clients input
   const clientsInput: Parameters<typeof generateFullMatchReview>[0]["clients"] =
     {
-      openai: openaiClient,
+      text: textClient,
     };
-  if (geminiClient !== undefined) {
-    clientsInput.gemini = geminiClient;
+  if (imageClient !== undefined) {
+    clientsInput.image = imageClient;
   }
 
   // Get default stage configs and conditionally disable image generation
@@ -352,7 +357,7 @@ export async function generateMatchReview(
     });
   } catch (error) {
     if (
-      didReportOpenAIProviderIssue(error, {
+      didReportLlmProviderIssue(error, {
         matchId,
       })
     ) {
@@ -369,7 +374,7 @@ export async function generateMatchReview(
     return undefined;
   }
 
-  resolveOpenAIProviderIssues();
+  resolveLlmProviderIssues();
 
   // Save traces to S3 (fire and forget, don't block return)
   void (async () => {

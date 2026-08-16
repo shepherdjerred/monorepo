@@ -5,6 +5,7 @@ const turboTasks = [
   "coverage:portable",
   "lint",
   "check-suppressions",
+  "check-ai-architecture",
   "check-patched-deps",
   "check-script-migrations",
   "script-coverage",

@@ -1,142 +1,8 @@
+import { trace } from "@opentelemetry/api";
 import { test, expect } from "bun:test";
-import { traceAnthropic } from "#src/anthropic-wrapper.ts";
-import { traceOpenAi } from "#src/openai-wrapper.ts";
-import { traceGemini } from "#src/gemini-wrapper.ts";
 import { traceClaudeAgent } from "#src/claude-agent-wrapper.ts";
 import { exporter } from "./otel-test-provider.ts";
-
-test("traceAnthropic emits gen_ai.* attributes with usage", async () => {
-  exporter.reset();
-  const response = await traceAnthropic(
-    {
-      service: "temporal",
-      callSite: "pr-summary",
-      request: {
-        model: "claude-haiku-4-5",
-        max_tokens: 4096,
-        messages: [{ role: "user", content: "summarize" }],
-        system: "you are a helpful assistant",
-      },
-    },
-    async () => ({
-      id: "msg_test123",
-      model: "claude-haiku-4-5-20251001",
-      stop_reason: "end_turn",
-      content: [{ type: "text", text: "ok" }],
-      usage: {
-        input_tokens: 100,
-        output_tokens: 25,
-        cache_read_input_tokens: 10,
-        cache_creation_input_tokens: 5,
-      },
-    }),
-  );
-  expect(response.id).toBe("msg_test123");
-
-  const spans = exporter.getFinishedSpans();
-  expect(spans.length).toBe(1);
-  const span = spans[0]!;
-  expect(span.name).toBe("gen_ai.chat");
-  expect(span.attributes["gen_ai.system"]).toBe("anthropic");
-  expect(span.attributes["gen_ai.request.model"]).toBe("claude-haiku-4-5");
-  expect(span.attributes["gen_ai.response.model"]).toBe(
-    "claude-haiku-4-5-20251001",
-  );
-  expect(span.attributes["gen_ai.response.id"]).toBe("msg_test123");
-  expect(span.attributes["gen_ai.usage.input_tokens"]).toBe(100);
-  expect(span.attributes["gen_ai.usage.output_tokens"]).toBe(25);
-  expect(span.attributes["gen_ai.usage.cache_read_input_tokens"]).toBe(10);
-  expect(span.attributes["gen_ai.usage.cache_creation_input_tokens"]).toBe(5);
-  expect(span.attributes["llm.service"]).toBe("temporal");
-  expect(span.attributes["llm.call_site"]).toBe("pr-summary");
-  expect(typeof span.attributes["gen_ai.input.messages"]).toBe("string");
-  expect(typeof span.attributes["gen_ai.output.messages"]).toBe("string");
-});
-
-test("traceOpenAi extracts prompt/completion tokens from chat.completions.create", async () => {
-  exporter.reset();
-  await traceOpenAi(
-    {
-      service: "scout-backend",
-      callSite: "scout-review",
-      request: {
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "be terse" },
-          { role: "user", content: "summary" },
-        ],
-        max_tokens: 256,
-        temperature: 0.7,
-      },
-    },
-    async () => ({
-      id: "chatcmpl-abc",
-      model: "gpt-4o-mini-2024-07-18",
-      choices: [
-        {
-          index: 0,
-          message: { role: "assistant", content: "ok" },
-          finish_reason: "stop",
-        },
-      ],
-      usage: {
-        prompt_tokens: 42,
-        completion_tokens: 5,
-        total_tokens: 47,
-        prompt_tokens_details: { cached_tokens: 7 },
-      },
-    }),
-  );
-
-  const span = exporter.getFinishedSpans()[0]!;
-  expect(span.attributes["gen_ai.system"]).toBe("openai");
-  expect(span.attributes["gen_ai.usage.input_tokens"]).toBe(42);
-  expect(span.attributes["gen_ai.usage.output_tokens"]).toBe(5);
-  expect(span.attributes["gen_ai.usage.cache_read_input_tokens"]).toBe(7);
-  expect(span.attributes["gen_ai.response.finish_reasons"]).toEqual(["stop"]);
-  expect(span.attributes["gen_ai.request.temperature"]).toBe(0.7);
-  expect(span.attributes["gen_ai.request.max_tokens"]).toBe(256);
-});
-
-test("traceGemini extracts usage from usageMetadata", async () => {
-  exporter.reset();
-  await traceGemini(
-    {
-      service: "scout-backend",
-      callSite: "scout-review",
-      request: {
-        model: "gemini-2.0-flash",
-        contents: [{ role: "user", parts: [{ text: "summarize" }] }],
-      },
-    },
-    async () => ({
-      response: {
-        candidates: [
-          {
-            content: { role: "model", parts: [{ text: "ok" }] },
-            finishReason: "STOP",
-            index: 0,
-          },
-        ],
-        usageMetadata: {
-          promptTokenCount: 12,
-          candidatesTokenCount: 3,
-          totalTokenCount: 15,
-          cachedContentTokenCount: 0,
-        },
-        modelVersion: "gemini-2.0-flash-001",
-        responseId: "resp-1",
-      },
-    }),
-  );
-  const span = exporter.getFinishedSpans()[0]!;
-  expect(span.attributes["gen_ai.system"]).toBe("gemini");
-  expect(span.attributes["gen_ai.request.model"]).toBe("gemini-2.0-flash");
-  expect(span.attributes["gen_ai.response.model"]).toBe("gemini-2.0-flash-001");
-  expect(span.attributes["gen_ai.usage.input_tokens"]).toBe(12);
-  expect(span.attributes["gen_ai.usage.output_tokens"]).toBe(3);
-  expect(span.attributes["gen_ai.response.finish_reasons"]).toEqual(["STOP"]);
-});
+import { Registry } from "prom-client";
 
 async function* fakeQuery(): AsyncGenerator {
   yield {
@@ -175,12 +41,14 @@ async function* fakeQuery(): AsyncGenerator {
 
 test("traceClaudeAgent accumulates assistant messages and result usage", async () => {
   exporter.reset();
+  const metricsRegister = new Registry();
   const yielded: unknown[] = [];
 
   for await (const msg of traceClaudeAgent(
     {
       service: "birmel",
       callSite: "editor-claude",
+      metricsRegister,
       request: {
         model: undefined,
         prompt: "edit this file",
@@ -214,4 +82,87 @@ test("traceClaudeAgent accumulates assistant messages and result usage", async (
     String(span.attributes["gen_ai.output.messages"] ?? "[]"),
   );
   expect(outputs.length).toBe(2);
+
+  const metrics = await metricsRegister.metrics();
+  expect(metrics).toContain('provider="claude_agent_sdk"');
+  expect(metrics).toContain('model="claude-sonnet-4-6"');
+  expect(metrics).toContain('outcome="success"');
+  expect(metrics).toContain('type="actual"');
+  expect(metrics).toContain('type="catalog"');
+});
+
+test("traceClaudeAgent runs SDK iteration beneath its repository-owned span", async () => {
+  exporter.reset();
+  let activeSpanId: string | undefined;
+  async function* contextQuery(): AsyncGenerator {
+    activeSpanId = trace.getActiveSpan()?.spanContext().spanId;
+    yield {
+      type: "result",
+      subtype: "success",
+      is_error: false,
+      result: "done",
+    };
+  }
+
+  for await (const message of traceClaudeAgent(
+    {
+      service: "temporal",
+      callSite: "agent-task",
+      request: { model: "claude-opus-5", prompt: "work", options: undefined },
+    },
+    contextQuery,
+  )) {
+    void message;
+  }
+
+  const root = exporter
+    .getFinishedSpans()
+    .find((span) => span.name === "gen_ai.chat");
+  expect(root).toBeDefined();
+  expect(activeSpanId).toBe(root?.spanContext().spanId);
+});
+
+test("traceClaudeAgent closes its span when SDK iterator cleanup fails", async () => {
+  exporter.reset();
+  const cleanupError = new Error("SDK cleanup failed");
+  const iterable: AsyncIterable<unknown> = {
+    [Symbol.asyncIterator]() {
+      let yielded = false;
+      return {
+        next() {
+          if (yielded) return Promise.resolve({ done: true, value: undefined });
+          yielded = true;
+          return Promise.resolve({ done: false, value: { type: "assistant" } });
+        },
+        return() {
+          return Promise.reject(cleanupError);
+        },
+      };
+    },
+  };
+
+  await expect(
+    (async () => {
+      for await (const message of traceClaudeAgent(
+        {
+          service: "temporal",
+          callSite: "agent-task",
+          request: {
+            model: "claude-opus-5",
+            prompt: "work",
+            options: undefined,
+          },
+        },
+        () => iterable,
+      )) {
+        void message;
+        break;
+      }
+    })(),
+  ).rejects.toThrow("SDK cleanup failed");
+
+  const root = exporter
+    .getFinishedSpans()
+    .find((span) => span.name === "gen_ai.chat");
+  expect(root?.status.code).toBe(2);
 });

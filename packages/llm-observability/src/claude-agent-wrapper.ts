@@ -1,8 +1,12 @@
 import {
+  context,
   SpanStatusCode,
+  trace,
   type AttributeValue,
   type Span,
 } from "@opentelemetry/api";
+import { costForTextUsage } from "@shepherdjerred/llm-models";
+import type { Registry } from "prom-client";
 import {
   getLlmTracer,
   serializeBodyAttribute,
@@ -14,8 +18,11 @@ import {
   ResultMessageSchema,
   type ClaudeResultMessage,
 } from "./claude-message-schemas.ts";
+import { commonLlmMetrics } from "./metrics.ts";
 
 export type TraceClaudeAgentMetadata = Omit<LlmCallMetadata, "system"> & {
+  metricsRegister?: Registry | undefined;
+  workload?: string | undefined;
   request: {
     /** Model name. Optional — falls back to the system/init message's model. */
     model: string | undefined;
@@ -63,16 +70,51 @@ type Accumulator = {
 export async function* traceClaudeAgent<TMessage>(
   metadata: TraceClaudeAgentMetadata,
   run: () => AsyncIterable<TMessage>,
+  transformMessage?: (message: TMessage) => TMessage | Promise<TMessage>,
 ): AsyncGenerator<TMessage, void> {
   const tracer = getLlmTracer();
   const span = tracer.startSpan("gen_ai.chat");
+  const startedAtMs = Date.now();
 
   span.setAttributes(buildInitialAttrs(metadata));
 
   const accumulator: Accumulator = newAccumulator();
+  const parentContext = trace.setSpan(context.active(), span);
+  const iterable = context.with(parentContext, run);
+  const iterator = context.with(parentContext, () =>
+    iterable[Symbol.asyncIterator](),
+  );
+  let iteratorCompleted = false;
+  let primaryFailure = false;
+
+  const closeIterator = async (): Promise<void> => {
+    if (iteratorCompleted || iterator.return === undefined) return;
+    try {
+      await context.with(parentContext, () => iterator.return?.());
+    } catch (error: unknown) {
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      if (error instanceof Error) span.recordException(error);
+      if (!primaryFailure) throw error;
+    }
+  };
 
   try {
-    for await (const message of run()) {
+    for (;;) {
+      const next = await context.with(parentContext, () => iterator.next());
+      if (next.done === true) {
+        iteratorCompleted = true;
+        break;
+      }
+      const rawMessage = next.value;
+      const message =
+        transformMessage === undefined
+          ? rawMessage
+          : await context.with(parentContext, () =>
+              transformMessage(rawMessage),
+            );
       observe(message, accumulator);
       yield message;
     }
@@ -85,9 +127,57 @@ export async function* traceClaudeAgent<TMessage>(
       message: error instanceof Error ? error.message : String(error),
     });
     if (error instanceof Error) span.recordException(error);
+    primaryFailure = true;
     throw error;
   } finally {
-    span.end();
+    try {
+      await closeIterator();
+    } finally {
+      recordMetrics(metadata, accumulator, startedAtMs);
+      span.end();
+    }
+  }
+}
+
+function recordMetrics(
+  metadata: TraceClaudeAgentMetadata,
+  acc: Accumulator,
+  startedAtMs: number,
+): void {
+  if (metadata.metricsRegister === undefined) return;
+  const metrics = commonLlmMetrics(metadata.metricsRegister);
+  const labels = {
+    service: metadata.service,
+    workload: metadata.workload ?? metadata.callSite,
+    provider: "claude_agent_sdk",
+    model: metadata.request.model ?? acc.initModel ?? "unknown",
+  };
+  metrics.requests.inc({
+    ...labels,
+    outcome: acc.sawResult && !acc.isError ? "success" : "error",
+  });
+  metrics.duration.observe(labels, (Date.now() - startedAtMs) / 1000);
+  metrics.tokens.inc({ ...labels, type: "input" }, acc.inputTokens ?? 0);
+  metrics.tokens.inc({ ...labels, type: "output" }, acc.outputTokens ?? 0);
+  metrics.tokens.inc(
+    { ...labels, type: "cached_input" },
+    acc.cacheReadInputTokens ?? 0,
+  );
+  metrics.tokens.inc(
+    { ...labels, type: "cache_write_input" },
+    acc.cacheCreationInputTokens ?? 0,
+  );
+  if (acc.totalCostUsd !== undefined) {
+    metrics.cost.inc({ ...labels, type: "actual" }, acc.totalCostUsd);
+  }
+  const catalogCostUsd = costForTextUsage(labels.model, {
+    inputTokens: acc.inputTokens ?? 0,
+    outputTokens: acc.outputTokens ?? 0,
+    cacheReadTokens: acc.cacheReadInputTokens ?? 0,
+    cacheWriteTokens: acc.cacheCreationInputTokens ?? 0,
+  });
+  if (catalogCostUsd !== undefined) {
+    metrics.cost.inc({ ...labels, type: "catalog" }, catalogCostUsd);
   }
 }
 

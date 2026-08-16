@@ -44,8 +44,9 @@ export function createBirmelChart(app: App) {
             },
           ],
         },
-        // Allow blackbox-exporter's in-cluster health probe (oauth service
-        // port only — not every port on the pod)
+        // Allow Prometheus to scrape the health service metrics and the
+        // blackbox exporter to probe the OAuth service, without opening other
+        // pod ports to the monitoring namespace.
         {
           from: [
             {
@@ -54,7 +55,10 @@ export function createBirmelChart(app: App) {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(4112), protocol: "TCP" }],
+          ports: [
+            { port: IntOrString.fromNumber(4112), protocol: "TCP" },
+            { port: IntOrString.fromNumber(8080), protocol: "TCP" },
+          ],
         },
       ],
     },

@@ -125,7 +125,7 @@ test("replay binds every mutable terminal summary field", async () => {
   }
 });
 
-test("bundle loading verifies database sidecars against terminal digests", async () => {
+test("bundle loading verifies authoritative spans against terminal digest", async () => {
   stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-run-"));
   const recorder = await RunRecorder.create({
     stateDirectory,
@@ -140,25 +140,24 @@ test("bundle loading verifies database sidecars against terminal digests", async
     maxWorkers: 2,
   });
   recorder.record("run.started", { phase: "startup" });
-  await Bun.write(recorder.paths.mastra, "mastra-sidecar");
-  await Bun.write(recorder.paths.observability, "observability-sidecar");
-  recorder.requireSidecars();
+  await Bun.write(recorder.paths.spans, '{"kind":"span"}\n');
+  recorder.requireTelemetryArtifact();
   await recorder.finalize("completed", snapshot);
 
   await expect(
     loadRunBundle(recorder.paths.runDirectory),
   ).resolves.toBeDefined();
-  await rm(recorder.paths.mastra);
+  await rm(recorder.paths.spans);
   await expect(loadRunBundle(recorder.paths.runDirectory)).rejects.toThrow(
-    "Run artifact mastra.db is missing",
+    "Run artifact spans.jsonl is missing",
   );
-  await Bun.write(recorder.paths.mastra, "mastra-sidecar");
+  await Bun.write(recorder.paths.spans, '{"kind":"span"}\n');
   await expect(
     loadRunBundle(recorder.paths.runDirectory),
   ).resolves.toBeDefined();
-  await Bun.write(recorder.paths.observability, "replacement");
+  await Bun.write(recorder.paths.spans, "replacement");
   await expect(loadRunBundle(recorder.paths.runDirectory)).rejects.toThrow(
-    "Run artifact observability.duckdb does not match its recorded digest",
+    "Run artifact spans.jsonl does not match its recorded digest",
   );
 });
 

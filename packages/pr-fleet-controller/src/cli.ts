@@ -9,7 +9,7 @@ import {
   REQUIRED_REVIEW_PROVIDER_ID,
 } from "@shepherdjerred/code-review";
 import { z } from "zod";
-import { MastraMaster, MastraWorkerRunner } from "./agents.ts";
+import { FleetMaster, NativeWorkerRunner } from "./agents.ts";
 import { combineFailures, normalizeFailure } from "./cli-failures.ts";
 import { HELP } from "./cli-help.ts";
 import { createTerminalLineHandler } from "./cli-terminal.ts";
@@ -21,9 +21,9 @@ import {
 } from "./controller-metadata.ts";
 import { CommandFleetEnvironment } from "./environment.ts";
 import {
-  createFleetMastraRuntime,
-  type FleetMastraRuntime,
-} from "./mastra-runtime.ts";
+  createFleetTelemetryRuntime,
+  type FleetTelemetryRuntime,
+} from "./telemetry-runtime.ts";
 import { resolveFleetModel } from "./model-resolution.ts";
 import type { FleetObserver } from "./ports.ts";
 import {
@@ -112,8 +112,6 @@ function parseCliArgs(args: string[]) {
       "worktree-root": { type: "string" },
       "max-workers": { type: "string", default: "5" },
       author: { type: "string" },
-      "base-url": { type: "string" },
-      "api-key-env": { type: "string" },
       "review-provider": { type: "string" },
       "state-dir": { type: "string" },
       "no-ui": { type: "boolean", default: false },
@@ -209,10 +207,9 @@ async function main(): Promise<void> {
     recorder.paths.controlSocket,
     args,
   );
-  let runtime: FleetMastraRuntime | undefined;
-  let runtimeInitialization: Promise<FleetMastraRuntime> | undefined;
+  let runtimeInitialization: Promise<FleetTelemetryRuntime> | undefined;
   let controller: FleetController | undefined;
-  let master: MastraMaster | undefined;
+  let master: FleetMaster | undefined;
   let terminal: ReturnType<typeof createInterface> | undefined;
   let operatorControl: OperatorControlServer | undefined;
   let shutdownRequested = false;
@@ -310,9 +307,7 @@ async function main(): Promise<void> {
   };
   try {
     const { parsed, modelName } = parseInvocation(args);
-    const apiKeyEnvironment = parsed.values["api-key-env"];
-    const configuredSecret =
-      apiKeyEnvironment === undefined ? undefined : Bun.env[apiKeyEnvironment];
+    const configuredSecret = Bun.env["OPENROUTER_API_KEY"];
     if (await finishIfRequested()) {
       return;
     }
@@ -369,11 +364,7 @@ async function main(): Promise<void> {
       author: config.author ?? null,
     });
     recorder.configureSecretValues(configuredSecretValues(configuredSecret));
-    const model = resolveFleetModel(
-      config.model,
-      parsed.values["base-url"],
-      apiKeyEnvironment,
-    );
+    const model = resolveFleetModel(config.model, configuredSecret);
     // Default to the provider the repository's CI gate enforces, not the
     // provider-neutral default. The fleet decides readiness from the same
     // findings that gate the PR, and a provider whose findings live somewhere
@@ -389,9 +380,9 @@ async function main(): Promise<void> {
       return;
     }
     const store = new FleetStore(config.maxWorkers);
-    runtimeInitialization = createFleetMastraRuntime(recorder);
-    runtime = await runtimeInitialization;
-    recorder.requireSidecars();
+    runtimeInitialization = createFleetTelemetryRuntime(recorder);
+    await runtimeInitialization;
+    recorder.requireTelemetryArtifact();
     if (await finishIfRequested()) {
       return;
     }
@@ -403,13 +394,8 @@ async function main(): Promise<void> {
       telemetry: recorder,
       author: config.author ?? null,
     });
-    // The configured model key-env var (if any) is scrubbed from every worker
-    // validation/setup subprocess in addition to the credential-name heuristic.
-    const extraSecretNames =
-      apiKeyEnvironment === undefined ? [] : [apiKeyEnvironment];
-    const workerRunner = new MastraWorkerRunner(model, store, environment, {
-      extraSecretNames,
-      mastra: runtime.mastra,
+    const workerRunner = new NativeWorkerRunner(model, store, environment, {
+      extraSecretNames: ["OPENROUTER_API_KEY"],
       telemetry: recorder,
     });
     controller = new FleetController({
@@ -425,8 +411,7 @@ async function main(): Promise<void> {
       },
     });
     const activeController = controller;
-    master = new MastraMaster(model, activeController, observer, {
-      mastra: runtime.mastra,
+    master = new FleetMaster(model, activeController, observer, {
       telemetry: recorder,
       onFatalError: (error) => {
         runFailure = combineFailures(runFailure, error);

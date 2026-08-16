@@ -1,4 +1,3 @@
-import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
 import { getFriendContext, people } from "@shepherdjerred/glitter-context";
 import {
@@ -7,6 +6,7 @@ import {
   type TurnInput,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { CORE_SYSTEM_POLICY } from "@shepherdjerred/birmel/agent-runtime/prompts.ts";
+import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { assembleContextBundle } from "@shepherdjerred/birmel/context/context-bundle.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
@@ -81,11 +81,13 @@ async function queryEmbedding(content: string): Promise<number[] | null> {
     return null;
   }
   const config = getConfig();
+  const runtime = getLlmRuntime();
   try {
     const result = await embed({
-      model: openai.embedding(config.openai.embeddingModel),
+      model: runtime.embeddingModel(config.openRouter.embeddingModel),
       value: content,
       abortSignal: AbortSignal.timeout(config.agent.routerTimeoutMs),
+      ...runtime.callOptions({ workload: "birmel.context.embed" }),
     });
     return result.embedding;
   } catch {

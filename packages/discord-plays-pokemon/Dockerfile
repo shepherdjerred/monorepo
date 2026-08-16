@@ -163,12 +163,6 @@ RUN set -e; \
 
 WORKDIR /app
 
-# Goal mode shells out to Codex. BUN_INSTALL=/usr/local drops the binary into a
-# world-readable bin on PATH. Kept ABOVE the app layers: it needs only bun +
-# network, and a source edit must not re-download it.
-ENV BUN_INSTALL=/usr/local
-RUN bun add -g @openai/codex@0.145.0 && codex --version
-
 # Production node_modules + workspace manifests. The isolated-linker tree uses
 # relative symlinks (store at node_modules/.bun), so copying the whole install
 # root between same-rooted stages is safe. Kept BEFORE the source COPY so a

@@ -17,7 +17,7 @@
  *   bun scripts/release.ts [--dry-run]
  *
  * Env: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY,
- *      CLAUDE_CODE_OAUTH_TOKEN, OPENAI_API_KEY (refine step)
+ *      CLAUDE_CODE_OAUTH_TOKEN, CODEX_ACCESS_TOKEN (refine step)
  */
 
 import { requireEnv, run } from "./lib/run.ts";
@@ -60,7 +60,7 @@ async function main(): Promise<void> {
   // Validate both providers before release-please mutates the release PR.
   // Codex is an intentional quota fallback, not an optional best-effort path.
   const claudeToken = requireEnv("CLAUDE_CODE_OAUTH_TOKEN");
-  const openAiApiKey = requireEnv("OPENAI_API_KEY");
+  const codexAccessToken = requireEnv("CODEX_ACCESS_TOKEN");
   // Codex runs tool calls through a login shell. Verify that exact boundary,
   // not only this process's mise-aware PATH, before release-please mutates a PR.
   await run(["/bin/bash", "-lc", "gh --version"], {
@@ -111,7 +111,7 @@ async function main(): Promise<void> {
       // git clone/push needs (the old helper's withAskpass: true).
       env,
       claudeToken,
-      openAiApiKey,
+      codexAccessToken,
     });
     console.log(`--- CHANGELOG refinement complete (provider=${provider})`);
 

@@ -22,6 +22,23 @@ export const GenerationUsageSchema = z.strictObject({
 });
 export type GenerationUsage = z.infer<typeof GenerationUsageSchema>;
 
+/**
+ * A generation that billed tokens and was then interrupted by a provider-call
+ * failure before producing a response. `readOrCreateGenerationArtifact`
+ * persists a spend receipt for it before rethrowing, so a Temporal retry finds
+ * the paid-but-artifactless state and refuses to silently rebill — the same
+ * billing-integrity stance the orphaned-receipt guard already takes.
+ */
+export class BilledGenerationInterruptedError extends Error {
+  readonly usage: GenerationUsage;
+
+  constructor(message: string, usage: GenerationUsage, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "BilledGenerationInterruptedError";
+    this.usage = usage;
+  }
+}
+
 const GenerationArtifactSchema = z.strictObject({
   schemaVersion: z.literal(GENERATION_ARTIFACT_SCHEMA_VERSION),
   ownerRunId: z.uuid(),
@@ -259,7 +276,28 @@ export async function readOrCreateGenerationArtifact<Response>(input: {
     );
   }
 
-  const generated = await input.generate();
+  let generated;
+  try {
+    generated = await input.generate();
+  } catch (error: unknown) {
+    // The interruption already billed tokens; record the spend before the
+    // rethrow so a retry cannot silently pay for the same request twice. The
+    // orphaned-receipt guard above then surfaces the paid state explicitly.
+    if (error instanceof BilledGenerationInterruptedError) {
+      await input.store.create(
+        spendReceiptKey,
+        GenerationSpendReceiptSchema.parse({
+          schemaVersion: GENERATION_SPEND_RECEIPT_SCHEMA_VERSION,
+          ownerRunId: input.store.ownerRunId,
+          model: input.model,
+          callSite: input.callSite,
+          requestSha256,
+          usage: error.usage,
+        }),
+      );
+    }
+    throw error;
+  }
   const reportedUsage = generated.usage;
   try {
     const usage = GenerationUsageSchema.parse(reportedUsage);

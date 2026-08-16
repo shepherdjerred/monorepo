@@ -269,9 +269,9 @@ bun run verify
 # CI runs on Buildkite (NOT GitHub Actions) via the static .buildkite/pipeline.yml
 # Check CI status via Buildkite CLI or web UI, never `gh run`
 
-# Foreground, provider-neutral Mastra controller for the complete open PR fleet
+# Foreground OpenRouter/AI SDK controller for the complete open PR fleet
 # (spawns a live dashboard with question answering only; --no-ui to suppress)
-bun run pr:fleet --model <provider>/<model-id>
+bun run pr:fleet --model <catalog-model-id>
 
 # Open the live/historical dashboard standalone (newest run, or --run <id|dir>)
 bun run pr:fleet:watch
@@ -311,11 +311,12 @@ Treat this as a production-mutating build, not a read-only benchmark.
 The main-only `release-please` lane runs `scripts/release.ts`. Its CHANGELOG
 refiner uses Claude first and falls back to Codex only when Claude returns a
 validated usage-quota error. Both `CLAUDE_CODE_OAUTH_TOKEN` and
-`OPENAI_API_KEY` are required; unknown provider failures and fallback failures
-remain hard CI failures. Codex is a pinned production dependency of
-`@shepherdjerred/root-scripts`, so the lane's filtered install provides the
-binary without depending on a future CI-base image rollout. Keep the
-provider-neutral procedure in `scripts/prompts/refine-release-please.md`.
+`CODEX_ACCESS_TOKEN` are required; unknown provider failures and fallback
+failures remain hard CI failures. Claude Agent SDK and Codex SDK are pinned
+production dependencies of `@shepherdjerred/root-scripts`, so the lane's
+filtered install provides both native SDK runtimes without globally installed
+`claude` or `codex` commands. Keep the provider-neutral procedure in
+`scripts/prompts/refine-release-please.md`.
 
 ## GitHub CLI in Codex
 
@@ -518,10 +519,11 @@ the verification machinery itself. There is no `pre-push` hook.
 
 ## PR Fleet Controller
 
-`bun run pr:fleet --model <provider>/<model-id> [--author <login>]` starts the
-standalone Mastra controller in the foreground. The optional author scope
-includes that login's drafts and is recorded in the manifest and dashboard. One
-selected API model powers the conversational master and every bounded worker.
+`bun run pr:fleet --model <catalog-model-id> [--author <login>]` starts the
+standalone AI SDK controller in the foreground. `OPENROUTER_API_KEY` is
+required. The optional author scope includes that login's drafts and is recorded
+in the manifest and dashboard. One selected catalog model powers the
+conversational master and every bounded worker.
 Use `/status`, `/tick`, `/questions`, `/answer <request-id> <free-text>`,
 `/help`, `/stop`, or free-text steering. The controller may repair and publish
 PR branches but may never merge, close, or approve them. Its exact model tool
@@ -540,8 +542,9 @@ that PR's detail view; it has no general pause, priority, steering, merge, or
 publication controls. Standalone and historical dashboards remain read-only.
 The live dashboard is torn down on shutdown; suppress it with `--no-ui`, fix the
 port with `--ui-port`, or skip the browser with `--no-open`. Reasoning is
-mirrored live to a best-effort `spans.jsonl` in the bundle because
-`observability.duckdb` is exclusively locked while the run holds it. Open the
+written live to the authoritative, redacted, digest-verified `spans.jsonl`
+artifact in schema-v2 bundles. Historical v1 database bundles remain
+inspectable and replayable. Open the
 dashboard for any run (live or finished) with `bun run pr:fleet:watch [--run
 <id|dir>]`.
 

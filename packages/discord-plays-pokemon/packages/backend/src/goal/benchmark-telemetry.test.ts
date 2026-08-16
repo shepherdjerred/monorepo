@@ -97,6 +97,31 @@ describe("assessBenchmarkBootReadiness", () => {
 });
 
 describe("summarizeCodexJsonl chained command output", () => {
+  test("accepts both legacy CLI and additive SDK v2 event records", () => {
+    const legacy = JSON.stringify({ type: "turn.started" });
+    const sdkV2 = JSON.stringify({
+      schema_version: 2,
+      transport: "codex_sdk",
+      type: "turn.completed",
+      usage: {
+        input_tokens: 120,
+        cached_input_tokens: 80,
+        output_tokens: 15,
+        reasoning_output_tokens: 5,
+        cache_write_input_tokens: 0,
+      },
+    });
+
+    expect(summarizeCodexJsonl(`${legacy}\n${sdkV2}`)).toMatchObject({
+      turns: 1,
+      errors: 0,
+      inputTokens: 120,
+      cachedInputTokens: 80,
+      outputTokens: 15,
+      reasoningOutputTokens: 5,
+    });
+  });
+
   test("counts every JSON-lines action, observation invocation, output character, and explicit ignored input", () => {
     const output = [
       JSON.stringify({

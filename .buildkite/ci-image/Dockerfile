@@ -62,13 +62,6 @@ RUN mise trust .mise.toml && mise install && mise reshim \
 # uv/uvx for the python checks (ruff via uvx, pyright bootstraps a venv)
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# claude CLI for the release CHANGELOG-refinement step (scripts/release.ts);
-# same pinned recipe as packages/birmel/Dockerfile.
-# renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.175
-ENV BUN_INSTALL=/usr/local
-RUN bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && claude --version
-
 # The bun download cache is NOT baked into this image anymore. The old
 # bun-cache-warm stage added ~1 GiB compressed that re-pushed/re-pulled on
 # every lockfile change; CI pods now share a persistent node-local cache

@@ -6,7 +6,7 @@ A human will review and merge — you do **not** merge.
 
 ## Environment
 
-- You are in a Debian-based container with `git`, `gh`, `bun`, `release-please`, `claude`, and `codex` installed.
+- You are running through a native coding-agent SDK in a Debian-based container with `git`, `gh`, `bun`, and `release-please` installed.
 - `GH_TOKEN` is set in the environment with write access to the repo (minted from a GitHub App installation token).
 - `GIT_ASKPASS` is configured so `git push` to `https://github.com/shepherdjerred/monorepo.git` authenticates automatically.
 - The monorepo source is mounted at `/workspace` but **without `.git`** (Dagger excludes it). You must clone a fresh copy to do git operations.

@@ -3,7 +3,7 @@ import type { ProposedChange, ProposedSplit } from "../classifier/types.ts";
 import type { AppleMatchResult } from "./matcher.ts";
 import { loadAppleReceipts } from "./parser.ts";
 import { matchAppleTransactions } from "./matcher.ts";
-import { computeSplits } from "../classifier/claude.ts";
+import { computeSplits } from "../classifier/llm.ts";
 import { log } from "../logger.ts";
 
 const CATEGORY_RULES: Record<string, string> = {

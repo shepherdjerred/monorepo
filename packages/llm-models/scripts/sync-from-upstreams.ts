@@ -2,10 +2,10 @@
 /**
  * Cross-check the catalog against community datasets and report/apply drift.
  *
- * Source of truth is still our own `src/catalog.json`. This script fetches two
- * public, MIT-licensed datasets — models.dev and LiteLLM's
- * `model_prices_and_context_window.json` — and, for each TEXT model WE list,
- * compares the unambiguous fields (input price, output price, context window).
+ * Source of truth is still our own `src/catalog.json`. This script fetches the
+ * public models.dev and LiteLLM datasets for pricing/context drift plus
+ * OpenRouter's ordinary and embedding catalogs for route availability. For
+ * each text model we list, it compares the unambiguous numeric fields.
  * It:
  *   - rewrites our values to the upstream value when they drift (default), and
  *   - reports models absent from BOTH upstreams as "overlay-only" (e.g.
@@ -35,7 +35,7 @@
  * Deliberately NOT cross-checked:
  *   - cache prices: providers name them differently (OpenAI cached-input vs
  *     Anthropic cache read/write) and upstreams normalize inconsistently.
- *   - image models: upstreams price them per token; we price per image.
+ *   - image pricing: upstreams price it per token; we price per image.
  * Both are reported as "not cross-checked" so a human can spot-check them.
  *
  * Never adds/removes models; never touches non-numeric fields.
@@ -47,6 +47,13 @@
  */
 import { z } from "zod";
 import { CatalogSchema, type Catalog, type ModelEntry } from "#src/index.ts";
+import {
+  indexOpenRouterRoutes,
+  missingOpenRouterRoute,
+  OPENROUTER_EMBEDDINGS_URL,
+  OPENROUTER_MODELS_URL,
+} from "#scripts/openrouter-routes.ts";
+import { emit, emitReport } from "#scripts/report.ts";
 
 const MODELS_DEV_URL = "https://models.dev/api.json";
 const LITELLM_URL =
@@ -88,10 +95,6 @@ function record(value: unknown): Record<string, unknown> {
 function perMillion(value: unknown): number | undefined {
   const n = num(value);
   return n === undefined ? undefined : n * 1_000_000;
-}
-
-function emit(line: string): void {
-  process.stdout.write(`${line}\n`);
 }
 
 /**
@@ -574,28 +577,6 @@ export type SyncReport = {
   notChecked: string[];
 };
 
-function emitReport(report: SyncReport, check: boolean): void {
-  emit("== LLM catalog cross-check ==");
-  emit(
-    report.applied.length > 0
-      ? `\nDrift vs upstreams (${check ? "not applied" : "applied"}):\n${report.applied.join("\n")}`
-      : "\nNo input/output/context drift vs upstreams.",
-  );
-  if (report.withheld.length > 0) {
-    emit(
-      `\nWITHHELD by plausibility guards — check each against the provider's own pricing page, then either apply the upstream value or confirm the catalog's is intended (a divergence can be deliberate, e.g. a standard rate held while upstream lists a promotional one):\n${report.withheld.join("\n")}`,
-    );
-  }
-  if (report.overlayOnly.length > 0) {
-    emit(
-      `\nOverlay-only (absent from both upstreams under their own provider — verify manually):\n  ${report.overlayOnly.join("\n  ")}`,
-    );
-  }
-  if (report.notChecked.length > 0) {
-    emit(`\nNot cross-checked:\n  ${report.notChecked.join("\n  ")}`);
-  }
-}
-
 function flagValue(flag: string): string | undefined {
   const index = process.argv.indexOf(flag);
   if (index === -1) {
@@ -618,9 +599,16 @@ async function main(): Promise<void> {
   const rawText = await Bun.file(CATALOG_PATH).text();
   const rawCatalog = UnknownRecord.parse(JSON.parse(rawText));
   const catalog: Catalog = CatalogSchema.parse(JSON.parse(rawText));
-  const [modelsDevRaw, liteLlmRaw] = await Promise.all([
+  const [
+    modelsDevRaw,
+    liteLlmRaw,
+    openRouterModelsRaw,
+    openRouterEmbeddingsRaw,
+  ] = await Promise.all([
     fetchJson(MODELS_DEV_URL),
     fetchJson(LITELLM_URL),
+    fetchJson(OPENROUTER_MODELS_URL),
+    fetchJson(OPENROUTER_EMBEDDINGS_URL),
   ]);
   const modelsDev = indexModelsDev(modelsDevRaw);
   const liteLlm = indexLiteLlm(liteLlmRaw);
@@ -633,14 +621,23 @@ async function main(): Promise<void> {
         .map((entry) => entry.provider),
     ),
   );
+  const openRouterRoutes = indexOpenRouterRoutes(
+    openRouterModelsRaw,
+    openRouterEmbeddingsRaw,
+  );
 
   const now = new Date();
   const drifted: string[] = [];
   const models: Record<string, ModelVerdict> = {};
   const overlayOnly: string[] = [];
   const notChecked: string[] = [];
+  const missingOpenRouterRoutes: string[] = [];
 
   for (const [id, entry] of Object.entries(catalog)) {
+    const missingRoute = missingOpenRouterRoute(id, entry, openRouterRoutes);
+    if (missingRoute !== undefined) {
+      missingOpenRouterRoutes.push(missingRoute);
+    }
     if (entry.pricing.modality !== "text") {
       notChecked.push(`${id} (image — per-image pricing not in upstreams)`);
       continue;
@@ -681,6 +678,15 @@ async function main(): Promise<void> {
     notChecked,
   };
   emitReport(report, check);
+
+  if (missingOpenRouterRoutes.length > 0) {
+    emit(
+      `\nMissing current OpenRouter routes:\n  ${missingOpenRouterRoutes.join("\n  ")}`,
+    );
+    process.exitCode = 1;
+  } else {
+    emit("\nAll current and preview OpenRouter routes are available.");
+  }
 
   if (!check && drifted.length > 0) {
     // Patch only the drifted numeric fields into the raw JSON structure so that

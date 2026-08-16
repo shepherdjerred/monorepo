@@ -4,12 +4,12 @@ import type { TransactionEnrichment } from "../enrichment/types.ts";
 import type { ProposedChange, ProposedSplit } from "./types.ts";
 import type { CategoryDefinition } from "../knowledge/types.ts";
 import {
-  callClaudeAndParseWithUsage,
+  callLlmAndParseWithUsage,
   getModelId,
   getTracker,
   isWebSearchEnabled,
-} from "./claude.ts";
-import { computeSplits } from "./claude.ts";
+} from "./llm.ts";
+import { computeSplits } from "./llm.ts";
 import { formatCategoryDefinitions } from "../knowledge/definitions.ts";
 import { log } from "../logger.ts";
 import {
@@ -311,7 +311,7 @@ function buildChangesFromResult(
 async function defaultTier2Classifier(
   prompt: string,
 ): Promise<Tier2ClassifierResult> {
-  return callClaudeAndParseWithUsage(prompt, Tier2ClassificationSchema);
+  return callLlmAndParseWithUsage(prompt, Tier2ClassificationSchema);
 }
 
 function buildBatchWorkItems(

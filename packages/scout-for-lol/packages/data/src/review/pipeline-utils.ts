@@ -6,7 +6,7 @@
  */
 
 import type {
-  OpenAIClient,
+  TextGenerationClient,
   ModelConfig,
   StageTrace,
 } from "./pipeline-types.ts";
@@ -71,44 +71,15 @@ export function replacePromptVariables(
 }
 
 /**
- * Build error details for OpenAI error messages
+ * Make a provider-neutral text-generation call and return the trace.
  */
-function buildErrorDetails(
-  refusal: string | null | undefined,
-  finishReason: string | null | undefined,
-): string[] {
-  const details: string[] = [];
-  if (refusal !== undefined && refusal !== null && refusal.length > 0) {
-    details.push(`refusal: ${refusal}`);
-  }
-  if (
-    finishReason !== undefined &&
-    finishReason !== null &&
-    finishReason.length > 0
-  ) {
-    details.push(`finish_reason: ${finishReason}`);
-  }
-  return details;
-}
-
-/**
- * Make an OpenAI chat completion call and return the trace
- */
-export async function callOpenAI(params: {
-  client: OpenAIClient;
+export async function callTextModel(params: {
+  client: TextGenerationClient;
   model: ModelConfig;
   systemPrompt?: string;
   userPrompt: string;
 }): Promise<{ text: string; trace: StageTrace }> {
   const { client, model, systemPrompt, userPrompt } = params;
-
-  const messages: { role: "system" | "user" | "assistant"; content: string }[] =
-    [];
-
-  if (systemPrompt !== undefined && systemPrompt.length > 0) {
-    messages.push({ role: "system", content: systemPrompt });
-  }
-  messages.push({ role: "user", content: userPrompt });
 
   const startTime = Date.now();
 
@@ -120,31 +91,29 @@ export async function callOpenAI(params: {
   );
   const supportsTopP = modelSupportsParameter(model.model, "topP");
 
-  const response = await client.chat.completions.create({
+  const response = await client.generate({
     model: model.model,
-    messages,
-    max_completion_tokens: model.maxTokens,
+    ...(systemPrompt === undefined || systemPrompt.length === 0
+      ? {}
+      : { systemPrompt }),
+    userPrompt,
+    maxOutputTokens: model.maxTokens,
+    workload: "scout.review.text",
     ...(supportsTemperature &&
       model.temperature !== undefined && { temperature: model.temperature }),
-    ...(supportsTopP && model.topP !== undefined && { top_p: model.topP }),
+    ...(supportsTopP && model.topP !== undefined && { topP: model.topP }),
   });
 
   const durationMs = Date.now() - startTime;
 
-  const content = response.choices[0]?.message.content;
-  if (
-    content === undefined ||
-    content === null ||
-    content.trim().length === 0
-  ) {
-    const refusal = response.choices[0]?.message.refusal;
-    const finishReason = response.choices[0]?.finish_reason;
-    const details = buildErrorDetails(refusal, finishReason);
-    const detailStr = details.length > 0 ? ` (${details.join(", ")})` : "";
-    throw new Error(`No content returned from OpenAI${detailStr}`);
+  if (response.text.trim().length === 0) {
+    const finishReason = response.finishReason;
+    const detail =
+      finishReason === undefined ? "" : ` (finish_reason: ${finishReason})`;
+    throw new Error(`No content returned from text model${detail}`);
   }
 
-  const text = content.trim();
+  const text = response.text.trim();
 
   const trace: StageTrace = {
     request: {
@@ -158,11 +127,15 @@ export async function callOpenAI(params: {
   if (systemPrompt !== undefined && systemPrompt.length > 0) {
     trace.request.systemPrompt = systemPrompt;
   }
-  if (response.usage?.prompt_tokens !== undefined) {
-    trace.tokensPrompt = response.usage.prompt_tokens;
+  if (response.inputTokens !== undefined) {
+    trace.tokensPrompt = response.inputTokens;
   }
-  if (response.usage?.completion_tokens !== undefined) {
-    trace.tokensCompletion = response.usage.completion_tokens;
+  if (response.outputTokens !== undefined) {
+    trace.tokensCompletion = response.outputTokens;
+  }
+  if (response.openRouter !== undefined) {
+    trace.transport = "openrouter";
+    trace.openRouter = response.openRouter;
   }
 
   return { text, trace };

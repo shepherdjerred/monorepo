@@ -45,6 +45,12 @@ Pricing = Annotated[TextPricing | ImagePricing, Field(discriminator="modality")]
 
 class Capabilities(BaseModel):
     model_config = {"extra": "forbid"}
+    inputModalities: list[Literal["text", "image", "audio", "video"]]
+    outputModalities: list[Literal["text", "image", "embedding"]]
+    tools: bool
+    structuredOutputs: bool
+    webSearch: bool
+    reasoning: bool
     supportsTemperature: bool
     supportsTopP: bool
     maxTokens: int | None = Field(default=None, gt=0)
@@ -89,6 +95,24 @@ class AcceptedUpstreamPricing(BaseModel):
         return self
 
 
+class OpenRouterRoute(BaseModel):
+    model_config = {"extra": "forbid"}
+    modelId: str = Field(min_length=1)
+    endpoint: Literal["language", "embedding", "image"]
+
+
+class NativeSdkRoute(BaseModel):
+    model_config = {"extra": "forbid"}
+    modelId: str = Field(min_length=1)
+
+
+class Routes(BaseModel):
+    model_config = {"extra": "forbid"}
+    openRouter: OpenRouterRoute | None = None
+    claudeAgentSdk: NativeSdkRoute | None = None
+    codexSdk: NativeSdkRoute | None = None
+
+
 class ModelEntry(BaseModel):
     model_config = {"extra": "forbid"}
     id: str = Field(min_length=1)
@@ -100,6 +124,7 @@ class ModelEntry(BaseModel):
     pinnedContextWindow: bool | None = None
     acceptedUpstreamPricing: AcceptedUpstreamPricing | None = None
     capabilities: Capabilities
+    routes: Routes
     status: Literal["current", "preview", "deprecated"]
     category: str | None = None
 

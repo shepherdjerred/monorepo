@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createTool } from "@mastra/core/tools";
+import { tool as defineTool } from "ai";
 import { z } from "zod";
 import {
   invalidateInheritedWipInspection,
@@ -136,8 +136,7 @@ export function createSetupWorktreeTool(options: {
     assertNotWaitingForAnswer,
     record,
   } = options;
-  return createTool({
-    id: "setup_worktree",
+  return defineTool({
     description:
       "Check that the pinned toolchain is already installed, then run controller-approved dependency and generation setup serially.",
     inputSchema: z.object({}),

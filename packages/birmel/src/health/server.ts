@@ -3,6 +3,7 @@ import { REQUIRED_MIGRATIONS } from "@shepherdjerred/birmel/database/migration-b
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
+import { metricsRegister } from "@shepherdjerred/birmel/observability/metrics.ts";
 
 const MigrationRowsSchema = z.array(z.object({ migration_name: z.string() }));
 
@@ -66,6 +67,11 @@ export function startHealthServer(options: {
       if (path === "/ready") {
         const result = await readiness(options.isSchedulerStarted);
         return Response.json(result, { status: result.ready ? 200 : 503 });
+      }
+      if (path === "/metrics") {
+        return new Response(await metricsRegister.metrics(), {
+          headers: { "Content-Type": metricsRegister.contentType },
+        });
       }
       return new Response("Not found", { status: 404 });
     },

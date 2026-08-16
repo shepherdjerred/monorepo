@@ -135,6 +135,20 @@ export function makeDraftDataset(
     durationMs: 100,
     inputTokens: 200,
     outputTokens: 20,
+    transport: "openrouter",
+    openRouterMetadata: {
+      generationId: `generation-${key}`,
+      requestedModel: "test-model",
+      resolvedModel: "openai/test-model",
+      upstreamProvider: "OpenAI",
+      fallbackAttempts: 0,
+      attempts: [
+        { provider: "OpenAI", model: "openai/test-model", status: 200 },
+      ],
+      actualCostUsd: 0.002,
+      upstreamCostUsd: 0.0015,
+      routerMetadataPresent: true,
+    },
   });
   return { datasetId: draft.id, caseId: evalCase.id, generation };
 }

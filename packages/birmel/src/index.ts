@@ -46,9 +46,9 @@ async function shutdown(exitCode: number): Promise<void> {
 async function main(): Promise<void> {
   const config = getConfig();
   logger.info("Starting Birmel 3.0", {
-    model: config.openai.model,
-    classifierModel: config.openai.classifierModel,
-    memoryModel: config.openai.memoryModel,
+    model: config.openRouter.model,
+    classifierModel: config.openRouter.classifierModel,
+    memoryModel: config.openRouter.memoryModel,
     personaEnabled: config.persona.enabled,
     telemetryEnabled: config.telemetry.enabled,
     trustedActorCount: config.authority.trustedUserIds.length,

@@ -8,9 +8,9 @@ const logger = createLogger("explore-stream");
 /**
  * Tracks how much of the answer has already been sent to the client.
  *
- * Mastra emits whole snapshots of the structured output rather than deltas, so
- * turning them into an append-only stream means remembering the high-water
- * mark. One of these per turn.
+ * `partialOutputStream` emits whole snapshots of the structured output rather
+ * than deltas, so turning them into an append-only stream means remembering
+ * the high-water mark. One of these per turn, shared by both stream readers.
  */
 export type ExploreStreamState = {
   sentAnswerLength: number;
@@ -23,11 +23,38 @@ export function createExploreStreamState(): ExploreStreamState {
 /** Only the field being streamed; the rest of the snapshot is ignored here. */
 const PartialAnswerSchema = z.looseObject({ answer: z.string().optional() });
 
-/** Map Mastra agent stream chunks onto explore stream events. */
+/**
+ * Turn one structured-output snapshot into an append-only `answer_delta`.
+ *
+ * These arrive on the AI SDK's `partialOutputStream`, not on `fullStream`, so
+ * they enter here rather than through emitExploreStreamChunk. A snapshot only
+ * carries the keys the model has emitted so far, which is why `answer` must
+ * stay the first field of ExploreAnswerSchema — a later field would not start
+ * streaming until everything before it had been emitted.
+ */
+export async function emitExploreAnswerSnapshot(
+  snapshot: unknown,
+  emit: (event: ExploreStreamEvent) => void | Promise<void>,
+  state: ExploreStreamState,
+): Promise<void> {
+  const parsed = PartialAnswerSchema.safeParse(snapshot);
+  if (!parsed.success) {
+    return;
+  }
+  const answer = parsed.data.answer ?? "";
+  if (answer.length > state.sentAnswerLength) {
+    await emit({
+      type: "answer_delta",
+      text: answer.slice(state.sentAnswerLength),
+    });
+    state.sentAnswerLength = answer.length;
+  }
+}
+
+/** Map AI SDK agent stream chunks onto explore stream events. */
 export async function emitExploreStreamChunk(
   rawChunk: unknown,
   emit: (event: ExploreStreamEvent) => void | Promise<void>,
-  state: ExploreStreamState,
 ): Promise<void> {
   const chunk = parseAgentStreamChunk(rawChunk);
   if (chunk === null) {
@@ -43,22 +70,8 @@ export async function emitExploreStreamChunk(
       // Deliberately ignored. This agent runs with structured output, so a
       // text delta is a fragment of the raw JSON the model is emitting —
       // relaying it would stream `{"answer":"Across the botto…` into the
-      // page. The prose arrives via `object` snapshots below.
-      break;
-    }
-    case "object": {
-      const parsed = PartialAnswerSchema.safeParse(chunk.object);
-      if (!parsed.success) {
-        break;
-      }
-      const answer = parsed.data.answer ?? "";
-      if (answer.length > state.sentAnswerLength) {
-        await emit({
-          type: "answer_delta",
-          text: answer.slice(state.sentAnswerLength),
-        });
-        state.sentAnswerLength = answer.length;
-      }
+      // page. The prose arrives as snapshots on the AI SDK's separate
+      // `partialOutputStream`, handled by emitExploreAnswerSnapshot.
       break;
     }
     case "tool-call": {

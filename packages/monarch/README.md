@@ -1,12 +1,12 @@
 # Monarch
 
-AI-powered transaction categorizer for [Monarch Money](https://www.monarchmoney.com/). Fetches transactions via the Monarch API, enriches them with data from external sources (Amazon, Venmo, Bilt/Conservice, USAA, Seattle City Light, Apple receipts, Costco), classifies them with Claude, and optionally applies the changes back. The full pipeline design lives in [ARCHITECTURE.md](ARCHITECTURE.md).
+AI-powered transaction categorizer for [Monarch Money](https://www.monarchmoney.com/). Fetches transactions via the Monarch API, enriches them with data from external sources (Amazon, Venmo, Bilt/Conservice, USAA, Seattle City Light, Apple receipts, Costco), classifies them with stable catalog models through OpenRouter, and optionally applies the changes back. The full pipeline design lives in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Setup
 
 Set the following environment variables:
 
-- `ANTHROPIC_API_KEY` (required) -- Anthropic API key
+- `OPENROUTER_API_KEY` (required) -- service-specific OpenRouter API key
 - `CONSERVICE_COOKIES` (optional) -- fallback for `--conservice-cookies`
 
 Authenticate to Monarch with a browser session:
@@ -44,22 +44,22 @@ bun run src/index.ts --apply --interactive
 
 General:
 
-| Flag                       | Description                                        |
-| -------------------------- | -------------------------------------------------- |
-| `--apply`                  | Apply changes to Monarch Money (default: dry run)  |
-| `--interactive`            | Approve each change individually                   |
-| `--limit <n>`              | Limit transactions to process                      |
-| `--batch-size <n>`         | Batch size for Claude API calls (default: 25)      |
-| `--model <id>`             | Claude model (default: `claude-sonnet-5`)          |
-| `--sample <n>`             | Sample N merchant groups for testing               |
-| `--verbose`                | Enable debug logging                               |
-| `--output <path>`          | Save proposed changes to JSON                      |
-| `--checkpoint-file <path>` | Override Tier 2 recovery checkpoint path           |
-| `--force-fetch`            | Re-fetch transactions even if cached               |
-| `--skip-research`          | Disable Claude's built-in web search for merchants |
-| `--rebuild-kb`             | Rebuild the merchant knowledge base from scratch   |
-| `--skip-enrich`            | Skip the enrichment pipeline                       |
-| `--suggest`                | Print verification suggestions (default: true)     |
+| Flag                       | Description                                          |
+| -------------------------- | ---------------------------------------------------- |
+| `--apply`                  | Apply changes to Monarch Money (default: dry run)    |
+| `--interactive`            | Approve each change individually                     |
+| `--limit <n>`              | Limit transactions to process                        |
+| `--batch-size <n>`         | Batch size for LLM calls (default: 25)               |
+| `--model <id>`             | Stable catalog model ID (default: `claude-sonnet-5`) |
+| `--sample <n>`             | Sample N merchant groups for testing                 |
+| `--verbose`                | Enable debug logging                                 |
+| `--output <path>`          | Save proposed changes to JSON                        |
+| `--checkpoint-file <path>` | Override Tier 2 recovery checkpoint path             |
+| `--force-fetch`            | Re-fetch transactions even if cached                 |
+| `--skip-research`          | Disable OpenRouter web search for merchants          |
+| `--rebuild-kb`             | Rebuild the merchant knowledge base from scratch     |
+| `--skip-enrich`            | Skip the enrichment pipeline                         |
+| `--suggest`                | Print verification suggestions (default: true)       |
 
 Per data source:
 
@@ -83,6 +83,11 @@ When `--output` is set, Tier 2 batch classifications are checkpointed next to
 the output file using `.checkpoint.json`. Re-running the same command resumes
 completed Tier 2 batches unless the prompt inputs, transaction IDs, model, web
 search setting, or batch size changed.
+
+Structured classifications use the shared Zod finalizer. Invalid output is
+repaired without replaying web searches or local tier-3 tools. Research is
+enabled by default through OpenRouter and can be disabled with
+`--skip-research`.
 
 ## Data Sources
 

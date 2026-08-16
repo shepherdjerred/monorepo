@@ -3,9 +3,9 @@
 # bun.lock, isolated linker). Built via `bun run docker:build` in this package
 # (which passes `-f Dockerfile ../..`).
 #
-# birmel's editor specialist shells out to `gh` (opens PRs) and `claude` (runs
-# edits); its music stack shells out through youtube-dl-exec (needs Node + Python
-# + a yt-dlp binary) and ffmpeg-static.
+# birmel's editor specialist shells out to `gh` to open PRs and uses the
+# package-local Claude Agent SDK for edits; its music stack shells out through
+# youtube-dl-exec (needs Node + Python + a yt-dlp binary) and ffmpeg-static.
 #
 # Multi-stage: deps does a full (dev-inclusive) install to feed the in-image
 # prisma generate; prod-deps installs the production-only closure; runtime
@@ -37,8 +37,13 @@ COPY --parents \
   tsconfig.base.json \
   packages/birmel \
   packages/glitter-context \
+  packages/llm-models \
   ./
 RUN cd packages/glitter-context && bun run build
+# llm-models' package `main`/`exports` resolve to a gitignored `dist/`, so the
+# llm-runtime closure Birmel imports at startup crashes with `Cannot find
+# module '@shepherdjerred/llm-models'` unless the catalog is compiled first.
+RUN cd packages/llm-models && bun run build
 RUN cd packages/birmel && bun run generate
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
@@ -56,14 +61,9 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/birmel'
 # ── runtime: CLIs + COPY-only app layers — no install, no build tooling ─────
 FROM base AS runtime
 
-# --- gh CLI + Claude Code CLI (editor sub-agent) ---
-# BUN_INSTALL=/usr/local drops `bun add -g` binaries into /usr/local/bin
-# (world-readable, on PATH). gh is fetched from the release tarball.
+# --- gh CLI (editor sub-agent) ---
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
-# renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.175
-ENV BUN_INSTALL=/usr/local
 RUN set -e; \
     apt-get update -qq; \
     apt-get install -y -qq --no-install-recommends ca-certificates curl git; \
@@ -74,8 +74,6 @@ RUN set -e; \
     curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_${gharch}.tar.gz" \
       | tar xz -C /usr/local/bin --strip-components=2 "gh_${GH_CLI_VERSION}_linux_${gharch}/bin/gh"; \
     rm -rf /var/lib/apt/lists/*
-RUN bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && claude --version
-
 # --- Music runtime: Node + Python for youtube-dl-exec / yt-dlp ---
 RUN set -e; \
     apt-get update -qq; \
@@ -114,7 +112,9 @@ RUN set -e; \
 COPY --parents \
   tsconfig.base.json \
   packages/birmel \
+  packages/llm-models \
   packages/llm-observability \
+  packages/llm-runtime \
   ./
 # Bake Prisma's migration engines into the production dependency tree. Bun's
 # production install omits lifecycle scripts, so the CLI otherwise downloads
@@ -124,6 +124,7 @@ COPY --parents \
 RUN cd packages/birmel && bunx --trust prisma generate
 COPY --from=build /app/packages/birmel/generated packages/birmel/generated
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
+COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown

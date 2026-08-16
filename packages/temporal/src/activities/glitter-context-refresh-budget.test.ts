@@ -1,12 +1,80 @@
 import { describe, expect, test } from "bun:test";
+import { MAX_SEMANTIC_ATTEMPTS } from "@shepherdjerred/llm-runtime";
 import { ApplicationFailure } from "@temporalio/common";
 import {
   estimatedCallCostUsd,
   GenerationBudget,
   inputTokenUpperBound,
+  worstCaseGenerationCostUsd,
 } from "./glitter-context-refresh-budget.ts";
 
 describe("Glitter generation budget", () => {
+  test("reserves every semantic attempt a single generation may bill", () => {
+    const singleAttempt = estimatedCallCostUsd({
+      model: "gpt-5.6-luna",
+      inputTokenUpperBound: 10_000,
+      outputTokenUpperBound: 2000,
+    });
+    const worstCase = worstCaseGenerationCostUsd({
+      model: "gpt-5.6-luna",
+      inputTokenUpperBound: 10_000,
+      outputTokenUpperBound: 2000,
+    });
+
+    expect(MAX_SEMANTIC_ATTEMPTS).toBeGreaterThan(1);
+    // Each retry also carries the corrective preamble, so the reservation is
+    // strictly more than the naive per-attempt multiple.
+    expect(worstCase).toBeGreaterThan(singleAttempt * MAX_SEMANTIC_ATTEMPTS);
+  });
+
+  test("prices semantic retries at the raised truncation ceiling", () => {
+    const flat = worstCaseGenerationCostUsd({
+      model: "gpt-5.6-sol",
+      inputTokenUpperBound: 50_000,
+      outputTokenUpperBound: 28_000,
+    });
+    const raised = worstCaseGenerationCostUsd({
+      model: "gpt-5.6-sol",
+      inputTokenUpperBound: 50_000,
+      outputTokenUpperBound: 28_000,
+      semanticRetryOutputTokenUpperBound: 40_000,
+    });
+
+    expect(raised).toBeGreaterThan(flat);
+  });
+
+  test("a run that exhausts its semantic retries stays inside the reservation", () => {
+    const reserved = worstCaseGenerationCostUsd({
+      model: "gpt-5.6-luna",
+      inputTokenUpperBound: 10_000,
+      outputTokenUpperBound: 2000,
+    });
+    const budget = new GenerationBudget(reserved);
+    budget.authorizeUncachedCall(reserved);
+
+    // The billed cost of all three attempts is what `record` later observes.
+    const billedPerAttempt = reserved / MAX_SEMANTIC_ATTEMPTS;
+    for (let attempt = 0; attempt < MAX_SEMANTIC_ATTEMPTS; attempt += 1) {
+      budget.record({
+        response: { value: "attempt" },
+        key: `artifact-${String(attempt)}`,
+        requestSha256: String(attempt).repeat(64),
+        cacheStatus: "miss",
+        billedToCurrentRun: true,
+        usage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          cachedInputTokens: 0,
+          costUsd: billedPerAttempt,
+        },
+      });
+    }
+
+    expect(budget.summary().actualUncachedCostUsd).toBeLessThanOrEqual(
+      reserved,
+    );
+  });
+
   test("uses a byte-based input upper bound and rejects unaffordable misses", () => {
     const callCost = estimatedCallCostUsd({
       model: "gpt-5.6-luna",

@@ -77,14 +77,14 @@ async function validateEditPreflight(
   if (!claudeCheck.installed) {
     return {
       success: false,
-      message: "Claude Code CLI is not installed. Run `claude install` first.",
+      message: "Claude Agent SDK is unavailable.",
     };
   }
   if (!claudeCheck.hasApiKey) {
     return {
       success: false,
       message:
-        "ANTHROPIC_API_KEY is not set. Set the environment variable or run `claude login`.",
+        "CLAUDE_CODE_OAUTH_TOKEN is not set. Configure it for production or run `claude login` locally.",
     };
   }
   if (reqCtx == null) {

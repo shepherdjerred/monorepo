@@ -37,6 +37,10 @@ const UpstreamSchema = z.looseObject({
   commit: z.string().regex(/^[0-9a-f]{40}$/),
 });
 
+const PackageVersionSchema = z.object({
+  version: z.string().min(1),
+});
+
 function usage(): string {
   return `Run a real-model Pokemon catch benchmark and preserve all evidence.
 
@@ -57,14 +61,13 @@ Options:
   --control-host <host>         Control server host (default: 127.0.0.1)
   --control-port <port>         First run's port (default: 18082)
   --port-stride <n>             Added to the port for each run (default: 1)
-  --codex-binary <path>         Codex executable (default: codex)
   --implementation-root <path>  Repo or discord-plays-pokemon package root
                                 (default: this script's package root)
   --boot-timeout-seconds <n>    Boot/Continue deadline (default: 60)
   -h, --help                    Show this help
 
 The harness provides only mechanical boot/Continue handling. The model chooses
-all gameplay actions. Each run writes result.json, raw Codex JSONL, logs,
+all gameplay actions. Each run writes result.json, versioned Codex JSONL, logs,
 screenshots, and independent save evidence. summary.json is written last.
 The selected implementation must have a clean Git worktree. The supplied WASM
 is identified by its SHA-256; the target's configured upstream pin is recorded
@@ -104,6 +107,7 @@ async function resolveImplementationRoot(
     "src/goal/goal-manager.ts",
     "src/goal/control-server.ts",
     "src/goal/pokemonctl.ts",
+    "node_modules/@openai/codex-sdk/package.json",
     "node_modules/zod/package.json",
   ];
   for (const relativePath of required) {
@@ -142,6 +146,17 @@ async function main(): Promise<void> {
   const implementation = await resolveImplementationRoot(
     args.implementationRoot,
   );
+  const codexSdkPackage = PackageVersionSchema.parse(
+    await Bun.file(
+      path.join(
+        implementation.backendRoot,
+        "node_modules/@openai/codex-sdk/package.json",
+      ),
+    ).json(),
+  );
+  // Preserve the v1 artifact key while switching its provenance source from
+  // the removed CLI executable to the native SDK package.
+  const codexVersion = `@openai/codex-sdk@${codexSdkPackage.version}`;
   const runnerGitRoot = await commandOutput(
     ["git", "rev-parse", "--show-toplevel"],
     PACKAGE_ROOT,
@@ -163,7 +178,6 @@ async function main(): Promise<void> {
     workerSourceSha256,
     evaluatorSourceSha256,
     saveOracleSourceSha256,
-    codexVersion,
     bunVersion,
   ] = await Promise.all([
     sha256File(args.wasm),
@@ -172,7 +186,6 @@ async function main(): Promise<void> {
     sha256File(WORKER_SOURCE),
     sha256File(EVALUATOR_SOURCE),
     sha256File(SAVE_ORACLE_SOURCE),
-    commandOutput([args.codexBinary, "--version"], implementation.backendRoot),
     commandOutput(["bun", "--version"], implementation.backendRoot),
   ]);
   const upstream = UpstreamSchema.parse(

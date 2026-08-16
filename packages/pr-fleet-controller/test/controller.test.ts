@@ -1113,7 +1113,9 @@ test("does not schedule a worker when persisting its start fails", async () => {
   expect(store.activeWorkers.has(1)).toBe(false);
   expect(store.prs.get(1)?.runtimeAgent).toBeNull();
   expect(store.pausedReasons.has(1)).toBe(false);
-  await controller.stop(Promise.resolve());
+  await expect(controller.stop(Promise.resolve())).rejects.toThrow(
+    "state volume is full",
+  );
 });
 
 test("worktree capture failures stop the controller instead of pausing the PR", async () => {

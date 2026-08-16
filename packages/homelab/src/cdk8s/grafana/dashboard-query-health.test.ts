@@ -100,5 +100,9 @@ describe("dashboard query health", () => {
     expect(dashboardJson).toContain(
       String.raw`ai_provider_errors_total{app=~\"$app\",provider=~\"$provider\",kind=~\"$kind\",source=~\"$source\"}[24h])) or on() vector(0)`,
     );
+    expect(dashboardJson).toContain("llm_request_duration_seconds_bucket");
+    expect(dashboardJson).toContain("llm_router_attempts_total");
+    expect(dashboardJson).toContain("llm_structured_output_attempts_total");
+    expect(dashboardJson).toContain("openrouter_broadcast_requests_total");
   });
 });

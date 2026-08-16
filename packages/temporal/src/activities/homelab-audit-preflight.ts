@@ -33,7 +33,6 @@ type RequiredEnvGroup = {
 };
 
 const REQUIRED_AUDIT_BINARIES = [
-  "claude",
   "kubectl",
   "talosctl",
   "argocd",

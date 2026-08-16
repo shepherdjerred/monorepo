@@ -1,11 +1,10 @@
-import OpenAI from "openai";
 import { Context } from "@temporalio/activity";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
-import { traceOpenAi } from "@shepherdjerred/llm-observability";
 import type { DependencyChange } from "./deps-summary.ts";
 import { ociManifestAttempt } from "./deps-summary-oci.ts";
-import { dependencyNoteText, firstWords } from "./deps-summary-text.ts";
+import { dependencyNoteText } from "./deps-summary-text.ts";
+import { generateBoundedSynthesis } from "./openrouter-runtime.ts";
 
 const REPO_SLUG = "shepherdjerred/monorepo";
 
@@ -375,36 +374,16 @@ export async function synthesizeDependencyChanges(
   changes: DependencyChange[],
   notes: ReleaseNote[],
 ): Promise<string | undefined> {
-  const apiKey = Bun.env["OPENAI_API_KEY"];
-  if (apiKey === undefined || apiKey === "" || notes.length === 0) {
+  if (notes.length === 0) {
     return undefined;
   }
-  const params = {
-    model: "gpt-5.6-sol",
-    messages: [
-      {
-        role: "user" as const,
-        content: [
-          "Write at most 80 words summarizing only the supplied dependency evidence. No headings, boilerplate, or speculation.",
-          JSON.stringify({ changes, notes }),
-        ].join("\n"),
-      },
-    ],
-    max_completion_tokens: 300,
-  };
-  try {
-    const completion = await traceOpenAi(
-      { service: "temporal", callSite: "deps-summary", request: params },
-      async () => new OpenAI({ apiKey }).chat.completions.create(params),
-    );
-    const content = completion.choices[0]?.message.content?.trim();
-    return content === undefined || content === ""
-      ? undefined
-      : firstWords(content, 80);
-  } catch (error) {
-    console.warn(
-      `Dependency synthesis unavailable: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return undefined;
-  }
+  return await generateBoundedSynthesis({
+    callSite: "deps-summary",
+    workload: "deps-summary-synthesis",
+    maxWords: 80,
+    prompt: [
+      "Write at most 80 words summarizing only the supplied dependency evidence. No headings, boilerplate, or speculation.",
+      JSON.stringify({ changes, notes }),
+    ].join("\n"),
+  });
 }

@@ -30,6 +30,7 @@ import { createBuildkitdChart } from "./cdk8s-charts/buildkitd.ts";
 import { createTrackerTrackerChart } from "./cdk8s-charts/tracker-tracker.ts";
 import { createAlertDashboardChart } from "./cdk8s-charts/alert-dashboard.ts";
 import { createStashChart } from "./cdk8s-charts/stash.ts";
+import { createOpenRouterBroadcastIngestChart } from "./cdk8s-charts/openrouter-broadcast-ingest.ts";
 import { createServiceProbesChart } from "./resources/monitoring/service-probes-chart.ts";
 import { resetProbeRegistry } from "./misc/probe-registry.ts";
 import { applyApplicationReleasePolicy } from "./application-release-policy.ts";
@@ -84,6 +85,7 @@ export async function setupCharts(app: App): Promise<void> {
   createBuildkitdChart(app);
   createTrackerTrackerChart(app);
   createStashChart(app);
+  createOpenRouterBroadcastIngestChart(app);
 
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.

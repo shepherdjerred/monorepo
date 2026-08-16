@@ -51,7 +51,7 @@ export const prWebhookSignatureFailuresTotal = new Counter({
 
 export const homelabAuditSubprocessDurationSeconds = new Histogram({
   name: "homelab_audit_subprocess_duration_seconds",
-  help: "Wall-clock duration of `claude -p` subprocess invocations for the homelab daily audit",
+  help: "Wall-clock duration of native Claude Agent SDK runs for the homelab daily audit; the metric name is retained for time-series continuity",
   labelNames: ["model", "exit_code"] as const,
   buckets: [60, 300, 600, 900, 1500, 1800, 2100, 2700],
   registers: [register],
@@ -59,14 +59,14 @@ export const homelabAuditSubprocessDurationSeconds = new Histogram({
 
 export const homelabAuditSubprocessExitTotal = new Counter({
   name: "homelab_audit_subprocess_exit_total",
-  help: "Homelab-audit claude subprocess exits, by exit code",
+  help: "Homelab-audit Claude Agent SDK outcomes; the metric name and exit_code label are retained for time-series continuity",
   labelNames: ["exit_code"] as const,
   registers: [register],
 });
 
 export const homelabAuditTokensTotal = new Counter({
   name: "homelab_audit_tokens_total",
-  help: "Tokens consumed by the homelab-audit claude subprocess, by model and direction",
+  help: "Tokens consumed by the homelab-audit Claude Agent SDK run, by model and direction",
   labelNames: ["model", "direction"] as const,
   registers: [register],
 });
@@ -126,18 +126,35 @@ export const agentTaskRunsTotal = new Counter({
   registers: [register],
 });
 
-export const agentTaskSubprocessDurationSeconds = new Histogram({
+// Keep the pre-cutover subprocess collectors registered so existing Prometheus
+// series and dashboards remain queryable. New runs use the SDK collectors.
+new Histogram({
   name: "agent_task_subprocess_duration_seconds",
-  help: "Wall-clock duration of Claude/Codex subprocess invocations for generic agent tasks",
+  help: "Historical wall-clock duration of pre-cutover Claude/Codex subprocess invocations for generic agent tasks",
   labelNames: ["provider", "model", "exit_code"] as const,
   buckets: [30, 60, 180, 300, 600, 900, 1500, 1800, 2700, 3600],
   registers: [register],
 });
 
-export const agentTaskSubprocessExitTotal = new Counter({
+new Counter({
   name: "agent_task_subprocess_exit_total",
-  help: "Generic agent-task subprocess exits, by provider and exit code",
+  help: "Historical pre-cutover generic agent-task subprocess exits, by provider and exit code",
   labelNames: ["provider", "exit_code"] as const,
+  registers: [register],
+});
+
+export const agentTaskSdkDurationSeconds = new Histogram({
+  name: "agent_task_sdk_duration_seconds",
+  help: "Wall-clock duration of native Claude Agent SDK and Codex SDK runs",
+  labelNames: ["provider", "model", "outcome"] as const,
+  buckets: [30, 60, 180, 300, 600, 900, 1500, 1800, 2700, 3600],
+  registers: [register],
+});
+
+export const agentTaskSdkRunsTotal = new Counter({
+  name: "agent_task_sdk_runs_total",
+  help: "Native agent SDK runs by provider and bounded outcome",
+  labelNames: ["provider", "model", "outcome"] as const,
   registers: [register],
 });
 
@@ -156,38 +173,28 @@ export const agentTaskEmailSentTotal = new Counter({
 });
 
 // ---------------------------------------------------------------------------
-// Agent subprocess wall-clock observability (shared across every agent
-// subprocess activity, e.g. agent-task / homelab-audit / scout-season-refresh).
-// The
-// point of these two metrics is to make a hang distinguishable from a
-// long-but-progressing run on the dashboard:
+// Agent progress observability. Metric names are retained across the native
+// SDK cutover so old and new samples remain queryable on one timeline.
 //
 //   * `agent_subprocess_idle_seconds` is the longest stretch within a single
-//     subprocess run where no stderr was seen. A subprocess that's working
-//     emits stderr periodically; a wedged tool call (slow WebFetch / hung
-//     kubectl pipe / API retry loop) is silent. Modeled as a Histogram (not
-//     a Gauge) because multiple agent subprocesses can run in parallel — a
-//     Gauge would last-writer-wins and silently drop the other observations.
-//     The Histogram accumulates every run's max-idle so the dashboard p95
-//     reflects the worst real hang across all concurrent runs.
+//     run without an SDK progress event. Modeled as a Histogram because
+//     multiple agents can run in parallel.
 //
-//   * `agent_subprocess_soft_kills_total` ticks when the activity itself
-//     sends SIGINT before Temporal's startToCloseTimeout SIGTERM lands. The
-//     soft-kill path captures last-stderr state for diagnosis; the counter
-//     makes that path alertable.
+//   * `agent_subprocess_soft_kills_total` is retained for historical CLI runs.
+//     Native SDK cancellation is represented by SDK/common LLM outcomes.
 // ---------------------------------------------------------------------------
 
 export const agentSubprocessIdleSeconds = new Histogram({
   name: "agent_subprocess_idle_seconds",
-  help: "Longest stretch (in seconds) of subprocess silence (no stderr) observed during a single agent subprocess run, by workflow_type. One observation per run; histogram-shaped so concurrent runs don't clobber each other.",
+  help: "Longest stretch in seconds without an agent SDK progress event, by workflow_type; the metric name is retained for time-series continuity",
   labelNames: ["workflow_type"] as const,
   buckets: [5, 15, 30, 60, 120, 300, 600, 1200, 1800],
   registers: [register],
 });
 
-export const agentSubprocessSoftKillsTotal = new Counter({
+new Counter({
   name: "agent_subprocess_soft_kills_total",
-  help: "Pre-emptive SIGINT kills sent to the agent subprocess by the activity (T-90s before Temporal startToCloseTimeout would SIGTERM), by workflow_type and reason",
+  help: "Historical pre-cutover SIGINT soft-kills of agent subprocesses, by workflow_type and reason",
   labelNames: ["workflow_type", "reason"] as const,
   registers: [register],
 });
@@ -195,7 +202,7 @@ export const agentSubprocessSoftKillsTotal = new Counter({
 // ---------------------------------------------------------------------------
 // scout-season-refresh workflow metrics
 //
-// Weekly LoL season-date drift check. claude -p researches the current season
+// Weekly LoL season-date drift check. Claude Agent SDK researches the current season
 // schedule and edits packages/scout-for-lol/.../seasons.ts when Riot has
 // announced new acts or moved dates. Activity opens a PR (human review, no
 // auto-merge) when there's drift; no-op when seasons.ts is already accurate.
@@ -218,14 +225,14 @@ export const scoutSeasonRefreshDurationSeconds = new Histogram({
 
 export const scoutSeasonRefreshSubprocessExitTotal = new Counter({
   name: "scout_season_refresh_subprocess_exit_total",
-  help: "scout-season-refresh claude subprocess exits, by exit code",
+  help: "scout-season-refresh Claude Agent SDK outcomes; the metric name and exit_code label are retained for time-series continuity",
   labelNames: ["exit_code"] as const,
   registers: [register],
 });
 
 export const scoutSeasonRefreshTokensTotal = new Counter({
   name: "scout_season_refresh_tokens_total",
-  help: "Tokens consumed by the scout-season-refresh claude subprocess, by model and direction",
+  help: "Tokens consumed by the scout-season-refresh Claude Agent SDK run, by model and direction",
   labelNames: ["model", "direction"] as const,
   registers: [register],
 });

@@ -18,6 +18,27 @@ function stageTrace(stage: string): StageTrace {
   };
 }
 
+function openRouterTrace(stage: string): StageTrace {
+  return {
+    ...stageTrace(stage),
+    transport: "openrouter",
+    openRouter: {
+      generationId: "generation-1",
+      requestedModel: "gpt-test",
+      resolvedModel: "openai/gpt-test",
+      upstreamProvider: "OpenAI",
+      fallbackAttempts: 1,
+      attempts: [
+        { provider: "Azure", model: "openai/gpt-test", status: 429 },
+        { provider: "OpenAI", model: "openai/gpt-test", status: 200 },
+      ],
+      actualCostUsd: 0.004,
+      upstreamCostUsd: 0.003,
+      routerMetadataPresent: true,
+    },
+  };
+}
+
 function multiChunkTraces(): PipelineTraces {
   return {
     matchSummary: stageTrace("match-summary"),
@@ -89,6 +110,7 @@ describe("freezeRenderedPrompts", () => {
 describe("buildMaterializedGeneration", () => {
   test("carries the initial materialization prompts into the generation", () => {
     const traces = multiChunkTraces();
+    traces.reviewText = openRouterTrace("review-text");
     const renderedPrompts = freezeRenderedPrompts(traces);
 
     expect(
@@ -102,6 +124,8 @@ describe("buildMaterializedGeneration", () => {
       promptRevision:
         "ea74739b82bee79254c160ca4b2df5a1c3322a417ea3da1d8e7c0b4dfbfd0d20",
       renderedPrompts,
+      transport: "openrouter",
+      openRouterMetadata: traces.reviewText.openRouter,
     });
   });
 });

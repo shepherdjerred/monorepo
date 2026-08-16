@@ -1,6 +1,6 @@
 import { lstat, realpath } from "node:fs/promises";
 import path from "node:path";
-import { createTool } from "@mastra/core/tools";
+import { tool as defineTool } from "ai";
 import { z } from "zod";
 import {
   invalidateInheritedWipInspection,
@@ -223,8 +223,7 @@ async function prepareFileMutation(deps: FileEditToolDeps): Promise<void> {
 export function createFileEditTools(deps: FileEditToolDeps) {
   const { worktree, record, environment, signal } = deps;
   return {
-    str_replace: createTool({
-      id: "str_replace",
+    str_replace: defineTool({
       description:
         "Replace an exact substring in a file beneath the assigned worktree. `old_string` must match the file verbatim (including whitespace and indentation) and be unique unless `replace_all` is set. This is the preferred way to edit an existing file — reach for it before apply_patch, which needs a correctly formatted unified diff.",
       inputSchema: z.object({
@@ -243,8 +242,7 @@ export function createFileEditTools(deps: FileEditToolDeps) {
           return applyStrReplace(worktree, input);
         }),
     }),
-    write_file: createTool({
-      id: "write_file",
+    write_file: defineTool({
       description:
         "Create or overwrite a UTF-8 file beneath the assigned worktree with the given full contents. Use for new files or a full rewrite; prefer str_replace for a targeted edit to an existing file.",
       inputSchema: z.object({
@@ -258,8 +256,7 @@ export function createFileEditTools(deps: FileEditToolDeps) {
           return writeWorktreeFile(worktree, input);
         }),
     }),
-    format_paths: createTool({
-      id: "format_paths",
+    format_paths: defineTool({
       description:
         "Run Prettier in write mode on explicit files beneath the assigned worktree. Use this when a staged-files formatting hook reports an exact path; directories and broad pathspecs are rejected.",
       inputSchema: z.object({

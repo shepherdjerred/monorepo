@@ -1,5 +1,5 @@
 import { createHash, createHmac } from "node:crypto";
-import { gzipSync } from "node:zlib";
+import { gunzipSync, gzipSync } from "node:zlib";
 
 export type ArchiveConfig = {
   bucket: string;
@@ -42,6 +42,14 @@ export function buildArchiveKey(
 }
 
 /**
+ * Bound on every archive S3 request. Uploads are multi-megabyte gzipped
+ * bodies to an in-cluster SeaweedFS endpoint, so 30s is generous headroom
+ * while still guaranteeing span export and Broadcast ingestion cannot hang
+ * on a stalled connection.
+ */
+const S3_REQUEST_TIMEOUT_MS = 30_000;
+
+/**
  * Gzip the JSON payload and PUT it to S3. Returns a ref describing the upload.
  *
  * Never throws: a failed upload is reported via `status: "failed"` + `error`
@@ -82,6 +90,46 @@ export async function uploadArchive(
   }
 }
 
+/**
+ * Check whether an archive object already exists without downloading it.
+ *
+ * Unlike {@link uploadArchive}, this is an integrity/control-plane operation:
+ * authentication and storage failures throw so callers cannot mistake an
+ * unavailable archive for a missing object.
+ */
+export async function archiveObjectExists(
+  config: ArchiveConfig,
+  key: string,
+): Promise<boolean> {
+  const response = await signedS3Request(config, key, "HEAD");
+  if (response.ok) return true;
+  if (response.status === 404) return false;
+  throw new Error(
+    `S3 archive existence check failed (${String(response.status)}): ${response.statusText}`,
+  );
+}
+
+/**
+ * Download and decompress an archived object.
+ *
+ * Like {@link archiveObjectExists} this is a control-plane read, so a missing
+ * object returns undefined while authentication and storage failures throw —
+ * a caller must never mistake an unavailable archive for an absent one.
+ */
+export async function readArchiveObject(
+  config: ArchiveConfig,
+  key: string,
+): Promise<string | undefined> {
+  const response = await signedS3Request(config, key, "GET");
+  if (response.status === 404) return undefined;
+  if (!response.ok) {
+    throw new Error(
+      `S3 archive read failed (${String(response.status)}): ${response.statusText}`,
+    );
+  }
+  return gunzipSync(Buffer.from(await response.arrayBuffer())).toString("utf8");
+}
+
 function sha256Hex(value: string | Uint8Array): string {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -118,8 +166,24 @@ async function putS3Object(
   key: string,
   body: Buffer,
 ): Promise<void> {
+  const response = await signedS3Request(config, key, "PUT", body);
+
+  if (!response.ok) {
+    const responseBody = await response.text();
+    throw new Error(
+      `S3 upload failed (${String(response.status)}): ${responseBody}`,
+    );
+  }
+}
+
+async function signedS3Request(
+  config: ArchiveConfig,
+  key: string,
+  method: "GET" | "HEAD" | "PUT",
+  body?: Buffer,
+): Promise<Response> {
   const url = buildS3Url(config, key);
-  const payloadHash = sha256Hex(body);
+  const payloadHash = sha256Hex(body ?? "");
   const amzDate = formatAmzDate(new Date());
   const dateStamp = amzDate.slice(0, 8);
 
@@ -141,7 +205,7 @@ async function putS3Object(
     .join("");
   const signedHeaders = sortedHeaderEntries.map(([k]) => k).join(";");
   const canonicalRequest = [
-    "PUT",
+    method,
     url.pathname,
     url.searchParams.toString(),
     canonicalHeaders,
@@ -178,19 +242,19 @@ async function putS3Object(
   ].join(", ");
 
   const response = await fetch(url, {
-    method: "PUT",
+    method,
     headers: {
       ...headers,
       Authorization: authorization,
-      "Content-Type": "application/gzip",
+      ...(body === undefined ? {} : { "Content-Type": "application/gzip" }),
     },
-    body: new Uint8Array(body),
+    ...(body === undefined ? {} : { body: new Uint8Array(body) }),
+    // A hung S3 endpoint must not stall span export or Broadcast ingestion
+    // indefinitely: the span processor awaits uploads before forwarding, and
+    // ingest awaits receipt reads in its request handler. Upload callers treat
+    // the abort as a failed (best-effort) upload; exists/read callers let it
+    // propagate so "unavailable" is never read as "missing".
+    signal: AbortSignal.timeout(S3_REQUEST_TIMEOUT_MS),
   });
-
-  if (!response.ok) {
-    const responseBody = await response.text();
-    throw new Error(
-      `S3 upload failed (${String(response.status)}): ${responseBody}`,
-    );
-  }
+  return response;
 }

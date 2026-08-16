@@ -7,7 +7,7 @@ import {
 } from "#src/league/raw-timeline.schema.ts";
 import { runTimelineSummaryWithChunks } from "#src/review/timeline-pipeline.ts";
 import type {
-  OpenAIClient,
+  TextGenerationClient,
   ModelConfig,
   PipelineStageName,
 } from "#src/review/pipeline-types.ts";
@@ -71,7 +71,7 @@ type RecordedCall = {
 };
 
 function buildConcurrencyCheckingClient(): {
-  client: OpenAIClient;
+  client: TextGenerationClient;
   calls: RecordedCall[];
   getMaxConcurrentRequests: () => number;
 } {
@@ -79,29 +79,19 @@ function buildConcurrencyCheckingClient(): {
   let activeRequests = 0;
   let maxConcurrentRequests = 0;
 
-  const client: OpenAIClient = {
-    chat: {
-      completions: {
-        create: async (params) => {
-          activeRequests++;
-          maxConcurrentRequests = Math.max(
-            maxConcurrentRequests,
-            activeRequests,
-          );
-          calls.push({ maxCompletionTokens: params.max_completion_tokens });
-          await Promise.resolve();
-          activeRequests--;
-          return {
-            choices: [
-              {
-                message: { content: `summary-${calls.length.toString()}` },
-                finish_reason: "stop",
-              },
-            ],
-            usage: { prompt_tokens: 10, completion_tokens: 5 },
-          };
-        },
-      },
+  const client: TextGenerationClient = {
+    generate: async (params) => {
+      activeRequests++;
+      maxConcurrentRequests = Math.max(maxConcurrentRequests, activeRequests);
+      calls.push({ maxCompletionTokens: params.maxOutputTokens });
+      await Promise.resolve();
+      activeRequests--;
+      return {
+        text: `summary-${calls.length.toString()}`,
+        finishReason: "stop",
+        inputTokens: 10,
+        outputTokens: 5,
+      };
     },
   };
 

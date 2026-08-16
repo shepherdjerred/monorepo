@@ -6,7 +6,7 @@
  * a real PR (DRY_RUN=0).
  *
  * Usage:
- *   # Pure dry-run against a fresh clone (slow: shallow clone + claude -p):
+ *   # Pure dry-run against a fresh clone (slow: shallow clone + Claude Agent SDK):
  *   op run --env-file=.env.season-refresh -- DRY_RUN=1 bun run scripts/run-scout-season-refresh-local.ts
  *
  *   # Faster iteration: point at an existing checkout (skips clone):
@@ -21,7 +21,7 @@
  *
  * Notes:
  *   - This bypasses Temporal entirely. No worker bundle, no schedule. The
- *     activity body is just Bun.spawn + git/gh commands.
+ *     activity body uses the Claude Agent SDK plus git/gh commands.
  *   - When using --repo=PATH, the harness assumes PATH is a clean checkout
  *     of the monorepo. The activity mutates files there in-place; reset
  *     between runs with `git checkout -- packages/scout-for-lol/.../seasons*`.

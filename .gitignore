@@ -104,6 +104,10 @@ packages/tasks-for-obsidian/ios/build/
 *.sqlite
 *.sqlite3
 
+# Exception: the frozen schema-v1 run-bundle fixture is a committed compatibility
+# guard, and its digests are recorded in the bundle's summary.json
+!packages/pr-fleet-controller/test/fixtures/run-bundle-v1/mastra.db
+
 # Generated TypeDoc docs (webring)
 packages/webring/docs/
 

@@ -51,50 +51,26 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
         <div className="space-y-4">
           <div>
             <label
-              htmlFor="openai-api-key"
+              htmlFor="openrouter-api-key"
               className="block text-sm font-medium text-scout-ink mb-1"
             >
-              OpenAI API Key
+              OpenRouter API Key
             </label>
             <input
-              id="openai-api-key"
+              id="openrouter-api-key"
               type="password"
-              value={config.api.openaiApiKey ?? ""}
+              value={config.api.openRouterApiKey ?? ""}
               onChange={(e) => {
                 onChange({
                   ...config,
                   api: {
                     ...config.api,
-                    openaiApiKey: e.target.value || undefined,
+                    openRouterApiKey: e.target.value || undefined,
                   },
                 });
               }}
               className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand placeholder:text-scout-subtle"
-              placeholder="sk-..."
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="gemini-api-key"
-              className="block text-sm font-medium text-scout-ink mb-1"
-            >
-              Gemini API Key
-            </label>
-            <input
-              id="gemini-api-key"
-              type="password"
-              value={config.api.geminiApiKey ?? ""}
-              onChange={(e) => {
-                onChange({
-                  ...config,
-                  api: {
-                    ...config.api,
-                    geminiApiKey: e.target.value || undefined,
-                  },
-                });
-              }}
-              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand placeholder:text-scout-subtle"
-              placeholder="AI..."
+              placeholder="sk-or-v1-..."
             />
           </div>
         </div>

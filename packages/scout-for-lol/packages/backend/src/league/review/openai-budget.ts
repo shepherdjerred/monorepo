@@ -5,26 +5,26 @@ import {
 } from "#src/metrics/index.ts";
 import { createLogger } from "#src/logger.ts";
 
-const logger = createLogger("openai-budget");
+const logger = createLogger("llm-budget");
 
-// Top-level safety net: track OpenAI tokens consumed and refuse calls that
-// would exceed the configured hourly/daily budget. Catches *any* runaway
-// loop, even from code paths we haven't written yet. Single-replica
-// deployment, so module-level in-memory state is sufficient — a budget
-// reset on restart is acceptable.
+// Top-level safety net: track LLM tokens consumed and refuse calls that would
+// exceed the configured hourly/daily budget. The historical metric symbol and
+// series names remain stable across the OpenRouter cutover. Single-replica
+// deployment makes module-level in-memory state sufficient; a budget reset on
+// restart is acceptable.
 
 export type BudgetWindow = "hourly" | "daily";
 
-export class OpenAIBudgetExceeded extends Error {
+export class LlmBudgetExceeded extends Error {
   readonly window: BudgetWindow;
   readonly used: number;
   readonly budget: number;
 
   constructor(window: BudgetWindow, used: number, budget: number) {
     super(
-      `OpenAI ${window} token budget exceeded: ${used.toString()} / ${budget.toString()}`,
+      `LLM ${window} token budget exceeded: ${used.toString()} / ${budget.toString()}`,
     );
-    this.name = "OpenAIBudgetExceeded";
+    this.name = "LlmBudgetExceeded";
     this.window = window;
     this.used = used;
     this.budget = budget;
@@ -45,7 +45,7 @@ const DAY_MS = 24 * HOUR_MS;
 const hourly: Window = {
   window: "hourly",
   durationMs: HOUR_MS,
-  budget: config.openaiHourlyTokenBudget,
+  budget: config.llmHourlyTokenBudget,
   startedAt: Date.now(),
   tokensUsed: 0,
 };
@@ -53,7 +53,7 @@ const hourly: Window = {
 const daily: Window = {
   window: "daily",
   durationMs: DAY_MS,
-  budget: config.openaiDailyTokenBudget,
+  budget: config.llmDailyTokenBudget,
   startedAt: Date.now(),
   tokensUsed: 0,
 };
@@ -67,8 +67,8 @@ function rollIfElapsed(w: Window): void {
 }
 
 /**
- * Throws `OpenAIBudgetExceeded` if the next call would push us over the
- * hourly or daily budget. Call before every `chat.completions.create`.
+ * Throws `LlmBudgetExceeded` if the next call would push us over the hourly or
+ * daily budget. Call before every model generation.
  */
 export function assertWithinBudget(): void {
   rollIfElapsed(hourly);
@@ -76,16 +76,16 @@ export function assertWithinBudget(): void {
 
   if (hourly.tokensUsed >= hourly.budget) {
     scoutOpenaiBudgetExceededTotal.inc({ window: "hourly" });
-    throw new OpenAIBudgetExceeded("hourly", hourly.tokensUsed, hourly.budget);
+    throw new LlmBudgetExceeded("hourly", hourly.tokensUsed, hourly.budget);
   }
   if (daily.tokensUsed >= daily.budget) {
     scoutOpenaiBudgetExceededTotal.inc({ window: "daily" });
-    throw new OpenAIBudgetExceeded("daily", daily.tokensUsed, daily.budget);
+    throw new LlmBudgetExceeded("daily", daily.tokensUsed, daily.budget);
   }
 }
 
 /**
- * Records token usage from a successful OpenAI response. Increments both the
+ * Records token usage from a successful model response. Increments both the
  * hourly/daily counters and the Prometheus metric (labelled by model+kind).
  */
 export function recordTokenUsage(
@@ -102,8 +102,13 @@ export function recordTokenUsage(
     completionTokens,
   );
   logger.info(
-    `📊 OpenAI usage: +${total.toString()} tokens (${model}); hourly ${hourly.tokensUsed.toString()}/${hourly.budget.toString()}, daily ${daily.tokensUsed.toString()}/${daily.budget.toString()}`,
+    `📊 LLM usage: +${total.toString()} tokens (${model}); hourly ${hourly.tokensUsed.toString()}/${hourly.budget.toString()}, daily ${daily.tokensUsed.toString()}/${daily.budget.toString()}`,
   );
+}
+
+/** For tests: read the tokens charged to each window. */
+export function budgetUsageForTests(): { hourly: number; daily: number } {
+  return { hourly: hourly.tokensUsed, daily: daily.tokensUsed };
 }
 
 /** For tests: reset both windows to zero. */

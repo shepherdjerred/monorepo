@@ -11,7 +11,7 @@
 import type { RawTimeline } from "#src/league/raw-timeline.schema.ts";
 import type { RawMatch } from "#src/league/raw-match.schema.ts";
 import type {
-  OpenAIClient,
+  TextGenerationClient,
   ModelConfig,
   StageTrace,
 } from "./pipeline-types.ts";
@@ -20,7 +20,7 @@ import type { EnrichedTimelineChunk } from "./timeline-chunker.ts";
 import {
   minifyJson,
   replacePromptVariables,
-  callOpenAI,
+  callTextModel,
 } from "./pipeline-utils.ts";
 
 // ============================================================================
@@ -37,7 +37,7 @@ export async function generateTimelineSummary(params: {
   rawTimeline: RawTimeline;
   rawMatch: RawMatch;
   laneContext: string;
-  client: OpenAIClient;
+  client: TextGenerationClient;
   model: ModelConfig;
   systemPrompt: string;
   userPrompt: string;
@@ -61,7 +61,7 @@ export async function generateTimelineSummary(params: {
     TIMELINE_DATA: minifyJson(enrichedData),
   });
 
-  return callOpenAI({
+  return callTextModel({
     client,
     model,
     systemPrompt,
@@ -81,7 +81,7 @@ export async function generateTimelineSummary(params: {
  */
 export async function generateTimelineChunkSummary(params: {
   enrichedChunk: EnrichedTimelineChunk;
-  client: OpenAIClient;
+  client: TextGenerationClient;
   model: ModelConfig;
   systemPrompt: string;
   userPrompt: string;
@@ -115,7 +115,7 @@ export async function generateTimelineChunkSummary(params: {
     CHUNK_DATA: minifyJson(chunkData),
   });
 
-  return callOpenAI({
+  return callTextModel({
     client,
     model,
     systemPrompt,
@@ -136,7 +136,7 @@ export async function generateTimelineChunkSummary(params: {
 export async function aggregateTimelineChunks(params: {
   chunkSummaries: string[];
   gameDurationSeconds: number;
-  client: OpenAIClient;
+  client: TextGenerationClient;
   model: ModelConfig;
   systemPrompt: string;
   userPrompt: string;
@@ -170,7 +170,7 @@ export async function aggregateTimelineChunks(params: {
     CHUNK_SUMMARIES: formattedSummaries,
   });
 
-  return callOpenAI({
+  return callTextModel({
     client,
     model,
     systemPrompt,

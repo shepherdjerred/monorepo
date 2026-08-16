@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
   coerceWorkerResult,
-  MastraMaster,
+  FleetMaster,
 } from "@shepherdjerred/pr-fleet-controller/src/agents.ts";
+import { resolveFleetModel } from "@shepherdjerred/pr-fleet-controller/src/model-resolution.ts";
 import type { WorkerResult } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
 import type { MasterControllerTools } from "@shepherdjerred/pr-fleet-controller/src/master-tools.ts";
 import type {
@@ -25,6 +26,8 @@ const snapshot: FleetSnapshot = {
   paused: 0,
   prs: [],
 };
+
+const fleetModel = resolveFleetModel("gpt-5.6-sol", "test-openrouter-key");
 
 const noop = (): void => {
   // test stub — intentionally does nothing
@@ -87,7 +90,7 @@ class RecordingTelemetry implements FleetTelemetry {
 
 // A master whose streamed turn hangs until its abort signal fires, standing in
 // for a long remote model turn without a live model.
-class HangingMaster extends MastraMaster {
+class HangingMaster extends FleetMaster {
   capturedSignal: AbortSignal | null = null;
   turns = 0;
 
@@ -118,7 +121,7 @@ class HangingMaster extends MastraMaster {
   }
 }
 
-class PartialOutputMaster extends MastraMaster {
+class PartialOutputMaster extends FleetMaster {
   protected override streamTurn(
     _prompt: string,
     signal: AbortSignal,
@@ -139,7 +142,7 @@ class PartialOutputMaster extends MastraMaster {
   }
 }
 
-class CompletedMaster extends MastraMaster {
+class CompletedMaster extends FleetMaster {
   protected override streamTurn(): Promise<{
     textStream: AsyncIterable<string>;
   }> {
@@ -226,7 +229,7 @@ describe("coerceWorkerResult", () => {
 describe("master shutdown", () => {
   test("aborts and awaits the in-flight master turn before resolving", async () => {
     const observer = new RecordingObserver();
-    const master = new HangingMaster("openai/gpt-5", controller, observer, {
+    const master = new HangingMaster(fleetModel, controller, observer, {
       onFatalError: noop,
       requestShutdown: noop,
     });
@@ -245,7 +248,7 @@ describe("master shutdown", () => {
 
   test("drops steering queued after shutdown instead of starting a new turn", async () => {
     const observer = new RecordingObserver();
-    const master = new HangingMaster("openai/gpt-5", controller, observer, {
+    const master = new HangingMaster(fleetModel, controller, observer, {
       onFatalError: noop,
       requestShutdown: noop,
     });
@@ -259,12 +262,11 @@ describe("master shutdown", () => {
   test("records partial output that was visible before an abort", async () => {
     const observer = new RecordingObserver();
     const telemetry = new RecordingTelemetry();
-    const master = new PartialOutputMaster(
-      "openai/gpt-5",
-      controller,
-      observer,
-      { onFatalError: noop, requestShutdown: noop, telemetry },
-    );
+    const master = new PartialOutputMaster(fleetModel, controller, observer, {
+      onFatalError: noop,
+      requestShutdown: noop,
+      telemetry,
+    });
 
     master.send("status?");
     await flush();
@@ -289,7 +291,7 @@ describe("master shutdown", () => {
       const observer = new RecordingObserver();
       const telemetry = new KindFailingTelemetry(failedKind);
       const fatal = Promise.withResolvers<Error>();
-      const master = new CompletedMaster("openai/gpt-5", controller, observer, {
+      const master = new CompletedMaster(fleetModel, controller, observer, {
         onFatalError: fatal.resolve,
         requestShutdown: noop,
         telemetry,
