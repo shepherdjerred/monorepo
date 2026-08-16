@@ -11,7 +11,7 @@ struct MenuBarView: View {
     TimelineView(.periodic(from: .now, by: 1)) { timeline in
       content(at: timeline.date)
     }
-    .frame(width: 380)
+    .frame(width: 372)
   }
 
   private func content(at date: Date) -> some View {
@@ -19,10 +19,9 @@ struct MenuBarView: View {
     return VStack(spacing: 0) {
       header(overview: overview, date: date)
       navigationSegments
-      QuotaSummaryView(summary: overview.summary, date: date)
+      WindowColumnHeader()
         .padding(.horizontal, 12)
-        .padding(.top, 2)
-        .padding(.bottom, 8)
+        .padding(.vertical, 5)
       Divider()
       providerList(overview: overview, date: date)
       Divider()
@@ -129,7 +128,7 @@ struct MenuBarView: View {
 
   private var spendRow: some View {
     HStack {
-      Label("Subscriptions", systemImage: "creditcard")
+      Text("Subscriptions")
       Spacer()
       Text("$\(SubscriptionPlan.totalMonthlyCostUSD)/mo")
         .monospacedDigit()

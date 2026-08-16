@@ -7,10 +7,8 @@ struct BrimMenuBarLabel: View {
 
   var body: some View {
     Image(nsImage: BrimAssets.menuBarImage(for: status))
-      .resizable()
       .renderingMode(.template)
-      .aspectRatio(contentMode: .fit)
-      .frame(width: 18, height: 18)
+      .frame(width: 16, height: 16)
       .accessibilityLabel("Brim, \(status.accessibilityDescription)")
   }
 }
@@ -34,6 +32,7 @@ private enum BrimAssets {
   @MainActor
   static func menuBarImage(for status: QuotaStatus) -> NSImage {
     let image = loadImage(named: status.menuBarAssetName)
+    image.size = NSSize(width: 16, height: 16)
     image.isTemplate = true
     return image
   }

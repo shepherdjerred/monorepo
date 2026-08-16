@@ -2,6 +2,81 @@ import AppKit
 import QuotaBarCore
 import SwiftUI
 
+struct WindowColumnHeader: View {
+  var body: some View {
+    HStack(spacing: 7) {
+      Text("WINDOW")
+        .frame(width: 96, alignment: .leading)
+      Color.clear
+        .frame(width: 82)
+      Text("LEFT")
+        .frame(width: 40, alignment: .trailing)
+      Text("RESETS")
+        .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+    .font(.caption2.monospaced().weight(.semibold))
+    .foregroundStyle(.secondary)
+    .accessibilityHidden(true)
+  }
+}
+
+struct ProviderBadgeView: View {
+  let badge: ProviderBadge
+
+  var body: some View {
+    Text(title)
+      .font(.caption2.monospaced().weight(.semibold))
+      .foregroundStyle(color)
+      .padding(.horizontal, 4)
+      .padding(.vertical, 2)
+      .background(color.opacity(0.14), in: Capsule())
+      .help(helpText)
+      .accessibilityLabel(title)
+      .accessibilityHint(helpText)
+  }
+
+  private var title: String {
+    switch badge.kind {
+    case .stale: return ageTitle(prefix: "STALE")
+    case .partial: return ageTitle(prefix: "PARTIAL")
+    case .noResets: return "NO RESETS"
+    case .resets:
+      let count = badge.expirations.count
+      return "\(count) RESET\(count == 1 ? "" : "S")"
+    case .resetsUnavailable: return "RESETS UNAVAILABLE"
+    }
+  }
+
+  private var helpText: String {
+    switch badge.kind {
+    case .stale, .partial:
+      return [badge.detail, badge.age.map { "Age \($0)" }]
+        .compactMap { $0 }
+        .joined(separator: " · ")
+    case .noResets, .resetsUnavailable:
+      return badge.detail ?? title
+    case .resets:
+      return badge.expirations
+        .map { "Expires \($0.formatted(date: .abbreviated, time: .shortened))" }
+        .joined(separator: "\n")
+    }
+  }
+
+  private var color: Color {
+    switch badge.kind {
+    case .stale, .resetsUnavailable: return .secondary
+    case .partial: return .orange
+    case .noResets: return .secondary
+    case .resets: return .blue
+    }
+  }
+
+  private func ageTitle(prefix: String) -> String {
+    guard let age = badge.age else { return prefix }
+    return "\(prefix) \(age)"
+  }
+}
+
 struct ProviderSectionView: View {
   let overview: ProviderOverview
   let date: Date
@@ -11,7 +86,8 @@ struct ProviderSectionView: View {
       header
       content
     }
-    .padding(.vertical, 9)
+    .padding(.vertical, 8)
+    .opacity(overview.dimsContent ? 0.58 : 1)
     .accessibilityElement(children: .contain)
   }
 
@@ -20,6 +96,9 @@ struct ProviderSectionView: View {
       ProviderLogo(provider: overview.provider)
       Text(overview.provider.displayName)
         .font(.subheadline.weight(.semibold))
+      ForEach(overview.badges) { badge in
+        ProviderBadgeView(badge: badge)
+      }
       Spacer()
       Text("$\(SubscriptionPlan.plan(for: overview.provider).monthlyCostUSD)/mo")
         .font(.caption)
@@ -68,16 +147,7 @@ struct ProviderSectionView: View {
       snapshot.windows.contains { $0.kind == .entitlement }
       ? snapshot.notes.first
       : nil
-    let remainingNotes =
-      entitlementDetail == nil ? snapshot.notes : Array(snapshot.notes.dropFirst())
 
-    if case let .stale(reason) = snapshot.freshness {
-      statusRow(
-        "Stale · \(QuotaTimeFormatter.refreshAge(since: snapshot.sourceTimestamp, at: date))",
-        symbol: "clock.badge.exclamationmark",
-        help: reason
-      )
-    }
     if snapshot.windows.isEmpty {
       statusRow(
         "No quota windows returned",
@@ -93,16 +163,6 @@ struct ProviderSectionView: View {
           entitlementDetail: window.kind == .entitlement ? entitlementDetail : nil
         )
       }
-    }
-    if let resetOverview = overview.resetOverview {
-      CodexResetRow(resetOverview: resetOverview, date: date, stale: isStale)
-    }
-    if overview.provider == .grok, !remainingNotes.isEmpty {
-      statusRow(
-        "Partial data",
-        symbol: "exclamationmark.circle",
-        help: remainingNotes.joined(separator: "\n")
-      )
     }
   }
 
@@ -132,10 +192,10 @@ struct WindowRow: View {
 
   private var quotaRow: some View {
     HStack(spacing: 7) {
-      Text(window.label)
+      Text(window.compactDisplayLabel)
         .lineLimit(1)
         .help(window.label)
-        .frame(width: 91, alignment: .leading)
+        .frame(width: 96, alignment: .leading)
       progress
         .frame(width: 82)
       Text(remainingText)
@@ -149,15 +209,16 @@ struct WindowRow: View {
     .foregroundStyle(stale ? .secondary : .primary)
     .opacity(stale ? 0.65 : 1)
     .accessibilityElement(children: .ignore)
-    .accessibilityLabel(window.label)
+    .accessibilityLabel("\(window.compactDisplayLabel), raw label \(window.label)")
     .accessibilityValue(accessibilityValue)
   }
 
   private var entitlementRow: some View {
     HStack(spacing: 7) {
-      Text(window.label)
+      Text(window.compactDisplayLabel)
         .lineLimit(1)
         .help(window.label)
+        .frame(width: 96, alignment: .leading)
       Spacer(minLength: 8)
       Text(entitlementDetail ?? "Policy only")
         .lineLimit(1)
@@ -167,6 +228,7 @@ struct WindowRow: View {
     .font(.caption)
     .opacity(stale ? 0.65 : 1)
     .accessibilityElement(children: .combine)
+    .accessibilityLabel("\(window.compactDisplayLabel), raw label \(window.label)")
   }
 
   @ViewBuilder private var progress: some View {
@@ -218,135 +280,8 @@ struct WindowRow: View {
     switch QuotaStatus.forRemaining(remaining) {
     case .critical: return .red
     case .warning: return .orange
-    case .healthy, .unavailable: return .secondary
-    }
-  }
-}
-
-struct CodexResetRow: View {
-  let resetOverview: ResetOverview
-  let date: Date
-  let stale: Bool
-
-  var body: some View {
-    Group {
-      switch resetOverview {
-      case .none:
-        Label("No resets available", systemImage: "arrow.counterclockwise.circle")
-      case .available(let resets):
-        HStack(spacing: 7) {
-          Label(
-            "\(resets.count) reset\(resets.count == 1 ? "" : "s")",
-            systemImage: "arrow.counterclockwise.circle.fill"
-          )
-          Spacer()
-          Text(expirationText(resets))
-            .monospacedDigit()
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
-            .help(absoluteExpirations(resets))
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityValue(absoluteExpirations(resets))
-      case .unavailable(let message):
-        Label("Resets unavailable", systemImage: "arrow.counterclockwise.circle")
-          .help(message)
-          .accessibilityHint(message)
-      }
-    }
-    .font(.caption)
-    .foregroundStyle(.secondary)
-    .opacity(stale ? 0.65 : 1)
-  }
-
-  private func expirationText(_ resets: [Reset]) -> String {
-    resets
-      .map { QuotaTimeFormatter.compactCountdown(to: $0.exp, from: date) }
-      .joined(separator: ", ")
-  }
-
-  private func absoluteExpirations(_ resets: [Reset]) -> String {
-    resets
-      .map { "Expires \($0.exp.formatted(date: .abbreviated, time: .shortened))" }
-      .joined(separator: "\n")
-  }
-}
-
-struct QuotaSummaryView: View {
-  let summary: QuotaOverviewSummary
-  let date: Date
-
-  var body: some View {
-    HStack(spacing: 7) {
-      Image(systemName: symbolName)
-        .foregroundStyle(color)
-      Text(text)
-        .lineLimit(2)
-        .fixedSize(horizontal: false, vertical: true)
-    }
-    .font(.caption)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .help(helpText)
-    .accessibilityElement(children: .combine)
-    .accessibilityValue(helpText)
-  }
-
-  private var text: String {
-    switch summary {
-    case let .quota(provider, window):
-      guard let remaining = window.remainingPercent else {
-        preconditionFailure("Summary window requires a remaining percentage")
-      }
-      var value =
-        "\(provider.displayName) \(window.label) is tightest — "
-        + "\(Int(remaining.rounded()))% left"
-      if let resetAt = window.resetAt {
-        value += " · \(QuotaTimeFormatter.compactCountdown(to: resetAt, from: date)) to reset"
-      }
-      return value
-    case .stale(let provider, _):
-      return "\(provider.displayName) usage is stale"
-    case .unavailable(let provider, _):
-      return "\(provider.displayName) usage is unavailable"
-    case .unauthenticated(let provider, _):
-      return "\(provider.displayName) needs sign-in"
-    case .loading(let provider):
-      return "Checking \(provider.displayName) usage…"
-    case .unknown(let provider):
-      return "\(provider.displayName) usage percentage is unknown"
-    case .noProvidersEnabled:
-      return "No subscription providers are enabled"
-    }
-  }
-
-  private var helpText: String {
-    switch summary {
-    case .quota(_, let window):
-      guard let resetAt = window.resetAt else { return "Tightest current subscription quota." }
-      return "Resets \(resetAt.formatted(date: .abbreviated, time: .shortened))"
-    case .stale(_, let reason): return reason
-    case .unavailable(_, let message): return message
-    case .unauthenticated(_, let message): return message
-    case .loading: return "Brim is waiting for the provider response."
-    case .unknown: return "The provider returned no usage percentage."
-    case .noProvidersEnabled: return "Enable a provider in Settings."
-    }
-  }
-
-  private var symbolName: String {
-    switch summary.status {
-    case .critical: "exclamationmark.circle.fill"
-    case .warning: "exclamationmark.triangle.fill"
-    case .healthy: "circle.fill"
-    case .unavailable: "circle.dashed"
-    }
-  }
-
-  private var color: Color {
-    switch summary.status {
-    case .critical: .red
-    case .warning: .orange
-    case .healthy, .unavailable: .secondary
+    case .healthy: return Color(red: 0.23, green: 0.45, blue: 0.62)
+    case .unavailable: return .secondary
     }
   }
 }
@@ -383,25 +318,6 @@ extension ProviderID {
     case .codex: "codex"
     case .kimi: "kimi"
     case .grok: "grok"
-    }
-  }
-}
-
-extension QuotaStatus {
-  var symbolName: String {
-    switch self {
-    case .healthy: "gauge.with.dots.needle.67percent"
-    case .warning: "gauge.with.dots.needle.33percent"
-    case .critical: "gauge.with.dots.needle.0percent"
-    case .unavailable: "gauge.with.dots.needle.50percent"
-    }
-  }
-
-  var color: Color {
-    switch self {
-    case .warning: .orange
-    case .critical: .red
-    case .healthy, .unavailable: .secondary
     }
   }
 }

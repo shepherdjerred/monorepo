@@ -105,6 +105,8 @@ public struct ProviderOverview: Identifiable, Equatable, Sendable {
   public let state: ProviderDisplayState
   public let tightestWindow: UsageWindow?
   public let resetOverview: ResetOverview?
+  public let badges: [ProviderBadge]
+  public let dimsContent: Bool
 
   fileprivate var sourceTimestamp: Date? {
     guard case let .available(snapshot) = state else { return nil }
@@ -115,6 +117,7 @@ public struct ProviderOverview: Identifiable, Equatable, Sendable {
     switch state {
     case .available(let snapshot):
       guard snapshot.freshness == .current else { return 2 }
+      if badges.contains(where: { $0.kind == .partial }) { return 2 }
       return tightestWindow == nil ? 1 : 0
     case .loading, .unavailable:
       return 2
@@ -128,6 +131,8 @@ public struct ProviderOverview: Identifiable, Equatable, Sendable {
   fileprivate init(provider: ProviderID, state: ProviderDisplayState, at date: Date) {
     self.provider = provider
     self.state = state
+    let partial = Self.hasPartialData(provider: provider, state: state)
+    dimsContent = Self.shouldDimContent(state: state)
     if case let .available(snapshot) = state, snapshot.freshness == .current {
       tightestWindow = snapshot.windows
         .filter { $0.remainingPercent != nil }
@@ -143,6 +148,64 @@ public struct ProviderOverview: Identifiable, Equatable, Sendable {
       tightestWindow = nil
     }
     resetOverview = Self.makeResetOverview(provider: provider, state: state, at: date)
+    badges = Self.makeBadges(
+      provider: provider,
+      state: state,
+      resetOverview: resetOverview,
+      partial: partial,
+      at: date
+    )
+  }
+
+  private static func hasPartialData(provider: ProviderID, state: ProviderDisplayState) -> Bool {
+    guard provider == .grok, case let .available(snapshot) = state else { return false }
+    return snapshot.freshness == .current && !snapshot.notes.isEmpty
+  }
+
+  private static func shouldDimContent(state: ProviderDisplayState) -> Bool {
+    guard case let .available(snapshot) = state else { return false }
+    return snapshot.freshness != .current
+  }
+
+  private static func makeBadges(
+    provider: ProviderID,
+    state: ProviderDisplayState,
+    resetOverview: ResetOverview?,
+    partial: Bool,
+    at date: Date
+  ) -> [ProviderBadge] {
+    guard case let .available(snapshot) = state else { return [] }
+    var badges: [ProviderBadge] = []
+    switch snapshot.freshness {
+    case .current:
+      if partial {
+        badges.append(
+          .partial(
+            age: QuotaTimeFormatter.compactAge(since: snapshot.sourceTimestamp, at: date),
+            detail: snapshot.notes.joined(separator: " ")
+          )
+        )
+      }
+    case let .stale(reason):
+      badges.append(
+        .stale(
+          age: QuotaTimeFormatter.compactAge(since: snapshot.sourceTimestamp, at: date),
+          detail: reason
+        )
+      )
+    }
+    guard provider == .codex, snapshot.freshness == .current, let resetOverview else {
+      return badges
+    }
+    switch resetOverview {
+    case .none:
+      badges.append(.noResets)
+    case .available(let resets):
+      badges.append(.resets(expirations: resets.map(\.exp)))
+    case .unavailable:
+      badges.append(.resetsUnavailable)
+    }
+    return badges
   }
 
   private static func makeResetOverview(
@@ -161,6 +224,57 @@ public enum ResetOverview: Equatable, Sendable {
   case none
   case available([Reset])
   case unavailable(message: String)
+}
+
+public enum ProviderBadgeKind: Equatable, Sendable {
+  case stale
+  case partial
+  case noResets
+  case resets
+  case resetsUnavailable
+}
+
+public struct ProviderBadge: Equatable, Identifiable, Sendable {
+  public let kind: ProviderBadgeKind
+  public let age: String?
+  public let expirations: [Date]
+  public let detail: String?
+
+  public var id: String {
+    switch kind {
+    case .stale: return "stale"
+    case .partial: return "partial"
+    case .noResets: return "no-resets"
+    case .resets: return "resets"
+    case .resetsUnavailable: return "resets-unavailable"
+    }
+  }
+
+  public static func stale(age: String?, detail: String?) -> ProviderBadge {
+    ProviderBadge(kind: .stale, age: age, expirations: [], detail: detail)
+  }
+
+  public static func partial(age: String?, detail: String?) -> ProviderBadge {
+    ProviderBadge(kind: .partial, age: age, expirations: [], detail: detail)
+  }
+
+  public static let noResets = ProviderBadge(
+    kind: .noResets,
+    age: nil,
+    expirations: [],
+    detail: "No reset windows are currently available."
+  )
+
+  public static func resets(expirations: [Date]) -> ProviderBadge {
+    ProviderBadge(kind: .resets, age: nil, expirations: expirations, detail: nil)
+  }
+
+  public static let resetsUnavailable = ProviderBadge(
+    kind: .resetsUnavailable,
+    age: nil,
+    expirations: [],
+    detail: "The reset endpoint is unavailable."
+  )
 }
 
 public enum QuotaOverviewSummary: Equatable, Sendable {
@@ -210,6 +324,12 @@ public enum QuotaTimeFormatter {
     let hours = minutes / 60
     if hours < 24 { return "\(hours)h ago" }
     return "\(hours / 24)d ago"
+  }
+
+  public static func compactAge(since date: Date, at referenceDate: Date = .now) -> String? {
+    let seconds = boundedSeconds(referenceDate.timeIntervalSince(date))
+    guard seconds >= 86_400 else { return nil }
+    return "\(seconds / 86_400)D"
   }
 
   /// Clamps an interval into `Int`'s representable range before converting, so a malformed or

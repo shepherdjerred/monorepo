@@ -54,7 +54,8 @@ The commands intentionally separate the release artifacts:
 6. `verify:notarized` validates the app metadata, resources, strict signature,
    stapled ticket, and Gatekeeper assessment.
 7. `install:notarized` repeats the notarized verification before replacing only
-   `/Applications/QuotaBar.app` and launching that exact artifact.
+   `/Applications/Brim.app`, removing the legacy `/Applications/QuotaBar.app`
+   installation during migration, and launching that exact artifact.
 
 Xcode Organizer's **Distribute App → Developer ID → Upload** flow is the
 interactive equivalent of the export and submission steps.

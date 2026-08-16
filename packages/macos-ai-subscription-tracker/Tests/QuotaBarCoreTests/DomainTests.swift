@@ -5,15 +5,73 @@ import XCTest
 
 final class DomainTests: XCTestCase {
   func testPercentageAndStatusBoundaries() throws {
-    XCTAssertEqual(try XCTUnwrap(window(remaining: 4.99).remainingPercent), 4.99, accuracy: 0.001)
-    XCTAssertEqual(snapshot(remaining: 4.99).quotaStatus, .critical)
-    XCTAssertEqual(snapshot(remaining: 5).quotaStatus, .warning)
-    XCTAssertEqual(snapshot(remaining: 20).quotaStatus, .warning)
-    XCTAssertEqual(snapshot(remaining: 20.01).quotaStatus, .healthy)
+    XCTAssertEqual(try XCTUnwrap(window(remaining: 9.99).remainingPercent), 9.99, accuracy: 0.001)
+    XCTAssertEqual(snapshot(remaining: 9.99).quotaStatus, .critical)
+    XCTAssertEqual(snapshot(remaining: 10).quotaStatus, .warning)
+    XCTAssertEqual(snapshot(remaining: 29.99).quotaStatus, .warning)
+    XCTAssertEqual(snapshot(remaining: 30).quotaStatus, .healthy)
     XCTAssertEqual(snapshot(remaining: nil).quotaStatus, .unavailable)
     XCTAssertEqual(
       snapshot(remaining: 80).markedStale(reason: "offline").quotaStatus,
       .unavailable
+    )
+  }
+
+  func testCompactDisplayLabelsPreserveMeaningWithoutBoilerplate() throws {
+    XCTAssertEqual(
+      try UsageWindow.validated(
+        id: "weekly-fable",
+        label: "Weekly · Fable",
+        kind: .modelScoped(model: "Fable"),
+        usedPercent: 50,
+        resetAt: nil,
+        sourceTimestamp: .now
+      ).compactDisplayLabel,
+      "Weekly · Fable"
+    )
+    XCTAssertEqual(
+      try UsageWindow.validated(
+        id: "nimbus",
+        label: "Nimbus Quill extended model quota",
+        kind: .modelScoped(model: "Nimbus Quill"),
+        usedPercent: 50,
+        resetAt: nil,
+        sourceTimestamp: .now
+      ).compactDisplayLabel,
+      "Nimbus Quill"
+    )
+    XCTAssertEqual(
+      try UsageWindow.validated(
+        id: "weekly-fable-long",
+        label: "Weekly · Fable extended model quota",
+        kind: .modelScoped(model: "Fable"),
+        usedPercent: 50,
+        resetAt: nil,
+        sourceTimestamp: .now
+      ).compactDisplayLabel,
+      "Weekly · Fable"
+    )
+    XCTAssertEqual(
+      try UsageWindow.validated(
+        id: "provider-nimbus-quill",
+        label: "Provider quota · Nimbus Quill",
+        kind: .providerDefined,
+        usedPercent: 0,
+        resetAt: nil,
+        sourceTimestamp: .now
+      ).compactDisplayLabel,
+      "Nimbus Quill"
+    )
+    XCTAssertEqual(
+      try UsageWindow.validated(
+        id: "provider",
+        label: "Provider quota · extremely long provider label",
+        kind: .providerDefined,
+        usedPercent: 50,
+        resetAt: nil,
+        sourceTimestamp: .now
+      ).compactDisplayLabel,
+      "Provider quota"
     )
   }
 

@@ -10,8 +10,12 @@ const notarized = mode === "--notarized";
 const source = notarized
   ? resolve(packageRoot, "dist", "notarized", "QuotaBar.app")
   : resolve(packageRoot, "dist", "QuotaBar.app");
-const target = "/Applications/QuotaBar.app";
-if (target !== "/Applications/QuotaBar.app")
+const target = "/Applications/Brim.app";
+const legacyTarget = "/Applications/QuotaBar.app";
+if (
+  target !== "/Applications/Brim.app" ||
+  legacyTarget !== "/Applications/QuotaBar.app"
+)
   throw new Error("Refusing unexpected install target.");
 
 const verificationScript = notarized
@@ -24,21 +28,36 @@ const verification = Bun.spawnSync(["bun", verificationScript], {
 });
 if (verification.exitCode !== 0) process.exit(verification.exitCode);
 
-const installedExecutable = `${target}/Contents/MacOS/QuotaBar`;
-for (const pid of installedProcessIDs(installedExecutable)) {
-  process.kill(pid, "SIGTERM");
+const installedExecutables = [
+  `${target}/Contents/MacOS/QuotaBar`,
+  `${legacyTarget}/Contents/MacOS/QuotaBar`,
+];
+for (const executable of installedExecutables) {
+  for (const pid of installedProcessIDs(executable)) {
+    process.kill(pid, "SIGTERM");
+  }
 }
 for (let attempt = 0; attempt < 50; attempt += 1) {
-  if (installedProcessIDs(installedExecutable).length === 0) break;
+  if (
+    installedExecutables.every(
+      (executable) => installedProcessIDs(executable).length === 0,
+    )
+  )
+    break;
   await Bun.sleep(100);
 }
-if (installedProcessIDs(installedExecutable).length !== 0) {
+if (
+  installedExecutables.some(
+    (executable) => installedProcessIDs(executable).length !== 0,
+  )
+) {
   throw new Error(`Refusing to replace running application at ${target}`);
 }
 
 console.log(`Installing verified bundle to exact target ${target}`);
 await rm(target, { recursive: true, force: true });
 await cp(source, target, { recursive: true });
+await rm(legacyTarget, { recursive: true, force: true });
 const signature = Bun.spawnSync(
   ["codesign", "--verify", "--deep", "--strict", target],
   {
