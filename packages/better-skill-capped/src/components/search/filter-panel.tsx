@@ -1,15 +1,20 @@
 import React from "react";
 import type { Kind } from "#src/model/content";
+import { KINDS } from "#src/model/content";
 import type { Role } from "#src/model/role";
 import { ROLES, roleDisplayName } from "#src/model/role";
-import type { BookmarkedFilter, Filters, WatchedFilter } from "./filters.ts";
+import type { BookmarkedFilter, WatchedFilter } from "./filters.ts";
+import type { SearchParams } from "#src/routes/search";
+import type { SearchRunResult } from "#src/search/run-search";
+import { FacetChecklist } from "./facet-checklist.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "#components/ui/card";
 import { Checkbox } from "#components/ui/checkbox";
 import { Label } from "#components/ui/label";
 
 export type FilterPanelProps = {
-  filters: Filters;
-  onFiltersUpdate: (newFilters: Filters) => void;
+  params: SearchParams;
+  facets: SearchRunResult["facets"] | undefined;
+  onChange: (updated: Partial<SearchParams>) => void;
 };
 
 const KIND_LABELS: Record<Kind, string> = {
@@ -40,74 +45,91 @@ function FilterSection({
 function CheckRow({
   id,
   label,
+  count,
   checked,
   onToggle,
 }: {
   id: string;
   label: string;
+  count?: number | undefined;
   checked: boolean;
   onToggle: () => void;
 }): React.ReactElement {
   return (
     <div className="flex items-center gap-2">
       <Checkbox id={id} checked={checked} onCheckedChange={onToggle} />
-      <Label htmlFor={id} className="font-normal">
-        {label}
+      <Label
+        htmlFor={id}
+        className="flex w-full justify-between gap-2 font-normal"
+      >
+        <span>{label}</span>
+        {count !== undefined && (
+          <span className="text-muted-foreground">{count}</span>
+        )}
       </Label>
     </div>
   );
 }
 
-export function FilterPanel({
-  filters,
-  onFiltersUpdate,
-}: FilterPanelProps): React.ReactElement {
-  const toggleRole = (role: Role) => {
-    const roles = filters.roles.includes(role)
-      ? filters.roles.filter((candidate) => candidate !== role)
-      : [...filters.roles, role];
-    onFiltersUpdate({ ...filters, roles });
-  };
+/** Toggle within "empty array means everything selected" semantics. */
+function toggleWithinAll<T extends string>(
+  all: readonly T[],
+  current: T[],
+  value: T,
+): T[] {
+  const effective = current.length === 0 ? [...all] : current;
+  const updated = effective.includes(value)
+    ? effective.filter((candidate) => candidate !== value)
+    : [...effective, value];
+  return updated.length === all.length ? [] : updated;
+}
 
-  const toggleType = (type: Kind) => {
-    const types = filters.types.includes(type)
-      ? filters.types.filter((candidate) => candidate !== type)
-      : [...filters.types, type];
-    onFiltersUpdate({ ...filters, types });
-  };
+export function FilterPanel({
+  params,
+  facets,
+  onChange,
+}: FilterPanelProps): React.ReactElement {
+  const effectiveRoles = params.role.length === 0 ? [...ROLES] : params.role;
+  const effectiveKinds = params.kind.length === 0 ? [...KINDS] : params.kind;
 
   const setWatched = (watched: WatchedFilter) => {
-    onFiltersUpdate({ ...filters, watched });
+    onChange({ watched });
+  };
+  const setBookmarked = (bookmarked: BookmarkedFilter) => {
+    onChange({ bookmarked });
   };
 
-  const setBookmarked = (bookmarked: BookmarkedFilter) => {
-    onFiltersUpdate({ ...filters, bookmarked });
-  };
+  // Commentary-specific facets are only meaningful when commentaries are in
+  // scope (progressive disclosure).
+  const commentariesInScope =
+    params.kind.length === 0 || params.kind.includes("commentary");
 
   return (
     <div className="flex flex-col gap-4">
       <FilterSection title="Roles">
-        {ROLES.map((role) => (
+        {ROLES.map((role: Role) => (
           <CheckRow
             key={role}
             id={`role-${role}`}
             label={roleDisplayName(role)}
-            checked={filters.roles.includes(role)}
+            count={facets?.role[role] ?? 0}
+            checked={effectiveRoles.includes(role)}
             onToggle={() => {
-              toggleRole(role);
+              onChange({ role: toggleWithinAll(ROLES, params.role, role) });
             }}
           />
         ))}
       </FilterSection>
       <FilterSection title="Type">
-        {KIND_ORDER.map((type) => (
+        {KIND_ORDER.map((kind) => (
           <CheckRow
-            key={type}
-            id={`type-${type}`}
-            label={KIND_LABELS[type]}
-            checked={filters.types.includes(type)}
+            key={kind}
+            id={`type-${kind}`}
+            label={KIND_LABELS[kind]}
+            count={facets?.kind[kind] ?? 0}
+            checked={effectiveKinds.includes(kind)}
             onToggle={() => {
-              toggleType(type);
+              onChange({ kind: toggleWithinAll(KINDS, params.kind, kind) });
             }}
           />
         ))}
@@ -116,17 +138,17 @@ export function FilterPanel({
         <CheckRow
           id="watched-unwatched"
           label="Only show unwatched"
-          checked={filters.watched === "unwatched"}
+          checked={params.watched === "unwatched"}
           onToggle={() => {
-            setWatched(filters.watched === "unwatched" ? "any" : "unwatched");
+            setWatched(params.watched === "unwatched" ? "any" : "unwatched");
           }}
         />
         <CheckRow
           id="watched-watched"
           label="Only show watched"
-          checked={filters.watched === "watched"}
+          checked={params.watched === "watched"}
           onToggle={() => {
-            setWatched(filters.watched === "watched" ? "any" : "watched");
+            setWatched(params.watched === "watched" ? "any" : "watched");
           }}
         />
       </FilterSection>
@@ -134,24 +156,72 @@ export function FilterPanel({
         <CheckRow
           id="bookmarked-only"
           label="Only show bookmarked"
-          checked={filters.bookmarked === "bookmarked"}
+          checked={params.bookmarked === "bookmarked"}
           onToggle={() => {
             setBookmarked(
-              filters.bookmarked === "bookmarked" ? "any" : "bookmarked",
+              params.bookmarked === "bookmarked" ? "any" : "bookmarked",
             );
           }}
         />
         <CheckRow
           id="bookmarked-unbookmarked"
           label="Only show unbookmarked"
-          checked={filters.bookmarked === "unbookmarked"}
+          checked={params.bookmarked === "unbookmarked"}
           onToggle={() => {
             setBookmarked(
-              filters.bookmarked === "unbookmarked" ? "any" : "unbookmarked",
+              params.bookmarked === "unbookmarked" ? "any" : "unbookmarked",
             );
           }}
         />
       </FilterSection>
+      {facets !== undefined && (
+        <>
+          <FacetChecklist
+            title="Tags"
+            counts={facets.tags}
+            selected={params.tag}
+            onChange={(tag) => {
+              onChange({ tag });
+            }}
+          />
+          {commentariesInScope && (
+            <>
+              <FacetChecklist
+                title="Champion"
+                counts={facets.champion}
+                selected={params.champion}
+                onChange={(champion) => {
+                  onChange({ champion });
+                }}
+              />
+              <FacetChecklist
+                title="Coach"
+                counts={facets.staff}
+                selected={params.staff}
+                onChange={(staff) => {
+                  onChange({ staff });
+                }}
+              />
+              <FacetChecklist
+                title="Carry"
+                counts={facets.carry}
+                selected={params.carry}
+                onChange={(carry) => {
+                  onChange({ carry });
+                }}
+              />
+              <FacetChecklist
+                title="Account Type"
+                counts={facets.commentaryType}
+                selected={params.ctype}
+                onChange={(ctype) => {
+                  onChange({ ctype });
+                }}
+              />
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 }

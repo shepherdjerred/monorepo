@@ -4,11 +4,8 @@ import { SearchBar } from "./search-bar.tsx";
 import { FilterPanel } from "./filter-panel.tsx";
 import { PaginationControls } from "./pagination-controls.tsx";
 import { ActiveFilters } from "./active-filters.tsx";
-import type { Filters } from "./filters.ts";
 import { ContentCard } from "#src/components/content/content-card";
 import { ScoutBanner } from "#src/components/layout/scout-banner";
-import { KINDS } from "#src/model/content";
-import { ROLES } from "#src/model/role";
 import { useContent } from "#src/hooks/use-content";
 import { useBookmarks } from "#src/hooks/use-bookmarks";
 import { useWatchStatus } from "#src/hooks/use-watch-status";
@@ -76,14 +73,6 @@ export function SearchPage(): React.ReactElement {
     });
   };
 
-  // The filter panel renders "no filter" as everything checked.
-  const panelFilters: Filters = {
-    roles: search.role.length === 0 ? [...ROLES] : search.role,
-    types: search.kind.length === 0 ? [...KINDS] : search.kind,
-    watched: search.watched,
-    bookmarked: search.bookmarked,
-  };
-
   const items = (result?.docs ?? []).flatMap((doc) => {
     const item = itemsByUuid.get(doc.uuid);
     return item === undefined ? [] : [item];
@@ -104,21 +93,9 @@ export function SearchPage(): React.ReactElement {
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 md:grid-cols-[14rem_1fr]">
         <aside>
           <FilterPanel
-            filters={panelFilters}
-            onFiltersUpdate={(newFilters) => {
-              updateSearch({
-                role:
-                  newFilters.roles.length === ROLES.length
-                    ? []
-                    : newFilters.roles,
-                kind:
-                  newFilters.types.length === KINDS.length
-                    ? []
-                    : newFilters.types,
-                watched: newFilters.watched,
-                bookmarked: newFilters.bookmarked,
-              });
-            }}
+            params={search}
+            facets={result?.facets}
+            onChange={updateSearch}
           />
         </aside>
         <main className="min-w-0">

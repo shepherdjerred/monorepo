@@ -40,9 +40,16 @@ export const SEARCH_DEFAULTS: {
 };
 
 const QSchema = z.string();
-const KindsSchema = z.array(z.enum(KINDS));
-const RolesSchema = z.array(z.enum(ROLES));
-const StringsSchema = z.array(z.string());
+
+// The router serializes arrays itself, but hand-edited URLs naturally use
+// the scalar form (?champion=Graves) — accept both.
+function listOf<T>(inner: z.ZodType<T>): z.ZodType<T[]> {
+  return z.union([z.array(inner), inner.transform((value): T[] => [value])]);
+}
+
+const KindsSchema = listOf(z.enum(KINDS));
+const RolesSchema = listOf(z.enum(ROLES));
+const StringsSchema = listOf(z.string());
 const WatchedSchema = z.enum(["any", "watched", "unwatched"]);
 const BookmarkedSchema = z.enum(["any", "bookmarked", "unbookmarked"]);
 const SortSchema = z.enum([
