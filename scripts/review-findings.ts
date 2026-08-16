@@ -44,6 +44,16 @@ const AUDIT_MARKER = "<!-- review-findings:dismissals -->";
 
 const PrSchema = z.object({ head: z.object({ sha: z.string() }) });
 const CommentSchema = z.object({ id: z.number(), body: z.string() });
+const GraphqlResponseSchema = z.object({
+  errors: z.array(z.object({ message: z.string() }).loose()).optional(),
+  data: z
+    .object({
+      resolveReviewThread: z
+        .object({ thread: z.object({ isResolved: z.boolean() }).loose() })
+        .nullish(),
+    })
+    .nullish(),
+});
 
 function requireToken(): string {
   const token = Bun.env["GH_TOKEN"];
@@ -82,6 +92,24 @@ async function githubJson(
     );
   }
   return await response.json();
+}
+
+/**
+ * Why a resolveReviewThread mutation did not succeed, or null when it did.
+ *
+ * GraphQL reports failure in the body with HTTP 200, so a status check alone
+ * would let a failed resolution be recorded as a dismissal — and that audit
+ * entry is what someone later trusts.
+ */
+export function resolveThreadOutcome(payload: unknown): string | null {
+  const parsed = GraphqlResponseSchema.parse(payload);
+  if (parsed.errors !== undefined && parsed.errors.length > 0) {
+    return parsed.errors.map((error) => error.message).join("; ");
+  }
+  if (parsed.data?.resolveReviewThread?.thread.isResolved !== true) {
+    return "the mutation returned no confirmation that the thread is resolved";
+  }
+  return null;
 }
 
 /**
@@ -224,6 +252,14 @@ async function dismissCommand(
       'dismiss requires --finding "<title>" and a non-empty --reason "<why>".',
     );
   }
+  // The edit understands Qodo's rendered-comment format specifically. Another
+  // provider's comment would not match, and the "no finding titled …" error
+  // that produced would be misleading — say what is actually unsupported.
+  if (provider.id !== "qodo") {
+    throw new Error(
+      `dismiss only understands Qodo's review comment format; ${provider.displayName} findings must be resolved through their own threads (see \`resolve-thread\`).`,
+    );
+  }
   const state = await resolveReviewState({
     repo,
     prNumber,
@@ -261,6 +297,34 @@ async function dismissCommand(
   console.log(`Dismissed "${finding}" and recorded the reason on the PR.`);
 }
 
+/**
+ * The audit comment, searched across every page.
+ *
+ * A single page is not enough: a long-lived PR easily passes 100 comments, and
+ * missing the existing comment does not fail — it silently posts a second one,
+ * splitting the dismissal record across two places just when it matters.
+ */
+async function findAuditComment(
+  repo: string,
+  prNumber: number,
+  token: string,
+): Promise<{ id: number; body: string } | undefined> {
+  for (let page = 1; ; page += 1) {
+    const batch = z
+      .array(CommentSchema.loose())
+      .parse(
+        await githubJson(
+          "GET",
+          `${GITHUB_API}/repos/${repo}/issues/${String(prNumber)}/comments?per_page=100&page=${String(page)}`,
+          token,
+        ),
+      );
+    const found = batch.find((comment) => comment.body.includes(AUDIT_MARKER));
+    if (found !== undefined) return found;
+    if (batch.length < 100) return undefined;
+  }
+}
+
 /** Append to the single audit comment, creating it on the first dismissal. */
 async function recordDismissal(
   repo: string,
@@ -268,18 +332,7 @@ async function recordDismissal(
   token: string,
   entry: { finding: string; reason: string },
 ): Promise<void> {
-  const comments = z
-    .array(CommentSchema.loose())
-    .parse(
-      await githubJson(
-        "GET",
-        `${GITHUB_API}/repos/${repo}/issues/${String(prNumber)}/comments?per_page=100`,
-        token,
-      ),
-    );
-  const existing = comments.find((comment) =>
-    comment.body.includes(AUDIT_MARKER),
-  );
+  const existing = await findAuditComment(repo, prNumber, token);
   const previous = (existing?.body ?? "")
     .split("\n")
     .filter((line) => line.startsWith("- **"))
@@ -340,6 +393,10 @@ async function resolveThreadCommand(
     throw new Error(
       `resolveReviewThread failed: ${String(response.status)} ${response.statusText}`,
     );
+  }
+  const failure = resolveThreadOutcome(await response.json());
+  if (failure !== null) {
+    throw new Error(`resolveReviewThread failed for ${threadId}: ${failure}`);
   }
   await recordDismissal(repo, prNumber, token, {
     finding: `thread ${threadId}`,

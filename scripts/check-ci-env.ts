@@ -222,7 +222,9 @@ const StepSchema = z
   .loose();
 
 const ContainerEnvSchema = z.object({
-  env: z.array(z.object({ name: z.string() }).loose()).optional(),
+  env: z
+    .array(z.object({ name: z.string(), value: z.string().optional() }).loose())
+    .optional(),
   envFrom: z
     .array(
       z.object({ secretRef: z.object({ name: z.string() }).loose() }).loose(),
@@ -249,7 +251,14 @@ function collectContainerEnv(
   if (!record.success) return;
   const container = ContainerEnvSchema.safeParse(record.data);
   if (container.success) {
-    for (const entry of container.data.env ?? []) names.add(entry.name);
+    for (const entry of container.data.env ?? []) {
+      // An explicitly empty value is not a provision: requireEnv treats "" as
+      // missing and throws, so counting it would pass the check on a step
+      // whose script fails at runtime. An absent `value` means `valueFrom`
+      // (secret/fieldRef), which does provide one.
+      if (entry.value === "") continue;
+      names.add(entry.name);
+    }
     for (const entry of container.data.envFrom ?? []) {
       secrets.add(entry.secretRef.name);
     }
@@ -284,7 +293,11 @@ export function collectSteps(
     if (command.trim() === "") continue;
     const providedNames = new Set<string>([
       ...globalEnvNames,
-      ...Object.keys(step.env ?? {}),
+      // Same rule as container env: a step-level key set to an empty string
+      // satisfies nothing, because requireEnv rejects "" as missing.
+      ...Object.entries(step.env ?? {})
+        .filter(([, value]) => value !== "")
+        .map(([key]) => key),
       ...assignedEnvNames(command),
     ]);
     const secrets = new Set<string>();
@@ -393,9 +406,11 @@ export type SecretFields = {
   isBlank: (name: string) => boolean;
 };
 
-const exceptionsByFile = new Map(
-  DYNAMIC_CALL_EXCEPTIONS.map((entry) => [entry.file, entry]),
-);
+export type DynamicCallException = {
+  file: string;
+  reason: string;
+  names: readonly string[];
+};
 
 /** Why `name` is unsatisfied for this step, or null when it is satisfied. */
 function unmetRequirement(
@@ -426,11 +441,15 @@ function unmetRequirement(
 }
 
 function errorsForInvocation(
-  step: PipelineStep,
-  entry: string,
-  required: RequiredEnv,
+  invocation: {
+    step: PipelineStep;
+    entry: string;
+    required: RequiredEnv;
+  },
   secret: SecretFields,
+  exceptionsByFile: ReadonlyMap<string, DynamicCallException>,
 ): string[] {
+  const { step, entry, required } = invocation;
   const errors: string[] = [];
   for (const site of required.unresolved) {
     const file = site.slice(0, site.lastIndexOf(":"));
@@ -441,10 +460,12 @@ function errorsForInvocation(
     );
   }
   const names = new Map(required.names);
-  for (const exception of exceptionsByFile.values()) {
-    for (const name of exception.names) {
-      names.set(name, `${exception.file} (declared exception)`);
-    }
+  // Only THIS script's exception contributes. Applying every exception's
+  // declared names to every script would make one entry's names required of
+  // unrelated scripts in unrelated steps — currently latent because the sole
+  // entry declares none, which is exactly how it would go unnoticed.
+  for (const name of exceptionsByFile.get(entry)?.names ?? []) {
+    names.set(name, `${entry} (declared exception)`);
   }
   const excepted = new Set(
     STEP_REQUIREMENT_EXCEPTIONS.filter(
@@ -463,16 +484,23 @@ export function collectErrors(input: {
   steps: readonly PipelineStep[];
   secret: SecretFields;
   requiredFor: (entry: string) => RequiredEnv;
+  /** Defaults to the declared table; injected by tests. */
+  dynamicCallExceptions?: readonly DynamicCallException[];
 }): string[] {
+  const exceptionsByFile = new Map(
+    (input.dynamicCallExceptions ?? DYNAMIC_CALL_EXCEPTIONS).map((entry) => [
+      entry.file,
+      entry,
+    ]),
+  );
   const errors: string[] = [];
   for (const step of input.steps) {
     for (const entry of step.scripts) {
       errors.push(
         ...errorsForInvocation(
-          step,
-          entry,
-          input.requiredFor(entry),
+          { step, entry, required: input.requiredFor(entry) },
           input.secret,
+          exceptionsByFile,
         ),
       );
     }

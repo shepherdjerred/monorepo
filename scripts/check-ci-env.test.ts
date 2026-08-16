@@ -135,6 +135,38 @@ steps:
     { merge: true },
   );
 
+  test("does not count an env key explicitly set to an empty value", () => {
+    // requireEnv rejects "" as missing, so an empty value satisfies nothing.
+    // Counting it would pass the check on a step whose script fails at runtime.
+    const withBlank = parse(
+      `
+steps:
+  - key: blank-env
+    command: bun scripts/release.ts
+    env:
+      SET_BUT_EMPTY: ""
+      REAL: value
+    plugins:
+      - kubernetes:
+          podSpecPatch:
+            containers:
+              - name: container-0
+                env:
+                  - name: CONTAINER_EMPTY
+                    value: ""
+                  - name: FROM_FIELD_REF
+                    valueFrom: { fieldRef: { fieldPath: metadata.name } }
+`,
+      { merge: true },
+    );
+    const step = collectSteps(withBlank, [])[0];
+    expect(step?.providedNames.has("REAL")).toBe(true);
+    expect(step?.providedNames.has("SET_BUT_EMPTY")).toBe(false);
+    expect(step?.providedNames.has("CONTAINER_EMPTY")).toBe(false);
+    // An absent `value` means valueFrom, which does provide one.
+    expect(step?.providedNames.has("FROM_FIELD_REF")).toBe(true);
+  });
+
   test("records the CI secret, container env, and global env per step", () => {
     const steps = collectSteps(pipeline, ["TURBO_TEAM"]);
     const withSecret = steps.find((step) => step.key === "with-secret");
@@ -218,6 +250,36 @@ describe("collectErrors", () => {
     });
     expect(errors).toHaveLength(1);
     expect(errors[0]).toContain("not a string literal");
+  });
+
+  test("does not apply one script's exception names to another script", () => {
+    // The declared names belong to the excepted call site alone. Leaking them
+    // into every script would make unrelated steps require them, which is how
+    // adding a name to one exception could redden steps that never run it.
+    const exceptions = [
+      {
+        file: "scripts/deploy-site.ts",
+        reason: "test",
+        names: ["ONLY_FOR_DEPLOY_SITE"],
+      },
+    ];
+    const releaseErrors = collectErrors({
+      steps: [step],
+      secret: secretWith([]),
+      requiredFor: () => required({}),
+      dynamicCallExceptions: exceptions,
+    });
+    expect(releaseErrors).toEqual([]);
+
+    // …and the excepted script itself still has its declared names checked.
+    const deployErrors = collectErrors({
+      steps: [{ ...step, scripts: ["scripts/deploy-site.ts"] }],
+      secret: secretWith([]),
+      requiredFor: () => required({}),
+      dynamicCallExceptions: exceptions,
+    });
+    expect(deployErrors).toHaveLength(1);
+    expect(deployErrors[0]).toContain("ONLY_FOR_DEPLOY_SITE");
   });
 
   test("accepts a declared dynamic-call exception and still checks its names", () => {

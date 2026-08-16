@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   auditCommentBody,
+  resolveThreadOutcome,
   commentIdFromUrl,
   describeFinding,
   parseFlags,
@@ -71,6 +72,33 @@ describe("describeFinding", () => {
     });
     expect(line).toContain("P2 src/x.ts:42");
     expect(line).not.toContain("untitled");
+  });
+});
+
+describe("graphql result handling", () => {
+  test("a 200 response carrying errors is a failure, not a success", () => {
+    // GitHub GraphQL reports failure in the body with HTTP 200. Trusting the
+    // status alone would record an audit entry for a resolution that never
+    // happened — the worst outcome, since that entry is the record someone
+    // later trusts.
+    expect(
+      resolveThreadOutcome({
+        errors: [{ message: "Could not resolve to a node" }],
+      }),
+    ).toBe("Could not resolve to a node");
+  });
+
+  test("a 200 response without confirmation is also a failure", () => {
+    expect(resolveThreadOutcome({ data: null })).toContain("no confirmation");
+    expect(resolveThreadOutcome({})).toContain("no confirmation");
+  });
+
+  test("a confirmed resolution passes", () => {
+    expect(
+      resolveThreadOutcome({
+        data: { resolveReviewThread: { thread: { isResolved: true } } },
+      }),
+    ).toBeNull();
   });
 });
 
