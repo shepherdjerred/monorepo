@@ -7,6 +7,7 @@ export default defineConfig({
   testDir: "./workbench",
   timeout: 60_000,
   forbidOnly: isCI,
+  workers: isCI ? 3 : undefined,
   reporter: isCI
     ? [
         ["github"],
