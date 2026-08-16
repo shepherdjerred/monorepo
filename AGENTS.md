@@ -396,6 +396,97 @@ transcripts into the repository, commits, logs, or chat.
   `~/.config/opencode/`. `~/.local/share/opencode/auth.json` contains credentials:
   never print, copy, commit, or paste its contents.
 
+### Example History Queries
+
+There is no single cross-client history index, so combine the read-only queries
+below. The seven-day examples use a rolling window; use explicit start and end
+dates when “last week” means a calendar week.
+
+To find recent work across the main stores:
+
+```bash
+# Conductor: recent session titles and workspaces.
+sqlite3 -header -column "$HOME/Library/Application Support/com.conductor.app/conductor.db" \
+  "SELECT datetime(s.updated_at, 'localtime') AS updated,
+          COALESCE(w.workspace_name, w.directory_name) AS area,
+          s.title, s.agent_type
+     FROM sessions s
+     LEFT JOIN workspaces w ON w.id = s.workspace_id
+    WHERE s.updated_at >= datetime('now', '-7 days')
+    ORDER BY s.updated_at DESC;"
+
+# Claude Code: transcript files touched during the rolling window.
+find "$HOME/.claude/projects" -type f -name '*.jsonl' -newermt '7 days ago' -print
+
+# Codex: recent thread IDs and activity counts.
+sqlite3 -header -column "$HOME/.codex/thread_history_1.sqlite" \
+  "SELECT datetime(max(created_at_ms) / 1000, 'unixepoch', 'localtime') AS updated,
+          thread_id, count(*) AS items
+     FROM thread_items
+    WHERE created_at_ms >= strftime('%s', 'now', '-7 days') * 1000
+    GROUP BY thread_id
+    ORDER BY updated DESC;"
+
+# Cursor: recent searchable conversation titles (the DB is an index).
+sqlite3 -header -column "$HOME/Library/Application Support/Cursor/User/globalStorage/conversation-search.db" \
+  "SELECT title, datetime(updated_at / 1000, 'unixepoch', 'localtime') AS updated,
+          source, scope, id
+     FROM conversations
+    WHERE updated_at >= strftime('%s', 'now', '-7 days') * 1000
+    ORDER BY updated_at DESC;"
+
+# Standalone OpenCode: recent sessions.
+sqlite3 -header -column "$HOME/.local/share/opencode/opencode.db" \
+  "SELECT datetime(time_updated / 1000, 'unixepoch', 'localtime') AS updated,
+          title, directory, id
+     FROM session
+    WHERE time_updated >= strftime('%s', 'now', '-7 days') * 1000
+    ORDER BY time_updated DESC;"
+```
+
+To answer “didn’t I solve this before?”, search file-backed transcripts first,
+then search the SQLite stores for the same distinctive phrase. Keep the term
+specific enough to avoid dumping unrelated private conversations:
+
+```bash
+worklog_term='argocd prune'
+rg -n -i -C 2 "$worklog_term" \
+  "$HOME/.claude/projects" \
+  "$HOME/.codex/history.jsonl" \
+  "$HOME/.codex/controller_state/sessions" \
+  "$HOME/.local/share/opencode/log"
+
+# Conductor transcript search; change only the bound parameter.
+sqlite3 -header -column "$HOME/Library/Application Support/com.conductor.app/conductor.db" <<'SQL'
+.parameter set :term 'argocd prune'
+SELECT datetime(m.created_at, 'localtime') AS created,
+       COALESCE(w.workspace_name, w.directory_name) AS area,
+       s.title,
+       substr(replace(replace(COALESCE(NULLIF(m.content, ''), m.full_message), char(10), ' '), char(13), ' '), 1, 240) AS excerpt
+  FROM session_messages m
+  JOIN sessions s ON s.id = m.session_id
+  LEFT JOIN workspaces w ON w.id = s.workspace_id
+ WHERE lower(COALESCE(m.content, '') || ' ' || COALESCE(m.full_message, ''))
+       LIKE '%' || lower(:term) || '%'
+ ORDER BY m.created_at DESC
+ LIMIT 30;
+SQL
+
+# Codex structured item search; item_json may contain private prompt/tool data.
+sqlite3 -header -column "$HOME/.codex/thread_history_1.sqlite" \
+  "SELECT datetime(created_at_ms / 1000, 'unixepoch', 'localtime') AS created,
+          thread_id, item_type, substr(item_json, 1, 240) AS excerpt
+     FROM thread_items
+    WHERE lower(item_json) LIKE '%argocd prune%'
+    ORDER BY created_at_ms DESC
+    LIMIT 30;"
+```
+
+To answer “what’s the status of X?”, use the matching history to identify the
+workspace, PR, branch, or issue, then verify the current source, CI, deployment,
+reachability, and runtime state separately. A transcript proves what was
+discussed, not that the work is currently merged or deployed.
+
 SQLite databases, caches, indexes, and sidecar/event-outbox files are
 version-sensitive and should be inspected read-only. `.context/` is workspace
 collaboration scratch space, not a canonical transcript archive. Do not treat
