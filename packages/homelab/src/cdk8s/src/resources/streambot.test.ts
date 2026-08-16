@@ -129,11 +129,8 @@ describe("streambot deployment (media namespace)", () => {
         value: "false",
       }),
     );
-    expect(container?.env).toContainEqual(
-      expect.objectContaining({
-        name: "VOICE_MODEL",
-        value: "gpt-realtime-2.1",
-      }),
+    expect(container?.env).not.toContainEqual(
+      expect.objectContaining({ name: "VOICE_MODEL" }),
     );
     expect(container?.env).not.toContainEqual(
       expect.objectContaining({ name: "OPENAI_API_KEY" }),

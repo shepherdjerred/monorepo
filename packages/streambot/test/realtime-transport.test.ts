@@ -738,9 +738,8 @@ describe("local Realtime probe", () => {
   });
 
   test("uses the same unprompted transcription gate in production and harness", () => {
-    const config = fixture().config.voice;
-    const production = buildRealtimeSessionConfig(config);
-    const harness = buildRealtimeSessionConfig(config);
+    const production = buildRealtimeSessionConfig();
+    const harness = buildRealtimeSessionConfig();
     expect(JSON.stringify(harness)).toBe(JSON.stringify(production));
   });
 

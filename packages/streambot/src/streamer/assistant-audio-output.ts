@@ -1,3 +1,5 @@
+import { voiceDuckTransitionsTotal } from "@shepherdjerred/streambot/observability/metrics.ts";
+
 type VolumePlayer = { setVolume: (volume: number) => Promise<boolean> };
 type AssistantVoiceConnection = {
   setSpeaking: (speaking: boolean) => void;
@@ -50,4 +52,3 @@ export class AssistantAudioOutput {
     this.speaking = false;
   }
 }
-import { voiceDuckTransitionsTotal } from "@shepherdjerred/streambot/observability/metrics.ts";

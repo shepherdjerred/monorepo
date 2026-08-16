@@ -3,6 +3,10 @@ import type { RealtimeTransportLayer } from "@openai/agents/realtime";
 import { z } from "zod";
 import { wakePcmToOpenAiPcm } from "@shepherdjerred/discord-video-stream";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
+import {
+  VOICE_ASSISTANT_VOICE,
+  VOICE_REALTIME_MODEL,
+} from "@shepherdjerred/streambot/voice/constants.ts";
 import { type PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
@@ -114,7 +118,7 @@ const ConversationItemCreatedEventSchema = z.object({
   item: z.object({ id: z.string().min(1) }),
 });
 
-export function buildRealtimeSessionConfig(config: Config["voice"]) {
+export function buildRealtimeSessionConfig() {
   return {
     outputModalities: ["audio"] as const,
     parallelToolCalls: false,
@@ -127,7 +131,7 @@ export function buildRealtimeSessionConfig(config: Config["voice"]) {
       },
       output: {
         format: { type: "audio/pcm" as const, rate: 24_000 },
-        voice: config.assistantVoice,
+        voice: VOICE_ASSISTANT_VOICE,
       },
     },
   };
@@ -212,7 +216,7 @@ export async function runRealtimeCommandTurn(
   const agent = new RealtimeAgent({
     name: "Streambot",
     instructions: INSTRUCTIONS,
-    voice: config.assistantVoice,
+    voice: VOICE_ASSISTANT_VOICE,
     tools: createStreambotVoiceTools(
       input.commands,
       mutationGate,
@@ -222,10 +226,10 @@ export async function runRealtimeCommandTurn(
   const session = new RealtimeSession(agent, {
     apiKey: config.openAiApiKey,
     transport: input.createTransport?.() ?? "websocket",
-    model: config.model,
+    model: VOICE_REALTIME_MODEL,
     historyStoreAudio: false,
     tracingDisabled: true,
-    config: buildRealtimeSessionConfig(config),
+    config: buildRealtimeSessionConfig(),
   });
   let firstAudio = true;
   let failureStage = "connect";
@@ -286,7 +290,10 @@ export async function runRealtimeCommandTurn(
   try {
     const interruption = aborted(transactionSignal);
     await Promise.race([
-      session.connect({ apiKey: config.openAiApiKey, model: config.model }),
+      session.connect({
+        apiKey: config.openAiApiKey,
+        model: VOICE_REALTIME_MODEL,
+      }),
       interruption,
       sessionFailure,
     ]);

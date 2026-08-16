@@ -25,9 +25,6 @@ const STREAM_CONFIG: Pick<Config, "stream" | "voice"> = {
   },
   voice: {
     enabled: false,
-    model: "gpt-realtime-2.1",
-    assistantVoice: "marin",
-    wakePhrase: "Hey Streambot",
     assetsDir: "/opt/streambot/voice",
     runtime: "auto",
     preRollMs: 1200,

@@ -11,9 +11,6 @@ export const VoiceConfigSchema = z
   .strictObject({
     enabled: z.boolean().default(false),
     openAiApiKey: z.string().min(1).optional(),
-    model: z.literal("gpt-realtime-2.1").default("gpt-realtime-2.1"),
-    assistantVoice: z.literal("marin").default("marin"),
-    wakePhrase: z.literal("Hey Streambot").default("Hey Streambot"),
     assetsDir: z.string().min(1).default("/opt/streambot/voice"),
     runtime: z.enum(["auto", "native", "wasm"]).default("auto"),
     preRollMs: z.number().int().min(0).max(3000).default(VOICE_WAKE_WINDOW_MS),
@@ -102,9 +99,6 @@ export const ConfigSchema = z.strictObject({
   }),
   voice: VoiceConfigSchema.default({
     enabled: false,
-    model: "gpt-realtime-2.1",
-    assistantVoice: "marin",
-    wakePhrase: "Hey Streambot",
     assetsDir: "/opt/streambot/voice",
     runtime: "auto",
     preRollMs: VOICE_WAKE_WINDOW_MS,

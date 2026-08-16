@@ -34,9 +34,6 @@ describe("loadConfig", () => {
     expect(config.ytDlpPath).toBe("/usr/local/bin/yt-dlp");
     expect(config.voice).toEqual({
       enabled: false,
-      model: "gpt-realtime-2.1",
-      assistantVoice: "marin",
-      wakePhrase: "Hey Streambot",
       assetsDir: "/opt/streambot/voice",
       runtime: "auto",
       preRollMs: 2000,
@@ -134,27 +131,6 @@ describe("loadConfig", () => {
     });
     expect(config.voice.enabled).toBe(true);
     expect(config.voice.openAiApiKey).toBe("project-key");
-    expect(config.voice.model).toBe("gpt-realtime-2.1");
-    expect(config.voice.assistantVoice).toBe("marin");
-  });
-
-  test("rejects unapproved voice models and voices", () => {
-    expect(() =>
-      loadConfig({
-        ...VALID,
-        VOICE_ASSISTANT_ENABLED: "true",
-        OPENAI_API_KEY: "project-key",
-        VOICE_MODEL: "gpt-realtime-mini",
-      }),
-    ).toThrow("Invalid streambot configuration");
-    expect(() =>
-      loadConfig({
-        ...VALID,
-        VOICE_ASSISTANT_ENABLED: "true",
-        OPENAI_API_KEY: "project-key",
-        VOICE_ASSISTANT_VOICE: "alloy",
-      }),
-    ).toThrow("Invalid streambot configuration");
   });
 });
 

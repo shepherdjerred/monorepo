@@ -117,9 +117,6 @@ export function createStreambotDeployment(
         // Global production kill switch. Enable only after synthetic, human holdout, live Discord,
         // and operational acceptance have all passed twice where required.
         VOICE_ASSISTANT_ENABLED: EnvValue.fromValue("false"),
-        VOICE_MODEL: EnvValue.fromValue("gpt-realtime-2.1"),
-        VOICE_ASSISTANT_VOICE: EnvValue.fromValue("marin"),
-        VOICE_WAKE_PHRASE: EnvValue.fromValue("Hey Streambot"),
         VOICE_ASSETS_DIR: EnvValue.fromValue("/opt/streambot/voice"),
         VOICE_KWS_RUNTIME: EnvValue.fromValue("auto"),
         VIDEOS_DIR: EnvValue.fromValue("/data/videos"),

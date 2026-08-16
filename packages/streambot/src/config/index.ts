@@ -76,9 +76,6 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
     voice: {
       enabled: bool(env["VOICE_ASSISTANT_ENABLED"]),
       openAiApiKey: str(env["OPENAI_API_KEY"]),
-      model: env["VOICE_MODEL"],
-      assistantVoice: env["VOICE_ASSISTANT_VOICE"],
-      wakePhrase: env["VOICE_WAKE_PHRASE"],
       assetsDir: str(env["VOICE_ASSETS_DIR"]),
       runtime: env["VOICE_KWS_RUNTIME"],
       preRollMs: num(env["VOICE_PRE_ROLL_MS"]),

@@ -55,3 +55,11 @@ export const VOICE_DTX_GAP_MS = 120;
  * tick bounds the extra endpoint latency; the ticker exists only while a candidate is pending.
  */
 export const VOICE_DTX_TICK_MS = 100;
+
+/**
+ * Fixed identifiers, deliberately not configuration. The realtime model and reply voice were
+ * z.literal env vars that could hold exactly one value — config theater. The wake phrase is
+ * encoded in the trained keyword/verifier assets, so no env var could change it either.
+ */
+export const VOICE_REALTIME_MODEL = "gpt-realtime-2.1";
+export const VOICE_ASSISTANT_VOICE = "marin";
