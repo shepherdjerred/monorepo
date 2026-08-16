@@ -318,7 +318,10 @@ func (r *portForwardResource) planToEntry(plan *portForwardResourceModel) client
 // ImportState imports a port forward rule by its name. Read then populates the
 // remaining attributes from the router.
 func (r *portForwardResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	// Trim as the DHCP lease and wireless importers do. Read finds the rule
+	// with strings.EqualFold, which tolerates case but not padding, so an ID
+	// like "Plex " would match nothing and drop the resource from state.
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), strings.TrimSpace(req.ID))...)
 }
 
 // findRuleByName searches for a port forward rule by name (case-insensitive).
