@@ -1,13 +1,14 @@
 import { recommended } from "@shepherdjerred/eslint-config";
+import pluginQuery from "@tanstack/eslint-plugin-query";
+
 const config = [
-  {
-    ignores: [
-      "fetcher/**",
-      "vite.config.ts",
-      "eslint.config.ts",
-      "**/*.test.ts",
-    ],
-  },
-  ...recommended({ tsconfigRootDir: import.meta.dirname, react: true }),
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    projectService: true,
+    react: true,
+    ignores: ["dist/**", "eslint.config.ts"],
+  }),
+  ...pluginQuery.configs["flat/recommended"],
 ];
+
 export default config;

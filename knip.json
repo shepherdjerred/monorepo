@@ -52,8 +52,9 @@
       "project": ["src/**/*.{ts,tsx}"]
     },
     "packages/better-skill-capped": {
-      "entry": ["src/index.tsx"],
-      "project": ["src/**/*.{ts,tsx}"],
+      "entry": ["src/main.tsx", "src/**/*.test.ts", "vite.config.ts"],
+      "project": ["src/**/*.{ts,tsx}", "vite.config.ts"],
+      "ignoreDependencies": ["shadcn"],
       "vite": false
     },
     "packages/sjer.red": {
@@ -432,7 +433,6 @@
     "zod"
   ],
   "ignoreFiles": [
-    "packages/better-skill-capped/src/datastore/content-datastore.ts",
     "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts",
     "packages/discord-plays-mario-kart/packages/frontend/src/util.ts",
     "packages/discord-plays-pokemon/packages/frontend/src/util.ts",
@@ -441,7 +441,7 @@
     "packages/scout-for-lol/packages/frontend/src/components/StatCard.astro"
   ],
   "ignoreIssues": {
-    "packages/better-skill-capped/src/utils/url-utilities.ts": ["exports"],
+    "packages/better-skill-capped/src/components/ui/card.tsx": ["exports"],
     "packages/discord-plays-mario-kart/packages/backend/src/observability/tracing.ts": [
       "exports"
     ],

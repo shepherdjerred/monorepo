@@ -1,248 +1,212 @@
-import type { Content } from "#src/model/content";
 import type {
-  ManifestCommentary,
-  ManifestCourse,
-  ManifestCourseChapters,
+  Content,
+  Course,
+  CourseVideo,
+  Commentary,
+  Video,
+} from "#src/model/content";
+import type {
   Manifest,
+  ManifestCommentary,
+  ManifestCourseChapters,
   ManifestVideo,
 } from "./manifest.ts";
-import type { Video } from "#src/model/video";
-import type { Course } from "#src/model/course";
-import type { Commentary } from "#src/model/commentary";
-import { roleFromString } from "#src/model/role";
+import { parseRole } from "#src/model/role";
 import { rawTitleToDisplayTitle } from "#src/utils/title-utilities";
 import { getCommentaryUrl, getVideoUrl } from "#src/utils/url-utilities";
-import type { CourseVideo } from "#src/model/course-video";
 
-export class Parser {
-  parse(manifest: Manifest): Content {
-    return {
-      videos: this.parseVideos(
-        manifest.videos,
-        manifest.courses,
-        manifest.videosToCourses,
-      ),
-      courses: this.parseCourses(
-        manifest.videos,
-        manifest.courses,
-        manifest.videosToCourses,
-      ),
-      commentaries: this.parseCommentaries(manifest.commentaries),
-      unmappedVideos: this.getUnmatchedVideos(
-        manifest.videos,
-        manifest.courses,
-        manifest.videosToCourses,
-      ),
-    };
+export function parseManifest(manifest: Manifest): Content {
+  const videoUuidToCourseTitle = buildVideoUuidToCourseTitle(
+    manifest.videosToCourses,
+  );
+  const courseTitles = new Set(manifest.courses.map((course) => course.title));
+
+  const parsedVideos = manifest.videos.map((video) => parseVideo(video));
+  const videoByUuid = new Map(parsedVideos.map((video) => [video.uuid, video]));
+
+  const videos: Video[] = [];
+  const unmappedVideos: Video[] = [];
+  for (const video of parsedVideos) {
+    const courseTitle = videoUuidToCourseTitle.get(video.uuid);
+    if (courseTitle !== undefined && courseTitles.has(courseTitle)) {
+      videos.push(video);
+    } else {
+      unmappedVideos.push(video);
+    }
   }
 
-  parseDate(input: number): Date {
-    const releaseDate = new Date(0);
-    releaseDate.setUTCMilliseconds(input);
-    return releaseDate;
-  }
-
-  getUnmatchedVideos(
-    input: ManifestVideo[],
-    courses: ManifestCourse[],
-    chapters: ManifestCourseChapters,
-  ): Video[] {
-    return input.flatMap((video) => {
-      const match = this.matchVideoToCourse(video, courses, chapters);
-
-      if (match !== undefined) {
-        return [];
-      }
-
-      const releaseDate = this.parseDate(video.rDate);
-      const role = roleFromString(video.role);
-      const imageUrl = this.getImageUrl(video);
-      const title = rawTitleToDisplayTitle(video.title);
-      const videoUrl = getVideoUrl({ uuid: video.uuid });
-
-      return [
+  return {
+    videos,
+    courses: parseCourses(manifest, videoByUuid),
+    commentaries: manifest.commentaries.map((commentary) =>
+      parseCommentary(commentary),
+    ),
+    unmappedVideos,
+    staffByName: new Map(
+      manifest.staff.map((staff) => [
+        staff.name,
         {
-          role,
-          title,
-          description: video.desc,
-          releaseDate,
-          durationInSeconds: video.durSec,
-          uuid: video.uuid,
-          imageUrl,
-          skillCappedUrl: videoUrl,
+          name: staff.name,
+          summonerName: staff.summonerName,
+          profileImage: staff.profileImage,
+          profileImageWithRank: staff.profileImageWithRank,
+          playerPeakRank: staff.playerPeakRank,
         },
-      ];
-    });
-  }
+      ]),
+    ),
+    patch: {
+      version: manifest.patch.patchVal,
+      releaseDate: parseDate(manifest.patch.releaseDate),
+    },
+    generatedAt: parseDate(manifest.timeStamp),
+  };
+}
 
-  matchVideoToCourse(
-    video: ManifestVideo,
-    courses: ManifestCourse[],
-    chapters: ManifestCourseChapters,
-  ): { video: string; course: ManifestCourse } | undefined {
-    let courseTitle: string | null = null;
-    for (const [key, value] of Object.entries(chapters)) {
-      if (value === undefined) {
-        continue;
-      }
-      const match = value.chapters[0].vids.some((courseVideo) => {
-        return courseVideo.uuid === video.uuid;
-      });
-      if (match) {
-        courseTitle = key;
-        break;
+function buildVideoUuidToCourseTitle(
+  chapters: ManifestCourseChapters,
+): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const [courseTitle, entry] of Object.entries(chapters)) {
+    if (entry === undefined) {
+      continue;
+    }
+    for (const video of entry.chapters[0].vids) {
+      if (!map.has(video.uuid)) {
+        map.set(video.uuid, courseTitle);
       }
     }
+  }
+  return map;
+}
 
-    if (courseTitle === null) {
-      return undefined;
+export function parseDate(input: number): Date {
+  const releaseDate = new Date(0);
+  releaseDate.setUTCMilliseconds(input);
+  return releaseDate;
+}
+
+/**
+ * Game times arrive as "27m26s", but the production manifest also contains
+ * typo'd variants ("23m35", "27m17m", "33m11ss", trailing spaces). Minutes
+ * always lead; anything after the second number is upstream noise.
+ *
+ * `gameTime` is free text nobody validates upstream, and the variants above
+ * are evidence that its spelling keeps drifting. An unrecognized value is
+ * therefore expected boundary noise, not a broken caller contract, so this
+ * returns `undefined` rather than throwing: a single unreadable commentary
+ * loses its own game-length tag instead of aborting the entire content load.
+ */
+export function parseGameTime(input: string): number | undefined {
+  const match = /^(\d+)m(?:(\d+)[a-z]*)?\s*$/.exec(input.trim());
+  if (match === null) {
+    return undefined;
+  }
+  const minutes = Number.parseInt(match[1] ?? "0", 10);
+  const seconds = Number.parseInt(match[2] ?? "0", 10);
+  return minutes * 60 + seconds;
+}
+
+export function getImageUrl(input: ManifestVideo | ManifestCommentary): string {
+  return input.tSS === ""
+    ? `https://ik.imagekit.io/skillcapped/thumbnails/${input.uuid}/thumbnails/thumbnail_${String(input.tId)}.jpg`
+    : input.tSS.replace(
+        "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/",
+        "https://ik.imagekit.io/skillcapped/customss/jpg-images/",
+      );
+}
+
+function parseVideo(video: ManifestVideo): Video {
+  return {
+    kind: "video",
+    role: parseRole(video.role),
+    title: rawTitleToDisplayTitle(video.title),
+    description: video.desc,
+    releaseDate: parseDate(video.rDate),
+    durationInSeconds: video.durSec,
+    uuid: video.uuid,
+    imageUrl: getImageUrl(video),
+    skillCappedUrl: getVideoUrl({ uuid: video.uuid }),
+  };
+}
+
+function parseCourses(
+  manifest: Manifest,
+  videoByUuid: Map<string, Video>,
+): Course[] {
+  return manifest.courses.flatMap((course): Course[] => {
+    const chapterEntry = manifest.videosToCourses[course.title];
+    if (chapterEntry === undefined) {
+      return [];
     }
 
-    const matchedCourse = courses.find((candidate) => {
-      return courseTitle === candidate.title;
-    });
-
-    if (matchedCourse === undefined) {
-      return undefined;
-    }
-
-    return {
-      video: video.uuid,
-      course: matchedCourse,
-    };
-  }
-
-  parseVideos(
-    input: ManifestVideo[],
-    courses: ManifestCourse[],
-    chapters: ManifestCourseChapters,
-  ): Video[] {
-    return input.flatMap((video: ManifestVideo): Video | Video[] => {
-      const releaseDate = this.parseDate(video.rDate);
-      const role = roleFromString(video.role);
-      const imageUrl = this.getImageUrl(video);
-      const title = rawTitleToDisplayTitle(video.title);
-
-      const match = this.matchVideoToCourse(video, courses, chapters);
-
-      if (match === undefined) {
-        return [];
-      }
-
-      const videoUrl = getVideoUrl({ uuid: video.uuid });
-
-      return {
-        role,
-        title,
-        description: video.desc,
-        releaseDate,
-        durationInSeconds: video.durSec,
-        uuid: video.uuid,
-        imageUrl,
-        skillCappedUrl: videoUrl,
-      };
-    });
-  }
-
-  getImageUrl(input: ManifestVideo | ManifestCommentary): string {
-    return input.tSS === ""
-      ? `https://ik.imagekit.io/skillcapped/thumbnails/${input.uuid}/thumbnails/thumbnail_${String(input.tId)}.jpg`
-      : input.tSS.replace(
-          "https://d20k8dfo6rtj2t.cloudfront.net/jpg-images/",
-          "https://ik.imagekit.io/skillcapped/customss/jpg-images/",
-        );
-  }
-
-  parseCourses(
-    manifestVideos: ManifestVideo[],
-    manifestCourses: ManifestCourse[],
-    manifestCourseChapters: ManifestCourseChapters,
-  ): Course[] {
-    const videos = this.parseVideos(
-      manifestVideos,
-      manifestCourses,
-      manifestCourseChapters,
+    const courseVideos: CourseVideo[] = chapterEntry.chapters[0].vids.map(
+      (video): CourseVideo => {
+        const videoInfo = videoByUuid.get(video.uuid);
+        if (videoInfo === undefined) {
+          throw new Error(
+            `Course "${course.title}" references unknown video ${JSON.stringify(video)}`,
+          );
+        }
+        return {
+          video: videoInfo,
+          ...(video.altTitle === undefined
+            ? {}
+            : { alternateTitle: rawTitleToDisplayTitle(video.altTitle) }),
+        };
+      },
     );
 
-    return manifestCourses
-      .filter(
-        (course) =>
-          manifestCourseChapters[course.title]?.chapters !== undefined,
-      )
-      .map((course: ManifestCourse): Course => {
-        const releaseDate = this.parseDate(course.rDate);
-        const role = roleFromString(course.role);
-        const title = rawTitleToDisplayTitle(course.title);
+    return [
+      {
+        kind: "course",
+        title: rawTitleToDisplayTitle(course.title),
+        uuid: course.uuid,
+        ...(course.desc === "" ? {} : { description: course.desc }),
+        releaseDate: parseDate(course.rDate),
+        role: parseRole(course.role),
+        image: course.courseImage2,
+        videos: courseVideos,
+        tags: course.tags,
+        recommended: course.recommended,
+        ...(course.marketingString === undefined
+          ? {}
+          : { marketingString: course.marketingString }),
+        ...(course.seasonString === undefined
+          ? {}
+          : { seasonString: course.seasonString }),
+      },
+    ];
+  });
+}
 
-        const courseChapters = manifestCourseChapters[course.title];
-        if (courseChapters === undefined) {
-          throw new Error(`Course chapters not found for ${course.title}`);
-        }
-        const courseVideos: CourseVideo[] = courseChapters.chapters[0].vids.map(
-          (video) => {
-            const videoInfo = videos.find(
-              (candidate) => candidate.uuid === video.uuid,
-            );
-            const altTitle =
-              video.altTitle === undefined
-                ? undefined
-                : rawTitleToDisplayTitle(video.altTitle);
-
-            if (videoInfo === undefined) {
-              throw new Error(`Couldn't find video ${JSON.stringify(video)}`);
-            }
-
-            return {
-              video: videoInfo,
-              altTitle,
-            };
-          },
-        );
-
-        return {
-          title,
-          uuid: course.uuid,
-          description: course.desc || undefined,
-          releaseDate: releaseDate,
-          role: role,
-          image: course.courseImage2,
-          videos: courseVideos,
-        };
-      });
-  }
-
-  parseCommentaries(dumpCommentary: ManifestCommentary[]): Commentary[] {
-    return dumpCommentary
-      .filter((commentary) => commentary.title !== undefined)
-      .map((commentary): Commentary => {
-        const releaseDate = this.parseDate(commentary.rDate);
-        const role = roleFromString(commentary.role);
-        const imageUrl = this.getImageUrl(commentary);
-        const commentaryTitle = commentary.title ?? "";
-        const title = rawTitleToDisplayTitle(commentaryTitle);
-
-        const commentaryUrl = getCommentaryUrl({ uuid: commentary.uuid });
-
-        return {
-          role,
-          title,
-          description: commentary.desc ?? "",
-          releaseDate,
-          durationInSeconds: commentary.durSec,
-          uuid: commentary.uuid,
-          imageUrl,
-          skillCappedUrl: commentaryUrl,
-          staff: commentary.staff,
-          matchLink: commentary.matchLink,
-          champion: commentary.yourChampion,
-          opponent: commentary.theirChampion,
-          kills: commentary.k,
-          deaths: commentary.d,
-          assists: commentary.a,
-          gameLengthInMinutes: Number.parseInt(commentary.gameTime),
-          carry: commentary.carry,
-          type: commentary.type,
-        };
-      });
-  }
+// Production commentaries carry no `title` at all (verified Aug 2026: 0 of
+// 3231). The old parser filtered on `title !== undefined`, which silently
+// removed every commentary from the app. The card UI renders the matchup as
+// the heading, so derive the title from it instead of filtering.
+function parseCommentary(commentary: ManifestCommentary): Commentary {
+  const gameLengthInSeconds = parseGameTime(commentary.gameTime);
+  return {
+    kind: "commentary",
+    role: parseRole(commentary.role),
+    title:
+      commentary.title === undefined
+        ? `${commentary.yourChampion} vs ${commentary.theirChampion}`
+        : rawTitleToDisplayTitle(commentary.title),
+    description: commentary.desc ?? "",
+    releaseDate: parseDate(commentary.rDate),
+    durationInSeconds: commentary.durSec,
+    uuid: commentary.uuid,
+    imageUrl: getImageUrl(commentary),
+    skillCappedUrl: getCommentaryUrl({ uuid: commentary.uuid }),
+    staff: commentary.staff,
+    matchLink: commentary.matchLink,
+    champion: commentary.yourChampion,
+    opponent: commentary.theirChampion,
+    kills: commentary.k,
+    deaths: commentary.d,
+    assists: commentary.a,
+    ...(gameLengthInSeconds === undefined ? {} : { gameLengthInSeconds }),
+    carry: commentary.carry,
+    type: commentary.type,
+  };
 }

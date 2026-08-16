@@ -1,6 +1,4 @@
-import type { Video } from "./video.ts";
-import type { Course } from "./course.ts";
-import type { Commentary } from "./commentary.ts";
+import type { Video, Course, Commentary } from "./content.ts";
 
 export type Bookmark = {
   item: Bookmarkable;
