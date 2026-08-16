@@ -3,13 +3,6 @@ resource "aws_s3_bucket" "better_skill_capped" {
   bucket = "better-skill-capped"
 }
 
-resource "aws_s3_bucket" "clauderon" {
-  # Keep this resource through the site-retirement apply so the provider can
-  # purge the archived site's non-empty bucket before the follow-up removes it.
-  bucket        = "clauderon"
-  force_destroy = true
-}
-
 resource "aws_s3_bucket" "resume" {
   bucket = "resume"
 }
