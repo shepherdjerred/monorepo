@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test } from "bun:test";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
@@ -124,6 +124,71 @@ test("discards staging left behind by an interrupted copy", async () => {
 
   expect(await publishedBuildId(lake)).toBe("seed-0001");
   expect(await Bun.file(`${lake}.seeding/CURRENT`).exists()).toBe(false);
+});
+
+test("refuses a relative destination rather than resolving it here", async () => {
+  await writeLake(seedLakeDir(), "seed-0001");
+  await expect(copySeedInto("./report-lake")).rejects.toThrow(
+    "Refusing to seed a relative report lake path",
+  );
+});
+
+test("refuses the filesystem root", async () => {
+  await writeLake(seedLakeDir(), "seed-0001");
+  await expect(copySeedInto(path.parse(process.cwd()).root)).rejects.toThrow(
+    "Refusing to seed the filesystem root",
+  );
+});
+
+test("refuses a destination that contains the current directory", async () => {
+  // What `REPORT_LAKE_DIR=..` resolves to: an ancestor of where this process
+  // runs, so replacing it would delete the checkout itself. Asserted against a
+  // synthetic ancestor rather than the real one — running the unguarded code
+  // against process.cwd()'s parent genuinely deletes it.
+  await writeLake(seedLakeDir(), "seed-0001");
+  const nested = path.join(workspace, "checkout", "deep", "cwd");
+  await mkdir(nested, { recursive: true });
+  // process.cwd() reports the real path, and macOS resolves /var to
+  // /private/var — compare against the realpath or the ancestor check silently
+  // never matches and a different branch of the guard answers instead.
+  const ancestor = path.dirname(path.dirname(await realpath(nested)));
+  const originalCwd = process.cwd();
+  process.chdir(nested);
+  try {
+    await expect(copySeedInto(ancestor)).rejects.toThrow(
+      "it contains the current directory",
+    );
+  } finally {
+    process.chdir(originalCwd);
+  }
+});
+
+test("refuses a non-empty directory that is not a report lake", async () => {
+  await writeLake(seedLakeDir(), "seed-0001");
+  const notALake = path.join(workspace, "someone-elses-data");
+  await mkdir(notALake, { recursive: true });
+  await writeFile(path.join(notALake, "important.txt"), "do not delete");
+
+  await expect(copySeedInto(notALake)).rejects.toThrow(
+    "does not look like a report lake",
+  );
+  expect(await Bun.file(path.join(notALake, "important.txt")).exists()).toBe(
+    true,
+  );
+});
+
+test("still replaces a real lake, and an empty directory", async () => {
+  await writeLake(seedLakeDir(), "seed-0001");
+
+  const realLake = path.join(workspace, "checkout-real", "report-lake");
+  await writeLake(realLake, "old-0001");
+  await copySeedInto(realLake);
+  expect(await publishedBuildId(realLake)).toBe("seed-0001");
+
+  const emptyDir = path.join(workspace, "empty", "report-lake");
+  await mkdir(emptyDir, { recursive: true });
+  await copySeedInto(emptyDir);
+  expect(await publishedBuildId(emptyDir)).toBe("seed-0001");
 });
 
 test("resolves a relative REPORT_LAKE_DIR against the backend's cwd, not the caller's", () => {

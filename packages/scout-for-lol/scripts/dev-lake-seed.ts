@@ -1,4 +1,4 @@
-import { cp, mkdir, rename, rm, stat } from "node:fs/promises";
+import { cp, mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { homedir } from "node:os";
 
@@ -88,6 +88,71 @@ export async function publishedBuildId(
  * Copies to a sibling and renames, so an interrupted copy cannot leave a
  * half-written tree behind a `CURRENT` that claims it is complete.
  */
+/**
+ * Refuse to delete anything that is not plausibly a report lake.
+ *
+ * `copySeedInto` removes its destination outright, and that destination comes
+ * from `REPORT_LAKE_DIR`. A value of `.`, `..`, or `/` therefore aims a
+ * recursive delete at the repo or the filesystem root, and `dev:web` reaches
+ * this path automatically whenever the destination looks unseeded. The
+ * resolve-once rule in `resolveBackendLakeDir` keeps the two processes
+ * agreeing on *which* directory; it does nothing about the value itself being
+ * dangerous, so check that here — at the only place that deletes.
+ */
+async function assertSafeLakeTarget(lakeDir: string): Promise<void> {
+  if (!path.isAbsolute(lakeDir)) {
+    throw new Error(
+      `Refusing to seed a relative report lake path ${lakeDir}: resolve it first with resolveBackendLakeDir().`,
+    );
+  }
+  if (path.dirname(lakeDir) === lakeDir) {
+    throw new Error(
+      `Refusing to seed the filesystem root ${lakeDir} — check REPORT_LAKE_DIR.`,
+    );
+  }
+
+  const cwd = process.cwd();
+  if (cwd === lakeDir || cwd.startsWith(`${lakeDir}${path.sep}`)) {
+    throw new Error(
+      `Refusing to seed ${lakeDir}: it contains the current directory, so replacing it would delete this checkout. Check REPORT_LAKE_DIR.`,
+    );
+  }
+
+  const existing = await stat(lakeDir).catch(() => null);
+  if (existing === null) {
+    return;
+  }
+  if (!existing.isDirectory()) {
+    throw new Error(`Refusing to seed ${lakeDir}: it is not a directory.`);
+  }
+
+  // An empty or freshly-created directory is fine — that is the unseeded
+  // case. What must never be deleted is a directory holding something else.
+  const markers = [
+    "CURRENT",
+    "builds",
+    "matches-recent",
+    "prematch-recent",
+    "competition-rank-history-recent",
+  ];
+  const present = await Promise.all(
+    markers.map(
+      async (marker) =>
+        (await stat(path.join(lakeDir, marker)).catch(() => null)) !== null,
+    ),
+  );
+  if (present.includes(true)) {
+    return;
+  }
+
+  const entries = await readdir(lakeDir).catch(() => []);
+  if (entries.length > 0) {
+    throw new Error(
+      `Refusing to seed ${lakeDir}: it holds ${entries.length.toString()} entries but none of ${markers.join(", ")}, so it does not look like a report lake. Check REPORT_LAKE_DIR.`,
+    );
+  }
+}
+
 export async function copySeedInto(lakeDir: string): Promise<string> {
   const seed = seedLakeDir();
   const buildId = await publishedBuildId(seed);
@@ -96,6 +161,8 @@ export async function copySeedInto(lakeDir: string): Promise<string> {
       `No published build in the shared seed at ${seed}. Run \`bun run dev:seed\` first.`,
     );
   }
+
+  await assertSafeLakeTarget(lakeDir);
 
   const staging = `${lakeDir}.seeding`;
   await rm(staging, { recursive: true, force: true });
