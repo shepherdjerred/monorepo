@@ -650,7 +650,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9586@sha256:fefec90ac311bb9ada67620555b74728119c3285f0bf472e520d09503a0cd14e",
+      "value": "2.0.0-9656@sha256:613d14bad6cdb2299f8499dcc78a273354d3c8eb643d8d41cafd04f1124990cc",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -728,7 +728,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9586@sha256:4300fcb4c46e10a3aadc246e7aafb5dcfbb62e9ffbade4cc1b9e8d4f95d6f17c",
+      "value": "2.0.0-9653@sha256:017f15284a9f9778f98ce4c93d600d27b391faf265c6f2bd935e2ecfbb96b6fb",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful scout-evals image push."
@@ -1354,7 +1354,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9600@sha256:6efff379e9c3ce568ec78e7e9743d280bbd483463e2fc67aed8e69f4182abf22",
+      "value": "2.0.0-9654@sha256:5d7572a7fe9522bc691aa145f77bfc6c1ab71c5b4672bfe1306e842d7701f8bb",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
