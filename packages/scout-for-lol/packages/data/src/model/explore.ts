@@ -116,17 +116,15 @@ export const ExploreAnswerSchema = z
      * stops (a partial snapshot only carries the keys emitted so far), which
      * is why this is appended rather than placed where it reads best.
      *
-     * Bounded generously and nullable on purpose — a tight `max()` would turn
-     * an over-long title into a schema failure that costs the reader the whole
-     * answer. The backend clamps for display instead.
+     * Unbounded and nullable on purpose — a `max()` here would turn an
+     * over-long title into a schema failure that costs the reader the whole
+     * answer, because the same schema both instructs the model and parses its
+     * output. `titleFromQuestion` clamps to EXPLORE_TITLE_MAX_LENGTH before
+     * anything is stored or displayed, so the bound is enforced where it
+     * cannot destroy the answer. The persisted and tRPC schemas below stay
+     * strict — they see already-clamped titles.
      */
-    title: z
-      .string()
-      .trim()
-      .min(1)
-      .max(EXPLORE_TITLE_MAX_LENGTH)
-      .nullable()
-      .default(null),
+    title: z.string().trim().min(1).nullable().default(null),
     queryText: ReportQueryTextSchema.nullable().default(null),
     /**
      * Limits a reader needs to judge the answer — small samples, a corpus
