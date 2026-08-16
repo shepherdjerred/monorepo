@@ -82,9 +82,17 @@ export const BucksVoidReasonSchema = z.enum([
  */
 export type BucksPoolParticipant = z.infer<typeof BucksPoolParticipantSchema>;
 export const BucksPoolParticipantSchema = z.strictObject({
-  puuid: LeaguePuuidSchema,
+  /**
+   * Null for participants Riot scrubbed for privacy. Those players carry no
+   * usable identity, so they can never be a bet's subject — but they still
+   * occupy a slot on the loading screen the bettor saw, so the roster records
+   * them rather than dropping them and misrepresenting the lobby.
+   */
+  puuid: LeaguePuuidSchema.nullable(),
   teamId: RiotTeamIdSchema,
-  championName: z.string(),
+  /** Riot champion ID. The spectator payload has no champion name, and this
+   * snapshot is written before any Data Dragon lookup. */
+  championId: z.number().int(),
   riotId: z.string().optional(),
   /** Set only for participants Scout tracks in this guild. */
   trackedAlias: z.string().optional(),
