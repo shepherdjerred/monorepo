@@ -7,6 +7,7 @@ import {
 } from "#src/discord/commands/onboarding.ts";
 import { listCommand } from "#src/discord/commands/list.ts";
 import { trackCommand } from "#src/discord/commands/track.ts";
+import { bbCommand } from "#src/discord/commands/bb.ts";
 
 export const commandDefinitions = [
   helpCommand,
@@ -16,6 +17,7 @@ export const commandDefinitions = [
   docsCommand,
   trackCommand,
   listCommand,
+  bbCommand,
 ] as const;
 
 export const commandPayload = commandDefinitions.map((command) =>

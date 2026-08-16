@@ -346,6 +346,18 @@ Scout intentionally exposes only seven Discord commands: `/help`, `/setup`,
 canonical surface for filters, queues, channels, competitions, reports, roles,
 and audit history. Do not recreate the removed management command trees.
 
+`/bb` (Bryan Bucks) is the one owner-approved exception, pinned by
+`definitions.test.ts`. It is gated to a single guild by the `betting_enabled`
+flag, and a balance you cannot check from the same place you place a bet is not
+usable. Adding anything else needs the same explicit decision.
+
+**Interactions are routed in `discord/interactions.ts`**, not in
+`discord/commands/index.ts`. That module is the single `interactionCreate`
+registration and dispatches buttons alongside chat-input commands; the commands
+module owns command dispatch only. It previously owned the event too and
+early-returned on anything that was not a chat-input command, which silently
+dropped every message component.
+
 Definitions are collected in `packages/backend/src/discord/commands/definitions.ts`
 and registered with a full global `applicationCommands` replacement in
 `discord/rest.ts`, which also removes stale commands and autocomplete handlers.
@@ -589,6 +601,61 @@ Two sources **refuse** global scope rather than answering wrongly:
   not stop the model emitting it.
 
 ---
+
+## Bryan Bucks — friendly betting
+
+A per-guild betting economy over the existing match lifecycle, in
+`backend/src/betting/` (no barrel), gated by the `betting_enabled` flag. Design
+notes: `packages/docs/plans/2026-08-15_scout-bryan-bucks-betting.md`.
+
+Bucks exchange at 1:10 Bucks:CAD, in person only, from Bryan, who lives in rural
+Canada. There is no monetary component and nothing transfers to real goods.
+
+- **The first statement of every mutating transaction is a guarded conditional
+  write.** It validates the precondition _and_ takes the SQLite write lock in
+  one round trip. This is the whole double-spend guard and the whole
+  exactly-once story; a read-then-write would race, and
+  `SQLITE_BUSY_SNAPSHOT` is **not** retried by `busy_timeout`.
+- **`BucksAccount.balance` is stored, and `src/betting/ledger.ts` is the only
+  module allowed to move it.** This departs from the `DmAuditLog` "derive,
+  never store" rule deliberately: that rule guards a counter written after a
+  _non-transactional_ side effect, whereas here the balance and its ledger row
+  commit together. `reconcileBucksBalances` re-derives from the ledger and
+  **reports** drift rather than correcting it — a mismatch is a bug in the
+  chokepoint, and quietly patching it would hide that.
+- **One pool per `(matchId, serverId)`; a bet stores a `predictedTeamId`.**
+  Every 5v5 outcome is one binary event, so with two tracked players on opposite
+  teams "A wins" _is_ "B loses". The UI still says "bet LOSE on Jerred".
+- **Settlement idempotency is the `poolState` column, not a marker table.**
+  Unlike `MatchAiAttempt` — marked _before_ its call because OpenAI spend cannot
+  join a transaction — every side effect here is local, so the transition
+  commits with the payouts. `settleBettingForMatch` returns a summary only for
+  pools _this_ call settled, which is what stops a duplicate announcement.
+- **Settle and award outside the Discord path.** `settleAndAwardBucks` is called
+  from `processMatchAndUpdatePlayers`, after the S3 ingest gate and outside
+  `if (!silent)`. `processMatch` returns early with no subscribed channel and
+  past `MAX_DISCORD_ALERT_AGE_MS`, and is skipped for silent backfill — but
+  Bucks are owed regardless of whether a message is worth sending.
+- **`voidStaleBettingPools` is not optional.** Without it, a match that never
+  produces a post-match result silently destroys every stake in its pool. Six
+  hours is chosen against the `ActiveGame` TTL and `MAX_DISCORD_ALERT_AGE_MS`,
+  both three.
+- **The prediction never calls Riot.** `buildLoadingScreenData` already fetches
+  ranks for all ten players; `prediction-inputs.ts` consumes that structure. The
+  prematch poll runs every 30s across up to 50 players, so re-fetching would be
+  thousands of requests a minute. The formula has **no intercept**, so a
+  symmetric lobby returns exactly 0.500 — pinned by a test.
+- **MVP is role-aware and lives in the backend**, because `toMatch()` drops
+  objective damage, heals/shields on teammates, CC, self-mitigated damage, and
+  `teamPosition`. Scores normalize as per-team share, so they need no
+  recalibration across game length or patch. `findMvpIndex` in the report
+  package answers a different question (splash-art hero, tracked players only)
+  and is left alone.
+- **A custom ID carries a key, never state.** Buttons encode a roster _index_
+  into the pool's frozen snapshot, so they survive a restart and stay inside
+  Discord's 100-character cap. Parsing never throws — it is an unauthenticated
+  surface, and every field is re-validated against server state before a Buck
+  moves.
 
 ## Database (Prisma)
 
