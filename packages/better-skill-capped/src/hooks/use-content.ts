@@ -27,6 +27,8 @@ export type UseContentResult = {
   itemsByUuid: Map<string, ContentItem>;
   isLoading: boolean;
   error: Error | null;
+  /** Changes whenever a new manifest payload lands; usable as a cache key. */
+  dataUpdatedAt: number;
 };
 
 export function useContent(): UseContentResult {
@@ -56,5 +58,6 @@ export function useContent(): UseContentResult {
     itemsByUuid,
     isLoading: query.isLoading,
     error: query.error,
+    dataUpdatedAt: query.dataUpdatedAt,
   };
 }

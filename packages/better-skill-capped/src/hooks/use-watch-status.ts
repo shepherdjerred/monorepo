@@ -15,6 +15,8 @@ const watchStatusStore = createLocalStore({
 export type UseWatchStatusResult = {
   /** Watch statuses resolved against current content. */
   watchStatuses: WatchStatus[];
+  /** uuids currently marked watched, including ones absent from content. */
+  watchedUuids: ReadonlySet<string>;
   isWatched: (item: ContentItem) => boolean;
   toggle: (item: ContentItem) => void;
 };
@@ -72,5 +74,5 @@ export function useWatchStatus(): UseWatchStatusResult {
     });
   }, []);
 
-  return { watchStatuses, isWatched, toggle };
+  return { watchStatuses, watchedUuids, isWatched, toggle };
 }

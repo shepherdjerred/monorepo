@@ -15,6 +15,8 @@ const bookmarkStore = createLocalStore({
 export type UseBookmarksResult = {
   /** Bookmarks resolved against current content, newest first. */
   bookmarks: Bookmark[];
+  /** Every bookmarked uuid, including ones absent from current content. */
+  bookmarkedUuids: ReadonlySet<string>;
   isBookmarked: (item: ContentItem) => boolean;
   toggle: (item: ContentItem) => void;
 };
@@ -65,5 +67,5 @@ export function useBookmarks(): UseBookmarksResult {
     });
   }, []);
 
-  return { bookmarks, isBookmarked, toggle };
+  return { bookmarks, bookmarkedUuids, isBookmarked, toggle };
 }

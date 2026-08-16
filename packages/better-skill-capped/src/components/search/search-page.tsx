@@ -1,49 +1,45 @@
-import React from "react";
+import React, { useDeferredValue, useMemo } from "react";
 import { getRouteApi } from "@tanstack/react-router";
-import type { IFuseOptions } from "fuse.js";
 import { SearchBar } from "./search-bar.tsx";
-import { ResultList } from "./result-list.tsx";
 import { FilterPanel } from "./filter-panel.tsx";
+import { PaginationControls } from "./pagination-controls.tsx";
+import { ActiveFilters } from "./active-filters.tsx";
 import type { Filters } from "./filters.ts";
 import { ContentCard } from "#src/components/content/content-card";
 import { ScoutBanner } from "#src/components/layout/scout-banner";
-import { TipsDialog } from "#src/components/layout/tips-dialog";
-import type { ContentItem } from "#src/model/content";
 import { KINDS } from "#src/model/content";
 import { ROLES } from "#src/model/role";
 import { useContent } from "#src/hooks/use-content";
 import { useBookmarks } from "#src/hooks/use-bookmarks";
 import { useWatchStatus } from "#src/hooks/use-watch-status";
+import { useSearch } from "#src/search/use-search";
+import { getHighlightTerms } from "#src/search/highlight";
+import { buildChampionAliases } from "#src/search/normalize";
+import type { SearchParams } from "#src/routes/search";
+import type { SortOption } from "#src/search/run-search";
 
 const routeApi = getRouteApi("/");
 
-const SEARCHABLE_FIELDS = [
-  "title",
-  "description",
-  "alternateTitle",
-  "videos.video.title",
-  "videos.video.altTitle",
-  "video.title",
-  "video.description",
-  "video.alternateTitle",
+const SORT_OPTIONS: SortOption[] = [
+  "relevance",
+  "newest",
+  "oldest",
+  "shortest",
+  "longest",
 ];
 
-const FUSE_OPTIONS: IFuseOptions<ContentItem> = {
-  keys: SEARCHABLE_FIELDS,
-  minMatchCharLength: 2,
-  threshold: 0.3,
-  useExtendedSearch: true,
-  includeMatches: true,
-  ignoreLocation: true,
-  includeScore: true,
+const SORT_LABELS: Record<SortOption, string> = {
+  relevance: "Relevance",
+  newest: "Newest",
+  oldest: "Oldest",
+  shortest: "Shortest",
+  longest: "Longest",
 };
-
-const ITEMS_PER_PAGE = 20;
 
 export function SearchPage(): React.ReactElement {
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const { content, error } = useContent();
+  const { content, itemsByUuid, error } = useContent();
   const { isBookmarked, toggle: toggleBookmark } = useBookmarks();
   const { isWatched, toggle: toggleWatchStatus } = useWatchStatus();
 
@@ -54,84 +50,47 @@ export function SearchPage(): React.ReactElement {
     throw error;
   }
 
-  const items: ContentItem[] = React.useMemo(() => {
-    if (content === undefined) {
-      return [];
-    }
-    return [
-      ...content.courses,
-      ...content.videos,
-      ...content.commentaries,
-    ].sort(
-      (left, right) => right.releaseDate.getTime() - left.releaseDate.getTime(),
-    );
-  }, [content]);
+  // Defer the query so typing stays responsive; the search itself is an
+  // in-memory pass over ~6.3k docs.
+  const deferredQ = useDeferredValue(search.q);
+  const { result } = useSearch({ ...search, q: deferredQ });
 
-  // URL semantics: an empty role/kind list means "no filter".
-  const filters: Filters = {
-    roles: search.role,
-    types: search.kind,
-    watched: search.watched,
-    bookmarked: search.bookmarked,
-  };
+  const championAliases = useMemo(
+    () =>
+      buildChampionAliases(
+        (content?.commentaries ?? []).flatMap((commentary) => [
+          commentary.champion,
+          commentary.opponent,
+        ]),
+      ),
+    [content],
+  );
+  const highlightTerms = useMemo(
+    () => getHighlightTerms(deferredQ, championAliases),
+    [deferredQ, championAliases],
+  );
 
-  const filteredItems = items
-    .filter(
-      (item) => filters.roles.length === 0 || filters.roles.includes(item.role),
-    )
-    .filter(
-      (item) => filters.types.length === 0 || filters.types.includes(item.kind),
-    )
-    .filter((item) => {
-      switch (filters.watched) {
-        case "watched": {
-          return isWatched(item);
-        }
-        case "unwatched": {
-          return !isWatched(item);
-        }
-        case "any": {
-          return true;
-        }
-      }
-    })
-    .filter((item) => {
-      switch (filters.bookmarked) {
-        case "bookmarked": {
-          return isBookmarked(item);
-        }
-        case "unbookmarked": {
-          return !isBookmarked(item);
-        }
-        case "any": {
-          return true;
-        }
-      }
-    });
-
-  const onFiltersUpdate = (newFilters: Filters) => {
+  const updateSearch = (updated: Partial<SearchParams>) => {
     void navigate({
-      search: (previous) => ({
-        ...previous,
-        role: newFilters.roles.length === ROLES.length ? [] : newFilters.roles,
-        kind: newFilters.types.length === KINDS.length ? [] : newFilters.types,
-        watched: newFilters.watched,
-        bookmarked: newFilters.bookmarked,
-        page: 1,
-      }),
+      search: (previous) => ({ ...previous, ...updated, page: 1 }),
     });
   };
 
   // The filter panel renders "no filter" as everything checked.
   const panelFilters: Filters = {
-    ...filters,
-    roles: filters.roles.length === 0 ? [...ROLES] : filters.roles,
-    types: filters.types.length === 0 ? [...KINDS] : filters.types,
+    roles: search.role.length === 0 ? [...ROLES] : search.role,
+    types: search.kind.length === 0 ? [...KINDS] : search.kind,
+    watched: search.watched,
+    bookmarked: search.bookmarked,
   };
+
+  const items = (result?.docs ?? []).flatMap((doc) => {
+    const item = itemsByUuid.get(doc.uuid);
+    return item === undefined ? [] : [item];
+  });
 
   return (
     <>
-      <TipsDialog />
       <SearchBar
         value={search.q}
         onValueUpdate={(newValue) => {
@@ -140,34 +99,76 @@ export function SearchPage(): React.ReactElement {
             replace: true,
           });
         }}
-        placeholder="Search for courses, videos, or game commentary"
+        placeholder="Search for courses, videos, or game commentary — typos are okay"
       />
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 md:grid-cols-[14rem_1fr]">
         <aside>
           <FilterPanel
             filters={panelFilters}
-            onFiltersUpdate={onFiltersUpdate}
+            onFiltersUpdate={(newFilters) => {
+              updateSearch({
+                role:
+                  newFilters.roles.length === ROLES.length
+                    ? []
+                    : newFilters.roles,
+                kind:
+                  newFilters.types.length === KINDS.length
+                    ? []
+                    : newFilters.types,
+                watched: newFilters.watched,
+                bookmarked: newFilters.bookmarked,
+              });
+            }}
           />
         </aside>
         <main className="min-w-0">
           <ScoutBanner />
-          <ResultList
-            query={search.q}
-            items={filteredItems}
-            fuseOptions={FUSE_OPTIONS}
-            render={(result) => (
-              <ContentCard
-                key={result.item.uuid}
-                item={result.item}
-                matchedStrings={result.matchedStrings}
-                isWatched={isWatched}
-                isBookmarked={isBookmarked}
-                onToggleBookmark={toggleBookmark}
-                onToggleWatchStatus={toggleWatchStatus}
-              />
-            )}
-            itemsPerPage={ITEMS_PER_PAGE}
-            page={search.page}
+          <ActiveFilters params={search} onChange={updateSearch} />
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <p className="text-sm text-muted-foreground">
+              {result === undefined
+                ? "Loading…"
+                : `${String(result.total)} results`}
+            </p>
+            <label className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Sort</span>
+              <select
+                className="h-8 rounded-lg border bg-background px-2 text-sm"
+                value={search.sort}
+                onChange={(event) => {
+                  const selected = SORT_OPTIONS.find(
+                    (option) => option === event.target.value,
+                  );
+                  updateSearch({ sort: selected ?? "relevance" });
+                }}
+              >
+                {SORT_OPTIONS.map((value) => (
+                  <option key={value} value={value}>
+                    {SORT_LABELS[value]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {items.length === 0 && result !== undefined && (
+            <p className="py-12 text-center text-muted-foreground">
+              No results. Try a different query or loosen the filters.
+            </p>
+          )}
+          {items.map((item) => (
+            <ContentCard
+              key={item.uuid}
+              item={item}
+              matchedStrings={highlightTerms}
+              isWatched={isWatched}
+              isBookmarked={isBookmarked}
+              onToggleBookmark={toggleBookmark}
+              onToggleWatchStatus={toggleWatchStatus}
+            />
+          ))}
+          <PaginationControls
+            currentPage={search.page}
+            lastPage={result?.pageCount ?? 0}
             onPageChange={(newPage) => {
               // Scrolling here (the event handler) rather than in an effect —
               // scrollRestoration only manages full-navigation scroll.
