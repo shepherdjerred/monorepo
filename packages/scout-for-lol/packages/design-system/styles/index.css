@@ -1,0 +1,49 @@
+@import "./generated/tokens.css";
+@import "./fonts.css";
+@import "./components.css";
+
+* {
+  border-color: var(--scout-color-border);
+}
+
+html {
+  color-scheme: light;
+  background: var(--scout-color-canvas);
+}
+
+html[data-scout-mode="dark"] {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--scout-color-canvas);
+  color: var(--scout-color-text);
+  font-family: var(--scout-font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--scout-font-display);
+}
+
+:focus-visible {
+  outline: 3px solid var(--scout-color-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}

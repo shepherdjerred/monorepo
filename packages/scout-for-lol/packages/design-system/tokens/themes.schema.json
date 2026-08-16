@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scout-for-lol.com/schemas/design-system-themes-v1.json",
+  "title": "Scout design-system themes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "version", "themes"],
+  "properties": {
+    "$schema": { "const": "./themes.schema.json" },
+    "version": { "const": 1 },
+    "themes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modern-light",
+        "modern-dark",
+        "classic-light",
+        "classic-dark"
+      ],
+      "properties": {
+        "modern-light": { "$ref": "#/$defs/theme" },
+        "modern-dark": { "$ref": "#/$defs/theme" },
+        "classic-light": { "$ref": "#/$defs/theme" },
+        "classic-dark": { "$ref": "#/$defs/theme" }
+      }
+    }
+  },
+  "$defs": {
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9A-F]{6}([0-9A-F]{2})?$"
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["colors", "typography", "shape", "motion"],
+      "properties": {
+        "colors": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "canvas",
+            "surface",
+            "surfaceRaised",
+            "text",
+            "textMuted",
+            "primary",
+            "primaryText",
+            "accent",
+            "accentText",
+            "border",
+            "interactiveHover",
+            "interactiveActive",
+            "interactiveDisabled",
+            "focus",
+            "success",
+            "successText",
+            "warning",
+            "warningText",
+            "danger",
+            "dangerText",
+            "info",
+            "infoText",
+            "overlay",
+            "chart1",
+            "chart2",
+            "chart3",
+            "chart4",
+            "chart5",
+            "chart6",
+            "chart7",
+            "chart8"
+          ],
+          "properties": {
+            "canvas": { "$ref": "#/$defs/color" },
+            "surface": { "$ref": "#/$defs/color" },
+            "surfaceRaised": { "$ref": "#/$defs/color" },
+            "text": { "$ref": "#/$defs/color" },
+            "textMuted": { "$ref": "#/$defs/color" },
+            "primary": { "$ref": "#/$defs/color" },
+            "primaryText": { "$ref": "#/$defs/color" },
+            "accent": { "$ref": "#/$defs/color" },
+            "accentText": { "$ref": "#/$defs/color" },
+            "border": { "$ref": "#/$defs/color" },
+            "interactiveHover": { "$ref": "#/$defs/color" },
+            "interactiveActive": { "$ref": "#/$defs/color" },
+            "interactiveDisabled": { "$ref": "#/$defs/color" },
+            "focus": { "$ref": "#/$defs/color" },
+            "success": { "$ref": "#/$defs/color" },
+            "successText": { "$ref": "#/$defs/color" },
+            "warning": { "$ref": "#/$defs/color" },
+            "warningText": { "$ref": "#/$defs/color" },
+            "danger": { "$ref": "#/$defs/color" },
+            "dangerText": { "$ref": "#/$defs/color" },
+            "info": { "$ref": "#/$defs/color" },
+            "infoText": { "$ref": "#/$defs/color" },
+            "overlay": { "$ref": "#/$defs/color" },
+            "chart1": { "$ref": "#/$defs/color" },
+            "chart2": { "$ref": "#/$defs/color" },
+            "chart3": { "$ref": "#/$defs/color" },
+            "chart4": { "$ref": "#/$defs/color" },
+            "chart5": { "$ref": "#/$defs/color" },
+            "chart6": { "$ref": "#/$defs/color" },
+            "chart7": { "$ref": "#/$defs/color" },
+            "chart8": { "$ref": "#/$defs/color" }
+          }
+        },
+        "typography": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["display", "body"],
+          "properties": {
+            "display": { "type": "string", "minLength": 1 },
+            "body": { "type": "string", "minLength": 1 }
+          }
+        },
+        "shape": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "radiusSmall",
+            "radiusMedium",
+            "radiusLarge",
+            "borderWidth",
+            "shadow"
+          ],
+          "properties": {
+            "radiusSmall": { "type": "string" },
+            "radiusMedium": { "type": "string" },
+            "radiusLarge": { "type": "string" },
+            "borderWidth": { "type": "string" },
+            "shadow": { "type": "string" }
+          }
+        },
+        "motion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["durationFast", "durationNormal", "easing"],
+          "properties": {
+            "durationFast": { "type": "string" },
+            "durationNormal": { "type": "string" },
+            "easing": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

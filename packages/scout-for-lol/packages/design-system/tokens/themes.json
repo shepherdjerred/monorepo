@@ -1,0 +1,210 @@
+{
+  "$schema": "./themes.schema.json",
+  "version": 1,
+  "themes": {
+    "modern-light": {
+      "colors": {
+        "canvas": "#F0E6D2",
+        "surface": "#FFFFFF",
+        "surfaceRaised": "#FAF7F0",
+        "text": "#010A13",
+        "textMuted": "#4A5360",
+        "primary": "#005A82",
+        "primaryText": "#FFFFFF",
+        "accent": "#C89B3C",
+        "accentText": "#010A13",
+        "border": "#C8AA6E",
+        "interactiveHover": "#E4D4B5",
+        "interactiveActive": "#D8C08E",
+        "interactiveDisabled": "#AAA296",
+        "focus": "#007A8A",
+        "success": "#176B45",
+        "successText": "#FFFFFF",
+        "warning": "#8A4B00",
+        "warningText": "#FFFFFF",
+        "danger": "#992E1E",
+        "dangerText": "#FFFFFF",
+        "info": "#005A82",
+        "infoText": "#FFFFFF",
+        "overlay": "#010A1399",
+        "chart1": "#005A82",
+        "chart2": "#C89B3C",
+        "chart3": "#0F7B6C",
+        "chart4": "#992E1E",
+        "chart5": "#7055A0",
+        "chart6": "#536B2D",
+        "chart7": "#9A4D78",
+        "chart8": "#4A5360"
+      },
+      "typography": {
+        "display": "Beaufort for LoL, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, serif",
+        "body": "Spiegel, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, sans-serif"
+      },
+      "shape": {
+        "radiusSmall": "0.25rem",
+        "radiusMedium": "0.5rem",
+        "radiusLarge": "0.75rem",
+        "borderWidth": "1px",
+        "shadow": "0 12px 32px #010A1326"
+      },
+      "motion": {
+        "durationFast": "120ms",
+        "durationNormal": "200ms",
+        "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+      }
+    },
+    "modern-dark": {
+      "colors": {
+        "canvas": "#010A13",
+        "surface": "#1E2328",
+        "surfaceRaised": "#272D33",
+        "text": "#F0E6D2",
+        "textMuted": "#C8BFAE",
+        "primary": "#C8AA6E",
+        "primaryText": "#010A13",
+        "accent": "#0AC8B9",
+        "accentText": "#010A13",
+        "border": "#3C3C41",
+        "interactiveHover": "#2A333B",
+        "interactiveActive": "#35424C",
+        "interactiveDisabled": "#6C7074",
+        "focus": "#25E6D4",
+        "success": "#246B4C",
+        "successText": "#FFFFFF",
+        "warning": "#8A4B00",
+        "warningText": "#FFFFFF",
+        "danger": "#A83832",
+        "dangerText": "#FFFFFF",
+        "info": "#14759B",
+        "infoText": "#FFFFFF",
+        "overlay": "#010A13CC",
+        "chart1": "#0AC8B9",
+        "chart2": "#C8AA6E",
+        "chart3": "#68B455",
+        "chart4": "#D9574D",
+        "chart5": "#9B7FD1",
+        "chart6": "#E09545",
+        "chart7": "#D66BA0",
+        "chart8": "#74A6C7"
+      },
+      "typography": {
+        "display": "Beaufort for LoL, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, serif",
+        "body": "Spiegel, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, sans-serif"
+      },
+      "shape": {
+        "radiusSmall": "0.25rem",
+        "radiusMedium": "0.5rem",
+        "radiusLarge": "0.75rem",
+        "borderWidth": "1px",
+        "shadow": "0 16px 40px #00000066"
+      },
+      "motion": {
+        "durationFast": "120ms",
+        "durationNormal": "200ms",
+        "easing": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+      }
+    },
+    "classic-light": {
+      "colors": {
+        "canvas": "#E5D5A0",
+        "surface": "#EBDEAA",
+        "surfaceRaised": "#F3E8BE",
+        "text": "#273D47",
+        "textMuted": "#4F5E59",
+        "primary": "#1B344D",
+        "primaryText": "#FFFFFF",
+        "accent": "#992E1E",
+        "accentText": "#FFFFFF",
+        "border": "#C8B275",
+        "interactiveHover": "#D9C88D",
+        "interactiveActive": "#CDB773",
+        "interactiveDisabled": "#9E967B",
+        "focus": "#1D5B78",
+        "success": "#32633D",
+        "successText": "#FFFFFF",
+        "warning": "#7A4700",
+        "warningText": "#FFFFFF",
+        "danger": "#84271B",
+        "dangerText": "#FFFFFF",
+        "info": "#1B5070",
+        "infoText": "#FFFFFF",
+        "overlay": "#06111BB3",
+        "chart1": "#1B344D",
+        "chart2": "#992E1E",
+        "chart3": "#536B2D",
+        "chart4": "#8A5A20",
+        "chart5": "#694C7A",
+        "chart6": "#2D6892",
+        "chart7": "#874B5C",
+        "chart8": "#4F5E59"
+      },
+      "typography": {
+        "display": "QTFrizQuad, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, serif",
+        "body": "Gill Sans, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, sans-serif"
+      },
+      "shape": {
+        "radiusSmall": "0rem",
+        "radiusMedium": "0.125rem",
+        "radiusLarge": "0.25rem",
+        "borderWidth": "2px",
+        "shadow": "3px 4px 0 #273D4733"
+      },
+      "motion": {
+        "durationFast": "90ms",
+        "durationNormal": "150ms",
+        "easing": "cubic-bezier(0.3, 0, 0.2, 1)"
+      }
+    },
+    "classic-dark": {
+      "colors": {
+        "canvas": "#050D17",
+        "surface": "#06111B",
+        "surfaceRaised": "#0C1D2A",
+        "text": "#F2ECDB",
+        "textMuted": "#C7BD9D",
+        "primary": "#BF9869",
+        "primaryText": "#050D17",
+        "accent": "#2D6892",
+        "accentText": "#FFFFFF",
+        "border": "#1B344D",
+        "interactiveHover": "#10293B",
+        "interactiveActive": "#183A50",
+        "interactiveDisabled": "#65717A",
+        "focus": "#D9B77E",
+        "success": "#35734A",
+        "successText": "#FFFFFF",
+        "warning": "#9A5C16",
+        "warningText": "#FFFFFF",
+        "danger": "#96382A",
+        "dangerText": "#FFFFFF",
+        "info": "#2D6892",
+        "infoText": "#FFFFFF",
+        "overlay": "#02070CCC",
+        "chart1": "#BF9869",
+        "chart2": "#4A8DB9",
+        "chart3": "#6C9B55",
+        "chart4": "#C15C48",
+        "chart5": "#9A7CB3",
+        "chart6": "#D08A42",
+        "chart7": "#B86C82",
+        "chart8": "#7F9AA8"
+      },
+      "typography": {
+        "display": "QTFrizQuad, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, serif",
+        "body": "Gill Sans, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC, sans-serif"
+      },
+      "shape": {
+        "radiusSmall": "0rem",
+        "radiusMedium": "0.125rem",
+        "radiusLarge": "0.25rem",
+        "borderWidth": "2px",
+        "shadow": "4px 5px 0 #00000080"
+      },
+      "motion": {
+        "durationFast": "90ms",
+        "durationNormal": "150ms",
+        "easing": "cubic-bezier(0.3, 0, 0.2, 1)"
+      }
+    }
+  }
+}
