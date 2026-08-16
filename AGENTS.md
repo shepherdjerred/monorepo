@@ -306,6 +306,32 @@ The value must be exactly `true`, and `BUILDKITE_BRANCH` must be `main`;
 invalid, unset-branch, and non-main requests fail before the pipeline runs.
 Treat this as a production-mutating build, not a read-only benchmark.
 
+### The review gate
+
+The `review-gate` step runs `.buildkite/scripts/review-gate.sh`, which checks
+out `main` into a worktree and runs the gate from there. The gate reads only
+GitHub state and never the PR's diff, so running the PR's own copy bought
+nothing and cost correctness: `@shepherdjerred/code-review` is a `workspace:*`
+dependency, so each branch graded itself with whatever version of the parser it
+happened to contain. A branch old enough to predate a parser fix counted
+findings that had already been fixed, and no change to that PR could clear it.
+
+The gate asks the provider to review the head before waiting on it. Qodo
+reviews a PR once, when it is opened, and never again on its own, so polling
+alone burned the whole budget on every push after the first. The request is
+idempotent per head through `buildReviewRequestMarker()`, shared with the PR
+fleet controller so the two recognise each other's request.
+
+Each `review-signal` event carries `parser_commit`, the commit of the parser
+that produced the counts. A finding count is only comparable against the parser
+that arrived at it — a local `probe-review-signal.ts` run from a stale checkout
+legitimately disagrees with CI.
+
+`REVIEW_GATE_REF` overrides the ref the gate runs from. It exists only so a
+change to the gate itself can be exercised before it lands, since the gate no
+longer runs a PR's own version of it. Set it when creating the build, as with
+`CI_IO_FIXED_CORPUS`; never in committed configuration.
+
 ### Release refinement providers
 
 The main-only `release-please` lane runs `scripts/release.ts`. Its CHANGELOG

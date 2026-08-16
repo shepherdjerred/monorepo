@@ -248,7 +248,21 @@ function buildSignalEvent(input: {
     timed_out: input.timedOut,
     stale_reaction: input.state.staleReaction,
     decision: input.decision === null ? null : input.decision.state,
+    parser_commit: parserCommit(),
   };
+}
+
+/**
+ * The commit of the `code-review` source that produced this observation.
+ *
+ * `review-gate.sh` runs the gate from a worktree of `main` and passes the
+ * commit it checked out. Recording it makes the log say which parser produced
+ * a count — the one thing that would have made an inflated `blocking_count`
+ * obvious at a glance rather than after a long hunt.
+ */
+function parserCommit(): string | null {
+  const commit = Bun.env["REVIEW_GATE_PARSER_COMMIT"];
+  return commit === undefined || commit.trim() === "" ? null : commit.trim();
 }
 
 async function waitForReview(): Promise<void> {

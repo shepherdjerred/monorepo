@@ -70,6 +70,16 @@ export const ReviewSignalEventSchema = z.object({
   stale_reaction: z.boolean(),
   /** Terminal gate decision, when this event is a decision (else null). */
   decision: z.enum(["waiting", "passed", "failed"]).nullable(),
+  /**
+   * The commit of the `code-review` source that produced these counts.
+   *
+   * The parser ships with the repository, so a finding count is only meaningful
+   * alongside the version of the parser that arrived at it: the same PR read by
+   * two different parsers legitimately yields two different numbers, and
+   * without this there is no way to tell that apart from the findings actually
+   * changing. `null` when the caller cannot determine its own commit.
+   */
+  parser_commit: z.string().nullable(),
 });
 export type ReviewSignalEvent = z.infer<typeof ReviewSignalEventSchema>;
 

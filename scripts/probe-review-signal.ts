@@ -149,6 +149,10 @@ async function probePr(
     timed_out: false,
     stale_reaction: state.staleReaction,
     decision: null,
+    // Which parser produced these counts. A probe run from a stale checkout
+    // reads the repository's stale parser and reports numbers that disagree
+    // with CI for reasons that have nothing to do with the PR.
+    parser_commit: parserCommit(),
   };
 
   console.log(
@@ -181,6 +185,22 @@ async function probePr(
       2,
     ),
   );
+}
+
+/**
+ * The commit this probe's copy of `code-review` came from.
+ *
+ * The probe imports the parser from the checkout it runs in, so its numbers
+ * describe that checkout's parser rather than CI's. Reporting the commit is
+ * what lets a caller see a disagreement for what it is.
+ */
+function parserCommit(): string | null {
+  const result = Bun.spawnSync(["git", "rev-parse", "HEAD"], {
+    cwd: import.meta.dir,
+  });
+  if (result.exitCode !== 0) return null;
+  const sha = result.stdout.toString().trim();
+  return sha === "" ? null : sha;
 }
 
 async function main(): Promise<void> {
