@@ -72,6 +72,7 @@ import {
   ManagedResourcesSchema,
   type ManagedResource,
 } from "./argocd-apply-safety.ts";
+import { withIgnoredDifferencesApplied } from "./argocd-ignored-differences.ts";
 import { z } from "zod";
 
 const DEFAULT_SERVER_URL = "https://argocd.sjer.red";
@@ -575,7 +576,7 @@ async function assertApplySafe(
   // own read would save a request but make a safety precondition depend on
   // every future caller remembering to pre-refresh; this function is also
   // invoked standalone by `sync-managed`.
-  await getApplication(appName, token, "hard");
+  const application = await getApplication(appName, token, "hard");
   const url = new URL(
     `/api/v1/applications/${encodeURIComponent(appName)}/managed-resources`,
     serverUrl(),
@@ -591,9 +592,12 @@ async function assertApplySafe(
   }
   const managed = ManagedResourcesSchema.parse(await response.json()).items;
   const findings = analyzeApplySafety(
-    revision === undefined
-      ? managed
-      : await revisionScopedResources(appName, revision, token, managed),
+    withIgnoredDifferencesApplied(
+      revision === undefined
+        ? managed
+        : await revisionScopedResources(appName, revision, token, managed),
+      application,
+    ),
   );
   if (findings.length > 0) {
     throw new Error(

@@ -8,6 +8,8 @@
     "scripts/argocd.ts",
     "scripts/argocd-apply-safety.ts",
     "scripts/argocd-apply-safety.test.ts",
+    "scripts/argocd-ignored-differences.ts",
+    "scripts/argocd-ignored-differences.test.ts",
     "scripts/argocd-auto-sync-policy.ts",
     "scripts/argocd-auto-sync-policy.test.ts",
     "scripts/argocd-manifest-overrides.ts",

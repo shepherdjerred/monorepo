@@ -26,7 +26,7 @@ const PROBE_HANDLERS = ["exec", "grpc", "httpGet", "tcpSocket"] as const;
  * reads every managed resource in the application and a bare JSON or Zod
  * message names none of them.
  */
-function parseObject(
+export function parseObject(
   source: string | undefined,
   resource: ManagedResource,
   field: "liveState" | "targetState",

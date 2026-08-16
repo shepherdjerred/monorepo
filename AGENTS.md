@@ -133,7 +133,16 @@ tolerance would hide an author-owned removal, the preflight descends into the
 list with the entry kind's own rules — a claim template is compared as a
 PersistentVolumeClaim, matched by name — so the classification comes from one
 reviewed table rather than a second list of server-defaulted keys that would
-drift with every Kubernetes release. Only the self-managed root Application
+drift with every Kubernetes release. It compares only what the sync will
+actually send: an Application declaring `ignoreDifferences` together with
+`RespectIgnoreDifferences=true` keeps those paths at their live values, so the
+preflight prunes them from both sides instead of refusing a change the API
+server never sees — the itzg Minecraft chart moves label values inside
+`volumeClaimTemplates` on every bump, which those Applications already ignore
+for exactly that reason. The relaxation is narrow: without
+`RespectIgnoreDifferences=true` the field is still applied and still checked,
+and only `jsonPointers` are honored, because a selector the preflight cannot
+resolve must exempt nothing. Only the self-managed root Application
 remains auto-sync suspended while those operations run.
 
 Ordinary manual or UI root syncs are supported. Admission merges each managed
