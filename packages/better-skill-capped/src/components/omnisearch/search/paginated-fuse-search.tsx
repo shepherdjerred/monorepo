@@ -1,94 +1,42 @@
 import React from "react";
+import type { IFuseOptions } from "fuse.js";
 import PaginationControls from "./pagination-controls.tsx";
 import type { FuseSearchResult } from "./fuse-search.tsx";
-import { FuseSearch } from "./fuse-search.tsx";
-import type { IFuseOptions } from "fuse.js";
+import { useFuseSearch } from "./fuse-search.tsx";
 
 export type PaginatedFuseSearchProps<T> = {
   query: string;
   items: T[];
   fuseOptions: IFuseOptions<T>;
-  render: (items: FuseSearchResult<T>) => React.ReactNode;
+  render: (result: FuseSearchResult<T>) => React.ReactNode;
   itemsPerPage: number;
+  page: number;
+  onPageChange: (newPage: number) => void;
 };
 
-type PaginatedFuseSearchState<T> = {
-  matches: T[];
-  currentPage: number;
-};
+export default function PaginatedFuseSearch<T>({
+  query,
+  items,
+  fuseOptions,
+  render,
+  itemsPerPage,
+  page,
+  onPageChange,
+}: PaginatedFuseSearchProps<T>): React.ReactElement {
+  const results = useFuseSearch(items, query, fuseOptions);
 
-export default class PaginatedFuseSearch<T> extends React.PureComponent<
-  PaginatedFuseSearchProps<T>,
-  PaginatedFuseSearchState<T>
-> {
-  constructor(props: PaginatedFuseSearchProps<T>) {
-    super(props);
+  const start = itemsPerPage * (page - 1);
+  const pageResults = results.slice(start, start + itemsPerPage);
+  const numberOfPages = Math.ceil(results.length / itemsPerPage);
 
-    this.state = {
-      matches: [],
-      currentPage: 1,
-    };
-  }
-
-  override componentDidUpdate(
-    prevProps: Readonly<PaginatedFuseSearchProps<T>>,
-    prevState: Readonly<PaginatedFuseSearchState<T>>,
-  ): void {
-    if (prevProps.query !== this.props.query) {
-      this.setState((state) => {
-        return {
-          ...state,
-          currentPage: 1,
-        };
-      });
-    }
-
-    if (prevState.currentPage !== this.state.currentPage) {
-      window.scrollTo(0, 0);
-    }
-  }
-
-  override render(): React.ReactNode {
-    const { query, items, fuseOptions, render, itemsPerPage } = this.props;
-    const { currentPage, matches } = this.state;
-
-    const resultList = (
-      <FuseSearch
-        query={query}
-        items={items}
-        options={fuseOptions}
-        render={render}
-        itemsPerPage={itemsPerPage}
-        page={currentPage}
-        onResultsUpdate={(newResults: T[]) => {
-          this.setState((state) => {
-            return {
-              ...state,
-              matches: newResults,
-            };
-          });
-        }}
+  return (
+    <>
+      {pageResults.map((result) => render(result))}
+      <PaginationControls
+        currentPage={page}
+        lastPage={numberOfPages}
+        onPageChange={onPageChange}
       />
-    );
-
-    const numberOfPages = Math.ceil(matches.length / itemsPerPage);
-
-    return (
-      <>
-        {resultList}
-        <PaginationControls
-          currentPage={currentPage}
-          lastPage={numberOfPages}
-          onPageChange={(newPage: number) => {
-            this.setState((state) => {
-              return {
-                ...state,
-                currentPage: newPage,
-              };
-            });
-          }}
-        />
-      </>
-    );
-  }
+    </>
+  );
 }

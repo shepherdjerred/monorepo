@@ -1,18 +1,14 @@
 import React from "react";
+import type { BookmarkedFilter } from "./filters.ts";
 
 export type BookmarkStatusSelectorProps = {
-  onlyShowBookmarked: boolean;
-  onlyShowUnbookmarked: boolean;
-  onSelectionChange: (
-    onlyShowBookmarked: boolean,
-    onlyShowUnbookmarked: boolean,
-  ) => void;
+  value: BookmarkedFilter;
+  onChange: (newValue: BookmarkedFilter) => void;
 };
 
 export default function BookmarkStatusSelector({
-  onlyShowBookmarked,
-  onlyShowUnbookmarked,
-  onSelectionChange,
+  value,
+  onChange,
 }: BookmarkStatusSelectorProps): React.ReactElement {
   return (
     <nav className="panel">
@@ -23,9 +19,9 @@ export default function BookmarkStatusSelector({
             <label className="checkbox">
               <input
                 type="checkbox"
-                checked={onlyShowBookmarked}
+                checked={value === "bookmarked"}
                 onChange={() => {
-                  onSelectionChange(!onlyShowBookmarked, onlyShowUnbookmarked);
+                  onChange(value === "bookmarked" ? "any" : "bookmarked");
                 }}
               />{" "}
               Only show bookmarked
@@ -35,9 +31,9 @@ export default function BookmarkStatusSelector({
             <label className="checkbox">
               <input
                 type="checkbox"
-                checked={onlyShowUnbookmarked}
+                checked={value === "unbookmarked"}
                 onChange={() => {
-                  onSelectionChange(onlyShowBookmarked, !onlyShowUnbookmarked);
+                  onChange(value === "unbookmarked" ? "any" : "unbookmarked");
                 }}
               />{" "}
               Only show unbookmarked

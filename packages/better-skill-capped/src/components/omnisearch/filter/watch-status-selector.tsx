@@ -1,18 +1,14 @@
 import React from "react";
+import type { WatchedFilter } from "./filters.ts";
 
 export type WatchStatusSelectorProps = {
-  onlyShowUnwatched: boolean;
-  onlyShowWatched: boolean;
-  onSelectionChange: (
-    onlyShowUnwatched: boolean,
-    onlyShowWatched: boolean,
-  ) => void;
+  value: WatchedFilter;
+  onChange: (newValue: WatchedFilter) => void;
 };
 
 export default function WatchStatusSelector({
-  onlyShowUnwatched,
-  onlyShowWatched,
-  onSelectionChange,
+  value,
+  onChange,
 }: WatchStatusSelectorProps): React.ReactElement {
   return (
     <nav className="panel">
@@ -23,9 +19,9 @@ export default function WatchStatusSelector({
             <label className="checkbox">
               <input
                 type="checkbox"
-                checked={onlyShowUnwatched}
+                checked={value === "unwatched"}
                 onChange={() => {
-                  onSelectionChange(!onlyShowUnwatched, onlyShowWatched);
+                  onChange(value === "unwatched" ? "any" : "unwatched");
                 }}
               />{" "}
               Only show unwatched
@@ -35,9 +31,9 @@ export default function WatchStatusSelector({
             <label className="checkbox">
               <input
                 type="checkbox"
-                checked={onlyShowWatched}
+                checked={value === "watched"}
                 onChange={() => {
-                  onSelectionChange(onlyShowUnwatched, !onlyShowWatched);
+                  onChange(value === "watched" ? "any" : "watched");
                 }}
               />{" "}
               Only show watched

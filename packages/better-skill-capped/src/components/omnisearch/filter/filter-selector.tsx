@@ -2,10 +2,10 @@ import React from "react";
 import RoleSelector from "./role-selector.tsx";
 import type { Filters } from "./filters.ts";
 import type { Role } from "#src/model/role";
+import type { Kind } from "#src/model/content";
 import WatchStatusSelector from "./watch-status-selector.tsx";
 import BookmarkStatusSelector from "./bookmark-status-selector.tsx";
 import TypeSelector from "./type-selector.tsx";
-import type { Kind } from "#src/model/content";
 
 export type FilterSelectorProps = {
   filters: Filters;
@@ -17,43 +17,11 @@ export default function FilterSelector({
   onFiltersUpdate,
 }: FilterSelectorProps): React.ReactElement {
   const updateFilterRoles = (newRoles: Role[]) => {
-    const newFilters = {
-      ...filters,
-      roles: newRoles,
-    };
-    onFiltersUpdate(newFilters);
-  };
-
-  const updateFilterBookmark = (
-    onlyShowBookmarked: boolean,
-    onlyShowUnbookmarked: boolean,
-  ) => {
-    const newFilters = {
-      ...filters,
-      onlyBookmarked: onlyShowBookmarked,
-      onlyUnbookmarked: onlyShowUnbookmarked,
-    };
-    onFiltersUpdate(newFilters);
-  };
-
-  const updateFilterWatchStatus = (
-    onlyShowUnwatched: boolean,
-    onlyShowWatched: boolean,
-  ) => {
-    const newFilters = {
-      ...filters,
-      onlyUnwatched: onlyShowUnwatched,
-      onlyWatched: onlyShowWatched,
-    };
-    onFiltersUpdate(newFilters);
+    onFiltersUpdate({ ...filters, roles: newRoles });
   };
 
   const updateFilterTypes = (newTypes: Kind[]) => {
-    const newFilters = {
-      ...filters,
-      types: newTypes,
-    };
-    onFiltersUpdate(newFilters);
+    onFiltersUpdate({ ...filters, types: newTypes });
   };
 
   return (
@@ -67,14 +35,16 @@ export default function FilterSelector({
         onTypesUpdate={updateFilterTypes}
       />
       <WatchStatusSelector
-        onlyShowUnwatched={filters.onlyUnwatched}
-        onlyShowWatched={filters.onlyWatched}
-        onSelectionChange={updateFilterWatchStatus}
+        value={filters.watched}
+        onChange={(watched) => {
+          onFiltersUpdate({ ...filters, watched });
+        }}
       />
       <BookmarkStatusSelector
-        onlyShowBookmarked={filters.onlyBookmarked}
-        onlyShowUnbookmarked={filters.onlyUnbookmarked}
-        onSelectionChange={updateFilterBookmark}
+        value={filters.bookmarked}
+        onChange={(bookmarked) => {
+          onFiltersUpdate({ ...filters, bookmarked });
+        }}
       />
     </>
   );
