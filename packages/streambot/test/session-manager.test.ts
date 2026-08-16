@@ -856,15 +856,15 @@ describe("playback actors", () => {
       guildIds: new Set([GUILD]),
       busy: false,
     };
-    const hold = new TeardownHold();
+    const hold = new TeardownHold(() => {
+      throw new Error("teardown must not run under a hold");
+    });
     const actors = buildPlaybackActors({
       entry,
       resolveSource: () => Promise.resolve(RESOLVED),
       teardownHold: () => hold,
     });
-    const release = hold.acquire(() => {
-      throw new Error("teardown must not run under a hold");
-    });
+    const release = hold.acquire();
 
     // A voice `stop` dispatches STOP from inside its own transaction: the machine reaches `leaving`
     // while the assistant is still speaking its confirmation over this very voice connection.

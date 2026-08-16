@@ -372,15 +372,15 @@ export class SessionManager {
       voiceRecoveryStarted: false,
       pendingSubtitleMenu: false,
       voiceAssistant: null,
-      teardownHold: new TeardownHold(),
+      teardownHold: new TeardownHold(() => {
+        this.teardown(session);
+      }),
       requestTeardown: () => {
         /* installed below after the record is initialized */
       },
     };
     session.requestTeardown = () => {
-      session.teardownHold.request(() => {
-        this.teardown(session);
-      });
+      session.teardownHold.request();
     };
     session.voiceAssistant = createSessionVoiceAssistant(this.deps, session);
     // Trigger 1: the fork's voice ws `close` event (fires even when the main gateway never

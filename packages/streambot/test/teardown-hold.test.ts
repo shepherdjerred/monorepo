@@ -15,14 +15,13 @@ function rejectTeardown(): never {
 
 describe("TeardownHold", () => {
   test("defers teardown until the spoken reply releases its hold", () => {
-    const hold = new TeardownHold();
     let teardowns = 0;
-    const teardown = () => {
+    const hold = new TeardownHold(() => {
       teardowns += 1;
-    };
-    const release = hold.acquire(teardown);
+    });
+    const release = hold.acquire();
 
-    hold.request(teardown);
+    hold.request();
     expect(teardowns).toBe(0);
     release();
     release();
@@ -30,25 +29,57 @@ describe("TeardownHold", () => {
   });
 
   test("tears down immediately when no reply is active", () => {
-    const hold = new TeardownHold();
-    let tornDown = false;
-    hold.request(() => {
-      tornDown = true;
+    let teardowns = 0;
+    const hold = new TeardownHold(() => {
+      teardowns += 1;
     });
-    expect(tornDown).toBe(true);
+    hold.request();
+    expect(teardowns).toBe(1);
+  });
+
+  test("a hold acquired after teardown fired does not replay the stale request", () => {
+    let teardowns = 0;
+    const hold = new TeardownHold(() => {
+      teardowns += 1;
+    });
+    const release = hold.acquire();
+    hold.request();
+    release();
+    expect(teardowns).toBe(1);
+
+    const laterRelease = hold.acquire();
+    laterRelease();
+    expect(teardowns).toBe(1);
+  });
+
+  test("a fresh request after a fired teardown fires again", () => {
+    let teardowns = 0;
+    const hold = new TeardownHold(() => {
+      teardowns += 1;
+    });
+    const release = hold.acquire();
+    hold.request();
+    release();
+    expect(teardowns).toBe(1);
+
+    const secondRelease = hold.acquire();
+    hold.request();
+    expect(teardowns).toBe(1);
+    secondRelease();
+    expect(teardowns).toBe(2);
   });
 
   test("drain resolves immediately when nothing holds the session", async () => {
-    const hold = new TeardownHold();
+    const hold = new TeardownHold(rejectTeardown);
     const drained = { value: false };
     await track(hold.drain(), drained);
     expect(drained.value).toBe(true);
   });
 
   test("drain waits for every outstanding hold before the voice disconnect", async () => {
-    const hold = new TeardownHold();
-    const releaseOne = hold.acquire(rejectTeardown);
-    const releaseTwo = hold.acquire(rejectTeardown);
+    const hold = new TeardownHold(rejectTeardown);
+    const releaseOne = hold.acquire();
+    const releaseTwo = hold.acquire();
     const drained = { value: false };
     const draining = track(hold.drain(), drained);
 

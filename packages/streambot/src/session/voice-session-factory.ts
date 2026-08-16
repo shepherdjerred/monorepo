@@ -32,9 +32,6 @@ export function createSessionVoiceAssistant(
       resolvePlaySource: deps.resolvePlaySource,
     },
     announce: (message) => deps.announce(session.statusChannelId, message),
-    holdTeardown: () =>
-      session.teardownHold.acquire(() => {
-        session.requestTeardown();
-      }),
+    holdTeardown: () => session.teardownHold.acquire(),
   });
 }

@@ -4,15 +4,22 @@ export class TeardownHold {
   private requested = false;
   private waiters: (() => void)[] = [];
 
-  request(teardown: () => void): void {
+  /**
+   * The single owner callback. Requests made while held fire this exact callback on release —
+   * taking a callback per request()/acquire() call invited two different callbacks where only
+   * one could ever run.
+   */
+  constructor(private readonly teardown: () => void) {}
+
+  request(): void {
     if (this.holds > 0) {
       this.requested = true;
       return;
     }
-    teardown();
+    this.teardown();
   }
 
-  acquire(teardown: () => void): () => void {
+  acquire(): () => void {
     this.holds += 1;
     let released = false;
     return () => {
@@ -23,7 +30,12 @@ export class TeardownHold {
       const waiters = this.waiters;
       this.waiters = [];
       for (const resolve of waiters) resolve();
-      if (this.requested) teardown();
+      if (this.requested) {
+        // Reset before firing so a hold acquired after this teardown cannot replay the stale
+        // request when it releases.
+        this.requested = false;
+        this.teardown();
+      }
     };
   }
 
