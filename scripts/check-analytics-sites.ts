@@ -35,6 +35,7 @@ const staticTrackers = [
   },
   {
     path: "packages/webring/posthog.js",
+    entrypoint: "packages/webring/typedoc.json",
     hostname: "webring.sjer.red",
     masksAllText: false,
   },
@@ -52,6 +53,30 @@ const staticTrackers = [
     path: "packages/discord-plays-pokemon/packages/frontend/index.html",
     hostname: "pokebot.sjer.red",
     masksAllText: true,
+  },
+  {
+    path: "packages/cooklang-rich-preview/public/posthog.js",
+    entrypoint: "packages/cooklang-rich-preview/src/layouts/Layout.astro",
+    hostname: "cook.sjer.red",
+    masksAllText: false,
+  },
+  {
+    path: "packages/stocks-sjer-red/public/posthog.js",
+    entrypoint: "packages/stocks-sjer-red/src/layouts/Layout.astro",
+    hostname: "stocks.sjer.red",
+    masksAllText: false,
+  },
+  {
+    path: "packages/docs/wiki/public/posthog.js",
+    entrypoint: "packages/docs/wiki/astro.config.ts",
+    hostname: "wiki.sjer.red",
+    masksAllText: false,
+  },
+  {
+    path: "packages/glitter/public/posthog.js",
+    entrypoint: "packages/glitter/public/index.html",
+    hostname: "ppl.glitter-boys.com",
+    masksAllText: false,
   },
 ] as const;
 
@@ -107,6 +132,11 @@ const expectedHostnames = new Set([
   "pokebot.sjer.red",
   "scout-for-lol.com",
   "beta.scout-for-lol.com",
+  "ts-mc.net",
+  "ppl.glitter-boys.com",
+  "cook.sjer.red",
+  "stocks.sjer.red",
+  "wiki.sjer.red",
 ]);
 const actualHostnames = new Set(registry.sites.map((site) => site.hostname));
 if (
@@ -114,7 +144,7 @@ if (
   [...expectedHostnames].some((hostname) => !actualHostnames.has(hostname))
 ) {
   throw new Error(
-    "Analytics registry must contain exactly the eight portfolio hosts",
+    "Analytics registry must contain exactly the thirteen portfolio hosts",
   );
 }
 
@@ -139,7 +169,13 @@ for (const tracker of staticTrackers) {
     );
   }
 
-  const source = await Bun.file(`${root}/${tracker.path}`).text();
+  const entrypoint = "entrypoint" in tracker ? tracker.entrypoint : undefined;
+  const source = [
+    await Bun.file(`${root}/${tracker.path}`).text(),
+    entrypoint === undefined
+      ? ""
+      : await Bun.file(`${root}/${entrypoint}`).text(),
+  ].join("\n");
   if (!source.includes(registry.projectToken)) {
     throw new Error(
       `${tracker.path} must use the shared PostHog project token for ${tracker.hostname}`,
@@ -230,6 +266,25 @@ if (forbiddenScoutSetting !== undefined) {
   throw new Error(
     `${scoutBootstrapPath} must not set ${forbiddenScoutSetting}`,
   );
+}
+
+const scoutDocsConfigPath =
+  "packages/scout-for-lol/packages/docs-site/astro.config.ts";
+const scoutDocsConfig = await Bun.file(`${root}/${scoutDocsConfigPath}`).text();
+for (const requiredSetting of [
+  'src: "/posthog-bootstrap.js"',
+  '"data-posthog-project-token"',
+  '"data-posthog-api-host"',
+  '"data-posthog-asset-host"',
+  '"data-posthog-site-key"',
+  '"data-posthog-site-domain"',
+  '"data-posthog-session-replay"',
+]) {
+  if (!scoutDocsConfig.includes(requiredSetting)) {
+    throw new Error(
+      `${scoutDocsConfigPath} must configure Scout docs PostHog setting ${requiredSetting}`,
+    );
+  }
 }
 
 if (registry.projectToken === "phc_REPLACEWITHEXISTINGPROJECTTOKEN") {

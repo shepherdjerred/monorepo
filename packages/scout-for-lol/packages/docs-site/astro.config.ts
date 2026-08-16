@@ -7,6 +7,14 @@ import { defineConfig } from "astro/config";
 import { scoutAssetsPlugin } from "@scout-for-lol/design-system/build";
 
 const siteOrigin = env.PUBLIC_DOCS_SITE_ORIGIN ?? "https://scout-for-lol.com";
+const posthogHeadAttrs = {
+  "data-posthog-project-token": env.PUBLIC_POSTHOG_PROJECT_TOKEN,
+  "data-posthog-api-host": env.PUBLIC_POSTHOG_API_HOST,
+  "data-posthog-asset-host": env.PUBLIC_POSTHOG_ASSET_HOST,
+  "data-posthog-site-key": env.PUBLIC_POSTHOG_SITE_KEY,
+  "data-posthog-site-domain": env.PUBLIC_POSTHOG_SITE_DOMAIN,
+  "data-posthog-session-replay": env.PUBLIC_POSTHOG_SESSION_REPLAY,
+};
 
 /**
  * Sidebar links are resolved through Starlight's `pathWithBase()`, which
@@ -39,6 +47,16 @@ export default defineConfig({
       description:
         "Learn how to install, configure, and get the most from Scout for League of Legends.",
       favicon: "/assets/scout/brand/emblem.svg",
+      head: [
+        {
+          tag: "script",
+          attrs: {
+            ...posthogHeadAttrs,
+            defer: true,
+            src: "/posthog-bootstrap.js",
+          },
+        },
+      ],
       lastUpdated: true,
       pagefind: true,
       sidebar: [

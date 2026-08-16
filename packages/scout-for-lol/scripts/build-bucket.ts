@@ -87,6 +87,27 @@ for (const entrypoint of [
   }
 }
 
+const docsHtml = await Bun.file(`${docsTarget}/index.html`).text();
+if (!docsHtml.includes('src="/posthog-bootstrap.js"')) {
+  throw new Error(
+    `${docsTarget}/index.html does not load the shared PostHog bootstrap`,
+  );
+}
+for (const attribute of [
+  "data-posthog-project-token",
+  "data-posthog-api-host",
+  "data-posthog-asset-host",
+  "data-posthog-site-key",
+  "data-posthog-site-domain",
+  "data-posthog-session-replay",
+]) {
+  if (!docsHtml.includes(attribute)) {
+    throw new Error(
+      `${docsTarget}/index.html is missing ${attribute} for PostHog`,
+    );
+  }
+}
+
 console.log(
   `Bundled and verified Scout deploy: ${frontendDist}/index.html + ${target}/index.html + ${docsTarget}/index.html + shared theme/font/brand/game assets`,
 );

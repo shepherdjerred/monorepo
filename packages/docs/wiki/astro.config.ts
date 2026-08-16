@@ -30,6 +30,12 @@ export default defineConfig({
       customCss: ["./src/styles/custom.css"],
       description:
         "A terse, visual map of Jerred's monorepo, infrastructure, and engineering decisions.",
+      head: [
+        {
+          tag: "script",
+          attrs: { src: "/posthog.js", defer: true },
+        },
+      ],
       editLink: {
         baseUrl:
           "https://github.com/shepherdjerred/monorepo/edit/main/packages/docs/wiki/",
