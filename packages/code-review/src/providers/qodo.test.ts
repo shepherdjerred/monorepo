@@ -441,6 +441,43 @@ describe("qodo re-review copies", () => {
     ]);
   });
 
+  test("ignores unresolved copies in Qodo's previous-review archive", () => {
+    const body = `
+<h3>Code Review by Qodo</h3>
+<code>🐞 Bugs (0)</code> <code>📘 Rule violations (0)</code>
+<img src="https://example/divider.svg" alt="Grey Divider">
+<img src="https://example/remediation-recommended.png" alt="Remediation recommended">
+<details>
+<summary>  1. <s>Backup path mismatch</s> <code>✓ Resolved</code> <code>🐞 Bug</code></summary>
+<code>[src/bootstrap.sh[R10]](https://github.com/shepherdjerred/monorepo/pull/1/files#diff-current)</code>
+Current review wording after the fix.
+</details>
+<!-- FOLDED_SECTION_START -->
+### Previous review results
+<details><summary>Results up to commit abc1234</summary>
+<img src="https://example/remediation-recommended.png" alt="Remediation recommended">
+<details>
+<summary>  1. Backup path mismatch <code>🐞 Bug</code></summary>
+<code>[src/bootstrap.sh[R10]](https://github.com/shepherdjerred/monorepo/pull/1/files#diff-previous)</code>
+Older unresolved wording retained for review history.
+</details>
+</details>
+`;
+
+    expect(parseQodoIssueComment({ ...comment, body })).toEqual([
+      {
+        authorLogin: "qodo-code-review",
+        isResolved: true,
+        isOutdated: false,
+        title: "Backup path mismatch",
+        path: "src/bootstrap.sh",
+        line: null,
+        url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-current",
+        priority: 2,
+      },
+    ]);
+  });
+
   test("maps Qodo's informational tier to P3 rather than dropping it", () => {
     const findings = parseQodoIssueComment({
       ...comment,

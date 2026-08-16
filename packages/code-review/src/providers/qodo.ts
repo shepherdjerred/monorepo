@@ -25,6 +25,7 @@ const QODO_ACKNOWLEDGEMENT_MARKER = "was updated up to the latest commit";
 // analysis". It keeps the review heading but drops the finding-count header.
 const QODO_IN_PROGRESS_MARKER = "<h3>New Review Started</h3>";
 const QODO_DIVIDER_ALT = "Grey Divider";
+const QODO_PREVIOUS_RESULTS_START = "<!-- FOLDED_SECTION_START -->";
 const QODO_FINDING_COUNT_LABELS = [
   "Bugs",
   "Rule violations",
@@ -386,6 +387,22 @@ function assertSectionsAreModelled(reviewBody: string): void {
 const QODO_DAILY_TIP =
   /<!-- qodo-daily-tip:start -->[\s\S]*?<!-- qodo-daily-tip:end -->/giu;
 
+/**
+ * The current review, excluding Qodo's archived copies from older revisions.
+ *
+ * Qodo keeps previous results after a stable HTML marker. Those copies retain
+ * their old unresolved styling even after the current review strikes through
+ * the finding, and their prose can differ enough that content-based deduping
+ * correctly treats them as distinct. They are history, not current findings,
+ * so keep them outside every layout and gate decision.
+ */
+function currentReviewOf(body: string): string {
+  const previousResultsIndex = body.indexOf(QODO_PREVIOUS_RESULTS_START);
+  return previousResultsIndex === -1
+    ? body
+    : body.slice(0, previousResultsIndex);
+}
+
 function reviewBodyOf(body: string): string {
   return body
     .slice(body.indexOf(QODO_DIVIDER_ALT))
@@ -421,8 +438,9 @@ function assertParsedLayout(input: {
 export function parseQodoIssueComment(
   comment: ReviewIssueComment,
 ): readonly ReviewThread[] {
-  const expectedFindings = declaredFindingCount(comment.body);
-  const sections = comment.body.split(QODO_SECTION_SPLIT);
+  const currentReview = currentReviewOf(comment.body);
+  const expectedFindings = declaredFindingCount(currentReview);
+  const sections = currentReview.split(QODO_SECTION_SPLIT);
   const rendered: RenderedFinding[] = [];
   let severitySections = 0;
 
@@ -438,13 +456,13 @@ export function parseQodoIssueComment(
   // copy it re-appends. Structure is checked before numbering so a recognizable
   // break reports itself rather than surfacing as the gap it leaves behind.
   assertParsedLayout({
-    body: comment.body,
+    body: currentReview,
     expectedFindings,
     findings: rendered.map((entry) => entry.finding),
     severitySections,
   });
   assertContiguousNumbering(rendered);
-  assertNoFindingBeyondParsed(reviewBodyOf(comment.body), rendered);
+  assertNoFindingBeyondParsed(reviewBodyOf(currentReview), rendered);
 
   return dedupeRenderedFindings(rendered);
 }
