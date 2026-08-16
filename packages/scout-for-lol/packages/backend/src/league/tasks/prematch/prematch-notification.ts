@@ -33,6 +33,14 @@ import {
   prematchLoadingScreenDurationSeconds,
 } from "#src/metrics/index.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
+import { recordPoolMessageRefs } from "#src/betting/pool-open.ts";
+import { appendBucksLine } from "#src/betting/prematch-line.ts";
+import {
+  prepareBucksPrematch,
+  type BucksPrematchAttachment,
+} from "#src/betting/prematch-hook.ts";
+import type { MessageCreateOptions } from "discord.js";
+import type { LoadingScreenData } from "@scout-for-lol/data/index.ts";
 
 const logger = createLogger("prematch-notification");
 
@@ -124,6 +132,46 @@ function buildFallbackPrematchEmbed(
 /**
  * Send pre-match notifications to all subscribed Discord channels.
  */
+
+/**
+ * The message payload for one channel.
+ *
+ * Extracted from `sendPrematchNotification` to keep that function's branching
+ * within the complexity budget, and because "what does this message look like"
+ * is a separate question from "where does it go".
+ */
+function buildPrematchPayload(input: {
+  betsOpen: boolean;
+  bucks: BucksPrematchAttachment;
+  baseContent: string;
+  loadingScreenAttachment: AttachmentBuilder | undefined;
+  loadingScreenEmbed: EmbedBuilder | undefined;
+  fallbackEmbed: () => EmbedBuilder;
+}): MessageCreateOptions {
+  const components =
+    input.betsOpen && input.bucks.rows.length > 0 ? input.bucks.rows : [];
+
+  if (input.loadingScreenAttachment && input.loadingScreenEmbed) {
+    return {
+      content: input.betsOpen
+        ? appendBucksLine(input.baseContent, input.bucks.footer)
+        : input.baseContent,
+      files: [input.loadingScreenAttachment],
+      embeds: [input.loadingScreenEmbed],
+      components,
+    };
+  }
+
+  // The fallback path still carries buttons: a market's validity depends on the
+  // game, not on whether the image rendered. The prediction is absent here
+  // because no ranks were fetched, so the footer is just the countdown.
+  return {
+    ...(input.betsOpen ? { content: input.bucks.footer } : {}),
+    embeds: [input.fallbackEmbed()],
+    components,
+  };
+}
+
 export async function sendPrematchNotification(
   gameInfo: RawCurrentGameInfo,
   trackedPlayers: PlayerConfigEntry[],
@@ -184,6 +232,10 @@ export async function sendPrematchNotification(
   // If generation fails, we fall back to a rich text embed (buildFallbackPrematchEmbed).
   let loadingScreenAttachment: AttachmentBuilder | undefined;
   let loadingScreenEmbed: EmbedBuilder | undefined;
+  // Hoisted so the Bryan Bucks prediction can reuse the ranks this already
+  // fetched for all ten players. Re-fetching them would be thousands of Riot
+  // calls a minute across the polling loop.
+  let loadingScreenData: LoadingScreenData | undefined;
   try {
     const startTime = Date.now();
     const firstPlayer = trackedPlayers[0];
@@ -195,7 +247,7 @@ export async function sendPrematchNotification(
       trackedPlayers.map((p) => p.league.leagueAccount.puuid),
     );
 
-    const loadingScreenData = await buildLoadingScreenData(
+    loadingScreenData = await buildLoadingScreenData(
       gameInfo,
       trackedPuuidSet,
       region,
@@ -289,21 +341,45 @@ export async function sendPrematchNotification(
     // Continue with text-only notification
   }
 
+  // Bryan Bucks: open the markets and build the buttons. Entirely
+  // best-effort — on any failure this yields no guilds, no rows, and the
+  // notification below is exactly what it was before the feature existed.
+  const bucks = await prepareBucksPrematch({
+    gameInfo,
+    trackedPlayers,
+    queueType,
+    targetGuildIds,
+    loadingScreenData,
+    detectedAt: new Date(),
+  });
+  const messageRefsByGuild = new Map<
+    string,
+    { channelId: string; messageId: string }[]
+  >();
+
   const deliveredGuildIds = new Set<DiscordGuildId>();
   for (const { channel, serverId } of deliverChannels) {
     try {
-      const message =
-        loadingScreenAttachment && loadingScreenEmbed
-          ? {
-              content: prematchMessageContent,
-              files: [loadingScreenAttachment],
-              embeds: [loadingScreenEmbed],
-            }
-          : { embeds: [buildFallbackPrematchEmbed(gameInfo, trackedPlayers)] };
       const guildId = DiscordGuildIdSchema.parse(serverId);
+      const betsOpen = bucks.bettingGuildIds.has(guildId);
+      const message = buildPrematchPayload({
+        betsOpen,
+        bucks,
+        baseContent: prematchMessageContent,
+        loadingScreenAttachment,
+        loadingScreenEmbed,
+        fallbackEmbed: () =>
+          buildFallbackPrematchEmbed(gameInfo, trackedPlayers),
+      });
       const sentMessage = await send(message, channel, guildId);
       sentMessageIds.set(channel, sentMessage.id);
       deliveredGuildIds.add(guildId);
+      if (betsOpen) {
+        messageRefsByGuild.set(guildId, [
+          ...(messageRefsByGuild.get(guildId) ?? []),
+          { channelId: channel, messageId: sentMessage.id },
+        ]);
+      }
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(
@@ -319,6 +395,14 @@ export async function sendPrematchNotification(
         tags: { source: "prematch-notification", gameId, channel },
       });
     }
+  }
+
+  for (const [serverId, refs] of messageRefsByGuild) {
+    await recordPoolMessageRefs({
+      matchId: bucks.matchId,
+      serverId: DiscordGuildIdSchema.parse(serverId),
+      refs,
+    });
   }
 
   await recordCoreOutputsDelivered(deliveredGuildIds, "prematch");

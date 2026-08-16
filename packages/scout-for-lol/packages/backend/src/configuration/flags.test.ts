@@ -1,306 +1,119 @@
-import { describe, test, expect, beforeEach } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
-
 import {
-  getLimit,
-  getFlag,
-  addLimitOverride,
   addFlagOverride,
-  clearLimitOverrides,
-  clearFlagOverrides,
-  type LimitName,
-  type FlagName,
+  getFlag,
+  listGuildsWithFlagDeclared,
+  listGuildsWithFlagEnabled,
+  MY_SERVER,
+  resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 
-describe("Feature Flags System", () => {
-  describe("getLimit", () => {
-    test("returns default limit when no attributes provided", () => {
-      expect(getLimit("player_subscriptions")).toBe(75);
-      expect(getLimit("accounts")).toBe(50);
-      expect(getLimit("competitions_per_owner")).toBe(1);
-      expect(getLimit("competitions_per_server")).toBe(2);
-      expect(getLimit("reports_per_owner_per_server")).toBe(2);
-      expect(getLimit("reports_per_server")).toBe(3);
-    });
+const OTHER_GUILD = DiscordGuildIdSchema.parse("2337623164146155593");
+const SOMEONE = DiscordAccountIdSchema.parse("160509172704739399");
 
-    test("returns default limit when no overrides match", () => {
-      const serverId = DiscordGuildIdSchema.parse("999999999999999999");
-      expect(getLimit("player_subscriptions", { server: serverId })).toBe(75);
-    });
-
-    test("returns override for specific server", () => {
-      const serverId = DiscordGuildIdSchema.parse("1337623164146155593");
-      expect(getLimit("player_subscriptions", { server: serverId })).toBe(
-        "unlimited",
-      );
-      expect(getLimit("accounts", { server: serverId })).toBe("unlimited");
-    });
-
-    test("returns most specific override when multiple match", () => {
-      const serverId = DiscordGuildIdSchema.parse("12345678901234567");
-      const userId = DiscordAccountIdSchema.parse("98765432109876543");
-
-      // Add overrides with different specificity
-      addLimitOverride("competitions_per_owner", 20, { server: serverId });
-      addLimitOverride("competitions_per_owner", 50, {
-        server: serverId,
-        user: userId,
-      });
-
-      // More specific override should win
-      expect(getLimit("competitions_per_owner", { server: serverId })).toBe(20);
-      expect(
-        getLimit("competitions_per_owner", { server: serverId, user: userId }),
-      ).toBe(50);
-
-      // Clean up
-      clearLimitOverrides("competitions_per_owner");
-    });
-
-    test("ignores overrides that don't match all attributes", () => {
-      const serverId = DiscordGuildIdSchema.parse("12345678901234567");
-      const otherServerId = DiscordGuildIdSchema.parse("98765432109876543");
-      const userId = DiscordAccountIdSchema.parse("11111111111111111");
-
-      addLimitOverride("competitions_per_server", 100, {
-        server: serverId,
-        user: userId,
-      });
-
-      // Should match
-      expect(
-        getLimit("competitions_per_server", { server: serverId, user: userId }),
-      ).toBe(100);
-
-      // Should not match (wrong server)
-      expect(
-        getLimit("competitions_per_server", {
-          server: otherServerId,
-          user: userId,
-        }),
-      ).toBe(2);
-
-      // Should not match (missing user)
-      expect(getLimit("competitions_per_server", { server: serverId })).toBe(2);
-
-      clearLimitOverrides("competitions_per_server");
-    });
-
-    test("supports custom attributes", () => {
-      addLimitOverride("accounts", 200, { custom_key: "custom_value" });
-
-      expect(getLimit("accounts", { custom_key: "custom_value" })).toBe(200);
-      expect(getLimit("accounts", { custom_key: "other_value" })).toBe(50);
-
-      clearLimitOverrides("accounts");
-    });
-  });
-
-  describe("getFlag", () => {
-    test("returns default flag when no attributes provided", () => {
-      expect(getFlag("ai_reviews_enabled")).toBe(false);
-    });
-
-    test("returns default flag when no overrides match", () => {
-      const serverId = DiscordGuildIdSchema.parse("999999999999999999");
-      expect(getFlag("ai_reviews_enabled", { server: serverId })).toBe(false);
-    });
-
-    test("returns override for specific server", () => {
-      const serverId = DiscordGuildIdSchema.parse("12345678901234567");
-
-      addFlagOverride("ai_reviews_enabled", true, { server: serverId });
-
-      expect(getFlag("ai_reviews_enabled", { server: serverId })).toBe(true);
-      expect(getFlag("ai_reviews_enabled")).toBe(false);
-
-      clearFlagOverrides("ai_reviews_enabled");
-    });
-
-    test("returns most specific override when multiple match", () => {
-      const serverId = DiscordGuildIdSchema.parse("12345678901234567");
-      const userId = DiscordAccountIdSchema.parse("98765432109876543");
-
-      // Add overrides with different specificity
-      addFlagOverride("ai_reviews_enabled", true, { server: serverId });
-      addFlagOverride("ai_reviews_enabled", false, {
-        server: serverId,
-        user: userId,
-      });
-
-      // More specific override should win
-      expect(getFlag("ai_reviews_enabled", { server: serverId })).toBe(true);
-      expect(
-        getFlag("ai_reviews_enabled", { server: serverId, user: userId }),
-      ).toBe(false);
-
-      clearFlagOverrides("ai_reviews_enabled");
-    });
-
-    test("ignores overrides that don't match all attributes", () => {
-      const serverId = DiscordGuildIdSchema.parse("12345678901234567");
-      const otherServerId = DiscordGuildIdSchema.parse("98765432109876543");
-      const userId = DiscordAccountIdSchema.parse("11111111111111111");
-
-      addFlagOverride("ai_reviews_enabled", true, {
-        server: serverId,
-        user: userId,
-      });
-
-      // Should match
-      expect(
-        getFlag("ai_reviews_enabled", { server: serverId, user: userId }),
-      ).toBe(true);
-
-      // Should not match (wrong server)
-      expect(
-        getFlag("ai_reviews_enabled", { server: otherServerId, user: userId }),
-      ).toBe(false);
-
-      // Should not match (missing user)
-      expect(getFlag("ai_reviews_enabled", { server: serverId })).toBe(false);
-
-      clearFlagOverrides("ai_reviews_enabled");
-    });
-  });
+afterEach(() => {
+  // The registry is process-wide. Restoring rather than clearing keeps this
+  // file from switching `debug` off for every test that runs after it.
+  resetFlagOverrides("debug");
+  resetFlagOverrides("betting_enabled");
 });
 
-describe("Feature Flags - Specificity & Overrides", () => {
-  describe("Specificity matching", () => {
-    beforeEach(() => {
-      clearLimitOverrides("player_subscriptions");
-    });
-
-    test("server+user beats server alone", () => {
-      const serverId = DiscordGuildIdSchema.parse("12345678901234567");
-      const userId = DiscordAccountIdSchema.parse("98765432109876543");
-
-      addLimitOverride("player_subscriptions", 20, { server: serverId });
-      addLimitOverride("player_subscriptions", 100, {
-        server: serverId,
-        user: userId,
-      });
-
-      expect(
-        getLimit("player_subscriptions", { server: serverId, user: userId }),
-      ).toBe(100);
-
-      clearLimitOverrides("player_subscriptions");
-    });
-
-    test("server+user+player beats server+user", () => {
-      const serverId = DiscordGuildIdSchema.parse("12345678901234567");
-      const userId = DiscordAccountIdSchema.parse("98765432109876543");
-      const playerId = 42;
-
-      addLimitOverride("player_subscriptions", 20, { server: serverId });
-      addLimitOverride("player_subscriptions", 50, {
-        server: serverId,
-        user: userId,
-      });
-      addLimitOverride("player_subscriptions", 200, {
-        server: serverId,
-        user: userId,
-        player: playerId,
-      });
-
-      expect(
-        getLimit("player_subscriptions", {
-          server: serverId,
-          user: userId,
-          player: playerId,
-        }),
-      ).toBe(200);
-
-      clearLimitOverrides("player_subscriptions");
-    });
-
-    test("partial override doesn't match when query has more attributes", () => {
-      const serverId = DiscordGuildIdSchema.parse("12345678901234567");
-      const userId = DiscordAccountIdSchema.parse("98765432109876543");
-
-      addLimitOverride("player_subscriptions", 50, { server: serverId });
-
-      // Override should still match (override attributes are subset of query)
-      expect(
-        getLimit("player_subscriptions", { server: serverId, user: userId }),
-      ).toBe(50);
-
-      clearLimitOverrides("player_subscriptions");
-    });
+describe("listGuildsWithFlagEnabled", () => {
+  test("returns the guild a flag is switched on for", () => {
+    // Reset first: another test file may have cleared this flag, and the
+    // registry is shared across the whole process.
+    resetFlagOverrides("betting_enabled");
+    expect(listGuildsWithFlagEnabled("betting_enabled")).toEqual([MY_SERVER]);
   });
 
-  describe("Runtime override management", () => {
-    test("addLimitOverride adds new override", () => {
-      const serverId = DiscordGuildIdSchema.parse("12345678901234567");
-
-      expect(getLimit("accounts", { server: serverId })).toBe(50);
-
-      addLimitOverride("accounts", 100, { server: serverId });
-      expect(getLimit("accounts", { server: serverId })).toBe(100);
-
-      clearLimitOverrides("accounts");
-    });
-
-    test("addFlagOverride adds new override", () => {
-      const serverId = DiscordGuildIdSchema.parse("12345678901234567");
-
-      expect(getFlag("ai_reviews_enabled", { server: serverId })).toBe(false);
-
-      addFlagOverride("ai_reviews_enabled", true, { server: serverId });
-      expect(getFlag("ai_reviews_enabled", { server: serverId })).toBe(true);
-
-      clearFlagOverrides("ai_reviews_enabled");
-    });
-
-    test("clearLimitOverrides removes all overrides", () => {
-      const serverId = DiscordGuildIdSchema.parse("12345678901234567");
-
-      addLimitOverride("accounts", 100, { server: serverId });
-      expect(getLimit("accounts", { server: serverId })).toBe(100);
-
-      clearLimitOverrides("accounts");
-      expect(getLimit("accounts", { server: serverId })).toBe(50);
-    });
-
-    test("clearFlagOverrides removes all overrides", () => {
-      const serverId = DiscordGuildIdSchema.parse("12345678901234567");
-
-      addFlagOverride("ai_reviews_enabled", true, { server: serverId });
-      expect(getFlag("ai_reviews_enabled", { server: serverId })).toBe(true);
-
-      clearFlagOverrides("ai_reviews_enabled");
-      expect(getFlag("ai_reviews_enabled", { server: serverId })).toBe(false);
-    });
+  test("follows the registry when a second guild is enabled", () => {
+    // The point of deriving this from the registry rather than hard-coding it:
+    // enabling a flag somewhere new registers the command there with no second
+    // edit.
+    addFlagOverride("debug", true, { server: OTHER_GUILD });
+    expect(listGuildsWithFlagEnabled("debug")).toContain(OTHER_GUILD);
   });
 
-  describe("Type safety", () => {
-    test("limit names are type-checked", () => {
-      // These should compile
-      const validLimits: LimitName[] = [
-        "player_subscriptions",
-        "accounts",
-        "competitions_per_owner",
-        "competitions_per_server",
-        "reports_per_owner_per_server",
-        "reports_per_server",
-      ];
+  test("ignores an override that only enables a flag for one person", () => {
+    // `{ server, user }` means one member has it, not that the guild does —
+    // registering a command for everyone there on that basis would be wrong.
+    addFlagOverride("debug", true, { server: OTHER_GUILD, user: SOMEONE });
 
-      for (const limit of validLimits) {
-        expect(getLimit(limit)).toBeNumber();
-      }
-    });
+    expect(listGuildsWithFlagEnabled("debug")).not.toContain(OTHER_GUILD);
+    expect(getFlag("debug", { server: OTHER_GUILD, user: SOMEONE })).toBe(true);
+    expect(getFlag("debug", { server: OTHER_GUILD })).toBe(false);
+  });
 
-    test("flag names are type-checked", () => {
-      // These should compile
-      const validFlags: FlagName[] = ["ai_reviews_enabled"];
+  test("ignores an override that switches a flag off", () => {
+    addFlagOverride("debug", false, { server: OTHER_GUILD });
+    expect(listGuildsWithFlagEnabled("debug")).not.toContain(OTHER_GUILD);
+  });
 
-      for (const flag of validFlags) {
-        expect(getFlag(flag)).toBeBoolean();
-      }
-    });
+  test("does not repeat a guild listed twice", () => {
+    addFlagOverride("debug", true, { server: OTHER_GUILD });
+    addFlagOverride("debug", true, { server: OTHER_GUILD });
+    const guilds = listGuildsWithFlagEnabled("debug");
+    expect(guilds.filter((guild) => guild === OTHER_GUILD)).toHaveLength(1);
+  });
+
+  test("every returned guild actually reads as enabled", () => {
+    resetFlagOverrides("betting_enabled");
+    for (const guild of listGuildsWithFlagEnabled("betting_enabled")) {
+      expect(getFlag("betting_enabled", { server: guild })).toBe(true);
+    }
+  });
+
+  // Not tested: the throw for a flag that defaults to true. Every flag in the
+  // registry defaults to false and there is no public way to change a default,
+  // so any test here would be asserting against a flag that cannot exist. The
+  // guard stays because returning [] for such a flag would quietly unregister
+  // its command everywhere, which is far worse than a loud failure.
+});
+
+describe("listGuildsWithFlagDeclared", () => {
+  test("returns the guild a flag is switched on for", () => {
+    resetFlagOverrides("betting_enabled");
+    expect(listGuildsWithFlagDeclared("betting_enabled")).toEqual([MY_SERVER]);
+  });
+
+  // The whole reason this exists next to `listGuildsWithFlagEnabled`. Guild
+  // command registration is a PUT that REPLACES a guild's command list, so a
+  // guild whose flag was switched off has to stay in the reconciliation set —
+  // visiting only the enabled guilds leaves Discord serving the command there
+  // forever.
+  test("keeps a guild whose override switches the flag off", () => {
+    addFlagOverride("debug", false, { server: OTHER_GUILD });
+
+    expect(listGuildsWithFlagEnabled("debug")).not.toContain(OTHER_GUILD);
+    expect(listGuildsWithFlagDeclared("debug")).toContain(OTHER_GUILD);
+  });
+
+  test("is a superset of the enabled list", () => {
+    addFlagOverride("debug", true, { server: MY_SERVER });
+    addFlagOverride("debug", false, { server: OTHER_GUILD });
+
+    const declared = listGuildsWithFlagDeclared("debug");
+    for (const guild of listGuildsWithFlagEnabled("debug")) {
+      expect(declared).toContain(guild);
+    }
+  });
+
+  test("ignores an override scoped to one person in a guild", () => {
+    // Same rule as the enabled list: `{ server, user }` says something about a
+    // member, not about the guild, so it must not pull the guild into a
+    // reconciliation that would clear that guild's commands.
+    addFlagOverride("debug", false, { server: OTHER_GUILD, user: SOMEONE });
+    expect(listGuildsWithFlagDeclared("debug")).not.toContain(OTHER_GUILD);
+  });
+
+  test("does not repeat a guild declared twice", () => {
+    addFlagOverride("debug", true, { server: OTHER_GUILD });
+    addFlagOverride("debug", false, { server: OTHER_GUILD });
+    const guilds = listGuildsWithFlagDeclared("debug");
+    expect(guilds.filter((guild) => guild === OTHER_GUILD)).toHaveLength(1);
   });
 });

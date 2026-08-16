@@ -139,6 +139,7 @@ export type FlagName =
   | "ai_reports_enabled"
   | "ai_reports_unlimited"
   | "ai_reviews_enabled"
+  | "betting_enabled"
   | "debug";
 
 /**
@@ -167,6 +168,27 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
       },
     ],
   },
+  // Bryan Bucks. Gates the whole betting economy: pool creation, bet placement,
+  // settlement announcements, AND earning. Earning is gated deliberately — an
+  // ungated economy would accrue silently in every server, and enabling the
+  // flag later would hand out a surprise backlog. The trade is that enabling it
+  // starts a guild at zero with no backfill.
+  //
+  // This is a private, single-server experiment and is not intended to become a
+  // Scout-wide feature. MY_SERVER runs the beta bot, so in practice Bryan Bucks
+  // only ever appears in beta — but that is a consequence of which bot is in
+  // that guild, NOT a second gate. There is deliberately no environment check:
+  // one override is the whole answer to "is it on here?", and a second one would
+  // mean two places to look.
+  betting_enabled: {
+    default: false,
+    overrides: [
+      {
+        value: true,
+        attributes: { server: MY_SERVER },
+      },
+    ],
+  },
   debug: {
     default: false,
     overrides: [
@@ -177,6 +199,23 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     ],
   },
 };
+
+/**
+ * The overrides each flag was declared with, captured at module load.
+ *
+ * `FLAG_REGISTRY` is mutable module state shared by every test file in a Bun
+ * process, so a test that calls `clearFlagOverrides` and stops there leaves the
+ * flag switched off for everything that runs afterwards — a failure that
+ * depends on file order and reads as a bug in unrelated code. `resetFlagOverrides`
+ * gives a test a way to put the world back without hard-coding what the
+ * defaults were.
+ */
+const INITIAL_FLAG_OVERRIDES = new Map<string, FlagOverride[]>(
+  Object.entries(FLAG_REGISTRY).map(([name, config]) => [
+    name,
+    config.overrides.map((override) => ({ ...override })),
+  ]),
+);
 
 // ============================================================================
 // Matching Algorithm
@@ -299,6 +338,84 @@ export function getFlag(
 }
 
 /**
+ * Every guild a flag is switched on for, whole-guild.
+ *
+ * Used to decide where a guild-scoped slash command should be registered, so
+ * the flag registry stays the single source of truth for "who has this?" — add
+ * a second guild override and the command follows automatically.
+ *
+ * Only counts overrides whose *sole* attribute is `server`. A more specific
+ * override such as `{ server, user }` enables the flag for one person in that
+ * guild, which is not the same as the guild having the feature, and registering
+ * a command for everyone there on that basis would be wrong.
+ *
+ * @throws if the flag defaults to true, where "which guilds" has no answer —
+ * such a flag belongs on a global command, and silently returning an empty list
+ * would unregister it everywhere.
+ */
+export function listGuildsWithFlagEnabled(name: FlagName): DiscordGuildId[] {
+  return listWholeGuildOverrides(name, (value) => value);
+}
+
+/**
+ * Every guild a flag carries a whole-guild override for, in **either**
+ * direction.
+ *
+ * The superset of `listGuildsWithFlagEnabled`, and the reconciliation set for
+ * guild-scoped command registration: registering is a PUT that *replaces* a
+ * guild's command list, so a guild whose flag was switched off has to be
+ * visited with an empty payload or Discord keeps serving the command forever.
+ * Only the enabled list can say where a command belongs; only this one can say
+ * where it no longer does.
+ *
+ * The consequence is a contract on how a guild-scoped feature is withdrawn:
+ * flip its override to `value: false` rather than deleting the entry. A deleted
+ * entry leaves no record that the guild was ever targeted, and nothing here or
+ * in Discord can then tell that guild apart from one that never had it.
+ *
+ * @throws for the same reason `listGuildsWithFlagEnabled` does.
+ */
+export function listGuildsWithFlagDeclared(name: FlagName): DiscordGuildId[] {
+  return listWholeGuildOverrides(name, () => true);
+}
+
+/**
+ * Guilds named by an override whose *sole* attribute is `server` and whose
+ * value the caller accepts.
+ *
+ * The specificity check is the point: a more specific override such as
+ * `{ server, user }` enables the flag for one person in that guild, which is
+ * not the same as the guild having the feature.
+ */
+function listWholeGuildOverrides(
+  name: FlagName,
+  accept: (value: boolean) => boolean,
+): DiscordGuildId[] {
+  const config = FLAG_REGISTRY[name];
+  if (config.default) {
+    throw new Error(
+      `Flag "${name}" defaults to true, so it has no finite guild list`,
+    );
+  }
+
+  const guilds = new Set<DiscordGuildId>();
+  for (const override of config.overrides) {
+    if (!accept(override.value)) {
+      continue;
+    }
+    const server = override.attributes.server;
+    if (
+      server === undefined ||
+      calculateSpecificity(override.attributes) !== 1
+    ) {
+      continue;
+    }
+    guilds.add(server);
+  }
+  return [...guilds];
+}
+
+/**
  * Add a limit override at runtime
  *
  * Useful for dynamic overrides
@@ -336,8 +453,24 @@ export function clearLimitOverrides(name: LimitName): void {
 
 /**
  * Clear all overrides for a flag (useful for testing)
+ *
+ * Prefer pairing this with `resetFlagOverrides` in an `afterEach`: the registry
+ * is process-wide, so a cleared flag stays cleared for every test file that
+ * runs after this one.
  */
 export function clearFlagOverrides(name: FlagName): void {
   const config = FLAG_REGISTRY[name];
   config.overrides.length = 0;
+}
+
+/**
+ * Restore a flag's overrides to the ones it was declared with.
+ *
+ * For tests that need to leave the shared registry as they found it. Copies the
+ * snapshot rather than handing it out, so a later `addFlagOverride` cannot
+ * mutate the thing every future reset restores from.
+ */
+export function resetFlagOverrides(name: FlagName): void {
+  const initial = INITIAL_FLAG_OVERRIDES.get(name) ?? [];
+  FLAG_REGISTRY[name].overrides = initial.map((override) => ({ ...override }));
 }
