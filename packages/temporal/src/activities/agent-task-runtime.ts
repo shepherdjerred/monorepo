@@ -1,4 +1,5 @@
 import { Context } from "@temporalio/activity";
+import { ApplicationFailure } from "@temporalio/common";
 import * as Sentry from "@sentry/bun";
 import { agentTaskRunsTotal } from "#observability/metrics.ts";
 import type { AgentTaskSecretRedactionError } from "#activities/agent-task-env.ts";
@@ -74,7 +75,15 @@ export function throwIfAgentTaskSecretRedactionFailed(
     phase: "secret-redaction",
     signal: context.signal,
   });
-  throw failure;
+  // This check only fires after the SDK run completed, so the agent may
+  // already have applied effects; a Temporal retry would replay the entire
+  // effectful run. Fail for good, like SDK and output-contract failures.
+  throw ApplicationFailure.create({
+    message: failure.message,
+    cause: failure,
+    nonRetryable: true,
+    type: "AgentTaskSecretRedactionFailure",
+  });
 }
 
 export function safeHeartbeat(payload: Record<string, unknown>): void {
