@@ -123,20 +123,28 @@ describe("PlaybackCommandService", () => {
   test("keeps requester and admin authorization authoritative", () => {
     const { service, events } = createService();
     expect(() => service.skip(OTHER)).toThrow("requester or an admin");
-    expect(service.skip(USER)).toBe("Skipped.");
+    expect(service.skip(USER)).toEqual({
+      outcome: "skipped",
+      message: "Skipped.",
+    });
     expect(() => service.stop(USER)).toThrow("Only an admin");
-    expect(service.stop(ADMIN)).toBe("Stopped and cleared the queue.");
+    expect(service.stop(ADMIN)).toEqual({
+      outcome: "stopped",
+      message: "Stopped and cleared the queue.",
+    });
     expect(events.map((event) => event.type)).toEqual(["SKIP", "STOP"]);
   });
 
   test("supports relative seek against the live position", async () => {
     const { service, seeks } = createService();
-    await expect(service.seek(USER, -30, true)).resolves.toBe(
-      "Seeked to 1:00.",
-    );
-    await expect(service.seek(USER, 150, false)).resolves.toBe(
-      "Seeked to 2:30.",
-    );
+    await expect(service.seek(USER, -30, true)).resolves.toEqual({
+      outcome: "seeked",
+      message: "Seeked to 1:00.",
+    });
+    await expect(service.seek(USER, 150, false)).resolves.toEqual({
+      outcome: "seeked",
+      message: "Seeked to 2:30.",
+    });
     expect(seeks).toEqual([60, 150]);
   });
 

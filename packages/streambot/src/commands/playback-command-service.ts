@@ -48,6 +48,25 @@ export type PlaybackCommandServiceDeps = {
 
 export class PlaybackCommandBoundaryError extends Error {}
 
+/**
+ * What a mutating command actually did, alongside its speakable message. Callers branch on the
+ * outcome — never on the English text, which the voice assistant paraphrases and this service is
+ * free to reword.
+ */
+export type PlaybackCommandResult = {
+  readonly outcome:
+    | "queued"
+    | "queued-next"
+    | "skipped"
+    | "stopped"
+    | "seeked"
+    | "volume-set"
+    | "volume-deferred"
+    | "loop-set"
+    | "shuffled";
+  readonly message: string;
+};
+
 export function normalizeVoicePlayQuery(query: string): string {
   const normalized = query.trim();
   if (normalized.length === 0)
@@ -68,7 +87,7 @@ export class PlaybackCommandService {
     placement: VoicePlayPlacement;
     userId: UserId;
     signal?: AbortSignal;
-  }): Promise<string> {
+  }): Promise<PlaybackCommandResult> {
     input.signal?.throwIfAborted();
     const query = normalizeVoicePlayQuery(input.query);
     const source = this.selectSource(query, input.source);
@@ -98,11 +117,14 @@ export class PlaybackCommandService {
       ...(preResolved === undefined ? {} : { preResolved }),
     });
     return input.placement === "next"
-      ? `Playing ${sourceLabel(source)} next.`
-      : `Queued ${sourceLabel(source)}.`;
+      ? {
+          outcome: "queued-next",
+          message: `Playing ${sourceLabel(source)} next.`,
+        }
+      : { outcome: "queued", message: `Queued ${sourceLabel(source)}.` };
   }
 
-  skip(userId: UserId): string {
+  skip(userId: UserId): PlaybackCommandResult {
     const current = this.deps.view().current;
     if (
       !canControlItem(
@@ -116,24 +138,24 @@ export class PlaybackCommandService {
       );
     }
     this.deps.dispatch({ type: "SKIP" });
-    return "Skipped.";
+    return { outcome: "skipped", message: "Skipped." };
   }
 
-  stop(userId: UserId): string {
+  stop(userId: UserId): PlaybackCommandResult {
     if (!isAdmin(userId, this.deps.config.discord.adminIds)) {
       throw new PlaybackCommandBoundaryError(
         "Only an admin can stop playback.",
       );
     }
     this.deps.dispatch({ type: "STOP" });
-    return "Stopped and cleared the queue.";
+    return { outcome: "stopped", message: "Stopped and cleared the queue." };
   }
 
   async seek(
     userId: UserId,
     seconds: number,
     relative: boolean,
-  ): Promise<string> {
+  ): Promise<PlaybackCommandResult> {
     const view = this.deps.view();
     if (view.current === null)
       throw new PlaybackCommandBoundaryError("Nothing is playing.");
@@ -159,26 +181,38 @@ export class PlaybackCommandService {
     );
     if (!(await this.deps.seek(target)))
       throw new PlaybackCommandBoundaryError("Nothing is playing.");
-    return `Seeked to ${formatTimecode(target)}.`;
+    return {
+      outcome: "seeked",
+      message: `Seeked to ${formatTimecode(target)}.`,
+    };
   }
 
-  async setVolume(percent: number): Promise<string> {
+  async setVolume(percent: number): Promise<PlaybackCommandResult> {
     this.deps.dispatch({ type: "SET_VOLUME", volume: percent });
     const applied = await this.deps.setVolume(percent);
     return applied
-      ? `Volume set to ${String(percent)} percent.`
-      : `Volume set to ${String(percent)} percent for the next video.`;
+      ? {
+          outcome: "volume-set",
+          message: `Volume set to ${String(percent)} percent.`,
+        }
+      : {
+          outcome: "volume-deferred",
+          message: `Volume set to ${String(percent)} percent for the next video.`,
+        };
   }
 
-  setLoop(mode: LoopMode): string {
+  setLoop(mode: LoopMode): PlaybackCommandResult {
     this.deps.dispatch({ type: "SET_LOOP", mode });
-    return `Loop set to ${mode}.`;
+    return { outcome: "loop-set", message: `Loop set to ${mode}.` };
   }
 
-  shuffle(): string {
+  shuffle(): PlaybackCommandResult {
     const count = this.deps.view().queue.length;
     this.deps.dispatch({ type: "SHUFFLE" });
-    return `Shuffled ${String(count)} items.`;
+    return {
+      outcome: "shuffled",
+      message: `Shuffled ${String(count)} items.`,
+    };
   }
 
   getQueue(): string {

@@ -37,9 +37,12 @@ import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 import {
   PlaybackCommandBoundaryError,
   PlaybackCommandService,
+  type PlaybackCommandResult,
 } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 
 const SOURCES_TIMEOUT_MS = 15_000;
+
+type PlaybackCommandDenial = { outcome: "denied"; message: string };
 const SUBTITLE_ENUMERATION_TIMEOUT_MS = 15_000;
 
 /**
@@ -253,7 +256,9 @@ export class CommandHandler {
     const result = this.runBoundary(() =>
       this.playback.skip(interaction.userId),
     );
-    await interaction.reply(result === "Skipped." ? "⏭️ Skipped." : result);
+    await interaction.reply(
+      result.outcome === "skipped" ? "⏭️ Skipped." : result.message,
+    );
   }
 
   private async handleStop(interaction: CommandInteraction): Promise<void> {
@@ -261,9 +266,9 @@ export class CommandHandler {
       this.playback.stop(interaction.userId),
     );
     await interaction.reply(
-      result === "Stopped and cleared the queue."
+      result.outcome === "stopped"
         ? "⏹️ Stopped and cleared the queue."
-        : result,
+        : result.message,
     );
   }
 
@@ -308,7 +313,7 @@ export class CommandHandler {
   }
 
   private async handleShuffle(interaction: CommandInteraction): Promise<void> {
-    await interaction.reply(this.playback.shuffle());
+    await interaction.reply(this.playback.shuffle().message);
   }
 
   private async handleLoop(interaction: CommandInteraction): Promise<void> {
@@ -327,7 +332,7 @@ export class CommandHandler {
     const level = interaction.getIntegerRequired("level");
     const result = await this.playback.setVolume(level);
     await interaction.reply(
-      result.includes("for the next video")
+      result.outcome === "volume-deferred"
         ? `Volume set to ${String(level)}% for the next video.`
         : `🔊 Volume → ${String(level)}%.`,
     );
@@ -343,26 +348,32 @@ export class CommandHandler {
       this.playback.seek(interaction.userId, seconds, false),
     );
     await interaction.reply(
-      result.startsWith("Seeked to ") ? `⏩ ${result}` : result,
+      result.outcome === "seeked" ? `⏩ ${result.message}` : result.message,
     );
   }
 
-  private runBoundary(operation: () => string): string {
+  private runBoundary(
+    operation: () => PlaybackCommandResult,
+  ): PlaybackCommandResult | PlaybackCommandDenial {
     try {
       return operation();
     } catch (error) {
-      if (error instanceof PlaybackCommandBoundaryError) return error.message;
+      if (error instanceof PlaybackCommandBoundaryError) {
+        return { outcome: "denied", message: error.message };
+      }
       throw error;
     }
   }
 
   private async runBoundaryAsync(
-    operation: () => Promise<string>,
-  ): Promise<string> {
+    operation: () => Promise<PlaybackCommandResult>,
+  ): Promise<PlaybackCommandResult | PlaybackCommandDenial> {
     try {
       return await operation();
     } catch (error) {
-      if (error instanceof PlaybackCommandBoundaryError) return error.message;
+      if (error instanceof PlaybackCommandBoundaryError) {
+        return { outcome: "denied", message: error.message };
+      }
       throw error;
     }
   }

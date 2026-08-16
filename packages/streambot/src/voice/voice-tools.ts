@@ -80,14 +80,26 @@ export function bindPlaybackVoiceCommandPort(
   userId: UserId,
 ): VoiceCommandPort {
   return {
-    play: (input, signal) => service.play({ ...input, userId, signal }),
-    skip: () => service.skip(userId),
-    stop: () => service.stop(userId),
-    seek: (input) =>
-      service.seek(userId, input.seconds, input.mode === "relative"),
-    setVolume: (percent) => service.setVolume(percent),
-    setLoop: (mode) => service.setLoop(mode),
-    shuffle: () => service.shuffle(),
+    play: async (input, signal) => {
+      const result = await service.play({ ...input, userId, signal });
+      return result.message;
+    },
+    skip: () => service.skip(userId).message,
+    stop: () => service.stop(userId).message,
+    seek: async (input) => {
+      const result = await service.seek(
+        userId,
+        input.seconds,
+        input.mode === "relative",
+      );
+      return result.message;
+    },
+    setVolume: async (percent) => {
+      const result = await service.setVolume(percent);
+      return result.message;
+    },
+    setLoop: (mode) => service.setLoop(mode).message,
+    shuffle: () => service.shuffle().message,
     getQueue: () => service.getQueue(),
     getNowPlaying: () => service.getNowPlaying(),
   };
