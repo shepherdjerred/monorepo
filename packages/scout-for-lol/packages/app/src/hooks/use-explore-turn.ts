@@ -241,9 +241,14 @@ export function useExploreTurn(params: {
               await refreshConversation(turn.conversationId);
             }
           }
-          await refreshQuota();
           applyTurn(null);
         }
+        // Outside the ownership guard on purpose: quota is per-user, not
+        // per-turn. `abortForNavigation` advances `seqRef`, so a turn that
+        // already spent quota and was then abandoned would skip this and leave
+        // the header showing capacity the account no longer has. The guard
+        // above decides who may tear down the refs, not whether quota moved.
+        await refreshQuota();
       }
     },
     [applyTurn, awaitSalvage, params, refreshConversation, refreshQuota],

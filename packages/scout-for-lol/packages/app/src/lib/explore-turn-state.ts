@@ -191,11 +191,16 @@ function questionRowArrived(
     turn.leafIdAtStart === null
       ? -1
       : messages.findIndex((message) => message.id === turn.leafIdAtStart);
+  // The server trims the question before persisting it, while the composer
+  // hands us the raw text, so a question typed with surrounding whitespace
+  // would never match its own persisted row — and the pending copy would keep
+  // rendering beside it, which is the double-question this check prevents.
+  const trimmed = question.trim();
   return messages.some(
     (message, index) =>
       index > startIndex &&
       message.role === "user" &&
-      message.content === question,
+      message.content.trim() === trimmed,
   );
 }
 

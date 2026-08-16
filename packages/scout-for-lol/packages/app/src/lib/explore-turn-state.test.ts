@@ -21,12 +21,13 @@ function message(input: {
   id: string;
   role: "user" | "assistant";
   parentId?: string | null;
+  content?: string;
 }): ExploreMessage {
   return ExploreMessageSchema.parse({
     id: input.id,
     role: input.role,
     parentId: input.parentId ?? null,
-    content: input.role === "user" ? "Who wins?" : "Jinx.",
+    content: input.content ?? (input.role === "user" ? "Who wins?" : "Jinx."),
     createdAt: "2026-08-14T12:00:00.000Z",
   });
 }
@@ -310,6 +311,21 @@ describe("visiblePending before `started` arrives", () => {
     const persisted = [message({ id: QUESTION_ID, role: "user" })];
 
     expect(turn.questionMessageId).toBeNull();
+    expect(visiblePending(turn, CONVERSATION, persisted).pendingQuestion).toBe(
+      null,
+    );
+  });
+
+  test("matches its persisted row even when the question was typed with padding", () => {
+    // The server trims before persisting; the composer hands the hook raw
+    // text. A strict comparison therefore misses, and the optimistic question
+    // keeps rendering beside the row that already arrived — the exact double
+    // render this check exists to stop.
+    const turn = beforeStarted("  Who wins?  ");
+    const persisted = [
+      message({ id: QUESTION_ID, role: "user", content: "Who wins?" }),
+    ];
+
     expect(visiblePending(turn, CONVERSATION, persisted).pendingQuestion).toBe(
       null,
     );
