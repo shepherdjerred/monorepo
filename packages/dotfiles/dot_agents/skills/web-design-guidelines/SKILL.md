@@ -26,13 +26,13 @@ Review files for compliance with Web Interface Guidelines.
 
 ## Guidelines Source
 
-Fetch fresh guidelines before each review:
+Fetch the reviewed guidelines before each review:
 
 ```
-https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md
+https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/d0a657bfe87e86dd3a4753d7ec28c7e7dd7a88fe/command.md
 ```
 
-Use WebFetch to retrieve the latest rules. The fetched content contains all the rules and output format instructions.
+Use WebFetch to retrieve the reviewed rules. The fetched content contains all the rules and output format instructions.
 
 ## Usage
 

@@ -129,6 +129,20 @@
       ]
     },
     {
+      "repository": "https://github.com/vercel-labs/web-interface-guidelines",
+      "commit": "d0a657bfe87e86dd3a4753d7ec28c7e7dd7a88fe",
+      "license": "MIT",
+      "reviewDate": "2026-08-16",
+      "imports": [
+        {
+          "upstreamSkillPath": "command.md",
+          "localSkillPath": "web-design-guidelines",
+          "integration": "adapted",
+          "notes": "The runtime guideline fetch is bound to this reviewed command.md revision; updates require manual review."
+        }
+      ]
+    },
+    {
       "repository": "https://github.com/cloudflare/security-audit-skill",
       "commit": "8bac42001ddd90a4dcd8d5a5045199283a8eba75",
       "license": "MIT",
