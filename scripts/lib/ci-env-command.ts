@@ -46,6 +46,39 @@ const ASSIGNMENT = /(?<![\w$])([A-Z_][A-Z0-9_]*)=/gu;
  * needs no scope of its own, and the pipeline uses no other construct that
  * scopes exports.
  */
+/**
+ * Only the parentheses that open or close a real subshell.
+ *
+ * `x=$(cmd)` is not a subshell for scoping purposes, and treating its parens
+ * as one opens a scope, records the assignment inside it, then pops — losing
+ * the name from the scope that actually has it. Buildkite escapes the sigil as
+ * `$$(`, so both spellings are recognised, and nesting inside a substitution
+ * is skipped wholesale.
+ */
+export function structuralParens(line: string): string {
+  let structural = "";
+  let substitutionDepth = 0;
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    if (character !== "(" && character !== ")") continue;
+    if (character === "(") {
+      const opensSubstitution = /\$\$?$/u.test(line.slice(0, index));
+      if (opensSubstitution || substitutionDepth > 0) {
+        substitutionDepth += 1;
+        continue;
+      }
+      structural += "(";
+      continue;
+    }
+    if (substitutionDepth > 0) {
+      substitutionDepth -= 1;
+      continue;
+    }
+    structural += ")";
+  }
+  return structural;
+}
+
 export function commandScopes(command: string): CommandScope[] {
   const root: CommandScope = { assigned: new Set(), scripts: [] };
   const scopes: CommandScope[] = [root];
@@ -53,8 +86,9 @@ export function commandScopes(command: string): CommandScope[] {
   const innermost = (): CommandScope => stack.at(-1) ?? root;
   for (const line of command.split("\n")) {
     const trimmed = line.trim();
+    const structural = structuralParens(trimmed);
     // A line that opens a subshell starts a scope inheriting what is in force.
-    for (const _ of trimmed.matchAll(/\(/gu)) {
+    for (const _ of structural.matchAll(/\(/gu)) {
       const child: CommandScope = {
         assigned: new Set(innermost().assigned),
         scripts: [],
@@ -70,14 +104,22 @@ export function commandScopes(command: string): CommandScope[] {
       }
     }
     current.scripts.push(...scriptPathsInCommand(trimmed));
-    for (const _ of trimmed.matchAll(/\)/gu)) {
+    for (const _ of structural.matchAll(/\)/gu)) {
       if (stack.length > 1) stack.pop();
     }
   }
   return scopes;
 }
 
-/** Repo-relative `.ts`/`.sh` script paths written literally in a command. */
+/**
+ * Repo-relative `.ts` script paths written literally in a command.
+ *
+ * TypeScript only, deliberately: requirements are read from `requireEnv` calls
+ * through the TypeScript AST, so a `.sh` entry point has nothing this analysis
+ * can resolve. Shell entry points are therefore out of scope rather than
+ * silently under-analyzed — if one ever needs checking it needs a different
+ * mechanism, not a wider regex here.
+ */
 export function scriptPathsInCommand(command: string): string[] {
   const paths = new Set<string>();
   const pattern =

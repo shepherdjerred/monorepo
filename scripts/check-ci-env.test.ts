@@ -12,6 +12,7 @@ import {
   assignedEnvNames,
   commandScopes,
   scriptPathsInCommand,
+  structuralParens,
 } from "./lib/ci-env-command.ts";
 
 /** A secret that carries `names`, of which `blanks` are present but empty. */
@@ -113,6 +114,21 @@ describe("commandScopes", () => {
     expect(outside?.assigned.has("AWS_ACCESS_KEY_ID")).toBe(false);
   });
 
+  test("a command substitution is not treated as a subshell", () => {
+    // `x=$(cmd)` opened a scope, recorded the assignment inside it, then
+    // popped — losing the name from the scope that actually has it, and
+    // splitting the step's invocations across scopes that do not exist.
+    const scopes = commandScopes(
+      [
+        'export DIGEST="$$(bun scripts/release.ts resolve)"',
+        "bun scripts/deploy-site.ts wiki",
+      ].join("\n"),
+    );
+    expect(scopes).toHaveLength(1);
+    expect(scopes[0]?.assigned.has("DIGEST")).toBe(true);
+    expect(scopes[0]?.scripts).toContain("scripts/deploy-site.ts");
+  });
+
   test("an export before a subshell is still visible inside it", () => {
     const scopes = commandScopes(
       ['export SHARED="x"', "(", "  bun scripts/release.ts", ")"].join("\n"),
@@ -121,6 +137,14 @@ describe("commandScopes", () => {
       scope.scripts.includes("scripts/release.ts"),
     );
     expect(inner?.assigned.has("SHARED")).toBe(true);
+  });
+});
+
+describe("structuralParens", () => {
+  test("keeps subshell parens and drops substitution parens", () => {
+    expect(structuralParens("( export A=1 )")).toBe("()");
+    expect(structuralParens('X="$(cmd (nested))"')).toBe("");
+    expect(structuralParens('( X="$$(cmd)" )')).toBe("()");
   });
 });
 
