@@ -35,6 +35,7 @@ import path from "node:path";
 import { parse } from "yaml";
 import { Project, SyntaxKind, type SourceFile } from "ts-morph";
 import { z } from "zod";
+import { commandScopes } from "./lib/ci-env-command.ts";
 
 const REPOSITORY_ROOT = path.resolve(import.meta.dir, "..");
 const PIPELINE_PATH = path.join(REPOSITORY_ROOT, ".buildkite", "pipeline.yml");
@@ -182,91 +183,6 @@ export function ciSecretItemId(declarationSource: string): string {
     );
   }
   return id;
-}
-
-/**
- * Names a shell command assigns before/while running something, which the
- * secret does not carry. Steps routinely rename a secret key into the name a
- * script expects — `export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID"`,
- * `export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"`. Treating those as unprovided
- * would make this check's first run a wall of false positives.
- *
- * Handles several assignments per `export` (the pipeline exports the two AWS
- * names on one line) and bare `NAME=value cmd` prefixes.
- */
-export function assignedEnvNames(command: string): Set<string> {
-  const names = new Set<string>();
-  for (const scope of commandScopes(command)) {
-    for (const name of scope.assigned) names.add(name);
-  }
-  return names;
-}
-
-export type CommandScope = {
-  /** Names assigned at or above this scope, so visible to its invocations. */
-  assigned: Set<string>;
-  /** Script paths invoked while those assignments are in effect. */
-  scripts: string[];
-};
-
-const ASSIGNMENT = /(?<![\w$])([A-Z_][A-Z0-9_]*)=/gu;
-
-/**
- * Split a step's command into subshell scopes.
- *
- * `pr-dryrun` exports the AWS credentials inside `( … )` around its Tofu loop
- * and then runs other scripts outside it. Treating the command as one flat
- * scope reports those names as provided to every script in the step — a false
- * negative in exactly the direction this check exists to prevent, since it
- * would let a genuinely missing credential pass.
- *
- * Only `( … )` is modelled. `{ …; }` shares the parent's environment, so it
- * needs no scope of its own, and the pipeline uses no other construct that
- * scopes exports.
- */
-export function commandScopes(command: string): CommandScope[] {
-  const scopes: CommandScope[] = [];
-  const stack: CommandScope[] = [{ assigned: new Set(), scripts: [] }];
-  scopes.push(stack[0]!);
-  for (const line of command.split("\n")) {
-    const trimmed = line.trim();
-    const opened = (trimmed.match(/\(/gu) ?? []).length;
-    const closed = (trimmed.match(/\)/gu) ?? []).length;
-    // A line that opens a subshell starts a scope inheriting what is in force.
-    for (let index = 0; index < opened; index += 1) {
-      const parent = stack[stack.length - 1]!;
-      const child: CommandScope = {
-        assigned: new Set(parent.assigned),
-        scripts: [],
-      };
-      stack.push(child);
-      scopes.push(child);
-    }
-    const current = stack[stack.length - 1]!;
-    if (/(?:^|\s|;)(?:export\s|[A-Z_][A-Z0-9_]*=)/u.test(trimmed)) {
-      for (const match of trimmed.matchAll(ASSIGNMENT)) {
-        const name = match[1];
-        if (name !== undefined) current.assigned.add(name);
-      }
-    }
-    current.scripts.push(...scriptPathsInCommand(trimmed));
-    for (let index = 0; index < closed && stack.length > 1; index += 1) {
-      stack.pop();
-    }
-  }
-  return scopes;
-}
-
-/** Repo-relative `.ts`/`.sh` script paths written literally in a command. */
-export function scriptPathsInCommand(command: string): string[] {
-  const paths = new Set<string>();
-  const pattern =
-    /(?<![\w./-])((?:scripts|\.buildkite\/scripts|packages\/[\w.-]+(?:\/[\w.-]+)*?\/scripts)\/[\w.-]+\.ts)/gu;
-  for (const match of command.matchAll(pattern)) {
-    const found = match[1];
-    if (found !== undefined) paths.add(found);
-  }
-  return [...paths].toSorted();
 }
 
 type PipelineStep = {

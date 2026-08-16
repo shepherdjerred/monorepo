@@ -2,15 +2,17 @@ import { describe, expect, test } from "bun:test";
 import { parse } from "yaml";
 
 import {
-  assignedEnvNames,
-  commandScopes,
   ciSecretItemId,
   collectErrors,
   collectSteps,
-  scriptPathsInCommand,
   type RequiredEnv,
   type SecretFields,
 } from "./check-ci-env.ts";
+import {
+  assignedEnvNames,
+  commandScopes,
+  scriptPathsInCommand,
+} from "./lib/ci-env-command.ts";
 
 /** A secret that carries `names`, of which `blanks` are present but empty. */
 function secretWith(
