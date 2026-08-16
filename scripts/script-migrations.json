@@ -153,6 +153,11 @@
       ]
     },
     {
+      "source": ".buildkite/scripts/review-gate.sh",
+      "disposition": "retain",
+      "reason": "Buildkite wrapper selects and checks out the trusted parser source before installing Bun"
+    },
+    {
       "source": ".buildkite/scripts/toolchain.sh",
       "disposition": "retain",
       "reason": "Sourced bootstrap installs Bun and exports into the parent shell"
