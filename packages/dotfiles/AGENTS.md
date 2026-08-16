@@ -33,6 +33,12 @@ When asked to get CI passing, fix a build, fix lints, or complete any task with 
 - When finishing a coding task, run the relevant verification commands for the area you changed and fix the failures before you stop.
 - Prefer simple, reviewable configuration over hidden automation. If a safeguard matters, document it here or in a skill instead of relying on opaque hook behavior.
 
+## Credentials in Chat
+
+- Treat credentials pasted into a private chat as sensitive input, but do not assume they are compromised merely because they appear in a chat transcript.
+- Use them only as needed for the requested operation; never repeat secret values in responses, logs, durable files, memory, commits, or generated artifacts.
+- Recommend rotation when a credential was posted publicly or shared broadly, persisted outside the intended private transcript, or shows signs of misuse. Do not reflexively demand rotation solely because the user pasted it into a private chat.
+
 ## Pull Requests — Show Visual Changes
 
 - When a change has a visible result — UI, web pages, components, charts, generated/OG images, CLI or TUI output, dashboards, rendered docs — **include screenshots (before/after where it applies) in the PR description or a PR comment.** A reviewer should be able to see the visual impact without checking out the branch.
