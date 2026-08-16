@@ -8,6 +8,7 @@ import {
   type WakePhraseVerification,
   type WakePhraseVerifier,
 } from "@shepherdjerred/streambot/voice/phrase-verifier.ts";
+import { readPcm16MonoWave } from "@shepherdjerred/streambot/voice/wave-io.ts";
 
 const log = logger.child("voice-models");
 const SAMPLE_RATE = 16_000;
@@ -123,64 +124,6 @@ const smokeVerifier: WakePhraseVerifier = {
   verify: () => Promise.resolve({ accepted: true, score: 1 }),
   close: () => Promise.resolve(),
 };
-
-async function readPcm16MonoWave(
-  filename: string,
-): Promise<{ samples: Float32Array; sampleRate: number }> {
-  const bytes = new Uint8Array(await Bun.file(filename).arrayBuffer());
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const ascii = (offset: number, length: number): string =>
-    String.fromCodePoint(...bytes.subarray(offset, offset + length));
-  if (
-    bytes.byteLength < 44 ||
-    ascii(0, 4) !== "RIFF" ||
-    ascii(8, 4) !== "WAVE"
-  ) {
-    throw new Error(`Invalid keyword smoke WAV: ${filename}`);
-  }
-
-  let offset = 12;
-  let sampleRate: number | null = null;
-  let dataOffset: number | null = null;
-  let dataLength: number | null = null;
-  while (offset + 8 <= bytes.byteLength) {
-    const chunkId = ascii(offset, 4);
-    const chunkLength = view.getUint32(offset + 4, true);
-    const chunkDataOffset = offset + 8;
-    if (chunkDataOffset + chunkLength > bytes.byteLength) {
-      throw new Error(`Invalid keyword smoke WAV chunk: ${filename}`);
-    }
-    if (chunkId === "fmt ") {
-      if (
-        chunkLength < 16 ||
-        view.getUint16(chunkDataOffset, true) !== 1 ||
-        view.getUint16(chunkDataOffset + 2, true) !== 1 ||
-        view.getUint16(chunkDataOffset + 14, true) !== 16
-      ) {
-        throw new Error(`Keyword smoke WAV must be mono PCM16: ${filename}`);
-      }
-      sampleRate = view.getUint32(chunkDataOffset + 4, true);
-    } else if (chunkId === "data") {
-      dataOffset = chunkDataOffset;
-      dataLength = chunkLength;
-    }
-    offset = chunkDataOffset + chunkLength + (chunkLength % 2);
-  }
-  if (
-    sampleRate === null ||
-    dataOffset === null ||
-    dataLength === null ||
-    dataLength % 2 !== 0
-  ) {
-    throw new Error(`Keyword smoke WAV is incomplete: ${filename}`);
-  }
-
-  const samples = new Float32Array(dataLength / 2);
-  for (let index = 0; index < samples.length; index += 1) {
-    samples[index] = view.getInt16(dataOffset + index * 2, true) / 32_768;
-  }
-  return { samples, sampleRate };
-}
 
 async function assertKeywordRuntimeWorks(
   assets: AssetPaths,
@@ -331,10 +274,14 @@ async function createNativeModels(
     keywordsThreshold: 0.05,
     keywordsFile: assets.keywords,
   };
+  // One spotter per models instance: constructing it loads the full transducer model, and the
+  // lifecycle discards every speaker's detector on each candidate/turn/rejection. sherpa-onnx-node
+  // exposes no free/dispose API, so per-speaker spotters churned model-sized native allocations
+  // reclaimable only by NAPI finalizers. Per-speaker state lives in streams, which are cheap.
+  const spotter = new KeywordSpotter(kwsConfig);
   return {
     runtime: "native",
     createKeywordDetector: () => {
-      const spotter = new KeywordSpotter(kwsConfig);
       const stream = spotter.createStream();
       return {
         accept: (samples) => {
@@ -354,7 +301,7 @@ async function createNativeModels(
           spotter.reset(stream);
         },
         close: () => {
-          // Native handles are released with their owning JS objects.
+          // No native stream disposal API; the small stream's NAPI finalizer reclaims it at GC.
         },
       };
     },
@@ -388,18 +335,20 @@ async function createWasmModels(
 ): Promise<LocalVoiceModels> {
   const { createKws, createVad } = await import("sherpa-onnx");
   const keywords = await readFile(assets.keywords, "utf8");
+  // Mirror of the native runtime: one model-sized spotter per models instance, cheap per-speaker
+  // streams. The WASM heap does expose free(), so the shared spotter is released in close().
+  const spotter = createKws({
+    featConfig: { samplingRate: SAMPLE_RATE, featureDim: 80 },
+    modelConfig: modelConfig(assets),
+    maxActivePaths: 8,
+    numTrailingBlanks: 1,
+    keywordsScore: 2,
+    keywordsThreshold: 0.05,
+    keywords,
+  });
   return {
     runtime: "wasm",
     createKeywordDetector: () => {
-      const spotter = createKws({
-        featConfig: { samplingRate: SAMPLE_RATE, featureDim: 80 },
-        modelConfig: modelConfig(assets),
-        maxActivePaths: 8,
-        numTrailingBlanks: 1,
-        keywordsScore: 2,
-        keywordsThreshold: 0.05,
-        keywords,
-      });
       const stream = spotter.createStream();
       return {
         accept: (samples) => {
@@ -420,7 +369,6 @@ async function createWasmModels(
         },
         close: () => {
           stream.free();
-          spotter.free();
         },
       };
     },
@@ -444,7 +392,10 @@ async function createWasmModels(
       };
     },
     verifyWakePhrase: verifier.verify,
-    close: verifier.close,
+    close: async () => {
+      spotter.free();
+      await verifier.close();
+    },
   };
 }
 
