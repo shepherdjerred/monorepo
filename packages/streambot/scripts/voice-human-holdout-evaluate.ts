@@ -16,16 +16,29 @@ const ClipSchema = z.strictObject({
   file: z.string().min(1),
   category: z.enum(["positive", "near-match", "background"]),
 });
+const SPEAKER_LABELS = ["speaker-1", "speaker-2", "speaker-3"] as const;
 const InputSchema = z.strictObject({
   version: z.literal(1),
+  // Three entries drawn from a three-label enum, all distinct, is exactly the required set.
+  // Checking the labels individually would accept three `speaker-1` groups, and since the report
+  // hardcodes `speakers: 3`, a single-speaker dataset could then pass the three-speaker gate.
   speakers: z
     .array(
       z.strictObject({
-        label: z.string().regex(/^speaker-[1-3]$/),
+        label: z.enum(SPEAKER_LABELS),
         clips: z.array(ClipSchema).length(10),
       }),
     )
-    .length(3),
+    .length(3)
+    .refine(
+      (speakers) =>
+        new Set(speakers.map((speaker) => speaker.label)).size ===
+        SPEAKER_LABELS.length,
+      {
+        message:
+          "Human holdout must contain one group each for speaker-1, speaker-2, and speaker-3",
+      },
+    ),
 });
 
 function option(name: string): string | undefined {
@@ -174,8 +187,13 @@ const report = await (async () => {
     await atomicWrite(reportPath, `${JSON.stringify(aggregate, null, 2)}\n`);
     return aggregate;
   } finally {
-    await Promise.all(opened.map((models) => models.close()));
-    await rm(inputDir, { recursive: true });
+    // Deleting the recordings is the privacy contract, so it cannot be downstream of anything
+    // that may reject. A failing ONNX session release must not keep private audio on disk.
+    try {
+      await Promise.all(opened.map((models) => models.close()));
+    } finally {
+      await rm(inputDir, { recursive: true });
+    }
   }
 })();
 process.stdout.write(
