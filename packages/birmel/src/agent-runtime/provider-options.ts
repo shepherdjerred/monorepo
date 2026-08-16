@@ -7,17 +7,23 @@ export type OpenRouterProviderOptions = {
       effort: "minimal" | "low" | "medium" | "high";
       exclude: false;
     };
+    verbosity?: "low" | "medium" | "high";
   };
 };
 
 export type OpenRouterProviderOverrides = {
   reasoningEffort?: "minimal" | "low" | "medium" | "high";
+  textVerbosity?: "low" | "medium" | "high";
 };
 
 /**
  * Tools run serially so one turn cannot emit parallel side effects. OpenRouter
  * may route between upstream providers, but the runtime keeps the selected
  * catalog model exact and denies data collection.
+ *
+ * The provider spreads every `openrouter` key into the request body, so a
+ * stored job's text-verbosity setting maps to OpenRouter's `verbosity`
+ * request field rather than being silently dropped.
  */
 export function getOpenRouterProviderOptions(
   overrides: OpenRouterProviderOverrides = {},
@@ -30,6 +36,9 @@ export function getOpenRouterProviderOptions(
         effort: overrides.reasoningEffort ?? config.openRouter.reasoningEffort,
         exclude: false,
       },
+      ...(overrides.textVerbosity === undefined
+        ? {}
+        : { verbosity: overrides.textVerbosity }),
     },
   };
 }
