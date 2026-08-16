@@ -32,4 +32,11 @@ export const persistOptions = {
   }),
   maxAge: 24 * 60 * 60 * 1000,
   buster: MANIFEST_SCHEMA_VERSION,
+  dehydrateOptions: {
+    // Persist ONLY the manifest. Other queries (in-memory search results,
+    // ddragon champion data with its Map) either don't survive JSON
+    // round-trips or don't deserve localStorage space.
+    shouldDehydrateQuery: (query: { queryKey: readonly unknown[] }) =>
+      query.queryKey[0] === "manifest",
+  },
 };

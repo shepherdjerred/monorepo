@@ -14,6 +14,9 @@ import { BookmarkButton } from "./bookmark-button.tsx";
 import { WatchButton } from "./watch-button.tsx";
 import { DownloadLink } from "./download-link.tsx";
 import { CourseVideoRow } from "./course-video-row.tsx";
+import { CoachAttribution } from "#src/features/commentaries/coach-attribution";
+import { CourseBadges } from "#src/features/courses/course-badges";
+import { ChampionIcon } from "#src/features/ddragon/champion-icon";
 
 export type ContentCardProps = {
   item: ContentItem;
@@ -152,21 +155,26 @@ function CommentaryCard(
     <Card className="mb-4">
       <CardContent className="grid gap-4 sm:grid-cols-[1fr_16rem]">
         <div className="min-w-0">
-          <h3 className="text-lg font-semibold">
+          <h3 className="flex items-center gap-2 text-lg font-semibold">
+            <ChampionIcon name={commentary.champion} />
             <a
               href={commentary.skillCappedUrl}
               className="underline-offset-2 hover:underline"
             >
               {commentary.champion} vs {commentary.opponent}
             </a>
+            <ChampionIcon
+              name={commentary.opponent}
+              className="size-6 rounded opacity-60"
+            />
           </h3>
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <Badge>Commentary</Badge>
             <Badge variant="secondary">
               {roleDisplayName(commentary.role)}
             </Badge>
             <ReleasedBadge date={commentary.releaseDate} />
-            <Badge variant="outline">Player: {commentary.staff}</Badge>
+            <CoachAttribution name={commentary.staff} />
             <Badge variant="outline">
               K/D/A: {commentary.kills}/{commentary.deaths}/{commentary.assists}
             </Badge>
@@ -213,6 +221,7 @@ function CourseCard(
             <ReleasedBadge date={course.releaseDate} />
             <Badge variant="outline">{course.videos.length} videos</Badge>
           </div>
+          <CourseBadges course={course} />
           <ol className="mt-3 list-inside list-decimal text-sm">
             {course.videos.map((courseVideo) => (
               <CourseVideoRow

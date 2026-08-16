@@ -15,6 +15,7 @@ const byRecency = <T extends { releaseDate: Date }>(items: T[]): T[] =>
 function selectContent(manifest: Manifest): Content {
   const content = parseManifest(manifest);
   return {
+    ...content,
     videos: byRecency(content.videos),
     courses: byRecency(content.courses),
     commentaries: byRecency(content.commentaries),

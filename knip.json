@@ -454,8 +454,6 @@
   ],
   "ignoreIssues": {
     "packages/better-skill-capped/src/components/ui/card.tsx": ["exports"],
-    "packages/better-skill-capped/src/components/ui/dialog.tsx": ["exports"],
-    "packages/better-skill-capped/src/utils/url-utilities.ts": ["exports"],
     "packages/discord-plays-mario-kart/packages/backend/src/observability/tracing.ts": [
       "exports"
     ],

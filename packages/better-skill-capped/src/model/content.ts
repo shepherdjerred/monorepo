@@ -50,13 +50,34 @@ export type Course = ItemBase & {
   description?: string | undefined;
   image: string;
   videos: CourseVideo[];
+  tags: string[];
+  recommended: boolean;
+  marketingString?: string | undefined;
+  seasonString?: string | undefined;
 };
 
 export type ContentItem = Video | Course | Commentary;
+
+export type Staff = {
+  name: string;
+  summonerName: string;
+  profileImage: string;
+  profileImageWithRank: string;
+  playerPeakRank: number | string;
+};
+
+export type PatchInfo = {
+  version: string;
+  releaseDate: Date;
+};
 
 export type Content = {
   videos: Video[];
   courses: Course[];
   commentaries: Commentary[];
   unmappedVideos: Video[];
+  staffByName: Map<string, Staff>;
+  patch: PatchInfo;
+  /** When the manifest snapshot itself was generated upstream. */
+  generatedAt: Date;
 };

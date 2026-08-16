@@ -1,9 +1,9 @@
 ---
 id: plan-2026-08-15-better-skill-capped-modernization
 type: plan
-status: in-progress
+status: awaiting-human
 board: true
-verification: agent
+verification: human
 disposition: active
 ---
 
@@ -359,13 +359,23 @@ across filter changes (spy).
 
 ## Remaining
 
-- [ ] PR 1 `bsc/toolchain` — strict tsconfig + Tailwind/shadcn scaffolding
-- [ ] PR 2 `bsc/models` — discriminated union + pure parser + bug fixes
-- [ ] PR 3 `bsc/data` — TanStack Query + storage v2 + hooks
-- [ ] PR 4 `bsc/router` — TanStack Router + typed URL state
-- [ ] PR 5 `bsc/ui` — Tailwind + shadcn presentational rewrite
-- [ ] PR 6 `bsc/search-core` — Orama pure search functions + tests
-- [ ] PR 7 `bsc/search-ui` — engine swap, chips, kind/role facets
-- [ ] PR 8 `bsc/facets` — full sidebar + highlighting
-- [ ] PR 9 `bsc/enrichment` — parser enrichment + features 1–5
-- [ ] PR 10 `bsc/polish` — recommended rail + ddragon icons + cleanup
+All implementation is complete and submitted as a git-spice stack; the
+remaining work is human review and bottom-up merge.
+
+- [x] PR 1 `bsc/toolchain` — strict tsconfig + Tailwind/shadcn scaffolding (#2188)
+- [x] PR 2 `bsc/models` — discriminated union + pure parser + bug fixes (#2190)
+- [x] PR 3 `bsc/data` — TanStack Query + storage v2 + hooks (#2193)
+- [x] PR 4 `bsc/router` — TanStack Router + typed URL state (#2195)
+- [x] PR 5 `bsc/ui` — Tailwind + shadcn presentational rewrite (#2197)
+- [x] PR 6 `bsc/search-core` — Orama pure search functions + tests (#2199)
+- [x] PR 7 `bsc/search-ui` — engine swap, chips, sort (#2201)
+- [x] PR 8 `bsc/facets` — full facet sidebar with live counts (#2202)
+- [x] PR 9 `bsc/enrichment` — enrichment + recommended rail + ddragon icons + cleanup (combined per user instruction)
+
+## Human Verification
+
+- [ ] Review and merge the stack bottom-up (#2188 → enrichment PR), running
+      `git-spice repo sync --restack` between merges
+- [ ] After the final deploy, spot-check https://better-skill-capped.com:
+      commentaries visible again, search typo tolerance, facet counts, course
+      pages, bookmarks/watch state migrated

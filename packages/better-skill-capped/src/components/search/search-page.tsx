@@ -6,6 +6,7 @@ import { PaginationControls } from "./pagination-controls.tsx";
 import { ActiveFilters } from "./active-filters.tsx";
 import { ContentCard } from "#src/components/content/content-card";
 import { ScoutBanner } from "#src/components/layout/scout-banner";
+import { RecommendedRail } from "#src/features/home/recommended-rail";
 import { useContent } from "#src/hooks/use-content";
 import { useBookmarks } from "#src/hooks/use-bookmarks";
 import { useWatchStatus } from "#src/hooks/use-watch-status";
@@ -100,6 +101,17 @@ export function SearchPage(): React.ReactElement {
         </aside>
         <main className="min-w-0">
           <ScoutBanner />
+          <RecommendedRail
+            visible={
+              search.q === "" &&
+              search.kind.length === 0 &&
+              search.role.length === 0 &&
+              search.champion.length === 0 &&
+              search.staff.length === 0 &&
+              search.tag.length === 0 &&
+              search.page === 1
+            }
+          />
           <ActiveFilters params={search} onChange={updateSearch} />
           <div className="mb-3 flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">

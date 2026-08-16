@@ -146,6 +146,24 @@ describe("runSearch", () => {
     expect(result.facets.champion["Kai'Sa"]).toBe(0);
   });
 
+  test("tag filter narrows to tagged courses and facet counts include tags", async () => {
+    const all = await runSearch(index, params(), NO_STATE);
+    expect(all.facets.tags["Support - Wave Control"]).toBe(1);
+
+    const tagged = await runSearch(
+      index,
+      params({ tag: ["Support - Wave Control"] }),
+      NO_STATE,
+    );
+    expect(tagged.docs.map((doc) => doc.uuid)).toEqual(["crs-wave"]);
+  });
+
+  test("recommended flag flows into search docs", async () => {
+    const result = await runSearch(index, params(), NO_STATE);
+    const wave = result.docs.find((doc) => doc.uuid === "crs-wave");
+    expect(wave?.recommended).toBe(true);
+  });
+
   test("bookmarked filter narrows to bookmarked docs", async () => {
     const state: UserContentState = {
       watchedUuids: new Set(),

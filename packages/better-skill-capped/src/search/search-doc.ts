@@ -81,12 +81,10 @@ function courseToDoc(course: Course): SearchDoc {
     staff: "",
     yourChampion: "",
     theirChampion: "",
-    // Tags arrive with the parser enrichment phase; the field is already
-    // indexed so wiring them is a one-line change in courseToDoc.
-    tags: [],
+    tags: course.tags,
     carry: "",
     commentaryType: "",
-    recommended: false,
+    recommended: course.recommended,
     releaseDate: course.releaseDate.getTime(),
     durationInSeconds: course.videos.reduce(
       (total, courseVideo) => total + courseVideo.video.durationInSeconds,

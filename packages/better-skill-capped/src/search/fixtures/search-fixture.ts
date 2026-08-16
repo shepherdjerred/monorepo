@@ -84,6 +84,8 @@ function makeCourse(options: {
   title: string;
   role: string;
   rDate?: number;
+  tags?: string[];
+  recommended?: boolean;
 }): Record<string, unknown> {
   return {
     title: options.title,
@@ -94,8 +96,8 @@ function makeCourse(options: {
     courseImage: "https://example.com/a.png",
     courseImage2: "https://example.com/b.png",
     courseImage3: "https://example.com/c.png",
-    tags: [],
-    recommended: false,
+    tags: options.tags ?? [],
+    recommended: options.recommended ?? false,
     override: false,
     overlay: "none",
   };
@@ -197,6 +199,8 @@ const RAW_MANIFEST = {
       title: "Wave Control {support}",
       role: "support",
       rDate: 1_719_000_000_000,
+      tags: ["Support", "Support - Wave Control"],
+      recommended: true,
     }),
     makeCourse({
       uuid: "crs-macro",

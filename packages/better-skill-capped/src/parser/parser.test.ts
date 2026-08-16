@@ -150,6 +150,33 @@ describe("parseManifest", () => {
     expect(healthy.gameLengthInSeconds).toBe(20 * 60 + 9);
   });
 
+  test("carries course curation fields into the model", () => {
+    const content = parseManifest(manifest);
+    const waveControl = must(
+      content.courses.find((course) => course.uuid === "5760l2psnt"),
+    );
+
+    expect(waveControl.tags).toEqual([
+      "Support",
+      "Support - Laning",
+      "Support - Wave Control",
+    ]);
+    expect(waveControl.recommended).toBe(true);
+    expect(waveControl.marketingString).toBe("Beginner's Guide");
+    expect(waveControl.seasonString).toBe("Season 15");
+  });
+
+  test("exposes staff, patch, and manifest generation time", () => {
+    const content = parseManifest(manifest);
+
+    const hector = must(content.staffByName.get("Hector"));
+    expect(hector.summonerName).toBe("HgHector");
+    expect(hector.playerPeakRank).toBe(10);
+
+    expect(content.patch.version).toBe("26.04");
+    expect(content.generatedAt.getTime()).toBe(1_771_681_507_372);
+  });
+
   test("throws when a course references a video missing from the manifest", () => {
     const clone = structuredClone(fixture);
     const entry = must(clone.videosToCourses["Meta Updates {all}"]);

@@ -1,14 +1,6 @@
 const BASE_URL = "https://www.skill-capped.com/lol/";
 const BROWSE_URL = BASE_URL + "browse";
 
-export function rawTitleToUrlTitle(rawTitle: string): string {
-  return rawTitle
-    .toLowerCase()
-    .replaceAll(" ", "-")
-    .replaceAll("$", "")
-    .replaceAll(/[!:.'%,[\]]/g, "");
-}
-
 export function getVideoUrl(video: { uuid: string }): string {
   return BROWSE_URL + "/video/" + video.uuid;
 }

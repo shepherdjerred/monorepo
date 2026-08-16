@@ -42,6 +42,23 @@ export function parseManifest(manifest: Manifest): Content {
       parseCommentary(commentary),
     ),
     unmappedVideos,
+    staffByName: new Map(
+      manifest.staff.map((staff) => [
+        staff.name,
+        {
+          name: staff.name,
+          summonerName: staff.summonerName,
+          profileImage: staff.profileImage,
+          profileImageWithRank: staff.profileImageWithRank,
+          playerPeakRank: staff.playerPeakRank,
+        },
+      ]),
+    ),
+    patch: {
+      version: manifest.patch.patchVal,
+      releaseDate: parseDate(manifest.patch.releaseDate),
+    },
+    generatedAt: parseDate(manifest.timeStamp),
   };
 }
 
@@ -149,6 +166,14 @@ function parseCourses(
         role: parseRole(course.role),
         image: course.courseImage2,
         videos: courseVideos,
+        tags: course.tags,
+        recommended: course.recommended,
+        ...(course.marketingString === undefined
+          ? {}
+          : { marketingString: course.marketingString }),
+        ...(course.seasonString === undefined
+          ? {}
+          : { seasonString: course.seasonString }),
       },
     ];
   });
