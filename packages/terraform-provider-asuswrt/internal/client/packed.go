@@ -16,8 +16,10 @@ import (
 // as data, so the next read returns "&#38#60"/"&#38#62" and the router no longer
 // sees delimiters. Encode*ForWrite performs that boundary conversion.
 const (
+	packedReadAmpersand   = "&#38" // appGet.cgi representation of '&'
 	packedEntryDelim      = "&#60" // appGet.cgi representation of '<'
 	packedFieldDelim      = "&#62" // appGet.cgi representation of '>'
+	packedWriteAmpersand  = "&"    // apply.cgi representation
 	packedWriteEntryDelim = "<"    // apply.cgi representation
 	packedWriteFieldDelim = ">"    // apply.cgi representation
 )
@@ -335,6 +337,8 @@ func EncodeVTSRuleListForWrite(entries []PortForwardEntry) string {
 
 func encodePackedListForWrite(value string) string {
 	return strings.NewReplacer(
+		packedReadAmpersand,
+		packedWriteAmpersand,
 		packedEntryDelim, packedWriteEntryDelim,
 		packedFieldDelim, packedWriteFieldDelim,
 	).Replace(value)

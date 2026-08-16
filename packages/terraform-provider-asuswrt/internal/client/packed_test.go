@@ -417,6 +417,36 @@ func TestEncodeVTSRuleListForWriteMatchesFirmwareBuilder(t *testing.T) {
 	}
 }
 
+func TestEncodeDHCPStaticListForWritePreservesReadSideAmpersands(t *testing.T) {
+	t.Parallel()
+
+	entries, err := client.ParseDHCPStaticList("&#60AA:BB:CC:DD:EE:FF&#62192.168.1.100&#62&#62living&#38room")
+	if err != nil {
+		t.Fatalf("parse read-side list: %v", err)
+	}
+
+	got := client.EncodeDHCPStaticListForWrite(entries)
+	want := "<AA:BB:CC:DD:EE:FF>192.168.1.100>>living&room"
+	if got != want {
+		t.Errorf("encoded list = %q, want %q", got, want)
+	}
+}
+
+func TestEncodeVTSRuleListForWritePreservesReadSideAmpersands(t *testing.T) {
+	t.Parallel()
+
+	entries, err := client.ParseVTSRuleList("&#60web&#6280&#62192.168.1.100&#6280&#62tcp&#62allow&#38guest")
+	if err != nil {
+		t.Fatalf("parse read-side list: %v", err)
+	}
+
+	got := client.EncodeVTSRuleListForWrite(entries)
+	want := "<web>80>192.168.1.100>80>tcp>allow&guest"
+	if got != want {
+		t.Errorf("encoded list = %q, want %q", got, want)
+	}
+}
+
 // TestPackedListsPreserveTrailingFields covers firmware that returns more
 // fields than this provider models. Every mutation rewrites the whole list, so
 // an unmodeled trailing field must survive parse→serialize or an unrelated
