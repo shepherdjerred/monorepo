@@ -51,7 +51,6 @@
       <outline text="Prometheus Blog" type="rss" xmlUrl="https://prometheus.io/blog/feed.xml" htmlUrl="https://prometheus.io/blog/"/>
       <outline text="Loki Releases" type="rss" xmlUrl="https://github.com/grafana/loki/releases.atom" htmlUrl="https://github.com/grafana/loki"/>
       <outline text="Tempo Releases" type="rss" xmlUrl="https://github.com/grafana/tempo/releases.atom" htmlUrl="https://github.com/grafana/tempo"/>
-      <outline text="Sentry Blog" type="rss" xmlUrl="https://blog.sentry.io/feed.xml" htmlUrl="https://blog.sentry.io/"/>
       <outline text="OpenTelemetry Blog" type="rss" xmlUrl="https://opentelemetry.io/blog/index.xml" htmlUrl="https://opentelemetry.io/blog/"/>
       <outline text="OpenTelemetry Collector Releases" type="rss" xmlUrl="https://github.com/open-telemetry/opentelemetry-collector/releases.atom" htmlUrl="https://github.com/open-telemetry/opentelemetry-collector"/>
     </outline>
