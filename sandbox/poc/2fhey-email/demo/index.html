@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CodeFill Demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+        background: #f5f7fb;
+        color: #172033;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        display: grid;
+        min-height: 100vh;
+        margin: 0;
+        place-items: center;
+        padding: 24px;
+        background: radial-gradient(circle at top, #e6ecff, #f5f7fb 55%);
+      }
+
+      main {
+        width: min(100%, 430px);
+        padding: 36px;
+        border: 1px solid #e1e6f0;
+        border-radius: 24px;
+        background: #fff;
+        box-shadow: 0 24px 70px #1d2a4a1a;
+      }
+
+      .mark {
+        display: grid;
+        width: 48px;
+        height: 48px;
+        place-items: center;
+        margin-bottom: 24px;
+        border-radius: 14px;
+        background: #4f46e5;
+        color: #fff;
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 28px;
+        letter-spacing: -0.04em;
+      }
+      p {
+        color: #647089;
+        line-height: 1.5;
+      }
+      label {
+        display: block;
+        margin-top: 28px;
+        font-size: 14px;
+        font-weight: 650;
+      }
+
+      input {
+        width: 100%;
+        margin-top: 9px;
+        padding: 15px 16px;
+        border: 1px solid #cbd3e2;
+        border-radius: 12px;
+        outline: none;
+        font: inherit;
+        font-size: 22px;
+        letter-spacing: 0.2em;
+        text-align: center;
+      }
+
+      input:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 4px #4f46e51c;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 18px;
+        padding: 14px 16px;
+        border: 0;
+        border-radius: 12px;
+        background: #172033;
+        color: #fff;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 650;
+      }
+
+      .hint {
+        margin: 12px 0 0;
+        font-size: 13px;
+        text-align: center;
+      }
+      #result {
+        min-height: 24px;
+        margin-bottom: 0;
+        font-weight: 650;
+        text-align: center;
+      }
+      .success {
+        color: #16834b;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true">✓</div>
+      <h1>Sign in to CodeFill Demo</h1>
+      <p>
+        This is a local test page. Enter the verification code from your
+        MailMate message.
+      </p>
+
+      <form id="login-form">
+        <label for="otp">Verification code</label>
+        <input
+          id="otp"
+          name="one-time-code"
+          type="text"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          pattern="[0-9A-Za-z -]{4,8}"
+          maxlength="8"
+          placeholder="123456"
+          aria-describedby="otp-hint"
+          required
+        />
+        <p id="otp-hint" class="hint">
+          If Safari shows a 1Password control, use the field’s context menu →
+          AutoFill, or temporarily turn off 1Password’s inline suggestions.
+        </p>
+        <button type="submit">Verify code</button>
+        <p id="result" role="status" aria-live="polite"></p>
+      </form>
+    </main>
+
+    <script>
+      document
+        .querySelector("#login-form")
+        .addEventListener("submit", (event) => {
+          event.preventDefault();
+          const code = document.querySelector("#otp").value.trim();
+          const result = document.querySelector("#result");
+          result.textContent = `Code ${code} accepted by the demo.`;
+          result.className = "success";
+        });
+    </script>
+  </body>
+</html>
