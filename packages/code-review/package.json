@@ -21,6 +21,10 @@
     "./request-review": {
       "types": "./src/request-review.ts",
       "default": "./src/request-review.ts"
+    },
+    "./qodo": {
+      "types": "./src/providers/qodo.ts",
+      "default": "./src/providers/qodo.ts"
     }
   },
   "scripts": {

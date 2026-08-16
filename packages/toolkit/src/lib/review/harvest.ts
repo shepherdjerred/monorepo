@@ -1,0 +1,119 @@
+/**
+ * Finding review gates that failed for a reason that has since gone away.
+ *
+ * The gate fails when its deadline expires before the provider's review lands.
+ * If the review arrives afterwards and carries nothing blocking, the job is
+ * simply stale: re-running it passes without a single change to the PR. That
+ * rule is fully decidable, and re-deciding it by hand on every stuck PR is how
+ * it was applied before this existed.
+ */
+
+import { z } from "zod";
+
+const GITHUB_API = "https://api.github.com";
+
+export const GATE_CONTEXT =
+  "buildkite/monorepo/pr/robot-face-qodo-review-gate-required";
+
+const StatusSchema = z.object({
+  state: z.string(),
+  statuses: z.array(
+    z.object({
+      context: z.string(),
+      state: z.string(),
+      target_url: z.string().nullable(),
+    }),
+  ),
+});
+
+export type GateStatus = {
+  state: string;
+  targetUrl: string | null;
+};
+
+/**
+ * The Buildkite job id a gate status points at.
+ *
+ * Buildkite writes the job into the URL fragment (`…/builds/9633#<uuid>`), so
+ * retrying the failed job — rather than rebuilding everything — means reading
+ * it back out of there.
+ */
+export function jobIdFromTargetUrl(targetUrl: string | null): string | null {
+  if (targetUrl === null) return null;
+  const fragment = targetUrl.split("#")[1];
+  if (fragment === undefined || fragment === "") return null;
+  return /^[0-9a-f-]{36}$/iu.test(fragment) ? fragment : null;
+}
+
+/** The review gate's status for a commit, or null when it posted none. */
+export async function gateStatusFor(input: {
+  repo: string;
+  ref: string;
+  token: string;
+  context?: string;
+}): Promise<GateStatus | null> {
+  const response = await fetch(
+    `${GITHUB_API}/repos/${input.repo}/commits/${input.ref}/status?per_page=100`,
+    {
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${input.token}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `Could not read status for ${input.repo}@${input.ref}: ` +
+        `${String(response.status)} ${response.statusText}`,
+    );
+  }
+  const parsed = StatusSchema.parse(await response.json());
+  const context = input.context ?? GATE_CONTEXT;
+  const gate = parsed.statuses.find((status) => status.context === context);
+  return gate === undefined
+    ? null
+    : { state: gate.state, targetUrl: gate.target_url };
+}
+
+export type HarvestVerdict =
+  | { retryable: true; jobId: string }
+  | { retryable: false; reason: string };
+
+/**
+ * Whether a failed gate is stale rather than correct.
+ *
+ * Every condition has to hold: the gate failed, the review that exists is for
+ * the commit the gate judged, the provider actually finished, and nothing it
+ * found blocks. Retrying on any weaker rule re-runs a job that will fail again,
+ * which reads as flakiness rather than as the gate doing its job.
+ */
+export function harvestVerdict(input: {
+  gate: GateStatus | null;
+  reviewedAtHead: boolean;
+  completionSignal: string;
+  blockingCount: number;
+}): HarvestVerdict {
+  if (input.gate === null)
+    return { retryable: false, reason: "no gate status" };
+  if (input.gate.state !== "failure") {
+    return { retryable: false, reason: `gate is ${input.gate.state}` };
+  }
+  if (!input.reviewedAtHead) {
+    return { retryable: false, reason: "no review for this head yet" };
+  }
+  if (input.completionSignal === "none") {
+    return { retryable: false, reason: "provider has not finished reviewing" };
+  }
+  if (input.blockingCount > 0) {
+    return {
+      retryable: false,
+      reason: `${String(input.blockingCount)} blocking finding(s) remain`,
+    };
+  }
+  const jobId = jobIdFromTargetUrl(input.gate.targetUrl);
+  if (jobId === null) {
+    return { retryable: false, reason: "gate status names no Buildkite job" };
+  }
+  return { retryable: true, jobId };
+}

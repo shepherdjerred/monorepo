@@ -215,6 +215,35 @@ exactly like the AWS CLI. Select a profile with `--profile <name>` or
 toolkit pr asset 1234 ./after.png ./flow.mp4 ./demo.cast ./demo-site --profile seaweedfs --markdown
 ```
 
+## `pr review` — see and clear provider findings
+
+`toolkit pr review list <PR>` prints every code-review finding on a PR,
+**deduplicated across the surfaces the provider posted it on**. Qodo renders
+each finding twice — once inside its persistent review comment, once as an
+addressable thread on the offending line — and the two are cleared through
+different APIs. `@shepherdjerred/code-review` merges them into one finding
+carrying both handles; this shows that, so a `blocking_count` becomes a list of
+named problems rather than a number.
+
+`toolkit pr review resolve <PR> --finding <key|title> --evidence <text>` clears
+one finding on **both** surfaces in a single step: it appends the
+`<code>☑ resolved</code>` chip to the finding in the review comment and replies
+to and resolves the review thread. `--evidence` is required — a dismissal
+without a reason is indistinguishable from silencing the finding. Chipping only
+ever edits the region above `<!-- FOLDED_SECTION_START -->`; everything below is
+Qodo's archive of previous results, which the parser excludes.
+
+`toolkit pr review harvest <PR…>` applies the stale-gate rule: a gate that
+failed, whose provider has since finished reviewing _this_ head with nothing
+blocking, is stale and passes on a re-run. It prints the `bk job retry` command
+by default and only re-runs jobs with `--retry`. The Buildkite job id comes out
+of the status URL's fragment, so the failed job is retried rather than the whole
+build.
+
+GitHub access borrows an authenticated `gh`'s token when `GH_TOKEN` is unset,
+keeping the package's no-token-setup convention; the library needs a token
+rather than the CLI because it speaks GraphQL and paginates itself.
+
 ## Shared `lib/http` + `lib/config`
 
 The Grafana, Alerts, and Bugsink service clients share one HTTP layer instead

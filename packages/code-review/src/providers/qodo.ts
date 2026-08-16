@@ -198,6 +198,59 @@ export function parseQodoFindingTitle(body: string | null): string | null {
 }
 
 /**
+ * The chip that marks a finding resolved in Qodo's review comment.
+ *
+ * Qodo never strikes a finding because the code was fixed — it re-lists it on
+ * every review until something says otherwise. This chip is that something, and
+ * `parseSeveritySection` reads it back as `checked`. Writer and reader are kept
+ * side by side deliberately: they are one agreement about what "resolved" looks
+ * like, and splitting them across packages is how they would drift apart.
+ *
+ * It goes inside a `<code>` element so `identityOf` strips it, which keeps a
+ * chipped finding the same finding rather than making it a new one.
+ */
+export const QODO_RESOLVED_CHIP = "<code>\u{2611} resolved</code>";
+
+/**
+ * Mark the finding titled `title` resolved in a Qodo review comment.
+ *
+ * Only the current review is touched. Everything from
+ * `<!-- FOLDED_SECTION_START -->` onward is Qodo's archive of previous results,
+ * which the parser already excludes, so editing there changes no decision while
+ * rewriting history the provider wrote.
+ *
+ * Returns the body unchanged when the finding is already struck or chipped, and
+ * reports whether anything changed so a caller can tell "already done" from
+ * "no such finding" instead of silently succeeding at nothing.
+ */
+export function markQodoFindingResolved(
+  body: string,
+  title: string,
+): { body: string; changed: boolean; found: boolean } {
+  const foldIndex = body.indexOf(QODO_PREVIOUS_RESULTS_START);
+  const current = foldIndex === -1 ? body : body.slice(0, foldIndex);
+  const archived = foldIndex === -1 ? "" : body.slice(foldIndex);
+
+  let found = false;
+  let changed = false;
+  const updated = current.replaceAll(
+    /<summary>([\s\S]*?)<\/summary>/giu,
+    (match, summary: string) => {
+      if (findingTitle(summary) !== title) return match;
+      found = true;
+      if (/<s>[\s\S]*?<\/s>/iu.test(summary) || summary.includes("\u{2611}")) {
+        return match;
+      }
+      changed = true;
+      return `<summary>${summary} ${QODO_RESOLVED_CHIP}</summary>`;
+    },
+  );
+  // `current + archived` reconstructs `body` exactly, so an unchanged pass
+  // returns the original string without needing to special-case it.
+  return { body: updated + archived, changed, found };
+}
+
+/**
  * Identity of the underlying finding, shared by both copies Qodo posts.
  *
  * Case is folded because the two surfaces disagree on it: the review comment

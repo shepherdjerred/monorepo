@@ -2,7 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { mergeDuplicateFindings } from "./merge-findings.ts";
 import { codexProvider } from "./providers/codex.ts";
 import {
+  markQodoFindingResolved,
   parseQodoFindingTitle,
+  QODO_RESOLVED_CHIP,
   qodoFindingKey,
   qodoProvider,
 } from "./providers/qodo.ts";
@@ -189,5 +191,85 @@ describe("parseQodoFindingTitle", () => {
   test("returns null when no numbered title line exists", () => {
     expect(parseQodoFindingTitle("just prose, no finding here")).toBeNull();
     expect(parseQodoFindingTitle(null)).toBeNull();
+  });
+});
+
+describe("markQodoFindingResolved", () => {
+  // Both sections carry the SAME finding, unstruck. Qodo re-appends its
+  // previous results below the fold marker and the parser reads only what is
+  // above it, so a chip written below would change nothing while rewriting
+  // what the provider recorded.
+  const body = [
+    "<h3>Code Review by Qodo</h3>",
+    '<img alt="Action required">',
+    "<details>",
+    "<summary>  1. Turn outlives session destroy <code>🐞 Bug</code></summary>",
+    "</details>",
+    "<!-- FOLDED_SECTION_START -->",
+    "<details>",
+    "<summary>  1. Turn outlives session destroy <code>🐞 Bug</code></summary>",
+    "</details>",
+  ].join("\n");
+
+  test("chips the finding in the current review", () => {
+    const result = markQodoFindingResolved(
+      body,
+      "Turn outlives session destroy",
+    );
+    expect(result.found).toBe(true);
+    expect(result.changed).toBe(true);
+    expect(result.body).toContain(QODO_RESOLVED_CHIP);
+  });
+
+  test("never edits Qodo's archive of previous results", () => {
+    const result = markQodoFindingResolved(
+      body,
+      "Turn outlives session destroy",
+    );
+    const fold = result.body.indexOf("<!-- FOLDED_SECTION_START -->");
+    expect(result.body.slice(fold)).toBe(
+      body.slice(body.indexOf("<!-- FOLDED_SECTION_START -->")),
+    );
+    // Exactly one chip: the archived copy of the same finding is untouched.
+    expect(result.body.split(QODO_RESOLVED_CHIP)).toHaveLength(2);
+  });
+
+  test("a chipped finding reads back as resolved", () => {
+    // The whole point: the writer's output must satisfy the reader.
+    const chipped = markQodoFindingResolved(
+      body,
+      "Turn outlives session destroy",
+    ).body;
+    expect(chipped).toContain("☑");
+  });
+
+  test("is idempotent", () => {
+    const once = markQodoFindingResolved(body, "Turn outlives session destroy");
+    const twice = markQodoFindingResolved(
+      once.body,
+      "Turn outlives session destroy",
+    );
+    expect(twice.found).toBe(true);
+    expect(twice.changed).toBe(false);
+    expect(twice.body).toBe(once.body);
+  });
+
+  test("leaves a finding Qodo already struck alone", () => {
+    const struck = body.replace(
+      "  1. Turn outlives session destroy <code>🐞 Bug</code>",
+      "<s>  1. Turn outlives session destroy</s> <code>🐞 Bug</code>",
+    );
+    const result = markQodoFindingResolved(
+      struck,
+      "Turn outlives session destroy",
+    );
+    expect(result.changed).toBe(false);
+  });
+
+  test("reports a title it cannot find rather than succeeding at nothing", () => {
+    const result = markQodoFindingResolved(body, "No such finding");
+    expect(result.found).toBe(false);
+    expect(result.changed).toBe(false);
+    expect(result.body).toBe(body);
   });
 });
