@@ -22,6 +22,18 @@ afterEach(async () => {
 async function git(directory: string, args: readonly string[]): Promise<void> {
   const subprocess = Bun.spawn(["git", ...args], {
     cwd: directory,
+    // Isolated from the operator's ~/.gitconfig: commit.gpgsign, core.hooksPath
+    // and an unexpandable excludesfile all change what these commands do.
+    env: {
+      ...Bun.env,
+      // Isolate from the operator's ~/.gitconfig: commit.gpgsign,
+      // core.hooksPath and an unexpandable excludesfile each change what
+      // these commands do, or make them fail outright.
+      HOME: directory,
+      GIT_CONFIG_GLOBAL: "/dev/null",
+      GIT_CONFIG_NOSYSTEM: "1",
+      GIT_TERMINAL_PROMPT: "0",
+    },
     stdout: "pipe",
     stderr: "pipe",
   });
