@@ -282,6 +282,7 @@ export type StepStructureConfig = {
   sharedPodAnchors: readonly string[];
   checkoutContainerAlias: string;
   pathGatedPrKeys: ReadonlySet<string>;
+  nativeStepKeys: ReadonlySet<string>;
   globalIfChanged: readonly string[];
 };
 
@@ -291,7 +292,12 @@ function checkStepStructure(
   blockLines: string[],
   config: StepStructureConfig,
 ): void {
-  const { sharedPodAnchors, checkoutContainerAlias, pathGatedPrKeys } = config;
+  const {
+    sharedPodAnchors,
+    checkoutContainerAlias,
+    pathGatedPrKeys,
+    nativeStepKeys,
+  } = config;
 
   if (!blockLines.some((line) => line.startsWith("    if:"))) {
     fail(`step ${key} has no condition`);
@@ -300,18 +306,42 @@ function checkStepStructure(
   const labels = blockLines
     .filter((line) => /^\s+ci\.sjer\.red\/step-key:/.test(line))
     .map((line) => scalar(line.replace(/^\s+ci\.sjer\.red\/step-key:\s*/, "")));
-  if (labels.length !== 1 || labels[0] !== key) {
-    fail(
-      `step ${key} must have exactly one ci.sjer.red/step-key label equal to its key`,
-    );
-  }
+  if (nativeStepKeys.has(key)) {
+    if (labels.length > 0) {
+      fail(`native step ${key} must not declare Kubernetes pod metadata`);
+    }
+    if (!/^ {4}agents:\n {6}queue: macos$/mu.test(block)) {
+      fail(`native step ${key} must target queue macos`);
+    }
+    if (
+      /^ {4}(?:plugins|soft_fail):/mu.test(block) ||
+      block.includes("kubernetes:")
+    ) {
+      fail(`native step ${key} must be a hard step without plugins`);
+    }
+    if (!/^ {4}depends_on: verify$/mu.test(block)) {
+      fail(`native step ${key} must wait for verify`);
+    }
+    if (
+      !/^ {4}concurrency: 1$/mu.test(block) ||
+      !/^ {4}concurrency_group: monorepo\/macos-native$/mu.test(block)
+    ) {
+      fail(`native step ${key} must serialize in monorepo/macos-native`);
+    }
+  } else {
+    if (labels.length !== 1 || labels[0] !== key) {
+      fail(
+        `step ${key} must have exactly one ci.sjer.red/step-key label equal to its key`,
+      );
+    }
 
-  const inheritedCheckoutPatch = sharedPodAnchors.some((anchorName) =>
-    block.includes(`<<: *${anchorName}`),
-  );
-  const directCheckoutPatch = hasTrimmedLine(block, checkoutContainerAlias);
-  if (!inheritedCheckoutPatch && !directCheckoutPatch) {
-    fail(`step ${key} does not patch checkout to 1Gi/2Gi`);
+    const inheritedCheckoutPatch = sharedPodAnchors.some((anchorName) =>
+      block.includes(`<<: *${anchorName}`),
+    );
+    const directCheckoutPatch = hasTrimmedLine(block, checkoutContainerAlias);
+    if (!inheritedCheckoutPatch && !directCheckoutPatch) {
+      fail(`step ${key} does not patch checkout to 1Gi/2Gi`);
+    }
   }
 
   if (pathGatedPrKeys.has(key)) {

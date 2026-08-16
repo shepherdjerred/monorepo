@@ -228,8 +228,8 @@ bun run mac:e2e
 ```
 
 The four navigation flows need nothing special. **The two quick-add hotkey flows
-need Accessibility trust, once**, and will otherwise report themselves as
-skipped with the reason rather than failing:
+need Accessibility trust, once**, and missing trust is a hard test failure with
+the remediation message below:
 
 ```bash
 # The identity is per-operator and deliberately not committed. Only the UI test
@@ -257,7 +257,7 @@ Then approve **TaskNotesUITests-Runner** in System Settings ▸ Privacy & Securi
 ⚠️ **Signing the runner is what makes that grant worth giving.** TCC keys the
 grant on the code signature, and an ad-hoc runner is re-hashed on every build —
 so an approval evaporates at the next rebuild and the flows go back to failing.
-With a stable Developer ID signature the grant is genuinely one-time. Approving
+With a stable Apple Development signature the grant is genuinely one-time. Approving
 an ad-hoc runner repeatedly is not a workflow; it is the thing this setting
 exists to avoid.
 

@@ -10,10 +10,13 @@
 agents:
   queue: default
 
-# Every step runs in the toolchain image baked from .mise.toml
-# (.buildkite/ci-image) — same tool versions as every laptop.
-# Steps that run repo tasks start with `. .buildkite/scripts/toolchain.sh`
-# — a fast no-op on a current image, a runtime mise bootstrap on a stale one.
+# Kubernetes steps run in the toolchain image baked from .mise.toml
+# (.buildkite/ci-image) — the same tool versions as developer machines. Native
+# macOS steps instead validate the pre-provisioned host against `.mise.toml`
+# and `.xcode-version`; jobs never install or upgrade host tools.
+# Kubernetes steps that run repo tasks start with
+# `. .buildkite/scripts/toolchain.sh` — a fast no-op on a current image, a
+# runtime mise bootstrap on a stale one.
 common:
   - checkout_container: &checkout_container
       name: checkout
@@ -556,6 +559,7 @@ env:
   # shared cache without taking its lock.
   BUN_INSTALL_CACHE_DIR: /buildkite/bun-cache/data
   BUN_CACHE_LOCK_FILE: /buildkite/bun-cache-control/.gc.lock
+  BUN_INSTALL_LOCK_MODE: shared
   TURBO_SCM_BASE: "origin/main"
   TURBO_TELEMETRY_DISABLED: "1"
   # Remote cache (ducktors/turborepo-remote-cache on its local ZFS PVC). CI pods run
@@ -653,6 +657,139 @@ steps:
                   - *grant_github_download
                   - *grant_turbo
                   - *grant_buildkite_analytics
+
+  # Native macOS jobs execute affected PR and main code directly in the
+  # unlocked console user's session. They deliberately receive neither the
+  # Kubernetes plugin nor the cluster-secret environment used by Linux jobs.
+  # Both lanes wait for verify and serialize globally on the single Mac.
+  - label: ":apple: QuotaBar macOS (PR)"
+    key: quotabar-macos-pr
+    timeout_in_minutes: 45
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
+        - ".buildkite/scripts/buildkite-handoff.ts"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - ".buildkite/scripts/bun-install.sh"
+        - ".buildkite/scripts/macos-native-env.sh"
+        - ".buildkite/scripts/macos-native-preflight.ts"
+        - ".buildkite/scripts/macos-native-preflight.test.ts"
+        - ".buildkite/scripts/macos-native-selection.ts"
+        - ".buildkite/scripts/toolchain.test.sh"
+        - ".buildkite/scripts/validate-pipeline*.ts"
+        - ".mise.toml"
+        - ".xcode-version"
+        - "packages/homelab/mac-ci/**"
+        - "packages/macos-ai-subscription-tracker/**"
+    depends_on: verify
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/macos-native
+    command: |
+      . .buildkite/scripts/macos-native-env.sh
+      bun --no-install .buildkite/scripts/macos-native-preflight.ts quotabar
+      bun --no-install run --cwd packages/macos-ai-subscription-tracker verify:macos
+    retry: *retry
+    agents:
+      queue: macos
+
+  - label: ":apple: QuotaBar macOS (main)"
+    key: quotabar-macos-main
+    timeout_in_minutes: 45
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/macos-native
+    command: |
+      . .buildkite/scripts/macos-native-env.sh
+      bun --no-install .buildkite/scripts/macos-native-preflight.ts quotabar
+      bun --no-install run --cwd packages/macos-ai-subscription-tracker verify:macos
+    retry: *retry
+    agents:
+      queue: macos
+
+  - label: ":apple: TaskNotes native (PR)"
+    key: tasknotes-native-pr
+    timeout_in_minutes: 90
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
+        - ".buildkite/scripts/buildkite-handoff.ts"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - ".buildkite/scripts/bun-install.sh"
+        - ".buildkite/scripts/macos-native-env.sh"
+        - ".buildkite/scripts/macos-native-preflight.ts"
+        - ".buildkite/scripts/macos-native-preflight.test.ts"
+        - ".buildkite/scripts/macos-native-selection.ts"
+        - ".buildkite/scripts/toolchain.test.sh"
+        - ".buildkite/scripts/validate-pipeline*.ts"
+        - ".mise.toml"
+        - ".xcode-version"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "packages/homelab/mac-ci/**"
+        - "packages/tasknotes-core/**"
+        - "packages/tasknotes-macos/**"
+        - "packages/tasknotes-server/**"
+        - "packages/tasknotes-types/**"
+    depends_on: verify
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/macos-native
+    command: |
+      . .buildkite/scripts/macos-native-env.sh
+      TASKNOTES_UITEST_IDENTITY="$$(bun --no-install .buildkite/scripts/macos-native-preflight.ts tasknotes)"
+      export TASKNOTES_UITEST_IDENTITY
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter tasknotes-server
+      cd packages/tasknotes-core
+      cargo xtask verify-swift
+      cd ../..
+      bun --no-install run --cwd packages/tasknotes-macos mac:verify
+      bun --no-install run --cwd packages/tasknotes-macos mac:analyze
+      bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci
+    retry: *retry
+    agents:
+      queue: macos
+
+  - label: ":apple: TaskNotes native (main)"
+    key: tasknotes-native-main
+    timeout_in_minutes: 90
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/macos-native
+    command: |
+      . .buildkite/scripts/macos-native-env.sh
+      TASKNOTES_UITEST_IDENTITY="$$(bun --no-install .buildkite/scripts/macos-native-preflight.ts tasknotes)"
+      export TASKNOTES_UITEST_IDENTITY
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter tasknotes-server
+      cd packages/tasknotes-core
+      cargo xtask verify-swift
+      cd ../..
+      bun --no-install run --cwd packages/tasknotes-macos mac:verify
+      bun --no-install run --cwd packages/tasknotes-macos mac:analyze
+      bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci
+    retry: *retry
+    agents:
+      queue: macos
 
   - label: ":sqlite: alert ledger integration"
     key: alert-dashboard-sqlite
@@ -2938,6 +3075,8 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on:
       - verify
+      - quotabar-macos-main
+      - tasknotes-native-main
       - playwright-e2e-main
       - resume-build-main
       - docker-e2e-main

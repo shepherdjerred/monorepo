@@ -47,17 +47,19 @@ bun run mac:app           # Debug app build (mac:app:release for Release)
 bun run mac:run           # build + open the Debug app
 bun run mac:smoke         # Release build + verify it launches and stays up
 bun run mac:e2e           # XCUITest suite
+bun run mac:e2e:ci        # signed CI suite; requires TASKNOTES_UITEST_IDENTITY
 bun run mac:verify        # generate + build + test + lint + format + app + smoke
 
 bun run mac:release       # operator-run release lane (scripts/release.ts)
 ```
 
-Only `lint` participates in the repository's Linux CI verify graph — SwiftLint
-ships a static Linux binary, while every `mac:` script needs a Swift toolchain
-or Xcode and is a local pre-merge step. The root lefthook `pre-commit` hook
-runs the fast build/test/lint subset when `.swift` files here are staged, and
-`mac:smoke` when bundle-affecting files (`project.yml`, `App/`, …) change.
-`mac:verify` is the pre-PR command.
+`lint` participates in the repository's Linux CI verify graph because
+SwiftLint ships a static Linux binary. Changed TaskNotes paths also select the
+hard `tasknotes-native` Buildkite lane after Linux `verify`; it validates the
+Swift bindings, runs `mac:verify` and `mac:analyze`, and executes all six UI
+flows with the one preflight-discovered Apple Development certificate. The
+root lefthook `pre-commit` hook still runs the fast local subset, and
+`mac:verify` remains the focused pre-PR command.
 
 See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes, including the
 host-layer contract, threading rules, and release procedure.

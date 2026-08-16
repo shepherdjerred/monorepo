@@ -6,6 +6,7 @@ TOOLCHAIN="${SCRIPT_DIR}/toolchain.sh"
 CI_IMAGE="${SCRIPT_DIR}/../ci-image/Dockerfile"
 CI_PLAYWRIGHT_IMAGE="${SCRIPT_DIR}/../ci-playwright/Dockerfile"
 BUN_INSTALL_WRAPPER="${SCRIPT_DIR}/bun-install.sh"
+MACOS_NATIVE_ENV="${SCRIPT_DIR}/macos-native-env.sh"
 BUN_CACHE_GC="${SCRIPT_DIR}/../../packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite-bun-cache-gc.sh"
 
 if ! awk '
@@ -134,6 +135,7 @@ fi
 
 : >"$TEST_ROOT/bun.log"
 BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  BUN_INSTALL_LOCK_MODE=shared \
   BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
   PATH="$TEST_ROOT/bin:$PATH" \
   "$BUN_INSTALL_WRAPPER" --frozen-lockfile --filter example
@@ -141,5 +143,55 @@ if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter example" ]
   echo "bun install wrapper must preserve every install argument" >&2
   exit 1
 fi
+
+: >"$TEST_ROOT/bun.log"
+BUN_INSTALL_LOCK_MODE=local \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile --filter native-example
+if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter native-example" ]]; then
+  echo "local Bun install mode must preserve every install argument" >&2
+  exit 1
+fi
+
+if BUN_INSTALL_LOCK_MODE=local \
+  BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile; then
+  echo "local Bun install mode must reject a shared lock path" >&2
+  exit 1
+fi
+
+if BUN_INSTALL_LOCK_MODE=unknown \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile; then
+  echo "Bun install wrapper must reject an unknown lock mode" >&2
+  exit 1
+fi
+
+mkdir -p "$TEST_ROOT/home"
+HOME="$TEST_ROOT/home" \
+  BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
+  TURBO_API=http://linux-cache.invalid \
+  TURBO_CACHE=remote:rw \
+  TURBO_SCM_BASE=origin/main \
+  TURBO_TEAM=monorepo \
+  TURBO_TELEMETRY_DISABLED=1 \
+  TURBO_TOKEN=secret \
+  bash -c '
+    set -euo pipefail
+    source "$1"
+    [[ "$BUN_INSTALL_LOCK_MODE" == "local" ]]
+    [[ "$BUN_INSTALL_CACHE_DIR" == "$HOME/Library/Caches/Bun/install/cache" ]]
+    [[ -z "${BUN_CACHE_LOCK_FILE+x}" ]]
+    [[ -z "${TURBO_API+x}" ]]
+    [[ -z "${TURBO_CACHE+x}" ]]
+    [[ -z "${TURBO_SCM_BASE+x}" ]]
+    [[ -z "${TURBO_TEAM+x}" ]]
+    [[ -z "${TURBO_TELEMETRY_DISABLED+x}" ]]
+    [[ -z "${TURBO_TOKEN+x}" ]]
+  ' _ "$MACOS_NATIVE_ENV"
 
 echo "toolchain and cache-lifecycle tests passed"

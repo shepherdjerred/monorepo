@@ -102,9 +102,11 @@ See the
 for prerequisites, artifact definitions, verification evidence, versioning,
 and troubleshooting.
 
-The Linux repository gate runs only the portable `lint:swift` task. Native
-Xcode-project generation, build, test, coverage, bundle, and smoke verification remain required local
-macOS release checks; this package does not add a macOS CI lane.
+The Linux repository gate runs the portable `lint:swift` task. A changed-path,
+hard Buildkite lane named `quotabar-macos` waits for Linux `verify` and then
+runs the complete `verify:macos` suite on the serial native `macos` queue for
+both PRs and `main`. Developer ID export, notarization, installation, and
+release remain explicit operator-only workflows.
 
 ## Credentials
 
