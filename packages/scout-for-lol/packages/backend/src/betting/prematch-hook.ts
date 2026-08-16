@@ -7,7 +7,9 @@ import type {
   RawCurrentGameInfo,
 } from "@scout-for-lol/data";
 import { buildBettingRows } from "#src/betting/components.ts";
+import { isBettableGame } from "#src/betting/eligibility.ts";
 import {
+  bettingEnabledGuilds,
   computeClosesAt,
   openBettingPoolsForPrematch,
 } from "#src/betting/pool-open.ts";
@@ -26,6 +28,21 @@ import {
  * routine: it should decide where a message goes, not how a market is priced.
  */
 
+/**
+ * The one expensive dependency, injectable.
+ *
+ * Follows the `GenerateMatchReportDependencies` precedent: a test needs to
+ * assert that this is *not* called when the game or guild is out of scope, and
+ * proving a negative needs a seam. Module mocking would not do — Bun's
+ * `mock.module` is process-wide and would replace this module for every other
+ * test file too.
+ */
+export type PrematchHookDependencies = {
+  buildPrediction: typeof buildPrediction;
+};
+
+const defaultDependencies: PrematchHookDependencies = { buildPrediction };
+
 export type BucksPrematchAttachment = {
   /** Guilds that got a pool, and so should see buttons. */
   bettingGuildIds: Set<DiscordGuildId>;
@@ -43,14 +60,17 @@ export type BucksPrematchAttachment = {
  * returns an empty set, which collapses this to "no buttons, no footer" — the
  * prematch notification still goes out unchanged.
  */
-export async function prepareBucksPrematch(input: {
-  gameInfo: RawCurrentGameInfo;
-  trackedPlayers: readonly PlayerConfigEntry[];
-  queueType: QueueType | undefined;
-  targetGuildIds: readonly DiscordGuildId[];
-  loadingScreenData: LoadingScreenData | undefined;
-  detectedAt: Date;
-}): Promise<BucksPrematchAttachment> {
+export async function prepareBucksPrematch(
+  input: {
+    gameInfo: RawCurrentGameInfo;
+    trackedPlayers: readonly PlayerConfigEntry[];
+    queueType: QueueType | undefined;
+    targetGuildIds: readonly DiscordGuildId[];
+    loadingScreenData: LoadingScreenData | undefined;
+    detectedAt: Date;
+  },
+  dependencies: PrematchHookDependencies = defaultDependencies,
+): Promise<BucksPrematchAttachment> {
   const matchId = `${input.gameInfo.platformId}_${input.gameInfo.gameId.toString()}`;
   const trackedAliasByPuuid = new Map(
     input.trackedPlayers.map((player) => [
@@ -59,11 +79,30 @@ export async function prepareBucksPrematch(input: {
     ]),
   );
 
+  // Cheap, pure checks first. Both of these are why the expensive step below is
+  // affordable: the prematch poll runs every 30 seconds across up to 50 players,
+  // and buildPrediction costs a DuckDB lake read. Computing one for a queue that
+  // cannot carry a market, or for guilds that are not on the allowlist, is work
+  // nobody will ever see.
+  const enabledGuilds = bettingEnabledGuilds(input.targetGuildIds);
+  const bettable = isBettableGame({
+    queueType: input.queueType,
+    participants: input.gameInfo.participants,
+  });
+  if (!bettable || enabledGuilds.length === 0) {
+    return {
+      bettingGuildIds: new Set<DiscordGuildId>(),
+      rows: [],
+      footer: "",
+      matchId,
+    };
+  }
+
   const subject = input.trackedPlayers[0];
   const prediction =
     subject === undefined || input.loadingScreenData === undefined
       ? undefined
-      : await buildPrediction({
+      : await dependencies.buildPrediction({
           loadingScreenData: input.loadingScreenData,
           subject: {
             puuid: subject.league.leagueAccount.puuid,
@@ -84,7 +123,7 @@ export async function prepareBucksPrematch(input: {
     matchId,
     gameInfo: input.gameInfo,
     queueType: input.queueType,
-    guildIds: input.targetGuildIds,
+    guildIds: enabledGuilds,
     detectedAt: input.detectedAt,
     trackedAliasByPuuid,
     prediction,

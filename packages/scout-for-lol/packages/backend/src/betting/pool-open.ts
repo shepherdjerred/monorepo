@@ -73,6 +73,23 @@ function buildRoster(input: {
   });
 }
 
+/**
+ * The subset of guilds a game would open a market in.
+ *
+ * Exported so callers can answer "is this worth doing at all?" *before* paying
+ * for anything — the prediction costs a lake read, and computing one for a
+ * guild that will never see it is pure waste on a poll that runs every 30
+ * seconds. `openBettingPoolsForPrematch` still applies this itself; it remains
+ * the authoritative gate rather than trusting its caller to have filtered.
+ */
+export function bettingEnabledGuilds(
+  guildIds: readonly DiscordGuildId[],
+): DiscordGuildId[] {
+  return guildIds.filter((serverId) =>
+    getFlag("betting_enabled", { server: serverId }),
+  );
+}
+
 export type OpenPoolsInput = {
   matchId: string;
   gameInfo: RawCurrentGameInfo;
@@ -106,9 +123,7 @@ export async function openBettingPoolsForPrematch(
       return opened;
     }
 
-    const enabledGuilds = input.guildIds.filter((serverId) =>
-      getFlag("betting_enabled", { server: serverId }),
-    );
+    const enabledGuilds = bettingEnabledGuilds(input.guildIds);
     if (enabledGuilds.length === 0) {
       return opened;
     }
