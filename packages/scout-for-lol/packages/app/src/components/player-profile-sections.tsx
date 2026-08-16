@@ -3,14 +3,13 @@ import {
   rankToString,
   type Rank,
 } from "@scout-for-lol/data";
-import { ChampionIcon } from "#src/components/champion-icon.tsx";
-import { Badge } from "#src/components/ui/badge.tsx";
+import { Badge } from "@scout-for-lol/design-system/components/badge";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "#src/components/ui/card.tsx";
+} from "@scout-for-lol/design-system/components/card";
 import {
   Table,
   TableBody,
@@ -18,7 +17,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#src/components/ui/table.tsx";
+} from "@scout-for-lol/design-system/components/table";
+import { ChampionIcon } from "#src/components/champion-icon.tsx";
 
 export function formatPercent(value: number | null): string {
   return value === null ? "—" : `${Math.round(value * 100).toString()}%`;
