@@ -22,13 +22,24 @@ export default function App(): React.ReactElement {
       client={queryClient}
       persistOptions={persistOptions}
     >
-      <AppContent />
+      <ErrorBoundary
+        fallback={
+          <Hero
+            title="Something went wrong"
+            color={Color.RED}
+            size={Size.FULL}
+          />
+        }
+        showDialog={true}
+      >
+        <AppContent />
+      </ErrorBoundary>
     </PersistQueryClientProvider>
   );
 }
 
 function AppContent(): React.ReactElement {
-  const { content } = useContent();
+  const { content, error } = useContent();
   const { bookmarks, isBookmarked, toggle: toggleBookmark } = useBookmarks();
   const {
     watchStatuses,
@@ -38,27 +49,27 @@ function AppContent(): React.ReactElement {
   const isDownloadEnabled = useDownloadEnabled();
   const [isTipsModalVisible, setTipsModalVisible] = useState(false);
 
+  // A failed manifest fetch/parse leaves `content` undefined, which Router
+  // would render as an empty catalog. Surface it to the boundary instead of
+  // presenting "no content" as a successful, empty result.
+  if (error !== null) {
+    throw error;
+  }
+
   return (
-    <ErrorBoundary
-      fallback={
-        <Hero title="Something went wrong" color={Color.RED} size={Size.FULL} />
-      }
-      showDialog={true}
-    >
-      <Router
-        content={content}
-        bookmarks={bookmarks}
-        onToggleBookmark={toggleBookmark}
-        watchStatuses={watchStatuses}
-        onToggleWatchStatus={toggleWatchStatus}
-        isBookmarked={isBookmarked}
-        isWatched={isWatched}
-        isDownloadEnabled={isDownloadEnabled}
-        isTipsModalVisible={isTipsModalVisible}
-        onToggleTipsModal={() => {
-          setTipsModalVisible((visible) => !visible);
-        }}
-      />
-    </ErrorBoundary>
+    <Router
+      content={content}
+      bookmarks={bookmarks}
+      onToggleBookmark={toggleBookmark}
+      watchStatuses={watchStatuses}
+      onToggleWatchStatus={toggleWatchStatus}
+      isBookmarked={isBookmarked}
+      isWatched={isWatched}
+      isDownloadEnabled={isDownloadEnabled}
+      isTipsModalVisible={isTipsModalVisible}
+      onToggleTipsModal={() => {
+        setTipsModalVisible((visible) => !visible);
+      }}
+    />
   );
 }

@@ -1,5 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import type { UseQueryResult } from "@tanstack/react-query";
 import {
   MANIFEST_SCHEMA_VERSION,
   ManifestSchema,
@@ -16,11 +14,4 @@ export async function fetchManifest(): Promise<Manifest> {
     );
   }
   return ManifestSchema.parse(await response.json());
-}
-
-export function useManifest(): UseQueryResult<Manifest> {
-  return useQuery({
-    queryKey: MANIFEST_QUERY_KEY,
-    queryFn: fetchManifest,
-  });
 }
