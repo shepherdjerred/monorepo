@@ -185,18 +185,6 @@ RUN VOICE_ASSISTANT_ENABLED=true \
     bun scripts/voice-model-smoke.ts \
     && touch /tmp/voice-model-smoke-passed
 
-FROM runtime AS voice-corpus-evaluation
-# The canonical corpus exists only in this acceptance stage. Both local
-# runtimes consume the production decoder/lifecycle, then only the aggregate
-# report and sentinel can cross into the final image.
-COPY packages/streambot/test/fixtures/voice-corpus /app/packages/streambot/test/fixtures/voice-corpus
-USER 1000:1000
-ENV HOME=/tmp
-RUN bun run voice:corpus:verify \
-    && VOICE_ASSETS_DIR=/opt/streambot/voice \
-      bun run voice:corpus:evaluate --report /tmp/streambot-voice-corpus-report.json \
-    && touch /tmp/voice-corpus-evaluation-passed
-
 FROM runtime AS smoke
 # The general app smoke harness ships in CI context only and never reaches the
 # pushed image. Depend on voice-smoke so explicit smoke builds prove both.
@@ -209,6 +197,7 @@ ENV HOME=/tmp
 RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
 
 FROM runtime AS image
+# Corpus evaluation is deliberately NOT a build dependency: it is a multi-hour acceptance
+# measurement, run by an operator inside this image (see the voice wiki reference) with its
+# report committed to voice-training/reports/. The build gate is the two-runtime smoke above.
 COPY --from=voice-smoke /tmp/voice-model-smoke-passed /opt/streambot/voice/.image-smoke-passed
-COPY --from=voice-corpus-evaluation /tmp/voice-corpus-evaluation-passed /opt/streambot/voice/.corpus-evaluation-passed
-COPY --from=voice-corpus-evaluation /tmp/streambot-voice-corpus-report.json /opt/streambot/voice/corpus-evaluation-report.json

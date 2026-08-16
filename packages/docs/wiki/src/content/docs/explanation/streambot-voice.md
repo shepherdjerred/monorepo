@@ -130,11 +130,12 @@ Packaging requires the minimum training counts, the complete ACAV100M general-sp
 a generated positive smoke WAV. Both local runtimes must accept that checksum-pinned smoke sample;
 successfully loading an ONNX graph is insufficient.
 
-The production image first requires both sherpa runtimes and the in-process phrase-verifier graph to
-complete inference as the deployment user; merely opening model files is not a successful smoke. It
-then evaluates the corpus as the deployment UID and keeps only an aggregate report and pass marker;
-none of the 400 corpus clips ship at runtime. The emergency rollback is the same global kill switch
-set back to `false`.
+The production image requires both sherpa runtimes and the in-process phrase-verifier graph to
+complete inference as the deployment user; merely opening model files is not a successful smoke.
+Corpus evaluation is deliberately not a build step: it is a multi-hour acceptance measurement an
+operator runs inside the built image, with the report committed to
+`packages/streambot/voice-training/reports/`. None of the 400 corpus clips ship at runtime. The
+emergency rollback is the same global kill switch set back to `false`.
 
 ## Related
 

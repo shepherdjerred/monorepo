@@ -83,8 +83,17 @@ canonical 400-clip synthetic corpus in both native and WASM runtimes, the privat
 human holdout, two consecutive live Discord/OpenAI matrices, and the production smoke/soak. There
 is intentionally no guild allowlist. `.dopus` fixtures are versioned length-prefixed 20 ms Discord
 Opus packets; offline evaluation must enter `DiscordOpusDecoder` and `VoiceAudioLifecycle`, never a
-test-only recognizer path. The final image must not contain the corpus—only its aggregate report and
-pass sentinel.
+test-only recognizer path. The final image must not contain the corpus. Corpus evaluation is an
+operator-run acceptance measurement, not a build step — the image build's only voice gate is the
+two-runtime recognition smoke. Run the evaluation inside the built image (deployment UID and
+runtime environment) and commit the report to `voice-training/reports/`:
+
+```bash
+docker run --rm -u 1000:1000 -e HOME=/tmp -e VOICE_ASSETS_DIR=/opt/streambot/voice \
+  -v "$PWD/test/fixtures/voice-corpus:/app/packages/streambot/test/fixtures/voice-corpus:ro" \
+  -v "$PWD/voice-training/reports:/reports" \
+  <streambot-image> bun run voice:corpus:evaluate --report /reports/corpus-report-<date>.json
+```
 
 The phrase-verifier manifest is a startup contract: it must attest at least 20,000 positive
 utterances, 40,000 adversarial near-matches, 25 hours of general negative speech/noise, and no
