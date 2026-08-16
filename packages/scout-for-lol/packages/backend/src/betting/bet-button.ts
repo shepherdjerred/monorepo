@@ -4,6 +4,7 @@ import {
   DiscordGuildIdSchema,
   type BucksPoolParticipant,
 } from "@scout-for-lol/data";
+import { BUCKS_SCOPE_NOTE } from "#src/betting/constants.ts";
 import { parseBucksCustomId } from "#src/betting/custom-id.ts";
 import { placeBet, type PlaceBetResult } from "#src/betting/place-bet.ts";
 import { cancelBet } from "#src/betting/cancel-bet.ts";
@@ -44,6 +45,8 @@ export function describeResult(
       return "⏰ Betting has closed for this game.";
     case "no_pool":
       return "🚫 There's no Bryan Bucks market for this game.";
+    case "feature_disabled":
+      return `🚫 Bryan Bucks is no longer enabled in this server. ${BUCKS_SCOPE_NOTE}`;
     case "not_eligible":
       return "🔒 Only tracked players can bet. Ask an admin to link your Discord account to a player in the dashboard.";
     case "unknown_subject":

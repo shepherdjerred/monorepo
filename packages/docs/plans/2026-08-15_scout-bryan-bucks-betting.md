@@ -140,6 +140,17 @@ champion form, with **no intercept**, so a symmetric lobby returns exactly
 0.500. Per-term clamps bound the logit at 2.075, so the model tops out near 89%
 rather than relying on the 95% safety clamp.
 
+### The allowlist gates taking, not returning
+
+`betting_enabled` is checked at command registration, pool creation, `placeBet`,
+and earning. Settlement and the refund sweeps are deliberately ungated: a guild
+removed from the allowlist mid-match still holds stakes that were already
+debited, and refusing to settle would strand real balances. The flag stops new
+stake being taken; in-flight pools still resolve.
+
+`placeBet` carries its own check rather than trusting "a pool exists", because a
+revoked guild's pools outlive the revocation.
+
 ## Layout
 
 Everything lives in `packages/scout-for-lol/packages/backend/src/betting/`, with

@@ -637,6 +637,14 @@ surfaces cannot drift apart.
 Bucks exchange at 1:10 Bucks:CAD, in person only, from Bryan, who lives in rural
 Canada. There is no monetary component and nothing transfers to real goods.
 
+- **The allowlist gates taking Bucks, never returning them.** `betting_enabled`
+  is checked in four places: command registration, pool creation, `placeBet`,
+  and earning. Settlement and the refund sweeps are deliberately **not** gated —
+  a guild removed from the allowlist mid-match still has stakes that were
+  already debited, and refusing to settle would strand real balances. So the
+  flag stops new stake from being taken while in-flight pools still pay out or
+  refund. `placeBet` carries the check rather than relying on the pool
+  disappearing, because a revoked guild's pools outlive the revocation.
 - **The first statement of every mutating transaction is a guarded conditional
   write.** It validates the precondition _and_ takes the SQLite write lock in
   one round trip. This is the whole double-spend guard and the whole

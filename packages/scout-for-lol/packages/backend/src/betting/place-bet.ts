@@ -6,6 +6,7 @@ import {
   type LeaguePuuid,
 } from "@scout-for-lol/data";
 import { MAX_STAKE, MIN_STAKE } from "#src/betting/constants.ts";
+import { getFlag } from "#src/configuration/flags.ts";
 import {
   ensureBucksAccount,
   findEligiblePlayer,
@@ -34,6 +35,7 @@ export type PlaceBetResult =
   | { kind: "placed"; totalStake: number; balanceAfter: number; side: number }
   | { kind: "window_closed" }
   | { kind: "no_pool" }
+  | { kind: "feature_disabled" }
   | { kind: "not_eligible" }
   | { kind: "unknown_subject"; validAliases: string[] }
   | { kind: "invalid_stake"; min: number; max: number }
@@ -82,6 +84,19 @@ export async function placeBet(
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<PlaceBetResult> {
   const now = input.now ?? new Date();
+
+  // The allowlist is re-checked here, not just at pool creation. A guild that
+  // is removed from it still has live pools, and without this those pools would
+  // keep taking new stakes. Both entry points — the prematch buttons and
+  // `/bb bet` — route through this function, so one check covers them.
+  //
+  // Note the deliberate asymmetry with settlement and the refund sweeps, which
+  // are NOT gated: the flag governs taking Bucks, never returning them.
+  // Refusing to settle a pool whose stakes were already debited would strand
+  // real balances, which is a worse outcome than paying out one last match.
+  if (!getFlag("betting_enabled", { server: input.serverId })) {
+    return { kind: "feature_disabled" };
+  }
 
   if (
     !Number.isInteger(input.stake) ||

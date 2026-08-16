@@ -14,6 +14,10 @@ const logger = createLogger("betting-sweep");
  * against `closesAt` inside `placeBet`'s transaction — but without the second
  * one, staked Bucks from a match that never produces a post-match result would
  * be silently destroyed.
+ *
+ * Neither is gated on `betting_enabled`, for the same reason settlement is not:
+ * the flag governs taking Bucks, not returning them. A guild removed from the
+ * allowlist must still get its outstanding stakes refunded.
  */
 
 export type ClosedPool = {

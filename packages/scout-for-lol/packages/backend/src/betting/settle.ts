@@ -20,6 +20,13 @@ const logger = createLogger("betting-settle");
 /**
  * Paying out a finished match.
  *
+ * Deliberately **not** gated on `betting_enabled`. The flag governs taking
+ * Bucks, never returning them: stakes were already debited when the bets were
+ * placed, so a guild removed from the allowlist mid-match must still have its
+ * pool settled or refunded. Refusing would strand real balances, which is worse
+ * than paying out one last match. `placeBet` carries the gate instead, so no
+ * *new* stake can be taken.
+ *
  * Idempotency is the `poolState` column itself, not a separate marker table.
  * `MatchAiAttempt` has to be marked *before* its call because OpenAI spend is
  * external and cannot join a database transaction; every side effect here is

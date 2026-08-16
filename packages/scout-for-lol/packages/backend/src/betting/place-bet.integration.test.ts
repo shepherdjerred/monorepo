@@ -1,4 +1,11 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from "bun:test";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -10,6 +17,11 @@ import {
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { placeBet, type PlaceBetInput } from "#src/betting/place-bet.ts";
 import { SEED_GRANT } from "#src/betting/constants.ts";
+import {
+  addFlagOverride,
+  clearFlagOverrides,
+  resetFlagOverrides,
+} from "#src/configuration/flags.ts";
 
 const { prisma: db } = createTestDatabase("bucks-place-bet");
 
@@ -58,6 +70,10 @@ async function betKind(overrides: Partial<PlaceBetInput> = {}) {
 
 beforeEach(async () => {
   await clearAll();
+  // This suite's fixture guild is not the one in the registry, so the allowlist
+  // has to be pointed at it explicitly.
+  clearFlagOverrides("betting_enabled");
+  addFlagOverride("betting_enabled", true, { server: SERVER_ID });
   const now = new Date();
   await db.player.create({
     data: {
@@ -79,6 +95,11 @@ beforeEach(async () => {
       roster: JSON.stringify({ participants: bucksTestRoster() }),
     },
   });
+});
+
+afterEach(() => {
+  // Restore rather than clear: the flag registry is process-wide.
+  resetFlagOverrides("betting_enabled");
 });
 
 afterAll(async () => {
@@ -213,7 +234,18 @@ describe("placeBet — refusing a position", () => {
 
   test("refuses a bet in a guild with no pool", async () => {
     const other = DiscordGuildIdSchema.parse("999999999999999999");
+    addFlagOverride("betting_enabled", true, { server: other });
     expect(await betKind({ serverId: other })).toBe("no_pool");
+  });
+
+  test("refuses a bet once the guild leaves the allowlist", async () => {
+    // The pool still exists — removing the flag must stop it taking new stakes
+    // rather than relying on the pool disappearing.
+    clearFlagOverrides("betting_enabled");
+
+    expect(await betKind({ stake: 5 })).toBe("feature_disabled");
+    expect(await db.bucksBet.count()).toBe(0);
+    expect(await db.bucksAccount.count()).toBe(0);
   });
 });
 
