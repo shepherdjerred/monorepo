@@ -107,9 +107,9 @@ async function createMatchImage(
     svgData = await classicMatchToSvg(matchToRender);
   } else {
     svgData = await matchToSvg(matchToRender, {
-      // Gate the new ranked banner/square designs to beta + local dev;
-      // prod keeps the legacy report until the redesign is promoted.
-      enableRankedDesigns: configuration.environment !== "prod",
+      // Keep the new ranked banner/square designs local-only until the
+      // redesign is promoted.
+      enableRankedDesigns: configuration.environment === "dev",
     });
   }
   const svg = z.string().parse(svgData);

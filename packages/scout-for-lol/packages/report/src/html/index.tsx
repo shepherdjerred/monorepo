@@ -35,8 +35,8 @@ export type MatchRenderOptions = {
   /**
    * Gate the new ranked banner/square designs. When `false`, ranked solo/flex
    * matches fall back to the legacy 4760×3500 report. Defaults to `true`.
-   * The backend sets this to `false` in prod so the redesign only ships to
-   * beta + local dev until it's promoted.
+   * The backend sets this to `false` outside local dev so the redesign stays
+   * local-only until it's promoted.
    */
   enableRankedDesigns?: boolean;
 };
