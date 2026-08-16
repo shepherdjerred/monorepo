@@ -33,6 +33,7 @@ import {
   type ReviewThread,
 } from "@shepherdjerred/code-review";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
+import { requestReviewAtHead } from "@shepherdjerred/code-review/request-review";
 import {
   fetchPullRequestAuthor,
   fetchReviewThreads,
@@ -388,6 +389,10 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
   let lastState: ReviewStateResult | null = null;
   let lastThreads: readonly ReviewThread[] = [];
   let lastPollError: Error | null = null;
+  // Whether this run has already asked the provider to review the head. The
+  // marker check makes a duplicate request impossible anyway; this avoids
+  // paying for a comment scan on every poll.
+  let requested = false;
 
   while (Date.now() <= deadline) {
     let stateResult: ReviewStateResult;
@@ -486,6 +491,37 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
         `PR #${String(number)} head is now ${threadResult.headRefOid}, but this build is for ${head}; evaluating ${head}.`,
       );
       warnedMismatch = true;
+    }
+
+    // Ask for the review this loop is waiting on, once we have seen that the
+    // provider has not already reviewed this head.
+    //
+    // Qodo reviews a PR once, when it is opened, and never again on its own.
+    // Polling alone therefore waits out the entire budget on every push after
+    // the first and then fails a PR whose diff is fine. The request is asked
+    // for after the first observation rather than before it, so a head the
+    // provider has already reviewed is never asked again; the marker makes a
+    // repeat impossible even so.
+    if (!requested && stateResult.reviewedCommit !== head) {
+      requested = true;
+      const posted = await requestReviewAtHead({
+        repo,
+        number,
+        head,
+        token,
+        provider,
+      });
+      console.log(
+        JSON.stringify({
+          level: "info",
+          msg: posted ? "review-requested" : "review-request-already-present",
+          component: "review-gate",
+          provider: provider.id,
+          repo,
+          pr: number,
+          head_sha: head,
+        }),
+      );
     }
 
     const decision = evaluateGate({

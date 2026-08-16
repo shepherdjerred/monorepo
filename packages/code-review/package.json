@@ -17,6 +17,10 @@
     "./head-pushed-at": {
       "types": "./src/head-pushed-at.ts",
       "default": "./src/head-pushed-at.ts"
+    },
+    "./request-review": {
+      "types": "./src/request-review.ts",
+      "default": "./src/request-review.ts"
     }
   },
   "scripts": {

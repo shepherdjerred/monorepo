@@ -1,6 +1,7 @@
 import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import type { ReviewProvider } from "@shepherdjerred/code-review";
+import { buildReviewRequestMarker } from "@shepherdjerred/code-review/request-review";
 import { z } from "zod";
 import { isTelemetryCaptureError } from "./controller-telemetry.ts";
 import { parseHeadSha, splitRepo } from "./evidence-parsers.ts";
@@ -364,7 +365,9 @@ export class GitOperations {
       return;
     }
     const { owner, name } = splitRepo(this.#repo);
-    const marker = `<!-- pr-fleet-review:${this.#provider.id}:${headSha} -->`;
+    // The same marker the CI gate uses, so whichever of the two asks first is
+    // recognised by the other and the head gets one request rather than two.
+    const marker = buildReviewRequestMarker(this.#provider.id, headSha);
     const bodies = await this.#mustRun(
       "gh",
       [
