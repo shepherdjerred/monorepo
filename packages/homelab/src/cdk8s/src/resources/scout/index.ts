@@ -82,7 +82,6 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       itemPath: path,
     },
   });
-
   const localPathVolume = new ZfsNvmeVolume(chart, "scout-storage-claim", {
     // 24Gi: the SQLite match DB (/data/db.sqlite) grows over time and filled the
     // original 8Gi to 0B, wedging writes (2026-05). See follow-up for retention.

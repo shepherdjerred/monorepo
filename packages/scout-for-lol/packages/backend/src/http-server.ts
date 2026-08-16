@@ -22,6 +22,12 @@ import {
   statusClass,
 } from "#src/http/route-label.ts";
 import { httpRequestDuration, httpRequestsTotal } from "#src/metrics/web.ts";
+import { handleCustomAuthRoutes } from "#src/customs/activity-auth.ts";
+import {
+  customSocketHandlers,
+  upgradeCustomSocket,
+} from "#src/customs/socket.ts";
+import { handleCustomRiotCallback } from "#src/customs/riot-callback.ts";
 
 const logger = createLogger("http-server");
 
@@ -63,13 +69,16 @@ const EXPECTED_CLIENT_ERROR_CODES = new Set<string>([
  * what we want for cross-origin browser callers; non-browser clients
  * ignore CORS entirely.
  *
- * `Authorization` is intentionally NOT in `Access-Control-Allow-Headers`:
- * the SPA uses cookies + X-CSRF-Token, and the desktop client isn't a
- * browser. Add it back deliberately if a future browser flow needs Bearer.
+ * The Scout SPA uses cookies + X-CSRF-Token. The dedicated Activity origin is
+ * the sole browser origin allowed to send the in-memory Activity bearer token.
  */
 function corsHeadersFor(request: Request): Record<string, string> {
   const origin = request.headers.get("Origin");
-  const allowedOrigin = configuration.webAppOrigin;
+  const customsOrigin = configuration.customs?.activityOrigin;
+  const allowedOrigin =
+    origin !== null && origin === customsOrigin
+      ? customsOrigin
+      : configuration.webAppOrigin;
   if (
     origin !== null &&
     allowedOrigin !== undefined &&
@@ -78,7 +87,10 @@ function corsHeadersFor(request: Request): Record<string, string> {
     return {
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, X-CSRF-Token",
+      "Access-Control-Allow-Headers":
+        origin === customsOrigin
+          ? "Content-Type, Authorization"
+          : "Content-Type, X-CSRF-Token",
       "Access-Control-Allow-Credentials": "true",
       Vary: "Origin",
     };
@@ -211,6 +223,9 @@ const server = Bun.serve({
   hostname: configuration.enableDevLogin ? "127.0.0.1" : "0.0.0.0",
   async fetch(request, bunServer) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/customs/socket") {
+      return await upgradeCustomSocket(request, bunServer);
+    }
     const response = await withHttpMetrics(request, url, () =>
       dispatch(request, url),
     );
@@ -227,6 +242,8 @@ const server = Bun.serve({
     }
     return response;
   },
+  websocket: customSocketHandlers,
+  websocket: customSocketHandlers,
   error(error) {
     logger.error("❌ HTTP server error:", error);
     Sentry.captureException(error, { tags: { source: "http-server" } });
@@ -301,6 +318,16 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
       });
     }
   }
+
+  const customsAuthResponse = await handleCustomAuthRoutes(
+    request,
+    url,
+    corsHeadersFor(request),
+  );
+  if (customsAuthResponse !== null) return customsAuthResponse;
+
+  const customsRiotCallback = await handleCustomRiotCallback(request, url);
+  if (customsRiotCallback !== null) return customsRiotCallback;
 
   // Web auth: Discord OAuth start/install/callback/logout — see
   // handleAuthRoutes for the individual routes and their error handling.

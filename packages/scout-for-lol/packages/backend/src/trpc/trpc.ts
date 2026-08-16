@@ -134,6 +134,18 @@ export const protectedProcedure = instrumentedProcedure.use(isAuthenticated);
  */
 export const desktopClientProcedure = instrumentedProcedure.use(hasApiToken);
 
+const hasActivitySession = middleware(async ({ ctx, next }) => {
+  if (ctx.activitySession === null) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Valid Scout Customs Activity session required",
+    });
+  }
+  return next({ ctx: { ...ctx, activitySession: ctx.activitySession } });
+});
+
+export const activityProcedure = instrumentedProcedure.use(hasActivitySession);
+
 /**
  * Web read middleware - requires a valid scout_session cookie.
  * Use webProcedure for queries that only read state.

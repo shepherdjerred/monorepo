@@ -11,6 +11,9 @@ export function validateReportingPipeline(pipeline: string): void {
     "complete reporting run did not emit the sjer.red Playwright JUnit report",
     ".ci-reports/junit/shepherdjerred__docs-wiki/playwright.xml",
     "complete reporting run did not emit the docs-wiki Playwright JUnit report",
+    ".ci-reports/junit/scout-for-lol__activity/playwright.xml",
+    "complete reporting run did not emit the Scout Customs Playwright JUnit report",
+    "--filter '@shepherdjerred/birmel'",
     "bun --no-install scripts/namespace-playwright-reports.ts",
     "run script-coverage",
     "write-coverage-summary.ts --require-complete",
@@ -22,6 +25,8 @@ export function validateReportingPipeline(pipeline: string): void {
     "allowPrivilegeEscalation: false",
     'image: "${CI_BASE_IMAGE}"',
     'image: "${CI_PLAYWRIGHT_IMAGE}"',
+    'requests: { cpu: "2", memory: "8Gi" }',
+    'limits: { cpu: "4", memory: "12Gi" }',
   ]) {
     if (!pipeline.includes(required)) {
       fail(`reporting pipeline is missing required contract ${required}`);

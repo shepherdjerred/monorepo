@@ -1071,3 +1071,173 @@ model BucksMatchEarning {
   @@index([phase, state, retryAt])
   @@index([state, retryAt])
 }
+
+// =============================================================================
+// Scout Customs — private, guild-scoped custom-game nights
+// =============================================================================
+
+/// The unique pointer is separate from CustomNight so ended nights remain
+/// immutable history while SQLite enforces one active night per guild.
+model CustomActiveNight {
+  guildId   String      @id
+  nightId   String      @unique
+  night     CustomNight @relation(fields: [nightId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+}
+
+model CustomNight {
+  id                   String    @id @default(uuid())
+  guildId              String
+  guildName            String
+  launchChannelId      String
+  voiceLobbyChannelId  String
+  hostDiscordId        String
+  cohostDiscordIds     String    @default("[]")
+  state                String
+  revision             Int       @default(0)
+  snapshot             String
+  recruitmentMessageId String?
+  riotTournamentId     String?
+  teamAVoiceChannelId  String?
+  teamBVoiceChannelId  String?
+  currentGameId        String?
+  lastActivityAt       DateTime
+  expiresAt            DateTime
+  endedAt              DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  activePointer CustomActiveNight?
+  participants  CustomNightParticipant[]
+  games         CustomGame[]
+  auditEvents   CustomAuditEvent[]
+
+  @@index([guildId, createdAt])
+  @@index([state, expiresAt])
+}
+
+/// Consent is guild-scoped and append-preserving. There is deliberately no
+/// revokedAt field or member-facing revocation mutation; deletion and
+/// anonymization are operator procedures.
+model CustomConsent {
+  id                String   @id @default(uuid())
+  guildId           String
+  discordId         String
+  disclosureVersion String
+  acceptedAt        DateTime
+  createdAt         DateTime @default(now())
+
+  @@unique([guildId, discordId, disclosureVersion])
+  @@index([discordId, acceptedAt])
+}
+
+model CustomNightParticipant {
+  id                String    @id @default(uuid())
+  nightId           String
+  discordId         String
+  displayName       String
+  avatarUrl         String?
+  role              String
+  availability      String
+  readyAt           DateTime?
+  awayUntil         DateTime?
+  awayOverdue       Boolean   @default(false)
+  held              Boolean   @default(false)
+  consentedAt       DateTime
+  playerId          Int?
+  playerAlias       String?
+  accountsSnapshot  String    @default("[]")
+  selectedAccountId Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  night CustomNight @relation(fields: [nightId], references: [id], onDelete: Cascade)
+
+  @@unique([nightId, discordId])
+  @@index([nightId, availability, readyAt])
+}
+
+model CustomGame {
+  id                 String    @id @default(uuid())
+  nightId            String
+  sequence           Int
+  state              String
+  rosterMode         String
+  map                String
+  pickMode           String
+  snapshot           String
+  matchSnapshot      String?
+  activeCaptain      String?
+  tournamentCode     String?   @unique
+  riotMatchId        String?
+  winner             String?
+  resultSource       String?
+  resultDisagreement Boolean   @default(false)
+  resultRequestedAt  DateTime?
+  importedAt         DateTime?
+  voiceReady         Boolean   @default(false)
+  voiceOverride      Boolean   @default(false)
+  voiceError         String?
+  createdAt          DateTime  @default(now())
+  startedAt          DateTime?
+  completedAt        DateTime?
+  updatedAt          DateTime  @updatedAt
+
+  night        CustomNight             @relation(fields: [nightId], references: [id], onDelete: Cascade)
+  participants CustomGameParticipant[]
+  auditEvents  CustomAuditEvent[]
+
+  @@unique([nightId, sequence])
+  @@index([state, resultRequestedAt])
+  @@index([riotMatchId])
+}
+
+model CustomGameParticipant {
+  id           String   @id @default(uuid())
+  gameId       String
+  discordId    String
+  displayName  String
+  playerId     Int
+  playerAlias  String
+  accountId    Int
+  puuid        String
+  riotGameName String?
+  riotTagLine  String?
+  rosterOrder  Int
+  benchOrder   Int?
+  team         String?
+  side         String?
+  captain      Boolean  @default(false)
+  pickOrder    Int?
+  championId   Int?
+  won          Boolean?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  game CustomGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, discordId])
+  @@index([gameId, team, pickOrder])
+  @@index([puuid])
+}
+
+/// Append-only command and integration ledger. The payload is validated at the
+/// boundary before serialization and records random outcomes as selected.
+model CustomAuditEvent {
+  id        String   @id @default(uuid())
+  nightId   String
+  gameId    String?
+  revision  Int
+  actorId   String
+  action    String
+  payload   String
+  source    String   @default("ACTIVITY")
+  createdAt DateTime @default(now())
+
+  night CustomNight @relation(fields: [nightId], references: [id], onDelete: Cascade)
+  game  CustomGame? @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([nightId, revision])
+  @@index([gameId, createdAt])
+  @@index([actorId, createdAt])
+}

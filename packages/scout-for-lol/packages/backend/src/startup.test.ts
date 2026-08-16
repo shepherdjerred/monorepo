@@ -17,9 +17,17 @@ describe("backend startup", () => {
       startDiscord: async () => {
         calls.push("discord");
       },
+      startCustomsDiscord: async () => {
+        calls.push("customs-discord");
+      },
     });
 
-    expect(calls).toEqual(["champion-assets", "http-server", "discord"]);
+    expect(calls).toEqual([
+      "champion-assets",
+      "http-server",
+      "discord",
+      "customs-discord",
+    ]);
     expect(runtime.shutdownHttpServer).toBe(shutdownHttpServer);
   });
 
@@ -56,6 +64,7 @@ describe("backend startup", () => {
       shutdownHttpServer: () => Promise.resolve(),
     }));
     const startDiscord = vi.fn(() => Promise.resolve());
+    const startCustomsDiscord = vi.fn(() => Promise.resolve());
 
     await expect(
       runBackendStartup({
@@ -64,10 +73,12 @@ describe("backend startup", () => {
         },
         startHttpServer,
         startDiscord,
+        startCustomsDiscord,
       }),
     ).rejects.toBe(assetFailure);
 
     expect(startHttpServer).not.toHaveBeenCalled();
     expect(startDiscord).not.toHaveBeenCalled();
+    expect(startCustomsDiscord).not.toHaveBeenCalled();
   });
 });

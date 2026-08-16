@@ -122,6 +122,7 @@
     "packages/resume",
     "packages/scout-for-lol",
     "packages/scout-for-lol/packages/app",
+    "packages/scout-for-lol/packages/activity",
     "packages/scout-for-lol/packages/backend",
     "packages/scout-for-lol/packages/data",
     "packages/scout-for-lol/packages/design-audit",

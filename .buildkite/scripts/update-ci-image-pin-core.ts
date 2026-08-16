@@ -12,14 +12,39 @@ export const PLAYWRIGHT_VERSION_FILE =
   ".buildkite/ci-playwright/PACKAGE_VERSION";
 export const PLAYWRIGHT_PACKAGE_TARGETS = [
   {
+    path: "packages/alert-dashboard/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
+  },
+  {
     path: "packages/birmel/package.json",
     section: "dependencies",
     dependency: "playwright",
   },
   {
+    path: "packages/docs/wiki/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
+  },
+  {
     path: "packages/monarch/package.json",
     section: "dependencies",
     dependency: "playwright",
+  },
+  {
+    path: "packages/scout-for-lol/packages/activity/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
+  },
+  {
+    path: "packages/scout-for-lol/packages/design-system/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
+  },
+  {
+    path: "packages/scout-for-lol/packages/evals/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
   },
   {
     path: "packages/sjer.red/package.json",

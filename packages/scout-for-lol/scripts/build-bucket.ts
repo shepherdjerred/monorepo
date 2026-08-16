@@ -11,9 +11,10 @@
  * This script:
  *   1. Builds the Astro marketing site → `packages/frontend/dist/`
  *   2. Builds the Vite React SPA → `packages/app/dist/`
- *   3. Builds the Starlight docs site → `packages/docs-site/dist/`
- *   4. Copies the SPA and docs into the frontend deploy bucket
- *   5. Asserts all three site entrypoints exist
+ *   3. Builds the Discord Activity → `packages/activity/dist/`
+ *   4. Builds the Starlight docs site → `packages/docs-site/dist/`
+ *   5. Copies the SPA, Activity, and docs into the frontend deploy bucket
+ *   6. Asserts all four site entrypoints exist
  *
  * Fail-fast: any missing artifact throws before the CI sync step starts.
  */
@@ -23,12 +24,15 @@ import { verifyScoutAssetBucket } from "@scout-for-lol/design-system/build";
 
 await $`bun --no-install run --filter='./packages/frontend' build`;
 await $`bun --no-install run --filter='./packages/app' build`;
+await $`bun --no-install run --filter='./packages/activity' build`;
 await $`bun --no-install run --filter='./packages/docs-site' build`;
 
 const appDist = "packages/app/dist";
+const activityDist = "packages/activity/dist";
 const docsDist = "packages/docs-site/dist";
 const frontendDist = "packages/frontend/dist";
 const target = `${frontendDist}/app`;
+const activityTarget = `${frontendDist}/customs`;
 const docsTarget = `${frontendDist}/docs`;
 
 const appIndex = `${appDist}/index.html`;
@@ -41,6 +45,19 @@ if (!(await appIndexFile.exists())) {
 if (appIndexFile.size < 100) {
   throw new Error(
     `SPA index.html is suspiciously small (${String(appIndexFile.size)} bytes) — refusing to ship`,
+  );
+}
+
+const activityIndex = `${activityDist}/index.html`;
+const activityIndexFile = Bun.file(activityIndex);
+if (!(await activityIndexFile.exists())) {
+  throw new Error(
+    `Activity build did not produce ${activityIndex} — refusing to copy or sync`,
+  );
+}
+if (activityIndexFile.size < 100) {
+  throw new Error(
+    `Activity index.html is suspiciously small (${String(activityIndexFile.size)} bytes) — refusing to ship`,
   );
 }
 
@@ -60,6 +77,8 @@ if (!(await Bun.file(docsIndex).exists())) {
 
 await $`rm -rf ${target}`;
 await $`cp -R ${appDist} ${target}`;
+await $`rm -rf ${activityTarget}`;
+await $`cp -R ${activityDist} ${activityTarget}`;
 await $`rm -rf ${docsTarget}`;
 await $`cp -R ${docsDist} ${docsTarget}`;
 
@@ -69,6 +88,11 @@ if (!(await Bun.file(copiedIndex).exists())) {
 }
 if (!(await Bun.file(`${docsTarget}/index.html`).exists())) {
   throw new Error(`copy failed: ${docsTarget}/index.html missing after copy`);
+}
+if (!(await Bun.file(`${activityTarget}/index.html`).exists())) {
+  throw new Error(
+    `copy failed: ${activityTarget}/index.html missing after copy`,
+  );
 }
 
 await verifyScoutAssetBucket(frontendDist);
@@ -134,5 +158,5 @@ for (const attribute of [
 }
 
 console.log(
-  `Bundled and verified Scout deploy: ${frontendDist}/index.html + ${target}/index.html + ${docsTarget}/index.html + shared theme/font/brand/game assets`,
+  `Bundled and verified Scout deploy: ${frontendDist}/index.html + ${target}/index.html + ${activityTarget}/index.html + ${docsTarget}/index.html + shared theme/font/brand/game assets`,
 );

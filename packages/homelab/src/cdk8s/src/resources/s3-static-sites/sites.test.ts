@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { staticSites } from "./sites.ts";
+import { renderHeaderBlock } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
 
 describe("Scout static sites", () => {
   for (const hostname of [
@@ -21,6 +22,50 @@ describe("Scout static sites", () => {
       expect(csp).toContain("connect-src 'self' https://us.i.posthog.com");
     });
   }
+});
+
+describe("Scout Customs Activity sites", () => {
+  for (const hostname of [
+    "customs.scout-for-lol.com",
+    "customs-beta.scout-for-lol.com",
+  ] as const) {
+    test(`${hostname} is Discord-embeddable without weakening Scout hosts`, () => {
+      const site = staticSites.find(
+        (candidate) => candidate.hostname === hostname,
+      );
+      if (site === undefined)
+        throw new Error(`${hostname} static site is missing`);
+      expect(site.indexFile).toBe("customs/index.html");
+      expect(site.notFoundPage).toBe("customs/index.html");
+      expect(site.responseHeaders?.["X-Frame-Options"]).toBeNull();
+      expect(site.responseHeaders?.["Content-Security-Policy"]).toContain(
+        "frame-ancestors https://discord.com https://*.discord.com",
+      );
+      expect(site.responseHeaders?.["Content-Security-Policy"]).not.toContain(
+        "posthog",
+      );
+      expect(renderHeaderBlock(site.responseHeaders)).toContain(
+        "-X-Frame-Options",
+      );
+    });
+  }
+
+  test("existing Scout hosts remain non-embeddable", () => {
+    for (const hostname of ["scout-for-lol.com", "beta.scout-for-lol.com"]) {
+      const site = staticSites.find(
+        (candidate) => candidate.hostname === hostname,
+      );
+      if (site === undefined)
+        throw new Error(`${hostname} static site is missing`);
+      expect(site.responseHeaders?.["Content-Security-Policy"]).toContain(
+        "frame-ancestors 'none'",
+      );
+      expect(site.responseHeaders?.["X-Frame-Options"]).toBeUndefined();
+      expect(renderHeaderBlock(site.responseHeaders)).toContain(
+        'X-Frame-Options "DENY"',
+      );
+    }
+  });
 });
 
 describe("human wiki static site", () => {

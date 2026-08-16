@@ -4,6 +4,7 @@ import {
   analyticsMeta,
   analyticsPrivacySettings,
   identifyUser,
+  isAnalyticsExcludedPath,
   normalizePath,
   resetIdentity,
   setAnalyticsForTesting,
@@ -194,6 +195,14 @@ describe("normalizePath", () => {
       "/explore/s/:shareToken",
     );
     expect(normalizePath("/explore/s")).toBe("/not-found");
+  });
+});
+
+describe("analytics exclusions", () => {
+  test("excludes private customs history and no other Scout route", () => {
+    expect(isAnalyticsExcludedPath("/customs/123456789")).toBe(true);
+    expect(isAnalyticsExcludedPath("/customs/123456789/")).toBe(true);
+    expect(isAnalyticsExcludedPath("/g/123456789/players")).toBe(false);
   });
 });
 

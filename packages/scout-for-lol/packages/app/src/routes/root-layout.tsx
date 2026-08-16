@@ -7,6 +7,7 @@ import {
 import { ContractMismatchBanner } from "#src/components/version-info.tsx";
 import {
   analyticsContextRoute,
+  isAnalyticsExcludedPath,
   normalizePath,
   resolvedAnalyticsContextRoute,
   startAnalyticsCapture,
@@ -60,11 +61,13 @@ export function RootLayout() {
   // has answered and the route's own context is attached, because PostHog
   // cannot reattribute an event after the fact.
   const requiredContextRoute = analyticsContextRoute(location.pathname);
+  const analyticsExcluded = isAnalyticsExcludedPath(location.pathname);
   const settledContextRoute = useSyncExternalStore(
     subscribeAnalyticsContext,
     resolvedAnalyticsContextRoute,
   );
   const ready =
+    !analyticsExcluded &&
     sessionResolved &&
     (requiredContextRoute === undefined ||
       requiredContextRoute === settledContextRoute);

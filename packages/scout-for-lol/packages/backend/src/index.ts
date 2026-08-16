@@ -94,6 +94,10 @@ if (configuration.enableBackgroundJobs) {
   logger.warn("⏭️  Background jobs disabled for this local secondary instance");
 }
 
+logger.info("🎲 Starting Scout Customs reconciler");
+const { startCustomsReconciler } = await import("#src/customs/reconciler.ts");
+startCustomsReconciler();
+
 // Incrementally seed the summoner-search index from existing data. Idempotent
 // and cheap to re-run (inserts only new PUUIDs); background so it never blocks
 // boot or request serving.

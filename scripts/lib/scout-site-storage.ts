@@ -27,6 +27,7 @@ const MARKER_KEY = ".release-version";
 const IMMUTABLE_PREFIXES = [
   "_astro/",
   "app/assets/",
+  "customs/assets/",
   "docs/_astro/",
   "assets/scout/game/",
 ];
@@ -34,6 +35,7 @@ const IMMUTABLE_PREFIXES = [
 const RELEASE_ENTRYPOINTS = [
   "index.html",
   "app/index.html",
+  "customs/index.html",
   "docs/index.html",
 ] as const;
 

@@ -330,7 +330,9 @@ describe("Playwright candidate promotion", () => {
     expect(() => parsePlaywrightVersionFile(futureVersion)).toThrow(
       "canonical semver line",
     );
-    const target = PLAYWRIGHT_PACKAGE_TARGETS[0];
+    const target = PLAYWRIGHT_PACKAGE_TARGETS.find(
+      ({ dependency }) => dependency === "playwright",
+    );
     expect(target).toBeDefined();
     if (target === undefined) {
       throw new Error("Playwright package target fixture is missing");
@@ -349,8 +351,13 @@ describe("Playwright candidate promotion", () => {
       ".buildkite/ci-playwright/DIGEST",
       ".buildkite/ci-playwright/STATE.json",
       ".buildkite/ci-playwright/PACKAGE_VERSION",
+      "packages/alert-dashboard/package.json",
       "packages/birmel/package.json",
+      "packages/docs/wiki/package.json",
       "packages/monarch/package.json",
+      "packages/scout-for-lol/packages/activity/package.json",
+      "packages/scout-for-lol/packages/design-system/package.json",
+      "packages/scout-for-lol/packages/evals/package.json",
       "packages/sjer.red/package.json",
       "bun.lock",
     ]);

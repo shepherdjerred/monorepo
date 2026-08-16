@@ -1,0 +1,55 @@
+{
+  "name": "@scout-for-lol/activity",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "bun x --no-install eslint src",
+    "test": "bun test src --preload ./src/testing/setup.ts",
+    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts",
+    "test:e2e": "playwright test"
+  },
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.7.0",
+    "@discord/embedded-app-sdk": "^2.5.0",
+    "@scout-for-lol/backend": "workspace:*",
+    "@scout-for-lol/data": "workspace:*",
+    "@tanstack/react-query": "^5.90.21",
+    "@trpc/client": "^11.18.0",
+    "@trpc/tanstack-react-query": "^11.18.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.14.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "sonner": "^2.0.8",
+    "tailwind-merge": "^3.6.0",
+    "tw-animate-css": "^1.4.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.0",
+    "@tailwindcss/vite": "^4.2.4",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.4",
+    "@types/bun": "^1.3.13",
+    "@types/jsdom": "^30.0.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vitejs/plugin-react": "^6.0.0",
+    "jsdom": "^30.0.1",
+    "shadcn": "^4.18.0",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.0"
+  }
+}

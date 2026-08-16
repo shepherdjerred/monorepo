@@ -374,6 +374,16 @@
       ]
     },
     {
+      "package": "@scout-for-lol/activity",
+      "directory": "packages/scout-for-lol/packages/activity",
+      "steps": [
+        {
+          "runner": "bun",
+          "args": ["src", "--preload", "./src/testing/setup.ts"]
+        }
+      ]
+    },
+    {
       "package": "@scout-for-lol/backend",
       "directory": "packages/scout-for-lol/packages/backend",
       "defaultEnv": {

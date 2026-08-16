@@ -17,14 +17,18 @@ steps:
     key: playwright-reporting
     timeout_in_minutes: 30
     command: |
-      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
-      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
+      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/birmel' --filter scout-for-lol --filter '@scout-for-lol/activity' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
+      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@scout-for-lol/activity' --concurrency=2
       if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then
         echo "complete reporting run did not emit the sjer.red Playwright JUnit report" >&2
         exit 1
       fi
       if [ ! -s .ci-reports/junit/shepherdjerred__docs-wiki/playwright.xml ]; then
         echo "complete reporting run did not emit the docs-wiki Playwright JUnit report" >&2
+        exit 1
+      fi
+      if [ ! -s .ci-reports/junit/scout-for-lol__activity/playwright.xml ]; then
+        echo "complete reporting run did not emit the Scout Customs Playwright JUnit report" >&2
         exit 1
       fi
       bun --no-install scripts/namespace-playwright-reports.ts
@@ -59,8 +63,10 @@ steps:
                 securityContext:
                   allowPrivilegeEscalation: false
                 resources:
-                  requests: { cpu: "2", memory: "5Gi" }
-                  limits: { cpu: "4", memory: "8Gi" }
+                  # Match the ordinary browser lane's expanded Scout graph;
+                  # checkout separately requests its 1Gi tmpfs charge.
+                  requests: { cpu: "2", memory: "8Gi" }
+                  limits: { cpu: "4", memory: "12Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors

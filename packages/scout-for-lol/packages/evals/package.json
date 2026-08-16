@@ -55,7 +55,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "1.62.0",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@tailwindcss/vite": "^4.2.4",
     "@types/bun": "1.4.0",

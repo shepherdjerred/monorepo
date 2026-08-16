@@ -25,6 +25,7 @@ import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 import { RootLayout } from "#src/routes/root-layout.tsx";
+import { CustomsHistory } from "#src/routes/customs-history.tsx";
 import { RouteErrorPanel } from "#src/components/route-error-panel.tsx";
 import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
 import {
@@ -189,6 +190,11 @@ export const routes: RouteObject[] = [
           },
           { path: "welcome", element: <OnboardingWizard /> },
           { path: "installed", element: <InstallLanding /> },
+          {
+            path: "customs/:guildId",
+            element: <CustomsHistory />,
+            errorElement: <RouteErrorPanel />,
+          },
           {
             path: "g/:guildId",
             element: <GuildWorkspace />,

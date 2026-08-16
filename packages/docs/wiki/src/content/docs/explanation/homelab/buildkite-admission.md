@@ -57,11 +57,13 @@ consume the node to zero: the node and queue dashboards correlate admission
 with MemAvailable, AMD Tctl, and disk-I/O pressure.
 
 The complete pod reservation includes the Buildkite agent and checkout
-containers. The audited heavy profiles are 1.1 CPU / 15.06Gi for `verify`, 1.1
-CPU / 5.06Gi for Playwright, and 1.1 CPU / 2.06Gi for image/remote-BuildKit
-clients. Light deploy and scanner profiles reserve 350m CPU and roughly
-1.56-1.81Gi. CPU, memory, and ephemeral-storage quotas continue to stop an
-unsafe all-heavy mix before the 24-job count cap does.
+containers. The audited heavy profiles are 1.1 CPU / 19.06Gi for `verify`, 1.1
+CPU / 9.06Gi for Playwright, and 1.1 CPU / 2.06Gi for image/remote-BuildKit
+clients. The Playwright command container may burst to 12Gi for the overlapping
+Astro OpenGraph and Scout browser graph. Light deploy and scanner profiles
+reserve 350m CPU and roughly 1.56-1.81Gi. CPU, memory, and ephemeral-storage
+quotas continue to stop an unsafe all-heavy mix before the 24-job count cap
+does.
 
 ## Why ephemeral storage is in the quota
 

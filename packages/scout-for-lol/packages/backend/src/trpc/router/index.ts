@@ -20,6 +20,7 @@ import { exploreRouter } from "#src/trpc/router/explore.router.ts";
 import { discordRouter } from "#src/trpc/router/discord.router.ts";
 import { riotRouter } from "#src/trpc/router/riot.router.ts";
 import { rolesRouter } from "#src/trpc/router/roles.router.ts";
+import { customsRouter } from "#src/trpc/router/customs.router.ts";
 
 export const appRouter = router({
   auth: authRouter,
@@ -37,6 +38,7 @@ export const appRouter = router({
   discord: discordRouter,
   riot: riotRouter,
   roles: rolesRouter,
+  customs: customsRouter,
 });
 
 export type AppRouter = typeof appRouter;

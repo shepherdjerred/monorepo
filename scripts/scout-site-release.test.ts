@@ -200,6 +200,8 @@ test("release input digest binds to the source commit", () => {
     contractHash: "contract-abc",
     pinterestTagId: "pin-1",
     redditPixelId: "reddit-1",
+    customsProdClientId: "123",
+    customsBetaClientId: "456",
   };
   const digest = computeReleaseInputDigest(base);
   // Deterministic for identical inputs.
@@ -216,6 +218,9 @@ test("release input digest binds to the source commit", () => {
   // A non-commit input change still changes the identity.
   expect(
     computeReleaseInputDigest({ ...base, backendImageDigest: `${DIGEST}0` }),
+  ).not.toBe(digest);
+  expect(
+    computeReleaseInputDigest({ ...base, customsBetaClientId: "789" }),
   ).not.toBe(digest);
 });
 

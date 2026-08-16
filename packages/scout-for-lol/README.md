@@ -116,6 +116,7 @@ contributor/agent workflow notes.
 
 ```text
 packages/
+  activity/     - Discord Activity for private custom-game nights
   app/          - Vite + React SPA dashboard (scout-for-lol.com/app/)
   backend/      - Discord bot, tRPC/HTTP server, report lake, cron jobs
   data/         - Shared data models, schemas, and Data Dragon assets
@@ -139,6 +140,43 @@ packages/
 **Environment:**
 The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=test`), placeholder values are used automatically—no real tokens needed for development.
 
+### Scout Customs configuration
+
+Scout Customs is disabled when every `CUSTOMS_*` value is absent. Once any one
+is present, startup requires the complete dedicated configuration so a partial
+Discord or Tournament setup cannot accept a game night:
+
+- `CUSTOMS_DISCORD_APPLICATION_ID`, `CUSTOMS_DISCORD_CLIENT_SECRET`, and
+  `CUSTOMS_DISCORD_TOKEN`
+- `CUSTOMS_JWT_SIGNING_SECRET` and `CUSTOMS_GUILD_ALLOWLIST`
+- `CUSTOMS_RIOT_TOURNAMENT_PROVIDER_ID`,
+  `CUSTOMS_RIOT_APPROVAL_REFERENCE`, and `CUSTOMS_RIOT_CALLBACK_SECRET`
+
+The stage-specific Scout 1Password items are the source for these values.
+Kubernetes projection remains deliberately unwired until an operator provisions
+the complete beta or production field set; the deployment must then add all
+references as required secrets in one change, never optional references.
+Buildkite reads `SCOUT_CUSTOMS_BETA_DISCORD_CLIENT_ID` and
+`SCOUT_CUSTOMS_PROD_DISCORD_CLIENT_ID` from its 1Password-backed environment and
+bakes the public application id into each lockstep Activity artifact. The fixed
+Activity origins are `customs-beta.scout-for-lol.com` and
+`customs.scout-for-lol.com`.
+
+Participant privacy requests use the operator-only, dry-run-first command:
+
+```bash
+kubectl -n scout-beta exec deployment/scout-beta-scout-backend -- \
+  bun run customs:anonymize \
+  --guild-id <discord-guild-id> --discord-id <discord-user-id>
+# Review counts, then repeat with --execute.
+```
+
+Use `scout-prod` and `scout-prod-scout-backend` for production. The command
+runs against the selected deployment's mounted SQLite database and refuses to
+alter an active night. It removes guild-scoped Customs consent and participant
+snapshots, redacts audit payload identity, and does not delete the person's
+ordinary Scout player mapping or normal-match history.
+
 ## Links
 
 - **Website**: [scout-for-lol.com](https://scout-for-lol.com)
@@ -150,6 +188,10 @@ The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=
 
 ## Privacy & Terms
 
-Scout stores only the minimum data necessary to provide notifications: Riot IDs, aliases, Discord channel information, and match history for competitions. We don't collect personal information beyond what's required for the service.
+Scout stores only the minimum data necessary to provide notifications and the
+features a person explicitly joins: Riot IDs, aliases, Discord channel
+information, match history for competitions, and consented private custom-game
+history. Customs data is never used for public profiles, rankings, skill
+ratings, or product analytics.
 
 See [Privacy Policy](https://scout-for-lol.com/privacy) and [Terms of Service](https://scout-for-lol.com/tos) for details.

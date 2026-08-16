@@ -9,6 +9,11 @@ import { createLogger } from "#src/logger.ts";
 import { webSessionRejectedTotal } from "#src/metrics/web.ts";
 import type { ApiToken, User } from "#generated/prisma/client/index.js";
 import { verifySession } from "#src/trpc/jwt.ts";
+import {
+  isCustomActivityTokenCandidate,
+  verifyCustomActivityToken,
+} from "#src/customs/activity-auth.ts";
+import type { CustomActivityClaims } from "@scout-for-lol/data";
 
 const logger = createLogger("trpc-context");
 
@@ -38,6 +43,8 @@ export type Context = {
   apiToken: ApiToken | null;
   /** The web session, if the request carried a valid scout_session cookie */
   webSession: WebSession | null;
+  /** Dedicated, short-lived Discord Activity bearer session. */
+  activitySession: CustomActivityClaims | null;
   /**
    * Forwarded client IP, when the edge supplied one. Present for anonymous
    * callers too, so public endpoints can rate-limit per caller. NEVER used for
@@ -94,30 +101,36 @@ export async function createContext(request: Request): Promise<Context> {
   let user: User | null = null;
   let apiToken: ApiToken | null = null;
   let webSession: WebSession | null = null;
+  let activitySession: CustomActivityClaims | null = null;
 
   if (bearerToken !== null && bearerToken.length > 0) {
-    const hashedToken = hashToken(bearerToken);
-    const tokenRecord = await prisma.apiToken.findUnique({
-      where: { token: hashedToken },
-      include: { user: true },
-    });
+    activitySession = isCustomActivityTokenCandidate(bearerToken)
+      ? await verifyCustomActivityToken(bearerToken)
+      : null;
+    if (activitySession === null) {
+      const hashedToken = hashToken(bearerToken);
+      const tokenRecord = await prisma.apiToken.findUnique({
+        where: { token: hashedToken },
+        include: { user: true },
+      });
 
-    if (tokenRecord && !tokenRecord.revokedAt) {
-      if (!tokenRecord.expiresAt || tokenRecord.expiresAt > new Date()) {
-        apiToken = tokenRecord;
-        user = tokenRecord.user;
+      if (tokenRecord && !tokenRecord.revokedAt) {
+        if (!tokenRecord.expiresAt || tokenRecord.expiresAt > new Date()) {
+          apiToken = tokenRecord;
+          user = tokenRecord.user;
 
-        await prisma.apiToken.update({
-          where: { id: tokenRecord.id },
-          data: { lastUsedAt: new Date() },
-        });
+          await prisma.apiToken.update({
+            where: { id: tokenRecord.id },
+            data: { lastUsedAt: new Date() },
+          });
 
-        logger.debug(
-          `API token auth successful for user ${user.discordUsername}`,
-          { requestId },
-        );
-      } else {
-        logger.debug("API token expired", { requestId });
+          logger.debug(
+            `API token auth successful for user ${user.discordUsername}`,
+            { requestId },
+          );
+        } else {
+          logger.debug("API token expired", { requestId });
+        }
       }
     }
   }
@@ -169,6 +182,7 @@ export async function createContext(request: Request): Promise<Context> {
     user,
     apiToken,
     webSession,
+    activitySession,
     clientIp:
       request.headers.get("CF-Connecting-IP") ??
       request.headers.get("X-Forwarded-For"),

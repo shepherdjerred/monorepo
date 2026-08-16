@@ -48,6 +48,22 @@ const ProductAnalyticsConfigurationSchema = z.object({
   siteHostname: z.string().min(1),
 });
 
+const CustomsConfigurationSchema = z.object({
+  applicationId: z.string().min(1),
+  clientSecret: z.string().min(1),
+  botToken: z.string().min(1),
+  jwtSigningSecret: z.string().min(32),
+  guildAllowlist: z.array(z.string().min(1)).min(1),
+  tournamentProviderId: z.string().min(1),
+  tournamentApprovalReference: z.string().min(1),
+  callbackSecret: z.string().min(32),
+  activityOrigin: z
+    .url({ protocol: /^https?$/ })
+    .transform((value) => new URL(value).origin),
+});
+
+export type CustomsConfiguration = z.infer<typeof CustomsConfigurationSchema>;
+
 export type ProductAnalyticsConfiguration = z.infer<
   typeof ProductAnalyticsConfigurationSchema
 >;
@@ -81,6 +97,51 @@ export function parseProductAnalyticsConfiguration(
 
   throw new Error(
     `Complete PostHog configuration is required in ${environment}: POSTHOG_PROJECT_TOKEN, POSTHOG_API_HOST, POSTHOG_SITE_KEY, POSTHOG_SITE_HOSTNAME`,
+    { cause: parsed.error },
+  );
+}
+
+export function parseCustomsConfiguration(
+  environment: z.infer<typeof EnvironmentSchema>,
+  values: {
+    applicationId: string | undefined;
+    clientSecret: string | undefined;
+    botToken: string | undefined;
+    jwtSigningSecret: string | undefined;
+    guildAllowlist: string[];
+    tournamentProviderId: string | undefined;
+    tournamentApprovalReference: string | undefined;
+    callbackSecret: string | undefined;
+    activityOrigin: string | undefined;
+  },
+): CustomsConfiguration | undefined {
+  const configuredValues = [
+    values.applicationId,
+    values.clientSecret,
+    values.botToken,
+    values.jwtSigningSecret,
+    ...values.guildAllowlist,
+    values.tournamentProviderId,
+    values.tournamentApprovalReference,
+    values.callbackSecret,
+    values.activityOrigin,
+  ];
+  if (configuredValues.every((value) => value === undefined || value === "")) {
+    return undefined;
+  }
+  const parsed = CustomsConfigurationSchema.safeParse({
+    ...values,
+    activityOrigin:
+      values.activityOrigin ??
+      (environment === "dev"
+        ? "http://localhost:5181"
+        : environment === "beta"
+          ? "https://customs-beta.scout-for-lol.com"
+          : "https://customs.scout-for-lol.com"),
+  });
+  if (parsed.success) return parsed.data;
+  throw new Error(
+    `Complete Scout Customs configuration is required in ${environment}: dedicated Discord credentials, JWT secret, guild allowlist, Tournament provider, approval reference, callback secret, and Activity origin`,
     { cause: parsed.error },
   );
 }
@@ -204,6 +265,27 @@ function computeConfiguration() {
       .get("EXPLORE_GUILD_ALLOWLIST")
       .default("")
       .asArray(","),
+    customs:
+      Bun.env.NODE_ENV === "test"
+        ? undefined
+        : parseCustomsConfiguration(environment, {
+            applicationId: getOptionalEnvVar("CUSTOMS_DISCORD_APPLICATION_ID"),
+            clientSecret: getOptionalEnvVar("CUSTOMS_DISCORD_CLIENT_SECRET"),
+            botToken: getOptionalEnvVar("CUSTOMS_DISCORD_TOKEN"),
+            jwtSigningSecret: getOptionalEnvVar("CUSTOMS_JWT_SIGNING_SECRET"),
+            guildAllowlist: env
+              .get("CUSTOMS_GUILD_ALLOWLIST")
+              .default("")
+              .asArray(","),
+            tournamentProviderId: getOptionalEnvVar(
+              "CUSTOMS_RIOT_TOURNAMENT_PROVIDER_ID",
+            ),
+            tournamentApprovalReference: getOptionalEnvVar(
+              "CUSTOMS_RIOT_APPROVAL_REFERENCE",
+            ),
+            callbackSecret: getOptionalEnvVar("CUSTOMS_RIOT_CALLBACK_SECRET"),
+            activityOrigin: getOptionalEnvVar("CUSTOMS_ACTIVITY_ORIGIN"),
+          }),
     llmHourlyTokenBudget: env
       .get("LLM_HOURLY_TOKEN_BUDGET")
       .default("2000000")
@@ -328,6 +410,9 @@ const configuration: Configuration = {
   },
   get exploreGuildAllowlist() {
     return getConfiguration().exploreGuildAllowlist;
+  },
+  get customs() {
+    return getConfiguration().customs;
   },
   get llmHourlyTokenBudget() {
     return getConfiguration().llmHourlyTokenBudget;

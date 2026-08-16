@@ -13,6 +13,7 @@ type BackendStartupDependencies = {
   readonly ensureReportLakeReady?: () => Promise<void>;
   readonly startHttpServer: () => Promise<HttpServerRuntime>;
   readonly startDiscord: () => Promise<void>;
+  readonly startCustomsDiscord: () => Promise<void>;
 };
 
 export async function runBackendStartup(
@@ -24,6 +25,7 @@ export async function runBackendStartup(
   }
   const httpServer = await dependencies.startHttpServer();
   await dependencies.startDiscord();
+  await dependencies.startCustomsDiscord();
   return httpServer;
 }
 
@@ -50,6 +52,11 @@ export async function startBackendRuntime(): Promise<HttpServerRuntime> {
         return;
       }
       await import("@scout-for-lol/backend/discord/index.ts");
+    },
+    startCustomsDiscord: async () => {
+      const { startCustomsDiscord } =
+        await import("#src/customs/discord-client.ts");
+      await startCustomsDiscord();
     },
   });
 }

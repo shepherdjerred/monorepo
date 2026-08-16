@@ -1,5 +1,6 @@
 import { describe, test, expect, afterEach } from "vitest";
 import {
+  parseCustomsConfiguration,
   parseProductAnalyticsConfiguration,
   resetConfigurationForTests,
   resolveEnvironment,
@@ -81,6 +82,69 @@ describe("resolveEnvironment", () => {
     Bun.env["ENVIRONMENT"] = "production";
     Bun.env.NODE_ENV = "development";
     expect(() => resolveEnvironment()).toThrow(/Invalid ENVIRONMENT/);
+  });
+});
+
+describe("parseCustomsConfiguration", () => {
+  const disabled = {
+    applicationId: undefined,
+    clientSecret: undefined,
+    botToken: undefined,
+    jwtSigningSecret: undefined,
+    guildAllowlist: [],
+    tournamentProviderId: undefined,
+    tournamentApprovalReference: undefined,
+    callbackSecret: undefined,
+    activityOrigin: undefined,
+  };
+  const complete = {
+    applicationId: "123456789",
+    clientSecret: "client-secret",
+    botToken: "bot-token",
+    jwtSigningSecret: "j".repeat(32),
+    guildAllowlist: ["987654321"],
+    tournamentProviderId: "provider-1",
+    tournamentApprovalReference: "approval-1",
+    callbackSecret: "c".repeat(32),
+    activityOrigin: "https://customs-beta.scout-for-lol.com",
+  };
+
+  test("keeps Customs disabled when no value is configured", () => {
+    expect(parseCustomsConfiguration("prod", disabled)).toBeUndefined();
+  });
+
+  test.each(["dev", "beta", "prod"] as const)(
+    "fails partial configuration in %s",
+    (environment) => {
+      expect(() =>
+        parseCustomsConfiguration(environment, {
+          ...disabled,
+          applicationId: "123456789",
+        }),
+      ).toThrow(/Complete Scout Customs configuration/);
+    },
+  );
+
+  test("accepts complete dedicated configuration", () => {
+    expect(parseCustomsConfiguration("prod", complete)).toEqual(complete);
+  });
+
+  test("normalizes the Activity URL to a browser origin", () => {
+    expect(
+      parseCustomsConfiguration("prod", {
+        ...complete,
+        activityOrigin: "https://customs.scout-for-lol.com/activity/?embed=1",
+      })?.activityOrigin,
+    ).toBe("https://customs.scout-for-lol.com");
+  });
+
+  test("rejects a non-HTTP Activity URL", () => {
+    expect(() =>
+      parseCustomsConfiguration("prod", {
+        ...complete,
+        activityOrigin: "wss://customs.scout-for-lol.com",
+      }),
+    ).toThrow(/Complete Scout Customs configuration/);
   });
 });
 

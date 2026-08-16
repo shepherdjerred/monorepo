@@ -357,6 +357,11 @@ export function analyticsContextRoute(pathname: string): string | undefined {
   return /^\/g\/[^/]+/.exec(pathname)?.[0] ?? undefined;
 }
 
+/** Customs history contains private game participation and is never analytics. */
+export function isAnalyticsExcludedPath(pathname: string): boolean {
+  return /^\/customs\/[^/]+(?:\/|$)/.test(pathname);
+}
+
 /** Snapshot + subscription for `useSyncExternalStore` in the root layout. */
 export function resolvedAnalyticsContextRoute(): string | undefined {
   return resolvedContextRoute;

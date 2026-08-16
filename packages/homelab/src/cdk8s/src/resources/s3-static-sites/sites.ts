@@ -34,6 +34,19 @@ const scoutCsp = [
   "form-action 'self' https://discord.com",
 ].join("; ");
 
+const customsCsp = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' https://cdn.discordapp.com data:",
+  "connect-src 'self' https://discord.com",
+  "font-src 'self' data:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'none'",
+  "frame-ancestors https://discord.com https://*.discord.com",
+].join("; ");
+
 /**
  * Starlight's Pagefind search loads a same-origin WASM module in a web worker.
  * Mermaid diagrams are initialized by Astro's generated inline module script.
@@ -120,6 +133,58 @@ export const staticSites: StaticSiteConfig[] = [
     ],
     spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
     responseHeaders: { "Content-Security-Policy": scoutCsp },
+  },
+  {
+    hostname: "customs.scout-for-lol.com",
+    bucket: "scout-frontend",
+    indexFile: "customs/index.html",
+    notFoundPage: "customs/index.html",
+    reverseProxies: [
+      {
+        path: "/api/healthz",
+        upstream: "scout-service-prod.scout-prod.svc.cluster.local:3000",
+        rewriteTo: "/healthz",
+      },
+      {
+        path: "/trpc*",
+        upstream: "scout-service-prod.scout-prod.svc.cluster.local:3000",
+      },
+      {
+        path: "/api/*",
+        upstream: "scout-service-prod.scout-prod.svc.cluster.local:3000",
+      },
+    ],
+    probes: [{ endpoint: "healthz", path: "/api/healthz", module: "http_2xx" }],
+    responseHeaders: {
+      "Content-Security-Policy": customsCsp,
+      "X-Frame-Options": null,
+    },
+  },
+  {
+    hostname: "customs-beta.scout-for-lol.com",
+    bucket: "scout-frontend-beta",
+    indexFile: "customs/index.html",
+    notFoundPage: "customs/index.html",
+    reverseProxies: [
+      {
+        path: "/api/healthz",
+        upstream: "scout-service-beta.scout-beta.svc.cluster.local:3000",
+        rewriteTo: "/healthz",
+      },
+      {
+        path: "/trpc*",
+        upstream: "scout-service-beta.scout-beta.svc.cluster.local:3000",
+      },
+      {
+        path: "/api/*",
+        upstream: "scout-service-beta.scout-beta.svc.cluster.local:3000",
+      },
+    ],
+    probes: [{ endpoint: "healthz", path: "/api/healthz", module: "http_2xx" }],
+    responseHeaders: {
+      "Content-Security-Policy": customsCsp,
+      "X-Frame-Options": null,
+    },
   },
   {
     hostname: "better-skill-capped.com",
