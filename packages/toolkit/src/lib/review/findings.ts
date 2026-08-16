@@ -1,0 +1,299 @@
+/**
+ * Reading and clearing a code-review provider's findings on a pull request.
+ *
+ * A provider may render the same finding on more than one surface — Qodo posts
+ * each one both inside its persistent review comment and as an addressable
+ * thread on the offending line — and each surface is cleared through a
+ * different API. `@shepherdjerred/code-review` already merges them into one
+ * finding carrying both handles; this turns that into something a person can
+ * act on in a single step.
+ */
+
+import {
+  isProviderAuthor,
+  resolveRequiredReviewProvider,
+  type ReviewProvider,
+  type ReviewThread,
+} from "@shepherdjerred/code-review";
+import {
+  fetchReviewThreads,
+  resolveReviewState,
+} from "@shepherdjerred/code-review/github";
+import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
+import { markQodoFindingResolved } from "@shepherdjerred/code-review/qodo";
+import { z } from "zod";
+
+const GITHUB_API = "https://api.github.com";
+
+const PrHeadSchema = z.object({ head: z.object({ sha: z.string() }) });
+const CommentSchema = z.object({ id: z.number(), body: z.string() });
+
+export type Finding = {
+  key: string;
+  title: string | null;
+  priority: number | null;
+  path: string | null;
+  line: number | null;
+  isResolved: boolean;
+  threadId: string | null;
+  commentId: number | null;
+  url: string | null;
+};
+
+/** Every provider finding on the PR, deduplicated across surfaces. */
+export async function listFindings(input: {
+  repo: string;
+  number: number;
+  token: string;
+  provider?: ReviewProvider;
+}): Promise<{ head: string; findings: Finding[] }> {
+  const provider = input.provider ?? resolveRequiredReviewProvider();
+  const head = await fetchHeadSha(input);
+  const state = await resolveReviewState({
+    provider,
+    repo: input.repo,
+    head,
+    prNumber: input.number,
+    token: input.token,
+    headPushedAt: await fetchHeadPushedAt({
+      repo: input.repo,
+      sha: head,
+      prNumber: input.number,
+      token: input.token,
+    }),
+  });
+  const { threads } = await fetchReviewThreads({
+    repo: input.repo,
+    number: input.number,
+    token: input.token,
+    provider,
+    issueComment: state.issueComment,
+  });
+  const findings = threads
+    .filter(
+      (thread) =>
+        isProviderAuthor(provider, thread.authorLogin) && !thread.isOutdated,
+    )
+    .map((thread, index) => toFinding(thread, provider, index));
+  return { head, findings };
+}
+
+/**
+ * Whether the provider has finished reviewing this exact head, and how it said
+ * so. The harvest rule needs both: a gate that failed while the review was
+ * still running is stale, one that failed with no review at all is not.
+ */
+export async function reviewStateFor(input: {
+  repo: string;
+  number: number;
+  token: string;
+  head: string;
+  provider?: ReviewProvider;
+}): Promise<{ reviewedAtHead: boolean; completionSignal: string }> {
+  const provider = input.provider ?? resolveRequiredReviewProvider();
+  const state = await resolveReviewState({
+    provider,
+    repo: input.repo,
+    head: input.head,
+    prNumber: input.number,
+    token: input.token,
+    headPushedAt: await fetchHeadPushedAt({
+      repo: input.repo,
+      sha: input.head,
+      prNumber: input.number,
+      token: input.token,
+    }),
+  });
+  return {
+    reviewedAtHead: state.reviewedCommit === input.head,
+    completionSignal: state.completionSignal,
+  };
+}
+
+function toFinding(
+  thread: ReviewThread,
+  provider: ReviewProvider,
+  index: number,
+): Finding {
+  return {
+    // Fall back to a positional key only when the provider cannot identify the
+    // finding, so an unrecognised one is still addressable rather than absent.
+    key: provider.findingKey?.(thread) ?? `#${String(index + 1)}`,
+    title: thread.title,
+    priority: thread.priority,
+    path: thread.path,
+    line: thread.line,
+    isResolved: thread.isResolved,
+    threadId: thread.threadId,
+    commentId: thread.commentId,
+    url: thread.url,
+  };
+}
+
+export type ResolveOutcome = {
+  chippedComment: boolean;
+  resolvedThread: boolean;
+};
+
+/**
+ * Clear one finding on every surface it appears on.
+ *
+ * Both surfaces are cleared even though the gate now treats either as
+ * sufficient: leaving one behind means the next reader still sees the finding
+ * open, and the point of this command is that a finding is one thing.
+ */
+export async function resolveFinding(input: {
+  repo: string;
+  number: number;
+  token: string;
+  finding: Finding;
+  evidence: string;
+}): Promise<ResolveOutcome> {
+  const outcome: ResolveOutcome = {
+    chippedComment: false,
+    resolvedThread: false,
+  };
+
+  if (input.finding.commentId !== null && input.finding.title !== null) {
+    outcome.chippedComment = await chipComment({
+      repo: input.repo,
+      token: input.token,
+      commentId: input.finding.commentId,
+      title: input.finding.title,
+    });
+  }
+
+  if (input.finding.threadId !== null) {
+    await replyToThread(input.token, input.finding.threadId, input.evidence);
+    await resolveThread(input.token, input.finding.threadId);
+    outcome.resolvedThread = true;
+  }
+
+  return outcome;
+}
+
+/** Append the resolved chip to a finding in the provider's review comment. */
+async function chipComment(input: {
+  repo: string;
+  token: string;
+  commentId: number;
+  title: string;
+}): Promise<boolean> {
+  const url = `${GITHUB_API}/repos/${input.repo}/issues/comments/${String(input.commentId)}`;
+  const current = CommentSchema.parse(await getJson(url, input.token));
+  const marked = markQodoFindingResolved(current.body, input.title);
+  if (marked === null) {
+    throw new Error(
+      `No finding titled "${input.title}" in comment ${String(input.commentId)}`,
+    );
+  }
+  if (marked === current.body) return false;
+  await sendJson("PATCH", url, { body: marked }, input.token);
+  return true;
+}
+
+async function replyToThread(
+  token: string,
+  threadId: string,
+  body: string,
+): Promise<void> {
+  await graphql(
+    token,
+    `
+      mutation ($t: ID!, $b: String!) {
+        addPullRequestReviewThreadReply(
+          input: { pullRequestReviewThreadId: $t, body: $b }
+        ) {
+          clientMutationId
+        }
+      }
+    `,
+    { t: threadId, b: body },
+  );
+}
+
+async function resolveThread(token: string, threadId: string): Promise<void> {
+  await graphql(
+    token,
+    `
+      mutation ($t: ID!) {
+        resolveReviewThread(input: { threadId: $t }) {
+          thread {
+            isResolved
+          }
+        }
+      }
+    `,
+    { t: threadId },
+  );
+}
+
+async function fetchHeadSha(input: {
+  repo: string;
+  number: number;
+  token: string;
+}): Promise<string> {
+  const payload = await getJson(
+    `${GITHUB_API}/repos/${input.repo}/pulls/${String(input.number)}`,
+    input.token,
+  );
+  return PrHeadSchema.parse(payload).head.sha;
+}
+
+function headers(token: string): Record<string, string> {
+  return {
+    Accept: "application/vnd.github+json",
+    Authorization: `Bearer ${token}`,
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+}
+
+async function getJson(url: string, token: string): Promise<unknown> {
+  const response = await fetch(url, { headers: headers(token) });
+  if (!response.ok) {
+    throw new Error(
+      `GET ${url} failed: ${String(response.status)} ${response.statusText}`,
+    );
+  }
+  return response.json();
+}
+
+async function sendJson(
+  method: string,
+  url: string,
+  body: unknown,
+  token: string,
+): Promise<unknown> {
+  const response = await fetch(url, {
+    method,
+    headers: { ...headers(token), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    throw new Error(
+      `${method} ${url} failed: ${String(response.status)} ${response.statusText}`,
+    );
+  }
+  return response.json();
+}
+
+const GraphQlSchema = z.object({ errors: z.unknown().optional() });
+
+async function graphql(
+  token: string,
+  query: string,
+  variables: Record<string, unknown>,
+): Promise<void> {
+  const payload = await sendJson(
+    "POST",
+    `${GITHUB_API}/graphql`,
+    { query, variables },
+    token,
+  );
+  const parsed = GraphQlSchema.safeParse(payload);
+  if (parsed.success && parsed.data.errors !== undefined) {
+    throw new Error(
+      `GitHub GraphQL errors: ${JSON.stringify(parsed.data.errors)}`,
+    );
+  }
+}

@@ -202,6 +202,10 @@ export const QODO_RESOLVED_CHIP = "<code>☑ resolved</code>";
  * copies Qodo re-appends on later reviews. A bare `☑` in the title would fork
  * it, leaving every earlier copy unresolved and still blocking.
  *
+ * Only the current review is touched. Everything from
+ * `<!-- FOLDED_SECTION_START -->` onward is Qodo's archive of previous results,
+ * which the parser excludes and an operator action must not rewrite.
+ *
  * Returns the edited body, or null when no finding matches — callers must not
  * silently no-op an operator's dismissal.
  */
@@ -209,17 +213,18 @@ export function markQodoFindingResolved(
   body: string,
   title: string,
 ): string | null {
-  const summaries = [
-    ...body.matchAll(/<summary>\s*\d+\.[\s\S]*?<\/summary>/giu),
-  ];
+  const foldIndex = body.indexOf(QODO_PREVIOUS_RESULTS_START);
+  const current = foldIndex === -1 ? body : body.slice(0, foldIndex);
+  const archived = foldIndex === -1 ? "" : body.slice(foldIndex);
+  const summaries = [...current.matchAll(/<summary>[\s\S]*?<\/summary>/giu)];
   const candidates = summaries
     .map((match, index) => {
       const block = match[0];
       const summary = block.slice("<summary>".length, -"</summary>".length);
       const bodyStart = match.index + block.length;
-      const nextSummary = summaries[index + 1]?.index ?? body.length;
-      const ruleIndex = body.indexOf("<hr/>", bodyStart);
-      const findingBody = body.slice(
+      const nextSummary = summaries[index + 1]?.index ?? current.length;
+      const ruleIndex = current.indexOf("<hr/>", bodyStart);
+      const findingBody = current.slice(
         bodyStart,
         ruleIndex === -1 || ruleIndex > nextSummary ? nextSummary : ruleIndex,
       );
@@ -230,7 +235,11 @@ export function markQodoFindingResolved(
         identity: findingDescription(findingBody),
       };
     })
-    .filter((candidate) => findingTitle(candidate.summary) === title);
+    .filter(
+      (candidate) =>
+        /^\s*\d+\.\s+\S/u.test(candidate.summary.replaceAll(/<[^>]*>/gu, "")) &&
+        findingTitle(candidate.summary) === title,
+    );
   if (candidates.length === 0) return null;
 
   // Qodo re-appends its whole review, so one finding routinely appears several
@@ -247,14 +256,17 @@ export function markQodoFindingResolved(
         `resolve them from the PR so the right one is chosen deliberately.`,
     );
   }
-  if (candidates.every((candidate) => candidate.block.includes("☑"))) {
+  const candidateIsResolved = (candidate: (typeof candidates)[number]) =>
+    /<s>[\s\S]*?<\/s>/iu.test(candidate.summary) ||
+    candidate.block.includes("☑");
+  if (candidates.every((candidate) => candidateIsResolved(candidate))) {
     return body;
   }
 
   // Rewrite back-to-front so each splice leaves earlier offsets valid.
-  let edited = body;
+  let edited = current;
   for (const candidate of [...candidates].reverse()) {
-    if (candidate.block.includes("☑")) continue;
+    if (candidateIsResolved(candidate)) continue;
     const chipIndex = candidate.block.indexOf("<code>");
     const insertAt =
       chipIndex === -1
@@ -269,7 +281,7 @@ export function markQodoFindingResolved(
       replacement +
       edited.slice(candidate.start + candidate.block.length);
   }
-  return edited;
+  return edited + archived;
 }
 
 /**

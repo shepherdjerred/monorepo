@@ -390,17 +390,17 @@ describe("markQodoFindingResolved", () => {
     expect(twice).toBe(once);
   });
 
-  test("marks every re-appended copy of one finding, not just the first", () => {
+  test("marks every unresolved re-appended copy of one finding", () => {
     // Qodo re-appends its whole review, so a finding routinely appears twice.
-    // The gate dedupes by identity, so leaving the other copy unmarked leaves
-    // the finding blocking — the dismissal would look applied and do nothing.
+    // The gate dedupes by identity, so every unresolved copy needs the chip;
+    // the copy Qodo already struck stays untouched.
     const body = reviewWithQuotedContext(
       ">## Issue Context",
       ">## Issue Context",
     );
     const edited = markQodoFindingResolved(body, "Stale artifact");
     if (edited === null) throw new Error("expected an edit");
-    expect([...edited.matchAll(/☑/gu)]).toHaveLength(2);
+    expect([...edited.matchAll(/☑/gu)]).toHaveLength(1);
     const findings = parseQodoIssueComment({ ...comment, body: edited });
     expect(findings).toHaveLength(1);
     expect(findings[0]?.isResolved).toBe(true);
