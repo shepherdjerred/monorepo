@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  EXPLORE_TITLE_MAX_LENGTH,
   ExploreAnswerSchema,
   ExploreStreamEventSchema,
   type ExploreStreamEvent,
@@ -49,6 +50,24 @@ describe("explore stream mapping", () => {
     // earlier field is complete — the page would sit blank and then paste the
     // whole answer at once, with no error anywhere.
     expect(Object.keys(ExploreAnswerSchema.shape)[0]).toBe("answer");
+  });
+
+  test("an over-long title does not fail the whole answer", () => {
+    // The same schema instructs the model and parses its output, so a `max()`
+    // on `title` turned a too-long title into a parse failure — sending the
+    // turn down the error/salvage path and dropping preview/visualization
+    // alongside an answer that was otherwise fine. The bound belongs at the
+    // display/storage boundary (`titleFromQuestion`), not here.
+    const parsed = ExploreAnswerSchema.parse({
+      answer: "Jinx leads.",
+      title: "t".repeat(EXPLORE_TITLE_MAX_LENGTH * 3),
+      queryText: null,
+      caveats: [],
+      followUps: [],
+    });
+
+    expect(parsed.title).toBe("t".repeat(EXPLORE_TITLE_MAX_LENGTH * 3));
+    expect(parsed.answer).toBe("Jinx leads.");
   });
 
   test("object snapshots stream as monotonic appends", async () => {

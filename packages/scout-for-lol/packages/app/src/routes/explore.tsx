@@ -55,6 +55,7 @@ export function Explore() {
   const {
     status,
     enabled,
+    quota,
     conversations,
     transcript,
     messages,
@@ -220,16 +221,32 @@ export function Explore() {
     [navigate, turn],
   );
 
+  // Answer a question whose turn was interrupted. Attaches to the question
+  // itself rather than to a parent, because there is no answer to fork from —
+  // that is the whole reason it is stranded.
+  const handleRetry = useCallback(
+    (question: ExploreMessage) => {
+      void turn.runTurn({
+        question: null,
+        attach: { kind: "message", messageId: question.id },
+        displayQuestion: null,
+        leafIdAtStart: messages.at(-1)?.id ?? null,
+      });
+    },
+    [messages, turn],
+  );
+
   const transcriptActions = useMemo<ExploreTranscriptActions>(
     () => ({
       onFollowUp: ask,
       onEdit: handleEdit,
       onRegenerate: handleRegenerate,
+      onRetry: handleRetry,
       onSelectVersion: (messageId) => {
         void handleSelectVersion(messageId);
       },
     }),
-    [ask, handleEdit, handleRegenerate, handleSelectVersion],
+    [ask, handleEdit, handleRegenerate, handleRetry, handleSelectVersion],
   );
 
   const { pendingQuestion, pendingAnswer, activity } = visiblePending(
@@ -333,8 +350,16 @@ export function Explore() {
   );
 
   return (
-    <div className="flex gap-6">
-      <aside className="hidden w-60 shrink-0 md:block">{sidebar}</aside>
+    // The page needs its own container: RootLayout provides none, and without
+    // one the transcript ran edge-to-edge at the viewport's full width — the
+    // same conversation the shared page renders at `max-w-3xl`.
+    <div className="mx-auto flex max-w-6xl gap-6 px-4 py-8">
+      {/* Sticky because the document is the scroll container: the sidebar's
+          own `h-full`/`overflow-y-auto` are inert against a page that scrolls
+          as a whole, so the conversation list scrolled away with the content. */}
+      <aside className="sticky top-8 hidden h-[calc(100vh-6rem)] w-60 shrink-0 md:block">
+        {sidebar}
+      </aside>
 
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         <ExploreHeader
@@ -372,13 +397,18 @@ export function Explore() {
           </div>
         )}
 
-        <ExploreTranscript
-          messages={messages}
-          pendingQuestion={pendingQuestion}
-          pendingAnswer={pendingAnswer}
-          activity={activity}
-          actions={transcriptActions}
-        />
+        {/* Capped independently of the page: a chat is read line by line, and
+            the 6xl page width is a ~150-character measure. */}
+        <div className="max-w-3xl">
+          <ExploreTranscript
+            messages={messages}
+            pendingQuestion={pendingQuestion}
+            pendingAnswer={pendingAnswer}
+            activity={activity}
+            turnActive={turn.pendingTurn !== null}
+            actions={transcriptActions}
+          />
+        </div>
 
         {pageError !== null && (
           <p className="rounded-md border border-scout-danger/40 bg-scout-danger/10 px-3 py-2 text-sm">
@@ -392,12 +422,17 @@ export function Explore() {
 
         <div ref={bottomRef} />
 
-        <ExploreComposer
-          active={turn.pendingTurn !== null}
-          restoredDraft={restoredDraft}
-          onAsk={ask}
-          onStop={turn.stop}
-        />
+        {/* Pinned to the bottom of the viewport: scrolling up to re-read an
+            earlier answer used to take the ask box off screen entirely. */}
+        <div className="sticky bottom-0 max-w-3xl bg-background pt-2 pb-4">
+          <ExploreComposer
+            active={turn.pendingTurn !== null}
+            restoredDraft={restoredDraft}
+            onAsk={ask}
+            onStop={turn.stop}
+          />
+          <ExploreQuota quota={quota} />
+        </div>
       </div>
 
       <RenameConversationDialog
@@ -430,6 +465,35 @@ function errorText(error: unknown): string {
 }
 
 /**
+ * How many questions are left, as one number.
+ *
+ * `explore.status` has always returned this and the page has never shown it,
+ * so the only way to discover the limit was to hit it mid-thought. There are
+ * seven windows across two scopes, and listing them is worse than saying
+ * nothing — only the one about to stop you is worth a line, and that is
+ * whichever has the fewest left. Hidden until a window is actually being
+ * consumed, because a full allowance is noise.
+ */
+function ExploreQuota(props: {
+  quota: { window: string; remaining: number; limit: number }[];
+}) {
+  const binding = props.quota
+    .filter((snapshot) => snapshot.remaining < snapshot.limit)
+    .reduce<
+      (typeof props.quota)[number] | null
+    >((tightest, snapshot) => (tightest === null || snapshot.remaining < tightest.remaining ? snapshot : tightest), null);
+  if (binding === null) {
+    return null;
+  }
+  return (
+    <p className="pt-1 text-right text-xs text-muted-foreground">
+      {binding.remaining.toString()} of {binding.limit.toString()} questions
+      left this {binding.window}
+    </p>
+  );
+}
+
+/**
  * Load everything the page reads: availability, the conversation list, and the
  * active transcript with its derived fields.
  *
@@ -452,6 +516,7 @@ function useExploreConversation(conversationId: string | null) {
   return {
     status,
     enabled,
+    quota: status.data?.quota ?? [],
     conversations,
     transcript,
     messages: transcript.data?.messages ?? [],

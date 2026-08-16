@@ -23,6 +23,10 @@ import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
 import { ReportResultTable } from "#src/components/report-result-table.tsx";
+import {
+  SingleRowResult,
+  isUngroupedResult,
+} from "#src/components/explore-result.tsx";
 
 /**
  * Renders one path through an explore conversation.
@@ -42,6 +46,8 @@ export type ExploreTranscriptActions = {
   onEdit?: (message: ExploreMessage, question: string) => void;
   onRegenerate?: (message: ExploreMessage) => void;
   onSelectVersion?: (messageId: string) => void;
+  /** Answer a question that never got one — see {@link InterruptedTurn}. */
+  onRetry?: (question: ExploreMessage) => void;
 };
 
 /** Stable identity so memoized turns don't re-render on the shared page. */
@@ -53,17 +59,33 @@ export function ExploreTranscript(props: {
   pendingAnswer?: string | null;
   pendingQuestion?: string | null;
   activity?: string | null;
+  /** True while a turn is running, so a trailing question is not "interrupted". */
+  turnActive?: boolean;
   actions?: ExploreTranscriptActions;
 }) {
   const actions = props.actions ?? EMPTY_ACTIONS;
+  const stranded = strandedQuestion(props.messages, props.turnActive ?? false);
   return (
-    <div role="log" aria-label="Conversation" className="space-y-6">
+    <div role="log" aria-label="Conversation">
+      {/* Spacing carries the grouping: an answer sits close to the question it
+          belongs to, and the next exchange starts well clear of it. A uniform
+          gap made every message look equally (un)related to its neighbours. */}
       {props.messages.map((message) =>
         message.role === "user" ? (
-          <UserTurn key={message.id} message={message} actions={actions} />
+          <div key={message.id} className="mt-10 first:mt-0">
+            <UserTurn message={message} actions={actions} />
+          </div>
         ) : (
-          <AssistantTurn key={message.id} message={message} actions={actions} />
+          <div key={message.id} className="mt-3">
+            <AssistantTurn message={message} actions={actions} />
+          </div>
         ),
+      )}
+
+      {stranded !== null && (
+        <div className="mt-3">
+          <InterruptedTurn question={stranded} actions={actions} />
+        </div>
       )}
 
       <PendingTurn
@@ -71,6 +93,51 @@ export function ExploreTranscript(props: {
         pendingAnswer={props.pendingAnswer ?? null}
         activity={props.activity ?? null}
       />
+    </div>
+  );
+}
+
+/**
+ * The question a turn never answered, or null when there isn't one.
+ *
+ * A turn abandoned before it streamed any prose salvages nothing — that is
+ * deliberate ("only a turn that said nothing salvages nothing"), so no refetch
+ * will ever fill the gap. Without this the reader is left with their own
+ * question, no answer, no error and no way forward, which reads as the page
+ * being broken rather than as an interruption. Switching conversations
+ * mid-turn is the ordinary way to reach it.
+ */
+function strandedQuestion(
+  messages: ExploreMessage[],
+  turnActive: boolean,
+): ExploreMessage | null {
+  if (turnActive) {
+    return null;
+  }
+  const last = messages.at(-1);
+  return last?.role === "user" ? last : null;
+}
+
+function InterruptedTurn(props: {
+  question: ExploreMessage;
+  actions: ExploreTranscriptActions;
+}) {
+  const retry = props.actions.onRetry;
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-scout-border px-3 py-2 text-sm text-scout-subtle">
+      <span>This question was interrupted before it was answered.</span>
+      {retry !== undefined && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            retry(props.question);
+          }}
+        >
+          Answer it
+        </Button>
+      )}
     </div>
   );
 }
@@ -164,19 +231,26 @@ const UserTurn = memo(function UserTurnView(props: {
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    // `group` + focus-within, not hover alone: the controls must still be
+    // reachable by keyboard. Previously the pencil sat permanently in its own
+    // band of empty space under every question, reading as a stray element.
+    <div className="group flex flex-col items-end gap-1">
       <UserBubble content={message.content} />
       <div className="flex items-center gap-1">
+        {/* Always visible: it is the only signal that other versions of this
+            question exist, so hiding it until hover would hide the feature. */}
         <VersionSwitcher message={message} actions={actions} />
         {actions.onEdit !== undefined && (
-          <IconButton
-            label="Edit this question"
-            onClick={() => {
-              setEditing(true);
-            }}
-          >
-            <Pencil className="size-3.5" />
-          </IconButton>
+          <span className="opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+            <IconButton
+              label="Edit this question"
+              onClick={() => {
+                setEditing(true);
+              }}
+            >
+              <Pencil className="size-3.5" />
+            </IconButton>
+          </span>
         )}
       </div>
     </div>
@@ -204,19 +278,26 @@ const AssistantTurn = memo(function AssistantTurnView(props: {
 
       {chart === null &&
         message.preview !== null &&
-        message.preview.rows.length > 0 && (
-          // Empty previews render nothing at all — the prose already says "no
-          // rows", and the shared table's empty-state box would restate it.
+        message.preview.rows.length > 0 &&
+        // Empty previews render nothing at all — the prose already says "no
+        // rows", and the shared table's empty-state box would restate it.
+        (isUngroupedResult(message.preview) ? (
+          <SingleRowResult preview={message.preview} />
+        ) : (
           <ReportResultTable
             columns={message.preview.columns}
             rows={message.preview.rows}
           />
-        )}
+        ))}
 
       {message.caveats.length > 0 && (
-        <ul className="space-y-1 text-xs text-scout-subtle">
+        // Caveats are what stop a reader quoting a number that does not mean
+        // what they think it means, so they get a marked-out block rather than
+        // the faintest text on screen. Uses the shared design-system tokens
+        // this file was migrated onto, not the retired muted-* ones.
+        <ul className="space-y-1 rounded-md border-l-2 border-scout-border bg-scout-surface py-2 pr-3 pl-3 text-xs">
           {message.caveats.map((caveat) => (
-            <li key={caveat}>• {caveat}</li>
+            <li key={caveat}>{caveat}</li>
           ))}
         </ul>
       )}
@@ -339,7 +420,10 @@ function VersionSwitcher(props: {
   const previous = message.siblingIds[message.versionIndex - 1];
   const next = message.siblingIds[message.versionIndex + 1];
   return (
-    <span className="flex items-center gap-0.5 text-xs text-scout-subtle">
+    // Bordered and in body colour: as faint muted text this was routinely
+    // missed, and a reader who cannot see that an answer has versions has no
+    // way to know the other one exists.
+    <span className="flex items-center gap-0.5 rounded-md border border-scout-border px-1 text-xs">
       <IconButton
         label="Previous version"
         disabled={previous === undefined}
@@ -351,7 +435,9 @@ function VersionSwitcher(props: {
       >
         <ChevronLeft className="size-3.5" />
       </IconButton>
-      {message.versionIndex + 1}/{message.versionCount}
+      <span className="tabular-nums">
+        {message.versionIndex + 1}/{message.versionCount}
+      </span>
       <IconButton
         label="Next version"
         disabled={next === undefined}

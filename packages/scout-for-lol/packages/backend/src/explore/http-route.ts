@@ -28,6 +28,7 @@ import {
   ExploreInvalidTurnError,
   ExploreNotFoundError,
   appendExploreAnswer,
+  applyGeneratedTitle,
   loadExploreTranscript,
   loadSharedExploreTranscript,
   resolveRegenerateTarget,
@@ -183,6 +184,69 @@ export async function handleExploreRoute(
 }
 
 /**
+ * The write end of one SSE response, and the only thing that knows whether it
+ * is still writable.
+ *
+ * Exists because "closed" has two causes and only one of them is ours. The
+ * runtime closes the controller when the client disconnects — a navigate-away,
+ * a closed tab, switching conversations mid-turn — and a flag that only
+ * recorded our own close left the teardown enqueueing into a dead controller.
+ * `enqueue` throws synchronously there, and since the run is a voided async
+ * IIFE that surfaced as an unhandled promise rejection rather than as anything
+ * a caller could handle.
+ *
+ * So disconnection is recorded through {@link disconnected} and every write
+ * goes through {@link emit}, which is a no-op once either side has closed.
+ */
+export function createSseWriter(
+  controller: Pick<
+    ReadableStreamDefaultController<Uint8Array>,
+    "enqueue" | "close"
+  >,
+): {
+  emit: (event: ExploreStreamEvent) => void;
+  disconnected: () => void;
+  finish: (event: ExploreStreamEvent) => void;
+} {
+  let closed = false;
+  // Read through a function boundary: control-flow narrowing would otherwise
+  // pin `closed` to its initializer, because every assignment happens inside a
+  // closure TypeScript cannot see run.
+  const isClosed = (): boolean => closed;
+
+  return {
+    emit: (event: ExploreStreamEvent): void => {
+      if (isClosed()) {
+        return;
+      }
+      const parsed = ExploreStreamEventSchema.parse(event);
+      controller.enqueue(
+        encoder.encode(
+          `event: ${parsed.type}\ndata: ${JSON.stringify(parsed)}\n\n`,
+        ),
+      );
+    },
+    disconnected: (): void => {
+      closed = true;
+    },
+    /** Send a terminal event and close, unless the client already left. */
+    finish: (event: ExploreStreamEvent): void => {
+      if (isClosed()) {
+        return;
+      }
+      const parsed = ExploreStreamEventSchema.parse(event);
+      controller.enqueue(
+        encoder.encode(
+          `event: ${parsed.type}\ndata: ${JSON.stringify(parsed)}\n\n`,
+        ),
+      );
+      closed = true;
+      controller.close();
+    },
+  };
+}
+
+/**
  * Run one turn onto an SSE controller.
  *
  * Extracted from the route handler purely so neither function is a wall of
@@ -206,26 +270,19 @@ function runExploreTurnStream(input: {
   const timeout = setTimeout(() => {
     abortController.abort("Explore turn timed out.");
   }, EXPLORE_TIMEOUT_MS);
+  const writer = createSseWriter(controller);
   const abortFromRequest = () => {
+    // Order matters: stop writing before unwinding the run, so nothing the
+    // teardown emits can reach the controller the client just took away.
+    writer.disconnected();
     abortController.abort("Client disconnected.");
   };
   request.signal.addEventListener("abort", abortFromRequest);
-  let closed = false;
   let runStatus = "error";
   const startedAt = Date.now();
   scoutExploreActiveRuns.inc();
 
-  const emit = (event: ExploreStreamEvent): void => {
-    if (closed) {
-      return;
-    }
-    const parsed = ExploreStreamEventSchema.parse(event);
-    controller.enqueue(
-      encoder.encode(
-        `event: ${parsed.type}\ndata: ${JSON.stringify(parsed)}\n\n`,
-      ),
-    );
-  };
+  const emit = writer.emit;
 
   emit({
     type: "started",
@@ -271,12 +328,24 @@ function runExploreTurnStream(input: {
         visualization: result.visualization,
         trace,
       });
+      // Only ever changes anything on a conversation still carrying its
+      // question-derived placeholder, so follow-up turns and manual renames
+      // both leave it alone. `started.title` is the conversation's *current*
+      // title, not necessarily that placeholder, so the comparison is made
+      // inside `applyGeneratedTitle` against the opening question instead.
+      const title =
+        result.answer.title === null
+          ? started.title
+          : await applyGeneratedTitle(prisma, {
+              conversationId: started.conversationId,
+              title: result.answer.title,
+            });
       ticket.finish();
       runStatus = "success";
       emit({
         type: "final",
         message,
-        title: started.title,
+        title,
         quota: getExploreQuotaStatus(identity, Date.now()).quota,
       });
     } catch (error) {
@@ -343,9 +412,11 @@ function runExploreTurnStream(input: {
       scoutExploreTurnDurationSeconds
         .labels(runStatus)
         .observe((Date.now() - startedAt) / 1000);
-      emit({ type: "done" });
-      closed = true;
-      controller.close();
+      // A no-op if the client already left: there is nobody to send `done`
+      // to, and closing a closed controller throws the same way enqueueing
+      // does. The salvage write above is what matters for that case, and it
+      // has already happened.
+      writer.finish({ type: "done" });
     }
   })();
 }
@@ -456,6 +527,9 @@ export async function persistPartialAnswer(
     parentMessageId: input.parentMessageId,
     answer: {
       answer: clampAnswer(input.text),
+      // A salvaged fragment is a poor summary of the conversation, and the
+      // placeholder is already a faithful one — leave the title alone.
+      title: null,
       queryText: null,
       caveats: [
         input.aborted ? EXPLORE_STOPPED_CAVEAT : EXPLORE_INTERRUPTED_CAVEAT,

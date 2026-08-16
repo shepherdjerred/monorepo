@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import * as Sentry from "@sentry/react";
 import { useQueryClient } from "@tanstack/react-query";
 import type {
   ExploreAttachPoint,
@@ -30,6 +31,13 @@ function readTurn(ref: {
 function readSeq(ref: { current: number }): number {
   return ref.current;
 }
+
+/**
+ * Re-reads of a conversation abandoned mid-turn, spaced to outlast the race
+ * between the client's abort and the server's salvage write. Mirrors the
+ * delays `salvageRefreshDelays` uses for a stop.
+ */
+const ABANDONED_TURN_REFRESH_DELAYS = [0, 600, 1500];
 
 /**
  * Owns one in-flight explore turn: the streaming request, the pending-turn
@@ -81,6 +89,21 @@ export function useExploreTurn(params: {
       queryKey: trpc.explore.list.queryKey(),
     });
   }, [queryClient, trpc.explore.list]);
+
+  /**
+   * Re-read the rate-limit allowance, which only `explore.status` carries.
+   *
+   * Every turn that reached the server spends from it — including one that was
+   * stopped or that failed mid-stream, neither of which emits `final` — so this
+   * is driven by the turn ending rather than by any single event. Without it
+   * the counter on screen keeps showing the allowance as it was when the page
+   * loaded, and claims capacity right up to a server-side rejection.
+   */
+  const refreshQuota = useCallback(async (): Promise<void> => {
+    await queryClient.invalidateQueries({
+      queryKey: trpc.explore.status.queryKey(),
+    });
+  }, [queryClient, trpc.explore.status]);
 
   const refreshConversation = useCallback(
     async (conversationId: string): Promise<void> => {
@@ -220,9 +243,15 @@ export function useExploreTurn(params: {
           }
           applyTurn(null);
         }
+        // Outside the ownership guard on purpose: quota is per-user, not
+        // per-turn. `abortForNavigation` advances `seqRef`, so a turn that
+        // already spent quota and was then abandoned would skip this and leave
+        // the header showing capacity the account no longer has. The guard
+        // above decides who may tear down the refs, not whether quota moved.
+        await refreshQuota();
       }
     },
-    [applyTurn, awaitSalvage, params, refreshConversation],
+    [applyTurn, awaitSalvage, params, refreshConversation, refreshQuota],
   );
 
   const stop = useCallback((): void => {
@@ -246,9 +275,27 @@ export function useExploreTurn(params: {
     applyTurn(null);
     const conversationId = turn.conversationId;
     if (conversationId !== null) {
-      setTimeout(() => {
-        void refreshConversation(conversationId);
-      }, 1000);
+      // The same bounded poll a stop uses, for the same reason: the abort and
+      // the server's salvage write race, and one fixed delay either fires
+      // before the write lands or waits longer than it needed to. Leaving the
+      // screen changes where the answer should be *rendered*, not whether it
+      // should be *fetched* — a conversation the reader may well come back to
+      // must not keep a question with nothing under it.
+      void (async () => {
+        try {
+          for (const delay of ABANDONED_TURN_REFRESH_DELAYS) {
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            await refreshConversation(conversationId);
+          }
+        } catch (refreshError) {
+          // Nothing is on screen to show this in — the reader already left
+          // the conversation — but a catch-up that dies still leaves a
+          // question with nothing under it, which is the state this loop
+          // exists to prevent. Report it rather than letting it surface as an
+          // unhandled rejection nobody attributes to Explore.
+          Sentry.captureException(refreshError);
+        }
+      })();
     }
   }, [applyTurn, refreshConversation]);
 

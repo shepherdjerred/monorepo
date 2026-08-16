@@ -160,6 +160,50 @@ export function salvageRefreshDelays(
   };
 }
 
+/**
+ * Has this turn's question reached the transcript, judged by position rather
+ * than by id?
+ *
+ * The id is the obvious test and it is not sufficient: the server persists the
+ * question row *before* it opens the stream, while `questionMessageId` only
+ * arrives with `started`. Any refetch landing in that window returns a
+ * transcript that already contains the question while the pending turn still
+ * believes it has not persisted — and the reader sees their own message twice.
+ *
+ * So this asks the positional question instead: is there a user message saying
+ * what we optimistically rendered, positioned *after* the leaf that was on
+ * screen when the turn began? Anything at or before that leaf was already
+ * there and is somebody else's message.
+ *
+ * A `leafIdAtStart` missing from the path means an edit forked away from it,
+ * so the whole path belongs to this turn and the scan covers all of it. A
+ * regenerate carries no question and is never matched here.
+ */
+function questionRowArrived(
+  turn: ExplorePendingTurn,
+  messages: ExploreMessage[],
+): boolean {
+  const question = turn.question;
+  if (question === null) {
+    return false;
+  }
+  const startIndex =
+    turn.leafIdAtStart === null
+      ? -1
+      : messages.findIndex((message) => message.id === turn.leafIdAtStart);
+  // The server trims the question before persisting it, while the composer
+  // hands us the raw text, so a question typed with surrounding whitespace
+  // would never match its own persisted row — and the pending copy would keep
+  // rendering beside it, which is the double-question this check prevents.
+  const trimmed = question.trim();
+  return messages.some(
+    (message, index) =>
+      index > startIndex &&
+      message.role === "user" &&
+      message.content.trim() === trimmed,
+  );
+}
+
 export function turnHasLanded(
   turn: ExplorePendingTurn,
   messages: ExploreMessage[],
@@ -210,8 +254,9 @@ export function visiblePending(
     return { pendingQuestion: null, pendingAnswer: null, activity: null };
   }
   const questionPersisted =
-    turn.questionMessageId !== null &&
-    messages.some((message) => message.id === turn.questionMessageId);
+    (turn.questionMessageId !== null &&
+      messages.some((message) => message.id === turn.questionMessageId)) ||
+    questionRowArrived(turn, messages);
   const landed = turnHasLanded(turn, messages);
   return {
     pendingQuestion: questionPersisted ? null : turn.question,

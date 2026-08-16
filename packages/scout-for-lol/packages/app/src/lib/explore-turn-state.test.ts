@@ -21,12 +21,13 @@ function message(input: {
   id: string;
   role: "user" | "assistant";
   parentId?: string | null;
+  content?: string;
 }): ExploreMessage {
   return ExploreMessageSchema.parse({
     id: input.id,
     role: input.role,
     parentId: input.parentId ?? null,
-    content: input.role === "user" ? "Who wins?" : "Jinx.",
+    content: input.content ?? (input.role === "user" ? "Who wins?" : "Jinx."),
     createdAt: "2026-08-14T12:00:00.000Z",
   });
 }
@@ -288,5 +289,94 @@ describe("pendingTurnLeftTheScreen", () => {
         routeConversationId: null,
       }),
     ).toBe(false);
+  });
+});
+
+function beforeStarted(question: string | null = "Who wins?") {
+  return createPendingTurn({
+    conversationId: CONVERSATION,
+    question,
+    leafIdAtStart: null,
+  });
+}
+
+/**
+ * The window between the server persisting the question and `started`
+ * reaching the client. A refetch landing here used to render the question
+ * twice — once from the transcript, once from the pending turn.
+ */
+describe("visiblePending before `started` arrives", () => {
+  test("hides the optimistic question once the transcript carries it", () => {
+    const turn = beforeStarted();
+    const persisted = [message({ id: QUESTION_ID, role: "user" })];
+
+    expect(turn.questionMessageId).toBeNull();
+    expect(visiblePending(turn, CONVERSATION, persisted).pendingQuestion).toBe(
+      null,
+    );
+  });
+
+  test("matches its persisted row even when the question was typed with padding", () => {
+    // The server trims before persisting; the composer hands the hook raw
+    // text. A strict comparison therefore misses, and the optimistic question
+    // keeps rendering beside the row that already arrived — the exact double
+    // render this check exists to stop.
+    const turn = beforeStarted("  Who wins?  ");
+    const persisted = [
+      message({ id: QUESTION_ID, role: "user", content: "Who wins?" }),
+    ];
+
+    expect(visiblePending(turn, CONVERSATION, persisted).pendingQuestion).toBe(
+      null,
+    );
+  });
+
+  test("still shows it while the transcript has not caught up", () => {
+    expect(
+      visiblePending(beforeStarted(), CONVERSATION, []).pendingQuestion,
+    ).toBe("Who wins?");
+  });
+
+  test("does not mistake the leaf that was already on screen for this turn", () => {
+    const turn = createPendingTurn({
+      conversationId: CONVERSATION,
+      question: "Who wins?",
+      leafIdAtStart: QUESTION_ID,
+    });
+    const unchanged = [message({ id: QUESTION_ID, role: "user" })];
+
+    expect(visiblePending(turn, CONVERSATION, unchanged).pendingQuestion).toBe(
+      "Who wins?",
+    );
+  });
+
+  test("does not match a different question with the same shape", () => {
+    const turn = beforeStarted("Who loses?");
+    const persisted = [message({ id: QUESTION_ID, role: "user" })];
+
+    expect(visiblePending(turn, CONVERSATION, persisted).pendingQuestion).toBe(
+      "Who loses?",
+    );
+  });
+
+  test("a regenerate has no question to duplicate", () => {
+    const turn = beforeStarted(null);
+    const persisted = [message({ id: QUESTION_ID, role: "user" })];
+
+    expect(visiblePending(turn, CONVERSATION, persisted).pendingQuestion).toBe(
+      null,
+    );
+  });
+
+  test("an answer already under the question is not a question row", () => {
+    const turn = beforeStarted();
+    const persisted = [
+      message({ id: QUESTION_ID, role: "user" }),
+      message({ id: ANSWER_ID, role: "assistant", parentId: QUESTION_ID }),
+    ];
+
+    expect(visiblePending(turn, CONVERSATION, persisted).pendingQuestion).toBe(
+      null,
+    );
   });
 });

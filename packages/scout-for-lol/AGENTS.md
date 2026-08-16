@@ -107,11 +107,53 @@ plaintext credentials are written to disk. You must be `op signin`'d.
 - While running, the deployed beta bot is disconnected from Discord (one
   gateway connection per token). Stop with Ctrl+C and beta reconnects within
   seconds.
+- Explore and every ScoutQL report read the **report lake**, not the database.
+  A checkout with no lake answers every question with zero rows and looks
+  broken rather than empty — see the shared seed below.
 - The BETA Discord app (`1311755320745394317`) must list
   `http://localhost:5180/api/auth/discord/callback` in its OAuth redirect
   URIs, otherwise the token exchange returns 400.
 - The bot only sees guilds it has been invited to. To populate the guild
   picker, make sure your test guild has the BETA bot in it.
+
+### Shared report-lake seed (multiple checkouts / parallel agents)
+
+`REPORT_LAKE_DIR` defaults to `./report-lake` **relative to the backend's
+cwd**, so every worktree and every Conductor workspace gets its own empty lake
+and would otherwise pay a full S3 walk each. A machine-wide seed at
+`~/.local/share/scout-for-lol/dev-seed/report-lake` (honours `XDG_DATA_HOME`)
+is built once and copied into each checkout.
+
+```bash
+bun run --filter='./packages/scout-for-lol' dev:seed                    # rebuild the seed from S3
+bun run --filter='./packages/scout-for-lol' dev:seed -- --from-checkout # publish this checkout's lake as the seed
+bun run --filter='./packages/scout-for-lol' dev:seed -- --status        # what the seed and this checkout hold
+```
+
+`dev:web` calls `adoptSeedIfUnseeded` before starting the backend: a checkout
+with no published build gets the seed copied in, one that already has a build
+is left alone, and a missing seed prints how to build one and boots anyway.
+
+- **`dev:web` resolves `REPORT_LAKE_DIR` against the backend's cwd, then passes
+  the absolute result to the backend.** `dev:web` itself runs from the Scout
+  package root, so a relative value would otherwise name one directory to the
+  seeding copy and a different one to the backend that reads it — a lake that
+  reports as seeded and still answers with no rows. It matters more than a
+  wasted copy: the copy removes its destination before renaming the staged tree
+  in, so a caller-relative path deletes a directory nobody chose.
+- **The seed is a copy source, not a shared working directory.** A running
+  backend folds staged rows into a new build every 15 minutes and GCs old
+  builds, so several backends pointed at one directory would publish and
+  collect over each other. Do not "save space" by pointing `REPORT_LAKE_DIR`
+  at the seed.
+- **`CURRENT` naming an existing build directory is the seeded test**, not the
+  directory existing. Backend startup creates the four staging subdirectories,
+  so an unbuilt lake is indistinguishable from a built one by `ls` alone —
+  which is exactly how an empty lake gets mistaken for a broken query engine.
+- Copies land in `<lake>.seeding` and are renamed into place, so an interrupted
+  copy never leaves a partial tree behind a `CURRENT` that claims completeness.
+- `--from-checkout` exists because the rebuild is the expensive part: if any
+  checkout already has a good lake, publish that rather than re-walking S3.
 
 ### Local UI screenshots (no manual OAuth click-through)
 
@@ -144,6 +186,47 @@ wraps this into one call:
 ```bash
 toolkit screenshot scout-app /app/ --discord-id 160509172704739328
 ```
+
+#### `DEV_USER_GUILDS` — dev-only Discord membership (needed for `/app/explore`)
+
+A dev-login session carries **no Discord OAuth token**, so anything that
+resolves the caller's servers cannot answer for it: `fetchUserGuilds` calls
+`getFreshUserAccessToken(user)` and fails as `token_refresh_failed` →
+`UNAUTHORIZED`. That is why dev-login alone gets you the guild picker's empty
+state and, on `/app/explore`, the "Explore couldn't load" panel rather than the
+page — `explore.status` converts only `FORBIDDEN` into `enabled: false`, so an
+auth failure rethrows.
+
+`DEV_USER_GUILDS` is a comma-separated list of Discord server ids that stands in
+for Discord's answer, as owner + `ADMINISTRATOR` (a member-only stand-in would
+block every management screen it exists to reach):
+
+```bash
+DEV_USER_GUILDS=1337623164146155593 \
+EXPLORE_GUILD_ALLOWLIST=1337623164146155593 \
+  bun run --filter='./packages/scout-for-lol' dev:web
+```
+
+The two are separate on purpose and both are needed: `EXPLORE_GUILD_ALLOWLIST`
+is the real product gate (which servers may use Explore), `DEV_USER_GUILDS` is
+the fake answer to "which servers is this user in". Setting only the allowlist
+denies you; setting only the membership leaves the allowlist empty, which
+denies everyone.
+
+- **Honoured only when `environment === "dev"` AND `enableDevLogin`**
+  (`devGuildOverride` in `src/lib/discord-rest.ts`), the same pair that binds
+  the server to loopback. All three conditions are required and each fails
+  closed on its own: `ENVIRONMENT` defaults to `"dev"` when unset, so gating on
+  environment alone would fail _open_ on a deploy that forgot to set it;
+  `ENABLE_DEV_LOGIN` defaults off; and an empty list means "no override" rather
+  than "no guilds", so an omitted config changes nothing.
+- **It replaces the membership lookup, not the gate.** The session cookie, CSRF,
+  and `EXPLORE_GUILD_ALLOWLIST` all still apply — this only answers the question
+  a tokenless dev session cannot ask Discord.
+- The backend logs a one-time warning when it takes effect, so a faked
+  membership is never silent in the logs.
+- The gate conditions are unit-tested in `src/lib/discord-rest.test.ts`,
+  including each refusal — an accept-only test would not catch the fail-open.
 
 This does not, by itself, reproduce every possible backend-driven state —
 see the `screenshot` skill's Limitations section (no network-response
@@ -748,9 +831,13 @@ Canada. There is no monetary component and nothing transfers to real goods.
 
 ### Local testing without Discord login or a real Discord backing
 
-There is **no runtime auth bypass** (no `SKIP_AUTH`/`DEV_AUTH` flag), and the web
-mutations are gated by a signed session cookie + CSRF + `assertGuildAdmin` (which
-calls Discord). To exercise the web/tRPC surface offline, use one of these — both
+There is **no blanket auth bypass** (no `SKIP_AUTH`/`DEV_AUTH` flag): the web
+mutations are gated by a signed session cookie + CSRF + `assertGuildAdmin`
+(which calls Discord). The one narrow, dev-only exception is `DEV_USER_GUILDS`,
+documented under **Web UI** above — it substitutes for the Discord _membership
+lookup_ only, and never for the session, CSRF, or the allowlist itself.
+
+To exercise the web/tRPC surface offline, use one of these — both
 run fully in-process against an isolated SQLite copy of `template.db`, no OAuth,
 no Discord API:
 

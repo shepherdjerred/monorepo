@@ -1,4 +1,6 @@
 import { $ } from "bun";
+import path from "node:path";
+import { adoptSeedIfUnseeded, resolveBackendLakeDir } from "./dev-lake-seed.ts";
 import { unresolvedSecrets } from "./migration-core.ts";
 
 if (import.meta.main) {
@@ -9,14 +11,29 @@ if (import.meta.main) {
       `${missing.join(", ")} not resolved. Run with op run --env-file=${root}/dev-web.env.tpl -- bun ${import.meta.path}`,
     );
   }
+  const backendCwd = path.join(root, "packages", "backend");
   console.log(
     `Applying Prisma migrations against ${Bun.env["DATABASE_URL"] ?? ""}`,
   );
-  await $`bunx prisma migrate deploy`.cwd(`${root}/packages/backend`);
+  await $`bunx prisma migrate deploy`.cwd(backendCwd);
 
-  const environment = { ...Bun.env, ENABLE_DEV_LOGIN: "true" };
+  // Explore and every ScoutQL report read the lake, not the database, so a
+  // checkout without one answers every question with no rows. Copy the shared
+  // seed in before the backend starts and begins folding into it.
+  //
+  // Resolved against the backend's cwd because that is how the backend itself
+  // reads `REPORT_LAKE_DIR`, then handed back to it absolute so the seeded
+  // directory and the queried one cannot drift apart.
+  const lakeDir = resolveBackendLakeDir(backendCwd, Bun.env["REPORT_LAKE_DIR"]);
+  console.log(await adoptSeedIfUnseeded(lakeDir));
+
+  const environment = {
+    ...Bun.env,
+    ENABLE_DEV_LOGIN: "true",
+    REPORT_LAKE_DIR: lakeDir,
+  };
   const backend = Bun.spawn(["bun", "--watch", "src/index.ts"], {
-    cwd: `${root}/packages/backend`,
+    cwd: backendCwd,
     env: environment,
     stdin: "inherit",
     stdout: "inherit",
