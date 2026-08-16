@@ -103,21 +103,21 @@ export function createMinecraftSjerredApp(chart: Chart) {
       serviceType: "ClusterIP",
       pluginUrls: [
         DISCORDSRV_PLUGIN_URL,
-        "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.13/bluemap-5.13-paper.jar",
-        "https://cdn.modrinth.com/data/fALzjamp/versions/P3y2MXnd/Chunky-Bukkit-1.4.40.jar",
+        "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.23/bluemap-5.23-paper.jar",
+        "https://cdn.modrinth.com/data/fALzjamp/versions/MdY6JATr/Chunky-Bukkit-1.5.3.jar",
         // EssentialsX - core commands and teleportation
         "https://cdn.modrinth.com/data/hXiIvTyT/versions/SKQwLLoQ/EssentialsX-2.21.0.jar",
         "https://cdn.modrinth.com/data/sYpvDxGJ/versions/mUsbLYCO/EssentialsXSpawn-2.21.0.jar",
         // Core plugins (all servers)
-        "https://cdn.modrinth.com/data/Vebnzrzj/versions/OrIs0S6b/LuckPerms-Bukkit-5.5.17.jar",
+        "https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar",
         "https://cdn.modrinth.com/data/Lu3KuzdV/versions/HD2IvrxS/CoreProtect-CE-23.1.jar",
-        "https://cdn.modrinth.com/data/Kt3eUOUy/versions/Ookvu78B/Sleeper-1.10.4.jar",
+        "https://cdn.modrinth.com/data/Kt3eUOUy/versions/hvoPVYQT/Sleeper-1.10.8.jar",
         // Harder mobs - scale health/damage based on distance from spawn
-        "https://cdn.modrinth.com/data/eX8JZ3Zr/versions/1zP2p3m2/LevelledMobs-4.5.1%20b143.jar",
+        "https://cdn.modrinth.com/data/eX8JZ3Zr/versions/dSBu3PRW/LevelledMobs-4.5.3.2%20b159.jar",
         // Blood moons - mobs get armor, speed, bigger detection range
         "https://cdn.modrinth.com/data/uA289E2d/versions/F4QSC1D9/Lunamatic-2.0.8-all.jar",
         // Death chests (QoL to offset harder mobs)
-        "https://cdn.modrinth.com/data/vCFaodCy/versions/S0aPOt1V/GravesX-4.9.10.10.jar",
+        "https://cdn.modrinth.com/data/vCFaodCy/versions/JpbCUK5u/GravesX-2026.4.9.1.jar",
       ],
       extraPorts: [
         {

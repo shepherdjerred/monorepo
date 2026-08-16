@@ -107,11 +107,11 @@ export function createMinecraftShuxinApp(chart: Chart) {
       ],
       pluginUrls: [
         "https://github.com/MilkBowl/Vault/releases/download/1.7.3/Vault.jar",
-        "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.13/bluemap-5.13-paper.jar",
-        "https://cdn.modrinth.com/data/fALzjamp/versions/P3y2MXnd/Chunky-Bukkit-1.4.40.jar",
+        "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.23/bluemap-5.23-paper.jar",
+        "https://cdn.modrinth.com/data/fALzjamp/versions/MdY6JATr/Chunky-Bukkit-1.5.3.jar",
         "https://github.com/EssentialsX/Essentials/releases/download/2.21.2/EssentialsX-2.21.2.jar",
         "https://github.com/EssentialsX/Essentials/releases/download/2.21.2/EssentialsXSpawn-2.21.2.jar",
-        "https://cdn.modrinth.com/data/lKEzGugV/versions/vkuwyUC6/PlaceholderAPI-2.11.6.jar",
+        "https://cdn.modrinth.com/data/lKEzGugV/versions/pIvQcXW8/PlaceholderAPI-2.12.3.jar",
         // GeyserMC - allows Bedrock Edition (Switch, mobile, etc.) to connect
         "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot",
         // Floodgate - allows Bedrock players to join with Xbox accounts
@@ -123,7 +123,7 @@ export function createMinecraftShuxinApp(chart: Chart) {
         // ProtocolLib - packet manipulation library (dependency for some plugins)
         "https://github.com/dmulloy2/ProtocolLib/releases/download/5.4.0/ProtocolLib.jar",
         // DecentHolograms - hologram display plugin
-        "https://github.com/DecentSoftware-eu/DecentHolograms/releases/download/2.9.9/DecentHolograms-2.9.9.jar",
+        "https://github.com/DecentSoftware-eu/DecentHolograms/releases/download/2.10.1/DecentHolograms-2.10.1.jar",
         // ChestSort API (Spigot) - intentionally commented out:
         // Spigot download endpoint is Cloudflare-protected and returns HTTP 403 in automation.
         // "https://www.spigotmc.org/resources/chestsort-api.59773/download",
@@ -133,17 +133,17 @@ export function createMinecraftShuxinApp(chart: Chart) {
         // mcMMO - RPG skill levelling system (Jenkins CI, Spigot is Cloudflare-protected)
         "https://popicraft.net/jenkins/job/mcMMO/lastSuccessfulBuild/artifact/target/mcMMO.jar",
         // Core plugins (all servers)
-        "https://cdn.modrinth.com/data/Vebnzrzj/versions/OrIs0S6b/LuckPerms-Bukkit-5.5.17.jar",
+        "https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar",
         "https://cdn.modrinth.com/data/Lu3KuzdV/versions/HD2IvrxS/CoreProtect-CE-23.1.jar",
-        "https://cdn.modrinth.com/data/Kt3eUOUy/versions/Ookvu78B/Sleeper-1.10.4.jar",
+        "https://cdn.modrinth.com/data/Kt3eUOUy/versions/hvoPVYQT/Sleeper-1.10.8.jar",
         // Easier mobs - challenge-bronze preset reduces mob health/damage
-        "https://cdn.modrinth.com/data/eX8JZ3Zr/versions/1zP2p3m2/LevelledMobs-4.5.1%20b143.jar",
+        "https://cdn.modrinth.com/data/eX8JZ3Zr/versions/dSBu3PRW/LevelledMobs-4.5.3.2%20b159.jar",
         // Death chests - items saved at death location instead of scattering
-        "https://cdn.modrinth.com/data/vCFaodCy/versions/S0aPOt1V/GravesX-4.9.10.10.jar",
+        "https://cdn.modrinth.com/data/vCFaodCy/versions/JpbCUK5u/GravesX-2026.4.9.1.jar",
         // GriefPrevention - prevents creeper block damage, crop trampling, and provides claims system
         "https://cdn.modrinth.com/data/O4o4mKaq/versions/4RqY8Kfl/GriefPrevention.jar",
         // WanderingTrades - custom trades for Wandering Traders
-        "https://cdn.modrinth.com/data/ZfddU72x/versions/hyDtQvok/WanderingTrades-1.9.0.jar",
+        "https://cdn.modrinth.com/data/ZfddU72x/versions/hFXagHpi/WanderingTrades-1.9.5.jar",
       ],
       rcon: {
         enabled: true,
