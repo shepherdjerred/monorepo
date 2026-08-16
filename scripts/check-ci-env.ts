@@ -114,6 +114,24 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
 }[] = [
   {
     step: "pr-dryrun",
+    script: "scripts/deploy-site.ts",
+    names: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
+    reason:
+      "The step runs deploy-site.ts with --dry-run, and both requireEnv calls " +
+      "sit behind `if (!dryRun && !haveCreds)`. The live `sites` step exports " +
+      "both names from the SEAWEEDFS_* secret keys and is checked normally.",
+  },
+  {
+    step: "pr-dryrun",
+    script: "scripts/scout-site-release.ts",
+    names: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
+    reason:
+      "Same shape via scripts/lib/scout-site-storage.ts's requireCreds(dryRun): " +
+      "every subcommand this step runs passes --dry-run. The live " +
+      "scout-beta-release step exports both names and is checked normally.",
+  },
+  {
+    step: "pr-dryrun",
     script: "packages/homelab/scripts/argocd.ts",
     names: ["ARGOCD_TOKEN"],
     reason:
@@ -178,18 +196,65 @@ export function ciSecretItemId(declarationSource: string): string {
  */
 export function assignedEnvNames(command: string): Set<string> {
   const names = new Set<string>();
-  const assignment = /(?<![\w$])([A-Z_][A-Z0-9_]*)=/gu;
-  for (const line of command.split("\n")) {
-    const trimmed = line.trim();
-    // An `export` line may assign several names; a bare line may prefix a
-    // command with assignments. Both are just NAME= tokens on the line.
-    if (!/(?:^|\s|;)(?:export\s|[A-Z_][A-Z0-9_]*=)/u.test(trimmed)) continue;
-    for (const match of trimmed.matchAll(assignment)) {
-      const name = match[1];
-      if (name !== undefined) names.add(name);
-    }
+  for (const scope of commandScopes(command)) {
+    for (const name of scope.assigned) names.add(name);
   }
   return names;
+}
+
+export type CommandScope = {
+  /** Names assigned at or above this scope, so visible to its invocations. */
+  assigned: Set<string>;
+  /** Script paths invoked while those assignments are in effect. */
+  scripts: string[];
+};
+
+const ASSIGNMENT = /(?<![\w$])([A-Z_][A-Z0-9_]*)=/gu;
+
+/**
+ * Split a step's command into subshell scopes.
+ *
+ * `pr-dryrun` exports the AWS credentials inside `( … )` around its Tofu loop
+ * and then runs other scripts outside it. Treating the command as one flat
+ * scope reports those names as provided to every script in the step — a false
+ * negative in exactly the direction this check exists to prevent, since it
+ * would let a genuinely missing credential pass.
+ *
+ * Only `( … )` is modelled. `{ …; }` shares the parent's environment, so it
+ * needs no scope of its own, and the pipeline uses no other construct that
+ * scopes exports.
+ */
+export function commandScopes(command: string): CommandScope[] {
+  const scopes: CommandScope[] = [];
+  const stack: CommandScope[] = [{ assigned: new Set(), scripts: [] }];
+  scopes.push(stack[0]!);
+  for (const line of command.split("\n")) {
+    const trimmed = line.trim();
+    const opened = (trimmed.match(/\(/gu) ?? []).length;
+    const closed = (trimmed.match(/\)/gu) ?? []).length;
+    // A line that opens a subshell starts a scope inheriting what is in force.
+    for (let index = 0; index < opened; index += 1) {
+      const parent = stack[stack.length - 1]!;
+      const child: CommandScope = {
+        assigned: new Set(parent.assigned),
+        scripts: [],
+      };
+      stack.push(child);
+      scopes.push(child);
+    }
+    const current = stack[stack.length - 1]!;
+    if (/(?:^|\s|;)(?:export\s|[A-Z_][A-Z0-9_]*=)/u.test(trimmed)) {
+      for (const match of trimmed.matchAll(ASSIGNMENT)) {
+        const name = match[1];
+        if (name !== undefined) current.assigned.add(name);
+      }
+    }
+    current.scripts.push(...scriptPathsInCommand(trimmed));
+    for (let index = 0; index < closed && stack.length > 1; index += 1) {
+      stack.pop();
+    }
+  }
+  return scopes;
 }
 
 /** Repo-relative `.ts`/`.sh` script paths written literally in a command. */
@@ -291,23 +356,28 @@ export function collectSteps(
           ? step.command.join("\n")
           : step.command;
     if (command.trim() === "") continue;
-    const providedNames = new Set<string>([
+    const stepNames = new Set<string>([
       ...globalEnvNames,
       // Same rule as container env: a step-level key set to an empty string
       // satisfies nothing, because requireEnv rejects "" as missing.
       ...Object.entries(step.env ?? {})
         .filter(([, value]) => value !== "")
         .map(([key]) => key),
-      ...assignedEnvNames(command),
     ]);
     const secrets = new Set<string>();
-    collectContainerEnv(step.plugins, providedNames, secrets);
-    steps.push({
-      key: step.key ?? step.label ?? `step[${String(index)}]`,
-      providedNames,
-      usesCiSecret: secrets.has(CI_SECRET_NAME),
-      scripts: scriptPathsInCommand(command),
-    });
+    collectContainerEnv(step.plugins, stepNames, secrets);
+    const key = step.key ?? step.label ?? `step[${String(index)}]`;
+    // One entry per subshell scope: a name exported inside `( … )` reaches the
+    // scripts in that block and no others.
+    for (const scope of commandScopes(command)) {
+      if (scope.scripts.length === 0) continue;
+      steps.push({
+        key,
+        providedNames: new Set([...stepNames, ...scope.assigned]),
+        usesCiSecret: secrets.has(CI_SECRET_NAME),
+        scripts: [...new Set(scope.scripts)].toSorted(),
+      });
+    }
   }
   return steps;
 }

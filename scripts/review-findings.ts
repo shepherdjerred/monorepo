@@ -298,13 +298,19 @@ async function dismissCommand(
       `no finding titled "${finding}" in the review comment. Run \`list\` to see the exact titles.`,
     );
   }
+  // Record the reason BEFORE clearing the gate. The dangerous half-completed
+  // state is "finding dismissed, no record of why" — a transient failure on
+  // the second write would otherwise leave exactly that. This ordering can
+  // only leave the opposite: a recorded intent whose edit failed, which the
+  // thrown error reports and a re-run makes good, since both writes are
+  // idempotent.
+  await recordDismissal(repo, prNumber, token, { finding, reason });
   await githubJson(
     "PATCH",
     `${GITHUB_API}/repos/${repo}/issues/comments/${String(commentId)}`,
     token,
     { body: edited },
   );
-  await recordDismissal(repo, prNumber, token, { finding, reason });
   console.log(`Dismissed "${finding}" and recorded the reason on the PR.`);
 }
 
@@ -468,10 +474,20 @@ async function resolveThreadCommand(
   if (failure !== null) {
     throw new Error(`resolveReviewThread failed for ${threadId}: ${failure}`);
   }
-  await recordDismissal(repo, prNumber, token, {
-    finding: `thread ${threadId}`,
-    reason,
-  });
+  // Unlike the comment edit, the mutation has already happened by here, so
+  // this write is the one that can strand a resolution without its reason.
+  // Surface that specifically rather than as a bare API error.
+  try {
+    await recordDismissal(repo, prNumber, token, {
+      finding: `thread ${threadId}`,
+      reason,
+    });
+  } catch (error: unknown) {
+    throw new Error(
+      `${threadId} was resolved but its reason could not be recorded — add it to the audit comment by hand`,
+      { cause: error },
+    );
+  }
   console.log(`Resolved ${threadId} and recorded the reason on the PR.`);
 }
 

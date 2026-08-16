@@ -3,6 +3,7 @@ import { parse } from "yaml";
 
 import {
   assignedEnvNames,
+  commandScopes,
   ciSecretItemId,
   collectErrors,
   collectSteps,
@@ -82,6 +83,42 @@ describe("ciSecretItemId", () => {
     expect(() =>
       ciSecretItemId('new OnePasswordItem(chart, "buildkite-ci-secrets", {});'),
     ).toThrow("declares no vaults");
+  });
+});
+
+describe("commandScopes", () => {
+  test("keeps a subshell export out of scripts that run outside it", () => {
+    // pr-dryrun exports the AWS names inside `( … )` around its Tofu loop and
+    // runs other scripts after it. Treating the command as one flat scope
+    // reported those names as provided to every script in the step — a false
+    // negative in the direction this check exists to prevent.
+    const scopes = commandScopes(
+      [
+        "(",
+        '  export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID"',
+        "  bun packages/homelab/scripts/tofu-stack.ts seaweedfs plan",
+        ")",
+        "bun scripts/deploy-site.ts wiki --dry-run",
+      ].join("\n"),
+    );
+    const inside = scopes.find((scope) =>
+      scope.scripts.includes("packages/homelab/scripts/tofu-stack.ts"),
+    );
+    const outside = scopes.find((scope) =>
+      scope.scripts.includes("scripts/deploy-site.ts"),
+    );
+    expect(inside?.assigned.has("AWS_ACCESS_KEY_ID")).toBe(true);
+    expect(outside?.assigned.has("AWS_ACCESS_KEY_ID")).toBe(false);
+  });
+
+  test("an export before a subshell is still visible inside it", () => {
+    const scopes = commandScopes(
+      ['export SHARED="x"', "(", "  bun scripts/release.ts", ")"].join("\n"),
+    );
+    const inner = scopes.find((scope) =>
+      scope.scripts.includes("scripts/release.ts"),
+    );
+    expect(inner?.assigned.has("SHARED")).toBe(true);
   });
 });
 
