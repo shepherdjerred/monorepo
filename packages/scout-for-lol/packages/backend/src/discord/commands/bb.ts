@@ -37,10 +37,13 @@ const logger = createLogger("command-bb");
  * cannot check from the same place you bet is not usable.
  *
  * That gate is per guild, not per environment, and the one guild it is on for
- * runs the beta bot — so this only ever answers in beta in practice. Because
- * `discord/rest.ts` registers commands with a global replace, `/bb` still shows
- * up in every guild's picker, which is why the description and the
- * not-enabled-here reply both state the scope outright.
+ * runs the beta bot — so this only ever answers in beta in practice.
+ *
+ * The command is registered per guild rather than globally
+ * (`guildScopedCommandGroups`), so it is invisible everywhere it would not
+ * work. The not-enabled-here reply below is therefore a narrow fallback for one
+ * real case — the flag being switched off while a previously registered command
+ * lingers — rather than the common path.
  *
  * `/bb bet` shares `placeBet` with the prematch buttons, so the two surfaces
  * cannot drift in what they accept or how they explain a refusal.
@@ -315,6 +318,8 @@ export async function executeBb(
 
     const serverId = DiscordGuildIdSchema.parse(interaction.guildId);
     if (!getFlag("betting_enabled", { server: serverId })) {
+      // Reachable only if the flag was turned off after registration, since
+      // the command is not registered anywhere the flag is off.
       await interaction.reply({
         content: `Bryan Bucks isn't enabled in this server. ${BUCKS_SCOPE_NOTE}`,
         ephemeral: true,

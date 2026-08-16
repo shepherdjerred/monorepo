@@ -619,11 +619,18 @@ Bucks only ever appears in beta. That is a consequence of which bot is in that
 guild, **not** a second gate: there is deliberately no environment check, because
 one override should be the whole answer to "is it on here?".
 
-Because `discord/rest.ts` registers commands with a global
-`applicationCommands` replace, `/bb` still appears in every guild's command
-picker even though it answers in one. The command description, the
-not-enabled-here reply, and both balance surfaces therefore state the scope
-outright. The wording lives once in `BUCKS_SCOPE_TAG` / `BUCKS_SCOPE_NOTE`
+**`/bb` is registered per guild, not globally.** `commandDefinitions` holds the
+seven global commands; `guildScopedCommandGroups` (same file) maps a flag to a
+payload, and `discord/rest.ts` resolves it through `listGuildsWithFlagEnabled`
+and PUTs to `applicationGuildCommands` for each. A globally registered
+flag-gated command would sit in the picker of every guild Scout is in and do
+nothing there. Two consequences worth knowing: a guild PUT **replaces** that
+guild's whole command list for the app, so groups are merged per guild before
+sending; and a guild the running bot is not in fails with `MISSING_ACCESS`,
+which is logged and skipped rather than fatal — otherwise the prod deployment
+would crash-loop over a command only beta serves.
+
+The scope wording lives once in `BUCKS_SCOPE_TAG` / `BUCKS_SCOPE_NOTE`
 (`betting/constants.ts`) — use those rather than writing new copy, so the
 surfaces cannot drift apart.
 

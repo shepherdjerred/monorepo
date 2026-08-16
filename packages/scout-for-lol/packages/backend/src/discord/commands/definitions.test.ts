@@ -1,15 +1,16 @@
 import { describe, expect, test } from "bun:test";
-import { commandDefinitions } from "#src/discord/commands/definitions.ts";
+import {
+  commandDefinitions,
+  guildScopedCommandGroups,
+} from "#src/discord/commands/definitions.ts";
+import {
+  getFlag,
+  listGuildsWithFlagEnabled,
+  resetFlagOverrides,
+} from "#src/configuration/flags.ts";
 
 describe("registered Discord commands", () => {
-  test("exposes only the web-first command surface", () => {
-    // The seven web-first commands, plus `bb`.
-    //
-    // `bb` is a deliberate, owner-approved exception to the "management lives
-    // in the dashboard" rule rather than a crack in it: Bryan Bucks is gated to
-    // a single guild by the `betting_enabled` flag, and a balance you cannot
-    // check from the same place you place a bet is not usable. Adding anything
-    // else here still needs the same explicit decision.
+  test("exposes only the web-first command surface globally", () => {
     expect(commandDefinitions.map((command) => command.name)).toEqual([
       "help",
       "setup",
@@ -18,8 +19,36 @@ describe("registered Discord commands", () => {
       "docs",
       "track",
       "list",
-      "bb",
     ]);
+  });
+
+  test("keeps flag-gated commands out of the global surface", () => {
+    // `bb` is registered per guild, so it must not leak into the global list —
+    // that would put it in the picker of every guild Scout is in, where it
+    // cannot do anything.
+    const globalNames = commandDefinitions.map((command) => command.name);
+    const guildScopedNames = guildScopedCommandGroups.flatMap((group) =>
+      group.payload.map((command) => command.name),
+    );
+
+    expect(guildScopedNames).toContain("bb");
+    for (const name of guildScopedNames) {
+      expect(globalNames).not.toContain(name);
+    }
+  });
+
+  test("registers each guild-scoped command only where its flag is on", () => {
+    for (const group of guildScopedCommandGroups) {
+      // Another test file may have cleared this flag; the registry is shared.
+      resetFlagOverrides(group.flag);
+      const guilds = listGuildsWithFlagEnabled(group.flag);
+      // A group that resolves to no guilds would silently register nowhere,
+      // which looks identical to the feature being broken.
+      expect(guilds.length).toBeGreaterThan(0);
+      for (const guildId of guilds) {
+        expect(getFlag(group.flag, { server: guildId })).toBe(true);
+      }
+    }
   });
 
   test("does not register autocomplete options", () => {

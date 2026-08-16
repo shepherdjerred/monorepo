@@ -21,6 +21,7 @@ import { computeMvp } from "#src/betting/mvp.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
+  resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 import { SEED_GRANT } from "#src/betting/constants.ts";
 
@@ -119,7 +120,9 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  clearFlagOverrides("betting_enabled");
+  // Restore, don't just clear: the flag registry is process-wide, so leaving it
+  // empty would switch Bryan Bucks off for every test file that runs later.
+  resetFlagOverrides("betting_enabled");
 });
 
 afterAll(async () => {

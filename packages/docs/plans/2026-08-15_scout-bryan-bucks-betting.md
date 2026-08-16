@@ -22,12 +22,17 @@ only ever appears in beta. That follows from which bot is in the guild rather
 than from a second gate; there is deliberately no environment check, so one
 override stays the whole answer to "is it on here?".
 
-Every surface says so: the `/bb` command description, the not-enabled-here
-reply, both balance surfaces, the prematch footer, and the settlement message.
-The wording is defined once as `BUCKS_SCOPE_TAG` / `BUCKS_SCOPE_NOTE` in
-`betting/constants.ts`. This matters because `discord/rest.ts` registers
-commands with a global `applicationCommands` replace, so `/bb` appears in the
-command picker of every guild Scout is in while answering in only one.
+`/bb` is registered as a **guild command** for exactly the guilds the flag is on
+for, so it never appears in anyone else's picker — a globally registered
+flag-gated command would be a dead end everywhere else. The guild list is
+derived from the flag registry (`listGuildsWithFlagEnabled`), so enabling the
+flag somewhere new registers the command there with no second edit.
+
+The surfaces that people who _can_ use it will see — command description, both
+balance surfaces, the prematch footer, the settlement header — still state the
+scope, so a balance here is never mistaken for something Scout-wide. The
+wording is defined once as `BUCKS_SCOPE_TAG` / `BUCKS_SCOPE_NOTE` in
+`betting/constants.ts`.
 
 Bryan Bucks exchange at **1:10 Bucks:CAD, in person only**. Bryan lives in
 rural Canada, so they are effectively unredeemable. That joke is the entire

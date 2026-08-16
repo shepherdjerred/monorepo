@@ -90,10 +90,10 @@ export const BUCKS_EARNING_QUEUES: readonly QueueType[] = ["solo", "flex"];
  * override is the mechanism, and adding a second one would mean two places to
  * check when the answer is "is it on here?".
  *
- * Saying so on the surfaces matters more than it looks, because `/bb` is
- * registered through a global `applicationCommands` replace in `discord/rest.ts`
- * and therefore appears in the command picker of every guild Scout is in, even
- * though it answers in only one.
+ * `/bb` is registered per guild (see `guildScopedCommandGroups`), so nobody
+ * outside those guilds ever sees it in the picker. These strings are for the
+ * people who *do* see it: they explain that a balance here means nothing
+ * anywhere else, and that this is not a feature the rest of Scout has.
  */
 export const BUCKS_SCOPE_TAG = "one server only";
 
