@@ -81,35 +81,17 @@ const assetsDir = path.resolve(
     Bun.env["VOICE_ASSETS_DIR"] ??
     "/opt/streambot/voice",
 );
-const manifest = InputSchema.parse(
-  await Bun.file(path.join(inputDir, "manifest.json")).json(),
-);
-for (const speaker of manifest.speakers) {
-  const positives = speaker.clips.filter(
-    (clip) => clip.category === "positive",
-  ).length;
-  const nearMatches = speaker.clips.filter(
-    (clip) => clip.category === "near-match",
-  ).length;
-  const backgrounds = speaker.clips.filter(
-    (clip) => clip.category === "background",
-  ).length;
-  if (positives !== 5 || nearMatches !== 3 || backgrounds !== 2) {
-    throw new Error(
-      `${speaker.label} must have five positives, three near-matches, and two background clips`,
-    );
-  }
-}
 const reportPath = path.resolve(
   inputDir,
   "..",
   "streambot-human-holdout-result.json",
 );
-// Every exit from here on must still close whatever opened and delete the raw recordings: this
-// evaluator's privacy contract is that only the aggregate report outlives it, so a runtime that
-// fails to initialize, a rejected clip, and a failed validation all have to clean up. Runtimes
-// open one at a time and register as they do, so a second failed initialization cannot strand a
-// first that already succeeded.
+// Everything that reads the holdout runs inside this cleanup scope, because the privacy contract
+// is that only the aggregate report outlives the run: a missing or malformed manifest, wrong
+// category counts, a runtime that fails to initialize, a rejected clip, and a failed validation
+// all have to delete the recordings. The `.context` guard above stays outside it — cleanup must
+// never be armed for a path that was not established as a holdout directory. Runtimes open one at
+// a time and register as they do, so a second failed initialization cannot strand the first.
 const report = await (async () => {
   const opened: LocalVoiceModels[] = [];
   const openRuntime = async (
@@ -123,6 +105,25 @@ const report = await (async () => {
     return models;
   };
   try {
+    const manifest = InputSchema.parse(
+      await Bun.file(path.join(inputDir, "manifest.json")).json(),
+    );
+    for (const speaker of manifest.speakers) {
+      const positives = speaker.clips.filter(
+        (clip) => clip.category === "positive",
+      ).length;
+      const nearMatches = speaker.clips.filter(
+        (clip) => clip.category === "near-match",
+      ).length;
+      const backgrounds = speaker.clips.filter(
+        (clip) => clip.category === "background",
+      ).length;
+      if (positives !== 5 || nearMatches !== 3 || backgrounds !== 2) {
+        throw new Error(
+          `${speaker.label} must have five positives, three near-matches, and two background clips`,
+        );
+      }
+    }
     const native = await openRuntime("native");
     const wasm = await openRuntime("wasm");
     let positivePasses = 0;

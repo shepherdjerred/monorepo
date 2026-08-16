@@ -72,6 +72,34 @@ function audio(opus: Uint8Array, index: number): ReceivedVoiceAudio {
   return { userId: "synthetic-speaker", ssrc: 1000 + index, opus };
 }
 
+/**
+ * The phrase verifier resolves asynchronously while `accept()` is synchronous, so offline
+ * evaluation has to be able to wait for a scheduled verification to finish being applied.
+ * Every caller needs it for the same reason — a turn that is still pending when the feed stops
+ * is silently discarded by `close()`.
+ */
+function verificationBarrier(): {
+  readonly onScheduled: (settled: Promise<void>) => void;
+  readonly settle: () => Promise<void>;
+} {
+  const running: { verification: Promise<void> | null } = {
+    verification: null,
+  };
+  return {
+    onScheduled: (settled) => {
+      running.verification = settled;
+    },
+    settle: async () => {
+      // A verification can schedule another as it settles, so drain until none is in flight.
+      while (running.verification !== null) {
+        const inFlight = running.verification;
+        await inFlight;
+        if (running.verification === inFlight) running.verification = null;
+      }
+    },
+  };
+}
+
 export async function evaluateDiscordOpusPackets(
   models: LocalVoiceModels,
   packets: readonly Uint8Array[],
@@ -81,14 +109,11 @@ export async function evaluateDiscordOpusPackets(
   const failure: { error: unknown } = { error: null };
   let packetTimeMs = 0;
   let endpointMs: number | null = null;
-  // The phrase verifier resolves asynchronously while `accept()` is synchronous. Draining the
-  // whole clip first would advance the simulated clock through the fixture's trailing silence
-  // before the turn could complete, so every activation would report the clip's end as its
-  // endpoint instead of the lifecycle's. Holding the feed for the verifier keeps the simulated
-  // timestamp on the frame the turn actually completed at.
-  const running: { verification: Promise<void> | null } = {
-    verification: null,
-  };
+  // Draining the whole clip first would advance the simulated clock through the fixture's
+  // trailing silence before the turn could complete, so every activation would report the clip's
+  // end as its endpoint instead of the lifecycle's. Holding the feed for the verifier keeps the
+  // simulated timestamp on the frame the turn actually completed at.
+  const verification = verificationBarrier();
   const lifecycle = new VoiceAudioLifecycle({
     models,
     preRollMs: VOICE_WAKE_WINDOW_MS,
@@ -96,9 +121,7 @@ export async function evaluateDiscordOpusPackets(
     onCandidate: () => {
       candidate.detected = true;
     },
-    onLocalVerificationScheduled: (settled) => {
-      running.verification = settled;
-    },
+    onLocalVerificationScheduled: verification.onScheduled,
     onLocalVerificationError: (error) => {
       failure.error = error;
     },
@@ -111,21 +134,14 @@ export async function evaluateDiscordOpusPackets(
       return Promise.resolve();
     },
   });
-  const settleVerification = async (): Promise<void> => {
-    while (running.verification !== null) {
-      const inFlight = running.verification;
-      await inFlight;
-      if (running.verification === inFlight) running.verification = null;
-    }
-  };
   try {
     for (const [index, packet] of packets.entries()) {
       packetTimeMs = (index + 1) * 20;
       lifecycle.accept(audio(packet, index));
-      await settleVerification();
+      await verification.settle();
     }
     lifecycle.finishInput();
-    await settleVerification();
+    await verification.settle();
     await Bun.sleep(0);
   } finally {
     lifecycle.close();
@@ -201,10 +217,12 @@ async function negativeSoak(
     })),
   );
   let activations = 0;
+  const verification = verificationBarrier();
   const lifecycle = new VoiceAudioLifecycle({
     models,
     preRollMs: VOICE_WAKE_WINDOW_MS,
     maxUtteranceMs: 15_000,
+    onLocalVerificationScheduled: verification.onScheduled,
     onWake: () => {
       activations += 1;
     },
@@ -230,6 +248,12 @@ async function negativeSoak(
       await Bun.sleep(0);
       fixtureIndex += 17;
     }
+    // A candidate raised near the cutoff — especially inside the last provisional window — is
+    // still pending here, and `close()` discards a pending turn without ever reporting it. That
+    // would drop a false activation and let the soak report zero, which is the one number this
+    // gate exists to trust. Finalize the bounded input, then wait for the verification it starts.
+    lifecycle.finishInput();
+    await verification.settle();
     await Bun.sleep(0);
   } finally {
     lifecycle.close();
