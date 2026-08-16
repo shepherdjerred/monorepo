@@ -79,29 +79,6 @@ set -gx CF_API_TOKEN '{{ onepasswordRead "op://v64ocnykdqju4ui6j6pua56xw4/vp4l6t
 set -gx LOKI_ADDR 'https://loki.tailnet-1a49.ts.net'
 set -gx PROMETHEUS_URL 'https://prometheus.tailnet-1a49.ts.net'
 {{ end -}}
-# Keep provider API keys available to ordinary tools, but coding-agent wrappers
-# below explicitly remove direct API credentials. Claude and Codex therefore use
-# their subscription/auth-file flows; OpenCode uses its configured provider.
-# Also give OpenCode plain tool defaults: no nvim editor, no pagers, and a
-# curated agent gitconfig (no delta pager, no difftastic external diff) that
-# keeps identity, gh credentials, and git-spice settings. Modern tools stay on
-# PATH as opt-in — nothing is restricted. OpenCode has no config-file env
-# injection, so these wrappers are the interactive enforcement point; launches
-# that bypass fish (Raycast, scripts) must scrub their environment explicitly.
-function claude --wraps claude -d "Run Claude Code without direct provider API keys"
-    env -u ANTHROPIC_API_KEY -u OPENAI_API_KEY -u CODEX_API_KEY \
-        (command -s claude) --allow-dangerously-skip-permissions $argv
-end
-function codex --wraps codex -d "Run Codex without direct provider API keys"
-    env -u OPENAI_API_KEY -u CODEX_API_KEY -u ANTHROPIC_API_KEY \
-        (command -s codex) $argv
-end
-function opencode --wraps opencode
-    env -u ANTHROPIC_API_KEY -u OPENAI_API_KEY -u CODEX_API_KEY \
-        EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat \
-        GIT_CONFIG_GLOBAL="$HOME/.config/agent/gitconfig" \
-        (command -s opencode) --auto $argv
-end
 if test -f ~/.config/turbo-cache/env.fish
     source ~/.config/turbo-cache/env.fish
 end
@@ -116,6 +93,26 @@ set -gx PROMETHEUS_URL 'https://prometheus.tailnet-1a49.ts.net'
 set -gx POSTHOG_CLI_PROJECT_ID '549883'
 {{ end -}}
 if status is-interactive
+  # Keep provider API keys available to ordinary tools, but coding-agent
+  # wrappers explicitly remove direct API credentials. Claude and Codex
+  # therefore use their subscription/auth-file flows; OpenCode uses its
+  # configured provider. These wrappers are intentionally interactive-only;
+  # launches that bypass fish (Raycast, scripts) must scrub their environment
+  # explicitly.
+  function claude --wraps claude -d "Run Claude Code without direct provider API keys"
+      env -u ANTHROPIC_API_KEY -u OPENAI_API_KEY -u CODEX_API_KEY \
+          (command -s claude) --allow-dangerously-skip-permissions $argv
+  end
+  function codex --wraps codex -d "Run Codex without direct provider API keys"
+      env -u OPENAI_API_KEY -u CODEX_API_KEY -u ANTHROPIC_API_KEY \
+          (command -s codex) $argv
+  end
+  function opencode --wraps opencode
+      env -u ANTHROPIC_API_KEY -u OPENAI_API_KEY -u CODEX_API_KEY \
+          EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat \
+          GIT_CONFIG_GLOBAL="$HOME/.config/agent/gitconfig" \
+          (command -s opencode) --auto $argv
+  end
   fish_vi_key_bindings
 
   starship init fish | source
