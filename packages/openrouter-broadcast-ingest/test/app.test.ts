@@ -123,7 +123,12 @@ function createHarness(options: HarnessOptions = {}) {
   return { app, forwarded, logs, objects, register };
 }
 
-function request(app: ReturnType<typeof createHarness>["app"], body = payload) {
+function request(
+  app: ReturnType<typeof createHarness>["app"],
+  // The route takes a JSON body; tests deliberately post malformed and
+  // reordered shapes, so this is `unknown` rather than the fixture's type.
+  body: unknown = payload,
+) {
   return app.request("/v1/traces", {
     method: "POST",
     headers: {
@@ -336,5 +341,33 @@ describe("OpenRouter Broadcast ingest", () => {
     expect(response.status).toBe(204);
     expect(objects.size).toBe(2);
     expect(forwarded).toEqual([JSON.stringify({ resourceSpans: [] })]);
+  });
+});
+
+function reorderKeys(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map((entry) => reorderKeys(entry));
+  if (typeof value !== "object" || value === null) return value;
+  return Object.fromEntries(
+    Object.entries(value)
+      .toReversed()
+      .map(([key, entry]) => [key, reorderKeys(entry)]),
+  );
+}
+
+describe("Broadcast dedupe is key-order independent", () => {
+  test("deduplicates a retry whose JSON key order differs", async () => {
+    // The payload schema is `.loose()`, so a sender that serializes its object
+    // keys in a different order survives parse in that order. Dedupe hashes a
+    // canonical serialization, so the retry must still be recognized.
+    const reordered = reorderKeys(payload);
+    expect(JSON.stringify(reordered)).not.toBe(JSON.stringify(payload));
+
+    const { app, forwarded, objects } = createHarness();
+    const first = await request(app);
+    expect(first.status).toBe(204);
+    const retry = await request(app, reordered);
+    expect(retry.status).toBe(204);
+    expect(forwarded).toHaveLength(1);
+    expect(objects.size).toBe(2);
   });
 });

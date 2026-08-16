@@ -245,6 +245,45 @@ test("records stable model ids, upstream attempts, and missing metadata", async 
   expect(exposition).toContain('workload="missing-metadata"');
 });
 
+test("does not double-count language calls the AI SDK telemetry already recorded", async () => {
+  const register = new Registry();
+  const metrics = runtimeMetrics(register);
+  // The fetch observer and OpenRouterMetricsTelemetry both see every language
+  // call. Only the telemetry path may record the common request instruments;
+  // if this observer starts recording them too, every dashboard doubles.
+  recordRouterResponse(metrics, {
+    service: "test-service",
+    workload: "language-no-double-count",
+    requestedModel: "openai/gpt-5.6-luna",
+    responseStatus: 200,
+    durationMs: 12,
+    endpoint: "language",
+    responseBody: {
+      usage: { prompt_tokens: 11, completion_tokens: 3, total_tokens: 14 },
+      openrouter_metadata: {
+        attempts: [
+          { provider: "Provider A", model: "openai/gpt-5.6-luna", status: 200 },
+        ],
+      },
+    },
+  });
+
+  const exposition = await register.metrics();
+  for (const common of [
+    "llm_requests_total",
+    "llm_request_duration_seconds_count",
+    "llm_tokens_total",
+  ]) {
+    expect(exposition).not.toContain(
+      `${common}{service="test-service",workload="language-no-double-count"`,
+    );
+  }
+  // The OpenRouter-specific instruments are still recorded for language.
+  expect(exposition).toContain(
+    'llm_router_attempts_total{service="test-service",workload="language-no-double-count"',
+  );
+});
+
 test("records common request, usage, and cost metrics for image calls", async () => {
   const register = new Registry();
   const metrics = runtimeMetrics(register);

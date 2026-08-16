@@ -18,7 +18,6 @@ const AGENT_CREDENTIAL_ENVIRONMENT = [
   "CODEX_REFRESH_TOKEN",
   "OPENAI_API_KEY",
 ];
-const AGENT_CREDENTIAL_ENVIRONMENT_KEYS = new Set(AGENT_CREDENTIAL_ENVIRONMENT);
 const OUTPUT_TAIL_LIMIT = 16_384;
 const CLAUDE_QUOTA_PATTERN =
   /\b(?:hit|reached|exceeded) (?:your )?(?:weekly|monthly|usage)(?: usage)? limit\b/i;
@@ -185,14 +184,47 @@ function commandFailure(provider: string, result: RunResult): Error {
 }
 
 /**
+ * Non-secret process and TLS settings the refiner agents inherit from the CI
+ * image. This is an allowlist, not a denylist, for the same reason
+ * `envForProvider` is one in packages/temporal: these agents run with Bash and
+ * network access, so anything reachable from their environment is exfiltratable
+ * by a prompt-injected or merely mistaken command. The main-only release lane
+ * runs with `GITHUB_APP_PRIVATE_KEY` set — `setupGitAuth()` requires it — so a
+ * denylist of inference credentials would hand the agent a long-lived GitHub
+ * App key it has no use for, along with every other CI secret nobody thought to
+ * enumerate. The agent needs `PATH`, TLS/proxy settings, the minted `GH_TOKEN`
+ * askpass environment, and its own provider credential; nothing else.
+ */
+const AGENT_PROCESS_ENVIRONMENT_KEYS = new Set([
+  // Claude is launched with `executable: "bun"`, resolvable only through the CI
+  // image's mise PATH. Without this the lane dies before refinement starts.
+  "PATH",
+  "HOME",
+  "SHELL",
+  "TERM",
+  "TMPDIR",
+  "TZ",
+  "LANG",
+  "LC_ALL",
+  "SSL_CERT_DIR",
+  "SSL_CERT_FILE",
+  "NODE_EXTRA_CA_CERTS",
+  "HTTP_PROXY",
+  "HTTPS_PROXY",
+  "NO_PROXY",
+  "http_proxy",
+  "https_proxy",
+  "no_proxy",
+]);
+
+/**
  * Build a native SDK environment for the release refiner.
  *
  * Both SDKs replace the child environment wholesale rather than layering onto
  * `process.env` the way `run()` does, so passing only the git-auth env would
- * drop the CI image's mise `PATH` — and Claude is launched with
- * `executable: "bun"`, which is only resolvable through that PATH. Preserve the
- * process environment, strip every inference credential, then add back the git
- * auth and the single provider credential this run needs.
+ * drop the CI image's mise `PATH`. Copy only the allowlisted process/TLS
+ * settings, then add the git auth and the single provider credential this run
+ * needs.
  */
 export function refinerSdkEnv(
   input: Pick<RunReleaseRefinerInput, "env">,
@@ -202,7 +234,7 @@ export function refinerSdkEnv(
   const env: Record<string, string> = {};
   for (const [key, value] of Object.entries(sourceEnv)) {
     if (typeof value !== "string") continue;
-    if (AGENT_CREDENTIAL_ENVIRONMENT_KEYS.has(key)) continue;
+    if (!AGENT_PROCESS_ENVIRONMENT_KEYS.has(key)) continue;
     env[key] = value;
   }
   return { ...env, ...input.env, ...credentials };

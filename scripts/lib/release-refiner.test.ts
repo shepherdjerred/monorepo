@@ -372,6 +372,68 @@ describe("refinerSdkEnv", () => {
     },
   };
 
+  test("withholds CI secrets the agent has no use for", () => {
+    // The main-only release lane runs with GITHUB_APP_PRIVATE_KEY set because
+    // setupGitAuth() needs it, and these agents have Bash plus network access.
+    // The environment is an allowlist so a secret nobody enumerated cannot ride
+    // along into a prompt-injectable agent.
+    const environment = refinerSdkEnv(
+      gitAuth,
+      { CLAUDE_CODE_OAUTH_TOKEN: "claude-credential" },
+      {
+        PATH: "/usr/bin",
+        GITHUB_APP_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----",
+        GITHUB_APP_ID: "12345",
+        GITHUB_APP_INSTALLATION_ID: "67890",
+        BUILDKITE_AGENT_ACCESS_TOKEN: "agent-token",
+        AWS_SECRET_ACCESS_KEY: "seaweedfs-secret",
+        SOME_FUTURE_CI_SECRET: "not-yet-invented",
+      },
+    );
+
+    for (const withheld of [
+      "GITHUB_APP_PRIVATE_KEY",
+      "GITHUB_APP_ID",
+      "GITHUB_APP_INSTALLATION_ID",
+      "BUILDKITE_AGENT_ACCESS_TOKEN",
+      "AWS_SECRET_ACCESS_KEY",
+      "SOME_FUTURE_CI_SECRET",
+    ]) {
+      expect(environment[withheld]).toBeUndefined();
+    }
+    // Only the allowlisted process settings, the git auth, and this run's own
+    // provider credential survive.
+    expect(Object.keys(environment).toSorted()).toEqual([
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "GH_TOKEN",
+      "GIT_ASKPASS",
+      "GIT_TERMINAL_PROMPT",
+      "PATH",
+    ]);
+  });
+
+  test("keeps the TLS and proxy settings an agent needs to reach its provider", () => {
+    expect(
+      refinerSdkEnv(
+        gitAuth,
+        {},
+        {
+          PATH: "/usr/bin",
+          HOME: "/root",
+          NODE_EXTRA_CA_CERTS: "/etc/ssl/ci.pem",
+          HTTPS_PROXY: "http://proxy:3128",
+          NO_PROXY: "localhost",
+        },
+      ),
+    ).toMatchObject({
+      PATH: "/usr/bin",
+      HOME: "/root",
+      NODE_EXTRA_CA_CERTS: "/etc/ssl/ci.pem",
+      HTTPS_PROXY: "http://proxy:3128",
+      NO_PROXY: "localhost",
+    });
+  });
+
   test("preserves the CI image PATH the SDK needs to spawn bun", () => {
     // Both SDKs replace the environment wholesale; without this the release
     // lane dies with an executable-not-found before refinement.

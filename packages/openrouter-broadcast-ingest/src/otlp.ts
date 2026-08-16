@@ -106,6 +106,30 @@ function stripAttributes(
   return attributes?.filter((attribute) => !isBodyAttribute(attribute.key));
 }
 
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map((entry) => canonicalize(entry));
+  if (typeof value !== "object" || value === null) return value;
+  return Object.fromEntries(
+    Object.entries(value)
+      .toSorted(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+      .map(([key, entry]) => [key, canonicalize(entry)]),
+  );
+}
+
+/**
+ * Serialize a payload with object keys in a stable order, for hashing only.
+ *
+ * `JSON.stringify` preserves insertion order, and the payload schema is
+ * `.loose()`, so unrecognized keys keep whatever order the sender emitted them
+ * in. Digesting that directly would give two semantically identical deliveries
+ * different digests and defeat deduplication. Array order is meaningful in OTLP
+ * and is preserved. The archived object keeps the verbatim serialization — this
+ * is the dedupe key, not the stored artifact.
+ */
+export function canonicalOtlpJson(payload: OtlpJsonPayload): string {
+  return JSON.stringify(canonicalize(payload));
+}
+
 /** Strip prompt, response, and tool bodies while retaining routing, usage, and cost data. */
 export function slimOtlpPayload(payload: OtlpJsonPayload): OtlpJsonPayload {
   return {

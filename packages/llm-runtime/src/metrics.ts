@@ -89,6 +89,16 @@ export function recordRouterResponse(
   if (successful && metadata.upstreamCostUsd !== undefined) {
     metrics.cost.inc({ ...labels, type: "upstream" }, metadata.upstreamCostUsd);
   }
+  // Everything below is the *common* LLM request instrumentation, and for
+  // language and embedding calls `OpenRouterMetricsTelemetry` already records
+  // it from the AI SDK's own call-end events (`onLanguageModelCallEnd`,
+  // `onEmbedEnd`). Recording it here as well would double every
+  // `llm_requests_total`, `llm_request_duration_seconds`, and
+  // `llm_tokens_total` for the two most common endpoints. Image generation has
+  // no AI SDK telemetry event, so this fetch observer is its only source — that
+  // is what this branch exists for, not an oversight. Router attempts, missing
+  // metadata, and actual/upstream cost above are OpenRouter-specific and are
+  // recorded for every endpoint.
   if (input.endpoint !== "image") return;
   metrics.requests.inc({
     ...labels,

@@ -6,6 +6,7 @@ import type { BroadcastConfig } from "./config.ts";
 import type { TempoForwarder } from "./forwarder.ts";
 import type { BroadcastMetrics } from "./metrics.ts";
 import {
+  canonicalOtlpJson,
   OtlpJsonPayloadSchema,
   redactOtlpPayload,
   slimOtlpPayload,
@@ -267,6 +268,13 @@ function createDeliveryProcessor(
       // would make the sender retry a payload Tempo has, and the retry would
       // forward it a second time. The receipt only suppresses later duplicates,
       // so a lost receipt costs deduplication for this digest, never delivery.
+      //
+      // This ordering is deliberate and must not be inverted. Writing the
+      // receipt before forwarding would let a crash in between suppress the
+      // sender's retry of a payload Tempo never received — trading a duplicate
+      // span, which Tempo tolerates, for silent telemetry loss, which is
+      // undetectable. Delivery is not atomic with an external endpoint, so the
+      // choice is which way to fail, and duplicates are the safe direction.
       dependencies.logger.warn("Broadcast receipt write failed after forward", {
         digest,
         error: error instanceof Error ? error.message : String(error),
@@ -281,7 +289,12 @@ function createDeliveryProcessor(
       redactOtlpPayload(payload, config.bearerToken),
     );
     const redactedJson = JSON.stringify(redacted);
-    const digest = createHash("sha256").update(redactedJson).digest("hex");
+    // Hash a key-order-stable serialization so two deliveries of the same
+    // payload dedupe even if the sender emitted its object keys in a different
+    // order; the archived body stays the verbatim `redactedJson` above.
+    const digest = createHash("sha256")
+      .update(canonicalOtlpJson(redacted))
+      .digest("hex");
     const existing = inFlight.get(digest);
     if (existing !== undefined) {
       const result = await existing;
