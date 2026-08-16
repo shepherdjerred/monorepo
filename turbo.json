@@ -7,6 +7,7 @@
     "bunfig.toml",
     "patches/**",
     "scripts/ci-reporting.ts",
+    "scripts/coverage-cobertura.ts",
     "scripts/ci-test-manifest.json",
     "scripts/run-ci-test.ts"
   ],

@@ -780,7 +780,7 @@ describe("CI reporting manifest", () => {
           (step) =>
             step.runner !== "cargo" &&
             step.runner !== "command" &&
-            step.runner !== "dotnet",
+            (step.runner !== "dotnet" || step.coverageConfig !== undefined),
         );
         const expectedReportScript = usesCoverage
           ? `CI_TEST_COVERAGE=1 bun ${relativeRunner}`
