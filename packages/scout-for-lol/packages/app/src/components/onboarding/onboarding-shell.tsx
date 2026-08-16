@@ -24,7 +24,7 @@ export function OnboardingShell(props: {
     <div className="mx-auto max-w-2xl space-y-6 py-2">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-wide text-scout-subtle">
             Step {current.toString()} of {TOTAL_PROGRESS_STEPS.toString()} ·{" "}
             {progressLabel(props.step)}
           </p>
@@ -32,15 +32,15 @@ export function OnboardingShell(props: {
             <button
               type="button"
               onClick={props.onSkip}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-scout-subtle hover:text-scout-ink"
             >
               Skip setup
             </button>
           )}
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-scout-hover">
           <div
-            className="h-full rounded-full bg-primary transition-all"
+            className="h-full rounded-full bg-scout-brand transition-all"
             style={{ width: `${pct.toString()}%` }}
           />
         </div>
@@ -49,7 +49,7 @@ export function OnboardingShell(props: {
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">{props.title}</h1>
         {props.description !== undefined && (
-          <p className="text-sm text-muted-foreground">{props.description}</p>
+          <p className="text-sm text-scout-subtle">{props.description}</p>
         )}
       </div>
 

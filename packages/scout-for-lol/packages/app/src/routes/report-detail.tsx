@@ -12,14 +12,14 @@ import { analyticsMeta } from "#src/lib/analytics.ts";
 import { channelLabel } from "#src/lib/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { useReportParams } from "#src/lib/route-params.ts";
-import { Button } from "#src/components/ui/button.tsx";
-import { Badge } from "#src/components/ui/badge.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import { Badge } from "@scout-for-lol/design-system/components/badge";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "#src/components/ui/card.tsx";
+} from "@scout-for-lol/design-system/components/card";
 import { ReportRunHistory } from "#src/components/report-run-history.tsx";
 import { ReportQueryViewer } from "#src/components/report-query-viewer.tsx";
 import { ReportTemporalControls } from "#src/components/report-temporal-controls.tsx";
@@ -101,14 +101,14 @@ function ReportDefinitionCards(props: {
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           {report.description !== null && (
-            <p className="text-muted-foreground">{report.description}</p>
+            <p className="text-scout-subtle">{report.description}</p>
           )}
           <p>
-            <span className="text-muted-foreground">Channel:</span>{" "}
+            <span className="text-scout-subtle">Channel:</span>{" "}
             {channelLabel(channels, report.channelId)}
           </p>
           <p>
-            <span className="text-muted-foreground">Schedule:</span>{" "}
+            <span className="text-scout-subtle">Schedule:</span>{" "}
             <span className="font-mono text-xs">{report.cronExpression}</span> ·{" "}
             {report.scheduleTimezone} ·{" "}
             {report.isEnabled ? "enabled" : "disabled"}
@@ -153,7 +153,7 @@ function ReportExploration(props: {
         <CardTitle>Explore over time</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-scout-subtle">
           These controls run an ephemeral preview. The saved report is
           unchanged.
         </p>
@@ -263,10 +263,10 @@ export function ReportDetail() {
       </div>
 
       {runMutation.error && (
-        <p className="text-sm text-destructive">{runMutation.error.message}</p>
+        <p className="text-sm text-scout-danger">{runMutation.error.message}</p>
       )}
       {deleteMutation.error && (
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-scout-danger">
           {deleteMutation.error.message}
         </p>
       )}

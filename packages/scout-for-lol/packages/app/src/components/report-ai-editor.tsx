@@ -13,10 +13,10 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "#src/components/ui/card.tsx";
-import { Button } from "#src/components/ui/button.tsx";
-import { Badge } from "#src/components/ui/badge.tsx";
-import { Textarea } from "#src/components/ui/textarea.tsx";
+} from "@scout-for-lol/design-system/components/card";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import { Badge } from "@scout-for-lol/design-system/components/badge";
+import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
 import { streamReportAiEdit } from "#src/lib/report-ai-stream.ts";
@@ -207,7 +207,7 @@ export function ReportAiEditor(props: {
         />
 
         {disabledReason !== null && (
-          <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <p className="flex items-center gap-2 text-xs text-scout-subtle">
             <AlertCircle className="size-4" />
             {disabledReason}
           </p>
@@ -262,7 +262,7 @@ export function ReportAiEditor(props: {
           <div className="space-y-2">
             <p className="text-xs font-medium">Draft preview</p>
             <ReportResultTable columns={preview.columns} rows={preview.rows} />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-scout-subtle">
               {preview.rows.length.toString()} row(s) ·{" "}
               {preview.rowsScanned.toLocaleString()} fact row(s) scanned
             </p>
@@ -270,7 +270,7 @@ export function ReportAiEditor(props: {
         )}
 
         {draftText.length > 0 && finalDraft === null && (
-          <pre className="max-h-[160px] overflow-auto whitespace-pre-wrap rounded-md bg-muted/50 p-3 text-xs">
+          <pre className="max-h-[160px] overflow-auto whitespace-pre-wrap rounded-md bg-scout-hover/50 p-3 text-xs">
             {draftText}
           </pre>
         )}
@@ -280,17 +280,17 @@ export function ReportAiEditor(props: {
             <div>
               <p className="text-sm font-medium">{finalDraft.title}</p>
               {finalDraft.description !== null && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-scout-subtle">
                   {finalDraft.description}
                 </p>
               )}
             </div>
             <ReportQueryViewer queryText={finalDraft.queryText} />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-scout-subtle">
               {finalDraft.explanation}
             </p>
             {finalDraft.warnings.length > 0 && (
-              <ul className="space-y-1 text-xs text-muted-foreground">
+              <ul className="space-y-1 text-xs text-scout-subtle">
                 {finalDraft.warnings.map((warning) => (
                   <li key={warning}>{warning}</li>
                 ))}
@@ -299,7 +299,7 @@ export function ReportAiEditor(props: {
           </div>
         )}
 
-        {error !== null && <p className="text-sm text-destructive">{error}</p>}
+        {error !== null && <p className="text-sm text-scout-danger">{error}</p>}
       </CardContent>
     </Card>
   );
@@ -307,7 +307,7 @@ export function ReportAiEditor(props: {
 
 function QuotaSummary(props: { status: ReportAiEditStatus | undefined }) {
   if (props.status === undefined) {
-    return <p className="text-xs text-muted-foreground">Loading credits…</p>;
+    return <p className="text-xs text-scout-subtle">Loading credits…</p>;
   }
   if (props.status.exempt) {
     return null;
@@ -317,9 +317,9 @@ function QuotaSummary(props: { status: ReportAiEditStatus | undefined }) {
       {props.status.quota.map((snapshot) => (
         <p
           key={`${snapshot.scope}-${snapshot.window}`}
-          className="text-xs text-muted-foreground"
+          className="text-xs text-scout-subtle"
         >
-          <span className="font-medium text-foreground">
+          <span className="font-medium text-scout-ink">
             {quotaScopeLabel(snapshot.scope)} {snapshot.window}:
           </span>{" "}
           {snapshot.remaining.toString()} of {snapshot.limit.toString()}{" "}
@@ -356,12 +356,12 @@ function statusDisabledReason(
 
 function progressClassName(tone: ProgressItem["tone"]): string {
   if (tone === "success") {
-    return "text-xs text-emerald-700 dark:text-emerald-400";
+    return "text-xs text-[var(--scout-color-success)]";
   }
   if (tone === "error") {
-    return "text-xs text-destructive";
+    return "text-xs text-scout-danger";
   }
-  return "text-xs text-muted-foreground";
+  return "text-xs text-scout-subtle";
 }
 
 function formatReset(resetsAt: string): string {

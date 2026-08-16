@@ -10,29 +10,30 @@ const { title = "Dashboard" } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <SeoHead
       title={`${title} | Scout for LoL`}
       description="Manage your Scout for League of Legends subscriptions, sound packs, and settings."
       noindex
     />
+    <script is:inline src="/assets/scout/brand/theme-bootstrap.js"></script>
   </head>
-  <body class="min-h-screen bg-slate-950 text-white">
+  <body class="min-h-screen bg-scout-canvas text-scout-ink">
     <div class="flex min-h-screen">
       <!-- Sidebar -->
-      <aside class="w-64 border-r border-slate-800 bg-slate-900/50">
+      <aside class="w-64 border-r border-scout-border bg-scout-canvas/50">
         <div class="flex h-full flex-col">
           <!-- Logo -->
           <div
-            class="flex items-center gap-3 border-b border-slate-800 px-5 py-6"
+            class="flex items-center gap-3 border-b border-scout-border px-5 py-6"
           >
             <div
-              class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-amber-500 shadow-lg"
+              class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-scout-brand to-scout-warning text-scout-brand-ink shadow-lg"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 text-white"
+                class="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -46,8 +47,8 @@ const { title = "Dashboard" } = Astro.props;
               </svg>
             </div>
             <div>
-              <h1 class="text-lg font-bold text-slate-100">Scout</h1>
-              <p class="text-xs text-slate-500">for League of Legends</p>
+              <h1 class="text-lg font-bold text-scout-subtle">Scout</h1>
+              <p class="text-xs text-scout-subtle">for League of Legends</p>
             </div>
           </div>
 
@@ -55,7 +56,7 @@ const { title = "Dashboard" } = Astro.props;
           <nav class="flex-1 space-y-1 p-4">
             <a
               href="/app"
-              class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200"
+              class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-scout-subtle transition-colors hover:bg-scout-canvas/50 hover:text-scout-subtle"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -75,7 +76,7 @@ const { title = "Dashboard" } = Astro.props;
             </a>
             <a
               href="/app/sound-packs"
-              class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200"
+              class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-scout-subtle transition-colors hover:bg-scout-canvas/50 hover:text-scout-subtle"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -95,7 +96,7 @@ const { title = "Dashboard" } = Astro.props;
             </a>
             <a
               href="/app/settings"
-              class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200"
+              class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-scout-subtle transition-colors hover:bg-scout-canvas/50 hover:text-scout-subtle"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -121,18 +122,21 @@ const { title = "Dashboard" } = Astro.props;
           </nav>
 
           <!-- User Section -->
-          <div class="border-t border-slate-800 p-4">
+          <div class="border-t border-scout-border p-4">
             <div class="flex items-center justify-between rounded-lg px-4 py-3">
               <div class="flex items-center gap-3">
-                <div id="user-avatar" class="h-8 w-8 rounded-full bg-slate-700">
+                <div
+                  id="user-avatar"
+                  class="h-8 w-8 rounded-full bg-scout-canvas"
+                >
                 </div>
-                <span id="user-name" class="text-sm text-slate-400"
+                <span id="user-name" class="text-sm text-scout-subtle"
                   >Loading...</span
                 >
               </div>
               <button
                 id="logout-btn"
-                class="rounded p-1.5 text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300"
+                class="rounded p-1.5 text-scout-subtle transition-colors hover:bg-scout-canvas hover:text-scout-subtle"
                 title="Sign out"
               >
                 <svg
@@ -238,8 +242,8 @@ const { title = "Dashboard" } = Astro.props;
   navLinks.forEach((link) => {
     const href = link.getAttribute("href");
     if (href === currentPath || (href === "/app" && currentPath === "/app/")) {
-      link.classList.remove("text-slate-400");
-      link.classList.add("bg-slate-800/50", "text-slate-200");
+      link.classList.remove("text-scout-subtle");
+      link.classList.add("bg-scout-canvas/50", "text-scout-subtle");
     }
   });
 

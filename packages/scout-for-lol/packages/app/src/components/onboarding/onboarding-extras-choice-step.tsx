@@ -1,4 +1,4 @@
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import type { ExtraChoice } from "#src/lib/onboarding-steps.ts";
 import {
   COMPETITION_EXAMPLES,
@@ -45,11 +45,11 @@ export function OnboardingChooseExtraStep(props: {
           {OPTIONS.map((option) => (
             <div
               key={option.value}
-              className="space-y-3 rounded-lg border border-border bg-card p-4 text-card-foreground"
+              className="space-y-3 rounded-lg border border-border bg-scout-surface p-4 text-scout-ink"
             >
               <div className="space-y-1">
                 <p className="font-semibold">{option.title}</p>
-                <p className="text-sm text-muted-foreground">{option.body}</p>
+                <p className="text-sm text-scout-subtle">{option.body}</p>
               </div>
               <div className="flex flex-col gap-2">
                 {option.examples.map((example) => (

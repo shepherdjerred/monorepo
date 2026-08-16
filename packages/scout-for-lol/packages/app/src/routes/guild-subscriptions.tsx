@@ -25,14 +25,14 @@ import {
   muteResultOutcome,
   removeResultOutcome,
 } from "#src/lib/subscription-result-messages.ts";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "#src/components/ui/dropdown-menu.tsx";
+} from "@scout-for-lol/design-system/components/dropdown-menu";
 import { LoadMore } from "#src/components/load-more.tsx";
 import {
   Table,
@@ -41,7 +41,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#src/components/ui/table.tsx";
+} from "@scout-for-lol/design-system/components/table";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 function accountLabel(account: {
@@ -180,7 +180,7 @@ export function GuildSubscriptions() {
   if (guildId === undefined) {
     return (
       <div>
-        <p className="text-sm text-destructive">Missing guild id</p>
+        <p className="text-sm text-scout-danger">Missing guild id</p>
       </div>
     );
   }
@@ -217,27 +217,27 @@ export function GuildSubscriptions() {
       </div>
 
       {subsQuery.isLoading && (
-        <p role="status" className="text-sm text-muted-foreground">
+        <p role="status" className="text-sm text-scout-subtle">
           Loading subscriptions…
         </p>
       )}
       {subsQuery.error && (
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-scout-danger">
           Failed to load: {subsQuery.error.message}
         </p>
       )}
       {removeMutation.error && (
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-scout-danger">
           Failed to remove: {removeMutation.error.message}
         </p>
       )}
-      {error !== null && <p className="text-sm text-destructive">{error}</p>}
+      {error !== null && <p className="text-sm text-scout-danger">{error}</p>}
       {message !== null && (
-        <p className="text-sm text-muted-foreground">{message}</p>
+        <p className="text-sm text-scout-subtle">{message}</p>
       )}
 
       {subsQuery.data && subscriptions.length === 0 && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-scout-subtle">
           No subscriptions yet — click &quot;Add subscription&quot;, or follow
           the{" "}
           <Link to="/welcome" className="underline">
@@ -278,17 +278,17 @@ export function GuildSubscriptions() {
                         {sub.player.alias}
                       </Link>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-scout-subtle">
                       {sub.player.accounts
                         .map((account) => accountLabel(account))
                         .join(", ")}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-scout-subtle">
                       {channel === undefined
                         ? sub.channelId
                         : `#${channel.name}`}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-scout-subtle">
                       <FilterSummary
                         filters={sub.filters}
                         isMuted={sub.isMuted}
@@ -371,7 +371,7 @@ export function GuildSubscriptions() {
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     disabled={removeMutation.isPending}
-                                    className="text-destructive focus:text-destructive"
+                                    className="text-scout-danger focus:text-scout-danger"
                                     onSelect={() => {
                                       if (
                                         !globalThis.confirm(

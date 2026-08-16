@@ -2,7 +2,7 @@ import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
-import { Combobox } from "#src/components/ui/combobox.tsx";
+import { Combobox } from "@scout-for-lol/design-system/components/combobox";
 
 const SNOWFLAKE = /^\d{17,20}$/;
 
@@ -83,7 +83,7 @@ export function DiscordMemberCombobox(props: {
           />
           <span className="truncate">
             {member.displayName}
-            <span className="text-muted-foreground"> @{member.username}</span>
+            <span className="text-scout-subtle"> @{member.username}</span>
           </span>
         </>
       )}

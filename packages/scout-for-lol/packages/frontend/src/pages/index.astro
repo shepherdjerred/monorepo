@@ -56,7 +56,7 @@ const initialShowcasePreview = showcasePreviews.at(0);
   title="Scout for League of Legends"
   description="Get notified when your friends start League of Legends matches and get beautiful post-match reports delivered right to your Discord server."
 >
-  <div class="bg-white dark:bg-gray-900">
+  <div class="bg-scout-surface">
     <WhatsNewBanner />
     <Navbar activePage="home" />
 
@@ -166,7 +166,7 @@ const initialShowcasePreview = showcasePreviews.at(0);
     </div>
 
     <!-- Features Gallery Section -->
-    <div class="bg-white dark:bg-gray-900 py-24 sm:py-32">
+    <div class="bg-scout-surface py-24 sm:py-32">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <SectionHeader badge="Feature Showcase" title="See Scout in Action" />
 
@@ -177,7 +177,7 @@ const initialShowcasePreview = showcasePreviews.at(0);
             showcasePreviews.map((preview) => (
               <button
                 type="button"
-                class="group mx-auto block w-full max-w-sm cursor-zoom-in rounded-md text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-4 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900"
+                class="group mx-auto block w-full max-w-sm cursor-zoom-in rounded-md text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-scout-focus focus-visible:ring-offset-4 focus-visible:ring-offset-scout-canvas"
                 data-scout-lightbox-trigger
                 data-lightbox-src={preview.src}
                 data-lightbox-alt={preview.title}
@@ -196,7 +196,7 @@ const initialShowcasePreview = showcasePreviews.at(0);
 
         {
           showcasePreviews.length === 0 && (
-            <div class="mt-8 rounded-lg border border-gray-200 bg-gray-50 px-5 py-4 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+            <div class="mt-8 rounded-lg border border-scout-border bg-scout-raised px-5 py-4 text-sm text-scout-subtle ">
               Scout showcase examples are unavailable right now.
             </div>
           )
@@ -205,7 +205,7 @@ const initialShowcasePreview = showcasePreviews.at(0);
         {
           initialShowcasePreview && (
             <div
-              class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-950/90 p-4 backdrop-blur-sm"
+              class="fixed inset-0 z-50 hidden items-center justify-center bg-scout-canvas/90 p-4 backdrop-blur-sm"
               data-scout-lightbox
               role="dialog"
               aria-modal="true"
@@ -213,7 +213,7 @@ const initialShowcasePreview = showcasePreviews.at(0);
             >
               <button
                 type="button"
-                class="absolute top-4 right-4 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                class="absolute top-4 right-4 rounded-md bg-scout-surface px-3 py-2 text-sm font-semibold text-scout-ink shadow-sm hover:bg-scout-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-scout-focus"
                 data-scout-lightbox-close
               >
                 Close
@@ -335,7 +335,7 @@ const initialShowcasePreview = showcasePreviews.at(0);
     </script>
 
     <!-- How it works -->
-    <div class="bg-gray-50 dark:bg-gray-800 py-24 sm:py-32">
+    <div class="bg-scout-raised py-24 sm:py-32">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <SectionHeader
           badge="Simple setup"
@@ -347,18 +347,18 @@ const initialShowcasePreview = showcasePreviews.at(0);
             class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3"
           >
             <ProcessStep number={1} title="Sign in with Discord">
-              <p class="text-gray-600 dark:text-gray-300">
+              <p class="text-scout-subtle">
                 Open the dashboard and sign in with your Discord account.
               </p>
             </ProcessStep>
             <ProcessStep number={2} title="Add Scout to your server">
-              <p class="text-gray-600 dark:text-gray-300">
+              <p class="text-scout-subtle">
                 One click adds the bot to your server and sends you right back
                 to the dashboard.
               </p>
             </ProcessStep>
             <ProcessStep number={3} title="Pick who to track">
-              <p class="text-gray-600 dark:text-gray-300">
+              <p class="text-scout-subtle">
                 Add the friends you want to follow, choose where Scout posts,
                 and start getting alerts, reports, and leaderboards.
               </p>

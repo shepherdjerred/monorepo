@@ -1,14 +1,14 @@
 import { memo, useMemo, useState } from "react";
 import { MoreHorizontal, Plus, Search } from "lucide-react";
 import type { ExploreConversation } from "@scout-for-lol/data";
-import { Button } from "#src/components/ui/button.tsx";
-import { Input } from "#src/components/ui/input.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import { Input } from "@scout-for-lol/design-system/components/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "#src/components/ui/dropdown-menu.tsx";
+} from "@scout-for-lol/design-system/components/dropdown-menu";
 
 /**
  * The conversation list.
@@ -47,7 +47,7 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
 
       {props.conversations.length > 4 && (
         <div className="relative">
-          <Search className="absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-scout-subtle" />
           <Input
             value={search}
             placeholder="Search"
@@ -62,7 +62,7 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
         {groups.map((group) => (
           <div key={group.label} className="space-y-1">
-            <p className="px-2 text-xs font-medium text-muted-foreground">
+            <p className="px-2 text-xs font-medium text-scout-subtle">
               {group.label}
             </p>
             <ul className="space-y-0.5">
@@ -70,8 +70,8 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
                 <li key={conversation.id} className="group flex items-center">
                   <button
                     type="button"
-                    className={`flex-1 truncate rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted ${
-                      conversation.id === props.activeId ? "bg-muted" : ""
+                    className={`flex-1 truncate rounded-md px-2 py-1.5 text-left text-sm hover:bg-scout-hover ${
+                      conversation.id === props.activeId ? "bg-scout-hover" : ""
                     }`}
                     onClick={() => {
                       props.onSelect(conversation.id);
@@ -114,7 +114,7 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
         ))}
 
         {groups.length === 0 && (
-          <p className="px-2 text-sm text-muted-foreground">
+          <p className="px-2 text-sm text-scout-subtle">
             {search.trim().length > 0
               ? "No conversations match."
               : "No conversations yet."}

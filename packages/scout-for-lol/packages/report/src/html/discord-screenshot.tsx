@@ -5,7 +5,7 @@ import {
   containsCjkText,
   font,
   fontForText,
-} from "#src/assets/index.ts";
+} from "@scout-for-lol/design-system/satori/fonts";
 import { svgToPng } from "#src/html/index.tsx";
 
 const CANVAS_WIDTH = 1280;

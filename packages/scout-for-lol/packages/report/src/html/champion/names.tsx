@@ -1,5 +1,5 @@
-import { palette } from "#src/assets/colors.ts";
-import { fontForText } from "#src/assets/index.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
+import { fontForText } from "@scout-for-lol/design-system/satori/fonts";
 import { getChampionImage } from "#src/dataDragon/image-cache.ts";
 import { championNameToDisplayName } from "@scout-for-lol/data";
 

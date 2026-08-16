@@ -1,5 +1,5 @@
 import type { LoadingScreenData } from "@scout-for-lol/data";
-import { palette } from "#src/assets/colors.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
 import { GameHeader } from "#src/html/loading-screen/game-header.tsx";
 import { StandardLayout } from "#src/html/loading-screen/standard-layout.tsx";
 import { ArenaLayout } from "#src/html/loading-screen/arena-layout.tsx";

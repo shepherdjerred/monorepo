@@ -4,7 +4,7 @@ import {
   VisualizationSnapshotSchema,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { visualizationSnapshotToOption } from "@scout-for-lol/report/browser";
+import { visualizationSnapshotToOption } from "@scout-for-lol/report/visualization";
 
 export function InteractiveVisualization(props: {
   snapshot: VisualizationSnapshot;

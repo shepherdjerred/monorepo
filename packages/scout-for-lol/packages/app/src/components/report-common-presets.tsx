@@ -8,8 +8,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "#src/components/ui/card.tsx";
-import { Button } from "#src/components/ui/button.tsx";
+} from "@scout-for-lol/design-system/components/card";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { track } from "#src/lib/analytics.ts";
 
 export function ReportCommonPresets(props: {
@@ -24,7 +24,7 @@ export function ReportCommonPresets(props: {
         <div className="space-y-5">
           {presetCategories().map(([category, presets]) => (
             <section key={category} className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
                 {category}
               </h3>
               <div className="grid gap-2 sm:grid-cols-2">
@@ -46,7 +46,7 @@ export function ReportCommonPresets(props: {
                       <span className="block text-sm font-medium leading-5">
                         {preset.title}
                       </span>
-                      <span className="block text-xs font-normal leading-4 text-muted-foreground">
+                      <span className="block text-xs font-normal leading-4 text-scout-subtle">
                         {preset.description}
                       </span>
                     </span>

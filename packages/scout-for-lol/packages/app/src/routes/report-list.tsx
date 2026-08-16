@@ -11,8 +11,8 @@ import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { useGuildParams } from "#src/lib/route-params.ts";
-import { Button } from "#src/components/ui/button.tsx";
-import { Badge } from "#src/components/ui/badge.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import { Badge } from "@scout-for-lol/design-system/components/badge";
 import { ReportRunStatusBadge } from "#src/components/status-badge.tsx";
 import {
   Table,
@@ -21,7 +21,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#src/components/ui/table.tsx";
+} from "@scout-for-lol/design-system/components/table";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 function cronLabel(cron: string): string {
@@ -83,18 +83,18 @@ export function ReportList() {
       </div>
 
       {setEnabledMutation.error && (
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-scout-danger">
           {setEnabledMutation.error.message}
         </p>
       )}
 
       {reports.length === 0 && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-scout-subtle">
           No reports yet — click &quot;New report&quot; to get started.
         </p>
       )}
       {reports.length > 0 && visibleReports.length === 0 && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-scout-subtle">
           All reports are disabled — switch the toggle to &quot;All&quot; to see
           them.
         </p>
@@ -124,7 +124,7 @@ export function ReportList() {
                       {report.title}
                     </Link>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-scout-subtle">
                     {cronLabel(report.cronExpression)}
                   </TableCell>
                   <TableCell>
@@ -155,7 +155,7 @@ export function ReportList() {
                     {report.isSystemManaged ? (
                       <Badge variant="outline">System</Badge>
                     ) : (
-                      <span className="text-muted-foreground">User</span>
+                      <span className="text-scout-subtle">User</span>
                     )}
                   </TableCell>
                 </TableRow>

@@ -4,7 +4,6 @@ import { AlertCircle } from "lucide-react";
 import {
   buildInfo,
   isContractMismatch,
-  shortSha,
   VersionResponseSchema,
   type VersionResponse,
 } from "#src/lib/build-info.ts";
@@ -63,14 +62,14 @@ export function ContractMismatchBanner() {
     return null;
   }
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground shadow-md">
+    <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border border-border bg-scout-surface px-3 py-1.5 text-xs text-scout-subtle shadow-md">
       <AlertCircle className="h-3.5 w-3.5 shrink-0" />
       <span>
         Version mismatch (app {buildInfo.version}, api {backend.data.version})
       </span>
       <button
         type="button"
-        className="font-medium text-foreground underline-offset-2 hover:underline"
+        className="font-medium text-scout-ink underline-offset-2 hover:underline"
         onClick={() => {
           location.reload();
         }}
@@ -80,7 +79,7 @@ export function ContractMismatchBanner() {
       <button
         type="button"
         aria-label="Dismiss"
-        className="text-sm leading-none text-muted-foreground hover:text-foreground"
+        className="text-sm leading-none text-scout-subtle hover:text-scout-ink"
         onClick={() => {
           localStorage.setItem(DISMISSED_MISMATCH_STORAGE_KEY, key);
           setDismissedKey(key);
@@ -89,58 +88,5 @@ export function ContractMismatchBanner() {
         ×
       </button>
     </div>
-  );
-}
-
-/**
- * One-line build-identity footer: this bundle's version + SHA, and the
- * backend's when reachable. Full contract hashes live in the title attribute
- * for copy/paste during debugging.
- */
-const FULL_SHA_PATTERN = /^[0-9a-f]{40}$/i;
-
-/**
- * Short SHA linked to the commit on GitHub when the build carries a real
- * 40-char SHA; dev builds carry placeholders and render as plain text.
- */
-function CommitSha(props: { gitSha: string }) {
-  if (!FULL_SHA_PATTERN.test(props.gitSha)) {
-    return <>{shortSha(props.gitSha)}</>;
-  }
-  return (
-    <a
-      href={`https://github.com/shepherdjerred/monorepo/commit/${props.gitSha}`}
-      target="_blank"
-      rel="noreferrer"
-      className="underline decoration-dotted underline-offset-2 hover:text-foreground"
-    >
-      {shortSha(props.gitSha)}
-    </a>
-  );
-}
-
-export function VersionFooter() {
-  const backend = useBackendVersion();
-
-  const title =
-    backend.data === undefined
-      ? `app contract ${buildInfo.contractHash}`
-      : `app contract ${buildInfo.contractHash} · api contract ${backend.data.contractHash}`;
-
-  return (
-    <footer className="px-4 py-3 text-center text-xs text-muted-foreground">
-      <span title={title}>
-        app {buildInfo.version} (<CommitSha gitSha={buildInfo.gitSha} />)
-        {backend.data === undefined ? null : (
-          <>
-            {" · "}api {backend.data.version} (
-            <CommitSha gitSha={backend.data.gitSha} />)
-          </>
-        )}
-        {/* The contract hashes live in the title tooltip for sighted mouse
-            users; expose them to screen readers too. */}
-        <span className="sr-only">{title}</span>
-      </span>
-    </footer>
   );
 }

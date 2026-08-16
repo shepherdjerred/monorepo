@@ -12,9 +12,7 @@ export function DiscordUser(props: {
   className?: string;
 }) {
   if (props.id === null) {
-    return (
-      <span className={cn("text-muted-foreground", props.className)}>—</span>
-    );
+    return <span className={cn("text-scout-subtle", props.className)}>—</span>;
   }
   if (props.name !== null && props.name !== undefined) {
     return (
@@ -28,7 +26,7 @@ export function DiscordUser(props: {
   }
   return (
     <span
-      className={cn("font-mono text-xs text-muted-foreground", props.className)}
+      className={cn("font-mono text-xs text-scout-subtle", props.className)}
       title={props.id}
     >
       {props.id}

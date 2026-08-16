@@ -5,7 +5,7 @@ import { visibilityToString } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { summarizeCriteria } from "#src/lib/criteria-summary.ts";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { LoadMore } from "#src/components/load-more.tsx";
 import { CompetitionStatusBadge } from "#src/components/status-badge.tsx";
@@ -16,7 +16,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#src/components/ui/table.tsx";
+} from "@scout-for-lol/design-system/components/table";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 export function CompetitionList() {
@@ -39,7 +39,7 @@ export function CompetitionList() {
   );
 
   if (guildId === undefined) {
-    return <p className="text-sm text-destructive">Missing guild id</p>;
+    return <p className="text-sm text-scout-danger">Missing guild id</p>;
   }
 
   const competitions =
@@ -71,16 +71,16 @@ export function CompetitionList() {
       </div>
 
       {competitionsQuery.isLoading && (
-        <p className="text-sm text-muted-foreground">Loading competitions…</p>
+        <p className="text-sm text-scout-subtle">Loading competitions…</p>
       )}
       {competitionsQuery.error && (
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-scout-danger">
           Failed to load: {competitionsQuery.error.message}
         </p>
       )}
 
       {competitionsQuery.data && competitions.length === 0 && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-scout-subtle">
           No competitions yet — click &quot;New competition&quot; to get
           started.
         </p>
@@ -114,15 +114,15 @@ export function CompetitionList() {
                   <TableCell>
                     <CompetitionStatusBadge status={competition.status} />
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-scout-subtle">
                     {summarizeCriteria(competition.criteria)}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-scout-subtle">
                     {formatDate(competition.startDate)} →{" "}
                     {formatDate(competition.endDate)}
                   </TableCell>
                   <TableCell>{competition.participantCount}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-scout-subtle">
                     {visibilityToString(competition.visibility)}
                   </TableCell>
                 </TableRow>

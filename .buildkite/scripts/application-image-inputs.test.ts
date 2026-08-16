@@ -74,4 +74,18 @@ describe("application image inputs", () => {
       "Scout contract hash mismatch: expected current-contract, found candidate-contract",
     );
   });
+
+  test("ships the shared report foundations in the Scout runtime image", async () => {
+    const dockerfile = await read(
+      "packages/scout-for-lol/packages/backend/Dockerfile",
+    );
+    const runtime = dockerfile
+      .split("FROM base AS runtime")[1]
+      ?.split("FROM runtime AS smoke")[0];
+    if (runtime === undefined) {
+      throw new Error("Scout Dockerfile is missing its runtime image stage");
+    }
+    expect(runtime).toContain("packages/scout-for-lol/packages/design-system");
+    expect(runtime).toContain("packages/scout-for-lol/packages/report");
+  });
 });

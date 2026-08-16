@@ -1,8 +1,10 @@
 import { env } from "node:process";
 import mdx from "@astrojs/mdx";
+import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
+import { scoutAssetsPlugin } from "@scout-for-lol/design-system/build";
 
 const siteOrigin = env.PUBLIC_DOCS_SITE_ORIGIN ?? "https://scout-for-lol.com";
 
@@ -25,9 +27,18 @@ export default defineConfig({
   },
   integrations: [
     sitemap(),
+    react(),
     starlight({
+      components: {
+        Footer: "./src/components/overrides/Footer.astro",
+        Header: "./src/components/overrides/Header.astro",
+        ThemeProvider: "./src/components/overrides/ThemeProvider.astro",
+        ThemeSelect: "./src/components/overrides/ThemeSelect.astro",
+      },
+      customCss: ["./src/styles/scout.css"],
       description:
         "Learn how to install, configure, and get the most from Scout for League of Legends.",
+      favicon: "/assets/scout/brand/emblem.svg",
       lastUpdated: true,
       pagefind: true,
       sidebar: [
@@ -57,4 +68,5 @@ export default defineConfig({
   output: "static",
   site: siteOrigin,
   trailingSlash: "always",
+  vite: { plugins: [scoutAssetsPlugin()] },
 });

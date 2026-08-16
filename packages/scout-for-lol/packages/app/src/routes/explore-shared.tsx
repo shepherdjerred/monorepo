@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import type { ExploreTranscript as Transcript } from "@scout-for-lol/data";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { ExploreTranscript } from "#src/components/explore-transcript.tsx";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import { fetchSharedTranscript } from "#src/lib/explore-stream.ts";
@@ -58,7 +58,7 @@ export function ExploreShared() {
         <h1 className="text-xl font-semibold tracking-tight">
           Conversation unavailable
         </h1>
-        <p className="text-sm text-muted-foreground">{error}</p>
+        <p className="text-sm text-scout-subtle">{error}</p>
         <Button asChild variant="outline" size="sm">
           <Link to="/explore">Go to Explore</Link>
         </Button>
@@ -80,7 +80,7 @@ export function ExploreShared() {
         <h1 className="text-xl font-semibold tracking-tight">
           {transcript.conversation.title}
         </h1>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-scout-subtle">
           A shared Scout Explore conversation. The results are a snapshot from
           when it was asked.
         </p>
@@ -89,7 +89,7 @@ export function ExploreShared() {
       <ExploreTranscript messages={transcript.messages} />
 
       <footer className="border-t pt-4">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-scout-subtle">
           Want to ask your own questions of Scout&apos;s match data?
         </p>
         <Button asChild size="sm" className="mt-2">

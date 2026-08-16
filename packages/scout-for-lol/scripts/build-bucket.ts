@@ -19,6 +19,7 @@
  */
 
 import { $ } from "bun";
+import { verifyScoutAssetBucket } from "@scout-for-lol/design-system/build";
 
 await $`bun --no-install run --filter='./packages/frontend' build`;
 await $`bun --no-install run --filter='./packages/app' build`;
@@ -70,6 +71,22 @@ if (!(await Bun.file(`${docsTarget}/index.html`).exists())) {
   throw new Error(`copy failed: ${docsTarget}/index.html missing after copy`);
 }
 
+await verifyScoutAssetBucket(frontendDist);
+
+const bootstrapPath = "/assets/scout/brand/theme-bootstrap.js";
+for (const entrypoint of [
+  frontendIndex,
+  copiedIndex,
+  `${docsTarget}/index.html`,
+]) {
+  const html = await Bun.file(entrypoint).text();
+  if (!html.includes(bootstrapPath)) {
+    throw new Error(
+      `${entrypoint} does not load the shared pre-paint theme bootstrap`,
+    );
+  }
+}
+
 console.log(
-  `Bundled scout-for-lol deploy: ${frontendDist}/index.html + ${target}/index.html + ${docsTarget}/index.html`,
+  `Bundled and verified Scout deploy: ${frontendDist}/index.html + ${target}/index.html + ${docsTarget}/index.html + shared theme/font/brand/game assets`,
 );

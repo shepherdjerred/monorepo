@@ -2,7 +2,7 @@ import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
-import { Combobox } from "#src/components/ui/combobox.tsx";
+import { Combobox } from "@scout-for-lol/design-system/components/combobox";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 type PlayerSummary = { id: number; alias: string };

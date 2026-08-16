@@ -47,14 +47,12 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
     <div className="space-y-6">
       {/* API Keys */}
       <div>
-        <h3 className="text-sm font-semibold text-surface-700 mb-3">
-          API Keys
-        </h3>
+        <h3 className="text-sm font-semibold text-scout-ink mb-3">API Keys</h3>
         <div className="space-y-4">
           <div>
             <label
               htmlFor="openai-api-key"
-              className="block text-sm font-medium text-surface-700 mb-1"
+              className="block text-sm font-medium text-scout-ink mb-1"
             >
               OpenAI API Key
             </label>
@@ -71,14 +69,14 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   },
                 });
               }}
-              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
+              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand placeholder:text-scout-subtle"
               placeholder="sk-..."
             />
           </div>
           <div>
             <label
               htmlFor="gemini-api-key"
-              className="block text-sm font-medium text-surface-700 mb-1"
+              className="block text-sm font-medium text-scout-ink mb-1"
             >
               Gemini API Key
             </label>
@@ -95,7 +93,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   },
                 });
               }}
-              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
+              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand placeholder:text-scout-subtle"
               placeholder="AI..."
             />
           </div>
@@ -103,15 +101,15 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
       </div>
 
       {/* S3/R2 Configuration */}
-      <div className="pt-4 border-t border-surface-200">
-        <h3 className="text-sm font-semibold text-surface-700 mb-3">
+      <div className="pt-4 border-t border-scout-border">
+        <h3 className="text-sm font-semibold text-scout-ink mb-3">
           S3 / R2 Configuration (Optional)
         </h3>
         <div className="space-y-4">
           <div>
             <label
               htmlFor="s3-bucket-name"
-              className="block text-sm font-medium text-surface-700 mb-1"
+              className="block text-sm font-medium text-scout-ink mb-1"
             >
               Bucket Name
             </label>
@@ -128,14 +126,14 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   },
                 });
               }}
-              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
+              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand placeholder:text-scout-subtle"
               placeholder="my-bucket-name"
             />
           </div>
           <div>
             <label
               htmlFor="aws-access-key-id"
-              className="block text-sm font-medium text-surface-700 mb-1"
+              className="block text-sm font-medium text-scout-ink mb-1"
             >
               Access Key ID
             </label>
@@ -152,14 +150,14 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   },
                 });
               }}
-              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
+              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand placeholder:text-scout-subtle"
               placeholder="AKIA... or R2 access key"
             />
           </div>
           <div>
             <label
               htmlFor="aws-secret-access-key"
-              className="block text-sm font-medium text-surface-700 mb-1"
+              className="block text-sm font-medium text-scout-ink mb-1"
             >
               Secret Access Key
             </label>
@@ -176,14 +174,14 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   },
                 });
               }}
-              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
+              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand placeholder:text-scout-subtle"
               placeholder="••••••••"
             />
           </div>
           <div>
             <label
               htmlFor="s3-endpoint"
-              className="block text-sm font-medium text-surface-700 mb-1"
+              className="block text-sm font-medium text-scout-ink mb-1"
             >
               Endpoint URL (for Cloudflare R2)
             </label>
@@ -200,17 +198,17 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   },
                 });
               }}
-              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
+              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand placeholder:text-scout-subtle"
               placeholder="https://<account-id>.r2.cloudflarestorage.com"
             />
-            <p className="mt-1 text-xs text-surface-500">
+            <p className="mt-1 text-xs text-scout-subtle">
               Leave empty for AWS S3. For R2, use your account endpoint.
             </p>
           </div>
           <div>
             <label
               htmlFor="aws-region"
-              className="block text-sm font-medium text-surface-700 mb-1"
+              className="block text-sm font-medium text-scout-ink mb-1"
             >
               Region
             </label>
@@ -224,10 +222,10 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   api: { ...config.api, awsRegion: e.target.value },
                 });
               }}
-              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
+              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand placeholder:text-scout-subtle"
               placeholder="us-east-1 or auto for R2"
             />
-            <p className="mt-1 text-xs text-surface-500">
+            <p className="mt-1 text-xs text-scout-subtle">
               For R2, use &quot;auto&quot; or &quot;us-east-1&quot;
             </p>
           </div>
@@ -235,8 +233,8 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
       </div>
 
       {/* Import/Export */}
-      <div className="pt-4 border-t border-surface-200">
-        <h3 className="text-sm font-semibold text-surface-700 mb-3">
+      <div className="pt-4 border-t border-scout-border">
+        <h3 className="text-sm font-semibold text-scout-ink mb-3">
           Share API Config
         </h3>
 
@@ -249,13 +247,13 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
               }}
               placeholder="Paste config blob here..."
               rows={3}
-              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono text-xs placeholder:text-surface-400"
+              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-success font-mono text-xs placeholder:text-scout-subtle"
             />
             <div className="flex gap-2">
               <button
                 onClick={handleImport}
                 disabled={!importInput.trim()}
-                className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm disabled:bg-surface-300 disabled:cursor-not-allowed"
+                className="flex-1 px-3 py-2 bg-scout-success text-scout-success-ink rounded hover:bg-scout-success transition-colors text-sm disabled:bg-scout-canvas disabled:cursor-not-allowed"
               >
                 Import
               </button>
@@ -264,7 +262,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   setShowImportExport(false);
                   setImportInput("");
                 }}
-                className="flex-1 px-3 py-2 bg-surface-300 text-surface-700 rounded hover:bg-surface-400 transition-colors text-sm"
+                className="flex-1 px-3 py-2 bg-scout-canvas text-scout-ink rounded hover:bg-scout-canvas transition-colors text-sm"
               >
                 Cancel
               </button>
@@ -274,7 +272,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
           <div className="flex gap-2">
             <button
               onClick={handleExport}
-              className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium"
+              className="flex-1 px-3 py-2 bg-scout-brand text-scout-brand-ink rounded hover:bg-scout-brand transition-colors text-sm font-medium"
             >
               📋 Export (Copy to Clipboard)
             </button>
@@ -282,20 +280,20 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
               onClick={() => {
                 setShowImportExport(true);
               }}
-              className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+              className="flex-1 px-3 py-2 bg-scout-success text-scout-success-ink rounded hover:bg-scout-success transition-colors text-sm"
             >
               📥 Import
             </button>
           </div>
         )}
 
-        <p className="text-xs text-surface-500 mt-2">
+        <p className="text-xs text-scout-subtle mt-2">
           Export creates a base64-encoded blob with API keys. Only share with
           trusted users.
         </p>
       </div>
 
-      <div className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded p-3">
+      <div className="text-xs text-scout-warning bg-scout-warning border border-scout-warning rounded p-3">
         ⚠️ API keys are stored in browser IndexedDB.
       </div>
     </div>

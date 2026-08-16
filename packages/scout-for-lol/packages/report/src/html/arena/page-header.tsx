@@ -1,6 +1,6 @@
 import { type ArenaMatch } from "@scout-for-lol/data";
-import { palette } from "#src/assets/colors.ts";
-import { font } from "#src/assets/index.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
+import { font } from "@scout-for-lol/design-system/satori/fonts";
 import { formatDuration } from "#src/html/arena/utils.ts";
 
 export function PageHeader({ match }: { match: ArenaMatch }) {

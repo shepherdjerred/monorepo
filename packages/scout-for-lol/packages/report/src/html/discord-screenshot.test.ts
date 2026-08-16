@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import { satoriRankAssetUrl } from "@scout-for-lol/design-system/satori/assets";
 import { discordScreenshotToImage } from "#src/html/discord-screenshot.tsx";
 
 const FIXTURE_PNG_BYTES: Uint8Array = Buffer.from(
@@ -49,12 +50,7 @@ describe("discord screenshot renderer", () => {
   test("renders chat messages before and after the embed", async () => {
     const image = await discordScreenshotToImage({
       embeddedImageBytes: await Bun.file(
-        path.resolve(
-          import.meta.dir,
-          "ranked",
-          "assets",
-          "Rank=Challenger.png",
-        ),
+        satoriRankAssetUrl("Challenger"),
       ).bytes(),
       timestamp: "5:23 AM",
       appName: "Scout for LoL",

@@ -10,8 +10,8 @@ import {
 import {
   classicPalette,
   classicTypography,
-} from "#src/assets/classic-style.ts";
-import { fontFamilyForText } from "#src/assets/index.ts";
+} from "@scout-for-lol/design-system/satori/classic-style";
+import { fontFamilyForText } from "@scout-for-lol/design-system/satori/fonts";
 
 const CARD_WIDTH = 320;
 const CARD_HEIGHT = 560;

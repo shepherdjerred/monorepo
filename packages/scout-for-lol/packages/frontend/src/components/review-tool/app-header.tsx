@@ -1,7 +1,7 @@
 /**
  * Application header with quick actions
  */
-import { Button } from "./ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 
 type AppHeaderProps = {
   showAnalytics: boolean;
@@ -15,16 +15,16 @@ export function AppHeader({
   onAnalyticsToggle,
 }: AppHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-surface-200/50 shadow-sm">
+    <header className="sticky top-0 z-40 bg-scout-surface backdrop-blur-sm border-b border-scout-border/50 shadow-sm">
       <div className="max-w-[1800px] mx-auto">
         {/* Top bar - Logo, title, actions */}
         <div className="flex items-center justify-between px-6 py-4">
           {/* Logo & Title */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-glow">
+              <div className="w-10 h-10 rounded-xl bg-scout-brand text-scout-brand-ink flex items-center justify-center shadow-lg">
                 <svg
-                  className="w-6 h-6 text-white"
+                  className="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -38,10 +38,10 @@ export function AppHeader({
                 </svg>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-surface-900">
+                <h1 className="text-xl font-bold text-scout-ink">
                   Review Generator
                 </h1>
-                <p className="text-xs text-surface-500">
+                <p className="text-xs text-scout-subtle">
                   Scout for LoL Dev Tools
                 </p>
               </div>
@@ -51,7 +51,7 @@ export function AppHeader({
           {/* Right actions */}
           <div className="flex items-center gap-2">
             <Button
-              variant={showAnalytics ? "primary" : "ghost"}
+              variant={showAnalytics ? "default" : "ghost"}
               size="sm"
               onClick={onAnalyticsToggle}
             >

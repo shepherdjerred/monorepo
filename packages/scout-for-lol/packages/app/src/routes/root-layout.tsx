@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useSyncExternalStore } from "react";
 import { Outlet, useLocation } from "react-router";
 import {
-  ContractMismatchBanner,
-  VersionFooter,
-} from "#src/components/version-info.tsx";
+  GlobalFooter,
+  GlobalNavbar,
+} from "@scout-for-lol/design-system/layout";
+import { ContractMismatchBanner } from "#src/components/version-info.tsx";
 import {
   analyticsContextRoute,
   normalizePath,
@@ -15,6 +16,12 @@ import {
 } from "#src/lib/analytics.ts";
 import { useAnalyticsIdentity } from "#src/hooks/use-analytics-identity.ts";
 import { FeedbackPrompt } from "#src/components/feedback-prompt.tsx";
+import { UserMenu } from "#src/components/user-menu.tsx";
+import { buildInfo } from "#src/lib/build-info.ts";
+
+export function appGlobalPath(pathname: string): string {
+  return `/app${pathname}`;
+}
 
 /**
  * Top-level chrome shared by every route (login included): the contract
@@ -27,7 +34,7 @@ export function RootLayout() {
 
   // Identity is synced here, not in `RequireSession`, because `/login` is
   // mounted outside that guard — see the hook for why that matters.
-  const { sessionResolved } = useAnalyticsIdentity();
+  const { sessionResolved, username } = useAnalyticsIdentity();
 
   // PostHog is initialised opted out, and this is the one place that opens it.
   // Nothing — pageview or autocapture — may leave the browser until the session
@@ -60,13 +67,27 @@ export function RootLayout() {
   }, [ready, location.pathname]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="scout-page-frame">
+      <GlobalNavbar
+        signedIn={username !== undefined}
+        currentPath={appGlobalPath(location.pathname)}
+        guildAccess={
+          username === undefined ? undefined : (
+            <a className="scout-navbar__link" href="/app/">
+              Guilds
+            </a>
+          )
+        }
+        accountMenu={
+          username === undefined ? undefined : <UserMenu username={username} />
+        }
+      />
       <ContractMismatchBanner />
       <FeedbackPrompt />
-      <div className="flex-1">
+      <main>
         <Outlet />
-      </div>
-      <VersionFooter />
+      </main>
+      <GlobalFooter release={buildInfo.version} commit={buildInfo.gitSha} />
     </div>
   );
 }

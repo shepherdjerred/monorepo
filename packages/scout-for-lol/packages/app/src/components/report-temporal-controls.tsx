@@ -5,8 +5,8 @@ import {
   type TemporalAnalysisSpec,
   type TemporalBucket,
 } from "@scout-for-lol/data";
-import { Input } from "#src/components/ui/input.tsx";
-import { Label } from "#src/components/ui/label.tsx";
+import { Input } from "@scout-for-lol/design-system/components/input";
+import { Label } from "@scout-for-lol/design-system/components/label";
 
 type RangeChoice = "30" | "90" | "365" | "custom";
 
@@ -48,7 +48,7 @@ export function ReportTemporalControls(props: {
           <label className="space-y-1 text-xs">
             <span className="font-medium">Period</span>
             <select
-              className="h-9 w-full rounded-md border border-input bg-background px-2"
+              className="h-9 w-full rounded-md border border-scout-border bg-scout-canvas px-2"
               value={rangeChoice(base)}
               onChange={(event) => {
                 update(withRange(base, parseRangeChoice(event.target.value)));
@@ -63,7 +63,7 @@ export function ReportTemporalControls(props: {
           <label className="space-y-1 text-xs">
             <span className="font-medium">Bucket</span>
             <select
-              className="h-9 w-full rounded-md border border-input bg-background px-2"
+              className="h-9 w-full rounded-md border border-scout-border bg-scout-canvas px-2"
               value={base.bucket}
               onChange={(event) => {
                 update({ ...base, bucket: parseBucket(event.target.value) });
@@ -119,7 +119,7 @@ export function ReportTemporalControls(props: {
           <label className="space-y-1 text-xs">
             <span className="font-medium">Comparison</span>
             <select
-              className="h-9 w-full rounded-md border border-input bg-background px-2"
+              className="h-9 w-full rounded-md border border-scout-border bg-scout-canvas px-2"
               value={base.comparison?.kind ?? "none"}
               onChange={(event) => {
                 update({
@@ -137,7 +137,7 @@ export function ReportTemporalControls(props: {
             <Label htmlFor="analysis-timezone">Analysis timezone</Label>
             <select
               id="analysis-timezone"
-              className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+              className="h-9 w-full rounded-md border border-scout-border bg-scout-canvas px-2 text-sm"
               value={base.timezone}
               onChange={(event) => {
                 update({ ...base, timezone: event.target.value });

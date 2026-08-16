@@ -1,6 +1,9 @@
 import { match } from "ts-pattern";
 import type { CompetitionStatus } from "@scout-for-lol/data";
-import { Badge, type BadgeProps } from "#src/components/ui/badge.tsx";
+import {
+  Badge,
+  type BadgeProps,
+} from "@scout-for-lol/design-system/components/badge";
 
 /** A report's last-run status as stored on the row (may be absent). */
 export type ReportRunStatusValue = "RUNNING" | "SUCCESS" | "FAILED";

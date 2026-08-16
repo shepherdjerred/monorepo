@@ -26,7 +26,7 @@ export function PromptVariablesInfo({ stage, type }: PromptVariablesInfoProps) {
 
   if (variables.length === 0) {
     return (
-      <p className="text-xs text-surface-500 italic">
+      <p className="text-xs text-scout-subtle italic">
         No variables available for this prompt.
       </p>
     );
@@ -34,14 +34,12 @@ export function PromptVariablesInfo({ stage, type }: PromptVariablesInfoProps) {
 
   return (
     <div className="space-y-1">
-      <p className="text-xs font-medium text-surface-700">
-        Available variables:
-      </p>
-      <div className="space-y-1 rounded-md bg-surface-50 p-2">
+      <p className="text-xs font-medium text-scout-ink">Available variables:</p>
+      <div className="space-y-1 rounded-md bg-scout-raised p-2">
         {variables.map((v) => (
           <div key={v.name} className="flex items-start gap-2 text-xs">
-            <code className="shrink-0 rounded bg-surface-200 px-1 py-0.5 font-mono text-surface-800">{`<${v.name}>`}</code>
-            <span className="text-surface-600">{v.description}</span>
+            <code className="shrink-0 rounded bg-scout-raised px-1 py-0.5 font-mono text-scout-ink">{`<${v.name}>`}</code>
+            <span className="text-scout-subtle">{v.description}</span>
           </div>
         ))}
       </div>

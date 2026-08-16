@@ -7,7 +7,7 @@ import {
   visibilityToString,
 } from "@scout-for-lol/data";
 import { MoreHorizontal } from "lucide-react";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import { FilterSummary } from "#src/components/subscription-filter-summary.tsx";
 import {
@@ -16,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "#src/components/ui/dropdown-menu.tsx";
+} from "@scout-for-lol/design-system/components/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#src/components/ui/table.tsx";
+} from "@scout-for-lol/design-system/components/table";
 
 type DiscordName = { username: string; displayName: string } | null;
 
@@ -101,7 +101,7 @@ export function PlayerSubscriptionsTable(props: {
   const hasActions = props.canUpdate || props.canCreate || props.canDelete;
   if (props.subscriptions.length === 0) {
     return (
-      <p className="p-3 text-sm text-muted-foreground">
+      <p className="p-3 text-sm text-scout-subtle">
         No subscriptions — this player&apos;s matches aren&apos;t posted
         anywhere yet.
       </p>
@@ -127,7 +127,7 @@ export function PlayerSubscriptionsTable(props: {
             <TableCell>
               {channelLabel(props.channels, subscription.channelId)}
             </TableCell>
-            <TableCell className="text-muted-foreground">
+            <TableCell className="text-scout-subtle">
               <FilterSummary
                 filters={subscription.filters}
                 isMuted={subscription.isMuted}
@@ -200,7 +200,7 @@ export function PlayerSubscriptionsTable(props: {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             disabled={props.mutationPending}
-                            className="text-destructive focus:text-destructive"
+                            className="text-scout-danger focus:text-scout-danger"
                             onSelect={() => {
                               props.onRemove(subscription);
                             }}
@@ -232,7 +232,7 @@ export function PlayerAccountsTable(props: {
   onDelete: (account: AccountRow) => void;
 }) {
   if (props.accounts.length === 0) {
-    return <p className="p-3 text-sm text-muted-foreground">No accounts.</p>;
+    return <p className="p-3 text-sm text-scout-subtle">No accounts.</p>;
   }
   return (
     <Table>
@@ -255,11 +255,11 @@ export function PlayerAccountsTable(props: {
             <TableCell className="font-medium">{account.alias}</TableCell>
             <TableCell>
               {account.riotGameName === null ? (
-                <span className="text-muted-foreground">Not resolved</span>
+                <span className="text-scout-subtle">Not resolved</span>
               ) : (
                 <span className="font-medium">
                   {account.riotGameName}
-                  <span className="text-muted-foreground">
+                  <span className="text-scout-subtle">
                     #{account.riotTagLine}
                   </span>
                 </span>
@@ -373,7 +373,7 @@ export function CompetitionSection(props: {
   return (
     <Section title={props.title} action={props.action}>
       {props.rows.length === 0 ? (
-        <p className="p-3 text-sm text-muted-foreground">None.</p>
+        <p className="p-3 text-sm text-scout-subtle">None.</p>
       ) : (
         <Table>
           <caption className="sr-only">
@@ -406,11 +406,11 @@ export function CompetitionSection(props: {
                 <TableCell>
                   {visibilityLabel(participant.competition.visibility)}
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-scout-subtle">
                   {formatDate(participant.competition.startDate)} to{" "}
                   {formatDate(participant.competition.endDate)}
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-scout-subtle">
                   <DiscordUser
                     id={participant.invitedBy}
                     name={participant.invitedByUser}

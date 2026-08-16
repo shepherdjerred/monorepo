@@ -1,76 +1,19 @@
 ---
-import { ClientNavigation } from "#src/components/client-navigation.tsx";
-import { ClientMobileNav } from "#src/components/client-mobile-nav.tsx";
-import {
-  APP_DASHBOARD_URL,
-  DOCS_URL,
-  GET_STARTED_CLICK_EVENT,
-} from "#src/lib/marketing-constants.ts";
+import { SharedNavbar } from "#src/components/shared-navbar.tsx";
 
 interface Props {
   activePage?: "home" | "getting-started" | "docs" | "support" | "whatsnew";
 }
 
 const { activePage } = Astro.props;
-
-const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/getting-started", label: "Getting Started" },
-  { href: DOCS_URL, label: "Documentation" },
-  { href: "/whatsnew", label: "What's New" },
-  { href: "/support", label: "Support" },
-];
-
-const mobileNavItems = [
-  { href: "/", label: "Home", currentPage: "home" },
-  {
-    href: "/getting-started",
-    label: "Getting Started",
-    currentPage: "getting-started",
-  },
-  { href: DOCS_URL, label: "Documentation", currentPage: "docs" },
-  { href: "/whatsnew", label: "What's New", currentPage: "whatsnew" },
-  { href: "/support", label: "Support", currentPage: "support" },
-];
-
-const dashboardLink = APP_DASHBOARD_URL;
+const paths = {
+  home: "/",
+  "getting-started": "/getting-started",
+  docs: "/docs/",
+  support: "/support",
+  whatsnew: "/whatsnew",
+};
+const currentPath = activePage === undefined ? undefined : paths[activePage];
 ---
 
-<header class="sticky top-0 z-50 bg-white dark:bg-gray-900">
-  <nav
-    class="flex items-center justify-between p-4 lg:p-6 lg:px-8"
-    aria-label="Global"
-  >
-    <div class="flex lg:flex-1">
-      <a href="/" class="-m-1.5 p-1.5">
-        <span class="sr-only">Scout for League of Legends</span>
-        <div
-          class="h-8 w-8 bg-linear-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center"
-        >
-          <span class="text-white font-bold text-sm">S</span>
-        </div>
-      </a>
-    </div>
-    <div class="flex lg:hidden">
-      <ClientMobileNav
-        items={mobileNavItems}
-        activePage={activePage}
-        ctaHref={dashboardLink}
-        client:load
-      />
-    </div>
-    <div class="hidden lg:flex">
-      <ClientNavigation items={navItems} client:load />
-    </div>
-    <div class="hidden lg:flex lg:flex-1 lg:justify-end">
-      <a
-        href={dashboardLink}
-        data-scout-conversion={GET_STARTED_CLICK_EVENT}
-        data-scout-cta-location="navbar"
-        class="inline-flex min-h-[44px] items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-      >
-        Get Started
-      </a>
-    </div>
-  </nav>
-</header>
+<SharedNavbar currentPath={currentPath} client:load />

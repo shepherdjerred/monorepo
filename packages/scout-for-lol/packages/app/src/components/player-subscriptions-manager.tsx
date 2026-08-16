@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import type { usePermissions } from "#src/hooks/use-permissions.ts";
 import type { ReactNode } from "react";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   PlayerSubscriptionsTable,
   Section,

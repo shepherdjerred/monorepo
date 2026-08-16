@@ -10,10 +10,10 @@ export function ValidationErrorAlert({
   onDismiss: () => void;
 }) {
   return (
-    <div className="mb-4 p-4 rounded-xl bg-defeat-50 border border-defeat-200 animate-fade-in">
+    <div className="mb-4 p-4 rounded-xl bg-scout-danger border border-scout-danger animate-fade-in">
       <div className="flex items-start gap-3">
         <svg
-          className="w-5 h-5 text-defeat-500 shrink-0 mt-0.5"
+          className="w-5 h-5 text-scout-danger shrink-0 mt-0.5"
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -24,14 +24,14 @@ export function ValidationErrorAlert({
           />
         </svg>
         <div className="flex-1">
-          <div className="font-semibold text-defeat-900 mb-1">
+          <div className="font-semibold text-scout-danger mb-1">
             Cannot Generate Review
           </div>
-          <div className="text-sm text-defeat-700">{error}</div>
+          <div className="text-sm text-scout-danger">{error}</div>
         </div>
         <button
           onClick={onDismiss}
-          className="text-defeat-400 hover:text-defeat-600"
+          className="text-scout-danger hover:text-scout-danger"
         >
           <svg
             className="w-4 h-4"
@@ -54,10 +54,10 @@ export function ValidationErrorAlert({
 
 export function GenerationErrorAlert({ error }: { error: string }) {
   return (
-    <div className="mb-4 p-4 rounded-xl bg-defeat-50 border border-defeat-200 animate-fade-in">
+    <div className="mb-4 p-4 rounded-xl bg-scout-danger border border-scout-danger animate-fade-in">
       <div className="flex items-start gap-3">
         <svg
-          className="w-5 h-5 text-defeat-500 shrink-0 mt-0.5"
+          className="w-5 h-5 text-scout-danger shrink-0 mt-0.5"
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -68,10 +68,10 @@ export function GenerationErrorAlert({ error }: { error: string }) {
           />
         </svg>
         <div className="flex-1">
-          <div className="font-semibold text-defeat-900 mb-1">
+          <div className="font-semibold text-scout-danger mb-1">
             Generation Failed
           </div>
-          <div className="text-sm text-defeat-700">{error}</div>
+          <div className="text-sm text-scout-danger">{error}</div>
         </div>
       </div>
     </div>
@@ -80,9 +80,9 @@ export function GenerationErrorAlert({ error }: { error: string }) {
 
 export function NoMatchInfoBox() {
   return (
-    <div className="mb-4 p-4 rounded-xl bg-victory-50 border border-victory-200 text-sm text-victory-800 flex items-center gap-3">
+    <div className="mb-4 p-4 rounded-xl bg-scout-warning border border-scout-warning text-sm text-scout-warning flex items-center gap-3">
       <svg
-        className="w-5 h-5 text-victory-500 shrink-0"
+        className="w-5 h-5 text-scout-warning shrink-0"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"

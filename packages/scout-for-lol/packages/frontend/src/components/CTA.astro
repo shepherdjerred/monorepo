@@ -27,19 +27,13 @@ interface Props {
 }
 
 const { title, description, variant = "indigo", buttons = [] } = Astro.props;
-const bgClass =
-  variant === "indigo"
-    ? "bg-indigo-600 dark:bg-indigo-700"
-    : "bg-white dark:bg-gray-900";
-const titleClass =
-  variant === "indigo" ? "text-white" : "text-gray-900 dark:text-white";
+const bgClass = variant === "indigo" ? "bg-scout-brand " : "bg-scout-surface ";
+const titleClass = variant === "indigo" ? "text-scout-ink" : "text-scout-ink ";
 const descClass =
-  variant === "indigo"
-    ? "text-indigo-200 dark:text-indigo-100"
-    : "text-gray-600 dark:text-gray-300";
+  variant === "indigo" ? "text-scout-brand " : "text-scout-subtle ";
 ---
 
-<div class={bgClass}>
+<div class={`scout-cta scout-panel ${bgClass}`}>
   <div class="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
     <div class="mx-auto max-w-2xl text-center">
       <h2

@@ -1,6 +1,11 @@
-import { Button } from "#src/components/review-tool/ui/button.tsx";
-import { Dialog } from "#src/components/review-tool/ui/dialog.tsx";
-import { Textarea } from "#src/components/review-tool/ui/textarea.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@scout-for-lol/design-system/components/dialog";
+import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 import { useState } from "react";
 import {
   PromptVariablesInfo,
@@ -50,59 +55,62 @@ export function PromptEditor({
       </Button>
       <Dialog
         open={open}
-        onClose={() => {
-          setOpen(false);
+        onOpenChange={(nextOpen) => {
+          setOpen(nextOpen);
         }}
-        title={label}
-        className="max-h-[90vh] max-w-4xl overflow-hidden"
       >
-        <div className="space-y-4">
-          {stage && promptType && (
-            <PromptVariablesInfo stage={stage} type={promptType} />
-          )}
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>{label}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {stage && promptType && (
+              <PromptVariablesInfo stage={stage} type={promptType} />
+            )}
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-surface-700">
-                Prompt template
-              </span>
-              {defaultPrompt !== undefined && defaultPrompt.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  type="button"
-                  onClick={handleReset}
-                >
-                  Reset to default
-                </Button>
-              )}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-scout-ink">
+                  Prompt template
+                </span>
+                {defaultPrompt !== undefined && defaultPrompt.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    onClick={handleReset}
+                  >
+                    Reset to default
+                  </Button>
+                )}
+              </div>
+              <Textarea
+                className="h-80 font-mono text-sm"
+                value={draft}
+                onChange={(e) => {
+                  setDraft(e.target.value);
+                }}
+                placeholder="Enter prompt template..."
+                aria-label="Prompt template"
+              />
             </div>
-            <Textarea
-              className="h-80 font-mono text-sm"
-              value={draft}
-              onChange={(e) => {
-                setDraft(e.target.value);
-              }}
-              placeholder="Enter prompt template..."
-              aria-label="Prompt template"
-            />
-          </div>
 
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              type="button"
-              onClick={() => {
-                setOpen(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="button" onClick={handleSave}>
-              Save
-            </Button>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="button" onClick={handleSave}>
+                Save
+              </Button>
+            </div>
           </div>
-        </div>
+        </DialogContent>
       </Dialog>
     </>
   );

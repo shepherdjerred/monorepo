@@ -8,15 +8,15 @@ import {
 import { useTRPC } from "#src/lib/trpc.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { ConceptCards } from "#src/components/concept-cards.tsx";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "#src/components/ui/collapsible.tsx";
+} from "@scout-for-lol/design-system/components/collapsible";
 import { ChevronDown } from "lucide-react";
-import { Input } from "#src/components/ui/input.tsx";
+import { Input } from "@scout-for-lol/design-system/components/input";
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#src/components/ui/table.tsx";
+} from "@scout-for-lol/design-system/components/table";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import { LoadMore } from "#src/components/load-more.tsx";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
@@ -77,7 +77,7 @@ export function PlayerList() {
   );
 
   if (guildId === undefined) {
-    return <p className="text-sm text-destructive">Missing guild id</p>;
+    return <p className="text-sm text-scout-danger">Missing guild id</p>;
   }
 
   const players = playersQuery.data?.pages.flatMap((page) => page.items) ?? [];
@@ -88,7 +88,7 @@ export function PlayerList() {
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Players</h2>
           <Collapsible>
-            <CollapsibleTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <CollapsibleTrigger className="flex items-center gap-1 text-sm text-scout-subtle hover:text-scout-ink">
               What are players, accounts, and subscriptions?
               <ChevronDown className="h-3 w-3" aria-hidden="true" />
             </CollapsibleTrigger>
@@ -138,23 +138,23 @@ export function PlayerList() {
       </div>
 
       {playersQuery.isLoading && (
-        <p role="status" className="text-sm text-muted-foreground">
+        <p role="status" className="text-sm text-scout-subtle">
           Loading players...
         </p>
       )}
       {playersQuery.error && (
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-scout-danger">
           Failed to load: {playersQuery.error.message}
         </p>
       )}
       {currentPlayerQuery.error && (
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-scout-danger">
           Failed to load linked player: {currentPlayerQuery.error.message}
         </p>
       )}
 
       {playersQuery.data && players.length === 0 && (
-        <p className="text-sm text-muted-foreground">No players found.</p>
+        <p className="text-sm text-scout-subtle">No players found.</p>
       )}
 
       {playersQuery.data && players.length > 0 && (
@@ -192,7 +192,7 @@ export function PlayerList() {
                     />
                   </TableCell>
                   <TableCell>{player.accountCount}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-scout-subtle">
                     {player.channelIds.length === 0
                       ? "—"
                       : player.channelIds
@@ -201,7 +201,7 @@ export function PlayerList() {
                           )
                           .join(", ")}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap text-muted-foreground">
+                  <TableCell className="whitespace-nowrap text-scout-subtle">
                     {formatDate(player.updatedTime)}
                   </TableCell>
                 </TableRow>

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scout-for-lol.com/schemas/game-asset-manifest-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "sourceVersion", "assets"],
+  "properties": {
+    "version": { "const": 1 },
+    "sourceVersion": { "type": "string", "minLength": 1 },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "canonicalId", "mimeType", "width", "height", "relativePath", "sha256"],
+        "properties": {
+          "kind": { "enum": ["champion", "champion-loading", "champion-splash", "item", "rune", "spell", "augment", "lane", "background"] },
+          "canonicalId": { "type": "string", "minLength": 1 },
+          "mimeType": { "enum": ["image/png", "image/jpeg"] },
+          "width": { "type": "integer", "minimum": 1 },
+          "height": { "type": "integer", "minimum": 1 },
+          "relativePath": { "type": "string", "pattern": "^img/" },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    }
+  }
+}

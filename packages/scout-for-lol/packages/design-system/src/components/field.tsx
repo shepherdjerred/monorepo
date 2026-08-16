@@ -1,0 +1,62 @@
+import * as LabelPrimitive from "@radix-ui/react-label";
+import {
+  forwardRef,
+  type HTMLAttributes,
+  type InputHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from "react";
+import { cn } from "#src/lib/cn.ts";
+
+export const Label = forwardRef<
+  React.ComponentRef<typeof LabelPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
+>(({ className, ...props }, ref) => (
+  <LabelPrimitive.Root
+    ref={ref}
+    className={cn("scout-label", className)}
+    {...props}
+  />
+));
+Label.displayName = "Label";
+
+export const Input = forwardRef<
+  HTMLInputElement,
+  InputHTMLAttributes<HTMLInputElement>
+>(({ className, ...props }, ref) => (
+  <input ref={ref} className={cn("scout-control", className)} {...props} />
+));
+Input.displayName = "Input";
+
+export const Textarea = forwardRef<
+  HTMLTextAreaElement,
+  TextareaHTMLAttributes<HTMLTextAreaElement>
+>(({ className, ...props }, ref) => (
+  <textarea
+    ref={ref}
+    className={cn("scout-control scout-textarea", className)}
+    {...props}
+  />
+));
+Textarea.displayName = "Textarea";
+
+export function Field({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("scout-field", className)} {...props} />;
+}
+export function FieldDescription({
+  className,
+  ...props
+}: HTMLAttributes<HTMLParagraphElement>) {
+  return <p className={cn("scout-field__description", className)} {...props} />;
+}
+export function FieldError({
+  className,
+  ...props
+}: HTMLAttributes<HTMLParagraphElement>) {
+  return (
+    <p
+      role="alert"
+      className={cn("scout-field__error", className)}
+      {...props}
+    />
+  );
+}

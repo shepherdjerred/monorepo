@@ -47,7 +47,7 @@ const iconBgClass =
   (withCard && gradient
     ? `bg-linear-to-br ${gradientColors[gradient] || gradientColors["yellow"]}`
     : number
-      ? "bg-indigo-600 text-white"
+      ? "bg-scout-brand text-scout-brand-ink"
       : iconColors[color]);
 
 const iconSize = withCard
@@ -62,7 +62,7 @@ const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
   withCard ? (
     <div
       class={cn(
-        "rounded-xl border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm py-6 flex flex-col gap-0",
+        "scout-card rounded-xl border bg-scout-surface border-scout-border shadow-sm py-6 flex flex-col gap-0",
         layout === "centered" ? "text-center" : "",
         classNames,
       )}
@@ -76,18 +76,14 @@ const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
             iconBgClass,
           )}
         >
-          {icon && <Icon name={icon} class={cn(iconInnerSize, "text-white")} />}
-          {iconHtml && (
-            <div set:html={iconHtml} class={cn(iconInnerSize, "text-white")} />
-          )}
-          {number && <span class="font-semibold text-white">{number}</span>}
+          {icon && <Icon name={icon} class={iconInnerSize} />}
+          {iconHtml && <div set:html={iconHtml} class={iconInnerSize} />}
+          {number && <span class="font-semibold">{number}</span>}
         </div>
-        <h3 class="text-2xl font-semibold leading-none tracking-tight text-gray-900 dark:text-white">
+        <h3 class="text-2xl font-semibold leading-none tracking-tight text-scout-ink ">
           {title}
         </h3>
-        {description && (
-          <p class="text-sm text-gray-600 dark:text-gray-300">{description}</p>
-        )}
+        {description && <p class="text-sm text-scout-subtle ">{description}</p>}
       </div>
       <div class="p-6 pt-0">
         <slot />
@@ -95,7 +91,7 @@ const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
     </div>
   ) : asList ? (
     <div class={cn(asList ? "relative pl-16" : "flex flex-col", classNames)}>
-      <dt class="text-base font-semibold text-gray-900 dark:text-white">
+      <dt class="text-base font-semibold text-scout-ink ">
         <div
           class={cn(
             "absolute left-0 top-0",
@@ -103,28 +99,26 @@ const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
             iconBgClass,
           )}
         >
-          {icon && <Icon name={icon} class="size-6 text-white" />}
-          {iconHtml && <div set:html={iconHtml} class="size-6 text-white" />}
-          {number && <span class="font-semibold text-white">{number}</span>}
+          {icon && <Icon name={icon} class="size-6" />}
+          {iconHtml && <div set:html={iconHtml} class="size-6" />}
+          {number && <span class="font-semibold">{number}</span>}
         </div>
         {title}
       </dt>
       {description && (
-        <dd class="mt-2 text-base text-gray-600 dark:text-gray-300">
-          {description}
-        </dd>
+        <dd class="mt-2 text-base text-scout-subtle ">{description}</dd>
       )}
       <slot />
     </div>
   ) : number ? (
     <div class={cn(layout === "centered" ? "text-center" : "")}>
-      <dt class="flex items-center gap-x-3 text-base font-semibold text-gray-900 dark:text-white">
+      <dt class="flex items-center gap-x-3 text-base font-semibold text-scout-ink ">
         <div
           class={cn(
             iconSize,
             "flex items-center justify-center rounded-lg",
             iconBgClass,
-            "font-semibold text-white",
+            "font-semibold",
             layout === "centered" ? "mx-auto" : "",
           )}
         >
@@ -133,7 +127,7 @@ const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
         {title}
       </dt>
       {description && (
-        <dd class="mt-4 flex flex-auto flex-col text-base text-gray-600 dark:text-gray-300">
+        <dd class="mt-4 flex flex-auto flex-col text-base text-scout-subtle ">
           <p class="flex-auto">{description}</p>
         </dd>
       )}
@@ -155,15 +149,13 @@ const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
       <h3
         class={cn(
           layout === "centered" ? "mt-4" : "mt-0",
-          "text-lg font-semibold text-gray-900 dark:text-white",
+          "text-lg font-semibold text-scout-ink ",
         )}
       >
         {title}
       </h3>
       {description && (
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-          {description}
-        </p>
+        <p class="mt-2 text-sm text-scout-subtle ">{description}</p>
       )}
       <slot />
     </div>

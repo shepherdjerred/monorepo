@@ -13,8 +13,8 @@ import { MatchFilters } from "./match-filters.tsx";
 import { MatchList } from "./match-list.tsx";
 import { MatchPagination } from "./match-pagination.tsx";
 import { MatchLoadingState } from "./match-loading-state.tsx";
-import { Button } from "./ui/button.tsx";
-import { EmptyState, CloudIcon, SearchIcon } from "./ui/empty-state.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import { EmptyState, CloudIcon, SearchIcon } from "./review-empty-state.tsx";
 import { useMatchBrowser } from "./use-match-browser.ts";
 
 type MatchBrowserProps = {
@@ -41,7 +41,7 @@ export function MatchBrowser({
           title="Storage Not Configured"
           description="Configure your Cloudflare R2 credentials in Settings to browse match data from your storage."
           action={
-            <div className="text-xs text-surface-400">
+            <div className="text-xs text-scout-subtle">
               Settings &rarr; API Configuration &rarr; Cloudflare R2
             </div>
           }
@@ -56,13 +56,13 @@ export function MatchBrowser({
       <div className="space-y-4 mb-4">
         <div className="flex items-center gap-3">
           <Button
-            variant="primary"
+            variant="default"
             size="sm"
             onClick={() => {
               void browser.handleBrowse(true);
             }}
             disabled={browser.loading}
-            isLoading={browser.loading && !browser.loadingProgress}
+            aria-busy={browser.loading && !browser.loadingProgress}
           >
             <svg
               className="w-4 h-4"
@@ -79,7 +79,7 @@ export function MatchBrowser({
             </svg>
             Refresh
           </Button>
-          <span className="text-xs text-surface-400">Last 7 days</span>
+          <span className="text-xs text-scout-subtle">Last 7 days</span>
         </div>
 
         <MatchFilters
@@ -107,10 +107,10 @@ export function MatchBrowser({
 
       {/* Error state */}
       {browser.error !== null && browser.error.length > 0 && (
-        <div className="p-4 rounded-xl bg-defeat-50 border border-defeat-200 text-sm text-defeat-700 mb-4 animate-fade-in">
+        <div className="p-4 rounded-xl bg-scout-danger border border-scout-danger text-sm text-scout-danger mb-4 animate-fade-in">
           <div className="flex items-start gap-3">
             <svg
-              className="w-5 h-5 text-defeat-500 shrink-0 mt-0.5"
+              className="w-5 h-5 text-scout-danger shrink-0 mt-0.5"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -122,7 +122,7 @@ export function MatchBrowser({
             </svg>
             <div>
               <p className="font-medium">Error loading matches</p>
-              <p className="text-defeat-600 mt-0.5">{browser.error}</p>
+              <p className="text-scout-danger mt-0.5">{browser.error}</p>
             </div>
           </div>
         </div>
@@ -130,11 +130,11 @@ export function MatchBrowser({
 
       {/* Match list */}
       {browser.filteredMatches.length > 0 && !browser.loading && (
-        <div className="rounded-xl border border-surface-200 overflow-hidden animate-fade-in">
+        <div className="rounded-xl border border-scout-border overflow-hidden animate-fade-in">
           {/* Results header */}
-          <div className="px-4 py-3 bg-surface-50 border-b border-surface-200 flex justify-between items-center">
-            <span className="text-sm text-surface-600">
-              <span className="font-medium text-surface-900">
+          <div className="px-4 py-3 bg-scout-raised border-b border-scout-border flex justify-between items-center">
+            <span className="text-sm text-scout-subtle">
+              <span className="font-medium text-scout-ink">
                 {(browser.currentPage - 1) * browser.pageSize + 1}-
                 {Math.min(
                   browser.currentPage * browser.pageSize,
@@ -142,11 +142,11 @@ export function MatchBrowser({
                 )}
               </span>
               {" of "}
-              <span className="font-medium text-surface-900">
+              <span className="font-medium text-scout-ink">
                 {browser.filteredMatches.length}
               </span>
               {browser.matches.length !== browser.filteredMatches.length && (
-                <span className="text-surface-400">
+                <span className="text-scout-subtle">
                   {" "}
                   (filtered from {browser.matches.length.toString()})
                 </span>

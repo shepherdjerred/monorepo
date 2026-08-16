@@ -36,12 +36,12 @@ function StageCostRow({
 }) {
   return (
     <div className="flex justify-between items-start">
-      <span className="text-surface-600 dark:text-surface-400">{label}:</span>
+      <span className="text-scout-subtle ">{label}:</span>
       <div className="text-right">
-        <span className="font-mono text-surface-900 dark:text-surface-100">
+        <span className="font-mono text-scout-ink ">
           {formatCost(stageCost.totalCost)}
         </span>
-        <div className="text-xs text-surface-500 dark:text-surface-500 font-mono">
+        <div className="text-xs text-scout-subtle font-mono">
           in: {formatCost(stageCost.inputCost)} / out:{" "}
           {formatCost(stageCost.outputCost)}
         </div>
@@ -73,19 +73,15 @@ function PipelineCostDisplay({ costs }: { costs: PipelineCostBreakdown }) {
       )}
       {costs.imageGeneration && costs.imageGeneration.cost > 0 && (
         <div className="flex justify-between">
-          <span className="text-surface-600 dark:text-surface-400">
-            Image Generation:
-          </span>
-          <span className="font-mono text-surface-900 dark:text-surface-100">
+          <span className="text-scout-subtle ">Image Generation:</span>
+          <span className="font-mono text-scout-ink ">
             {formatCost(costs.imageGeneration.cost)}
           </span>
         </div>
       )}
-      <div className="flex justify-between border-t border-surface-200 dark:border-surface-700 pt-2">
-        <span className="font-semibold text-surface-900 dark:text-white">
-          Total:
-        </span>
-        <span className="font-mono font-bold text-brand-600 dark:text-brand-400">
+      <div className="flex justify-between border-t border-scout-border pt-2">
+        <span className="font-semibold text-scout-ink ">Total:</span>
+        <span className="font-mono font-bold text-scout-brand ">
           {formatCost(costs.total.totalCost)}
         </span>
       </div>
@@ -97,34 +93,28 @@ function LegacyCostDisplay({ cost }: { cost: CostBreakdown }) {
   return (
     <>
       <div className="flex justify-between">
-        <span className="text-surface-600 dark:text-surface-400">
-          Text Input:
-        </span>
-        <span className="font-mono text-surface-900 dark:text-surface-100">
+        <span className="text-scout-subtle ">Text Input:</span>
+        <span className="font-mono text-scout-ink ">
           {formatCost(cost.textInputCost)}
         </span>
       </div>
       <div className="flex justify-between">
-        <span className="text-surface-600 dark:text-surface-400">
-          Text Output:
-        </span>
-        <span className="font-mono text-surface-900 dark:text-surface-100">
+        <span className="text-scout-subtle ">Text Output:</span>
+        <span className="font-mono text-scout-ink ">
           {formatCost(cost.textOutputCost)}
         </span>
       </div>
       {cost.imageCost > 0 && (
         <div className="flex justify-between">
-          <span className="text-surface-600 dark:text-surface-400">Image:</span>
-          <span className="font-mono text-surface-900 dark:text-surface-100">
+          <span className="text-scout-subtle ">Image:</span>
+          <span className="font-mono text-scout-ink ">
             {formatCost(cost.imageCost)}
           </span>
         </div>
       )}
-      <div className="flex justify-between border-t border-surface-200 dark:border-surface-700 pt-2">
-        <span className="font-semibold text-surface-900 dark:text-white">
-          Total:
-        </span>
-        <span className="font-mono font-bold text-brand-600 dark:text-brand-400">
+      <div className="flex justify-between border-t border-scout-border pt-2">
+        <span className="font-semibold text-scout-ink ">Total:</span>
+        <span className="font-mono font-bold text-scout-brand ">
           {formatCost(cost.totalCost)}
         </span>
       </div>
@@ -147,11 +137,11 @@ function StageTimingRow({
     trace.tokensPrompt !== undefined || trace.tokensCompletion !== undefined;
   return (
     <div className="flex justify-between items-center">
-      <span className="text-surface-600 dark:text-surface-400">{label}:</span>
-      <span className="font-mono text-surface-900 dark:text-surface-100 text-right">
+      <span className="text-scout-subtle ">{label}:</span>
+      <span className="font-mono text-scout-ink text-right">
         {trace.durationMs.toLocaleString()}ms
         {hasTokens && (
-          <span className="text-xs text-surface-500 ml-2">
+          <span className="text-xs text-scout-subtle ml-2">
             ({trace.tokensPrompt?.toLocaleString() ?? "?"} →{" "}
             {trace.tokensCompletion?.toLocaleString() ?? "?"})
           </span>
@@ -164,10 +154,8 @@ function StageTimingRow({
 function ImageGenTimingRow({ durationMs }: { durationMs: number }) {
   return (
     <div className="flex justify-between">
-      <span className="text-surface-600 dark:text-surface-400">
-        Image Generation:
-      </span>
-      <span className="font-mono text-surface-900 dark:text-surface-100">
+      <span className="text-scout-subtle ">Image Generation:</span>
+      <span className="font-mono text-scout-ink ">
         {durationMs.toLocaleString()}ms
       </span>
     </div>
@@ -208,13 +196,11 @@ function PipelineTimingTotals({ traces }: { traces: PipelineTraces }) {
   ]);
 
   return (
-    <div className="flex justify-between border-t border-surface-200 dark:border-surface-700 pt-2">
-      <span className="font-semibold text-surface-900 dark:text-white">
-        Total:
-      </span>
-      <span className="font-mono text-surface-900 dark:text-surface-100 text-right">
+    <div className="flex justify-between border-t border-scout-border pt-2">
+      <span className="font-semibold text-scout-ink ">Total:</span>
+      <span className="font-mono text-scout-ink text-right">
         {duration.toLocaleString()}ms
-        <span className="text-xs text-surface-500 ml-2">
+        <span className="text-xs text-scout-subtle ml-2">
           ({promptTokens.toLocaleString()} → {completionTokens.toLocaleString()}
           )
         </span>
@@ -254,39 +240,31 @@ function LegacyTimingDisplay({ metadata }: { metadata: GenerationMetadata }) {
   return (
     <>
       <div className="flex justify-between">
-        <span className="text-surface-600 dark:text-surface-400">
-          Text Generation:
-        </span>
-        <span className="font-mono text-surface-900 dark:text-surface-100">
+        <span className="text-scout-subtle ">Text Generation:</span>
+        <span className="font-mono text-scout-ink ">
           {metadata.textDurationMs}ms
         </span>
       </div>
       {metadata.textTokensPrompt !== undefined && (
         <div className="flex justify-between">
-          <span className="text-surface-600 dark:text-surface-400">
-            Prompt Tokens:
-          </span>
-          <span className="font-mono text-surface-900 dark:text-surface-100">
+          <span className="text-scout-subtle ">Prompt Tokens:</span>
+          <span className="font-mono text-scout-ink ">
             {metadata.textTokensPrompt}
           </span>
         </div>
       )}
       {metadata.textTokensCompletion !== undefined && (
         <div className="flex justify-between">
-          <span className="text-surface-600 dark:text-surface-400">
-            Completion Tokens:
-          </span>
-          <span className="font-mono text-surface-900 dark:text-surface-100">
+          <span className="text-scout-subtle ">Completion Tokens:</span>
+          <span className="font-mono text-scout-ink ">
             {metadata.textTokensCompletion}
           </span>
         </div>
       )}
       {metadata.imageGenerated && metadata.imageDurationMs !== undefined && (
         <div className="flex justify-between">
-          <span className="text-surface-600 dark:text-surface-400">
-            Image Generation:
-          </span>
-          <span className="font-mono text-surface-900 dark:text-surface-100">
+          <span className="text-scout-subtle ">Image Generation:</span>
+          <span className="font-mono text-scout-ink ">
             {metadata.imageDurationMs}ms
           </span>
         </div>
@@ -311,17 +289,13 @@ function ContextDisplay({ metadata }: { metadata: GenerationMetadata }) {
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">
-        Context
-      </h3>
+      <h3 className="text-sm font-semibold text-scout-ink mb-2">Context</h3>
       <div className="space-y-2 text-sm">
         {metadata.selectedPersonality !== undefined &&
           metadata.selectedPersonality.length > 0 && (
             <div className="flex justify-between">
-              <span className="text-surface-600 dark:text-surface-400">
-                Personality:
-              </span>
-              <span className="font-mono text-surface-900 dark:text-surface-100">
+              <span className="text-scout-subtle ">Personality:</span>
+              <span className="font-mono text-scout-ink ">
                 {metadata.selectedPersonality}
               </span>
             </div>
@@ -338,11 +312,11 @@ function ContextDisplay({ metadata }: { metadata: GenerationMetadata }) {
 function OpenAIParamsSection({ params }: { params: unknown }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">
+      <h3 className="text-sm font-semibold text-scout-ink mb-2">
         OpenAI Request Parameters
       </h3>
       <details className="group">
-        <summary className="cursor-pointer text-xs font-medium text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-200 list-none">
+        <summary className="cursor-pointer text-xs font-medium text-scout-subtle hover:text-scout-ink list-none">
           <span className="inline-flex items-center gap-1">
             <svg
               className="w-4 h-4 transition-transform group-open:rotate-90"
@@ -360,7 +334,7 @@ function OpenAIParamsSection({ params }: { params: unknown }) {
             Full Request Object (JSON)
           </span>
         </summary>
-        <div className="mt-2 p-3 bg-surface-50 dark:bg-surface-800 rounded border border-surface-200 dark:border-surface-700 font-mono text-xs text-surface-900 dark:text-surface-100 whitespace-pre-wrap max-h-96 overflow-y-auto">
+        <div className="mt-2 p-3 bg-scout-raised rounded border border-scout-border font-mono text-xs text-scout-ink whitespace-pre-wrap max-h-96 overflow-y-auto">
           {JSON.stringify(params, null, 2)}
         </div>
       </details>
@@ -395,7 +369,7 @@ export function ResultMetadata({
     <div className="space-y-4">
       {/* Pipeline Timing */}
       <div>
-        <h3 className="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">
+        <h3 className="text-sm font-semibold text-scout-ink mb-2">
           Pipeline Timing
         </h3>
         <div className="space-y-2 text-sm">
@@ -419,9 +393,7 @@ export function ResultMetadata({
       {/* Cost */}
       {hasCost && (
         <div>
-          <h3 className="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">
-            Cost
-          </h3>
+          <h3 className="text-sm font-semibold text-scout-ink mb-2">Cost</h3>
           <div className="space-y-2 text-sm">
             {pipelineCosts === null ? (
               cost === null ? null : (

@@ -1,6 +1,6 @@
 import { type Augment } from "@scout-for-lol/data";
-import { palette } from "#src/assets/colors.ts";
-import { font } from "#src/assets/index.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
+import { font } from "@scout-for-lol/design-system/satori/fonts";
 import { getAugmentIcon } from "#src/dataDragon/image-cache.ts";
 
 const ICON_SIZE = 22;

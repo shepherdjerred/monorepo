@@ -42,60 +42,60 @@ const colorClasses: Record<
   }
 > = {
   yellow: {
-    border: "border-yellow-600 dark:border-yellow-500",
-    bg: "bg-yellow-50 dark:bg-yellow-900/30",
-    titleText: "text-yellow-900 dark:text-yellow-300",
-    dot: "bg-yellow-600 dark:bg-yellow-400",
-    arrow: "text-yellow-600 dark:text-yellow-400",
+    border: "border-scout-warning ",
+    bg: "bg-scout-warning ",
+    titleText: "text-scout-warning ",
+    dot: "bg-scout-warning ",
+    arrow: "text-scout-warning ",
   },
   indigo: {
-    border: "border-indigo-600 dark:border-indigo-500",
-    bg: "bg-indigo-50 dark:bg-indigo-900/30",
-    titleText: "text-indigo-900 dark:text-indigo-300",
-    dot: "bg-indigo-600 dark:bg-indigo-400",
-    arrow: "text-indigo-600 dark:text-indigo-400",
+    border: "border-scout-brand ",
+    bg: "bg-scout-raised ",
+    titleText: "text-scout-brand ",
+    dot: "bg-scout-brand ",
+    arrow: "text-scout-brand ",
   },
   blue: {
-    border: "border-blue-600 dark:border-blue-500",
-    bg: "bg-blue-50 dark:bg-blue-900/30",
-    titleText: "text-blue-900 dark:text-blue-300",
-    dot: "bg-blue-600 dark:bg-blue-400",
-    arrow: "text-blue-600 dark:text-blue-400",
+    border: "border-scout-brand ",
+    bg: "bg-scout-raised ",
+    titleText: "text-scout-brand ",
+    dot: "bg-scout-brand ",
+    arrow: "text-scout-brand ",
   },
   purple: {
-    border: "border-purple-600 dark:border-purple-500",
-    bg: "bg-purple-50 dark:bg-purple-900/30",
-    titleText: "text-purple-900 dark:text-purple-300",
-    dot: "bg-purple-600 dark:bg-purple-400",
-    arrow: "text-purple-600 dark:text-purple-400",
+    border: "border-scout-accent ",
+    bg: "bg-scout-accent ",
+    titleText: "text-scout-accent ",
+    dot: "bg-scout-accent ",
+    arrow: "text-scout-accent ",
   },
   green: {
-    border: "border-green-600 dark:border-green-500",
-    bg: "bg-green-50 dark:bg-green-900/30",
-    titleText: "text-green-900 dark:text-green-300",
-    dot: "bg-green-600 dark:bg-green-400",
-    arrow: "text-green-600 dark:text-green-400",
+    border: "border-scout-success ",
+    bg: "bg-scout-success ",
+    titleText: "text-scout-success ",
+    dot: "bg-scout-success ",
+    arrow: "text-scout-success ",
   },
   red: {
-    border: "border-red-600 dark:border-red-500",
-    bg: "bg-red-50 dark:bg-red-900/30",
-    titleText: "text-red-900 dark:text-red-300",
-    dot: "bg-red-600 dark:bg-red-400",
-    arrow: "text-red-600 dark:text-red-400",
+    border: "border-scout-danger ",
+    bg: "bg-scout-danger ",
+    titleText: "text-scout-danger ",
+    dot: "bg-scout-danger ",
+    arrow: "text-scout-danger ",
   },
   pink: {
-    border: "border-pink-600 dark:border-pink-500",
-    bg: "bg-pink-50 dark:bg-pink-900/30",
-    titleText: "text-pink-900 dark:text-pink-300",
-    dot: "bg-pink-600 dark:bg-pink-400",
-    arrow: "text-pink-600 dark:text-pink-400",
+    border: "border-scout-accent ",
+    bg: "bg-scout-accent ",
+    titleText: "text-scout-accent ",
+    dot: "bg-scout-accent ",
+    arrow: "text-scout-accent ",
   },
   teal: {
-    border: "border-teal-600 dark:border-teal-500",
-    bg: "bg-teal-50 dark:bg-teal-900/30",
-    titleText: "text-teal-900 dark:text-teal-300",
-    dot: "bg-teal-600 dark:bg-teal-400",
-    arrow: "text-teal-600 dark:text-teal-400",
+    border: "border-scout-accent ",
+    bg: "bg-scout-accent ",
+    titleText: "text-scout-accent ",
+    dot: "bg-scout-accent ",
+    arrow: "text-scout-accent ",
   },
 };
 
@@ -121,10 +121,7 @@ export function ChangelogSection({
       </h3>
       <ul className="space-y-2 list-none pl-4">
         {items.map((item, index) => (
-          <li
-            key={index}
-            className="text-gray-700 dark:text-gray-300 flex items-start gap-3"
-          >
+          <li key={index} className="text-scout-ink flex items-start gap-3">
             <span className={`${colors.arrow} font-bold text-lg leading-none`}>
               →
             </span>
@@ -204,7 +201,7 @@ export function buildChangelogEntry(
             href={input.link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-6 inline-flex items-center gap-1 font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+            className="mt-6 inline-flex items-center gap-1 font-semibold text-scout-brand hover:underline "
           >
             {input.link.label}
             <span aria-hidden="true">→</span>

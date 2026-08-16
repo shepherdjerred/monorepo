@@ -11,7 +11,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "#src/components/ui/table.tsx";
+} from "@scout-for-lol/design-system/components/table";
 
 export function GuildAudit() {
   const { guildId } = useParams();
@@ -34,7 +34,7 @@ export function GuildAudit() {
   if (guildId === undefined) {
     return (
       <div>
-        <p className="text-sm text-destructive">Missing guild id</p>
+        <p className="text-sm text-scout-danger">Missing guild id</p>
       </div>
     );
   }
@@ -43,17 +43,15 @@ export function GuildAudit() {
     <div className="space-y-4">
       <h2 className="text-xl font-semibold tracking-tight">Audit log</h2>
 
-      {query.isLoading && (
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      )}
+      {query.isLoading && <p className="text-sm text-scout-subtle">Loading…</p>}
       {query.error && (
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-scout-danger">
           Failed to load: {query.error.message}
         </p>
       )}
 
       {query.data && rows.length === 0 && (
-        <p className="text-sm text-muted-foreground">No audit entries yet.</p>
+        <p className="text-sm text-scout-subtle">No audit entries yet.</p>
       )}
 
       {query.data && rows.length > 0 && (
@@ -74,7 +72,7 @@ export function GuildAudit() {
             <TableBody>
               {rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="whitespace-nowrap text-muted-foreground">
+                  <TableCell className="whitespace-nowrap text-scout-subtle">
                     {new Date(row.createdAt).toLocaleString()}
                   </TableCell>
                   <TableCell>
@@ -84,17 +82,17 @@ export function GuildAudit() {
                     />
                   </TableCell>
                   <TableCell className="font-medium">{row.action}</TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
+                  <TableCell className="font-mono text-xs text-scout-subtle">
                     {row.targetChannelId ?? "—"}
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
+                  <TableCell className="font-mono text-xs text-scout-subtle">
                     {row.targetPlayerId ?? "—"}
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
+                  <TableCell className="font-mono text-xs text-scout-subtle">
                     {row.targetAccountId ?? "—"}
                   </TableCell>
                   <TableCell>
-                    <pre className="m-0 max-w-md overflow-x-auto rounded-sm bg-muted p-2 text-xs">
+                    <pre className="m-0 max-w-md overflow-x-auto rounded-sm bg-scout-hover p-2 text-xs">
                       {JSON.stringify(row.payload, null, 2)}
                     </pre>
                   </TableCell>

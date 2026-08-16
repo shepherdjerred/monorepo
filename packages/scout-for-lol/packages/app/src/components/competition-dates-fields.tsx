@@ -1,13 +1,13 @@
 import { getAllSeasons } from "@scout-for-lol/data";
-import { Input } from "#src/components/ui/input.tsx";
-import { Label } from "#src/components/ui/label.tsx";
+import { Input } from "@scout-for-lol/design-system/components/input";
+import { Label } from "@scout-for-lol/design-system/components/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "#src/components/ui/select.tsx";
+} from "@scout-for-lol/design-system/components/select";
 
 export type DatesState = {
   mode: "FIXED_DATES" | "SEASON";
@@ -129,7 +129,7 @@ export function CompetitionDatesFields(props: {
                 <SelectItem key={season.id} value={season.id}>
                   <span className="flex flex-col">
                     <span>{season.displayName}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-scout-subtle">
                       {formatDateRange(season.startDate, season.endDate)}
                     </span>
                   </span>

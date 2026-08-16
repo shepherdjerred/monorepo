@@ -262,11 +262,6 @@ export async function migrateFromLocalStorage(): Promise<void> {
       store: STORES.COSTS,
       key: "costs",
     },
-    {
-      localStorageKey: "darkMode",
-      store: STORES.PREFERENCES,
-      key: "darkMode",
-    },
   ];
 
   for (const migration of migrations) {

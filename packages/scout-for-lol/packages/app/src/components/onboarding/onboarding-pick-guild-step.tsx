@@ -1,4 +1,4 @@
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
 
 type Guild = {
@@ -30,10 +30,10 @@ export function OnboardingPickGuildStep(props: {
                 onClick={() => {
                   props.onSelect(g.id);
                 }}
-                className="flex w-full items-center gap-3 rounded-md border border-border bg-card p-3 text-left text-card-foreground transition-colors hover:bg-accent"
+                className="flex w-full items-center gap-3 rounded-md border border-border bg-scout-surface p-3 text-left text-scout-ink transition-colors hover:bg-scout-accent"
               >
                 {g.icon === null ? (
-                  <div className="h-8 w-8 shrink-0 rounded-md bg-muted" />
+                  <div className="h-8 w-8 shrink-0 rounded-md bg-scout-hover" />
                 ) : (
                   <img
                     src={`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64`}
@@ -45,7 +45,7 @@ export function OnboardingPickGuildStep(props: {
                 )}
                 <span className="flex-1 truncate font-medium">{g.name}</span>
                 {g.isOwner && (
-                  <span className="text-xs text-muted-foreground">owner</span>
+                  <span className="text-xs text-scout-subtle">owner</span>
                 )}
               </button>
             </li>

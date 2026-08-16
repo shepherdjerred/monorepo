@@ -32,6 +32,10 @@ jscpd-report/
 !packages/docs-site/src/assets/generated/
 !packages/docs-site/src/assets/generated/*.png
 !packages/docs-site/src/assets/generated/*.json
+!packages/design-system/src/generated/
+!packages/design-system/src/generated/tokens.ts
+!packages/design-system/styles/generated/
+!packages/design-system/styles/generated/tokens.css
 
 settings.local.json
 

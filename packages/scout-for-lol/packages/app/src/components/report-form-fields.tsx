@@ -2,21 +2,21 @@ import { lazy, Suspense, type Dispatch, type SetStateAction } from "react";
 import { Link } from "react-router";
 import { ChevronDown } from "lucide-react";
 import { DEFAULT_REPORT_CRON } from "@scout-for-lol/data";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "#src/components/ui/collapsible.tsx";
-import { Input } from "#src/components/ui/input.tsx";
-import { Label } from "#src/components/ui/label.tsx";
+} from "@scout-for-lol/design-system/components/collapsible";
+import { Input } from "@scout-for-lol/design-system/components/input";
+import { Label } from "@scout-for-lol/design-system/components/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "#src/components/ui/select.tsx";
+} from "@scout-for-lol/design-system/components/select";
 import { ReportQueryDocs } from "#src/components/report-query-docs.tsx";
 import { ReportScheduleFields } from "#src/components/report-schedule-fields.tsx";
 import { ReportTemporalControls } from "#src/components/report-temporal-controls.tsx";
@@ -158,19 +158,19 @@ export function ReportFormFields(props: {
           <CollapsibleTrigger asChild>
             <button
               type="button"
-              className="group flex w-full items-start justify-between gap-2 rounded-md border border-border px-3 py-2 text-left hover:bg-accent"
+              className="group flex w-full items-start justify-between gap-2 rounded-md border border-border px-3 py-2 text-left hover:bg-scout-accent"
             >
               <span className="space-y-0.5">
                 <span className="block text-sm font-medium">
                   Advanced: edit the ScoutQL query
                 </span>
-                <span className="block text-xs text-muted-foreground">
+                <span className="block text-xs text-scout-subtle">
                   For users comfortable writing queries — the preset already
                   fills this in.
                 </span>
               </span>
               <ChevronDown
-                className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
+                className="mt-0.5 h-4 w-4 shrink-0 text-scout-subtle transition-transform group-data-[state=open]:rotate-180"
                 aria-hidden="true"
               />
             </button>
@@ -187,7 +187,7 @@ export function ReportFormFields(props: {
           </div>
           <Suspense
             fallback={
-              <div className="flex h-[180px] items-center justify-center rounded-md border border-border text-sm text-muted-foreground">
+              <div className="flex h-[180px] items-center justify-center rounded-md border border-border text-sm text-scout-subtle">
                 Loading editor…
               </div>
             }
@@ -199,13 +199,13 @@ export function ReportFormFields(props: {
               }}
             />
           </Suspense>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-scout-subtle">
             End the query with a <code>RENDER &lt;kind&gt;</code> clause to set
             the display, e.g. <code>RENDER bar_chart with (y = win_rate)</code>.
             The editor autocompletes the kinds and options.
           </p>
           <details className="rounded-md border border-border">
-            <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-muted-foreground">
+            <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-scout-subtle">
               Query reference
             </summary>
             <div className="border-t border-border p-3">

@@ -1,6 +1,6 @@
 import type { LoadingScreenBan, LoadingScreenData } from "@scout-for-lol/data";
-import { palette } from "#src/assets/colors.ts";
-import { font } from "#src/assets/index.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
+import { font } from "@scout-for-lol/design-system/satori/fonts";
 import { getChampionImage } from "#src/dataDragon/image-cache.ts";
 
 function BanIcon({ ban }: { ban: LoadingScreenBan }) {

@@ -8,7 +8,7 @@ import {
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import type { CriteriaState } from "#src/components/competition-criteria-fields.tsx";
 import {
   CompetitionFormFields,
@@ -98,7 +98,7 @@ export function CompetitionForm() {
 
   if (guildId === undefined || (isEdit && !idResult.success)) {
     return (
-      <p className="text-sm text-destructive">Invalid competition route.</p>
+      <p className="text-sm text-scout-danger">Invalid competition route.</p>
     );
   }
 

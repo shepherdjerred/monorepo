@@ -84,7 +84,7 @@ function RankEditor({ label, rank, onChange, idPrefix }: RankEditorProps) {
 
   return (
     <div className="space-y-2">
-      <span className="text-xs font-medium text-surface-600 uppercase tracking-wide">
+      <span className="text-xs font-medium text-scout-subtle uppercase tracking-wide">
         {label}
       </span>
       <div className="grid grid-cols-3 gap-2">
@@ -92,7 +92,7 @@ function RankEditor({ label, rank, onChange, idPrefix }: RankEditorProps) {
         <div>
           <label
             htmlFor={tierId}
-            className="text-xs text-surface-500 mb-1 block"
+            className="text-xs text-scout-subtle mb-1 block"
           >
             Tier
           </label>
@@ -116,7 +116,7 @@ function RankEditor({ label, rank, onChange, idPrefix }: RankEditorProps) {
         <div>
           <label
             htmlFor={divisionId}
-            className="text-xs text-surface-500 mb-1 block"
+            className="text-xs text-scout-subtle mb-1 block"
           >
             Division
           </label>
@@ -139,7 +139,10 @@ function RankEditor({ label, rank, onChange, idPrefix }: RankEditorProps) {
 
         {/* LP */}
         <div>
-          <label htmlFor={lpId} className="text-xs text-surface-500 mb-1 block">
+          <label
+            htmlFor={lpId}
+            className="text-xs text-scout-subtle mb-1 block"
+          >
             LP
           </label>
           <input
@@ -171,7 +174,7 @@ function PresetButton({
   label,
   active,
   onClick,
-  colorClass = "bg-surface-100",
+  colorClass = "bg-scout-raised",
 }: PresetButtonProps) {
   return (
     <button
@@ -179,8 +182,8 @@ function PresetButton({
       onClick={onClick}
       className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
         active
-          ? `${colorClass} ring-2 ring-brand-500 ring-offset-1`
-          : `${colorClass} hover:bg-surface-200 text-surface-700`
+          ? `${colorClass} ring-2 ring-scout-focus ring-offset-1`
+          : `${colorClass} hover:bg-scout-raised text-scout-ink`
       }`}
     >
       {label}
@@ -346,22 +349,20 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
 
   const statusClass = useMemo(() => {
     if (wasPromoted(config.rankBefore, config.rankAfter)) {
-      return "text-victory-600 bg-victory-50";
+      return "text-scout-warning bg-scout-warning";
     }
     if (wasDemoted(config.rankBefore, config.rankAfter)) {
-      return "text-defeat-600 bg-defeat-50";
+      return "text-scout-danger bg-scout-danger";
     }
-    return "text-surface-600 bg-surface-100";
+    return "text-scout-subtle bg-scout-raised";
   }, [config.rankBefore, config.rankAfter]);
 
   return (
     <div className="card p-0 overflow-hidden">
-      <div className="px-6 py-4 border-b border-surface-200/50 flex items-center justify-between">
+      <div className="px-6 py-4 border-b border-scout-border/50 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-surface-900">
-            Rank Context
-          </h2>
-          <p className="text-sm text-surface-500 mt-0.5">
+          <h2 className="text-lg font-semibold text-scout-ink">Rank Context</h2>
+          <p className="text-sm text-scout-subtle mt-0.5">
             Configure rank before/after for the review
           </p>
         </div>
@@ -372,9 +373,9 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
             onChange={(e) => {
               onChange({ ...config, enabled: e.target.checked });
             }}
-            className="w-4 h-4 rounded border-surface-300 text-brand-600 focus:ring-brand-500"
+            className="w-4 h-4 rounded border-scout-border text-scout-brand focus:ring-scout-focus"
           />
-          <span className="text-sm text-surface-600">Override</span>
+          <span className="text-sm text-scout-subtle">Override</span>
         </label>
       </div>
 
@@ -383,7 +384,7 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
       >
         {/* Quick presets */}
         <div>
-          <span className="text-xs font-medium text-surface-600 uppercase tracking-wide mb-2 block">
+          <span className="text-xs font-medium text-scout-subtle uppercase tracking-wide mb-2 block">
             Quick Presets
           </span>
           <div className="flex flex-wrap gap-2">
@@ -393,7 +394,7 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
               onClick={() => {
                 handlePresetClick("promotion");
               }}
-              colorClass="bg-victory-50 text-victory-700"
+              colorClass="bg-scout-warning text-scout-warning"
             />
             <PresetButton
               label="Demotion"
@@ -401,7 +402,7 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
               onClick={() => {
                 handlePresetClick("demotion");
               }}
-              colorClass="bg-defeat-50 text-defeat-700"
+              colorClass="bg-scout-danger text-scout-danger"
             />
             <PresetButton
               label="LP Gain"
@@ -409,7 +410,7 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
               onClick={() => {
                 handlePresetClick("lp-gain");
               }}
-              colorClass="bg-blue-50 text-blue-700"
+              colorClass="bg-scout-raised text-scout-brand"
             />
             <PresetButton
               label="LP Loss"
@@ -417,7 +418,7 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
               onClick={() => {
                 handlePresetClick("lp-loss");
               }}
-              colorClass="bg-amber-50 text-amber-700"
+              colorClass="bg-scout-warning text-scout-warning"
             />
           </div>
         </div>

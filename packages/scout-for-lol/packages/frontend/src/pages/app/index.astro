@@ -6,22 +6,22 @@ import AppLayout from "../../layouts/app/AppLayout.astro";
   <div class="p-8">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-white">Dashboard</h1>
-      <p class="mt-2 text-slate-400">
+      <h1 class="text-3xl font-bold text-scout-ink">Dashboard</h1>
+      <p class="mt-2 text-scout-subtle">
         Welcome back! Here's an overview of your Scout setup.
       </p>
     </div>
 
     <!-- Stats Grid -->
     <div class="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+      <div class="rounded-xl border border-scout-border bg-scout-canvas/50 p-6">
         <div class="flex items-center gap-4">
           <div
-            class="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-500/20"
+            class="flex h-12 w-12 items-center justify-center rounded-lg bg-scout-brand/20"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-indigo-400"
+              class="h-6 w-6 text-scout-brand"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -35,20 +35,22 @@ import AppLayout from "../../layouts/app/AppLayout.astro";
             </svg>
           </div>
           <div>
-            <p class="text-sm text-slate-400">Sound Packs</p>
-            <p class="text-2xl font-bold text-white" id="sound-pack-count">-</p>
+            <p class="text-sm text-scout-subtle">Sound Packs</p>
+            <p class="text-2xl font-bold text-scout-ink" id="sound-pack-count">
+              -
+            </p>
           </div>
         </div>
       </div>
 
-      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+      <div class="rounded-xl border border-scout-border bg-scout-canvas/50 p-6">
         <div class="flex items-center gap-4">
           <div
-            class="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-500/20"
+            class="flex h-12 w-12 items-center justify-center rounded-lg bg-scout-success/20"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-emerald-400"
+              class="h-6 w-6 text-scout-success"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -61,20 +63,20 @@ import AppLayout from "../../layouts/app/AppLayout.astro";
             </svg>
           </div>
           <div>
-            <p class="text-sm text-slate-400">Desktop Clients</p>
-            <p class="text-2xl font-bold text-white" id="client-count">-</p>
+            <p class="text-sm text-scout-subtle">Desktop Clients</p>
+            <p class="text-2xl font-bold text-scout-ink" id="client-count">-</p>
           </div>
         </div>
       </div>
 
-      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+      <div class="rounded-xl border border-scout-border bg-scout-canvas/50 p-6">
         <div class="flex items-center gap-4">
           <div
-            class="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500/20"
+            class="flex h-12 w-12 items-center justify-center rounded-lg bg-scout-warning/20"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-amber-400"
+              class="h-6 w-6 text-scout-warning"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -88,20 +90,20 @@ import AppLayout from "../../layouts/app/AppLayout.astro";
             </svg>
           </div>
           <div>
-            <p class="text-sm text-slate-400">API Tokens</p>
-            <p class="text-2xl font-bold text-white" id="token-count">-</p>
+            <p class="text-sm text-scout-subtle">API Tokens</p>
+            <p class="text-2xl font-bold text-scout-ink" id="token-count">-</p>
           </div>
         </div>
       </div>
 
-      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+      <div class="rounded-xl border border-scout-border bg-scout-canvas/50 p-6">
         <div class="flex items-center gap-4">
           <div
-            class="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/20"
+            class="flex h-12 w-12 items-center justify-center rounded-lg bg-scout-accent/20"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-purple-400"
+              class="h-6 w-6 text-scout-accent"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -114,8 +116,8 @@ import AppLayout from "../../layouts/app/AppLayout.astro";
             </svg>
           </div>
           <div>
-            <p class="text-sm text-slate-400">Events Today</p>
-            <p class="text-2xl font-bold text-white" id="events-count">-</p>
+            <p class="text-sm text-scout-subtle">Events Today</p>
+            <p class="text-2xl font-bold text-scout-ink" id="events-count">-</p>
           </div>
         </div>
       </div>
@@ -123,18 +125,18 @@ import AppLayout from "../../layouts/app/AppLayout.astro";
 
     <!-- Quick Actions -->
     <div class="mb-8">
-      <h2 class="mb-4 text-lg font-semibold text-white">Quick Actions</h2>
+      <h2 class="mb-4 text-lg font-semibold text-scout-ink">Quick Actions</h2>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <a
           href="/app/sound-packs/new"
-          class="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/50 p-6 transition-colors hover:border-slate-700 hover:bg-slate-900"
+          class="flex items-center gap-4 rounded-xl border border-scout-border bg-scout-canvas/50 p-6 transition-colors hover:border-scout-border hover:bg-scout-canvas"
         >
           <div
-            class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500"
+            class="flex h-10 w-10 items-center justify-center rounded-lg bg-scout-brand"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 text-white"
+              class="h-5 w-5 text-scout-ink"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -147,21 +149,23 @@ import AppLayout from "../../layouts/app/AppLayout.astro";
             </svg>
           </div>
           <div>
-            <p class="font-medium text-white">Create Sound Pack</p>
-            <p class="text-sm text-slate-400">Set up sounds for game events</p>
+            <p class="font-medium text-scout-ink">Create Sound Pack</p>
+            <p class="text-sm text-scout-subtle">
+              Set up sounds for game events
+            </p>
           </div>
         </a>
 
         <a
           href="/app/settings/tokens"
-          class="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/50 p-6 transition-colors hover:border-slate-700 hover:bg-slate-900"
+          class="flex items-center gap-4 rounded-xl border border-scout-border bg-scout-canvas/50 p-6 transition-colors hover:border-scout-border hover:bg-scout-canvas"
         >
           <div
-            class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500"
+            class="flex h-10 w-10 items-center justify-center rounded-lg bg-scout-warning"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 text-white"
+              class="h-5 w-5 text-scout-ink"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -175,21 +179,21 @@ import AppLayout from "../../layouts/app/AppLayout.astro";
             </svg>
           </div>
           <div>
-            <p class="font-medium text-white">Generate API Token</p>
-            <p class="text-sm text-slate-400">Connect your desktop client</p>
+            <p class="font-medium text-scout-ink">Generate API Token</p>
+            <p class="text-sm text-scout-subtle">Connect your desktop client</p>
           </div>
         </a>
 
         <a
           href="/getting-started"
-          class="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/50 p-6 transition-colors hover:border-slate-700 hover:bg-slate-900"
+          class="flex items-center gap-4 rounded-xl border border-scout-border bg-scout-canvas/50 p-6 transition-colors hover:border-scout-border hover:bg-scout-canvas"
         >
           <div
-            class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500"
+            class="flex h-10 w-10 items-center justify-center rounded-lg bg-scout-success"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5 text-white"
+              class="h-5 w-5 text-scout-ink"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -203,8 +207,8 @@ import AppLayout from "../../layouts/app/AppLayout.astro";
             </svg>
           </div>
           <div>
-            <p class="font-medium text-white">Getting Started Guide</p>
-            <p class="text-sm text-slate-400">Learn how to use Scout</p>
+            <p class="font-medium text-scout-ink">Getting Started Guide</p>
+            <p class="text-sm text-scout-subtle">Learn how to use Scout</p>
           </div>
         </a>
       </div>
@@ -212,11 +216,11 @@ import AppLayout from "../../layouts/app/AppLayout.astro";
 
     <!-- Recent Activity -->
     <div>
-      <h2 class="mb-4 text-lg font-semibold text-white">Recent Activity</h2>
-      <div class="rounded-xl border border-slate-800 bg-slate-900/50">
+      <h2 class="mb-4 text-lg font-semibold text-scout-ink">Recent Activity</h2>
+      <div class="rounded-xl border border-scout-border bg-scout-canvas/50">
         <div id="activity-loading" class="flex items-center justify-center p-8">
           <svg
-            class="h-5 w-5 animate-spin text-slate-400"
+            class="h-5 w-5 animate-spin text-scout-subtle"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -235,11 +239,14 @@ import AppLayout from "../../layouts/app/AppLayout.astro";
             ></path>
           </svg>
         </div>
-        <div id="activity-empty" class="hidden p-8 text-center text-slate-400">
+        <div
+          id="activity-empty"
+          class="hidden p-8 text-center text-scout-subtle"
+        >
           <p>No recent activity</p>
           <p class="mt-1 text-sm">Start monitoring games to see events here</p>
         </div>
-        <div id="activity-list" class="hidden divide-y divide-slate-800">
+        <div id="activity-list" class="hidden divide-y border-scout-border">
           <!-- Activity items will be inserted here -->
         </div>
       </div>

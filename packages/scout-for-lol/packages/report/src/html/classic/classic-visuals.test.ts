@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { bunClassicFonts } from "#src/assets/classic-fonts.ts";
-import { classicTypography } from "#src/assets/classic-style.ts";
+import { bunClassicFonts } from "@scout-for-lol/design-system/satori/classic-fonts";
+import { classicTypography } from "@scout-for-lol/design-system/satori/classic-style";
 import {
   classicLoadingScreenFixture,
   classicMatchFixture,

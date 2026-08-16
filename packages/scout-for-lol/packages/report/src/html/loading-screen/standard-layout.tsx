@@ -3,8 +3,8 @@ import {
   type AramLoadingScreenData,
   type StandardLoadingScreenData,
 } from "@scout-for-lol/data";
-import { palette } from "#src/assets/colors.ts";
-import { font } from "#src/assets/index.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
+import { font } from "@scout-for-lol/design-system/satori/fonts";
 import { PlayerCard } from "#src/html/loading-screen/player-card.tsx";
 
 function TeamRow({

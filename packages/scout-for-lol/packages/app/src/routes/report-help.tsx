@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { ReportQueryDocs } from "#src/components/report-query-docs.tsx";
 
 export function ReportHelp() {
@@ -17,7 +17,7 @@ export function ReportHelp() {
           </Button>
         )}
       </div>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-scout-subtle">
         The report query language is a small SQL-like dialect. Pick a source,
         select metrics, group, filter, analyze time windows, and choose a
         visualization. Everything below is also available as autocomplete and

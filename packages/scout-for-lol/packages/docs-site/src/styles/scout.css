@@ -1,0 +1,42 @@
+@import "@scout-for-lol/design-system/styles.css";
+
+:root {
+  --sl-font: var(--scout-font-body);
+  --sl-font-system: var(--scout-font-body);
+  --sl-color-accent-low: var(--scout-color-interactive-hover);
+  --sl-color-accent: var(--scout-color-primary);
+  --sl-color-accent-high: var(--scout-color-primary-text);
+  --sl-color-white: var(--scout-color-text);
+  --sl-color-gray-1: var(--scout-color-text);
+  --sl-color-gray-2: var(--scout-color-text-muted);
+  --sl-color-gray-3: var(--scout-color-text-muted);
+  --sl-color-gray-4: var(--scout-color-border);
+  --sl-color-gray-5: var(--scout-color-border);
+  --sl-color-gray-6: var(--scout-color-surface-raised);
+  --sl-color-black: var(--scout-color-canvas);
+  --sl-color-bg: var(--scout-color-canvas);
+  --sl-color-bg-nav: var(--scout-color-surface);
+  --sl-color-bg-sidebar: var(--scout-color-surface);
+  --sl-color-hairline-light: var(--scout-color-border);
+  --sl-color-hairline: var(--scout-color-border);
+  --sl-color-hairline-shade: var(--scout-color-border);
+  --sl-nav-height: 4rem;
+}
+
+.header {
+  padding: 0 !important;
+}
+
+.header > astro-island,
+.header .scout-navbar {
+  width: 100%;
+  height: 100%;
+}
+
+.header .scout-container {
+  max-width: none;
+}
+
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--scout-font-display);
+}

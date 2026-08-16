@@ -13,8 +13,8 @@ import {
 import {
   classicPalette,
   classicTypography,
-} from "#src/assets/classic-style.ts";
-import { fontFamilyForText } from "#src/assets/index.ts";
+} from "@scout-for-lol/design-system/satori/classic-style";
+import { fontFamilyForText } from "@scout-for-lol/design-system/satori/fonts";
 import { formatDuration } from "#src/html/shared/format.ts";
 
 export const CLASSIC_MATCH_WIDTH = 1920;

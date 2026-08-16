@@ -4,8 +4,11 @@ import type {
   ReportChartOrientation,
 } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
-import { fileURLToPath } from "node:url";
-import { cjkFontFileNames, containsCjkText } from "#src/assets/index.ts";
+import {
+  cjkFontFileNames,
+  containsCjkText,
+} from "@scout-for-lol/design-system/satori/fonts";
+import { satoriFontFilePath } from "@scout-for-lol/design-system/satori/file-assets";
 import {
   ANALYTICS_BODY_FONT as BODY_FONT,
   ANALYTICS_CHART_HEIGHT as HEIGHT,
@@ -433,9 +436,7 @@ export function analyticsChartToImage(props: AnalyticsChartProps): Buffer {
     ? [
         ...FONT_FILE_PATHS,
         ...cjkFontFileNames.map((name) =>
-          fileURLToPath(
-            new URL(`../assets/fonts/NotoSansCJK/${name}`, import.meta.url),
-          ),
+          satoriFontFilePath(`NotoSansCJK/${name}`),
         ),
       ]
     : FONT_FILE_PATHS;

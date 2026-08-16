@@ -53,17 +53,17 @@ export function PersonalityEditor({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-surface-200 sticky top-0 bg-white">
-          <h2 className="text-2xl font-bold text-surface-900">
+    <div className="fixed inset-0 bg-scout-overlay backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-scout-surface rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-scout-border sticky top-0 bg-scout-surface">
+          <h2 className="text-2xl font-bold text-scout-ink">
             {personality ? "Edit Personality" : "Create New Personality"}
           </h2>
         </div>
 
         <div className="p-6 space-y-6">
           {error !== null && error.length > 0 && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded text-red-800">
+            <div className="p-4 bg-scout-danger border border-scout-danger rounded text-scout-danger">
               {error}
             </div>
           )}
@@ -71,9 +71,9 @@ export function PersonalityEditor({
           <div>
             <label
               htmlFor="personality-name"
-              className="block text-sm font-medium text-surface-700 mb-1"
+              className="block text-sm font-medium text-scout-ink mb-1"
             >
-              Name <span className="text-red-500">*</span>
+              Name <span className="text-scout-danger">*</span>
             </label>
             <input
               id="personality-name"
@@ -82,7 +82,7 @@ export function PersonalityEditor({
               onChange={(e) => {
                 setName(e.target.value);
               }}
-              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
+              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand placeholder:text-scout-subtle"
               placeholder="e.g., Friendly Coach"
             />
           </div>
@@ -90,10 +90,10 @@ export function PersonalityEditor({
           <div>
             <label
               htmlFor="personality-instructions"
-              className="block text-sm font-medium text-surface-700 mb-1"
+              className="block text-sm font-medium text-scout-ink mb-1"
             >
               Instructions / System Prompt{" "}
-              <span className="text-red-500">*</span>
+              <span className="text-scout-danger">*</span>
             </label>
             <textarea
               id="personality-instructions"
@@ -102,10 +102,10 @@ export function PersonalityEditor({
                 setInstructions(e.target.value);
               }}
               rows={15}
-              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-mono text-sm placeholder:text-surface-400"
+              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand font-mono text-sm placeholder:text-scout-subtle"
               placeholder="Detailed instructions for how this reviewer should behave and write reviews..."
             />
-            <p className="mt-1 text-sm text-surface-500">
+            <p className="mt-1 text-sm text-scout-subtle">
               This is the system prompt that defines how the reviewer thinks and
               writes.
             </p>
@@ -114,7 +114,7 @@ export function PersonalityEditor({
           <div>
             <label
               htmlFor="personality-style-card"
-              className="block text-sm font-medium text-surface-700 mb-1"
+              className="block text-sm font-medium text-scout-ink mb-1"
             >
               Style Card (required)
             </label>
@@ -125,26 +125,26 @@ export function PersonalityEditor({
                 setStyleCard(e.target.value);
               }}
               rows={12}
-              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-mono text-sm placeholder:text-surface-400"
+              className="w-full px-3 py-2 bg-scout-surface text-scout-ink border border-scout-border rounded focus:ring-2 focus:ring-scout-focus focus:border-scout-brand font-mono text-sm placeholder:text-scout-subtle"
               placeholder="Paste the reviewer’s style card (JSON or text) here"
             />
-            <p className="mt-1 text-sm text-surface-500">
+            <p className="mt-1 text-sm text-scout-subtle">
               Required. Paste the voice/style analysis used to steer this
               reviewer.
             </p>
           </div>
         </div>
 
-        <div className="p-6 border-t border-surface-200 flex justify-end gap-3 sticky bottom-0 bg-white">
+        <div className="p-6 border-t border-scout-border flex justify-end gap-3 sticky bottom-0 bg-scout-surface">
           <button
             onClick={onCancel}
-            className="px-4 py-2 border border-surface-300 text-surface-700 rounded hover:bg-surface-50 transition-colors"
+            className="px-4 py-2 border border-scout-border text-scout-ink rounded hover:bg-scout-raised transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-brand-600 text-white rounded hover:bg-brand-700 transition-colors"
+            className="px-4 py-2 bg-scout-brand text-scout-brand-ink rounded hover:bg-scout-brand transition-colors"
           >
             {personality ? "Save Changes" : "Create Personality"}
           </button>

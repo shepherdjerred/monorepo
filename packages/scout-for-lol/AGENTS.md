@@ -12,10 +12,13 @@ Monorepo using **Bun workspaces**:
 packages/
 ├── backend/   # Discord bot backend service (Discord.js, Prisma, twisted)
 ├── data/      # Shared data models, schemas, and utilities
+├── design-system/ # Shared themes, components, browser assets, and Satori foundations
 ├── report/    # Report generation components (React + satori)
 ├── frontend/  # Web frontend (Astro + React + Tailwind)
+├── docs-site/ # User documentation (Astro + Starlight)
+├── app/       # Management web app (React + Vite)
 ├── desktop/   # Desktop app (Tauri + React + Vite)
-└── ui/        # Shared UI components (React)
+└── ui/        # Desktop sound-editor UI (separate and out of web scope)
 ```
 
 ## Workspace Dependencies
@@ -263,48 +266,29 @@ The project uses custom ESLint rules in `eslint-rules/`:
 
 ---
 
-## Color Usage Convention (Frontend)
+## Unified Web Design System
 
-**Marketing components** (`components/*.astro`, `pages/*.astro`, non-UI TSX):
+`@scout-for-lol/design-system` is the only visual source of truth for the
+marketing site, Starlight documentation, management app, and shared report
+foundations.
 
-- Use explicit Tailwind colors: `text-gray-900 dark:text-white`
-- Use `colors.ts` utilities: `iconColors`, `badgeColors`, `gradientColors`
-- **NEVER** use shadcn theme tokens (`text-foreground`, `bg-primary`, etc.)
-- Enforced by ESLint rule `custom-rules/no-shadcn-theme-tokens`
-
-**UI components** (`components/ui/*.tsx`):
-
-- shadcn theme tokens are allowed and expected
-- These components are designed for the theming system
-
-### Standard Color Replacements
-
-| shadcn token              | Explicit Tailwind                      |
-| ------------------------- | -------------------------------------- |
-| `text-foreground`         | `text-gray-900 dark:text-white`        |
-| `text-muted-foreground`   | `text-gray-600 dark:text-gray-300`     |
-| `text-primary-foreground` | `text-white` (on colored bg)           |
-| `text-primary`            | `text-indigo-600 dark:text-indigo-400` |
-| `bg-background`           | `bg-white dark:bg-gray-900`            |
-| `bg-primary`              | `bg-indigo-600` or specific color      |
-| `bg-muted`                | `bg-gray-100 dark:bg-gray-800`         |
-| `bg-card`                 | `bg-white dark:bg-gray-800`            |
-| `border-border`           | `border-gray-200 dark:border-gray-700` |
-
----
-
-## Web App vs Marketing Site — Distinct Design
-
-Two separate web surfaces with **intentionally distinct visual design**:
-
-- `packages/app/` — Vite + React SPA, served at `scout-for-lol.com/app/`. Authenticated subscription management (tables, forms, modals). Should look like a clean admin product.
-- `packages/frontend/` — Astro marketing site. Content-heavy, Riot/LoL-branded (Beaufort for LoL + Spiegel fonts, indigo palette), conversion-focused.
-
-Rules:
-
-- Never `@import` `frontend/src/styles/global.css` or its tokens into `app/`.
-- Never reuse the marketing site's fonts (Beaufort for LoL, Spiegel), color scale, radius, or shadow choices in `app/`. The app has its own `src/styles/tokens.css` and its own Tailwind v4 `@theme` block.
-- Shared **dependencies** are fine (Tailwind v4, Radix, lucide-react, clsx, tailwind-merge). Shared **visual tokens/components** are not — if both surfaces ever need a shadcn-style Button/Card/Dialog, each gets its own copy with its own tokens (do not put them in a shared package).
+- Consume standalone `@scout-for-lol/design-system/styles.css`; do not create a
+  surface-local color or theme system, and do not rely on Tailwind scanning the
+  design-system package.
+- Site-local Tailwind composition uses the exported `--scout-*` CSS variables.
+  Reusable primitives, chrome, layouts, marketing compositions, and
+  value/callback-only Scout widgets belong in the design system.
+- Framework adapters, routing, SEO, analytics, authentication, tRPC workflows,
+  and permission-aware business composition stay in their surface package.
+- Theme state is canonical under `scout-theme-v1`. Only the shared runtime may
+  write `data-scout-skin`, `data-scout-mode`, Starlight's `data-theme`, or the
+  compatibility `.dark` class.
+- Reports import only Satori-safe resolved values, fonts, and assets from the
+  design system. Report markup, layout, transformations, exports, and feature
+  routing remain in `@scout-for-lol/report`, and the committed visual contract
+  must remain byte-for-byte unchanged.
+- `@scout-for-lol/ui` remains the desktop sound-editor package. Do not migrate
+  or import it into the web design system.
 
 ---
 

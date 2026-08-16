@@ -64,22 +64,22 @@ export function ReportQueryPreview(props: {
     <div className="space-y-2">
       <h3 className="text-sm font-semibold">Live preview</h3>
       {!hasQuery && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-scout-subtle">
           Write a query to preview its results.
         </p>
       )}
       {hasQuery && previewQuery.isPending && (
-        <p className="text-sm text-muted-foreground">Running preview…</p>
+        <p className="text-sm text-scout-subtle">Running preview…</p>
       )}
       {previewQuery.error !== null && (
-        <pre className="overflow-auto whitespace-pre-wrap rounded-md border border-border bg-muted/50 p-3 text-xs text-destructive">
+        <pre className="overflow-auto whitespace-pre-wrap rounded-md border border-border bg-scout-hover/50 p-3 text-xs text-scout-danger">
           {previewQuery.error.message}
         </pre>
       )}
       {result !== undefined && previewQuery.error === null && (
         <>
           {previewQuery.isFetching && (
-            <p className="text-xs text-muted-foreground">Updating…</p>
+            <p className="text-xs text-scout-subtle">Updating…</p>
           )}
           {result.visualization !== null &&
           result.renderKind !== "TABLE" &&
@@ -99,7 +99,7 @@ export function ReportQueryPreview(props: {
             visualization={result.visualization}
             evidence={result.evidence}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-scout-subtle">
             {result.rows.length} row(s) · {result.rowsScanned} fact row(s)
             scanned
           </p>

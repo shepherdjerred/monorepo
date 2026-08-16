@@ -1,5 +1,5 @@
 import { type ArenaTeam } from "@scout-for-lol/data";
-import { palette } from "#src/assets/colors.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
 import { TeamHeader } from "#src/html/arena/team-header.tsx";
 import { PlayerColumn } from "#src/html/arena/player-column.tsx";
 import { sumBy } from "remeda";

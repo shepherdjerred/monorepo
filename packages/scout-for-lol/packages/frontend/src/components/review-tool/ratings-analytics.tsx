@@ -110,12 +110,12 @@ export function RatingsAnalytics() {
 
   if (statistics.totalRated === 0) {
     return (
-      <div className="bg-white rounded-lg border border-surface-200 p-8 text-center">
+      <div className="bg-scout-surface rounded-lg border border-scout-border p-8 text-center">
         <div className="text-4xl mb-3">📊</div>
-        <h3 className="text-lg font-bold text-surface-900 mb-2">
+        <h3 className="text-lg font-bold text-scout-ink mb-2">
           No ratings yet
         </h3>
-        <p className="text-sm text-surface-600">
+        <p className="text-sm text-scout-subtle">
           Generate some reviews and rate them to see analytics here
         </p>
       </div>
@@ -124,36 +124,36 @@ export function RatingsAnalytics() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-surface-200 p-6">
-        <h2 className="text-xl font-bold text-surface-900 mb-4">
+      <div className="bg-scout-surface rounded-lg border border-scout-border p-6">
+        <h2 className="text-xl font-bold text-scout-ink mb-4">
           Rating Analytics
         </h2>
 
         {/* Summary Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="p-4 bg-surface-50 rounded">
-            <div className="text-2xl font-bold text-surface-900">
+          <div className="p-4 bg-scout-raised rounded">
+            <div className="text-2xl font-bold text-scout-ink">
               {statistics.totalRated}
             </div>
-            <div className="text-sm text-surface-600">Rated Generations</div>
+            <div className="text-sm text-scout-subtle">Rated Generations</div>
           </div>
-          <div className="p-4 bg-blue-50 rounded">
-            <div className="text-2xl font-bold text-blue-900">
+          <div className="p-4 bg-scout-raised rounded">
+            <div className="text-2xl font-bold text-scout-brand">
               {statistics.totalGenerated}
             </div>
-            <div className="text-sm text-blue-700">Total Generations</div>
+            <div className="text-sm text-scout-brand">Total Generations</div>
           </div>
-          <div className="p-4 bg-green-50 rounded">
-            <div className="text-2xl font-bold text-green-900">
+          <div className="p-4 bg-scout-success rounded">
+            <div className="text-2xl font-bold text-scout-success">
               {statistics.averageRating.toFixed(2)}
             </div>
-            <div className="text-sm text-green-700">Average Rating</div>
+            <div className="text-sm text-scout-success">Average Rating</div>
           </div>
         </div>
 
         {/* Rating Distribution */}
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-surface-700 mb-3">
+          <h3 className="text-sm font-semibold text-scout-ink mb-3">
             Rating Distribution
           </h3>
           <div className="flex gap-4 items-end h-32">
@@ -167,7 +167,7 @@ export function RatingsAnalytics() {
               return (
                 <div key={rating} className="flex-1 flex flex-col items-center">
                   <div
-                    className="w-full bg-blue-500 rounded-t transition-all flex items-start justify-center pt-2 text-white font-semibold text-sm"
+                    className="w-full bg-scout-brand rounded-t transition-all flex items-start justify-center pt-2 text-scout-brand-ink font-semibold text-sm"
                     style={{
                       height: `${height.toString()}%`,
                       minHeight: count > 0 ? "32px" : "0",
@@ -175,7 +175,7 @@ export function RatingsAnalytics() {
                   >
                     {count > 0 && count}
                   </div>
-                  <div className="mt-2 text-sm font-medium text-surface-600">
+                  <div className="mt-2 text-sm font-medium text-scout-subtle">
                     {rating} ⭐
                   </div>
                 </div>
@@ -187,25 +187,25 @@ export function RatingsAnalytics() {
 
       {/* Best Personalities */}
       {statistics.personalityStats.length > 0 && (
-        <div className="bg-white rounded-lg border border-surface-200 p-6">
-          <h3 className="text-lg font-bold text-surface-900 mb-4">
+        <div className="bg-scout-surface rounded-lg border border-scout-border p-6">
+          <h3 className="text-lg font-bold text-scout-ink mb-4">
             Best Personalities
           </h3>
           <div className="space-y-2">
             {statistics.personalityStats.slice(0, 10).map((stat) => (
               <div
                 key={stat.personality}
-                className="flex items-center justify-between p-3 bg-surface-50 rounded"
+                className="flex items-center justify-between p-3 bg-scout-raised rounded"
               >
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-surface-900">
+                  <div className="text-sm font-medium text-scout-ink">
                     {stat.personality}
                   </div>
-                  <div className="text-xs text-surface-500">
+                  <div className="text-xs text-scout-subtle">
                     {stat.count} generations
                   </div>
                 </div>
-                <div className="text-lg font-bold text-brand-600">
+                <div className="text-lg font-bold text-scout-brand">
                   {stat.average.toFixed(2)}
                 </div>
               </div>

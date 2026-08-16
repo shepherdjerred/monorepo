@@ -7,7 +7,7 @@ import {
 } from "react-router";
 import * as Sentry from "@sentry/react";
 import { z } from "zod";
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { queryClient } from "#src/lib/query-client.ts";
 import { RouteParameterError } from "#src/lib/route-params.ts";
 
@@ -66,16 +66,16 @@ export function RouteErrorPanel() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
-      <div className="rounded-lg border border-destructive/40 bg-card p-8 text-center">
-        <h2 className="text-base font-semibold text-destructive">
+      <div className="rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center">
+        <h2 className="text-base font-semibold text-scout-danger">
           Something went wrong
         </h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+        <p className="mx-auto mt-2 max-w-sm text-sm text-scout-subtle">
           This section failed to load. You can try again — if it keeps
           happening, reload the page.
         </p>
         {detail !== null && (
-          <p className="mx-auto mt-2 max-w-sm text-xs text-muted-foreground">
+          <p className="mx-auto mt-2 max-w-sm text-xs text-scout-subtle">
             {detail}
           </p>
         )}

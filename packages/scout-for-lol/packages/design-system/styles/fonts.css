@@ -1,0 +1,69 @@
+@font-face {
+  font-family: "Beaufort for LoL";
+  src: url("/assets/scout/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Beaufort for LoL";
+  src: url("/assets/scout/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf")
+    format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spiegel";
+  src: url("/assets/scout/fonts/Spiegel-TTF/Spiegel_TT_Regular.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spiegel";
+  src: url("/assets/scout/fonts/Spiegel-TTF/Spiegel_TT_SemiBold.ttf")
+    format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "QTFrizQuad";
+  src: url("/assets/scout/fonts/QTFrizQuad/QTFrizQuad.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "QTFrizQuad";
+  src: url("/assets/scout/fonts/QTFrizQuad/QTFrizQuad-Bold.otf")
+    format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gill Sans";
+  src: url("/assets/scout/fonts/GillSans/GillSans-Regular.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gill Sans";
+  src: url("/assets/scout/fonts/GillSans/GillSans-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

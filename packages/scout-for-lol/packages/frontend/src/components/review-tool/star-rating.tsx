@@ -105,8 +105,16 @@ export function StarRating({
               width={starSize}
               height={starSize}
               viewBox="0 0 24 24"
-              fill={isFilled ? "#fbbf24" : "#d1d5db"}
-              stroke={isFilled ? "#f59e0b" : "#9ca3af"}
+              fill={
+                isFilled
+                  ? "var(--scout-color-warning)"
+                  : "var(--scout-color-interactive-disabled)"
+              }
+              stroke={
+                isFilled
+                  ? "var(--scout-color-accent)"
+                  : "var(--scout-color-text-muted)"
+              }
               strokeWidth="1.5"
               style={{
                 transition: "fill 0.15s ease, stroke 0.15s ease",
@@ -127,7 +135,7 @@ export function StarRating({
             marginLeft: "8px",
             fontSize:
               size === "small" ? "12px" : size === "medium" ? "14px" : "16px",
-            color: "#6b7280",
+            color: "var(--scout-color-text-muted)",
             fontWeight: 500,
           }}
         >

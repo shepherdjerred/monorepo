@@ -7,15 +7,15 @@ import {
   isCompetitionQueueCurrentlyAvailable,
 } from "@scout-for-lol/data";
 import { ChampionCombobox } from "#src/components/champion-combobox.tsx";
-import { Input } from "#src/components/ui/input.tsx";
-import { Label } from "#src/components/ui/label.tsx";
+import { Input } from "@scout-for-lol/design-system/components/input";
+import { Label } from "@scout-for-lol/design-system/components/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "#src/components/ui/select.tsx";
+} from "@scout-for-lol/design-system/components/select";
 
 export type CriteriaState = {
   criteriaType: CompetitionCriteria["type"];
@@ -83,7 +83,7 @@ function QueueSelect(props: {
             <SelectItem key={queue} value={queue}>
               <span
                 className={
-                  isAvailableChoice(queue) ? undefined : "text-muted-foreground"
+                  isAvailableChoice(queue) ? undefined : "text-scout-subtle"
                 }
               >
                 {competitionQueueTypeToString(
@@ -100,7 +100,7 @@ function QueueSelect(props: {
           inside SelectContent is unreachable by keyboard. Placing it in normal
           flow keeps it Tab-focusable. */}
       {unavailableCount > 0 && (
-        <label className="flex w-fit cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+        <label className="flex w-fit cursor-pointer items-center gap-2 text-xs text-scout-subtle">
           <input
             type="checkbox"
             checked={showUnavailable}

@@ -1,4 +1,4 @@
-import { Button } from "#src/components/ui/button.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
 import { ConceptCards } from "#src/components/concept-cards.tsx";
 import { OnboardingConceptDiagram } from "#src/components/onboarding/onboarding-concept-diagram.tsx";

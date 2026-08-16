@@ -124,9 +124,9 @@ export function HistoryPanel({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-surface-200 p-4">
+    <div className="bg-scout-surface rounded-lg border border-scout-border p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-surface-900">
+        <h3 className="text-lg font-bold text-scout-ink">
           History ({history.length})
         </h3>
         {history.length > 0 && (
@@ -134,7 +134,7 @@ export function HistoryPanel({
             onClick={() => {
               setShowConfirmClear(true);
             }}
-            className="text-sm text-defeat-600 hover:text-defeat-700 font-medium"
+            className="text-sm text-scout-danger hover:text-scout-danger font-medium"
           >
             Clear All
           </button>
@@ -142,8 +142,8 @@ export function HistoryPanel({
       </div>
 
       {showConfirmClear && (
-        <div className="mb-4 p-3 bg-defeat-50 border border-defeat-200 rounded">
-          <div className="text-sm text-defeat-900 mb-2">
+        <div className="mb-4 p-3 bg-scout-danger border border-scout-danger rounded">
+          <div className="text-sm text-scout-danger mb-2">
             Are you sure you want to clear all history?
           </div>
           <div className="flex gap-2">
@@ -151,7 +151,7 @@ export function HistoryPanel({
               onClick={() => {
                 void handleClearAll();
               }}
-              className="px-3 py-1 bg-defeat-600 text-white text-sm rounded hover:bg-defeat-700"
+              className="px-3 py-1 bg-scout-danger text-scout-danger-ink text-sm rounded hover:bg-scout-danger"
             >
               Yes, clear all
             </button>
@@ -159,7 +159,7 @@ export function HistoryPanel({
               onClick={() => {
                 setShowConfirmClear(false);
               }}
-              className="px-3 py-1 bg-surface-200 text-surface-700 text-sm rounded hover:bg-surface-300"
+              className="px-3 py-1 bg-scout-raised text-scout-ink text-sm rounded hover:bg-scout-canvas"
             >
               Cancel
             </button>
@@ -168,7 +168,7 @@ export function HistoryPanel({
       )}
 
       {history.length === 0 ? (
-        <div className="text-center py-8 text-surface-500">
+        <div className="text-center py-8 text-scout-subtle">
           <div className="text-4xl mb-2">📝</div>
           <div className="text-sm">No history yet</div>
           <div className="text-xs mt-1">Generated reviews will appear here</div>
@@ -196,15 +196,15 @@ export function HistoryPanel({
                 tabIndex={0}
                 className={`w-full text-left p-3 rounded border transition-colors cursor-pointer ${(() => {
                   if (isSelected) {
-                    return "border-brand-500 bg-brand-50";
+                    return "border-scout-brand bg-scout-raised";
                   }
                   if (isPending) {
-                    return "border-victory-200 bg-victory-50 hover:bg-victory-100";
+                    return "border-scout-warning bg-scout-warning hover:bg-scout-warning";
                   }
                   if (hasError) {
-                    return "border-defeat-200 bg-defeat-50 hover:bg-defeat-100";
+                    return "border-scout-danger bg-scout-danger hover:bg-scout-danger";
                   }
-                  return "border-surface-200 hover:bg-surface-50";
+                  return "border-scout-border hover:bg-scout-raised";
                 })()}`}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -212,25 +212,25 @@ export function HistoryPanel({
                     <div className="flex items-center gap-2 mb-1">
                       {isPending ? (
                         <div className="flex items-center gap-1">
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-victory-600" />
-                          <span className="text-victory-600 text-xs font-semibold">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-scout-warning" />
+                          <span className="text-scout-warning text-xs font-semibold">
                             GENERATING...
                           </span>
                         </div>
                       ) : hasError ? (
-                        <span className="text-defeat-600 text-xs font-semibold">
+                        <span className="text-scout-danger text-xs font-semibold">
                           ERROR
                         </span>
                       ) : (
-                        <span className="text-brand-600 text-xs font-semibold">
+                        <span className="text-scout-brand text-xs font-semibold">
                           SUCCESS
                         </span>
                       )}
-                      <span className="text-xs text-surface-500">
+                      <span className="text-xs text-scout-subtle">
                         {formatTimestamp(entry.timestamp)}
                       </span>
                     </div>
-                    <div className="text-xs text-surface-700 space-y-0.5">
+                    <div className="text-xs text-scout-ink space-y-0.5">
                       {entry.configSnapshot.personality !== undefined &&
                         entry.configSnapshot.personality.length > 0 && (
                           <div className="truncate">
@@ -238,7 +238,7 @@ export function HistoryPanel({
                           </div>
                         )}
                       {!isPending && !hasError && (
-                        <div className="flex items-center gap-2 text-surface-500">
+                        <div className="flex items-center gap-2 text-scout-subtle">
                           <span>{entry.result.text.length} chars</span>
                           {entry.result.image !== undefined &&
                             entry.result.image.length > 0 && <span>🖼️</span>}
@@ -261,7 +261,7 @@ export function HistoryPanel({
                         onClick={(e) => {
                           handleCancelPending(entry.id, e);
                         }}
-                        className="shrink-0 text-surface-400 hover:text-victory-600 transition-colors"
+                        className="shrink-0 text-scout-subtle hover:text-scout-warning transition-colors"
                         title="Cancel (mark as interrupted)"
                       >
                         <svg
@@ -281,7 +281,7 @@ export function HistoryPanel({
                       onClick={(e) => {
                         void handleDelete(entry.id, e);
                       }}
-                      className="shrink-0 text-surface-400 hover:text-defeat-600 transition-colors"
+                      className="shrink-0 text-scout-subtle hover:text-scout-danger transition-colors"
                       title="Delete"
                     >
                       <svg

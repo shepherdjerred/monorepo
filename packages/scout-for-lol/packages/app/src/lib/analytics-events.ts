@@ -82,6 +82,10 @@ export type AnalyticsProperty =
   | "kind"
   | "category"
   | "preference"
+  | "skin"
+  | "mode_preference"
+  | "resolved_mode"
+  | "surface"
   | "action"
   | "step"
   | "has_existing_query";

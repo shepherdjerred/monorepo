@@ -31,7 +31,7 @@ export function ReportRunHistory(props: {
     <Section title="Run history">
       <div className="space-y-3 p-3">
         {runs.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-scout-subtle">
             No runs yet — use “Run now” to generate one.
           </p>
         ) : (
@@ -40,7 +40,7 @@ export function ReportRunHistory(props: {
               key={run.id}
               className="space-y-2 rounded-md border border-border p-3"
             >
-              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-scout-subtle">
                 <ReportRunStatusBadge status={run.status} />
                 <span>{run.trigger}</span>
                 <span>·</span>
@@ -58,22 +58,22 @@ export function ReportRunHistory(props: {
               </div>
 
               {run.errorMessage !== null && (
-                <p className="text-sm text-destructive">{run.errorMessage}</p>
+                <p className="text-sm text-scout-danger">{run.errorMessage}</p>
               )}
 
               {run.querySnapshot !== null && (
                 <details className="rounded-md border border-border">
-                  <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-muted-foreground">
+                  <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-scout-subtle">
                     ScoutQL snapshot
                   </summary>
-                  <pre className="max-h-[360px] overflow-auto whitespace-pre-wrap break-words border-t border-border bg-muted/50 p-3 font-mono text-xs leading-5">
+                  <pre className="max-h-[360px] overflow-auto whitespace-pre-wrap break-words border-t border-border bg-scout-hover/50 p-3 font-mono text-xs leading-5">
                     {run.querySnapshot}
                   </pre>
                 </details>
               )}
 
               {run.renderedContent !== null && (
-                <pre className="overflow-auto whitespace-pre-wrap rounded-md border border-border bg-muted/50 p-3 text-xs">
+                <pre className="overflow-auto whitespace-pre-wrap rounded-md border border-border bg-scout-hover/50 p-3 text-xs">
                   {run.renderedContent}
                 </pre>
               )}

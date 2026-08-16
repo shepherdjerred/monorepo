@@ -1,4 +1,6 @@
 ---
+import { ProcessStep } from "@scout-for-lol/design-system/marketing";
+
 interface Props {
   number: number;
   title: string;
@@ -8,13 +10,7 @@ const { number, title } = Astro.props;
 ---
 
 <section class="mb-16">
-  <div class="flex items-center mb-6">
-    <div
-      class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold mr-4"
-    >
-      {number}
-    </div>
-    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">{title}</h2>
-  </div>
-  <slot />
+  <ProcessStep number={number} title={title}>
+    <slot />
+  </ProcessStep>
 </section>

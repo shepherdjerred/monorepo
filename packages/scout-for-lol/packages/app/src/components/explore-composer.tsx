@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Square } from "lucide-react";
-import { Button } from "#src/components/ui/button.tsx";
-import { Textarea } from "#src/components/ui/textarea.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 
 /**
  * Keep in step with the `max-h-[200px]` class below — Tailwind cannot

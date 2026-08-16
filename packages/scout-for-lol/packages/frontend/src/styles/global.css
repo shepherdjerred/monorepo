@@ -1,187 +1,57 @@
 @import "tailwindcss";
+@import "@scout-for-lol/design-system/styles.css";
 @plugin "@tailwindcss/typography";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
-/* Beaufort for LoL - Headings/Titles */
-@font-face {
-  font-family: "Beaufort for LoL";
-  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf")
-    format("truetype");
-  font-weight: 400;
-  font-style: normal;
+@theme inline {
+  --color-scout-canvas: var(--scout-color-canvas);
+  --color-scout-surface: var(--scout-color-surface);
+  --color-scout-raised: var(--scout-color-surface-raised);
+  --color-scout-ink: var(--scout-color-text);
+  --color-scout-subtle: var(--scout-color-text-muted);
+  --color-scout-brand: var(--scout-color-primary);
+  --color-scout-brand-ink: var(--scout-color-primary-text);
+  --color-scout-accent: var(--scout-color-accent);
+  --color-scout-accent-ink: var(--scout-color-accent-text);
+  --color-scout-border: var(--scout-color-border);
+  --color-scout-focus: var(--scout-color-focus);
+  --color-scout-success: var(--scout-color-success);
+  --color-scout-success-ink: var(--scout-color-success-text);
+  --color-scout-warning: var(--scout-color-warning);
+  --color-scout-warning-ink: var(--scout-color-warning-text);
+  --color-scout-danger: var(--scout-color-danger);
+  --color-scout-danger-ink: var(--scout-color-danger-text);
+  --color-scout-info: var(--scout-color-info);
+  --color-scout-info-ink: var(--scout-color-info-text);
+  --color-scout-overlay: var(--scout-color-overlay);
+  --font-sans: var(--scout-font-body);
+  --font-display: var(--scout-font-display);
+  --radius-sm: var(--scout-radius-small);
+  --radius-md: var(--scout-radius-medium);
+  --radius-lg: var(--scout-radius-large);
 }
 
-@font-face {
-  font-family: "Beaufort for LoL";
-  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf")
-    format("truetype");
-  font-weight: 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Beaufort for LoL";
-  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Heavy.ttf")
-    format("truetype");
-  font-weight: 900;
-  font-style: normal;
-}
-
-/* Spiegel - Body Text */
-@font-face {
-  font-family: "Spiegel";
-  src: url("/fonts/Spiegel-TTF/Spiegel_TT_Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Spiegel";
-  src: url("/fonts/Spiegel-TTF/Spiegel_TT_SemiBold.ttf") format("truetype");
-  font-weight: 600;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Spiegel";
-  src: url("/fonts/Spiegel-TTF/Spiegel_TT_Bold.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
-}
-
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-
-  --primary: 222.2 47.4% 11.2%;
-  --primary-foreground: 210 40% 98%;
-
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
-
-  --radius: 0.5rem;
-
-  --info: 210 100% 50%; /* Blue */
-  --info-foreground: 210 40% 98%;
-  --warning: 38 92% 50%; /* Yellow/Orange */
-  --warning-foreground: 222.2 47.4% 11.2%;
-  --success: 142.1 76.2% 36.3%; /* Green */
-  --success-foreground: 210 40% 98%;
-  --danger: 0 84.2% 60.2%; /* Red (same as destructive) */
-  --danger-foreground: 210 40% 98%;
-}
-
-.dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-
-  --primary: 210 40% 98%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 212.7 26.8% 83.9%;
-
-  --info: 210 100% 50%; /* Blue */
-  --info-foreground: 210 40% 98%;
-  --warning: 38 92% 50%; /* Yellow/Orange */
-  --warning-foreground: 222.2 47.4% 11.2%;
-  --success: 142.1 76.2% 36.3%; /* Green */
-  --success-foreground: 210 40% 98%;
-  --danger: 0 62.8% 30.6%; /* Red (match destructive in dark) */
-  --danger-foreground: 210 40% 98%;
-}
-
-* {
-  border-color: hsl(var(--border));
-}
-
-body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-family:
-    "Spiegel",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: "Beaufort for LoL", serif;
-}
-
-/* Card component */
-.card {
-  background-color: hsl(var(--card));
-  color: hsl(var(--card-foreground));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  box-shadow:
-    0 1px 3px 0 rgb(0 0 0 / 0.1),
-    0 1px 2px -1px rgb(0 0 0 / 0.1);
-}
-
-/* Select component */
-.select {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  border: 1px solid hsl(var(--input));
-  border-radius: calc(var(--radius) - 2px);
-}
-
-.select:focus {
-  outline: none;
-  ring: 2px;
-  ring-color: hsl(var(--ring));
-}
-
-/* Form controls */
 input,
 select,
 textarea {
-  color-scheme: light;
+  color-scheme: inherit;
+}
+
+.prose {
+  --tw-prose-body: var(--scout-color-text);
+  --tw-prose-headings: var(--scout-color-text);
+  --tw-prose-lead: var(--scout-color-text-muted);
+  --tw-prose-links: var(--scout-color-primary);
+  --tw-prose-bold: var(--scout-color-text);
+  --tw-prose-counters: var(--scout-color-text-muted);
+  --tw-prose-bullets: var(--scout-color-border);
+  --tw-prose-hr: var(--scout-color-border);
+  --tw-prose-quotes: var(--scout-color-text);
+  --tw-prose-quote-borders: var(--scout-color-border);
+  --tw-prose-captions: var(--scout-color-text-muted);
+  --tw-prose-kbd: var(--scout-color-text);
+  --tw-prose-code: var(--scout-color-text);
+  --tw-prose-pre-code: var(--scout-color-text);
+  --tw-prose-pre-bg: var(--scout-color-surface-raised);
+  --tw-prose-th-borders: var(--scout-color-border);
+  --tw-prose-td-borders: var(--scout-color-border);
 }

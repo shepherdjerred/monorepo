@@ -1,7 +1,7 @@
 import { divisionToString, leaguePointsDelta } from "@scout-for-lol/data";
 import type { Rank } from "@scout-for-lol/data";
-import { palette } from "#src/assets/colors.ts";
-import { font } from "#src/assets/index.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
+import { font } from "@scout-for-lol/design-system/satori/fonts";
 
 /**
  * Top-right pill showing "+22 LP DIAMOND II" style metadata. Used by both

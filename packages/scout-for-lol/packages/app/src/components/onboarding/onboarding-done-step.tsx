@@ -1,5 +1,8 @@
-import { Button } from "#src/components/ui/button.tsx";
-import { Card, CardContent } from "#src/components/ui/card.tsx";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import {
+  Card,
+  CardContent,
+} from "@scout-for-lol/design-system/components/card";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
 
 export function OnboardingDoneStep(props: {
@@ -31,7 +34,7 @@ export function OnboardingDoneStep(props: {
             <p className="text-sm font-medium">
               Want to go further? (optional)
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-scout-subtle">
               Set up an automatic leaderboard report, or start a competition
               between your members.
             </p>

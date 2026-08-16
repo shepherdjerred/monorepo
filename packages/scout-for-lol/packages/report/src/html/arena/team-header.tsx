@@ -1,6 +1,6 @@
 import { type ArenaTeam, getArenaTeamName } from "@scout-for-lol/data";
-import { palette } from "#src/assets/colors.ts";
-import { font } from "#src/assets/index.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
+import { font } from "@scout-for-lol/design-system/satori/fonts";
 import { PlacementBadge } from "#src/html/arena/placement-badge.tsx";
 
 export function TeamHeader({ team }: { team: ArenaTeam }) {

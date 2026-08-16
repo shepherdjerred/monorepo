@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import { satoriFontFilePath } from "@scout-for-lol/design-system/satori/file-assets";
 
 export const ANALYTICS_CHART_WIDTH = 1600;
 export const ANALYTICS_CHART_HEIGHT = 900;
@@ -11,6 +11,4 @@ export const ANALYTICS_FONT_FILE_PATHS = [
   "BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf",
   "BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf",
   "BeaufortForLoL-TTF/BeaufortforLOL-Heavy.ttf",
-].map((name) =>
-  fileURLToPath(new URL(`../assets/fonts/${name}`, import.meta.url)),
-);
+].map((relativePath) => satoriFontFilePath(relativePath));

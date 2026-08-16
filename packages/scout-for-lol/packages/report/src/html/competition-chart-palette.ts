@@ -1,5 +1,5 @@
 import chroma from "chroma-js";
-import { palette } from "#src/assets/colors.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
 
 /**
  * Anchor stops for the leaderboard series palette.

@@ -37,10 +37,10 @@ export function PipelinePillProgress({
             key={index}
             className={`h-2 flex-1 rounded-full transition-all duration-300 ${
               status === "complete"
-                ? "bg-green-500"
+                ? "bg-scout-success"
                 : status === "active"
-                  ? "bg-yellow-500 animate-pulse"
-                  : "bg-surface-200"
+                  ? "bg-scout-warning animate-pulse"
+                  : "bg-scout-raised"
             }`}
           />
         );
@@ -68,7 +68,7 @@ export function GenerationProgress({
       : message;
 
   return (
-    <div className="mb-4 p-4 bg-brand-50 border border-brand-200 rounded-xl">
+    <div className="mb-4 p-4 bg-scout-raised border border-scout-brand rounded-xl">
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -76,7 +76,7 @@ export function GenerationProgress({
             {!isComplete && (
               <div className="shrink-0">
                 <svg
-                  className="animate-spin h-5 w-5 text-brand-600"
+                  className="animate-spin h-5 w-5 text-scout-brand"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -100,7 +100,7 @@ export function GenerationProgress({
             {isComplete && (
               <div className="shrink-0">
                 <svg
-                  className="h-5 w-5 text-victory-500"
+                  className="h-5 w-5 text-scout-warning"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -113,12 +113,12 @@ export function GenerationProgress({
               </div>
             )}
             <div className="flex-1">
-              <div className="text-sm font-medium text-brand-900">
+              <div className="text-sm font-medium text-scout-brand">
                 {isComplete ? "Complete!" : displayMessage}
               </div>
             </div>
           </div>
-          <div className="text-sm font-mono text-brand-700">
+          <div className="text-sm font-mono text-scout-brand">
             {elapsedSeconds}s
           </div>
         </div>

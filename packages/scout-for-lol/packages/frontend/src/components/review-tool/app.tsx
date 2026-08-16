@@ -31,7 +31,7 @@ import {
   type RankConfig,
 } from "./rank-config-panel.tsx";
 import { RatingsAnalytics } from "./ratings-analytics.tsx";
-import { Spinner } from "./ui/spinner.tsx";
+import { Spinner } from "@scout-for-lol/design-system/components/spinner";
 import type {
   CompletedMatch,
   ArenaMatch,
@@ -160,10 +160,10 @@ export default function App() {
   // Show loading state while initializing
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-surface-50 flex items-center justify-center">
+      <div className="min-h-screen bg-scout-raised flex items-center justify-center">
         <div className="card p-8 flex flex-col items-center gap-4 animate-fade-in">
-          <Spinner size="lg" className="text-brand-500" />
-          <p className="text-surface-600 font-medium">
+          <Spinner className="h-8 w-8 text-scout-brand" />
+          <p className="text-scout-subtle font-medium">
             Loading configuration...
           </p>
         </div>
@@ -241,7 +241,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-50 bg-hero-pattern">
+    <div className="min-h-screen bg-scout-raised bg-hero-pattern">
       {/* Header */}
       <AppHeader
         showAnalytics={showAnalytics}
@@ -265,11 +265,11 @@ export default function App() {
             <div className="space-y-6">
               {/* Match Browser */}
               <section className="card p-0 overflow-hidden">
-                <div className="px-6 py-4 border-b border-surface-200/50">
-                  <h2 className="text-lg font-semibold text-surface-900">
+                <div className="px-6 py-4 border-b border-scout-border/50">
+                  <h2 className="text-lg font-semibold text-scout-ink">
                     Browse Matches
                   </h2>
-                  <p className="text-sm text-surface-500 mt-0.5">
+                  <p className="text-sm text-scout-subtle mt-0.5">
                     Select a match to generate a review
                   </p>
                 </div>

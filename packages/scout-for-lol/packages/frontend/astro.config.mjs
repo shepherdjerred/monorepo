@@ -10,18 +10,20 @@ import tailwindcss from "@tailwindcss/vite";
 import icon from "astro-icon";
 import sitemap from "@astrojs/sitemap";
 import astroOpenGraphImages from "astro-opengraph-images";
+import { scoutAssetsPlugin } from "@scout-for-lol/design-system/build";
+import { satoriFontUrl } from "@scout-for-lol/design-system/satori/assets";
 import { ogTemplate } from "./src/lib/og-template.tsx";
 
 const dirname = fileURLToPath(new URL(".", import.meta.url));
 
 const beaufortBold = readFileSync(
-  resolve(dirname, "public/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf"),
+  fileURLToPath(satoriFontUrl("BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf")),
 );
 const spiegelRegular = readFileSync(
-  resolve(dirname, "public/fonts/Spiegel-TTF/Spiegel_TT_Regular.ttf"),
+  fileURLToPath(satoriFontUrl("Spiegel-TTF/Spiegel_TT_Regular.ttf")),
 );
 const spiegelSemiBold = readFileSync(
-  resolve(dirname, "public/fonts/Spiegel-TTF/Spiegel_TT_SemiBold.ttf"),
+  fileURLToPath(satoriFontUrl("Spiegel-TTF/Spiegel_TT_SemiBold.ttf")),
 );
 
 // Pages that are noindex (dashboard SPA + dev tooling) — excluded from the
@@ -106,7 +108,7 @@ export default defineConfig({
     }),
   ],
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), scoutAssetsPlugin()],
     assetsInclude: ["**/*.txt"],
     optimizeDeps: {
       // Don't pre-bundle these native modules - they're only used server-side

@@ -5,7 +5,7 @@
  */
 export function SectionSkeleton() {
   return (
-    <p role="status" className="text-sm text-muted-foreground">
+    <p role="status" className="text-sm text-scout-subtle">
       Loading…
     </p>
   );

@@ -9,7 +9,7 @@ const id = Astro.url.searchParams.get("id");
     <!-- Loading State -->
     <div id="loading-state" class="flex items-center justify-center py-12">
       <svg
-        class="h-8 w-8 animate-spin text-indigo-500"
+        class="h-8 w-8 animate-spin text-scout-brand"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
@@ -37,7 +37,7 @@ const id = Astro.url.searchParams.get("id");
           <div class="flex items-center gap-3">
             <a
               href="/app/sound-packs"
-              class="text-slate-400 hover:text-slate-300"
+              class="text-scout-subtle hover:text-scout-subtle"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -53,23 +53,23 @@ const id = Astro.url.searchParams.get("id");
                   d="M15 19l-7-7 7-7"></path>
               </svg>
             </a>
-            <h1 class="text-3xl font-bold text-white" id="pack-name">
+            <h1 class="text-3xl font-bold text-scout-ink" id="pack-name">
               Sound Pack
             </h1>
             <span
               id="pack-version"
-              class="rounded bg-slate-800 px-2 py-1 text-xs text-slate-400"
+              class="rounded bg-scout-canvas px-2 py-1 text-xs text-scout-subtle"
               >v1.0.0</span
             >
           </div>
-          <p class="mt-2 text-slate-400" id="pack-description">
+          <p class="mt-2 text-scout-subtle" id="pack-description">
             No description
           </p>
         </div>
         <div class="flex items-center gap-3">
           <button
             id="export-btn"
-            class="flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800"
+            class="flex items-center gap-2 rounded-lg border border-scout-border px-4 py-2 text-sm font-medium text-scout-subtle transition-colors hover:bg-scout-canvas"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -89,7 +89,7 @@ const id = Astro.url.searchParams.get("id");
           </button>
           <button
             id="save-btn"
-            class="flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+            class="flex items-center gap-2 rounded-lg bg-scout-brand px-4 py-2 text-sm font-medium text-scout-brand-ink transition-colors hover:bg-scout-brand disabled:cursor-not-allowed disabled:opacity-50"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -110,22 +110,22 @@ const id = Astro.url.searchParams.get("id");
       </div>
 
       <!-- Tabs -->
-      <div class="mb-6 border-b border-slate-800">
+      <div class="mb-6 border-b border-scout-border">
         <nav class="flex gap-6">
           <button
-            class="tab-btn border-b-2 border-indigo-500 pb-3 text-sm font-medium text-white"
+            class="tab-btn border-b-2 border-scout-brand pb-3 text-sm font-medium text-scout-ink"
             data-tab="defaults"
           >
             Default Sounds
           </button>
           <button
-            class="tab-btn border-b-2 border-transparent pb-3 text-sm font-medium text-slate-400 hover:text-slate-300"
+            class="tab-btn border-b-2 border-transparent pb-3 text-sm font-medium text-scout-subtle hover:text-scout-subtle"
             data-tab="rules"
           >
             Rules
           </button>
           <button
-            class="tab-btn border-b-2 border-transparent pb-3 text-sm font-medium text-slate-400 hover:text-slate-300"
+            class="tab-btn border-b-2 border-transparent pb-3 text-sm font-medium text-scout-subtle hover:text-scout-subtle"
             data-tab="settings"
           >
             Settings
@@ -136,7 +136,7 @@ const id = Astro.url.searchParams.get("id");
       <!-- Default Sounds Tab -->
       <div id="tab-defaults" class="tab-content">
         <div class="mb-4 flex items-center justify-between">
-          <p class="text-sm text-slate-400">
+          <p class="text-sm text-scout-subtle">
             Configure default sounds for each event type. These play when no
             custom rules match.
           </p>
@@ -149,13 +149,13 @@ const id = Astro.url.searchParams.get("id");
       <!-- Rules Tab -->
       <div id="tab-rules" class="tab-content hidden">
         <div class="mb-4 flex items-center justify-between">
-          <p class="text-sm text-slate-400">
+          <p class="text-sm text-scout-subtle">
             Custom rules let you play different sounds based on conditions like
             player names or champions.
           </p>
           <button
             id="add-rule-btn"
-            class="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700"
+            class="flex items-center gap-2 rounded-lg bg-scout-canvas px-4 py-2 text-sm font-medium text-scout-subtle transition-colors hover:bg-scout-canvas"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -175,11 +175,11 @@ const id = Astro.url.searchParams.get("id");
         </div>
         <div
           id="rules-empty"
-          class="rounded-xl border border-slate-800 bg-slate-900/50 p-8 text-center"
+          class="rounded-xl border border-scout-border bg-scout-canvas/50 p-8 text-center"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="mx-auto h-12 w-12 text-slate-600"
+            class="mx-auto h-12 w-12 text-scout-subtle"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -191,8 +191,8 @@ const id = Astro.url.searchParams.get("id");
               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
             ></path>
           </svg>
-          <p class="mt-4 text-slate-400">No custom rules yet</p>
-          <p class="text-sm text-slate-500">
+          <p class="mt-4 text-scout-subtle">No custom rules yet</p>
+          <p class="text-sm text-scout-subtle">
             Rules let you play specific sounds for certain players, champions,
             or events
           </p>
@@ -205,13 +205,15 @@ const id = Astro.url.searchParams.get("id");
       <!-- Settings Tab -->
       <div id="tab-settings" class="tab-content hidden">
         <div class="max-w-2xl space-y-6">
-          <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
-            <h3 class="mb-4 font-semibold text-white">Audio Settings</h3>
+          <div
+            class="rounded-xl border border-scout-border bg-scout-canvas/50 p-6"
+          >
+            <h3 class="mb-4 font-semibold text-scout-ink">Audio Settings</h3>
             <div class="space-y-6">
               <div>
                 <label
                   for="masterVolume"
-                  class="mb-2 block text-sm font-medium text-slate-300"
+                  class="mb-2 block text-sm font-medium text-scout-subtle"
                 >
                   Master Volume: <span id="volume-display">100%</span>
                 </label>
@@ -229,13 +231,13 @@ const id = Astro.url.searchParams.get("id");
                   type="checkbox"
                   id="normalization"
                   checked
-                  class="h-4 w-4 rounded border-slate-700 bg-slate-800 text-indigo-500 focus:ring-indigo-500"
+                  class="h-4 w-4 rounded border-scout-border bg-scout-canvas text-scout-brand focus:ring-scout-focus"
                 />
                 <div>
-                  <label for="normalization" class="text-sm text-slate-300"
+                  <label for="normalization" class="text-sm text-scout-subtle"
                     >Audio Normalization</label
                   >
-                  <p class="text-xs text-slate-500">
+                  <p class="text-xs text-scout-subtle">
                     Normalize audio levels to prevent clipping
                   </p>
                 </div>
@@ -243,70 +245,74 @@ const id = Astro.url.searchParams.get("id");
             </div>
           </div>
 
-          <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
-            <h3 class="mb-4 font-semibold text-white">Pack Information</h3>
+          <div
+            class="rounded-xl border border-scout-border bg-scout-canvas/50 p-6"
+          >
+            <h3 class="mb-4 font-semibold text-scout-ink">Pack Information</h3>
             <div class="space-y-4">
               <div>
                 <label
                   for="edit-name"
-                  class="mb-2 block text-sm font-medium text-slate-300"
+                  class="mb-2 block text-sm font-medium text-scout-subtle"
                   >Name</label
                 >
                 <input
                   type="text"
                   id="edit-name"
-                  class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  class="w-full rounded-lg border border-scout-border bg-scout-canvas px-4 py-2 text-scout-ink focus:border-scout-brand focus:outline-none focus:ring-1 focus:ring-scout-focus"
                 />
               </div>
               <div>
                 <label
                   for="edit-version"
-                  class="mb-2 block text-sm font-medium text-slate-300"
+                  class="mb-2 block text-sm font-medium text-scout-subtle"
                   >Version</label
                 >
                 <input
                   type="text"
                   id="edit-version"
-                  class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  class="w-full rounded-lg border border-scout-border bg-scout-canvas px-4 py-2 text-scout-ink focus:border-scout-brand focus:outline-none focus:ring-1 focus:ring-scout-focus"
                 />
               </div>
               <div>
                 <label
                   for="edit-description"
-                  class="mb-2 block text-sm font-medium text-slate-300"
+                  class="mb-2 block text-sm font-medium text-scout-subtle"
                   >Description</label
                 >
                 <textarea
                   id="edit-description"
                   rows="3"
-                  class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  class="w-full rounded-lg border border-scout-border bg-scout-canvas px-4 py-2 text-scout-ink focus:border-scout-brand focus:outline-none focus:ring-1 focus:ring-scout-focus"
                 ></textarea>
               </div>
               <div class="flex items-center gap-3">
                 <input
                   type="checkbox"
                   id="edit-public"
-                  class="h-4 w-4 rounded border-slate-700 bg-slate-800 text-indigo-500 focus:ring-indigo-500"
+                  class="h-4 w-4 rounded border-scout-border bg-scout-canvas text-scout-brand focus:ring-scout-focus"
                 />
-                <label for="edit-public" class="text-sm text-slate-300"
+                <label for="edit-public" class="text-sm text-scout-subtle"
                   >Make this sound pack public</label
                 >
               </div>
             </div>
           </div>
 
-          <div class="rounded-xl border border-red-500/30 bg-red-500/5 p-6">
-            <h3 class="mb-4 font-semibold text-red-400">Danger Zone</h3>
+          <div
+            class="rounded-xl border border-scout-danger/30 bg-scout-danger/5 p-6"
+          >
+            <h3 class="mb-4 font-semibold text-scout-danger">Danger Zone</h3>
             <div class="flex items-center justify-between">
               <div>
-                <p class="font-medium text-white">Delete Sound Pack</p>
-                <p class="text-sm text-slate-400">
+                <p class="font-medium text-scout-ink">Delete Sound Pack</p>
+                <p class="text-sm text-scout-subtle">
                   This action cannot be undone
                 </p>
               </div>
               <button
                 id="delete-btn"
-                class="rounded-lg border border-red-500/50 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10"
+                class="rounded-lg border border-scout-danger/50 px-4 py-2 text-sm font-medium text-scout-danger transition-colors hover:bg-scout-danger/10"
               >
                 Delete
               </button>
@@ -320,7 +326,7 @@ const id = Astro.url.searchParams.get("id");
     <div id="error-state" class="hidden py-12 text-center">
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        class="mx-auto h-12 w-12 text-red-500"
+        class="mx-auto h-12 w-12 text-scout-danger"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -332,14 +338,16 @@ const id = Astro.url.searchParams.get("id");
           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
         ></path>
       </svg>
-      <p class="mt-4 text-lg font-medium text-white">Sound pack not found</p>
-      <p class="mt-2 text-slate-400">
+      <p class="mt-4 text-lg font-medium text-scout-ink">
+        Sound pack not found
+      </p>
+      <p class="mt-2 text-scout-subtle">
         The sound pack you're looking for doesn't exist or you don't have access
         to it.
       </p>
       <a
         href="/app/sound-packs"
-        class="mt-6 inline-block rounded-lg bg-indigo-500 px-6 py-2 font-medium text-white hover:bg-indigo-600"
+        class="mt-6 inline-block rounded-lg bg-scout-brand px-6 py-2 font-medium text-scout-brand-ink hover:bg-scout-brand"
       >
         Back to Sound Packs
       </a>
@@ -494,23 +502,23 @@ const id = Astro.url.searchParams.get("id");
       const soundCount = pool?.sounds?.length ?? 0;
 
       return `
-      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+      <div class="rounded-xl border border-scout-border bg-scout-canvas/50 p-6">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
-            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/20">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-scout-brand/20">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-scout-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
             </div>
             <div>
-              <h3 class="font-medium text-white">${label}</h3>
-              <p class="text-sm text-slate-400">${description}</p>
+              <h3 class="font-medium text-scout-ink">${label}</h3>
+              <p class="text-sm text-scout-subtle">${description}</p>
             </div>
           </div>
           <div class="flex items-center gap-4">
-            <span class="text-sm text-slate-500">${soundCount} sound${soundCount !== 1 ? "s" : ""}</span>
+            <span class="text-sm text-scout-subtle">${soundCount} sound${soundCount !== 1 ? "s" : ""}</span>
             <button
-              class="add-sound-btn rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700"
+              class="add-sound-btn rounded-lg bg-scout-canvas px-3 py-1.5 text-sm text-scout-subtle hover:bg-scout-canvas"
               data-event="${key}"
             >
               Add Sound
@@ -529,9 +537,9 @@ const id = Astro.url.searchParams.get("id");
                   volume: number;
                 };
                 return `
-                <div class="flex items-center justify-between rounded-lg bg-slate-800/50 px-4 py-2">
-                  <span class="text-sm text-slate-300">${s.source.type === "file" ? s.source.path : s.source.url}</span>
-                  <button class="remove-sound-btn text-slate-500 hover:text-red-400" data-event="${key}" data-index="${index}">
+                <div class="flex items-center justify-between rounded-lg bg-scout-canvas/50 px-4 py-2">
+                  <span class="text-sm text-scout-subtle">${s.source.type === "file" ? s.source.path : s.source.url}</span>
+                  <button class="remove-sound-btn text-scout-subtle hover:text-scout-danger" data-event="${key}" data-index="${index}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -593,21 +601,21 @@ const id = Astro.url.searchParams.get("id");
             conditions: unknown[];
           };
           return `
-        <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+        <div class="rounded-xl border border-scout-border bg-scout-canvas/50 p-6">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
               <input
                 type="checkbox"
-                class="rule-enabled h-4 w-4 rounded border-slate-700 bg-slate-800 text-indigo-500"
+                class="rule-enabled h-4 w-4 rounded border-scout-border bg-scout-canvas text-scout-brand"
                 data-index="${index}"
                 ${r.enabled ? "checked" : ""}
               />
               <div>
-                <h3 class="font-medium text-white">${escapeHtml(r.name)}</h3>
-                <p class="text-sm text-slate-400">${r.conditions.length} condition${r.conditions.length !== 1 ? "s" : ""} | Priority: ${r.priority}</p>
+                <h3 class="font-medium text-scout-ink">${escapeHtml(r.name)}</h3>
+                <p class="text-sm text-scout-subtle">${r.conditions.length} condition${r.conditions.length !== 1 ? "s" : ""} | Priority: ${r.priority}</p>
               </div>
             </div>
-            <button class="delete-rule-btn text-slate-500 hover:text-red-400" data-index="${index}">
+            <button class="delete-rule-btn text-scout-subtle hover:text-scout-danger" data-index="${index}">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
@@ -784,11 +792,11 @@ const id = Astro.url.searchParams.get("id");
 
       // Update button styles
       document.querySelectorAll(".tab-btn").forEach((b) => {
-        b.classList.remove("border-indigo-500", "text-white");
-        b.classList.add("border-transparent", "text-slate-400");
+        b.classList.remove("border-scout-brand", "text-scout-ink");
+        b.classList.add("border-transparent", "text-scout-subtle");
       });
-      btn.classList.remove("border-transparent", "text-slate-400");
-      btn.classList.add("border-indigo-500", "text-white");
+      btn.classList.remove("border-transparent", "text-scout-subtle");
+      btn.classList.add("border-scout-brand", "text-scout-ink");
 
       // Show/hide tab content
       document.querySelectorAll(".tab-content").forEach((content) => {

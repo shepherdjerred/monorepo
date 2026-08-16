@@ -42,6 +42,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@scout-for-lol/design-system": "workspace:*",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-dialog": "^2.7.0",
     "openai": "^7.0.0",

@@ -4,7 +4,12 @@
  * Shows detailed information about each stage's request/response for debugging.
  */
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@scout-for-lol/design-system/components/card";
 import type {
   PipelineTraces,
   PipelineIntermediateResults,
@@ -28,10 +33,10 @@ function CollapsibleSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-md border border-surface-200 overflow-hidden">
+    <div className="rounded-md border border-scout-border overflow-hidden">
       <button
         type="button"
-        className="w-full flex items-center justify-between px-3 py-2 bg-surface-50 hover:bg-surface-100 text-left"
+        className="w-full flex items-center justify-between px-3 py-2 bg-scout-raised hover:bg-scout-raised text-left"
         onClick={() => {
           setIsOpen(!isOpen);
         }}
@@ -50,12 +55,10 @@ function CollapsibleSection({
               d="M9 5l7 7-7 7"
             />
           </svg>
-          <span className="text-xs font-semibold text-surface-700">
-            {title}
-          </span>
+          <span className="text-xs font-semibold text-scout-ink">{title}</span>
         </div>
         {badge !== undefined && badge.length > 0 && (
-          <span className="text-xs text-surface-500">{badge}</span>
+          <span className="text-xs text-scout-subtle">{badge}</span>
         )}
       </button>
       {isOpen && <div className="p-2">{children}</div>}
@@ -71,17 +74,17 @@ type TraceCardProps = {
 
 function TraceCardStats({ trace }: { trace: StageTrace }) {
   return (
-    <div className="text-xs text-surface-600 text-right space-y-0.5">
+    <div className="text-xs text-scout-subtle text-right space-y-0.5">
       <div>{trace.model.model}</div>
       <div className="flex items-center gap-2">
         <span>{trace.durationMs}ms</span>
         {trace.tokensPrompt !== undefined && (
-          <span className="text-surface-500">
+          <span className="text-scout-subtle">
             {trace.tokensPrompt.toLocaleString()} input tokens
           </span>
         )}
         {trace.tokensCompletion !== undefined && (
-          <span className="text-surface-500">
+          <span className="text-scout-subtle">
             {trace.tokensCompletion.toLocaleString()} output tokens
           </span>
         )}
@@ -115,7 +118,7 @@ function TraceCard({ label, trace, text }: TraceCardProps) {
             title="System prompt"
             badge={`${systemPromptLength.toLocaleString()} chars`}
           >
-            <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 text-xs text-surface-800 max-h-64 overflow-auto">
+            <pre className="whitespace-pre-wrap rounded-md bg-scout-raised p-2 text-xs text-scout-ink max-h-64 overflow-auto">
               {systemPrompt}
             </pre>
           </CollapsibleSection>
@@ -125,7 +128,7 @@ function TraceCard({ label, trace, text }: TraceCardProps) {
             title="User prompt"
             badge={`${userPromptLength.toLocaleString()} chars`}
           >
-            <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 text-xs text-surface-800 max-h-64 overflow-auto">
+            <pre className="whitespace-pre-wrap rounded-md bg-scout-raised p-2 text-xs text-scout-ink max-h-64 overflow-auto">
               {userPrompt}
             </pre>
           </CollapsibleSection>
@@ -136,7 +139,7 @@ function TraceCard({ label, trace, text }: TraceCardProps) {
             defaultOpen={true}
             badge={`${responseLength.toLocaleString()} chars`}
           >
-            <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 text-xs text-surface-800 max-h-64 overflow-auto">
+            <pre className="whitespace-pre-wrap rounded-md bg-scout-raised p-2 text-xs text-scout-ink max-h-64 overflow-auto">
               {responseText}
             </pre>
           </CollapsibleSection>
@@ -169,11 +172,11 @@ function ChunkTracesCard({ chunks, chunkSummaries }: ChunkTracesCardProps) {
           return (
             <div
               key={index}
-              className="rounded-md border border-surface-200 overflow-hidden"
+              className="rounded-md border border-scout-border overflow-hidden"
             >
               <button
                 type="button"
-                className="w-full flex items-center justify-between px-3 py-2 bg-surface-50 hover:bg-surface-100 text-left"
+                className="w-full flex items-center justify-between px-3 py-2 bg-scout-raised hover:bg-scout-raised text-left"
                 onClick={() => {
                   setExpandedChunk(isExpanded ? null : index);
                 }}
@@ -192,17 +195,17 @@ function ChunkTracesCard({ chunks, chunkSummaries }: ChunkTracesCardProps) {
                       d="M9 5l7 7-7 7"
                     />
                   </svg>
-                  <span className="text-xs font-semibold text-surface-700">
+                  <span className="text-xs font-semibold text-scout-ink">
                     Chunk {(chunk.chunkIndex + 1).toString()}: {chunk.timeRange}
                   </span>
                 </div>
-                <span className="text-xs text-surface-500">
+                <span className="text-xs text-scout-subtle">
                   {chunk.trace.durationMs}ms
                 </span>
               </button>
               {isExpanded && (
                 <div className="p-2 space-y-2">
-                  <div className="text-xs text-surface-600 space-y-1">
+                  <div className="text-xs text-scout-subtle space-y-1">
                     <div>Model: {chunk.trace.model.model}</div>
                     {chunk.trace.tokensPrompt !== undefined && (
                       <div>
@@ -219,7 +222,7 @@ function ChunkTracesCard({ chunks, chunkSummaries }: ChunkTracesCardProps) {
                   </div>
                   {summary !== undefined && summary.length > 0 && (
                     <CollapsibleSection title="Summary" defaultOpen={true}>
-                      <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 text-xs text-surface-800 max-h-64 overflow-auto">
+                      <pre className="whitespace-pre-wrap rounded-md bg-scout-raised p-2 text-xs text-scout-ink max-h-64 overflow-auto">
                         {summary}
                       </pre>
                     </CollapsibleSection>
@@ -229,7 +232,7 @@ function ChunkTracesCard({ chunks, chunkSummaries }: ChunkTracesCardProps) {
             </div>
           );
         })}
-        <div className="text-xs text-surface-600 pt-2 border-t border-surface-200">
+        <div className="text-xs text-scout-subtle pt-2 border-t border-scout-border">
           Total chunk processing time:{" "}
           {chunks.reduce((acc, c) => acc + c.trace.durationMs, 0)}ms
         </div>
@@ -294,12 +297,12 @@ function ImageSettingsCard({
       <CardHeader>
         <CardTitle>Image Generation Settings</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 text-xs text-surface-800">
+      <CardContent className="space-y-3 text-xs text-scout-ink">
         {intermediate?.selectedArtStyle !== undefined &&
           intermediate.selectedArtStyle.length > 0 && (
             <div>
-              <p className="text-surface-600 mb-1">Art style:</p>
-              <p className="text-surface-700 bg-surface-50 rounded-md p-2">
+              <p className="text-scout-subtle mb-1">Art style:</p>
+              <p className="text-scout-ink bg-scout-raised rounded-md p-2">
                 {intermediate.selectedArtStyle}
               </p>
             </div>
@@ -307,14 +310,14 @@ function ImageSettingsCard({
         {intermediate?.selectedImagePrompts &&
           intermediate.selectedImagePrompts.length > 0 && (
             <div>
-              <p className="text-surface-600 mb-1">
+              <p className="text-scout-subtle mb-1">
                 {intermediate.selectedImagePrompts.length.toString()} prompt
                 {intermediate.selectedImagePrompts.length === 1 ? "" : "s"}{" "}
                 selected from personality:
               </p>
               <ul className="list-disc list-inside space-y-1">
                 {intermediate.selectedImagePrompts.map((prompt, index) => (
-                  <li key={index} className="text-surface-700">
+                  <li key={index} className="text-scout-ink">
                     {prompt}
                   </li>
                 ))}
@@ -339,20 +342,20 @@ function ImageGenerationCard({
     <Card>
       <CardHeader className="flex items-start justify-between">
         <CardTitle>Stage 4: Image Generation</CardTitle>
-        <div className="text-xs text-surface-600">
+        <div className="text-xs text-scout-subtle">
           {trace.model} · {trace.durationMs}ms
         </div>
       </CardHeader>
-      <CardContent className="space-y-2 text-xs text-surface-800">
+      <CardContent className="space-y-2 text-xs text-scout-ink">
         <CollapsibleSection
           title="Prompt"
           badge={`${trace.request.prompt.length.toLocaleString()} chars`}
         >
-          <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 max-h-64 overflow-auto">
+          <pre className="whitespace-pre-wrap rounded-md bg-scout-raised p-2 max-h-64 overflow-auto">
             {trace.request.prompt}
           </pre>
         </CollapsibleSection>
-        <div className="text-surface-700">
+        <div className="text-scout-ink">
           Generated: {trace.response.imageGenerated ? "yes" : "no"}{" "}
           {trace.response.imageSizeBytes === undefined
             ? ""

@@ -2,8 +2,8 @@ import {
   championNameToDisplayName,
   type ArenaChampion,
 } from "@scout-for-lol/data";
-import { palette } from "#src/assets/colors.ts";
-import { font, fontForText } from "#src/assets/index.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
+import { font, fontForText } from "@scout-for-lol/design-system/satori/fonts";
 import { getChampionLoadingImage } from "#src/dataDragon/image-cache.ts";
 import { Damage } from "#src/html/arena/damage.tsx";
 import { ItemsRow } from "#src/html/arena/items-row.tsx";
