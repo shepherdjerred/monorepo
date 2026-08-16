@@ -10,6 +10,8 @@ describe("R2 orphan cleanup arguments", () => {
       manifestPath: "/tmp/r2-orphans.json",
       apply: false,
       yes: false,
+      heldBackupNames: [],
+      onlyBackupName: undefined,
     });
   });
 
@@ -31,6 +33,31 @@ describe("R2 orphan cleanup arguments", () => {
       manifestPath: "/tmp/r2-orphans.json",
       apply: true,
       yes: true,
+      heldBackupNames: [],
+      onlyBackupName: undefined,
+    });
+  });
+
+  test("parses holds and a single-backup selector", () => {
+    expect(
+      parseR2OrphanArguments([
+        "inspect",
+        "--manifest",
+        "/tmp/r2-orphans.json",
+        "--hold-backup",
+        "held-b",
+        "--hold-backup",
+        "held-a",
+        "--only-backup",
+        "selected",
+      ]),
+    ).toEqual({
+      command: "inspect",
+      manifestPath: "/tmp/r2-orphans.json",
+      apply: false,
+      yes: false,
+      heldBackupNames: ["held-a", "held-b"],
+      onlyBackupName: "selected",
     });
   });
 

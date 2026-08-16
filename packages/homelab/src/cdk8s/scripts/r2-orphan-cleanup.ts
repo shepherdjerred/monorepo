@@ -19,47 +19,96 @@ type Options = {
   manifestPath: string;
   apply: boolean;
   yes: boolean;
+  heldBackupNames: string[];
+  onlyBackupName: string | undefined;
 };
+
+type ParseState = Omit<Options, "command" | "manifestPath"> & {
+  manifestPath: string | undefined;
+};
+
+function requiredArgument(
+  args: readonly string[],
+  index: number,
+  flag: string,
+): string {
+  const value = args[index + 1];
+  if (value === undefined || value === "") {
+    throw new Error(`${flag} requires a value`);
+  }
+  return value;
+}
+
+function parseArgument(
+  args: readonly string[],
+  index: number,
+  state: ParseState,
+): number {
+  const argument = args[index];
+  if (argument === "--manifest") {
+    state.manifestPath = requiredArgument(args, index, argument);
+    return index + 2;
+  }
+  if (argument === "--apply") {
+    state.apply = true;
+    return index + 1;
+  }
+  if (argument === "--yes") {
+    state.yes = true;
+    return index + 1;
+  }
+  if (argument === "--hold-backup") {
+    const name = requiredArgument(args, index, argument);
+    if (state.heldBackupNames.includes(name)) {
+      throw new Error(`--hold-backup was repeated for ${name}`);
+    }
+    state.heldBackupNames.push(name);
+    return index + 2;
+  }
+  if (argument === "--only-backup") {
+    if (state.onlyBackupName !== undefined) {
+      throw new Error("--only-backup may only be provided once");
+    }
+    state.onlyBackupName = requiredArgument(args, index, argument);
+    return index + 2;
+  }
+  if (argument === undefined) {
+    throw new Error("Missing argument");
+  }
+  throw new Error(`Unknown argument: ${argument}`);
+}
 
 export function parseR2OrphanArguments(args: readonly string[]): Options {
   const command = args[0];
   if (command !== "inspect" && command !== "apply") {
     throw new Error(
-      "Usage: bun run r2:orphans -- inspect|apply --manifest <path> [--apply] [--yes]",
+      "Usage: bun run r2:orphans -- inspect|apply --manifest <path> [--hold-backup <name>]... [--only-backup <name>] [--apply] [--yes]",
     );
   }
-  let manifestPath: string | undefined;
-  let apply = false;
-  let yes = false;
-  for (let index = 1; index < args.length; index += 1) {
-    const argument = args[index];
-    switch (argument) {
-      case "--manifest":
-        manifestPath = args[index + 1];
-        if (manifestPath === undefined || manifestPath === "") {
-          throw new Error("--manifest requires a path");
-        }
-        index += 1;
-        break;
-      case "--apply":
-        apply = true;
-        break;
-      case "--yes":
-        yes = true;
-        break;
-      case undefined:
-        throw new Error("Missing argument");
-      default:
-        throw new Error(`Unknown argument: ${argument}`);
-    }
+  const state: ParseState = {
+    manifestPath: undefined,
+    apply: false,
+    yes: false,
+    heldBackupNames: [],
+    onlyBackupName: undefined,
+  };
+  for (let index = 1; index < args.length; ) {
+    index = parseArgument(args, index, state);
   }
-  if (manifestPath === undefined) {
+  if (state.manifestPath === undefined) {
     throw new Error("--manifest is required");
   }
-  if (command === "inspect" && (apply || yes)) {
+  if (command === "inspect" && (state.apply || state.yes)) {
     throw new Error("inspect does not accept destructive flags");
   }
-  return { command, manifestPath, apply, yes };
+  return {
+    command,
+    manifestPath: state.manifestPath,
+    apply: state.apply,
+    yes: state.yes,
+    heldBackupNames: state.heldBackupNames.toSorted(),
+    onlyBackupName: state.onlyBackupName,
+  };
 }
 
 async function run(
@@ -99,7 +148,11 @@ async function liveBackupNames(): Promise<string[]> {
     .toSorted();
 }
 
-async function observe(observedAt: string): Promise<{
+async function observe(
+  observedAt: string,
+  heldBackupNames: readonly string[],
+  onlyBackupName: string | undefined,
+): Promise<{
   manifest: R2OrphanManifest;
   zfsObjects: Awaited<ReturnType<typeof listR2Objects>>;
 }> {
@@ -119,6 +172,8 @@ async function observe(observedAt: string): Promise<{
       zfsObjects,
       liveBackupNames: liveNames,
       metadataBackupNames: metadataBackupNames(metadataObjects),
+      heldBackupNames,
+      onlyBackupName,
     }),
     zfsObjects,
   };
@@ -164,11 +219,18 @@ async function removePrefix(prefix: string): Promise<void> {
   );
 }
 
-async function inspect(manifestPath: string): Promise<void> {
-  const { manifest } = await observe(new Date().toISOString());
-  await Bun.write(manifestPath, `${JSON.stringify(manifest, undefined, 2)}\n`);
+async function inspect(options: Options): Promise<void> {
+  const { manifest } = await observe(
+    new Date().toISOString(),
+    options.heldBackupNames,
+    options.onlyBackupName,
+  );
+  await Bun.write(
+    options.manifestPath,
+    `${JSON.stringify(manifest, undefined, 2)}\n`,
+  );
   console.log(
-    `Wrote ${manifest.candidates.length.toString()} guarded R2 orphan candidates to ${manifestPath}`,
+    `Wrote ${manifest.candidates.length.toString()} guarded R2 orphan candidates to ${options.manifestPath}`,
   );
   console.log(JSON.stringify(manifest, undefined, 2));
 }
@@ -180,7 +242,24 @@ async function applyCleanup(options: Options): Promise<void> {
   const approved = R2OrphanManifestSchema.parse(
     JSON.parse(await Bun.file(options.manifestPath).text()),
   );
-  const current = await observe(approved.observedAt);
+  if (
+    JSON.stringify(options.heldBackupNames) !==
+    JSON.stringify(approved.heldBackupNames)
+  ) {
+    throw new Error(
+      "Apply hold list does not match the reviewed manifest; pass every --hold-backup name used during inspect",
+    );
+  }
+  if (options.onlyBackupName !== (approved.onlyBackupName ?? undefined)) {
+    throw new Error(
+      "Apply backup selector does not match the reviewed manifest; pass the same --only-backup value used during inspect",
+    );
+  }
+  const current = await observe(
+    approved.observedAt,
+    approved.heldBackupNames,
+    approved.onlyBackupName ?? undefined,
+  );
   assertManifestRevalidated(approved, current.manifest);
   if (!options.yes) {
     if (!process.stdin.isTTY) {
@@ -195,7 +274,11 @@ async function applyCleanup(options: Options): Promise<void> {
 
   let expected = approved;
   for (const candidate of approved.candidates) {
-    const latest = await observe(approved.observedAt);
+    const latest = await observe(
+      approved.observedAt,
+      approved.heldBackupNames,
+      approved.onlyBackupName ?? undefined,
+    );
     assertManifestRevalidated(expected, latest.manifest);
     if (latest.manifest.protectedBackupNames.includes(candidate.backupName)) {
       throw new Error(
@@ -230,6 +313,6 @@ async function applyCleanup(options: Options): Promise<void> {
 
 if (import.meta.main) {
   const options = parseR2OrphanArguments(Bun.argv.slice(2));
-  if (options.command === "inspect") await inspect(options.manifestPath);
+  if (options.command === "inspect") await inspect(options);
   else await applyCleanup(options);
 }

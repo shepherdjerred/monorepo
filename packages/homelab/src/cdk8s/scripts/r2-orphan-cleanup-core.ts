@@ -19,13 +19,15 @@ const CandidateSchema = z.object({
 });
 
 export const R2OrphanManifestSchema = z.object({
-  contractVersion: z.literal(1),
+  contractVersion: z.literal(2),
   observedAt: z.iso.datetime(),
   minimumAgeHours: z.literal(R2_ORPHAN_MINIMUM_AGE_HOURS),
   storage: z.object({
     bucket: z.string().min(1),
     endpointHost: z.string().min(1),
   }),
+  heldBackupNames: z.array(z.string().min(1)),
+  onlyBackupName: z.string().min(1).nullable(),
   protectedBackupNames: z.array(z.string().min(1)),
   candidates: z.array(CandidateSchema),
 });
@@ -64,6 +66,8 @@ export function buildR2OrphanManifest(input: {
   zfsObjects: readonly R2Object[];
   liveBackupNames: readonly string[];
   metadataBackupNames: readonly string[];
+  heldBackupNames?: readonly string[];
+  onlyBackupName?: string;
 }): R2OrphanManifest {
   const observedAt = Date.parse(input.observedAt);
   if (!Number.isFinite(observedAt)) {
@@ -80,10 +84,7 @@ export function buildR2OrphanManifest(input: {
       `Refusing to propose R2 orphan deletions: ${input.zfsObjects.length.toString()} ZFS backup objects exist but Velero metadata under ${R2_BACKUP_METADATA_BACKUPS_PREFIX} is empty. Confirm the BackupStorageLocation prefix and metadata layout before cleaning up.`,
     );
   }
-  const protectedBackupNames = [
-    ...new Set([...input.liveBackupNames, ...input.metadataBackupNames]),
-  ].toSorted();
-  const protectedSet = new Set(protectedBackupNames);
+  const heldBackupNames = [...new Set(input.heldBackupNames)].toSorted();
   const groups = new Map<
     string,
     { backupName: string; bytes: number; objects: number; newest: string }
@@ -104,24 +105,65 @@ export function buildR2OrphanManifest(input: {
     }
     groups.set(name, existing);
   }
+  const missingHeldNames = heldBackupNames.filter((name) => !groups.has(name));
+  if (missingHeldNames.length > 0) {
+    throw new Error(
+      `Held R2 backup prefix is missing: ${missingHeldNames.join(", ")}; refusing to continue`,
+    );
+  }
+  if (
+    input.onlyBackupName !== undefined &&
+    heldBackupNames.includes(input.onlyBackupName)
+  ) {
+    throw new Error(
+      `Backup ${input.onlyBackupName} cannot be both held and selected for deletion`,
+    );
+  }
+  if (input.onlyBackupName !== undefined && !groups.has(input.onlyBackupName)) {
+    throw new Error(
+      `Selected R2 backup prefix is missing: ${input.onlyBackupName}; refusing to continue`,
+    );
+  }
+  const protectedBackupNames = [
+    ...new Set([
+      ...input.liveBackupNames,
+      ...input.metadataBackupNames,
+      ...heldBackupNames,
+    ]),
+  ].toSorted();
+  const protectedSet = new Set(protectedBackupNames);
   const cutoff = observedAt - R2_ORPHAN_MINIMUM_AGE_HOURS * 3_600_000;
   const candidates = [...groups.values()]
     .filter(
       (group) =>
         !protectedSet.has(group.backupName) &&
-        Date.parse(group.newest) < cutoff,
+        Date.parse(group.newest) < cutoff &&
+        (input.onlyBackupName === undefined ||
+          group.backupName === input.onlyBackupName),
     )
     .map((group) => ({
       prefix: `${R2_ZFS_PREFIX}${group.backupName}/`,
       ...group,
     }))
     .toSorted((left, right) => left.prefix.localeCompare(right.prefix));
+  if (
+    input.onlyBackupName !== undefined &&
+    !candidates.some(
+      (candidate) => candidate.backupName === input.onlyBackupName,
+    )
+  ) {
+    throw new Error(
+      `Selected R2 backup prefix is protected or younger than the 24 hour safety fence: ${input.onlyBackupName}`,
+    );
+  }
 
   return R2OrphanManifestSchema.parse({
-    contractVersion: 1,
+    contractVersion: 2,
     observedAt: new Date(observedAt).toISOString(),
     minimumAgeHours: R2_ORPHAN_MINIMUM_AGE_HOURS,
     storage: input.storage,
+    heldBackupNames,
+    onlyBackupName: input.onlyBackupName ?? null,
     protectedBackupNames,
     candidates,
   });
