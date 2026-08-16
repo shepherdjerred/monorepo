@@ -3025,7 +3025,7 @@
       "stress-positive-079",
       "stress-positive-080"
     ],
-    "twoHourNegativeSoakActivations": 0
+    "twoHourNegativeSoakActivations": null
   },
   "wasm": {
     "runtime": "wasm",
@@ -6053,7 +6053,7 @@
       "stress-positive-079",
       "stress-positive-080"
     ],
-    "twoHourNegativeSoakActivations": 0
+    "twoHourNegativeSoakActivations": null
   },
   "runtimeDisagreements": [
     "clean-positive-133",

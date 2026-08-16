@@ -56,6 +56,27 @@ export async function verifyVoiceCorpus(
       `Voice corpus must contain ${String(VOICE_CORPUS_CLIP_COUNT)} entries, found ${String(manifest.entries.length)}`,
     );
   }
+  if (requireComplete) {
+    // Composition, not just count: recall() treats an empty bucket as 100%, so a 400-entry
+    // corpus with a hollowed-out category would silently weaken every acceptance number.
+    const composition: Record<string, number> = {
+      "clean-positive": 160,
+      "stress-positive": 80,
+      "near-match-negative": 60,
+      "ordinary-negative": 60,
+      "background-negative": 40,
+    };
+    for (const [category, expected] of Object.entries(composition)) {
+      const actual = manifest.entries.filter(
+        (entry) => entry.category === category,
+      ).length;
+      if (actual !== expected) {
+        throw new Error(
+          `Voice corpus must contain ${String(expected)} ${category} entries, found ${String(actual)}`,
+        );
+      }
+    }
+  }
   const ids = new Set<string>();
   const files = new Set<string>();
   let totalBytes = 0;

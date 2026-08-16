@@ -171,6 +171,9 @@ async function assertKeywordRuntimeWorks(
   } finally {
     wave.samples.fill(0);
     detector.close();
+    // The temporary runtime owns a full spotter (WASM frees it here; the smoke verifier's
+    // close is a no-op) — leaking it per smoke would matter most under runtime "both".
+    await models.close();
   }
   if (!activated) {
     throw new Error(

@@ -44,6 +44,21 @@ function bool(value: string | undefined): boolean | undefined {
 }
 
 /**
+ * Strict variant for the production voice kill switch: a misspelled or oddly-formatted value
+ * ("tru", "1", " true") must fail startup loudly, not silently disable the only rollout and
+ * rollback control.
+ */
+function strictBool(
+  name: string,
+  value: string | undefined,
+): boolean | undefined {
+  if (value === undefined || value === "") return undefined;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  throw new Error(`${name} must be exactly "true" or "false", got: ${value}`);
+}
+
+/**
  * Build the raw config object from environment variables and validate it with Zod. Throws with
  * a readable, aggregated message if the environment is misconfigured (fail fast at the boundary).
  */
@@ -74,7 +89,10 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       readrateInitialBurst: num(env["STREAM_READRATE_INITIAL_BURST"]),
     },
     voice: {
-      enabled: bool(env["VOICE_ASSISTANT_ENABLED"]),
+      enabled: strictBool(
+        "VOICE_ASSISTANT_ENABLED",
+        env["VOICE_ASSISTANT_ENABLED"],
+      ),
       openAiApiKey: str(env["OPENAI_API_KEY"]),
       assetsDir: str(env["VOICE_ASSETS_DIR"]),
       runtime: env["VOICE_KWS_RUNTIME"],

@@ -137,6 +137,14 @@ const report = await (async () => {
         );
       }
     }
+    // Thirty clips means thirty recordings: a manifest pointing several groups at the same
+    // files would inflate the holdout's sample count without adding evidence.
+    const clipPaths = manifest.speakers.flatMap((speaker) =>
+      speaker.clips.map((clip) => clip.file),
+    );
+    if (new Set(clipPaths).size !== clipPaths.length) {
+      throw new Error("Holdout clip paths must be distinct across all groups");
+    }
     const native = await openRuntime("native");
     const wasm = await openRuntime("wasm");
     let positivePasses = 0;

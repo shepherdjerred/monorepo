@@ -2,10 +2,13 @@ import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
 import { DiscordOpusDecoder } from "@shepherdjerred/discord-video-stream";
 import type {
   KeywordDetectionEvidence,
-  KeywordDetector,
   LocalVoiceModels,
   VoiceActivityDetector,
 } from "@shepherdjerred/streambot/voice/local-models.ts";
+import {
+  SpeakerRegistry,
+  type SpeakerState,
+} from "@shepherdjerred/streambot/voice/speaker-registry.ts";
 import { voiceTurnDeliveryFailuresTotal } from "@shepherdjerred/streambot/observability/metrics.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
@@ -20,18 +23,6 @@ import {
 const log = logger.child("voice-lifecycle");
 const SAMPLE_RATE = 16_000;
 const DEFAULT_POST_VERIFICATION_MS = 300;
-
-type SpeakerState = {
-  readonly decoder: Pick<DiscordOpusDecoder, "decode" | "close">;
-  readonly keyword: KeywordDetector;
-  rolling: Float32Array[];
-  rollingSamples: number;
-  /**
-   * Samples fed to the keyword detector since its stream was last reset. sherpa's timestamps are
-   * stream-relative, so this is what converts them into a position in the audio we are holding.
-   */
-  keywordStreamSamples: number;
-};
 
 export type WakeCandidateEvidence = KeywordDetectionEvidence & {
   readonly userId: string;
@@ -149,13 +140,18 @@ function clearParts(parts: Float32Array[]): void {
 /** Per-session cascaded local wake/VAD state machine. It never owns a network client. */
 export class VoiceAudioLifecycle {
   private readonly options: VoiceAudioLifecycleOptions;
-  private readonly speakers = new Map<string, SpeakerState>();
+  private readonly speakers: SpeakerRegistry;
   private pending: PendingTurn | null = null;
   private transactionRunning = false;
   private closed = false;
 
   constructor(options: VoiceAudioLifecycleOptions) {
     this.options = options;
+    this.speakers = new SpeakerRegistry(
+      options.models,
+      options.createDecoder ?? (() => new DiscordOpusDecoder()),
+      () => options.now?.() ?? Date.now(),
+    );
   }
 
   accept(audio: ReceivedVoiceAudio): void {
@@ -167,15 +163,14 @@ export class VoiceAudioLifecycle {
       audio.opus.fill(0);
       return;
     }
-    const speaker = this.speaker(audio.userId);
+    const speaker = this.speakers.acquire(audio.userId);
     let decoded: Float32Array;
     try {
       decoded = speaker.decoder.decode(audio.opus);
     } catch (error) {
       // Recovery at a network-input boundary: malformed or undecodable Opus wedges the libav
       // context. Destroy this speaker's state so the next packet rebuilds it, and report loudly.
-      this.clearSpeaker(speaker);
-      this.speakers.delete(audio.userId);
+      this.speakers.destroy(audio.userId);
       this.options.onDecodeError?.(error);
       return;
     } finally {
@@ -185,7 +180,11 @@ export class VoiceAudioLifecycle {
     const samples = Float32Array.from(decoded);
     decoded.fill(0);
     if (this.pending === null) {
-      this.pushRolling(speaker, samples);
+      this.speakers.pushRolling(
+        speaker,
+        samples,
+        Math.ceil((this.options.preRollMs / 1000) * SAMPLE_RATE),
+      );
       speaker.keywordStreamSamples += samples.length;
       const match = speaker.keyword.accept(samples);
       if (match !== null) {
@@ -226,34 +225,7 @@ export class VoiceAudioLifecycle {
       this.discardPending(this.pending);
       this.options.onAbandoned?.("closed");
     }
-    this.clearSpeakers();
-  }
-
-  private speaker(userId: string): SpeakerState {
-    const existing = this.speakers.get(userId);
-    if (existing !== undefined) return existing;
-    const created: SpeakerState = {
-      decoder: this.options.createDecoder?.() ?? new DiscordOpusDecoder(),
-      keyword: this.options.models.createKeywordDetector(),
-      rolling: [],
-      rollingSamples: 0,
-      keywordStreamSamples: 0,
-    };
-    this.speakers.set(userId, created);
-    return created;
-  }
-
-  private pushRolling(speaker: SpeakerState, samples: Float32Array): void {
-    speaker.rolling.push(samples);
-    speaker.rollingSamples += samples.length;
-    const maximum = Math.ceil((this.options.preRollMs / 1000) * SAMPLE_RATE);
-    while (speaker.rollingSamples > maximum && speaker.rolling.length > 1) {
-      const removed = speaker.rolling.shift();
-      if (removed !== undefined) {
-        speaker.rollingSamples -= removed.length;
-        removed.fill(0);
-      }
-    }
+    this.speakers.clearAll();
   }
 
   private provision(
@@ -316,12 +288,7 @@ export class VoiceAudioLifecycle {
     pending.stopSilenceTicker = createTicker(() => {
       this.onSilenceTick(pending);
     }, this.options.dtxTickMs ?? VOICE_DTX_TICK_MS);
-    for (const [otherUserId, state] of this.speakers) {
-      if (otherUserId !== userId) {
-        this.clearSpeaker(state);
-        this.speakers.delete(otherUserId);
-      }
-    }
+    this.speakers.retainOnly(userId);
   }
 
   /**
@@ -441,7 +408,7 @@ export class VoiceAudioLifecycle {
       });
       if (!result.accepted) {
         this.discardPending(pending);
-        this.clearSpeakers();
+        this.speakers.clearAll();
         return;
       }
       pending.localVerified = true;
@@ -453,7 +420,7 @@ export class VoiceAudioLifecycle {
       if (this.pending === pending && !this.closed) {
         this.options.onLocalVerificationError?.(error);
         this.discardPending(pending);
-        this.clearSpeakers();
+        this.speakers.clearAll();
       }
     } finally {
       verificationAudio.fill(0);
@@ -505,7 +472,7 @@ export class VoiceAudioLifecycle {
     if (!pending.localVerified || !pending.sawSpeech) {
       clearParts(pending.pcm);
       this.options.onAbandoned?.(reason === "timeout" ? "timeout" : "empty");
-      this.clearSpeakers();
+      this.speakers.clearAll();
       return;
     }
     const pcm16k = concatSamples(pending.pcm, pending.sampleCount);
@@ -516,7 +483,7 @@ export class VoiceAudioLifecycle {
       activatedAtMs: pending.candidate.detectedAtMs,
     };
     this.transactionRunning = true;
-    this.clearSpeakers();
+    this.speakers.clearAll();
     void this.deliver(turn);
   }
 
@@ -537,7 +504,7 @@ export class VoiceAudioLifecycle {
     } finally {
       turn.pcm16k.fill(0);
       this.transactionRunning = false;
-      if (!this.closed) this.clearSpeakers();
+      if (!this.closed) this.speakers.clearAll();
     }
   }
 
@@ -547,17 +514,5 @@ export class VoiceAudioLifecycle {
     pending.stopSilenceTicker();
     pending.vad.close();
     clearParts(pending.pcm);
-  }
-
-  private clearSpeaker(speaker: SpeakerState): void {
-    speaker.decoder.close();
-    speaker.keyword.close();
-    clearParts(speaker.rolling);
-    speaker.rollingSamples = 0;
-  }
-
-  private clearSpeakers(): void {
-    for (const speaker of this.speakers.values()) this.clearSpeaker(speaker);
-    this.speakers.clear();
   }
 }

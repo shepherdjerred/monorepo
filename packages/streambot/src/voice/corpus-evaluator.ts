@@ -49,7 +49,8 @@ export type RuntimeCorpusEvaluation = {
   readonly stressBelow10DbRecall: number;
   readonly negativeActivations: number;
   readonly endpointViolations: readonly string[];
-  readonly twoHourNegativeSoakActivations: number;
+  /** Null when the soak was skipped — a skipped soak must never read as a passed one. */
+  readonly twoHourNegativeSoakActivations: number | null;
 };
 
 export type VoiceCorpusEvaluationReport = {
@@ -262,6 +263,10 @@ async function negativeSoak(
       const packets = cloneDiscordOpusPackets(fixture.container.packets);
       for (const [packetIndex, packet] of packets.entries()) {
         lifecycle.accept(audio(packet, packetIndex));
+        // Hold the simulated feed for any in-flight verification, exactly like the per-clip
+        // path: otherwise a slow ONNX pass lets the loop fast-forward whole fixtures past a
+        // pending candidate, and the soak under-drives the verifier it exists to measure.
+        await verification.settle();
         elapsedMs += 20;
         if (elapsedMs >= targetMs) break;
       }
@@ -346,7 +351,7 @@ async function evaluateRuntime(
     endpointViolations,
     twoHourNegativeSoakActivations: runSoak
       ? await negativeSoak(corpusDir, models, manifest)
-      : 0,
+      : null,
   };
 }
 
@@ -406,6 +411,6 @@ function passesRuntime(result: RuntimeCorpusEvaluation): boolean {
     result.negativeActivations === 0 &&
     result.stressAtLeast10DbRecall >= 0.95 &&
     result.endpointViolations.length === 0 &&
-    result.twoHourNegativeSoakActivations === 0
+    result.twoHourNegativeSoakActivations === 0 // null (skipped) fails
   );
 }
