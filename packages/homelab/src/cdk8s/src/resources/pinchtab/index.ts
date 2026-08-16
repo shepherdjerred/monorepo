@@ -125,9 +125,11 @@ export function createPinchtabDeployment(chart: Chart) {
           limit: Cpu.millis(2000),
         },
         memory: {
-          // Limit must comfortably exceed the 2Gi Memory-backed /dev/shm below
-          // plus Chrome's working set.
-          request: Size.gibibytes(1),
+          // The 30d working-set peak is ~237MiB. Keep a rounded 512MiB
+          // scheduler reservation, while the limit must still comfortably
+          // exceed the 2Gi Memory-backed /dev/shm below plus Chrome's working
+          // set.
+          request: Size.mebibytes(512),
           limit: Size.gibibytes(4),
         },
       },
