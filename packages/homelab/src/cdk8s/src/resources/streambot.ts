@@ -61,6 +61,20 @@ export function createStreambotDeployment(
     tmdbItem.name,
   );
 
+  // Dedicated item for the voice assistant's OpenAI project key, separate from streambot-config
+  // so it can rotate and carry its own spend ceiling independently. Its single `OPENAI_API_KEY`
+  // field syncs to a secret key of the same name.
+  const openAiItem = new OnePasswordItem(chart, "streambot-openai", {
+    spec: {
+      itemPath: vaultItemPath("streambot-openai"),
+    },
+  });
+  const openAiSecret = Secret.fromSecretName(
+    chart,
+    "streambot-openai-secret",
+    openAiItem.name,
+  );
+
   // Small persistent volume for resume state (current item + playback position + queue). Survives
   // pod restarts so a deploy/crash mid-movie picks up where it left off. RWO + the Recreate strategy
   // below guarantees the old pod detaches before the new one attaches (a rolling update would
@@ -114,9 +128,14 @@ export function createStreambotDeployment(
           secret: tmdbSecret,
           key: "TMDB_API_KEY",
         }),
-        // Global production kill switch. Enable only after synthetic, human holdout, live Discord,
-        // and operational acceptance have all passed twice where required.
-        VOICE_ASSISTANT_ENABLED: EnvValue.fromValue("false"),
+        // Global kill switch and the only rollback control: flip to "false" via GitOps to turn
+        // voice off. Cloud exposure is bounded by the per-session rate limiter and the spend
+        // ceiling on the OpenAI project key.
+        VOICE_ASSISTANT_ENABLED: EnvValue.fromValue("true"),
+        OPENAI_API_KEY: EnvValue.fromSecretValue({
+          secret: openAiSecret,
+          key: "OPENAI_API_KEY",
+        }),
         VOICE_ASSETS_DIR: EnvValue.fromValue("/opt/streambot/voice"),
         VOICE_KWS_RUNTIME: EnvValue.fromValue("auto"),
         VIDEOS_DIR: EnvValue.fromValue("/data/videos"),

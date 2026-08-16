@@ -123,18 +123,23 @@ describe("streambot deployment (media namespace)", () => {
 
   it("uses the first-party ghcr image", () => {
     expect(container?.image).toStartWith("ghcr.io/shepherdjerred/streambot:");
+    // Voice ships enabled; the env flag is the single GitOps rollback knob.
     expect(container?.env).toContainEqual(
       expect.objectContaining({
         name: "VOICE_ASSISTANT_ENABLED",
-        value: "false",
+        value: "true",
       }),
     );
     expect(container?.env).not.toContainEqual(
       expect.objectContaining({ name: "VOICE_MODEL" }),
     );
-    expect(container?.env).not.toContainEqual(
-      expect.objectContaining({ name: "OPENAI_API_KEY" }),
+    // The dedicated streambot-openai item syncs to a secret; the key must arrive via
+    // secretKeyRef, never as a literal env value.
+    const openAiKey = container?.env?.find(
+      (entry: { name: string }) => entry.name === "OPENAI_API_KEY",
     );
+    expect(openAiKey?.valueFrom?.secretKeyRef?.key).toBe("OPENAI_API_KEY");
+    expect(openAiKey?.value).toBeUndefined();
   });
 
   it("runs as the non-root user", () => {
