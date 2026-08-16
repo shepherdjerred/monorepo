@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import App from "./components/app.tsx";
 import "./bulma.sass";
 import * as Sentry from "@sentry/react";
+import { migrateStorage } from "./storage/migrate.ts";
 
 // Set up dark mode based on system preference
 function setupTheme() {
@@ -20,9 +21,9 @@ globalThis
   .matchMedia("(prefers-color-scheme: dark)")
   .addEventListener("change", setupTheme);
 
-// VITE_SENTRY_RELEASE is injected at build time by the CI site-deploy step
-// (2.0.0-<build>). Guard the untyped env access so `release` is
-// `string | undefined`, never `any`.
+// VITE_SENTRY_RELEASE is not currently injected for this package (the deploy
+// entry has no buildEnvVars), so release is undefined until that changes.
+// Guard the untyped env access so `release` is `string | undefined`.
 const sentryRelease =
   typeof import.meta.env.VITE_SENTRY_RELEASE === "string"
     ? import.meta.env.VITE_SENTRY_RELEASE
@@ -33,6 +34,10 @@ Sentry.init({
   release: sentryRelease,
   environment: import.meta.env.MODE,
 });
+
+// One-time localStorage migration (legacy caches and v1 bookmark/watch-status
+// shapes) must complete before anything reads the stores.
+migrateStorage();
 
 const container = document.querySelector("#root");
 if (!container) {

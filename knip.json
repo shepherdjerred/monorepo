@@ -445,7 +445,6 @@
     "zod"
   ],
   "ignoreFiles": [
-    "packages/better-skill-capped/src/datastore/content-datastore.ts",
     "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts",
     "packages/discord-plays-mario-kart/packages/frontend/src/util.ts",
     "packages/discord-plays-pokemon/packages/frontend/src/util.ts",

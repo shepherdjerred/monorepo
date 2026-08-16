@@ -1,14 +1,13 @@
-import React from "react";
-import type { Content } from "#src/model/content";
-import { Router } from "./router.tsx";
-import type { Bookmark, Bookmarkable } from "#src/model/bookmark";
-import { LocalStorageBookmarkDatastore } from "#src/datastore/local-storage-bookmark-datastore";
-import type { BookmarkDatastore } from "#src/datastore/bookmark-datastore";
-import type { WatchStatusDatastore } from "#src/datastore/watch-status-datastore";
-import type { Watchable, WatchStatus } from "#src/model/watch-status";
-import { LocalStorageWatchStatusDatastore } from "#src/datastore/local-storage-watch-status-datastore";
+import React, { useState } from "react";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import * as Sentry from "@sentry/react";
+import { Router } from "./router.tsx";
 import { Color, Hero, Size } from "./hero.tsx";
+import { persistOptions, queryClient } from "#src/lib/query-client";
+import { useContent } from "#src/hooks/use-content";
+import { useBookmarks } from "#src/hooks/use-bookmarks";
+import { useWatchStatus } from "#src/hooks/use-watch-status";
+import { useDownloadEnabled } from "#src/hooks/use-download-enabled";
 
 // Workaround: @sentry/react ErrorBoundary types are incompatible with React 19's
 // stricter class component typing. The component works at runtime.
@@ -16,183 +15,50 @@ import { Color, Hero, Size } from "./hero.tsx";
 const ErrorBoundary = Sentry.ErrorBoundary as unknown as React.ComponentType<
   React.PropsWithChildren<{ fallback: React.ReactNode; showDialog?: boolean }>
 >;
-import { ManifestLoader } from "#src/manifest-loader";
-import { parseManifest } from "#src/parser/parser";
 
-export type AppState = {
-  content?: Content | undefined;
-  bookmarkDatastore?: BookmarkDatastore | undefined;
-  bookmarks: Bookmark[];
-  watchStatusesDatastore?: WatchStatusDatastore | undefined;
-  watchStatuses: WatchStatus[];
-  isDownloadEnabled: boolean;
-  isTipsModalVisible: boolean;
-};
+export default function App(): React.ReactElement {
+  return (
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={persistOptions}
+    >
+      <AppContent />
+    </PersistQueryClientProvider>
+  );
+}
 
-export default class App extends React.Component<unknown, AppState> {
-  constructor(props: unknown) {
-    super(props);
+function AppContent(): React.ReactElement {
+  const { content } = useContent();
+  const { bookmarks, isBookmarked, toggle: toggleBookmark } = useBookmarks();
+  const {
+    watchStatuses,
+    isWatched,
+    toggle: toggleWatchStatus,
+  } = useWatchStatus();
+  const isDownloadEnabled = useDownloadEnabled();
+  const [isTipsModalVisible, setTipsModalVisible] = useState(false);
 
-    this.state = {
-      content: undefined,
-      bookmarks: [],
-      watchStatuses: [],
-      isDownloadEnabled:
-        globalThis.localStorage.getItem("download") === "true" || false,
-      isTipsModalVisible: false,
-    };
-  }
-
-  override componentDidMount(): void {
-    void this.loadContent();
-  }
-
-  private async loadContent(): Promise<void> {
-    const manifestLoader = new ManifestLoader();
-    const manifest = await manifestLoader.load();
-    const content = parseManifest(manifest);
-
-    const bookmarkDatastore: BookmarkDatastore =
-      new LocalStorageBookmarkDatastore(content);
-    const watchStatusesDatastore: WatchStatusDatastore =
-      new LocalStorageWatchStatusDatastore();
-
-    this.setState({
-      content: {
-        ...content,
-        courses: [...content.courses].sort(
-          (left, right) =>
-            right.releaseDate.getTime() - left.releaseDate.getTime(),
-        ),
-        videos: [...content.videos].sort(
-          (left, right) =>
-            right.releaseDate.getTime() - left.releaseDate.getTime(),
-        ),
-        commentaries: [...content.commentaries].sort(
-          (left, right) =>
-            right.releaseDate.getTime() - left.releaseDate.getTime(),
-        ),
-      },
-      bookmarkDatastore,
-      watchStatusesDatastore,
-      bookmarks: bookmarkDatastore.get(),
-      watchStatuses: watchStatusesDatastore.get(),
-    });
-  }
-
-  onToggleWatchStatus(item: Bookmarkable): void {
-    const { watchStatusesDatastore, watchStatuses } = this.state;
-    const currentWatchStatus = this.getWatchStatus(item, watchStatuses);
-
-    if (watchStatusesDatastore === undefined) {
-      console.error("Not ready to toggle yet");
-    }
-
-    if (currentWatchStatus !== undefined) {
-      watchStatusesDatastore?.remove(currentWatchStatus);
-    }
-
-    const newStatus =
-      currentWatchStatus === undefined ? true : !currentWatchStatus.isWatched;
-
-    watchStatusesDatastore?.add({
-      item,
-      isWatched: newStatus,
-      lastUpdate: new Date(),
-    });
-
-    this.setState({
-      watchStatuses: watchStatusesDatastore?.get() ?? [],
-    });
-  }
-
-  getWatchStatus(
-    item: Bookmarkable,
-    watchStatuses: WatchStatus[],
-  ): WatchStatus | undefined {
-    return watchStatuses.find((watchStatus) => {
-      return watchStatus.item.uuid === item.uuid;
-    });
-  }
-
-  onToggleTipsModal(): void {
-    this.setState((prevState) => {
-      return {
-        isTipsModalVisible: !prevState.isTipsModalVisible,
-      };
-    });
-  }
-
-  onToggleBookmark(item: Bookmarkable): void {
-    const { bookmarkDatastore, bookmarks } = this.state;
-    const currentBookmark = this.getBookmark(item, bookmarks);
-
-    if (bookmarkDatastore === undefined) {
-      console.error("Bookmark datastore not ready yet");
-    }
-
-    if (currentBookmark === undefined) {
-      bookmarkDatastore?.add({
-        item,
-        date: new Date(),
-      });
-    } else {
-      bookmarkDatastore?.remove(currentBookmark);
-    }
-    this.setState({
-      bookmarks: bookmarkDatastore?.get() ?? [],
-    });
-  }
-
-  getBookmark(item: Bookmarkable, bookmarks: Bookmark[]): Bookmark | undefined {
-    return bookmarks.find((bookmark) => {
-      return bookmark.item.uuid === item.uuid;
-    });
-  }
-
-  isWatched(item: Watchable): boolean {
-    return this.state.watchStatuses.some((watchStatuses) => {
-      return watchStatuses.item.uuid === item.uuid && watchStatuses.isWatched;
-    });
-  }
-
-  isBookmarked(item: Bookmarkable): boolean {
-    return this.state.bookmarks.some((bookmark) => {
-      return bookmark.item.uuid === item.uuid;
-    });
-  }
-
-  override render(): React.ReactNode {
-    return (
-      <React.Fragment>
-        <ErrorBoundary
-          fallback={
-            <Hero
-              title="Something went wrong"
-              color={Color.RED}
-              size={Size.FULL}
-            />
-          }
-          showDialog={true}
-        >
-          <Router
-            content={this.state.content}
-            bookmarks={this.state.bookmarks}
-            onToggleBookmark={(item: Bookmarkable) => {
-              this.onToggleBookmark(item);
-            }}
-            watchStatuses={this.state.watchStatuses}
-            onToggleWatchStatus={(item: Watchable) => {
-              this.onToggleWatchStatus(item);
-            }}
-            isBookmarked={this.isBookmarked.bind(this)}
-            isWatched={this.isWatched.bind(this)}
-            isDownloadEnabled={this.state.isDownloadEnabled}
-            isTipsModalVisible={this.state.isTipsModalVisible}
-            onToggleTipsModal={this.onToggleTipsModal.bind(this)}
-          />
-        </ErrorBoundary>
-      </React.Fragment>
-    );
-  }
+  return (
+    <ErrorBoundary
+      fallback={
+        <Hero title="Something went wrong" color={Color.RED} size={Size.FULL} />
+      }
+      showDialog={true}
+    >
+      <Router
+        content={content}
+        bookmarks={bookmarks}
+        onToggleBookmark={toggleBookmark}
+        watchStatuses={watchStatuses}
+        onToggleWatchStatus={toggleWatchStatus}
+        isBookmarked={isBookmarked}
+        isWatched={isWatched}
+        isDownloadEnabled={isDownloadEnabled}
+        isTipsModalVisible={isTipsModalVisible}
+        onToggleTipsModal={() => {
+          setTipsModalVisible((visible) => !visible);
+        }}
+      />
+    </ErrorBoundary>
+  );
 }
