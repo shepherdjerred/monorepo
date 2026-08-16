@@ -135,6 +135,24 @@ print(doc.export_to_markdown())
 
 ## CLI tool boundaries
 
+### Linear and PostHog
+
+`linear` and `posthog-cli` are Homebrew-managed vendor CLIs. Their credentials
+are rendered into Fish from the existing 1Password item by
+`private_dot_config/private_fish/config.fish.tmpl`:
+
+- Linear reads `LINEAR_API_KEY` and targets the `sjerred` workspace.
+- PostHog reads `POSTHOG_CLI_API_KEY` and project `549883`.
+
+After installing or updating the dotfiles, open a new Fish shell or run
+`chezmoi apply`, then verify with `linear auth whoami` and
+`posthog-cli api call read-data-schema '{"query":{"kind":"events"}}'`.
+Never use `linear auth token`, `posthog-cli login`, or ad-hoc dotenv files for
+the normal setup: those paths duplicate or expose credentials outside the
+1Password-backed environment. Load `linear-helper` or `posthog-helper` before
+performing vendor operations; they hold the schema-first workflow, explicit
+write boundary, and dated deep references.
+
 - **Cloudflare DNS is OpenTofu-owned.** `cf` (`~/.local/bin/cf`) carries a
   read/write token, but records, zones, and DNSSEC live in
   `packages/homelab/src/tofu/cloudflare/`. Use `cf` to read; make every change

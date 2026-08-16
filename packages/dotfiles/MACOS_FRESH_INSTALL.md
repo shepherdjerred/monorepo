@@ -123,6 +123,10 @@ decisions as part of routine setup.
 - `temporal --profile homelab operator cluster health` reports `SERVING`, and
   `temporal config get --profile default` still points at `localhost:7233`.
 - `linear auth whoami` resolves the workspace from `LINEAR_API_KEY`.
+- `posthog-cli --version` succeeds, and
+  `posthog-cli api call read-data-schema '{"query":{"kind":"events"}}'`
+  returns the configured project's event schema through
+  `POSTHOG_CLI_API_KEY`.
 - `psql --version` resolves through the keg-only `libpq` on PATH, in both fish
   and `bash -lc`.
 - `tailscale version` succeeds through `~/.local/bin/tailscale`, and the brew

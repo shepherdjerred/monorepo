@@ -252,6 +252,49 @@ If a command legitimately needs error handling, handle the specific error explic
 
 ## Commands
 
+### Linear and PostHog CLIs
+
+The macOS dotfiles install both vendor CLIs and load their credentials from
+1Password through the Fish template. Load the matching concise skill for the
+schema-first workflow and dated deep references. Do not paste or print either
+token, and do not use an interactive login as the normal setup path.
+
+For Linear, verify the ambient credential and workspace first:
+
+```bash
+linear --version
+linear auth whoami
+linear issue id                 # resolve the issue attached to the branch
+linear issue view SJ-123        # inspect an issue
+linear issue list --team <key>  # list assigned/open work
+```
+
+The configured workspace is `sjerred` (`monorepo`). Use
+`--workspace sjerred` when the current directory or default workspace is
+ambiguous. Linear owns plans, TODOs, review queues, and follow-ups; use the
+`linear-helper` skill before creating or changing work, and keep feature PRs on
+the repository's git-spice workflow. `issue id` needs a branch identifier, and
+issue/cycle lists need `--team <key>` unless the repository has a default team.
+
+For PostHog, use the agent-first API surface rather than `posthog-cli login`:
+
+```bash
+posthog-cli --version
+posthog-cli api search read-data-schema
+posthog-cli api info read-data-schema
+posthog-cli api call read-data-schema '{"query":{"kind":"events"}}'
+```
+
+The shell supplies `POSTHOG_CLI_API_KEY` and project `549883`. Before any
+analytics query, discover the event/property schema; before a mutation, inspect
+the tool with `info`, drill into every hinted schema field, validate with
+`--dry-run`, and pass `--confirm` only for the exact user-authorized target.
+Read `posthog-helper` for the complete workflow. Source-side analytics checks
+and a successful capture response do not prove that PostHog stored an event;
+use the live API/Live Events for runtime acceptance.
+
+### General repository commands
+
 ```bash
 # Local iteration: run only the package tasks relevant to the change
 bunx turbo run <task> --filter=<pkg>   # e.g. bunx turbo run typecheck --filter=birmel
