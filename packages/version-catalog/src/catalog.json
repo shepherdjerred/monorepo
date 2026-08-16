@@ -682,7 +682,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9551@sha256:f2fd94d031e024fc1adc4a9393268a1f57c35e5255dd94a2110409e9171c43eb",
+      "value": "2.0.0-9554@sha256:f57938d1cde2d75408685c131049d5adf8621658ded5d14191780fdf2be72431",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -715,7 +715,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9522@sha256:acca5f130663ba8861f586464a6dfd48f7d08b67026f0478ec388b0a3adaf845",
+      "value": "2.0.0-9554@sha256:00cb75378383a43fb9ed392e347f60b8a7b96913533c51f177acddb9811aa2b8",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -728,7 +728,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9522@sha256:f4773644a1371f0553542ced9f152530cc1129b44beba5f2d794c0e7e15332b2",
+      "value": "2.0.0-9554@sha256:e288c4a2ef74868d0cf500c95456353c48423695556806a3afd897799192b3c1",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful scout-evals image push."
@@ -741,7 +741,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9522@sha256:2592f37f3a4cb844d7ca40f9bb3051236bdffcf440b7fb89ed369cd21bf2a361",
+      "value": "2.0.0-9554@sha256:34fe853c2db2da8a10f1ec70c4338751158cde4119fc20b1fa835b72dae87dc2",
       "notes": ["not managed by renovate"]
     },
     {
@@ -751,7 +751,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9522@sha256:628556055f871fe7e7e470b55b1a404d9a2f6d1af923ca6a142bb87d2d8c0d6a",
+      "value": "2.0.0-9554@sha256:92359eda7dea8e612cc21ab097b33066861fa7ba7fe75c33d202b4fd344f9877",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful image push."
