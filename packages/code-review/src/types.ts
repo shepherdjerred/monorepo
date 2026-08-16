@@ -50,13 +50,24 @@ export type ReviewThread = {
   url: string | null;
   priority: number | null;
   /**
-   * What the finding says, when the provider renders it somewhere a consumer
-   * cannot re-read. Threads carry their own comment bodies, but findings parsed
-   * out of a persistent issue comment do not: without this a consumer is left
-   * with a path and a diff anchor, which name a file rather than the problem.
-   * `null` for providers whose findings are addressable GitHub threads.
+   * What the finding says. Without it a consumer is left with a path and a diff
+   * anchor, which name a file rather than the problem — so it is populated for
+   * BOTH surfaces: parsed out of the persistent issue comment for findings that
+   * live there, and parsed from the first comment's body (via
+   * {@link ReviewProvider.parseFindingTitle}) for addressable GitHub threads.
+   * `null` only when the provider cannot recognise a title.
    */
   title: string | null;
+  /**
+   * GraphQL node id of the review thread, for consumers that resolve it.
+   * `null` for findings parsed out of an issue comment, which are not threads.
+   */
+  threadId: string | null;
+  /**
+   * REST id of the issue comment a finding was parsed out of, for consumers
+   * that edit it. `null` for real review threads.
+   */
+  commentId: number | null;
 };
 
 /** A provider-authored issue comment used as a review completion signal. */
@@ -64,6 +75,11 @@ export type ReviewIssueComment = {
   body: string;
   updatedAt: string | null;
   url: string | null;
+  /**
+   * REST id of the comment, carried onto every finding parsed out of it so a
+   * consumer can address the comment it must edit. `null` when unavailable.
+   */
+  id: number | null;
 };
 
 /**
@@ -160,6 +176,23 @@ export type ReviewProvider = {
   authorLogins: readonly string[];
   /** Parse the severity level (0..3) from a review comment body, or null. */
   parseSeverity: (body: string | null) => number | null;
+  /**
+   * Parse the finding's title out of a review thread's first comment body, or
+   * `null` when the provider renders no recognisable title. Findings parsed
+   * from an issue comment already carry their title; this is what lets an
+   * addressable GitHub thread carry one too, which is what makes the two
+   * surfaces comparable. `null` for providers that do not render titles.
+   */
+  parseFindingTitle: ((body: string | null) => string | null) | null;
+  /**
+   * A stable key identifying the underlying finding, used to collapse the
+   * copies a provider posts to more than one surface into a single finding.
+   *
+   * Returning `null` means "cannot identify this one", and a null key NEVER
+   * merges — an unrecognised finding is counted on its own rather than silently
+   * folded into another. `null` for providers that post each finding once.
+   */
+  findingKey: ((thread: ReviewThread) => string | null) | null;
   /** How the gate detects the provider finished reviewing the head commit. */
   completion: CompletionStrategy;
   /** How the provider signals a deliberate skip, or null if it has none. */

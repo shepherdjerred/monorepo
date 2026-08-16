@@ -22,6 +22,10 @@ export const codexProvider: ReviewProvider = {
   botAuthoredPullRequestPolicy: "skip",
   authorLogins: ["chatgpt-codex-connector"],
   parseSeverity: parseCodexSeverity,
+  // Codex posts each finding once, as an addressable thread, so there is
+  // nothing to recognise a second copy of.
+  parseFindingTitle: null,
+  findingKey: null,
   completion: { kind: "review-at-head", cleanSignal: "thumbsup-reaction" },
   detectSkip: null,
   // Codex re-reviews on push, but an explicit `@codex review` mention forces a

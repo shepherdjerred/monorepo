@@ -3,6 +3,7 @@ import {
   asRecord,
   GITHUB_API_URL,
   getJsonWithLink,
+  numberField,
   recordField,
   stringField,
 } from "./github-http.ts";
@@ -101,7 +102,12 @@ async function scanProviderIssueComments(
       if (body === null) continue;
       const updatedAt =
         stringField(item, "updated_at") ?? stringField(item, "created_at");
-      const comment = { body, updatedAt, url: stringField(item, "html_url") };
+      const comment = {
+        body,
+        updatedAt,
+        url: stringField(item, "html_url"),
+        id: numberField(item, "id"),
+      };
       // An acknowledgement quotes the review comment's title, so classify it
       // first: only a comment that is not an acknowledgement can be the review.
       if (body.includes(completion.acknowledgement.marker)) {

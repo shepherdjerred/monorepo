@@ -189,6 +189,7 @@ describe("issue-comment provider findings", () => {
   const qodoComment = {
     updatedAt: "2026-08-13T05:32:39Z",
     url: "https://github.com/o/r/pull/1#issuecomment-1",
+    id: 1,
     body: `
 <h3>Code Review by Qodo</h3>
 <code>\u{1F41E} Bugs (2)</code> <code>\u{1F4D8} Rule violations (0)</code>

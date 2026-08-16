@@ -154,12 +154,17 @@ function identityOf(summary: string, findingBody: string): string {
  * The finding's headline, as a reader would see it: the summary stripped of its
  * position, its resolved styling, and its category chips. Consumers that cannot
  * re-read the comment rely on this to say what the finding is.
+ *
+ * The ordinal may arrive Markdown-escaped (`1\.`): Qodo writes the review
+ * comment as HTML but the inline thread as Markdown, where a leading `1.` would
+ * otherwise start an ordered list. Both spellings must strip to the same title,
+ * because that title is what identifies one finding across the two surfaces.
  */
 function findingTitle(summary: string): string {
   return summary
     .replaceAll(/<code>[^<]*<\/code>/giu, "")
     .replaceAll(/<[^>]*>/gu, "")
-    .replace(/^\s*\d+\.\s*/u, "")
+    .replace(/^\s*\d+\\?\.\s*/u, "")
     .replaceAll(/[☑✓]/gu, "")
     .replaceAll(/\s+/gu, " ")
     .trim();
@@ -267,10 +272,56 @@ export function markQodoFindingResolved(
   return edited;
 }
 
+/**
+ * The title Qodo renders at the top of an inline review thread.
+ *
+ * Qodo posts every finding twice — once in the persistent review comment, once
+ * as an addressable thread on the offending line — and only the comment copy
+ * carries a parsed title. Reading the thread's title is what lets the two be
+ * recognised as one finding rather than counted (and cleared) twice.
+ *
+ * The title is the first ordinal-numbered line of the body, which follows the
+ * severity badge image. Returns `null` when no such line exists, which leaves
+ * the finding unmergeable rather than guessing at its identity.
+ */
+export function parseQodoFindingTitle(body: string | null): string | null {
+  if (body === null) return null;
+  for (const line of body.split("\n")) {
+    // Locate the line by its tag-stripped text, not its raw form: Qodo wraps a
+    // resolved finding's title in `<s>`, so the raw line opens with the strike
+    // tag rather than the ordinal. Requiring the ordinal first silently found
+    // no title on exactly the findings that had been dealt with — which left
+    // them unmergeable and counted twice.
+    if (!/^\s*\d+\\?\.\s+\S/u.test(line.replaceAll(/<[^>]*>/gu, ""))) continue;
+    const title = findingTitle(line);
+    return title === "" ? null : title;
+  }
+  return null;
+}
+
+/**
+ * Identity of the underlying finding, shared by both copies Qodo posts.
+ *
+ * Case is folded because the two surfaces disagree on it: the review comment
+ * renders `joinVoice can hang forever` while the thread renders `Joinvoice can
+ * hang forever`. The ordinal is already stripped by {@link findingTitle}, which
+ * matters because the copies are numbered independently — the same finding is
+ * `3.` in the comment and `1.` on the thread.
+ *
+ * The path is part of the key so two findings that happen to share a headline
+ * in different files stay distinct. A finding with no title returns `null` and
+ * therefore never merges.
+ */
+export function qodoFindingKey(thread: ReviewThread): string | null {
+  if (thread.title === null || thread.title === "") return null;
+  return `${thread.path ?? ""} ${thread.title.toLowerCase()}`;
+}
+
 function parseSeveritySection(
   section: string,
   priority: 1 | 2 | 3,
   commentUrl: string | null,
+  commentId: number | null,
 ): RenderedFinding[] {
   const findings: RenderedFinding[] = [];
   const summaries = [
@@ -319,6 +370,10 @@ function parseSeveritySection(
         line: null,
         url: linkMatch?.[2] ?? commentUrl,
         priority,
+        // A finding parsed out of the review comment is not a thread; it is
+        // cleared by editing the comment it came from.
+        threadId: null,
+        commentId,
       },
     });
   }
@@ -550,7 +605,9 @@ export function parseQodoIssueComment(
     const priority = priorityForSection(section);
     if (priority === null) continue;
     severitySections += 1;
-    rendered.push(...parseSeveritySection(section, priority, comment.url));
+    rendered.push(
+      ...parseSeveritySection(section, priority, comment.url, comment.id),
+    );
   }
 
   // Assert against the renderings, not the deduplicated findings: the layout
@@ -585,6 +642,8 @@ export const qodoProvider: ReviewProvider = {
   botAuthoredPullRequestPolicy: "skip",
   authorLogins: QODO_AUTHOR_LOGINS,
   parseSeverity: parseQodoSeverity,
+  parseFindingTitle: parseQodoFindingTitle,
+  findingKey: qodoFindingKey,
   completion: {
     kind: "issue-comment",
     marker: QODO_REVIEW_MARKER,

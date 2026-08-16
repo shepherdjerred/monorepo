@@ -16,6 +16,7 @@ function acknowledging(sha: string) {
     body: `[Code review](https://github.com/o/r/pull/1#issuecomment-1) by qodo was updated up to the latest commit https://github.com/o/r/commit/${sha}`,
     updatedAt: afterPush,
     url: null,
+    id: null,
   };
 }
 
@@ -181,11 +182,15 @@ const issueCommentProvider: ReviewProvider = {
         url: null,
         priority: 1,
         title: null,
+        threadId: null,
+        commentId: null,
       },
     ],
   },
   detectSkip: null,
   requestReview: null,
+  parseFindingTitle: null,
+  findingKey: null,
 };
 
 test("records the acknowledgement time as issue-comment completion", async () => {

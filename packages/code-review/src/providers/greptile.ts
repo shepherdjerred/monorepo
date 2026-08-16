@@ -20,6 +20,10 @@ export const greptileProvider: ReviewProvider = {
   botAuthoredPullRequestPolicy: "review",
   authorLogins: ["greptile-apps"],
   parseSeverity: parseGreptileSeverity,
+  // Greptile posts each finding once, as an addressable thread, so there is
+  // nothing to recognise a second copy of.
+  parseFindingTitle: null,
+  findingKey: null,
   completion: { kind: "check-run", namePattern: /greptile/iu },
   detectSkip: {
     marker: "<!-- greptile-status -->",

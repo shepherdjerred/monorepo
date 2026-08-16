@@ -164,12 +164,17 @@ async function probePr(
             priority: thread.priority,
             isResolved: thread.isResolved,
             isOutdated: thread.isOutdated,
-            // Title and url make the dump readable on its own; without them a
-            // probe of a blocked PR says only which files were complained about.
+            // What the finding says, plus the handles needed to act on it and
+            // the key it was deduplicated by. Without these a caller has a
+            // count and a filename, and has to re-derive everything else by
+            // hand from the raw GitHub payloads.
             title: thread.title,
             path: thread.path,
             line: thread.line,
             url: thread.url,
+            threadId: thread.threadId,
+            commentId: thread.commentId,
+            findingKey: provider.findingKey?.(thread) ?? null,
           })),
         },
       },
