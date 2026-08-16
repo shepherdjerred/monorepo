@@ -97,7 +97,20 @@ export class Streamer {
         user_id,
         channel_id,
         (conn) => {
-          if (options.receiveAudio ?? false) conn.setAudioPacketizer();
+          if (options.receiveAudio ?? false) {
+            try {
+              conn.setAudioPacketizer();
+            } catch (error) {
+              // This callback runs inside BaseMediaConnection's
+              // setProtocols().then(...) chain, which has no rejection
+              // handler. Letting a throw escape would leave this promise
+              // pending forever *and* surface as an unhandled rejection, so
+              // the caller would hang with no usable error.
+              reject(error instanceof Error ? error : new Error(String(error)));
+
+              return;
+            }
+          }
           resolve(conn);
         },
         options,

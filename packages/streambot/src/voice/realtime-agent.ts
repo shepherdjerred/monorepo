@@ -15,6 +15,7 @@ import {
   voiceConcurrentTurns,
   voiceOpenAiFailuresTotal,
   voiceReplyPacketsTotal,
+  voiceReplySendFailuresTotal,
   voiceTranscriptVerificationsTotal,
   voiceTranscriptionUsageTotal,
   voiceTurnsTotal,
@@ -117,7 +118,18 @@ class PacedAssistantSender implements AssistantAudioSink {
         });
         continue;
       }
-      this.streamer.sendAssistantOpus(packet);
+      try {
+        this.streamer.sendAssistantOpus(packet);
+      } catch {
+        // sendOpus throws once the voice connection is gone, and this runs on
+        // a 20ms tick, so a mid-reply disconnect would reject this background
+        // task. That rejection later surfaces as a cancel() failure and masks
+        // whatever actually ended the turn. There is nothing left to send to,
+        // so count it and stop pumping.
+        voiceReplySendFailuresTotal.inc();
+
+        return;
+      }
       voiceReplyPacketsTotal.inc();
       await Bun.sleep(20);
     }
@@ -461,7 +473,13 @@ export async function runRealtimeCommandTurn(
       voiceOpenAiFailuresTotal.inc({ stage: failureStage });
       voiceTurnsTotal.inc({ outcome: "error" });
     }
-    await input.assistantAudio.cancel();
+    try {
+      await input.assistantAudio.cancel();
+    } catch {
+      // Cancellation is cleanup. If it fails we still owe the caller the
+      // reason we got here, so never let it replace `error`.
+      voiceReplySendFailuresTotal.inc();
+    }
     throw error;
   } finally {
     session.close();

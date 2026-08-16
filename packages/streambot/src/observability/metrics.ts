@@ -406,6 +406,12 @@ export const voiceReplyPacketsTotal = new Counter({
   registers: [register],
 });
 
+export const voiceReplySendFailuresTotal = new Counter({
+  name: "streambot_voice_reply_send_failures_total",
+  help: "Assistant Opus sends that failed, normally a voice disconnect mid-reply",
+  registers: [register],
+});
+
 export const voiceDuckTransitionsTotal = new Counter({
   name: "streambot_voice_duck_transitions_total",
   help: "Assistant duck state transitions, without session or user labels",
