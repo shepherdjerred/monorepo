@@ -336,6 +336,17 @@ export async function runRealtimeCommandTurn(
       });
     },
   );
+  // A transcription failure can arrive while connect() is still being awaited, and this promise
+  // only joins a race after that — across a macrotask gap, that rejection would surface as an
+  // unhandled rejection. Observing it here closes the gap; the later race still receives the
+  // original rejection, which is where it is actually handled.
+  void (async () => {
+    try {
+      await transcription;
+    } catch {
+      // Deliberately observed-and-dropped: the turn's Promise.race is the real handler.
+    }
+  })();
   const completed = new Promise<void>((resolve) => {
     session.on("audio", (event) => {
       if (firstAudio) {
@@ -370,9 +381,13 @@ export async function runRealtimeCommandTurn(
     failureStage = "transcription";
     const pcm24k = wakePcmToOpenAiPcm(input.pcm16k);
     const transcriptionStartedAtMs = Date.now();
+    // The SDK wants a bare ArrayBuffer and base64-encodes it synchronously inside sendAudio, so
+    // both the source and the transmitted copy can be erased the moment the call returns.
+    const pcm24kCopy = Uint8Array.from(pcm24k);
     try {
-      session.sendAudio(Uint8Array.from(pcm24k).buffer, { commit: true });
+      session.sendAudio(pcm24kCopy.buffer, { commit: true });
     } finally {
+      pcm24kCopy.fill(0);
       pcm24k.fill(0);
     }
     const transcriptionResult = await Promise.race([

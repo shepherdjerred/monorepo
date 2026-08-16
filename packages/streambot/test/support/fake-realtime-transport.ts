@@ -52,6 +52,7 @@ export class FakeRealtimeTransport
       | "success"
       | "error"
       | "transcription-error"
+      | "transcription-error-during-connect"
       | "response-error"
       | "disconnect"
       | "timeout" = "success",
@@ -60,11 +61,26 @@ export class FakeRealtimeTransport
     super();
   }
 
-  connect(options: RealtimeTransportLayerConnectOptions): Promise<void> {
+  async connect(options: RealtimeTransportLayerConnectOptions): Promise<void> {
     this.status = "connected";
     this.connectOptions = options;
     this.emit("connection_change", "connected");
-    return Promise.resolve();
+    if (this.behavior === "transcription-error-during-connect") {
+      // Fail transcription while connect() is still the awaited promise, then hold connect open
+      // across a macrotask boundary: an unobserved transcription rejection surfaces as an
+      // unhandled rejection here rather than reaching the turn's later race.
+      this.emit("*", {
+        type: "conversation.item.input_audio_transcription.failed",
+        event_id: "fake-transcription-failed-early",
+        item_id: "fake-input",
+        content_index: 0,
+        error: {
+          type: "server_error",
+          message: "fake early transcription error",
+        },
+      });
+      await Bun.sleep(5);
+    }
   }
 
   sendEvent(event: RealtimeClientMessage): void {

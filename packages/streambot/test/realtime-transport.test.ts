@@ -252,6 +252,7 @@ async function run(
     | "success"
     | "error"
     | "transcription-error"
+    | "transcription-error-during-connect"
     | "response-error"
     | "disconnect"
     | "timeout" = "success",
@@ -443,6 +444,10 @@ describe("custom Realtime transport failure boundaries", () => {
     for (const behavior of [
       "error",
       "transcription-error",
+      // Fails transcription while connect() is still awaited, across a macrotask gap — without
+      // early observation in runRealtimeCommandTurn this is an unhandled rejection, which bun
+      // fails the test run on, rather than the ordinary turn rejection asserted here.
+      "transcription-error-during-connect",
       "disconnect",
       "timeout",
     ] as const) {
