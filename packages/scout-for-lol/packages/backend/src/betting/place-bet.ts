@@ -39,6 +39,7 @@ export type PlaceBetResult =
   | { kind: "not_eligible" }
   | { kind: "unknown_subject"; validAliases: string[] }
   | { kind: "invalid_stake"; min: number; max: number }
+  | { kind: "stake_cap"; existingStake: number; max: number }
   | { kind: "insufficient"; balance: number; needed: number }
   | { kind: "side_conflict"; existingTeamId: number };
 
@@ -180,6 +181,23 @@ export async function placeBet(
         // predict" unanswerable in the ledger, so it is refused outright
         // rather than netted off.
         throw new SideConflictError(existing.predictedTeamId);
+      }
+
+      // MAX_STAKE bounds a *position*, not a click. The range check above only
+      // sees the increment, so without this a bettor could walk an existing
+      // position past the cap one click at a time — and the cap is what keeps
+      // `stake * losersPool` inside Number.MAX_SAFE_INTEGER in the parimutuel
+      // allocation, so exceeding it is not merely a policy breach.
+      //
+      // Read-then-compare is safe here for the same reason the rest of this
+      // closure is: the claim above took the write lock for this transaction,
+      // so `existing.stake` cannot move underneath us.
+      if (existing !== null && existing.stake + input.stake > MAX_STAKE) {
+        return {
+          kind: "stake_cap",
+          existingStake: existing.stake,
+          max: MAX_STAKE,
+        };
       }
 
       const bet =

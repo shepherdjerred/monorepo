@@ -9,11 +9,20 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-cancel-bet");
 
-export type CancelBetResult = {
-  cancelled: boolean;
-  refunded: number;
-  balanceAfter: number;
-};
+/**
+ * Why a cancellation did or did not happen.
+ *
+ * A discriminated union rather than a `cancelled: false` flag, because the
+ * reasons are not interchangeable to the person clicking: "you have no bet" and
+ * "your bet is locked in because the window closed" describe opposite states of
+ * the same wallet, and answering the second with the first tells a bettor with
+ * money on the game that their stake was never recorded.
+ */
+export type CancelBetResult =
+  | { kind: "cancelled"; refunded: number; balanceAfter: number }
+  | { kind: "no_pool" }
+  | { kind: "no_bet" }
+  | { kind: "window_closed" };
 
 /**
  * Withdraw a position while the window is still open.
@@ -38,12 +47,6 @@ export async function cancelBet(
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
 ): Promise<CancelBetResult> {
-  const empty: CancelBetResult = {
-    cancelled: false,
-    refunded: 0,
-    balanceAfter: 0,
-  };
-
   const pool = await prismaClient.bucksMatchPool.findUnique({
     where: {
       matchId_serverId: { matchId: input.matchId, serverId: input.serverId },
@@ -51,7 +54,7 @@ export async function cancelBet(
     select: { id: true, roster: true },
   });
   if (pool === null) {
-    return empty;
+    return { kind: "no_pool" };
   }
 
   const account = await prismaClient.bucksAccount.findUnique({
@@ -64,7 +67,9 @@ export async function cancelBet(
     select: { id: true },
   });
   if (account === null) {
-    return empty;
+    // No wallet in this guild means no stake in this pool, so this is the same
+    // answer as an empty bet slot rather than a distinct state.
+    return { kind: "no_bet" };
   }
 
   return await prismaClient.$transaction(async (tx) => {
@@ -76,7 +81,11 @@ export async function cancelBet(
       data: { updatedAt: now },
     });
     if (claim.count !== 1) {
-      return empty;
+      // The pool row was read moments ago and nothing deletes pools, so the
+      // only way to miss it here is the predicate: the window has passed or the
+      // pool has already left `open`. That is a different answer from "you have
+      // no bet", and the caller renders it as one.
+      return { kind: "window_closed" };
     }
 
     const bet = await tx.bucksBet.findUnique({
@@ -89,7 +98,7 @@ export async function cancelBet(
       select: { id: true, stake: true, predictedTeamId: true },
     });
     if (bet === null) {
-      return empty;
+      return { kind: "no_bet" };
     }
 
     const roster = BucksPoolRosterSchema.parse(
@@ -126,6 +135,6 @@ export async function cancelBet(
       `↩️ Cancelled a Bryan Bucks bet on ${input.matchId}, refunding ${bet.stake.toString()} BB`,
     );
 
-    return { cancelled: true, refunded: bet.stake, balanceAfter };
+    return { kind: "cancelled", refunded: bet.stake, balanceAfter };
   });
 }

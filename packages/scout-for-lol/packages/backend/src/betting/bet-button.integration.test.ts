@@ -154,6 +154,47 @@ describe("handleBetButton", () => {
     expect(bet.predictedTeamId).toBe(200);
   });
 
+  test("tells a bettor their position is locked rather than missing", async () => {
+    await handleBetButton(fakeInteraction(betId(0, "W", 5)).interaction, db);
+    await db.bucksMatchPool.updateMany({
+      data: { closesAt: new Date(Date.now() - 1000) },
+    });
+
+    const cancelId = formatBucksCustomId({
+      action: "x",
+      matchId: MATCH_ID,
+      subjectIndex: 0,
+      side: "W",
+      amount: 0,
+    });
+    const { interaction, replies } = fakeInteraction(cancelId);
+    await handleBetButton(interaction, db);
+
+    // "You don't have a bet" would be a lie to someone whose stake is sitting
+    // in the pool, and would read as if it had never been recorded.
+    expect(replies[0]).toContain("Betting has closed");
+    expect(replies[0]).not.toContain("don't have a bet");
+
+    // The stake stays staked: no refund sneaks out after close.
+    expect(await db.bucksBet.count()).toBe(1);
+    const account = await db.bucksAccount.findFirstOrThrow();
+    expect(account.balance).toBe(SEED_GRANT - 5);
+  });
+
+  test("still reports a missing bet as missing", async () => {
+    const cancelId = formatBucksCustomId({
+      action: "x",
+      matchId: MATCH_ID,
+      subjectIndex: 0,
+      side: "W",
+      amount: 0,
+    });
+    const { interaction, replies } = fakeInteraction(cancelId);
+    await handleBetButton(interaction, db);
+
+    expect(replies[0]).toContain("don't have a bet");
+  });
+
   test("refuses a click after the window closes", async () => {
     await db.bucksMatchPool.updateMany({
       data: { closesAt: new Date(Date.now() - 1000) },

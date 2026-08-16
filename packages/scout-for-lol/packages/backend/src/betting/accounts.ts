@@ -1,5 +1,6 @@
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import { SEED_GRANT } from "#src/betting/constants.ts";
+import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import { createLogger } from "#src/logger.ts";
@@ -54,9 +55,14 @@ export type BucksAccountRef = {
  *
  * A newly created wallet starts at `SEED_GRANT` with a matching `seed` ledger
  * row, because earning alone cannot bootstrap the economy: a player with no
- * Bucks cannot place a bet, and betting is the point. The grant and the row are
- * written in one transaction so a wallet can never exist without the entry that
- * explains its balance.
+ * Bucks cannot place a bet, and betting is the point.
+ *
+ * The row is created at zero and the grant applied through `applyBucksDelta`
+ * inside the same transaction, rather than by writing a starting balance
+ * alongside a hand-built ledger row. `ledger.ts` is documented as the one place
+ * a balance may move, and a bootstrap exception would be a second mutation path
+ * that skips its context validation — so a wallet still cannot exist without
+ * the entry that explains its balance, and there is still only one writer.
  *
  * Racing callers are handled by catching the unique-constraint violation rather
  * than by locking: two concurrent first-clicks would otherwise both see "no
@@ -85,26 +91,23 @@ export async function ensureBucksAccount(
         data: {
           serverId: input.serverId,
           discordId: input.discordId,
-          balance: SEED_GRANT,
+          balance: 0,
         },
-        select: { id: true, balance: true },
+        select: { id: true },
       });
-      await tx.bucksLedgerEntry.create({
-        data: {
-          bucksAccountId: created.id,
-          delta: SEED_GRANT,
-          balanceAfter: SEED_GRANT,
-          kind: "seed",
-          context: JSON.stringify({
-            type: "seed",
-            note: "Welcome grant on first Bryan Bucks wallet",
-          }),
+      const balance = await applyBucksDelta(tx, {
+        bucksAccountId: created.id,
+        delta: SEED_GRANT,
+        kind: "seed",
+        context: {
+          type: "seed",
+          note: "Welcome grant on first Bryan Bucks wallet",
         },
       });
       logger.info(
         `💰 Seeded a Bryan Bucks wallet with ${SEED_GRANT.toString()} BB`,
       );
-      return created;
+      return { id: created.id, balance };
     });
   } catch (error) {
     if (isUniqueConstraintError(error)) {
