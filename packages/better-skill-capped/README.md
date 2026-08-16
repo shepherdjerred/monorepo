@@ -48,9 +48,3 @@ search. Data flows manifest → parser → search index → UI:
   (`bsc.bookmarks.v2`, `bsc.watch-status.v2`) hold `{uuid, kind, timestamp}`
   entries behind strict Zod schemas, with a one-time salvaging migration from
   the legacy snapshot format.
-
-## Sponsors
-
-A special thanks to [Sentry](https://sentry.io/) for sponsoring this project. Check them out!
-
-[![Sentry Logo](https://i.imgur.com/6do6yJx.png)](https://sentry.io/)
