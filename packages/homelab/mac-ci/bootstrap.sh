@@ -94,7 +94,14 @@ umask 022
 #   womp 1          wake on network access (magic packet)
 #   autorestart 1   power back on automatically after a power loss
 echo "==> Configuring power management (never sleep) — needs sudo"
-if ! sudo test -e "$POWER_BACKUP_FILE"; then
+if sudo test -e "$POWER_BACKUP_FILE" && ! sudo test -f "$POWER_BACKUP_FILE"; then
+  echo "error: $POWER_BACKUP_FILE exists but is not a regular file" >&2
+  echo "restore-power.sh reads it with 'test -f', so teardown could not restore" >&2
+  echo "the pre-bootstrap profile. Remove or move it, then re-run." >&2
+  exit 1
+fi
+
+if ! sudo test -f "$POWER_BACKUP_FILE"; then
   power_backup="$(mktemp)"
   pmset -g custom >"$power_backup"
   sudo install -m 600 "$power_backup" "$POWER_BACKUP_FILE"
