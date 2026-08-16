@@ -345,6 +345,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/scout-for-lol/eslint.config.ts",
     "packages/scout-for-lol/tsconfig.base.json",
     "packages/scout-for-lol/packages/data",
+    "packages/scout-for-lol/packages/design-system",
     "packages/scout-for-lol/packages/evals",
     ...deployScripts,
   ],

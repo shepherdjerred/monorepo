@@ -15,11 +15,11 @@ export function validatePlaywrightLanes(
   for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
     const block = stepBlocks.get(key);
     // The Scout flat config lives in the parent workspace, so isolated installs
-    // must select that config owner (scout-for-lol) as well as the eval package
-    // that invokes it (@scout-for-lol/evals). Alerts contributes its own
-    // browser suite and must remain in the exact isolated install closure.
+    // must select that config owner (scout-for-lol), the design-system catalog,
+    // and the eval package that invokes it (@scout-for-lol/evals). Alerts
+    // contributes its own browser suite and remains in the install closure.
     const install =
-      ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter scout-for-lol --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'";
+      ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter scout-for-lol --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'";
     if (!hasTrimmedLine(block, install)) {
       fail(
         `Playwright lane ${key} is missing exact filtered install ${install}`,

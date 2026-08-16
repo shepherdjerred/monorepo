@@ -24,7 +24,12 @@ export const SCOUT_RELEASE_WORK_DIR = ".scout-release";
 const PROD_BUCKET = "scout-frontend";
 const BETA_BUCKET = "scout-frontend-beta";
 const MARKER_KEY = ".release-version";
-const IMMUTABLE_PREFIXES = ["_astro/", "app/assets/", "docs/_astro/"];
+const IMMUTABLE_PREFIXES = [
+  "_astro/",
+  "app/assets/",
+  "docs/_astro/",
+  "assets/scout/game/",
+];
 /** Every entrypoint a bundle built from the current tree must contain. */
 const RELEASE_ENTRYPOINTS = [
   "index.html",

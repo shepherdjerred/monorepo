@@ -266,6 +266,11 @@
       "steps": [{ "runner": "bun" }]
     },
     {
+      "package": "@scout-for-lol/design-system",
+      "directory": "packages/scout-for-lol/packages/design-system",
+      "steps": [{ "runner": "bun", "args": ["src"] }]
+    },
+    {
       "package": "@scout-for-lol/evals",
       "directory": "packages/scout-for-lol/packages/evals",
       "steps": [{ "runner": "bun", "args": ["src"] }]
