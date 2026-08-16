@@ -1,4 +1,7 @@
-import { parseAndCompile, ReportAiFinalDraftSchema } from "@scout-for-lol/data";
+import {
+  parseAndCompile,
+  ReportAiFinalDraftWireSchema,
+} from "@scout-for-lol/data";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -10,7 +13,7 @@ function errorMessage(error: unknown): string {
  * failing only after its retry budget has been discarded.
  */
 export const ValidatedReportAiFinalDraftSchema =
-  ReportAiFinalDraftSchema.superRefine((draft, context) => {
+  ReportAiFinalDraftWireSchema.superRefine((draft, context) => {
     try {
       parseAndCompile(draft.queryText);
     } catch (error: unknown) {

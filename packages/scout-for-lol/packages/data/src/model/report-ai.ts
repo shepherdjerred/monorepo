@@ -51,6 +51,30 @@ export const ReportAiFinalDraftSchema = z
 
 export type ReportAiFinalDraft = z.infer<typeof ReportAiFinalDraftSchema>;
 
+/**
+ * The draft contract shaped for a strict structured-output request.
+ *
+ * OpenAI's strict mode requires every property to appear in `required`, and the
+ * runtime asks for `structuredOutputs: { strict: true }`, so a field carrying
+ * `.default()` is emitted as optional and the provider rejects the request
+ * outright with `invalid_json_schema` rather than filling the default. The
+ * model must supply all five keys; `description` stays nullable because a draft
+ * legitimately may not have one, and `warnings` uses an empty array to say
+ * "nothing to flag".
+ *
+ * Its inferred output type matches `ReportAiFinalDraft` — a defaulted field is
+ * already non-optional after parsing — so callers keep the same domain type.
+ */
+export const ReportAiFinalDraftWireSchema = z
+  .object({
+    title: z.string().trim().min(1).max(100),
+    description: z.string().trim().max(500).nullable(),
+    queryText: ReportQueryTextSchema,
+    explanation: z.string().trim().min(1).max(1000),
+    warnings: z.array(z.string().trim().min(1).max(300)).max(5),
+  })
+  .strict();
+
 export const ReportAiQuotaScopeSchema = z.enum([
   "user_guild",
   "guild",

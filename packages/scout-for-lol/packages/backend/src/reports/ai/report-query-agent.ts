@@ -8,6 +8,7 @@ import {
   REPORT_AI_MAX_PREVIEW_CALLS,
   REPORT_AI_MAX_STEPS,
   REPORT_AI_MAX_TOOL_CALLS,
+  modelSupportsParameter,
   ReportQueryTextSchema,
   type ReportAiEditRequest,
   type ReportAiFinalDraft,
@@ -70,7 +71,13 @@ export async function streamReportQueryAgent(
       stepNumber >= REPORT_AI_MAX_STEPS - 1
         ? { activeTools: [], toolChoice: "none" }
         : undefined,
-    temperature: 0.2,
+    // See explore/agent.ts: most current models declare
+    // supportsTemperature: false, and the runtime requests
+    // `require_parameters` for tool calls, so sending temperature to such a
+    // model leaves zero eligible OpenRouter endpoints and 404s the whole run.
+    ...(modelSupportsParameter(model, "temperature")
+      ? { temperature: 0.2 }
+      : {}),
     maxOutputTokens: REPORT_AI_MAX_OUTPUT_TOKENS,
     ...runtime.callOptions({
       workload: "scout.report-query.tool-loop",

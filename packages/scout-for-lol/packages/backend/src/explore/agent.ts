@@ -7,6 +7,8 @@ import {
   EXPLORE_MAX_STEPS,
   EXPLORE_MAX_TOOL_CALLS,
   ExploreAnswerSchema,
+  ExploreAnswerWireSchema,
+  modelSupportsParameter,
   ReportQueryTextSchema,
   type ExploreAnswer,
   type ExploreMessage,
@@ -93,9 +95,17 @@ export async function streamExploreAgent(
     model: runtime.languageModel(model, ["tools"]),
     tools: createExploreTools(params, state),
     stopWhen: stepCountIs(EXPLORE_MAX_STEPS),
-    temperature: 0.2,
+    // Most current models (every GPT-5.x, most Claude) declare
+    // supportsTemperature: false, and the runtime asks OpenRouter for
+    // `require_parameters` whenever a call needs tools or structured output.
+    // Sending temperature to a model that does not accept it therefore leaves
+    // zero eligible endpoints and the whole turn fails with a 404 "No endpoints
+    // found that can handle the requested parameters" — not a soft downgrade.
+    ...(modelSupportsParameter(model, "temperature")
+      ? { temperature: 0.2 }
+      : {}),
     maxOutputTokens: EXPLORE_MAX_OUTPUT_TOKENS,
-    output: Output.object({ schema: ExploreAnswerSchema }),
+    output: Output.object({ schema: ExploreAnswerWireSchema }),
     ...runtime.callOptions({
       workload: "scout.explore",
       sessionId: params.runId,
