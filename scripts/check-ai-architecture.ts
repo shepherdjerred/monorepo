@@ -87,6 +87,23 @@ const CREDENTIAL_SANITIZER_PATHS = new Set([
 
 const WHISPER_TRANSCRIPTION_ADAPTER =
   "packages/homelab/src/cdk8s/src/resources/torrents/whisperbridge.ts";
+// Streambot's voice assistant runs on OpenAI's native agent SDK (@openai/agents Realtime) with a
+// dedicated project key — the sanctioned native-SDK credential class — and its corpus tooling
+// speaks to OpenAI TTS. Neither the Realtime WebSocket nor TTS is routable through
+// OpenRouter/llm-runtime, so these named surfaces hold the credential and the direct SDK.
+const STREAMBOT_VOICE_REALTIME_PATHS = new Set([
+  "packages/homelab/src/cdk8s/src/resources/streambot.ts",
+  "packages/streambot/Dockerfile",
+  "packages/streambot/scripts/voice-corpus-generate.ts",
+  "packages/streambot/scripts/voice-harness.ts",
+  "packages/streambot/scripts/voice-model-smoke.ts",
+  "packages/streambot/src/config/index.ts",
+  "packages/streambot/src/config/schema.ts",
+]);
+const STREAMBOT_VOICE_TTS_PATHS = new Set([
+  "packages/streambot/package.json",
+  "packages/streambot/src/voice/corpus-generator.ts",
+]);
 const SUBSCRIPTION_QUOTA_ENDPOINTS =
   "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/ProviderEndpoints.swift";
 const NATIVE_SDK_CONTRACT_TEST = "scripts/release-agent-sdk-contract.test.ts";
@@ -108,8 +125,13 @@ function isAllowedViolation(rule: ArchitectureRule, filePath: string): boolean {
     return (
       isTestOrFixture(filePath) ||
       CREDENTIAL_SANITIZER_PATHS.has(filePath) ||
-      filePath === WHISPER_TRANSCRIPTION_ADAPTER
+      filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
+      STREAMBOT_VOICE_REALTIME_PATHS.has(filePath)
     );
+  }
+
+  if (rule.id === "direct-provider-sdk") {
+    return STREAMBOT_VOICE_TTS_PATHS.has(filePath);
   }
 
   if (rule.id === "direct-provider-endpoint") {

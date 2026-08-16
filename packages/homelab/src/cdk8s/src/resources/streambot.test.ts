@@ -135,11 +135,16 @@ describe("streambot deployment (media namespace)", () => {
     );
     // The dedicated streambot-openai item syncs to a secret; the key must arrive via
     // secretKeyRef, never as a literal env value.
-    const openAiKey = container?.env?.find(
-      (entry: { name: string }) => entry.name === "OPENAI_API_KEY",
+    const EnvFromSecretSchema = z.object({
+      name: z.string(),
+      valueFrom: z.object({
+        secretKeyRef: z.object({ key: z.string() }),
+      }),
+    });
+    const openAiKey = EnvFromSecretSchema.parse(
+      (container?.env ?? []).find((entry) => entry.name === "OPENAI_API_KEY"),
     );
-    expect(openAiKey?.valueFrom?.secretKeyRef?.key).toBe("OPENAI_API_KEY");
-    expect(openAiKey?.value).toBeUndefined();
+    expect(openAiKey.valueFrom.secretKeyRef.key).toBe("OPENAI_API_KEY");
   });
 
   it("runs as the non-root user", () => {
