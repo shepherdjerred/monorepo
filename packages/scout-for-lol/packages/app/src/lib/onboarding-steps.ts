@@ -88,7 +88,10 @@ export function onboardingReducer(
     })
     .with(
       { type: "goto" },
-      (e): OnboardingState => ({ ...state, step: e.step }),
+      (e): OnboardingState => ({
+        ...state,
+        step: e.step,
+      }),
     )
     .with(
       { type: "select-guild" },

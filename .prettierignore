@@ -58,6 +58,7 @@ coverage/
 
 # Generated reports
 **/playwright-report/
+**/jscpd-report/
 
 # Test snapshots (binary/unparseable formats)
 **/__snapshots__/*.snap
