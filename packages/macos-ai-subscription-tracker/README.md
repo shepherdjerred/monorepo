@@ -34,7 +34,8 @@ written to `dist/QuotaBar.app` and ad-hoc signed by default. Set
 available.
 
 `install:macos` is an explicit opt-in operation. It verifies the bundle, then
-replaces the exact target `/Applications/QuotaBar.app` and launches it. Launch
+replaces the exact target `/Applications/Brim.app` and launches it. It removes
+the legacy `/Applications/QuotaBar.app` installation during migration. Launch
 at login requires this real app bundle; it does not claim success for a
 `swift run` executable.
 
@@ -87,7 +88,7 @@ bun run install:notarized
 `notarize:macos` intentionally creates a new submission to Apple's notary
 service. `export:notarized` waits up to ten minutes for Xcode to receive and
 staple the ticket. Verification requires strict `codesign`, a valid stapled
-ticket, and Gatekeeper acceptance before the exact `/Applications/QuotaBar.app`
+ticket, and Gatekeeper acceptance before the exact `/Applications/Brim.app`
 target is replaced. Xcode Organizer's **Distribute App → Developer ID →
 Upload** workflow remains the UI equivalent. Authentication stays in Xcode; no
 Apple password, private key, or notarization credential belongs in the

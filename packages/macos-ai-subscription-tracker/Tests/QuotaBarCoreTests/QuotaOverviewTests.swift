@@ -22,6 +22,88 @@ final class QuotaOverviewTests: XCTestCase {
     XCTAssertNil(overview.providers[3].tightestWindow)
   }
 
+  func testPartialCurrentDataSortsAfterTrustedCurrentData() {
+    let overview = QuotaOverview(
+      states: allStates([
+        .claudeCode: .available(snapshot(provider: .claudeCode, remaining: 50)),
+        .codex: .available(snapshot(provider: .codex, remaining: 20)),
+        .grok: .available(
+          UsageSnapshot(
+            provider: .grok,
+            windows: [window(remaining: 1)],
+            notes: ["Monthly usage is unavailable."],
+            sourceTimestamp: referenceDate
+          )
+        ),
+      ]),
+      at: referenceDate
+    )
+
+    XCTAssertEqual(overview.providers.map(\.provider), [.codex, .claudeCode, .grok, .kimi])
+    XCTAssertEqual(overview.providers[2].badges.map(\.kind), [.partial])
+  }
+
+  func testProviderBadgesDescribeFreshnessAndResetDetails() throws {
+    let staleDate = referenceDate.addingTimeInterval(-5 * 86_400)
+    let partialDate = referenceDate.addingTimeInterval(-4 * 86_400)
+    let resetDate = referenceDate.addingTimeInterval(4_000)
+    let overview = QuotaOverview(
+      states: allStates([
+        .codex: .available(
+          UsageSnapshot(
+            provider: .codex,
+            windows: [window(remaining: 14)],
+            resets: [Reset(exp: resetDate)],
+            sourceTimestamp: referenceDate
+          )
+        ),
+        .kimi: .available(
+          snapshot(provider: .kimi, remaining: 40, sourceTimestamp: staleDate)
+            .markedStale(reason: "offline")
+        ),
+        .grok: .available(
+          UsageSnapshot(
+            provider: .grok,
+            windows: [window(remaining: 44)],
+            notes: ["Monthly usage is unavailable."],
+            sourceTimestamp: partialDate
+          )
+        ),
+      ]),
+      at: referenceDate
+    )
+
+    let codex = try XCTUnwrap(overview.providers.first { $0.provider == .codex })
+    XCTAssertEqual(codex.badges.map(\.kind), [.resets])
+    XCTAssertEqual(codex.badges.first?.expirations, [resetDate])
+    XCTAssertNil(codex.badges.first?.detail)
+
+    let kimi = try XCTUnwrap(overview.providers.first { $0.provider == .kimi })
+    XCTAssertEqual(kimi.badges.map(\.kind), [.stale])
+    XCTAssertEqual(kimi.badges.first?.age, "5D")
+    XCTAssertEqual(kimi.badges.first?.detail, "offline")
+    XCTAssertTrue(kimi.dimsContent)
+
+    let grok = try XCTUnwrap(overview.providers.first { $0.provider == .grok })
+    XCTAssertEqual(grok.badges.map(\.kind), [.partial])
+    XCTAssertEqual(grok.badges.first?.age, "4D")
+    XCTAssertEqual(grok.badges.first?.detail, "Monthly usage is unavailable.")
+    XCTAssertFalse(grok.dimsContent)
+  }
+
+  func testCodexNoResetStateUsesCompactBadge() throws {
+    let overview = QuotaOverview(
+      states: allStates([
+        .codex: .available(snapshot(provider: .codex, remaining: 14))
+      ]),
+      at: referenceDate
+    )
+
+    let codex = try XCTUnwrap(overview.providers.first { $0.provider == .codex })
+    XCTAssertEqual(codex.badges.map(\.kind), [.noResets])
+    XCTAssertEqual(codex.badges.first?.detail, "No reset windows are currently available.")
+  }
+
   func testCriticalQuotaTakesPrecedenceOverStaleProvider() {
     let codex = snapshot(provider: .codex, remaining: 2)
     let overview = QuotaOverview(
@@ -146,6 +228,10 @@ final class QuotaOverviewTests: XCTestCase {
       QuotaTimeFormatter.compactCountdown(to: farFuture, from: referenceDate).contains("d"))
     XCTAssertTrue(
       QuotaTimeFormatter.refreshAge(since: farPast, at: referenceDate).hasSuffix("d ago"))
+    XCTAssertNotNil(QuotaTimeFormatter.compactAge(since: farPast, at: referenceDate))
+    XCTAssertTrue(
+      QuotaTimeFormatter.compactAge(since: farPast, at: referenceDate)?.hasSuffix("D") == true
+    )
   }
 
   func testCompactTimeFormattingAndLatestSourceTimestamp() {
@@ -183,6 +269,19 @@ final class QuotaOverviewTests: XCTestCase {
         at: referenceDate
       ),
       "2h ago"
+    )
+    XCTAssertNil(
+      QuotaTimeFormatter.compactAge(
+        since: referenceDate.addingTimeInterval(-3_600),
+        at: referenceDate
+      )
+    )
+    XCTAssertEqual(
+      QuotaTimeFormatter.compactAge(
+        since: referenceDate.addingTimeInterval(-5 * 86_400),
+        at: referenceDate
+      ),
+      "5D"
     )
 
     let newerTimestamp = referenceDate.addingTimeInterval(60)

@@ -13,6 +13,17 @@ import SwiftUI
   )
 }
 
+#Preview("Brim compact shipping panel") {
+  OverviewPreview(
+    states: PreviewData.states([
+      .claudeCode: .available(PreviewData.shippingClaude),
+      .codex: .available(PreviewData.shippingCodex),
+      .kimi: .available(PreviewData.shippingKimi),
+      .grok: .available(PreviewData.shippingGrok),
+    ])
+  )
+}
+
 #Preview("Loading, stale, unauthenticated, disabled") {
   OverviewPreview(
     states: PreviewData.states([
@@ -67,9 +78,8 @@ private struct OverviewPreview: View {
   var body: some View {
     let overview = QuotaOverview(states: states, at: PreviewData.now)
     VStack(spacing: 0) {
-      QuotaSummaryView(summary: overview.summary, date: PreviewData.now)
-        .padding(.bottom, 8)
-      Divider()
+      WindowColumnHeader()
+        .padding(.vertical, 5)
       ForEach(overview.providers) { provider in
         ProviderSectionView(overview: provider, date: PreviewData.now)
         if provider.id != overview.providers.last?.id {
@@ -78,7 +88,7 @@ private struct OverviewPreview: View {
       }
     }
     .padding(.horizontal, 12)
-    .frame(width: 380)
+    .frame(width: 372)
   }
 }
 
@@ -157,6 +167,50 @@ private enum PreviewData {
     )
   }
 
+  static var shippingClaude: UsageSnapshot {
+    UsageSnapshot(
+      provider: .claudeCode,
+      windows: [
+        window(label: "5-hour", remaining: 23, kind: .rolling(durationSeconds: 18_000)),
+        window(label: "Weekly", remaining: 52),
+        window(
+          label: "Weekly · Fable extended model quota",
+          remaining: 8,
+          kind: .modelScoped(model: "Fable")
+        ),
+        window(
+          label: "Provider quota · Anthropic subscription",
+          remaining: 100,
+          kind: .providerDefined
+        ),
+      ],
+      sourceTimestamp: now
+    )
+  }
+
+  static var shippingCodex: UsageSnapshot {
+    UsageSnapshot(
+      provider: .codex,
+      windows: [window(label: "Weekly", remaining: 14)],
+      sourceTimestamp: now
+    )
+  }
+
+  static var shippingKimi: UsageSnapshot {
+    snapshot(.kimi, remaining: 42)
+      .withSourceTimestamp(now.addingTimeInterval(-5 * 86_400))
+      .markedStale(reason: "Kimi has not returned a fresh usage response.")
+  }
+
+  static var shippingGrok: UsageSnapshot {
+    UsageSnapshot(
+      provider: .grok,
+      windows: [window(label: "Monthly usage allowance", remaining: 38, kind: .monthly)],
+      notes: ["The provider returned current usage without reset metadata."],
+      sourceTimestamp: now.addingTimeInterval(-4 * 86_400)
+    )
+  }
+
   static var manyWindows: UsageSnapshot {
     UsageSnapshot(
       provider: .claudeCode,
@@ -192,5 +246,20 @@ private enum PreviewData {
     } catch {
       preconditionFailure("Invalid preview fixture")
     }
+  }
+}
+
+private extension UsageSnapshot {
+  func withSourceTimestamp(_ timestamp: Date) -> UsageSnapshot {
+    UsageSnapshot(
+      provider: provider,
+      accountLabel: accountLabel,
+      windows: windows,
+      resets: resets,
+      resetErrorMessage: resetErrorMessage,
+      notes: notes,
+      sourceTimestamp: timestamp,
+      freshness: freshness
+    )
   }
 }

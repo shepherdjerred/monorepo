@@ -73,6 +73,34 @@ public struct UsageWindow: Identifiable, Equatable, Codable, Sendable {
     usedPercent.map { 100 - $0 }
   }
 
+  public var compactDisplayLabel: String {
+    switch kind {
+    case .rolling:
+      return label == "5-hour" ? label : "Rolling"
+    case .weekly:
+      return label.count <= 18 ? label : "Weekly"
+    case .monthly:
+      return label.count <= 18 ? label : "Monthly"
+    case .modelScoped(let model):
+      if label.count <= 18 { return label }
+      if label.localizedCaseInsensitiveContains("weekly") {
+        return "Weekly · \(model)"
+      }
+      return model
+    case .credits:
+      return label.count <= 18 ? label : "Credits"
+    case .providerDefined:
+      let prefix = "Provider quota · "
+      if label.hasPrefix(prefix) {
+        let detail = String(label.dropFirst(prefix.count))
+        return detail.count <= 18 ? detail : "Provider quota"
+      }
+      return label.count <= 18 ? label : "Provider window"
+    case .entitlement:
+      return label == "Fable 5 policy" ? "Provider quota" : "Policy"
+    }
+  }
+
   public static func validated(
     id: String,
     label: String,
@@ -209,8 +237,8 @@ public enum QuotaStatus: Int, Equatable, Sendable {
   case critical
 
   public static func forRemaining(_ remaining: Double) -> QuotaStatus {
-    if remaining < 5 { return .critical }
-    if remaining <= 20 { return .warning }
+    if remaining < 10 { return .critical }
+    if remaining < 30 { return .warning }
     return .healthy
   }
 }
