@@ -348,8 +348,11 @@ and audit history. Do not recreate the removed management command trees.
 
 `/bb` (Bryan Bucks) is the one owner-approved exception, pinned by
 `definitions.test.ts`. It is gated to a single guild by the `betting_enabled`
-flag, and a balance you cannot check from the same place you place a bet is not
-usable. Adding anything else needs the same explicit decision.
+flag — effectively beta-only, since that guild runs the beta bot — and a balance
+you cannot check from the same place you place a bet is not usable. Because
+command registration is a global replace, `/bb` is _visible_ everywhere but
+_answers_ in one server, so its description and its not-enabled-here reply both
+say so. Adding anything else needs the same explicit decision.
 
 **Interactions are routed in `discord/interactions.ts`**, not in
 `discord/commands/index.ts`. That module is the single `interactionCreate`
@@ -607,6 +610,22 @@ Two sources **refuse** global scope rather than answering wrongly:
 A per-guild betting economy over the existing match lifecycle, in
 `backend/src/betting/` (no barrel), gated by the `betting_enabled` flag. Design
 notes: `packages/docs/plans/2026-08-15_scout-bryan-bucks-betting.md`.
+
+**Scope: one server, effectively beta-only.** This is a private single-server
+experiment, not a Scout-wide feature, and is not intended to become one.
+`betting_enabled` is `false` by default and overridden `true` for exactly one
+guild — the owner's — and that guild runs the beta bot, so in practice Bryan
+Bucks only ever appears in beta. That is a consequence of which bot is in that
+guild, **not** a second gate: there is deliberately no environment check, because
+one override should be the whole answer to "is it on here?".
+
+Because `discord/rest.ts` registers commands with a global
+`applicationCommands` replace, `/bb` still appears in every guild's command
+picker even though it answers in one. The command description, the
+not-enabled-here reply, and both balance surfaces therefore state the scope
+outright. The wording lives once in `BUCKS_SCOPE_TAG` / `BUCKS_SCOPE_NOTE`
+(`betting/constants.ts`) — use those rather than writing new copy, so the
+surfaces cannot drift apart.
 
 Bucks exchange at 1:10 Bucks:CAD, in person only, from Bryan, who lives in rural
 Canada. There is no monetary component and nothing transfers to real goods.

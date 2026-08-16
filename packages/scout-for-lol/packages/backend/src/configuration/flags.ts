@@ -173,6 +173,13 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   // ungated economy would accrue silently in every server, and enabling the
   // flag later would hand out a surprise backlog. The trade is that enabling it
   // starts a guild at zero with no backfill.
+  //
+  // This is a private, single-server experiment and is not intended to become a
+  // Scout-wide feature. MY_SERVER runs the beta bot, so in practice Bryan Bucks
+  // only ever appears in beta — but that is a consequence of which bot is in
+  // that guild, NOT a second gate. There is deliberately no environment check:
+  // one override is the whole answer to "is it on here?", and a second one would
+  // mean two places to look.
   betting_enabled: {
     default: false,
     overrides: [

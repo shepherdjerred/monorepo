@@ -9,6 +9,7 @@ import {
 import type { EarnedAward } from "#src/betting/earnings.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPool } from "#src/betting/sweep.ts";
+import { BUCKS_SCOPE_TAG } from "#src/betting/constants.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { send } from "#src/league/discord/channel.ts";
@@ -62,7 +63,7 @@ function formatSettlementBody(input: {
 
   if (summary.voidReason === undefined) {
     lines.push(
-      `💰 **Bryan Bucks** — pool ${(summary.winnersPool + summary.losersPool).toString()} BB (winners ${summary.winnersPool.toString()} / losers ${summary.losersPool.toString()})`,
+      `💰 **Bryan Bucks** _(${BUCKS_SCOPE_TAG})_ — pool ${(summary.winnersPool + summary.losersPool).toString()} BB (winners ${summary.winnersPool.toString()} / losers ${summary.losersPool.toString()})`,
     );
   } else {
     const reason =
@@ -73,7 +74,7 @@ function formatSettlementBody(input: {
           : summary.voidReason === "expired"
             ? "This game never resolved — every bet refunded."
             : "Unsupported game mode — every bet refunded.";
-    lines.push(`💰 **Bryan Bucks** — ${reason}`);
+    lines.push(`💰 **Bryan Bucks** _(${BUCKS_SCOPE_TAG})_ — ${reason}`);
   }
 
   if (input.predictionSentence !== undefined) {

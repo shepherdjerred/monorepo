@@ -79,6 +79,27 @@ export const REMAKE_MAX_DURATION_SECONDS = 300;
  */
 export const BUCKS_EARNING_QUEUES: readonly QueueType[] = ["solo", "flex"];
 
+/**
+ * How the feature describes its own scope, defined once so every surface says
+ * the same thing.
+ *
+ * Bryan Bucks is not a Scout-wide feature and is not intended to become one.
+ * `betting_enabled` is off by default and overridden true for exactly one
+ * guild, and that guild runs the beta bot — so in practice this only ever
+ * appears in beta. There is deliberately **no** environment gate: the guild
+ * override is the mechanism, and adding a second one would mean two places to
+ * check when the answer is "is it on here?".
+ *
+ * Saying so on the surfaces matters more than it looks, because `/bb` is
+ * registered through a global `applicationCommands` replace in `discord/rest.ts`
+ * and therefore appears in the command picker of every guild Scout is in, even
+ * though it answers in only one.
+ */
+export const BUCKS_SCOPE_TAG = "one server only";
+
+export const BUCKS_SCOPE_NOTE =
+  "Bryan Bucks is a private, single-server experiment — it runs in one Discord server (on beta Scout) and is not a Scout-wide feature.";
+
 /** Riot's two team identifiers on Summoner's Rift. */
 export const BLUE_TEAM_ID = 100;
 export const RED_TEAM_ID = 200;

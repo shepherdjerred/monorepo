@@ -15,7 +15,12 @@ import {
 } from "#src/betting/accounts.ts";
 import { placeBet } from "#src/betting/place-bet.ts";
 import { describeResult } from "#src/betting/bet-button.ts";
-import { MAX_STAKE, MIN_STAKE } from "#src/betting/constants.ts";
+import {
+  BUCKS_SCOPE_NOTE,
+  BUCKS_SCOPE_TAG,
+  MAX_STAKE,
+  MIN_STAKE,
+} from "#src/betting/constants.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
@@ -31,6 +36,12 @@ const logger = createLogger("command-bb");
  * feature is gated to a single guild by `betting_enabled`, and a balance you
  * cannot check from the same place you bet is not usable.
  *
+ * That gate is per guild, not per environment, and the one guild it is on for
+ * runs the beta bot — so this only ever answers in beta in practice. Because
+ * `discord/rest.ts` registers commands with a global replace, `/bb` still shows
+ * up in every guild's picker, which is why the description and the
+ * not-enabled-here reply both state the scope outright.
+ *
  * `/bb bet` shares `placeBet` with the prematch buttons, so the two surfaces
  * cannot drift in what they accept or how they explain a refusal.
  */
@@ -43,7 +54,9 @@ const BUCKS_COLOR = 0x2e_cc_71;
 
 export const bbCommand = new SlashCommandBuilder()
   .setName("bb")
-  .setDescription("Bryan Bucks — friendly betting on live games")
+  .setDescription(
+    `Bryan Bucks — friendly betting on live games (${BUCKS_SCOPE_TAG})`,
+  )
   .addSubcommand((sub) =>
     sub.setName("balance").setDescription("Check your Bryan Bucks balance"),
   )
@@ -97,9 +110,13 @@ export const bbCommand = new SlashCommandBuilder()
       ),
   );
 
-/** The joke that is the entire prize structure. */
+/** The joke that is the entire prize structure, plus the scope it applies in.
+ * Both are stated wherever a balance is shown, so nobody reads a number here
+ * and assumes it means anything anywhere else. */
 const REDEMPTION_NOTE =
   "Redeemable at 1:10 BB:CAD, in person, from Bryan. He lives in rural Canada.";
+
+const BALANCE_FOOTER = `${REDEMPTION_NOTE} ${BUCKS_SCOPE_NOTE}`;
 
 async function replyBalance(
   interaction: ChatInputCommandInteraction,
@@ -109,8 +126,7 @@ async function replyBalance(
   const balance = await getBalance({ serverId, discordId });
   if (balance === undefined) {
     await interaction.editReply({
-      content:
-        "You don't have a Bryan Bucks wallet yet — place your first bet on a live game and you'll be given a starting balance.",
+      content: `You don't have a Bryan Bucks wallet yet — place your first bet on a live game and you'll be given a starting balance.\n_${BUCKS_SCOPE_NOTE}_`,
     });
     return;
   }
@@ -130,7 +146,7 @@ async function replyBalance(
       (openBets.length > 0
         ? ` with **${staked.toString()} BB** riding on ${openBets.length.toString()} open bet(s).`
         : ".") +
-      `\n_${REDEMPTION_NOTE}_`,
+      `\n_${BALANCE_FOOTER}_`,
   });
 }
 
@@ -157,7 +173,7 @@ async function replyLeaderboard(
         )
         .join("\n"),
     )
-    .setFooter({ text: REDEMPTION_NOTE });
+    .setFooter({ text: BALANCE_FOOTER });
 
   await interaction.editReply({
     embeds: [embed],
@@ -300,7 +316,7 @@ export async function executeBb(
     const serverId = DiscordGuildIdSchema.parse(interaction.guildId);
     if (!getFlag("betting_enabled", { server: serverId })) {
       await interaction.reply({
-        content: "Bryan Bucks isn't enabled in this server.",
+        content: `Bryan Bucks isn't enabled in this server. ${BUCKS_SCOPE_NOTE}`,
         ephemeral: true,
       });
       return;

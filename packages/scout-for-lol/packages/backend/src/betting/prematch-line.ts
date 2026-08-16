@@ -1,4 +1,5 @@
 import type { BucksPrediction } from "@scout-for-lol/data";
+import { BUCKS_SCOPE_TAG } from "#src/betting/constants.ts";
 
 /**
  * The Bryan Bucks lines appended to a prematch message.
@@ -28,8 +29,10 @@ export function bucksPrematchLine(input: {
   if (input.prediction !== undefined) {
     lines.push(input.prediction.sentence);
   }
+  // The scope tag is the short form: this line posts on every tracked game, so
+  // the full note would be noise. The long form lives on the `/bb` surfaces.
   lines.push(
-    `Bets close <t:${closesAtUnix.toString()}:R> · \`/bb balance\` · 1:10 BB:CAD, in person only`,
+    `Bets close <t:${closesAtUnix.toString()}:R> · \`/bb balance\` · ${BUCKS_SCOPE_TAG} · 1:10 BB:CAD, in person only`,
   );
 
   return lines.join("\n");

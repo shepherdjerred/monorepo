@@ -12,8 +12,22 @@ disposition: active
 ## Goal
 
 Let the friend group bet on each other's live ranked games, using the prematch
-and postmatch messages Scout already sends. Gated to one guild by a new
-`betting_enabled` flag.
+and postmatch messages Scout already sends.
+
+**Scope: one server, effectively beta-only.** This is a private single-server
+experiment, not a Scout-wide feature, and is not intended to become one. The new
+`betting_enabled` flag is `false` by default and overridden `true` for exactly
+one guild — the owner's — and that guild runs the beta bot, so in practice it
+only ever appears in beta. That follows from which bot is in the guild rather
+than from a second gate; there is deliberately no environment check, so one
+override stays the whole answer to "is it on here?".
+
+Every surface says so: the `/bb` command description, the not-enabled-here
+reply, both balance surfaces, the prematch footer, and the settlement message.
+The wording is defined once as `BUCKS_SCOPE_TAG` / `BUCKS_SCOPE_NOTE` in
+`betting/constants.ts`. This matters because `discord/rest.ts` registers
+commands with a global `applicationCommands` replace, so `/bb` appears in the
+command picker of every guild Scout is in while answering in only one.
 
 Bryan Bucks exchange at **1:10 Bucks:CAD, in person only**. Bryan lives in
 rural Canada, so they are effectively unredeemable. That joke is the entire
