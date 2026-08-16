@@ -1,252 +1,98 @@
-# Scout for LoL - Project Guide
+# Scout for LoL - LLM Project Guide
 
-## Environment Notes
+`AGENTS.md` is the authoritative Scout engineering guide. Load it before
+changing code, and load the reusable `$scout-development` skill from
+`packages/dotfiles/dot_agents/skills/scout-development/SKILL.md` for local
+development, BETA data, dev auth, Kubernetes, and PinchTab workflows.
 
-**Docker Availability**: Docker commands are NOT available when `CLAUDE_CODE_REMOTE=true`. Use `bun run` commands for local development tasks instead.
+## Fast local workflow
 
-## Project Structure
-
-Monorepo using **Bun workspaces**:
-
-```text
-packages/
-├── backend/   # Discord bot backend service
-├── data/      # Shared data models and utilities
-├── report/    # Report generation components (React + satori)
-└── frontend/  # Web frontend (Astro)
-```
-
-## Core Technologies
-
-| Category      | Technology                       |
-| ------------- | -------------------------------- |
-| Runtime       | Bun                              |
-| Language      | TypeScript (strict mode)         |
-| Linting       | ESLint + Prettier                |
-| Database      | Prisma ORM                       |
-| Validation    | Zod                              |
-| Bot Framework | Discord.js                       |
-| Frontend      | Astro                            |
-| Reports       | React + satori + @resvg/resvg-js |
-
-## Development Commands
-
-### Root Level
+Scout is a Bun workspace. Run commands from the repository root:
 
 ```bash
-bun install              # Install all dependencies
-bun run install:all      # Install dependencies across all packages
-bun run typecheck:all    # Type checking across all packages
-bun run lint:all         # Linting across all packages
-bun run format:all       # Formatting across all packages
-bun run test:all         # Testing across all packages
-bun run generate         # Generate Prisma client and other generated code
-bun run clean            # Clean all node_modules
+bun install
+
+# Marketing site
+PUBLIC_APP_ORIGIN=http://localhost:5180 PUBLIC_DOCS_ORIGIN=http://localhost:4322 \
+bun run --filter=@scout-for-lol/frontend dev -- --host 127.0.0.1 --port 4321
+
+# Scout documentation/wiki
+PUBLIC_MARKETING_ORIGIN=http://localhost:4321 PUBLIC_APP_ORIGIN=http://localhost:5180 \
+bun run --filter=@scout-for-lol/docs-site dev -- --host 127.0.0.1 --port 4322
+
+# Management webapp and backend
+bun run --filter='./packages/scout-for-lol' dev:web -- \
+  --marketing-origin http://localhost:4321 --docs-origin http://localhost:4322
+bun run --filter='./packages/scout-for-lol' dev:login -- --return-to /app/
+
+# A second UI/API copy, without claiming the BETA gateway:
+PUBLIC_APP_ORIGIN=http://localhost:5181 PUBLIC_DOCS_ORIGIN=http://localhost:4324 \
+bun run --filter=@scout-for-lol/frontend dev -- --host 127.0.0.1 --port 4323
+PUBLIC_MARKETING_ORIGIN=http://localhost:4323 PUBLIC_APP_ORIGIN=http://localhost:5181 \
+bun run --filter=@scout-for-lol/docs-site dev -- --host 127.0.0.1 --port 4324
+bun run --filter='./packages/scout-for-lol' dev:web -- \
+  --backend-port 3001 --web-port 5181 --no-discord-gateway \
+  --marketing-origin http://localhost:4323 --docs-origin http://localhost:4324
 ```
 
-### Backend Package
+The webapp backend uses the BETA Discord bot token from
+`dev-web.env.tpl` through `op run`, listens on `:3000`, and the Vite SPA listens
+on `:5180`. One Discord gateway connection exists per token, so local `dev:web`
+intentionally disconnects the deployed BETA bot until stopped. This is an
+authorized and expected part of local development/testing; stop the process
+when finished so BETA can reconnect. Only one copy may own that gateway;
+secondary copies use `--no-discord-gateway`, separate ports, and an automatically
+isolated SQLite file. Secondary copies do not have the live bot guild/channel
+cache. Never write credentials to files, chat, or logs, and never use production
+credentials locally.
+
+## Local data and auth
+
+Use the shared derived report lake explicitly:
 
 ```bash
-cd packages/backend
-bun run dev              # Start with hot reload
-bun run build            # Build for production
-bun run db:generate      # Generate Prisma client
-bun run db:push          # Push schema to database
-bun run db:migrate       # Run migrations
-bun run db:studio        # Open Prisma Studio
+export REPORT_LAKE_DIR="$HOME/.local/share/scout-for-lol/dev-seed/report-lake"
 ```
 
-Each package supports: `dev`, `build`, `test`, `lint`, `format`, `typecheck`
+ScoutQL reads this Parquet lake through DuckDB; it is separate from the SQLite
+application database. Do not compact it concurrently from multiple workspaces.
 
-## CI/CD
+`dev:login` prints a URL for the loopback-only `/api/dev/login` route. It is a
+session bootstrap, not a global auth bypass: `ENVIRONMENT=dev`, explicit
+`ENABLE_DEV_LOGIN=true`, signed cookies, CSRF, and Discord-backed guild checks
+remain required. Do not add `SKIP_AUTH` or `DEV_AUTH`.
 
-There is no CI — the Dagger pipeline was removed 2026-07. Run checks locally with `bun run` commands and build/push container images manually (plain `docker build`/`docker push`).
+For a secondary copy, set `SCOUT_DEV_BACKEND_URL` and `SCOUT_DEV_WEB_ORIGIN` to
+its ports before running `dev:login`.
 
----
+BETA SQLite lives at `/data/db.sqlite` in the
+`scout-beta-scout-backend-*` pod in namespace `scout-beta`. Create a consistent
+temporary copy with SQLite `VACUUM INTO` before using `kubectl cp`; never copy a
+live database file directly or copy production data.
 
-## TypeScript Standards
+## PinchTab browser automation
 
-### Strict Type Safety Rules
+Use PinchTab when the task needs real Chrome state, cookies, screenshots, or
+interactive page behavior:
 
-- **NEVER use `any`** - Always define proper types
-- **Avoid type assertions (`as`)** - Use type guards instead
-- **Use `unknown` for uncertain types** - Validate with Zod before processing
-- **Prefer advanced types** - Mapped types, conditional types, template literals
-- **Exhaustive pattern matching** - Use `ts-pattern` for complex branching
-- **Strict null checks** - Handle undefined/null explicitly
-
-### Validation Patterns
-
-```typescript
-// Always validate unknown input with Zod
-const result = SomeSchema.safeParse(unknownData);
-if (!result.success) {
-  throw new Error(fromZodError(result.error).toString());
-}
-
-// Use type guards instead of casting
-function isString(value: unknown): value is string {
-  return typeof value === "string";
-}
-
-// Advanced types for complex scenarios
-type DeepReadonly<T> = {
-  readonly [P in keyof T]: T[P] extends object ? DeepReadonly<T[P]> : T[P];
-};
+```bash
+pinchtab health
+pinchtab config
+pinchtab profiles
 ```
 
-### Error Handling
+The CLI and daemon must share `PINCHTAB_CONFIG`, normally
+`$HOME/Library/Application Support/pinchtab/config.json`. Start a persistent
+profile headed, navigate to the printed `dev:login` URL, then reuse the same
+profile headlessly. Use accessibility snapshots and returned tab/instance IDs;
+do not set HttpOnly cookies with `eval`, guess IDs, or persist tokens/profiles in
+the repository. If a CAPTCHA appears, switch to headed mode and ask the
+operator to solve it.
 
-- Use `zod-validation-error` for user-friendly error messages
-- Handle errors at appropriate levels
-- Use Result patterns where appropriate
-- Proper async/await error handling
+## Quality rules
 
----
-
-## Key Libraries
-
-| Library                | Purpose                                 |
-| ---------------------- | --------------------------------------- |
-| `remeda`               | Functional data transformations         |
-| `ts-pattern`           | Complex control flow / pattern matching |
-| `env-var`              | Type-safe environment configuration     |
-| `date-fns`             | Date operations                         |
-| `zod`                  | Runtime validation and schemas          |
-| `zod-validation-error` | User-friendly validation errors         |
-| `twisted`              | Riot Games API client                   |
-| `satori`               | JSX to SVG rendering                    |
-| `@resvg/resvg-js`      | SVG to PNG conversion                   |
-
----
-
-## Discord Bot Patterns
-
-### Command Structure
-
-The Discord surface intentionally contains only `/help`, `/setup`, `/status`,
-`/invite`, `/docs`, `/track`, and `/list`. `/track` and `/list` call the
-shared subscription services; advanced management belongs in the web dashboard.
-
-### Discord Error Handling
-
-```typescript
-// Always handle Discord API errors gracefully
-try {
-  await interaction.reply({ content: "Success!" });
-} catch (error) {
-  console.error("Discord API error:", error);
-  if (interaction.replied || interaction.deferred) {
-    await interaction.followUp({
-      content: "An error occurred",
-      ephemeral: true,
-    });
-  } else {
-    await interaction.reply({ content: "An error occurred", ephemeral: true });
-  }
-}
-```
-
-### Best Practices
-
-- Validate all user input with Zod schemas
-- Use ephemeral responses for error messages
-- Use embeds for rich content presentation
-- Handle message length limits appropriately
-- Provide clear, user-friendly error messages
-
----
-
-## League of Legends API Integration
-
-- Use the `twisted` library for Riot API calls
-- Implement proper rate limiting and retry logic
-- Cache API responses appropriately
-- Handle API errors and rate limits gracefully
-
-### External Data Type Naming Convention
-
-Types representing external/unvalidated data (from Riot API, user input, etc.) must use the **`Raw*` prefix**:
-
-```typescript
-// Correct: Raw* prefix for external data types
-type RawMatch = z.infer<typeof RawMatchSchema>;
-type RawParticipant = z.infer<typeof RawParticipantSchema>;
-type RawTimeline = z.infer<typeof RawTimelineSchema>;
-type RawSummonerLeague = z.infer<typeof RawSummonerLeagueSchema>;
-
-// Incorrect: *Dto suffix (legacy pattern - do not use)
-type MatchDto = ...;        // ❌ Use RawMatch instead
-type ParticipantDto = ...;  // ❌ Use RawParticipant instead
-```
-
-**File naming**: Schema files should use `raw-*.schema.ts` pattern:
-
-- `raw-match.schema.ts`
-- `raw-participant.schema.ts`
-- `raw-timeline.schema.ts`
-
-**Why this convention?**
-
-- Clearly distinguishes between unvalidated external data (`Raw*`) and validated internal types
-- Enforced by ESLint rule `custom-rules/no-dto-naming`
-- Never import DTO types directly from `twisted` - use `@scout-for-lol/data` schemas instead
-
----
-
-## Report Generation
-
-- Use the `@scout-for-lol/report` package for match reports
-- Generate reports as images using `satori` (JSX → SVG) and `@resvg/resvg-js` (SVG → PNG)
-- Optimize image generation performance
-- Handle report generation errors gracefully
-- Lazy load heavy dependencies
-
----
-
-## Database (Prisma)
-
-- **Schema-first approach** - Define models in `schema.prisma`
-- **Migration strategy** - Use `prisma migrate` for production, `db:push` for development
-- **Type safety** - Generated client provides full type safety
-- **Connection management** - Proper connection pooling and cleanup
-- Validate database inputs with Zod schemas
-- Use transactions for multi-step operations
-- Handle connection errors and timeouts
-
----
-
-## Environment & Configuration
-
-- Use `env-var` for type-safe environment variables
-- Validate all configuration with Zod schemas
-- Keep sensitive data in secret stores (1Password / k8s secrets), never in the repo
-- Separate development and production configurations
-
----
-
-## Code Organization
-
-- **Functional approach** - Use `remeda` for data transformations
-- **Modular design** - Each package has clear responsibilities
-- **Proper dependency injection** - Avoid global state
-- **Consistent naming** - Use TypeScript naming conventions
-
----
-
-## Testing Strategy
-
-- **Unit tests** - Test individual functions and components
-- **Integration tests** - Test package interactions
-- **Snapshot testing** - For report generation output
-- **Type testing** - Ensure type safety in complex scenarios
-
----
-
-## Performance Considerations
-
-- **Lazy loading** - Load heavy dependencies only when needed (image generation, API clients)
-- **Connection pooling** - For database connections
-- **Caching** - Cache expensive operations appropriately (API responses)
-- **Memory management** - Clean up resources and connections
-- **Bundle optimization** - Use proper bundling strategies
+- Use Bun commands, not npm/yarn/pnpm.
+- Follow the no-type-assertions, fail-fast, and no-silent-fallback rules in
+  `AGENTS.md`.
+- Run focused Scout tests/typechecks before claiming a change works.
+- Distinguish source, CI/image, deployment, reachability, and runtime proof.

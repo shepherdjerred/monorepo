@@ -1,0 +1,4 @@
+interface:
+  display_name: "Scout Development"
+  short_description: "Develop and test Scout with real local data and Chrome"
+  default_prompt: "Use $scout-development to develop, test, or investigate Scout safely."

@@ -1,5 +1,7 @@
 import { afterAll, describe, expect, test } from "bun:test";
-import { resetConfigurationForTests } from "#src/configuration.ts";
+import configuration, {
+  resetConfigurationForTests,
+} from "#src/configuration.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 
 /**
@@ -122,6 +124,19 @@ describe("handleDevLogin", () => {
     );
 
     Bun.env["ENVIRONMENT"] = "dev";
+    resetConfigurationForTests();
+  });
+
+  test("requires the explicit opt-in flag in addition to environment=dev", () => {
+    Bun.env["ENABLE_DEV_LOGIN"] = "false";
+    resetConfigurationForTests();
+    expect(configuration.enableDevLogin).toBe(false);
+
+    Bun.env["ENABLE_DEV_LOGIN"] = "true";
+    resetConfigurationForTests();
+    expect(configuration.enableDevLogin).toBe(true);
+
+    delete Bun.env["ENABLE_DEV_LOGIN"];
     resetConfigurationForTests();
   });
 });

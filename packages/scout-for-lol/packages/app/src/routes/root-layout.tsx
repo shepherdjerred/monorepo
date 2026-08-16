@@ -19,6 +19,25 @@ import { FeedbackPrompt } from "#src/components/feedback-prompt.tsx";
 import { UserMenu } from "#src/components/user-menu.tsx";
 import { buildInfo } from "#src/lib/build-info.ts";
 
+function localSurfaceOrigin(
+  configured: unknown,
+  developmentFallback: string,
+): string | undefined {
+  if (typeof configured === "string" && configured.length > 0) {
+    return configured;
+  }
+  return import.meta.env.DEV ? developmentFallback : undefined;
+}
+
+const marketingOrigin = localSurfaceOrigin(
+  import.meta.env["VITE_MARKETING_ORIGIN"],
+  "http://localhost:4321",
+);
+const docsOrigin = localSurfaceOrigin(
+  import.meta.env["VITE_DOCS_ORIGIN"],
+  "http://localhost:4322",
+);
+
 export function appGlobalPath(pathname: string): string {
   return `/app${pathname}`;
 }
@@ -81,13 +100,18 @@ export function RootLayout() {
         accountMenu={
           username === undefined ? undefined : <UserMenu username={username} />
         }
+        origins={{ marketing: marketingOrigin, docs: docsOrigin }}
       />
       <ContractMismatchBanner />
       <FeedbackPrompt />
       <main>
         <Outlet />
       </main>
-      <GlobalFooter release={buildInfo.version} commit={buildInfo.gitSha} />
+      <GlobalFooter
+        release={buildInfo.version}
+        commit={buildInfo.gitSha}
+        origins={{ marketing: marketingOrigin, docs: docsOrigin }}
+      />
     </div>
   );
 }

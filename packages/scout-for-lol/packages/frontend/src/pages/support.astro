@@ -2,6 +2,10 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
+import { DOCS_ORIGIN } from "../lib/marketing-constants.ts";
+import { surfaceHref } from "@scout-for-lol/design-system/layout";
+
+const docsUrl = surfaceHref(DOCS_ORIGIN, "/docs/");
 import Header from "../components/Header.astro";
 import InfoBox from "../components/InfoBox.astro";
 import { Icon } from "astro-icon/components";
@@ -146,7 +150,7 @@ import Button from "../components/Button.astro";
                 />
                 <span
                   ><strong>Check the documentation:</strong> Visit our <a
-                    href="/docs/"
+                    href={docsUrl}
                     class="text-scout-brand hover:text-scout-brand underline"
                     >documentation page</a
                   > for comprehensive guides and command references.</span

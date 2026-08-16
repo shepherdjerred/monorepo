@@ -4,9 +4,11 @@
 # Secrets come from the BETA 1Password item (vault v64ocnykdqju4ui6j6pua56xw4,
 # item rtu44pohnp5ixdp2njuv5f6t2e). Non-secret config is inline.
 #
-# ⚠️  Running this disconnects the deployed beta bot from Discord for the
-# duration — only one gateway connection per token. Stop the local backend
-# (Ctrl+C) and beta reconnects within seconds.
+# ⚠️  The default gateway-owner copy intentionally disconnects the deployed beta
+# bot from Discord for the duration — only one gateway owner per token. This is
+# authorized for local development/testing. Stop the local backend (Ctrl+C) and
+# beta reconnects within seconds. Secondary copies should pass
+# --no-discord-gateway and use different ports.
 
 # ── Build / process identity ──────────────────────────────────────────
 VERSION=local-dev
@@ -31,8 +33,9 @@ DISCORD_CLIENT_SECRET=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e
 JWT_SIGNING_SECRET=local-dev-only-jwt-signing-secret-not-for-any-deployed-env
 
 # ── Where the SPA lives (browser-visible origin) ──────────────────────
-# Vite dev server runs at :5180 and proxies /trpc + /api to the backend.
-# This MUST match the redirect URI registered on the BETA Discord app.
+# The default Vite dev server runs at :5180 and proxies /trpc + /api to the
+# backend. scripts/dev-web.ts overrides this for --web-port; it MUST match the
+# redirect URI registered on the BETA Discord app when testing OAuth.
 WEB_APP_ORIGIN=http://localhost:5180
 
 # ── AI (report editor + explore) ──────────────────────────────────────

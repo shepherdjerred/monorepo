@@ -97,22 +97,42 @@ bun run --filter='./packages/scout-for-lol' dev:web
 
 This boots the backend on `:3000` (logging in as the BETA Discord bot) and the
 Vite dev server on `:5180` (proxying `/trpc` + `/api` to the backend). It
-applies Prisma migrations against a local `local-web-dev.db` first.
+applies Prisma migrations against a local `local-web-dev.db` first. To run a
+second copy, use different ports and `--no-discord-gateway`; the SQLite file
+then defaults to `local-web-dev-<backend-port>.db`:
+
+```bash
+bun run --filter='./packages/scout-for-lol' dev:web -- \
+  --backend-port 3001 \
+  --web-port 5181 \
+  --no-discord-gateway
+```
+
+Use `--database-url file:...` for an explicit local database. Ports are strict:
+a busy port fails instead of silently changing the URL.
 
 Secrets are pulled at runtime via `op run --env-file=dev-web.env.tpl` — no
-plaintext credentials are written to disk. You must be `op signin`'d.
+plaintext credentials are written to disk. On macOS, test the exact `op`
+operation you need; Desktop integration may authenticate per command even when
+`op whoami` reports no shell session.
 
 **Caveats:**
 
 - While running, the deployed beta bot is disconnected from Discord (one
-  gateway connection per token). Stop with Ctrl+C and beta reconnects within
-  seconds.
+  gateway connection per token). This is an intentional and authorized part of
+  local Scout development/testing, not a reason to avoid starting `dev:web`.
+  Stop with Ctrl+C when finished and beta reconnects within seconds.
+- Only one local copy may own the BETA gateway. Secondary copies must pass
+  `--no-discord-gateway` (or use a separate test bot token); they do not have
+  the live bot guild/channel cache, so guild and channel picker flows use the
+  gateway-owner copy.
 - Explore and every ScoutQL report read the **report lake**, not the database.
   A checkout with no lake answers every question with zero rows and looks
   broken rather than empty — see the shared seed below.
 - The BETA Discord app (`1311755320745394317`) must list
-  `http://localhost:5180/api/auth/discord/callback` in its OAuth redirect
-  URIs, otherwise the token exchange returns 400.
+  `http://localhost:<each-web-port>/api/auth/discord/callback` in its OAuth
+  redirect URIs, otherwise the token exchange returns 400. `dev:login` avoids
+  OAuth and is preferred for secondary copies.
 - The bot only sees guilds it has been invited to. To populate the guild
   picker, make sure your test guild has the BETA bot in it.
 
@@ -231,6 +251,113 @@ denies everyone.
 This does not, by itself, reproduce every possible backend-driven state —
 see the `screenshot` skill's Limitations section (no network-response
 mocking in v1).
+
+The Scout-specific CLI wrapper performs the backend readiness check and prints
+the same browser/PinchTab-ready URL without requiring an agent to hand-build
+query strings:
+
+```bash
+bun run --filter='./packages/scout-for-lol' dev:login
+bun run --filter='./packages/scout-for-lol' dev:login -- \
+  --discord-id <discord-id> \
+  --username 'Test User' \
+  --return-to /app/g/<guild-id>/reports
+```
+
+For a non-default copy, set its origins explicitly:
+
+```bash
+SCOUT_DEV_BACKEND_URL=http://127.0.0.1:3001 \
+SCOUT_DEV_WEB_ORIGIN=http://localhost:5181 \
+bun run --filter='./packages/scout-for-lol' dev:login -- --return-to /app/
+```
+
+This is a local session bootstrap, not an authorization bypass. The route still
+requires `ENVIRONMENT=dev` plus explicit `ENABLE_DEV_LOGIN=true`, binds the
+backend to loopback, and leaves signed-session, CSRF, and Discord-backed guild
+authorization checks intact. Never add `SKIP_AUTH` or `DEV_AUTH`.
+
+### LLM development workflow
+
+Load the reusable `$scout-development` skill from
+`packages/dotfiles/dot_agents/skills/scout-development/SKILL.md` for the full
+workflow. The three browser surfaces are independent:
+
+```bash
+# Marketing site
+PUBLIC_APP_ORIGIN=http://localhost:5180 \
+PUBLIC_DOCS_ORIGIN=http://localhost:4322 \
+bun run --filter=@scout-for-lol/frontend dev -- --host 127.0.0.1 --port 4321
+
+# Scout user documentation/wiki
+PUBLIC_MARKETING_ORIGIN=http://localhost:4321 \
+PUBLIC_APP_ORIGIN=http://localhost:5180 \
+bun run --filter=@scout-for-lol/docs-site dev -- --host 127.0.0.1 --port 4322
+
+# Management webapp + backend
+bun run --filter='./packages/scout-for-lol' dev:web -- \
+  --marketing-origin http://localhost:4321 \
+  --docs-origin http://localhost:4322
+```
+
+Marketing and docs are independent Astro processes. For a complete second
+surface set, use different Astro ports alongside the isolated app/backend:
+
+```bash
+PUBLIC_APP_ORIGIN=http://localhost:5181 \
+PUBLIC_DOCS_ORIGIN=http://localhost:4324 \
+bun run --filter=@scout-for-lol/frontend dev -- --host 127.0.0.1 --port 4323
+PUBLIC_MARKETING_ORIGIN=http://localhost:4323 \
+PUBLIC_APP_ORIGIN=http://localhost:5181 \
+bun run --filter=@scout-for-lol/docs-site dev -- --host 127.0.0.1 --port 4324
+bun run --filter='./packages/scout-for-lol' dev:web -- \
+  --backend-port 3001 --web-port 5181 --no-discord-gateway \
+  --marketing-origin http://localhost:4323 \
+  --docs-origin http://localhost:4324
+```
+
+The `PUBLIC_*_ORIGIN` variables configure Astro's cross-surface links, and the
+`dev:web` origin flags configure the Vite app's links. Keep all three origin
+sets aligned: navigation from docs to app, app to marketing, and marketing to
+docs must cross the ports explicitly. With no origin variables in a production
+or beta build, links remain same-origin (`/app/` and `/docs/`) as expected.
+
+The shared local report lake is
+`$HOME/.local/share/scout-for-lol/dev-seed/report-lake`; set
+`REPORT_LAKE_DIR` explicitly when using it. It is derived Parquet data queried
+by DuckDB, not the SQLite application database, and compaction is an explicit
+single-operator action. Multiple copies may read it concurrently.
+
+BETA application state is `/data/db.sqlite` in the
+`scout-beta-scout-backend-*` pod in namespace `scout-beta`; the lake is
+`/data/report-lake`. To copy BETA state, create a consistent temporary snapshot
+with SQLite `VACUUM INTO`, then `kubectl cp` only that snapshot to an ignored
+local path. For example:
+
+```bash
+POD="$(kubectl get pods -n scout-beta -o name | rg 'scout-beta-scout-backend-' | head -n 1)"
+LOCAL_DB="$HOME/.local/share/scout-for-lol/scout-beta.db"
+kubectl exec -n scout-beta "$POD" -- bun -e 'import { Database } from "bun:sqlite"; const db = new Database("/data/db.sqlite", { readonly: true }); db.exec(`VACUUM INTO "/tmp/scout-beta-snapshot.sqlite"`); db.close();'
+mkdir -p "$(dirname "$LOCAL_DB")"
+kubectl cp -n scout-beta "$POD:/tmp/scout-beta-snapshot.sqlite" "$LOCAL_DB"
+kubectl exec -n scout-beta "$POD" -- rm /tmp/scout-beta-snapshot.sqlite
+```
+
+Never raw-copy a live SQLite file, copy production data, or print credentials.
+The BETA pod uses the real BETA Discord token and one gateway connection, so the
+gateway-owner `dev:web` intentionally disconnects the deployed BETA bot until
+stopped. That disconnect is authorized and expected for local
+development/testing; stop the process when finished so BETA can reconnect. Run
+secondary copies with `--no-discord-gateway` and isolated ports/databases.
+
+For browser automation, use PinchTab's real Chrome profile. Verify
+`pinchtab health`, `pinchtab config`, and `pinchtab profiles`; keep the CLI and
+daemon on the same `PINCHTAB_CONFIG` (normally
+`$HOME/Library/Application Support/pinchtab/config.json`). Start a persistent
+profile headed, navigate to the printed `dev:login` URL, then reuse that
+profile headlessly with accessibility snapshots, actions, screenshots, and
+evaluation. Do not set HttpOnly cookies through `eval`, guess tab IDs, or put
+tokens/profiles/cookies in Git.
 
 ### Post-match review evals
 
@@ -868,8 +995,10 @@ no Discord API:
   object. `assertGuildAdmin` / `assertChannelInGuild` are stubbed, so real Discord
   admin/membership is out of scope for these tests.
 
-For the running app end-to-end, `bun run dev:web` still needs `op signin` and real
-Discord OAuth in the browser (see **Web UI (Local end-to-end)** above).
+For the running app end-to-end, `bun run dev:web` uses the explicit local
+session bootstrap above when OAuth click-through is unnecessary. Use real
+Discord OAuth only when testing the OAuth flow itself; the BETA app must still
+contain the localhost callback URI and the test guild must contain the BETA bot.
 
 ---
 

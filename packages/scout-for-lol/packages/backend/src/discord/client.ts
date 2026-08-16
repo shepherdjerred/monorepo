@@ -62,6 +62,8 @@ client.on("reconnecting", () => {
 // that need client behavior mock it; production/dev/beta log in as normal.
 if (Bun.env.NODE_ENV === "test") {
   logger.info("🧪 NODE_ENV=test — skipping Discord login");
+} else if (!configuration.enableDiscordGateway) {
+  logger.warn("⏭️  Discord gateway disabled — skipping Discord login");
 } else {
   logger.info("🔑 Logging into Discord");
   try {

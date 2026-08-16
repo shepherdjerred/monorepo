@@ -1,15 +1,23 @@
 import { describe, test, expect, afterEach } from "bun:test";
 import {
   parseProductAnalyticsConfiguration,
+  resetConfigurationForTests,
   resolveEnvironment,
 } from "#src/configuration.ts";
+import configuration from "#src/configuration.ts";
 
-type TrackedKey = "ENVIRONMENT" | "NODE_ENV";
+type TrackedKey =
+  | "ENVIRONMENT"
+  | "NODE_ENV"
+  | "ENABLE_DISCORD_GATEWAY"
+  | "ENABLE_BACKGROUND_JOBS";
 
 function snapshotEnv(): Record<TrackedKey, string | undefined> {
   return {
     ENVIRONMENT: Bun.env["ENVIRONMENT"],
     NODE_ENV: Bun.env.NODE_ENV,
+    ENABLE_DISCORD_GATEWAY: Bun.env["ENABLE_DISCORD_GATEWAY"],
+    ENABLE_BACKGROUND_JOBS: Bun.env["ENABLE_BACKGROUND_JOBS"],
   };
 }
 
@@ -24,6 +32,18 @@ function restoreEnv(snapshot: Record<TrackedKey, string | undefined>) {
   } else {
     Bun.env.NODE_ENV = snapshot.NODE_ENV;
   }
+  for (const key of [
+    "ENABLE_DISCORD_GATEWAY",
+    "ENABLE_BACKGROUND_JOBS",
+  ] as const) {
+    const value = snapshot[key];
+    if (value === undefined) {
+      delete Bun.env[key];
+    } else {
+      Bun.env[key] = value;
+    }
+  }
+  resetConfigurationForTests();
 }
 
 describe("resolveEnvironment", () => {
@@ -90,4 +110,32 @@ describe("parseProductAnalyticsConfiguration", () => {
       );
     },
   );
+});
+
+describe("local runtime flags", () => {
+  const initial = snapshotEnv();
+
+  afterEach(() => {
+    restoreEnv(initial);
+  });
+
+  test("allows secondary development instances to disable gateway and jobs", () => {
+    Bun.env["ENVIRONMENT"] = "dev";
+    Bun.env["ENABLE_DISCORD_GATEWAY"] = "false";
+    Bun.env["ENABLE_BACKGROUND_JOBS"] = "false";
+    resetConfigurationForTests();
+
+    expect(configuration.enableDiscordGateway).toBe(false);
+    expect(configuration.enableBackgroundJobs).toBe(false);
+  });
+
+  test("rejects disabled gateway or jobs outside development", () => {
+    Bun.env["ENVIRONMENT"] = "beta";
+    Bun.env["ENABLE_DISCORD_GATEWAY"] = "false";
+    resetConfigurationForTests();
+
+    expect(() => configuration.enableDiscordGateway).toThrow(
+      /may only be disabled in environment=dev/,
+    );
+  });
 });

@@ -96,6 +96,22 @@ export function parseProductAnalyticsConfiguration(
  */
 function computeConfiguration() {
   const environment = resolveEnvironment();
+  const enableDiscordGateway = env
+    .get("ENABLE_DISCORD_GATEWAY")
+    .default("true")
+    .asBool();
+  const enableBackgroundJobs = env
+    .get("ENABLE_BACKGROUND_JOBS")
+    .default("true")
+    .asBool();
+  if (
+    environment !== "dev" &&
+    (!enableDiscordGateway || !enableBackgroundJobs)
+  ) {
+    throw new Error(
+      "ENABLE_DISCORD_GATEWAY and ENABLE_BACKGROUND_JOBS may only be disabled in environment=dev",
+    );
+  }
   const config = {
     version: getRequiredEnvVar("VERSION"),
     gitSha: getRequiredEnvVar("GIT_SHA"),
@@ -133,6 +149,10 @@ function computeConfiguration() {
     // same pair that already binds the server to loopback. Unset means "no
     // override", so an omitted config fails closed exactly like dev-login.
     devUserGuilds: env.get("DEV_USER_GUILDS").default("").asArray(","),
+    // A secondary local web instance can opt out of the single BETA Discord
+    // gateway and background jobs. These remain enabled by default everywhere.
+    enableDiscordGateway,
+    enableBackgroundJobs,
     discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
     applicationId: getRequiredEnvVar("APPLICATION_ID"),
     discordClientSecret: getOptionalEnvVar("DISCORD_CLIENT_SECRET"),
@@ -235,6 +255,12 @@ const configuration: Configuration = {
   },
   get devUserGuilds() {
     return getConfiguration().devUserGuilds;
+  },
+  get enableDiscordGateway() {
+    return getConfiguration().enableDiscordGateway;
+  },
+  get enableBackgroundJobs() {
+    return getConfiguration().enableBackgroundJobs;
   },
   get discordToken() {
     return getConfiguration().discordToken;

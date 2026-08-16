@@ -4,6 +4,7 @@ import {
   type ScoutThemeChangedPayload,
 } from "@scout-for-lol/design-system/runtime";
 import { GET_STARTED_CLICK_EVENT } from "#src/lib/marketing-constants.ts";
+import { APP_ORIGIN, DOCS_ORIGIN } from "#src/lib/marketing-constants.ts";
 
 function captureThemeChange(payload: ScoutThemeChangedPayload): void {
   const posthog: unknown = Reflect.get(globalThis, "posthog");
@@ -21,6 +22,7 @@ export function SharedNavbar(props: { currentPath?: string | undefined }) {
         currentPath={props.currentPath}
         getStartedTrackingEvent={GET_STARTED_CLICK_EVENT}
         getStartedLocation="navbar"
+        origins={{ app: APP_ORIGIN, docs: DOCS_ORIGIN }}
       />
     </ScoutThemeProvider>
   );
