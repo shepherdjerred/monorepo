@@ -9,15 +9,27 @@ Scout has two stores with opposite guarantees: S3 holds the canonical raw
 Riot JSON and must never lose a write, while the report lake is a local
 Parquet directory that can be deleted and rebuilt from S3 at any time.
 
-The lake is what every analytics surface queries — ScoutQL reports, the
-Explore chat, competition analysis, the web data explorer — through an
-embedded in-process DuckDB. Nothing queries S3 directly, and nothing treats
-the lake as durable.
+The lake is what the fact-style analytics surfaces query — ScoutQL's match,
+prematch, and player-group sources, the Explore chat, the web data explorer —
+through an embedded in-process DuckDB. Nothing on those paths reads S3, and
+nothing treats the lake as durable.
+
+Competition standings are the exception. ScoutQL's rank sources still delegate
+to `calculateLeaderboard`, which pulls raw match JSON straight from S3 for the
+match-counting criteria
+([s3-query.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/storage/s3-query.ts));
+pairing stats read the same way. Competition analysis additionally loads the
+official leaderboard snapshots from S3
+([s3-leaderboard.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard.ts))
+and merges them over the lake's rank history — a published standing is a
+record, not something to re-derive. Either way those surfaces inherit S3's
+latency and availability, so when competition analysis is slow or failing, the
+lake is the wrong place to look.
 
 ```mermaid
 flowchart LR
   accTitle: Scout report lake read and write flow
-  accDescr: Ingest crons write raw JSON to S3, which must succeed, and NDJSON staging files, which are best effort. A fold compaction every fifteen minutes and a nightly rebuild from S3 both publish immutable Parquet builds behind a CURRENT pointer. Readers union the published Parquet with the staging files, so DuckDB queries see a match seconds after ingest.
+  accDescr: Ingest crons write raw JSON to S3, which must succeed, and NDJSON staging files, which are best effort. A fold compaction every fifteen minutes and a nightly rebuild from S3 both publish immutable Parquet builds behind a CURRENT pointer. Readers union the published Parquet with the staging files, so DuckDB queries see a match seconds after ingest. Competition standings bypass the lake and read raw match JSON and leaderboard snapshots from S3 directly.
 
   I[Ingest crons] -->|must succeed| S3[(S3 raw JSON)]
   I -->|best effort| ST[NDJSON staging]
@@ -28,6 +40,7 @@ flowchart LR
   B --> C[CURRENT pointer]
   C --> D[DuckDB query]
   ST --> D
+  S3 -.->|direct read| CS[Competition standings]
 ```
 
 ## The record and the cache
@@ -74,8 +87,13 @@ sequenceDiagram
 Staging is one NDJSON file per match under `matches-recent/`, written as a
 whole-file overwrite rather than an append
 ([staging.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/staging.ts)).
-Re-ingesting the same match rewrites the same file, so retries are idempotent
-and torn half-written lines cannot exist.
+Re-ingesting the same match rewrites the same file, so rows can never
+interleave the way concurrent appends would, and a successful retry is
+idempotent. The overwrite is not atomic, though: it targets the final path
+rather than writing a temporary file and renaming it, so a crash or a storage
+failure mid-write can leave a truncated file on disk. That is why compaction
+validates every staged line and skips the whole file when one fails, and why
+the nightly rebuild re-derives the row from S3 regardless.
 
 Timelines go to S3 only. No query surface reads them, so flattening them into
 the lake would be pure cost.
