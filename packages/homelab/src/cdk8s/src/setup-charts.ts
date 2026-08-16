@@ -18,7 +18,6 @@ import { createMarioKartChart } from "./cdk8s-charts/mario-kart.ts";
 import { createGickupChart } from "./cdk8s-charts/gickup.ts";
 import { createGrafanaDbChart } from "./cdk8s-charts/grafana-db.ts";
 import { createS3StaticSitesChart } from "./cdk8s-charts/s3-static-sites.ts";
-import { createMcpGatewayChart } from "./cdk8s-charts/mcp-gateway.ts";
 import { createBugsinkChart } from "./cdk8s-charts/bugsink.ts";
 import { createScoutEvalsChart } from "./cdk8s-charts/scout-evals.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
@@ -73,7 +72,6 @@ export async function setupCharts(app: App): Promise<void> {
   createMarioKartChart(app);
   await createGickupChart(app);
   createGrafanaDbChart(app);
-  await createMcpGatewayChart(app);
   createBugsinkChart(app);
   createScoutEvalsChart(app);
   createTasknotesChart(app);

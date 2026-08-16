@@ -255,17 +255,6 @@ describe("Container resource requests backstop", () => {
         { requests: { cpu: "10m", memory: "32Mi" } },
       ],
       [
-        "mcp-gateway/render-config",
-        { requests: { cpu: "10m", memory: "16Mi" } },
-      ],
-      [
-        "mcp-gateway/main",
-        {
-          requests: { cpu: "50m", memory: "768Mi" },
-          limits: { cpu: "500m", memory: "1536Mi" },
-        },
-      ],
-      [
         "mario-kart/main",
         {
           requests: { cpu: "1000m", memory: "1792Mi" },

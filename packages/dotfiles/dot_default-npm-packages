@@ -3,5 +3,4 @@ neovim
 prettier
 eslint
 typescript
-@google/gemini-cli
 @posthog/cli

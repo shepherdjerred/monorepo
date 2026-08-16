@@ -1210,45 +1210,6 @@
       "value": "1.29.1-alpine@sha256:42a516af16b852e33b7682d5ef8acbd5d13fe08fecadc7ed98605ba5e3b26ab8"
     },
     {
-      "name": "tbxark/mcp-proxy",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://ghcr.io",
-        "versioning": "semver"
-      },
-      "value": "v0.43.2@sha256:70c0e02d39c4c0898e610b3a30954f7930628fa6f4fb447bad14c32382a25879"
-    },
-    {
-      "name": "@r-huijts/canvas-mcp",
-      "category": "upstream",
-      "artifactType": "package",
-      "management": {
-        "managed": true,
-        "datasource": "npm",
-        "versioning": "npm"
-      },
-      "value": "1.3.0",
-      "notes": [
-        "mcp-gateway downstream npm MCP servers. Pinned + Renovate-tracked so cold",
-        "starts are reproducible instead of `npx -y` grabbing latest. Substituted",
-        "into mcp-gateway/config.json at synth time."
-      ]
-    },
-    {
-      "name": "@automatearmy/email-reader-mcp",
-      "category": "upstream",
-      "artifactType": "package",
-      "management": {
-        "managed": true,
-        "datasource": "npm",
-        "versioning": "npm"
-      },
-      "value": "1.0.3"
-    },
-    {
       "name": "bugsink/bugsink",
       "category": "upstream",
       "artifactType": "image",
@@ -1309,19 +1270,6 @@
       "value": "2.0.0-6529@sha256:fd1e89af7747c0b0ad2c650c6eab0c60452464e83dfcfb3bedbf967f15e7e645",
       "notes": [
         "Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync",
-        "not managed by renovate"
-      ]
-    },
-    {
-      "name": "shepherdjerred/mcp-gateway",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "2.0.0-6690@sha256:719ad2ddcf05af01be975f984cb2ef8a3139302724e6d2cb01111cb50b348aa9",
-      "notes": [
-        "Custom mcp-gateway image - tbxark/mcp-proxy + prebuilt edstem-mcp (rob-9/edstem-mcp)",
         "not managed by renovate"
       ]
     },
