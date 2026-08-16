@@ -29,6 +29,7 @@ abbr btop "sudo btop"
 abbr less ov
 abbr ping gping
 abbr oc opencode
+abbr claude "env -u (string join \"\" ANTHROPIC _API_KEY) -u (string join \"\" OPENAI _API_KEY) -u (string join \"\" CODEX _API_KEY) claude --allow-dangerously-skip-permissions"
 abbr finder "open -a Finder"
 abbr gs git-spice
 
@@ -99,12 +100,6 @@ if status is-interactive
   # configured provider. These wrappers are intentionally interactive-only;
   # launches that bypass fish (Raycast, scripts) must scrub their environment
   # explicitly.
-  function claude --wraps claude -d "Run Claude Code without direct provider API keys"
-      env -u (string join "" ANTHROPIC _API_KEY) \
-          -u (string join "" OPENAI _API_KEY) \
-          -u (string join "" CODEX _API_KEY) \
-          (command -s claude) --allow-dangerously-skip-permissions $argv
-  end
   function codex --wraps codex -d "Run Codex without direct provider API keys"
       env -u (string join "" OPENAI _API_KEY) \
           -u (string join "" CODEX _API_KEY) \
