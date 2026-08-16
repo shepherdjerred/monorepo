@@ -54,9 +54,6 @@ packages/dpp/
 /.codex/*
 !/.codex/config.toml
 
-# Clauderon daemon data (root level only)
-/.clauderon/
-
 # Build and tool caches (root level only, from HOME=/workspace)
 /.bun/
 /.cache/

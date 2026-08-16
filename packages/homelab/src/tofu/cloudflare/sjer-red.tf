@@ -68,15 +68,6 @@ resource "cloudflare_dns_record" "sjer_red_cname_chartmuseum" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_clauderon_com" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "clauderon.com"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
-
 resource "cloudflare_dns_record" "sjer_red_cname_discord_plays_pokemon_com" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
@@ -615,14 +606,6 @@ resource "cloudflare_dns_record" "sjer_red_dmarc_report_discord_plays_pokemon_co
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
   name    = "discord-plays-pokemon.com._report._dmarc"
-  type    = "TXT"
-  content = "v=DMARC1"
-}
-
-resource "cloudflare_dns_record" "sjer_red_dmarc_report_clauderon_com" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "clauderon.com._report._dmarc"
   type    = "TXT"
   content = "v=DMARC1"
 }
