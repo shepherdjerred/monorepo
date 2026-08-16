@@ -6,6 +6,7 @@ import { qodoProvider, parseQodoIssueComment } from "./qodo.ts";
 const comment = {
   updatedAt: "2026-08-09T12:00:00Z",
   url: "https://github.com/shepherdjerred/monorepo/pull/1#issuecomment-1",
+  id: 1,
   body: `
 <h3>Code Review by Qodo</h3>
 <code>🐞 Bugs (1)</code> <code>📘 Rule violations (1)</code> <code>📎 Requirement gaps (0)</code> <code>🎨 UX issues (0)</code> <code>🔗 Cross-repo conflicts (0)</code> <code>📜 Skill insights (0)</code>
@@ -75,6 +76,8 @@ describe("qodoProvider", () => {
         line: null,
         url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc",
         priority: 1,
+        threadId: null,
+        commentId: 1,
       },
       {
         authorLogin: "qodo-code-review",
@@ -85,6 +88,8 @@ describe("qodoProvider", () => {
         line: null,
         url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-def",
         priority: 2,
+        threadId: null,
+        commentId: 1,
       },
       {
         authorLogin: "qodo-code-review",
@@ -95,6 +100,8 @@ describe("qodoProvider", () => {
         line: null,
         url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-ghi",
         priority: 2,
+        threadId: null,
+        commentId: 1,
       },
     ]);
   });
@@ -382,6 +389,8 @@ describe("qodo re-review copies", () => {
         line: null,
         url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc",
         priority: 1,
+        threadId: null,
+        commentId: 1,
       },
       {
         authorLogin: "qodo-code-review",
@@ -392,6 +401,8 @@ describe("qodo re-review copies", () => {
         line: null,
         url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-jkl",
         priority: 1,
+        threadId: null,
+        commentId: 1,
       },
     ]);
   });
@@ -474,6 +485,8 @@ Older unresolved wording retained for review history.
         line: null,
         url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-current",
         priority: 2,
+        threadId: null,
+        commentId: 1,
       },
     ]);
   });

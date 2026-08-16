@@ -166,6 +166,14 @@ async function probePr(
             isOutdated: thread.isOutdated,
             path: thread.path,
             line: thread.line,
+            // What the finding says, plus the handles needed to act on it and
+            // the key it was deduplicated by. Without these a caller has a
+            // count and a filename, and has to re-derive everything else by
+            // hand from the raw GitHub payloads.
+            title: thread.title,
+            threadId: thread.threadId,
+            commentId: thread.commentId,
+            findingKey: provider.findingKey?.(thread) ?? null,
           })),
         },
       },
