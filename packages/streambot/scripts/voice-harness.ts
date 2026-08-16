@@ -15,10 +15,8 @@ import {
   type MacMicrophoneCapture,
 } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
 import { wakePcmToOpenAiPcm } from "@shepherdjerred/discord-video-stream";
-import {
-  type AssistantAudioSink,
-  runRealtimeCommandTurn,
-} from "@shepherdjerred/streambot/voice/realtime-agent.ts";
+import { runRealtimeCommandTurn } from "@shepherdjerred/streambot/voice/realtime-agent.ts";
+import type { AssistantAudioSink } from "@shepherdjerred/streambot/voice/assistant-sink.ts";
 import {
   DebugAudioRecorder,
   type DebugAudioRecording,

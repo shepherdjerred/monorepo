@@ -58,6 +58,7 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
+import type { SpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
 import { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
 import { createSessionVoiceAssistant } from "@shepherdjerred/streambot/session/voice-session-factory.ts";
 import { destroySession } from "@shepherdjerred/streambot/session/destroy-session.ts";
@@ -86,6 +87,8 @@ export type SessionManagerDeps = {
     signal: AbortSignal,
   ) => Promise<ResolvedSource>;
   readonly voiceModels?: LocalVoiceModels | null;
+  /** Loaded at boot alongside the models; fatal when missing while voice is enabled. */
+  readonly voiceFeedbackClips?: SpokenFeedbackClips | null;
 };
 
 // Re-exported for existing consumers (command-bot) — the canonical home is session-types.ts.
@@ -375,12 +378,6 @@ export class SessionManager {
       teardownHold: new TeardownHold(() => {
         this.teardown(session);
       }),
-      requestTeardown: () => {
-        /* installed below after the record is initialized */
-      },
-    };
-    session.requestTeardown = () => {
-      session.teardownHold.request();
     };
     session.voiceAssistant = createSessionVoiceAssistant(this.deps, session);
     // Trigger 1: the fork's voice ws `close` event (fires even when the main gateway never
@@ -408,7 +405,7 @@ export class SessionManager {
       if (stateName !== "idle") {
         session.hasStarted = true;
       } else if (session.hasStarted && snapshot.context.queue.length === 0) {
-        session.requestTeardown();
+        session.teardownHold.request();
       }
     });
     session.unsubscribe = () => {

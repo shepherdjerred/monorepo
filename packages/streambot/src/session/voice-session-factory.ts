@@ -34,5 +34,8 @@ export function createSessionVoiceAssistant(
     },
     announce: (message) => deps.announce(session.statusChannelId, message),
     holdTeardown: () => session.teardownHold.acquire(),
+    ...(deps.voiceFeedbackClips == null
+      ? {}
+      : { feedbackClips: deps.voiceFeedbackClips }),
   });
 }

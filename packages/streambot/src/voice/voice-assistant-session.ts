@@ -10,6 +10,10 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import { VoiceAudioLifecycle } from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";
 import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
 import { runRealtimeVoiceTurn } from "@shepherdjerred/streambot/voice/realtime-agent.ts";
+import {
+  speakClip,
+  type SpokenFeedbackClips,
+} from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
 import type { RealtimeTransportLayer } from "@openai/agents/realtime";
 import type { DiscordOpusDecoder } from "@shepherdjerred/discord-video-stream";
 import {
@@ -34,6 +38,8 @@ export type VoiceAssistantSessionOptions = {
   readonly commands: PlaybackCommandServiceDeps;
   readonly announce: (message: string) => Promise<void>;
   readonly holdTeardown: () => () => void;
+  /** Local pre-rendered feedback; absent in probes/tests, which keep the silent behavior. */
+  readonly feedbackClips?: SpokenFeedbackClips;
   readonly createRealtimeTransport?: () => RealtimeTransportLayer;
   readonly createDecoder?: () => Pick<DiscordOpusDecoder, "decode" | "close">;
 };
@@ -88,6 +94,20 @@ export class VoiceAssistantSession {
             reason: rateLimit.reason,
           });
           voiceTurnsTotal.inc({ outcome: "cloud-rate-limited" });
+          // A silent drop is indistinguishable from being ignored. The quota reason stays
+          // silent — its announce already explained the pause once, and repeating a spoken
+          // line on every wake during a backoff hour would be noise.
+          if (
+            options.feedbackClips !== undefined &&
+            rateLimit.reason !== "quota"
+          ) {
+            const release = options.holdTeardown();
+            try {
+              await speakClip(options.streamer, options.feedbackClips.retry);
+            } finally {
+              release();
+            }
+          }
           return;
         }
         const userId = UserIdSchema.parse(turn.userId);
@@ -101,6 +121,9 @@ export class VoiceAssistantSession {
             service,
             streamer: options.streamer,
             signal: transaction.signal,
+            ...(options.feedbackClips === undefined
+              ? {}
+              : { feedbackClips: options.feedbackClips }),
             ...(options.createRealtimeTransport === undefined
               ? {}
               : { createTransport: options.createRealtimeTransport }),

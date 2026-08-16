@@ -1,10 +1,7 @@
 import { RealtimeAgent, RealtimeSession } from "@openai/agents/realtime";
 import type { RealtimeTransportLayer } from "@openai/agents/realtime";
 import { z } from "zod";
-import {
-  DiscordOpusEncoder,
-  wakePcmToOpenAiPcm,
-} from "@shepherdjerred/discord-video-stream";
+import { wakePcmToOpenAiPcm } from "@shepherdjerred/discord-video-stream";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { type PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
@@ -14,13 +11,18 @@ import {
   voiceActivationStageLatencySeconds,
   voiceConcurrentTurns,
   voiceOpenAiFailuresTotal,
-  voiceReplyPacketsTotal,
   voiceReplySendFailuresTotal,
   voiceTranscriptVerificationsTotal,
   voiceTranscriptionUsageTotal,
   voiceTurnsTotal,
   voiceWakeToReplySeconds,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
+import {
+  PacedAssistantSender,
+  type AssistantAudioSink,
+} from "@shepherdjerred/streambot/voice/assistant-sink.ts";
+import type { SpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
+
 import {
   bindPlaybackVoiceCommandPort,
   createStreambotVoiceTools,
@@ -35,105 +37,11 @@ For a clear request, call the single best tool and briefly speak its result.
 If the request is ambiguous, ask the speaker to try again more specifically and execute nothing.
 Never call more than one mutating tool. Keep every spoken reply to one short sentence.`;
 
-const EMPTY_VERIFIED_COMMAND = "[no command after verified wake phrase]";
-
-export type AssistantAudioSink = {
-  readonly enqueue: (pcm24k: Uint8Array) => void;
-  readonly finish: () => Promise<void>;
-  readonly cancel: () => Promise<void>;
-};
-
 function audioTokenCount(details: readonly Record<string, number>[]): number {
   return details.reduce(
     (total, item) => total + (item["audio_tokens"] ?? 0),
     0,
   );
-}
-
-class PacedAssistantSender implements AssistantAudioSink {
-  private readonly encoder = new DiscordOpusEncoder();
-  private readonly queue: Uint8Array[] = [];
-  private task: Promise<void> | null = null;
-  private finishTask: Promise<void> | null = null;
-  private wake: (() => void) | null = null;
-  private done = false;
-  private cancelled = false;
-
-  constructor(private readonly streamer: StreamerLike) {}
-
-  enqueue(pcm24k: Uint8Array): void {
-    if (this.cancelled) return;
-    this.queue.push(...this.encoder.encode(pcm24k));
-    this.start();
-    this.wake?.();
-    this.wake = null;
-  }
-
-  finish(): Promise<void> {
-    this.finishTask ??= this.complete(true);
-    return this.finishTask;
-  }
-
-  cancel(): Promise<void> {
-    this.cancelled = true;
-    this.queue.length = 0;
-    if (this.task === null) {
-      this.done = true;
-      this.encoder.close();
-      this.finishTask ??= Promise.resolve();
-      return this.finishTask;
-    }
-    this.finishTask ??= this.complete(false);
-    this.done = true;
-    this.wake?.();
-    this.wake = null;
-    return this.finishTask;
-  }
-
-  private async complete(flush: boolean): Promise<void> {
-    try {
-      if (flush && !this.cancelled) this.queue.push(...this.encoder.finish());
-      this.done = true;
-      this.start();
-      this.wake?.();
-      this.wake = null;
-      await this.task;
-    } finally {
-      this.encoder.close();
-      await this.streamer.setAssistantSpeaking(false);
-    }
-  }
-
-  private start(): void {
-    this.task ??= this.run();
-  }
-
-  private async run(): Promise<void> {
-    await this.streamer.setAssistantSpeaking(true);
-    while (!this.done || this.queue.length > 0) {
-      const packet = this.queue.shift();
-      if (packet === undefined) {
-        await new Promise<void>((resolve) => {
-          this.wake = resolve;
-        });
-        continue;
-      }
-      try {
-        this.streamer.sendAssistantOpus(packet);
-      } catch {
-        // sendOpus throws once the voice connection is gone, and this runs on
-        // a 20ms tick, so a mid-reply disconnect would reject this background
-        // task. That rejection later surfaces as a cancel() failure and masks
-        // whatever actually ended the turn. There is nothing left to send to,
-        // so count it and stop pumping.
-        voiceReplySendFailuresTotal.inc();
-
-        return;
-      }
-      voiceReplyPacketsTotal.inc();
-      await Bun.sleep(20);
-    }
-  }
 }
 
 export type RealtimeVoiceTurnInput = {
@@ -142,6 +50,8 @@ export type RealtimeVoiceTurnInput = {
   readonly userId: UserId;
   readonly service: PlaybackCommandService;
   readonly streamer: StreamerLike;
+  /** Local pre-rendered feedback; when absent, rejected and bare wakes stay silent (probes/tests). */
+  readonly feedbackClips?: SpokenFeedbackClips;
   readonly signal?: AbortSignal;
   /** Test seam; production omits this and gets the official server WebSocket transport. */
   readonly createTransport?: () => RealtimeTransportLayer;
@@ -152,6 +62,8 @@ export type RealtimeCommandTurnInput = {
   readonly activatedAtMs: number;
   readonly commands: VoiceCommandPort;
   readonly assistantAudio: AssistantAudioSink;
+  /** Local pre-rendered feedback; when absent, rejected and bare wakes stay silent (probes/tests). */
+  readonly feedbackClips?: SpokenFeedbackClips;
   readonly signal?: AbortSignal;
   /** Test seam; production omits this and gets the official server WebSocket transport. */
   readonly createTransport?: () => RealtimeTransportLayer;
@@ -404,7 +316,15 @@ export async function runRealtimeCommandTurn(
     if (verified === null) {
       voiceTranscriptVerificationsTotal.inc({ outcome: "rejected" });
       voiceTurnsTotal.inc({ outcome: "transcript-rejected" });
-      await input.assistantAudio.cancel();
+      // Still response.create-free: the retry line is a local pre-rendered clip, so nothing
+      // about the rejected audio reaches the Realtime model — but the speaker is no longer
+      // left wondering whether Streambot heard anything at all.
+      if (input.feedbackClips === undefined) {
+        await input.assistantAudio.cancel();
+      } else {
+        input.assistantAudio.enqueue(input.feedbackClips.retry);
+        await Promise.race([input.assistantAudio.finish(), interruption]);
+      }
       return {
         transcript: transcriptionResult.transcript,
         wakeVerified: false,
@@ -412,6 +332,23 @@ export async function runRealtimeCommandTurn(
       };
     }
     voiceTranscriptVerificationsTotal.inc({ outcome: "accepted" });
+    if (verified.command.length === 0) {
+      // A bare "Hey Streambot" used to bill a full Realtime response just to ask what to play.
+      // The prompt is a local clip instead; no conversation item is created and no response is
+      // requested, and the finally below closes the session immediately.
+      voiceTurnsTotal.inc({ outcome: "bare-wake" });
+      if (input.feedbackClips === undefined) {
+        await input.assistantAudio.cancel();
+      } else {
+        input.assistantAudio.enqueue(input.feedbackClips.prompt);
+        await Promise.race([input.assistantAudio.finish(), interruption]);
+      }
+      return {
+        transcript: transcriptionResult.transcript,
+        wakeVerified: true,
+        mutated: false,
+      };
+    }
     failureStage = "verified-command";
 
     const deleted = new Promise<void>((resolve) => {
@@ -446,15 +383,7 @@ export async function runRealtimeCommandTurn(
         id: verifiedCommandItemId,
         type: "message",
         role: "user",
-        content: [
-          {
-            type: "input_text",
-            text:
-              verified.command.length === 0
-                ? EMPTY_VERIFIED_COMMAND
-                : verified.command,
-          },
-        ],
+        content: [{ type: "input_text", text: verified.command }],
       },
     });
     await Promise.race([created, interruption, sessionFailure]);
@@ -512,6 +441,9 @@ export async function runRealtimeVoiceTurn(
     activatedAtMs: input.activatedAtMs,
     commands: bindPlaybackVoiceCommandPort(input.service, input.userId),
     assistantAudio: new PacedAssistantSender(input.streamer),
+    ...(input.feedbackClips === undefined
+      ? {}
+      : { feedbackClips: input.feedbackClips }),
     ...(input.signal === undefined ? {} : { signal: input.signal }),
     ...(input.createTransport === undefined
       ? {}

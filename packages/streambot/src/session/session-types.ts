@@ -92,7 +92,6 @@ export type Session = {
   /** Per-session wake/VAD/Realtime lifecycle, absent when the feature is disabled. */
   voiceAssistant: VoiceAssistantSession | null;
   readonly teardownHold: TeardownHold;
-  requestTeardown: () => void;
 };
 
 /** Everything needed to spin up a session actor (manual play, boot resume, or reconnect). */

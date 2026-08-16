@@ -23,6 +23,7 @@ import {
 import { startGpuCollector } from "@shepherdjerred/streambot/observability/gpu-collector.ts";
 import { initializeSentry } from "@shepherdjerred/streambot/observability/sentry.ts";
 import { initializeLocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
+import { loadSpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
@@ -31,6 +32,11 @@ async function main(): Promise<void> {
   initializeSentry();
   const config = loadConfig();
   const voiceModels = await initializeLocalVoiceModels(config.voice);
+  // Same posture as the models: pinned assets, loaded and validated at boot, fatal when broken.
+  const voiceFeedbackClips =
+    voiceModels === null
+      ? null
+      : await loadSpokenFeedbackClips(config.voice.assetsDir);
   logger.info("starting streambot", {
     userTokenCount: config.discord.userTokens.length,
     videosDir: config.library.videosDir,
@@ -105,6 +111,7 @@ async function main(): Promise<void> {
     resolvePlaySource: (source, signal) =>
       resolveSource(config, source, signal),
     voiceModels,
+    voiceFeedbackClips,
   });
   refs.sessions = sessions;
 

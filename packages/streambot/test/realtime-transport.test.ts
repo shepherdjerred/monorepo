@@ -13,11 +13,12 @@ import {
   runRealtimeCommandTurn,
   runRealtimeVoiceTurn,
   verifyWakeTranscript,
-  type AssistantAudioSink,
 } from "@shepherdjerred/streambot/voice/realtime-agent.ts";
+import type { AssistantAudioSink } from "@shepherdjerred/streambot/voice/assistant-sink.ts";
 import { VoiceAssistantSession } from "@shepherdjerred/streambot/voice/voice-assistant-session.ts";
 import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
 import { DryRunVoiceCommandPort } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
+import type { SpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
 import {
   FakeRealtimeTransport,
   type FakeRealtimeToolCall,
@@ -276,6 +277,7 @@ async function run(
 async function runLocal(
   calls: readonly FakeRealtimeToolCall[],
   inputTranscript: string,
+  feedbackClips?: SpokenFeedbackClips,
 ) {
   const context = fixture();
   const transport = new FakeRealtimeTransport(
@@ -290,6 +292,7 @@ async function runLocal(
     activatedAtMs: Date.now(),
     commands,
     assistantAudio,
+    ...(feedbackClips === undefined ? {} : { feedbackClips }),
     createTransport: () => transport,
   });
   return { ...context, transport, commands, assistantAudio, result };
@@ -567,6 +570,52 @@ describe("custom Realtime transport failure boundaries", () => {
     expect(context.events).toHaveLength(0);
     assistant.close();
   });
+});
+
+describe("VoiceAssistantSession feedback and isolation", () => {
+  test("a rate-limited wake speaks the local retry clip instead of dropping silently", async () => {
+    const context = fixture();
+    // One paced packet's worth of PCM keeps the real sender fast in a unit test.
+    const clips: SpokenFeedbackClips = {
+      retry: new Uint8Array(960),
+      prompt: new Uint8Array(960),
+    };
+    clips.retry[0] = 1;
+    let holds = 0;
+    let releases = 0;
+    const releaseHold = (): void => {
+      releases += 1;
+    };
+    const assistant = new VoiceAssistantSession({
+      config: context.config,
+      models: markerModels(),
+      streamer: context.streamer,
+      commands: context.commandDeps,
+      announce: () => Promise.resolve(),
+      holdTeardown: () => {
+        holds += 1;
+        return releaseHold;
+      },
+      feedbackClips: clips,
+      createDecoder: markerDecoder,
+      createRealtimeTransport: () => new FakeRealtimeTransport([]),
+    });
+    const listener = context.voiceListener();
+    if (listener === null) throw new Error("Voice listener was not installed");
+    // Burst capacity is two: the first two wakes reach the cloud path, the third is limited and
+    // must speak the retry clip over normal voice while holding teardown for the drain.
+    for (let turn = 0; turn < 2; turn += 1) {
+      emitMarkerTurn(listener);
+      await Bun.sleep(80);
+    }
+    const packetsBefore = context.replyPackets.length;
+    emitMarkerTurn(listener);
+    await Bun.sleep(200);
+    expect(context.replyPackets.length).toBeGreaterThan(packetsBefore);
+    expect(holds).toBe(3);
+    expect(releases).toBe(3);
+    assistant.close();
+  });
 
   test("peer userbot audio never reaches the wake detector", async () => {
     const context = fixture();
@@ -700,6 +749,38 @@ describe("local Realtime probe", () => {
     expect(context.result.wakeVerified).toBe(false);
     expect(context.assistantAudio.cancelCount).toBe(1);
     expect(context.assistantAudio.finishCount).toBe(0);
+  });
+
+  test("speaks the local retry clip on a rejected transcript without any response", async () => {
+    const clips: SpokenFeedbackClips = {
+      retry: new Uint8Array([1, 2, 3, 4]),
+      prompt: new Uint8Array([5, 6, 7, 8]),
+    };
+    const context = await runLocal([], "Ich bin Gott.", clips);
+    expect(context.result.wakeVerified).toBe(false);
+    // The clip is local: the model never gets a response.create, and the sink drains normally
+    // instead of being cancelled into silence.
+    expect(context.assistantAudio.chunks).toEqual([clips.retry]);
+    expect(context.assistantAudio.cancelCount).toBe(0);
+    expect(context.assistantAudio.finishCount).toBe(1);
+    expect(context.transport.sentEvents).not.toContainEqual({
+      type: "response.create",
+    });
+  });
+
+  test("answers a bare wake with the local prompt clip instead of a billed response", async () => {
+    const clips: SpokenFeedbackClips = {
+      retry: new Uint8Array([1, 2, 3, 4]),
+      prompt: new Uint8Array([5, 6, 7, 8]),
+    };
+    const context = await runLocal([], "Hey Streambot", clips);
+    expect(context.result.wakeVerified).toBe(true);
+    expect(context.result.mutated).toBe(false);
+    expect(context.assistantAudio.chunks).toEqual([clips.prompt]);
+    expect(context.assistantAudio.finishCount).toBe(1);
+    const sentTypes = context.transport.sentEvents.map((event) => event.type);
+    expect(sentTypes).not.toContain("conversation.item.create");
+    expect(sentTypes).not.toContain("response.create");
   });
 
   test("records no command for ambiguous speech", async () => {
