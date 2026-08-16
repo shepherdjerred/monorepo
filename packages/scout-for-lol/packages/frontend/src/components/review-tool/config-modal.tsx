@@ -181,7 +181,7 @@ export function ConfigModal({
                         </li>
                       )}
                     </ul>
-                    <p className="text-sm text-scout-success bg-scout-success border border-scout-success rounded p-2 mb-3">
+                    <p className="text-sm text-scout-success-ink bg-scout-success border border-scout-success rounded p-2 mb-3">
                       ✓ API keys, cache, and cost data will be preserved
                     </p>
                     <p className="text-sm text-scout-subtle font-medium">

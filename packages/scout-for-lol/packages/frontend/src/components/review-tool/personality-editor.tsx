@@ -63,7 +63,7 @@ export function PersonalityEditor({
 
         <div className="p-6 space-y-6">
           {error !== null && error.length > 0 && (
-            <div className="p-4 bg-scout-danger border border-scout-danger rounded text-scout-danger">
+            <div className="p-4 bg-scout-danger border border-scout-danger rounded text-scout-danger-ink">
               {error}
             </div>
           )}

@@ -144,10 +144,10 @@ export function RatingsAnalytics() {
             <div className="text-sm text-scout-brand">Total Generations</div>
           </div>
           <div className="p-4 bg-scout-success rounded">
-            <div className="text-2xl font-bold text-scout-success">
+            <div className="text-2xl font-bold text-scout-success-ink">
               {statistics.averageRating.toFixed(2)}
             </div>
-            <div className="text-sm text-scout-success">Average Rating</div>
+            <div className="text-sm text-scout-success-ink">Average Rating</div>
           </div>
         </div>
 

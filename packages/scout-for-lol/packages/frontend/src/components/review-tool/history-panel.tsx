@@ -143,7 +143,7 @@ export function HistoryPanel({
 
       {showConfirmClear && (
         <div className="mb-4 p-3 bg-scout-danger border border-scout-danger rounded">
-          <div className="text-sm text-scout-danger mb-2">
+          <div className="text-sm text-scout-danger-ink mb-2">
             Are you sure you want to clear all history?
           </div>
           <div className="flex gap-2">

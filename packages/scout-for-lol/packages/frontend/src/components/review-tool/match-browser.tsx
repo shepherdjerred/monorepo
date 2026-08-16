@@ -107,10 +107,10 @@ export function MatchBrowser({
 
       {/* Error state */}
       {browser.error !== null && browser.error.length > 0 && (
-        <div className="p-4 rounded-xl bg-scout-danger border border-scout-danger text-sm text-scout-danger mb-4 animate-fade-in">
+        <div className="p-4 rounded-xl bg-scout-danger border border-scout-danger text-sm text-scout-danger-ink mb-4 animate-fade-in">
           <div className="flex items-start gap-3">
             <svg
-              className="w-5 h-5 text-scout-danger shrink-0 mt-0.5"
+              className="w-5 h-5 text-scout-danger-ink shrink-0 mt-0.5"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -122,7 +122,7 @@ export function MatchBrowser({
             </svg>
             <div>
               <p className="font-medium">Error loading matches</p>
-              <p className="text-scout-danger mt-0.5">{browser.error}</p>
+              <p className="text-scout-danger-ink mt-0.5">{browser.error}</p>
             </div>
           </div>
         </div>

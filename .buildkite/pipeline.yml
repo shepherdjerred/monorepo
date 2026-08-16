@@ -425,6 +425,10 @@ steps:
         - "packages/scout-for-lol/eslint.config.ts"
         - "packages/scout-for-lol/tsconfig.base.json"
         - "packages/scout-for-lol/packages/data/**"
+        - "packages/scout-for-lol/packages/app/**"
+        - "packages/scout-for-lol/packages/frontend/**"
+        - "packages/scout-for-lol/packages/docs-site/**"
+        - "packages/scout-for-lol/packages/design-audit/**"
         - "packages/scout-for-lol/packages/design-system/**"
         - "packages/scout-for-lol/packages/evals/**"
         # Main's playwright lane also gates on the deploy consumers of its
@@ -434,9 +438,12 @@ steps:
         - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter scout-for-lol --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
-      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
-      echo "Browser E2E scope: sjer.red, docs wiki, alert dashboard, and Scout design-system/eval suites."
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter scout-for-lol --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
+      bun x --no-install turbo run build lint test --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/app' --filter='@scout-for-lol/frontend' --filter='@scout-for-lol/docs-site' --filter='@scout-for-lol/design-audit' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
+      bun x --no-install turbo run test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
+      bun --no-install run --cwd packages/scout-for-lol/packages/design-audit check:tokens
+      SCOUT_DESIGN_AUDIT_MODE=pr SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true bun --no-install run --cwd packages/scout-for-lol/packages/design-audit test:e2e
+      echo "Browser E2E scope: sites, Scout public/docs/app design audit, design-system, and eval suites."
       bun --no-install scripts/namespace-playwright-reports.ts
       bun --no-install scripts/write-ci-report-index.ts
     artifact_paths:
@@ -484,9 +491,12 @@ steps:
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter scout-for-lol --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
-      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
-      echo "Browser E2E scope: sjer.red, docs wiki, alert dashboard, and Scout design-system/eval suites."
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter scout-for-lol --filter '@scout-for-lol/app' --filter '@scout-for-lol/frontend' --filter '@scout-for-lol/docs-site' --filter '@scout-for-lol/design-audit' --filter '@scout-for-lol/design-system' --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
+      bun x --no-install turbo run build lint test --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/app' --filter='@scout-for-lol/frontend' --filter='@scout-for-lol/docs-site' --filter='@scout-for-lol/design-audit' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
+      bun x --no-install turbo run test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
+      bun --no-install run --cwd packages/scout-for-lol/packages/design-audit check:tokens
+      SCOUT_DESIGN_AUDIT_MODE=nightly bun --no-install run --cwd packages/scout-for-lol/packages/design-audit test:e2e
+      echo "Browser E2E scope: sites, Scout public/docs/app design audit, design-system, and eval suites."
       if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then
         echo "playwright-e2e-main completed without a non-empty JUnit report" >&2
         exit 1
@@ -497,6 +507,10 @@ steps:
       fi
       if [ ! -s .ci-reports/junit/scout-for-lol__design-system/playwright.xml ]; then
         echo "Scout design-system browser tests completed without a non-empty JUnit report" >&2
+        exit 1
+      fi
+      if [ ! -s .ci-reports/junit/scout-for-lol__design-audit/playwright.xml ]; then
+        echo "Scout design-audit browser tests completed without a non-empty JUnit report" >&2
         exit 1
       fi
       bun --no-install scripts/namespace-playwright-reports.ts
