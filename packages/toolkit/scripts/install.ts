@@ -32,7 +32,7 @@ if (import.meta.main) {
     ],
     root,
   );
-  await Promise.all([mkdir(`${home}/.local/bin`, { recursive: true })]);
+  await mkdir(`${home}/.local/bin`, { recursive: true });
   await rm(paths.binary, { force: true });
   await Bun.write(paths.binary, Bun.file(`${root}/dist/toolkit`));
   await chmod(paths.binary, 0o755);
