@@ -32,7 +32,26 @@ export function buildPlaybackActors(deps: PlaybackActorDeps): PlaybackActors {
     resolveSource: deps.resolveSource,
     runStream: deps.entry.userbot.runStream,
     leaveVoice: async (input, signal) => {
-      await deps.teardownHold().drain();
+      // The drain must honor the invoke's abort: a voice-transaction hold can legitimately last
+      // longer (30 s budget) than the machine's leaving-state wedge guard (10 s), and a leave
+      // that outlives its abort could disconnect a session that has already moved on.
+      await Promise.race([
+        deps.teardownHold().drain(),
+        new Promise<never>((_resolve, reject) => {
+          const rejectAbort = () => {
+            reject(
+              signal.reason instanceof Error
+                ? signal.reason
+                : new Error("Voice leave aborted"),
+            );
+          };
+          if (signal.aborted) {
+            rejectAbort();
+            return;
+          }
+          signal.addEventListener("abort", rejectAbort, { once: true });
+        }),
+      ]);
       await deps.entry.userbot.leaveVoice(input, signal);
     },
   };

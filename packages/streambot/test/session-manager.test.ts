@@ -879,4 +879,46 @@ describe("playback actors", () => {
     await leaving;
     expect(left).toBe(true);
   });
+
+  test("an aborted leave stops waiting on the hold and never disconnects late", async () => {
+    const pool = fakePool(1);
+    const streamer = pool.streamers[0];
+    if (streamer === undefined) throw new Error("fake pool produced no bot");
+    let left = false;
+    const entry: UserbotEntry = {
+      userbot: {
+        ...streamer,
+        leaveVoice: () => {
+          left = true;
+          return Promise.resolve();
+        },
+      },
+      guildIds: new Set([GUILD]),
+      busy: false,
+    };
+    const hold = new TeardownHold(() => {
+      throw new Error("teardown must not run under a hold");
+    });
+    const actors = buildPlaybackActors({
+      entry,
+      resolveSource: () => Promise.resolve(RESOLVED),
+      teardownHold: () => hold,
+    });
+    const release = hold.acquire();
+
+    // The machine's leaving-state wedge guard aborts the invoke while the voice transaction
+    // still holds the drain; the leave must reject promptly and never disconnect afterwards.
+    const controller = new AbortController();
+    const leaving = actors.leaveVoice(
+      { voice: { guildId: GUILD, channelId: CHANNEL_A } },
+      controller.signal,
+    );
+    controller.abort(new Error("leaving-state wedge guard"));
+    await expect(leaving).rejects.toThrow("leaving-state wedge guard");
+    expect(left).toBe(false);
+
+    release();
+    await Bun.sleep(0);
+    expect(left).toBe(false);
+  });
 });
