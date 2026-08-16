@@ -27,13 +27,13 @@ that surface.
 
 ## What runs where
 
-| Layer         | Mechanism                              | Notes                                                                                                   |
-| ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Host packages | `bootstrap.sh` → Homebrew              | `buildkite-agent`, `swiftlint`, `tailscale`                                                             |
-| Power         | `bootstrap.sh` → `pmset`               | never sleep (`sleep 0`, `powernap 0`, `womp 1`, `autorestart 1`) — a sleeping agent drops off Buildkite |
-| Agent daemon  | `brew services` (LaunchAgent)          | user context (keychain/Xcode-friendly); needs auto-login for headless boot                              |
-| Queue         | Tofu `buildkite_cluster_queue "macos"` | `src/tofu/buildkite/cluster.tf`                                                                         |
-| Job routing   | per-step `agents.queue = "macos"`      | steps added directly to the static `.buildkite/pipeline.yml`                                            |
+| Layer         | Mechanism                              | Notes                                                                                                                                    |
+| ------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Host packages | `bootstrap.sh` → Homebrew              | `buildkite-agent`, `swiftlint`, `tailscale`                                                                                              |
+| Power         | `bootstrap.sh` → `pmset`               | never sleep (`sleep 0`, `disksleep 0`, `displaysleep 0`, `powernap 0`, `womp 1`, `autorestart 1`) — a sleeping agent drops off Buildkite |
+| Agent daemon  | `brew services` (LaunchAgent)          | user context (keychain/Xcode-friendly); needs auto-login for headless boot                                                               |
+| Queue         | Tofu `buildkite_cluster_queue "macos"` | `src/tofu/buildkite/cluster.tf`                                                                                                          |
+| Job routing   | per-step `agents.queue = "macos"`      | steps added directly to the static `.buildkite/pipeline.yml`                                                                             |
 
 ## First-time setup
 
@@ -62,7 +62,8 @@ that surface.
 
    The `pmset` step is what keeps a Mac Mini from dropping off Buildkite: a
    sleeping host disconnects its agent and hangs any dispatched job. It forces
-   `sleep 0` / `disksleep 0` / `powernap 0` / `womp 1` / `autorestart 1`.
+   `sleep 0` / `disksleep 0` / `displaysleep 0` / `powernap 0` / `womp 1` /
+   `autorestart 1` — the same six settings `restore-power.sh` puts back.
    Verify afterward with `pmset -g custom` (look for `sleep 0`).
 
 3. **Join the tailnet** (manual — needs interactive auth):
