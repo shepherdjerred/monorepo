@@ -55,6 +55,15 @@ describe("voice RTP parsing", () => {
     expect(parsed).toEqual({ ssrc: 99, payload: new Uint8Array([8, 9]) });
   });
 
+  test("returns the payload as a view over the packet, not a copy", () => {
+    const packet = rtpPacket({ ssrc: 7, payload: [5, 6, 7] });
+    const parsed = parseRtpPacket(packet);
+    expect(parsed.payload.buffer).toBe(packet.buffer);
+    parsed.payload.fill(0);
+    // Zeroing the payload view erases exactly the voice bytes inside the packet.
+    expect(packet.subarray(12)).toEqual(new Uint8Array([0, 0, 0]));
+  });
+
   test("rejects short packets before reading the RTP header", () => {
     expect(() => parseRtpPacket(new Uint8Array([0x80]))).toThrow("Invalid RTP packet");
   });
@@ -131,6 +140,56 @@ describe("bidirectional voice policy", () => {
     connection.handleClientDisconnect("speaker-1");
     connection.handleIncomingAudioPacket(
       rtpPacket({ ssrc: 42, payload: [4, 5, 6] }),
+    );
+    expect(received).toHaveLength(1);
+  });
+
+  test("prunes a speaker's stale SSRC on rejoin and clears all mappings on READY", () => {
+    const streamer = new Streamer(new Client());
+    const connection = new VoiceConnection(
+      streamer,
+      "guild-1",
+      "bot-1",
+      "channel-1",
+      () => {},
+      { receiveAudio: true },
+    );
+    const received: { userId: string }[] = [];
+    connection.on("audio", ({ userId }) => received.push({ userId }));
+    connection.handleSpeakingUpdate({
+      speaking: 1,
+      delay: 0,
+      ssrc: 42,
+      user_id: "speaker-1",
+    });
+    // speaker-1 rejoins with a fresh SSRC; Discord may recycle 42 for someone else without a
+    // CLIENT_DISCONNECT, so the old row must not linger to mis-attribute their audio.
+    connection.handleSpeakingUpdate({
+      speaking: 1,
+      delay: 0,
+      ssrc: 43,
+      user_id: "speaker-1",
+    });
+    connection.handleIncomingAudioPacket(
+      rtpPacket({ ssrc: 42, payload: [1, 2, 3] }),
+    );
+    expect(received).toHaveLength(0);
+    connection.handleIncomingAudioPacket(
+      rtpPacket({ ssrc: 43, payload: [1, 2, 3] }),
+    );
+    expect(received).toEqual([{ userId: "speaker-1" }]);
+
+    // A renegotiated session starts from a clean speaker table.
+    connection.handleReady({
+      ssrc: 1,
+      ip: "127.0.0.1",
+      port: 50_000,
+      modes: [],
+      experiments: [],
+      streams: [{ ssrc: 2, rtx_ssrc: 3 }],
+    });
+    connection.handleIncomingAudioPacket(
+      rtpPacket({ ssrc: 43, payload: [4, 5, 6] }),
     );
     expect(received).toHaveLength(1);
   });

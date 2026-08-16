@@ -277,6 +277,9 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
   }
 
   handleReady(d: Message.Ready): void {
+    // A (re)connected voice session renegotiates SSRCs; mappings from the previous session are
+    // stale and repopulate from this session's SPEAKING frames.
+    this._audioUsersBySsrc.clear();
     // we hardcoded the STREAMS_SIMULCAST, which will always be array of 1
     const stream = d.streams[0];
     if (stream === undefined) throw new Error("Voice READY had no stream");
@@ -619,7 +622,16 @@ a=ice-lite
 
   /** Voice-gateway speaker mapping, public so transports can be tested without a live socket. */
   public handleSpeakingUpdate(update: Message.SpeakingUpdate): void {
-    if (this._receiveAudio) this._audioUsersBySsrc.set(update.ssrc, update.user_id);
+    if (!this._receiveAudio) return;
+    // A rejoining user speaks with a fresh SSRC and Discord recycles the old one, but not every
+    // departure emits CLIENT_DISCONNECT. A stale row would then attribute the recycled SSRC's
+    // audio — and the permissions derived from it downstream — to the wrong user.
+    for (const [ssrc, mappedUserId] of this._audioUsersBySsrc) {
+      if (mappedUserId === update.user_id && ssrc !== update.ssrc) {
+        this._audioUsersBySsrc.delete(ssrc);
+      }
+    }
+    this._audioUsersBySsrc.set(update.ssrc, update.user_id);
   }
 
   public handleClientDisconnect(userId: string): void {
@@ -830,6 +842,11 @@ export function parseRtpPacket(packet: Uint8Array): {
 
   return {
     ssrc: view.getUint32(8),
-    payload: packet.slice(payloadOffset, payloadEnd),
+    // A view, not a copy: this runs per packet on the receive hot path, and most packets are
+    // dropped (unmapped SSRC, own bot) before the payload is ever read. The DAVE path copies the
+    // view into decrypt's input Buffer anyway; on the passthrough path the emitted opus therefore
+    // aliases the packet buffer, whose only other bytes are the RTP header — a consumer zeroing
+    // its opus erases exactly the voice payload, and each packet is a fresh buffer per message.
+    payload: packet.subarray(payloadOffset, payloadEnd),
   };
 }
