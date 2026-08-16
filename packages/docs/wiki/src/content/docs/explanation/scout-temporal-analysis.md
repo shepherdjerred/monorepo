@@ -69,4 +69,5 @@ posted last year still looks like what you posted.
 
 ## Related
 
+- [Scout's report lake](/explanation/scout-report-lake/) — how the disposable DuckDB lake is written and read
 - [Temporal workflow inventory](/reference/temporal-workflows/) — the Scout upkeep jobs
