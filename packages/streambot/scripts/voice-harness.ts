@@ -231,7 +231,7 @@ async function main(): Promise<void> {
         printResult(await trial.probe.finish());
       } finally {
         trial.recorder?.close();
-        trial.commands.clear();
+        trial.commands.resetInvocations();
         trial.probe.close();
         if (active === trial) active = null;
         if (!quitting) console.log("Press Enter to record, q to quit.");
@@ -305,7 +305,7 @@ async function main(): Promise<void> {
     } catch (error) {
       probe.close();
       recorder?.close();
-      commands.clear();
+      commands.resetInvocations();
       throw error;
     }
     const timer = setTimeout(() => {

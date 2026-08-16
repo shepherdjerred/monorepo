@@ -42,7 +42,7 @@ export function helpText(voiceEnabled: boolean): string {
     ...(voiceEnabled
       ? [
           "**Voice commands**",
-          "• During playback, say **Hey Streambot**, then one command: play, skip, stop, seek, volume, loop, shuffle, queue, or now playing.",
+          "• During playback, say **Hey Streambot**, then one command: play, skip, stop, seek, volume, loop, shuffle, remove, move, clear, chapters, subtitles off, search, queue, or now playing.",
           "• Wake detection stays local; only that speaker's command is sent. Say “local” or “YouTube” to force a source; use titles, not URLs.",
           "",
         ]

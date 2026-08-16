@@ -331,6 +331,15 @@ describe("custom Realtime transport", () => {
     { name: "set_volume", arguments: JSON.stringify({ percent: 70 }) },
     { name: "set_loop", arguments: JSON.stringify({ mode: "track" }) },
     { name: "shuffle", arguments: "{}" },
+    // remove/move run against the fixture's empty queue and chapter against a chapterless
+    // video: the boundary denial is itself the asserted tool output path.
+    { name: "remove", arguments: JSON.stringify({ position: 1 }) },
+    { name: "clear", arguments: "{}" },
+    { name: "move", arguments: JSON.stringify({ from: 1, to: 2 }) },
+    { name: "chapter", arguments: JSON.stringify({ target: "next" }) },
+    { name: "subtitles_off", arguments: "{}" },
+    { name: "search_library", arguments: JSON.stringify({ query: "Local" }) },
+    { name: "list_chapters", arguments: "{}" },
     { name: "get_queue", arguments: "{}" },
     { name: "get_now_playing", arguments: "{}" },
   ];
@@ -370,7 +379,7 @@ describe("custom Realtime transport", () => {
     );
     expect(
       result.transport.connectOptions?.initialSessionConfig?.tools,
-    ).toHaveLength(9);
+    ).toHaveLength(16);
   });
 
   test("deletes committed audio and inserts verified command text before response", async () => {

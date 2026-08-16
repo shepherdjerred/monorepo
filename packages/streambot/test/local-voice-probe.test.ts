@@ -241,6 +241,13 @@ Error opening input files: Input/output error`;
     await commands.setVolume(75);
     await commands.setLoop("queue");
     await commands.shuffle();
+    await commands.remove(2);
+    await commands.clear();
+    await commands.move(1, 3);
+    await commands.jumpToChapter("next");
+    await commands.subtitlesOff();
+    await commands.searchLibrary("movie");
+    await commands.listChapters();
     await commands.getQueue();
     await commands.getNowPlaying();
     expect(commands.invocations.map((item) => item.name)).toEqual([
@@ -251,10 +258,17 @@ Error opening input files: Input/output error`;
       "set_volume",
       "set_loop",
       "shuffle",
+      "remove",
+      "clear",
+      "move",
+      "chapter",
+      "subtitles_off",
+      "search_library",
+      "list_chapters",
       "get_queue",
       "get_now_playing",
     ]);
-    commands.clear();
+    commands.resetInvocations();
     expect(commands.invocations).toEqual([]);
   });
 

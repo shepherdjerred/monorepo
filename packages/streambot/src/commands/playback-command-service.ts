@@ -14,6 +14,7 @@ import {
 } from "@shepherdjerred/streambot/moderation/adult-block.ts";
 import { formatTimecode } from "@shepherdjerred/streambot/discord/timecode.ts";
 import {
+  chaptersText,
   nowPlayingText,
   queueText,
   type PlaybackView,
@@ -25,8 +26,10 @@ import type {
 } from "@shepherdjerred/streambot/machine/types.ts";
 import {
   findBestMatch,
+  searchLibrary,
   type LibraryEntry,
 } from "@shepherdjerred/streambot/sources/library.ts";
+import { findChapterAt } from "@shepherdjerred/streambot/sources/chapters.ts";
 import {
   sourceLabel,
   type Source,
@@ -70,7 +73,12 @@ export type PlaybackCommandResult = {
     | "volume-set"
     | "volume-deferred"
     | "loop-set"
-    | "shuffled";
+    | "shuffled"
+    | "removed"
+    | "cleared"
+    | "moved"
+    | "chapter-jumped"
+    | "subtitles-off";
   readonly message: string;
 };
 
@@ -243,6 +251,149 @@ export class PlaybackCommandService {
   private async announceBlocked(userId: UserId): Promise<never> {
     await this.deps.announce(shameMessage(userId));
     throw new PlaybackCommandBoundaryError("Nope. That's not allowed.");
+  }
+
+  remove(userId: UserId, position: number): PlaybackCommandResult {
+    const item = this.deps.view().queue[position - 1];
+    if (item === undefined) {
+      throw new PlaybackCommandBoundaryError(
+        `There's no queue item ${String(position)}.`,
+      );
+    }
+    if (
+      !canControlItem(
+        userId,
+        item.requesterId,
+        this.deps.config.discord.adminIds,
+      )
+    ) {
+      throw new PlaybackCommandBoundaryError(
+        "Only the requester or an admin can remove this.",
+      );
+    }
+    this.deps.dispatch({ type: "REMOVE", index: position });
+    return { outcome: "removed", message: `Removed ${item.title}.` };
+  }
+
+  clear(userId: UserId): PlaybackCommandResult {
+    if (!isAdmin(userId, this.deps.config.discord.adminIds)) {
+      throw new PlaybackCommandBoundaryError(
+        "Only an admin can clear the queue.",
+      );
+    }
+    const count = this.deps.view().queue.length;
+    this.deps.dispatch({ type: "CLEAR" });
+    return {
+      outcome: "cleared",
+      message: `Cleared ${String(count)} queued items.`,
+    };
+  }
+
+  // Mirrors /stream move, which has no permission gate; voice adds bounds checks only so a
+  // misheard position gets a spoken correction instead of a silent no-op.
+  move(from: number, to: number): PlaybackCommandResult {
+    const queue = this.deps.view().queue;
+    const item = queue[from - 1];
+    if (item === undefined || to < 1 || to > queue.length) {
+      throw new PlaybackCommandBoundaryError(
+        `Those queue positions don't exist. The queue has ${String(queue.length)} items.`,
+      );
+    }
+    this.deps.dispatch({ type: "MOVE", from, to });
+    return {
+      outcome: "moved",
+      message: `Moved ${item.title} to position ${String(to)}.`,
+    };
+  }
+
+  async jumpToChapter(
+    userId: UserId,
+    target: number | "next" | "previous",
+  ): Promise<PlaybackCommandResult> {
+    const view = this.deps.view();
+    const current = view.current;
+    if (current === null)
+      throw new PlaybackCommandBoundaryError("Nothing is playing.");
+    if (
+      !canControlItem(
+        userId,
+        current.requesterId,
+        this.deps.config.discord.adminIds,
+      )
+    ) {
+      throw new PlaybackCommandBoundaryError(
+        "Only the requester or an admin can seek this.",
+      );
+    }
+    if (current.chapters.length === 0) {
+      throw new PlaybackCommandBoundaryError(
+        "No chapters for the current video.",
+      );
+    }
+    let chapter;
+    if (typeof target === "number") {
+      chapter = current.chapters[target - 1];
+      if (chapter === undefined) {
+        throw new PlaybackCommandBoundaryError(
+          `There's no chapter ${String(target)}. This video has ${String(current.chapters.length)}.`,
+        );
+      }
+    } else {
+      const at = findChapterAt(current.chapters, view.positionSeconds ?? 0);
+      const currentIndex = at?.index ?? 0;
+      const nextIndex = target === "next" ? currentIndex + 1 : currentIndex - 1;
+      chapter = current.chapters[nextIndex - 1];
+      if (chapter === undefined) {
+        throw new PlaybackCommandBoundaryError(
+          target === "next"
+            ? "There's no next chapter."
+            : "There's no previous chapter.",
+        );
+      }
+    }
+    if (!(await this.deps.seek(chapter.startSeconds)))
+      throw new PlaybackCommandBoundaryError("Nothing is playing.");
+    return {
+      outcome: "chapter-jumped",
+      message: `Chapter ${String(chapter.index)}: ${chapter.title}.`,
+    };
+  }
+
+  subtitlesOff(userId: UserId): PlaybackCommandResult {
+    const view = this.deps.view();
+    if (view.current === null)
+      throw new PlaybackCommandBoundaryError("Nothing is playing.");
+    if (
+      !canControlItem(
+        userId,
+        view.current.requesterId,
+        this.deps.config.discord.adminIds,
+      )
+    ) {
+      throw new PlaybackCommandBoundaryError(
+        "Only the requester or an admin can change subtitles for this.",
+      );
+    }
+    this.deps.dispatch({
+      type: "CHANGE_SUBTITLES",
+      subtitles: { trackRef: { kind: "off" } },
+      positionSeconds: view.positionSeconds ?? 0,
+    });
+    return {
+      outcome: "subtitles-off",
+      message: "Subtitles turned off; the video restarts at the same spot.",
+    };
+  }
+
+  /** Bounded library search so the model can ground a title before its one play. */
+  searchLibraryTitles(query: string, limit: number): string {
+    const matches = searchLibrary(this.deps.library(), query, limit);
+    if (matches.length === 0) return `Nothing in the library matches ${query}.`;
+    return matches.map((entry) => entry.title).join("; ");
+  }
+
+  listChapters(): string {
+    return chaptersText(this.deps.view());
   }
 
   private selectSource(query: string, requested: VoicePlaySource): Source {

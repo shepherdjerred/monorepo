@@ -63,6 +63,13 @@ describe("voice transaction policy", () => {
       "set_volume",
       "set_loop",
       "shuffle",
+      "remove",
+      "clear",
+      "move",
+      "chapter",
+      "subtitles_off",
+      "search_library",
+      "list_chapters",
       "get_queue",
       "get_now_playing",
     ]);

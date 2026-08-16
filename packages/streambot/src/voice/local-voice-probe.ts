@@ -154,7 +154,7 @@ export class DryRunVoiceCommandPort implements VoiceCommandPort {
     return [...this.calls];
   }
 
-  clear(): void {
+  resetInvocations(): void {
     this.calls.length = 0;
   }
 
@@ -207,6 +207,43 @@ export class DryRunVoiceCommandPort implements VoiceCommandPort {
   getNowPlaying(): string {
     this.calls.push({ name: "get_now_playing", arguments: {} });
     return "Dry run: the current item would be read.";
+  }
+
+  remove(position: number): string {
+    this.calls.push({ name: "remove", arguments: { position } });
+    return "Dry run: the queued item would be removed.";
+  }
+
+  clear(): string {
+    this.calls.push({ name: "clear", arguments: {} });
+    return "Dry run: the queue would be cleared.";
+  }
+
+  move(from: number, to: number): string {
+    this.calls.push({ name: "move", arguments: { from, to } });
+    return "Dry run: the queued item would move.";
+  }
+
+  jumpToChapter(
+    target: Parameters<VoiceCommandPort["jumpToChapter"]>[0],
+  ): string {
+    this.calls.push({ name: "chapter", arguments: { target } });
+    return "Dry run: playback would jump to the chapter.";
+  }
+
+  subtitlesOff(): string {
+    this.calls.push({ name: "subtitles_off", arguments: {} });
+    return "Dry run: subtitles would turn off.";
+  }
+
+  searchLibrary(query: string): string {
+    this.calls.push({ name: "search_library", arguments: { query } });
+    return "Dry run: the library would be searched.";
+  }
+
+  listChapters(): string {
+    this.calls.push({ name: "list_chapters", arguments: {} });
+    return "Dry run: the chapter list would be read.";
   }
 }
 

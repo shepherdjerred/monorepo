@@ -23,6 +23,18 @@ export const voiceToolSchemas = {
   setVolume: z.strictObject({ percent: z.number().int().min(0).max(200) }),
   setLoop: z.strictObject({ mode: z.enum(["off", "track", "queue"]) }),
   shuffle: EmptyInputSchema,
+  remove: z.strictObject({ position: z.number().int().min(1) }),
+  clear: EmptyInputSchema,
+  move: z.strictObject({
+    from: z.number().int().min(1),
+    to: z.number().int().min(1),
+  }),
+  chapter: z.strictObject({
+    target: z.union([z.number().int().min(1), z.enum(["next", "previous"])]),
+  }),
+  subtitlesOff: EmptyInputSchema,
+  searchLibrary: z.strictObject({ query: z.string().min(1) }),
+  listChapters: EmptyInputSchema,
   getQueue: EmptyInputSchema,
   getNowPlaying: EmptyInputSchema,
 } as const;
@@ -35,6 +47,13 @@ type ToolName =
   | "set_volume"
   | "set_loop"
   | "shuffle"
+  | "remove"
+  | "clear"
+  | "move"
+  | "chapter"
+  | "subtitles_off"
+  | "search_library"
+  | "list_chapters"
   | "get_queue"
   | "get_now_playing";
 
@@ -53,6 +72,31 @@ export type VoiceCommandInvocation =
     }
   | { readonly name: "set_loop"; readonly arguments: LoopArguments }
   | { readonly name: "shuffle"; readonly arguments: Record<string, never> }
+  | {
+      readonly name: "remove";
+      readonly arguments: z.infer<typeof voiceToolSchemas.remove>;
+    }
+  | { readonly name: "clear"; readonly arguments: Record<string, never> }
+  | {
+      readonly name: "move";
+      readonly arguments: z.infer<typeof voiceToolSchemas.move>;
+    }
+  | {
+      readonly name: "chapter";
+      readonly arguments: z.infer<typeof voiceToolSchemas.chapter>;
+    }
+  | {
+      readonly name: "subtitles_off";
+      readonly arguments: Record<string, never>;
+    }
+  | {
+      readonly name: "search_library";
+      readonly arguments: z.infer<typeof voiceToolSchemas.searchLibrary>;
+    }
+  | {
+      readonly name: "list_chapters";
+      readonly arguments: Record<string, never>;
+    }
   | { readonly name: "get_queue"; readonly arguments: Record<string, never> }
   | {
       readonly name: "get_now_playing";
@@ -71,6 +115,15 @@ export type VoiceCommandPort = {
   readonly setVolume: (percent: number) => string | Promise<string>;
   readonly setLoop: (mode: LoopArguments["mode"]) => string | Promise<string>;
   readonly shuffle: () => string | Promise<string>;
+  readonly remove: (position: number) => string | Promise<string>;
+  readonly clear: () => string | Promise<string>;
+  readonly move: (from: number, to: number) => string | Promise<string>;
+  readonly jumpToChapter: (
+    target: number | "next" | "previous",
+  ) => string | Promise<string>;
+  readonly subtitlesOff: () => string | Promise<string>;
+  readonly searchLibrary: (query: string) => string | Promise<string>;
+  readonly listChapters: () => string | Promise<string>;
   readonly getQueue: () => string | Promise<string>;
   readonly getNowPlaying: () => string | Promise<string>;
 };
@@ -100,6 +153,18 @@ export function bindPlaybackVoiceCommandPort(
     },
     setLoop: (mode) => service.setLoop(mode).message,
     shuffle: () => service.shuffle().message,
+    remove: (position) => service.remove(userId, position).message,
+    clear: () => service.clear(userId).message,
+    move: (from, to) => service.move(from, to).message,
+    jumpToChapter: async (target) => {
+      const result = await service.jumpToChapter(userId, target);
+      return result.message;
+    },
+    subtitlesOff: () => service.subtitlesOff(userId).message,
+    // Five grounded titles is plenty for one spoken disambiguation and keeps the tool result
+    // small in the realtime context.
+    searchLibrary: (query) => service.searchLibraryTitles(query, 5),
+    listChapters: () => service.listChapters(),
     getQueue: () => service.getQueue(),
     getNowPlaying: () => service.getNowPlaying(),
   };
@@ -213,6 +278,59 @@ export function createStreambotVoiceTools(
       description: "Shuffle the queued items.",
       parameters: voiceToolSchemas.shuffle,
       execute: () => invoke("shuffle", true, () => commands.shuffle()),
+    }),
+    tool({
+      name: "remove",
+      description: "Remove a queued item by its 1-based queue position.",
+      parameters: voiceToolSchemas.remove,
+      execute: (input) =>
+        invoke("remove", true, () => commands.remove(input.position)),
+    }),
+    tool({
+      name: "clear",
+      description: "Clear the whole queue. Admin only.",
+      parameters: voiceToolSchemas.clear,
+      execute: () => invoke("clear", true, () => commands.clear()),
+    }),
+    tool({
+      name: "move",
+      description: "Move a queued item from one 1-based position to another.",
+      parameters: voiceToolSchemas.move,
+      execute: (input) =>
+        invoke("move", true, () => commands.move(input.from, input.to)),
+    }),
+    tool({
+      name: "chapter",
+      description:
+        "Jump to a chapter of the current video by number, or to the next/previous chapter.",
+      parameters: voiceToolSchemas.chapter,
+      execute: (input) =>
+        invoke("chapter", true, () => commands.jumpToChapter(input.target)),
+    }),
+    tool({
+      name: "subtitles_off",
+      description:
+        "Turn subtitles off for the current video. Enabling a specific track needs the /stream subtitles picker.",
+      parameters: voiceToolSchemas.subtitlesOff,
+      execute: () =>
+        invoke("subtitles_off", true, () => commands.subtitlesOff()),
+    }),
+    tool({
+      name: "search_library",
+      description:
+        "Search the local library by title and hear the closest matches, without changing playback. Use this to disambiguate before play.",
+      parameters: voiceToolSchemas.searchLibrary,
+      execute: (input) =>
+        invoke("search_library", false, () =>
+          commands.searchLibrary(input.query),
+        ),
+    }),
+    tool({
+      name: "list_chapters",
+      description: "Read the current video's chapter list without seeking.",
+      parameters: voiceToolSchemas.listChapters,
+      execute: () =>
+        invoke("list_chapters", false, () => commands.listChapters()),
     }),
     tool({
       name: "get_queue",

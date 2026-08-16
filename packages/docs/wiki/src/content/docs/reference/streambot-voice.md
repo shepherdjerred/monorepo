@@ -21,9 +21,6 @@ An invalid value fails startup rather than degrading.
 | ------------------------------ | ---------------------- | ---------------------------------------------------------------- |
 | `VOICE_ASSISTANT_ENABLED`      | `false`                | Global on/off. The only rollout and rollback control.            |
 | `OPENAI_API_KEY`               | —                      | Required when enabled. Startup fails without it.                 |
-| `VOICE_MODEL`                  | `gpt-realtime-2.1`     | Response model. Fixed value.                                     |
-| `VOICE_ASSISTANT_VOICE`        | `marin`                | Reply voice. Fixed value.                                        |
-| `VOICE_WAKE_PHRASE`            | `Hey Streambot`        | Wake phrase. Fixed value; the verifier model is phrase-specific. |
 | `VOICE_ASSETS_DIR`             | `/opt/streambot/voice` | Directory the pinned model assets are read from.                 |
 | `VOICE_KWS_RUNTIME`            | `auto`                 | `auto`, `native`, or `wasm`. `auto` prefers the native addon.    |
 | `VOICE_PRE_ROLL_MS`            | `2000`                 | Rolling audio retained before a candidate. Max `3000`.           |

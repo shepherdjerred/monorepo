@@ -160,6 +160,94 @@ describe("PlaybackCommandService", () => {
     expect(service.getNowPlaying()).toContain("Current");
     expect(service.getNowPlaying()).not.toContain("<@");
   });
+});
+
+describe("PlaybackCommandService queue and chapter surface", () => {
+  test("queue management mirrors slash permissions and bounds", () => {
+    const queueItem = {
+      title: "Queued Movie",
+      requesterId: USER,
+      chapters: [],
+      kind: "file" as const,
+      sourceId: "file:/queued.mkv",
+      durationSeconds: 60,
+    };
+    const { service, events } = createService({ queue: [queueItem] });
+    expect(() => service.remove(OTHER, 1)).toThrow("requester or an admin");
+    expect(() => service.remove(USER, 5)).toThrow("no queue item");
+    expect(service.remove(ADMIN, 1)).toEqual({
+      outcome: "removed",
+      message: "Removed Queued Movie.",
+    });
+    expect(() => service.clear(USER)).toThrow("Only an admin");
+    expect(service.clear(ADMIN).outcome).toBe("cleared");
+    expect(() => service.move(1, 9)).toThrow("positions don't exist");
+    expect(service.move(1, 1)).toEqual({
+      outcome: "moved",
+      message: "Moved Queued Movie to position 1.",
+    });
+    expect(events.map((event) => event.type)).toEqual([
+      "REMOVE",
+      "CLEAR",
+      "MOVE",
+    ]);
+  });
+
+  test("chapter jumps honor requester control, bounds, and relative targets", async () => {
+    const chapters = [
+      { index: 1, title: "Intro", startSeconds: 0, endSeconds: 60 },
+      { index: 2, title: "Middle", startSeconds: 60, endSeconds: 120 },
+      { index: 3, title: "End", startSeconds: 120, endSeconds: null },
+    ];
+    const { service, seeks } = createService({
+      current: {
+        title: "Current",
+        requesterId: USER,
+        chapters,
+        kind: "file",
+        sourceId: "file:/current.mkv",
+        durationSeconds: 600,
+      },
+      positionSeconds: 90,
+    });
+    await expect(service.jumpToChapter(OTHER, 1)).rejects.toThrow(
+      "requester or an admin",
+    );
+    await expect(service.jumpToChapter(USER, 9)).rejects.toThrow(
+      "no chapter 9",
+    );
+    // Position 90 s is inside chapter 2, so next is 3 and previous is 1.
+    await expect(service.jumpToChapter(USER, "next")).resolves.toMatchObject({
+      outcome: "chapter-jumped",
+      message: "Chapter 3: End.",
+    });
+    await expect(
+      service.jumpToChapter(USER, "previous"),
+    ).resolves.toMatchObject({ message: "Chapter 1: Intro." });
+    await expect(service.jumpToChapter(USER, 2)).resolves.toMatchObject({
+      message: "Chapter 2: Middle.",
+    });
+    expect(seeks).toEqual([120, 0, 60]);
+  });
+
+  test("subtitles off dispatches a positioned change for a controllable item", () => {
+    const { service, events } = createService();
+    expect(() => service.subtitlesOff(OTHER)).toThrow("requester or an admin");
+    expect(service.subtitlesOff(USER).outcome).toBe("subtitles-off");
+    expect(events[0]).toEqual({
+      type: "CHANGE_SUBTITLES",
+      subtitles: { trackRef: { kind: "off" } },
+      positionSeconds: 90,
+    });
+  });
+
+  test("library search is bounded and mention-free", () => {
+    const { service } = createService();
+    expect(service.searchLibraryTitles("local", 5)).toBe("Local Movie");
+    expect(service.searchLibraryTitles("nothing-matches", 5)).toContain(
+      "Nothing in the library",
+    );
+  });
 
   test("keeps requester and admin authorization authoritative", () => {
     const { service, events } = createService();
