@@ -196,7 +196,11 @@ namespace TaskNotes.Windows.Host
             };
         }
 
-        private sealed class ActiveRequest : IDisposable
+        // Internal rather than private so a unit test can assert the disposal contract
+        // below directly. Reaching it through CancelAll means racing a request to
+        // completion, which lands the guard only when the scheduler cooperates and makes
+        // the measured coverage of this file depend on thread timing.
+        internal sealed class ActiveRequest : IDisposable
         {
             private readonly CancellationTokenSource _cancellation = new();
 

@@ -366,10 +366,29 @@ for (const [component, minimum] of Object.entries(
   if (changedComponentLines.length === 0) {
     continue;
   }
-  if (coveredLines.length === 0) {
+  // The guard here is that a changed source *file* reached the coverage run at
+  // all: a file left out of the portable solution, or excluded by the coverage
+  // settings, would otherwise pass this gate by producing no data to measure.
+  // Whether the individual changed lines are executable is a different
+  // question — a comment, an attribute, or an accessibility modifier changes
+  // real source and instruments nothing, and must not read as uninstrumented.
+  const instrumentedFiles = new Set(
+    [...(lines?.keys() ?? [])].map((key) => key.slice(0, key.lastIndexOf(":"))),
+  );
+  const uninstrumentedFiles = [
+    ...new Set(
+      changedComponentLines.map((key) => key.slice(0, key.lastIndexOf(":"))),
+    ),
+  ]
+    .filter((file) => !instrumentedFiles.has(file))
+    .sort();
+  if (uninstrumentedFiles.length > 0) {
     failures.push(
-      `${component} has changed source but no instrumented executable lines.`,
+      `${component} has changed source that the coverage run never instrumented: ${uninstrumentedFiles.join(", ")}.`,
     );
+    continue;
+  }
+  if (coveredLines.length === 0) {
     continue;
   }
   const coverage = percent(

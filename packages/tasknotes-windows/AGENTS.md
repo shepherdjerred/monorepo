@@ -18,6 +18,12 @@ Native Windows 11 x64 TaskNotes client. The durable design is
   remain ignored.
 - Linux verification uses `TaskNotes.Windows.Portable.slnx`; Windows uses
   `bun run windows:verify` and must compile/package the full solution.
+- `coverage-baseline.json` keeps headroom on purpose: the measured percentage
+  moves with the host and the thread schedule, so a baseline pinned to the
+  observed value turns the ratchet into a coin flip. Raise a baseline only to a
+  value the slowest CI agent clears with room to spare, and cover a
+  race-only guard with a direct test rather than leaving a stress test to reach
+  it by luck.
 - Every parity claim needs a runtime assertion ID. Record it only after its
   UIA, server, persistence, or Markdown assertion has passed.
 - Do not activate the prepared Windows Buildkite lane until the tracked

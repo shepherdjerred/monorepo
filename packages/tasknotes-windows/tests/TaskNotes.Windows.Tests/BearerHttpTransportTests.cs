@@ -1,4 +1,5 @@
 using System.Net;
+using System.Reflection;
 using TaskNotes.Windows.Host;
 using Core = uniffi.TaskNotesCore;
 
@@ -109,6 +110,17 @@ namespace TaskNotes.Windows.Tests
         [DataRow(HttpRequestError.HttpProtocolError, typeof(Core.TransportException.Other))]
         [DataRow(HttpRequestError.InvalidResponse, typeof(Core.TransportException.Other))]
         [DataRow(HttpRequestError.Unknown, typeof(Core.TransportException.Other))]
+        [DataRow(
+            HttpRequestError.ExtendedConnectNotSupported,
+            typeof(Core.TransportException.Other)
+        )]
+        [DataRow(HttpRequestError.VersionNegotiationError, typeof(Core.TransportException.Other))]
+        [DataRow(HttpRequestError.UserAuthenticationError, typeof(Core.TransportException.Other))]
+        [DataRow(HttpRequestError.ResponseEnded, typeof(Core.TransportException.Other))]
+        [DataRow(
+            HttpRequestError.ConfigurationLimitExceeded,
+            typeof(Core.TransportException.Other)
+        )]
         public void NetworkFailuresMapToCoreTransportErrors(HttpRequestError error, Type expected)
         {
             using BearerHttpTransport transport = new(null, new ThrowingHandler(error));
@@ -125,6 +137,26 @@ namespace TaskNotes.Windows.Tests
             );
 
             Assert.AreEqual(expected, exception.GetType());
+        }
+
+        /// <summary>Keeps the mapping rows exhaustive as HttpRequestError gains members.</summary>
+        [TestMethod]
+        public void EveryHttpRequestErrorHasAMappingRow()
+        {
+            MethodInfo? mapping = typeof(BearerHttpTransportTests).GetMethod(
+                nameof(NetworkFailuresMapToCoreTransportErrors)
+            );
+            Assert.IsNotNull(mapping);
+            HttpRequestError[] covered =
+            [
+                .. mapping
+                    .GetCustomAttributes<DataRowAttribute>()
+                    .SelectMany(row => row.Data)
+                    .OfType<HttpRequestError>()
+                    .Order(),
+            ];
+
+            Assert.AreSequenceEqual(Enum.GetValues<HttpRequestError>().Order().ToArray(), covered);
         }
 
         /// <summary>Maps local timeouts and rejects calls after idempotent disposal.</summary>
@@ -298,6 +330,37 @@ namespace TaskNotes.Windows.Tests
 
             await stop.CancelAsync();
             await canceller;
+        }
+
+        /// <summary>Cancels a live request and reports the host, not a timeout, as the source.</summary>
+        [TestMethod]
+        public void CancellingALiveRequestNamesTheHostAsTheSource()
+        {
+            using BearerHttpTransport.ActiveRequest request = new(TimeSpan.FromMinutes(1));
+            Assert.IsFalse(request.WasCancelledByHost);
+            Assert.IsFalse(request.Token.IsCancellationRequested);
+
+            request.CancelByHost();
+
+            Assert.IsTrue(request.WasCancelledByHost);
+            Assert.IsTrue(request.Token.IsCancellationRequested);
+        }
+
+        /// <summary>Cancelling a request that already finished does nothing instead of throwing.</summary>
+        [TestMethod]
+        public void CancellingAFinishedRequestIsANoOp()
+        {
+            // CancelAll cancels a snapshot, so it can reach a request that finished and
+            // disposed its token source first. That window is what
+            // CancelAllRacingCompletionDoesNotThrow hammers; asserting the guard here
+            // states the contract without waiting for the scheduler to reproduce it.
+            BearerHttpTransport.ActiveRequest request = new(TimeSpan.FromMinutes(1));
+            request.Dispose();
+            request.Dispose();
+
+            request.CancelByHost();
+
+            Assert.IsFalse(request.WasCancelledByHost);
         }
 
         /// <summary>Times out a response whose headers arrive before the body stalls.</summary>
