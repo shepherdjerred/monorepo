@@ -1,7 +1,10 @@
 import type * as echarts from "echarts";
-import { fileURLToPath } from "node:url";
-import { palette } from "#src/assets/colors.ts";
-import { cjkFontFileNames, containsCjkText } from "#src/assets/index.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
+import {
+  cjkFontFileNames,
+  containsCjkText,
+} from "@scout-for-lol/design-system/satori/fonts";
+import { satoriFontFilePath } from "@scout-for-lol/design-system/satori/file-assets";
 import { generateSeriesPalette } from "#src/html/competition-chart-palette.ts";
 import {
   echartsOptionToSvg,
@@ -89,7 +92,7 @@ const BEAUFORT_FONT_FILES = [
 ];
 
 const FONT_FILE_PATHS = [...SPIEGEL_FONT_FILES, ...BEAUFORT_FONT_FILES].map(
-  (name) => fileURLToPath(new URL(`../assets/fonts/${name}`, import.meta.url)),
+  (relativePath) => satoriFontFilePath(relativePath),
 );
 const DAY_MS = 86_400_000;
 
@@ -396,9 +399,7 @@ export function competitionChartToImage(
     ? [
         ...FONT_FILE_PATHS,
         ...cjkFontFileNames.map((name) =>
-          fileURLToPath(
-            new URL(`../assets/fonts/NotoSansCJK/${name}`, import.meta.url),
-          ),
+          satoriFontFilePath(`NotoSansCJK/${name}`),
         ),
       ]
     : FONT_FILE_PATHS;

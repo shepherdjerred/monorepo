@@ -5,7 +5,11 @@ import {
   wasPromoted,
 } from "@scout-for-lol/data";
 import type { Rank, Tier } from "@scout-for-lol/data";
-import { palette } from "#src/assets/colors.ts";
+import {
+  browserRankAssetUrl,
+  satoriRankAssetUrl,
+} from "@scout-for-lol/design-system/satori/assets";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
 import { z } from "zod";
 import { match } from "ts-pattern";
 
@@ -17,12 +21,8 @@ if (typeof Bun !== "undefined") {
     Object.fromEntries(
       await Promise.all(
         TierSchema.options.map(async (tier): Promise<[Tier, string]> => {
-          const assetPrefix = "assets/Rank=";
           const image = await Bun.file(
-            new URL(
-              `${assetPrefix}${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`,
-              import.meta.url,
-            ),
+            satoriRankAssetUrl(tier.charAt(0).toUpperCase() + tier.slice(1)),
           ).arrayBuffer();
           const bytes = new Uint8Array(image);
           // Use Buffer to avoid stack overflow with large arrays
@@ -48,12 +48,9 @@ export function RankedBadge({
   const badge = match(environment)
     .with("bun", () => `data:image/png;base64,${rankImages[newRank.tier]}`)
     .with("browser", () => {
-      // Construct the import path for Vite to handle at build time
-      const assetPrefix = "assets/Rank=";
-      return new URL(
-        `${assetPrefix}${newRank.tier.charAt(0).toUpperCase() + newRank.tier.slice(1)}.png`,
-        import.meta.url,
-      ).href;
+      return browserRankAssetUrl(
+        newRank.tier.charAt(0).toUpperCase() + newRank.tier.slice(1),
+      );
     })
     .exhaustive();
 

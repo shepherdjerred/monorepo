@@ -5,8 +5,8 @@ import {
   bunCjkFonts,
   bunReportFonts,
   containsCjkText,
-} from "#src/assets/index.ts";
-import { bunClassicFonts } from "#src/assets/classic-fonts.ts";
+} from "@scout-for-lol/design-system/satori/fonts";
+import { bunClassicFonts } from "@scout-for-lol/design-system/satori/classic-fonts";
 import { ClassicLoadingScreen } from "#src/html/loading-screen/classic-layout.tsx";
 import { getClassicBackgroundBase64 } from "@scout-for-lol/data";
 import {

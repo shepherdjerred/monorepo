@@ -1,7 +1,10 @@
 import satori from "satori";
 import type { ClassicMatch } from "@scout-for-lol/data";
-import { bunClassicFonts } from "#src/assets/classic-fonts.ts";
-import { bunCjkFonts, containsCjkText } from "#src/assets/index.ts";
+import { bunClassicFonts } from "@scout-for-lol/design-system/satori/classic-fonts";
+import {
+  bunCjkFonts,
+  containsCjkText,
+} from "@scout-for-lol/design-system/satori/fonts";
 import {
   preloadChampionImages,
   preloadChampionSplashImages,

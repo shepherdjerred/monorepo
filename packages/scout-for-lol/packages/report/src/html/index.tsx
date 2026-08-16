@@ -17,7 +17,10 @@ import {
   type RankedDesign,
 } from "#src/html/shared/pick-design.ts";
 import { heroPlayer } from "#src/html/shared/grade.ts";
-import { bunReportFonts, containsCjkText } from "#src/assets/index.ts";
+import {
+  bunReportFonts,
+  containsCjkText,
+} from "@scout-for-lol/design-system/satori/fonts";
 import {
   preloadChampionImages,
   preloadChampionSplashImages,

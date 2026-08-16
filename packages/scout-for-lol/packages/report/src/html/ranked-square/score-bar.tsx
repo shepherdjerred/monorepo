@@ -1,7 +1,7 @@
 import { sumBy } from "remeda";
 import { getChampionImage } from "#src/dataDragon/image-cache.ts";
-import { palette } from "#src/assets/colors.ts";
-import { font } from "#src/assets/index.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
+import { font } from "@scout-for-lol/design-system/satori/fonts";
 import type { CompletedMatch } from "@scout-for-lol/data";
 
 const ICON_REM = 6;

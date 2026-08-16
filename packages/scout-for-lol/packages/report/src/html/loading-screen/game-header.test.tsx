@@ -1,8 +1,11 @@
 import { expect, test } from "bun:test";
 import satori from "satori";
 import { LoadingScreenDataSchema } from "@scout-for-lol/data";
-import { bunBeaufortFonts, bunSpiegelFonts } from "#src/assets/index.ts";
-import { palette } from "#src/assets/colors.ts";
+import {
+  bunBeaufortFonts,
+  bunSpiegelFonts,
+} from "@scout-for-lol/design-system/satori/fonts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
 import { GameHeader } from "#src/html/loading-screen/game-header.tsx";
 
 const currentDir = new URL(".", import.meta.url).pathname;

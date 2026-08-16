@@ -6,11 +6,14 @@
   "exports": {
     ".": "./src/index.ts",
     "./browser": "./src/browser.ts",
+    "./visualization": "./src/html/visualization-snapshot-option.ts",
     "./html/arena/report": "./src/html/arena/report.tsx",
     "./*": "./src/*"
   },
   "scripts": {
     "verify:classic-visuals": "bun run scripts/verify-classic-visuals.ts",
+    "verify:visual-contract": "bun test && bun run verify:classic-visuals && bun run scripts/verify-visual-contract.ts",
+    "update:visual-contract": "bun test && bun run verify:classic-visuals && SCOUT_ALLOW_REPORT_BASELINE_UPDATE=1 bun run scripts/verify-visual-contract.ts --write",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
@@ -24,6 +27,7 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "@scout-for-lol/data": "workspace:*",
+    "@scout-for-lol/design-system": "workspace:*",
     "chroma-js": "^3.2.0",
     "echarts": "^6.0.0",
     "react": "19.2.8",

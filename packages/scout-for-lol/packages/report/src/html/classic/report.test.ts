@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import satori, { type Font } from "satori";
 import type { ClassicMatch } from "@scout-for-lol/data";
-import { classicTypography } from "#src/assets/classic-style.ts";
+import { satoriFontUrl } from "@scout-for-lol/design-system/satori/assets";
+import { classicTypography } from "@scout-for-lol/design-system/satori/classic-style";
 import {
   preloadChampionImages,
   preloadChampionSplashImages,
@@ -17,13 +18,10 @@ import {
 
 async function testClassicFonts(): Promise<Font[]> {
   const regular = await Bun.file(
-    new URL("../../assets/fonts/QTFrizQuad/QTFrizQuad.otf", import.meta.url),
+    satoriFontUrl("QTFrizQuad/QTFrizQuad.otf"),
   ).arrayBuffer();
   const bold = await Bun.file(
-    new URL(
-      "../../assets/fonts/QTFrizQuad/QTFrizQuad-Bold.otf",
-      import.meta.url,
-    ),
+    satoriFontUrl("QTFrizQuad/QTFrizQuad-Bold.otf"),
   ).arrayBuffer();
   return [
     {

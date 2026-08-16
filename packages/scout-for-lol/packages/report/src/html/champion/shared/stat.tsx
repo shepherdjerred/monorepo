@@ -1,5 +1,5 @@
 import { round } from "remeda";
-import { palette } from "#src/assets/colors.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
 
 type StatProps = {
   mainValue: string;

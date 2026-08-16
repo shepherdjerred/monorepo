@@ -1,5 +1,5 @@
 import { getChampionSplashImage } from "#src/dataDragon/image-cache.ts";
-import { palette } from "#src/assets/colors.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
 
 /**
  * Full-bleed champion splash art (high-res ≈1280×720 centered art) used as the

@@ -1,4 +1,4 @@
-import { palette } from "#src/assets/colors.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
 import { getItemImage } from "#src/dataDragon/image-cache.ts";
 
 const ITEM_SIZE = 26;

@@ -3,8 +3,8 @@ import {
   championNameToDisplayName,
   type CompletedMatch,
 } from "@scout-for-lol/data";
-import { palette } from "#src/assets/colors.ts";
-import { font, fontForText } from "#src/assets/index.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
+import { font, fontForText } from "@scout-for-lol/design-system/satori/fonts";
 import { Splash } from "#src/html/shared/splash.tsx";
 import { TierPill } from "#src/html/shared/tier-pill.tsx";
 import { GradeDiamond } from "#src/html/shared/grade-diamond.tsx";

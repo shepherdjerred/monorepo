@@ -1,4 +1,4 @@
-import { palette } from "#src/assets/colors.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
 import { Damage as BaseDamage } from "#src/html/shared/damage.tsx";
 
 // TODO(https://github.com/shepherdjerred/monorepo/issues/183): Add damage icon for better visual hierarchy

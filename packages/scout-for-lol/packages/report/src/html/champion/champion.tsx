@@ -1,5 +1,5 @@
 import { renderItems } from "#src/html/champion/item.tsx";
-import { palette } from "#src/assets/colors.ts";
+import { palette } from "@scout-for-lol/design-system/satori/colors";
 import type { Champion } from "@scout-for-lol/data";
 import { summoner } from "@scout-for-lol/data/index.ts";
 import { getSpellImage } from "#src/dataDragon/image-cache.ts";

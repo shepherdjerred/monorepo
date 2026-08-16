@@ -1,7 +1,10 @@
 import satori from "satori";
 import { type ArenaMatch } from "@scout-for-lol/data";
 import { ArenaReport } from "#src/html/arena/report.tsx";
-import { bunReportFonts, containsCjkText } from "#src/assets/index.ts";
+import {
+  bunReportFonts,
+  containsCjkText,
+} from "@scout-for-lol/design-system/satori/fonts";
 import { svgToPng } from "#src/html/index.tsx";
 import {
   preloadChampionImages,
