@@ -274,12 +274,14 @@ export async function validateVoiceAssets(
  * The raw JSON carries `timestamps` (seconds, stream-relative) alongside `tokens`; both native and
  * WASM return the same shape, and neither is typed by its bindings.
  */
+const KeywordTimestampsSchema = z.looseObject({
+  timestamps: z.array(z.number()).min(1),
+});
+
 function fragmentEndSeconds(result: unknown): number | null {
-  if (typeof result !== "object" || result === null) return null;
-  const timestamps = Reflect.get(result, "timestamps");
-  if (!Array.isArray(timestamps) || timestamps.length === 0) return null;
-  const last = timestamps.at(-1);
-  return typeof last === "number" && Number.isFinite(last) ? last : null;
+  const parsed = KeywordTimestampsSchema.safeParse(result);
+  if (!parsed.success) return null;
+  return parsed.data.timestamps.at(-1) ?? null;
 }
 
 function modelConfig(assets: AssetPaths) {

@@ -16,11 +16,13 @@ import {
   voiceActivationStageLatencySeconds,
   voiceCloudVerificationRateLimitsTotal,
   voiceLocalVerificationsTotal,
+  voiceTranscriptVerificationsTotal,
   voiceTurnsTotal,
   voiceWakeCandidatesTotal,
   voiceWakeDetectionsTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 import { CloudVerificationRateLimiter } from "@shepherdjerred/streambot/voice/cloud-verification-rate-limiter.ts";
+import { isQuotaExhaustedError } from "@shepherdjerred/streambot/voice/quota-errors.ts";
 
 const log = logger.child("voice-assistant");
 
@@ -101,6 +103,24 @@ export class VoiceAssistantSession {
           }
         } catch (error) {
           if (transaction.signal.aborted) return;
+          if (isQuotaExhaustedError(error)) {
+            // Expected once a month: the spend ceiling on the OpenAI project token has been
+            // reached. Telling the user to try again would be false — nothing will work until the
+            // period rolls over — and repeating it on every wake would be noise.
+            const alreadyAnnounced =
+              this.cloudVerificationLimiter.isQuotaExhausted();
+            this.cloudVerificationLimiter.recordQuotaExhausted();
+            voiceTranscriptVerificationsTotal.inc({ outcome: "quota" });
+            log.warn("voice cloud verification is out of quota", {
+              error: getErrorMessage(error),
+            });
+            if (!alreadyAnnounced) {
+              await options.announce(
+                "⚠️ Streambot's voice budget for this period is used up, so voice commands are paused until it resets. Playback and slash commands are unaffected.",
+              );
+            }
+            return;
+          }
           log.warn("voice command transaction failed", {
             error: getErrorMessage(error),
           });
