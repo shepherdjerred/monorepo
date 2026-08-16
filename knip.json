@@ -63,7 +63,7 @@
       "project": ["src/**/*.{ts,tsx}"]
     },
     "packages/better-skill-capped": {
-      "entry": ["src/main.tsx", "vite.config.ts"],
+      "entry": ["src/main.tsx", "src/**/*.test.ts", "vite.config.ts"],
       "project": ["src/**/*.{ts,tsx}", "vite.config.ts"],
       "ignoreDependencies": ["shadcn"],
       "vite": false
