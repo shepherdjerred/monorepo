@@ -266,6 +266,20 @@ describe("Container resource requests backstop", () => {
         },
       ],
       [
+        "mario-kart/main",
+        {
+          requests: { cpu: "1000m", memory: "1792Mi" },
+          limits: { cpu: "8000m", memory: "4096Mi" },
+        },
+      ],
+      [
+        "pinchtab/main",
+        {
+          requests: { cpu: "250m", memory: "512Mi" },
+          limits: { cpu: "2000m", memory: "4096Mi" },
+        },
+      ],
+      [
         "scout-beta-scout-backend/main",
         { requests: { cpu: "50m", memory: "2048Mi" } },
       ],
@@ -285,6 +299,13 @@ describe("Container resource requests backstop", () => {
         {
           requests: { cpu: "1", memory: "3072Mi" },
           limits: { cpu: "2", memory: "6144Mi" },
+        },
+      ],
+      [
+        "temporal-temporal-agent-worker/temporal-agent-worker",
+        {
+          requests: { cpu: "500m", memory: "768Mi" },
+          limits: { cpu: "1500m", memory: "1024Mi" },
         },
       ],
     ]);

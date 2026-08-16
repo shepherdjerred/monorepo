@@ -153,14 +153,15 @@ export function createMarioKartDeployment(chart: Chart) {
         allowPrivilegeEscalation: false,
       },
       // Software RDP is CPU-heavy and there's no GPU on the node — give it burst room
-      // via the limit. 30d peak is ~900m, so the guaranteed request stays modest.
+      // via the limit. The 30d working-set peak is ~1.36GiB, so a 1.75GiB
+      // request keeps 25% memory headroom without reserving the full 2GiB.
       resources: {
         cpu: {
           request: Cpu.millis(1000),
           limit: Cpu.millis(8000),
         },
         memory: {
-          request: Size.gibibytes(2),
+          request: Size.mebibytes(1792),
           limit: Size.gibibytes(4),
         },
       },

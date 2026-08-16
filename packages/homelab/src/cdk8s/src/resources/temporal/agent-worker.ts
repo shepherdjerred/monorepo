@@ -163,8 +163,11 @@ ip6tables -L OUTPUT -n`,
           limit: Cpu.millis(1500),
         },
         memory: {
-          request: Size.gibibytes(3),
-          limit: Size.gibibytes(6),
+          // The 30d working-set peak is ~505MiB. Keep a rounded 768MiB
+          // request and 1GiB limit for task bursts without reserving the 3GiB
+          // used by the larger core and glitter workers.
+          request: Size.mebibytes(768),
+          limit: Size.gibibytes(1),
         },
       },
       ...temporalWorkerHealthProbes(),

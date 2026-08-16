@@ -25,19 +25,17 @@ machine:
       # the ARC and kernel slab are kernel memory capped/bounded outside the
       # cgroup — the reservation still budgets for them in allocatable math).
       #
-      # 40Gi = 16 ARC + ~24 kernel/OS burst. History: right-sized 56Gi -> 24Gi on
-      # 2026-07-10 (30d evidence: 48Gi ARC massively oversized, CI unschedulable
-      # at 99.99% requested), then corrected 24Gi -> 40Gi on 2026-07-11 after a
-      # global-OOM freeze: under a full CI storm + dagger cache rebuild, kernel
-      # slab (ZFS dnode/dbuf metadata from buildkit small-file IO) alone peaked
-      # at 30.3Gi — the original "8Gi OS overhead" estimate only holds when idle.
-      # Sum of ceilings must leave real physical slack: kubepods (capacity-48Gi
-      # = 77.4Gi) + ARC 16 + slab burst fits in 125.4Gi physical with this value.
+      # 24Gi = 16Gi ARC + ~8Gi kernel/OS burst. CI jobs now run on the dedicated
+      # liskov worker, so the torvalds reservation no longer needs to budget for
+      # the historical BuildKit/Dagger storm. Post-migration torvalds slab peaked
+      # at ~7.2Gi over the retained observation window. Keep this reservation
+      # above the ARC cap and re-raise it in lockstep with zfs_arc_max if a
+      # production-only soak demonstrates a larger host burst.
       # If ZfsArcHitRateLow fires sustained, raise zfs_arc_max and this value in
       # lockstep.
       systemReserved:
         cpu: "4"
-        memory: "40Gi"
+        memory: "24Gi"
       # /system — Talos's CgroupSystem: every non-Kubernetes Talos daemon (udevd,
       # apid, trustd, extensions, dashboard, the system-level containerd) runs
       # here. Sourced from siderolabs/talos `pkg/machinery/constants/constants.go`
