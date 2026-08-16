@@ -262,6 +262,17 @@ describe("Alerts route selection", () => {
     ).toBe("postal-fallback");
   });
 
+  it("routes the cluster-wide webhook delivery-failure alert to Postal alongside its single-instance sibling", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "AlertmanagerClusterFailedToSendAlerts",
+        namespace: "prometheus",
+        severity: "critical",
+        integration: "webhook",
+      }),
+    ).toBe("postal-fallback");
+  });
+
   it("keeps email-integration delivery failures off the broken Postal path", () => {
     expect(
       resolveReceiver(route, {

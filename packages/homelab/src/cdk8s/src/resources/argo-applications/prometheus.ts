@@ -323,15 +323,19 @@ export async function createPrometheusApp(chart: Chart) {
               ],
             },
             {
-              // AlertmanagerFailedToSendAlerts fires once per failed
-              // notification integration. Only route the webhook integration's
-              // failures here — that's the one this fallback exists to
-              // diagnose. Email-integration failures must stay on the normal
-              // Alerts receiver: routing a "Postal is broken" diagnostic
-              // through Postal itself would mean it never arrives.
+              // AlertmanagerFailedToSendAlerts (single instance) and
+              // AlertmanagerClusterFailedToSendAlerts (all instances, critical)
+              // both fire once per failed notification integration — they
+              // have historically fired together for this cluster (see
+              // packages/docs/archive/homelab-audits/2026-04-04_homelab-health-audit-2.md).
+              // Only route the webhook integration's failures here — that's
+              // the one this fallback exists to diagnose. Email-integration
+              // failures must stay on the normal Alerts receiver: routing a
+              // "Postal is broken" diagnostic through Postal itself would
+              // mean it never arrives.
               receiver: "postal-fallback",
               matchers: [
-                'alertname = "AlertmanagerFailedToSendAlerts"',
+                'alertname =~ "AlertmanagerFailedToSendAlerts|AlertmanagerClusterFailedToSendAlerts"',
                 'integration = "webhook"',
               ],
             },
