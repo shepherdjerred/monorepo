@@ -40,8 +40,14 @@ echo "Review gate source: ${GATE_REF} @ ${GATE_SHA}"
 # Cleaning up first is idempotent and keeps the gate's exit status its own: a
 # teardown failure cannot red a PR, and nothing has to be suppressed to make
 # that true. The agent discards the workspace after the job regardless.
-git worktree prune
+#
+# The directory goes before the prune, not after: `git worktree prune` drops the
+# registrations whose working tree is already gone, so pruning first cannot
+# clear the one this run is about to delete. On a reused checkout that left the
+# registration behind, `git worktree add` then refuses the path as already
+# registered and the gate fails before it reads anything.
 rm -rf "$GATE_DIR"
+git worktree prune
 git worktree add --detach "$GATE_DIR" FETCH_HEAD
 
 cd "$GATE_DIR"

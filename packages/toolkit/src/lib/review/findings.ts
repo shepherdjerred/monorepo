@@ -180,7 +180,14 @@ export async function resolveFinding(input: {
     });
   }
 
-  if (input.finding.threadId !== null) {
+  // Asking first is what makes this idempotent, and it is what `chipComment`
+  // already does by comparing the body it would write. Resolving unconditionally
+  // posted a second copy of the evidence on a thread that was already resolved,
+  // and reported "resolved the review thread" for work it had not done.
+  if (
+    input.finding.threadId !== null &&
+    !(await threadIsResolved(input.token, input.finding.threadId))
+  ) {
     await replyToThread(input.token, input.finding.threadId, input.evidence);
     await resolveThread(input.token, input.finding.threadId);
     outcome.resolvedThread = true;
@@ -227,6 +234,42 @@ async function replyToThread(
     `,
     { t: threadId, b: body },
   );
+}
+
+const ThreadStateSchema = z.object({
+  data: z.object({ node: z.object({ isResolved: z.boolean() }) }),
+});
+
+/**
+ * Whether the review thread is already resolved.
+ *
+ * Asked before resolving so the outcome the CLI prints describes what this run
+ * did. `resolveReviewThread` is idempotent and reports the state after the
+ * mutation, so it cannot answer this on its own.
+ */
+async function threadIsResolved(
+  token: string,
+  threadId: string,
+): Promise<boolean> {
+  const payload = await sendJson(
+    "POST",
+    `${GITHUB_API}/graphql`,
+    {
+      query: `
+        query ($t: ID!) {
+          node(id: $t) {
+            ... on PullRequestReviewThread {
+              isResolved
+            }
+          }
+        }
+      `,
+      variables: { t: threadId },
+    },
+    token,
+  );
+  assertGraphQlOk(payload);
+  return ThreadStateSchema.parse(payload).data.node.isResolved;
 }
 
 async function resolveThread(token: string, threadId: string): Promise<void> {
