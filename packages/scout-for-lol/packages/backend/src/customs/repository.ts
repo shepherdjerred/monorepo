@@ -77,6 +77,18 @@ async function persistParticipants(
   transaction: CustomTransactionClient,
   snapshot: CustomNightSnapshot,
 ): Promise<void> {
+  const participantDiscordIds = snapshot.participants.map((participant) =>
+    DiscordAccountIdSchema.parse(participant.discordId),
+  );
+  await transaction.customNightParticipant.deleteMany({
+    where:
+      participantDiscordIds.length === 0
+        ? { nightId: snapshot.id }
+        : {
+            nightId: snapshot.id,
+            discordId: { notIn: participantDiscordIds },
+          },
+  });
   for (const participant of snapshot.participants) {
     await transaction.customNightParticipant.upsert({
       where: {
