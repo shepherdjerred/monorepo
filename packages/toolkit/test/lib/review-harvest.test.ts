@@ -27,6 +27,14 @@ describe("jobIdFromTargetUrl", () => {
 
   test("rejects a fragment that is not a job id", () => {
     expect(jobIdFromTargetUrl("https://buildkite.com/x#not-a-uuid")).toBeNull();
+    // 36 characters of hex and hyphens, but not a UUID. Anything non-null here
+    // is reported as retryable and handed to `bk job retry`.
+    expect(
+      jobIdFromTargetUrl(`https://buildkite.com/x#${"-".repeat(36)}`),
+    ).toBeNull();
+    expect(
+      jobIdFromTargetUrl(`https://buildkite.com/x#${"a".repeat(36)}`),
+    ).toBeNull();
     expect(jobIdFromTargetUrl(null)).toBeNull();
   });
 });

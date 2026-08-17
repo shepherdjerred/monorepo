@@ -32,7 +32,9 @@ GATE_REF="${REVIEW_GATE_REF:-main}"
 GATE_DIR="${BUILDKITE_BUILD_CHECKOUT_PATH:-$PWD}/.review-gate-source"
 
 echo "~~~ Fetching the review gate from ${GATE_REF}"
-git fetch --depth 1 origin "$GATE_REF"
+# `--` so an operator-supplied REVIEW_GATE_REF beginning with `-` is fetched as
+# a ref rather than parsed as a git option.
+git fetch --depth 1 origin -- "$GATE_REF"
 GATE_SHA="$(git rev-parse FETCH_HEAD)"
 echo "Review gate source: ${GATE_REF} @ ${GATE_SHA}"
 

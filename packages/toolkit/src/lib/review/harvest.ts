@@ -42,7 +42,14 @@ export function jobIdFromTargetUrl(targetUrl: string | null): string | null {
   if (targetUrl === null) return null;
   const fragment = targetUrl.split("#")[1];
   if (fragment === undefined || fragment === "") return null;
-  return /^[0-9a-f-]{36}$/iu.test(fragment) ? fragment : null;
+  // Matched as a UUID rather than as 36 hex-or-hyphen characters: the loose
+  // form accepted strings like 36 hyphens, and every non-null id here is
+  // reported as retryable and handed to `bk job retry`.
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(
+    fragment,
+  )
+    ? fragment
+    : null;
 }
 
 /** The `rel="next"` URL of a GitHub `Link` header, or null on the last page. */
