@@ -1,10 +1,12 @@
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import {
+  Capability,
   Cpu,
   Deployment,
   EnvValue,
   Probe,
+  SeccompProfileType,
   Secret,
   Service,
   Volume,
@@ -102,6 +104,9 @@ export function createOpenRouterBroadcastIngestDeployment(chart: Chart) {
         ensureNonRoot: true,
         readOnlyRootFilesystem: true,
         allowPrivilegeEscalation: false,
+        privileged: false,
+        capabilities: { drop: [Capability.ALL] },
+        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
       },
       resources: {
         cpu: { request: Cpu.millis(50), limit: Cpu.millis(500) },
