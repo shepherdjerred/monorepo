@@ -87,6 +87,52 @@ for (const entrypoint of [
   }
 }
 
+const docsHtml = await Bun.file(`${docsTarget}/index.html`).text();
+if (!docsHtml.includes('src="/posthog-bootstrap.js"')) {
+  throw new Error(
+    `${docsTarget}/index.html does not load the shared PostHog bootstrap`,
+  );
+}
+
+function docsPosthogAttr(attribute: string): string | undefined {
+  return new RegExp(`${attribute}="([^"]*)"`).exec(docsHtml)?.[1];
+}
+
+// posthog-bootstrap.js silently no-ops on an invalid dataset value (see
+// packages/scout-for-lol/packages/frontend/public/posthog-bootstrap.js), so
+// checking attribute *names* alone would let a broken env value ship a build
+// that passes verification but never actually captures analytics.
+const docsApiHost = docsPosthogAttr("data-posthog-api-host");
+if (docsApiHost !== "https://us.i.posthog.com") {
+  throw new Error(
+    `${docsTarget}/index.html must set data-posthog-api-host to the PostHog US API host, got ${String(docsApiHost)}`,
+  );
+}
+const docsAssetHost = docsPosthogAttr("data-posthog-asset-host");
+if (docsAssetHost !== "https://us-assets.i.posthog.com") {
+  throw new Error(
+    `${docsTarget}/index.html must set data-posthog-asset-host to the PostHog US asset host, got ${String(docsAssetHost)}`,
+  );
+}
+const docsSessionReplay = docsPosthogAttr("data-posthog-session-replay");
+if (docsSessionReplay !== "true" && docsSessionReplay !== "false") {
+  throw new Error(
+    `${docsTarget}/index.html must set data-posthog-session-replay to "true" or "false", got ${String(docsSessionReplay)}`,
+  );
+}
+for (const attribute of [
+  "data-posthog-project-token",
+  "data-posthog-site-key",
+  "data-posthog-site-domain",
+]) {
+  const value = docsPosthogAttr(attribute);
+  if (value === undefined || value.length === 0) {
+    throw new Error(
+      `${docsTarget}/index.html must set a non-empty ${attribute} for PostHog`,
+    );
+  }
+}
+
 console.log(
   `Bundled and verified Scout deploy: ${frontendDist}/index.html + ${target}/index.html + ${docsTarget}/index.html + shared theme/font/brand/game assets`,
 );

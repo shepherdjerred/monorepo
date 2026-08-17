@@ -61,6 +61,12 @@
       "entry": ["src/**/*.astro", "astro.config.ts"],
       "project": ["src/**/*.{ts,tsx,astro}"]
     },
+    "packages/docs/wiki": {
+      "entry": ["public/posthog.js"]
+    },
+    "packages/glitter": {
+      "entry": ["public/posthog.js"]
+    },
     "packages/webring": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]

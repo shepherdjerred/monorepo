@@ -5,9 +5,17 @@ description: Privacy configuration, public-token setup, and production verificat
 
 PostHog Cloud US provides analytics for `sjer.red`, `resume.sjer.red`,
 `webring.sjer.red`, `better-skill-capped.com`, `mariokart.sjer.red`,
-`pokebot.sjer.red`, `scout-for-lol.com`, and `beta.scout-for-lol.com`. It is a
+`pokebot.sjer.red`, `scout-for-lol.com`, `beta.scout-for-lol.com`, `ts-mc.net`,
+`ppl.glitter-boys.com`, `cook.sjer.red`, `stocks.sjer.red`, and `wiki.sjer.red`.
+Scout's `/docs/` pages share the Scout host identity and tracker. PostHog is a
 managed external service: the cluster has no PostHog namespace, database,
 volume, DNS record, secret, or readiness dependency.
+
+The Cooklang preview, Stocks, Glitter Boys, and human wiki trackers are
+repo-owned static assets. `ts-mc.net` has no current site source in this
+checkout, so its tracker is currently installed in the S3-hosted HTML itself;
+an external redeploy of that bucket must preserve `/posthog.js` and its HTML
+script tags.
 
 ## Project setup
 
@@ -20,8 +28,9 @@ In PostHog project privacy settings, IP collection must stay **enabled** — it 
 what produces the country and city breakdowns — and session-recording masking
 stays at the standard setting. Leave _Cookieless server hash mode_ **disabled**.
 
-All eight sites use PostHog's default persistence (a first-party cookie plus
-`localStorage`), create person profiles, and capture autocapture, heatmaps, dead
+All thirteen configured hosts use PostHog's default persistence (a first-party
+cookie plus `localStorage`), create person profiles, and capture autocapture,
+heatmaps, dead
 clicks, web vitals, and session replay with inputs masked. Every site respects
 Do Not Track, so a DNT browser sends nothing at all.
 
@@ -91,7 +100,7 @@ enrichment is enabled for browser events and **disabled** for backend events:
 those captures come from Discord gateway events and background jobs that carry
 no end-user `$ip`, so GeoIP would resolve the backend's own egress location and
 label it as the guild's. PostHog _group_ analytics is deliberately not used: it
-is a paid add-on that reprices every identified event across all eight sites,
+is a paid add-on that reprices every identified event across all thirteen hosts,
 and the `guild_id` property answers the same questions through breakdowns and
 filters.
 
@@ -133,7 +142,7 @@ is precisely how the cookieless outage went unnoticed.
   dynamic identifiers (`/g/:guildId`, `/players/:alias`).
 - Confirm `$geoip_country_name` is populated on browser events and absent on
   backend events.
-- Confirm session recordings appear for all eight hosts with input masking
+- Confirm session recordings appear for all thirteen hosts with input masking
   active, and that no username, guild name, Riot account, or player alias is
   legible in a Mario Kart, Pokémon, or Scout recording.
 - Repeat with Do Not Track enabled and confirm the browser sends no PostHog

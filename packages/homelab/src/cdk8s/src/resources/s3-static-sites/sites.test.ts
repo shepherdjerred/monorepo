@@ -38,14 +38,14 @@ describe("human wiki static site", () => {
     });
   });
 
-  test("allows Pagefind and Mermaid without third-party origins", () => {
+  test("allows Pagefind, Mermaid, and PostHog Cloud US", () => {
     const csp = wiki.responseHeaders?.["Content-Security-Policy"];
     expect(csp).toContain(
-      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com",
     );
+    expect(csp).toContain("connect-src 'self' https://us.i.posthog.com");
     expect(csp).toContain("worker-src 'self' blob:");
     expect(csp).toContain("frame-ancestors 'none'");
-    expect(csp).not.toContain("https:");
   });
 });
 

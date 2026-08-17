@@ -43,6 +43,31 @@
       "key": "scout-beta",
       "hostname": "beta.scout-for-lol.com",
       "sessionReplay": true
+    },
+    {
+      "key": "ts-mc",
+      "hostname": "ts-mc.net",
+      "sessionReplay": true
+    },
+    {
+      "key": "glitter-boys-ppl",
+      "hostname": "ppl.glitter-boys.com",
+      "sessionReplay": true
+    },
+    {
+      "key": "cook",
+      "hostname": "cook.sjer.red",
+      "sessionReplay": true
+    },
+    {
+      "key": "stocks",
+      "hostname": "stocks.sjer.red",
+      "sessionReplay": true
+    },
+    {
+      "key": "wiki",
+      "hostname": "wiki.sjer.red",
+      "sessionReplay": true
     }
   ]
 }

@@ -37,16 +37,16 @@ const scoutCsp = [
 /**
  * Starlight's Pagefind search loads a same-origin WASM module in a web worker.
  * Mermaid diagrams are initialized by Astro's generated inline module script.
- * Keep the policy otherwise self-contained: the wiki has no analytics, remote
- * fonts, embeds, or third-party asset hosts.
+ * Keep the policy otherwise self-contained: the wiki uses only PostHog's US
+ * asset and ingestion hosts in addition to its own assets.
  */
 const wikiCsp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self'",
+  "connect-src 'self' https://us.i.posthog.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",

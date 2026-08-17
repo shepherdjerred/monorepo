@@ -25,4 +25,8 @@ await Bun.write(
   new URL("index.html", distRoot),
   await Bun.file(new URL("index.html", publicRoot)).text(),
 );
+await Bun.write(
+  new URL("posthog.js", distRoot),
+  await Bun.file(new URL("posthog.js", publicRoot)).text(),
+);
 await Bun.write(new URL("context-data.js", distRoot), contextScript);

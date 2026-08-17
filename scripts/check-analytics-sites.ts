@@ -35,8 +35,10 @@ const staticTrackers = [
   },
   {
     path: "packages/webring/posthog.js",
+    entrypoint: "packages/webring/typedoc.json",
     hostname: "webring.sjer.red",
     masksAllText: false,
+    wiring: /"customJs"\s*:\s*["'][^"']*posthog\.js["']/,
   },
   {
     path: "packages/better-skill-capped/index.html",
@@ -52,6 +54,34 @@ const staticTrackers = [
     path: "packages/discord-plays-pokemon/packages/frontend/index.html",
     hostname: "pokebot.sjer.red",
     masksAllText: true,
+  },
+  {
+    path: "packages/cooklang-rich-preview/public/posthog.js",
+    entrypoint: "packages/cooklang-rich-preview/src/layouts/Layout.astro",
+    hostname: "cook.sjer.red",
+    masksAllText: false,
+    wiring: /<script[^>]+\bsrc=["']\/posthog\.js["']/,
+  },
+  {
+    path: "packages/stocks-sjer-red/public/posthog.js",
+    entrypoint: "packages/stocks-sjer-red/src/layouts/Layout.astro",
+    hostname: "stocks.sjer.red",
+    masksAllText: false,
+    wiring: /<script[^>]+\bsrc=["']\/posthog\.js["']/,
+  },
+  {
+    path: "packages/docs/wiki/public/posthog.js",
+    entrypoint: "packages/docs/wiki/astro.config.ts",
+    hostname: "wiki.sjer.red",
+    masksAllText: false,
+    wiring: /\bsrc\s*:\s*["']\/posthog\.js["']/,
+  },
+  {
+    path: "packages/glitter/public/posthog.js",
+    entrypoint: "packages/glitter/public/index.html",
+    hostname: "ppl.glitter-boys.com",
+    masksAllText: false,
+    wiring: /<script[^>]+\bsrc=["']\.\/posthog\.js["']/,
   },
 ] as const;
 
@@ -107,6 +137,11 @@ const expectedHostnames = new Set([
   "pokebot.sjer.red",
   "scout-for-lol.com",
   "beta.scout-for-lol.com",
+  "ts-mc.net",
+  "ppl.glitter-boys.com",
+  "cook.sjer.red",
+  "stocks.sjer.red",
+  "wiki.sjer.red",
 ]);
 const actualHostnames = new Set(registry.sites.map((site) => site.hostname));
 if (
@@ -114,7 +149,7 @@ if (
   [...expectedHostnames].some((hostname) => !actualHostnames.has(hostname))
 ) {
   throw new Error(
-    "Analytics registry must contain exactly the eight portfolio hosts",
+    "Analytics registry must contain exactly the thirteen portfolio hosts",
   );
 }
 
@@ -139,27 +174,41 @@ for (const tracker of staticTrackers) {
     );
   }
 
-  const source = await Bun.file(`${root}/${tracker.path}`).text();
-  if (!source.includes(registry.projectToken)) {
+  const entrypoint = "entrypoint" in tracker ? tracker.entrypoint : undefined;
+  const wiring = "wiring" in tracker ? tracker.wiring : undefined;
+  const trackerSource = await Bun.file(`${root}/${tracker.path}`).text();
+  if (entrypoint !== undefined) {
+    if (wiring === undefined) {
+      throw new Error(
+        `${tracker.path} declares an entrypoint but no wiring pattern to verify it`,
+      );
+    }
+    if (!wiring.test(await Bun.file(`${root}/${entrypoint}`).text())) {
+      throw new Error(
+        `${entrypoint} must wire ${tracker.path} into the ${tracker.hostname} entrypoint`,
+      );
+    }
+  }
+  if (!trackerSource.includes(registry.projectToken)) {
     throw new Error(
       `${tracker.path} must use the shared PostHog project token for ${tracker.hostname}`,
     );
   }
   if (
-    !source.includes(registry.apiHost) ||
-    !source.includes(registry.assetHost)
+    !trackerSource.includes(registry.apiHost) ||
+    !trackerSource.includes(registry.assetHost)
   ) {
     throw new Error(`${tracker.path} must use the PostHog US hosts`);
   }
-  if (!source.includes(`asset_host: "${registry.assetHost}"`)) {
+  if (!trackerSource.includes(`asset_host: "${registry.assetHost}"`)) {
     throw new Error(`${tracker.path} must configure the PostHog asset host`);
   }
-  if (!source.includes(`site_key: "${site.key}"`)) {
+  if (!trackerSource.includes(`site_key: "${site.key}"`)) {
     throw new Error(
       `${tracker.path} must register PostHog site key ${site.key}`,
     );
   }
-  if (!source.includes("disable_session_recording: false")) {
+  if (!trackerSource.includes("disable_session_recording: false")) {
     throw new Error(`${tracker.path} must enable session replay`);
   }
   for (const captureSetting of [
@@ -172,7 +221,7 @@ for (const tracker of staticTrackers) {
     sessionRecordingSetting(tracker.masksAllText),
     ...(tracker.masksAllText ? AUTOCAPTURE_MASKING : []),
   ]) {
-    if (!source.includes(captureSetting)) {
+    if (!trackerSource.includes(captureSetting)) {
       throw new Error(
         `${tracker.path} must configure PostHog capture setting ${captureSetting}`,
       );
@@ -182,20 +231,20 @@ for (const tracker of staticTrackers) {
     "respect_dnt: true",
     'person_profiles: "always"',
   ]) {
-    if (!source.includes(privacySetting)) {
+    if (!trackerSource.includes(privacySetting)) {
       throw new Error(
         `${tracker.path} must configure PostHog privacy setting ${privacySetting}`,
       );
     }
   }
-  const forbidden = forbiddenSettingIn(source);
+  const forbidden = forbiddenSettingIn(trackerSource);
   if (forbidden !== undefined) {
     throw new Error(`${tracker.path} must not set ${forbidden}`);
   }
   if (
-    !source.includes("e.__SV") ||
-    !source.includes("e._i.push") ||
-    !source.includes('"/static/array.js"')
+    !trackerSource.includes("e.__SV") ||
+    !trackerSource.includes("e._i.push") ||
+    !trackerSource.includes('"/static/array.js"')
   ) {
     throw new Error(
       `${tracker.path} must use PostHog's official queueing snippet`,
@@ -230,6 +279,25 @@ if (forbiddenScoutSetting !== undefined) {
   throw new Error(
     `${scoutBootstrapPath} must not set ${forbiddenScoutSetting}`,
   );
+}
+
+const scoutDocsConfigPath =
+  "packages/scout-for-lol/packages/docs-site/astro.config.ts";
+const scoutDocsConfig = await Bun.file(`${root}/${scoutDocsConfigPath}`).text();
+for (const requiredSetting of [
+  'src: "/posthog-bootstrap.js"',
+  '"data-posthog-project-token"',
+  '"data-posthog-api-host"',
+  '"data-posthog-asset-host"',
+  '"data-posthog-site-key"',
+  '"data-posthog-site-domain"',
+  '"data-posthog-session-replay"',
+]) {
+  if (!scoutDocsConfig.includes(requiredSetting)) {
+    throw new Error(
+      `${scoutDocsConfigPath} must configure Scout docs PostHog setting ${requiredSetting}`,
+    );
+  }
 }
 
 if (registry.projectToken === "phc_REPLACEWITHEXISTINGPROJECTTOKEN") {
