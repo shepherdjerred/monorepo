@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# Kubernetes steps pin BUILDKITE_SHELL in the pod spec; the native queue takes
+# its shell from the agent config instead (bootstrap.sh writes
+# shell="/bin/bash -e -c"). State that requirement here rather than inheriting
+# it, so a shell regression fails with this message instead of an unbound
+# BASH_SOURCE or an unknown `pipefail` option.
+set -eu
+if [ -z "${BASH_VERSION:-}" ]; then
+  echo "error: macos-native-env.sh requires bash; set shell=\"/bin/bash -e -c\" in the macOS agent config" >&2
+  exit 1
+fi
+set -o pipefail
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   echo "error: source macos-native-env.sh so its environment reaches the native job" >&2

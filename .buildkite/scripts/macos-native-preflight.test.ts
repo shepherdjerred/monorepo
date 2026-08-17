@@ -3,6 +3,7 @@ import {
   appleDevelopmentIdentities,
   availableDiskKib,
   parseNativeSuite,
+  pinnedToolVersion,
 } from "./macos-native-preflight.ts";
 
 describe("native macOS suite parsing", () => {
@@ -31,6 +32,30 @@ describe("Apple Development identity parsing", () => {
   2) 89ABCDEF0123456789ABCDEF0123456789ABCDEF "Apple Development: CI B (TEAM123456)"
 `;
     expect(appleDevelopmentIdentities(output)).toHaveLength(2);
+  });
+});
+
+describe("pinned toolchain versions", () => {
+  test("reads the repository's own .mise.toml pins", async () => {
+    const miseToml = await Bun.file(
+      new URL("../../.mise.toml", import.meta.url),
+    ).text();
+    expect(pinnedToolVersion(miseToml, "bun")).toMatch(/^\d+\.\d+\.\d+$/u);
+    expect(pinnedToolVersion(miseToml, "rust")).toMatch(/^\d+\.\d+\.\d+$/u);
+  });
+
+  test("rejects a tool the pin file does not carry as a version string", () => {
+    const miseToml = `[tools]\nbun = "1.2.3"\n"cargo:example" = { version = "1" }\n`;
+    expect(pinnedToolVersion(miseToml, "bun")).toBe("1.2.3");
+    expect(() => pinnedToolVersion(miseToml, "rust")).toThrow(
+      "does not pin rust",
+    );
+    expect(() => pinnedToolVersion(miseToml, "cargo:example")).toThrow(
+      "does not pin cargo:example",
+    );
+    expect(() => pinnedToolVersion(`bun = "1.2.3"\n`, "bun")).toThrow(
+      "no [tools] table",
+    );
   });
 });
 

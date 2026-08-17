@@ -57,7 +57,10 @@ The bootstrap:
 - installs `buildkite-agent@3`, `mise`, `xcodes`, XcodeGen, SwiftLint, and
   Tailscale with Homebrew;
 - installs the Bun and Rust versions pinned by the root `.mise.toml`;
-- configures the per-user Buildkite LaunchAgent on `queue=macos`;
+- configures the per-user Buildkite LaunchAgent on `queue=macos`, pinning
+  `shell="/bin/bash -e -c"` so the native steps that source
+  `macos-native-env.sh` get the bash guarantee Kubernetes steps get from
+  `BUILDKITE_SHELL`;
 - saves the original AC power profile and disables system/disk sleep while
   allowing display sleep after ten minutes.
 
