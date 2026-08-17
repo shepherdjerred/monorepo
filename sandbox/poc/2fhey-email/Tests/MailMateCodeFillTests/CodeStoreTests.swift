@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import Dispatch
 import Testing
@@ -65,6 +66,38 @@ func serializesConcurrentWriters() throws {
     } catch {
         Issue.record("Concurrent store read failed: \(error)")
     }
+}
+
+@Test("waits for an outside holder of the lock file before mutating the store")
+func waitsForOutsideLockHolder() throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = try CodeStore(directory: directory)
+    try store.append(makeRecord(code: "111111", messageID: "one", detectedAt: 100), now: Date(timeIntervalSince1970: 101))
+
+    let descriptor = open(directory.appendingPathComponent(CodeStore.lockFileName).path, O_RDWR)
+    #expect(descriptor >= 0)
+    #expect(flock(descriptor, LOCK_EX) == 0)
+
+    let failures = FailureBox()
+    let finished = DispatchSemaphore(value: 0)
+    DispatchQueue.global().async {
+        do {
+            let contender = try CodeStore(directory: directory)
+            try contender.append(makeRecord(code: "222222", messageID: "two", detectedAt: 101), now: Date(timeIntervalSince1970: 101))
+        } catch {
+            failures.record()
+        }
+        finished.signal()
+    }
+
+    #expect(finished.wait(timeout: .now() + 0.5) == .timedOut)
+    #expect(flock(descriptor, LOCK_UN) == 0)
+    close(descriptor)
+
+    #expect(finished.wait(timeout: .now() + 10) == .success)
+    #expect(failures.count == 0)
+    #expect(try store.read(now: Date(timeIntervalSince1970: 101)).count == 2)
 }
 
 private final class FailureBox: @unchecked Sendable {

@@ -23,6 +23,11 @@ enum CredentialIdentityBuilder {
                 ASCredentialServiceIdentifier(identifier: "http://127.0.0.1:8788", type: .URL),
             ]
         }
+        // A subject-derived service is not a domain, and the identity store rejects or never
+        // matches such an identifier, so no identity is better than a bogus one.
+        guard ServiceIdentity.isDomain(service) else {
+            return []
+        }
         return [ASCredentialServiceIdentifier(identifier: service, type: .domain)]
     }
 }

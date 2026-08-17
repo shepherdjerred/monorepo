@@ -1,13 +1,15 @@
+import Darwin
 import Foundation
 
 public enum CodeStoreError: Error, Equatable {
     case applicationGroupUnavailable(String)
     case invalidRecord
+    case lockUnavailable(Int32)
 }
 
 public struct CodeStore {
     public static let fileName = "pending-one-time-codes.json"
-    private static let processLock = NSLock()
+    public static let lockFileName = ".pending-one-time-codes.lock"
 
     private let directory: URL
     private let fileManager: FileManager
@@ -115,9 +117,24 @@ public struct CodeStore {
         CodeFillObservability.storeLogger.debug("event=store_write outcome=success record_count=\(records.count, privacy: .public) atomic=true")
     }
 
+    // The helper, setup app, and provider extension are separate processes sharing one App Group
+    // file, so the read-modify-write sequences must be serialized with an interprocess lock.
     private func withLock<T>(_ operation: () throws -> T) throws -> T {
-        Self.processLock.lock()
-        defer { Self.processLock.unlock() }
+        let lockURL = directory.appendingPathComponent(Self.lockFileName)
+        var descriptor = Int32(-1)
+        while descriptor < 0 {
+            descriptor = open(lockURL.path, O_CREAT | O_RDWR | O_CLOEXEC, 0o600)
+            if descriptor < 0 && errno != EINTR {
+                throw CodeStoreError.lockUnavailable(errno)
+            }
+        }
+        defer { close(descriptor) }
+        while flock(descriptor, LOCK_EX) != 0 {
+            guard errno == EINTR else {
+                throw CodeStoreError.lockUnavailable(errno)
+            }
+        }
+        defer { flock(descriptor, LOCK_UN) }
         return try operation()
     }
 

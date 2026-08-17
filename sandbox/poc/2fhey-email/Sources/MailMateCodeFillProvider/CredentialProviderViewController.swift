@@ -53,7 +53,10 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     }
 
     override func prepareOneTimeCodeCredentialList(for serviceIdentifiers: [ASCredentialServiceIdentifier]) {
-        let validRecords = loadRecords()
+        guard let validRecords = loadRecords() else {
+            cancel(code: ProviderErrorCode.failed)
+            return
+        }
         records = validRecords.filter { record in
             serviceIdentifiers.isEmpty || serviceIdentifiers.contains { service in
                 matches(record: record, serviceIdentifier: service.identifier)
@@ -69,12 +72,22 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
             cancel(code: ProviderErrorCode.credentialIdentityNotFound)
             return nil
         }
-        let record = loadRecords().first { $0.messageID == messageID }
+        guard let storedRecords = loadRecords() else {
+            cancel(code: ProviderErrorCode.failed)
+            return nil
+        }
+        let record = storedRecords.first { $0.messageID == messageID }
         logger.info("event=credential_lookup outcome=\(record == nil ? "not_found" : "found", privacy: .public) message_id_hash=\(CodeFillObservability.fingerprint(messageID), privacy: .public)")
+        // The identity can outlive its record once the code expires or is consumed, and an
+        // unresolved extension request would leave AutoFill hanging.
+        guard let record else {
+            cancel(code: ProviderErrorCode.credentialIdentityNotFound)
+            return nil
+        }
         return record
     }
 
-    private func loadRecords() -> [OTPRecord] {
+    private func loadRecords() -> [OTPRecord]? {
         do {
             let store = try CodeStore(applicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier)
             let records = try store.read()
@@ -83,8 +96,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
             return records
         } catch {
             logger.error("event=provider_store_read outcome=error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
-            cancel(code: ProviderErrorCode.failed)
-            return []
+            return nil
         }
     }
 
