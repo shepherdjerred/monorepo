@@ -33,6 +33,19 @@ const PUBLISHED_VERSION_CATALOG = REAL_VERSION_CATALOG.replaceAll(
   UNPUBLISHED_IMAGE_DIGEST,
   PUBLISHED_IMAGE_DIGEST,
 );
+const OPENROUTER_IMAGE_PIN_PATTERN =
+  /("name": "shepherdjerred\/openrouter-broadcast-ingest",[\s\S]*?"value": "[^"]*@)sha256:[0-9a-f]{64}/;
+
+function unpublishedOpenrouterVersionCatalog(source: string): string {
+  if (!OPENROUTER_IMAGE_PIN_PATTERN.test(source)) {
+    throw new Error("OpenRouter image pin is missing from the version catalog");
+  }
+
+  return source.replace(
+    OPENROUTER_IMAGE_PIN_PATTERN,
+    `$1${UNPUBLISHED_IMAGE_DIGEST}`,
+  );
+}
 
 function selectorInputs(inputs?: SelectorInputs): SelectorInputs {
   return { versionCatalogSource: PUBLISHED_VERSION_CATALOG, ...inputs };
@@ -190,7 +203,9 @@ describe("selectImageTargets", () => {
       ["README.md"],
       REPO_ROOT,
       {
-        versionCatalogSource: REAL_VERSION_CATALOG,
+        versionCatalogSource: unpublishedOpenrouterVersionCatalog(
+          PUBLISHED_VERSION_CATALOG,
+        ),
       },
     );
 
