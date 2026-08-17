@@ -93,17 +93,42 @@ if (!docsHtml.includes('src="/posthog-bootstrap.js"')) {
     `${docsTarget}/index.html does not load the shared PostHog bootstrap`,
   );
 }
+
+function docsPosthogAttr(attribute: string): string | undefined {
+  return new RegExp(`${attribute}="([^"]*)"`).exec(docsHtml)?.[1];
+}
+
+// posthog-bootstrap.js silently no-ops on an invalid dataset value (see
+// packages/scout-for-lol/packages/frontend/public/posthog-bootstrap.js), so
+// checking attribute *names* alone would let a broken env value ship a build
+// that passes verification but never actually captures analytics.
+const docsApiHost = docsPosthogAttr("data-posthog-api-host");
+if (docsApiHost !== "https://us.i.posthog.com") {
+  throw new Error(
+    `${docsTarget}/index.html must set data-posthog-api-host to the PostHog US API host, got ${String(docsApiHost)}`,
+  );
+}
+const docsAssetHost = docsPosthogAttr("data-posthog-asset-host");
+if (docsAssetHost !== "https://us-assets.i.posthog.com") {
+  throw new Error(
+    `${docsTarget}/index.html must set data-posthog-asset-host to the PostHog US asset host, got ${String(docsAssetHost)}`,
+  );
+}
+const docsSessionReplay = docsPosthogAttr("data-posthog-session-replay");
+if (docsSessionReplay !== "true" && docsSessionReplay !== "false") {
+  throw new Error(
+    `${docsTarget}/index.html must set data-posthog-session-replay to "true" or "false", got ${String(docsSessionReplay)}`,
+  );
+}
 for (const attribute of [
   "data-posthog-project-token",
-  "data-posthog-api-host",
-  "data-posthog-asset-host",
   "data-posthog-site-key",
   "data-posthog-site-domain",
-  "data-posthog-session-replay",
 ]) {
-  if (!docsHtml.includes(attribute)) {
+  const value = docsPosthogAttr(attribute);
+  if (value === undefined || value.length === 0) {
     throw new Error(
-      `${docsTarget}/index.html is missing ${attribute} for PostHog`,
+      `${docsTarget}/index.html must set a non-empty ${attribute} for PostHog`,
     );
   }
 }

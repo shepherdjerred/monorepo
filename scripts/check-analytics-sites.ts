@@ -38,6 +38,7 @@ const staticTrackers = [
     entrypoint: "packages/webring/typedoc.json",
     hostname: "webring.sjer.red",
     masksAllText: false,
+    wiring: /"customJs"\s*:\s*["'][^"']*posthog\.js["']/,
   },
   {
     path: "packages/better-skill-capped/index.html",
@@ -59,24 +60,28 @@ const staticTrackers = [
     entrypoint: "packages/cooklang-rich-preview/src/layouts/Layout.astro",
     hostname: "cook.sjer.red",
     masksAllText: false,
+    wiring: /<script[^>]+\bsrc=["']\/posthog\.js["']/,
   },
   {
     path: "packages/stocks-sjer-red/public/posthog.js",
     entrypoint: "packages/stocks-sjer-red/src/layouts/Layout.astro",
     hostname: "stocks.sjer.red",
     masksAllText: false,
+    wiring: /<script[^>]+\bsrc=["']\/posthog\.js["']/,
   },
   {
     path: "packages/docs/wiki/public/posthog.js",
     entrypoint: "packages/docs/wiki/astro.config.ts",
     hostname: "wiki.sjer.red",
     masksAllText: false,
+    wiring: /\bsrc\s*:\s*["']\/posthog\.js["']/,
   },
   {
     path: "packages/glitter/public/posthog.js",
     entrypoint: "packages/glitter/public/index.html",
     hostname: "ppl.glitter-boys.com",
     masksAllText: false,
+    wiring: /<script[^>]+\bsrc=["']\.\/posthog\.js["']/,
   },
 ] as const;
 
@@ -170,32 +175,40 @@ for (const tracker of staticTrackers) {
   }
 
   const entrypoint = "entrypoint" in tracker ? tracker.entrypoint : undefined;
-  const source = [
-    await Bun.file(`${root}/${tracker.path}`).text(),
-    entrypoint === undefined
-      ? ""
-      : await Bun.file(`${root}/${entrypoint}`).text(),
-  ].join("\n");
-  if (!source.includes(registry.projectToken)) {
+  const wiring = "wiring" in tracker ? tracker.wiring : undefined;
+  const trackerSource = await Bun.file(`${root}/${tracker.path}`).text();
+  if (entrypoint !== undefined) {
+    if (wiring === undefined) {
+      throw new Error(
+        `${tracker.path} declares an entrypoint but no wiring pattern to verify it`,
+      );
+    }
+    if (!wiring.test(await Bun.file(`${root}/${entrypoint}`).text())) {
+      throw new Error(
+        `${entrypoint} must wire ${tracker.path} into the ${tracker.hostname} entrypoint`,
+      );
+    }
+  }
+  if (!trackerSource.includes(registry.projectToken)) {
     throw new Error(
       `${tracker.path} must use the shared PostHog project token for ${tracker.hostname}`,
     );
   }
   if (
-    !source.includes(registry.apiHost) ||
-    !source.includes(registry.assetHost)
+    !trackerSource.includes(registry.apiHost) ||
+    !trackerSource.includes(registry.assetHost)
   ) {
     throw new Error(`${tracker.path} must use the PostHog US hosts`);
   }
-  if (!source.includes(`asset_host: "${registry.assetHost}"`)) {
+  if (!trackerSource.includes(`asset_host: "${registry.assetHost}"`)) {
     throw new Error(`${tracker.path} must configure the PostHog asset host`);
   }
-  if (!source.includes(`site_key: "${site.key}"`)) {
+  if (!trackerSource.includes(`site_key: "${site.key}"`)) {
     throw new Error(
       `${tracker.path} must register PostHog site key ${site.key}`,
     );
   }
-  if (!source.includes("disable_session_recording: false")) {
+  if (!trackerSource.includes("disable_session_recording: false")) {
     throw new Error(`${tracker.path} must enable session replay`);
   }
   for (const captureSetting of [
@@ -208,7 +221,7 @@ for (const tracker of staticTrackers) {
     sessionRecordingSetting(tracker.masksAllText),
     ...(tracker.masksAllText ? AUTOCAPTURE_MASKING : []),
   ]) {
-    if (!source.includes(captureSetting)) {
+    if (!trackerSource.includes(captureSetting)) {
       throw new Error(
         `${tracker.path} must configure PostHog capture setting ${captureSetting}`,
       );
@@ -218,20 +231,20 @@ for (const tracker of staticTrackers) {
     "respect_dnt: true",
     'person_profiles: "always"',
   ]) {
-    if (!source.includes(privacySetting)) {
+    if (!trackerSource.includes(privacySetting)) {
       throw new Error(
         `${tracker.path} must configure PostHog privacy setting ${privacySetting}`,
       );
     }
   }
-  const forbidden = forbiddenSettingIn(source);
+  const forbidden = forbiddenSettingIn(trackerSource);
   if (forbidden !== undefined) {
     throw new Error(`${tracker.path} must not set ${forbidden}`);
   }
   if (
-    !source.includes("e.__SV") ||
-    !source.includes("e._i.push") ||
-    !source.includes('"/static/array.js"')
+    !trackerSource.includes("e.__SV") ||
+    !trackerSource.includes("e._i.push") ||
+    !trackerSource.includes('"/static/array.js"')
   ) {
     throw new Error(
       `${tracker.path} must use PostHog's official queueing snippet`,
