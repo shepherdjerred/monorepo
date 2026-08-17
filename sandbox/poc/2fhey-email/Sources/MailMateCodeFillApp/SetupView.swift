@@ -157,38 +157,44 @@ struct SetupView: View {
     private func refreshCredentialIdentities() {
         let startedAt = Date()
         CodeFillObservability.appLogger.info("event=identity_refresh outcome=started")
-        do {
-            let store = try CodeStore(applicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier)
-            let records = try store.read()
-            let identities = CredentialIdentityBuilder.identities(for: records)
-            CodeFillObservability.appLogger.info("event=identity_refresh outcome=records_loaded record_count=\(records.count, privacy: .public) identity_count=\(identities.count, privacy: .public)")
+        Task.detached(priority: .userInitiated) {
+            do {
+                let store = try CodeStore(applicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier)
+                let records = try store.read()
+                let identities = CredentialIdentityBuilder.identities(for: records)
+                CodeFillObservability.appLogger.info("event=identity_refresh outcome=records_loaded record_count=\(records.count, privacy: .public) identity_count=\(identities.count, privacy: .public)")
 
-            ASCredentialIdentityStore.shared.getState { state in
-                guard state.isEnabled else {
-                    CodeFillObservability.appLogger.info("event=identity_refresh outcome=disabled duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
-                    Task { @MainActor in
-                        identityStatus = "AutoFill identity store is disabled. Enable MailMate CodeFill in System Settings first."
-                    }
-                    return
-                }
-                ASCredentialIdentityStore.shared.replaceCredentialIdentities(identities) { success, error in
-                    Task { @MainActor in
-                        if success {
-                            CodeFillObservability.appLogger.info("event=identity_refresh outcome=success identity_count=\(identities.count, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
-                            identityStatus = identities.isEmpty
-                                ? "No unexpired MailMate codes are available yet."
-                                : "Registered \(identities.count) native AutoFill identity entries."
-                        } else {
-                            let detail = error.map { ": \($0.localizedDescription)" } ?? "."
-                            CodeFillObservability.appLogger.error("event=identity_refresh outcome=error identity_count=\(identities.count, privacy: .public) detail=\(detail, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
-                            identityStatus = "Could not register AutoFill identities\(detail)"
+                await MainActor.run {
+                    ASCredentialIdentityStore.shared.getState { state in
+                        guard state.isEnabled else {
+                            CodeFillObservability.appLogger.info("event=identity_refresh outcome=disabled duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
+                            Task { @MainActor in
+                                identityStatus = "AutoFill identity store is disabled. Enable MailMate CodeFill in System Settings first."
+                            }
+                            return
+                        }
+                        ASCredentialIdentityStore.shared.replaceCredentialIdentities(identities) { success, error in
+                            Task { @MainActor in
+                                if success {
+                                    CodeFillObservability.appLogger.info("event=identity_refresh outcome=success identity_count=\(identities.count, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
+                                    identityStatus = identities.isEmpty
+                                        ? "No unexpired MailMate codes are available yet."
+                                        : "Registered \(identities.count) native AutoFill identity entries."
+                                } else {
+                                    let detail = error.map { ": \($0.localizedDescription)" } ?? "."
+                                    CodeFillObservability.appLogger.error("event=identity_refresh outcome=error identity_count=\(identities.count, privacy: .public) detail=\(detail, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
+                                    identityStatus = "Could not register AutoFill identities\(detail)"
+                                }
+                            }
                         }
                     }
                 }
+            } catch {
+                await MainActor.run {
+                    identityStatus = "Could not read pending MailMate codes: \(error.localizedDescription)"
+                    CodeFillObservability.appLogger.error("event=identity_refresh outcome=store_error error=\(CodeFillObservability.errorSummary(error), privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
+                }
             }
-        } catch {
-            identityStatus = "Could not read pending MailMate codes: \(error.localizedDescription)"
-            CodeFillObservability.appLogger.error("event=identity_refresh outcome=store_error error=\(CodeFillObservability.errorSummary(error), privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
         }
     }
 
