@@ -1,27 +1,27 @@
-#!/bin/zsh
+#!/usr/bin/env bash
 set -euo pipefail
 
-script_dir="${0:A:h}"
-project_dir="${script_dir:h}"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+project_dir="$(dirname "$script_dir")"
 release_dir="${RELEASE_DIR:-$project_dir/dist}"
 signing_identity="${CODE_SIGN_IDENTITY:-Developer ID Application}"
 notary_profile="${NOTARY_PROFILE:-}"
 release_started_at=$(date +%s)
 
 log_event() {
-    event="$1"
+    local event="$1"
     shift
-    print -u2 -- "$(date -u +%Y-%m-%dT%H:%M:%SZ) event=$event $*"
+    printf '%s event=%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$event" "$*" >&2
 }
 
 : "${DEVELOPMENT_TEAM:?Set DEVELOPMENT_TEAM to the Apple Developer Team ID}"
 if [[ -z "$notary_profile" ]]; then
-    print -u2 "Set NOTARY_PROFILE to an xcrun notarytool keychain profile name"
+    printf '%s\n' "Set NOTARY_PROFILE to an xcrun notarytool keychain profile name" >&2
     exit 1
 fi
 
 if [[ -e "$release_dir/MailMateCodeFill.zip" ]]; then
-    print -u2 "Refusing to overwrite $release_dir/MailMateCodeFill.zip; choose a new RELEASE_DIR or remove the old artifact"
+    printf '%s\n' "Refusing to overwrite $release_dir/MailMateCodeFill.zip; choose a new RELEASE_DIR or remove the old artifact" >&2
     exit 1
 fi
 
@@ -52,7 +52,7 @@ log_event archive_created
 
 app_path="$temp_dir/MailMateCodeFill.xcarchive/Products/Applications/MailMateCodeFill.app"
 if [[ ! -d "$app_path" ]]; then
-    print -u2 "Archive did not contain $app_path"
+    printf '%s\n' "Archive did not contain $app_path" >&2
     exit 1
 fi
 
@@ -70,6 +70,6 @@ log_event notarization_stapled
 
 /usr/bin/ditto "$app_path" "$release_dir/MailMateCodeFill.app"
 /usr/bin/ditto -c -k --keepParent "$app_path" "$release_dir/MailMateCodeFill.zip"
-print "Created $release_dir/MailMateCodeFill.app"
-print "Created $release_dir/MailMateCodeFill.zip"
-log_event release_finished duration_s=$(( $(date +%s) - release_started_at ))
+printf '%s\n' "Created $release_dir/MailMateCodeFill.app"
+printf '%s\n' "Created $release_dir/MailMateCodeFill.zip"
+log_event release_finished duration_s=$(($(date +%s) - release_started_at))
