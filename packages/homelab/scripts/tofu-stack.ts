@@ -98,7 +98,7 @@ const OPTIONAL_SECRET_ENV: readonly [source: string, target: string][] = [
 async function configureLocalOpenRouterProvider(
   env: Record<string, string>,
 ): Promise<void> {
-  const providerRoot = `${homelabRoot()}/../../terraform-provider-openrouter-byok`;
+  const providerRoot = `${homelabRoot()}/../terraform-provider-openrouter-byok`;
   const tempRoot = `${Bun.env["TMPDIR"] ?? "/tmp"}/monorepo-openrouter-byok-${process.pid.toString()}`;
   const goosResult = await run(["go", "env", "GOOS"], { capture: true });
   const goarchResult = await run(["go", "env", "GOARCH"], { capture: true });
