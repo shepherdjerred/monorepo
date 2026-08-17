@@ -51,10 +51,52 @@ export function validateAtomicRootSyncLifecycle(
   }
 }
 
+export function validateHomelabReleaseAdmission(
+  stepBlocks: ReadonlyMap<string, string>,
+): void {
+  const admission = stepBlocks.get("homelab-release-admission");
+  for (const required of [
+    "homelab-release-admission.ts admit",
+    "depends_on: verify",
+  ]) {
+    requireIncludes(
+      admission,
+      required,
+      `homelab-release-admission is missing ${required}`,
+    );
+  }
+  for (const step of [
+    "helm-push",
+    "tofu-apply",
+    "argocd-sync",
+    "tofu-cloudflare",
+  ]) {
+    const block = stepBlocks.get(step);
+    for (const required of [
+      "homelab-release-admission",
+      "homelab-release-admission.ts consume",
+      '"$$release_admission" = "superseded"',
+      '"$$release_admission" != "admitted"',
+    ]) {
+      requireIncludes(
+        block,
+        required,
+        `${step} is missing homelab release admission invariant ${required}`,
+      );
+    }
+  }
+  requireIncludes(
+    stepBlocks.get("argocd-sync"),
+    'artifact upload "homelab-release-result.json"',
+    "argocd-sync must publish the applied-verified release receipt",
+  );
+}
+
 function validateReleaseSteps({
   prDryrun,
   stepBlocks,
 }: Pick<ReleaseValidationOptions, "prDryrun" | "stepBlocks">): void {
+  validateHomelabReleaseAdmission(stepBlocks);
   const sites = stepBlocks.get("sites");
   requireIncludes(
     sites,

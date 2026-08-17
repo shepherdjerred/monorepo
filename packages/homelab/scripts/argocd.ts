@@ -65,6 +65,10 @@ import {
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
 import { autoSyncPolicyDivergences } from "./argocd-auto-sync-policy.ts";
+import {
+  appliedVerifiedReleaseResult,
+  HOMELAB_RELEASE_RESULT_FILE,
+} from "./argocd-release-result.ts";
 import { latestPublishedVersion } from "./helm-release-core.ts";
 import {
   analyzeApplySafety,
@@ -1341,7 +1345,7 @@ async function finalizeRootRelease(
   requestId: string,
   timeoutSeconds: number,
   dryRun: boolean,
-): Promise<void> {
+): Promise<readonly string[]> {
   const exactRevision = BuildRevisionSchema.parse(revision);
   const exactRequestId = SyncRequestIdSchema.parse(requestId);
   if (rootAppName !== "apps") {
@@ -1351,7 +1355,7 @@ async function finalizeRootRelease(
     `--- argocd finalize-root-release: ${rootAppName} at ${exactRevision} for request ${exactRequestId}${dryRun ? " (dry run)" : ""}`,
   );
   if (dryRun) {
-    return;
+    return [];
   }
   await assertExpectedAppsRevisionIsLatest(exactRevision, timeoutSeconds);
   const token = requireEnv("ARGOCD_TOKEN");
@@ -1429,7 +1433,7 @@ async function finalizeRootRelease(
       terminateAfterApplied: true,
       verifiedRootDesiredIdentities,
     });
-    return;
+    return [...verifiedRootDesiredIdentities].sort();
   }
 
   await syncRootReleaseBatches(
@@ -1450,6 +1454,7 @@ async function finalizeRootRelease(
     terminateAfterApplied: true,
     verifiedRootDesiredIdentities,
   });
+  return [...verifiedRootDesiredIdentities].sort();
 }
 
 function latestSuccessfulRevision(
@@ -2951,7 +2956,7 @@ async function releaseRoot(
       exactRequestId,
     );
   }
-  await finalizeRootRelease(
+  const verifiedResourceIdentities = await finalizeRootRelease(
     rootAppName,
     exactRevision,
     exactRequestId,
@@ -2967,6 +2972,21 @@ async function releaseRoot(
   // exactly the shape that produced the incident this guards.
   await assertLiveAutoSyncMatchesRelease(rootAppName, exactRevision, dryRun);
   await releaseHealthWait(expectedPath, timeoutSeconds, dryRun);
+  if (!dryRun) {
+    const result = appliedVerifiedReleaseResult({
+      requestId: exactRequestId,
+      revision: exactRevision,
+      resourceIdentities: verifiedResourceIdentities,
+      applications: expected.map((application) => ({
+        name: application.name,
+        revision: application.revision,
+      })),
+    });
+    await Bun.write(HOMELAB_RELEASE_RESULT_FILE, `${JSON.stringify(result)}\n`);
+    console.log(
+      `release receipt: ${result.outcome}; ArgoCD root is intentionally ${result.terminalOperationState}`,
+    );
+  }
 }
 
 /**

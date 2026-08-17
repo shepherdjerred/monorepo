@@ -179,6 +179,7 @@ export const summarySteps = [
   "docker-e2e-main",
   "images",
   "sites",
+  "homelab-release-admission",
   "helm-push",
   "tofu-apply",
   "tofu-github",

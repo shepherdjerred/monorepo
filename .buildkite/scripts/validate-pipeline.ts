@@ -138,11 +138,18 @@ if (mainBootstrap.includes("soft_fail:")) {
   fail("main selector bootstrap must keep configuration errors hard");
 }
 
-requireIncludes(
-  stepBlocks.get("helm-push"),
-  "depends_on: [verify, images, ci-base-refresh, ci-playwright-refresh]",
-  "helm-push must wait for remote BuildKit consumers before publishing the floating buildkitd chart",
-);
+for (const dependency of [
+  "homelab-release-admission",
+  "images",
+  "ci-base-refresh",
+  "ci-playwright-refresh",
+]) {
+  requireIncludes(
+    stepBlocks.get("helm-push"),
+    dependency,
+    `helm-push must depend on ${dependency} before publishing the floating buildkitd chart`,
+  );
+}
 const sitesStep = stepBlocks.get("sites");
 requireIncludes(
   sitesStep,
