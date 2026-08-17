@@ -1,4 +1,5 @@
 import React from "react";
+import Highlighter from "react-highlight-words";
 import { Link } from "@tanstack/react-router";
 import { useContent } from "#src/hooks/use-content";
 
@@ -9,8 +10,10 @@ import { useContent } from "#src/hooks/use-content";
  */
 export function CoachAttribution({
   name,
+  matchedStrings,
 }: {
   name: string;
+  matchedStrings: string[];
 }): React.ReactElement {
   const { content } = useContent();
   const staff = content?.staffByName.get(name);
@@ -31,7 +34,11 @@ export function CoachAttribution({
           className="size-5 rounded-full border bg-background"
         />
       )}
-      <span>{name}</span>
+      <Highlighter
+        searchWords={matchedStrings}
+        textToHighlight={name}
+        autoEscape={true}
+      />
       {staff !== undefined && typeof staff.playerPeakRank === "number" && (
         <span className="text-muted-foreground">
           #{staff.playerPeakRank} peak

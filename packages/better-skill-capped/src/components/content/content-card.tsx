@@ -150,7 +150,7 @@ function VideoCard(
 function CommentaryCard(
   props: ContentCardProps & { commentary: Commentary },
 ): React.ReactElement {
-  const { commentary } = props;
+  const { commentary, matchedStrings } = props;
   return (
     <Card className="mb-4">
       <CardContent className="grid gap-4 sm:grid-cols-[1fr_16rem]">
@@ -161,7 +161,11 @@ function CommentaryCard(
               href={commentary.skillCappedUrl}
               className="underline-offset-2 hover:underline"
             >
-              {commentary.champion} vs {commentary.opponent}
+              <Highlighter
+                searchWords={matchedStrings}
+                textToHighlight={`${commentary.champion} vs ${commentary.opponent}`}
+                autoEscape={true}
+              />
             </a>
             <ChampionIcon
               name={commentary.opponent}
@@ -174,7 +178,10 @@ function CommentaryCard(
               {roleDisplayName(commentary.role)}
             </Badge>
             <ReleasedBadge date={commentary.releaseDate} />
-            <CoachAttribution name={commentary.staff} />
+            <CoachAttribution
+              name={commentary.staff}
+              matchedStrings={matchedStrings}
+            />
             <Badge variant="outline">
               K/D/A: {commentary.kills}/{commentary.deaths}/{commentary.assists}
             </Badge>
