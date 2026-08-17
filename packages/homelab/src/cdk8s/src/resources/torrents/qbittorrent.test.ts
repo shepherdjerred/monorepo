@@ -204,6 +204,22 @@ describe("qBittorrent deployment", () => {
     expect(deployment.spec.template.metadata.labels.app).toBe("qbittorrent");
   });
 
+  it("contains no retired ShelfBridge workload resources", () => {
+    expect(
+      deployment.spec.template.spec.containers.map(
+        (container) => container.name,
+      ),
+    ).toEqual(["gluetun", "qbittorrent", "qbittorrent-exporter"]);
+    expect(
+      deployment.spec.template.spec.volumes.map((volume) => volume.name),
+    ).not.toContain("configmap-qbittorrent-shelfbridge-relay-config");
+    expect(
+      deployment.spec.template.spec.volumes.flatMap((volume) =>
+        volume.configMap?.name ? [volume.configMap.name] : [],
+      ),
+    ).toEqual(["qbittorrent-config"]);
+  });
+
   it("gates WebUI traffic on qBittorrent readiness while keeping metrics discoverable", () => {
     const qbittorrent = getContainer("qbittorrent");
 
