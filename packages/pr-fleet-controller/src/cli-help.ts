@@ -3,8 +3,8 @@ export const HELP = `Usage:
 
 Options:
   --repo <owner/name>       Repository (default: shepherdjerred/monorepo)
-  --checkout <path>         Main checkout (default: current Git root)
-  --worktree-root <path>    Fleet worktrees (default: .claude/worktrees/pr-fleet)
+  --checkout <path>         Controller-owned checkout (default: state-dir/checkouts/repo-<owner--name>)
+  --worktree-root <path>    Fleet worktrees (default: state-dir/worktrees/repo-<owner--name>)
   --max-workers <1..5>      Worker limit (default: 5)
   --author <login>          Scope to this author's PRs (drafts included)
   --review-provider <id>    Hosted review provider to gate on (default: codex)

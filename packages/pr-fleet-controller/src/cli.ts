@@ -25,6 +25,10 @@ import {
   type FleetTelemetryRuntime,
 } from "./telemetry-runtime.ts";
 import { resolveFleetModel } from "./model-resolution.ts";
+import {
+  prepareManagedCheckout,
+  resolveManagedCheckoutPaths,
+} from "./managed-checkout.ts";
 import type { FleetObserver } from "./ports.ts";
 import {
   startOperatorControlServer,
@@ -152,14 +156,16 @@ async function createBootstrapRecorder(
   const bootstrapModel = rawOptionValue(args, "model") ?? "unresolved/unknown";
   const bootstrapRepository =
     rawOptionValue(args, "repo") ?? "shepherdjerred/monorepo";
-  const bootstrapCheckout = rawOptionValue(args, "checkout") ?? process.cwd();
-  const bootstrapWorktreeRoot =
-    rawOptionValue(args, "worktree-root") ??
-    path.join(bootstrapCheckout, ".claude", "worktrees", "pr-fleet");
   const bootstrapMaxWorkers = rawOptionValue(args, "max-workers") ?? "5";
   const stateDirectory = resolveStateDirectory(
     rawOptionValue(args, "state-dir"),
   );
+  const bootstrapPaths = resolveManagedCheckoutPaths({
+    repository: bootstrapRepository,
+    stateDirectory,
+    checkout: rawOptionValue(args, "checkout"),
+    worktreeRoot: rawOptionValue(args, "worktree-root"),
+  });
   await assertStateRootOutsideControllerRepository(stateDirectory);
   const recorder = await RunRecorder.create({
     stateDirectory,
@@ -170,8 +176,8 @@ async function createBootstrapRecorder(
     controllerSourceResolved: false,
     model: bootstrapModel,
     repository: bootstrapRepository,
-    checkout: bootstrapCheckout,
-    worktreeRoot: bootstrapWorktreeRoot,
+    checkout: bootstrapPaths.checkout,
+    worktreeRoot: bootstrapPaths.worktreeRoot,
     maxWorkers: bootstrapWorkerLimit(bootstrapMaxWorkers),
     author: rawOptionValue(args, "author") ?? null,
   });
@@ -179,8 +185,8 @@ async function createBootstrapRecorder(
     phase: "preflight",
     model: bootstrapModel,
     repository: bootstrapRepository,
-    checkout: bootstrapCheckout,
-    worktreeRoot: bootstrapWorktreeRoot,
+    checkout: bootstrapPaths.checkout,
+    worktreeRoot: bootstrapPaths.worktreeRoot,
     maxWorkers: bootstrapMaxWorkers,
     author: rawOptionValue(args, "author") ?? null,
     reviewProvider:
@@ -188,6 +194,25 @@ async function createBootstrapRecorder(
   });
   process.stdout.write(`Run bundle: ${recorder.paths.runDirectory}\n`);
   return recorder;
+}
+
+async function resolveSourceCheckout(recorder: RunRecorder): Promise<string> {
+  const checkoutResult = await runRecordedCommand(
+    {
+      executable: "git",
+      args: ["rev-parse", "--show-toplevel"],
+      cwd: process.cwd(),
+      timeoutMs: 120_000,
+      sensitiveOutput: true,
+    },
+    recorder,
+  );
+  if (checkoutResult.exitCode !== 0) {
+    throw new Error(
+      `git rev-parse --show-toplevel failed: ${checkoutResult.stderr.trim()}`,
+    );
+  }
+  return checkoutResult.stdout.trim();
 }
 
 async function main(): Promise<void> {
@@ -311,37 +336,33 @@ async function main(): Promise<void> {
       return;
     }
     requireTools();
-    let checkout = parsed.values.checkout;
-    if (checkout === undefined) {
-      const checkoutResult = await runRecordedCommand(
-        {
-          executable: "git",
-          args: ["rev-parse", "--show-toplevel"],
-          cwd: process.cwd(),
-          timeoutMs: 120_000,
-          sensitiveOutput: true,
-        },
-        recorder,
-      );
-      if (checkoutResult.exitCode !== 0) {
-        throw new Error(
-          `git rev-parse --show-toplevel failed: ${checkoutResult.stderr.trim()}`,
-        );
-      }
-      checkout = checkoutResult.stdout.trim();
+    let sourceCheckout: string | undefined;
+    if (parsed.values.checkout === undefined) {
+      sourceCheckout = await resolveSourceCheckout(recorder);
     }
     if (await finishIfRequested()) {
       return;
     }
+    const managedPaths = resolveManagedCheckoutPaths({
+      repository: parsed.values.repo,
+      stateDirectory: recorder.paths.root,
+      checkout: parsed.values.checkout,
+      worktreeRoot: parsed.values["worktree-root"],
+    });
     const config = FleetControllerConfigSchema.parse({
       model: modelName,
       repo: parsed.values.repo,
-      checkout,
-      worktreeRoot:
-        parsed.values["worktree-root"] ??
-        path.join(checkout, ".claude", "worktrees", "pr-fleet"),
+      checkout: managedPaths.checkout,
+      worktreeRoot: managedPaths.worktreeRoot,
       maxWorkers: Number(parsed.values["max-workers"]),
       author: parsed.values.author ?? null,
+    });
+    sourceCheckout ??= await resolveSourceCheckout(recorder);
+    await prepareManagedCheckout({
+      sourceCheckout,
+      checkout: config.checkout,
+      worktreeRoot: config.worktreeRoot,
+      run: (request) => runRecordedCommand(request, recorder),
     });
     const controllerSource = await resolveControllerSource({
       stateRoot: recorder.paths.root,

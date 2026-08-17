@@ -151,13 +151,14 @@ POSIX
 process group so descendant processes cannot outlive the worker that spawned
 them.
 
-Each stack gets one worktree. A fleet-owned worktree is always preferred, but
-when a branch is already checked out in an operator's own worktree — git forbids
-the same branch in two worktrees, so the fleet cannot provision its own — the
-fleet reuses that exact-branch worktree in place. Matching-branch worktrees are
-never reset: staged and unstaged edits plus local commits are inventoried for the
-worker. It proceeds only when the inherited work is explainable by the PR and
-can be isolated safely; ambiguity moves only that PR to `waiting-for-answer`.
+Each stack gets one worktree in a controller-owned clone. By default, that clone
+is under the private state directory at `checkouts/repo-<owner--name>`, with
+worktrees alongside it at `worktrees/repo-<owner--name>`. The checkout from
+which the CLI was launched supplies only its `origin` URL and local git-spice
+metadata; it is never assigned to a worker. Existing managed clones must be
+clean, and the controller refuses to reset or reuse a dirty one. `--checkout`
+is an explicit override for another controller-owned clone, never an operator
+checkout.
 Unrelated unstaged files remain untouched, and publication still names explicit
 paths or a captured local commit head.
 
