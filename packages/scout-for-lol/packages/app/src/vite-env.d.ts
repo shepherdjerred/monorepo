@@ -21,4 +21,6 @@ interface ImportMetaEnv {
   readonly VITE_POSTHOG_SITE_KEY?: string;
   readonly VITE_POSTHOG_SITE_DOMAIN?: string;
   readonly VITE_POSTHOG_SESSION_REPLAY?: "true" | "false";
+  readonly VITE_MARKETING_ORIGIN?: string;
+  readonly VITE_DOCS_ORIGIN?: string;
 }

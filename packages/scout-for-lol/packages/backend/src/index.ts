@@ -72,8 +72,12 @@ import { seedScheduledReportLastSuccessMetric } from "#src/reports/schedule-metr
 await seedScheduledReportLastSuccessMetric(prisma);
 
 logger.info("⏰ Starting cron job scheduler");
-const { startCronJobs } = await import("#src/league/cron.ts");
-void startCronJobs();
+if (configuration.enableBackgroundJobs) {
+  const { startCronJobs } = await import("#src/league/cron.ts");
+  void startCronJobs();
+} else {
+  logger.warn("⏭️  Background jobs disabled for this local secondary instance");
+}
 
 // Incrementally seed the summoner-search index from existing data. Idempotent
 // and cheap to re-run (inserts only new PUUIDs); background so it never blocks

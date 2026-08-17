@@ -1,7 +1,37 @@
 ---
 import StarlightFooter from "@astrojs/starlight/components/Footer.astro";
 import { GlobalFooter } from "@scout-for-lol/design-system/layout";
+
+function localSurfaceOrigin(
+  configured: unknown,
+  developmentFallback: string,
+): string | undefined {
+  if (typeof configured === "string" && configured.length > 0) {
+    return configured;
+  }
+  return import.meta.env.DEV ? developmentFallback : undefined;
+}
+
+const appOrigin = localSurfaceOrigin(
+  import.meta.env["PUBLIC_APP_ORIGIN"],
+  "http://localhost:5180",
+);
+const marketingOrigin = localSurfaceOrigin(
+  import.meta.env["PUBLIC_MARKETING_ORIGIN"],
+  "http://localhost:4321",
+);
 ---
 
 <StarlightFooter />
-<GlobalFooter />
+<GlobalFooter origins={{ marketing: marketingOrigin }} />
+<script is:inline define:vars={{ appOrigin: appOrigin ?? "" }}>
+  if (appOrigin.length > 0) {
+    const normalizedAppOrigin = appOrigin.replace(/\/$/, "");
+    for (const anchor of document.querySelectorAll('a[href^="/app/"]')) {
+      const href = anchor.getAttribute("href");
+      if (href !== null) {
+        anchor.setAttribute("href", `${normalizedAppOrigin}${href}`);
+      }
+    }
+  }
+</script>

@@ -10,14 +10,32 @@ import {
 } from "#src/components/sheet.tsx";
 import { ThemeMenu } from "#src/runtime/theme-menu.tsx";
 import { cn } from "#src/lib/cn.ts";
+import { surfaceHref as joinSurfaceHref } from "#src/layout/origins.ts";
+
+export type ScoutSurfaceOrigins = {
+  readonly app?: string | undefined;
+  readonly docs?: string | undefined;
+  readonly marketing?: string | undefined;
+};
+
+export function surfaceHref(
+  origin: string | undefined,
+  pathname: string,
+): string {
+  return joinSurfaceHref(origin, pathname);
+}
 
 export const SCOUT_NAV_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "Getting Started", href: "/getting-started" },
-  { label: "Documentation", href: "/docs/" },
-  { label: "What’s New", href: "/whatsnew" },
-  { label: "Support", href: "/support" },
-  { label: "Dashboard", href: "/app/" },
+  { label: "Home", href: "/", surface: "marketing" },
+  {
+    label: "Getting Started",
+    href: "/getting-started",
+    surface: "marketing",
+  },
+  { label: "Documentation", href: "/docs/", surface: "docs" },
+  { label: "What’s New", href: "/whatsnew", surface: "marketing" },
+  { label: "Support", href: "/support", surface: "marketing" },
+  { label: "Dashboard", href: "/app/", surface: "app" },
 ] as const;
 
 export function Container({
@@ -68,13 +86,16 @@ export function EmptyState({
   );
 }
 
-function NavLinks(props: { currentPath?: string | undefined }) {
+function NavLinks(props: {
+  currentPath?: string | undefined;
+  origins?: ScoutSurfaceOrigins | undefined;
+}) {
   return (
     <>
       {SCOUT_NAV_LINKS.map((link) => (
         <a
           key={link.href}
-          href={link.href}
+          href={surfaceHref(props.origins?.[link.surface], link.href)}
           className="scout-navbar__link"
           aria-current={props.currentPath === link.href ? "page" : undefined}
         >
@@ -93,15 +114,19 @@ export function GlobalNavbar(props: {
   guildAccess?: ReactNode | undefined;
   getStartedTrackingEvent?: string | undefined;
   getStartedLocation?: string | undefined;
+  origins?: ScoutSurfaceOrigins | undefined;
 }) {
   return (
     <header className="scout-navbar">
       <Container className="scout-navbar__inner">
-        <a href="/" aria-label="Scout home">
+        <a
+          href={surfaceHref(props.origins?.marketing, "/")}
+          aria-label="Scout home"
+        >
           <ScoutMark />
         </a>
         <nav className="scout-navbar__links" aria-label="Global">
-          <NavLinks currentPath={props.currentPath} />
+          <NavLinks currentPath={props.currentPath} origins={props.origins} />
         </nav>
         <div className="scout-navbar__utility">
           {props.utility}
@@ -112,7 +137,7 @@ export function GlobalNavbar(props: {
           ) : (
             <Button asChild size="sm">
               <a
-                href="/app/login"
+                href={surfaceHref(props.origins?.app, "/app/login")}
                 data-scout-conversion={props.getStartedTrackingEvent}
                 data-scout-cta-location={props.getStartedLocation}
               >
@@ -136,7 +161,10 @@ export function GlobalNavbar(props: {
                   <ScoutMark />
                 </SheetTitle>
                 <nav className="scout-stack" aria-label="Mobile">
-                  <NavLinks currentPath={props.currentPath} />
+                  <NavLinks
+                    currentPath={props.currentPath}
+                    origins={props.origins}
+                  />
                 </nav>
               </SheetContent>
             </Sheet>
@@ -158,14 +186,19 @@ export function ProductSubnavigation(props: { children: ReactNode }) {
 export function GlobalFooter(props: {
   release?: string | undefined;
   commit?: string | undefined;
+  origins?: ScoutSurfaceOrigins | undefined;
 }) {
   return (
     <footer className="scout-footer">
       <Container className="scout-stack">
         <div className="scout-footer__links">
-          <a href="/privacy">Privacy</a>
-          <a href="/tos">Terms</a>
-          <a href="/support">Support</a>
+          <a href={surfaceHref(props.origins?.marketing, "/privacy")}>
+            Privacy
+          </a>
+          <a href={surfaceHref(props.origins?.marketing, "/tos")}>Terms</a>
+          <a href={surfaceHref(props.origins?.marketing, "/support")}>
+            Support
+          </a>
           <a href="https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol">
             GitHub
           </a>
@@ -215,13 +248,24 @@ export function PublicShell(props: {
   utility?: ReactNode | undefined;
   release?: string | undefined;
   commit?: string | undefined;
+  origins?: ScoutSurfaceOrigins | undefined;
 }) {
   return (
     <ResponsivePageFrame
       navbar={
-        <GlobalNavbar currentPath={props.currentPath} utility={props.utility} />
+        <GlobalNavbar
+          currentPath={props.currentPath}
+          utility={props.utility}
+          origins={props.origins}
+        />
       }
-      footer={<GlobalFooter release={props.release} commit={props.commit} />}
+      footer={
+        <GlobalFooter
+          release={props.release}
+          commit={props.commit}
+          origins={props.origins}
+        />
+      }
     >
       {props.children}
     </ResponsivePageFrame>
@@ -235,6 +279,7 @@ export function AppShell(props: {
   accountMenu?: ReactNode | undefined;
   guildAccess?: ReactNode | undefined;
   productSubnav?: ReactNode | undefined;
+  origins?: ScoutSurfaceOrigins | undefined;
 }) {
   return (
     <ResponsivePageFrame
@@ -244,6 +289,7 @@ export function AppShell(props: {
           signedIn={props.signedIn}
           accountMenu={props.accountMenu}
           guildAccess={props.guildAccess}
+          origins={props.origins}
         />
       }
       subnav={props.productSubnav}
@@ -256,10 +302,12 @@ export function AppShell(props: {
 export function DocsAdapter(props: {
   search?: ReactNode | undefined;
   mobileSidebar?: ReactNode | undefined;
+  origins?: ScoutSurfaceOrigins | undefined;
 }) {
   return (
     <GlobalNavbar
       currentPath="/docs/"
+      origins={props.origins}
       utility={
         <>
           {props.search}

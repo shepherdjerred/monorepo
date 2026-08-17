@@ -1,15 +1,23 @@
 import { describe, test, expect, afterEach } from "bun:test";
 import {
   parseProductAnalyticsConfiguration,
+  resetConfigurationForTests,
   resolveEnvironment,
 } from "#src/configuration.ts";
+import configuration from "#src/configuration.ts";
 
-type TrackedKey = "ENVIRONMENT" | "NODE_ENV";
+type TrackedKey =
+  | "ENVIRONMENT"
+  | "NODE_ENV"
+  | "ENABLE_DISCORD_GATEWAY"
+  | "ENABLE_BACKGROUND_JOBS";
 
 function snapshotEnv(): Record<TrackedKey, string | undefined> {
   return {
     ENVIRONMENT: Bun.env["ENVIRONMENT"],
     NODE_ENV: Bun.env.NODE_ENV,
+    ENABLE_DISCORD_GATEWAY: Bun.env["ENABLE_DISCORD_GATEWAY"],
+    ENABLE_BACKGROUND_JOBS: Bun.env["ENABLE_BACKGROUND_JOBS"],
   };
 }
 
@@ -24,6 +32,17 @@ function restoreEnv(snapshot: Record<TrackedKey, string | undefined>) {
   } else {
     Bun.env.NODE_ENV = snapshot.NODE_ENV;
   }
+  if (snapshot.ENABLE_DISCORD_GATEWAY === undefined) {
+    delete Bun.env["ENABLE_DISCORD_GATEWAY"];
+  } else {
+    Bun.env["ENABLE_DISCORD_GATEWAY"] = snapshot.ENABLE_DISCORD_GATEWAY;
+  }
+  if (snapshot.ENABLE_BACKGROUND_JOBS === undefined) {
+    delete Bun.env["ENABLE_BACKGROUND_JOBS"];
+  } else {
+    Bun.env["ENABLE_BACKGROUND_JOBS"] = snapshot.ENABLE_BACKGROUND_JOBS;
+  }
+  resetConfigurationForTests();
 }
 
 describe("resolveEnvironment", () => {
@@ -90,4 +109,43 @@ describe("parseProductAnalyticsConfiguration", () => {
       );
     },
   );
+});
+
+describe("local runtime flags", () => {
+  const initial = snapshotEnv();
+
+  afterEach(() => {
+    restoreEnv(initial);
+  });
+
+  test("allows secondary development instances to disable gateway and jobs", () => {
+    Bun.env["ENVIRONMENT"] = "dev";
+    Bun.env["ENABLE_DISCORD_GATEWAY"] = "false";
+    Bun.env["ENABLE_BACKGROUND_JOBS"] = "false";
+    resetConfigurationForTests();
+
+    expect(configuration.enableDiscordGateway).toBe(false);
+    expect(configuration.enableBackgroundJobs).toBe(false);
+  });
+
+  test("rejects disabled gateway or jobs outside development", () => {
+    Bun.env["ENVIRONMENT"] = "beta";
+    Bun.env["ENABLE_DISCORD_GATEWAY"] = "false";
+    resetConfigurationForTests();
+
+    expect(() => configuration.enableDiscordGateway).toThrow(
+      /may only be disabled in environment=dev/,
+    );
+  });
+
+  test("rejects background jobs enabled while the gateway is disabled", () => {
+    Bun.env["ENVIRONMENT"] = "dev";
+    Bun.env["ENABLE_DISCORD_GATEWAY"] = "false";
+    Bun.env["ENABLE_BACKGROUND_JOBS"] = "true";
+    resetConfigurationForTests();
+
+    expect(() => configuration.enableBackgroundJobs).toThrow(
+      /ENABLE_BACKGROUND_JOBS requires ENABLE_DISCORD_GATEWAY/,
+    );
+  });
 });

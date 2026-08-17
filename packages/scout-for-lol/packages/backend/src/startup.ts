@@ -1,4 +1,8 @@
 import { validateChampionAssets } from "#src/league/data-dragon/validate-assets.ts";
+import configuration from "#src/configuration.ts";
+import { createLogger } from "#src/logger.ts";
+
+const logger = createLogger("startup");
 
 type HttpServerRuntime = {
   readonly shutdownHttpServer: () => Promise<void>;
@@ -24,6 +28,12 @@ export async function startBackendRuntime(): Promise<HttpServerRuntime> {
     validateChampionAssets,
     startHttpServer: async () => await import("#src/http-server.ts"),
     startDiscord: async () => {
+      if (!configuration.enableDiscordGateway) {
+        logger.warn(
+          "⏭️  Discord gateway disabled for this local secondary instance",
+        );
+        return;
+      }
       await import("@scout-for-lol/backend/discord/index.ts");
     },
   });

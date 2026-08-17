@@ -5,6 +5,18 @@ const requiredSecrets = [
   "RIOT_API_KEY",
 ] as const;
 
+export function requireCliValue(
+  args: readonly string[],
+  index: number,
+  flag: string,
+): string {
+  const value = args[index + 1];
+  if (value === undefined || value.startsWith("--")) {
+    throw new Error(`${flag} requires a value`);
+  }
+  return value;
+}
+
 const pngBytes = [
   137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0,
   0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120,
