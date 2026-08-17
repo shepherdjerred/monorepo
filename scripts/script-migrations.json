@@ -288,6 +288,11 @@
       "reason": "Wrapper targets a missing Python scraper and stale paths"
     },
     {
+      "source": "packages/dotfiles/dot_agents/skills/terraform-helper/references/hashicorp-search-import/list_resources.sh",
+      "disposition": "retain",
+      "reason": "Terraform and jq helper is intentionally distributed as a shell script for use from initialized Terraform directories"
+    },
+    {
       "source": "packages/dotfiles/install.sh",
       "disposition": "retain",
       "reason": "Bootstrap installs the toolchain including Bun"
