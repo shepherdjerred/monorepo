@@ -49,10 +49,16 @@ public enum CodeFillObservability {
             return generated
         }
         defer { close(lockDescriptor) }
-        guard flock(lockDescriptor, LOCK_EX) == 0 else {
-            let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
-            cachedSalt = generated
-            return generated
+        // Never let observability initialization block an ingestion or provider flow forever.
+        // Another process may be stalled while holding this lock, so acquire it with a deadline.
+        let lockDeadline = Date().addingTimeInterval(2)
+        while flock(lockDescriptor, LOCK_EX | LOCK_NB) != 0 {
+            guard Date() < lockDeadline else {
+                let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
+                cachedSalt = generated
+                return generated
+            }
+            usleep(10_000)
         }
         defer { _ = flock(lockDescriptor, LOCK_UN) }
 
