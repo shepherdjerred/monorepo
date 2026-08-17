@@ -5,15 +5,23 @@ import (
 	"strings"
 )
 
-// Asuswrt packs list-valued NVRAM entries using HTML numeric character
-// references as delimiters rather than literal angle brackets: each entry is
-// prefixed by "&#60" (encodes '<') and its fields are separated by "&#62"
-// (encodes '>'). The router stores and returns the literal 4-character token
-// strings — it does NOT emit real '<'/'>' bytes — so parsing/serializing must
-// operate on these tokens to round-trip correctly against live hardware.
+// Asuswrt returns packed list-valued NVRAM entries from appGet.cgi with HTML
+// numeric character references as delimiters: each entry is prefixed by
+// "&#60" (encodes '<') and its fields are separated by "&#62" (encodes '>').
+// Parsing and the state-side serializer operate on that representation so an
+// untouched read round-trips byte-for-byte.
+//
+// apply.cgi is asymmetric: it expects the literal '<'/'>' format built by the
+// firmware's own web UI. Sending the appGet.cgi representation writes the '&'
+// as data, so the next read returns "&#38#60"/"&#38#62" and the router no longer
+// sees delimiters. Encode*ForWrite performs that boundary conversion.
 const (
-	packedEntryDelim = "&#60" // '<' — separates/prefixes entries
-	packedFieldDelim = "&#62" // '>' — separates fields within an entry
+	packedReadAmpersand   = "&#38" // appGet.cgi representation of '&'
+	packedEntryDelim      = "&#60" // appGet.cgi representation of '<'
+	packedFieldDelim      = "&#62" // appGet.cgi representation of '>'
+	packedWriteAmpersand  = "&"    // apply.cgi representation
+	packedWriteEntryDelim = "<"    // apply.cgi representation
+	packedWriteFieldDelim = ">"    // apply.cgi representation
 )
 
 // Minimum field counts for a well-formed entry. Trailing fields (DHCP DNS and
@@ -38,13 +46,14 @@ const (
 	vtsSourceIPField  = 5
 )
 
-// PackedDelimiters returns the tokens that delimit packed NVRAM lists.
+// PackedDelimiters returns every read- or write-side delimiter that cannot
+// appear inside a modeled packed-list field.
 //
-// The format has no escaping, so a field value containing either token cannot
+// The format has no escaping, so a field value containing any delimiter cannot
 // be represented. Callers that accept user input destined for a packed list
 // must reject such values before they reach serialization.
 func PackedDelimiters() []string {
-	return []string{packedEntryDelim, packedFieldDelim}
+	return []string{packedEntryDelim, packedFieldDelim, packedWriteEntryDelim, packedWriteFieldDelim}
 }
 
 // splitPackedEntries splits a packed NVRAM value into per-entry field slices.
@@ -196,6 +205,13 @@ func SerializeDHCPStaticList(entries []DHCPStaticEntry) string {
 	return b.String()
 }
 
+// EncodeDHCPStaticListForWrite returns the literal-delimiter representation
+// apply.cgi expects. appGet.cgi exposes the same NVRAM value with the angle
+// brackets HTML-encoded, which SerializeDHCPStaticList deliberately preserves.
+func EncodeDHCPStaticListForWrite(entries []DHCPStaticEntry) string {
+	return encodePackedListForWrite(SerializeDHCPStaticList(entries))
+}
+
 // modeledFieldCount decides how many modeled fields to emit for one entry.
 //
 // It preserves the count the router supplied so an untouched short entry
@@ -311,4 +327,19 @@ func SerializeVTSRuleList(entries []PortForwardEntry) string {
 	}
 
 	return b.String()
+}
+
+// EncodeVTSRuleListForWrite is the port-forward equivalent of
+// EncodeDHCPStaticListForWrite.
+func EncodeVTSRuleListForWrite(entries []PortForwardEntry) string {
+	return encodePackedListForWrite(SerializeVTSRuleList(entries))
+}
+
+func encodePackedListForWrite(value string) string {
+	return strings.NewReplacer(
+		packedReadAmpersand,
+		packedWriteAmpersand,
+		packedEntryDelim, packedWriteEntryDelim,
+		packedFieldDelim, packedWriteFieldDelim,
+	).Replace(value)
 }

@@ -712,8 +712,9 @@ func TestApplyPlanToEntryLeavesAbsentTrailingFieldAbsent(t *testing.T) {
 }
 
 // TestPackedFieldValidator covers the boundary rejection that keeps packed
-// NVRAM lists parseable. A value carrying a delimiter token cannot be
-// represented in the router's flat, unescaped list format.
+// NVRAM lists parseable. A value carrying either an appGet.cgi delimiter token
+// or a literal apply.cgi delimiter cannot be represented in the router's flat,
+// unescaped list format.
 func TestPackedFieldValidator(t *testing.T) {
 	t.Parallel()
 
@@ -723,7 +724,8 @@ func TestPackedFieldValidator(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "ordinary value", value: types.StringValue("Plex"), wantErr: false},
-		{name: "value with a real angle bracket", value: types.StringValue("a>b"), wantErr: false},
+		{name: "literal field delimiter", value: types.StringValue("a>b"), wantErr: true},
+		{name: "literal entry delimiter", value: types.StringValue("a<b"), wantErr: true},
 		{name: "null", value: types.StringNull(), wantErr: false},
 		{name: "unknown", value: types.StringUnknown(), wantErr: false},
 		{name: "field delimiter token", value: types.StringValue("foo&#62bar"), wantErr: true},

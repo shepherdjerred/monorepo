@@ -36,7 +36,7 @@ provider "asuswrt" {
 
 provider "asuswrt" {
   alias    = "ap_ax88u"
-  host     = "192.168.1.213"
+  host     = "192.168.1.214"
   port     = 8443
   https    = true
   insecure = true

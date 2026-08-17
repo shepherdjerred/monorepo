@@ -17,6 +17,7 @@ cd "$CHDIR/.."
 IMPORTS=$(
   cat <<'EOF'
 asuswrt_system.router	system
+asuswrt_dhcp_static_lease.ax88u_ap	24:4B:FE:D0:9B:A0
 asuswrt_dhcp_static_lease.plex_host	08:BF:B8:D4:59:7F
 asuswrt_dhcp_static_lease.lease_61	48:DA:35:6F:61:BF
 asuswrt_dhcp_static_lease.lease_90	4C:B9:EA:97:90:5A

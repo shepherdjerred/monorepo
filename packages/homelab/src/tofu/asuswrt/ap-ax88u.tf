@@ -1,4 +1,4 @@
-# RT-AX88U @ 192.168.1.213 (access point, sw_mode=3).
+# RT-AX88U @ 192.168.1.214 (access point, sw_mode=3).
 # In AP mode DHCP-server / WAN / port-forward are inert, so only system and
 # wireless are managed here.
 

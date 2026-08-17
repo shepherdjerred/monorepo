@@ -275,7 +275,7 @@ func (r *portForwardResource) writeRules(ctx context.Context, entries []client.P
 	}
 
 	values := map[string]string{
-		"vts_rulelist": client.SerializeVTSRuleList(entries),
+		"vts_rulelist": client.EncodeVTSRuleListForWrite(entries),
 		"vts_enable_x": vtsEnable,
 	}
 

@@ -330,7 +330,7 @@ func (r *dhcpStaticLeaseResource) readLeases(ctx context.Context) ([]client.DHCP
 
 func (r *dhcpStaticLeaseResource) writeLeases(ctx context.Context, entries []client.DHCPStaticEntry) error {
 	values := map[string]string{
-		"dhcp_staticlist": client.SerializeDHCPStaticList(entries),
+		"dhcp_staticlist": client.EncodeDHCPStaticListForWrite(entries),
 	}
 
 	if err := r.client.NvramSet(ctx, values, client.ServiceDNSMasq); err != nil {

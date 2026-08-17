@@ -77,13 +77,31 @@ func (m *mockRouter) handler(t *testing.T) http.Handler {
 			if k == "action_mode" || k == "rc_service" {
 				continue
 			}
-			m.nvram[k] = vals[0]
+
+			value := vals[0]
+			if k == "dhcp_staticlist" || k == "vts_rulelist" {
+				value = encodePackedListForRead(value)
+			}
+
+			m.nvram[k] = value
 		}
 		m.mu.Unlock()
 		writeTestJSON(t, w, map[string]string{"modify": "1"})
 	})
 
 	return mux
+}
+
+// appGet.cgi HTML-encodes the literal delimiters accepted by apply.cgi. It
+// also escapes a submitted '&', which is the behavior that turns an incorrect
+// write-side "&#60" into the unreadable "&#38#60" and makes this mock an
+// independent oracle for the provider boundary.
+func encodePackedListForRead(value string) string {
+	return strings.NewReplacer(
+		"&", "&#38",
+		"<", "&#60",
+		">", "&#62",
+	).Replace(value)
 }
 
 func parseLimitedTestForm(t *testing.T, w http.ResponseWriter, r *http.Request) bool {

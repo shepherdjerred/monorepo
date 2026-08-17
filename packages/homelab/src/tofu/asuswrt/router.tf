@@ -11,6 +11,13 @@ resource "asuswrt_system" "router" {
 }
 
 # --- DHCP static leases ---
+resource "asuswrt_dhcp_static_lease" "ax88u_ap" {
+  provider = asuswrt.router
+  mac      = "24:4B:FE:D0:9B:A0"
+  ip       = "192.168.1.214"
+  hostname = "RT-AX88U-9BA0"
+}
+
 resource "asuswrt_dhcp_static_lease" "plex_host" {
   provider = asuswrt.router
   mac      = "08:BF:B8:D4:59:7F"
