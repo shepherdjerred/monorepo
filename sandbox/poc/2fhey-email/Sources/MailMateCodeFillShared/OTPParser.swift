@@ -96,7 +96,18 @@ public struct OTPParser {
         guard !falsePositiveWords.contains(where: context.contains) else { return true }
         if code.count == 4, code.hasPrefix("19") || code.hasPrefix("20") { return true }
         if rawCode.contains(" ") || rawCode.contains("-") { return false }
-        return Self.emailPattern.firstMatch(in: body, range: NSRange(body.startIndex..., in: body)) != nil && code.count >= 7
+        guard code.count >= 7 else { return false }
+        return Self.overlapsEmailAddress(body: body, range: range)
+    }
+
+    // Only a candidate that is part of an address is a false positive; an unrelated support address
+    // elsewhere in the body must not reject a legitimate 7-8 character code.
+    private static func overlapsEmailAddress(body: String, range: NSRange) -> Bool {
+        emailPattern.matches(in: body, range: NSRange(body.startIndex..., in: body)).contains { match in
+            NSIntersectionRange(match.range, range).length > 0 ||
+                match.range.location == NSMaxRange(range) ||
+                NSMaxRange(match.range) == range.location
+        }
     }
 
     private static func normalizeCandidate(rawCode: String, range: NSRange) -> (code: String, range: NSRange)? {
