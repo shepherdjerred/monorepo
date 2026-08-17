@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type * as Monaco from "monaco-editor";
 import Editor, { type OnChange } from "@monaco-editor/react";
 import { useScoutTheme } from "@scout-for-lol/design-system/runtime";
@@ -29,11 +29,8 @@ export default function ReportQueryEditor(props: {
     };
   }, []);
 
-  // The wrapper is controlled through `value`, so it already owns the model
-  // text; this only re-runs the squiggles after a parent-driven edit. Writing
-  // the model here too would be a second, competing source of truth and would
-  // reset the whole document on every external update.
-  useEffect(() => {
+  // Only reads refs, so it is stable and safe as an effect dependency.
+  const refreshDiagnostics = useCallback(() => {
     const editor = editorRef.current;
     const monaco = monacoRef.current;
     if (editor === null || monaco === null) {
@@ -43,19 +40,17 @@ export default function ReportQueryEditor(props: {
     if (model !== null) {
       updateScoutQlDiagnostics(monaco, model);
     }
-  }, [props.value]);
+  }, []);
 
-  const refreshDiagnostics = () => {
-    const editor = editorRef.current;
-    const monaco = monacoRef.current;
-    if (editor === null || monaco === null) {
-      return;
-    }
-    const model = editor.getModel();
-    if (model !== null) {
-      updateScoutQlDiagnostics(monaco, model);
-    }
-  };
+  // The wrapper is controlled through `value`, so it already owns the model
+  // text; this only re-runs the squiggles. Writing the model here too would be
+  // a second, competing source of truth and would reset the whole document on
+  // every external update. This is also the single lint path per edit: the
+  // parent updates `value` on change, so linting from `onChange` as well would
+  // run a full-document pass twice per keystroke.
+  useEffect(() => {
+    refreshDiagnostics();
+  }, [props.value, refreshDiagnostics]);
 
   const handleMount = (
     editor: Monaco.editor.IStandaloneCodeEditor,
@@ -82,7 +77,6 @@ export default function ReportQueryEditor(props: {
 
   const handleChange: OnChange = (value) => {
     props.onChange(value ?? "");
-    refreshDiagnostics();
   };
 
   return (
