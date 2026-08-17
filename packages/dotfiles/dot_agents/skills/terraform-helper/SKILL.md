@@ -409,6 +409,31 @@ terraform-docs -c .terraform-docs.yml .
 9. **Scan for security issues** with tflint and trivy in pre-commit hooks
 10. **Use ephemeral values (v1.10+)** for secrets that should not be in state
 
+## HashiCorp Terraform Skill References
+
+Use these repo-owned adaptations of HashiCorp's active Terraform skills when the
+task needs more than the CLI and HCL basics above. They are reference material,
+not permission to bypass this skill's state-safety and confirmation boundaries.
+
+- **Style**: Follow the official file layout, naming, ordering, descriptions,
+  and formatting conventions when writing or reviewing modules.
+- **Tests**: For `.tftest.hcl`, choose plan-mode unit tests for fast validation,
+  apply-mode integration tests only when the user has authorized real resources,
+  and read the relevant examples in
+  `references/hashicorp-terraform-test/` before using mocks or CI patterns.
+- **Module refactoring**: Identify interfaces and state addresses before moving
+  resources. Prefer `moved` blocks and a reviewed migration plan over ad-hoc
+  state commands; preserve behavior and document the new module contract.
+- **Discovery and import**: Check provider support and Terraform version before
+  using Search and bulk import. The local helper script and manual-import notes
+  are in `references/hashicorp-search-import/`; importing still requires the
+  confirmation required by the CLI boundary above.
+- **Policy**: Treat policy as a testable contract: validate it in CI, keep
+  exceptions explicit, and never weaken a policy merely to make a plan pass.
+
+The upstream skills are pinned in `public-sources.json`; review changes manually
+before updating this SOT.
+
 ## References
 
 - [Terraform Documentation](https://developer.hashicorp.com/terraform/docs)

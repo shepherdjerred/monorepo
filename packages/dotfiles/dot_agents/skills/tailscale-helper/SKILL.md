@@ -33,6 +33,20 @@ description: |
 
 Tailscale is a WireGuard-based mesh VPN that creates a secure overlay network (tailnet) connecting devices across any network topology. Every device gets a stable Tailscale IP from the CGNAT range (`100.64.0.0/10`) that persists regardless of physical location. Tailscale handles NAT traversal, key management, and peer discovery automatically through a coordination server, while all data flows directly between devices via encrypted WireGuard tunnels.
 
+## Public Product Reference
+
+The upstream Tailscale skill is an Alpha reference index, not an authority for
+this workstation or homelab. Use `references/public-product-reference.md` for
+the broader product map (grants, device management, Kubernetes, Taildrop,
+Taildrive, Serve, Funnel, session recording, and `tsnet`) and fetch the linked
+official documentation when syntax or product availability may have changed.
+
+Local rules remain mandatory: probe authentication with the exact read-only
+operation needed, verify live state before claiming a change worked, treat
+Serve/Funnel as exposure changes, and preserve the homelab's encryption and
+access-control requirements. Do not install or invoke an MCP server for this
+reference.
+
 ## CLI Quick Reference
 
 ```bash
