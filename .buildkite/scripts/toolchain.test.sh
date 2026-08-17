@@ -8,6 +8,7 @@ CI_PLAYWRIGHT_IMAGE="${SCRIPT_DIR}/../ci-playwright/Dockerfile"
 BUN_INSTALL_WRAPPER="${SCRIPT_DIR}/bun-install.sh"
 MACOS_NATIVE_ENV="${SCRIPT_DIR}/macos-native-env.sh"
 BUN_CACHE_GC="${SCRIPT_DIR}/../../packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite-bun-cache-gc.sh"
+MAC_CI_BOOTSTRAP="${SCRIPT_DIR}/../../packages/homelab/mac-ci/bootstrap.sh"
 
 if ! awk '
   $0 == "mise install --yes" { install_line = NR }
@@ -68,6 +69,11 @@ fi
 if ! rg -Fq 'flock --exclusive 9' "$BUN_CACHE_GC" ||
   ! rg -Fq 'find "$CACHE_DIR" -mindepth 1 -depth -delete' "$BUN_CACHE_GC"; then
   echo "bun cache collector must clear only while holding the exclusive cache lock" >&2
+  exit 1
+fi
+
+if ! rg -Fq 'shell="/bin/bash -e -c"' "$MAC_CI_BOOTSTRAP"; then
+  echo "macOS agent config must pin bash for the native steps that source macos-native-env.sh" >&2
   exit 1
 fi
 
@@ -181,5 +187,17 @@ HOME="$TEST_ROOT/home" \
     [[ -z "${TURBO_TELEMETRY_DISABLED+x}" ]]
     [[ -z "${TURBO_TOKEN+x}" ]]
   ' _ "$MACOS_NATIVE_ENV"
+
+# A non-bash shell is simulated by unsetting BASH_VERSION rather than invoking
+# /bin/sh, which is bash in POSIX mode on macOS and would still define it.
+if bash -c 'unset BASH_VERSION; . "$1"' _ "$MACOS_NATIVE_ENV" \
+  >"$TEST_ROOT/native-env-shell.log" 2>&1; then
+  echo "macos-native-env.sh must refuse a shell that is not bash" >&2
+  exit 1
+fi
+if ! rg -Fq 'requires bash' "$TEST_ROOT/native-env-shell.log"; then
+  echo "macos-native-env.sh must name the bash requirement when it refuses" >&2
+  exit 1
+fi
 
 echo "toolchain and cache-lifecycle tests passed"

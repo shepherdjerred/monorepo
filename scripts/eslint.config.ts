@@ -27,7 +27,8 @@ const config: ReturnType<typeof recommended> = [
     // `.buildkite/scripts` is not a workspace member (no package.json), so
     // Zod is unreachable from any file there under the isolated linker,
     // regardless of install state — a type predicate is the only way to
-    // narrow parsed JSON without an `as` cast, which `no-type-assertions`
+    // narrow parsed JSON or TOML without an `as` cast, which
+    // `no-type-assertions`
     // bans outright. Enumerate the files that actually declare one instead
     // of a directory-wide `.buildkite/scripts/**/*.ts` glob, so a future
     // script that doesn't need this escape hatch doesn't inherit it silently
@@ -36,6 +37,7 @@ const config: ReturnType<typeof recommended> = [
       ".buildkite/scripts/select-image-targets-lockfile.ts",
       ".buildkite/scripts/annotate-image-summary.ts",
       ".buildkite/scripts/ci-lane-coverage.test.ts",
+      ".buildkite/scripts/macos-native-preflight.ts",
     ],
     rules: {
       "custom-rules/no-type-guards": "off",

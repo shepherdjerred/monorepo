@@ -22,6 +22,27 @@ export function appleDevelopmentIdentities(output: string): string[] {
   return identities;
 }
 
+function isTable(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * `.mise.toml` is the single pin for dev machines and CI alike, so the native
+ * preflight reads it rather than restating versions that a Renovate bump would
+ * silently desynchronise.
+ */
+export function pinnedToolVersion(miseToml: string, tool: string): string {
+  const parsed: unknown = Bun.TOML.parse(miseToml);
+  if (!isTable(parsed)) throw new Error(".mise.toml is not a TOML table");
+  const tools = parsed["tools"];
+  if (!isTable(tools)) throw new Error(".mise.toml has no [tools] table");
+  const version = tools[tool];
+  if (typeof version !== "string" || version.length === 0) {
+    throw new Error(`.mise.toml does not pin ${tool} to a version string`);
+  }
+  return version;
+}
+
 export function availableDiskKib(output: string): number {
   const lines = output.trim().split("\n");
   const lastLine = lines.at(-1);
@@ -91,12 +112,29 @@ async function preflight(suite: NativeSuite): Promise<string | undefined> {
     );
   }
 
-  await requiredVersion(["mise", "current", "bun"], "1.3.14", "mise Bun");
-  await requiredVersion(["bun", "--version"], "1.3.14", "Bun");
-  await requiredVersion(["mise", "current", "rust"], "1.97.1", "mise Rust");
+  const miseToml = await Bun.file(".mise.toml").text();
+  const expectedBun = pinnedToolVersion(miseToml, "bun");
+  const expectedRust = pinnedToolVersion(miseToml, "rust");
+  await requiredVersion(
+    ["mise", "current", "bun"],
+    expectedBun,
+    "mise Bun (pinned by .mise.toml)",
+  );
+  await requiredVersion(
+    ["bun", "--version"],
+    expectedBun,
+    "Bun (pinned by .mise.toml)",
+  );
+  await requiredVersion(
+    ["mise", "current", "rust"],
+    expectedRust,
+    "mise Rust (pinned by .mise.toml)",
+  );
   const rustVersion = await run(["rustc", "--version"]);
-  if (!rustVersion.startsWith("rustc 1.97.1 ")) {
-    throw new Error(`Rust must be 1.97.1, got ${rustVersion}`);
+  if (!rustVersion.startsWith(`rustc ${expectedRust} `)) {
+    throw new Error(
+      `Rust must match .mise.toml (expected ${expectedRust}, got ${rustVersion})`,
+    );
   }
   await run(["xcodegen", "--version"]);
   await run(["swiftlint", "version"]);

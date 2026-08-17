@@ -83,6 +83,9 @@ mise reshim
 # Write the agent config with the macos-queue tag. chmod 600 — it holds the
 # token. `git-clean-flags="-ffxdq"` forces a clean working tree on every build
 # (macOS jobs run natively on a persistent host, so we scrub between builds).
+# `shell` is pinned because the native steps source macos-native-env.sh, which
+# needs bash; Kubernetes steps get the same guarantee from BUILDKITE_SHELL in
+# their pod spec, and this queue has no pod spec to carry it.
 CFG_DIR="$(brew --prefix)/etc/buildkite-agent"
 CFG_FILE="$CFG_DIR/buildkite-agent.cfg"
 mkdir -p "$CFG_DIR"
@@ -96,6 +99,7 @@ tags="queue=macos,os=darwin,arch=$(uname -m)"
 tags-from-host=false
 build-path="$HOME/.buildkite-agent/builds"
 git-clean-flags="-ffxdq"
+shell="/bin/bash -e -c"
 EOF
 chmod 600 "$CFG_FILE"
 umask 022
