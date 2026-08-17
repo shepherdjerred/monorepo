@@ -13,8 +13,6 @@ import {
   CustomSetHeldInputSchema,
   CustomSetCohostInputSchema,
   CustomSubstituteInputSchema,
-  type CustomActivityClaims,
-  type CustomNightSnapshot,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { router, activityProcedure } from "#src/trpc/trpc.ts";
@@ -47,7 +45,6 @@ import {
   getCustomNight,
 } from "#src/customs/repository.ts";
 import { publishCustomSnapshot } from "#src/customs/socket.ts";
-import { syncCustomRecruitmentMessage } from "#src/customs/recruitment-message.ts";
 import { createLogger } from "#src/logger.ts";
 import { arrangeCustomVoice, cleanupCustomVoice } from "#src/customs/voice.ts";
 import { provisionCustomTournamentCode } from "#src/customs/riot-results.ts";
@@ -67,57 +64,13 @@ import {
   customsHistoryBootstrapProcedure,
   customsHistoryDetailProcedure,
 } from "#src/trpc/router/customs-history.ts";
+import {
+  assertClaimsGuild,
+  broadcast,
+  customActorForNight,
+} from "#src/trpc/router/customs-shared.ts";
 
 const logger = createLogger("customs-router");
-
-function assertClaimsGuild(claimsGuildId: string, inputGuildId: string): void {
-  if (claimsGuildId !== inputGuildId) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Activity guild mismatch",
-    });
-  }
-}
-
-async function customActorForNight(
-  claims: CustomActivityClaims,
-  nightId: string,
-) {
-  const snapshot = await getCustomNight(prisma, nightId);
-  if (snapshot === null) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Custom night not found",
-    });
-  }
-  assertClaimsGuild(claims.guildId, snapshot.guildId);
-  return await customActorForSession(claims);
-}
-
-async function broadcast<
-  T extends {
-    snapshot: CustomNightSnapshot;
-    applied?: boolean;
-  },
->(result: T): Promise<T> {
-  if (result.applied !== false) publishCustomSnapshot(result.snapshot);
-  if (result.applied === false) return result;
-  try {
-    const snapshot = await syncCustomRecruitmentMessage({
-      prisma,
-      snapshot: result.snapshot,
-    });
-    if (snapshot.revision > result.snapshot.revision)
-      publishCustomSnapshot(snapshot);
-    return { ...result, snapshot };
-  } catch (error) {
-    logger.error(
-      "Custom night state committed but recruitment message sync failed",
-      { error },
-    );
-    return result;
-  }
-}
 
 export const customsRouter = router({
   voiceChannels: activityProcedure.query(

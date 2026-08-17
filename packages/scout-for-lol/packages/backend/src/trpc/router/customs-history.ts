@@ -1,7 +1,7 @@
 import {
   CustomAuditEventSchema,
   CustomGameSnapshotSchema,
-  CustomNightSnapshotSchema,
+  CustomNightStateSchema,
 } from "@scout-for-lol/data";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -30,13 +30,37 @@ async function assertWebCustomsMember(params: {
   }
 }
 
+/**
+ * The list only needs what a row renders. Reading `snapshot` instead would
+ * parse and validate every night's full participant/game tree to show four
+ * fields, and history grows without bound for the life of a guild.
+ */
+const CUSTOMS_HISTORY_LIMIT = 50;
+
+const CustomNightSummarySchema = z.object({
+  id: z.uuid(),
+  state: CustomNightStateSchema,
+  revision: z.number().int().nonnegative(),
+  lastActivityAt: z.iso.datetime(),
+});
+
 async function loadCustomsHistory(guildId: string) {
   const rows = await prisma.customNight.findMany({
     where: { guildId },
     orderBy: { createdAt: "desc" },
+    take: CUSTOMS_HISTORY_LIMIT,
+    select: {
+      id: true,
+      state: true,
+      revision: true,
+      lastActivityAt: true,
+    },
   });
   return rows.map((row) =>
-    CustomNightSnapshotSchema.parse(JSON.parse(row.snapshot)),
+    CustomNightSummarySchema.parse({
+      ...row,
+      lastActivityAt: row.lastActivityAt.toISOString(),
+    }),
   );
 }
 
