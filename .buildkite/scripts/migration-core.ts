@@ -192,6 +192,7 @@ export const summarySteps = [
   "helm-push",
   "tofu-apply",
   "tofu-github",
+  "tofu-platform",
   "argocd-sync",
   "scout-beta-release",
   "publish",
