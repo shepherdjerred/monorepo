@@ -22,14 +22,38 @@ import {
   patchedDependencyKey,
   type LockfilePair,
 } from "./select-image-targets-lockfile.ts";
+import { UNPUBLISHED_IMAGE_DIGEST } from "../../scripts/lib/image-pin-catalog.ts";
 
 const REPO_ROOT = new URL("../..", import.meta.url).pathname;
+const PUBLISHED_IMAGE_DIGEST = `sha256:${"f".repeat(64)}`;
+const REAL_VERSION_CATALOG = await Bun.file(
+  `${REPO_ROOT}/packages/version-catalog/src/catalog.json`,
+).text();
+const PUBLISHED_VERSION_CATALOG = REAL_VERSION_CATALOG.replaceAll(
+  UNPUBLISHED_IMAGE_DIGEST,
+  PUBLISHED_IMAGE_DIGEST,
+);
+
+function selectorInputs(inputs?: SelectorInputs): SelectorInputs {
+  return { versionCatalogSource: PUBLISHED_VERSION_CATALOG, ...inputs };
+}
 
 function select(
   changedPaths: readonly string[],
   inputs?: SelectorInputs,
 ): Promise<string[]> {
-  return selectImageTargets(changedPaths, REPO_ROOT, inputs);
+  return selectImageTargets(changedPaths, REPO_ROOT, selectorInputs(inputs));
+}
+
+function selectWithReasons(
+  changedPaths: readonly string[],
+  inputs?: SelectorInputs,
+) {
+  return selectImageTargetsWithReasons(
+    changedPaths,
+    REPO_ROOT,
+    selectorInputs(inputs),
+  );
 }
 
 describe("selectImageTargets", () => {
@@ -88,7 +112,7 @@ describe("selectImageTargets", () => {
       "bunfig.toml",
       "tsconfig.base.json",
     ]) {
-      const result = await selectImageTargetsWithReasons([path], REPO_ROOT);
+      const result = await selectWithReasons([path]);
       expect(result.targets).toEqual(APPLICATION_IMAGE_TARGETS);
       expect(result.targets).not.toContain("infra");
       expect(result.report.targets["birmel"]).toEqual([
@@ -111,6 +135,7 @@ describe("selectImageTargets", () => {
       ".buildkite/scripts/production-bake-environment.ts",
       ".buildkite/scripts/select-image-targets.ts",
       ".buildkite/scripts/select-image-targets-lockfile.ts",
+      ".buildkite/scripts/select-image-targets-pins.ts",
       ".buildkite/scripts/select-image-targets-workspaces.ts",
       "scripts/lib/image-pin-catalog.ts",
     ]) {
@@ -149,7 +174,7 @@ describe("selectImageTargets", () => {
 
   test("selects Scout for its contract-hash implementation with an exact reason", async () => {
     const path = "packages/scout-for-lol/scripts/contract-hash.ts";
-    const result = await selectImageTargetsWithReasons([path], REPO_ROOT);
+    const result = await selectWithReasons([path]);
     expect(result.targets).toEqual(["scout-for-lol"]);
     expect(result.report.targets["scout-for-lol"]).toEqual([
       `configured extra input: ${path} (matches ${path})`,
@@ -158,6 +183,37 @@ describe("selectImageTargets", () => {
 
   test("selects nothing for unrelated documentation", async () => {
     expect(await select(["README.md"])).toEqual([]);
+  });
+
+  test("keeps an unpublished image target selected until it has a real digest", async () => {
+    const result = await selectImageTargetsWithReasons(
+      ["README.md"],
+      REPO_ROOT,
+      {
+        versionCatalogSource: REAL_VERSION_CATALOG,
+      },
+    );
+
+    expect(result.targets).toEqual(["openrouter-broadcast-ingest"]);
+    expect(result.report.targets["openrouter-broadcast-ingest"]).toEqual([
+      "unpublished image pin shepherdjerred/openrouter-broadcast-ingest requires its first release",
+    ]);
+  });
+
+  test("fails open when unpublished-pin inspection cannot read the catalog", async () => {
+    const result = await selectImageTargetsWithReasons(
+      ["README.md"],
+      REPO_ROOT,
+      {
+        versionCatalogSource: "{",
+      },
+    );
+
+    expect(result.targets).toEqual(ALL_IMAGE_TARGETS);
+    expect(result.report.mode).toBe("all");
+    expect(result.report.globalReason).toContain(
+      "unpublished pin inspection failed",
+    );
   });
 });
 
@@ -504,10 +560,9 @@ describe("changedPathsSince", () => {
 
 describe("selection reasons", () => {
   test("a closure hit records the matching path and directory", async () => {
-    const { targets, report } = await selectImageTargetsWithReasons(
-      ["packages/tasknotes-server/src/index.ts"],
-      REPO_ROOT,
-    );
+    const { targets, report } = await selectWithReasons([
+      "packages/tasknotes-server/src/index.ts",
+    ]);
     expect(targets).toEqual(["tasknotes-server"]);
     expect(report.mode).toBe("selected");
     expect(report.globalReason).toBeNull();
@@ -520,13 +575,10 @@ describe("selection reasons", () => {
   });
 
   test("records every matching path instead of hiding later causes", async () => {
-    const { report } = await selectImageTargetsWithReasons(
-      [
-        "packages/tasknotes-server/src/index.ts",
-        "packages/tasknotes-server/src/routes.ts",
-      ],
-      REPO_ROOT,
-    );
+    const { report } = await selectWithReasons([
+      "packages/tasknotes-server/src/index.ts",
+      "packages/tasknotes-server/src/routes.ts",
+    ]);
     expect(report.targets["tasknotes-server"]).toEqual([
       "workspace closure: packages/tasknotes-server/src/index.ts under packages/tasknotes-server/",
       "workspace closure: packages/tasknotes-server/src/routes.ts under packages/tasknotes-server/",
@@ -534,10 +586,9 @@ describe("selection reasons", () => {
   });
 
   test("a configured extra input records its prefix", async () => {
-    const { report } = await selectImageTargetsWithReasons(
-      ["packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts"],
-      REPO_ROOT,
-    );
+    const { report } = await selectWithReasons([
+      "packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts",
+    ]);
     expect(report.mode).toBe("selected");
     const reasons = report.targets["infra"];
     if (reasons === undefined) throw new Error("infra should be selected");
@@ -545,10 +596,7 @@ describe("selection reasons", () => {
   });
 
   test("a global image input flips to ALL with the trigger named", async () => {
-    const { targets, report } = await selectImageTargetsWithReasons(
-      ["docker-bake.hcl"],
-      REPO_ROOT,
-    );
+    const { targets, report } = await selectWithReasons(["docker-bake.hcl"]);
     expect(targets).toEqual(ALL_IMAGE_TARGETS);
     expect(report.mode).toBe("all");
     expect(report.globalReason).toContain("docker-bake.hcl");
@@ -559,20 +607,14 @@ describe("selection reasons", () => {
   });
 
   test("a lockfile fail-open reports the failure as the global reason", async () => {
-    const { targets, report } = await selectImageTargetsWithReasons(
-      ["bun.lock"],
-      REPO_ROOT,
-    );
+    const { targets, report } = await selectWithReasons(["bun.lock"]);
     expect(targets).toEqual(ALL_IMAGE_TARGETS);
     expect(report.mode).toBe("all");
     expect(report.globalReason).toContain("lockfile attribution failed");
   });
 
   test("an unselecting change yields an empty report", async () => {
-    const { targets, report } = await selectImageTargetsWithReasons(
-      ["README.md"],
-      REPO_ROOT,
-    );
+    const { targets, report } = await selectWithReasons(["README.md"]);
     expect(targets).toEqual([]);
     expect(report.mode).toBe("selected");
     expect(report.targets).toEqual({});
@@ -581,7 +623,7 @@ describe("selection reasons", () => {
   test("the wrapper returns exactly the reasoned targets", async () => {
     const paths = ["packages/llm-models/src/models.ts"];
     const wrapped = await select(paths);
-    const { targets } = await selectImageTargetsWithReasons(paths, REPO_ROOT);
+    const { targets } = await selectWithReasons(paths);
     expect(wrapped).toEqual(targets);
   });
 });

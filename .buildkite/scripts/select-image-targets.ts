@@ -26,6 +26,7 @@ import {
   targetClosureDirs,
 } from "./select-image-targets-workspaces.ts";
 import type { WorkspacePackage } from "./select-image-targets-workspaces.ts";
+import { unpublishedImagePinInspectionFailure } from "./select-image-targets-pins.ts";
 import {
   ALL_IMAGE_TARGETS,
   APPLICATION_IMAGE_TARGETS,
@@ -66,6 +67,7 @@ const GLOBAL_IMAGE_INPUTS = [
   ".buildkite/scripts/production-bake-environment.ts",
   ".buildkite/scripts/select-image-targets.ts",
   ".buildkite/scripts/select-image-targets-lockfile.ts",
+  ".buildkite/scripts/select-image-targets-pins.ts",
   ".buildkite/scripts/select-image-targets-workspaces.ts",
   "scripts/lib/image-pin-catalog.ts",
 ];
@@ -116,6 +118,8 @@ export type SelectorInputs = {
   lockfiles?: LockfilePair;
   rootPackageJson?: FilePair;
   scriptsPackageJson?: FilePair;
+  /** Version-catalog contents for deterministic tests. */
+  versionCatalogSource?: string;
 };
 
 function lockfileChangedTargets(
@@ -380,10 +384,6 @@ function selectedResult(
   };
 }
 
-function failOpenMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
 export async function selectImageTargetsWithReasons(
   changedPaths: readonly string[],
   repoRoot = process.cwd(),
@@ -405,6 +405,21 @@ export async function selectImageTargetsWithReasons(
   addPrefixReasons(changedPaths, reasons);
   addSharedApplicationReasons(changedPaths, reasons);
 
+  const unpublishedPinFailure = await unpublishedImagePinInspectionFailure({
+    repoRoot,
+    versionCatalogSource: inputs?.versionCatalogSource,
+    reasons,
+  });
+  if (unpublishedPinFailure !== undefined) {
+    console.error(
+      `select-image-targets: unpublished pin inspection failed (${unpublishedPinFailure}); selecting ALL targets`,
+    );
+    return allTargetsResult(
+      changedPaths,
+      `unpublished pin inspection failed (${unpublishedPinFailure}); fail-open`,
+    );
+  }
+
   const patchPaths = changedPaths.filter((path) => path.startsWith("patches/"));
   if (patchPaths.length > 0) {
     try {
@@ -416,7 +431,7 @@ export async function selectImageTargetsWithReasons(
         inputs,
       });
     } catch (error) {
-      const message = failOpenMessage(error);
+      const message = error instanceof Error ? error.message : String(error);
       console.error(
         `select-image-targets: patch attribution failed (${message}); selecting ALL targets`,
       );
@@ -431,7 +446,7 @@ export async function selectImageTargetsWithReasons(
     try {
       addLockfileReasons(packages, reasons, inputs);
     } catch (error) {
-      const message = failOpenMessage(error);
+      const message = error instanceof Error ? error.message : String(error);
       console.error(
         `select-image-targets: lockfile attribution failed (${message}); selecting ALL targets`,
       );

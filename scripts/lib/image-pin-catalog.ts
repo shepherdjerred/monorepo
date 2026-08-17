@@ -1,5 +1,7 @@
 import { asRecord } from "./json.ts";
 
+export const UNPUBLISHED_IMAGE_DIGEST = `sha256:${"0".repeat(64)}`;
+
 type ManagedImagePin = {
   readonly key: string;
   readonly digest: string;
