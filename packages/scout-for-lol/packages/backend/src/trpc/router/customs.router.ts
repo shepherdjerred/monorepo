@@ -272,7 +272,10 @@ export const customsRouter = router({
           actorDiscordId: actor.discordId,
           expectedRevision: latest.snapshot.revision,
         });
-        if (!latest.applied) return await broadcast(latest);
+        if (!latest.applied) {
+          const current = await broadcast(latest);
+          return { applied: true, snapshot: current.snapshot };
+        }
         publishCustomSnapshot(latest.snapshot);
       } catch (error) {
         logger.error("Custom teams locked but voice arrangement failed", {
