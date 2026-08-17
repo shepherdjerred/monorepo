@@ -142,15 +142,16 @@ function frontmatter(
   content: string,
   skillPath: string,
 ): { description: string; name: string } {
-  if (!content.startsWith("---\n")) {
+  const normalized = content.replaceAll("\r\n", "\n");
+  if (!normalized.startsWith("---\n")) {
     throw new Error(`${skillPath} is missing opening YAML frontmatter`);
   }
-  const end = content.indexOf("\n---", 4);
+  const end = normalized.indexOf("\n---", 4);
   if (end === -1) {
     throw new Error(`${skillPath} is missing closing YAML frontmatter`);
   }
 
-  const yamlLines = content.slice(4, end).split("\n");
+  const yamlLines = normalized.slice(4, end).split("\n");
   const nameLine = yamlLines.find((line) => line.startsWith("name:"));
   const descriptionIndex = yamlLines.findIndex((line) =>
     line.startsWith("description:"),
