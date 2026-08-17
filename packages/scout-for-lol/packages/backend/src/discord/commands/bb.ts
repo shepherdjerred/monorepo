@@ -15,6 +15,7 @@ import {
 } from "#src/betting/accounts.ts";
 import { placeBet } from "#src/betting/place-bet.ts";
 import { describeResult } from "#src/betting/bet-button.ts";
+import { announceBetPlacement } from "#src/betting/announce.ts";
 import { MAX_STAKE, MIN_STAKE } from "#src/betting/constants.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
@@ -277,6 +278,17 @@ async function replyBet(
         betOnWin,
       ),
     });
+    if (result.kind === "placed") {
+      await announceBetPlacement({
+        matchId: pool.matchId,
+        serverId,
+        discordId,
+        subjectAlias: subject.trackedAlias ?? requestedAlias,
+        subjectWins: betOnWin,
+        stake,
+        totalStake: result.totalStake,
+      });
+    }
     return;
   }
 

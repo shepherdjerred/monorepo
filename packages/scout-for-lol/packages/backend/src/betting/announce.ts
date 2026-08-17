@@ -68,6 +68,80 @@ export function predictionVerdict(
   return predictedWin === subjectWon ? "Scout called it." : "Scout was wrong.";
 }
 
+export function formatBetPlacementAnnouncement(input: {
+  discordId: string;
+  subjectAlias: string;
+  subjectWins: boolean;
+  stake: number;
+  totalStake: number;
+}): string {
+  const side = input.subjectWins ? "WINS" : "LOSES";
+  return `🎲 <@${input.discordId}> staked **${input.stake.toString()} BB** on **${input.subjectAlias} ${side}** (position: **${input.totalStake.toString()} BB**).`;
+}
+
+/**
+ * Announce a successful placement in the channels carrying this pool's
+ * prematch message. This is deliberately best-effort: the stake is already
+ * committed, and a missing public receipt must not turn a successful bet into
+ * an interaction error.
+ */
+export async function announceBetPlacement(
+  input: {
+    matchId: string;
+    serverId: ReturnType<typeof DiscordGuildIdSchema.parse>;
+    discordId: string;
+    subjectAlias: string;
+    subjectWins: boolean;
+    stake: number;
+    totalStake: number;
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  try {
+    const pool = await prismaClient.bucksMatchPool.findUnique({
+      where: {
+        matchId_serverId: {
+          matchId: input.matchId,
+          serverId: input.serverId,
+        },
+      },
+      select: { messageRefs: true },
+    });
+    if (pool === null) {
+      return;
+    }
+
+    const refs = BucksMessageRefsSchema.parse(JSON.parse(pool.messageRefs));
+    const content = formatBetPlacementAnnouncement(input);
+    for (const ref of refs) {
+      try {
+        await send(
+          {
+            content,
+            allowedMentions: { users: [input.discordId] },
+          },
+          DiscordChannelIdSchema.parse(ref.channelId),
+          input.serverId,
+        );
+      } catch (error) {
+        logger.warn(
+          `⚠️ Could not announce Bryan Bucks placement for ${input.matchId} in channel ${ref.channelId}:`,
+          error,
+        );
+      }
+    }
+  } catch (error) {
+    logger.error(
+      `❌ Could not prepare Bryan Bucks placement announcement for ${input.matchId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "betting-placement-announce", matchId: input.matchId },
+      extra: { serverId: input.serverId },
+    });
+  }
+}
+
 export function formatSettlementBody(input: {
   summary: SettlementSummary;
   earnings: readonly EarnedAward[];

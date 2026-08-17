@@ -886,6 +886,10 @@ the market is voided with `house_unavailable` and user stakes are refunded.
   satori crash or a failed report send would take the settlement message with it
   — and inside it each `messageRefs` entry is sent under its own `catch`, so one
   dead channel cannot swallow the guilds behind it in the loop.
+- **Successful placements get a public receipt.** The button and `/bb bet`
+  paths both announce the increment and current position in the pool's stored
+  prematch message channels. The receipt is best-effort after the ledger
+  transaction commits, so a Discord delivery failure never changes the bet.
 - **Settle and award outside the Discord path.** `settleAndAwardBucks` is called
   from `processMatchAndUpdatePlayers`, after the S3 ingest gate and outside
   `if (!silent)`. `processMatch` returns early with no subscribed channel and

@@ -4,6 +4,7 @@ import {
   type BucksPrediction,
 } from "@scout-for-lol/data/index.ts";
 import {
+  formatBetPlacementAnnouncement,
   formatSettlementBody,
   predictionVerdict,
 } from "#src/betting/announce.ts";
@@ -216,5 +217,21 @@ describe("formatSettlementBody", () => {
     );
     expect(body).not.toContain(`<@${HOUSE_ACCOUNT_DISCORD_ID}>`);
     expect(body).toContain(`• <@${WINNER_DISCORD_ID}> staked 25 BB`);
+  });
+});
+
+describe("formatBetPlacementAnnouncement", () => {
+  test("shows the increment and the bettor's total position", () => {
+    expect(
+      formatBetPlacementAnnouncement({
+        discordId: WINNER_DISCORD_ID,
+        subjectAlias: "Aaron",
+        subjectWins: true,
+        stake: 5,
+        totalStake: 10,
+      }),
+    ).toBe(
+      `🎲 <@${WINNER_DISCORD_ID}> staked **5 BB** on **Aaron WINS** (position: **10 BB**).`,
+    );
   });
 });

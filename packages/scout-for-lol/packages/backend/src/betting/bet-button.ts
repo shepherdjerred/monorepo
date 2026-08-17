@@ -7,6 +7,7 @@ import {
 import { parseBucksCustomId } from "#src/betting/custom-id.ts";
 import { placeBet, type PlaceBetResult } from "#src/betting/place-bet.ts";
 import { cancelBet, type CancelBetResult } from "#src/betting/cancel-bet.ts";
+import { announceBetPlacement } from "#src/betting/announce.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -169,4 +170,19 @@ export async function handleBetButton(
   await interaction.editReply({
     content: describeResult(result, alias, betOnWin),
   });
+
+  if (result.kind === "placed") {
+    await announceBetPlacement(
+      {
+        matchId: parsed.matchId,
+        serverId,
+        discordId,
+        subjectAlias: alias,
+        subjectWins: betOnWin,
+        stake: parsed.amount,
+        totalStake: result.totalStake,
+      },
+      prismaClient,
+    );
+  }
 }
