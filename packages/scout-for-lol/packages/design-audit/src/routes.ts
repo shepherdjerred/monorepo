@@ -420,7 +420,11 @@ export function routeBaseUrl(surface: AuditSurface): string {
   const localDefaults = {
     public: "http://127.0.0.1:4321",
     docs: "http://127.0.0.1:4322",
-    app: "http://127.0.0.1:5180",
+    // The backend's dev-login redirect is driven by WEB_APP_ORIGIN
+    // (http://localhost:5180 per dev-web.env.tpl) and sets host-only
+    // cookies, so the app surface must match that host or the
+    // post-redirect browser arrives without the session cookie.
+    app: "http://localhost:5180",
   } satisfies Record<AuditSurface, string>;
   const configured = {
     public: process.env["SCOUT_DESIGN_AUDIT_PUBLIC_URL"],
