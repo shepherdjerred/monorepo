@@ -71,6 +71,10 @@ export function describeCancel(result: CancelBetResult): string {
       return `↩️ Bet cancelled. **${result.refunded.toString()} BB** returned; balance **${result.balanceAfter.toString()} BB**.`;
     case "window_closed":
       return "⏰ Betting has closed for this game, so positions are locked in. Yours settles when the game ends.";
+    case "already_resolved":
+      return result.poolState === "settled"
+        ? "✅ This game has already settled, so there's nothing left to cancel — check your balance for the payout."
+        : "🚫 This game's market was voided, so every stake was already returned.";
     case "no_bet":
       return "🤷 You don't have a bet to cancel on this game.";
     case "no_pool":

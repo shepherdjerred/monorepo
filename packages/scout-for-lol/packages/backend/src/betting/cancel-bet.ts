@@ -22,7 +22,8 @@ export type CancelBetResult =
   | { kind: "cancelled"; refunded: number; balanceAfter: number }
   | { kind: "no_pool" }
   | { kind: "no_bet" }
-  | { kind: "window_closed" };
+  | { kind: "window_closed" }
+  | { kind: "already_resolved"; poolState: "settled" | "voided" };
 
 /**
  * Withdraw a position while the window is still open.
@@ -84,7 +85,37 @@ export async function cancelBet(
       // The pool row was read moments ago and nothing deletes pools, so the
       // only way to miss it here is the predicate: the window has passed or the
       // pool has already left `open`. That is a different answer from "you have
-      // no bet", and the caller renders it as one.
+      // no bet", and the caller renders it as one — but only for someone who
+      // actually has a stake. Telling a non-bettor their position is locked
+      // describes a bet they never placed, so check before claiming that.
+      const locked = await tx.bucksBet.findUnique({
+        where: {
+          poolId_bucksAccountId: {
+            poolId: pool.id,
+            bucksAccountId: account.id,
+          },
+        },
+        select: { id: true },
+      });
+      if (locked === null) {
+        return { kind: "no_bet" };
+      }
+      // "Locked in, settles when the game ends" is only true while the pool is
+      // still awaiting a result. The claim also fails once the pool has left
+      // `open` for good, and telling someone their stake is pending after it
+      // already paid out — or was voided and refunded — describes the wrong
+      // event. Re-read the state rather than reusing the row fetched above,
+      // which predates this transaction.
+      const current = await tx.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true },
+      });
+      if (current.poolState === "settled") {
+        return { kind: "already_resolved", poolState: "settled" };
+      }
+      if (current.poolState === "voided") {
+        return { kind: "already_resolved", poolState: "voided" };
+      }
       return { kind: "window_closed" };
     }
 

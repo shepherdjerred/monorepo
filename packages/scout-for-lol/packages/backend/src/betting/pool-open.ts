@@ -225,18 +225,22 @@ export async function recordPoolMessageRefs(
       if (attempt < MESSAGE_REF_ATTEMPTS) {
         const delayMs = MESSAGE_REF_BACKOFF_MS * 2 ** (attempt - 1);
         logger.warn(
-          `⚠️ Attempt ${attempt.toString()}/${MESSAGE_REF_ATTEMPTS.toString()} to record Bryan Bucks message refs for ${input.matchId} failed; retrying in ${delayMs.toString()}ms:`,
+          `⚠️ Attempt ${attempt.toString()}/${MESSAGE_REF_ATTEMPTS.toString()} to record Bryan Bucks message refs for ${input.matchId} in guild ${input.serverId} failed; retrying in ${delayMs.toString()}ms:`,
           error,
         );
         await Bun.sleep(delayMs);
         continue;
       }
       logger.error(
-        `❌ Could not record Bryan Bucks message refs for ${input.matchId} — this pool's settlement announcement now has nowhere to go:`,
+        `❌ Could not record Bryan Bucks message refs for ${input.matchId} in guild ${input.serverId} — this pool's settlement announcement now has nowhere to go:`,
         error,
       );
       Sentry.captureException(error, {
-        tags: { source: "betting-record-message-refs", matchId: input.matchId },
+        tags: {
+          source: "betting-record-message-refs",
+          matchId: input.matchId,
+          serverId: input.serverId,
+        },
       });
     }
   }
