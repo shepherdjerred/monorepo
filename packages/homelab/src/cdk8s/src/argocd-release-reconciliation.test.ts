@@ -527,4 +527,49 @@ describe("Argo CD child reconciliation identity", () => {
     // times out waiting for it; that wait is not what this test covers.
     expect(syncPosts).toBe(0);
   });
+
+  test("adopts an operation carrying its exact declared source", async () => {
+    const source = {
+      repoURL: "https://chartmuseum.sjer.red",
+      chart: "worker",
+      targetRevision: "~2.0.0-0",
+    };
+    const { stdout, stderr, syncPosts } =
+      await reconcileAgainstActiveChildOperation(
+        activeChildOperation({ source }),
+        { spec: { source } },
+      );
+
+    expect(stderr).not.toContain("Refusing to adopt");
+    expect(stdout).toContain("adopted active sync operation: worker");
+    expect(syncPosts).toBe(0);
+  });
+
+  test("refuses an operation carrying a different source", async () => {
+    const { exitCode, stderr, syncPosts } =
+      await reconcileAgainstActiveChildOperation(
+        activeChildOperation({
+          source: {
+            repoURL: "https://chartmuseum.sjer.red",
+            chart: "worker",
+            targetRevision: "~2.0.0-0",
+          },
+        }),
+        {
+          spec: {
+            source: {
+              repoURL: "https://chartmuseum.sjer.red",
+              chart: "worker",
+              targetRevision: "~2.0.1-0",
+            },
+          },
+        },
+      );
+
+    expect(exitCode).not.toBe(0);
+    expect(stderr).toContain(
+      `Refusing to adopt the active worker operation for request ${CHILD_REQUEST_ID}; it applies a different source`,
+    );
+    expect(syncPosts).toBe(0);
+  });
 });

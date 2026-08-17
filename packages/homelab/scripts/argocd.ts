@@ -727,6 +727,7 @@ function operationReleasePhase(
 const ActiveSyncRequestSchema = z.object({
   manifests: z.array(z.string()).optional(),
   prune: z.boolean().optional(),
+  source: ApplicationSourceSchema.optional(),
   syncOptions: z.array(z.string()).optional(),
 });
 
@@ -737,6 +738,7 @@ const DeclaredSyncOptionsSchema = z.object({
     .optional(),
   spec: z
     .object({
+      source: ApplicationSourceSchema.optional(),
       syncPolicy: z
         .object({ syncOptions: z.array(z.string()).optional() })
         .loose()
@@ -750,13 +752,17 @@ const DeclaredSyncOptionsSchema = z.object({
  * Every key this process can account for in a live `operation.sync`. `revision`,
  * `prune`, `manifests`, and `resources` are the request's own fields;
  * `syncOptions` is absent from the request and injected by the sync-option
- * admission policy from the Application's declared policy.
+ * admission policy from the Application's declared policy. ArgoCD also
+ * serializes the Application source in a live operation even when the client
+ * did not send it, so it is accepted only when it is exactly the declared
+ * source of this Application.
  */
 const ACCOUNTED_SYNC_KEYS = new Set([
   "manifests",
   "prune",
   "resources",
   "revision",
+  "source",
   "syncOptions",
 ]);
 
@@ -773,6 +779,12 @@ function expectedSyncOptions(app: Record<string, unknown>): readonly string[] {
   const admitted =
     parsed.metadata?.labels?.[MANAGED_APPLICATION_LABEL] === "true";
   return admitted ? (parsed.spec?.syncPolicy?.syncOptions ?? []) : [];
+}
+
+function declaredApplicationSource(
+  app: Record<string, unknown>,
+): z.infer<typeof ApplicationSourceSchema> | undefined {
+  return DeclaredSyncOptionsSchema.parse(app).spec?.source;
 }
 
 /**
@@ -823,6 +835,15 @@ function activeOperationRequestMismatch(
   const expectedOptions = [...expectedSyncOptions(app)].sort();
   if (canonicalJson(admittedOptions) !== canonicalJson(expectedOptions)) {
     return `sync options ${JSON.stringify(admittedOptions)}`;
+  }
+  if (active.source !== undefined) {
+    const declaredSource = declaredApplicationSource(app);
+    if (declaredSource === undefined) {
+      return "a source without a declared application source";
+    }
+    if (canonicalJson(active.source) !== canonicalJson(declaredSource)) {
+      return "a different source";
+    }
   }
   if ((active.manifests === undefined) !== (options.manifests === undefined)) {
     return active.manifests === undefined
