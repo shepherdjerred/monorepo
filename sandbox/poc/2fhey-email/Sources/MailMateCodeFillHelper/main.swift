@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 #if SWIFT_PACKAGE
 import MailMateCodeFillShared
 #endif
@@ -96,5 +97,5 @@ do {
     CodeFillObservability.helperLogger.error("event=helper_finished outcome=error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
     let message = "MailMateCodeFillHelper: \(error)\n"
     FileHandle.standardError.write(Data(message.utf8))
-    Foundation.exit(EXIT_FAILURE)
+    Darwin.exit(EXIT_FAILURE)
 }
