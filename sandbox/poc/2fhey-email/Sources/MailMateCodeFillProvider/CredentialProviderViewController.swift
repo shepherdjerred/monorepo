@@ -11,7 +11,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
 
     private let logger = CodeFillObservability.providerLogger
     private var records: [OTPRecord] = []
-    private var choiceButtons: [NSButton] = []
+    private var choiceViews: [NSView] = []
     private var stackView: NSStackView?
 
     override func loadView() {
@@ -100,13 +100,15 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         }
     }
 
+    // Every view added here is tracked so a re-render clears the previous state completely; the
+    // empty-state label used to survive and duplicate because only the buttons were removed.
     private func renderChoices() {
         guard let stack = stackView else {
             return
         }
-        choiceButtons.forEach(stack.removeArrangedSubview)
-        choiceButtons.forEach { $0.removeFromSuperview() }
-        choiceButtons = records.enumerated().map { index, record in
+        choiceViews.forEach(stack.removeArrangedSubview)
+        choiceViews.forEach { $0.removeFromSuperview() }
+        choiceViews = records.enumerated().map { index, record -> NSView in
             let title = record.service.map { "\($0) · \(record.code)" } ?? record.code
             let button = NSButton(title: title, target: self, action: #selector(selectChoice(_:)))
             button.tag = index
@@ -115,7 +117,9 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
             return button
         }
         if records.isEmpty {
-            stack.addArrangedSubview(NSTextField(labelWithString: "No unexpired codes are available."))
+            let emptyState = NSTextField(labelWithString: "No unexpired codes are available.")
+            stack.addArrangedSubview(emptyState)
+            choiceViews.append(emptyState)
         }
     }
 
@@ -161,7 +165,9 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     }
 
     private func matches(record: OTPRecord, serviceIdentifier: String) -> Bool {
-        guard let service = record.service else { return true }
+        // A record with no derived service matches nothing in particular, and offering it to every
+        // requesting site would leak codes across services.
+        guard let service = record.service else { return false }
         let normalizedService = service.lowercased()
         let requestedValues = [serviceIdentifier.lowercased()] + (URL(string: serviceIdentifier)?.host.map { [$0.lowercased()] } ?? [])
         return requestedValues.contains { requested in

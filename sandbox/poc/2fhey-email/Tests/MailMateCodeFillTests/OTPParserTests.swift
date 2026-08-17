@@ -41,6 +41,14 @@ func keepsLongCodeAlongsideUnrelatedAddress() {
     #expect(OTPParser().parse(body: body, metadata: metadata)?.code == "7319042")
 }
 
+@Test("keeps alphanumeric codes that begin with lowercase letters")
+func keepsLowercaseLedCodes() {
+    let metadata = MessageMetadata(sender: "Acme <security@acme.example>", subject: "Sign in", date: nil, messageID: "message-7")
+
+    #expect(OTPParser().parse(body: "Your verification code is abcd1234.", metadata: metadata)?.code == "abcd1234")
+    #expect(OTPParser().parse(body: "Your OTP is a7b9c2.", metadata: metadata)?.code == "a7b9c2")
+}
+
 @Test("rejects a long candidate that is part of an address")
 func rejectsCodeInsideAddress() {
     let metadata = MessageMetadata(sender: "Acme <security@acme.example>", subject: "Sign in", date: nil, messageID: "message-6")

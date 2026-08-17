@@ -1,6 +1,9 @@
 const port = Number(Bun.env.PORT ?? 8788);
 
+const hostname = "127.0.0.1";
+
 Bun.serve({
+  hostname,
   port,
   async fetch(request) {
     const startedAt = performance.now();
@@ -25,7 +28,7 @@ Bun.serve({
 console.info(
   JSON.stringify({
     event: "demo_server_started",
-    bind: "127.0.0.1",
+    bind: hostname,
     port,
     health_path: "/",
   }),

@@ -12,9 +12,34 @@ public enum CodeFillObservability {
     public static let storeLogger = Logger(subsystem: subsystem, category: "store")
     public static let providerLogger = Logger(subsystem: subsystem, category: "provider")
 
+    private static let saltDefaultsKey = "observability-fingerprint-salt"
+    private static let saltLock = NSLock()
+    nonisolated(unsafe) private static var cachedSalt: Data?
+
+    // Domains, senders, and message IDs are guessable, so an unsalted digest is reversible by
+    // anyone with log access. The salt is generated once and shared through the App Group so
+    // fingerprints stay comparable across the helper, app, and extension.
+    private static func salt() -> Data {
+        saltLock.lock()
+        defer { saltLock.unlock() }
+        if let cachedSalt {
+            return cachedSalt
+        }
+        let defaults = UserDefaults(suiteName: CodeFillConfiguration.applicationGroupIdentifier)
+        if let stored = defaults?.data(forKey: saltDefaultsKey), stored.count == 32 {
+            cachedSalt = stored
+            return stored
+        }
+        let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
+        defaults?.set(generated, forKey: saltDefaultsKey)
+        cachedSalt = generated
+        return generated
+    }
+
     public static func fingerprint(_ value: String) -> String {
-        let digest = SHA256.hash(data: Data(value.utf8))
-        return digest.prefix(8).map { String(format: "%02x", $0) }.joined()
+        var salted = salt()
+        salted.append(Data(value.utf8))
+        return SHA256.hash(data: salted).prefix(8).map { String(format: "%02x", $0) }.joined()
     }
 
     public static func metadataSummary(_ metadata: MessageMetadata) -> String {
