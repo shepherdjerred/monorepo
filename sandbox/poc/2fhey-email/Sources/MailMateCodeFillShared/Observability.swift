@@ -1,6 +1,9 @@
 import CryptoKit
 import Foundation
 import os
+#if canImport(Darwin)
+import Darwin
+#endif
 
 public enum CodeFillObservability {
     public static let subsystem = "com.sjerred.MailMateCodeFill"
@@ -25,13 +28,41 @@ public enum CodeFillObservability {
         if let cachedSalt {
             return cachedSalt
         }
+
         let defaults = UserDefaults(suiteName: CodeFillConfiguration.applicationGroupIdentifier)
+        guard let containerURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier
+        ) else {
+            // Preserve the existing fallback for environments without an App Group, while the
+            // normal path below is serialized across all helper/app/extension processes.
+            let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
+            defaults?.set(generated, forKey: saltDefaultsKey)
+            cachedSalt = generated
+            return generated
+        }
+
+        let lockURL = containerURL.appendingPathComponent("observability-salt.lock")
+        let lockDescriptor = open(lockURL.path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
+        guard lockDescriptor >= 0 else {
+            let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
+            cachedSalt = generated
+            return generated
+        }
+        defer { close(lockDescriptor) }
+        guard flock(lockDescriptor, LOCK_EX) == 0 else {
+            let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
+            cachedSalt = generated
+            return generated
+        }
+        defer { _ = flock(lockDescriptor, LOCK_UN) }
+
         if let stored = defaults?.data(forKey: saltDefaultsKey), stored.count == 32 {
             cachedSalt = stored
             return stored
         }
         let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
         defaults?.set(generated, forKey: saltDefaultsKey)
+        _ = defaults?.synchronize()
         cachedSalt = generated
         return generated
     }
