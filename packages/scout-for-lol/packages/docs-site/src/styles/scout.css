@@ -69,8 +69,8 @@
 
 :root:not([data-has-sidebar]) .scout-footer,
 :root[data-has-sidebar] .scout-footer {
-  width: 100vw;
-  margin-inline-start: calc(50% - 50vw + var(--sl-content-pad-x));
+  width: 100dvw;
+  margin-inline-start: calc(50% - 50dvw + var(--sl-content-pad-x));
 }
 
 :root[data-has-sidebar] .scout-footer {
