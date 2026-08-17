@@ -1,18 +1,5 @@
 import { asRecord } from "../../scripts/lib/json.ts";
-
-const applicationTargets = [
-  "alert-dashboard",
-  "birmel",
-  "tasknotes-server",
-  "starlight-karma-bot",
-  "streambot",
-  "temporal-worker",
-  "trmnl-dashboard",
-  "scout-for-lol",
-  "scout-evals",
-  "discord-plays-pokemon",
-  "discord-plays-mario-kart",
-] as const;
+import { ALL_IMAGE_TARGETS } from "./image-targets.ts";
 
 const infrastructureTargets = [
   "caddy-s3proxy",
@@ -20,7 +7,10 @@ const infrastructureTargets = [
   "redlib",
 ] as const;
 
-export const knownImageTargets = [...applicationTargets, "infra"].sort();
+// Keep full-image and fallback builds on the same target universe as the
+// closure selector. A second hand-maintained list previously omitted
+// OpenRouter, so fixed-corpus recovery could never publish its first image.
+export const knownImageTargets = [...ALL_IMAGE_TARGETS];
 
 const FIXED_CORPUS_LANES: ReadonlySet<string> = new Set([
   "docker-e2e",

@@ -23,6 +23,7 @@ import {
 import type { BuildxCommandResult } from "./bake-retry.ts";
 import { TransientError } from "../../scripts/lib/transient-error.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
+import { ALL_IMAGE_TARGETS } from "./image-targets.ts";
 import {
   caddyfileEntitlementArguments,
   expandTargets,
@@ -419,6 +420,11 @@ test("resolves every bake target from the real structured version catalog", asyn
   );
 
   expect(missingPins).toEqual([]);
+});
+
+test("shares its full-build target universe with the image selector", () => {
+  expect(knownImageTargets).toEqual(ALL_IMAGE_TARGETS);
+  expect(knownImageTargets).toContain("openrouter-broadcast-ingest");
 });
 
 test("validates structured pins before starting a production push", async () => {
