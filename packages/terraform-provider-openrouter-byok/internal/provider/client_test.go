@@ -85,3 +85,20 @@ func TestClientNotFoundAndSecretRedaction(t *testing.T) {
 		t.Fatalf("delete missing = %d, %v", status, err)
 	}
 }
+
+func TestCreateAndUpdateRejectNotFound(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	client := newClient(server.URL, "management-key")
+	created, err := client.create(context.Background(), byokRequest{Provider: "openai", Key: "secret"})
+	if err == nil {
+		t.Fatalf("create on 404 = %#v, want error", created)
+	}
+	updated, err := client.update(context.Background(), "byok-1", byokRequest{Provider: "openai", Key: "secret"})
+	if err == nil {
+		t.Fatalf("update on 404 = %#v, want error", updated)
+	}
+}

@@ -15,6 +15,19 @@ variable "discord_bot_tokens" {
   type        = map(string)
   default     = {}
   sensitive   = true
+
+  # A provider instance is created for every managed and retained name, and each
+  # one indexes this map. Without this check a name missing a token fails as an
+  # opaque invalid-index error while evaluating the provider configuration.
+  validation {
+    condition = length(setsubtract(
+      setunion(toset(keys(var.discord_bots)), var.discord_provider_names),
+      toset(keys(var.discord_bot_tokens)),
+    )) == 0
+    # The message stays static: the missing names derive from a sensitive map,
+    # and OpenTofu rejects an error message built from sensitive values.
+    error_message = "Every name in discord_bots and discord_provider_names needs a matching discord_bot_tokens entry."
+  }
 }
 
 variable "discord_provider_names" {

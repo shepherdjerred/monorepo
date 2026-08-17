@@ -94,6 +94,41 @@ const OPTIONAL_SECRET_ENV: readonly [source: string, target: string][] = [
   ["OPENROUTER_BYOK_KEYS_JSON", "TF_VAR_openrouter_byok_keys"],
 ];
 
+/**
+ * Registry inputs whose stack drives `for_each` from them. Their OpenTofu
+ * variables default to `{}`, so an absent env var does not plan "no changes" —
+ * it plans the deletion of every project, credential, and bot the stack
+ * manages. Each stack therefore requires its own registries rather than
+ * treating them as optional.
+ */
+const REQUIRED_STACK_ENV: Readonly<Record<string, readonly string[]>> = {
+  openai: [
+    "OPENAI_PROJECTS_JSON",
+    "OPENAI_SERVICE_ACCOUNTS_JSON",
+    "OPENAI_ORGANIZATION_USERS_JSON",
+    "OPENAI_PROJECT_USERS_JSON",
+    "OPENAI_PROJECT_SPEND_ALERTS_JSON",
+  ],
+  anthropic: [
+    "ANTHROPIC_WORKSPACES_JSON",
+    "ANTHROPIC_API_KEYS_JSON",
+    "ANTHROPIC_WORKSPACE_MEMBERS_JSON",
+    "ANTHROPIC_INVITES_JSON",
+  ],
+  discord: [
+    "DISCORD_BOTS_JSON",
+    "DISCORD_BOT_TOKENS_JSON",
+    "DISCORD_PROVIDER_NAMES_JSON",
+  ],
+  openrouter: [
+    "OPENROUTER_WORKSPACES_JSON",
+    "OPENROUTER_GUARDRAILS_JSON",
+    "OPENROUTER_API_KEYS_JSON",
+    "OPENROUTER_BYOK_CREDENTIALS_JSON",
+    "OPENROUTER_BYOK_KEYS_JSON",
+  ],
+};
+
 /** Build the local filesystem mirror needed by the in-repository BYOK provider. */
 async function configureLocalOpenRouterProvider(
   env: Record<string, string>,
@@ -141,6 +176,20 @@ function buildTofuEnv(stack: string): Record<string, string> {
     if (value !== null) {
       env[target] = value;
     }
+  }
+
+  // Deliberately not `requireEnv`: check-ci-env unions every requireEnv in a
+  // script's import graph, so literal calls here would demand every platform
+  // registry of every step that runs this script, including the infra stacks.
+  const missing = (REQUIRED_STACK_ENV[stack] ?? []).filter(
+    (source) => optionalEnv(source) === null,
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `Stack "${stack}" drives resources from registries that are missing from the ` +
+        `environment: ${missing.join(", ")}. These default to an empty map, so ` +
+        `running without them plans a destroy of everything the stack manages.`,
+    );
   }
   return env;
 }

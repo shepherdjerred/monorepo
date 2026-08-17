@@ -8,7 +8,12 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
+
+// requestTimeout bounds every BYOK API call so a stalled connection cannot hang
+// a plan or apply indefinitely.
+const requestTimeout = 60 * time.Second
 
 type client struct {
 	baseURL string
@@ -45,7 +50,7 @@ type byokData struct {
 }
 
 func newClient(baseURL string, apiKey string) *client {
-	return &client{baseURL: strings.TrimRight(baseURL, "/"), apiKey: apiKey, http: http.DefaultClient}
+	return &client{baseURL: strings.TrimRight(baseURL, "/"), apiKey: apiKey, http: &http.Client{Timeout: requestTimeout}}
 }
 
 func (c *client) request(ctx context.Context, method string, path string, body []byte) (byokData, int, error) {
@@ -65,9 +70,6 @@ func (c *client) request(ctx context.Context, method string, path string, body [
 		return byokData{}, 0, fmt.Errorf("request OpenRouter BYOK API: %w", err)
 	}
 	defer func() { _ = response.Body.Close() }()
-	if response.StatusCode == http.StatusNotFound {
-		return byokData{}, response.StatusCode, nil
-	}
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		return byokData{}, response.StatusCode, fmt.Errorf("OpenRouter BYOK API returned HTTP %d", response.StatusCode)
 	}
@@ -89,8 +91,16 @@ func (c *client) create(ctx context.Context, request byokRequest) (byokData, err
 	return data, err
 }
 
+// read reports a 404 as an absent credential rather than an error so the
+// resource can be dropped from state. Create and update deliberately do not
+// share that tolerance: a 404 there means the request never reached the BYOK
+// route and must not be recorded as success.
 func (c *client) read(ctx context.Context, id string) (byokData, int, error) {
-	return c.request(ctx, http.MethodGet, "/byok/"+id, nil)
+	data, status, err := c.request(ctx, http.MethodGet, "/byok/"+id, nil)
+	if status == http.StatusNotFound {
+		return byokData{}, status, nil
+	}
+	return data, status, err
 }
 
 func (c *client) update(ctx context.Context, id string, request byokRequest) (byokData, error) {
@@ -102,7 +112,11 @@ func (c *client) update(ctx context.Context, id string, request byokRequest) (by
 	return data, err
 }
 
+// delete treats an already-absent credential as a successful deletion.
 func (c *client) delete(ctx context.Context, id string) (int, error) {
 	_, status, err := c.request(ctx, http.MethodDelete, "/byok/"+id, nil)
+	if status == http.StatusNotFound {
+		return status, nil
+	}
 	return status, err
 }

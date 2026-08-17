@@ -7,7 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -53,14 +55,44 @@ func (r *byokResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Sensitive:     true,
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
-			"name":             schema.StringAttribute{Optional: true},
-			"workspace_id":     schema.StringAttribute{Optional: true},
-			"allowed_models":   schema.SetAttribute{Optional: true, ElementType: types.StringType},
-			"allowed_user_ids": schema.SetAttribute{Optional: true, ElementType: types.StringType},
-			"disabled":         schema.BoolAttribute{Optional: true},
-			"is_fallback":      schema.BoolAttribute{Optional: true},
-			"label":            schema.StringAttribute{Computed: true},
-			"sort_order":       schema.Int64Attribute{Computed: true},
+			// The API answers every field with a concrete value, so an omitted
+			// attribute must stay Computed and hold its prior state: marking it
+			// Optional alone would diff the null config against the value the
+			// API returned on every plan.
+			"name": schema.StringAttribute{
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			},
+			"workspace_id": schema.StringAttribute{
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			},
+			"allowed_models": schema.SetAttribute{
+				Optional:      true,
+				Computed:      true,
+				ElementType:   types.StringType,
+				PlanModifiers: []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
+			},
+			"allowed_user_ids": schema.SetAttribute{
+				Optional:      true,
+				Computed:      true,
+				ElementType:   types.StringType,
+				PlanModifiers: []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
+			},
+			"disabled": schema.BoolAttribute{
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
+			},
+			"is_fallback": schema.BoolAttribute{
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
+			},
+			"label":      schema.StringAttribute{Computed: true},
+			"sort_order": schema.Int64Attribute{Computed: true},
 		},
 	}
 }
@@ -185,16 +217,24 @@ func setModelFromData(model *byokModel, data byokData) {
 	model.Provider = types.StringValue(data.Provider)
 	model.Name = types.StringValue(data.Name)
 	model.WorkspaceID = types.StringValue(data.WorkspaceID)
-	if data.AllowedModels != nil {
-		model.AllowedModels = stringSetValue(data.AllowedModels)
-	}
-	if data.AllowedUserIDs != nil {
-		model.AllowedUsers = stringSetValue(data.AllowedUserIDs)
-	}
+	model.AllowedModels = setFromData(model.AllowedModels, data.AllowedModels)
+	model.AllowedUsers = setFromData(model.AllowedUsers, data.AllowedUserIDs)
 	model.Disabled = types.BoolValue(data.Disabled)
 	model.IsFallback = types.BoolValue(data.IsFallback)
 	model.Label = types.StringValue(data.Label)
 	model.SortOrder = types.Int64Value(data.SortOrder)
+}
+
+// setFromData keeps the planned value when the API omits the field, but never
+// leaves a Computed attribute unknown after apply.
+func setFromData(planned types.Set, values []string) types.Set {
+	if values != nil {
+		return stringSetValue(values)
+	}
+	if planned.IsUnknown() {
+		return types.SetValueMust(types.StringType, []attr.Value{})
+	}
+	return planned
 }
 
 func stringSetValue(values []string) types.Set {
