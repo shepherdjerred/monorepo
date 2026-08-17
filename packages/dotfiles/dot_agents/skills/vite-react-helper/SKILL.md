@@ -374,6 +374,15 @@ function ThemedButton() {
 
 ## Performance Optimization
 
+### Vercel React Performance Checklist
+
+When reviewing React code, selectively apply the repo-owned adaptation in
+`references/vercel-react-best-practices.md`: remove request waterfalls, defer
+non-critical work, keep initial bundles small, avoid unnecessary re-renders,
+and measure before optimizing. Keep this guidance compatible with the repo's
+Bun/Vite toolchain and local tests; do not introduce Next.js, Vercel deployment,
+or Vercel-specific optimization workflows unless the project already uses them.
+
 ### useMemo for Expensive Calculations
 
 ```tsx

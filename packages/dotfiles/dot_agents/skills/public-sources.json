@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "reviewPolicy": "Pinned commits are manually reviewed before updates; the local skill tree is authoritative.",
+  "sources": [
+    {
+      "repository": "https://github.com/hashicorp/agent-skills",
+      "commit": "4451ceca5456e79cc776efee96a744f7ac96e5bf",
+      "license": "MPL-2.0",
+      "reviewDate": "2026-08-16",
+      "imports": [
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/terraform-style-guide",
+          "localSkillPath": "terraform-helper",
+          "integration": "adapted",
+          "notes": "Added style, module layout, and review guidance to the existing local Terraform helper."
+        },
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/terraform-test",
+          "localSkillPath": "terraform-helper",
+          "integration": "adapted",
+          "notes": "Copied only the focused test references and retained local confirmation rules for apply-mode tests."
+        },
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/refactor-module",
+          "localSkillPath": "terraform-helper",
+          "integration": "adapted",
+          "notes": "Added state-preserving module-refactoring guidance; local state safety remains authoritative."
+        },
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/terraform-search-import",
+          "localSkillPath": "terraform-helper",
+          "integration": "adapted",
+          "notes": "Adapted the manual-import reference and resource-list helper to fail fast without hidden stderr or implicit init; import remains confirmation-gated."
+        },
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/terraform-policy",
+          "localSkillPath": "terraform-helper",
+          "integration": "adapted",
+          "notes": "Added policy-as-contract guidance without replacing repository policy or CI conventions."
+        },
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/new-terraform-provider",
+          "localSkillPath": "terraform-provider-development",
+          "integration": "adapted",
+          "notes": "Combined provider scaffolding with the selected provider implementation and testing workflows."
+        },
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/provider-configuration",
+          "localSkillPath": "terraform-provider-development",
+          "integration": "adapted",
+          "notes": "Copied credential-chain and case-study references; secrets and live acceptance remain local safety boundaries."
+        },
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/provider-docs",
+          "localSkillPath": "terraform-provider-development",
+          "integration": "adapted",
+          "notes": "Copied the provider documentation reference and retained repository-specific generation expectations."
+        },
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/provider-resources",
+          "localSkillPath": "terraform-provider-development",
+          "integration": "adapted",
+          "notes": "Copied resource design and waiter references for Plugin Framework implementations."
+        },
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/provider-actions",
+          "localSkillPath": "terraform-provider-development",
+          "integration": "adapted",
+          "notes": "Integrated the action lifecycle and experimental-feature cautions into the provider workflow."
+        },
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/provider-test-patterns",
+          "localSkillPath": "terraform-provider-development",
+          "integration": "adapted",
+          "notes": "Copied checks, ephemeral-resource, and sweeper references for provider test coverage."
+        },
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/run-acceptance-tests",
+          "localSkillPath": "terraform-provider-development",
+          "integration": "adapted",
+          "notes": "Integrated acceptance-test authorization, environment, cleanup, and version-recording guidance."
+        },
+        {
+          "upstreamSkillPath": "plugins/terraform/skills/provider-framework-migration",
+          "localSkillPath": "terraform-provider-development",
+          "integration": "adapted",
+          "notes": "Copied schema-mapping guidance for staged SDKv2-to-Framework migrations."
+        }
+      ]
+    },
+    {
+      "repository": "https://github.com/tailscale/tailscale-skill",
+      "commit": "4f05d353efc56962546aa26ccc59bb08ca699ad1",
+      "license": "BSD-3-Clause",
+      "reviewDate": "2026-08-16",
+      "imports": [
+        {
+          "upstreamSkillPath": "skills/tailscale",
+          "localSkillPath": "tailscale-helper",
+          "integration": "adapted",
+          "notes": "Adapted the product index and canonical-doc routing; Alpha status means it is reference material, not authority."
+        }
+      ]
+    },
+    {
+      "repository": "https://github.com/vercel-labs/agent-skills",
+      "commit": "b8caa260a420a73042e35521de4b5c8baf6446cc",
+      "license": "MIT",
+      "reviewDate": "2026-08-16",
+      "imports": [
+        {
+          "upstreamSkillPath": "skills/web-design-guidelines",
+          "localSkillPath": "web-design-guidelines",
+          "integration": "adapted",
+          "notes": "Kept the current guideline-fetching review workflow and added local testing/deployment boundaries."
+        },
+        {
+          "upstreamSkillPath": "skills/react-native-skills",
+          "localSkillPath": "react-native-guidelines",
+          "integration": "adapted",
+          "notes": "Renamed the local skill to avoid a vendor-prefixed public name and retained the rule references."
+        },
+        {
+          "upstreamSkillPath": "skills/react-best-practices",
+          "localSkillPath": "vite-react-helper",
+          "integration": "adapted",
+          "notes": "Selected waterfall, bundle, fetching, rerender, and measurement guidance; excluded Vercel deployment workflows."
+        }
+      ]
+    },
+    {
+      "repository": "https://github.com/vercel-labs/web-interface-guidelines",
+      "commit": "d0a657bfe87e86dd3a4753d7ec28c7e7dd7a88fe",
+      "license": "MIT",
+      "reviewDate": "2026-08-16",
+      "imports": [
+        {
+          "upstreamSkillPath": "command.md",
+          "localSkillPath": "web-design-guidelines",
+          "integration": "adapted",
+          "notes": "The runtime guideline fetch is bound to this reviewed command.md revision; updates require manual review."
+        }
+      ]
+    },
+    {
+      "repository": "https://github.com/cloudflare/security-audit-skill",
+      "commit": "8bac42001ddd90a4dcd8d5a5045199283a8eba75",
+      "license": "MIT",
+      "reviewDate": "2026-08-16",
+      "imports": [
+        {
+          "upstreamSkillPath": "skills/security-audit",
+          "localSkillPath": "security-audit",
+          "integration": "vendored",
+          "notes": "Preserved the six phases, bundled references, report schema, and validator; added only local output/tool boundaries."
+        }
+      ]
+    }
+  ]
+}
