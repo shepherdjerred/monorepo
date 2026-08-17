@@ -9,13 +9,11 @@
 import {
   arrayField,
   asRecord,
-  boolField,
   type CheckConclusion,
   conclusionField,
   GITHUB_API_URL,
   getJsonWithLink,
   graphqlRequest,
-  numberField,
   recordField,
   splitRepo,
   stringField,
@@ -25,7 +23,12 @@ import {
   fetchLatestProviderIssueComment,
   resolveIssueCommentReview,
 } from "./github-issue-comments.ts";
+import {
+  parseThreadPage,
+  REVIEW_THREADS_QUERY,
+} from "./github-review-threads.ts";
 import { isProviderAuthor } from "./identity.ts";
+import { mergeDuplicateFindings } from "./merge-findings.ts";
 import type { CompletionSignal } from "./signal.ts";
 import type {
   PullRequestAuthor,
@@ -34,7 +37,6 @@ import type {
   ReviewState,
   ReviewThread,
 } from "./types.ts";
-
 // ---------------------------------------------------------------------------
 // Pull-request author
 // ---------------------------------------------------------------------------
@@ -77,94 +79,9 @@ export async function fetchPullRequestAuthor(input: {
   const { payload } = await getJsonWithLink(url, input.token);
   return parsePullRequestAuthor(payload);
 }
-
 // ---------------------------------------------------------------------------
 // Review threads (provider-agnostic; priority parsed via the active provider)
 // ---------------------------------------------------------------------------
-
-const REVIEW_THREADS_QUERY = `
-query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
-  repository(owner: $owner, name: $name) {
-    pullRequest(number: $number) {
-      headRefOid
-      reviewThreads(first: 100, after: $cursor) {
-        pageInfo { hasNextPage endCursor }
-        nodes {
-          isResolved
-          isOutdated
-          path
-          line
-          comments(first: 1) {
-            nodes { author { login } url body }
-          }
-        }
-      }
-    }
-  }
-}`;
-
-function parseThreadPage(
-  payload: unknown,
-  provider: ReviewProvider,
-): {
-  headRefOid: string | null;
-  threads: ReviewThread[];
-  hasNextPage: boolean;
-  endCursor: string | null;
-} {
-  const payloadRecord = asRecord(payload);
-  const data =
-    payloadRecord === null ? null : recordField(payloadRecord, "data");
-  const repository = data === null ? null : recordField(data, "repository");
-  const pullRequest =
-    repository === null ? null : recordField(repository, "pullRequest");
-  if (pullRequest === null) {
-    throw new Error(
-      "GitHub GraphQL response did not include repository.pullRequest",
-    );
-  }
-  const reviewThreads = recordField(pullRequest, "reviewThreads");
-  if (reviewThreads === null) {
-    throw new Error("GitHub GraphQL response did not include reviewThreads");
-  }
-
-  const threads: ReviewThread[] = [];
-  for (const rawNode of arrayField(reviewThreads, "nodes")) {
-    const node = asRecord(rawNode);
-    if (node === null) continue;
-    const comments = recordField(node, "comments");
-    const commentNodes = comments === null ? [] : arrayField(comments, "nodes");
-    const firstComment = asRecord(commentNodes[0]);
-    let authorLogin: string | null = null;
-    let url: string | null = null;
-    let priority: number | null = null;
-    if (firstComment !== null) {
-      const author = recordField(firstComment, "author");
-      authorLogin = author === null ? null : stringField(author, "login");
-      url = stringField(firstComment, "url");
-      priority = provider.parseSeverity(stringField(firstComment, "body"));
-    }
-    threads.push({
-      authorLogin,
-      isResolved: boolField(node, "isResolved"),
-      isOutdated: boolField(node, "isOutdated"),
-      path: stringField(node, "path"),
-      line: numberField(node, "line"),
-      url,
-      priority,
-      // A GitHub thread is addressable: consumers read its comment directly.
-      title: null,
-    });
-  }
-
-  const pageInfo = recordField(reviewThreads, "pageInfo");
-  return {
-    headRefOid: stringField(pullRequest, "headRefOid"),
-    threads,
-    hasNextPage: pageInfo !== null && boolField(pageInfo, "hasNextPage"),
-    endCursor: pageInfo === null ? null : stringField(pageInfo, "endCursor"),
-  };
-}
 
 export async function fetchReviewThreads(input: {
   repo: string;
@@ -209,7 +126,10 @@ export async function fetchReviewThreads(input: {
       threads.push(...completion.parseFindings(comment));
     }
   }
-  return { threads, headRefOid };
+  return {
+    threads: mergeDuplicateFindings(threads, input.provider),
+    headRefOid,
+  };
 }
 
 // ---------------------------------------------------------------------------

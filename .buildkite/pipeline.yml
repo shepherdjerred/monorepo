@@ -1037,8 +1037,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
-      bun --no-install scripts/wait-for-review.ts
+      .buildkite/scripts/review-gate.sh
     retry: *retry
     plugins:
       - kubernetes:

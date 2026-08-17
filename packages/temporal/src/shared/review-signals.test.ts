@@ -28,6 +28,7 @@ function makeEvent(
     timed_out: false,
     stale_reaction: false,
     decision: null,
+    parser_commit: null,
     ...overrides,
   };
 }

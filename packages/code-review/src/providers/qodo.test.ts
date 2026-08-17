@@ -10,6 +10,7 @@ import {
 const comment = {
   updatedAt: "2026-08-09T12:00:00Z",
   url: "https://github.com/shepherdjerred/monorepo/pull/1#issuecomment-1",
+  id: 1,
   body: `
 <h3>Code Review by Qodo</h3>
 <code>🐞 Bugs (1)</code> <code>📘 Rule violations (1)</code> <code>📎 Requirement gaps (0)</code> <code>🎨 UX issues (0)</code> <code>🔗 Cross-repo conflicts (0)</code> <code>📜 Skill insights (0)</code>
@@ -79,6 +80,8 @@ describe("qodoProvider", () => {
         line: null,
         url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc",
         priority: 1,
+        threadId: null,
+        commentId: 1,
       },
       {
         authorLogin: "qodo-code-review",
@@ -89,6 +92,8 @@ describe("qodoProvider", () => {
         line: null,
         url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-def",
         priority: 2,
+        threadId: null,
+        commentId: 1,
       },
       {
         authorLogin: "qodo-code-review",
@@ -99,6 +104,8 @@ describe("qodoProvider", () => {
         line: null,
         url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-ghi",
         priority: 2,
+        threadId: null,
+        commentId: 1,
       },
     ]);
   });
@@ -361,6 +368,22 @@ describe("markQodoFindingResolved", () => {
     expect(byTitle.get("Stale wording")).toBe(false);
   });
 
+  test("chips a finding the thread surface spells with different case", () => {
+    // Verbatim from PR #2244: the review comment titled it "NUL in finding
+    // key" and the thread "Nul in finding key". A merged finding carries one
+    // of the two, so an exact match refused to chip a finding the caller had
+    // just named — the same disagreement qodoFindingKey folds case for.
+    const edited = markQodoFindingResolved(comment.body, "CONSENT CACHE");
+    if (edited === null) throw new Error("expected an edit");
+    const byTitle = new Map(
+      parseQodoIssueComment({ ...comment, body: edited }).map((finding) => [
+        finding.title,
+        finding.isResolved,
+      ]),
+    );
+    expect(byTitle.get("Consent cache")).toBe(true);
+  });
+
   test("keeps the finding's identity so re-appended copies still collapse", () => {
     // The chip form is the whole point: identityOf strips `<code>☑ …</code>`,
     // so a dismissal must not fork the finding away from the unstruck copies
@@ -383,17 +406,17 @@ describe("markQodoFindingResolved", () => {
     expect(twice).toBe(once);
   });
 
-  test("marks every re-appended copy of one finding, not just the first", () => {
+  test("marks every unresolved re-appended copy of one finding", () => {
     // Qodo re-appends its whole review, so a finding routinely appears twice.
-    // The gate dedupes by identity, so leaving the other copy unmarked leaves
-    // the finding blocking — the dismissal would look applied and do nothing.
+    // The gate dedupes by identity, so every unresolved copy needs the chip;
+    // the copy Qodo already struck stays untouched.
     const body = reviewWithQuotedContext(
       ">## Issue Context",
       ">## Issue Context",
     );
     const edited = markQodoFindingResolved(body, "Stale artifact");
     if (edited === null) throw new Error("expected an edit");
-    expect([...edited.matchAll(/☑/gu)]).toHaveLength(2);
+    expect([...edited.matchAll(/☑/gu)]).toHaveLength(1);
     const findings = parseQodoIssueComment({ ...comment, body: edited });
     expect(findings).toHaveLength(1);
     expect(findings[0]?.isResolved).toBe(true);
@@ -455,6 +478,8 @@ describe("qodo re-review copies", () => {
         line: null,
         url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc",
         priority: 1,
+        threadId: null,
+        commentId: 1,
       },
       {
         authorLogin: "qodo-code-review",
@@ -465,6 +490,8 @@ describe("qodo re-review copies", () => {
         line: null,
         url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-jkl",
         priority: 1,
+        threadId: null,
+        commentId: 1,
       },
     ]);
   });
@@ -547,6 +574,8 @@ Older unresolved wording retained for review history.
         line: null,
         url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-current",
         priority: 2,
+        threadId: null,
+        commentId: 1,
       },
     ]);
   });

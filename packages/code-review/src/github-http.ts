@@ -144,6 +144,32 @@ export async function graphqlRequest(
   return payload;
 }
 
+/**
+ * POST a JSON body to a REST endpoint and return the parsed response.
+ *
+ * The gate runs in a light CI pod with a token and no `gh` CLI, so the one
+ * write it performs — asking the provider to review the head — goes through the
+ * same fetch path as every read.
+ */
+export async function postJson(
+  url: string,
+  body: unknown,
+  token: string,
+): Promise<unknown> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { ...githubHeaders(token), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(
+      `GitHub API request failed with ${String(response.status)} ${response.statusText}: ${text}`,
+    );
+  }
+  return response.json();
+}
+
 export function splitRepo(repo: string): { owner: string; name: string } {
   const [owner, name] = repo.split("/");
   if (

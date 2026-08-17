@@ -33,6 +33,7 @@ import {
   type ReviewThread,
 } from "@shepherdjerred/code-review";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
+import { requestReviewAtHead } from "@shepherdjerred/code-review/request-review";
 import {
   fetchPullRequestAuthor,
   fetchReviewThreads,
@@ -247,7 +248,21 @@ function buildSignalEvent(input: {
     timed_out: input.timedOut,
     stale_reaction: input.state.staleReaction,
     decision: input.decision === null ? null : input.decision.state,
+    parser_commit: parserCommit(),
   };
+}
+
+/**
+ * The commit of the `code-review` source that produced this observation.
+ *
+ * `review-gate.sh` runs the gate from a worktree of `main` and passes the
+ * commit it checked out. Recording it makes the log say which parser produced
+ * a count — the one thing that would have made an inflated `blocking_count`
+ * obvious at a glance rather than after a long hunt.
+ */
+function parserCommit(): string | null {
+  const commit = Bun.env["REVIEW_GATE_PARSER_COMMIT"];
+  return commit === undefined || commit.trim() === "" ? null : commit.trim();
 }
 
 async function waitForReview(): Promise<void> {
@@ -388,6 +403,10 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
   let lastState: ReviewStateResult | null = null;
   let lastThreads: readonly ReviewThread[] = [];
   let lastPollError: Error | null = null;
+  // Whether this run has already asked the provider to review the head. The
+  // marker check makes a duplicate request impossible anyway; this avoids
+  // paying for a comment scan on every poll.
+  let requested = false;
 
   while (Date.now() <= deadline) {
     let stateResult: ReviewStateResult;
@@ -463,6 +482,39 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
         // whole comment history twice on every poll.
         issueComment: stateResult.issueComment,
       });
+
+      // Ask for the review this loop is waiting on, once we have seen that the
+      // provider has not already reviewed this head. Keep this write inside the
+      // same retry boundary as the reads above: a transient failure while
+      // checking or posting the request must not fail the gate immediately.
+      //
+      // Qodo reviews a PR once, when it is opened, and never again on its own.
+      // Polling alone therefore waits out the entire budget on every push after
+      // the first and then fails a PR whose diff is fine. The request is asked
+      // for after the first observation rather than before it, so a head the
+      // provider has already reviewed is never asked again; the marker makes a
+      // repeat impossible even so.
+      if (!requested && stateResult.reviewedCommit !== head) {
+        const outcome = await requestReviewAtHead({
+          repo,
+          number,
+          head,
+          token,
+          provider,
+        });
+        requested = true;
+        console.log(
+          JSON.stringify({
+            level: "info",
+            msg: `review-request-${outcome}`,
+            component: "review-gate",
+            provider: provider.id,
+            repo,
+            pr: number,
+            head_sha: head,
+          }),
+        );
+      }
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       if (!isRetryablePollError(err)) throw err;

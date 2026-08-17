@@ -209,6 +209,7 @@ async function buildSignalEvent(input: {
     timed_out: false,
     stale_reaction: state.staleReaction,
     decision: null,
+    parser_commit: null,
   };
 }
 

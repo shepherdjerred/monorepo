@@ -53,6 +53,8 @@ describe("describeFinding", () => {
       url: "https://github.com/o/r/pull/1#issuecomment-2",
       priority: 1,
       title: "S3 fetch lacks timeout",
+      threadId: null,
+      commentId: null,
     });
     expect(line).toContain("P1");
     expect(line).toContain("S3 fetch lacks timeout");
@@ -69,6 +71,8 @@ describe("describeFinding", () => {
       url: null,
       priority: 2,
       title: null,
+      threadId: null,
+      commentId: null,
     });
     expect(line).toContain("P2 src/x.ts:42");
     expect(line).not.toContain("untitled");
