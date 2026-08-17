@@ -2,10 +2,12 @@
  * Parimutuel payout allocation.
  *
  * Pure, integer-only, and closed: every Buck staked into a pool comes back out
- * of it. There is no house and no rake, so the sum of payouts always equals
- * the sum of stakes. That identity is asserted rather than assumed — a
- * violation throws, and the caller runs this inside a transaction so the throw
- * rolls the settlement back instead of minting or destroying currency.
+ * of it. Human two-sided pools remain purely parimutuel; one-sided pools are
+ * supplied a synthetic house position by settlement before reaching this
+ * function. The sum of payouts always equals the sum of stakes. That identity
+ * is asserted rather than assumed — a violation throws, and the caller runs
+ * this inside a transaction so the throw rolls the settlement back instead of
+ * minting or destroying currency.
  */
 
 export type ParimutuelBet = {
@@ -84,7 +86,8 @@ export function computeParimutuelPayouts(
   const winnersPool = sumStakes(winners);
   const losersPool = sumStakes(losers);
 
-  // Nobody took the other side, so there is nothing to win. Refunding is
+  // Keep this safe fallback for callers that present a legacy or invalid
+  // one-sided pool without first adding the house position. Refunding is
   // numerically the same as paying each winner their stake back, but it is
   // recorded as a refund so the ledger states the reason instead of leaving a
   // reader to notice that payout happened to equal stake.

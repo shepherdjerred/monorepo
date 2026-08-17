@@ -69,6 +69,7 @@ export type BucksVoidReason = z.infer<typeof BucksVoidReasonSchema>;
 export const BucksVoidReasonSchema = z.enum([
   "remake",
   "no_counterparty",
+  "house_unavailable",
   "expired",
   "unsupported_mode",
 ]);

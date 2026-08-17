@@ -87,9 +87,11 @@ export function formatSettlementBody(input: {
         ? "Remake — every bet refunded."
         : summary.voidReason === "no_counterparty"
           ? "No takers on the other side — every bet refunded."
-          : summary.voidReason === "expired"
-            ? "This game never resolved — every bet refunded."
-            : "Unsupported game mode — every bet refunded.";
+          : summary.voidReason === "house_unavailable"
+            ? "The Bryan Bucks house reserve was unavailable — every bet refunded."
+            : summary.voidReason === "expired"
+              ? "This game never resolved — every bet refunded."
+              : "Unsupported game mode — every bet refunded.";
     lines.push(`💰 **Bryan Bucks** — ${reason}`);
   }
 
@@ -101,10 +103,23 @@ export function formatSettlementBody(input: {
     lines.push(`${input.predictionSentence}${verdict}`);
   }
 
-  if (summary.bets.length > 0) {
+  const humanBets = summary.bets.filter((bet) => !bet.isHouse);
+  const houseBets = summary.bets.filter((bet) => bet.isHouse);
+
+  if (houseBets.length > 0) {
+    const houseStake = houseBets.reduce((total, bet) => total + bet.stake, 0);
+    lines.push("");
+    lines.push(
+      "🏦 Bryan Bucks house matched " +
+        houseStake.toString() +
+        " BB on the other side.",
+    );
+  }
+
+  if (humanBets.length > 0) {
     lines.push("");
     lines.push("**Bets**");
-    for (const bet of summary.bets.slice(0, MAX_BET_ROWS)) {
+    for (const bet of humanBets.slice(0, MAX_BET_ROWS)) {
       const result = bet.refunded
         ? `refunded ${bet.payout.toString()} BB`
         : `received ${bet.payout.toString()} BB` +
@@ -115,9 +130,9 @@ export function formatSettlementBody(input: {
         `• <@${bet.discordId}> staked ${bet.stake.toString()} BB → ${result}`,
       );
     }
-    if (summary.bets.length > MAX_BET_ROWS) {
+    if (humanBets.length > MAX_BET_ROWS) {
       lines.push(
-        `…and ${(summary.bets.length - MAX_BET_ROWS).toString()} more — see \`/bb history\``,
+        `…and ${(humanBets.length - MAX_BET_ROWS).toString()} more — see \`/bb history\``,
       );
     }
   }
@@ -202,7 +217,7 @@ export async function announceSettlements(
         // would post a guild's payouts somewhere nobody opted into. A pool that
         // owed nobody anything is not worth reporting.
         const owedSomeone =
-          summary.bets.length > 0 ||
+          summary.bets.some((bet) => !bet.isHouse) ||
           input.earnings.some((award) => award.serverId === summary.serverId);
         if (owedSomeone) {
           logger.error(

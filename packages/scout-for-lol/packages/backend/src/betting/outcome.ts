@@ -12,8 +12,10 @@ import { isStandardLobby } from "#src/betting/eligibility.ts";
  * Pure and total: it answers from `RawMatch` alone, with no database and no
  * pool context, so settlement's decision is reproducible from the archived
  * match JSON forever. Pool-dependent voiding (`no_counterparty`, when one side
- * attracted no stake) is decided by the settler, not here, because it depends
- * on who bet rather than on what happened.
+ * one-sided pools that cannot be matched) is decided by the settler, not here,
+ * because it depends on who bet rather than on what happened. Current decided
+ * one-sided pools
+ * are matched by the audited house account during settlement.
  */
 export type MatchBettingOutcome =
   | { kind: "decided"; winningTeamId: number }

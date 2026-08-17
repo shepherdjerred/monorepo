@@ -1,4 +1,4 @@
-import type { QueueType } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, type QueueType } from "@scout-for-lol/data";
 
 /**
  * Tuning constants for Bryan Bucks.
@@ -42,6 +42,17 @@ export const VOID_GRACE_MS = 6 * 60 * 60 * 1000;
  * meaning anything.
  */
 export const SEED_GRANT = 25;
+
+/**
+ * The per-server bankroll available to match a one-sided market. It is seeded
+ * once through the same ledger as every other account, so house risk and house
+ * winnings remain auditable rather than being implicit minting.
+ */
+export const HOUSE_BANKROLL = 10_000;
+
+/** Synthetic, non-user Discord ID used only by the per-server house account. */
+export const HOUSE_ACCOUNT_DISCORD_ID =
+  DiscordAccountIdSchema.parse("10000000000000000");
 
 /**
  * Stake denominations offered as buttons on the prematch message.

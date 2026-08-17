@@ -15,7 +15,12 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 import { settleBettingForMatch } from "#src/betting/settle.ts";
 import { voidStaleBettingPools } from "#src/betting/sweep.ts";
 import { reconcileBucksBalances } from "#src/betting/reconcile.ts";
-import { VOID_GRACE_MS } from "#src/betting/constants.ts";
+import {
+  HOUSE_ACCOUNT_DISCORD_ID,
+  HOUSE_BANKROLL,
+  VOID_GRACE_MS,
+} from "#src/betting/constants.ts";
+import { getLeaderboard } from "#src/betting/accounts.ts";
 
 const { prisma: db } = createTestDatabase("bucks-settle");
 
@@ -96,6 +101,21 @@ async function makeTwoSidedPool(stake = 10) {
     stake,
   });
   return pool;
+}
+
+async function makeSoloBettor(
+  poolId: number,
+  serverId: DiscordGuildId,
+  teamId: number,
+  stake: number,
+) {
+  return await makeBettor({
+    poolId,
+    serverId,
+    discordId: bucksTestDiscordId(1),
+    teamId,
+    stake,
+  });
 }
 
 async function clearAll() {
@@ -233,34 +253,6 @@ describe("settleBettingForMatch", () => {
     );
   });
 
-  test("refunds everyone when one side attracted no stake", async () => {
-    const pool = await makePool(SERVER_A);
-    const only = await makeBettor({
-      poolId: pool.id,
-      serverId: SERVER_A,
-      discordId: bucksTestDiscordId(1),
-      teamId: WINNING_TEAM,
-      stake: 15,
-    });
-
-    const [summary] = await settleBettingForMatch(fixture, db);
-    expect(summary?.voidReason).toBe("no_counterparty");
-
-    const account = await db.bucksAccount.findUniqueOrThrow({
-      where: { id: only.account.id },
-    });
-    expect(account.balance).toBe(115);
-
-    // Recorded as a refund, not a payout that happens to equal the stake.
-    const entry = await db.bucksLedgerEntry.findFirstOrThrow();
-    expect(entry.kind).toBe("bet_refund");
-
-    const settled = await db.bucksMatchPool.findUniqueOrThrow({
-      where: { id: pool.id },
-    });
-    expect(settled.poolState).toBe("voided");
-  });
-
   test("refunds everyone on a remake", async () => {
     await makeTwoSidedPool();
 
@@ -289,7 +281,7 @@ describe("settleBettingForMatch", () => {
       teamId: LOSING_TEAM,
       stake: 10,
     });
-    // Guild B has only one side, so it voids while A pays out.
+    // Guild B has only one side, so the house matches it while A pays out.
     const lonely = await makeBettor({
       poolId: poolB.id,
       serverId: SERVER_B,
@@ -303,13 +295,13 @@ describe("settleBettingForMatch", () => {
 
     const bySever = new Map(summaries.map((s) => [s.serverId, s]));
     expect(bySever.get(SERVER_A)?.voidReason).toBeUndefined();
-    expect(bySever.get(SERVER_B)?.voidReason).toBe("no_counterparty");
+    expect(bySever.get(SERVER_B)?.voidReason).toBeUndefined();
 
-    // Guild B's bettor was refunded, not paid out of guild A's losers.
+    // Guild B's bettor was paid by its own house, not out of guild A's losers.
     const account = await db.bucksAccount.findUniqueOrThrow({
       where: { id: lonely.account.id },
     });
-    expect(account.balance).toBe(120);
+    expect(account.balance).toBe(140);
   });
 
   test("conserves Bucks across the whole settlement", async () => {
@@ -339,6 +331,132 @@ describe("settleBettingForMatch", () => {
     const accounts = await db.bucksAccount.findMany();
     const total = accounts.reduce((sum, a) => sum + a.balance, 0);
     expect(total).toBe(7 + 11 + 13 + 17 + 19);
+  });
+});
+
+describe("one-sided house settlement", () => {
+  test("matches a one-sided market with an auditable house account", async () => {
+    const pool = await makePool(SERVER_A);
+    const only = await makeSoloBettor(pool.id, SERVER_A, WINNING_TEAM, 25);
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary?.voidReason).toBeUndefined();
+    expect(summary?.bets).toHaveLength(2);
+    expect(summary?.bets.find((bet) => bet.isHouse)).toMatchObject({
+      discordId: HOUSE_ACCOUNT_DISCORD_ID,
+      stake: 25,
+      payout: 0,
+      won: false,
+    });
+    expect(summary?.bets.find((bet) => !bet.isHouse)).toMatchObject({
+      stake: 25,
+      payout: 50,
+      winnings: 25,
+      won: true,
+    });
+
+    const account = await db.bucksAccount.findUniqueOrThrow({
+      where: { id: only.account.id },
+    });
+    expect(account.balance).toBe(150);
+
+    const house = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: {
+          serverId: SERVER_A,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        },
+      },
+    });
+    expect(house.isHouse).toBe(true);
+    expect(house.balance).toBe(HOUSE_BANKROLL - 25);
+    expect(
+      await db.bucksLedgerEntry.findMany({
+        where: { bucksAccountId: house.id },
+        orderBy: { id: "asc" },
+        select: { kind: true, delta: true },
+      }),
+    ).toEqual([
+      { kind: "seed", delta: HOUSE_BANKROLL },
+      { kind: "bet_stake", delta: -25 },
+    ]);
+
+    expect(await getLeaderboard({ serverId: SERVER_A, limit: 10 }, db)).toEqual(
+      [{ discordId: only.account.discordId, balance: 150 }],
+    );
+
+    const settled = await db.bucksMatchPool.findUniqueOrThrow({
+      where: { id: pool.id },
+    });
+    expect(settled.poolState).toBe("settled");
+  });
+
+  test("voids a one-sided market when the house reserve cannot cover it", async () => {
+    const pool = await makePool(SERVER_A);
+    await db.bucksAccount.create({
+      data: {
+        serverId: SERVER_A,
+        discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        isHouse: true,
+        balance: 0,
+      },
+    });
+    const only = await makeSoloBettor(pool.id, SERVER_A, WINNING_TEAM, 25);
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary?.voidReason).toBe("house_unavailable");
+
+    const account = await db.bucksAccount.findUniqueOrThrow({
+      where: { id: only.account.id },
+    });
+    expect(account.balance).toBe(125);
+    expect(
+      await db.bucksLedgerEntry.findFirstOrThrow({
+        where: { bucksAccountId: only.account.id },
+      }),
+    ).toMatchObject({ kind: "bet_refund", delta: 25 });
+
+    const house = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: {
+          serverId: SERVER_A,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        },
+      },
+    });
+    expect(house.balance).toBe(0);
+    expect(
+      await db.bucksLedgerEntry.count({ where: { bucksAccountId: house.id } }),
+    ).toBe(0);
+  });
+
+  test("credits the house ledger when the lone bettor loses", async () => {
+    const pool = await makePool(SERVER_A);
+    await makeSoloBettor(pool.id, SERVER_A, LOSING_TEAM, 25);
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary?.voidReason).toBeUndefined();
+
+    const house = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: {
+          serverId: SERVER_A,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        },
+      },
+    });
+    expect(house.balance).toBe(HOUSE_BANKROLL + 25);
+    expect(
+      await db.bucksLedgerEntry.findMany({
+        where: { bucksAccountId: house.id },
+        orderBy: { id: "asc" },
+        select: { kind: true, delta: true },
+      }),
+    ).toEqual([
+      { kind: "seed", delta: HOUSE_BANKROLL },
+      { kind: "bet_stake", delta: -25 },
+      { kind: "bet_payout", delta: 50 },
+    ]);
   });
 });
 

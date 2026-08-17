@@ -7,6 +7,7 @@ import {
   formatSettlementBody,
   predictionVerdict,
 } from "#src/betting/announce.ts";
+import { HOUSE_ACCOUNT_DISCORD_ID } from "#src/betting/constants.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
 
@@ -79,6 +80,7 @@ describe("formatSettlementBody", () => {
           betId: 1,
           bucksAccountId: 1,
           discordId: WINNER_DISCORD_ID,
+          isHouse: false,
           predictedTeamId: 100,
           stake: 10,
           payout: 20,
@@ -91,6 +93,7 @@ describe("formatSettlementBody", () => {
           betId: 2,
           bucksAccountId: 2,
           discordId: LOSER_DISCORD_ID,
+          isHouse: false,
           predictedTeamId: 200,
           stake: 10,
           payout: 0,
@@ -139,6 +142,7 @@ describe("formatSettlementBody", () => {
           betId: 1,
           bucksAccountId: 1,
           discordId: WINNER_DISCORD_ID,
+          isHouse: false,
           predictedTeamId: 100,
           stake: 10,
           payout: 10,
@@ -160,5 +164,57 @@ describe("formatSettlementBody", () => {
     expect(body).toContain(
       `• <@${WINNER_DISCORD_ID}> staked 10 BB → refunded 10 BB`,
     );
+  });
+
+  test("summarizes the house without exposing its synthetic account", () => {
+    const summary: SettlementSummary = {
+      matchId: "NA1_5000000042",
+      serverId: "1337623164146155593",
+      winningTeamId: 100,
+      voidReason: undefined,
+      winnersPool: 25,
+      losersPool: 25,
+      bets: [
+        {
+          betId: 1,
+          bucksAccountId: 1,
+          discordId: WINNER_DISCORD_ID,
+          isHouse: false,
+          predictedTeamId: 100,
+          stake: 25,
+          payout: 50,
+          winnings: 25,
+          won: true,
+          refunded: false,
+          subjectPuuid: "winner-puuid",
+        },
+        {
+          betId: 2,
+          bucksAccountId: 2,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+          isHouse: true,
+          predictedTeamId: 200,
+          stake: 25,
+          payout: 0,
+          winnings: 0,
+          won: false,
+          refunded: false,
+          subjectPuuid: "winner-puuid",
+        },
+      ],
+    };
+
+    const body = formatSettlementBody({
+      summary,
+      earnings: [],
+      predictionSentence: undefined,
+      predictionVerdictLine: undefined,
+    });
+
+    expect(body).toContain(
+      "🏦 Bryan Bucks house matched 25 BB on the other side.",
+    );
+    expect(body).not.toContain(`<@${HOUSE_ACCOUNT_DISCORD_ID}>`);
+    expect(body).toContain(`• <@${WINNER_DISCORD_ID}> staked 25 BB`);
   });
 });

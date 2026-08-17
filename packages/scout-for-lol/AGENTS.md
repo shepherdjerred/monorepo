@@ -844,6 +844,12 @@ redemption joke. `/bb prizes` is the deliberate exception: it exposes the
 Bucks exchange at 1:10 Bucks:CAD, in person only, from Bryan, who lives in rural
 Canada. There is no monetary component and nothing transfers to real goods.
 
+One-sided markets are matched by a synthetic per-guild house account with a
+bounded opening bankroll. The house is a real `BucksAccount` and `BucksBet`, so
+its seed, stake, payout, and balance are all ledger-audited; house accounts do
+not appear on the user leaderboard. If the reserve cannot cover the exposure,
+the market is voided with `house_unavailable` and user stakes are refunded.
+
 - **The allowlist gates taking Bucks, never returning them.** `betting_enabled`
   is checked in four places: command registration, pool creation, `placeBet`,
   and earning. Settlement and the refund sweeps are deliberately **not** gated —
