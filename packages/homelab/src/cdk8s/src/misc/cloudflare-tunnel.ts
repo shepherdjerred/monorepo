@@ -74,13 +74,18 @@ export function createCloudflareTunnelBinding(
     },
     subjects: [
       {
+        // The operator writes these defaults. Declare them here so ArgoCD's
+        // desired state matches the live TunnelBinding under server-side apply.
+        kind: "Service",
         name: props.serviceName,
         spec: {
           fqdn,
+          http2Origin: false,
+          noTlsVerify: props.noTlsVerify ?? false,
+          proxyAddress: "127.0.0.1",
+          proxyPort: 0,
+          proxyType: "",
           ...(props.protocol === undefined ? {} : { protocol: props.protocol }),
-          ...(props.noTlsVerify === undefined
-            ? {}
-            : { noTlsVerify: props.noTlsVerify }),
         },
       },
     ],
