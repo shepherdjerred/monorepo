@@ -40,9 +40,9 @@
     "description": "Balanced GPT-5.6 tier (~2x cheaper than Sol).",
     "pricing": {
       "modality": "text",
-      "input": 2.5,
+      "input": 2,
       "cachedInput": 0.25,
-      "output": 15
+      "output": 12
     },
     "contextWindow": 1050000,
     "capabilities": {
@@ -112,7 +112,7 @@
       "cachedInput": 0.5,
       "output": 30
     },
-    "contextWindow": 400000,
+    "contextWindow": 1050000,
     "capabilities": {
       "inputModalities": ["text", "image"],
       "outputModalities": ["text"],
@@ -283,8 +283,14 @@
       "cacheWrite": 3.75
     },
     "acceptedUpstreamPricing": {
-      "input": { "upstream": 2, "catalog": 3 },
-      "output": { "upstream": 10, "catalog": 15 },
+      "input": {
+        "upstream": 2,
+        "catalog": 3
+      },
+      "output": {
+        "upstream": 10,
+        "catalog": 15
+      },
       "reason": "Upstreams list the introductory rate through 2026-08-31; the catalog holds the standard $3/$15 that billing reverts to.",
       "expiresAt": "2026-09-01T00:00:00Z"
     },
