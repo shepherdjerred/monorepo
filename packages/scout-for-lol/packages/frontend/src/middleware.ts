@@ -4,7 +4,7 @@ export const onRequest = defineMiddleware((context, next) => {
   const pathname = context.url.pathname;
   const isAppRoute = pathname === "/app" || pathname.startsWith("/app/");
 
-  if (!import.meta.env.DEV || !isAppRoute) {
+  if (!isAppRoute || !import.meta.env.DEV) {
     return next();
   }
 
