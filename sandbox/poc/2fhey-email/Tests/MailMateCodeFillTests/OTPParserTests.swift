@@ -33,6 +33,33 @@ func rejectsFalsePositives() {
     #expect(OTPParser().parse(body: body, metadata: metadata) == nil)
 }
 
+@Test("keeps a long code when an unrelated address appears in the body")
+func keepsLongCodeAlongsideUnrelatedAddress() {
+    let metadata = MessageMetadata(sender: "Acme <security@acme.example>", subject: "Sign in", date: nil, messageID: "message-5")
+    let body = "Your verification code is 7319042. Contact support@acme.example if this was not you."
+
+    #expect(OTPParser().parse(body: body, metadata: metadata)?.code == "7319042")
+}
+
+@Test("rejects a long candidate that is part of an address")
+func rejectsCodeInsideAddress() {
+    let metadata = MessageMetadata(sender: "Acme <security@acme.example>", subject: "Sign in", date: nil, messageID: "message-6")
+    let body = "Your verification code was sent to 7319042@acme.example."
+
+    #expect(OTPParser().parse(body: body, metadata: metadata) == nil)
+}
+
+@Test("accepts real domains and rejects subject fallbacks as service identifiers")
+func validatesDomainServiceIdentifiers() {
+    #expect(ServiceIdentity.isDomain("acme.example"))
+    #expect(ServiceIdentity.isDomain("login.acme.co.uk"))
+    #expect(!ServiceIdentity.isDomain("Your verification code"))
+    #expect(!ServiceIdentity.isDomain("localhost"))
+    #expect(!ServiceIdentity.isDomain("acme.example."))
+    #expect(!ServiceIdentity.isDomain("-acme.example"))
+    #expect(!ServiceIdentity.isDomain("acme.123"))
+}
+
 @Test("requires contextual evidence")
 func requiresContext() {
     let metadata = MessageMetadata(sender: "news@example.test", subject: "Daily update", date: nil, messageID: "message-4")
