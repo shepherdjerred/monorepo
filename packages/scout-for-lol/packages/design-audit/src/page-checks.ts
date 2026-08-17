@@ -33,7 +33,10 @@ export async function waitForStablePage(page: Page): Promise<void> {
       }),
     );
   });
-  await page.waitForLoadState("networkidle");
+  // Do not wait for network idle: routes such as /app/explore keep an SSE
+  // connection open, so network idle may never be reached. The explicit font
+  // and image checks above provide the stability guarantees this audit needs.
+  await page.waitForLoadState("load");
   const brokenImages = await page
     .locator("img")
     .evaluateAll((images) =>
