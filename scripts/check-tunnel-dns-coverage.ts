@@ -173,7 +173,13 @@ async function collectTunnelBindings(): Promise<TunnelBinding[]> {
     cwd: CDK8S_RESOURCES,
     onlyFiles: true,
   })) {
-    if (rel.includes("node_modules") || rel.includes("generated")) continue;
+    if (
+      rel.includes("node_modules") ||
+      rel.includes("generated") ||
+      rel.endsWith(".test.ts")
+    ) {
+      continue;
+    }
     const abs = path.join(CDK8S_RESOURCES, rel);
     const text = await Bun.file(abs).text();
     if (!text.includes("createCloudflareTunnelBinding(")) continue;
