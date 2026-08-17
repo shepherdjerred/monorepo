@@ -175,9 +175,6 @@ export function handleStateChanged(
     if (!parsed.success) {
       return;
     }
-    if (!PERSON_ENTITY_SET.has(parsed.data.entity_id)) {
-      return;
-    }
     const oldState = parsed.data.old_state?.state;
     const newState = parsed.data.new_state?.state;
     if (oldState === undefined || newState === undefined) {
@@ -190,17 +187,24 @@ export function handleStateChanged(
     }
 
     const motionLight = MOTION_LIGHT_ROOMS_BY_ENTITY.get(parsed.data.entity_id);
-    if (motionLight !== undefined && oldState === "off" && newState === "on") {
-      await startWorkflow(
-        client,
-        "motionLight",
-        `motion-light-${motionLight.lightEntityId}`,
-        {
-          args: [motionLight.room],
-          workflowIdConflictPolicy: WorkflowIdConflictPolicy.TERMINATE_EXISTING,
-          workflowExecutionTimeout: "30 minutes",
-        },
-      );
+    if (motionLight !== undefined) {
+      if (oldState === "off" && newState === "on") {
+        await startWorkflow(
+          client,
+          "motionLight",
+          `motion-light-${motionLight.lightEntityId}`,
+          {
+            args: [motionLight.room],
+            workflowIdConflictPolicy:
+              WorkflowIdConflictPolicy.TERMINATE_EXISTING,
+            workflowExecutionTimeout: "24 hours",
+          },
+        );
+      }
+      return;
+    }
+
+    if (!PERSON_ENTITY_SET.has(parsed.data.entity_id)) {
       return;
     }
 

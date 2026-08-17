@@ -21,8 +21,8 @@ describe("motionLight", () => {
   test("turns on the room light and waits for inactivity before turning it off", async () => {
     const calls: string[] = [];
     const motionStates = new Map<string, string[]>([
-      [MOTION_LIGHT_ROOMS.laundry.motionEntityId, ["on", "off"]],
-      [MOTION_LIGHT_ROOMS.storage.motionEntityId, ["off"]],
+      [MOTION_LIGHT_ROOMS.laundry.motionEntityId, ["on", "off", "off"]],
+      [MOTION_LIGHT_ROOMS.storage.motionEntityId, ["off", "off"]],
     ]);
 
     const worker = await Worker.create({
