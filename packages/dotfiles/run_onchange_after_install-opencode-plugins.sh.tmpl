@@ -91,7 +91,22 @@ fi
 # so a nested `apply` call deadlocks until it times out. `execute-template`
 # only renders output and takes no lock, so it can run from inside a script.
 opencode_config_dir="$source_dir/private_dot_config/private_opencode"
-chezmoi execute-template -f "$opencode_config_dir/private_opencode.jsonc.tmpl" >~/.config/opencode/opencode.jsonc
-chezmoi execute-template -f "$opencode_config_dir/private_tui.jsonc.tmpl" >~/.config/opencode/tui.jsonc
-chmod 600 ~/.config/opencode/opencode.jsonc ~/.config/opencode/tui.jsonc
+
+# Render to a sibling temp file and rename into place so a failed or partial
+# render (e.g. a template error) can never truncate the existing config.
+render_config() {
+  local template="$1"
+  local dest="$2"
+  local tmp
+  tmp="$(mktemp "${dest}.XXXXXX")"
+  if ! chezmoi execute-template -f "$template" >"$tmp"; then
+    rm -f "$tmp"
+    return 1
+  fi
+  chmod 600 "$tmp"
+  mv "$tmp" "$dest"
+}
+
+render_config "$opencode_config_dir/private_opencode.jsonc.tmpl" ~/.config/opencode/opencode.jsonc
+render_config "$opencode_config_dir/private_tui.jsonc.tmpl" ~/.config/opencode/tui.jsonc
 {{- end -}}
