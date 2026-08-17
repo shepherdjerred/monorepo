@@ -81,7 +81,7 @@
 
 @media (min-width: 50rem) {
   :root[data-has-sidebar] .scout-footer .scout-container {
-    width: min(calc(100vw - var(--sl-content-inline-start) - 2rem), 75rem);
+    width: min(calc(100dvw - var(--sl-content-inline-start) - 2rem), 75rem);
     margin-inline: calc(
         var(--sl-content-inline-start) + var(--sl-content-pad-x)
       )
@@ -90,7 +90,7 @@
 
   :root[data-has-sidebar][data-has-toc] .scout-footer .scout-container {
     width: min(
-      calc(100vw - (2 * var(--sl-content-inline-start)) - 2rem),
+      calc(100dvw - (2 * var(--sl-content-inline-start)) - 2rem),
       75rem
     );
   }
