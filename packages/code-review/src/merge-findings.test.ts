@@ -173,6 +173,30 @@ describe("parseQodoFindingTitle", () => {
     ).toBe(qodoFindingKey({ ...base, title: "Joinvoice can hang forever" }));
   });
 
+  test("keys a finding with a string that survives a process argument", () => {
+    const base = {
+      authorLogin: "qodo-code-review",
+      isResolved: false,
+      isOutdated: false,
+      line: null,
+      url: null,
+      priority: 1,
+      threadId: null,
+      commentId: null,
+    };
+    // `toolkit pr review list` prints the key and `resolve --finding <key>`
+    // matches it back by equality, so a control character in the key puts the
+    // finding out of reach of the command built to clear it.
+    const key = qodoFindingKey({ ...base, path: "a b/c.ts", title: "Boom" });
+    expect(key).not.toBeNull();
+    expect(key).not.toMatch(/\p{Cc}/u);
+    // Escaping the path keeps the space separator unambiguous, so a path that
+    // contains one cannot collide with a different path plus a longer title.
+    expect(qodoFindingKey({ ...base, path: "a b", title: "c" })).not.toBe(
+      qodoFindingKey({ ...base, path: "a", title: "b c" }),
+    );
+  });
+
   test("reads the title of a finding Qodo has struck as resolved", () => {
     // Verbatim from PR #2095 after its thread was resolved: Qodo wraps the
     // whole title in <s>, so the line no longer opens with the ordinal.

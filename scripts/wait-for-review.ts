@@ -482,6 +482,39 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
         // whole comment history twice on every poll.
         issueComment: stateResult.issueComment,
       });
+
+      // Ask for the review this loop is waiting on, once we have seen that the
+      // provider has not already reviewed this head. Keep this write inside the
+      // same retry boundary as the reads above: a transient failure while
+      // checking or posting the request must not fail the gate immediately.
+      //
+      // Qodo reviews a PR once, when it is opened, and never again on its own.
+      // Polling alone therefore waits out the entire budget on every push after
+      // the first and then fails a PR whose diff is fine. The request is asked
+      // for after the first observation rather than before it, so a head the
+      // provider has already reviewed is never asked again; the marker makes a
+      // repeat impossible even so.
+      if (!requested && stateResult.reviewedCommit !== head) {
+        const posted = await requestReviewAtHead({
+          repo,
+          number,
+          head,
+          token,
+          provider,
+        });
+        requested = true;
+        console.log(
+          JSON.stringify({
+            level: "info",
+            msg: posted ? "review-requested" : "review-request-already-present",
+            component: "review-gate",
+            provider: provider.id,
+            repo,
+            pr: number,
+            head_sha: head,
+          }),
+        );
+      }
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       if (!isRetryablePollError(err)) throw err;
@@ -505,37 +538,6 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
         `PR #${String(number)} head is now ${threadResult.headRefOid}, but this build is for ${head}; evaluating ${head}.`,
       );
       warnedMismatch = true;
-    }
-
-    // Ask for the review this loop is waiting on, once we have seen that the
-    // provider has not already reviewed this head.
-    //
-    // Qodo reviews a PR once, when it is opened, and never again on its own.
-    // Polling alone therefore waits out the entire budget on every push after
-    // the first and then fails a PR whose diff is fine. The request is asked
-    // for after the first observation rather than before it, so a head the
-    // provider has already reviewed is never asked again; the marker makes a
-    // repeat impossible even so.
-    if (!requested && stateResult.reviewedCommit !== head) {
-      requested = true;
-      const posted = await requestReviewAtHead({
-        repo,
-        number,
-        head,
-        token,
-        provider,
-      });
-      console.log(
-        JSON.stringify({
-          level: "info",
-          msg: posted ? "review-requested" : "review-request-already-present",
-          component: "review-gate",
-          provider: provider.id,
-          repo,
-          pr: number,
-          head_sha: head,
-        }),
-      );
     }
 
     const decision = evaluateGate({

@@ -143,13 +143,23 @@ export async function reviewResolveCommand(
     finding,
     evidence,
   });
-  console.log(
-    `${finding.title ?? finding.key}: ` +
-      `${outcome.chippedComment ? "chipped the review comment" : "review comment already marked"}, ` +
-      (outcome.resolvedThread
+  // Report each surface by what actually happened to it. `chippedComment` is
+  // false both when the finding has no comment to chip and when the chip was
+  // already there, and reporting those the same way tells a reader the command
+  // skipped work it never had to do.
+  const comment =
+    finding.commentId === null
+      ? "no review comment"
+      : outcome.chippedComment
+        ? "chipped the review comment"
+        : "review comment already marked";
+  const thread =
+    finding.threadId === null
+      ? "no review thread"
+      : outcome.resolvedThread
         ? "resolved the review thread"
-        : "no review thread"),
-  );
+        : "review thread already resolved";
+  console.log(`${finding.title ?? finding.key}: ${comment}, ${thread}`);
 }
 
 export async function reviewHarvestCommand(

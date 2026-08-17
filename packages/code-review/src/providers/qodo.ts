@@ -323,10 +323,19 @@ export function parseQodoFindingTitle(body: string | null): string | null {
  * The path is part of the key so two findings that happen to share a headline
  * in different files stay distinct. A finding with no title returns `null` and
  * therefore never merges.
+ *
+ * The separator is a space rather than a control character because the key is
+ * printed by `toolkit pr review list` and handed straight back as
+ * `--finding <key>`; a NUL cannot survive a process argument. Percent-escaping
+ * the path keeps that space unambiguous for the rare path that contains one,
+ * so two findings can still never collide into a single key.
  */
 export function qodoFindingKey(thread: ReviewThread): string | null {
   if (thread.title === null || thread.title === "") return null;
-  return `${thread.path ?? ""} ${thread.title.toLowerCase()}`;
+  const path = (thread.path ?? "")
+    .replaceAll("%", "%25")
+    .replaceAll(" ", "%20");
+  return `${path} ${thread.title.toLowerCase()}`;
 }
 
 function parseSeveritySection(

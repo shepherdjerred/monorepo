@@ -164,7 +164,7 @@ export async function postJson(
   if (!response.ok) {
     const text = await response.text();
     throw new Error(
-      `GitHub request to ${url} failed with ${String(response.status)} ${response.statusText}: ${text}`,
+      `GitHub API request failed with ${String(response.status)} ${response.statusText}: ${text}`,
     );
   }
   return response.json();
