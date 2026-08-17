@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { CustomsDashboard } from "@/components/customs-dashboard";
 import { JoinNight } from "@/components/join-night";
 import { StartNight } from "@/components/start-night";
+import { fireAndForget } from "@/lib/fire-and-forget";
 import { useCustomSocket } from "@/hooks/use-custom-socket";
 import { useActivitySession } from "@/lib/activity-session";
 import { useTRPC } from "@/lib/activity-api";
@@ -17,8 +18,10 @@ function ActivityContent() {
 
   useEffect(() => {
     if (active.data === undefined) return;
-    void session.sdk.setReadyPresence(
-      active.data?.recruitmentCounts.ready ?? 0,
+    const ready = active.data?.recruitmentCounts.ready ?? 0;
+    fireAndForget(
+      () => session.sdk.setReadyPresence(ready),
+      "ready-presence update",
     );
   }, [active.data, session.sdk]);
 

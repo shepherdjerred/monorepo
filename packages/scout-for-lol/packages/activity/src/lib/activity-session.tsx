@@ -18,6 +18,7 @@ import {
   type ActivitySdkAdapter,
 } from "@/lib/sdk-adapter";
 import { customActivityRefreshDelay } from "@/lib/activity-refresh";
+import { fireAndForget } from "@/lib/fire-and-forget";
 
 const ActivityEnvSchema = z.object({
   clientId: z
@@ -187,8 +188,10 @@ export function ActivitySessionProvider({ children }: { children: ReactNode }) {
     })();
     return () => {
       lifecycle.abort();
-      if (stopLayout !== undefined) void stopLayout();
-      if (stopParticipants !== undefined) void stopParticipants();
+      if (stopLayout !== undefined)
+        fireAndForget(stopLayout, "layout unsubscribe");
+      if (stopParticipants !== undefined)
+        fireAndForget(stopParticipants, "participants unsubscribe");
     };
   }, []);
 

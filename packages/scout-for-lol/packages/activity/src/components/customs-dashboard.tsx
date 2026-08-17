@@ -20,6 +20,7 @@ import {
   TabsTrigger,
 } from "@scout-for-lol/design-system/components/tabs";
 import { toast } from "@scout-for-lol/design-system/components/toaster";
+import { fireAndForget } from "@/lib/fire-and-forget";
 import {
   Tooltip,
   TooltipContent,
@@ -95,7 +96,15 @@ export function CustomsDashboard({
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  onClick={() => void session.sdk.invite()}
+                  onClick={() => {
+                    fireAndForget(
+                      () => session.sdk.invite(),
+                      "invite dialog",
+                      () => {
+                        toast.error("Couldn't open the Discord invite dialog");
+                      },
+                    );
+                  }}
                 >
                   <UserPlusIcon /> Invite
                 </Button>
