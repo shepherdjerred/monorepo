@@ -93,6 +93,11 @@
       ]
     },
     {
+      "source": ".buildkite/scripts/macos-native-env.sh",
+      "disposition": "retain",
+      "reason": "Sourced native macOS job environment must export host-local tool and cache settings before Bun is invoked"
+    },
+    {
       "source": ".buildkite/scripts/bun-install.sh",
       "disposition": "retain",
       "reason": "Must acquire a Linux flock file descriptor before invoking Bun"
