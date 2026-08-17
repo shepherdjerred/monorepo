@@ -57,11 +57,11 @@ kind: List
 items:
   - kind: Application
     metadata:
-      name: plausible
+      name: retired-app
     spec:
       source:
         repoURL: https://chartmuseum.tailnet-1a49.ts.net
-        chart: plausible
+        chart: retired-app
 ---
 ---
 kind: Application
@@ -72,7 +72,7 @@ spec:
     repoURL: https://example.com/charts
     chart: external
 `),
-    ).toEqual(new Set(["plausible"]));
+    ).toEqual(new Set(["retired-app"]));
   });
 
   test("rejects an Application without metadata.name", () => {

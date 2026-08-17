@@ -181,7 +181,7 @@ test("verify-auto-sync ignores an Application the revision does not declare", as
       [
         liveItem("worker", { enabled: true }),
         // A retirement's leftover, pending prune — suspended, and not ours.
-        liveItem("plausible", { enabled: false }),
+        liveItem("retired-app", { enabled: false }),
       ],
     ],
   });

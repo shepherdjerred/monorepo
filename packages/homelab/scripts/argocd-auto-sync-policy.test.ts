@@ -84,7 +84,7 @@ test("ignores an Application the rendered revision does not declare", () => {
     liveList([
       { name: "worker", syncPolicy: { automated: { enabled: true } } },
       // A prune candidate left behind by a retirement — not this check's business.
-      { name: "plausible", syncPolicy: { automated: { enabled: false } } },
+      { name: "retired-app", syncPolicy: { automated: { enabled: false } } },
     ]),
   );
 

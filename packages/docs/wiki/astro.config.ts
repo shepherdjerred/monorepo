@@ -86,12 +86,8 @@ export default defineConfig({
   // redirect rather than 404.
   redirects: {
     "/birmel": "/explanation/birmel/",
-    // Plane was retired; preserve its old routes by redirecting them to the
-    // current homelab overview.
-    "/explanation/homelab/plane": "/explanation/homelab/overview/",
     "/homelab/alerts": "/explanation/homelab/alerts/",
     "/homelab/buildkite-admission": "/explanation/homelab/buildkite-admission/",
-    "/homelab/plane": "/explanation/homelab/overview/",
     "/homelab/releases": "/explanation/homelab/release-safety/",
     "/homelab/scout-evals-tailnet-boundary":
       "/explanation/homelab/scout-evals-trust-boundary/",
