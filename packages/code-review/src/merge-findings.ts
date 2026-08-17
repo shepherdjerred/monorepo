@@ -10,12 +10,14 @@ import type { ReviewProvider, ReviewThread } from "./types.ts";
  * through different APIs. Counting both made `blocking_count` roughly double
  * the number of real findings and made every finding cost two actions to clear.
  *
- * A finding is resolved once EITHER copy is resolved. Both gestures are
- * deliberate and auditable, and each copy is already scoped to what currently
- * applies: the comment parser reads only the current review section, and
- * outdated threads are excluded downstream. This mirrors how copies *within*
- * the review comment have always been merged (`dedupeRenderedFindings`), so one
- * finding behaves the same however the provider chose to render it.
+ * A finding is resolved once either copy that STILL APPLIES is resolved. Both
+ * gestures are deliberate and auditable. Reading resolution off an outdated
+ * copy instead would let a stale resolved thread mark a live finding resolved,
+ * and the gate blocks on `!isResolved && !isOutdated` — so the merged finding
+ * would be neither, and a finding nobody had dealt with would pass. This
+ * mirrors how copies *within* the review comment have always been merged
+ * (`dedupeRenderedFindings`), so one finding behaves the same however the
+ * provider chose to render it.
  *
  * Priority takes the most severe copy, so a disagreement between surfaces can
  * only ever make the gate stricter. A `null` key never merges — an unrecognised
@@ -28,7 +30,10 @@ export function mergeDuplicateFindings(
   const { findingKey } = provider;
   if (findingKey === null) return [...threads];
   const merged: ReviewThread[] = [];
-  const byKey = new Map<string, ReviewThread>();
+  const byKey = new Map<
+    string,
+    { finding: ReviewThread; copies: ReviewThread[] }
+  >();
   for (const thread of threads) {
     // Only the configured provider posts a finding twice, so only its own
     // threads may merge. Without this, another reviewer's thread that happened
@@ -43,27 +48,39 @@ export function mergeDuplicateFindings(
     }
     const seen = byKey.get(key);
     if (seen === undefined) {
-      const copy = { ...thread };
-      byKey.set(key, copy);
-      merged.push(copy);
+      const finding = { ...thread };
+      byKey.set(key, { finding, copies: [thread] });
+      merged.push(finding);
       continue;
     }
-    if (thread.isResolved) seen.isResolved = true;
-    // An outdated copy does not make the finding outdated: the other surface
-    // still shows it, so it is still on screen for a reviewer to act on.
-    if (!thread.isOutdated) seen.isOutdated = false;
+    seen.copies.push(thread);
+    const { finding } = seen;
     if (
       thread.priority !== null &&
-      (seen.priority === null || thread.priority < seen.priority)
+      (finding.priority === null || thread.priority < finding.priority)
     ) {
-      seen.priority = thread.priority;
+      finding.priority = thread.priority;
     }
     // Keep whichever handles each copy contributes, so a consumer can act on
     // the finding wherever it lives without re-deriving the other surface.
-    seen.threadId ??= thread.threadId;
-    seen.commentId ??= thread.commentId;
-    seen.line ??= thread.line;
-    seen.path ??= thread.path;
+    finding.threadId ??= thread.threadId;
+    finding.commentId ??= thread.commentId;
+    finding.line ??= thread.line;
+    finding.path ??= thread.path;
+  }
+  // Decided over the whole group rather than folded in copy by copy, so the
+  // answer cannot depend on which surface the provider happened to list first.
+  for (const { finding, copies } of byKey.values()) {
+    // An outdated copy does not make the finding outdated: the other surface
+    // still shows it, so it is still on screen for a reviewer to act on.
+    const current = copies.filter((copy) => !copy.isOutdated);
+    finding.isOutdated = current.length === 0;
+    // Only the copies that still apply may resolve it. When every copy is
+    // outdated the finding is outdated anyway, so its resolution gates nothing
+    // and is reported from what is there.
+    finding.isResolved = (current.length === 0 ? copies : current).some(
+      (copy) => copy.isResolved,
+    );
   }
   return merged;
 }

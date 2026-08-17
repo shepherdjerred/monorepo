@@ -78,6 +78,35 @@ describe("mergeDuplicateFindings", () => {
     expect(merged[0]?.isResolved).toBe(true);
   });
 
+  test("does not let an outdated resolved copy resolve a live finding", () => {
+    // The gate blocks on `!isResolved && !isOutdated`, so taking resolution
+    // from the outdated copy while the current copy keeps the finding current
+    // produced a merged finding that was neither — and passed the gate on a
+    // finding nobody had dealt with.
+    for (const order of [
+      [fromComment, { ...fromThread, isOutdated: true, isResolved: true }],
+      [{ ...fromThread, isOutdated: true, isResolved: true }, fromComment],
+    ]) {
+      const merged = mergeDuplicateFindings(order, qodoProvider);
+      expect(merged).toHaveLength(1);
+      expect(merged[0]?.isResolved).toBe(false);
+      expect(merged[0]?.isOutdated).toBe(false);
+    }
+  });
+
+  test("reports an all-outdated finding's resolution from its outdated copies", () => {
+    const merged = mergeDuplicateFindings(
+      [
+        { ...fromComment, isOutdated: true },
+        { ...fromThread, isOutdated: true, isResolved: true },
+      ],
+      qodoProvider,
+    );
+    expect(merged).toHaveLength(1);
+    expect(merged[0]?.isOutdated).toBe(true);
+    expect(merged[0]?.isResolved).toBe(true);
+  });
+
   test("does not mutate its input", () => {
     const input = [{ ...fromComment, isResolved: true }, { ...fromThread }];
     mergeDuplicateFindings(input, qodoProvider);

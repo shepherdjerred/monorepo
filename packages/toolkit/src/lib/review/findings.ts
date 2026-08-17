@@ -110,15 +110,32 @@ export async function reviewStateFor(input: {
   };
 }
 
+/**
+ * A key for a finding the provider cannot identify.
+ *
+ * `resolve` re-lists the findings before matching the key it was given, so a
+ * purely positional key names whatever finding happens to be in that slot the
+ * second time — a reordered list would clear the wrong thread. A GitHub node id
+ * names one exact surface forever, so it is preferred wherever one exists.
+ *
+ * Two unidentifiable findings inside the same review comment do collapse to the
+ * same key, and that is the safe direction: `resolve` refuses an ambiguous key
+ * rather than picking one. The positional last resort is reached only by a
+ * finding with neither handle, which `resolveFinding` cannot act on at all.
+ */
+export function fallbackKey(thread: ReviewThread, index: number): string {
+  if (thread.threadId !== null) return `thread:${thread.threadId}`;
+  if (thread.commentId !== null) return `comment:${String(thread.commentId)}`;
+  return `#${String(index + 1)}`;
+}
+
 function toFinding(
   thread: ReviewThread,
   provider: ReviewProvider,
   index: number,
 ): Finding {
   return {
-    // Fall back to a positional key only when the provider cannot identify the
-    // finding, so an unrecognised one is still addressable rather than absent.
-    key: provider.findingKey?.(thread) ?? `#${String(index + 1)}`,
+    key: provider.findingKey?.(thread) ?? fallbackKey(thread, index),
     title: thread.title,
     priority: thread.priority,
     path: thread.path,
