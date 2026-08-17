@@ -1597,7 +1597,9 @@ steps:
     key: argocd-sync
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
-    depends_on: [images, helm-push, tofu-apply]
+    # tofu-platform is in the chain so a deploy never lands before the platform
+    # credentials and 1Password handoffs from the same merge have been applied.
+    depends_on: [images, helm-push, tofu-apply, tofu-platform]
     concurrency: 1
     concurrency_group: monorepo/homelab-release
     concurrency_method: ordered

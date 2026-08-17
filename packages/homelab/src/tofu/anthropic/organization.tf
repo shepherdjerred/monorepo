@@ -8,7 +8,7 @@ resource "anthropic_api_key" "managed" {
   for_each = var.anthropic_api_keys
 
   name         = each.value.name
-  workspace_id = try(anthropic_workspace.managed[each.value.workspace_key].id, null)
+  workspace_id = each.value.workspace_key == null ? null : anthropic_workspace.managed[each.value.workspace_key].id
   status       = try(each.value.status, null)
 }
 

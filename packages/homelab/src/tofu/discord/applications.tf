@@ -5,8 +5,11 @@ locals {
   }
   discord_bots = {
     for name, settings in var.discord_bots : name => {
-      registry = local.discord_registry_by_name[name]
-      settings = settings
+      # A name absent from the registry would otherwise fail as an invalid index
+      # here, while locals are evaluated — before any precondition can explain
+      # it. Resolve it to null and let the precondition below report it.
+      expected_application_id = try(local.discord_registry_by_name[name].expected_application_id, null)
+      settings                = settings
     }
   }
 }
@@ -29,7 +32,11 @@ resource "discord_application_settings" "managed" {
   lifecycle {
     prevent_destroy = true
     precondition {
-      condition     = data.discord_current_application.managed[each.key].id == each.value.registry.expected_application_id
+      condition     = each.value.expected_application_id != null
+      error_message = "Discord bot ${each.key} has no entry in bot-registry.json; add it there before managing it."
+    }
+    precondition {
+      condition     = data.discord_current_application.managed[each.key].id == each.value.expected_application_id
       error_message = "Discord token for ${each.key} resolved to an unexpected application ID; refusing to manage it."
     }
   }

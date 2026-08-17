@@ -154,8 +154,16 @@ async function configureLocalOpenRouterProvider(
   env["TF_CLI_CONFIG_FILE"] = cliConfigPath;
 }
 
-/** Build the env the tofu subprocess runs with. */
-function buildTofuEnv(stack: string): Record<string, string> {
+/**
+ * Build the env the tofu subprocess runs with. `encryptsState` comes from the
+ * stack declaring a state-encryption.tf, whose passphrase variable has no
+ * default — so a missing passphrase must fail here rather than midway through
+ * `tofu init`.
+ */
+function buildTofuEnv(
+  stack: string,
+  encryptsState: boolean,
+): Record<string, string> {
   const env: Record<string, string> = {
     AWS_ACCESS_KEY_ID: requireEnv("AWS_ACCESS_KEY_ID"),
     AWS_SECRET_ACCESS_KEY: requireEnv("AWS_SECRET_ACCESS_KEY"),
@@ -181,14 +189,24 @@ function buildTofuEnv(stack: string): Record<string, string> {
   // Deliberately not `requireEnv`: check-ci-env unions every requireEnv in a
   // script's import graph, so literal calls here would demand every platform
   // registry of every step that runs this script, including the infra stacks.
-  const missing = (REQUIRED_STACK_ENV[stack] ?? []).filter(
+  const missingRegistries = (REQUIRED_STACK_ENV[stack] ?? []).filter(
     (source) => optionalEnv(source) === null,
   );
-  if (missing.length > 0) {
+  if (missingRegistries.length > 0) {
     throw new Error(
       `Stack "${stack}" drives resources from registries that are missing from the ` +
-        `environment: ${missing.join(", ")}. These default to an empty map, so ` +
+        `environment: ${missingRegistries.join(", ")}. These default to an empty map, so ` +
         `running without them plans a destroy of everything the stack manages.`,
+    );
+  }
+  if (
+    encryptsState &&
+    optionalEnv("TOFU_STATE_ENCRYPTION_PASSPHRASE") === null
+  ) {
+    throw new Error(
+      `Stack "${stack}" encrypts its state and plan, so it requires ` +
+        `TOFU_STATE_ENCRYPTION_PASSPHRASE. Without it OpenTofu fails later, ` +
+        `inside init or plan, with a less actionable error.`,
     );
   }
   return env;
@@ -236,7 +254,10 @@ async function main(): Promise<void> {
     return;
   }
 
-  const env = buildTofuEnv(stack);
+  const env = buildTofuEnv(
+    stack,
+    await Bun.file(`${stackDir}/state-encryption.tf`).exists(),
+  );
 
   if (stack === "openrouter") {
     await configureLocalOpenRouterProvider(env);

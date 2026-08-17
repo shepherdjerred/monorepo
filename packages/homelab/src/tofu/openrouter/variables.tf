@@ -69,6 +69,19 @@ variable "openrouter_byok_keys" {
   type        = map(string)
   default     = {}
   sensitive   = true
+
+  # Metadata and key material arrive as separate JSON env vars, so they can
+  # drift. Every credential indexes this map, and without this check a metadata
+  # entry with no key fails as an opaque invalid-index error.
+  validation {
+    condition = length(setsubtract(
+      toset(keys(var.openrouter_byok_credentials)),
+      toset(keys(var.openrouter_byok_keys)),
+    )) == 0
+    # Static message: the missing names derive from a sensitive map, and
+    # OpenTofu rejects an error message built from sensitive values.
+    error_message = "Every openrouter_byok_credentials entry needs a matching openrouter_byok_keys entry."
+  }
 }
 
 variable "op_connect_url" {
