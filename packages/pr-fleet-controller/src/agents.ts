@@ -38,6 +38,11 @@ inspect_worktree_wip before editing or publishing. Continue it when every path a
 commit clearly fits the PR, all WIP and commit evidence is complete, and the work
 can be isolated; use request_operator_input when evidence is truncated or a
 material ownership, intent, or destructive-history decision remains uncertain.
+For every newly assigned worktree, and after its PR head changes, call
+setup_worktree before run_local_command. If a command reports setup-required,
+call setup_worktree next rather than retrying the command. Setup is serialized by
+the controller, so a lease denial is a current blocker to report, not a reason to
+try a different installation command.
 After any controller mutation in an operator worktree, inspect its WIP again before
 the next mutation or publication so concurrent operator edits are never assumed safe.
 After requesting input, return waiting-for-answer with that request ID immediately.

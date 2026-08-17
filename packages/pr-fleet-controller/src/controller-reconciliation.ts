@@ -22,6 +22,7 @@ export function closeMissingPrStates(
     }
     store.completedRestacks.delete(number);
     store.activeRestacks.delete(number);
+    store.clearControlledWorktreeHead(number);
     store.prs.set(number, {
       ...previous,
       status: "closed",
@@ -78,6 +79,7 @@ export function reconcilePrStates(
     if (headChanged || reconciled.state.classification === "green") {
       store.completedRestacks.delete(item.identity.number);
       store.activeRestacks.delete(item.identity.number);
+      store.clearControlledWorktreeHead(item.identity.number);
     }
     if (
       (headChanged || reconciled.state.classification === "green") &&

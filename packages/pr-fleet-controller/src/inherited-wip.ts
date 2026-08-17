@@ -207,13 +207,7 @@ export function requireMatchingInheritedWipInspection(
     return;
   }
   const inspection = store.inheritedWipInspections.get(pr.identity.number);
-  const activeRestack = store.activeRestacks.get(pr.identity.number);
-  const expectedLocalHead =
-    activeRestack === undefined
-      ? context.localHeadSha
-      : activeRestack.remoteHeadSha === context.remoteHeadSha
-        ? activeRestack.localHeadSha
-        : undefined;
+  const expectedLocalHead = store.expectedWorktreeHead(pr);
   if (
     expectedLocalHead === undefined ||
     live.localHeadSha !== expectedLocalHead
@@ -222,7 +216,11 @@ export function requireMatchingInheritedWipInspection(
       "Operator worktree HEAD changed after assignment; inspect again or ask the operator",
     );
   }
-  if (activeRestack === undefined && !live.hasWip && !context.dirty) {
+  if (
+    !store.activeRestacks.has(pr.identity.number) &&
+    !live.hasWip &&
+    !context.dirty
+  ) {
     return;
   }
   if (

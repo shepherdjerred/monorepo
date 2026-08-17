@@ -6,6 +6,10 @@ import {
   requireCurrentInheritedWipInspection,
 } from "./inherited-wip.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
+import {
+  recordProgressEvent,
+  type ProgressEventKind,
+} from "./progress-events.ts";
 import { runRecordedToolOperation } from "./recorded-tool.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
 import { LeaseKindSchema, PrStateSchema, type PrState } from "./schemas.ts";
@@ -64,6 +68,22 @@ export function createWorkerTools(
   }
   const worktree = pr.worktree;
   const toolContext = { pr, telemetry, parentCorrelation };
+  const recordProgress = (
+    kind: ProgressEventKind,
+    payload: Record<string, unknown>,
+  ): void => {
+    recordProgressEvent({
+      telemetry,
+      kind,
+      payload,
+      correlation: {
+        ...parentCorrelation(),
+        prNumber: pr.identity.number,
+        headSha: pr.identity.headSha,
+        generation: pr.agentGeneration,
+      },
+    });
+  };
   const assertNotWaitingForAnswer = (): void => {
     if (store.operatorRequests.has(pr.identity.number)) {
       throw new Error(
@@ -93,6 +113,7 @@ export function createWorkerTools(
       parentCorrelation,
       record: (tool, input, run) =>
         runRecordedTool(tool, input, toolContext, run),
+      recordProgress,
       assertNotWaitingForAnswer,
     }),
     read_file: defineTool({
@@ -221,12 +242,27 @@ export function createWorkerTools(
     request_lease: defineTool({
       description: "Request setup, heavy-command, or stack-write authority.",
       inputSchema: z.object({ kind: LeaseKindSchema }),
-      outputSchema: z.object({ granted: z.boolean() }),
+      outputSchema: z.object({
+        granted: z.boolean(),
+        reason: z
+          .enum(["setup-held", "heavy-capacity", "stack-write-held"])
+          .nullable(),
+      }),
       execute: (input) =>
         runRecordedTool("request_lease", input, toolContext, () => {
           assertNotWaitingForAnswer();
+          const decision = store.requestLeaseDecision(pr, input.kind);
+          if (decision.granted) {
+            recordProgress("lease.granted", { kind: input.kind });
+          } else {
+            recordProgress("lease.denied", {
+              kind: input.kind,
+              reason: decision.reason,
+            });
+          }
           return Promise.resolve({
-            granted: store.requestLease(pr, input.kind),
+            granted: decision.granted,
+            reason: decision.granted ? null : decision.reason,
           });
         }),
     }),
@@ -239,6 +275,7 @@ export function createWorkerTools(
       assertNotWaitingForAnswer,
       record: (tool, input, run) =>
         runRecordedTool(tool, input, toolContext, run),
+      recordProgress,
     }),
     ...createWorkerRestackTools({
       store,
@@ -249,6 +286,7 @@ export function createWorkerTools(
       assertNotWaitingForAnswer,
       record: (tool, input, run) =>
         runRecordedTool(tool, input, toolContext, run),
+      recordProgress,
     }),
     run_local_command: defineTool({
       description:
@@ -267,13 +305,23 @@ export function createWorkerTools(
         runRecordedTool("run_local_command", input, toolContext, async () => {
           assertNotWaitingForAnswer();
           if (store.setupWorktrees.get(worktree) !== pr.identity.headSha) {
+            recordProgress("setup.required", {
+              reason: "current-head-unprepared",
+            });
             throw new Error(
-              "Worktree setup must complete for the current head before validation",
+              "Worktree setup must complete for the current head before validation; call setup_worktree before retrying this command",
             );
           }
-          if (!store.requestLease(pr, "heavy")) {
+          const heavyLease = store.requestLeaseDecision(pr, "heavy");
+          if (!heavyLease.granted) {
+            recordProgress("lease.denied", {
+              kind: "heavy",
+              reason: heavyLease.reason,
+            });
             throw new Error("Heavy lease is not available");
           }
+          recordProgress("lease.granted", { kind: "heavy" });
+          const startedAt = performance.now();
           try {
             const result = await environment.runLocalCommand({
               executable: "/bin/zsh",
@@ -290,6 +338,10 @@ export function createWorkerTools(
             };
           } finally {
             store.releaseLease(pr.identity.number, "heavy", pr.stackId);
+            recordProgress("lease.released", {
+              kind: "heavy",
+              durationMs: Math.round(performance.now() - startedAt),
+            });
           }
         }),
     }),
@@ -304,9 +356,16 @@ export function createWorkerTools(
       execute: (input) =>
         runRecordedTool("publish_fix", input, toolContext, async () => {
           assertNotWaitingForAnswer();
-          if (!store.requestLease(pr, "stack-write")) {
+          const stackWriteLease = store.requestLeaseDecision(pr, "stack-write");
+          if (!stackWriteLease.granted) {
+            recordProgress("lease.denied", {
+              kind: "stack-write",
+              reason: stackWriteLease.reason,
+            });
             throw new Error("Stack write lease is not available");
           }
+          recordProgress("lease.granted", { kind: "stack-write" });
+          const startedAt = performance.now();
           try {
             await requireCurrentInheritedWipInspection({
               store,
@@ -315,14 +374,28 @@ export function createWorkerTools(
               worktree,
               signal,
             });
-            return await environment.publishFix(
+            const published = await environment.publishFix(
               pr,
               input.paths,
               input.message,
               signal,
             );
+            store.recordControlledWorktreeHead(
+              pr,
+              published.headSha,
+              "publication",
+            );
+            recordProgress("worktree.head.transition", {
+              cause: "publication",
+              localHeadSha: published.headSha,
+            });
+            return published;
           } finally {
             store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
+            recordProgress("lease.released", {
+              kind: "stack-write",
+              durationMs: Math.round(performance.now() - startedAt),
+            });
           }
         }),
     }),

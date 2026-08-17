@@ -36,6 +36,26 @@ describe("controller leases", () => {
     expect(store.requestLease(state(2), "heavy")).toBe(false);
   });
 
+  test("reports a bounded reason when a lease is unavailable", () => {
+    const store = new FleetStore(1);
+    expect(store.requestLeaseDecision(state(1), "setup")).toEqual({
+      granted: true,
+    });
+    expect(store.requestLeaseDecision(state(2), "setup")).toEqual({
+      granted: false,
+      reason: "setup-held",
+    });
+  });
+
+  test("returns the tracked duration when releasing an acquired lease", () => {
+    const store = new FleetStore(1);
+    const pr = state(1);
+    expect(store.requestLease(pr, "heavy")).toBe(true);
+    expect(store.releaseLease(pr.identity.number, "heavy", pr.stackId)).toEqual(
+      expect.any(Number),
+    );
+  });
+
   test("reserves a stack while one PR waits for operator input", () => {
     const store = new FleetStore(2);
     const waiting = state(1, "shared-stack");

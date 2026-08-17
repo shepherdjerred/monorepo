@@ -7,6 +7,7 @@
   "include": [
     "*.ts",
     "lib/**/*.ts",
+    "types/**/*.d.ts",
     "observability/**/*.ts",
     "../.buildkite/scripts/*.ts"
   ],

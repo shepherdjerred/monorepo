@@ -50,6 +50,12 @@ tool calls, command output, evidence, state changes, and the model's reasoning
 spans. Its only control is answering an active operator question inside that
 PR's detail view. It cannot pause, prioritize, steer, merge, or publish.
 
+The header projects causal run progress from the recorded event stream:
+completed setups, confirmed publications, lease contention, and repeated blocker
+classes. Each PR shows its latest meaningful transition plus its current
+normalized blocker and repeat count. This stays in the local run bundle rather
+than adding an external collector, so live and historical dashboards agree.
+
 - `--no-ui` does not spawn the dashboard.
 - `--ui-port <port>` binds a fixed port (default: an ephemeral loopback port).
 - `--no-open` starts the dashboard without opening a browser.
@@ -123,6 +129,14 @@ Each worker receives:
 - explicit-path staging, hooks, commit, git-spice publication, and one
   SHA-marked hosted review request.
 
+Workers set up a newly assigned or changed-head worktree before validation
+commands. Lease denials and setup requirements have bounded reasons instead of
+only raw tool errors. A controller commit or restack may move an operator
+worktree's local HEAD only when that exact SHA is recorded against the current
+remote PR head; any other transition remains operator-owned and requires fresh
+inspection. Commit subjects are checked against the same package/root scope
+rules as the commit-msg hook before paths are staged.
+
 Shell commands run through the operator's normal shell environment with network,
 filesystem, credentials, and installed tools available. Output remains bounded
 when returned to the model and persisted to the run bundle. Publication,
@@ -157,7 +171,8 @@ Collection is mandatory and local-only. Each run writes:
   state and content fingerprint (independent of the managed checkout), model,
   repository, optional author scope, and capture contract;
 - `events.jsonl` with sequenced, hash-chained controller, worker, command,
-  evidence, model-turn, and shutdown events;
+  evidence, model-turn, shutdown, lease, setup, publication, and worktree-head
+  transition events;
 - `summary.json` with final status, duration, event counts, last hash, and final
   fleet snapshot;
 - `spans.jsonl` with completed, secret-redacted OpenTelemetry spans, including

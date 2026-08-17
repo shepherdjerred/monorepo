@@ -209,7 +209,67 @@ describe("fold", () => {
     expect(view.prs.get(1389)?.timeline).toHaveLength(1);
     expect(view.fleetTimeline).toHaveLength(1);
   });
+});
 
+describe("causal progress", () => {
+  test("projects causal setup, publication, and repeated blocker progress", () => {
+    const view = createRunView();
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 1,
+        timestamp: "2026-08-09T20:00:00.000Z",
+        kind: "setup.required",
+        correlation: { prNumber: 42 },
+        payload: { reason: "current-head-unprepared" },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 2,
+        timestamp: "2026-08-09T20:00:01.000Z",
+        kind: "tool.failed",
+        correlation: { prNumber: 42 },
+        payload: {
+          tool: "run_local_command",
+          error: "Worktree setup must complete",
+          failureClass: "setup-required",
+        },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 3,
+        timestamp: "2026-08-09T20:00:02.000Z",
+        kind: "setup.completed",
+        correlation: { prNumber: 42 },
+        payload: { headSha: "a".repeat(40), commandCount: 4 },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 4,
+        timestamp: "2026-08-09T20:00:03.000Z",
+        kind: "publication.stage",
+        correlation: { prNumber: 42 },
+        payload: { intent: "fix", stage: "review", state: "completed" },
+      }),
+    );
+
+    expect(view.progress.setupsCompleted).toBe(1);
+    expect(view.progress.publicationsConfirmed).toBe(1);
+    expect(view.progress.prs.get(42)?.latest?.label).toBe(
+      "fix review completed",
+    );
+    expect(view.progress.prs.get(42)?.blocker).toBeNull();
+    expect(view.progress.prs.get(42)?.failures.get("setup-required")).toBe(2);
+  });
+});
+
+describe("fold", () => {
   test("folds waiting state and operator-question events into the affected PR", () => {
     const view = createRunView();
     applyEventLine(

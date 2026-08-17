@@ -73,6 +73,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       provider: options.provider,
       run,
       mustRun,
+      telemetry: options.telemetry,
     });
     this.#worktreeManager = new WorktreeManager({
       checkout: options.checkout,
@@ -490,7 +491,6 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     };
     return evidence;
   }
-
   findWorktree(
     fleetBranches: string[],
     candidateBranch: string,

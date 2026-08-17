@@ -9,6 +9,7 @@ import {
   WorktreeHeadChangedError,
 } from "./inherited-wip.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
+import type { ProgressEventKind } from "./progress-events.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
 import {
   OperatorInputRequestDraftSchema,
@@ -24,6 +25,11 @@ type RecordTool = <T>(
   input: unknown,
   run: () => Promise<T>,
 ) => Promise<T>;
+
+type RecordProgress = (
+  kind: ProgressEventKind,
+  payload: Record<string, unknown>,
+) => void;
 
 const MAX_INHERITED_EVIDENCE_BYTES = 100_000;
 
@@ -132,6 +138,7 @@ export function createWorkerWipTools(options: {
   telemetry: FleetTelemetry | undefined;
   parentCorrelation: () => RunEventCorrelation;
   record: RecordTool;
+  recordProgress: RecordProgress;
   assertNotWaitingForAnswer: () => void;
 }) {
   const {
@@ -143,6 +150,7 @@ export function createWorkerWipTools(options: {
     telemetry,
     parentCorrelation,
     record,
+    recordProgress,
     assertNotWaitingForAnswer,
   } = options;
   return {
@@ -218,18 +226,23 @@ export function createWorkerWipTools(options: {
           let localCommits = "No ahead-of-remote inherited commits.";
           let localCommitEvidenceComplete = true;
           const context = pr.worktreeContext;
-          const restackInProgress = store.activeRestacks.has(
-            pr.identity.number,
-          );
+          const expectedLocalHead = store.expectedWorktreeHead(pr);
           if (
-            !restackInProgress &&
             context !== null &&
-            wip.localHeadSha !== context.localHeadSha
+            (expectedLocalHead === undefined ||
+              wip.localHeadSha !== expectedLocalHead)
           ) {
+            recordProgress("worktree.head.transition", {
+              cause: "unexpected",
+              localHeadSha: wip.localHeadSha,
+            });
             throw new WorktreeHeadChangedError(
               "Local HEAD changed after inherited work was captured; inspect again",
             );
           }
+          const restackInProgress = store.activeRestacks.has(
+            pr.identity.number,
+          );
           if (restackInProgress) {
             localCommits =
               "Restack in progress; inherited commit publication is disabled until it completes.";

@@ -95,6 +95,7 @@ function operations(fake: ReturnType<typeof fakeGit>): GitOperations {
     provider: codexProvider,
     run: fake.run,
     mustRun: fake.mustRun,
+    validateCommitMessage: () => Promise.resolve(),
   });
 }
 
@@ -148,6 +149,23 @@ describe("stack ownership routing", () => {
     );
     expect(fake.mustCalls).toEqual([]);
     expect(fake.runCalls).toEqual([]);
+  });
+
+  test("rejects an invalid commit scope before staging paths", async () => {
+    const fake = fakeGit(0);
+    const git = new GitOperations({
+      repo: "shepherdjerred/monorepo",
+      provider: codexProvider,
+      run: fake.run,
+      mustRun: fake.mustRun,
+      validateCommitMessage: () =>
+        Promise.reject(new Error('Invalid commit scope: "design-audit"')),
+    });
+
+    await expect(
+      git.publishFix(makePr(), ["file.ts"], "fix(design-audit): repair"),
+    ).rejects.toThrow(/Invalid commit scope/);
+    expect(fake.mustCalls).toEqual([]);
   });
 
   test("allows the dedicated inherited-commit path for an ahead worktree", async () => {
@@ -269,6 +287,7 @@ describe("validatePaths rejects directory pathspecs", () => {
         }
         return fake.mustRun(executable, args);
       },
+      validateCommitMessage: () => Promise.resolve(),
     });
 
     await expect(
