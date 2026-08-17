@@ -7,11 +7,21 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "buffer_font_family": "Berkeley Mono",
   "project_panel": {
     "dock": "left"
   },
+  "session": {
+    "trust_all_worktrees": true
+  },
   "vim_mode": true,
   "agent_servers": {
+    "github-copilot-cli": {
+      "type": "registry"
+    },
+    "cursor": {
+      "type": "registry"
+    },
     "codex-acp": {
       "type": "registry"
     },

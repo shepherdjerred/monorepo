@@ -86,7 +86,27 @@ fi
 
 # The plugin entries are conditional on these checkouts existing. Re-render
 # them now that the bootstrap has created and built the repositories.
-chezmoi --source "$source_dir" apply --force \
-  ~/.config/opencode/opencode.jsonc \
-  ~/.config/opencode/tui.jsonc
+# `chezmoi apply` (even with --force) acquires the persistent-state lock, and
+# this script itself runs inside an already-locked `chezmoi apply` transaction,
+# so a nested `apply` call deadlocks until it times out. `execute-template`
+# only renders output and takes no lock, so it can run from inside a script.
+opencode_config_dir="$source_dir/private_dot_config/private_opencode"
+
+# Render to a sibling temp file and rename into place so a failed or partial
+# render (e.g. a template error) can never truncate the existing config.
+render_config() {
+  local template="$1"
+  local dest="$2"
+  local tmp
+  tmp="$(mktemp "${dest}.XXXXXX")"
+  if ! chezmoi execute-template -f "$template" >"$tmp"; then
+    rm -f "$tmp"
+    return 1
+  fi
+  chmod 600 "$tmp"
+  mv "$tmp" "$dest"
+}
+
+render_config "$opencode_config_dir/private_opencode.jsonc.tmpl" ~/.config/opencode/opencode.jsonc
+render_config "$opencode_config_dir/private_tui.jsonc.tmpl" ~/.config/opencode/tui.jsonc
 {{- end -}}

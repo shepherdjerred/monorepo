@@ -26,6 +26,9 @@ Library/Application Support/Claude/claude_desktop_config.json
 node_modules
 coverage
 .turbo
+package.json
+tsconfig.json
+eslint.config.ts
 
 # Claude Code rewrites model/effortLevel/fast into this file on every /model or
 # /effort, so tracking it caused perpetual drift and re-add snapshotting a

@@ -1,3 +1,5 @@
+Include ~/.ssh/conductor_config
+
 Include ~/.orbstack/ssh/config
 
 Host *
