@@ -379,7 +379,12 @@ export const customsRouter = router({
         input.nightId,
       );
       const snapshot = await getCustomNight(prisma, input.nightId);
-      if (snapshot === null) throw new Error("Custom night not found");
+      if (snapshot === null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Custom night not found",
+        });
+      }
       assertCustomHostControl(
         snapshot,
         actor.discordId,
@@ -414,7 +419,12 @@ export const customsRouter = router({
         input.nightId,
       );
       const snapshot = await getCustomNight(prisma, input.nightId);
-      if (snapshot === null) throw new Error("Custom night not found");
+      if (snapshot === null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Custom night not found",
+        });
+      }
       assertCustomHostControl(
         snapshot,
         actor.discordId,
@@ -462,7 +472,12 @@ export const customsRouter = router({
     .input(CustomRevisionInputSchema)
     .mutation(async ({ ctx, input }) => {
       const snapshot = await getCustomNight(prisma, input.nightId);
-      if (snapshot === null) throw new Error("Custom night not found");
+      if (snapshot === null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Custom night not found",
+        });
+      }
       const actor = await customActorForNight(
         ctx.activitySession,
         input.nightId,
