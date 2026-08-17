@@ -188,17 +188,16 @@ function origins(options: DevWebOptions): {
 
 if (import.meta.main) {
   const root = import.meta.dir.replace(/\/scripts$/, "");
-  const missing = unresolvedSecrets(Bun.env);
-  if (missing.length > 0) {
-    throw new Error(
-      `${missing.join(", ")} not resolved. Run with op run --env-file=${root}/dev-web.env.tpl -- bun ${import.meta.path}`,
-    );
-  }
-
   const parsed = parseDevWebArgs(Bun.argv.slice(2));
   if (parsed.kind === "help") {
     printHelp();
   } else {
+    const missing = unresolvedSecrets(Bun.env);
+    if (missing.length > 0) {
+      throw new Error(
+        `${missing.join(", ")} not resolved. Run with op run --env-file=${root}/dev-web.env.tpl -- bun ${import.meta.path}`,
+      );
+    }
     const { options } = parsed;
     const { backendOrigin, webOrigin } = origins(options);
     const backendCwd = path.join(root, "packages", "backend");
