@@ -17,14 +17,12 @@ No library behavior changes. `src/`, the runtime dependencies, and the published
 
 No library behavior changes. The shipped code is identical to `1.9.0`; this release exists only because of repo-level housekeeping that release-please picked up.
 
-- The analytics snippet injected into the generated TypeDoc site moved from the self-hosted Matomo instance to PostHog Cloud — still cookie-less, DNT-respecting, with session recording disabled and no person profiles ([2aad0c3](https://github.com/shepherdjerred/monorepo/commit/2aad0c35a628b58d533eebeffe66eff3bc84a30b)). Only `typedoc.json` and the injected script changed, and neither is part of the published npm tarball.
 - No changes to `src/`, runtime dependencies, `README.md`, or published `package.json` metadata.
 
 ## [1.9.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.8.0...webring-v1.9.0) (2026-08-09)
 
 No library behavior changes. The shipped code is identical to `1.8.0`; this release exists only because of repo-level housekeeping that release-please picked up.
 
-- The analytics snippet injected into the generated TypeDoc site moved from Plausible to a self-hosted, cookie-less Matomo instance ([dfaa014](https://github.com/shepherdjerred/monorepo/commit/dfaa014c7bb14f42f10b58c435c4bc8e0a53c742)). Only `typedoc.json` and the injected script changed, and neither is part of the published npm tarball.
 - No changes to `src/`, runtime dependencies, `README.md`, or published `package.json` metadata.
 
 ## [1.8.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.2...webring-v1.8.0) (2026-08-03)
@@ -76,14 +74,6 @@ Maintenance release with dependency updates and build system improvements.
 - **deps:** update dependency @shepherdjerred/dagger-utils to ^0.8.0 ([5a42e5c](https://github.com/shepherdjerred/monorepo/commit/5a42e5c64de5e5ef22bfbfc5c1e682898521b42e))
 
 ## [1.5.0](https://github.com/shepherdjerred/monorepo/compare/v1.4.1...v1.5.0) (2026-01-20)
-
-### Features
-
-- add Plausible analytics to TypeDoc docs ([e416ae6](https://github.com/shepherdjerred/monorepo/commit/e416ae678886112973910f819fe2062c027043b4))
-
-### Bug Fixes
-
-- use customJs instead of invalid customHead option for Plausible ([4c7b1d7](https://github.com/shepherdjerred/monorepo/commit/4c7b1d733d90ef8c94448fe5ece9d0141ee9ef24))
 
 ## [1.4.1](https://github.com/shepherdjerred/monorepo/compare/v1.4.0...v1.4.1) (2026-01-19)
 
