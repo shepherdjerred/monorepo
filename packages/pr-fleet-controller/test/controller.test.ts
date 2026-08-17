@@ -846,6 +846,7 @@ test("worker completion capture failures escape settlement and stop the controll
     validation: [],
     lastAction: "observed CI",
     blockers: [],
+    operatorRequestId: null,
     worktree: "/tmp/pr-fleet-fake",
     worktreeDirty: false,
     setupLeaseReleased: true,

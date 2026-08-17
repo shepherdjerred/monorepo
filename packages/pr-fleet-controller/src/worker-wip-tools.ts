@@ -6,6 +6,7 @@ import {
   collectInheritedWipEvidence,
   invalidateInheritedWipInspection,
   requireCurrentInheritedWipInspection,
+  WorktreeHeadChangedError,
 } from "./inherited-wip.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
@@ -225,7 +226,7 @@ export function createWorkerWipTools(options: {
             context !== null &&
             wip.localHeadSha !== context.localHeadSha
           ) {
-            throw new Error(
+            throw new WorktreeHeadChangedError(
               "Local HEAD changed after inherited work was captured; inspect again",
             );
           }

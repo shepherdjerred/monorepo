@@ -1,6 +1,5 @@
 import { tool as defineTool } from "ai";
 import { z } from "zod";
-import { validateWorkerCommand } from "./command-policy.ts";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import {
   invalidateInheritedWipInspection,
@@ -9,7 +8,6 @@ import {
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
 import { runRecordedToolOperation } from "./recorded-tool.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
-import { sandboxProfile, sanitizedEnvironment } from "./sandbox.ts";
 import { LeaseKindSchema, PrStateSchema, type PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 import { containedPath, createFileEditTools } from "./worker-file-edits.ts";
@@ -54,19 +52,11 @@ export function createWorkerTools(
   environment: FleetEnvironment,
   options: {
     signal: AbortSignal;
-    // Additional env-var names to scrub from validation/setup subprocesses
-    // beyond the credential heuristic.
-    extraSecretNames?: readonly string[];
     telemetry?: FleetTelemetry;
     parentCorrelation?: () => RunEventCorrelation;
   },
 ) {
-  const {
-    signal,
-    extraSecretNames = [],
-    telemetry,
-    parentCorrelation = () => ({}),
-  } = options;
+  const { signal, telemetry, parentCorrelation = () => ({}) } = options;
   if (pr.worktree === null) {
     throw new Error(
       `PR #${String(pr.identity.number)} has no assigned worktree`,
@@ -246,7 +236,6 @@ export function createWorkerTools(
       environment,
       worktree,
       signal,
-      extraSecretNames,
       assertNotWaitingForAnswer,
       record: (tool, input, run) =>
         runRecordedTool(tool, input, toolContext, run),
@@ -263,10 +252,9 @@ export function createWorkerTools(
     }),
     run_local_command: defineTool({
       description:
-        "Run an approved local build, test, lint, typecheck, generator, or search command.",
+        "Run any shell command in the assigned worktree with the operator's normal environment. Use this for builds, tests, diagnostics, toolchain commands, and PR repair work. The command is recorded with bounded output and can be cancelled with the worker.",
       inputSchema: z.object({
-        executable: z.string().min(1),
-        args: z.array(z.string()).max(100),
+        command: z.string().min(1),
         timeoutMs: z.number().int().min(1000).max(900_000).default(120_000),
       }),
       outputSchema: z.object({
@@ -278,7 +266,6 @@ export function createWorkerTools(
       execute: (input) =>
         runRecordedTool("run_local_command", input, toolContext, async () => {
           assertNotWaitingForAnswer();
-          validateWorkerCommand(input.executable, input.args);
           if (store.setupWorktrees.get(worktree) !== pr.identity.headSha) {
             throw new Error(
               "Worktree setup must complete for the current head before validation",
@@ -289,17 +276,11 @@ export function createWorkerTools(
           }
           try {
             const result = await environment.runLocalCommand({
-              executable: "sandbox-exec",
-              args: [
-                "-p",
-                sandboxProfile(worktree),
-                input.executable,
-                ...input.args,
-              ],
+              executable: "/bin/zsh",
+              args: ["-lc", input.command],
               cwd: worktree,
               timeoutMs: input.timeoutMs,
               signal,
-              env: sanitizedEnvironment(extraSecretNames),
             });
             return {
               exitCode: result.exitCode,

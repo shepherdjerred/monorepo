@@ -1,6 +1,3 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import { tool as defineTool } from "ai";
 import { z } from "zod";
 import {
@@ -8,109 +5,18 @@ import {
   requireCurrentInheritedWipInspection,
 } from "./inherited-wip.ts";
 import type { FleetEnvironment } from "./ports.ts";
-import {
-  setupEnvironment,
-  setupSandboxProfile,
-  type SetupDirectories,
-} from "./sandbox.ts";
 import type { PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 
 export const SETUP_COMMANDS = [
+  { executable: "mise", args: ["trust", "--yes", ".mise.toml"] },
   { executable: "mise", args: ["install", "--dry-run-code"] },
   { executable: "bun", args: ["install", "--frozen-lockfile"] },
-  // Turbo's default strict environment drops XDG_CACHE_HOME before invoking
-  // package generators. The parent environment is already credential-scrubbed,
-  // so loose propagation is required to preserve the invocation-scoped Prisma
-  // engine cache (and remains bounded to that sanitized environment).
   {
     executable: "bunx",
     args: ["turbo", "run", "generate", "--env-mode=loose"],
   },
 ] satisfies { executable: string; args: string[] }[];
-
-type RemoveScratchDirectory = (
-  directory: string,
-  options: { recursive: true; force: true },
-) => Promise<void>;
-
-export async function releaseSetupResources(options: {
-  store: FleetStore;
-  pr: PrState;
-  miseScratchDirectory: string | undefined;
-  setupFailure: { error: unknown } | null;
-  removeScratchDirectory?: RemoveScratchDirectory;
-}): Promise<void> {
-  const {
-    store,
-    pr,
-    miseScratchDirectory,
-    setupFailure,
-    removeScratchDirectory = rm,
-  } = options;
-  let cleanupFailed = false;
-  let cleanupError: unknown;
-  try {
-    if (miseScratchDirectory !== undefined) {
-      await removeScratchDirectory(miseScratchDirectory, {
-        recursive: true,
-        force: true,
-      });
-    }
-  } catch (error) {
-    cleanupFailed = true;
-    cleanupError = error;
-  } finally {
-    store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
-    store.releaseLease(pr.identity.number, "heavy", pr.stackId);
-    store.releaseLease(pr.identity.number, "setup", pr.stackId);
-  }
-  if (cleanupFailed && setupFailure !== null) {
-    throw new AggregateError(
-      [setupFailure.error, cleanupError],
-      "Worktree setup and scratch-directory cleanup both failed",
-    );
-  }
-  if (cleanupFailed) {
-    throw cleanupError;
-  }
-}
-
-async function resolveSetupDirectories(
-  worktree: string,
-  environment: FleetEnvironment,
-  signal: AbortSignal,
-): Promise<SetupDirectories> {
-  const result = await environment.runLocalCommand({
-    executable: "git",
-    args: [
-      "rev-parse",
-      "--path-format=absolute",
-      "--git-common-dir",
-      "--git-dir",
-    ],
-    cwd: worktree,
-    timeoutMs: 30_000,
-    signal,
-  });
-  if (result.exitCode !== 0) {
-    throw new Error(
-      `Failed to resolve git directories for setup: ${result.stderr.trim()}`,
-    );
-  }
-  const [gitCommonDir, gitDir] = result.stdout.trim().split("\n");
-  if (
-    gitCommonDir === undefined ||
-    gitDir === undefined ||
-    gitCommonDir.length === 0 ||
-    gitDir.length === 0
-  ) {
-    throw new Error(
-      `Unexpected git directory output during setup: ${result.stdout.trim()}`,
-    );
-  }
-  return { gitCommonDir, gitDir, checkoutRoot: path.dirname(gitCommonDir) };
-}
 
 export function createSetupWorktreeTool(options: {
   pr: PrState;
@@ -118,7 +24,6 @@ export function createSetupWorktreeTool(options: {
   environment: FleetEnvironment;
   worktree: string;
   signal: AbortSignal;
-  extraSecretNames: readonly string[];
   assertNotWaitingForAnswer: () => void;
   record: <T>(
     tool: string,
@@ -132,13 +37,12 @@ export function createSetupWorktreeTool(options: {
     environment,
     worktree,
     signal,
-    extraSecretNames,
     assertNotWaitingForAnswer,
     record,
   } = options;
   return defineTool({
     description:
-      "Check that the pinned toolchain is already installed, then run controller-approved dependency and generation setup serially.",
+      "Trust the assigned repository Mise configuration, then run dependency installation and code generation serially in the assigned worktree.",
     inputSchema: z.object({}),
     outputSchema: z.object({ commands: z.array(z.string()) }),
     execute: (input) =>
@@ -161,8 +65,6 @@ export function createSetupWorktreeTool(options: {
           throw new Error("Heavy lease is not available for generation");
         }
         const completed: string[] = [];
-        let miseScratchDirectory: string | undefined;
-        let setupFailure: { error: unknown } | null = null;
         try {
           await requireCurrentInheritedWipInspection({
             store,
@@ -172,33 +74,20 @@ export function createSetupWorktreeTool(options: {
             signal,
           });
           invalidateInheritedWipInspection({ store, pr });
-          const directories = await resolveSetupDirectories(
-            worktree,
-            environment,
-            signal,
-          );
-          const profile = setupSandboxProfile(worktree, directories);
-          miseScratchDirectory = await mkdtemp(
-            path.join(tmpdir(), "pr-fleet-mise-"),
-          );
-          const commandEnvironment = setupEnvironment(
-            extraSecretNames,
-            path.join(worktree, ".mise.toml"),
-            miseScratchDirectory,
-          );
           for (const command of SETUP_COMMANDS) {
             const result = await environment.runLocalCommand({
-              executable: "sandbox-exec",
-              args: ["-p", profile, command.executable, ...command.args],
+              executable: command.executable,
+              args: command.args,
               cwd: worktree,
               timeoutMs: 900_000,
               signal,
-              env: commandEnvironment,
             });
             if (result.exitCode !== 0) {
-              throw new Error(
-                `${command.executable} failed: ${result.stderr.trim()}`,
-              );
+              const detail =
+                result.stderr.trim() ||
+                result.stdout.trim() ||
+                "no diagnostic output";
+              throw new Error(`${command.executable} failed: ${detail}`);
             }
             completed.push([command.executable, ...command.args].join(" "));
           }
@@ -212,16 +101,10 @@ export function createSetupWorktreeTool(options: {
             }
           }
           return { commands: completed };
-        } catch (error) {
-          setupFailure = { error };
-          throw error;
         } finally {
-          await releaseSetupResources({
-            store,
-            pr,
-            miseScratchDirectory,
-            setupFailure,
-          });
+          store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
+          store.releaseLease(pr.identity.number, "heavy", pr.stackId);
+          store.releaseLease(pr.identity.number, "setup", pr.stackId);
         }
       }),
   });

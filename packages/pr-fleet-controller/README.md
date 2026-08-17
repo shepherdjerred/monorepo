@@ -116,26 +116,22 @@ Each worker receives:
   repairing a formatting-hook failure without exposing a general command;
 - serial worktree setup;
 - setup, heavy-command, and stack-write lease requests;
-- an allowlisted validation command surface;
+- unrestricted shell access in the assigned worktree with the operator's normal
+  environment;
 - git-spice restack start/continue/publication for stacks, and bounded native
   rebase start/continue plus force-with-lease publication for ordinary branches;
 - explicit-path staging, hooks, commit, git-spice publication, and one
   SHA-marked hosted review request.
 
-Validation commands run through `sandbox-exec` with network denied, writes
-restricted to the assigned worktree and macOS temporary directories, reads of
-well-known host credential stores (`~/.aws`, `~/.ssh`, `~/.config/gh`, …)
-denied, and a credential-scrubbed environment so tool output cannot exfiltrate
-host secrets. Only read-only script and task forms are accepted. Publication,
+Shell commands run through the operator's normal shell environment with network,
+filesystem, credentials, and installed tools available. Output remains bounded
+when returned to the model and persisted to the run bundle. Publication,
 worktree creation, current-head verification, review-request deduplication, and
 timers remain deterministic controller operations.
 
-Worktree setup never runs `mise trust`: the controller does not persist trust
-for configuration supplied by a pull request. Setup enables Mise paranoid mode
-and grants invocation-scoped trust to only the assigned worktree's exact
-`.mise.toml` while it runs inside the credential-scrubbed setup sandbox. Mise
-cache, state, and shim directories are invocation-scoped as well, including
-`XDG_CACHE_HOME`, so generators cannot write to the operator's home cache.
+Worktree setup automatically runs `mise trust --yes .mise.toml` for the assigned
+worktree, then installs the pinned toolchain, dependencies, and generated
+artifacts using the operator's normal environment.
 Command timeouts, cancellation, and shutdown terminate the command's complete
 POSIX
 process group so descendant processes cannot outlive the worker that spawned

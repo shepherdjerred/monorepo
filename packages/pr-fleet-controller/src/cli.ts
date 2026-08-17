@@ -85,7 +85,6 @@ function requireTools(): void {
     "git-spice",
     "mise",
     "rg",
-    "sandbox-exec",
   ]) {
     if (Bun.which(executable) === null) {
       throw new Error(`Required executable is missing: ${executable}`);
@@ -395,7 +394,6 @@ async function main(): Promise<void> {
       author: config.author ?? null,
     });
     const workerRunner = new NativeWorkerRunner(model, store, environment, {
-      extraSecretNames: ["OPENROUTER_API_KEY"],
       telemetry: recorder,
     });
     controller = new FleetController({

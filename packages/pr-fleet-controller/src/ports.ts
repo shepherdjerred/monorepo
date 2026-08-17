@@ -22,11 +22,7 @@ export type CommandRequest = {
   sensitiveOutput?: boolean | undefined;
   /** Retain at most this many bytes from each output stream while draining it. */
   maxOutputBytes?: number | undefined;
-  /**
-   * Environment for the subprocess. Defaults to the controller's own
-   * environment; model-driven worker commands pass a credential-scrubbed
-   * environment so tool output cannot exfiltrate host secrets.
-   */
+  /** Environment for the subprocess. Defaults to the controller's environment. */
   env?: Record<string, string | undefined>;
 };
 

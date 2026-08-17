@@ -1,5 +1,6 @@
 import type { ControllerTelemetry } from "./controller-telemetry.ts";
 import { currentTimestamp } from "./fleet-logic.ts";
+import { WorktreeHeadChangedError } from "./inherited-wip.ts";
 import type { FleetObserver } from "./ports.ts";
 import type { PrState, WorkerResult } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
@@ -142,6 +143,24 @@ export function settleWorkerFailure(
     }
     observer.onChange(
       `worker for PR #${String(prNumber)} stopped after requesting operator input`,
+    );
+    return true;
+  }
+  if (error instanceof WorktreeHeadChangedError) {
+    const current = store.prs.get(prNumber);
+    if (current !== undefined) {
+      store.prs.set(prNumber, {
+        ...current,
+        runtimeAgent: null,
+        status: "waiting-ci",
+        classification: "pending",
+        lastAgentReportAt: currentTimestamp(),
+        lastProgressAt: currentTimestamp(),
+        noProgressTicks: 0,
+      });
+    }
+    observer.onChange(
+      `worker for PR #${String(prNumber)} observed a changed worktree HEAD; refreshing before retry`,
     );
     return true;
   }

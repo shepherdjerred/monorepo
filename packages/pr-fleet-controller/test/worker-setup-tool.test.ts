@@ -1,65 +1,24 @@
-import { expect, test } from "bun:test";
-import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
-import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
-import { releaseSetupResources } from "@shepherdjerred/pr-fleet-controller/src/worker-setup-tool.ts";
-import { evidence, identity } from "./fixtures.ts";
+import { describe, expect, test } from "bun:test";
+import { SETUP_COMMANDS } from "@shepherdjerred/pr-fleet-controller/src/worker-setup-tool.ts";
 
-function setupState() {
-  const pr = identity(76);
-  return buildPrState(
-    { identity: pr, evidence: evidence(pr), stackId: "pr-76" },
-    {
-      previous: undefined,
-      pausedReason: undefined,
-      model: "openai/gpt-5.6-terra",
-    },
-  ).state;
-}
-
-test("scratch cleanup failure cannot leak setup or heavy leases", async () => {
-  const pr = setupState();
-  const store = new FleetStore(1);
-  store.requestLease(pr, "setup");
-  store.requestLease(pr, "heavy");
-  const cleanupError = new Error("scratch volume unavailable");
-
-  await expect(
-    releaseSetupResources({
-      store,
-      pr,
-      miseScratchDirectory: "/tmp/pr-fleet-mise-test",
-      setupFailure: null,
-      removeScratchDirectory: () => Promise.reject(cleanupError),
-    }),
-  ).rejects.toBe(cleanupError);
-
-  expect(store.setupOwner).toBeNull();
-  expect(store.heavyOwners.has(pr.identity.number)).toBe(false);
-});
-
-test("scratch cleanup failure is preserved alongside the setup failure", async () => {
-  const pr = setupState();
-  const store = new FleetStore(1);
-  store.requestLease(pr, "setup");
-  store.requestLease(pr, "heavy");
-  const setupError = new Error("mise install failed");
-  const cleanupError = new Error("scratch volume unavailable");
-
-  try {
-    await releaseSetupResources({
-      store,
-      pr,
-      miseScratchDirectory: "/tmp/pr-fleet-mise-test",
-      setupFailure: { error: setupError },
-      removeScratchDirectory: () => Promise.reject(cleanupError),
+describe("worktree setup", () => {
+  test("trusts the exact repository Mise configuration before setup", () => {
+    expect(SETUP_COMMANDS[0]).toEqual({
+      executable: "mise",
+      args: ["trust", "--yes", ".mise.toml"],
     });
-    throw new Error("Expected setup resource release to fail");
-  } catch (error) {
-    expect(error).toBeInstanceOf(AggregateError);
-    if (!(error instanceof AggregateError)) throw error;
-    expect(error.errors).toEqual([setupError, cleanupError]);
-  }
+  });
 
-  expect(store.setupOwner).toBeNull();
-  expect(store.heavyOwners.has(pr.identity.number)).toBe(false);
+  test("keeps setup serial and deterministic", () => {
+    expect(SETUP_COMMANDS.map((command) => command.executable)).toEqual([
+      "mise",
+      "mise",
+      "bun",
+      "bunx",
+    ]);
+    expect(SETUP_COMMANDS.at(-1)).toEqual({
+      executable: "bunx",
+      args: ["turbo", "run", "generate", "--env-mode=loose"],
+    });
+  });
 });

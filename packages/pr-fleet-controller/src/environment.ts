@@ -145,7 +145,9 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       const detail =
         options.sensitiveOutput === true
           ? "sensitive output omitted"
-          : result.stderr.trim();
+          : result.stderr.trim() ||
+            result.stdout.trim() ||
+            "no diagnostic output";
       throw new Error(
         `${executable} ${args.join(" ")} failed (${String(result.exitCode)}): ${detail}`,
       );

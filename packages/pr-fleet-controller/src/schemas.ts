@@ -264,7 +264,7 @@ export const WorkerResultSchema = z
     validation: z.array(z.string()),
     lastAction: z.string(),
     blockers: z.array(z.string()),
-    operatorRequestId: z.string().min(1).nullable().optional(),
+    operatorRequestId: z.string().min(1).nullable(),
     worktree: z.string().nullable(),
     worktreeDirty: z.boolean(),
     setupLeaseReleased: z.boolean(),

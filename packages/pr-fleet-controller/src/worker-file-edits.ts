@@ -152,7 +152,7 @@ export async function applyStrReplace(
   const occurrences = content.split(input.old_string).length - 1;
   if (occurrences === 0) {
     throw new Error(
-      `old_string not found in ${input.path}; it must match the file exactly, including whitespace and indentation`,
+      `old_string not found in ${input.path}; re-read the current file and retry with an exact match including whitespace and indentation`,
     );
   }
   if (occurrences > 1 && !input.replace_all) {
