@@ -86,7 +86,12 @@ fi
 
 # The plugin entries are conditional on these checkouts existing. Re-render
 # them now that the bootstrap has created and built the repositories.
-chezmoi --source "$source_dir" apply --force \
-  ~/.config/opencode/opencode.jsonc \
-  ~/.config/opencode/tui.jsonc
+# `chezmoi apply` (even with --force) acquires the persistent-state lock, and
+# this script itself runs inside an already-locked `chezmoi apply` transaction,
+# so a nested `apply` call deadlocks until it times out. `execute-template`
+# only renders output and takes no lock, so it can run from inside a script.
+opencode_config_dir="$source_dir/private_dot_config/private_opencode"
+chezmoi execute-template -f "$opencode_config_dir/private_opencode.jsonc.tmpl" >~/.config/opencode/opencode.jsonc
+chezmoi execute-template -f "$opencode_config_dir/private_tui.jsonc.tmpl" >~/.config/opencode/tui.jsonc
+chmod 600 ~/.config/opencode/opencode.jsonc ~/.config/opencode/tui.jsonc
 {{- end -}}
