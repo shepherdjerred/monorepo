@@ -9,7 +9,7 @@ import {
 import type { EarnedAward } from "#src/betting/earnings.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPool } from "#src/betting/sweep.ts";
-import { BUCKS_SCOPE_TAG } from "#src/betting/constants.ts";
+import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { send } from "#src/league/discord/channel.ts";
@@ -30,28 +30,27 @@ const logger = createLogger("betting-announce");
  */
 
 /** Beyond this the message stops being readable, so the tail is summarised. */
-const MAX_PAYOUT_ROWS = 15;
+const MAX_BET_ROWS = 15;
 
 function formatPrediction(raw: string | null): string | undefined {
   if (raw === null) {
     return undefined;
   }
   const parsed = BucksPredictionSchema.safeParse(JSON.parse(raw));
-  return parsed.success ? parsed.data.sentence : undefined;
+  return parsed.success && shouldDisplayPrediction(parsed.data.winProbability)
+    ? parsed.data.sentence
+    : undefined;
 }
 
-/** The coin flip. The prediction formula has no intercept, so a symmetric lobby
- * returns exactly this — a supported result, not a rounding artifact. */
+/** The neutral midpoint used to decide which side of a prediction won. */
 const COIN_FLIP = 0.5;
 
 /**
  * Score the stored prediction against the result, or return nothing.
  *
- * Exactly `0.500` is a *declined* call, not a call that the subject loses:
- * `prediction.ts` has no intercept, so a symmetric lobby lands here by design.
- * Reading it with `> 0.5` alone made the sentence retroactively claim a
- * direction it never took — "Scout was wrong." after a win, "Scout called it."
- * after a loss — from a forecast that said 50/50.
+ * Near-even calls are declined, not counted as calls the subject loses or
+ * wins. Reading them with `> 0.5` alone would turn an uninteresting forecast
+ * into a retroactive directional claim.
  */
 export function predictionVerdict(
   prediction: BucksPrediction | undefined,
@@ -60,7 +59,7 @@ export function predictionVerdict(
   if (
     winningTeamId === undefined ||
     prediction === undefined ||
-    prediction.winProbability === COIN_FLIP
+    !shouldDisplayPrediction(prediction.winProbability)
   ) {
     return undefined;
   }
@@ -69,7 +68,81 @@ export function predictionVerdict(
   return predictedWin === subjectWon ? "Scout called it." : "Scout was wrong.";
 }
 
-function formatSettlementBody(input: {
+export function formatBetPlacementAnnouncement(input: {
+  discordId: string;
+  subjectAlias: string;
+  subjectWins: boolean;
+  stake: number;
+  totalStake: number;
+}): string {
+  const side = input.subjectWins ? "WINS" : "LOSES";
+  return `🎲 <@${input.discordId}> staked **${input.stake.toString()} BB** on **${input.subjectAlias} ${side}** (position: **${input.totalStake.toString()} BB**).`;
+}
+
+/**
+ * Announce a successful placement in the channels carrying this pool's
+ * prematch message. This is deliberately best-effort: the stake is already
+ * committed, and a missing public receipt must not turn a successful bet into
+ * an interaction error.
+ */
+export async function announceBetPlacement(
+  input: {
+    matchId: string;
+    serverId: ReturnType<typeof DiscordGuildIdSchema.parse>;
+    discordId: string;
+    subjectAlias: string;
+    subjectWins: boolean;
+    stake: number;
+    totalStake: number;
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  try {
+    const pool = await prismaClient.bucksMatchPool.findUnique({
+      where: {
+        matchId_serverId: {
+          matchId: input.matchId,
+          serverId: input.serverId,
+        },
+      },
+      select: { messageRefs: true },
+    });
+    if (pool === null) {
+      return;
+    }
+
+    const refs = BucksMessageRefsSchema.parse(JSON.parse(pool.messageRefs));
+    const content = formatBetPlacementAnnouncement(input);
+    for (const ref of refs) {
+      try {
+        await send(
+          {
+            content,
+            allowedMentions: { users: [input.discordId] },
+          },
+          DiscordChannelIdSchema.parse(ref.channelId),
+          input.serverId,
+        );
+      } catch (error) {
+        logger.warn(
+          `⚠️ Could not announce Bryan Bucks placement for ${input.matchId} in channel ${ref.channelId}:`,
+          error,
+        );
+      }
+    }
+  } catch (error) {
+    logger.error(
+      `❌ Could not prepare Bryan Bucks placement announcement for ${input.matchId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "betting-placement-announce", matchId: input.matchId },
+      extra: { serverId: input.serverId },
+    });
+  }
+}
+
+export function formatSettlementBody(input: {
   summary: SettlementSummary;
   earnings: readonly EarnedAward[];
   predictionSentence: string | undefined;
@@ -80,7 +153,7 @@ function formatSettlementBody(input: {
 
   if (summary.voidReason === undefined) {
     lines.push(
-      `💰 **Bryan Bucks** _(${BUCKS_SCOPE_TAG})_ — pool ${(summary.winnersPool + summary.losersPool).toString()} BB (winners ${summary.winnersPool.toString()} / losers ${summary.losersPool.toString()})`,
+      `💰 **Bryan Bucks** — pool ${(summary.winnersPool + summary.losersPool).toString()} BB (winners ${summary.winnersPool.toString()} / losers ${summary.losersPool.toString()})`,
     );
   } else {
     const reason =
@@ -88,10 +161,12 @@ function formatSettlementBody(input: {
         ? "Remake — every bet refunded."
         : summary.voidReason === "no_counterparty"
           ? "No takers on the other side — every bet refunded."
-          : summary.voidReason === "expired"
-            ? "This game never resolved — every bet refunded."
-            : "Unsupported game mode — every bet refunded.";
-    lines.push(`💰 **Bryan Bucks** _(${BUCKS_SCOPE_TAG})_ — ${reason}`);
+          : summary.voidReason === "house_unavailable"
+            ? "The Bryan Bucks house reserve was unavailable — every bet refunded."
+            : summary.voidReason === "expired"
+              ? "This game never resolved — every bet refunded."
+              : "Unsupported game mode — every bet refunded.";
+    lines.push(`💰 **Bryan Bucks** — ${reason}`);
   }
 
   if (input.predictionSentence !== undefined) {
@@ -102,18 +177,36 @@ function formatSettlementBody(input: {
     lines.push(`${input.predictionSentence}${verdict}`);
   }
 
-  const paid = summary.bets.filter((bet) => bet.payout > 0);
-  if (paid.length > 0) {
+  const humanBets = summary.bets.filter((bet) => !bet.isHouse);
+  const houseBets = summary.bets.filter((bet) => bet.isHouse);
+
+  if (houseBets.length > 0) {
+    const houseStake = houseBets.reduce((total, bet) => total + bet.stake, 0);
     lines.push("");
-    for (const bet of paid.slice(0, MAX_PAYOUT_ROWS)) {
-      const delta = bet.refunded
+    lines.push(
+      "🏦 Bryan Bucks house matched " +
+        houseStake.toString() +
+        " BB on the other side.",
+    );
+  }
+
+  if (humanBets.length > 0) {
+    lines.push("");
+    lines.push("**Bets**");
+    for (const bet of humanBets.slice(0, MAX_BET_ROWS)) {
+      const result = bet.refunded
         ? `refunded ${bet.payout.toString()} BB`
-        : `+${bet.winnings.toString()} BB`;
-      lines.push(`• staked ${bet.stake.toString()} BB → ${delta}`);
-    }
-    if (paid.length > MAX_PAYOUT_ROWS) {
+        : `received ${bet.payout.toString()} BB` +
+          (bet.winnings > 0
+            ? ` (+${bet.winnings.toString()} BB winnings)`
+            : "");
       lines.push(
-        `…and ${(paid.length - MAX_PAYOUT_ROWS).toString()} more — see \`/bb history\``,
+        `• <@${bet.discordId}> staked ${bet.stake.toString()} BB → ${result}`,
+      );
+    }
+    if (humanBets.length > MAX_BET_ROWS) {
+      lines.push(
+        `…and ${(humanBets.length - MAX_BET_ROWS).toString()} more — see \`/bb history\``,
       );
     }
   }
@@ -198,7 +291,7 @@ export async function announceSettlements(
         // would post a guild's payouts somewhere nobody opted into. A pool that
         // owed nobody anything is not worth reporting.
         const owedSomeone =
-          summary.bets.length > 0 ||
+          summary.bets.some((bet) => !bet.isHouse) ||
           input.earnings.some((award) => award.serverId === summary.serverId);
         if (owedSomeone) {
           logger.error(

@@ -1,11 +1,17 @@
 import * as Sentry from "@sentry/bun";
 import {
   BucksPoolRosterSchema,
+  LeaguePuuidSchema,
   type BucksPoolParticipant,
   type BucksVoidReason,
+  type DiscordGuildId,
   type RawMatch,
 } from "@scout-for-lol/data";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
+import {
+  HOUSE_ACCOUNT_DISCORD_ID,
+  HOUSE_BANKROLL,
+} from "#src/betting/constants.ts";
 import {
   computeParimutuelPayouts,
   type ParimutuelBet,
@@ -38,6 +44,8 @@ const logger = createLogger("betting-settle");
 export type SettlementBet = {
   betId: number;
   bucksAccountId: number;
+  discordId: string;
+  isHouse: boolean;
   predictedTeamId: number;
   stake: number;
   payout: number;
@@ -137,6 +145,8 @@ async function creditBet(
 type PendingBetRow = {
   id: number;
   bucksAccountId: number;
+  discordId: string;
+  isHouse: boolean;
   predictedTeamId: number;
   stake: number;
   subjectPuuid: string;
@@ -153,6 +163,8 @@ function refundAll(rows: readonly PendingBetRow[]): {
     bets: rows.map((row) => ({
       betId: row.id,
       bucksAccountId: row.bucksAccountId,
+      discordId: row.discordId,
+      isHouse: row.isHouse,
       predictedTeamId: row.predictedTeamId,
       stake: row.stake,
       payout: row.stake,
@@ -196,6 +208,8 @@ function toSettlementBets(input: {
       return {
         betId: row.id,
         bucksAccountId: row.bucksAccountId,
+        discordId: row.discordId,
+        isHouse: row.isHouse,
         predictedTeamId: row.predictedTeamId,
         stake: row.stake,
         payout: allocation?.payout ?? 0,
@@ -269,7 +283,7 @@ export async function settleBettingForMatch(
 async function settleOnePool(input: {
   prismaClient: ExtendedPrismaClient;
   poolId: number;
-  serverId: string;
+  serverId: DiscordGuildId;
   matchId: string;
   roster: readonly BucksPoolParticipant[];
   winningTeamId: number | undefined;
@@ -303,24 +317,59 @@ async function settleOnePool(input: {
       select: {
         id: true,
         bucksAccountId: true,
+        bucksAccount: { select: { discordId: true, isHouse: true } },
         predictedTeamId: true,
         stake: true,
         subjectPuuid: true,
       },
       orderBy: { id: "asc" },
     });
+    const pendingBets: PendingBetRow[] = rows.map((row) => ({
+      id: row.id,
+      bucksAccountId: row.bucksAccountId,
+      discordId: row.bucksAccount.discordId,
+      isHouse: row.bucksAccount.isHouse,
+      predictedTeamId: row.predictedTeamId,
+      stake: row.stake,
+      subjectPuuid: row.subjectPuuid,
+    }));
 
-    // A one-sided market has no counterparty to pay from. Recorded as its own
-    // void reason rather than as payouts that happen to equal each stake.
-    const hasBothSides =
-      rows.some((row) => row.predictedTeamId === 100) &&
-      rows.some((row) => row.predictedTeamId === 200);
-    const voidReason: BucksVoidReason | undefined =
-      input.classificationVoid ??
-      (!hasBothSides && rows.length > 0 ? "no_counterparty" : undefined);
+    let voidReason: BucksVoidReason | undefined = input.classificationVoid;
+    const humanBets = pendingBets.filter((bet) => !bet.isHouse);
+
+    // A one-sided decided market is matched by the per-guild house account.
+    // The house stake is real: it is debited before the synthetic bet enters
+    // the same parimutuel allocation as human bets. If its audited reserve is
+    // too small, preserve the old safe behavior and refund everyone.
+    if (
+      voidReason === undefined &&
+      input.winningTeamId !== undefined &&
+      humanBets.length > 0
+    ) {
+      voidReason = await addHousePositionIfNeeded({
+        tx,
+        poolId: input.poolId,
+        serverId: input.serverId,
+        matchId: input.matchId,
+        roster: input.roster,
+        humanBets,
+        pendingBets,
+      });
+    }
+
+    // This remains a defensive fallback for legacy pools with no human bets on
+    // which a house position could be created, or for an unresolved outcome.
+    if (voidReason === undefined) {
+      const hasBothSides =
+        pendingBets.some((row) => row.predictedTeamId === 100) &&
+        pendingBets.some((row) => row.predictedTeamId === 200);
+      if (!hasBothSides && pendingBets.length > 0) {
+        voidReason = "no_counterparty";
+      }
+    }
 
     const settled = toSettlementBets({
-      rows,
+      rows: pendingBets,
       winningTeamId: input.winningTeamId,
       voidReason,
     });
@@ -375,4 +424,115 @@ async function settleOnePool(input: {
       bets: settled.bets,
     };
   });
+}
+
+async function addHousePositionIfNeeded(input: {
+  tx: Db;
+  poolId: number;
+  serverId: DiscordGuildId;
+  matchId: string;
+  roster: readonly BucksPoolParticipant[];
+  humanBets: readonly PendingBetRow[];
+  pendingBets: PendingBetRow[];
+}): Promise<BucksVoidReason | undefined> {
+  const hasBothHumanSides =
+    input.humanBets.some((row) => row.predictedTeamId === 100) &&
+    input.humanBets.some((row) => row.predictedTeamId === 200);
+  if (hasBothHumanSides) {
+    return;
+  }
+
+  const representative = input.humanBets[0];
+  if (representative === undefined) {
+    throw new Error("A human Bucks bet was missing its predicted team");
+  }
+  const humanTeamId = representative.predictedTeamId;
+  const houseStake = input.humanBets.reduce(
+    (total, bet) => total + bet.stake,
+    0,
+  );
+  const house = await ensureHouseAccountInTransaction(input.tx, input.serverId);
+  if (house.balance < houseStake) {
+    return "house_unavailable";
+  }
+
+  const houseTeamId = humanTeamId === 100 ? 200 : 100;
+  const houseBet = await input.tx.bucksBet.create({
+    data: {
+      poolId: input.poolId,
+      bucksAccountId: house.id,
+      predictedTeamId: houseTeamId,
+      subjectPuuid: representative.subjectPuuid,
+      stake: houseStake,
+    },
+    select: { id: true },
+  });
+  await applyBucksDelta(input.tx, {
+    bucksAccountId: house.id,
+    delta: -houseStake,
+    kind: "bet_stake",
+    matchId: input.matchId,
+    betId: houseBet.id,
+    predictedTeamId: houseTeamId,
+    context: {
+      type: "stake",
+      subjectAlias: subjectAlias(input.roster, representative.subjectPuuid),
+      subjectPuuid: LeaguePuuidSchema.parse(representative.subjectPuuid),
+      backedAliases: aliasesForTeam(input.roster, houseTeamId),
+      opposingAliases: aliasesForTeam(input.roster, humanTeamId),
+    },
+  });
+  input.pendingBets.push({
+    id: houseBet.id,
+    bucksAccountId: house.id,
+    discordId: HOUSE_ACCOUNT_DISCORD_ID,
+    isHouse: true,
+    predictedTeamId: houseTeamId,
+    stake: houseStake,
+    subjectPuuid: representative.subjectPuuid,
+  });
+  return;
+}
+
+async function ensureHouseAccountInTransaction(
+  tx: Db,
+  serverId: DiscordGuildId,
+): Promise<{ id: number; balance: number }> {
+  const existing = await tx.bucksAccount.findUnique({
+    where: {
+      serverId_discordId: {
+        serverId,
+        discordId: HOUSE_ACCOUNT_DISCORD_ID,
+      },
+    },
+    select: { id: true, balance: true, isHouse: true },
+  });
+  if (existing !== null) {
+    if (!existing.isHouse) {
+      throw new Error(
+        `Bucks account ${existing.id.toString()} uses the reserved house account ID`,
+      );
+    }
+    return existing;
+  }
+
+  const created = await tx.bucksAccount.create({
+    data: {
+      serverId,
+      discordId: HOUSE_ACCOUNT_DISCORD_ID,
+      isHouse: true,
+      balance: 0,
+    },
+    select: { id: true },
+  });
+  const balance = await applyBucksDelta(tx, {
+    bucksAccountId: created.id,
+    delta: HOUSE_BANKROLL,
+    kind: "seed",
+    context: {
+      type: "seed",
+      note: "Opening bankroll for the Bryan Bucks house account",
+    },
+  });
+  return { id: created.id, balance };
 }

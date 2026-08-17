@@ -5,9 +5,8 @@ import { QueueTypeSchema } from "#src/model/state.ts";
 /**
  * Bryan Bucks — the friendly betting currency.
  *
- * Bucks exchange at 1:10 Bucks:CAD, in person only, from Bryan, who lives in
- * rural Canada. They are therefore unredeemable in practice. There is no
- * monetary component and nothing transfers to real goods.
+ * They are a private joke with no monetary component and nothing transfers to
+ * real goods.
  *
  * These schemas describe the JSON blobs and string enums stored on the
  * `Bucks*` Prisma models. SQLite has no native enum type, so every one of
@@ -70,6 +69,7 @@ export type BucksVoidReason = z.infer<typeof BucksVoidReasonSchema>;
 export const BucksVoidReasonSchema = z.enum([
   "remake",
   "no_counterparty",
+  "house_unavailable",
   "expired",
   "unsupported_mode",
 ]);

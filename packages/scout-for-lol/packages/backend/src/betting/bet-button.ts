@@ -4,10 +4,10 @@ import {
   DiscordGuildIdSchema,
   type BucksPoolParticipant,
 } from "@scout-for-lol/data";
-import { BUCKS_SCOPE_NOTE } from "#src/betting/constants.ts";
 import { parseBucksCustomId } from "#src/betting/custom-id.ts";
 import { placeBet, type PlaceBetResult } from "#src/betting/place-bet.ts";
 import { cancelBet, type CancelBetResult } from "#src/betting/cancel-bet.ts";
+import { announceBetPlacement } from "#src/betting/announce.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -46,7 +46,7 @@ export function describeResult(
     case "no_pool":
       return "🚫 There's no Bryan Bucks market for this game.";
     case "feature_disabled":
-      return `🚫 Bryan Bucks is no longer enabled in this server. ${BUCKS_SCOPE_NOTE}`;
+      return "🚫 Bryan Bucks is no longer enabled in this server.";
     case "not_eligible":
       return "🔒 Only tracked players can bet. Ask an admin to link your Discord account to a player in the dashboard.";
     case "unknown_subject":
@@ -170,4 +170,19 @@ export async function handleBetButton(
   await interaction.editReply({
     content: describeResult(result, alias, betOnWin),
   });
+
+  if (result.kind === "placed") {
+    await announceBetPlacement(
+      {
+        matchId: parsed.matchId,
+        serverId,
+        discordId,
+        subjectAlias: alias,
+        subjectWins: betOnWin,
+        stake: parsed.amount,
+        totalStake: result.totalStake,
+      },
+      prismaClient,
+    );
+  }
 }

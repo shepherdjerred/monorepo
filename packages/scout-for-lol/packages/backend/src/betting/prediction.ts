@@ -76,8 +76,16 @@ const MIN_GAMES_FOR_CHAMPION = 3;
 const MIN_PROBABILITY = 0.05;
 const MAX_PROBABILITY = 0.95;
 
-const COIN_FLIP_BAND = 0.03;
+/** Predictions within five percentage points of even odds are not useful
+ * enough to show as a call, but remain stored for later calibration. */
+const COIN_FLIP_BAND = 0.05;
 const MAX_SENTENCE_LENGTH = 120;
+
+export function shouldDisplayPrediction(winProbability: number): boolean {
+  // Compare the rounded percentage that readers see, so 45% and 55% stay in
+  // the suppressed band without floating-point boundary surprises.
+  return Math.abs(Math.round(winProbability * 100) - 50) > COIN_FLIP_BAND * 100;
+}
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);

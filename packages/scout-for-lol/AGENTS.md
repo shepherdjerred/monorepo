@@ -836,12 +836,19 @@ override to `value: false`; do not delete the entry.** A deleted override leaves
 no record that the guild was ever targeted, and nothing on either side can then
 tell it apart from a guild that never had the feature.
 
-The scope wording lives once in `BUCKS_SCOPE_TAG` / `BUCKS_SCOPE_NOTE`
-(`betting/constants.ts`) — use those rather than writing new copy, so the
-surfaces cannot drift apart.
+The feature scope remains enforced by the flag and guild-scoped registration;
+user-facing betting surfaces should not advertise the allowlist or the private
+redemption joke. `/bb prizes` is the deliberate exception: it exposes the
+1:10 joke and its in-person-with-Bryan footer as a prize catalog.
 
 Bucks exchange at 1:10 Bucks:CAD, in person only, from Bryan, who lives in rural
 Canada. There is no monetary component and nothing transfers to real goods.
+
+One-sided markets are matched by a synthetic per-guild house account with a
+bounded opening bankroll. The house is a real `BucksAccount` and `BucksBet`, so
+its seed, stake, payout, and balance are all ledger-audited; house accounts do
+not appear on the user leaderboard. If the reserve cannot cover the exposure,
+the market is voided with `house_unavailable` and user stakes are refunded.
 
 - **The allowlist gates taking Bucks, never returning them.** `betting_enabled`
   is checked in four places: command registration, pool creation, `placeBet`,
@@ -879,6 +886,10 @@ Canada. There is no monetary component and nothing transfers to real goods.
   satori crash or a failed report send would take the settlement message with it
   — and inside it each `messageRefs` entry is sent under its own `catch`, so one
   dead channel cannot swallow the guilds behind it in the loop.
+- **Successful placements get a public receipt.** The button and `/bb bet`
+  paths both announce the increment and current position in the pool's stored
+  prematch message channels. The receipt is best-effort after the ledger
+  transaction commits, so a Discord delivery failure never changes the bet.
 - **Settle and award outside the Discord path.** `settleAndAwardBucks` is called
   from `processMatchAndUpdatePlayers`, after the S3 ingest gate and outside
   `if (!silent)`. `processMatch` returns early with no subscribed channel and
@@ -909,10 +920,11 @@ Canada. There is no monetary component and nothing transfers to real goods.
   interaction failed". An ID that is claimed by namespace and then fails to parse
   is closed out with a silent `deferUpdate()` and counted as `bb/malformed`, never
   as `bb/success`.
-- **The prediction verdict declines the coin flip.** The formula has no intercept,
-  so exactly `0.500` is a supported result meaning "no call" — not a call that the
-  subject loses. `predictionVerdict` returns nothing for it, because scoring it
-  makes the recap claim a direction the stored sentence never took.
+- **Near-even predictions stay internal.** The formula has no intercept, so a
+  symmetric lobby returns exactly `0.500`; calls that display as 45–55% are
+  omitted from prematch and settlement copy while remaining available for
+  calibration. `predictionVerdict` returns nothing for them, because scoring
+  them makes the recap claim a direction the stored sentence never took.
 
 ## Database (Prisma)
 

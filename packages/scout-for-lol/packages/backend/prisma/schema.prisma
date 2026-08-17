@@ -704,6 +704,9 @@ model BucksAccount {
   id        Int      @id @default(autoincrement())
   serverId  String
   discordId String
+  // Synthetic per-guild house rows use the reserved account ID. They are
+  // ledger-audited but excluded from user-facing balances and leaderboards.
+  isHouse   Boolean  @default(false)
   balance   Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

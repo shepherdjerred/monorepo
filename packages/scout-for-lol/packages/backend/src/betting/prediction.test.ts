@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { RankSchema, type Rank } from "@scout-for-lol/data/index.ts";
 import {
   predictWin,
+  shouldDisplayPrediction,
   type PredictionParticipant,
 } from "#src/betting/prediction.ts";
 
@@ -59,6 +60,13 @@ describe("predictWin", () => {
     expect(result.winProbability).toBe(0.5);
     expect(result.confidence).toBe("low");
     expect(result.sentence).toContain("coin flip");
+  });
+
+  test("only displays calls more than five points from even odds", () => {
+    expect(shouldDisplayPrediction(0.45)).toBe(false);
+    expect(shouldDisplayPrediction(0.49)).toBe(false);
+    expect(shouldDisplayPrediction(0.55)).toBe(false);
+    expect(shouldDisplayPrediction(0.6)).toBe(true);
   });
 
   test("a full tier of rank advantage moves the number meaningfully", () => {

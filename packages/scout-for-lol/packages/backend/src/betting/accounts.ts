@@ -194,7 +194,7 @@ export async function getLeaderboard(
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<{ discordId: string; balance: number }[]> {
   return await prismaClient.bucksAccount.findMany({
-    where: { serverId: input.serverId },
+    where: { serverId: input.serverId, isHouse: false },
     orderBy: [{ balance: "desc" }, { id: "asc" }],
     take: input.limit,
     select: { discordId: true, balance: true },

@@ -22,6 +22,7 @@ export type BalanceDrift = {
   bucksAccountId: number;
   serverId: string;
   discordId: string;
+  isHouse: boolean;
   storedBalance: number;
   ledgerSum: number;
 };
@@ -33,7 +34,13 @@ export async function reconcileBucksBalances(
 
   try {
     const accounts = await prismaClient.bucksAccount.findMany({
-      select: { id: true, serverId: true, discordId: true, balance: true },
+      select: {
+        id: true,
+        serverId: true,
+        discordId: true,
+        isHouse: true,
+        balance: true,
+      },
     });
 
     for (const account of accounts) {
@@ -48,6 +55,7 @@ export async function reconcileBucksBalances(
           bucksAccountId: account.id,
           serverId: account.serverId,
           discordId: account.discordId,
+          isHouse: account.isHouse,
           storedBalance: account.balance,
           ledgerSum,
         });

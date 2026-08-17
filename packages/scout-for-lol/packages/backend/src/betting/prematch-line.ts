@@ -1,5 +1,5 @@
 import type { BucksPrediction } from "@scout-for-lol/data";
-import { BUCKS_SCOPE_TAG } from "#src/betting/constants.ts";
+import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
 
 /**
  * The Bryan Bucks lines appended to a prematch message.
@@ -13,29 +13,18 @@ import { BUCKS_SCOPE_TAG } from "#src/betting/constants.ts";
 const MAX_CONTENT_LENGTH = 2000;
 
 /**
- * Build the betting footer.
+ * Build the optional betting line.
  *
- * `<t:…:R>` renders a live countdown in every reader's own locale and costs
- * nothing to keep current — far better than baking a wall-clock time into the
- * text and letting it go stale the moment it is posted.
+ * A prediction close to even odds is deliberately omitted: the buttons are
+ * useful, but a nearly arbitrary call is not useful to read.
  */
 export function bucksPrematchLine(input: {
-  closesAt: Date;
   prediction: BucksPrediction | undefined;
 }): string {
-  const closesAtUnix = Math.floor(input.closesAt.getTime() / 1000);
-  const lines: string[] = [];
-
-  if (input.prediction !== undefined) {
-    lines.push(input.prediction.sentence);
-  }
-  // The scope tag is the short form: this line posts on every tracked game, so
-  // the full note would be noise. The long form lives on the `/bb` surfaces.
-  lines.push(
-    `Bets close <t:${closesAtUnix.toString()}:R> · \`/bb balance\` · ${BUCKS_SCOPE_TAG} · 1:10 BB:CAD, in person only`,
-  );
-
-  return lines.join("\n");
+  return input.prediction !== undefined &&
+    shouldDisplayPrediction(input.prediction.winProbability)
+    ? input.prediction.sentence
+    : "";
 }
 
 /**
@@ -47,6 +36,9 @@ export function bucksPrematchLine(input: {
  * footer is all-or-nothing.
  */
 export function appendBucksLine(base: string, footer: string): string {
+  if (footer.length === 0) {
+    return base;
+  }
   const combined = `${base}\n\n${footer}`;
   if (combined.length <= MAX_CONTENT_LENGTH) {
     return combined;

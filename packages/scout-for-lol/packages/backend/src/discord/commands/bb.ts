@@ -15,15 +15,12 @@ import {
 } from "#src/betting/accounts.ts";
 import { placeBet } from "#src/betting/place-bet.ts";
 import { describeResult } from "#src/betting/bet-button.ts";
-import {
-  BUCKS_SCOPE_NOTE,
-  BUCKS_SCOPE_TAG,
-  MAX_STAKE,
-  MIN_STAKE,
-} from "#src/betting/constants.ts";
+import { announceBetPlacement } from "#src/betting/announce.ts";
+import { MAX_STAKE, MIN_STAKE } from "#src/betting/constants.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
+import { buildBbPrizesEmbed } from "#src/discord/commands/bb-prizes.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("command-bb");
@@ -57,11 +54,12 @@ const BUCKS_COLOR = 0x2e_cc_71;
 
 export const bbCommand = new SlashCommandBuilder()
   .setName("bb")
-  .setDescription(
-    `Bryan Bucks — friendly betting on live games (${BUCKS_SCOPE_TAG})`,
-  )
+  .setDescription("Bryan Bucks — betting, balances, and prizes")
   .addSubcommand((sub) =>
     sub.setName("balance").setDescription("Check your Bryan Bucks balance"),
+  )
+  .addSubcommand((sub) =>
+    sub.setName("prizes").setDescription("See what your Bryan Bucks can buy"),
   )
   .addSubcommand((sub) =>
     sub.setName("leaderboard").setDescription("Who has the most Bryan Bucks"),
@@ -113,14 +111,6 @@ export const bbCommand = new SlashCommandBuilder()
       ),
   );
 
-/** The joke that is the entire prize structure, plus the scope it applies in.
- * Both are stated wherever a balance is shown, so nobody reads a number here
- * and assumes it means anything anywhere else. */
-const REDEMPTION_NOTE =
-  "Redeemable at 1:10 BB:CAD, in person, from Bryan. He lives in rural Canada.";
-
-const BALANCE_FOOTER = `${REDEMPTION_NOTE} ${BUCKS_SCOPE_NOTE}`;
-
 async function replyBalance(
   interaction: ChatInputCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
@@ -129,7 +119,8 @@ async function replyBalance(
   const balance = await getBalance({ serverId, discordId });
   if (balance === undefined) {
     await interaction.editReply({
-      content: `You don't have a Bryan Bucks wallet yet — place your first bet on a live game and you'll be given a starting balance.\n_${BUCKS_SCOPE_NOTE}_`,
+      content:
+        "You don't have a Bryan Bucks wallet yet — place your first bet on a live game and you'll be given a starting balance.",
     });
     return;
   }
@@ -148,8 +139,7 @@ async function replyBalance(
       `You have **${balance.toString()} BB**` +
       (openBets.length > 0
         ? ` with **${staked.toString()} BB** riding on ${openBets.length.toString()} open bet(s).`
-        : ".") +
-      `\n_${BALANCE_FOOTER}_`,
+        : "."),
   });
 }
 
@@ -175,14 +165,19 @@ async function replyLeaderboard(
             `**${(index + 1).toString()}.** <@${row.discordId}> — ${row.balance.toString()} BB`,
         )
         .join("\n"),
-    )
-    .setFooter({ text: BALANCE_FOOTER });
+    );
 
   await interaction.editReply({
     embeds: [embed],
     // A leaderboard should not ping the top ten people every time it is run.
     allowedMentions: { parse: [] },
   });
+}
+
+async function replyPrizes(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
+  await interaction.editReply({ embeds: [buildBbPrizesEmbed()] });
 }
 
 async function replyHistory(
@@ -283,6 +278,17 @@ async function replyBet(
         betOnWin,
       ),
     });
+    if (result.kind === "placed") {
+      await announceBetPlacement({
+        matchId: pool.matchId,
+        serverId,
+        discordId,
+        subjectAlias: subject.trackedAlias ?? requestedAlias,
+        subjectWins: betOnWin,
+        stake,
+        totalStake: result.totalStake,
+      });
+    }
     return;
   }
 
@@ -321,14 +327,14 @@ export async function executeBb(
       // Reachable only if the flag was turned off after registration, since
       // the command is not registered anywhere the flag is off.
       await interaction.reply({
-        content: `Bryan Bucks isn't enabled in this server. ${BUCKS_SCOPE_NOTE}`,
+        content: "Bryan Bucks isn't enabled in this server.",
         ephemeral: true,
       });
       return;
     }
 
-    // The leaderboard is the one public answer; everything else is personal.
-    const ephemeral = subcommand !== "leaderboard";
+    // The leaderboard and prize catalog are public; everything else is personal.
+    const ephemeral = subcommand !== "leaderboard" && subcommand !== "prizes";
     await interaction.deferReply({ ephemeral });
 
     const discordId = DiscordAccountIdSchema.parse(interaction.user.id);
@@ -339,6 +345,9 @@ export async function executeBb(
         break;
       case "leaderboard":
         await replyLeaderboard(interaction, serverId);
+        break;
+      case "prizes":
+        await replyPrizes(interaction);
         break;
       case "history":
         await replyHistory(interaction, serverId, discordId);
