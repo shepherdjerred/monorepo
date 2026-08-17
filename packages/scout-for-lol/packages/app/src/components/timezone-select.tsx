@@ -82,6 +82,27 @@ function labelForValue(value: string): string {
   return makeZone(value).label;
 }
 
+// Show the complete IANA catalog from the first focus, while keeping the user's
+// zone and UTC near the top through the catalog's offset ordering. The shared
+// combobox caps the visible list and scrolls it, so comprehensive coverage does
+// not turn the form into a page-length menu.
+//
+// At rest the input holds the selected zone's rendered label (`America/New_York
+// (GMT-04:00)`), which is not a substring of any zone id — filtering on it
+// leaves no items, and the combobox hides its popover when the list is empty.
+// So the resting text means "no query", and typed text matches against the
+// label so an offset fragment finds zones too.
+export function zonesForQuery(query: string, selectedLabel: string): Zone[] {
+  const trimmed = query.trim();
+  if (trimmed.length === 0 || trimmed === selectedLabel.trim()) {
+    return SEARCHABLE_ZONES;
+  }
+  const needle = trimmed.toLowerCase();
+  return SEARCHABLE_ZONES.filter((zone) =>
+    zone.label.toLowerCase().includes(needle),
+  );
+}
+
 // `Intl.supportedValuesOf("timeZone")` omits aliases (e.g. `US/Pacific`,
 // `Etc/UTC`) and SEARCHABLE_ZONES matching is case-sensitive, but
 // `Intl.DateTimeFormat` accepts and canonicalizes any valid IANA id/alias. This
@@ -114,14 +135,7 @@ export function TimezoneSelect(props: {
     setQuery(selectedLabel);
   }, [selectedLabel]);
 
-  const trimmed = query.trim();
-  // Show the complete IANA catalog from the first focus, while keeping the
-  // user's zone and UTC near the top through the catalog's offset ordering.
-  // The shared combobox caps the visible list and scrolls it, so comprehensive
-  // coverage does not turn the form into a page-length menu.
-  const items = SEARCHABLE_ZONES.filter((zone) =>
-    zone.id.toLowerCase().includes(trimmed.toLowerCase()),
-  );
+  const items = zonesForQuery(query, selectedLabel);
 
   return (
     <Combobox<Zone>
