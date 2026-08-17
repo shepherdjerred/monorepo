@@ -294,23 +294,36 @@ async function sendJson(
   return response.json();
 }
 
-const GraphQlSchema = z.object({ errors: z.unknown().optional() });
+const GraphQlSchema = z.object({ errors: z.array(z.unknown()).optional() });
+
+/**
+ * Throw unless the payload says the mutation succeeded.
+ *
+ * GraphQL answers 200 with an `errors` array, so the HTTP status proves
+ * nothing. A payload this cannot read is not a success either: `resolveFinding`
+ * reports `resolvedThread` from the mere absence of a throw, and the CLI prints
+ * "resolved the review thread" from that — so swallowing an unreadable response
+ * told an operator a finding was cleared when the outcome was unknown, and left
+ * it blocking the gate.
+ */
+export function assertGraphQlOk(payload: unknown): void {
+  const parsed = GraphQlSchema.parse(payload);
+  if (parsed.errors !== undefined && parsed.errors.length > 0) {
+    throw new Error(`GitHub GraphQL errors: ${JSON.stringify(parsed.errors)}`);
+  }
+}
 
 async function graphql(
   token: string,
   query: string,
   variables: Record<string, unknown>,
 ): Promise<void> {
-  const payload = await sendJson(
-    "POST",
-    `${GITHUB_API}/graphql`,
-    { query, variables },
-    token,
+  assertGraphQlOk(
+    await sendJson(
+      "POST",
+      `${GITHUB_API}/graphql`,
+      { query, variables },
+      token,
+    ),
   );
-  const parsed = GraphQlSchema.safeParse(payload);
-  if (parsed.success && parsed.data.errors !== undefined) {
-    throw new Error(
-      `GitHub GraphQL errors: ${JSON.stringify(parsed.data.errors)}`,
-    );
-  }
 }

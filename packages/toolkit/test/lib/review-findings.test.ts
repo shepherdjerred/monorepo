@@ -1,6 +1,6 @@
 import type { ReviewThread } from "@shepherdjerred/code-review";
 import { describe, expect, test } from "bun:test";
-import { fallbackKey } from "#lib/review/findings.ts";
+import { assertGraphQlOk, fallbackKey } from "#lib/review/findings.ts";
 
 const thread: ReviewThread = {
   authorLogin: "qodo-code-review",
@@ -14,6 +14,36 @@ const thread: ReviewThread = {
   threadId: null,
   commentId: null,
 };
+
+describe("assertGraphQlOk", () => {
+  test("accepts a mutation that reported no errors", () => {
+    expect(() => {
+      assertGraphQlOk({
+        data: { resolveReviewThread: { thread: { id: "1" } } },
+      });
+    }).not.toThrow();
+    expect(() => {
+      assertGraphQlOk({ data: {}, errors: [] });
+    }).not.toThrow();
+  });
+
+  test("throws on the errors GraphQL returns alongside a 200", () => {
+    expect(() => {
+      assertGraphQlOk({ errors: [{ message: "Resource not accessible" }] });
+    }).toThrow("Resource not accessible");
+  });
+
+  test("throws on a payload it cannot read rather than calling it a success", () => {
+    // The caller reports the thread resolved from the absence of a throw, so
+    // an unreadable response must not pass for one.
+    expect(() => {
+      assertGraphQlOk("<html>502 Bad Gateway</html>");
+    }).toThrow();
+    expect(() => {
+      assertGraphQlOk({ errors: "boom" });
+    }).toThrow();
+  });
+});
 
 describe("fallbackKey", () => {
   test("names the thread, so the key survives a reordered list", () => {
