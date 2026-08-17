@@ -113,6 +113,19 @@ variable "openai_certificate_values" {
   type        = map(string)
   default     = {}
   sensitive   = true
+
+  # Metadata and PEM values arrive as separate JSON env vars, so they can drift.
+  # Every certificate indexes this map, and without this check a metadata entry
+  # with no PEM fails as an opaque invalid-index error.
+  validation {
+    condition = length(setsubtract(
+      toset(keys(var.openai_certificates)),
+      toset(keys(var.openai_certificate_values)),
+    )) == 0
+    # Static message: the missing names derive from a sensitive map, and
+    # OpenTofu rejects an error message built from sensitive values.
+    error_message = "Every openai_certificates entry needs a matching openai_certificate_values entry."
+  }
 }
 
 variable "openai_organization_spend_alerts" {
