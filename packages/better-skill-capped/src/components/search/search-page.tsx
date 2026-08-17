@@ -106,7 +106,7 @@ export function SearchPage(): React.ReactElement {
             replace: true,
           });
         }}
-        placeholder="Search for courses, videos, or game commentary — typos are okay"
+        placeholder="Search for courses, videos, or game commentary"
       />
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 md:grid-cols-[14rem_1fr]">
         <aside>

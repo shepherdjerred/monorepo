@@ -33,7 +33,7 @@ export function SearchBar({
             onChange={(event) => {
               onValueUpdate(event.target.value);
             }}
-            className="h-12 bg-background pl-10 text-base text-foreground md:text-lg"
+            className="h-12 bg-card pl-10 text-base text-foreground md:text-lg"
           />
         </div>
       </div>

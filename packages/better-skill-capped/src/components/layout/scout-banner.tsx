@@ -8,13 +8,13 @@ import { Card, CardContent } from "#components/ui/card";
  */
 export function ScoutBanner(): React.ReactElement {
   return (
-    <Card className="mb-4 border-amber-300/60 bg-amber-50 py-4 dark:border-amber-400/20 dark:bg-amber-950/30">
+    <Card className="mb-4 border-amber-300/60 bg-amber-50 py-4 dark:border-primary/40 dark:bg-primary/10 dark:text-primary-foreground">
       <CardContent className="flex items-center gap-3 px-4 text-sm">
         <span aria-hidden className="text-xl">
           🔭
         </span>
         <p>
-          Check out{" "}
+          Never miss a game from your friends. Try{" "}
           <a
             href="https://scout-for-lol.com/"
             className="font-semibold underline underline-offset-2"
@@ -22,8 +22,8 @@ export function ScoutBanner(): React.ReactElement {
             Scout
             <ExternalLink className="ml-0.5 inline size-3.5 align-text-top" />
           </a>{" "}
-          — a Discord bot that notifies you when friends finish League matches,
-          with detailed post-match reports.
+          for Discord alerts, detailed post-match reports, and custom
+          competitions with daily leaderboards.
         </p>
       </CardContent>
     </Card>
