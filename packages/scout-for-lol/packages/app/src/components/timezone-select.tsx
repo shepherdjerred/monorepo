@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Combobox } from "@scout-for-lol/design-system/components/combobox";
 
 type Zone = {
@@ -121,6 +121,12 @@ function canonicalizeTimezone(value: string): string | undefined {
   }
 }
 
+// Module scope so the identity is stable: Combobox derives its item signature
+// from `items` and `getKey`, and the resting list here is the whole catalog.
+function zoneKey(zone: Zone): string {
+  return zone.id;
+}
+
 export function TimezoneSelect(props: {
   value: string;
   onChange: (tz: string) => void;
@@ -135,7 +141,10 @@ export function TimezoneSelect(props: {
     setQuery(selectedLabel);
   }, [selectedLabel]);
 
-  const items = zonesForQuery(query, selectedLabel);
+  const items = useMemo(
+    () => zonesForQuery(query, selectedLabel),
+    [query, selectedLabel],
+  );
 
   return (
     <Combobox<Zone>
@@ -171,7 +180,7 @@ export function TimezoneSelect(props: {
       isLoading={false}
       openOnEmptyQuery
       placeholder="Search timezones…"
-      getKey={(zone) => zone.id}
+      getKey={zoneKey}
       renderItem={(zone) => zone.label}
       onSelect={(zone) => {
         props.onChange(zone.id);
