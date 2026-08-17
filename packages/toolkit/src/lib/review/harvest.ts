@@ -45,35 +45,56 @@ export function jobIdFromTargetUrl(targetUrl: string | null): string | null {
   return /^[0-9a-f-]{36}$/iu.test(fragment) ? fragment : null;
 }
 
-/** The review gate's status for a commit, or null when it posted none. */
+/** The `rel="next"` URL of a GitHub `Link` header, or null on the last page. */
+export function nextPageUrl(link: string | null): string | null {
+  if (link === null) return null;
+  for (const part of link.split(",")) {
+    const match = /<([^>]+)>\s*;\s*rel="next"/u.exec(part);
+    if (match?.[1] !== undefined) return match[1];
+  }
+  return null;
+}
+
+/**
+ * The review gate's status for a commit, or null when it posted none.
+ *
+ * The commit-status list is paginated, and `null` here is read by
+ * `harvestVerdict` as "this PR has no gate to retry". Stopping at the first
+ * page would turn a gate that merely sorted onto a later page into that answer
+ * — a stale gate reported as nothing to do, which is the one outcome this
+ * module exists to prevent. So every page is read before answering `null`.
+ */
 export async function gateStatusFor(input: {
   repo: string;
   ref: string;
   token: string;
   context?: string;
 }): Promise<GateStatus | null> {
-  const response = await fetch(
-    `${GITHUB_API}/repos/${input.repo}/commits/${input.ref}/status?per_page=100`,
-    {
+  const context = input.context ?? GATE_CONTEXT;
+  let url: string | null =
+    `${GITHUB_API}/repos/${input.repo}/commits/${input.ref}/status?per_page=100`;
+  while (url !== null) {
+    const response = await fetch(url, {
       headers: {
         Accept: "application/vnd.github+json",
         Authorization: `Bearer ${input.token}`,
         "X-GitHub-Api-Version": "2022-11-28",
       },
-    },
-  );
-  if (!response.ok) {
-    throw new Error(
-      `Could not read status for ${input.repo}@${input.ref}: ` +
-        `${String(response.status)} ${response.statusText}`,
-    );
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Could not read status for ${input.repo}@${input.ref}: ` +
+          `${String(response.status)} ${response.statusText}`,
+      );
+    }
+    const parsed = StatusSchema.parse(await response.json());
+    const gate = parsed.statuses.find((status) => status.context === context);
+    if (gate !== undefined) {
+      return { state: gate.state, targetUrl: gate.target_url };
+    }
+    url = nextPageUrl(response.headers.get("link"));
   }
-  const parsed = StatusSchema.parse(await response.json());
-  const context = input.context ?? GATE_CONTEXT;
-  const gate = parsed.statuses.find((status) => status.context === context);
-  return gate === undefined
-    ? null
-    : { state: gate.state, targetUrl: gate.target_url };
+  return null;
 }
 
 export type HarvestVerdict =

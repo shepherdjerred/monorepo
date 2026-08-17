@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   harvestVerdict,
   jobIdFromTargetUrl,
+  nextPageUrl,
   type GateStatus,
 } from "#lib/review/harvest.ts";
 
@@ -91,5 +92,29 @@ describe("harvestVerdict", () => {
       retryable: false,
       reason: "gate status names no Buildkite job",
     });
+  });
+});
+
+describe("nextPageUrl", () => {
+  test("follows the next link when the statuses span pages", () => {
+    expect(
+      nextPageUrl(
+        '<https://api.github.com/repositories/1/commits/abc/status?page=2>; rel="next", ' +
+          '<https://api.github.com/repositories/1/commits/abc/status?page=9>; rel="last"',
+      ),
+    ).toBe("https://api.github.com/repositories/1/commits/abc/status?page=2");
+  });
+
+  test("stops on the last page, which carries prev and first but no next", () => {
+    expect(
+      nextPageUrl(
+        '<https://api.github.com/repositories/1/commits/abc/status?page=8>; rel="prev", ' +
+          '<https://api.github.com/repositories/1/commits/abc/status?page=1>; rel="first"',
+      ),
+    ).toBeNull();
+  });
+
+  test("stops when the response carries no Link header at all", () => {
+    expect(nextPageUrl(null)).toBeNull();
   });
 });
