@@ -1,315 +1,431 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Twitch": {
-      "id": "Jade_Twitch",
-      "key": "60029",
+      "id": "Twitch",
+      "key": "29",
       "name": "Twitch",
-      "title": "The Plague Rat",
+      "title": "the Plague Rat",
       "image": {
-        "full": "Jade_Twitch.png",
-        "sprite": "champion3.png",
+        "full": "Twitch.png",
+        "sprite": "champion4.png",
         "group": "champion",
         "x": 144,
-        "y": 48,
+        "y": 96,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60029000",
+          "id": "29000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60029003",
-          "num": 3,
-          "name": "Medieval Twitch",
+          "id": "29001",
+          "num": 1,
+          "name": "Kingpin Twitch",
           "chromas": false
         },
         {
-          "id": "60029004",
+          "id": "29002",
+          "num": 2,
+          "name": "Whistler Village Twitch",
+          "chromas": false
+        },
+        {
+          "id": "29003",
+          "num": 3,
+          "name": "Medieval Twitch",
+          "chromas": true
+        },
+        {
+          "id": "29004",
           "num": 4,
           "name": "Crime City Twitch",
           "chromas": false
         },
         {
-          "id": "60029018",
-          "num": 18,
-          "name": "Medieval Twitch",
-          "chromas": true,
-          "parentSkin": 3
+          "id": "29005",
+          "num": 5,
+          "name": "Vandal Twitch",
+          "chromas": false
         },
         {
-          "id": "60029019",
-          "num": 19,
-          "name": "Medieval Twitch",
+          "id": "29006",
+          "num": 6,
+          "name": "Pickpocket Twitch",
+          "chromas": false
+        },
+        {
+          "id": "29007",
+          "num": 7,
+          "name": "SSW Twitch",
+          "chromas": false
+        },
+        {
+          "id": "29008",
+          "num": 8,
+          "name": "Omega Squad Twitch",
+          "chromas": true
+        },
+        {
+          "id": "29009",
+          "num": 9,
+          "name": "Omega Squad Twitch (Pearl)",
           "chromas": false,
-          "parentSkin": 3
+          "parentSkin": 8
         },
         {
-          "id": "60029020",
-          "num": 20,
-          "name": "Medieval Twitch",
+          "id": "29010",
+          "num": 10,
+          "name": "Omega Squad Twitch (Sandstone)",
           "chromas": false,
-          "parentSkin": 3
+          "parentSkin": 8
         },
         {
-          "id": "60029021",
+          "id": "29011",
+          "num": 11,
+          "name": "Omega Squad Twitch (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "29012",
+          "num": 12,
+          "name": "Ice King Twitch",
+          "chromas": true
+        },
+        {
+          "id": "29013",
+          "num": 13,
+          "name": "Ice King Twitch (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "29014",
+          "num": 14,
+          "name": "Ice King Twitch (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "29015",
+          "num": 15,
+          "name": "Ice King Twitch (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "29016",
+          "num": 16,
+          "name": "Ice King Twitch (Rainbow)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "29017",
+          "num": 17,
+          "name": "Ice King Twitch (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "29021",
           "num": 21,
           "name": "Medieval Twitch (Sapphire)",
           "chromas": false,
           "parentSkin": 3
         },
         {
-          "id": "60029022",
-          "num": 22,
-          "name": "Medieval Twitch",
-          "chromas": false,
-          "parentSkin": 3
-        },
-        {
-          "id": "60029023",
+          "id": "29023",
           "num": 23,
           "name": "Medieval Twitch (Amethyst)",
           "chromas": false,
           "parentSkin": 3
         },
         {
-          "id": "60029024",
+          "id": "29024",
           "num": 24,
           "name": "Medieval Twitch (Obsidian)",
           "chromas": false,
           "parentSkin": 3
         },
         {
-          "id": "60029025",
-          "num": 25,
-          "name": "Medieval Twitch",
-          "chromas": false,
-          "parentSkin": 3
-        },
-        {
-          "id": "60029026",
-          "num": 26,
-          "name": "Medieval Twitch",
-          "chromas": false,
-          "parentSkin": 3
-        },
-        {
-          "id": "60029027",
+          "id": "29027",
           "num": 27,
           "name": "Twitch Shadowfoot",
           "chromas": false
         },
         {
-          "id": "60029028",
+          "id": "29028",
           "num": 28,
           "name": "Twitch Shadowfoot (Ruby)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60029029",
+          "id": "29029",
           "num": 29,
           "name": "Twitch Shadowfoot (Aquamarine)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60029030",
+          "id": "29030",
           "num": 30,
           "name": "Twitch Shadowfoot (Citrine)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60029031",
+          "id": "29031",
           "num": 31,
           "name": "Twitch Shadowfoot (Rose Quartz)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60029032",
+          "id": "29032",
           "num": 32,
           "name": "Twitch Shadowfoot (Obsidian)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60029033",
+          "id": "29033",
           "num": 33,
           "name": "Twitch Shadowfoot (Emerald)",
-          "chromas": false,
+          "chromas": true,
           "parentSkin": 27
         },
         {
-          "id": "60029034",
+          "id": "29034",
           "num": 34,
           "name": "Twitch Shadowfoot (Amethyst)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60029035",
+          "id": "29035",
           "num": 35,
           "name": "Twitch Shadowfoot (Pearl)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60029036",
+          "id": "29036",
           "num": 36,
           "name": "Dragonslayer Twitch",
           "chromas": false
         },
         {
-          "id": "60029037",
+          "id": "29037",
           "num": 37,
           "name": "Dragonslayer Twitch (Ruby)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60029038",
+          "id": "29038",
           "num": 38,
           "name": "Dragonslayer Twitch (Rose Quartz)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60029039",
+          "id": "29039",
           "num": 39,
           "name": "Dragonslayer Twitch (Sapphire)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60029040",
+          "id": "29040",
           "num": 40,
           "name": "Dragonslayer Twitch (Citrine)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60029041",
+          "id": "29041",
           "num": 41,
           "name": "Dragonslayer Twitch (Emerald)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60029042",
+          "id": "29042",
           "num": 42,
           "name": "Dragonslayer Twitch (Obsidian)",
           "chromas": true,
           "parentSkin": 36
         },
         {
-          "id": "60029043",
+          "id": "29043",
           "num": 43,
           "name": "Dragonslayer Twitch (Tanzanite)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60029044",
+          "id": "29044",
           "num": 44,
           "name": "Dragonslayer Twitch (Pearl)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60029045",
+          "id": "29045",
           "num": 45,
           "name": "High Noon Twitch",
           "chromas": false
         },
         {
-          "id": "60029046",
+          "id": "29046",
           "num": 46,
           "name": "High Noon Twitch (Ruby)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60029047",
+          "id": "29047",
           "num": 47,
           "name": "High Noon Twitch (Citrine)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60029048",
+          "id": "29048",
           "num": 48,
           "name": "High Noon Twitch (Turquoise)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60029049",
+          "id": "29049",
           "num": 49,
           "name": "High Noon Twitch (Sapphire)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60029050",
+          "id": "29050",
           "num": 50,
           "name": "High Noon Twitch (Tanzanite)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60029051",
+          "id": "29051",
           "num": 51,
           "name": "High Noon Twitch (Rose Quartz)",
           "chromas": true,
           "parentSkin": 45
         },
         {
-          "id": "60029052",
+          "id": "29052",
           "num": 52,
           "name": "High Noon Twitch (Obsidian)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60029053",
+          "id": "29053",
           "num": 53,
           "name": "High Noon Twitch (Pearl)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60029054",
+          "id": "29054",
           "num": 54,
           "name": "High Noon Twitch (Nomad)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60029301",
-          "num": 301,
-          "name": "Classic Twitch",
+          "id": "29055",
+          "num": 55,
+          "name": "Cheddar Chief Twitch",
           "chromas": false
         },
         {
-          "id": "60029302",
-          "num": 302,
-          "name": "Classic Twitch (Kingpin)",
+          "id": "29056",
+          "num": 56,
+          "name": "Cheddar Chief Twitch (Ruby)",
           "chromas": false,
-          "parentSkin": 301
+          "parentSkin": 55
+        },
+        {
+          "id": "29057",
+          "num": 57,
+          "name": "Cheddar Chief Twitch (Bleu)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "29058",
+          "num": 58,
+          "name": "Cheddar Chief Twitch (Cheddar)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "29059",
+          "num": 59,
+          "name": "Cheddar Chief Twitch (Berry Cake)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "29060",
+          "num": 60,
+          "name": "Cheddar Chief Twitch (Matcha Cake)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "29061",
+          "num": 61,
+          "name": "Cheddar Chief Twitch (Cheesecake)",
+          "chromas": true,
+          "parentSkin": 55
+        },
+        {
+          "id": "29062",
+          "num": 62,
+          "name": "Cheddar Chief Twitch (Chocolate Pie)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "29063",
+          "num": 63,
+          "name": "Cheddar Chief Twitch (Rainbow Cake)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "29064",
+          "num": 64,
+          "name": "Pool Party Twitch",
+          "chromas": false
         }
       ],
-      "lore": "- Deliberating Poison (W) is an AoE spell around him<br>- Ambush (Q) can last up to 50 seconds<br>- Expunge (E) removes poison stacks on enemies",
-      "blurb": "- Deliberating Poison (W) is an AoE spell around him<br>- Ambush (Q) can last up to 50 seconds<br>- Expunge (E) removes poison stacks on enemies",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "A Zaunite plague rat by birth, but a connoisseur of filth by passion, Twitch is not afraid to get his paws dirty. Aiming a chem-powered crossbow at the gilded heart of Piltover, he has vowed to show those in the city above just how filthy they really are. Always a sneaky sneak, when he's not rooting around in the Sump, he's digging deep into other people's garbage for discarded treasures… and perhaps a moldy sandwich.",
+      "blurb": "A Zaunite plague rat by birth, but a connoisseur of filth by passion, Twitch is not afraid to get his paws dirty. Aiming a chem-powered crossbow at the gilded heart of Piltover, he has vowed to show those in the city above just how filthy they really...",
+      "allytips": [
+        "Twitch's Attack Speed is among the highest in the game; try purchasing items with on-hit effects such as Black Cleaver or Wit's End.",
+        "Contaminate has a large range; apply as many stacks of Deadly Venom as possible before using it.",
+        "You can catch up to an enemy out of attack range with Venom Cask."
+      ],
+      "enemytips": [
+        "Twitch is fragile. Work with teammates to focus on him when you're able to catch him out of Camouflage.",
+        "Spell Shields won't block the damage from Deadly Venom, but they will block the effects Twitch can trigger with it.",
+        "If you suspect Twitch has left the lane, let your teammates know that Twitch is ''MIA.''"
+      ],
       "tags": [
         "Marksman",
         "Assassin"
@@ -322,36 +438,36 @@
         "difficulty": 6
       },
       "stats": {
-        "hp": 470,
-        "hpperlevel": 81,
-        "mp": 260,
+        "hp": 630,
+        "hpperlevel": 98,
+        "mp": 300,
         "mpperlevel": 40,
         "movespeed": 330,
-        "armor": 21,
-        "armorperlevel": 3,
-        "spellblock": 30,
-        "spellblockperlevel": 0,
+        "armor": 27,
+        "armorperlevel": 4,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 550,
-        "hpregen": 5.6,
+        "hpregen": 3.75,
         "hpregenperlevel": 0.6,
-        "mpregen": 6.95,
-        "mpregenperlevel": 0.45,
+        "mpregen": 7.25,
+        "mpregenperlevel": 0.7,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 52,
+        "attackdamage": 59,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 3.38,
+        "attackspeedperlevel": 3,
         "attackspeed": 0.679
       },
       "spells": [
         {
-          "id": "Jade_TwitchQ",
+          "id": "TwitchHideInShadows",
           "name": "Ambush",
-          "description": "Twitch turns Invisible for several seconds, gaining Move Speed. He then gains Attack Speed after coming out of Invisibility.",
-          "tooltip": "After {{ maxfadetime }} seconds of not taking damage or after {{ maxdelaytime }} seconds, Twitch turns <keywordStealth>Invisible</keywordStealth> for {{ stealthduration }} seconds, gaining <speed>{{ movespeedmod*100 }}% Move Speed</speed>.<br /><br />Twitch gains <attackSpeed>{{ attackspeedmod*100 }}% Attack Speed</attackSpeed> for {{ attackspeedduration }} seconds after coming out of <keywordStealth>Invisibility</keywordStealth>.{{ spellmodifierdescriptionappend }}",
+          "description": "Twitch becomes Camouflaged for a short duration and gains Move Speed. When leaving Camouflage, Twitch gains Attack Speed for a short duration.<br><br>When an enemy champion with Deadly Venom dies, Ambush's cooldown is reset.",
+          "tooltip": "Twitch <keywordStealth>Camouflages</keywordStealth> and gains <speed>{{ movespeedmod }}% Move Speed</speed> for {{ stealthduration }} seconds. The Move Speed increases to {{ hiddenspeed }}% while near an enemy champion that can't see him. After exiting <keywordStealth>Camouflage</keywordStealth>, Twitch gains <attackSpeed>{{ attackspeedmod*100 }}% Attack Speed</attackSpeed> for {{ attackspeedduration }} seconds.<br /><br />When an enemy champion dies while afflicted with <keywordMajor>Venom</keywordMajor>, this Ability's Cooldown is refreshed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Invisibility Duration",
+              "Camouflage Duration",
               "Attack Speed"
             ],
             "effect": [
@@ -369,13 +485,13 @@
           ],
           "cooldownBurn": "16",
           "cost": [
-            60,
-            60,
-            60,
-            60,
-            60
+            40,
+            40,
+            40,
+            40,
+            40
           ],
-          "costBurn": "60",
+          "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
@@ -422,11 +538,11 @@
               0
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              3,
+              3,
+              3,
+              3,
+              3
             ],
             [
               0,
@@ -458,7 +574,7 @@
             "0",
             "0",
             "0",
-            "0",
+            "3",
             "0",
             "0",
             "0"
@@ -475,8 +591,8 @@
           ],
           "rangeBurn": "20",
           "image": {
-            "full": "Jade_TwitchQ.png",
-            "sprite": "spell11.png",
+            "full": "TwitchHideInShadows.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 288,
             "y": 0,
@@ -486,10 +602,10 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_TwitchW",
+          "id": "TwitchVenomCask",
           "name": "Venom Cask",
-          "description": "Twitch hurls a cask of venom that explodes, inflicting Deadly Venom and slowing enemies in the area.",
-          "tooltip": "Twitch hurls an exploding cask of venom, inflicting {{ stacksadded }} stacks of <keywordMajor>Deadly Venom</keywordMajor> and <status>Slowing</status> enemies by {{ baseslowamount }}% for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Twitch hurls a cask of venom that explodes in an area, slowing targets and applying deadly venom to the target.",
+          "tooltip": "Twitch hurls a cask that adds a stack of <spellName>Deadly Venom</spellName> to all enemies struck and leaves behind a toxic cloud that persists for {{ duration }} seconds.<br /><br />Enemies that remain within the cloud are <status>Slowed</status> by {{ totalslowamount }}% and receive an additional stack of <spellName>Deadly Venom</spellName> each second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Move Speed Slow",
@@ -510,13 +626,13 @@
           ],
           "cooldownBurn": "13/12/11/10/9",
           "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
+            70,
+            70,
+            70,
+            70,
+            70
           ],
-          "costBurn": "50",
+          "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
@@ -616,8 +732,8 @@
           ],
           "rangeBurn": "950",
           "image": {
-            "full": "Jade_TwitchW.png",
-            "sprite": "spell11.png",
+            "full": "TwitchVenomCask.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 336,
             "y": 0,
@@ -627,22 +743,20 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_TwitchE",
-          "name": "Expunge",
-          "description": "All nearby enemies secrete Twitch's toxic venoms from their bodies, dealing damage for each stack.",
-          "tooltip": "Twitch deals <physicalDamage>{{ basedamage }} physical damage</physicalDamage> plus <physicalDamage>{{ totalstackdamage }}</physicalDamage> per stack of <keywordMajor>Deadly Venom</keywordMajor> to all marked nearby enemies.{{ spellmodifierdescriptionappend }}",
+          "id": "TwitchExpunge",
+          "name": "Contaminate",
+          "description": "Twitch wreaks further havoc on poisoned enemies with a blast of his vile diseases.",
+          "tooltip": "Deals <physicalDamage>{{ basedamage }} physical damage</physicalDamage> to all nearby enemies affected by <spellName>Deadly Venom</spellName>, plus an additional <physicalDamage>{{ physicaldamageperstack }} physical damage</physicalDamage> and <magicDamage>{{ magicdamageperstack }} magical damage</magicDamage> per stack of <spellName>Deadly Venom</spellName>.<br /><br />Max Damage: <physicalDamage>{{ maxphysicaldamage }} physical damage</physicalDamage> and <magicDamage>{{ maxmagicdamage }} magical damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Damage per Stack",
-              "@AbilityResourceName@ Cost",
-              "Cooldown"
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basephysicaldamageperstack }} -> {{ basephysicaldamageperstackNL }}",
-              "{{ cost }} -> {{ costNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
@@ -761,8 +875,8 @@
           ],
           "rangeBurn": "1200",
           "image": {
-            "full": "Jade_TwitchE.png",
-            "sprite": "spell11.png",
+            "full": "TwitchExpunge.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 384,
             "y": 0,
@@ -772,35 +886,31 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_TwitchR",
+          "id": "TwitchFullAutomatic",
           "name": "Spray and Pray",
-          "description": "Twitch closes his eyes and fires his crossbow, rapidly spraying powerful piercing bolts ahead of him.",
-          "tooltip": "For {{ duration }} seconds Twitch gains {{ bonusrange }} Attack Range, <physicalDamage>{{ bonusad }} Attack Damage</physicalDamage> and his basic attacks become piercing bolts that deal {{ falloffdamage*100 }}% less damage to subsequent targets down to a minimum of {{ minimumfalloffdamage*100 }}%.{{ spellmodifierdescriptionappend }}",
+          "description": "Twitch unleashes the full power of his crossbow, shooting bolts over a great distance that pierce all enemies caught in their path.",
+          "tooltip": "Twitch unleashes his crossbow, gaining {{ bonusrange }} Attack Range and <scaleAD>{{ bonusad }} Attack Damage</scaleAD>, and causing his Attacks to become piercing bolts for {{ duration }} seconds. These bolts hit all enemies they pass through, but deal {{ falloffdamage*100 }}% less damage to subsequent targets, down to a minimum of {{ minimumfalloffdamage*100 }}% damage.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Attack Damage",
-              "@AbilityResourceName@ Cost",
-              "Cooldown"
+              "Attack Damage"
             ],
             "effect": [
-              "{{ bonusad }} -> {{ bonusadNL }}",
-              "{{ cost }} -> {{ costNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ bonusad }} -> {{ bonusadNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            120,
-            110,
-            100
+            90,
+            90,
+            90
           ],
-          "cooldownBurn": "120/110/100",
+          "cooldownBurn": "90",
           "cost": [
             100,
-            125,
-            150
+            100,
+            100
           ],
-          "costBurn": "100/125/150",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -878,8 +988,8 @@
           ],
           "rangeBurn": "1200",
           "image": {
-            "full": "Jade_TwitchR.png",
-            "sprite": "spell11.png",
+            "full": "TwitchFullAutomatic.png",
+            "sprite": "spell15.png",
             "group": "spell",
             "x": 432,
             "y": 0,
@@ -891,13 +1001,13 @@
       ],
       "passive": {
         "name": "Deadly Venom",
-        "description": "Twitch's basic attacks infect the target, dealing magic damage each second.",
+        "description": "Twitch's basic attacks infect the target %i:OnHit% <OnHit>On-Hit</OnHit>, dealing true damage each second.",
         "image": {
-          "full": "Jade_Twitch_Passive.png",
-          "sprite": "passive3.png",
+          "full": "Twitch_Passive.png",
+          "sprite": "passive4.png",
           "group": "passive",
           "x": 144,
-          "y": 48,
+          "y": 96,
           "w": 48,
           "h": 48
         }

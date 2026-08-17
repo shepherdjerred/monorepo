@@ -1,239 +1,554 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Sona": {
-      "id": "Jade_Sona",
-      "key": "60037",
+      "id": "Sona",
+      "key": "37",
       "name": "Sona",
       "title": "Maven of the Strings",
       "image": {
-        "full": "Jade_Sona.png",
-        "sprite": "champion3.png",
+        "full": "Sona.png",
+        "sprite": "champion4.png",
         "group": "champion",
-        "x": 288,
+        "x": 384,
         "y": 0,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60037000",
+          "id": "37000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60037007",
+          "id": "37001",
+          "num": 1,
+          "name": "Muse Sona",
+          "chromas": false
+        },
+        {
+          "id": "37002",
+          "num": 2,
+          "name": "Pentakill Sona",
+          "chromas": false
+        },
+        {
+          "id": "37003",
+          "num": 3,
+          "name": "Silent Night Sona",
+          "chromas": false
+        },
+        {
+          "id": "37004",
+          "num": 4,
+          "name": "Guqin Sona",
+          "chromas": true
+        },
+        {
+          "id": "37005",
+          "num": 5,
+          "name": "Arcade Sona",
+          "chromas": true
+        },
+        {
+          "id": "37006",
+          "num": 6,
+          "name": "DJ Sona",
+          "chromas": false
+        },
+        {
+          "id": "37007",
           "num": 7,
           "name": "Sweetheart Sona",
           "chromas": false
         },
         {
-          "id": "60037035",
-          "num": 35,
-          "name": "Star Guardian Sona",
-          "chromas": false
+          "id": "37008",
+          "num": 8,
+          "name": "Guqin Sona (Golden)",
+          "chromas": false,
+          "parentSkin": 4
         },
         {
-          "id": "60037036",
+          "id": "37009",
+          "num": 9,
+          "name": "Odyssey Sona",
+          "chromas": true
+        },
+        {
+          "id": "37010",
+          "num": 10,
+          "name": "Odyssey Sona (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "37011",
+          "num": 11,
+          "name": "Odyssey Sona (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "37012",
+          "num": 12,
+          "name": "Odyssey Sona (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "37013",
+          "num": 13,
+          "name": "Odyssey Sona (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "37014",
+          "num": 14,
+          "name": "Odyssey Sona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "37015",
+          "num": 15,
+          "name": "Odyssey Sona (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "37016",
+          "num": 16,
+          "name": "Arcade Sona (K.O.)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "37017",
+          "num": 17,
+          "name": "PsyOps Sona",
+          "chromas": true
+        },
+        {
+          "id": "37018",
+          "num": 18,
+          "name": "PsyOps Sona (Ruby)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "37019",
+          "num": 19,
+          "name": "PsyOps Sona (Obsidian)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "37020",
+          "num": 20,
+          "name": "PsyOps Sona (Citrine)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "37021",
+          "num": 21,
+          "name": "PsyOps Sona (Emerald)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "37022",
+          "num": 22,
+          "name": "PsyOps Sona (Amethyst)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "37023",
+          "num": 23,
+          "name": "PsyOps Sona (Turquoise)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "37024",
+          "num": 24,
+          "name": "PsyOps Sona (Sapphire)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "37025",
+          "num": 25,
+          "name": "PsyOps Sona (Hunter)",
+          "chromas": false,
+          "parentSkin": 17
+        },
+        {
+          "id": "37026",
+          "num": 26,
+          "name": "Pentakill III: Lost Chapter Sona",
+          "chromas": true
+        },
+        {
+          "id": "37027",
+          "num": 27,
+          "name": "Pentakill III: Lost Chapter Sona (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "37028",
+          "num": 28,
+          "name": "Pentakill III: Lost Chapter Sona (Citrine)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "37029",
+          "num": 29,
+          "name": "Pentakill III: Lost Chapter Sona (Emerald)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "37030",
+          "num": 30,
+          "name": "Pentakill III: Lost Chapter Sona (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "37031",
+          "num": 31,
+          "name": "Pentakill III: Lost Chapter Sona (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "37032",
+          "num": 32,
+          "name": "Pentakill III: Lost Chapter Sona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "37033",
+          "num": 33,
+          "name": "Pentakill III: Lost Chapter Sona (Obsidian)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "37034",
+          "num": 34,
+          "name": "Pentakill III: Lost Chapter Sona (Pearl)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "37035",
+          "num": 35,
+          "name": "Star Guardian Sona",
+          "chromas": true
+        },
+        {
+          "id": "37036",
           "num": 36,
           "name": "Star Guardian Sona (Ruby)",
           "chromas": false,
           "parentSkin": 35
         },
         {
-          "id": "60037037",
+          "id": "37037",
           "num": 37,
           "name": "Star Guardian Sona (Catseye)",
           "chromas": false,
           "parentSkin": 35
         },
         {
-          "id": "60037038",
+          "id": "37038",
           "num": 38,
           "name": "Star Guardian Sona (Aquamarine)",
           "chromas": false,
           "parentSkin": 35
         },
         {
-          "id": "60037039",
+          "id": "37039",
           "num": 39,
           "name": "Star Guardian Sona (Rose Quartz)",
           "chromas": false,
           "parentSkin": 35
         },
         {
-          "id": "60037040",
+          "id": "37040",
           "num": 40,
           "name": "Star Guardian Sona (Amethyst)",
           "chromas": false,
           "parentSkin": 35
         },
         {
-          "id": "60037041",
+          "id": "37041",
           "num": 41,
           "name": "Star Guardian Sona (Tanzanite)",
           "chromas": false,
           "parentSkin": 35
         },
         {
-          "id": "60037042",
+          "id": "37042",
           "num": 42,
           "name": "Star Guardian Sona (Pearl)",
           "chromas": false,
           "parentSkin": 35
         },
         {
-          "id": "60037043",
+          "id": "37043",
           "num": 43,
           "name": "Star Guardian Sona (Obsidian)",
           "chromas": false,
           "parentSkin": 35
         },
         {
-          "id": "60037044",
+          "id": "37044",
           "num": 44,
           "name": "Star Guardian Sona (Brilliant)",
           "chromas": false,
           "parentSkin": 35
         },
         {
-          "id": "60037045",
+          "id": "37045",
           "num": 45,
           "name": "Immortal Journey Sona",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60037046",
+          "id": "37046",
           "num": 46,
           "name": "Prestige Immortal Journey Sona",
           "chromas": false
         },
         {
-          "id": "60037047",
+          "id": "37047",
           "num": 47,
           "name": "Immortal Journey Sona (Ruby)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60037048",
+          "id": "37048",
           "num": 48,
           "name": "Immortal Journey Sona (Rose Quartz)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60037049",
+          "id": "37049",
           "num": 49,
           "name": "Immortal Journey Sona (Catseye)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60037050",
+          "id": "37050",
           "num": 50,
           "name": "Immortal Journey Sona (Sapphire)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60037051",
+          "id": "37051",
           "num": 51,
           "name": "Immortal Journey Sona (Emerald)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60037052",
+          "id": "37052",
           "num": 52,
           "name": "Immortal Journey Sona (Pearl)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60037053",
+          "id": "37053",
           "num": 53,
           "name": "Immortal Journey Sona (Turquoise)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60037054",
+          "id": "37054",
           "num": 54,
           "name": "Immortal Journey Sona (Obsidian)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60037066",
-          "num": 66,
-          "name": "Spirit Blossom Springs Sona",
-          "chromas": false
+          "id": "37055",
+          "num": 55,
+          "name": "Guqin Sona (Meteorite)",
+          "chromas": false,
+          "parentSkin": 4
         },
         {
-          "id": "60037067",
+          "id": "37056",
+          "num": 56,
+          "name": "Victorious Sona",
+          "chromas": true
+        },
+        {
+          "id": "37057",
+          "num": 57,
+          "name": "Victorious Sona (Bronze)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "37058",
+          "num": 58,
+          "name": "Victorious Sona (Silver)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "37059",
+          "num": 59,
+          "name": "Victorious Sona (Gold)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "37060",
+          "num": 60,
+          "name": "Victorious Sona (Platinum)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "37061",
+          "num": 61,
+          "name": "Victorious Sona (Emerald)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "37062",
+          "num": 62,
+          "name": "Victorious Sona (Diamond)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "37063",
+          "num": 63,
+          "name": "Victorious Sona (Master)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "37064",
+          "num": 64,
+          "name": "Victorious Sona (Grandmaster)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "37065",
+          "num": 65,
+          "name": "Victorious Sona (Challenger)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "37066",
+          "num": 66,
+          "name": "Spirit Blossom Springs Sona",
+          "chromas": true
+        },
+        {
+          "id": "37067",
           "num": 67,
           "name": "Spirit Blossom Springs Sona (Ruby)",
           "chromas": false,
           "parentSkin": 66
         },
         {
-          "id": "60037068",
+          "id": "37068",
           "num": 68,
           "name": "Spirit Blossom Springs Sona (Catseye)",
           "chromas": false,
           "parentSkin": 66
         },
         {
-          "id": "60037069",
+          "id": "37069",
           "num": 69,
           "name": "Spirit Blossom Springs Sona (Emerald)",
           "chromas": false,
           "parentSkin": 66
         },
         {
-          "id": "60037070",
+          "id": "37070",
           "num": 70,
           "name": "Spirit Blossom Springs Sona (Turquoise)",
           "chromas": false,
           "parentSkin": 66
         },
         {
-          "id": "60037071",
+          "id": "37071",
           "num": 71,
           "name": "Spirit Blossom Springs Sona (Tanzanite)",
           "chromas": false,
           "parentSkin": 66
         },
         {
-          "id": "60037072",
+          "id": "37072",
           "num": 72,
           "name": "Spirit Blossom Springs Sona (Pearl)",
           "chromas": false,
           "parentSkin": 66
         },
         {
-          "id": "60037073",
+          "id": "37073",
           "num": 73,
           "name": "Spirit Blossom Springs Sona (Obsidian)",
           "chromas": false,
           "parentSkin": 66
         },
         {
-          "id": "60037074",
+          "id": "37074",
           "num": 74,
           "name": "Spirit Blossom Springs Sona (Rose Quartz)",
           "chromas": false,
           "parentSkin": 66
+        },
+        {
+          "id": "37075",
+          "num": 75,
+          "name": "Prestige Requiem Sona",
+          "chromas": true
+        },
+        {
+          "id": "37076",
+          "num": 76,
+          "name": "Prestige Requiem Sona (Vivid)",
+          "chromas": false,
+          "parentSkin": 75
         }
       ],
-      "lore": "- Auras of basic abilities are persistent<br>- Power Chord (P) does bonus damage<br>- Crescendo (R) is wider",
-      "blurb": "- Auras of basic abilities are persistent<br>- Power Chord (P) does bonus damage<br>- Crescendo (R) is wider",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Sona is Demacia's foremost virtuoso of the stringed etwahl, speaking only through her graceful chords and vibrant arias. This genteel manner has endeared her to the highborn, though others suspect her spellbinding melodies to actually emanate magic—a Demacian taboo. Silent to outsiders but somehow understood by close companions, Sona plucks her harmonies not only to soothe injured allies, but also to strike down unsuspecting enemies.",
+      "blurb": "Sona is Demacia's foremost virtuoso of the stringed etwahl, speaking only through her graceful chords and vibrant arias. This genteel manner has endeared her to the highborn, though others suspect her spellbinding melodies to actually emanate magic—a...",
+      "allytips": [
+        "Make sure to tag your allies while Sona's auras are active, but avoid getting caught out by enemies.",
+        "Save Crescendo for the game-altering moment.",
+        "Well-timed uses of Aria of Perseverance will grant you maximum survivability."
+      ],
+      "enemytips": [
+        "Spread out when you see Sona so she can't make your entire team dance.",
+        "Kill Sona first, as she will heal up her team if left alone for too long."
+      ],
       "tags": [
         "Support",
         "Mage"
@@ -246,62 +561,62 @@
         "difficulty": 4
       },
       "stats": {
-        "hp": 450,
-        "hpperlevel": 70,
-        "mp": 310,
+        "hp": 550,
+        "hpperlevel": 91,
+        "mp": 340,
         "mpperlevel": 45,
-        "movespeed": 330,
-        "armor": 15.3,
-        "armorperlevel": 3.3,
+        "movespeed": 325,
+        "armor": 26,
+        "armorperlevel": 4.2,
         "spellblock": 30,
-        "spellblockperlevel": 0,
+        "spellblockperlevel": 1.3,
         "attackrange": 550,
-        "hpregen": 5.05,
+        "hpregen": 5.5,
         "hpregenperlevel": 0.55,
-        "mpregen": 7.65,
-        "mpregenperlevel": 0.65,
+        "mpregen": 11.5,
+        "mpregenperlevel": 0.4,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 50,
+        "attackdamage": 49,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.3,
         "attackspeed": 0.644
       },
       "spells": [
         {
-          "id": "Jade_SonaQ",
+          "id": "SonaQ",
           "name": "Hymn of Valor",
-          "description": "Sona plays the Hymn of Valor, granting nearby allied champions bonus Damage and Ability Power. Additionally, casting this ability sends out bolts of sound, dealing magic damage to the nearest two enemy champions or monsters.",
-          "tooltip": "<keywordMajor>Persistent Aura:</keywordMajor> Grants nearby allied Champions {{ apadboost }} <physicalDamage>Attack Damage</physicalDamage> and <magicDamage>Ability Power</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the nearest {{ enemiestohit }} enemies, prioritizing Champions.{{ spellmodifierdescriptionappend }}",
+          "description": "Sona plays the Hymn of Valor, sends out bolts of sound, dealing magic damage to two nearby enemies, prioritizing champions and monsters. Sona gains a temporary aura that grants allies tagged by the zone bonus damage on their next attack against enemies.",
+          "tooltip": "Sona deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the nearest two enemies, prioritizing champions. She then begins a new <keywordMajor>Melody</keywordMajor>. Gain a stack of <keywordMajor>Accelerando</keywordMajor> for every champion you damage with this.<br /><br /><keywordMajor>Melody:</keywordMajor> Sona gains an aura for {{ auraduration }} seconds, granting allied champions an additional <magicDamage>{{ totalonhitdamage }} magic damage</magicDamage> %i:OnHit% on their next Attack within {{ onhitduration }} seconds.<br /><br /><keywordMajor>Power Chord - Staccato:</keywordMajor> Power Chord bonus damage (<magicDamage>{{ totalstaccatodamage }} total magic damage</magicDamage>).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Aura Damage / Ability Power",
-              "Damage",
+              "Damage (active)",
+              "Damage (melody)",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ apadboost }} -> {{ apadboostNL }}",
-              "{{ damagemissile }} -> {{ damagemissileNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ baseonhitdamage }} -> {{ baseonhitdamageNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            7,
-            7,
-            7,
-            7,
-            7
+            8,
+            8,
+            8,
+            8,
+            8
           ],
-          "cooldownBurn": "7",
+          "cooldownBurn": "8",
           "cost": [
+            50,
+            55,
+            60,
             65,
-            70,
-            75,
-            80,
-            85
+            70
           ],
-          "costBurn": "65/70/75/80/85",
+          "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
@@ -401,296 +716,10 @@
           ],
           "rangeBurn": "825",
           "image": {
-            "full": "Jade_SonaQ.png",
-            "sprite": "spell10.png",
+            "full": "SonaQ.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 384,
-            "y": 48,
-            "w": 48,
-            "h": 48
-          },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
-        },
-        {
-          "id": "Jade_SonaW",
-          "name": "Aria of Perseverance",
-          "description": "Sona plays the Aria of Perseverance, granting nearby allied champions bonus Armor and Magic Resist. Additionally, casting this ability sends out healing melodies, healing Sona and a nearby wounded ally.",
-          "tooltip": "<keywordMajor>Persistent Aura:</keywordMajor> Grants nearby allied Champions {{ armrboost }} <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>.<br /><br /><spellActive>Active:</spellActive> Heals Sona and the most wounded nearby allied Champion for <healing>{{ healing }} Health</healing>.{{ spellmodifierdescriptionappend }}",
-          "leveltip": {
-            "label": [
-              "Aura Resistances",
-              "Heal",
-              "@AbilityResourceName@ Cost"
-            ],
-            "effect": [
-              "{{ armrboost }} -> {{ armrboostNL }}",
-              "{{ heal }} -> {{ healNL }}",
-              "{{ cost }} -> {{ costNL }}"
-            ]
-          },
-          "maxrank": 5,
-          "cooldown": [
-            7,
-            7,
-            7,
-            7,
-            7
-          ],
-          "cooldownBurn": "7",
-          "cost": [
-            65,
-            70,
-            75,
-            80,
-            85
-          ],
-          "costBurn": "65/70/75/80/85",
-          "datavalues": {},
-          "effect": [
-            null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
-          "vars": [],
-          "costType": " {{ abilityresourcename }}",
-          "maxammo": "-1",
-          "range": [
-            1000,
-            1000,
-            1000,
-            1000,
-            1000
-          ],
-          "rangeBurn": "1000",
-          "image": {
-            "full": "Jade_SonaW.png",
-            "sprite": "spell10.png",
-            "group": "spell",
-            "x": 432,
-            "y": 48,
-            "w": 48,
-            "h": 48
-          },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
-        },
-        {
-          "id": "Jade_SonaE",
-          "name": "Song of Celerity",
-          "description": "Sona plays the Song of Celerity, granting nearby allied champions bonus Movement Speed. Additionally, casting this ability energizes nearby allies with a burst of speed.",
-          "tooltip": "<keywordMajor>Persistent Aura:</keywordMajor> Grants nearby allied Champions <speed>{{ msboost }} Move Speed</speed>.<br /><br /><spellActive>Active:</spellActive> Grants nearby allied Champions <speed>{{ movespeedmod*100 }}% Move Speed</speed> for {{ activespeedduration }} seconds.{{ spellmodifierdescriptionappend }}",
-          "leveltip": {
-            "label": [
-              "Aura Movement Speed",
-              "Move Speed",
-              "@AbilityResourceName@ Cost"
-            ],
-            "effect": [
-              "{{ msboost }} -> {{ msboostNL }}",
-              "{{ movespeedmod*100.000000 }}% -> {{ movespeedmodnl*100.000000 }}%",
-              "{{ cost }} -> {{ costNL }}"
-            ]
-          },
-          "maxrank": 5,
-          "cooldown": [
-            7,
-            7,
-            7,
-            7,
-            7
-          ],
-          "cooldownBurn": "7",
-          "cost": [
-            65,
-            70,
-            75,
-            80,
-            85
-          ],
-          "costBurn": "65/70/75/80/85",
-          "datavalues": {},
-          "effect": [
-            null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
-          "vars": [],
-          "costType": " {{ abilityresourcename }}",
-          "maxammo": "-1",
-          "range": [
-            1000,
-            1000,
-            1000,
-            1000,
-            1000
-          ],
-          "rangeBurn": "1000",
-          "image": {
-            "full": "Jade_SonaE.png",
-            "sprite": "spell10.png",
-            "group": "spell",
-            "x": 0,
+            "x": 288,
             "y": 96,
             "w": 48,
             "h": 48
@@ -698,10 +727,292 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_SonaR",
+          "id": "SonaW",
+          "name": "Aria of Perseverance",
+          "description": "Sona plays the Aria of Perseverance, sending out protective melodies, healing Sona and a nearby wounded ally. Sona gains a temporary aura that grants allies tagged by the zone a temporary shield.",
+          "tooltip": "<spellPassive>Active:</spellPassive> Sona restores <healing>{{ totalheal }} Health</healing> to herself and a nearby allied champion, prioritizing the most wounded. She then begins a new <keywordMajor>Melody</keywordMajor>.<br /><br /><keywordMajor>Melody:</keywordMajor> Sona gains an aura for {{ auraduration }} seconds, granting allied champions <shield>{{ totalshield }} Shield</shield> for {{ shieldduration }} seconds.<br /><br />Gain a stack of <keywordMajor>Accelerando</keywordMajor> whenever you heal another injured ally and every time you protect another ally from at least {{ accelerandoshieldbreakpoint }} damage with this shield.<br /><br /><keywordMajor>Power Chord - Diminuendo:</keywordMajor> Power Chord also reduces physical and magic damage dealt by the target by {{ totaldiminuendoweakenpercent }} for {{ diminuendoduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Heal (active)",
+              "Shield (melody)",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ baseshield }} -> {{ baseshieldNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "cooldownBurn": "10",
+          "cost": [
+            80,
+            85,
+            90,
+            95,
+            100
+          ],
+          "costBurn": "80/85/90/95/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
+          ],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "SonaW.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 336,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SonaE",
+          "name": "Song of Celerity",
+          "description": "Sona plays the Song of Celerity, granting nearby allies bonus Move Speed. Sona gains a temporary aura that grants allied champions tagged by the zone bonus Move Speed.",
+          "tooltip": "<spellPassive>Active:</spellPassive> She begins a new <keywordMajor>Melody</keywordMajor> and grants herself <speed>{{ totalselfmovementspeed }} Move Speed</speed> for {{ selfmovementspeeddurationmin }} seconds, extended to up to {{ selfmovementspeeddurationmax }} seconds if she doesn't take damage. <br /><br /><keywordMajor>Melody:</keywordMajor> Sona gains an aura for {{ auraduration }} seconds that grants allied champions <speed>{{ totalallymovementspeed }} Move Speed</speed> for {{ allymovementspeedduration }} seconds.<br /><br /><keywordMajor>Power Chord - Tempo:</keywordMajor> Power Chord also <status>Slows</status> the target by {{ totaltempomovespeedslow }} for {{ tempoduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Move Speed"
+            ],
+            "effect": [
+              "{{ allybasemovementspeed*100.000000 }}% -> {{ allybasemovementspeednl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            14,
+            14,
+            14,
+            14,
+            14
+          ],
+          "cooldownBurn": "14",
+          "cost": [
+            65,
+            65,
+            65,
+            65,
+            65
+          ],
+          "costBurn": "65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            430,
+            430,
+            430,
+            430,
+            430
+          ],
+          "rangeBurn": "430",
+          "image": {
+            "full": "SonaE.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 384,
+            "y": 96,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SonaR",
           "name": "Crescendo",
-          "description": "Sona plays her ultimate chord, forcing enemy champions to dance and dealing magic damage to them.",
-          "tooltip": "Strikes an irresistible chord dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and forcing enemy Champions to <status>dance</status> for 1.5 seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Sona plays her ultimate chord, stunning enemy champions and forcing them to dance and dealing magic damage to them.",
+          "tooltip": "Sona strikes an irresistible chord, <status>Stunning</status> enemy for {{ stunduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -714,11 +1025,11 @@
           },
           "maxrank": 3,
           "cooldown": [
-            170,
-            150,
-            130
+            140,
+            120,
+            100
           ],
-          "cooldownBurn": "170/150/130",
+          "cooldownBurn": "140/120/100",
           "cost": [
             100,
             100,
@@ -802,10 +1113,10 @@
           ],
           "rangeBurn": "900",
           "image": {
-            "full": "Jade_SonaR.png",
-            "sprite": "spell10.png",
+            "full": "SonaR.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 48,
+            "x": 432,
             "y": 96,
             "w": 48,
             "h": 48
@@ -815,12 +1126,12 @@
       ],
       "passive": {
         "name": "Power Chord",
-        "description": "After casting 3 spells, Sona's next attack deals bonus magic damage and causes her target to deal reduced damage for a few seconds.",
+        "description": "<passive>Accelerando</passive>: Sona gains non-Ultimate ability haste permanently for her basic abilities as she uses her abilities well, up to a cap. Beyond that cap, further successful uses reduce her ultimate's remaining cooldown instead.<br><br><passive>Power Chord</passive>: Every few spell casts, Sona's next attack will deal bonus magic damage in addition to an additional effect based on what basic Ability Sona last activated.",
         "image": {
-          "full": "Jade_Sona_Passive_Charged.png",
-          "sprite": "passive3.png",
+          "full": "Sona_Passive_Charged.png",
+          "sprite": "passive4.png",
           "group": "passive",
-          "x": 288,
+          "x": 384,
           "y": 0,
           "w": 48,
           "h": 48

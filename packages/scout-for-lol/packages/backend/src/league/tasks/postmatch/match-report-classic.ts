@@ -19,7 +19,10 @@ import {
   resolveQueueTypeFromGame,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
-import { participantMismatchTotal } from "#src/metrics/index.ts";
+import {
+  classicAssetResolutionFailuresTotal,
+  participantMismatchTotal,
+} from "#src/metrics/index.ts";
 
 const logger = createLogger("postmatch-match-report-classic");
 
@@ -46,32 +49,44 @@ function resolveClassicIdentity(
 }
 
 function toClassicChampion(participant: RawParticipant): ClassicChampion {
-  return {
-    puuid: participant.puuid,
-    ...resolveClassicIdentity(participant),
-    championId: getClassicChampionId(participant.championId),
-    championName: resolveClassicChampionKey(participant.championId),
-    kills: participant.kills,
-    deaths: participant.deaths,
-    assists: participant.assists,
-    level: participant.champLevel,
-    items: [
-      participant.item0,
-      participant.item1,
-      participant.item2,
-      participant.item3,
-      participant.item4,
-      participant.item5,
-      participant.item6,
-    ],
-    spells: [
-      getClassicSpellId(participant.summoner1Id),
-      getClassicSpellId(participant.summoner2Id),
-    ],
-    gold: participant.goldEarned,
-    creepScore:
-      participant.totalMinionsKilled + participant.neutralMinionsKilled,
-  };
+  try {
+    return {
+      puuid: participant.puuid,
+      ...resolveClassicIdentity(participant),
+      championId: getClassicChampionId(participant.championId),
+      championName: resolveClassicChampionKey(participant.championId),
+      kills: participant.kills,
+      deaths: participant.deaths,
+      assists: participant.assists,
+      level: participant.champLevel,
+      items: [
+        participant.item0,
+        participant.item1,
+        participant.item2,
+        participant.item3,
+        participant.item4,
+        participant.item5,
+        participant.item6,
+      ],
+      spells: [
+        getClassicSpellId(participant.summoner1Id),
+        getClassicSpellId(participant.summoner2Id),
+      ],
+      gold: participant.goldEarned,
+      creepScore:
+        participant.totalMinionsKilled + participant.neutralMinionsKilled,
+    };
+  } catch (error) {
+    const reason =
+      error instanceof Error && error.message.includes("asset")
+        ? "asset"
+        : "mapping";
+    classicAssetResolutionFailuresTotal.inc({ phase: "postmatch", reason });
+    logger.error("Classic postmatch champion asset resolution failed", error, {
+      championId: participant.championId,
+    });
+    throw error;
+  }
 }
 
 function requireTeam(participant: RawParticipant): Team {

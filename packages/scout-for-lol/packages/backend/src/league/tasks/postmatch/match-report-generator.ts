@@ -17,6 +17,7 @@ import {
   resolveQueueTypeFromGame,
   isArenaQueueOrMode,
   isClassicQueueType,
+  isClassicAssetMode,
 } from "@scout-for-lol/data/index.ts";
 import configuration from "#src/configuration.ts";
 import { getPlayer } from "#src/league/model/player.ts";
@@ -418,7 +419,10 @@ export async function generateMatchReport(
       matchData.info.gameMode,
       matchData.info.gameType,
     );
-    if (isClassicQueueType(queueType)) {
+    if (
+      isClassicQueueType(queueType) &&
+      isClassicAssetMode(matchData.info.queueId, matchData.info.gameMode)
+    ) {
       const result = await dependencies.processClassicMatch(
         matchData,
         matchId,

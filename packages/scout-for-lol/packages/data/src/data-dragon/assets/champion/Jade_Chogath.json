@@ -1,162 +1,315 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Chogath": {
-      "id": "Jade_Chogath",
-      "key": "60031",
+      "id": "Chogath",
+      "key": "31",
       "name": "Cho'Gath",
-      "title": "The Terror of the Void",
+      "title": "the Terror of the Void",
       "image": {
-        "full": "Jade_Chogath.png",
-        "sprite": "champion1.png",
+        "full": "Chogath.png",
+        "sprite": "champion0.png",
         "group": "champion",
-        "x": 336,
+        "x": 144,
         "y": 96,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60031000",
+          "id": "31000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60031004",
+          "id": "31001",
+          "num": 1,
+          "name": "Nightmare Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "31002",
+          "num": 2,
+          "name": "Gentleman Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "31003",
+          "num": 3,
+          "name": "Loch Ness Cho'Gath",
+          "chromas": false
+        },
+        {
+          "id": "31004",
           "num": 4,
           "name": "Jurassic Cho'Gath",
           "chromas": false
         },
         {
-          "id": "60031005",
+          "id": "31005",
           "num": 5,
           "name": "Battlecast Prime Cho'Gath",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60031006",
+          "id": "31006",
           "num": 6,
           "name": "Prehistoric Cho'Gath",
           "chromas": false
         },
         {
-          "id": "60031007",
+          "id": "31007",
           "num": 7,
           "name": "Dark Star Cho'Gath",
           "chromas": false
         },
         {
-          "id": "60031008",
+          "id": "31008",
           "num": 8,
           "name": "Battlecast Prime Cho'Gath (Ruby)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60031009",
+          "id": "31009",
           "num": 9,
           "name": "Battlecast Prime Cho'Gath (Catseye)",
           "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60031010",
+          "id": "31010",
           "num": 10,
           "name": "Battlecast Prime Cho'Gath (Sapphire)",
           "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60031011",
+          "id": "31011",
           "num": 11,
           "name": "Battlecast Prime Cho'Gath (Pearl)",
           "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60031012",
+          "id": "31012",
           "num": 12,
           "name": "Battlecast Prime Cho'Gath (Obsidian)",
           "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60031013",
+          "id": "31013",
           "num": 13,
           "name": "Battlecast Prime Cho'Gath (Tanzanite)",
           "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60031032",
-          "num": 32,
-          "name": "Toy Terror Cho'Gath",
-          "chromas": false
+          "id": "31014",
+          "num": 14,
+          "name": "Shan Hai Scrolls Cho'Gath",
+          "chromas": true
         },
         {
-          "id": "60031033",
+          "id": "31015",
+          "num": 15,
+          "name": "Shan Hai Scrolls Cho'Gath (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "31016",
+          "num": 16,
+          "name": "Shan Hai Scrolls Cho'Gath (Peridot)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "31017",
+          "num": 17,
+          "name": "Shan Hai Scrolls Cho'Gath (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "31018",
+          "num": 18,
+          "name": "Shan Hai Scrolls Cho'Gath (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "31019",
+          "num": 19,
+          "name": "Shan Hai Scrolls Cho'Gath (Turquoise)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "31020",
+          "num": 20,
+          "name": "Shan Hai Scrolls Cho'Gath (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "31021",
+          "num": 21,
+          "name": "Shan Hai Scrolls Cho'Gath (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "31022",
+          "num": 22,
+          "name": "Shan Hai Scrolls Cho'Gath (Catseye)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "31023",
+          "num": 23,
+          "name": "Broken Covenant Cho'Gath",
+          "chromas": true
+        },
+        {
+          "id": "31024",
+          "num": 24,
+          "name": "Broken Covenant Cho'Gath (Ruby)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "31025",
+          "num": 25,
+          "name": "Broken Covenant Cho'Gath (Catseye)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "31026",
+          "num": 26,
+          "name": "Broken Covenant Cho'Gath (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "31027",
+          "num": 27,
+          "name": "Broken Covenant Cho'Gath (Turquoise)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "31028",
+          "num": 28,
+          "name": "Broken Covenant Cho'Gath (Sapphire)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "31029",
+          "num": 29,
+          "name": "Broken Covenant Cho'Gath (Emerald)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "31030",
+          "num": 30,
+          "name": "Broken Covenant Cho'Gath (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "31031",
+          "num": 31,
+          "name": "Broken Covenant Cho'Gath (Pearl)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "31032",
+          "num": 32,
+          "name": "Toy Terror Cho'Gath",
+          "chromas": true
+        },
+        {
+          "id": "31033",
           "num": 33,
           "name": "Toy Terror Cho'Gath (Ruby)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60031034",
+          "id": "31034",
           "num": 34,
           "name": "Toy Terror Cho'Gath (Aquamarine)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60031035",
+          "id": "31035",
           "num": 35,
           "name": "Toy Terror Cho'Gath (Rose Quartz)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60031036",
+          "id": "31036",
           "num": 36,
           "name": "Toy Terror Cho'Gath (Tanzanite)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60031037",
+          "id": "31037",
           "num": 37,
           "name": "Toy Terror Cho'Gath (Peridot)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60031038",
+          "id": "31038",
           "num": 38,
           "name": "Toy Terror Cho'Gath (Catseye)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60031039",
+          "id": "31039",
           "num": 39,
           "name": "Toy Terror Cho'Gath (Obsidian)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60031040",
+          "id": "31040",
           "num": 40,
           "name": "Toy Terror Cho'Gath (Pearl)",
           "chromas": false,
           "parentSkin": 32
+        },
+        {
+          "id": "31041",
+          "num": 41,
+          "name": "Petricite Cho'Gath",
+          "chromas": false
         }
       ],
-      "lore": "- Feast (R) stacks max 6 times, is lost on kill but can be stacked on anything<br>- Vorpal Spikes (E) toggles the spikes that go through players",
-      "blurb": "- Feast (R) stacks max 6 times, is lost on kill but can be stacked on anything<br>- Vorpal Spikes (E) toggles the spikes that go through players",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "From the moment Cho'Gath first emerged into the harsh light of Runeterra's sun, the beast was driven by the most pure and insatiable hunger. A perfect expression of the Void's desire to consume all life, Cho'Gath's complex biology quickly converts matter into new bodily growth—increasing its muscle mass and density, or hardening its outer carapace like organic diamond. When growing larger does not suit the Void-spawn's needs, it vomits out the excess material as razor-sharp spines, leaving prey skewered and ready to feast upon later.",
+      "blurb": "From the moment Cho'Gath first emerged into the harsh light of Runeterra's sun, the beast was driven by the most pure and insatiable hunger. A perfect expression of the Void's desire to consume all life, Cho'Gath's complex biology quickly converts...",
+      "allytips": [
+        "Try to line up your attacks with Vorpal Spikes so that they kill minions and harass enemy champions at the same time.",
+        "If you're having difficulty feasting upon champions, try eating minions until you're larger.",
+        "Using Rupture on creeps in combination with Carnivore is a good way to gain Health and Mana."
+      ],
+      "enemytips": [
+        "Purchasing a few HP items decreases the chances of Cho'Gath killing you quickly.",
+        "Focus on preventing Cho'Gath from reaching his max size.",
+        "Rupture has a smoke cloud indicating the area it will strike. Try to watch out for it to prevent Cho'Gath from being able to combo his abilities."
+      ],
       "tags": [
         "Tank",
         "Mage"
@@ -169,33 +322,33 @@
         "difficulty": 5
       },
       "stats": {
-        "hp": 520,
-        "hpperlevel": 80,
-        "mp": 245,
-        "mpperlevel": 40,
+        "hp": 644,
+        "hpperlevel": 94,
+        "mp": 270,
+        "mpperlevel": 60,
         "movespeed": 345,
-        "armor": 26.5,
-        "armorperlevel": 3.5,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
+        "armor": 38,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
         "attackrange": 125,
-        "hpregen": 8.35,
+        "hpregen": 9,
         "hpregenperlevel": 0.85,
-        "mpregen": 6.9,
+        "mpregen": 7.2,
         "mpregenperlevel": 0.45,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 58.3,
+        "attackdamage": 69,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 1.44,
-        "attackspeed": 0.625
+        "attackspeed": 0.658
       },
       "spells": [
         {
-          "id": "Jade_ChogathQ",
+          "id": "Rupture",
           "name": "Rupture",
           "description": "Ruptures the ground at target location, popping enemy units into the air, dealing damage and slowing them.",
-          "tooltip": "Cho'Gath ruptures the ground, <status>Knocking Up</status> enemies for {{ knockupduration }} second, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, and <status>Slowing</status> them by {{ slowamountpercentage }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Cho'Gath ruptures the ground, <status>Knocking Up</status> enemies for {{ e5 }} second, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>, and <status>Slowing</status> them by {{ e2 }}% for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage"
@@ -206,21 +359,21 @@
           },
           "maxrank": 5,
           "cooldown": [
-            9,
-            9,
-            9,
-            9,
-            9
+            6,
+            6,
+            6,
+            6,
+            6
           ],
-          "cooldownBurn": "9",
+          "cooldownBurn": "6",
           "cost": [
-            90,
-            90,
-            90,
-            90,
-            90
+            50,
+            50,
+            50,
+            50,
+            50
           ],
-          "costBurn": "90",
+          "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
@@ -320,50 +473,52 @@
           ],
           "rangeBurn": "950",
           "image": {
-            "full": "Jade_ChogathQ.png",
-            "sprite": "spell6.png",
+            "full": "Rupture.png",
+            "sprite": "spell3.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 288,
+            "y": 0,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_ChogathW",
+          "id": "FeralScream",
           "name": "Feral Scream",
           "description": "Cho'Gath unleashes a terrible scream at enemies in a cone, dealing magic damage and Silencing enemies for a few seconds.",
-          "tooltip": "Cho'Gath roars, <status>Silencing</status> enemies for {{ silenceduration }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Cho'Gath roars, <status>Silencing</status> enemies for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
+              "Cooldown",
               "Silence Duration",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ silenceduration }} -> {{ silencedurationNL }}",
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ e2 }} -> {{ e2NL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            13,
-            13,
-            13,
-            13,
-            13
+            11,
+            10.5,
+            10,
+            9.5,
+            9
           ],
-          "cooldownBurn": "13",
+          "cooldownBurn": "11/10.5/10/9.5/9",
           "cost": [
             70,
+            75,
             80,
-            90,
-            100,
-            110
+            85,
+            90
           ],
-          "costBurn": "70/80/90/100/110",
+          "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
@@ -463,46 +618,54 @@
           ],
           "rangeBurn": "300",
           "image": {
-            "full": "Jade_ChogathW.png",
-            "sprite": "spell6.png",
+            "full": "FeralScream.png",
+            "sprite": "spell3.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 336,
+            "y": 0,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_ChogathE",
+          "id": "VorpalSpikes",
           "name": "Vorpal Spikes",
-          "description": "Cho'Gath's attacks passively release deadly spikes, dealing damage to all enemy units in front of him.",
-          "tooltip": " <toggle>Toggle:</toggle> Cho'gath's attacks launch spikes that deal <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "description": "Cho'Gath's attacks release deadly spikes, dealing damage and slowing all enemy units in front of him.",
+          "tooltip": "Cho'Gath's next 3 Attacks launch spikes that deal <magicDamage>{{ flatdamagecalc }} plus {{ maxhealthpercentcalc }} of the target's max Health magic damage</magicDamage> and <status>Slow</status> by {{ slowamountpercentage }}%, decaying over {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage"
+              "Damage",
+              "Maximum Health Damage",
+              "Monster Damage",
+              "Slow",
+              "Cooldown"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ percenthealthdamage }}% -> {{ percenthealthdamageNL }}%",
+              "{{ modifiedmonstercap }} -> {{ modifiedmonstercapNL }}",
+              "{{ slowamountpercentage }}% -> {{ slowamountpercentageNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            0.5,
-            0.5,
-            0.5,
-            0.5,
-            0.5
+            8,
+            7,
+            6,
+            5,
+            4
           ],
-          "cooldownBurn": "0.5",
+          "cooldownBurn": "8/7/6/5/4",
           "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
+            30,
+            30,
+            30,
+            30,
+            30
           ],
-          "costBurn": "0",
+          "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
@@ -591,7 +754,7 @@
             "0"
           ],
           "vars": [],
-          "costType": "No Cost",
+          "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
             40,
@@ -602,38 +765,42 @@
           ],
           "rangeBurn": "40",
           "image": {
-            "full": "Jade_ChogathE.png",
-            "sprite": "spell6.png",
+            "full": "VorpalSpikes.png",
+            "sprite": "spell3.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 384,
+            "y": 0,
             "w": 48,
             "h": 48
           },
-          "resource": "No Cost"
+          "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_ChogathR",
+          "id": "Feast",
           "name": "Feast",
-          "description": "Devours an enemy unit, dealing a high amount of true damage. If the target is killed, Cho'Gath grows, gaining maximum health (maximum 6 stacks). Cho'Gath loses half of his stacks upon death.",
-          "tooltip": "Cho'Gath ravenously feeds on an enemy, dealing <trueDamage>{{ rdamage }} true damage</trueDamage> to champions or <trueDamage>{{ rmonsterdamage }}</trueDamage> to minions or jungle monsters. If this kills the target, Cho'Gath gains a stack, which causes him to grow in size and gain <healing>{{ rhealthperstack }} max Health</healing> (maximum 6 stacks). Loses half of his stacks on death. {{ spellmodifierdescriptionappend }}",
+          "description": "Devours an enemy unit, dealing a high amount of true damage. If the target is killed, Cho'Gath grows, gaining maximum Health.",
+          "tooltip": "Cho'Gath ravenously feeds on an enemy, dealing <trueDamage>{{ rdamage }} true damage</trueDamage> to champions or <trueDamage>{{ rmonsterdamage }}</trueDamage> to minions or jungle monsters. If this kills the target, Cho'Gath gains a stack, which causes him to grow in size and gain <healing>{{ rhealthperstack }} max Health</healing>. Only {{ rminionmaxstacks }} stacks can be gained from minions and non-epic jungle monsters. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Champion Damage",
-              "Health per Stack"
+              "Health per Stack",
+              "Attack Range per Stack",
+              "Cooldown"
             ],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
-              "{{ rhealthperstack }} -> {{ rhealthperstackNL }}"
+              "{{ rhealthperstack }} -> {{ rhealthperstackNL }}",
+              "{{ attackrangeperstack }} -> {{ attackrangeperstackNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            60,
-            60,
+            80,
+            70,
             60
           ],
-          "cooldownBurn": "60",
+          "cooldownBurn": "80/70/60",
           "cost": [
             100,
             100,
@@ -717,11 +884,11 @@
           ],
           "rangeBurn": "175",
           "image": {
-            "full": "Jade_ChogathR.png",
-            "sprite": "spell6.png",
+            "full": "Feast.png",
+            "sprite": "spell3.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 432,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -730,12 +897,12 @@
       ],
       "passive": {
         "name": "Carnivore",
-        "description": "Whenever Cho'Gath kills a unit, he recovers health and mana. The values restored increase with Cho'Gath's level.",
+        "description": "Whenever Cho'Gath kills a unit, he recovers Health and Mana. The values restored increase with Cho'Gath's level.",
         "image": {
           "full": "GreenTerror_TailSpike.png",
-          "sprite": "passive1.png",
+          "sprite": "passive0.png",
           "group": "passive",
-          "x": 336,
+          "x": 144,
           "y": 96,
           "w": 48,
           "h": 48

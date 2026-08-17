@@ -1,177 +1,273 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Wukong": {
-      "id": "Jade_Wukong",
-      "key": "60062",
+      "id": "MonkeyKing",
+      "key": "62",
       "name": "Wukong",
-      "title": "The Monkey King",
+      "title": "the Monkey King",
       "image": {
-        "full": "Jade_Wukong.png",
-        "sprite": "champion3.png",
+        "full": "MonkeyKing.png",
+        "sprite": "champion2.png",
         "group": "champion",
-        "x": 336,
-        "y": 48,
+        "x": 240,
+        "y": 96,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60062000",
+          "id": "62000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60062003",
-          "num": 3,
-          "name": "Jade Dragon Wukong",
+          "id": "62001",
+          "num": 1,
+          "name": "Volcanic Wukong",
           "chromas": false
         },
         {
-          "id": "60062005",
+          "id": "62002",
+          "num": 2,
+          "name": "General Wukong",
+          "chromas": false
+        },
+        {
+          "id": "62003",
+          "num": 3,
+          "name": "Jade Dragon Wukong",
+          "chromas": true
+        },
+        {
+          "id": "62004",
+          "num": 4,
+          "name": "Underworld Wukong",
+          "chromas": true
+        },
+        {
+          "id": "62005",
           "num": 5,
           "name": "Radiant Wukong",
           "chromas": false
         },
         {
-          "id": "60062007",
+          "id": "62006",
+          "num": 6,
+          "name": "Lancer Stratus Wukong",
+          "chromas": false
+        },
+        {
+          "id": "62007",
           "num": 7,
           "name": "Battle Academia Wukong",
           "chromas": true
         },
         {
-          "id": "60062008",
+          "id": "62008",
           "num": 8,
           "name": "Battle Academia Wukong (Ruby)",
           "chromas": false,
           "parentSkin": 7
         },
         {
-          "id": "60062009",
+          "id": "62009",
           "num": 9,
           "name": "Battle Academia Wukong (Rose Quartz)",
           "chromas": false,
           "parentSkin": 7
         },
         {
-          "id": "60062010",
+          "id": "62010",
           "num": 10,
           "name": "Battle Academia Wukong (Catseye)",
           "chromas": false,
           "parentSkin": 7
         },
         {
-          "id": "60062011",
+          "id": "62011",
           "num": 11,
           "name": "Battle Academia Wukong (Sapphire)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 7
         },
         {
-          "id": "60062012",
+          "id": "62012",
           "num": 12,
           "name": "Battle Academia Wukong (Emerald)",
           "chromas": false,
           "parentSkin": 7
         },
         {
-          "id": "60062013",
+          "id": "62013",
           "num": 13,
           "name": "Battle Academia Wukong (Pearl)",
           "chromas": false,
           "parentSkin": 7
         },
         {
-          "id": "60062014",
+          "id": "62014",
           "num": 14,
           "name": "Battle Academia Wukong (Meteorite)",
           "chromas": false,
           "parentSkin": 7
         },
         {
-          "id": "60062015",
+          "id": "62015",
           "num": 15,
           "name": "Battle Academia Wukong (Obsidian)",
           "chromas": false,
           "parentSkin": 7
         },
         {
-          "id": "60062025",
+          "id": "62016",
+          "num": 16,
+          "name": "Elderwood Wukong",
+          "chromas": true
+        },
+        {
+          "id": "62017",
+          "num": 17,
+          "name": "Elderwood Wukong (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62018",
+          "num": 18,
+          "name": "Elderwood Wukong (Citrine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62019",
+          "num": 19,
+          "name": "Elderwood Wukong (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62020",
+          "num": 20,
+          "name": "Elderwood Wukong (Turquoise)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62021",
+          "num": 21,
+          "name": "Elderwood Wukong (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62022",
+          "num": 22,
+          "name": "Elderwood Wukong (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62023",
+          "num": 23,
+          "name": "Elderwood Wukong (Amethyst)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62024",
+          "num": 24,
+          "name": "Elderwood Wukong (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "62025",
           "num": 25,
           "name": "Jade Dragon Wukong (Meteorite)",
           "chromas": false,
           "parentSkin": 3
         },
         {
-          "id": "60062026",
+          "id": "62026",
           "num": 26,
           "name": "Mecha Kingdoms Wukong",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60062029",
+          "id": "62027",
+          "num": 27,
+          "name": "Underworld Wukong (Doom)",
+          "chromas": false,
+          "parentSkin": 4
+        },
+        {
+          "id": "62029",
           "num": 29,
           "name": "Mecha Kingdoms Wukong (Ruby)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60062030",
+          "id": "62030",
           "num": 30,
           "name": "Mecha Kingdoms Wukong (Emerald)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60062031",
+          "id": "62031",
           "num": 31,
           "name": "Mecha Kingdoms Wukong (Rose Quartz)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60062032",
+          "id": "62032",
           "num": 32,
           "name": "Mecha Kingdoms Wukong (Sapphire)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60062033",
+          "id": "62033",
           "num": 33,
           "name": "Mecha Kingdoms Wukong (Amethyst)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60062034",
+          "id": "62034",
           "num": 34,
           "name": "Mecha Kingdoms Wukong (Pearl)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60062035",
+          "id": "62035",
           "num": 35,
           "name": "Mecha Kingdoms Wukong (Obsidian)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60062036",
+          "id": "62036",
           "num": 36,
           "name": "Mecha Kingdoms Wukong (Catseye)",
           "chromas": false,
           "parentSkin": 26
         }
       ],
-      "lore": "- Decoy (W) does not mirror other abilities used and does not auto attack<br>- Cyclone (R) only has 1 activation",
-      "blurb": "- Decoy (W) does not mirror other abilities used and does not auto attack<br>- Cyclone (R) only has 1 activation",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Wukong is a vastayan trickster who uses his strength, agility, and intelligence to confuse his opponents and gain the upper hand. After finding a lifelong friend in the warrior known as Master Yi, Wukong became the last student of the ancient martial art known as Wuju. Armed with an enchanted staff, Wukong seeks to prevent Ionia from falling to ruin.",
+      "blurb": "Wukong is a vastayan trickster who uses his strength, agility, and intelligence to confuse his opponents and gain the upper hand. After finding a lifelong friend in the warrior known as Master Yi, Wukong became the last student of the ancient martial...",
+      "allytips": [
+        "Decoy and Nimbus Strike work well together to quickly strike your enemy and get out before they can retaliate.",
+        "Try using Decoy near brush to make an enemy overreact to your movement."
+      ],
+      "enemytips": [
+        "Wukong will often use Decoy after Nimbus Strike. Try delaying your abilities by a short amount of time to ensure that you're hitting the real Wukong.",
+        "Wukong becomes tougher to kill when surrounded by his enemies. Try to isolate him to gain an advantage."
+      ],
       "tags": [
         "Fighter",
         "Tank"
@@ -184,60 +280,64 @@
         "difficulty": 3
       },
       "stats": {
-        "hp": 520,
-        "hpperlevel": 85,
-        "mp": 240,
-        "mpperlevel": 38,
-        "movespeed": 345,
-        "armor": 22.5,
-        "armorperlevel": 3.5,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
+        "hp": 610,
+        "hpperlevel": 99,
+        "mp": 330,
+        "mpperlevel": 65,
+        "movespeed": 340,
+        "armor": 31,
+        "armorperlevel": 4.7,
+        "spellblock": 28,
+        "spellblockperlevel": 2.05,
         "attackrange": 175,
-        "hpregen": 5.75,
+        "hpregen": 3.5,
         "hpregenperlevel": 0.65,
-        "mpregen": 7.6,
-        "mpregenperlevel": 0.65,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 57.7,
+        "attackdamage": 66,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 3,
-        "attackspeed": 0.658
+        "attackspeed": 0.69
       },
       "spells": [
         {
-          "id": "Jade_WukongQ",
+          "id": "MonkeyKingDoubleAttack",
           "name": "Crushing Blow",
-          "description": "Wukong's next attack gains extra range, deals bonus damage, and reduces the enemy's Armor.",
-          "tooltip": "Wukong's next Attack has {{ bonusattackrange }} bonus Attack Range, deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and reduces the enemy's <scaleArmor>Armor by {{ armorshredpercent*-100 }}%</scaleArmor> for {{ shredduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Wukong's next attack gains attack range, deals bonus damage, and reduces the target's armor for a few seconds.",
+          "tooltip": "Wukong and his <keywordMajor>Clone's</keywordMajor> next Attack gains {{ attackrangebonus }} range, deals an additional <physicalDamage>{{ bonusdamagett }} physical damage</physicalDamage>, and removes <scaleArmor>{{ armorshredpercent*100 }}% Armor</scaleArmor> for {{ shredduration }} seconds.<br /><br />This Ability's cooldown is reduced by {{ cooldowndecrease }} seconds every time Wukong or his <keywordMajor>Clone</keywordMajor> hit an enemy with an Attack or Ability.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Bonus Damage",
+              "Damage",
+              "Armor Reduction %",
+              "Range",
               "Cooldown"
             ],
             "effect": [
-              "{{ bonusdamage }} -> {{ bonusdamageNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ armorshredpercent*100.000000 }}% -> {{ armorshredpercentnl*100.000000 }}%",
+              "{{ attackrangebonus }} -> {{ attackrangebonusNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            9,
             8,
+            7.5,
             7,
-            6,
-            5
+            6.5,
+            6
           ],
-          "cooldownBurn": "9/8/7/6/5",
+          "cooldownBurn": "8/7.5/7/6.5/6",
           "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
+            20,
+            20,
+            20,
+            20,
+            20
           ],
-          "costBurn": "40",
+          "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
@@ -337,50 +437,50 @@
           ],
           "rangeBurn": "250/275/300/325/350",
           "image": {
-            "full": "Jade_WukongQ.png",
-            "sprite": "spell11.png",
+            "full": "MonkeyKingDoubleAttack.png",
+            "sprite": "spell9.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 192,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_WukongW",
-          "name": "Decoy",
-          "description": "Wukong becomes invisible for 1.5 seconds. An uncontrollable decoy is left behind that will deal magic damage to enemies near it after 1.5 seconds.",
-          "tooltip": "Wukong becomes <keywordStealth>Invisible</keywordStealth> for {{ stealthduration }} seconds. An uncontrollable decoy is left behind that will deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemies near it after {{ cloneduration }} seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "id": "MonkeyKingDecoy",
+          "name": "Warrior Trickster",
+          "description": "Wukong becomes <font color='#91d7ee'>Invisible</font> and dashes in a direction, leaving behind a clone that will attack nearby enemies.",
+          "tooltip": "Wukong dashes and becomes <keywordStealth>Invisible</keywordStealth> for {{ stealthduration }} second, leaving behind a stationary <keywordMajor>Clone</keywordMajor> for {{ cloneduration }} seconds.<br /><br />The <keywordMajor>Clone</keywordMajor> Attacks nearby enemies Wukong has recently damaged and will mimic his ultimate, each dealing {{ clonedamagemod*100 }}% of normal damage.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
+              "Damage Percent",
               "Cooldown",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ clonebasedamage }} -> {{ clonebasedamageNL }}",
+              "{{ clonedamagemod*100.000000 }}% -> {{ clonedamagemodnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            18,
-            16,
-            14,
-            12,
-            10
+            22,
+            21,
+            20,
+            19,
+            18
           ],
-          "cooldownBurn": "18/16/14/12/10",
+          "cooldownBurn": "22/21/20/19/18",
           "cost": [
-            50,
-            55,
             60,
-            65,
-            70
+            55,
+            50,
+            45,
+            40
           ],
-          "costBurn": "50/55/60/65/70",
+          "costBurn": "60/55/50/45/40",
           "datavalues": {},
           "effect": [
             null,
@@ -480,50 +580,52 @@
           ],
           "rangeBurn": "275",
           "image": {
-            "full": "Jade_WukongW.png",
-            "sprite": "spell11.png",
+            "full": "MonkeyKingDecoy.png",
+            "sprite": "spell9.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 240,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_WukongE",
+          "id": "MonkeyKingNimbus",
           "name": "Nimbus Strike",
-          "description": "Wukong dashes toward a target enemy and sends out images to attack up to 2 additional enemies near his target, dealing physical damage to each enemy struck.",
-          "tooltip": "Wukong dashes toward a target enemy and sends out images to attack up to 2 additional enemies near his target, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to each enemy struck. Upon hitting his target, Wukong gains <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> for {{ attackspeedduration }} seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "Wukong dashes to a targeted enemy and sends out images to attack enemies near his target, dealing damage to each enemy struck.",
+          "tooltip": "Wukong dashes to an enemy, sending out <keywordMajor>Clones</keywordMajor> that mimic the dash to up to {{ extratargets }} additional enemies nearby. Each enemy struck takes <magicDamage>{{ totaldamage }} magic damage</magicDamage>. He and his <keywordMajor>Clone</keywordMajor> gain <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> for {{ attackspeedduration }} seconds.<br /><br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage",
+              "Damage",
               "Attack Speed",
+              "Cooldown",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            8,
-            8,
-            8,
-            8,
-            8
+            10,
+            9.25,
+            8.5,
+            7.75,
+            7
           ],
-          "cooldownBurn": "8",
+          "cooldownBurn": "10/9.25/8.5/7.75/7",
           "cost": [
+            30,
+            35,
+            40,
             45,
-            50,
-            55,
-            60,
-            65
+            50
           ],
-          "costBurn": "45/50/55/60/65",
+          "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
@@ -623,38 +725,38 @@
           ],
           "rangeBurn": "650",
           "image": {
-            "full": "Jade_WukongE.png",
-            "sprite": "spell11.png",
+            "full": "MonkeyKingNimbus.png",
+            "sprite": "spell9.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 288,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_WukongR",
+          "id": "MonkeyKingSpinToWin",
           "name": "Cyclone",
-          "description": "Wukong's staff grows outward and he spins it around, dealing damage and knocking up enemies. Wukong gains movement speed over the duration of the spell.",
-          "tooltip": "Wukong's staff grows outward and he spins it around, dealing <physicalDamage>{{ damagepersecondtotal }} physical damage</physicalDamage> per second and <status>Knocking Up</status> enemies he encounters. Wukong gains <speed>Move Speed</speed> over the duration of the spell. Lasts {{ spinduration }} seconds. <recast>Recast:</recast> Cancels the ultimate early.</mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "Wukong's extends his staff and spins it around repeatedly, gaining Move Speed.<br><br>Enemies struck take damage and are knocked up.",
+          "tooltip": "Wukong gains <speed>{{ movespeed*100 }}% Move Speed</speed> and spins his staff, <status>Knocking Up</status> nearby enemies for {{ knockupduration }} seconds and take <physicalDamage>{{ totaldamagett }} plus {{ percenthpdamagett }} max Health physical damage</physicalDamage> over {{ spinduration }} seconds.<br /><br />This Ability can be cast a second time within {{ recastwindow }} seconds before going on cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage",
+              "Maximum Health Damage",
               "Cooldown"
             ],
             "effect": [
-              "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}",
+              "{{ basepercentmaxhpdmgpersec*200.000000 }}% -> {{ basepercentmaxhpdmgpersecnl*200.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            120,
-            105,
+            130,
+            110,
             90
           ],
-          "cooldownBurn": "120/105/90",
+          "cooldownBurn": "130/110/90",
           "cost": [
             100,
             100,
@@ -738,11 +840,11 @@
           ],
           "rangeBurn": "315",
           "image": {
-            "full": "Jade_WukongR.png",
-            "sprite": "spell11.png",
+            "full": "MonkeyKingSpinToWin.png",
+            "sprite": "spell9.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 336,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -751,13 +853,13 @@
       ],
       "passive": {
         "name": "Stone Skin",
-        "description": "Increases Wukong's armor and magic resistance for each nearby enemy champion.",
+        "description": "Wukong gains stacking armor and max health regeneration while fighting champions and monsters.",
         "image": {
-          "full": "Jade_WukongStoneSkin.png",
-          "sprite": "passive3.png",
+          "full": "MonkeyKingStoneSkin.png",
+          "sprite": "passive2.png",
           "group": "passive",
-          "x": 336,
-          "y": 48,
+          "x": 240,
+          "y": 96,
           "w": 48,
           "h": 48
         }

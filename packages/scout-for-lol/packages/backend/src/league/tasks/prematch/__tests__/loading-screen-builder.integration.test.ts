@@ -132,8 +132,7 @@ describe("buildLoadingScreenData layout variants", () => {
       `${currentDir}testdata/spectator-ranked-flex.json`,
     );
     const classicChampionIds = [
-      60_103, 60_012, 60_032, 60_034, 60_001, 60_022, 60_053, 60_063, 60_031,
-      60_042,
+      84, 85, 98, 60_034, 60_001, 60_022, 60_053, 60_063, 60_031, 60_042,
     ];
     const trackedPuuid = baseGameInfo.participants[0]?.puuid;
     if (trackedPuuid === null || trackedPuuid === undefined) {
@@ -168,8 +167,17 @@ describe("buildLoadingScreenData layout variants", () => {
     expect(result.queueType).toBe("classic");
     expect(result.mapName).toBe("Classic Rift");
     expect(result.participants).toHaveLength(10);
-    expect(result.participants[0]?.championName).toStartWith("Jade_");
-    expect(result.participants[0]?.isTrackedPlayer).toBe(true);
+    expect(
+      result.participants
+        .map((participant) => participant.championName)
+        .filter((name) =>
+          ["Jade_Akali", "Jade_Kennen", "Jade_Shen"].includes(name),
+        )
+        .toSorted(),
+    ).toEqual(["Jade_Akali", "Jade_Kennen", "Jade_Shen"]);
+    expect(
+      result.participants.some((participant) => participant.isTrackedPlayer),
+    ).toBe(true);
     expect("bans" in result).toBe(false);
     expect("isRanked" in result).toBe(false);
     expect("ranks" in (result.participants[0] ?? {})).toBe(false);
@@ -363,6 +371,32 @@ describe("buildLoadingScreenData standard and custom layouts", () => {
     const parsed = LoadingScreenDataSchema.parse(result);
     expect(parsed.queueType).toBe("custom");
     expect(parsed.layout).toBe("standard");
+  });
+
+  test("normal CLASSIC queues keep normal champion assets", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 3260,
+      gameMode: "CLASSIC",
+      participants: baseGameInfo.participants.map((participant) => ({
+        ...participant,
+        championId: 84,
+      })),
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+    if (result.layout !== "standard") {
+      throw new Error("Expected a normal standard loading screen");
+    }
+    expect(result.participants[0]?.championName).toBe("Akali");
+    expect(result.participants[0]?.championName).not.toStartWith("Jade_");
   });
 
   test("queue 0 (Custom) with CLASSIC mode stays custom standard layout", async () => {

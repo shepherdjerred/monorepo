@@ -1,124 +1,321 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Jax": {
-      "id": "Jade_Jax",
-      "key": "60024",
+      "id": "Jax",
+      "key": "24",
       "name": "Jax",
       "title": "Grandmaster at Arms",
       "image": {
-        "full": "Jade_Jax.png",
-        "sprite": "champion2.png",
+        "full": "Jax.png",
+        "sprite": "champion1.png",
         "group": "champion",
-        "x": 432,
-        "y": 0,
+        "x": 48,
+        "y": 96,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60024000",
+          "id": "24000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60024002",
+          "id": "24001",
+          "num": 1,
+          "name": "The Mighty Jax",
+          "chromas": false
+        },
+        {
+          "id": "24002",
           "num": 2,
           "name": "Vandal Jax",
           "chromas": false
         },
         {
-          "id": "60024003",
+          "id": "24003",
           "num": 3,
           "name": "Angler Jax",
           "chromas": false
         },
         {
-          "id": "60024004",
+          "id": "24004",
           "num": 4,
           "name": "PAX Jax",
           "chromas": false
         },
         {
-          "id": "60024013",
+          "id": "24005",
+          "num": 5,
+          "name": "Jaximus",
+          "chromas": false
+        },
+        {
+          "id": "24006",
+          "num": 6,
+          "name": "Temple Jax",
+          "chromas": false
+        },
+        {
+          "id": "24007",
+          "num": 7,
+          "name": "Nemesis Jax",
+          "chromas": true
+        },
+        {
+          "id": "24008",
+          "num": 8,
+          "name": "SKT T1 Jax",
+          "chromas": false
+        },
+        {
+          "id": "24009",
+          "num": 9,
+          "name": "Nemesis Jax Sand Cream",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "24010",
+          "num": 10,
+          "name": "Nemesis Jax Sand Amber",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "24011",
+          "num": 11,
+          "name": "Nemesis Jax Sand Brick",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "24012",
+          "num": 12,
+          "name": "Warden Jax",
+          "chromas": false
+        },
+        {
+          "id": "24013",
           "num": 13,
           "name": "God Staff Jax",
           "chromas": false
         },
         {
-          "id": "60024014",
+          "id": "24014",
           "num": 14,
           "name": "Mecha Kingdoms Jax",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60024015",
+          "id": "24015",
           "num": 15,
           "name": "Mecha Kingdoms Jax (Ruby)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60024016",
+          "id": "24016",
           "num": 16,
           "name": "Mecha Kingdoms Jax (Peridot)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60024017",
+          "id": "24017",
           "num": 17,
           "name": "Mecha Kingdoms Jax (Rose Quartz)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60024018",
+          "id": "24018",
           "num": 18,
           "name": "Mecha Kingdoms Jax (Peacekeeper)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60024019",
+          "id": "24019",
           "num": 19,
           "name": "Mecha Kingdoms Jax (Pearl)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60024032",
+          "id": "24020",
+          "num": 20,
+          "name": "Conqueror Jax",
+          "chromas": false
+        },
+        {
+          "id": "24021",
+          "num": 21,
+          "name": "Prestige Conqueror Jax",
+          "chromas": false
+        },
+        {
+          "id": "24022",
+          "num": 22,
+          "name": "Empyrean Jax",
+          "chromas": true
+        },
+        {
+          "id": "24023",
+          "num": 23,
+          "name": "Empyrean Jax (Ruby)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "24024",
+          "num": 24,
+          "name": "Empyrean Jax (Catseye)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "24025",
+          "num": 25,
+          "name": "Empyrean Jax (Emerald)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "24026",
+          "num": 26,
+          "name": "Empyrean Jax (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "24027",
+          "num": 27,
+          "name": "Empyrean Jax (Turquoise)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "24028",
+          "num": 28,
+          "name": "Empyrean Jax (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "24029",
+          "num": 29,
+          "name": "Empyrean Jax (Citrine)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "24030",
+          "num": 30,
+          "name": "Empyrean Jax (Pearl)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "24031",
+          "num": 31,
+          "name": "Empyrean Jax (Neon Flare)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "24032",
           "num": 32,
           "name": "Neo PAX Jax",
           "chromas": false
         },
         {
-          "id": "60024042",
+          "id": "24033",
+          "num": 33,
+          "name": "PROJECT: Jax",
+          "chromas": true
+        },
+        {
+          "id": "24034",
+          "num": 34,
+          "name": "PROJECT: Jax (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "24035",
+          "num": 35,
+          "name": "PROJECT: Jax (Catseye)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "24036",
+          "num": 36,
+          "name": "PROJECT: Jax (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "24037",
+          "num": 37,
+          "name": "PROJECT: Jax (Turquoise)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "24038",
+          "num": 38,
+          "name": "PROJECT: Jax (Amethyst)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "24039",
+          "num": 39,
+          "name": "PROJECT: Jax (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "24040",
+          "num": 40,
+          "name": "PROJECT: Jax (Obsidian)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "24041",
+          "num": 41,
+          "name": "PROJECT: Jax (Sandstone)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "24042",
           "num": 42,
-          "name": "Magma Chamber Jax",
-          "chromas": false
+          "name": "Prestige Magma Chamber Jax",
+          "chromas": true
         },
         {
-          "id": "60024301",
-          "num": 301,
-          "name": "Classic Jax",
-          "chromas": false
-        },
-        {
-          "id": "60024302",
-          "num": 302,
-          "name": "Classic Jax (Vandal)",
-          "chromas": true,
-          "parentSkin": 301
+          "id": "24043",
+          "num": 43,
+          "name": "Prestige Magma Chamber Jax (Vivid)",
+          "chromas": false,
+          "parentSkin": 42
         }
       ],
-      "lore": "- Grandmaster's Might (R) grants stacking attack speed per strike<br>- Equipment Mastery (P) grants health for power",
-      "blurb": "- Grandmaster's Might (R) grants stacking attack speed per strike<br>- Equipment Mastery (P) grants health for power",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Unmatched in both his skill with unique armaments and his biting sarcasm, Jax is the last known weapons master of Icathia. After his homeland was laid low by its own hubris in unleashing the Void, Jax and his kind vowed to protect what little remained. As magic now rises in the world, this slumbering threat stirs once more, and Jax roams Valoran, wielding the last light of Icathia and testing all warriors he meets to see if any are strong enough to stand beside him...",
+      "blurb": "Unmatched in both his skill with unique armaments and his biting sarcasm, Jax is the last known weapons master of Icathia. After his homeland was laid low by its own hubris in unleashing the Void, Jax and his kind vowed to protect what little remained...",
+      "allytips": [
+        "Jax can Leap Strike to friendly units, including wards. You can use them to plan your escape.",
+        "Jax benefits greatly from items that have both Ability Power and Attack Damage such as Guinsoo's Rageblade and Hextech Gunblade."
+      ],
+      "enemytips": [
+        "Try to engage him in short bursts instead of going toe-to-toe with him. Preventing him from attacking consecutively drastically lowers his damage output.",
+        "Jax can dodge all incoming attacks for a very short amount of time and stuns enemies in melee range when it ends. Wait to strike him until after his dodge is finished."
+      ],
       "tags": [
         "Fighter"
       ],
@@ -130,60 +327,60 @@
         "difficulty": 5
       },
       "stats": {
-        "hp": 506,
-        "hpperlevel": 83,
-        "mp": 265,
-        "mpperlevel": 35,
+        "hp": 650,
+        "hpperlevel": 103,
+        "mp": 339,
+        "mpperlevel": 52,
         "movespeed": 350,
-        "armor": 25.5,
-        "armorperlevel": 3.2,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
+        "armor": 36,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
         "attackrange": 125,
-        "hpregen": 8,
+        "hpregen": 8.5,
         "hpregenperlevel": 0.55,
-        "mpregen": 7.1,
+        "mpregen": 8.2,
         "mpregenperlevel": 0.7,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 59.675,
+        "attackdamage": 68,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 3.4,
         "attackspeed": 0.638
       },
       "spells": [
         {
-          "id": "Jade_JaxQ",
+          "id": "JaxQ",
           "name": "Leap Strike",
-          "description": "Jax leaps and strikes.",
-          "tooltip": "Jax leaps to a target unit, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> if it is an enemy.{{ spellmodifierdescriptionappend }}",
+          "description": "Jax leaps toward a unit. If they are an enemy, he strikes them with his weapon.",
+          "tooltip": "Jax leaps to a friendly or enemy unit or ward, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> if it is an enemy.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Cooldown"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ damage }} -> {{ damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            17,
-            14,
-            11,
             8,
-            5
+            7.5,
+            7,
+            6.5,
+            6
           ],
-          "cooldownBurn": "17/14/11/8/5",
+          "cooldownBurn": "8/7.5/7/6.5/6",
           "cost": [
-            65,
-            65,
-            65,
-            65,
-            65
+            50,
+            50,
+            50,
+            50,
+            50
           ],
-          "costBurn": "65",
+          "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
@@ -283,10 +480,10 @@
           ],
           "rangeBurn": "700",
           "image": {
-            "full": "Jade_JaxQ.png",
-            "sprite": "spell7.png",
+            "full": "JaxQ.png",
+            "sprite": "spell5.png",
             "group": "spell",
-            "x": 0,
+            "x": 384,
             "y": 144,
             "w": 48,
             "h": 48
@@ -294,17 +491,17 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_JaxW",
+          "id": "JaxW",
           "name": "Empower",
-          "description": "Jax's next attack or Leap Strike deals bonus damage and damages nearby enemies.",
-          "tooltip": "Jax charges his weapon with energy, causing his next basic attack or Leap Strike to deal an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage> to his target and nearby enemies.{{ spellmodifierdescriptionappend }}",
+          "description": "Jax charges his weapon with energy, causing his next attack to deal additional damage.",
+          "tooltip": "Jax charges his weapon with energy, causing his next Attack or <spellName>Leap Strike</spellName> to deal an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Cooldown"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ damage }} -> {{ damageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -318,13 +515,13 @@
           ],
           "cooldownBurn": "7/6/5/4/3",
           "cost": [
-            35,
-            35,
-            35,
-            35,
-            35
+            30,
+            30,
+            30,
+            30,
+            30
           ],
-          "costBurn": "35",
+          "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
@@ -424,10 +621,10 @@
           ],
           "rangeBurn": "300",
           "image": {
-            "full": "Jade_JaxW.png",
-            "sprite": "spell7.png",
+            "full": "JaxW.png",
+            "sprite": "spell5.png",
             "group": "spell",
-            "x": 48,
+            "x": 432,
             "y": 144,
             "w": 48,
             "h": 48
@@ -435,10 +632,10 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_JaxE",
+          "id": "JaxE",
           "name": "Counter Strike",
-          "description": "Jax enters a defensive stance, dodging all incoming basic attacks and taking less damage from area of effect abilities. Then he stuns surrounding enemies and damages them.",
-          "tooltip": "Jax enters a defensive stance for up to {{ dodgeduration }} seconds, dodging incoming Attacks and taking {{ aoedamagereduction }}% less damage from area of effect Abilities. This Ability automatically <recast>Recasts</recast> at the end of the duration.<br /><br /><recast>Recast</recast>: Jax deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Stuns</status> nearby enemies for {{ stunduration }} second. <br /><br />The damage is increased by {{ percentincreasedperdodge*100 }}% per Attack dodged, up to a maximum of <physicalDamage>{{ maxdamage }}</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "description": "Jax's combat prowess allows him to dodge all incoming attacks for a short duration and then quickly counterattack, stunning all surrounding enemies.",
+          "tooltip": "Jax enters a defensive stance for up to {{ dodgeduration }} seconds, dodging incoming Attacks and taking {{ aoedamagereduction }}% less damage from area of effect Abilities. After {{ dodgeduration }} seconds or <recast>Recasting</recast>, Jax deals <magicDamage>{{ totaldamage }} + {{ percenthealthdamage }}% max Health magic damage</magicDamage> and <status>Stuns</status> nearby enemies for {{ stunduration }} second. <br /><br />The damage is increased by {{ percentincreasedperdodge*100 }}% per Attack dodged, up to a maximum of <magicDamage>{{ maxdamage }} + {{ maxpercenthealthdamage }}% max Health</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -453,21 +650,21 @@
           },
           "maxrank": 5,
           "cooldown": [
-            18,
-            16,
-            14,
-            12,
-            10
+            17,
+            15,
+            13,
+            11,
+            9
           ],
-          "cooldownBurn": "18/16/14/12/10",
+          "cooldownBurn": "17/15/13/11/9",
           "cost": [
+            50,
+            60,
             70,
-            75,
             80,
-            85,
             90
           ],
-          "costBurn": "70/75/80/85/90",
+          "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
@@ -567,44 +764,54 @@
           ],
           "rangeBurn": "300",
           "image": {
-            "full": "Jade_JaxE.png",
-            "sprite": "spell7.png",
+            "full": "JaxE.png",
+            "sprite": "spell6.png",
             "group": "spell",
-            "x": 96,
-            "y": 144,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_JaxR",
-          "name": "Grandmaster's Might",
-          "description": "Jax gains attack speed when he strikes. Every third consecutive attack deals bonus damage.",
-          "tooltip": "<spellPassive>Passive</spellPassive>: Jax gains <attackSpeed>{{ attackspeedperstack*100 }}% attack speed</attackSpeed> every strike, stacking up to {{ maxstacks }} times. Every third consecutive strike deals an additional <magicDamage>{{ onhitdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "id": "JaxR",
+          "name": "Grandmaster-at-Arms",
+          "description": "Every third consecutive attack deals additional Magic Damage. Additionally, Jax can activate this ability to deal damage around himself and strengthen his resolve, increasing his Armor and Magic Resist for a short duration.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Every third Attack within {{ passivefallofftime }} seconds deals an additional <magicDamage>{{ onhitdamage }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Jax slams his lantern down, dealing <magicDamage>{{ swingdamagetotal }} magic damage</magicDamage> to nearby enemies. If he hits a champion he gains <scaleArmor>{{ basearmor }} Armor</scaleArmor> and <scaleMR>{{ basemr }} Magic Resist</scaleMR> plus <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and <scaleMR>{{ bonusmr }} Magic Resist</scaleMR> per additional champion hit for {{ duration }} seconds. During this time every second Attack deals additional <magicDamage>magic damage</magicDamage> instead of every third.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Attack Speed",
-              "Passive Damage"
+              "Passive Damage",
+              "Active Damage",
+              "Base Armor",
+              "Base Magic Resist",
+              "Armor per Additional Champion",
+              "Magic Resist per Additional Champion",
+              "Cooldown"
             ],
             "effect": [
-              "{{ attackspeedperstack*100.000000 }}% -> {{ attackspeedperstacknl*100.000000 }}%",
-              "{{ passivebasedamage }} -> {{ passivebasedamageNL }}"
+              "{{ passivebasedamage }} -> {{ passivebasedamageNL }}",
+              "{{ swingdamagebase }} -> {{ swingdamagebaseNL }}",
+              "{{ baseresists }} -> {{ baseresistsNL }}",
+              "{{ baseresists*0.600000 }} -> {{ baseresistsnl*0.600000 }}",
+              "{{ resistsperextratarget }} -> {{ resistsperextratargetNL }}",
+              "{{ resistsperextratarget*0.600000 }} -> {{ resistsperextratargetnl*0.600000 }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            0,
-            0,
-            0
+            110,
+            100,
+            90
           ],
-          "cooldownBurn": "0",
+          "cooldownBurn": "110/100/90",
           "cost": [
-            0,
-            0,
-            0
+            100,
+            100,
+            100
           ],
-          "costBurn": "0",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -673,35 +880,35 @@
             "0"
           ],
           "vars": [],
-          "costType": "Passive",
+          "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            400,
-            400,
-            400
+            260,
+            260,
+            260
           ],
-          "rangeBurn": "400",
+          "rangeBurn": "260",
           "image": {
-            "full": "Jade_JaxR.png",
-            "sprite": "spell7.png",
+            "full": "JaxR.png",
+            "sprite": "spell6.png",
             "group": "spell",
-            "x": 144,
-            "y": 144,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
-          "resource": "Passive"
+          "resource": "{{ cost }} {{ abilityresourcename }}"
         }
       ],
       "passive": {
-        "name": "Equipment Mastery",
-        "description": "Jax's gains bonus Health based on his bonus Attack Damage and Ability Power from items.",
+        "name": "Relentless Assault",
+        "description": "Jax's consecutive basic attacks continuously increase his Attack Speed.",
         "image": {
           "full": "Armsmaster_MasterOfArms.png",
-          "sprite": "passive2.png",
+          "sprite": "passive1.png",
           "group": "passive",
-          "x": 432,
-          "y": 0,
+          "x": 48,
+          "y": 96,
           "w": 48,
           "h": 48
         }

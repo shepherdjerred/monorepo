@@ -1,239 +1,211 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Heimerdinger": {
-      "id": "Jade_Heimerdinger",
-      "key": "60074",
+      "id": "Heimerdinger",
+      "key": "74",
       "name": "Heimerdinger",
-      "title": "The Revered Inventor",
+      "title": "the Revered Inventor",
       "image": {
-        "full": "Jade_Heimerdinger.png",
-        "sprite": "champion2.png",
+        "full": "Heimerdinger.png",
+        "sprite": "champion1.png",
         "group": "champion",
-        "x": 288,
-        "y": 0,
+        "x": 192,
+        "y": 48,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60074000",
+          "id": "74000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60074005",
+          "id": "74001",
+          "num": 1,
+          "name": "Alien Invader Heimerdinger",
+          "chromas": false
+        },
+        {
+          "id": "74002",
+          "num": 2,
+          "name": "Blast Zone Heimerdinger",
+          "chromas": false
+        },
+        {
+          "id": "74003",
+          "num": 3,
+          "name": "Piltover Customs Heimerdinger",
+          "chromas": false
+        },
+        {
+          "id": "74004",
+          "num": 4,
+          "name": "Snowmerdinger",
+          "chromas": false
+        },
+        {
+          "id": "74005",
           "num": 5,
           "name": "Hazmat Heimerdinger",
           "chromas": false
         },
         {
-          "id": "60074006",
+          "id": "74006",
           "num": 6,
           "name": "Dragon Trainer Heimerdinger",
           "chromas": false
         },
         {
-          "id": "60074007",
-          "num": 7,
-          "name": "",
-          "chromas": false,
-          "parentSkin": 6
-        },
-        {
-          "id": "60074008",
-          "num": 8,
-          "name": "",
-          "chromas": false,
-          "parentSkin": 6
-        },
-        {
-          "id": "60074009",
-          "num": 9,
-          "name": "",
-          "chromas": false,
-          "parentSkin": 6
-        },
-        {
-          "id": "60074010",
-          "num": 10,
-          "name": "",
-          "chromas": true,
-          "parentSkin": 6
-        },
-        {
-          "id": "60074011",
-          "num": 11,
-          "name": "",
-          "chromas": false,
-          "parentSkin": 6
-        },
-        {
-          "id": "60074012",
-          "num": 12,
-          "name": "",
-          "chromas": false,
-          "parentSkin": 6
-        },
-        {
-          "id": "60074013",
-          "num": 13,
-          "name": "",
-          "chromas": false,
-          "parentSkin": 6
-        },
-        {
-          "id": "60074014",
-          "num": 14,
-          "name": "",
-          "chromas": false,
-          "parentSkin": 6
-        },
-        {
-          "id": "60074015",
+          "id": "74015",
           "num": 15,
           "name": "Pool Party Heimerdinger",
           "chromas": false
         },
         {
-          "id": "60074016",
+          "id": "74016",
           "num": 16,
           "name": "Pool Party Heimerdinger (Ruby)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60074017",
+          "id": "74017",
           "num": 17,
           "name": "Pool Party Heimerdinger (Amethyst)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60074018",
+          "id": "74018",
           "num": 18,
           "name": "Pool Party Heimerdinger (Citrine)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60074019",
+          "id": "74019",
           "num": 19,
           "name": "Pool Party Heimerdinger (Aquamarine)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60074020",
+          "id": "74020",
           "num": 20,
           "name": "Pool Party Heimerdinger (Emerald)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60074021",
+          "id": "74021",
           "num": 21,
           "name": "Pool Party Heimerdinger (Obsidian)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60074022",
+          "id": "74022",
           "num": 22,
           "name": "Pool Party Heimerdinger (Rose Quartz)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60074023",
+          "id": "74023",
           "num": 23,
           "name": "Pool Party Heimerdinger (Rainbow)",
-          "chromas": false,
+          "chromas": true,
           "parentSkin": 15
         },
         {
-          "id": "60074024",
+          "id": "74024",
           "num": 24,
           "name": "Heimerstinger",
           "chromas": false
         },
         {
-          "id": "60074025",
+          "id": "74025",
           "num": 25,
           "name": "Heimerstinger (Ruby)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60074026",
+          "id": "74026",
           "num": 26,
           "name": "Heimerstinger (Sapphire)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60074027",
+          "id": "74027",
           "num": 27,
           "name": "Heimerstinger (Tanzanite)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60074028",
+          "id": "74028",
           "num": 28,
           "name": "Heimerstinger (Emerald)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60074029",
+          "id": "74029",
           "num": 29,
           "name": "Heimerstinger (Rose Quartz)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60074030",
+          "id": "74030",
           "num": 30,
           "name": "Heimerstinger (Pearl)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60074031",
+          "id": "74031",
           "num": 31,
           "name": "Heimerstinger (Obsidian)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60074032",
+          "id": "74032",
           "num": 32,
           "name": "Heimerstinger (Rainbow)",
-          "chromas": false,
+          "chromas": true,
           "parentSkin": 24
         },
         {
-          "id": "60074301",
-          "num": 301,
-          "name": "Classic Heimerdinger",
+          "id": "74033",
+          "num": 33,
+          "name": "Arcane Professor Heimerdinger",
           "chromas": false
         },
         {
-          "id": "60074302",
-          "num": 302,
-          "name": "Classic Heimerdinger (Blast Zone)",
+          "id": "74034",
+          "num": 34,
+          "name": "Arcane Professor Heimerdinger (Paragon)",
           "chromas": false,
-          "parentSkin": 301
+          "parentSkin": 33
         }
       ],
-      "lore": "- The abilities may look similar but are very different<br>- UPGRADE!!! (R) is a buff that lasts a set time not a single ability<br>- H-28G Evolution Turrets (Q) are active globally but die when Heimerdinger does",
-      "blurb": "- The abilities may look similar but are very different<br>- UPGRADE!!! (R) is a buff that lasts a set time not a single ability<br>- H-28G Evolution Turrets (Q) are active globally but die when Heimerdinger does",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "The eccentric Professor Cecil B. Heimerdinger is one of the most innovative and esteemed inventors the world has ever known. As the longest serving member of the Council of Piltover, he saw the best and the worst of the city's unending desire for progress. Nonetheless, this brilliant scientist and teacher will always remain dedicated to using his unconventional devices to improve the lives of others.",
+      "blurb": "The eccentric Professor Cecil B. Heimerdinger is one of the most innovative and esteemed inventors the world has ever known. As the longest serving member of the Council of Piltover, he saw the best and the worst of the city's unending desire for...",
+      "allytips": [
+        "Turret placement can be a deciding factor in a battle. Against most enemies turrets are best when they can support each other, but if the enemy has a lot of area of effect damage your turrets can be destroyed quickly. Placing turrets in brush can lead to a surprise attack in your favor.",
+        "The success of Electron Storm Grenade is very important to Heimerdinger's survival. The slow and stun both are capable of keeping enemies in place long enough to punish them, but it is also the first line of defense against a surprise attack.",
+        "Spreading out Hextech Micro-Rockets leads to more reliable damage and more efficiency against multiple targets, but focusing it creates the biggest impact."
+      ],
+      "enemytips": [
+        "It's better to destroy all of Heimerdinger's turrets at once with the help of creeps than to fight them one at a time.",
+        "Be wary of Heimerdinger's Upgrade!!!, as he can use it to find an answer to most trouble he gets into. Once his ultimate is down, go in for the kill!"
+      ],
       "tags": [
         "Mage",
         "Support"
@@ -246,41 +218,41 @@
         "difficulty": 8
       },
       "stats": {
-        "hp": 425,
-        "hpperlevel": 75,
-        "mp": 305,
-        "mpperlevel": 65,
-        "movespeed": 325,
-        "armor": 14,
-        "armorperlevel": 3,
+        "hp": 558,
+        "hpperlevel": 105,
+        "mp": 385,
+        "mpperlevel": 20,
+        "movespeed": 340,
+        "armor": 19,
+        "armorperlevel": 4.2,
         "spellblock": 30,
-        "spellblockperlevel": 0,
+        "spellblockperlevel": 1.3,
         "attackrange": 550,
-        "hpregen": 4.5,
+        "hpregen": 7,
         "hpregenperlevel": 0.55,
-        "mpregen": 7.65,
-        "mpregenperlevel": 0.65,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 52.24,
+        "attackdamage": 56,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 1.21,
-        "attackspeed": 0.625
+        "attackspeedperlevel": 1.36,
+        "attackspeed": 0.658
       },
       "spells": [
         {
-          "id": "Jade_HeimerdingerQ",
-          "name": "H-28G Evolution Turret",
-          "description": "Heimerdinger lays down a machine gun turret. Turrets gain abilities as this skill is increased. (Turrets deal half damage to towers).",
-          "tooltip": "Heimerdinger constructs a Machine Gun Turret that deals <magicDamage>{{ bonusdamage }} magic damage</magicDamage> per attack. This ability has {{ maxammo }} charges ({{ ammorechargetime }} second refresh).<br /><br />Each rank of this skill grants a further enhancement:<br /><attention>Rank 2:</attention> Turret attacks reduce the target's Armor and Magic Resist by 1 (max 50)<br /><attention>Rank 3:</attention> Maximum turrets increased to 2<br /><attention>Rank 4:</attention> Turrets gain an additional <scaleHealth>125 Health</scaleHealth><br /><attention>Rank 5:</attention>  Turret attacks deal area damage{{ spellmodifierdescriptionappend }}",
+          "id": "HeimerdingerQ",
+          "name": "H-28 G Evolution Turret",
+          "description": "Heimerdinger lays down a rapid-fire cannon turret equipped with a secondary pass-through beam attack (turrets deal half damage to towers).",
+          "tooltip": "Heimerdinger constructs a <keywordMajor>Turret</keywordMajor> that attacks nearby enemies. Heimerdinger can have {{ maxturrets }} turrets active at once. <keywordMajor>Turrets</keywordMajor> slowly build up charge. At max charge, they fire a stronger attack.<br /><br />If Heimerdinger gets too far away, his <keywordMajor>Turrets</keywordMajor> will deactivate after 8 seconds.<br /><br />This Ability has {{ maxkits }} charges.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage",
-              "@AbilityResourceName@ Cost"
+              "Cannon Damage",
+              "Beam Damage"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ basedamagebeam }} -> {{ basedamagebeamNL }}"
             ]
           },
           "maxrank": 5,
@@ -293,13 +265,13 @@
           ],
           "cooldownBurn": "1",
           "cost": [
-            70,
-            80,
-            90,
-            100,
-            110
+            20,
+            20,
+            20,
+            20,
+            20
           ],
-          "costBurn": "70/80/90/100/110",
+          "costBurn": "20",
           "datavalues": {},
           "effect": [
             null,
@@ -388,8 +360,8 @@
             "0"
           ],
           "vars": [],
-          "costType": " {{ abilityresourcename }}",
-          "maxammo": "1",
+          "costType": " Turret Kit & {{ cost }} Mana",
+          "maxammo": "3",
           "range": [
             350,
             350,
@@ -399,48 +371,50 @@
           ],
           "rangeBurn": "350",
           "image": {
-            "full": "Jade_HeimerdingerQ.png",
-            "sprite": "spell7.png",
+            "full": "HeimerdingerQ.png",
+            "sprite": "spell5.png",
             "group": "spell",
-            "x": 384,
+            "x": 0,
             "y": 48,
             "w": 48,
             "h": 48
           },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
+          "resource": "{{ kitcost }} Turret Kit & {{ cost }} Mana"
         },
         {
-          "id": "Jade_HeimerdingerW",
+          "id": "HeimerdingerW",
           "name": "Hextech Micro-Rockets",
-          "description": "Heimerdinger fires long-range rockets that hit the enemies closest to Heimerdinger.",
-          "tooltip": "Heimerdinger fires 3 enemy seeking Micro-Rocket(s) (max 1 per person), hitting targets nearest to him. Each rocket deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "description": "Heimerdinger fires long-range rockets that converge on his cursor.",
+          "tooltip": "Heimerdinger unleashes a barrage of {{ rockets }} rockets that deal <magicDamage>{{ damage }} magic damage</magicDamage> to the first enemy hit. Additional rocket hits deal reduced damage.<br /><br />Max Damage: <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />Nearby <keywordMajor>Turrets</keywordMajor> gain 20% charge per rocket that hits a champion.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "@AbilityResourceName@ Cost",
-              "Base Damage"
+              "Cooldown",
+              "Damage",
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ cost }} -> {{ costNL }}",
-              "{{ basedamage }} -> {{ basedamageNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
+            11,
             10,
-            10,
-            10,
-            10,
-            10
+            9,
+            8,
+            7
           ],
-          "cooldownBurn": "10",
+          "cooldownBurn": "11/10/9/8/7",
           "cost": [
-            65,
-            85,
-            105,
-            125,
-            145
+            50,
+            60,
+            70,
+            80,
+            90
           ],
-          "costBurn": "65/85/105/125/145",
+          "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
@@ -532,18 +506,18 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            1100,
-            1100,
-            1100,
-            1100,
-            1100
+            1325,
+            1325,
+            1325,
+            1325,
+            1325
           ],
-          "rangeBurn": "1100",
+          "rangeBurn": "1325",
           "image": {
-            "full": "Jade_HeimerdingerW.png",
-            "sprite": "spell7.png",
+            "full": "HeimerdingerW.png",
+            "sprite": "spell5.png",
             "group": "spell",
-            "x": 432,
+            "x": 48,
             "y": 48,
             "w": 48,
             "h": 48
@@ -551,41 +525,35 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_HeimerdingerE",
-          "name": "CH-1 Concussion Grenade",
-          "description": "Heimerdinger lobs a grenade at a location, dealing damage to enemy units as well as stunning anyone directly hit and blinding surrounding units.",
-          "tooltip": "Heimerdinger tosses a grenade, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to enemy units and <status>Blinding</status> them for {{ blindduration }} seconds.  Enemies who are directly hit are <status>Stunned</status> for 1.5 seconds.{{ spellmodifierdescriptionappend }}",
+          "id": "HeimerdingerE",
+          "name": "CH-2 Electron Storm Grenade",
+          "description": "Heimerdinger lobs a grenade at a location, dealing damage to enemy units, as well as stunning anyone directly hit and slowing surrounding units.",
+          "tooltip": "Heimerdinger hurls a grenade that deals <magicDamage>{{ damage }} magic damage</magicDamage> in an area and <status>Slows</status> by {{ slowpercent.0*100 }}% for {{ slowduration }} seconds. Enemies in the center are also <status>Stunned</status> for {{ stunduration }} seconds.<br /><br />Hitting a champion fully charges nearby <keywordMajor>Turrets</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage",
-              "Blind Duration",
-              "@AbilityResourceName@ Cost",
-              "Cooldown"
+              "Damage"
             ],
             "effect": [
-              "{{ damage }} -> {{ damageNL }}",
-              "{{ blindduration }} -> {{ blinddurationNL }}",
-              "{{ cost }} -> {{ costNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            13,
-            12,
             11,
-            10,
-            9
+            11,
+            11,
+            11,
+            11
           ],
-          "cooldownBurn": "13/12/11/10/9",
+          "cooldownBurn": "11",
           "cost": [
-            80,
-            90,
-            100,
-            110,
-            120
+            85,
+            85,
+            85,
+            85,
+            85
           ],
-          "costBurn": "80/90/100/110/120",
+          "costBurn": "85",
           "datavalues": {},
           "effect": [
             null,
@@ -677,54 +645,60 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            920,
-            920,
-            920,
-            920,
-            920
+            970,
+            970,
+            970,
+            970,
+            970
           ],
-          "rangeBurn": "920",
+          "rangeBurn": "970",
           "image": {
-            "full": "Jade_HeimerdingerE.png",
-            "sprite": "spell7.png",
+            "full": "HeimerdingerE.png",
+            "sprite": "spell5.png",
             "group": "spell",
-            "x": 0,
-            "y": 96,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_HeimerdingerR",
+          "id": "HeimerdingerR",
           "name": "UPGRADE!!!",
-          "description": "Passive / Active: Passively increases Cooldown Reduction.  Activate to heal all active Evolution Turrets and cause them to fire frost shots, which reduce Movement Speed, for a short time.",
-          "tooltip": "<spellPassive>Passive: </spellPassive>{{ cooldownbonus*-100 }}% Cooldown Reduction.<br /><br /><spellActive>Active: </spellActive>Empower all abilities and turrets for the duration.<br /><br /><spellName>Evolution Turrets:</spellName> All turrets are <healing>healed</healing> for 100% of their maximum health and each attack applies a <status>{{ movementspeedmod*-100 }}% Slow</status>.<br /><spellName>Hextech Micro-Rockets:</spellName> Fire 5 rockets instead of 3.<br /><spellName>CH-1 Concussion Grenade:</spellName> Travels 33% faster.{{ spellmodifierdescriptionappend }}",
+          "description": "Heimerdinger invents an upgrade, causing his next spell to have increased effects. ",
+          "tooltip": "Heimerdinger upgrades his next non-ultimate Ability.<br /><br /><spellName>H-28Q Apex Turret:</spellName> Place an upgraded <keywordMajor>Turret</keywordMajor> for 8 seconds that doesn't count towards Heimerdinger's max turrets, deals <magicDamage>{{ qultdamage }} magic damage</magicDamage> per shot and <magicDamage>{{ qultdamagebeam }} magic damage</magicDamage> per charged shot. Its attacks deal damage in an area, <status>Slow</status> by 25% for 2 seconds, and it is immune to crowd control.<br /><br /><spellName>Hextech Rocket Swarm:</spellName> Fires 4 waves of rockets that each deal <magicDamage>{{ wultdamage }} magic damage</magicDamage>. Champions and jungle monsters hit by additional rockets take reduced damage, and minions take increased damage. Max Damage: <magicDamage>{{ wulttotaldamage }} magic damage</magicDamage>. <br /><br /><spellName>CH-3X Lightning Grenade:</spellName> Throws a bouncing grenade that discharges three times, dealing <magicDamage>{{ eultdamage }} magic damage</magicDamage>. The <status>Stun</status> and <status>Slow</status> areas are larger.<br /><br /><recast>Recast:</recast> Cancel this Ability.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
-              "Cooldown Reduction",
-              "Slow"
+              "Apex Turret Cannon Damage",
+              "Turret Beam Damage",
+              "Rocket Swarm Damage",
+              "Rocket Swarm Max Damage",
+              "Lightning Grenade Damage"
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ cooldownbonus*-100.000000 }}% -> {{ cooldownbonusnl*-100.000000 }}%",
-              "{{ movementspeedmod*-100.000000 }}% -> {{ movementspeedmodnl*-100.000000 }}%"
+              "{{ qultbasedamage }} -> {{ qultbasedamageNL }}",
+              "{{ qultbasedamagebeam }} -> {{ qultbasedamagebeamNL }}",
+              "{{ wultbasedamage }} -> {{ wultbasedamageNL }}",
+              "{{ wulttotalbasedamage }} -> {{ wulttotalbasedamageNL }}",
+              "{{ eultbasedamage }} -> {{ eultbasedamageNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            120,
-            105,
-            90
+            100,
+            85,
+            70
           ],
-          "cooldownBurn": "120/105/90",
+          "cooldownBurn": "100/85/70",
           "cost": [
-            90,
-            90,
-            90
+            100,
+            100,
+            100
           ],
-          "costBurn": "90",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -802,11 +776,11 @@
           ],
           "rangeBurn": "1",
           "image": {
-            "full": "Jade_HeimerdingerR.png",
-            "sprite": "spell7.png",
+            "full": "HeimerdingerR.png",
+            "sprite": "spell5.png",
             "group": "spell",
-            "x": 48,
-            "y": 96,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -814,14 +788,14 @@
         }
       ],
       "passive": {
-        "name": "Techmaturgical Repair Bots",
-        "description": "Heimerdinger gives nearby allied Turrets and Champions increased Health Regeneration.",
+        "name": "Hextech Affinity",
+        "description": "Gain Move Speed while near allied towers and turrets deployed by Heimerdinger.",
         "image": {
-          "full": "Jade_Heimerdinger_Passive.png",
-          "sprite": "passive2.png",
+          "full": "Heimerdinger_Passive.png",
+          "sprite": "passive1.png",
           "group": "passive",
-          "x": 288,
-          "y": 0,
+          "x": 192,
+          "y": 48,
           "w": 48,
           "h": 48
         }

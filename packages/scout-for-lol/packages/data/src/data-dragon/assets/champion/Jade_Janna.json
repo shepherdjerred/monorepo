@@ -1,217 +1,485 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Janna": {
-      "id": "Jade_Janna",
-      "key": "60040",
+      "id": "Janna",
+      "key": "40",
       "name": "Janna",
-      "title": "The Storm's Fury",
+      "title": "the Storm's Fury",
       "image": {
-        "full": "Jade_Janna.png",
-        "sprite": "champion2.png",
+        "full": "Janna.png",
+        "sprite": "champion1.png",
         "group": "champion",
-        "x": 336,
-        "y": 0,
+        "x": 432,
+        "y": 48,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60040000",
+          "id": "40000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60040001",
+          "id": "40001",
           "num": 1,
           "name": "Tempest Janna",
           "chromas": false
         },
         {
-          "id": "60040005",
+          "id": "40002",
+          "num": 2,
+          "name": "Hextech Janna",
+          "chromas": false
+        },
+        {
+          "id": "40003",
+          "num": 3,
+          "name": "Frost Queen Janna",
+          "chromas": false
+        },
+        {
+          "id": "40004",
+          "num": 4,
+          "name": "Victorious Janna",
+          "chromas": false
+        },
+        {
+          "id": "40005",
           "num": 5,
           "name": "Forecast Janna",
           "chromas": false
         },
         {
-          "id": "60040008",
-          "num": 8,
-          "name": "Sacred Sword Janna",
+          "id": "40006",
+          "num": 6,
+          "name": "Fnatic Janna",
           "chromas": false
         },
         {
-          "id": "60040009",
+          "id": "40007",
+          "num": 7,
+          "name": "Star Guardian Janna",
+          "chromas": false
+        },
+        {
+          "id": "40008",
+          "num": 8,
+          "name": "Sacred Sword Janna",
+          "chromas": true
+        },
+        {
+          "id": "40009",
           "num": 9,
           "name": "Sacred Sword Janna (Peridot)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60040010",
+          "id": "40010",
           "num": 10,
           "name": "Sacred Sword Janna (Sapphire)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60040011",
+          "id": "40011",
           "num": 11,
           "name": "Sacred Sword Janna (Rose Quartz)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60040012",
+          "id": "40012",
           "num": 12,
           "name": "Sacred Sword Janna (Aquamarine)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60040036",
+          "id": "40013",
+          "num": 13,
+          "name": "Bewitching Janna",
+          "chromas": true
+        },
+        {
+          "id": "40014",
+          "num": 14,
+          "name": "Bewitching Janna (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "40015",
+          "num": 15,
+          "name": "Bewitching Janna (Citrine)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "40016",
+          "num": 16,
+          "name": "Bewitching Janna (Emerald)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "40017",
+          "num": 17,
+          "name": "Bewitching Janna (Rainbow)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "40018",
+          "num": 18,
+          "name": "Bewitching Janna (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "40019",
+          "num": 19,
+          "name": "Bewitching Janna (Golden)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "40020",
+          "num": 20,
+          "name": "Guardian of the Sands Janna",
+          "chromas": true
+        },
+        {
+          "id": "40021",
+          "num": 21,
+          "name": "Guardian of the Sands Janna (Ruby)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "40022",
+          "num": 22,
+          "name": "Guardian of the Sands Janna (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "40023",
+          "num": 23,
+          "name": "Guardian of the Sands Janna (Sapphire)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "40024",
+          "num": 24,
+          "name": "Guardian of the Sands Janna (Peridot)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "40025",
+          "num": 25,
+          "name": "Guardian of the Sands Janna (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "40026",
+          "num": 26,
+          "name": "Guardian of the Sands Janna (Catseye)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "40027",
+          "num": 27,
+          "name": "Battle Queen Janna",
+          "chromas": true
+        },
+        {
+          "id": "40028",
+          "num": 28,
+          "name": "Battle Queen Janna (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40029",
+          "num": 29,
+          "name": "Battle Queen Janna (Catseye)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40030",
+          "num": 30,
+          "name": "Battle Queen Janna (Peridot)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40031",
+          "num": 31,
+          "name": "Battle Queen Janna (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40032",
+          "num": 32,
+          "name": "Battle Queen Janna (Amethyst)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40033",
+          "num": 33,
+          "name": "Battle Queen Janna (Coronation)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40034",
+          "num": 34,
+          "name": "Battle Queen Janna (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40035",
+          "num": 35,
+          "name": "Battle Queen Janna (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "40036",
           "num": 36,
           "name": "Crystal Rose Janna",
           "chromas": true
         },
         {
-          "id": "60040037",
+          "id": "40037",
           "num": 37,
           "name": "Crystal Rose Janna (Ruby)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60040038",
+          "id": "40038",
           "num": 38,
           "name": "Crystal Rose Janna (Sapphire)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60040039",
+          "id": "40039",
           "num": 39,
           "name": "Crystal Rose Janna (Emerald)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60040040",
+          "id": "40040",
           "num": 40,
           "name": "Crystal Rose Janna (Rose Quartz)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60040041",
+          "id": "40041",
           "num": 41,
           "name": "Crystal Rose Janna (Tanzanite)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60040042",
+          "id": "40042",
           "num": 42,
           "name": "Crystal Rose Janna (Catseye)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60040043",
+          "id": "40043",
           "num": 43,
           "name": "Crystal Rose Janna (Pearl)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60040044",
+          "id": "40044",
           "num": 44,
           "name": "Crystal Rose Janna (Obsidian)",
           "chromas": false,
           "parentSkin": 36
         },
         {
-          "id": "60040045",
+          "id": "40045",
           "num": 45,
           "name": "Cyber Halo Janna",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60040046",
+          "id": "40046",
           "num": 46,
           "name": "Prestige Cyber Halo Janna",
           "chromas": false
         },
         {
-          "id": "60040047",
+          "id": "40047",
           "num": 47,
           "name": "Cyber Halo Janna (Ruby)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60040048",
+          "id": "40048",
           "num": 48,
           "name": "Cyber Halo Janna (Aquamarine)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60040049",
+          "id": "40049",
           "num": 49,
           "name": "Cyber Halo Janna (Peridot)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60040050",
+          "id": "40050",
           "num": 50,
           "name": "Cyber Halo Janna (Catseye)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60040051",
+          "id": "40051",
           "num": 51,
           "name": "Cyber Halo Janna (Rose Quartz)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60040052",
+          "id": "40052",
           "num": 52,
           "name": "Cyber Halo Janna (Tanzanite)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60040053",
+          "id": "40053",
           "num": 53,
           "name": "Cyber Halo Janna (Pearl)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60040054",
+          "id": "40054",
           "num": 54,
           "name": "Cyber Halo Janna (Turquoise)",
           "chromas": false,
           "parentSkin": 45
         },
         {
-          "id": "60040055",
+          "id": "40055",
           "num": 55,
           "name": "Cyber Halo Janna (Ace)",
           "chromas": false,
           "parentSkin": 45
+        },
+        {
+          "id": "40056",
+          "num": 56,
+          "name": "Heavenscale Janna",
+          "chromas": true
+        },
+        {
+          "id": "40057",
+          "num": 57,
+          "name": "Heavenscale Janna (Ruby)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40058",
+          "num": 58,
+          "name": "Heavenscale Janna (Turquoise)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40059",
+          "num": 59,
+          "name": "Heavenscale Janna (Amethyst)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40060",
+          "num": 60,
+          "name": "Heavenscale Janna (Catseye)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40061",
+          "num": 61,
+          "name": "Heavenscale Janna (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40062",
+          "num": 62,
+          "name": "Heavenscale Janna (Emerald)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40063",
+          "num": 63,
+          "name": "Heavenscale Janna (Sapphire)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40064",
+          "num": 64,
+          "name": "Heavenscale Janna (Obsidian)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40065",
+          "num": 65,
+          "name": "Heavenscale Janna (Lustrous)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "40066",
+          "num": 66,
+          "name": "Dawnbringer Janna",
+          "chromas": false
         }
       ],
-      "lore": "- Tailwind (P) grants global movement speed",
-      "blurb": "- Tailwind (P) grants global movement speed",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Armed with the power of Runeterra's gales, Janna is a mysterious, elemental wind spirit who protects the dispossessed of Zaun. Some believe she was brought into existence by the pleas of Runeterra's sailors who prayed for fair winds as they navigated treacherous waters and braved rough tempests. Her favor and protection has since been called into the depths of Zaun, where Janna has become a beacon of hope to those in need. No one knows where or when she will appear, but more often than not, she's come to help.",
+      "blurb": "Armed with the power of Runeterra's gales, Janna is a mysterious, elemental wind spirit who protects the dispossessed of Zaun. Some believe she was brought into existence by the pleas of Runeterra's sailors who prayed for fair winds as they navigated...",
+      "allytips": [
+        "Eye of the Storm can be used on allied turrets.",
+        "Quickly firing a Howling Gale without the charge up can be used to heavily disable the other team.",
+        "Timing Janna's ultimate can push enemies away from a wounded ally or even separate enemies."
+      ],
+      "enemytips": [
+        "Save an interrupt ability for when Janna uses her ultimate.",
+        "Listen for the charge up sound on Howling Gale in case Janna is trying to hit you with it from off screen or from brush.",
+        "Janna's at her strongest when buffing another ally. If you can harass her ally, it will weaken her ability to fight you."
+      ],
       "tags": [
         "Support",
         "Mage"
@@ -224,64 +492,62 @@
         "difficulty": 7
       },
       "stats": {
-        "hp": 434,
-        "hpperlevel": 78,
-        "mp": 366,
-        "mpperlevel": 64,
-        "movespeed": 335,
-        "armor": 16.8,
-        "armorperlevel": 3.8,
+        "hp": 570,
+        "hpperlevel": 90,
+        "mp": 360,
+        "mpperlevel": 50,
+        "movespeed": 325,
+        "armor": 28,
+        "armorperlevel": 4.5,
         "spellblock": 30,
-        "spellblockperlevel": 0,
-        "attackrange": 475,
-        "hpregen": 5.05,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 5.5,
         "hpregenperlevel": 0.55,
-        "mpregen": 7.5,
-        "mpregenperlevel": 0.6,
+        "mpregen": 11.5,
+        "mpregenperlevel": 0.4,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 51.95,
+        "attackdamage": 47,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 2.61,
+        "attackspeedperlevel": 3,
         "attackspeed": 0.625
       },
       "spells": [
         {
-          "id": "Jade_JannaHowlingGale",
+          "id": "HowlingGale",
           "name": "Howling Gale",
-          "description": "By creating a localized change in pressure and temperature, Janna is able to create a small storm that grows in size with time. She can active the spell again to release the storm. On release this storm will fly towards the direction it was cast in, dealing damage and knocking away any enemies in its path.",
-          "tooltip": "Summons a whirlwind, which deals <magicDamage>{{ minimumdamage }} magic damage</magicDamage> to all enemies in its path and <status>Knocks</status> them into the air. The whirlwind travels further, deals <magicDamage>{{ chargedamage }} bonus damage</magicDamage>, and <status>Knocks</status> enemies higher, for each second it charges (up to a maximum of 3 seconds).<br /><br /><recast>Recast</recast> to release the whirlwind early.{{ spellmodifierdescriptionappend }}",
+          "description": "By creating a localized change in pressure and temperature, Janna is able to create a small storm that grows in size with time. She can activate the spell again to release the storm. On release this storm will fly towards the direction it was cast in, dealing damage and knocking away any enemies in its path.",
+          "tooltip": "Janna summons a tornado that grows stronger over {{ maxduration }} seconds then blows along its path. It deals <magicDamage>{{ minimumdamage }} - {{ maxdamage }} magic damage</magicDamage> and <status>Knocks Up</status> for {{ baseknockup }} - {{ maxknockup }} seconds. The distance, damage, and <status>Knock Up</status> duration increase based on how much the tornado grew. Janna can <recast>Recast</recast> to send the tornado early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Damage Per Second Charged",
-              "@AbilityResourceName@ Cost",
-              "Cooldown"
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ chargedamage }} -> {{ chargedamageNL }}",
-              "{{ cost }} -> {{ costNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ mindamage }} -> {{ mindamageNL }}",
+              "{{ bonusdamage }} -> {{ bonusdamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
             14,
-            13,
-            12,
-            11,
-            10
+            14,
+            14,
+            14,
+            14
           ],
-          "cooldownBurn": "14/13/12/11/10",
+          "cooldownBurn": "14",
           "cost": [
             90,
+            95,
+            100,
             105,
-            120,
-            135,
-            150
+            110
           ],
-          "costBurn": "90/105/120/135/150",
+          "costBurn": "90/95/100/105/110",
           "datavalues": {},
           "effect": [
             null,
@@ -381,54 +647,54 @@
           ],
           "rangeBurn": "1075",
           "image": {
-            "full": "Jade_JannaHowlingGale.png",
-            "sprite": "spell7.png",
+            "full": "HowlingGale.png",
+            "sprite": "spell5.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_JannaSowTheWind",
+          "id": "SowTheWind",
           "name": "Zephyr",
-          "description": "Janna summons an air elemental that passively increases her Movement Speed and enables her to pass through units. She may also activate this ability to deal damage and slow an enemy's Movement Speed. The passive is lost while this ability is on cooldown.",
-          "tooltip": "<spellPassive>Passive: </spellPassive>Increases <speed>Movement Speed</speed> by {{ mspercent*100 }}% and allows movement through units.<br /><br /><spellActive>Active: </spellActive>Deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to an enemy and <status>Slows</status> by {{ movementspeedfortooltip }}% for {{ slowduration }} seconds. Passive benefit is lost while <spellName>Zephyr</spellName> is on cooldown.{{ spellmodifierdescriptionappend }}",
+          "description": "Janna summons an air elemental that passively increases her Move Speed and enables her to pass through units. She may also activate this ability to deal damage and slow an enemy's Move Speed.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Janna gains <speed>{{ totalms }} Move Speed</speed> and is Ghosted.<br /><br /><spellActive>Active:</spellActive> Janna's elemental strikes an enemy, <status>Slowing</status> them by {{ totalslow }} for {{ slowduration }} seconds, and dealing <magicDamage>{{ totaldamage }} + {{ spell.tailwindself:bonusdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Passive Move Speed",
               "Damage",
               "Slow",
-              "@AbilityResourceName@ Cost",
-              "Cooldown"
+              "Passive Move Speed",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ mspercent*100.000000 }}% -> {{ mspercentnl*100.000000 }}%",
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ slowpercent*-1.000000 }}% -> {{ slowpercentnl*-1.000000 }}%",
-              "{{ cost }} -> {{ costNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
+              "{{ mspercent*100.000000 }}% -> {{ mspercentnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            12,
-            11,
-            10,
-            9,
-            8
+            8,
+            7.5,
+            7,
+            6.5,
+            6
           ],
-          "cooldownBurn": "12/11/10/9/8",
+          "cooldownBurn": "8/7.5/7/6.5/6",
           "cost": [
-            40,
             50,
+            55,
             60,
-            70,
-            80
+            65,
+            70
           ],
-          "costBurn": "40/50/60/70/80",
+          "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
@@ -528,50 +794,52 @@
           ],
           "rangeBurn": "4294967295",
           "image": {
-            "full": "Jade_JannaSowTheWind.png",
-            "sprite": "spell7.png",
+            "full": "SowTheWind.png",
+            "sprite": "spell5.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_JannaEyeOfTheStorm",
+          "id": "EyeOfTheStorm",
           "name": "Eye Of The Storm",
           "description": "Janna conjures a defensive gale that shields an ally champion or turret from incoming damage and increases their Attack Damage.",
-          "tooltip": "Shields an allied Champion or turret for {{ shieldduration }} seconds. The shield absorbs up to <shield>{{ totalshield }} damage</shield> and grants <physicalDamage>{{ bonusad }} Attack Damage</physicalDamage> until it breaks.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Janna grants an ally champion or turret <shield>{{ totalshield }} Shield</shield> for {{ shieldduration }} seconds. While shielded, they gain <scaleAD>{{ totalad }} Attack Damage</scaleAD>.<br /><br />Janna refunds {{ ecdrefundforcc*100 }}% of the cooldown whenever she impairs an enemy champion's movement with an Ability.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Shield Health",
               "Attack Damage",
+              "Cooldown",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ baseshield }} -> {{ baseshieldNL }}",
               "{{ bonusad }} -> {{ bonusadNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            10,
-            10,
-            10,
-            10,
-            10
+            16,
+            15,
+            14,
+            13,
+            12
           ],
-          "cooldownBurn": "10",
+          "cooldownBurn": "16/15/14/13/12",
           "cost": [
             70,
+            75,
             80,
-            90,
-            100,
-            110
+            85,
+            90
           ],
-          "costBurn": "70/80/90/100/110",
+          "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
@@ -671,46 +939,44 @@
           ],
           "rangeBurn": "800",
           "image": {
-            "full": "Jade_JannaEyeOfTheStorm.png",
-            "sprite": "spell7.png",
+            "full": "EyeOfTheStorm.png",
+            "sprite": "spell5.png",
             "group": "spell",
-            "x": 192,
-            "y": 96,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_JannaReapTheWhirlwind",
+          "id": "ReapTheWhirlwind",
           "name": "Monsoon",
           "description": "Janna surrounds herself in a magical storm, throwing enemies back. After the storm has settled, soothing winds heal nearby allies while the ability is active.",
-          "tooltip": "Summons forth the might of the wind to <recast>Knockback</recast> surrounding enemies and restores <healing>{{ totalheal }} Health</healing> to nearby allies over 4 seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Janna summons a magical monsoon, <status>Knocking Back</status> nearby enemies then healing nearby allies for <healing>{{ totalheal }} Health</healing> over {{ duration }} seconds. Moving or using an Ability ends the monsoon early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Heal Per Second",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
+              "Cooldown"
             ],
             "effect": [
               "{{ healbasepersecond }} -> {{ healbasepersecondNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            150,
-            135,
-            120
+            130,
+            115,
+            100
           ],
-          "cooldownBurn": "150/135/120",
+          "cooldownBurn": "130/115/100",
           "cost": [
             100,
-            150,
-            200
+            100,
+            100
           ],
-          "costBurn": "100/150/200",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -788,11 +1054,11 @@
           ],
           "rangeBurn": "725",
           "image": {
-            "full": "Jade_JannaReapTheWhirlwind.png",
-            "sprite": "spell7.png",
+            "full": "ReapTheWhirlwind.png",
+            "sprite": "spell5.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -801,13 +1067,13 @@
       ],
       "passive": {
         "name": "Tailwind",
-        "description": "Janna and her allied champions gain 3% increased Movement Speed.",
+        "description": "Janna's allies gain Move Speed moving towards her.<br><br>Janna deals a portion of bonus Move Speed as bonus magic damage on hit and with Zephyr.",
         "image": {
-          "full": "Jade_JannaP.png",
-          "sprite": "passive2.png",
+          "full": "JannaP.png",
+          "sprite": "passive1.png",
           "group": "passive",
-          "x": 336,
-          "y": 0,
+          "x": 432,
+          "y": 48,
           "w": 48,
           "h": 48
         }

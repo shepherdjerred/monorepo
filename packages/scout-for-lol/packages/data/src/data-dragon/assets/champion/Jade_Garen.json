@@ -1,153 +1,395 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Garen": {
-      "id": "Jade_Garen",
-      "key": "60086",
+      "id": "Garen",
+      "key": "86",
       "name": "Garen",
-      "title": "The Might of Deamcia",
+      "title": "The Might of Demacia",
       "image": {
-        "full": "Jade_Garen.png",
-        "sprite": "champion2.png",
+        "full": "Garen.png",
+        "sprite": "champion1.png",
         "group": "champion",
-        "x": 192,
+        "x": 384,
         "y": 0,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60086000",
+          "id": "86000",
           "num": 0,
           "name": "default",
           "chromas": true
         },
         {
-          "id": "60086005",
+          "id": "86001",
+          "num": 1,
+          "name": "Sanguine Garen",
+          "chromas": false
+        },
+        {
+          "id": "86002",
+          "num": 2,
+          "name": "Desert Trooper Garen",
+          "chromas": false
+        },
+        {
+          "id": "86003",
+          "num": 3,
+          "name": "Commando Garen",
+          "chromas": false
+        },
+        {
+          "id": "86004",
+          "num": 4,
+          "name": "Dreadknight Garen",
+          "chromas": false
+        },
+        {
+          "id": "86005",
           "num": 5,
           "name": "Rugged Garen",
           "chromas": false
         },
         {
-          "id": "60086007",
+          "id": "86006",
+          "num": 6,
+          "name": "Steel Legion Garen",
+          "chromas": false
+        },
+        {
+          "id": "86007",
           "num": 7,
           "name": "Garen Noble Garnet",
           "chromas": false,
           "parentSkin": 0
         },
         {
-          "id": "60086008",
+          "id": "86008",
           "num": 8,
           "name": "Garen Noble Plum",
           "chromas": false,
           "parentSkin": 0
         },
         {
-          "id": "60086009",
+          "id": "86009",
           "num": 9,
           "name": "Garen Noble Ivory",
           "chromas": false,
           "parentSkin": 0
         },
         {
-          "id": "60086013",
+          "id": "86010",
+          "num": 10,
+          "name": "Rogue Admiral Garen",
+          "chromas": false
+        },
+        {
+          "id": "86011",
+          "num": 11,
+          "name": "Warring Kingdoms Garen",
+          "chromas": true
+        },
+        {
+          "id": "86012",
+          "num": 12,
+          "name": "Warring Kingdoms Garen (Golden)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "86013",
           "num": 13,
           "name": "God-King Garen",
           "chromas": false
         },
         {
-          "id": "60086014",
+          "id": "86014",
           "num": 14,
           "name": "Demacia Vice Garen",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60086015",
+          "id": "86015",
           "num": 15,
           "name": "Demacia Vice Garen (Ruby)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60086016",
+          "id": "86016",
           "num": 16,
           "name": "Demacia Vice Garen (Pearl)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60086017",
+          "id": "86017",
           "num": 17,
           "name": "Demacia Vice Garen (Obsidian)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60086018",
+          "id": "86018",
           "num": 18,
           "name": "Demacia Vice Garen (Sapphire)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60086019",
+          "id": "86019",
           "num": 19,
           "name": "Demacia Vice Garen (Catseye)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60086020",
+          "id": "86020",
           "num": 20,
           "name": "Demacia Vice Garen (Amethyst)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60086021",
+          "id": "86021",
           "num": 21,
           "name": "Demacia Vice Garen (Neon Noir)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60086022",
+          "id": "86022",
           "num": 22,
           "name": "Mecha Kingdoms Garen",
-          "chromas": true
+          "chromas": false
         },
         {
-          "id": "60086023",
+          "id": "86023",
           "num": 23,
           "name": "Prestige Mecha Kingdoms Garen",
           "chromas": false
         },
         {
-          "id": "60086044",
+          "id": "86024",
+          "num": 24,
+          "name": "Battle Academia Garen",
+          "chromas": true
+        },
+        {
+          "id": "86025",
+          "num": 25,
+          "name": "Battle Academia Garen (Ruby)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86026",
+          "num": 26,
+          "name": "Battle Academia Garen (Sapphire)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86027",
+          "num": 27,
+          "name": "Battle Academia Garen (Citrine)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86028",
+          "num": 28,
+          "name": "Battle Academia Garen (Turquoise)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86029",
+          "num": 29,
+          "name": "Battle Academia Garen (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86030",
+          "num": 30,
+          "name": "Battle Academia Garen (Pearl)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86031",
+          "num": 31,
+          "name": "Battle Academia Garen (Emerald)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86032",
+          "num": 32,
+          "name": "Battle Academia Garen (Sandstone)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "86033",
+          "num": 33,
+          "name": "Mythmaker Garen",
+          "chromas": true
+        },
+        {
+          "id": "86034",
+          "num": 34,
+          "name": "Mythmaker Garen (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86035",
+          "num": 35,
+          "name": "Mythmaker Garen (Catseye)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86036",
+          "num": 36,
+          "name": "Mythmaker Garen (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86037",
+          "num": 37,
+          "name": "Mythmaker Garen (Amethyst)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86038",
+          "num": 38,
+          "name": "Mythmaker Garen (Turquoise)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86039",
+          "num": 39,
+          "name": "Mythmaker Garen (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86040",
+          "num": 40,
+          "name": "Mythmaker Garen (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86041",
+          "num": 41,
+          "name": "Mythmaker Garen (Pearl)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86042",
+          "num": 42,
+          "name": "Mythmaker Garen (Gilded)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86044",
           "num": 44,
           "name": "Fallen God-King Garen",
           "chromas": false
         },
         {
-          "id": "60086301",
-          "num": 301,
-          "name": "Classic Garen",
+          "id": "86045",
+          "num": 45,
+          "name": "Mythmaker Garen (Paragon)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "86046",
+          "num": 46,
+          "name": "Visions of the Fallen Garen",
           "chromas": false
         },
         {
-          "id": "60086302",
-          "num": 302,
-          "name": "Classic Garen (Desert Trooper)",
+          "id": "86047",
+          "num": 47,
+          "name": "Visions of the Fallen Garen (Ruby)",
+          "chromas": true,
+          "parentSkin": 46
+        },
+        {
+          "id": "86048",
+          "num": 48,
+          "name": "Visions of the Fallen Garen (Emerald)",
           "chromas": false,
-          "parentSkin": 301
+          "parentSkin": 46
+        },
+        {
+          "id": "86049",
+          "num": 49,
+          "name": "Visions of the Fallen Garen (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "86050",
+          "num": 50,
+          "name": "Visions of the Fallen Garen (Sapphire)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "86051",
+          "num": 51,
+          "name": "Visions of the Fallen Garen (Pearl)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "86052",
+          "num": 52,
+          "name": "Visions of the Fallen Garen (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "86053",
+          "num": 53,
+          "name": "Visions of the Fallen Garen (Obsidian)",
+          "chromas": false,
+          "parentSkin": 46
+        },
+        {
+          "id": "86054",
+          "num": 54,
+          "name": "Visions of the Fallen Garen (Citrine)",
+          "chromas": false,
+          "parentSkin": 46
         }
       ],
-      "lore": "- Demacian Justice (R) does magic damage",
-      "blurb": "- Demacian Justice (R) does magic damage",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "A proud and noble warrior, Garen fights as one of the Dauntless Vanguard. He is popular among his fellows, and respected well enough by his enemies—not least as a scion of the prestigious Crownguard family, entrusted with defending Demacia and its ideals. Clad in magic-resistant armor and bearing a mighty broadsword, Garen stands ready to confront mages and sorcerers on the field of battle, in a veritable whirlwind of righteous steel.",
+      "blurb": "A proud and noble warrior, Garen fights as one of the Dauntless Vanguard. He is popular among his fellows, and respected well enough by his enemies—not least as a scion of the prestigious Crownguard family, entrusted with defending Demacia and its...",
+      "allytips": [
+        "Garen's regeneration greatly increases if he can avoid receiving damage for several seconds.",
+        "Judgment deals maximum damage when only hitting a single target. For effective trading, try to position such that only the enemy champion is hit.",
+        "Garen is only constrained by cooldowns, making items such as Black Cleaver very effective for him."
+      ],
+      "enemytips": [
+        "Stack armor items to lower the large amount of physical damage that Garen deals out.",
+        "Try to run away from Garen as your health gets lower, as he can execute you quickly with Demacian Justice.",
+        "Be careful about attacking Garen in brush. It often will lead to taking full damage from Judgment.",
+        "Judgment deals maximum damage when only hitting a single target. If getting out of its radius isn't possible, move through allied minions to reduce damage taken."
+      ],
       "tags": [
         "Fighter",
         "Tank"
@@ -160,43 +402,41 @@
         "difficulty": 5
       },
       "stats": {
-        "hp": 551,
-        "hpperlevel": 96,
+        "hp": 690,
+        "hpperlevel": 98,
         "mp": 0,
         "mpperlevel": 0,
-        "movespeed": 345,
-        "armor": 25.7,
-        "armorperlevel": 2.7,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
-        "attackrange": 125,
-        "hpregen": 8.2,
-        "hpregenperlevel": 0.75,
+        "movespeed": 340,
+        "armor": 38,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 1.55,
+        "attackrange": 175,
+        "hpregen": 8,
+        "hpregenperlevel": 0.5,
         "mpregen": 0,
         "mpregenperlevel": 0,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 55.5,
+        "attackdamage": 69,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 2.9,
+        "attackspeedperlevel": 3.65,
         "attackspeed": 0.625
       },
       "spells": [
         {
-          "id": "Jade_GarenQ",
+          "id": "GarenQ",
           "name": "Decisive Strike",
           "description": "Garen gains a burst of Move Speed, breaking free of all slows affecting him. His next attack strikes a vital area of his foe, dealing bonus damage and silencing them.",
-          "tooltip": "Garen breaks free from all slows affecting him and gains <speed>{{ movementspeedamount*100 }}% Movement Speed</speed> for {{ movementspeedduration }} seconds.<br /><br />His next basic attack deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>silences</status> his target for {{ silenceduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Garen removes all <status>Slowing</status> effects on him and gains <speed>{{ movementspeedamount*100 }}% Move Speed</speed> for {{ movementspeedduration }} second(s).<br /><br />His next Attack <status>Silences</status> for {{ silenceduration }} seconds and does <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
-              "Move Speed Duration",
-              "Silence Duration"
+              "Move Speed Duration"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ movementspeedduration }} -> {{ movementspeeddurationNL }}",
-              "{{ silenceduration }} -> {{ silencedurationNL }}"
+              "{{ movementspeedduration }} -> {{ movementspeeddurationNL }}"
             ]
           },
           "maxrank": 5,
@@ -315,40 +555,42 @@
           ],
           "rangeBurn": "300",
           "image": {
-            "full": "Jade_GarenQ.png",
-            "sprite": "spell7.png",
+            "full": "GarenQ.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 0,
-            "y": 48,
+            "x": 288,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "No Cost"
         },
         {
-          "id": "Jade_GarenW",
+          "id": "GarenW",
           "name": "Courage",
-          "description": "Garen performs a dance of death with his sword, dealing damage around him for the duration.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Garen's gains an additional 20% value from bonus <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>.<br /><br /><spellActive>Active: </spellActive>Garen gains a defensive shield for {{ buffduration }} seconds, reducing incoming damage by {{ damagereduction*100 }}% and granting 30% Crowd Control Reduction.{{ spellmodifierdescriptionappend }}",
+          "description": "Garen passively increases his Armor and Magic Resist by killing enemies. He may also activate this ability to give him a shield and tenacity for a brief moment followed by a lesser amount of damage reduction for a longer duration.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Garen has <scaleArmor>{{ resistsfortooltip }} bonus Armor</scaleArmor> and <scaleMR>{{ resistsfortooltip }} bonus Magic Resist</scaleMR>. Killing units permanently grants <attention>{{ resistgainonkilltooltip }} resists</attention>, up to a max of <attention>{{ resistmax }}</attention>.<br /><br /><spellActive>Active:</spellActive> Garen steels his courage for {{ drduration }} seconds, reducing incoming damage by {{ drpercent*100 }}%. He also gains <shield>{{ totalshield }} Shield</shield> and <slow>{{ upfronttenacity*100 }}% Tenacity</slow> for {{ upfrontduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Duration",
+              "Shield Amount",
+              "Damage Reduction",
               "Cooldown"
             ],
             "effect": [
-              "{{ buffduration }} -> {{ buffdurationNL }}",
+              "{{ baseshield }} -> {{ baseshieldNL }}",
+              "{{ drpercent*100.000000 }}% -> {{ drpercentnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            24,
-            23,
             22,
-            21,
-            20
+            19.5,
+            17,
+            14.5,
+            12
           ],
-          "cooldownBurn": "24/23/22/21/20",
+          "cooldownBurn": "22/19.5/17/14.5/12",
           "cost": [
             0,
             0,
@@ -456,42 +698,42 @@
           ],
           "rangeBurn": "0",
           "image": {
-            "full": "Jade_GarenW.png",
-            "sprite": "spell7.png",
+            "full": "GarenW.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 48,
-            "y": 48,
+            "x": 336,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "No Cost"
         },
         {
-          "id": "Jade_GarenE",
+          "id": "GarenE",
           "name": "Judgment",
           "description": "Garen rapidly spins his sword around his body, dealing physical damage to nearby enemies.",
-          "tooltip": "Garen rapidly spins his sword around his body for {{ duration }} seconds, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to nearby enemies every second. Garen can move through units while spinning but moves 20% slower when travelling directly through units.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Garen rapidly spins his sword for {{ duration }} seconds, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> {{ f1 }} times over the duration. The nearest enemy takes <physicalDamage>{{ nearestenemybonus*100 }}% increased damage</physicalDamage>. Champions hit by {{ stackstoshred }} strikes lose <scaleArmor>{{ shredamount*100 }}% Armor</scaleArmor> for {{ shredduration }} seconds.<br /><br /><recast>Recast</recast>: Garen ends this Ability early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage per Second",
-              "Total Attack Damage Ratio",
+              "Base Damage Per Spin",
+              "Attack Damage Scaling Per Spin",
               "Cooldown"
             ],
             "effect": [
-              "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}",
-              "{{ baseadratiopersecond*100.000000 }}% -> {{ baseadratiopersecondnl*100.000000 }}%",
+              "{{ basedamagepertick }} -> {{ basedamagepertickNL }}",
+              "{{ adratiopertick*100.000000 }}% -> {{ adratioperticknl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            13,
-            12,
-            11,
-            10,
-            9
+            9,
+            8.25,
+            7.5,
+            6.75,
+            6
           ],
-          "cooldownBurn": "13/12/11/10/9",
+          "cooldownBurn": "9/8.25/7.5/6.75/6",
           "cost": [
             0,
             0,
@@ -599,40 +841,40 @@
           ],
           "rangeBurn": "325",
           "image": {
-            "full": "Jade_GarenE.png",
-            "sprite": "spell7.png",
+            "full": "GarenE.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 96,
-            "y": 48,
+            "x": 384,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "No Cost"
         },
         {
-          "id": "Jade_GarenR",
+          "id": "GarenR",
           "name": "Demacian Justice",
           "description": "Garen calls upon the might of Demacia to attempt to execute an enemy champion.",
-          "tooltip": "Garen calls upon the might of Demacia to attempt to execute an enemy champion, dealing <magicDamage>{{ basedamage }} magic damage</magicDamage> plus 1 damage for every {{ executedamage }} health they are missing.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Garen calls upon the might of Demacia to slay his enemy, dealing <trueDamage>{{ basedamage }} plus {{ executedamage*100 }}% missing Health true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
+              "Cooldown",
               "Damage",
-              "Missing Health Damage",
-              "Cooldown"
+              "Percent Missing Health Damage"
             ],
             "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ executedamage }} -> {{ executedamageNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ executedamage*100.000000 }}% -> {{ executedamagenl*100.000000 }}%"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            160,
             120,
+            100,
             80
           ],
-          "cooldownBurn": "160/120/80",
+          "cooldownBurn": "120/100/80",
           "cost": [
             0,
             0,
@@ -716,11 +958,11 @@
           ],
           "rangeBurn": "400",
           "image": {
-            "full": "Jade_GarenR.png",
-            "sprite": "spell7.png",
+            "full": "GarenR.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 144,
-            "y": 48,
+            "x": 432,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -731,10 +973,10 @@
         "name": "Perseverance",
         "description": "If Garen has not recently been struck by damage or enemy abilities, he regenerates a percentage of his total health each second.",
         "image": {
-          "full": "Jade_Garen_Passive.png",
-          "sprite": "passive2.png",
+          "full": "Garen_Passive.png",
+          "sprite": "passive1.png",
           "group": "passive",
-          "x": 192,
+          "x": 384,
           "y": 0,
           "w": 48,
           "h": 48

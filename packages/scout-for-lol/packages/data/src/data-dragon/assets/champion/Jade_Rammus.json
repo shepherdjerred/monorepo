@@ -1,182 +1,271 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Rammus": {
-      "id": "Jade_Rammus",
-      "key": "60033",
+      "id": "Rammus",
+      "key": "33",
       "name": "Rammus",
-      "title": "The Armordillo",
+      "title": "the Armordillo",
       "image": {
-        "full": "Jade_Rammus.png",
-        "sprite": "champion2.png",
+        "full": "Rammus.png",
+        "sprite": "champion3.png",
         "group": "champion",
-        "x": 432,
-        "y": 96,
+        "x": 288,
+        "y": 48,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60033000",
+          "id": "33000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60033001",
+          "id": "33001",
           "num": 1,
           "name": "King Rammus",
           "chromas": false
         },
         {
-          "id": "60033002",
+          "id": "33002",
           "num": 2,
           "name": "Chrome Rammus",
           "chromas": false
         },
         {
-          "id": "60033006",
+          "id": "33003",
+          "num": 3,
+          "name": "Molten Rammus",
+          "chromas": false
+        },
+        {
+          "id": "33004",
+          "num": 4,
+          "name": "Freljord Rammus",
+          "chromas": false
+        },
+        {
+          "id": "33005",
+          "num": 5,
+          "name": "Ninja Rammus",
+          "chromas": false
+        },
+        {
+          "id": "33006",
           "num": 6,
           "name": "Full Metal Rammus",
           "chromas": false
         },
         {
-          "id": "60033017",
-          "num": 17,
-          "name": "Astronaut Rammus",
+          "id": "33007",
+          "num": 7,
+          "name": "Guardian of the Sands Rammus",
           "chromas": false
         },
         {
-          "id": "60033018",
+          "id": "33008",
+          "num": 8,
+          "name": "Sweeper Rammus",
+          "chromas": true
+        },
+        {
+          "id": "33009",
+          "num": 9,
+          "name": "Sweeper Rammus (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33010",
+          "num": 10,
+          "name": "Sweeper Rammus (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33011",
+          "num": 11,
+          "name": "Sweeper Rammus (Emerald)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33012",
+          "num": 12,
+          "name": "Sweeper Rammus (Sapphire)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33013",
+          "num": 13,
+          "name": "Sweeper Rammus (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33014",
+          "num": 14,
+          "name": "Sweeper Rammus (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33015",
+          "num": 15,
+          "name": "Sweeper Rammus (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "33016",
+          "num": 16,
+          "name": "Hextech Rammus",
+          "chromas": false
+        },
+        {
+          "id": "33017",
+          "num": 17,
+          "name": "Astronaut Rammus",
+          "chromas": true
+        },
+        {
+          "id": "33018",
           "num": 18,
           "name": "Astronaut Rammus (Ruby)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60033019",
+          "id": "33019",
           "num": 19,
           "name": "Astronaut Rammus (Citrine)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60033020",
+          "id": "33020",
           "num": 20,
           "name": "Astronaut Rammus (Catseye)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60033021",
+          "id": "33021",
           "num": 21,
           "name": "Astronaut Rammus (Turquoise)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60033022",
+          "id": "33022",
           "num": 22,
           "name": "Astronaut Rammus (Sapphire)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60033023",
+          "id": "33023",
           "num": 23,
           "name": "Astronaut Rammus (Emerald)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60033024",
+          "id": "33024",
           "num": 24,
           "name": "Astronaut Rammus (Amethyst)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60033025",
+          "id": "33025",
           "num": 25,
           "name": "Astronaut Rammus (Rose Quartz)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60033026",
+          "id": "33026",
           "num": 26,
           "name": "Durian Defender Rammus",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60033027",
+          "id": "33027",
           "num": 27,
           "name": "Durian Defender Rammus (Ruby)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60033028",
+          "id": "33028",
           "num": 28,
           "name": "Durian Defender Rammus (Citrine)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60033029",
+          "id": "33029",
           "num": 29,
           "name": "Durian Defender Rammus (Aquamarine)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60033030",
+          "id": "33030",
           "num": 30,
           "name": "Durian Defender Rammus (Rose Quartz)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60033031",
+          "id": "33031",
           "num": 31,
           "name": "Durian Defender Rammus (Tanzanite)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60033032",
+          "id": "33032",
           "num": 32,
           "name": "Durian Defender Rammus (Obsidian)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60033033",
+          "id": "33033",
           "num": 33,
           "name": "Durian Defender Rammus (Jasper)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60033034",
+          "id": "33034",
           "num": 34,
           "name": "Durian Defender Rammus (Pearl)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60033035",
+          "id": "33035",
           "num": 35,
           "name": "Baron Rammus",
           "chromas": false
         }
       ],
-      "lore": "- Tremors (R) is a repeating AoE around him<br>- All other abilities are ok",
-      "blurb": "- Tremors (R) is a repeating AoE around him<br>- All other abilities are ok",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Idolized by many, dismissed by some, mystifying to all, the curious being Rammus is an enigma. Protected by a spiked shell, he inspires increasingly disparate theories on his origin wherever he goes—from demigod, to sacred oracle, to a mere beast transformed by magic. Whatever the truth may be, Rammus keeps his own counsel and stops for no one as he roams the Shuriman desert.",
+      "blurb": "Idolized by many, dismissed by some, mystifying to all, the curious being Rammus is an enigma. Protected by a spiked shell, he inspires increasingly disparate theories on his origin wherever he goes—from demigod, to sacred oracle, to a mere beast...",
+      "allytips": [
+        "Powerball can be used as an effective escape mechanism.",
+        "Using taunt on a champion by your tower can cause the tower to attack your enemy.",
+        "Tremors and Defensive Ball Curl can be used late in the game to obliterate towers. If you're bogged down in a team fight, it is often valuable to break off and attack the buildings."
+      ],
+      "enemytips": [
+        "Pay particular attention to when his Defensive Ball Curl is off. Rammus has much lower stats than a normal tank when he's out of the stance.",
+        "Rammus often stacks high Armor, leaving him especially vulnerable to caster damage while not in Defensive Ball Curl."
+      ],
       "tags": [
         "Tank"
       ],
@@ -188,62 +277,62 @@
         "difficulty": 5
       },
       "stats": {
-        "hp": 506,
-        "hpperlevel": 86,
-        "mp": 288,
+        "hp": 645,
+        "hpperlevel": 100,
+        "mp": 310,
         "mpperlevel": 33,
         "movespeed": 335,
-        "armor": 28.8,
-        "armorperlevel": 3.8,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
+        "armor": 35,
+        "armorperlevel": 4.5,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
         "attackrange": 125,
-        "hpregen": 7.55,
+        "hpregen": 8,
         "hpregenperlevel": 0.55,
-        "mpregen": 7.5,
+        "mpregen": 7.85,
         "mpregenperlevel": 0.5,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 53.5,
+        "attackdamage": 65,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.215,
-        "attackspeed": 0.625
+        "attackspeed": 0.7
       },
       "spells": [
         {
-          "id": "Jade_RammusQ",
+          "id": "PowerBall",
           "name": "Powerball",
           "description": "Rammus accelerates in a ball towards his enemies, dealing damage and slowing targets affected by the impact.",
-          "tooltip": "Rammus accelerates in a ball over 7 seconds towards his enemies, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies on impact and <status>Slowing</status> them by {{ slowpercent*-100 }}% for 3 seconds.<br /><br /><recast>Recast</recast> to remove this effect.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Rammus curls into a ball, gaining <speed>{{ minimummovespeed }} Move Speed</speed>, accelerating up to <speed>{{ maximummovespeed }} Move Speed</speed> over {{ rollduration }} seconds. Rammus stops after colliding with an enemy, dealing <magicDamage>{{ powerballdamage }} magic damage</magicDamage>, <status>Knocking Back</status>, and <status>Slowing</status> nearby enemies by {{ slowpercent }}% for {{ slowduration }} second.<br /><br /><recast>Recast</recast>: Rammus ends this Ability early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
               "Slow",
-              "@AbilityResourceName@ Cost"
+              "Cooldown"
             ],
             "effect": [
-              "{{ aoedamage }} -> {{ aoedamageNL }}",
-              "{{ slowpercent*-100.000000 }}% -> {{ slowpercentnl*-100.000000 }}%",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ qbasedamage }} -> {{ qbasedamageNL }}",
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            10,
-            10,
-            10,
-            10,
-            10
+            12,
+            10.5,
+            9,
+            7.5,
+            6
           ],
-          "cooldownBurn": "10",
+          "cooldownBurn": "12/10.5/9/7.5/6",
           "cost": [
-            70,
-            80,
-            90,
-            100,
-            110
+            60,
+            60,
+            60,
+            60,
+            60
           ],
-          "costBurn": "70/80/90/100/110",
+          "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
@@ -343,42 +432,44 @@
           ],
           "rangeBurn": "300",
           "image": {
-            "full": "Jade_RammusQ.png",
-            "sprite": "spell9.png",
+            "full": "PowerBall.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 0,
-            "y": 144,
+            "x": 384,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_RammusW",
+          "id": "DefensiveBallCurl",
           "name": "Defensive Ball Curl",
-          "description": "Rammus goes into a defensive formation, vastly increasing his armor and magic resistance, while returning damage to attacks.",
-          "tooltip": "Rammus goes into a defensive formation for 6 seconds, increasing his <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> by {{ armour }} and returning <magicDamage>{{ totaldamage }} magic damage</magicDamage> to attackers.<br /><br /><recast>Recast</recast> to remove this effect.{{ spellmodifierdescriptionappend }}",
+          "description": "Rammus goes into a defensive formation, vastly increasing his Armor and Magic Resistance, and returning damage to enemies that attack him.",
+          "tooltip": "Rammus enters a defensive formation for {{ buffduration }} seconds, gaining <scaleArmor>{{ bonusarmortooltip }} Armor</scaleArmor> and <scaleMR>{{ bonusmrtooltip }} Magic Resist</scaleMR> and dealing <magicDamage>{{ returndamagecalc }} magic damage</magicDamage> to enemies that Attack him.<br /><br /><recast>Recast</recast>: Rammus ends this Ability early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Return Damage",
               "Armor Bonus",
-              "Magic Resist Bonus"
+              "Magic Resist Bonus",
+              "Percent Armor Bonus",
+              "Percent Magic Resist Bonus"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ armour }} -> {{ armourNL }}",
-              "{{ armour }} -> {{ armourNL }}"
+              "{{ flatbonusarmor }} -> {{ flatbonusarmorNL }}",
+              "{{ flatbonusmr }} -> {{ flatbonusmrNL }}",
+              "{{ bonusarmorpercent*100.000000 }}% -> {{ bonusarmorpercentnl*100.000000 }}%",
+              "{{ bonusmrpercent*100.000000 }}% -> {{ bonusmrpercentnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            14,
-            14,
-            14,
-            14,
-            14
+            7,
+            7,
+            7,
+            7,
+            7
           ],
-          "cooldownBurn": "14",
+          "cooldownBurn": "7",
           "cost": [
             40,
             40,
@@ -486,31 +577,29 @@
           ],
           "rangeBurn": "300",
           "image": {
-            "full": "Jade_RammusW.png",
-            "sprite": "spell9.png",
+            "full": "DefensiveBallCurl.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 48,
-            "y": 144,
+            "x": 432,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_RammusE",
-          "name": "Puncturing Taunt",
-          "description": "Rammus taunts an enemy champion or monster into a reckless assault against Rammus' hard shell, reducing Armor temporarily.",
-          "tooltip": "Rammus <status>Taunts</status> the enemy champion or monster into a reckless assault, reducing their Armor by {{ armourreduction*-1 }} and forcing them to attack Rammus for {{ duration }} second(s).</mainText>{{ spellmodifierdescriptionappend }}",
+          "id": "PuncturingTaunt",
+          "name": "Frenzying Taunt",
+          "description": "Rammus taunts an enemy champion or monster into a reckless assault against him.",
+          "tooltip": "Rammus <status>Taunts</status> an enemy champion or monster for {{ duration }} seconds. Monsters are dealt <magicDamage>{{ monsterdamagecalc }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Duration",
-              "Mana Cost",
-              "Armor Reduction"
+              "Monster Damage"
             ],
             "effect": [
               "{{ duration }} -> {{ durationNL }}",
-              "{{ cost }} -> {{ costNL }}",
-              "{{ armourreduction*-1.000000 }} -> {{ armourreductionnl*-1.000000 }}"
+              "{{ monsterdamage }} -> {{ monsterdamageNL }}"
             ]
           },
           "maxrank": 5,
@@ -524,12 +613,12 @@
           "cooldownBurn": "12",
           "cost": [
             50,
-            60,
-            70,
-            80,
-            90
+            50,
+            50,
+            50,
+            50
           ],
-          "costBurn": "50/60/70/80/90",
+          "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
@@ -629,42 +718,46 @@
           ],
           "rangeBurn": "325",
           "image": {
-            "full": "Jade_RammusE.png",
-            "sprite": "spell9.png",
+            "full": "PuncturingTaunt.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 96,
-            "y": 144,
+            "x": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_RammusR",
-          "name": "Tremors",
-          "description": "Rammus creates waves of destruction pulsing through the ground, causing damage to units and structures near him.",
-          "tooltip": "Rammus creates tremors beneath him, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> every second to nearby units and structures for 8 seconds.{{ spellmodifierdescriptionappend }}",
+          "id": "Tremors2",
+          "name": "Soaring Slam",
+          "description": "Rammus hops into the air and slams down at a target area, dealing magic damage and slowing enemies. If cast while Rammus is in Powerball, Rammus knocks up enemies near the center as well.",
+          "tooltip": "Rammus hops into the air and slams down in an area, dealing <magicDamage>{{ initialdamagecalc }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowamount*100 }}% for {{ slowduration }} seconds. If used during <spellName>Powerball</spellName>, enemies in the center take an additional <magicDamage>{{ spell.powerball:powerballdamage }} magic damage</magicDamage> and are <status>Knocked Up</status> for {{ knockupduration }} seconds.<br /><br />Rammus then creates {{ numberofpulses }} aftershocks in the area over {{ buffduration }} seconds, repeating the <status>Slow</status>.<br /><br />The range of this Ability is increased by Rammus's <speed>Move Speed</speed>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage"
+              "Damage",
+              "Slow",
+              "Cooldown"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}"
+              "{{ initialdamage }} -> {{ initialdamageNL }}",
+              "{{ slowamount*100.000000 }}% -> {{ slowamountnl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            60,
-            60,
-            60
+            120,
+            105,
+            90
           ],
-          "cooldownBurn": "60",
+          "cooldownBurn": "120/105/90",
           "cost": [
-            120,
-            120,
-            120
+            100,
+            100,
+            100
           ],
-          "costBurn": "120",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -742,11 +835,11 @@
           ],
           "rangeBurn": "25000",
           "image": {
-            "full": "Jade_RammusR.png",
-            "sprite": "spell9.png",
+            "full": "Tremors2.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 144,
-            "y": 144,
+            "x": 48,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -755,13 +848,13 @@
       ],
       "passive": {
         "name": "Spiked Shell",
-        "description": "Rammus gains additional damage as his shell becomes reinforced, converting 25% of his armor into Attack Damage.",
+        "description": "Rammus gains bonus Attack Damage scaling with his Armor and Magic Resistance.",
         "image": {
           "full": "Armordillo_ScavengeArmor.png",
-          "sprite": "passive2.png",
+          "sprite": "passive3.png",
           "group": "passive",
-          "x": 432,
-          "y": 96,
+          "x": 288,
+          "y": 48,
           "w": 48,
           "h": 48
         }

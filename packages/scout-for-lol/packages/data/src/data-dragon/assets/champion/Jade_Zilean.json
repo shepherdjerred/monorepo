@@ -1,226 +1,254 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Zilean": {
-      "id": "Jade_Zilean",
-      "key": "60026",
+      "id": "Zilean",
+      "key": "26",
       "name": "Zilean",
-      "title": "The Chronokeeper",
+      "title": "the Chronokeeper",
       "image": {
-        "full": "Jade_Zilean.png",
-        "sprite": "champion3.png",
+        "full": "Zilean.png",
+        "sprite": "champion5.png",
         "group": "champion",
-        "x": 384,
-        "y": 48,
+        "x": 0,
+        "y": 96,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60026000",
+          "id": "26000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60026005",
+          "id": "26001",
+          "num": 1,
+          "name": "Old Saint Zilean",
+          "chromas": false
+        },
+        {
+          "id": "26002",
+          "num": 2,
+          "name": "Groovy Zilean",
+          "chromas": false
+        },
+        {
+          "id": "26003",
+          "num": 3,
+          "name": "Shurima Desert Zilean",
+          "chromas": false
+        },
+        {
+          "id": "26004",
+          "num": 4,
+          "name": "Time Machine Zilean",
+          "chromas": false
+        },
+        {
+          "id": "26005",
           "num": 5,
           "name": "Blood Moon Zilean",
           "chromas": false
         },
         {
-          "id": "60026006",
+          "id": "26006",
           "num": 6,
           "name": "Sugar Rush Zilean",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60026007",
+          "id": "26007",
           "num": 7,
           "name": "Sugar Rush Zilean (Ruby)",
           "chromas": false,
           "parentSkin": 6
         },
         {
-          "id": "60026008",
+          "id": "26008",
           "num": 8,
           "name": "Sugar Rush Zilean (Rose Quartz)",
           "chromas": false,
           "parentSkin": 6
         },
         {
-          "id": "60026009",
+          "id": "26009",
           "num": 9,
           "name": "Sugar Rush Zilean (Peridot)",
           "chromas": false,
           "parentSkin": 6
         },
         {
-          "id": "60026010",
+          "id": "26010",
           "num": 10,
           "name": "Sugar Rush Zilean (Aquamarine)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 6
         },
         {
-          "id": "60026011",
+          "id": "26011",
           "num": 11,
           "name": "Sugar Rush Zilean (Citrine)",
           "chromas": false,
           "parentSkin": 6
         },
         {
-          "id": "60026012",
+          "id": "26012",
           "num": 12,
           "name": "Sugar Rush Zilean (Meteorite)",
           "chromas": false,
           "parentSkin": 6
         },
         {
-          "id": "60026013",
+          "id": "26013",
           "num": 13,
           "name": "Sugar Rush Zilean (Sweet Tooth)",
           "chromas": false,
           "parentSkin": 6
         },
         {
-          "id": "60026014",
+          "id": "26014",
           "num": 14,
           "name": "Winterblessed Zilean",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60026015",
+          "id": "26015",
           "num": 15,
           "name": "Winterblessed Zilean (Ruby)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60026016",
+          "id": "26016",
           "num": 16,
           "name": "Winterblessed Zilean (Citrine)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60026017",
+          "id": "26017",
           "num": 17,
           "name": "Winterblessed Zilean (Sapphire)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60026018",
+          "id": "26018",
           "num": 18,
           "name": "Winterblessed Zilean (Emerald)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60026019",
+          "id": "26019",
           "num": 19,
           "name": "Winterblessed Zilean (Pearl)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60026020",
+          "id": "26020",
           "num": 20,
           "name": "Winterblessed Zilean (Obsidian)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60026021",
+          "id": "26021",
           "num": 21,
           "name": "Winterblessed Zilean (Turquoise)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60026022",
+          "id": "26022",
           "num": 22,
           "name": "Winterblessed Zilean (Rose Quartz)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60026023",
+          "id": "26023",
           "num": 23,
           "name": "Winterblessed Zilean (Wreathguard)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60026024",
+          "id": "26024",
           "num": 24,
           "name": "Arcana Zilean",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60026025",
+          "id": "26025",
           "num": 25,
           "name": "Arcana Zilean (Ruby)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60026026",
+          "id": "26026",
           "num": 26,
           "name": "Arcana Zilean (Catseye)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60026027",
+          "id": "26027",
           "num": 27,
           "name": "Arcana Zilean (Emerald)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60026028",
+          "id": "26028",
           "num": 28,
           "name": "Arcana Zilean (Tanzanite)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60026029",
+          "id": "26029",
           "num": 29,
           "name": "Arcana Zilean (Sapphire)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60026030",
+          "id": "26030",
           "num": 30,
           "name": "Arcana Zilean (Rose Quartz)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60026031",
+          "id": "26031",
           "num": 31,
           "name": "Arcana Zilean (Pearl)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60026032",
+          "id": "26032",
           "num": 32,
           "name": "Arcana Zilean (Obsidian)",
           "chromas": false,
           "parentSkin": 24
         }
       ],
-      "lore": "- Time Bomb (Q) is point and click<br>- Heightened Learning (P) grants experience to his entire team",
-      "blurb": "- Time Bomb (Q) is point and click<br>- Heightened Learning (P) grants experience to his entire team",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Once a powerful Icathian mage, Zilean became obsessed with the passage of time after witnessing his homeland's destruction by the Void. Unable to spare even a minute to grieve the catastrophic loss, he called upon ancient temporal magic to divine all possible outcomes. Having become functionally immortal, Zilean now drifts through the past, present, and future, bending and warping the flow of time around him, always searching for that elusive moment that will turn back the clock and undo Icathia's destruction.",
+      "blurb": "Once a powerful Icathian mage, Zilean became obsessed with the passage of time after witnessing his homeland's destruction by the Void. Unable to spare even a minute to grieve the catastrophic loss, he called upon ancient temporal magic to divine all...",
+      "allytips": [
+        "You can combine the use of Time Bomb and Rewind to place two Time Bombs on a target quickly. Placing the second bomb will detonate the first and stun all nearby enemies.",
+        "Time Warp is an effective way to enable allies to finish off enemies, or escape from a losing battle.",
+        "Chronoshift is a powerful deterrent to attacking your carries, but casting Chronoshift too early in a fight can cause the enemy to switch targets too soon, making it less effective."
+      ],
+      "enemytips": [
+        "If you're able to match Zilean's speed, it can sometimes be beneficial to wait until his ultimate has faded before landing the killing blow.",
+        "Zilean is fragile if a team focuses on him, but otherwise he's very difficult to kill. Commit to killing him as a team."
+      ],
       "tags": [
         "Support",
         "Mage"
@@ -233,64 +261,103 @@
         "difficulty": 6
       },
       "stats": {
-        "hp": 451,
-        "hpperlevel": 71,
-        "mp": 320,
-        "mpperlevel": 60,
+        "hp": 574,
+        "hpperlevel": 96,
+        "mp": 452,
+        "mpperlevel": 50,
         "movespeed": 335,
-        "armor": 14.55,
-        "armorperlevel": 3.8,
+        "armor": 24,
+        "armorperlevel": 5,
         "spellblock": 30,
-        "spellblockperlevel": 0,
-        "attackrange": 600,
-        "hpregen": 5.1,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 5.5,
         "hpregenperlevel": 0.5,
-        "mpregen": 7.6,
-        "mpregenperlevel": 0.65,
+        "mpregen": 11.35,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 51.6,
+        "attackdamage": 52,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.13,
-        "attackspeed": 0.625
+        "attackspeed": 0.658
       },
       "spells": [
         {
-          "id": "Jade_ZileanQ",
+          "id": "ZileanQ",
           "name": "Time Bomb",
-          "description": "Zilean places a time bomb on his target, which damages nearby enemies once it expires.",
-          "tooltip": "Zilean places a time-delayed bomb on a target. After {{ countdowntimer }} seconds this bomb will detonate, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to all surrounding enemies.<br /><br />Placing a second <spellName>Time Bomb</spellName> on a target will immediately detonate the first one.{{ spellmodifierdescriptionappend }}",
+          "description": "Tosses a bomb to target area that sticks to units that come near it (prioritizes Champions). It detonates after 3 seconds, dealing area of effect damage. If a Time Bomb is detonated early by another Time Bomb, it also stuns enemies.",
+          "tooltip": "Zilean tosses a time-delayed bomb that sticks to the first unit which comes within a small area around it. After {{ fuseduration }} seconds it detonates, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />Placing a second bomb on a unit that already has one detonates the first bomb immediately and <status>Stuns</status> enemies in the blast for {{ stunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
               "Damage",
-              "@AbilityResourceName@ Cost"
+              "Stun Duration:"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ bombbasedamage }} -> {{ bombbasedamageNL }}",
+              "{{ stunduration }} -> {{ stundurationNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
             10,
-            10,
-            10,
-            10,
-            10
+            9.5,
+            9,
+            8.5,
+            8
           ],
-          "cooldownBurn": "10",
+          "cooldownBurn": "10/9.5/9/8.5/8",
           "cost": [
+            60,
+            65,
             70,
-            85,
-            100,
-            115,
-            130
+            75,
+            80
           ],
-          "costBurn": "70/85/100/115/130",
+          "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
             [
+              75,
+              115,
+              165,
+              230,
+              300
+            ],
+            [
+              3,
+              3,
+              3,
+              3,
+              3
+            ],
+            [
+              7,
+              7,
+              7,
+              7,
+              7
+            ],
+            [
+              1.1,
+              1.2,
+              1.3,
+              1.4,
+              1.5
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
               0,
               0,
               0,
@@ -310,6 +377,110 @@
               0,
               0,
               0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "75/115/165/230/300",
+            "3",
+            "7",
+            "1.1/1.2/1.3/1.4/1.5",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            900,
+            900,
+            900,
+            900,
+            900
+          ],
+          "rangeBurn": "900",
+          "image": {
+            "full": "ZileanQ.png",
+            "sprite": "spell17.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "ZileanW",
+          "name": "Rewind",
+          "description": "Zilean can prepare himself for future confrontations, reducing the cooldowns of his other basic abilities.",
+          "tooltip": "Zilean turns time, reducing his other basic Ability Cooldowns by {{ cooldownreduction }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            14,
+            12,
+            10,
+            8,
+            6
+          ],
+          "cooldownBurn": "14/12/10/8/6",
+          "cost": [
+            35,
+            35,
+            35,
+            35,
+            35
+          ],
+          "costBurn": "35",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              20,
+              30,
+              40,
+              50,
+              60
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              35,
+              35,
+              35,
+              35,
+              35
             ],
             [
               0,
@@ -363,9 +534,9 @@
           ],
           "effectBurn": [
             null,
+            "20/30/40/50/60",
             "0",
-            "0",
-            "0",
+            "35",
             "0",
             "0",
             "0",
@@ -375,49 +546,51 @@
             "0"
           ],
           "vars": [],
-          "costType": " {{ abilityresourcename }}",
+          "costType": " Mana",
           "maxammo": "-1",
           "range": [
-            650,
-            650,
-            650,
-            650,
-            650
+            600,
+            600,
+            600,
+            600,
+            600
           ],
-          "rangeBurn": "650",
+          "rangeBurn": "600",
           "image": {
-            "full": "Jade_ZileanQ.png",
-            "sprite": "spell11.png",
+            "full": "ZileanW.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 288,
-            "y": 96,
+            "x": 240,
+            "y": 144,
             "w": 48,
             "h": 48
           },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
+          "resource": "{{ manacost }} Mana"
         },
         {
-          "id": "Jade_ZileanW",
-          "name": "Rewind",
-          "description": "Zilean reduces all of his other cooldowns.",
-          "tooltip": "Zilean reduces all of his other Ability cooldowns by {{ cooldownrefund }} seconds.{{ spellmodifierdescriptionappend }}",
+          "id": "TimeWarp",
+          "name": "Time Warp",
+          "description": "Zilean bends time around any unit, decreasing an enemy's Move Speed or increasing an ally's Move Speed for a short time.",
+          "tooltip": "Zilean <status>Slows</status> an enemy champion by {{ speedamount }}% or grants an allied champion <speed>{{ speedamount }}% Move Speed</speed> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Cooldown"
+              "Slow",
+              "Move Speed"
             ],
             "effect": [
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ speedamount }}% -> {{ speedamountNL }}%",
+              "{{ speedamount }}% -> {{ speedamountNL }}%"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            18,
             15,
-            12,
-            9,
-            6
+            15,
+            15,
+            15,
+            15
           ],
-          "cooldownBurn": "18/15/12/9/6",
+          "cooldownBurn": "15",
           "cost": [
             50,
             50,
@@ -430,171 +603,32 @@
           "effect": [
             null,
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              2.5,
+              2.5,
+              2.5,
+              2.5,
+              2.5
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              40,
+              55,
+              70,
+              85,
+              99
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
-          "vars": [],
-          "costType": " {{ abilityresourcename }}",
-          "maxammo": "-1",
-          "range": [
-            600,
-            600,
-            600,
-            600,
-            600
-          ],
-          "rangeBurn": "600",
-          "image": {
-            "full": "Jade_ZileanW.png",
-            "sprite": "spell11.png",
-            "group": "spell",
-            "x": 336,
-            "y": 96,
-            "w": 48,
-            "h": 48
-          },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
-        },
-        {
-          "id": "Jade_ZileanE",
-          "name": "Time Warp",
-          "description": "Zilean increases an allied Champion's movement speed or slows an enemy champion.",
-          "tooltip": "Zilean increases an allied Champion's <speed>Movement Speed</speed> or <status>Slows</status> an enemy Champion by {{ movespeedmod*100 }}% for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
-          "leveltip": {
-            "label": [
-              "Duration"
-            ],
-            "effect": [
-              "{{ duration }} -> {{ durationNL }}"
-            ]
-          },
-          "maxrank": 5,
-          "cooldown": [
-            20,
-            20,
-            20,
-            20,
-            20
-          ],
-          "cooldownBurn": "20",
-          "cost": [
-            80,
-            80,
-            80,
-            80,
-            80
-          ],
-          "costBurn": "80",
-          "datavalues": {},
-          "effect": [
-            null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
+              8,
+              8,
+              8,
+              8,
+              8
             ],
             [
               0,
@@ -641,10 +675,10 @@
           ],
           "effectBurn": [
             null,
-            "0",
-            "0",
-            "0",
-            "0",
+            "2.5",
+            "40/55/70/85/99",
+            "1.5",
+            "8",
             "0",
             "0",
             "0",
@@ -664,38 +698,40 @@
           ],
           "rangeBurn": "550",
           "image": {
-            "full": "Jade_ZileanE.png",
-            "sprite": "spell11.png",
+            "full": "TimeWarp.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 384,
-            "y": 96,
+            "x": 288,
+            "y": 144,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_ZileanR",
+          "id": "ChronoShift",
           "name": "Chronoshift",
-          "description": "Zilean marks himself or an allied champion with a protective time rune. If they would take lethal damage, they are instead transported back in time and healed.",
-          "tooltip": "Zilean marks himself or an allied champion with a protective time rune for {{ rduration }} seconds. If they would take lethal damage, they are instead transported back in time, regaining <healing>{{ rtotalheal }} Health</healing>.{{ spellmodifierdescriptionappend }}",
+          "description": "Zilean places a protective time rune on an allied champion, teleporting the champion back in time if they take lethal damage.",
+          "tooltip": "Zilean grants a protective time rune to an allied champion for {{ rduration }} seconds. If the target would die, the rune rewinds their timeline, putting them into Stasis for {{ revivestateduration }} seconds, then reviving them and restoring <healing>{{ rtotalheal }} Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Heal",
-              "@AbilityResourceName@ Cost"
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Healing"
             ],
             "effect": [
-              "{{ rbaseheal }} -> {{ rbasehealNL }}",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ rbaseheal }} -> {{ rbasehealNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            180,
-            180,
-            180
+            120,
+            90,
+            60
           ],
-          "cooldownBurn": "180",
+          "cooldownBurn": "120/90/60",
           "cost": [
             125,
             150,
@@ -779,11 +815,11 @@
           ],
           "rangeBurn": "900",
           "image": {
-            "full": "Jade_ZileanR.png",
-            "sprite": "spell11.png",
+            "full": "ChronoShift.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 432,
-            "y": 96,
+            "x": 336,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -791,14 +827,14 @@
         }
       ],
       "passive": {
-        "name": "Heightened Learning",
-        "description": "Zilean and his allies gain additional experience.",
+        "name": "Time In A Bottle",
+        "description": "Zilean stores time as Experience and can grant it to his allies. When he has enough Experience to finish an ally's level up, he can right-click them to impart it. Zilean receives as much Experience as he gives.",
         "image": {
-          "full": "Jade_Zilean_Passive.png",
-          "sprite": "passive3.png",
+          "full": "Zilean_Passive.png",
+          "sprite": "passive5.png",
           "group": "passive",
-          "x": 384,
-          "y": 48,
+          "x": 0,
+          "y": 96,
           "w": 48,
           "h": 48
         }

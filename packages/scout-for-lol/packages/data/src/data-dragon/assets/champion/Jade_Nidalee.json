@@ -1,182 +1,485 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Nidalee": {
-      "id": "Jade_Nidalee",
-      "key": "60076",
+      "id": "Nidalee",
+      "key": "76",
       "name": "Nidalee",
-      "title": "The Bestial Huntress",
+      "title": "the Bestial Huntress",
       "image": {
-        "full": "Jade_Nidalee.png",
-        "sprite": "champion2.png",
+        "full": "Nidalee.png",
+        "sprite": "champion3.png",
         "group": "champion",
-        "x": 240,
-        "y": 96,
+        "x": 144,
+        "y": 0,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60076000",
+          "id": "76000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60076004",
+          "id": "76001",
+          "num": 1,
+          "name": "Snow Bunny Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76002",
+          "num": 2,
+          "name": "Leopard Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76003",
+          "num": 3,
+          "name": "French Maid Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76004",
           "num": 4,
           "name": "Pharaoh Nidalee",
           "chromas": false
         },
         {
-          "id": "60076006",
+          "id": "76005",
+          "num": 5,
+          "name": "Bewitching Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76006",
           "num": 6,
           "name": "Headhunter Nidalee",
           "chromas": false
         },
         {
-          "id": "60076008",
-          "num": 8,
-          "name": "Challenger Nidalee",
+          "id": "76007",
+          "num": 7,
+          "name": "Warring Kingdoms Nidalee",
           "chromas": false
         },
         {
-          "id": "60076010",
+          "id": "76008",
+          "num": 8,
+          "name": "Challenger Nidalee",
+          "chromas": true
+        },
+        {
+          "id": "76009",
+          "num": 9,
+          "name": "Super Galaxy Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76010",
           "num": 10,
           "name": "Challenger Nidalee (Golden)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60076011",
+          "id": "76011",
           "num": 11,
           "name": "Dawnbringer Nidalee",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60076012",
+          "id": "76012",
           "num": 12,
           "name": "Dawnbringer Nidalee (Ruby)",
           "chromas": false,
           "parentSkin": 11
         },
         {
-          "id": "60076013",
+          "id": "76013",
           "num": 13,
           "name": "Dawnbringer Nidalee (Amethyst)",
           "chromas": false,
           "parentSkin": 11
         },
         {
-          "id": "60076014",
+          "id": "76014",
           "num": 14,
           "name": "Dawnbringer Nidalee (Peridot)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 11
         },
         {
-          "id": "60076015",
+          "id": "76015",
           "num": 15,
           "name": "Dawnbringer Nidalee (Paragon)",
           "chromas": false,
           "parentSkin": 11
         },
         {
-          "id": "60076016",
+          "id": "76016",
           "num": 16,
           "name": "Dawnbringer Nidalee (Rose Quartz)",
           "chromas": false,
           "parentSkin": 11
         },
         {
-          "id": "60076017",
+          "id": "76017",
           "num": 17,
           "name": "Dawnbringer Nidalee (Pearl)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 11
         },
         {
-          "id": "60076039",
+          "id": "76018",
+          "num": 18,
+          "name": "Cosmic Huntress Nidalee",
+          "chromas": true
+        },
+        {
+          "id": "76019",
+          "num": 19,
+          "name": "Cosmic Huntress Nidalee (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76020",
+          "num": 20,
+          "name": "Cosmic Huntress Nidalee (Citrine)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76021",
+          "num": 21,
+          "name": "Cosmic Huntress Nidalee (Emerald)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76022",
+          "num": 22,
+          "name": "Cosmic Huntress Nidalee (Turquoise)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76023",
+          "num": 23,
+          "name": "Cosmic Huntress Nidalee  (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76024",
+          "num": 24,
+          "name": "Cosmic Huntress Nidalee (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76025",
+          "num": 25,
+          "name": "Cosmic Huntress Nidalee (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76026",
+          "num": 26,
+          "name": "Cosmic Huntress Nidalee (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "76027",
+          "num": 27,
+          "name": "DWG Nidalee",
+          "chromas": true
+        },
+        {
+          "id": "76028",
+          "num": 28,
+          "name": "DWG Nidalee (Elite)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "76029",
+          "num": 29,
+          "name": "Ocean Song Nidalee",
+          "chromas": true
+        },
+        {
+          "id": "76030",
+          "num": 30,
+          "name": "Ocean Song Nidalee (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76031",
+          "num": 31,
+          "name": "Ocean Song Nidalee (Catseye)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76032",
+          "num": 32,
+          "name": "Ocean Song Nidalee (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76033",
+          "num": 33,
+          "name": "Ocean Song Nidalee (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76034",
+          "num": 34,
+          "name": "Ocean Song Nidalee (Emerald)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76035",
+          "num": 35,
+          "name": "Ocean Song Nidalee (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76036",
+          "num": 36,
+          "name": "Ocean Song Nidalee (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76037",
+          "num": 37,
+          "name": "Ocean Song Nidalee (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "76039",
           "num": 39,
           "name": "Kittalee",
           "chromas": false
         },
         {
-          "id": "60076040",
+          "id": "76040",
           "num": 40,
           "name": "Kittalee (Ruby)",
-          "chromas": false,
+          "chromas": true,
           "parentSkin": 39
         },
         {
-          "id": "60076041",
+          "id": "76041",
           "num": 41,
           "name": "Kittalee (Citrine)",
           "chromas": false,
           "parentSkin": 39
         },
         {
-          "id": "60076042",
+          "id": "76042",
           "num": 42,
           "name": "Kittalee (Aquamarine)",
           "chromas": false,
           "parentSkin": 39
         },
         {
-          "id": "60076043",
+          "id": "76043",
           "num": 43,
           "name": "Kittalee (Peridot)",
           "chromas": false,
           "parentSkin": 39
         },
         {
-          "id": "60076044",
+          "id": "76044",
           "num": 44,
           "name": "Kittalee (Obsidian)",
           "chromas": false,
           "parentSkin": 39
         },
         {
-          "id": "60076045",
+          "id": "76045",
           "num": 45,
           "name": "Kittalee (Amethyst)",
           "chromas": false,
           "parentSkin": 39
         },
         {
-          "id": "60076046",
+          "id": "76046",
           "num": 46,
           "name": "Kittalee (Rose Quartz)",
           "chromas": false,
           "parentSkin": 39
         },
         {
-          "id": "60076047",
+          "id": "76047",
           "num": 47,
           "name": "Kittalee (Pearl)",
           "chromas": false,
           "parentSkin": 39
         },
         {
-          "id": "60076301",
-          "num": 301,
-          "name": "Classic Nidalee",
+          "id": "76048",
+          "num": 48,
+          "name": "La Ilusión Nidalee",
           "chromas": false
         },
         {
-          "id": "60076302",
-          "num": 302,
-          "name": "Classic Nidalee (French Maid)",
+          "id": "76049",
+          "num": 49,
+          "name": "La Ilusión Nidalee (Ruby)",
+          "chromas": true,
+          "parentSkin": 48
+        },
+        {
+          "id": "76050",
+          "num": 50,
+          "name": "La Ilusión Nidalee (Citrine)",
           "chromas": false,
-          "parentSkin": 301
+          "parentSkin": 48
+        },
+        {
+          "id": "76051",
+          "num": 51,
+          "name": "La Ilusión Nidalee (Emerald)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76052",
+          "num": 52,
+          "name": "La Ilusión Nidalee (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76053",
+          "num": 53,
+          "name": "La Ilusión Nidalee (Turquoise)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76054",
+          "num": 54,
+          "name": "La Ilusión Nidalee (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76055",
+          "num": 55,
+          "name": "La Ilusión Nidalee (Sapphire)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76056",
+          "num": 56,
+          "name": "La Ilusión Nidalee (Pearl)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76057",
+          "num": 57,
+          "name": "La Ilusión Nidalee (Vivida)",
+          "chromas": false,
+          "parentSkin": 48
+        },
+        {
+          "id": "76058",
+          "num": 58,
+          "name": "Spirit Blossom Nidalee",
+          "chromas": false
+        },
+        {
+          "id": "76059",
+          "num": 59,
+          "name": "Spirit Blossom Nidalee (Ruby)",
+          "chromas": true,
+          "parentSkin": 58
+        },
+        {
+          "id": "76060",
+          "num": 60,
+          "name": "Spirit Blossom Nidalee (Turquoise)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76061",
+          "num": 61,
+          "name": "Spirit Blossom Nidalee (Catseye)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76062",
+          "num": 62,
+          "name": "Spirit Blossom Nidalee (Amethyst)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76063",
+          "num": 63,
+          "name": "Spirit Blossom Nidalee (Emerald)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76064",
+          "num": 64,
+          "name": "Spirit Blossom Nidalee (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76065",
+          "num": 65,
+          "name": "Spirit Blossom Nidalee (Obsidian)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76066",
+          "num": 66,
+          "name": "Spirit Blossom Nidalee (Pearl)",
+          "chromas": false,
+          "parentSkin": 58
+        },
+        {
+          "id": "76067",
+          "num": 67,
+          "name": "Spirit Blossom Nidalee (Paragon)",
+          "chromas": false,
+          "parentSkin": 58
         }
       ],
-      "lore": "- Aspect of the Cougar (R) does not start with a level<br>- Prowl (P) has Hunt passive removed<br>- Bushwhack (W) does insane damage",
-      "blurb": "- Aspect of the Cougar (R) does not start with a level<br>- Prowl (P) has Hunt passive removed<br>- Bushwhack (W) does insane damage",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Raised in the deepest jungle, Nidalee is a master tracker who can shapeshift into a ferocious cougar at will. Neither wholly woman nor beast, she viciously defends her territory from any and all trespassers, with carefully placed traps and deft spear throws. She cripples her quarry before pouncing on them in feline form—the lucky few who survive tell tales of a wild woman with razor-sharp instincts, and even sharper claws...",
+      "blurb": "Raised in the deepest jungle, Nidalee is a master tracker who can shapeshift into a ferocious cougar at will. Neither wholly woman nor beast, she viciously defends her territory from any and all trespassers, with carefully placed traps and deft spear...",
+      "allytips": [
+        "Use brush to your advantage! Moving in and out of brush can heavily alter your effectiveness in battle.",
+        "Start team fights by harassing with your Javelin Toss, and then switch to cougar form to chase down Hunted targets.",
+        "Bushwhack traps deal damage based on their victim's current Health. Set them up in your team's backline before fights break out during sieges to help your team deal damage to the enemy frontline."
+      ],
+      "enemytips": [
+        "Nidalee's Hunt debuff is only applied with Javelin Toss and Bushwhack. Avoiding being hit by these abilities will impair her ability to deal follow-up damage.",
+        "Nidalee's Javelin Toss deals more damage the farther she is. If she is far away, it's imperative to dodge it.",
+        "Nidalee's Takedown deals extreme damage to Hunted targets, but she has to get close to use it. Save your crowd control or defensive abilities for when she goes in for the kill."
+      ],
       "tags": [
         "Assassin",
         "Mage"
@@ -189,41 +492,43 @@
         "difficulty": 8
       },
       "stats": {
-        "hp": 460,
-        "hpperlevel": 90,
-        "mp": 265,
+        "hp": 610,
+        "hpperlevel": 109,
+        "mp": 295,
         "mpperlevel": 45,
         "movespeed": 335,
-        "armor": 18.5,
-        "armorperlevel": 3.5,
+        "armor": 32,
+        "armorperlevel": 5,
         "spellblock": 30,
-        "spellblockperlevel": 0,
+        "spellblockperlevel": 1.45,
         "attackrange": 525,
-        "hpregen": 5.6,
+        "hpregen": 6,
         "hpregenperlevel": 0.6,
-        "mpregen": 7.5,
-        "mpregenperlevel": 0.5,
+        "mpregen": 6,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 52.5,
+        "attackdamage": 58,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 3.22,
-        "attackspeed": 0.67
+        "attackspeed": 0.638
       },
       "spells": [
         {
-          "id": "Jade_NidaleeJavelinToss",
+          "id": "JavelinToss",
           "name": "Javelin Toss / Takedown",
           "description": "In human form, Nidalee throws a spiked javelin at her target that gains damage as it flies.  As a cougar, her next attack will attempt to fatally wound her target, dealing more damage the less life they have.",
-          "tooltip": "<keywordMajor>Human:</keywordMajor> Nidalee tosses her javelin, dealing between <magicDamage>{{ startingdamage }}</magicDamage> and <magicDamage>{{ maxdamage }} magic damage</magicDamage> on impact based on how far Nidalee is away from the target. <br /><br /><keywordMajor>Cougar:</keywordMajor> Nidalee's next attack deals <physicalDamage>{{ spell.jade_nidaleeaspectofthecougar:totaltakedowndamage }} physical damage</physicalDamage>, and the damage is increased against wounded targets (up to 300% total damage).{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<keywordMajor>Human Form:</keywordMajor> Nidalee throws her javelin, dealing <magicDamage>{{ humanminimumdamage }} magic damage</magicDamage>, increased up to <magicDamage>{{ humanmaximumdamage }} magic damage</magicDamage> based on distance flown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Javelin Mana Cost",
-              "Damage"
+              "Javelin Minimum Damage",
+              "Javelin Maximum Damage",
+              "Javelin Mana Cost"
             ],
             "effect": [
-              "{{ cost }} -> {{ costNL }}",
-              "{{ damage }} -> {{ damageNL }}"
+              "{{ spearminimumdamage }} -> {{ spearminimumdamageNL }}",
+              "{{ spearmaximumdamage }} -> {{ spearmaximumdamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
@@ -237,21 +542,28 @@
           "cooldownBurn": "6",
           "cost": [
             50,
+            55,
             60,
-            70,
-            80,
-            90
+            65,
+            70
           ],
-          "costBurn": "50/60/70/80/90",
+          "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              70,
+              90,
+              110,
+              130,
+              150
+            ],
+            [
+              227.5,
+              292.5,
+              357.5,
+              422.5,
+              487.5
             ],
             [
               0,
@@ -268,32 +580,25 @@
               0
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              1.2,
+              1.2,
+              1.2,
+              1.2,
+              1.2
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
+              525,
+              525,
+              525,
+              525,
+              525
             ],
             [
               0,
@@ -319,13 +624,13 @@
           ],
           "effectBurn": [
             null,
+            "70/90/110/130/150",
+            "227.5/292.5/357.5/422.5/487.5",
             "0",
             "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
+            "0.4",
+            "1.2",
+            "525",
             "0",
             "0",
             "0"
@@ -342,48 +647,50 @@
           ],
           "rangeBurn": "1500",
           "image": {
-            "full": "Jade_NidaleeJavelinToss.png",
-            "sprite": "spell9.png",
+            "full": "JavelinToss.png",
+            "sprite": "spell10.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 288,
+            "y": 0,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_NidaleeBushwhack",
+          "id": "Bushwhack",
           "name": "Bushwhack / Pounce",
-          "description": "In human form, Nidalee lays a damaging trap for unwary opponents that, when sprung, reveals the target and reduces their Armor and Magic Resist for 12 seconds. As a cougar, she pounces forward, dealing a small amount of damage when she lands.",
-          "tooltip": "<keywordMajor>Human: </keywordMajor>Nidalee lays a trap that deals <magicDamage>{{ damagepersecond }} magic damage</magicDamage> over 2 seconds, reveals the target, and <status>shreds</status> their <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> by {{ resistdecreases*100 }}% for 12 seconds. <br /><br /><keywordMajor>Cougar: </keywordMajor>Nidalee lunges forward, dealing <magicDamage>{{ spell.jade_nidaleeaspectofthecougar:totalpouncedamage }} magic damage</magicDamage> to surrounding enemies.{{ spellmodifierdescriptionappend }}",
+          "description": "In human form, Nidalee lays a trap for unwary opponents that, when sprung, damages and reveals its target. As a cougar, she jumps in a direction, dealing damage in an area where she lands.",
+          "tooltip": "<keywordMajor>Human Form:</keywordMajor> Nidalee places an invisible trap for 2 minutes. When an enemy walks over it, they are dealt <magicDamage>{{ damagepersecond }} magic damage</magicDamage> per second for {{ dotduration }} seconds.<br /><br />{{ maxtraps }} traps may be active at once.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Trap Damage",
-              "Trap Armor/MR Debuff"
+              "Trap Cooldown",
+              "Trap Mana Cost"
             ],
             "effect": [
-              "{{ damageperseconddata }} -> {{ damageperseconddataNL }}",
-              "{{ resistdecreases*100.000000 }}% -> {{ resistdecreasesnl*100.000000 }}%"
+              "{{ totalflatdamage }} -> {{ totalflatdamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            18,
-            18,
-            18,
-            18,
-            18
+            13,
+            12,
+            11,
+            10,
+            9
           ],
-          "cooldownBurn": "18",
+          "cooldownBurn": "13/12/11/10/9",
           "cost": [
-            60,
-            75,
-            90,
-            105,
-            120
+            30,
+            35,
+            40,
+            45,
+            50
           ],
-          "costBurn": "60/75/90/105/120",
+          "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
@@ -416,11 +723,11 @@
               9
             ],
             [
-              50,
-              100,
-              150,
-              200,
-              250
+              10,
+              20,
+              30,
+              40,
+              50
             ],
             [
               120,
@@ -464,7 +771,7 @@
             "0",
             "4",
             "13/12/11/10/9",
-            "50/100/150/200/250",
+            "10/20/30/40/50",
             "120",
             "40/80/120/160/200",
             "0",
@@ -483,21 +790,21 @@
           ],
           "rangeBurn": "900",
           "image": {
-            "full": "Jade_NidaleeBushwhack.png",
-            "sprite": "spell9.png",
+            "full": "Bushwhack.png",
+            "sprite": "spell10.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 336,
+            "y": 0,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_NidaleePrimalSurge",
+          "id": "PrimalSurge",
           "name": "Primal Surge / Swipe",
-          "description": "In human form, Nidalee channels the spirit of the cougar to heal her allies and imbue them with attack speed for a short duration.  As a cougar, she rapidly claws enemies in front of her.",
-          "tooltip": "<keywordMajor>Human: </keywordMajor>Nidalee heals an allied champion for <healing>{{ totalhealing }}</healing> and grants them <attackSpeed>{{ bonusas*100 }}% Attack Speed</attackSpeed> for 7 seconds.<br /><br /><keywordMajor>Cougar: </keywordMajor>Nidalee claws at enemies in front of her, dealing <magicDamage>{{ spell.jade_nidaleeaspectofthecougar:totalswipedamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "description": "In human form, Nidalee channels the spirit of the cougar to heal her allies and imbue them with Attack Speed for a short duration. As a cougar, she claws in a direction, dealing damage to enemies in front of her.",
+          "tooltip": "<keywordMajor>Human Form:</keywordMajor> Nidalee restores <healing>{{ totalhealing }} Health</healing> increased up to <healing>{{ maxhealing }}</healing> based on missing Health and grants them <attackSpeed>{{ bonusas*100 }}% Attack Speed</attackSpeed> for {{ asduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Primal Surge Heal",
@@ -512,21 +819,21 @@
           },
           "maxrank": 5,
           "cooldown": [
-            10,
-            10,
-            10,
-            10,
-            10
+            12,
+            12,
+            12,
+            12,
+            12
           ],
-          "cooldownBurn": "10",
+          "cooldownBurn": "12",
           "cost": [
+            50,
+            55,
             60,
-            80,
-            100,
-            120,
-            140
+            65,
+            70
           ],
-          "costBurn": "60/80/100/120/140",
+          "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
@@ -626,41 +933,47 @@
           ],
           "rangeBurn": "900",
           "image": {
-            "full": "Jade_NidaleePrimalSurge.png",
-            "sprite": "spell9.png",
+            "full": "PrimalSurge.png",
+            "sprite": "spell10.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 384,
+            "y": 0,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_NidaleeAspectOfTheCougar",
+          "id": "AspectOfTheCougar",
           "name": "Aspect Of The Cougar",
-          "description": "Nidalee transforms into a cougar, gaining new abilities and increased Movement Speed.",
-          "tooltip": "<keywordMajor>Human: </keywordMajor>Nidalee transforms into a vicious cougar, gaining <speed>20 Movement Speed</speed>, and her basic abilities become <spellName>Takedown</spellName>, <spellName>Pounce</spellName>, and <spellName>Swipe</spellName>.<br /><br /><keywordMajor>Cougar: </keywordMajor>Nidalee transforms back into human form.{{ spellmodifierdescriptionappend }}",
+          "description": "Nidalee transforms into a cougar, gaining new abilities.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> While in <keywordMajor>Human Form</keywordMajor>, applying <keywordMajor>Hunted</keywordMajor> refreshes this Ability's Cooldown.<br /><br /><keywordMajor>Human Form:</keywordMajor> Nidalee transforms into <keywordMajor>Cougar Form</keywordMajor>, gaining melee Attacks and replacing her Active Abilities.<br /><br /><keywordMajor>Cougar Form:</keywordMajor> Nidalee transforms into <keywordMajor>Human Form</keywordMajor>, gaining ranged Attacks and replacing her Active Abilities.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Takedown Damage",
+              "Takedown Damage Amp",
               "Pounce Damage",
-              "Swipe Damage"
+              "Swipe Damage",
+              "Enhanced Pounce Cooldown"
             ],
             "effect": [
               "{{ takedownbasedamage }} -> {{ takedownbasedamageNL }}",
+              "{{ takedowndamageamp*100.000000 }}% -> {{ takedowndamageampnl*100.000000 }}%",
               "{{ pouncedamage }} -> {{ pouncedamageNL }}",
-              "{{ swipedamage }} -> {{ swipedamageNL }}"
+              "{{ swipedamage }} -> {{ swipedamageNL }}",
+              "{{ pouncecooldown }} -> {{ pouncecooldownNL }}"
             ]
           },
-          "maxrank": 3,
+          "maxrank": 4,
           "cooldown": [
-            4,
-            4,
-            4
+            3,
+            3,
+            3,
+            3
           ],
-          "cooldownBurn": "4",
+          "cooldownBurn": "3",
           "cost": [
+            0,
             0,
             0,
             0
@@ -672,19 +985,11 @@
             [
               0,
               0,
-              0
-            ],
-            [
-              0,
               0,
               0
             ],
             [
               0,
-              0,
-              0
-            ],
-            [
               0,
               0,
               0
@@ -692,9 +997,23 @@
             [
               0,
               0,
+              0,
               0
             ],
             [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              6,
               6,
               6,
               6
@@ -702,19 +1021,23 @@
             [
               0,
               0,
-              0
-            ],
-            [
-              0,
               0,
               0
             ],
             [
               0,
               0,
+              0,
               0
             ],
             [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
               0,
               0,
               0
@@ -734,35 +1057,36 @@
             "0"
           ],
           "vars": [],
-          "costType": " {{ abilityresourcename }}",
+          "costType": "No Cost",
           "maxammo": "-1",
           "range": [
+            20,
             20,
             20,
             20
           ],
           "rangeBurn": "20",
           "image": {
-            "full": "Jade_NidaleeAspectOfTheCougar.png",
-            "sprite": "spell9.png",
+            "full": "AspectOfTheCougar.png",
+            "sprite": "spell10.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 432,
+            "y": 0,
             "w": 48,
             "h": 48
           },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
+          "resource": "No Cost"
         }
       ],
       "passive": {
         "name": "Prowl",
-        "description": "Moving through brush increases Nidalee's Movement Speed by 15% for 2 seconds.",
+        "description": "Moving through brush increases Nidalee's Move Speed by 10% for 2 seconds, increased to 30% toward visible enemy champions within 1400 range.<br><br>Hitting champions or monsters with Javelin Toss or Bushwhack triggers a <font color='#FFF673'>Hunt</font>, granting <font color='#ee91d7'>True Sight</font> of them for 4 seconds. During this time, Nidalee gains 10% Move Speed (increased to 30% toward the <font color='#FFF673'>Hunted</font> target) and her Takedown and Pounce are enhanced against them.",
         "image": {
-          "full": "Jade_Nidalee_Passive.png",
-          "sprite": "passive2.png",
+          "full": "Nidalee_Passive.png",
+          "sprite": "passive3.png",
           "group": "passive",
-          "x": 240,
-          "y": 96,
+          "x": 144,
+          "y": 0,
           "w": 48,
           "h": 48
         }

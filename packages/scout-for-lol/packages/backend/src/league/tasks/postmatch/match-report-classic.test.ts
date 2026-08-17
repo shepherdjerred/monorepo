@@ -29,8 +29,7 @@ async function classicMatchFixture(
   const input: unknown = await Bun.file(fixtureUrl).json();
   const base = RawMatchSchema.parse(input);
   const classicChampionIds = [
-    60_103, 60_012, 60_032, 60_034, 60_001, 60_022, 60_053, 60_063, 60_031,
-    60_042,
+    84, 85, 98, 60_034, 60_001, 60_022, 60_053, 60_063, 60_031, 60_042,
   ];
   return RawMatchSchema.parse({
     ...base,

@@ -147,6 +147,22 @@ export function resolveQueueTypeFromGame(
   return undefined;
 }
 
+/**
+ * Riot reuses the `classic` queue type for ordinary Summoner's Rift queues.
+ * Only the JADE family uses the dedicated Classic champion/art catalog;
+ * ordinary CLASSIC payloads must stay on normal League assets.
+ */
+export function isClassicAssetMode(queueId: number, gameMode: string): boolean {
+  return (
+    gameMode === "JADE" ||
+    gameMode === "KIWI_JADE" ||
+    gameMode === "CLASSIC ARAM MAYHEM" ||
+    queueId === 4310 ||
+    queueId === 2450 ||
+    queueId === 3280
+  );
+}
+
 export function queueTypeToDisplayString(queueType: QueueType): string {
   return match(queueType)
     .returnType<string>()

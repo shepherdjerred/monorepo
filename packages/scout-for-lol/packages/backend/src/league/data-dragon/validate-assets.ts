@@ -3,6 +3,7 @@ import {
   validateChampionImage,
   validateChampionLoadingImage,
   validateChampionSplashImage,
+  validateClassicChampionCatalog,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import { getAllChampions, resolveChampionKey } from "#src/utils/champion.ts";
@@ -22,6 +23,7 @@ const logger = createLogger("validate-assets");
 // so any name-resolution divergence between callers is caught at deploy
 // time rather than at notification time.
 export async function validateChampionAssets(): Promise<void> {
+  validateClassicChampionCatalog();
   const twistedChampions = getAllChampions();
   const dataDragonChampions = await getChampionList();
   const totalChecks = twistedChampions.length + dataDragonChampions.length;

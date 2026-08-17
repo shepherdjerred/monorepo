@@ -31,6 +31,16 @@ Limited-time queues are only offered in the subscription filter picker while
 they are actually live. Tick **Show unavailable queues** to select one ahead of
 time.
 
+## League Classic
+
+League Classic is supported as its own mode, not as a normal League match with
+different artwork. Riot's `JADE` queue uses queue ID `4310`; Scout maps its
+modern champion IDs to the versioned Classic catalog for prematch loading
+screens and postmatch reports. The Classic catalog and renderer are separate
+from normal `CLASSIC` matches, so ordinary Summoner's Rift games continue to
+use normal champion IDs and assets. Classic ARAM Mayhem uses `KIWI_JADE` when
+that limited-time queue is active.
+
 :::caution
 A match whose queue Scout does not yet recognize does **not** pass a queue
 filter. When Riot adds a new queue, filtered subscriptions skip it until Scout

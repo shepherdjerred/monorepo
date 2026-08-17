@@ -1,127 +1,425 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Malzahar": {
-      "id": "Jade_Malzahar",
-      "key": "60090",
+      "id": "Malzahar",
+      "key": "90",
       "name": "Malzahar",
-      "title": "The Prophet of the Void",
+      "title": "the Prophet of the Void",
       "image": {
-        "full": "Jade_Malzahar.png",
+        "full": "Malzahar.png",
         "sprite": "champion2.png",
         "group": "champion",
-        "x": 0,
-        "y": 96,
+        "x": 432,
+        "y": 48,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60090000",
+          "id": "90000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60090002",
+          "id": "90001",
+          "num": 1,
+          "name": "Vizier Malzahar",
+          "chromas": false
+        },
+        {
+          "id": "90002",
           "num": 2,
           "name": "Shadow Prince Malzahar",
           "chromas": false
         },
         {
-          "id": "60090004",
+          "id": "90003",
+          "num": 3,
+          "name": "Djinn Malzahar",
+          "chromas": false
+        },
+        {
+          "id": "90004",
           "num": 4,
           "name": "Overlord Malzahar",
           "chromas": false
         },
         {
-          "id": "60090006",
+          "id": "90005",
+          "num": 5,
+          "name": "Snow Day Malzahar",
+          "chromas": true
+        },
+        {
+          "id": "90006",
           "num": 6,
           "name": "Battle Boss Malzahar",
           "chromas": false
         },
         {
-          "id": "60090007",
+          "id": "90007",
           "num": 7,
           "name": "Hextech Malzahar",
           "chromas": false
         },
         {
-          "id": "60090018",
-          "num": 18,
-          "name": "Beezahar",
-          "chromas": false
+          "id": "90008",
+          "num": 8,
+          "name": "Snow Day Malzahar (Golden)",
+          "chromas": false,
+          "parentSkin": 5
         },
         {
-          "id": "60090019",
+          "id": "90009",
+          "num": 9,
+          "name": "Worldbreaker Malzahar",
+          "chromas": true
+        },
+        {
+          "id": "90010",
+          "num": 10,
+          "name": "Worldbreaker Malzahar (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90011",
+          "num": 11,
+          "name": "Worldbreaker Malzahar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90012",
+          "num": 12,
+          "name": "Worldbreaker Malzahar (Citrine)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90013",
+          "num": 13,
+          "name": "Worldbreaker Malzahar (Sandstone)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90014",
+          "num": 14,
+          "name": "Worldbreaker Malzahar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90015",
+          "num": 15,
+          "name": "Worldbreaker Malzahar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90016",
+          "num": 16,
+          "name": "Worldbreaker Malzahar (Emerald)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90017",
+          "num": 17,
+          "name": "Worldbreaker Malzahar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "90018",
+          "num": 18,
+          "name": "Beezahar",
+          "chromas": true
+        },
+        {
+          "id": "90019",
           "num": 19,
           "name": "Beezahar (Ruby)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60090020",
+          "id": "90020",
           "num": 20,
           "name": "Beezahar (Emerald)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60090021",
+          "id": "90021",
           "num": 21,
           "name": "Beezahar (Sapphire)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60090022",
+          "id": "90022",
           "num": 22,
           "name": "Beezahar (Amethyst)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60090023",
+          "id": "90023",
           "num": 23,
           "name": "Beezahar (Rose Quartz)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60090024",
+          "id": "90024",
           "num": 24,
           "name": "Beezahar (Obsidian)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60090025",
+          "id": "90025",
           "num": 25,
           "name": "Beezahar (Sandstone)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60090026",
+          "id": "90026",
           "num": 26,
           "name": "Beezahar (Rainbow)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60090027",
+          "id": "90027",
           "num": 27,
           "name": "Beezahar (Citrine)",
           "chromas": false,
           "parentSkin": 18
+        },
+        {
+          "id": "90028",
+          "num": 28,
+          "name": "Debonair Malzahar",
+          "chromas": true
+        },
+        {
+          "id": "90029",
+          "num": 29,
+          "name": "Debonair Malzahar (Ruby)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90030",
+          "num": 30,
+          "name": "Debonair Malzahar (Citrine)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90031",
+          "num": 31,
+          "name": "Debonair Malzahar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90032",
+          "num": 32,
+          "name": "Debonair Malzahar (Emerald)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90033",
+          "num": 33,
+          "name": "Debonair Malzahar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90034",
+          "num": 34,
+          "name": "Debonair Malzahar (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90035",
+          "num": 35,
+          "name": "Debonair Malzahar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90036",
+          "num": 36,
+          "name": "Debonair Malzahar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90037",
+          "num": 37,
+          "name": "Debonair Malzahar (Cerulean Club)",
+          "chromas": false,
+          "parentSkin": 28
+        },
+        {
+          "id": "90038",
+          "num": 38,
+          "name": "Three Honors Malzahar",
+          "chromas": false
+        },
+        {
+          "id": "90039",
+          "num": 39,
+          "name": "Empyrean Malzahar",
+          "chromas": true
+        },
+        {
+          "id": "90040",
+          "num": 40,
+          "name": "Empyrean Malzahar (Ruby)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90041",
+          "num": 41,
+          "name": "Empyrean Malzahar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90042",
+          "num": 42,
+          "name": "Empyrean Malzahar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90043",
+          "num": 43,
+          "name": "Empyrean Malzahar (Emerald)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90044",
+          "num": 44,
+          "name": "Empyrean Malzahar (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90045",
+          "num": 45,
+          "name": "Empyrean Malzahar (Catseye)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90046",
+          "num": 46,
+          "name": "Empyrean Malzahar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90047",
+          "num": 47,
+          "name": "Empyrean Malzahar (Pearl)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90048",
+          "num": 48,
+          "name": "Empyrean Malzahar (Neon Facade)",
+          "chromas": false,
+          "parentSkin": 39
+        },
+        {
+          "id": "90049",
+          "num": 49,
+          "name": "Fatebreaker Malzahar",
+          "chromas": true
+        },
+        {
+          "id": "90050",
+          "num": 50,
+          "name": "Fatebreaker Malzahar (Ruby)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90051",
+          "num": 51,
+          "name": "Fatebreaker Malzahar (Catseye)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90052",
+          "num": 52,
+          "name": "Fatebreaker Malzahar (Emerald)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90053",
+          "num": 53,
+          "name": "Fatebreaker Malzahar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90054",
+          "num": 54,
+          "name": "Fatebreaker Malzahar (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90055",
+          "num": 55,
+          "name": "Fatebreaker Malzahar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90056",
+          "num": 56,
+          "name": "Fatebreaker Malzahar (Pearl)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "90057",
+          "num": 57,
+          "name": "Fatebreaker Malzahar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 49
         }
       ],
-      "lore": "- Null Zone (W) is an AoE area for a short time<br>- Summon Voidling (P) creates a voidling after a number of casts<br>- Nether Grasp (R) does not have the null zone around the target",
-      "blurb": "- Null Zone (W) is an AoE area for a short time<br>- Summon Voidling (P) creates a voidling after a number of casts<br>- Nether Grasp (R) does not have the null zone around the target",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "A zealous seer dedicated to the unification of all life, Malzahar truly believes the newly emergent Void to be the path to Runeterra's salvation. In the desert wastes of Shurima, he followed the voices that whispered in his mind, all the way to ancient Icathia. Amidst the ruins of that land, he gazed into the dark heart of the Void itself, and was gifted new power and purpose. Malzahar now sees himself as a shepherd, empowered to bring others into the fold… or to release the voidling creatures that dwell beneath.",
+      "blurb": "A zealous seer dedicated to the unification of all life, Malzahar truly believes the newly emergent Void to be the path to Runeterra's salvation. In the desert wastes of Shurima, he followed the voices that whispered in his mind, all the way to ancient...",
+      "allytips": [
+        "Wait to cast Void Swarm until there are nearby enemies for the Voidling to attack or kill.",
+        "Use Call of the Void and Nether Grasp to renew the duration of Malefic Visions on enemies.",
+        "Avoiding damage in lane maximizes the uptime on Void Shift, increasing Malzahar's safety dramatically."
+      ],
+      "enemytips": [
+        "When Malzahar hits a spell on enemies affected by Malefic Visions, the Visions are refreshed.",
+        "Avoid minion waves that have been affected by Malefic Visions. You never know when they may die and pass the Visions onto you.",
+        "Malzahar is especially dangerous when he has built up his Void Swarm."
+      ],
       "tags": [
         "Mage"
       ],
@@ -133,33 +431,33 @@
         "difficulty": 6
       },
       "stats": {
-        "hp": 460,
-        "hpperlevel": 80,
-        "mp": 295,
-        "mpperlevel": 45,
-        "movespeed": 340,
-        "armor": 19.5,
-        "armorperlevel": 3.5,
+        "hp": 580,
+        "hpperlevel": 101,
+        "mp": 375,
+        "mpperlevel": 28,
+        "movespeed": 335,
+        "armor": 18,
+        "armorperlevel": 4.7,
         "spellblock": 30,
-        "spellblockperlevel": 0,
-        "attackrange": 550,
-        "hpregen": 5.05,
-        "hpregenperlevel": 0.55,
-        "mpregen": 7.6,
-        "mpregenperlevel": 0.6,
+        "spellblockperlevel": 1.3,
+        "attackrange": 500,
+        "hpregen": 6,
+        "hpregenperlevel": 0.6,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 54.66,
+        "attackdamage": 55,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 1.36,
+        "attackspeedperlevel": 1.5,
         "attackspeed": 0.625
       },
       "spells": [
         {
-          "id": "Jade_MalzaharQ",
+          "id": "MalzaharQ",
           "name": "Call of the Void",
           "description": "Malzahar opens up two portals to the Void. After a short delay, they fire projectiles that deal Magic Damage and silence enemy champions.",
-          "tooltip": "Malzahar opens up two portals to the Void. After a short delay, they fire projectiles that deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>silence</status> enemies for {{ silenceduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Malzahar opens two portals to the Void that fire projectiles inward, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and <status>Silencing</status> for {{ silenceduration }} second(s).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -174,44 +472,44 @@
           },
           "maxrank": 5,
           "cooldown": [
-            9,
-            9,
-            9,
-            9,
-            9
+            6,
+            6,
+            6,
+            6,
+            6
           ],
-          "cooldownBurn": "9",
+          "cooldownBurn": "6",
           "cost": [
-            80,
-            85,
-            90,
-            95,
-            100
+            60,
+            65,
+            70,
+            75,
+            80
           ],
-          "costBurn": "80/85/90/95/100",
+          "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              70,
+              105,
+              140,
+              175,
+              210
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              1,
+              1.25,
+              1.5,
+              1.75,
+              2
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
             ],
             [
               0,
@@ -265,9 +563,9 @@
           ],
           "effectBurn": [
             null,
-            "0",
-            "0",
-            "0",
+            "70/105/140/175/210",
+            "1/1.25/1.5/1.75/2",
+            "0.4",
             "0",
             "0",
             "0",
@@ -288,10 +586,10 @@
           ],
           "rangeBurn": "900",
           "image": {
-            "full": "Jade_MalzaharQ.png",
+            "full": "MalzaharQ.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 192,
+            "x": 0,
             "y": 144,
             "w": 48,
             "h": 48
@@ -299,37 +597,39 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_MalzaharW",
-          "name": "Null Zone",
-          "description": "Malzahar creates a zone of negative energy that damages nearby enemies each second.",
-          "tooltip": "Malzahar creates a zone of negative energy for {{ zoneduration }} seconds, which damages nearby enemies for <magicDamage>{{ totaldamage }} max Health magic damage</magicDamage> each second.{{ spellmodifierdescriptionappend }}",
+          "id": "MalzaharW",
+          "name": "Void Swarm",
+          "description": "Malzahar summons Voidlings to attack nearby enemies.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Malzahar's other Abilities give him a stack when cast (max {{ stackcap }}).<br /><br /><spellActive>Active:</spellActive> Malzahar summons a Voidling plus an additional Voidling per stack. Voidlings last {{ voidlingduration }} seconds and deal <magicDamage>{{ voidlingbonusdamagetooltip }} magic damage</magicDamage> each hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Max Health %",
+              "Voidling Damage",
+              "Voidling Duration",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ voidlingbasedamage }} -> {{ voidlingbasedamageNL }}",
+              "{{ voidlingduration }} -> {{ voidlingdurationNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            14,
-            14,
-            14,
-            14,
-            14
+            8,
+            8,
+            8,
+            8,
+            8
           ],
-          "cooldownBurn": "14",
+          "cooldownBurn": "8",
           "cost": [
-            90,
-            95,
-            100,
-            105,
-            110
+            40,
+            45,
+            50,
+            55,
+            60
           ],
-          "costBurn": "90/95/100/105/110",
+          "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
@@ -362,18 +662,18 @@
               0
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              25000,
+              25000,
+              25000,
+              25000,
+              25000
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              2,
+              2,
+              2,
+              2,
+              2
             ],
             [
               0,
@@ -410,8 +710,8 @@
             "0",
             "0",
             "0",
-            "0",
-            "0",
+            "25000",
+            "2",
             "0",
             "0",
             "0",
@@ -421,18 +721,18 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "0",
           "range": [
-            800,
-            800,
-            800,
-            800,
-            800
+            150,
+            150,
+            150,
+            150,
+            150
           ],
-          "rangeBurn": "800",
+          "rangeBurn": "150",
           "image": {
-            "full": "Jade_MalzaharW.png",
+            "full": "MalzaharW.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 240,
+            "x": 48,
             "y": 144,
             "w": 48,
             "h": 48
@@ -440,10 +740,10 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_MalzaharE",
+          "id": "MalzaharE",
           "name": "Malefic Visions",
-          "description": "Malzahar infects his target's mind, dealing damage over time. If the target dies during this time, the visions pass to a nearby enemy and Malzahar gains mana.",
-          "tooltip": "Malzahar infects his target's mind, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ duration }} seconds. If the target dies during this time, the visions pass to a nearby enemy and Malzahar gains <scaleMana>{{ manarestore }} Mana</scaleMana>.<br /><br />Malzahar's Voidlings are attracted to affected units.{{ spellmodifierdescriptionappend }}",
+          "description": "Malzahar infects his target's mind with cruel visions of their demise, dealing damage over time. Using Malzahar's other spells on the target will refresh the visions.<br><br>If the target dies while afflicted by the visions, they pass on to a nearby enemy unit and Malzahar gains Mana. Malzahar's Voidlings are attracted to affected units.",
+          "tooltip": "Malzahar inflicts terrible visions, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ duration }} seconds. Applying <spellName>Call of the Void</spellName> or <spellName>Nether Grasp</spellName> to the victim during this time refreshes the visions.<br /><br />If the victim dies, Malzahar gains <scaleMana>{{ manarestore }} Mana</scaleMana> and the visions spread to the nearest enemy.<br /><br /><rules>Malefic Visions executes minions below {{ minionexecutethreshold }} Health.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -458,21 +758,21 @@
           },
           "maxrank": 5,
           "cooldown": [
-            15,
-            13,
             11,
+            10,
             9,
+            8,
             7
           ],
-          "cooldownBurn": "15/13/11/9/7",
+          "cooldownBurn": "11/10/9/8/7",
           "cost": [
             60,
-            75,
+            70,
+            80,
             90,
-            105,
-            120
+            100
           ],
-          "costBurn": "60/75/90/105/120",
+          "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
@@ -498,18 +798,18 @@
               0
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              8,
+              8,
+              8,
+              8,
+              8
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              2,
+              2,
+              2,
+              2,
+              2
             ],
             [
               0,
@@ -552,8 +852,8 @@
             "0",
             "0",
             "0",
-            "0",
-            "0",
+            "8",
+            "2",
             "0",
             "0",
             "0",
@@ -572,10 +872,10 @@
           ],
           "rangeBurn": "650",
           "image": {
-            "full": "Jade_MalzaharE.png",
+            "full": "MalzaharE.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 288,
+            "x": 96,
             "y": 144,
             "w": 48,
             "h": 48
@@ -583,33 +883,35 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_MalzaharR",
+          "id": "MalzaharR",
           "name": "Nether Grasp",
-          "description": "Malzahar channels the essence of the Void to suppress target champion while dealing magic damage over time.",
-          "tooltip": "Malzahar channels the essence of the Void to <status>suppress</status> target champion, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> over {{ suppressduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Malzahar channels the essence of the Void to suppress an enemy champion over a zone of damaging negative energy.",
+          "tooltip": "Malzahar <status>Suppresses</status> an enemy champion and deals <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> over {{ ccduration }} seconds. A zone of negative energy is created around his target dealing <magicDamage>{{ zonedamagetooltip }} max Health magic damage</magicDamage> over {{ poolduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Nether Grasp Damage",
+              "Null Zone Damage Per Second",
               "Cooldown"
             ],
             "effect": [
               "{{ beamdamage }} -> {{ beamdamageNL }}",
+              "{{ maxhealthdamage }}% -> {{ maxhealthdamageNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            120,
-            100,
+            140,
+            110,
             80
           ],
-          "cooldownBurn": "120/100/80",
+          "cooldownBurn": "140/110/80",
           "cost": [
-            150,
-            150,
-            150
+            100,
+            100,
+            100
           ],
-          "costBurn": "150",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -624,14 +926,14 @@
               0
             ],
             [
-              0,
-              0,
-              0
+              5,
+              5,
+              5
             ],
             [
-              0,
-              0,
-              0
+              2.5,
+              2.5,
+              2.5
             ],
             [
               0,
@@ -668,8 +970,8 @@
             null,
             "0",
             "0",
-            "0",
-            "0",
+            "5",
+            "2.5",
             "0",
             "0",
             "0",
@@ -687,10 +989,10 @@
           ],
           "rangeBurn": "700",
           "image": {
-            "full": "Jade_MalzaharR.png",
+            "full": "MalzaharR.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 336,
+            "x": 144,
             "y": 144,
             "w": 48,
             "h": 48
@@ -699,14 +1001,14 @@
         }
       ],
       "passive": {
-        "name": "Summon Voidling",
-        "description": "Every few spells, Malzahar summons an uncontrollable Voidling to engage his enemies. Voidlings grow over time, gaining armor, damage, and attack speed.",
+        "name": "Void Shift",
+        "description": "When he hasn't recently taken damage or been crowd controlled, Malzahar gains massive damage reduction and crowd control immunity, lingering for a short period after taking damage.",
         "image": {
-          "full": "Jade_Malzahar_Passive.png",
+          "full": "Malzahar_Passive.png",
           "sprite": "passive2.png",
           "group": "passive",
-          "x": 0,
-          "y": 96,
+          "x": 432,
+          "y": 48,
           "w": 48,
           "h": 48
         }

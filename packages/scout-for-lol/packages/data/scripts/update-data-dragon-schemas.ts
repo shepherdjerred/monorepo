@@ -38,6 +38,7 @@ export const ChampionListSchema = z.object({
       id: z.string(),
       key: ChampionIdSchema,
       name: z.string(),
+      modernKey: ChampionIdSchema.optional(),
     }),
   ),
 });
@@ -96,11 +97,14 @@ export function rarityNumberToString(
  * (newer "tier" skins like Praetorian/Star Nemesis return 403 from Data
  * Dragon but are mirrored on CommunityDragon).
  *
- * Source: https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champions/{championId}.json
+ * Source: https://raw.communitydragon.org/{cdVersion}/plugins/rcp-be-lol-game-data/global/default/v1/champions/{championId}.json
  */
 export const CDragonChampionSchema = z.object({
   id: z.number(),
   alias: z.string(),
+  name: z.string(),
+  relatedPrimeItemId: z.number().nullable(),
+  squarePortraitPath: z.string().optional(),
   skins: z.array(
     z.object({
       id: z.number(),
