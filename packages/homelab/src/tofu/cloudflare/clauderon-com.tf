@@ -23,6 +23,26 @@ resource "cloudflare_dns_record" "clauderon_com_www" {
   proxied = true
 }
 
+# Proxied IPv4 placeholders ensure IPv4-only clients can reach Cloudflare's
+# edge and receive the redirect; the address is never contacted as an origin.
+resource "cloudflare_dns_record" "clauderon_com_apex_ipv4" {
+  zone_id = cloudflare_zone.clauderon_com.id
+  ttl     = 1
+  name    = "clauderon.com"
+  type    = "A"
+  content = "192.0.2.1"
+  proxied = true
+}
+
+resource "cloudflare_dns_record" "clauderon_com_www_ipv4" {
+  zone_id = cloudflare_zone.clauderon_com.id
+  ttl     = 1
+  name    = "www"
+  type    = "A"
+  content = "192.0.2.1"
+  proxied = true
+}
+
 resource "cloudflare_ruleset" "clauderon_com_redirect" {
   zone_id = cloudflare_zone.clauderon_com.id
   name    = "clauderon.com to sjer.red"
