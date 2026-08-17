@@ -38,6 +38,7 @@ const logger = createLogger("betting-settle");
 export type SettlementBet = {
   betId: number;
   bucksAccountId: number;
+  discordId: string;
   predictedTeamId: number;
   stake: number;
   payout: number;
@@ -137,6 +138,7 @@ async function creditBet(
 type PendingBetRow = {
   id: number;
   bucksAccountId: number;
+  discordId: string;
   predictedTeamId: number;
   stake: number;
   subjectPuuid: string;
@@ -153,6 +155,7 @@ function refundAll(rows: readonly PendingBetRow[]): {
     bets: rows.map((row) => ({
       betId: row.id,
       bucksAccountId: row.bucksAccountId,
+      discordId: row.discordId,
       predictedTeamId: row.predictedTeamId,
       stake: row.stake,
       payout: row.stake,
@@ -196,6 +199,7 @@ function toSettlementBets(input: {
       return {
         betId: row.id,
         bucksAccountId: row.bucksAccountId,
+        discordId: row.discordId,
         predictedTeamId: row.predictedTeamId,
         stake: row.stake,
         payout: allocation?.payout ?? 0,
@@ -303,24 +307,33 @@ async function settleOnePool(input: {
       select: {
         id: true,
         bucksAccountId: true,
+        bucksAccount: { select: { discordId: true } },
         predictedTeamId: true,
         stake: true,
         subjectPuuid: true,
       },
       orderBy: { id: "asc" },
     });
+    const pendingBets: PendingBetRow[] = rows.map((row) => ({
+      id: row.id,
+      bucksAccountId: row.bucksAccountId,
+      discordId: row.bucksAccount.discordId,
+      predictedTeamId: row.predictedTeamId,
+      stake: row.stake,
+      subjectPuuid: row.subjectPuuid,
+    }));
 
     // A one-sided market has no counterparty to pay from. Recorded as its own
     // void reason rather than as payouts that happen to equal each stake.
     const hasBothSides =
-      rows.some((row) => row.predictedTeamId === 100) &&
-      rows.some((row) => row.predictedTeamId === 200);
+      pendingBets.some((row) => row.predictedTeamId === 100) &&
+      pendingBets.some((row) => row.predictedTeamId === 200);
     const voidReason: BucksVoidReason | undefined =
       input.classificationVoid ??
       (!hasBothSides && rows.length > 0 ? "no_counterparty" : undefined);
 
     const settled = toSettlementBets({
-      rows,
+      rows: pendingBets,
       winningTeamId: input.winningTeamId,
       voidReason,
     });

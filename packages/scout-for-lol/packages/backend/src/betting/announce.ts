@@ -30,7 +30,7 @@ const logger = createLogger("betting-announce");
  */
 
 /** Beyond this the message stops being readable, so the tail is summarised. */
-const MAX_PAYOUT_ROWS = 15;
+const MAX_BET_ROWS = 15;
 
 function formatPrediction(raw: string | null): string | undefined {
   if (raw === null) {
@@ -68,7 +68,7 @@ export function predictionVerdict(
   return predictedWin === subjectWon ? "Scout called it." : "Scout was wrong.";
 }
 
-function formatSettlementBody(input: {
+export function formatSettlementBody(input: {
   summary: SettlementSummary;
   earnings: readonly EarnedAward[];
   predictionSentence: string | undefined;
@@ -101,18 +101,23 @@ function formatSettlementBody(input: {
     lines.push(`${input.predictionSentence}${verdict}`);
   }
 
-  const paid = summary.bets.filter((bet) => bet.payout > 0);
-  if (paid.length > 0) {
+  if (summary.bets.length > 0) {
     lines.push("");
-    for (const bet of paid.slice(0, MAX_PAYOUT_ROWS)) {
-      const delta = bet.refunded
+    lines.push("**Bets**");
+    for (const bet of summary.bets.slice(0, MAX_BET_ROWS)) {
+      const result = bet.refunded
         ? `refunded ${bet.payout.toString()} BB`
-        : `+${bet.winnings.toString()} BB`;
-      lines.push(`• staked ${bet.stake.toString()} BB → ${delta}`);
-    }
-    if (paid.length > MAX_PAYOUT_ROWS) {
+        : `received ${bet.payout.toString()} BB` +
+          (bet.winnings > 0
+            ? ` (+${bet.winnings.toString()} BB winnings)`
+            : "");
       lines.push(
-        `…and ${(paid.length - MAX_PAYOUT_ROWS).toString()} more — see \`/bb history\``,
+        `• <@${bet.discordId}> staked ${bet.stake.toString()} BB → ${result}`,
+      );
+    }
+    if (summary.bets.length > MAX_BET_ROWS) {
+      lines.push(
+        `…and ${(summary.bets.length - MAX_BET_ROWS).toString()} more — see \`/bb history\``,
       );
     }
   }
