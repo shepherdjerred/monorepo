@@ -129,19 +129,32 @@ const REQUIRED_STACK_ENV: Readonly<Record<string, readonly string[]>> = {
   ],
 };
 
-/** Build the local filesystem mirror needed by the in-repository BYOK provider. */
+/**
+ * The version the filesystem mirror publishes the in-repository BYOK provider
+ * under. It must satisfy the `~> 0.1` constraint that
+ * src/tofu/openrouter/providers.tf declares, and it names both the mirror
+ * directory and the binary, so it lives here once rather than in each string.
+ */
+const OPENROUTER_BYOK_VERSION = "0.1.0";
+
+/**
+ * Build the local filesystem mirror needed by the in-repository BYOK provider.
+ * Returns the temporary root so the caller can remove it once tofu has exited.
+ */
 async function configureLocalOpenRouterProvider(
   env: Record<string, string>,
-): Promise<void> {
+): Promise<string> {
   const providerRoot = `${homelabRoot()}/../terraform-provider-openrouter-byok`;
   const tempRoot = `${Bun.env["TMPDIR"] ?? "/tmp"}/monorepo-openrouter-byok-${process.pid.toString()}`;
   const goosResult = await run(["go", "env", "GOOS"], { capture: true });
   const goarchResult = await run(["go", "env", "GOARCH"], { capture: true });
   const goos = goosResult.stdout.trim();
   const goarch = goarchResult.stdout.trim();
-  const mirrorRoot = `${tempRoot}/mirror/registry.opentofu.org/shepherdjerred/openrouter-byok/0.1.0/${goos}_${goarch}`;
+  const mirrorRoot =
+    `${tempRoot}/mirror/registry.opentofu.org/shepherdjerred/openrouter-byok/` +
+    `${OPENROUTER_BYOK_VERSION}/${goos}_${goarch}`;
   await run(["mkdir", "-p", mirrorRoot]);
-  const binaryPath = `${mirrorRoot}/terraform-provider-openrouter-byok_v0.1.0`;
+  const binaryPath = `${mirrorRoot}/terraform-provider-openrouter-byok_v${OPENROUTER_BYOK_VERSION}`;
   await run(
     ["go", "build", "-trimpath", "-buildvcs=false", "-o", binaryPath, "."],
     { cwd: providerRoot, env },
@@ -152,6 +165,7 @@ async function configureLocalOpenRouterProvider(
     `provider_installation {\n  filesystem_mirror {\n    path = "${tempRoot}/mirror"\n    include = ["registry.opentofu.org/shepherdjerred/openrouter-byok"]\n  }\n  direct {}\n}\n`,
   );
   env["TF_CLI_CONFIG_FILE"] = cliConfigPath;
+  return tempRoot;
 }
 
 /**
@@ -259,10 +273,25 @@ async function main(): Promise<void> {
     await Bun.file(`${stackDir}/state-encryption.tf`).exists(),
   );
 
-  if (stack === "openrouter") {
-    await configureLocalOpenRouterProvider(env);
+  const localProviderRoot =
+    stack === "openrouter" ? await configureLocalOpenRouterProvider(env) : null;
+  try {
+    await runTofu(stack, action, root, env);
+  } finally {
+    // The mirror holds a freshly built provider binary and a CLI config that
+    // only this run uses, so it is removed however tofu exits.
+    if (localProviderRoot !== null) {
+      await run(["rm", "-rf", localProviderRoot]);
+    }
   }
+}
 
+async function runTofu(
+  stack: string,
+  action: "plan" | "apply",
+  root: string,
+  env: Record<string, string>,
+): Promise<void> {
   // `tofu init` — NOTE: the old code wrapped init in a bounded retry loop to
   // survive slow provider-registry / GitHub release CDN responses. That retry
   // is intentionally OMITTED here: this runs locally under an operator who can
