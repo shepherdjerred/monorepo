@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { MANAGED_APPLICATION_LABEL } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -500,19 +499,15 @@ describe("Argo CD child reconciliation identity", () => {
     });
   }
 
-  test("adopts an operation carrying the Application's declared sync options", async () => {
-    // Admission merges these into the operation server-side, so a legitimate
-    // live operation carries options the request never sent. Rejecting them
-    // would break every managed Application that declares any.
+  test("adopts an unlabelled Application's declared sync options", async () => {
+    // ArgoCD serializes declared options even when the admission policy does
+    // not select the Application, as it does for the root `apps` Application.
     const { stdout, stderr, syncPosts } =
       await reconcileAgainstActiveChildOperation(
         activeChildOperation({
           syncOptions: ["ServerSideApply=true", "CreateNamespace=true"],
         }),
         {
-          // A managed child carries the label the admission policy matches on,
-          // which is what makes its declared options the expected ones.
-          metadata: { labels: { [MANAGED_APPLICATION_LABEL]: "true" } },
           spec: {
             syncPolicy: {
               syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
@@ -536,8 +531,18 @@ describe("Argo CD child reconciliation identity", () => {
     };
     const { stdout, stderr, syncPosts } =
       await reconcileAgainstActiveChildOperation(
-        activeChildOperation({ source }),
-        { spec: { source } },
+        activeChildOperation({
+          source,
+          syncOptions: ["ServerSideApply=true", "CreateNamespace=true"],
+        }),
+        {
+          spec: {
+            source,
+            syncPolicy: {
+              syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
+            },
+          },
+        },
       );
 
     expect(stderr).not.toContain("Refusing to adopt");

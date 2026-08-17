@@ -43,7 +43,6 @@ import {
 import {
   APPLICATION_LIFECYCLE_ANNOTATION,
   APPLICATION_RESOURCES_FINALIZER,
-  MANAGED_APPLICATION_LABEL,
   REPOSITORY_CHART_URLS,
 } from "../src/cdk8s/src/application-release-policy.ts";
 import {
@@ -732,10 +731,6 @@ const ActiveSyncRequestSchema = z.object({
 });
 
 const DeclaredSyncOptionsSchema = z.object({
-  metadata: z
-    .object({ labels: z.record(z.string(), z.string()).optional() })
-    .loose()
-    .optional(),
   spec: z
     .object({
       source: ApplicationSourceSchema.optional(),
@@ -751,11 +746,8 @@ const DeclaredSyncOptionsSchema = z.object({
 /**
  * Every key this process can account for in a live `operation.sync`. `revision`,
  * `prune`, `manifests`, and `resources` are the request's own fields;
- * `syncOptions` is absent from the request and injected by the sync-option
- * admission policy from the Application's declared policy. ArgoCD also
- * serializes the Application source in a live operation even when the client
- * did not send it, so it is accepted only when it is exactly the declared
- * source of this Application.
+ * `syncOptions` and `source` are absent from the request, but ArgoCD serializes
+ * the Application's declared values in a live operation.
  */
 const ACCOUNTED_SYNC_KEYS = new Set([
   "manifests",
@@ -768,17 +760,13 @@ const ACCOUNTED_SYNC_KEYS = new Set([
 
 /**
  * The sync options an operation on this Application is expected to carry. The
- * request never sends any, so they can only come from the sync-option admission
- * policy, which matches on the managed label. The release policy withholds that
- * label from the root `apps` Application precisely so its operations are not
- * mutated, so the root legitimately carries none even though it declares some.
- * Reading the declaration alone would reject every root retry.
+ * request never sends any, but ArgoCD serializes the Application's declared
+ * options in the live operation. The admission policy may merge options for a
+ * managed child, but that merge resolves to the same declared set.
  */
 function expectedSyncOptions(app: Record<string, unknown>): readonly string[] {
   const parsed = DeclaredSyncOptionsSchema.parse(app);
-  const admitted =
-    parsed.metadata?.labels?.[MANAGED_APPLICATION_LABEL] === "true";
-  return admitted ? (parsed.spec?.syncPolicy?.syncOptions ?? []) : [];
+  return parsed.spec?.syncPolicy?.syncOptions ?? [];
 }
 
 function declaredApplicationSource(
@@ -829,8 +817,9 @@ function activeOperationRequestMismatch(
   if ((active.prune ?? false) !== options.prune) {
     return `prune ${(active.prune ?? false).toString()}`;
   }
-  // The request never sends sync options, so admission's merge leaves exactly
-  // the set it injects. Anything else was added by someone else.
+  // The request never sends sync options, so a live operation can carry only
+  // the exact set declared by this Application. Anything else was added by
+  // someone else.
   const admittedOptions = [...(active.syncOptions ?? [])].sort();
   const expectedOptions = [...expectedSyncOptions(app)].sort();
   if (canonicalJson(admittedOptions) !== canonicalJson(expectedOptions)) {
