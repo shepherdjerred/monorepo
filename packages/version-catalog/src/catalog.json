@@ -650,7 +650,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9840@sha256:c364f29ce0a3f83170d6e2413567eced1b9e0e7b62cac84596392beb1122b8c0",
+      "value": "2.0.0-9859@sha256:e22fa9c383f06cec6b697ad0f6c3e3c39bbf2fd1c8b4262c285a835329037aa0",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -705,7 +705,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9840@sha256:f9f4aa6ae059af2023d4c95519a3dd343be4707ea4aede582097ebfc49f5d559",
+      "value": "2.0.0-9859@sha256:29b59f6ef8726122953b15337c39e3e85b52d1e300240555fe3b963f78e2792b",
       "notes": ["not managed by renovate"]
     },
     {
@@ -728,7 +728,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "value": "2.0.0-9865@sha256:c2cf00d613bc3102177d9ab56abb886e7ad0f3a0d1d251fc7fd70ee77bfc2c86",
       "notes": [
         "not managed by renovate — pre-first-publish placeholder. The main image",
         "release injects the built digest into chart synthesis and version",
