@@ -59,7 +59,7 @@ resource "cloudflare_ruleset" "clauderon_com_redirect" {
         status_code           = 301
         preserve_query_string = true
         target_url = {
-          value = "https://sjer.red"
+          expression = "concat(\"https://sjer.red\", http.request.uri.path)"
         }
       }
     }
