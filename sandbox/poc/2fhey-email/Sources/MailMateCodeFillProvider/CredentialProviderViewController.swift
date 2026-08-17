@@ -37,8 +37,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
             cancel(code: ProviderErrorCode.failed)
             return
         }
-        guard let record = recordFor(credentialRequest.credentialIdentity) else { return }
-        complete(record)
+        Task { await completeUsingStoredRecord(for: credentialRequest.credentialIdentity) }
     }
 
     override func prepareInterfaceToProvideCredential(for credentialRequest: any ASCredentialRequest) {
@@ -48,31 +47,37 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
             cancel(code: ProviderErrorCode.failed)
             return
         }
-        guard let record = recordFor(credentialRequest.credentialIdentity) else { return }
-        complete(record)
+        Task { await completeUsingStoredRecord(for: credentialRequest.credentialIdentity) }
     }
 
     override func prepareOneTimeCodeCredentialList(for serviceIdentifiers: [ASCredentialServiceIdentifier]) {
-        guard let validRecords = loadRecords() else {
-            cancel(code: ProviderErrorCode.failed)
-            return
-        }
-        records = validRecords.filter { record in
-            serviceIdentifiers.isEmpty || serviceIdentifiers.contains { service in
-                matches(record: record, serviceIdentifier: service.identifier)
+        Task {
+            guard let validRecords = await loadRecords() else {
+                cancel(code: ProviderErrorCode.failed)
+                return
             }
+            records = validRecords.filter { record in
+                serviceIdentifiers.isEmpty || serviceIdentifiers.contains { service in
+                    matches(record: record, serviceIdentifier: service.identifier)
+                }
+            }
+            logger.info("event=credential_list outcome=ready requested_service_count=\(serviceIdentifiers.count, privacy: .public) available_record_count=\(validRecords.count, privacy: .public) matching_record_count=\(self.records.count, privacy: .public)")
+            renderChoices()
         }
-        logger.info("event=credential_list outcome=ready requested_service_count=\(serviceIdentifiers.count, privacy: .public) available_record_count=\(validRecords.count, privacy: .public) matching_record_count=\(self.records.count, privacy: .public)")
-        renderChoices()
     }
 
-    private func recordFor(_ identity: any ASCredentialIdentity) -> OTPRecord? {
+    private func completeUsingStoredRecord(for identity: any ASCredentialIdentity) async {
+        guard let record = await recordFor(identity) else { return }
+        complete(record)
+    }
+
+    private func recordFor(_ identity: any ASCredentialIdentity) async -> OTPRecord? {
         guard let messageID = identity.recordIdentifier else {
             logger.error("event=credential_lookup outcome=missing_record_identifier")
             cancel(code: ProviderErrorCode.credentialIdentityNotFound)
             return nil
         }
-        guard let storedRecords = loadRecords() else {
+        guard let storedRecords = await loadRecords() else {
             cancel(code: ProviderErrorCode.failed)
             return nil
         }
@@ -87,14 +92,25 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         return record
     }
 
-    private func loadRecords() -> [OTPRecord]? {
-        do {
-            let store = try CodeStore(applicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier)
-            let records = try store.read()
+    // The controller is @MainActor, but reading the store takes a lock and touches the filesystem.
+    // Doing that inline would stall the extension UI and risk an OS request timeout, so the read
+    // runs off the main actor and only its result comes back.
+    private func loadRecords() async -> [OTPRecord]? {
+        let outcome = await Task.detached(priority: .userInitiated) { () -> Result<[OTPRecord], any Error> in
+            do {
+                let store = try CodeStore(applicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier)
+                return .success(try store.read())
+            } catch {
+                return .failure(error)
+            }
+        }.value
+
+        switch outcome {
+        case let .success(records):
             logger.info("event=provider_store_read outcome=success record_count=\(records.count, privacy: .public)")
             synchronizeIdentityStore(records)
             return records
-        } catch {
+        case let .failure(error):
             logger.error("event=provider_store_read outcome=error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
             return nil
         }
