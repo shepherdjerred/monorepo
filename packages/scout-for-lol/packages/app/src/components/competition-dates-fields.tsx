@@ -79,7 +79,7 @@ export function CompetitionDatesFields(props: {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="FIXED_DATES">Fixed dates</SelectItem>
-            <SelectItem value="SEASON">League season</SelectItem>
+            <SelectItem value="SEASON">League season dates</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -114,6 +114,10 @@ export function CompetitionDatesFields(props: {
       ) : (
         <div className="space-y-2">
           <Label htmlFor="competition-season">Season</Label>
+          <p className="text-sm text-scout-subtle">
+            Classic is the current League season name. This only sets the
+            competition dates; games from every mode remain eligible.
+          </p>
           <Select
             value={value.seasonId}
             disabled={disabled}

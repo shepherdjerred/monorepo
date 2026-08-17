@@ -3,16 +3,15 @@ title: Scout for League of Legends
 description: Install Scout, track players, and turn your server's match history into leaderboards, competitions, and scheduled reports.
 template: splash
 hero:
-  title: Match notifications your server will actually read.
-  tagline: Scout watches tracked players, posts a card when they queue up and a full recap when they finish, and turns the history into leaderboards, competitions, and scheduled reports.
+  title: Turn every match into a moment your server talks about.
+  tagline: Scout follows the players your community cares about, posts live queue alerts and polished recaps, then turns every game into shared history with leaderboards, competitions, and reports.
   actions:
-    - text: Get your first notification
+    - text: See your first recap
       link: /docs/tutorials/first-notification/
       icon: rocket
-    - text: Browse the how-to guides
+    - text: Browse the guides
       link: /docs/how-to/add-players/
-      variant: minimal
-      icon: open-book
+      variant: secondary
 ---
 
 ## Start here

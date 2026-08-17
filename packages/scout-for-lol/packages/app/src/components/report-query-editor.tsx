@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type * as Monaco from "monaco-editor";
 import Editor, { type OnChange } from "@monaco-editor/react";
 import { useScoutTheme } from "@scout-for-lol/design-system/runtime";
@@ -20,8 +20,17 @@ export default function ReportQueryEditor(props: {
   const { resolvedMode } = useScoutTheme();
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof Monaco | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
-  const refreshDiagnostics = () => {
+  useEffect(() => {
+    return () => {
+      resizeObserverRef.current?.disconnect();
+    };
+  }, []);
+
+  // Only reads refs, so it is stable and safe as an effect dependency.
+  const refreshDiagnostics = useCallback(() => {
     const editor = editorRef.current;
     const monaco = monacoRef.current;
     if (editor === null || monaco === null) {
@@ -31,7 +40,17 @@ export default function ReportQueryEditor(props: {
     if (model !== null) {
       updateScoutQlDiagnostics(monaco, model);
     }
-  };
+  }, []);
+
+  // The wrapper is controlled through `value`, so it already owns the model
+  // text; this only re-runs the squiggles. Writing the model here too would be
+  // a second, competing source of truth and would reset the whole document on
+  // every external update. This is also the single lint path per edit: the
+  // parent updates `value` on change, so linting from `onChange` as well would
+  // run a full-document pass twice per keystroke.
+  useEffect(() => {
+    refreshDiagnostics();
+  }, [props.value, refreshDiagnostics]);
 
   const handleMount = (
     editor: Monaco.editor.IStandaloneCodeEditor,
@@ -41,16 +60,32 @@ export default function ReportQueryEditor(props: {
     monacoRef.current = monaco;
     registerScoutQlLanguage(monaco);
     refreshDiagnostics();
+    const container = containerRef.current;
+    if (container !== null) {
+      resizeObserverRef.current?.disconnect();
+      const layout = () => {
+        editor.layout({
+          width: container.clientWidth,
+          height: container.clientHeight,
+        });
+      };
+      resizeObserverRef.current = new ResizeObserver(layout);
+      resizeObserverRef.current.observe(container);
+      layout();
+    }
   };
 
   const handleChange: OnChange = (value) => {
     props.onChange(value ?? "");
-    refreshDiagnostics();
   };
 
   return (
-    <div className="overflow-hidden rounded-md border border-border">
+    <div
+      ref={containerRef}
+      className="min-w-0 overflow-hidden rounded-md border border-border"
+    >
       <Editor
+        width="100%"
         height="180px"
         language={SCOUTQL_LANGUAGE_ID}
         theme={resolvedMode === "dark" ? "vs-dark" : "vs"}

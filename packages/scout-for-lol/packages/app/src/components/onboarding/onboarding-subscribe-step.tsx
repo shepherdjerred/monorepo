@@ -73,6 +73,10 @@ export function OnboardingSubscribeStep(props: {
     );
   }
 
+  const trackedAliases = [
+    ...new Set(props.existingSubs.map((subscription) => subscription.alias)),
+  ].toSorted((left, right) => left.localeCompare(right));
+
   function handleSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     submit(value);
@@ -86,13 +90,17 @@ export function OnboardingSubscribeStep(props: {
       onSkip={props.onSkip}
     >
       <div className="space-y-4">
-        {props.mode === "more" && props.existingSubs.length > 0 && (
+        {props.mode === "more" && trackedAliases.length > 0 && (
           <Card>
             <CardContent className="space-y-1 p-4">
-              <p className="text-sm font-medium">Tracking so far</p>
-              <ul className="list-inside list-disc text-sm text-scout-subtle">
-                {props.existingSubs.map((sub) => (
-                  <li key={`${sub.alias}-${sub.channelId}`}>{sub.alias}</li>
+              <p className="text-sm font-medium">
+                Tracking {trackedAliases.length.toString()} players so far
+              </p>
+              <ul className="grid max-h-48 grid-cols-2 gap-x-6 gap-y-1 overflow-y-auto pr-2 text-sm text-scout-subtle sm:grid-cols-3">
+                {trackedAliases.map((alias) => (
+                  <li key={alias} className="truncate">
+                    {alias}
+                  </li>
                 ))}
               </ul>
             </CardContent>

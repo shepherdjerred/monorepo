@@ -1,5 +1,4 @@
 ---
-import StarlightFooter from "@astrojs/starlight/components/Footer.astro";
 import { GlobalFooter } from "@scout-for-lol/design-system/layout";
 
 function localSurfaceOrigin(
@@ -22,7 +21,6 @@ const marketingOrigin = localSurfaceOrigin(
 );
 ---
 
-<StarlightFooter />
 <GlobalFooter origins={{ marketing: marketingOrigin }} />
 <script is:inline define:vars={{ appOrigin: appOrigin ?? "" }}>
   if (appOrigin.length > 0) {

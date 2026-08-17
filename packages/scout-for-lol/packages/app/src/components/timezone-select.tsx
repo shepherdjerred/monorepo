@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Combobox } from "@scout-for-lol/design-system/components/combobox";
 
 type Zone = {
@@ -41,8 +41,8 @@ function makeZone(id: string): Zone {
 
 const LOCAL_ZONE = new Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-// The short "common" group pinned to the top of an unfiltered list: the user's
-// own zone, UTC, then the previously hard-coded shortlist.
+// Keep the user's zone, UTC, and common North American/European/Asia-Pacific
+// zones present even if the platform's IANA catalog omits one of them.
 const PINNED_IDS = [
   ...new Set([
     LOCAL_ZONE,
@@ -78,8 +78,29 @@ const SEARCHABLE_ZONES: Zone[] = [
   ...ALL_ZONES,
 ];
 
-function labelForValue(value: string): string {
+export function labelForValue(value: string): string {
   return makeZone(value).label;
+}
+
+// Show the complete IANA catalog from the first focus, while keeping the user's
+// zone and UTC near the top through the catalog's offset ordering. The shared
+// combobox caps the visible list and scrolls it, so comprehensive coverage does
+// not turn the form into a page-length menu.
+//
+// At rest the input holds the selected zone's rendered label (`America/New_York
+// (GMT-04:00)`), which is not a substring of any zone id — filtering on it
+// leaves no items, and the combobox hides its popover when the list is empty.
+// So the resting text means "no query", and typed text matches against the
+// label so an offset fragment finds zones too.
+export function zonesForQuery(query: string, selectedLabel: string): Zone[] {
+  const trimmed = query.trim();
+  if (trimmed.length === 0 || trimmed === selectedLabel.trim()) {
+    return SEARCHABLE_ZONES;
+  }
+  const needle = trimmed.toLowerCase();
+  return SEARCHABLE_ZONES.filter((zone) =>
+    zone.label.toLowerCase().includes(needle),
+  );
 }
 
 // `Intl.supportedValuesOf("timeZone")` omits aliases (e.g. `US/Pacific`,
@@ -100,6 +121,12 @@ function canonicalizeTimezone(value: string): string | undefined {
   }
 }
 
+// Module scope so the identity is stable: Combobox derives its item signature
+// from `items` and `getKey`, and the resting list here is the whole catalog.
+function zoneKey(zone: Zone): string {
+  return zone.id;
+}
+
 export function TimezoneSelect(props: {
   value: string;
   onChange: (tz: string) => void;
@@ -114,15 +141,10 @@ export function TimezoneSelect(props: {
     setQuery(selectedLabel);
   }, [selectedLabel]);
 
-  const trimmed = query.trim();
-  // "Resting" = the input still shows the current selection (or is empty) and
-  // the user hasn't started a fresh search, so we surface the pinned group.
-  const resting = trimmed.length === 0 || query === selectedLabel;
-  const items = resting
-    ? PINNED_ZONES
-    : SEARCHABLE_ZONES.filter((zone) =>
-        zone.id.toLowerCase().includes(trimmed.toLowerCase()),
-      );
+  const items = useMemo(
+    () => zonesForQuery(query, selectedLabel),
+    [query, selectedLabel],
+  );
 
   return (
     <Combobox<Zone>
@@ -158,7 +180,7 @@ export function TimezoneSelect(props: {
       isLoading={false}
       openOnEmptyQuery
       placeholder="Search timezones…"
-      getKey={(zone) => zone.id}
+      getKey={zoneKey}
       renderItem={(zone) => zone.label}
       onSelect={(zone) => {
         props.onChange(zone.id);

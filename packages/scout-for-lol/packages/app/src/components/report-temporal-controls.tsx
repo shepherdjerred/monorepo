@@ -133,8 +133,8 @@ export function ReportTemporalControls(props: {
               <option value="calendar">Custom equal-length baseline</option>
             </select>
           </label>
-          <div className="space-y-1">
-            <Label htmlFor="analysis-timezone">Analysis timezone</Label>
+          <label className="space-y-1 text-xs">
+            <span className="font-medium">Analysis timezone</span>
             <select
               id="analysis-timezone"
               className="h-9 w-full rounded-md border border-scout-border bg-scout-canvas px-2 text-sm"
@@ -149,7 +149,7 @@ export function ReportTemporalControls(props: {
                 </option>
               ))}
             </select>
-          </div>
+          </label>
           {calendarComparison !== null && (
             <>
               <div className="space-y-1">

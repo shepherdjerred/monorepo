@@ -51,7 +51,8 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
           <Input
             value={search}
             placeholder="Search"
-            className="h-8 pl-7 text-sm"
+            className="h-8 text-sm"
+            style={{ paddingInlineStart: "2.25rem" }}
             onChange={(event) => {
               setSearch(event.target.value);
             }}
