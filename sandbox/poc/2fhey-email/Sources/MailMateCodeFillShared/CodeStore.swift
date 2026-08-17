@@ -10,27 +10,38 @@ public enum CodeStoreError: Error, Equatable {
 public struct CodeStore {
     public static let fileName = "pending-one-time-codes.json"
     public static let lockFileName = ".pending-one-time-codes.lock"
+    public static let defaultLockTimeout: TimeInterval = 5
 
     private let directory: URL
     private let fileManager: FileManager
+    private let lockTimeout: TimeInterval
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
 
-    public init(directory: URL, fileManager: FileManager = .default) throws {
+    public init(
+        directory: URL,
+        fileManager: FileManager = .default,
+        lockTimeout: TimeInterval = CodeStore.defaultLockTimeout
+    ) throws {
         self.directory = directory
         self.fileManager = fileManager
+        self.lockTimeout = lockTimeout
         self.encoder = JSONEncoder()
         self.decoder = JSONDecoder()
         try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
         CodeFillObservability.storeLogger.debug("event=store_ready directory_type=app_group")
     }
 
-    public init(applicationGroupIdentifier: String, fileManager: FileManager = .default) throws {
+    public init(
+        applicationGroupIdentifier: String,
+        fileManager: FileManager = .default,
+        lockTimeout: TimeInterval = CodeStore.defaultLockTimeout
+    ) throws {
         guard let directory = fileManager.containerURL(forSecurityApplicationGroupIdentifier: applicationGroupIdentifier) else {
             CodeFillObservability.storeLogger.error("event=store_unavailable group_hash=\(CodeFillObservability.fingerprint(applicationGroupIdentifier), privacy: .public)")
             throw CodeStoreError.applicationGroupUnavailable(applicationGroupIdentifier)
         }
-        try self.init(directory: directory, fileManager: fileManager)
+        try self.init(directory: directory, fileManager: fileManager, lockTimeout: lockTimeout)
     }
 
     public func append(_ record: OTPRecord, now: Date = Date()) throws {
@@ -129,13 +140,31 @@ public struct CodeStore {
             }
         }
         defer { close(descriptor) }
-        while flock(descriptor, LOCK_EX) != 0 {
-            guard errno == EINTR else {
-                throw CodeStoreError.lockUnavailable(errno)
-            }
-        }
+        try acquireLock(descriptor)
         defer { flock(descriptor, LOCK_UN) }
         return try operation()
+    }
+
+    // A blocking flock would hang the caller for as long as a stalled or suspended process holds
+    // the file, which in the extension means a wedged AutoFill request. Wait a bounded time and
+    // then fail deterministically so callers can report an error instead.
+    private func acquireLock(_ descriptor: Int32) throws {
+        let deadline = Date().addingTimeInterval(lockTimeout)
+        var backoffMicroseconds: useconds_t = 1_000
+        while true {
+            if flock(descriptor, LOCK_EX | LOCK_NB) == 0 {
+                return
+            }
+            let failure = errno
+            guard failure == EWOULDBLOCK || failure == EINTR else {
+                throw CodeStoreError.lockUnavailable(failure)
+            }
+            guard Date() < deadline else {
+                throw CodeStoreError.lockUnavailable(ETIMEDOUT)
+            }
+            usleep(backoffMicroseconds)
+            backoffMicroseconds = min(backoffMicroseconds * 2, 25_000)
+        }
     }
 
     private func elapsedMilliseconds(since start: Date) -> Int {

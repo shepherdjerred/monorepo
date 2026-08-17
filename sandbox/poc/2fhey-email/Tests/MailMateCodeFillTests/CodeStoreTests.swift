@@ -100,6 +100,26 @@ func waitsForOutsideLockHolder() throws {
     #expect(try store.read(now: Date(timeIntervalSince1970: 101)).count == 2)
 }
 
+@Test("fails deterministically when the lock stays held past the timeout")
+func timesOutWaitingForLock() throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = try CodeStore(directory: directory, lockTimeout: 0.2)
+    try store.append(makeRecord(code: "111111", messageID: "one", detectedAt: 100), now: Date(timeIntervalSince1970: 101))
+
+    let descriptor = open(directory.appendingPathComponent(CodeStore.lockFileName).path, O_RDWR)
+    #expect(descriptor >= 0)
+    #expect(flock(descriptor, LOCK_EX) == 0)
+    defer {
+        flock(descriptor, LOCK_UN)
+        close(descriptor)
+    }
+
+    #expect(throws: CodeStoreError.lockUnavailable(ETIMEDOUT)) {
+        try store.append(makeRecord(code: "222222", messageID: "two", detectedAt: 101), now: Date(timeIntervalSince1970: 101))
+    }
+}
+
 private final class FailureBox: @unchecked Sendable {
     private let lock = NSLock()
     private var value = 0
