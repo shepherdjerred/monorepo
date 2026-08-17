@@ -1,7 +1,10 @@
 import { defineMiddleware } from "astro:middleware";
 
 export const onRequest = defineMiddleware((context, next) => {
-  if (!import.meta.env.DEV || !context.url.pathname.startsWith("/app")) {
+  const pathname = context.url.pathname;
+  const isAppRoute = pathname === "/app" || pathname.startsWith("/app/");
+
+  if (!import.meta.env.DEV || !isAppRoute) {
     return next();
   }
 
