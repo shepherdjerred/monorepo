@@ -12,6 +12,10 @@ import type {
   HomeAssistantRestClient,
 } from "@shepherdjerred/home-assistant";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import {
+  MOTION_LIGHT_ROOMS,
+  type MotionLightRoom,
+} from "#shared/motion-light.ts";
 import { cooldownBucket } from "#shared/presence.ts";
 
 const IOS_ACTION_ID_GOOD_NIGHT = "A91A15AA-479E-416C-8F51-BD983A999266";
@@ -28,6 +32,28 @@ const StateChangedEventData = z.object({
 
 const PERSON_ENTITIES = ["person.jerred", "person.shuxin"] as const;
 const PERSON_ENTITY_SET = new Set<string>(PERSON_ENTITIES);
+const MOTION_LIGHT_ROOMS_BY_ENTITY = new Map<
+  string,
+  {
+    room: MotionLightRoom;
+    lightEntityId: string;
+  }
+>([
+  [
+    MOTION_LIGHT_ROOMS.laundry.motionEntityId,
+    {
+      room: "laundry",
+      lightEntityId: MOTION_LIGHT_ROOMS.laundry.lightEntityId,
+    },
+  ],
+  [
+    MOTION_LIGHT_ROOMS.storage.motionEntityId,
+    {
+      room: "storage",
+      lightEntityId: MOTION_LIGHT_ROOMS.storage.lightEntityId,
+    },
+  ],
+]);
 
 // Singleton id for the debounced front-door lock reconciler. Every presence
 // transition signals this one workflow (starting it if needed) rather than
@@ -160,6 +186,21 @@ export function handleStateChanged(
     // Ignore attribute-only updates (e.g. GPS coordinate churn while the state
     // stays `home`) — only real presence transitions matter.
     if (oldState === newState) {
+      return;
+    }
+
+    const motionLight = MOTION_LIGHT_ROOMS_BY_ENTITY.get(parsed.data.entity_id);
+    if (motionLight !== undefined && oldState === "off" && newState === "on") {
+      await startWorkflow(
+        client,
+        "motionLight",
+        `motion-light-${motionLight.lightEntityId}`,
+        {
+          args: [motionLight.room],
+          workflowIdConflictPolicy: WorkflowIdConflictPolicy.TERMINATE_EXISTING,
+          workflowExecutionTimeout: "30 minutes",
+        },
+      );
       return;
     }
 

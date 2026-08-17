@@ -15,7 +15,9 @@ import { welcomeHome as _welcomeHome } from "./ha/welcome-home.ts";
 import { leavingHome as _leavingHome } from "./ha/leaving-home.ts";
 import { reconcileLock as _reconcileLock } from "./ha/reconcile-lock.ts";
 import { runVacuumIfNotHome as _runVacuumIfNotHome } from "./ha/run-vacuum-if-not-home.ts";
+import { motionLight as _motionLight } from "./ha/motion-light.ts";
 import { sleepAc as _sleepAc, sleepMusic as _sleepMusic } from "./ha/sleep.ts";
+import type { MotionLightRoom } from "#shared/motion-light.ts";
 import type { SleepAutomationInput } from "#shared/schemas.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-maintenance.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
@@ -165,6 +167,10 @@ export async function reconcileLock(): Promise<void> {
 
 export async function runVacuumIfNotHome(): Promise<void> {
   return _runVacuumIfNotHome();
+}
+
+export async function motionLight(room: MotionLightRoom): Promise<void> {
+  return _motionLight(room);
 }
 
 export async function sleepMusic(input?: SleepAutomationInput): Promise<void> {
