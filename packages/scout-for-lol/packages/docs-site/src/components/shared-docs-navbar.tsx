@@ -13,11 +13,11 @@ function localSurfaceOrigin(
 }
 
 const appOrigin = localSurfaceOrigin(
-  import.meta.env["PUBLIC_APP_ORIGIN"],
+  import.meta.env.PUBLIC_APP_ORIGIN,
   "http://localhost:5180",
 );
 const marketingOrigin = localSurfaceOrigin(
-  import.meta.env["PUBLIC_MARKETING_ORIGIN"],
+  import.meta.env.PUBLIC_MARKETING_ORIGIN,
   "http://localhost:4321",
 );
 

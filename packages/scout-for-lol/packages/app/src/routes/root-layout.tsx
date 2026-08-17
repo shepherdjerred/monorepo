@@ -30,11 +30,11 @@ function localSurfaceOrigin(
 }
 
 const marketingOrigin = localSurfaceOrigin(
-  import.meta.env["VITE_MARKETING_ORIGIN"],
+  import.meta.env.VITE_MARKETING_ORIGIN,
   "http://localhost:4321",
 );
 const docsOrigin = localSurfaceOrigin(
-  import.meta.env["VITE_DOCS_ORIGIN"],
+  import.meta.env.VITE_DOCS_ORIGIN,
   "http://localhost:4322",
 );
 

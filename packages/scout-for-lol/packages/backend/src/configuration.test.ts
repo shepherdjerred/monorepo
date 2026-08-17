@@ -32,16 +32,15 @@ function restoreEnv(snapshot: Record<TrackedKey, string | undefined>) {
   } else {
     Bun.env.NODE_ENV = snapshot.NODE_ENV;
   }
-  for (const key of [
-    "ENABLE_DISCORD_GATEWAY",
-    "ENABLE_BACKGROUND_JOBS",
-  ] as const) {
-    const value = snapshot[key];
-    if (value === undefined) {
-      delete Bun.env[key];
-    } else {
-      Bun.env[key] = value;
-    }
+  if (snapshot.ENABLE_DISCORD_GATEWAY === undefined) {
+    delete Bun.env["ENABLE_DISCORD_GATEWAY"];
+  } else {
+    Bun.env["ENABLE_DISCORD_GATEWAY"] = snapshot.ENABLE_DISCORD_GATEWAY;
+  }
+  if (snapshot.ENABLE_BACKGROUND_JOBS === undefined) {
+    delete Bun.env["ENABLE_BACKGROUND_JOBS"];
+  } else {
+    Bun.env["ENABLE_BACKGROUND_JOBS"] = snapshot.ENABLE_BACKGROUND_JOBS;
   }
   resetConfigurationForTests();
 }
@@ -136,6 +135,17 @@ describe("local runtime flags", () => {
 
     expect(() => configuration.enableDiscordGateway).toThrow(
       /may only be disabled in environment=dev/,
+    );
+  });
+
+  test("rejects background jobs enabled while the gateway is disabled", () => {
+    Bun.env["ENVIRONMENT"] = "dev";
+    Bun.env["ENABLE_DISCORD_GATEWAY"] = "false";
+    Bun.env["ENABLE_BACKGROUND_JOBS"] = "true";
+    resetConfigurationForTests();
+
+    expect(() => configuration.enableBackgroundJobs).toThrow(
+      /ENABLE_BACKGROUND_JOBS requires ENABLE_DISCORD_GATEWAY/,
     );
   });
 });

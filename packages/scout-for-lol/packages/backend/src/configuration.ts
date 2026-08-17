@@ -112,6 +112,11 @@ function computeConfiguration() {
       "ENABLE_DISCORD_GATEWAY and ENABLE_BACKGROUND_JOBS may only be disabled in environment=dev",
     );
   }
+  if (enableBackgroundJobs && !enableDiscordGateway) {
+    throw new Error(
+      "ENABLE_BACKGROUND_JOBS requires ENABLE_DISCORD_GATEWAY: background jobs use the Discord client and guild filtering",
+    );
+  }
   const config = {
     version: getRequiredEnvVar("VERSION"),
     gitSha: getRequiredEnvVar("GIT_SHA"),

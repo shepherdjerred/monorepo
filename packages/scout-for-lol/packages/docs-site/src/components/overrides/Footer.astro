@@ -26,10 +26,11 @@ const marketingOrigin = localSurfaceOrigin(
 <GlobalFooter origins={{ marketing: marketingOrigin }} />
 <script is:inline define:vars={{ appOrigin: appOrigin ?? "" }}>
   if (appOrigin.length > 0) {
+    const normalizedAppOrigin = appOrigin.replace(/\/$/, "");
     for (const anchor of document.querySelectorAll('a[href^="/app/"]')) {
       const href = anchor.getAttribute("href");
       if (href !== null) {
-        anchor.setAttribute("href", `${appOrigin}${href}`);
+        anchor.setAttribute("href", `${normalizedAppOrigin}${href}`);
       }
     }
   }
