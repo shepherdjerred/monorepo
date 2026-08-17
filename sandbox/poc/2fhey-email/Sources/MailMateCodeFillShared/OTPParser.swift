@@ -122,15 +122,24 @@ public struct OTPParser {
             let numericPrefix = String(characters[..<firstLetterIndex])
             return (numericPrefix, NSRange(location: range.location, length: numericPrefix.utf16.count))
         }
-        let firstUsefulIndex = characters.firstIndex { character in
-            character.isNumber || character.isUppercase
-        } ?? 0
-        let suffix = String(characters[firstUsefulIndex...])
+        // The candidate pattern tolerates single separators, so a preceding word can be captured
+        // together with the code ("is 482913"). Drop such a prefix only when a separator actually
+        // divided it from the rest — scanning for the first digit would truncate a genuine
+        // alphanumeric code that starts with letters, such as "abcd1234".
+        guard let separatorIndex = rawCode.firstIndex(where: { $0 == " " || $0 == "-" }) else {
+            return (compact, range)
+        }
+        let word = rawCode[rawCode.startIndex..<separatorIndex]
+        guard !word.isEmpty, word.allSatisfy(\.isLetter) else {
+            return (compact, range)
+        }
+        let remainder = String(rawCode[rawCode.index(after: separatorIndex)...])
+        let suffix = remainder.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "-", with: "")
         guard suffix.count >= 4, suffix.count <= 8, suffix.contains(where: \.isNumber) else {
             return (compact, range)
         }
-        let offset = String(characters[..<firstUsefulIndex]).utf16.count
-        return (suffix, NSRange(location: range.location + offset, length: suffix.utf16.count))
+        let offset = String(rawCode[rawCode.startIndex...separatorIndex]).utf16.count
+        return (suffix, NSRange(location: range.location + offset, length: remainder.utf16.count))
     }
 
     private static func service(from metadata: MessageMetadata) -> String? {
