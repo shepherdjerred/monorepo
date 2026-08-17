@@ -368,6 +368,22 @@ describe("markQodoFindingResolved", () => {
     expect(byTitle.get("Stale wording")).toBe(false);
   });
 
+  test("chips a finding the thread surface spells with different case", () => {
+    // Verbatim from PR #2244: the review comment titled it "NUL in finding
+    // key" and the thread "Nul in finding key". A merged finding carries one
+    // of the two, so an exact match refused to chip a finding the caller had
+    // just named — the same disagreement qodoFindingKey folds case for.
+    const edited = markQodoFindingResolved(comment.body, "CONSENT CACHE");
+    if (edited === null) throw new Error("expected an edit");
+    const byTitle = new Map(
+      parseQodoIssueComment({ ...comment, body: edited }).map((finding) => [
+        finding.title,
+        finding.isResolved,
+      ]),
+    );
+    expect(byTitle.get("Consent cache")).toBe(true);
+  });
+
   test("keeps the finding's identity so re-appended copies still collapse", () => {
     // The chip form is the whole point: identityOf strips `<code>☑ …</code>`,
     // so a dismissal must not fork the finding away from the unstruck copies

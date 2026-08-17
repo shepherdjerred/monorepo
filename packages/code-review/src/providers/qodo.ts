@@ -206,6 +206,12 @@ export const QODO_RESOLVED_CHIP = "<code>☑ resolved</code>";
  * `<!-- FOLDED_SECTION_START -->` onward is Qodo's archive of previous results,
  * which the parser excludes and an operator action must not rewrite.
  *
+ * The title is matched case-insensitively, for the same reason
+ * {@link qodoFindingKey} folds case: the two surfaces disagree on it. Qodo
+ * rendered one finding as "NUL in finding key" in this comment and "Nul in
+ * finding key" on its thread, so an exact match refused to chip a finding the
+ * caller had just identified from the merged pair.
+ *
  * Returns the edited body, or null when no finding matches — callers must not
  * silently no-op an operator's dismissal.
  */
@@ -238,7 +244,7 @@ export function markQodoFindingResolved(
     .filter(
       (candidate) =>
         /^\s*\d+\.\s+\S/u.test(candidate.summary.replaceAll(/<[^>]*>/gu, "")) &&
-        findingTitle(candidate.summary) === title,
+        findingTitle(candidate.summary).toLowerCase() === title.toLowerCase(),
     );
   if (candidates.length === 0) return null;
 
