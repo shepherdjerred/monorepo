@@ -55,6 +55,14 @@ const RootSyncRequestSchema = z.object({
   infos: z.array(SyncInfoEntrySchema),
   prune: z.boolean(),
   revision: z.string().optional(),
+  source: z
+    .object({
+      chart: z.string(),
+      repoURL: z.string(),
+      targetRevision: z.string(),
+    })
+    .optional(),
+  syncOptions: z.array(z.string()).optional(),
 });
 
 function operationForRootSyncRequest(
@@ -69,6 +77,12 @@ function operationForRootSyncRequest(
       ...(syncRequest.revision === undefined
         ? {}
         : { revision: syncRequest.revision }),
+      ...(syncRequest.source === undefined
+        ? {}
+        : { source: syncRequest.source }),
+      ...(syncRequest.syncOptions === undefined
+        ? {}
+        : { syncOptions: syncRequest.syncOptions }),
     },
   };
 }
@@ -85,16 +99,18 @@ const RootApplicationResource = {
   name: "apps",
 };
 
+const RootApplicationSource = {
+  chart: "apps",
+  repoURL: "https://chartmuseum.sjer.red",
+  targetRevision: "2.0.0-43",
+};
+
 const StagedRootApplication = JSON.stringify({
   apiVersion: "argoproj.io/v1alpha1",
   kind: "Application",
   metadata: { name: "apps" },
   spec: {
-    source: {
-      repoURL: "https://chartmuseum.sjer.red",
-      chart: "apps",
-      targetRevision: "2.0.0-43",
-    },
+    source: RootApplicationSource,
     syncPolicy: {
       automated: { enabled: true, prune: true, selfHeal: true },
     },
@@ -571,6 +587,8 @@ test("root release finalization adopts the exact active prune without another PO
     infos: releaseOperationInfo("prune"),
     prune: true,
     revision: "2.0.0-43",
+    source: RootApplicationSource,
+    syncOptions: ["CreateNamespace=true"],
   });
   const unmarkedOperation = operationForRootSyncRequest({
     infos: releaseOperationInfo("prune").filter(
@@ -578,6 +596,8 @@ test("root release finalization adopts the exact active prune without another PO
     ),
     prune: true,
     revision: "2.0.0-43",
+    source: RootApplicationSource,
+    syncOptions: ["CreateNamespace=true"],
   });
   let marked = false;
   let live = true;
@@ -628,10 +648,10 @@ test("root release finalization adopts the exact active prune without another PO
         const currentOperation = marked ? activeOperation : unmarkedOperation;
         return Response.json({
           operation: currentOperation,
-          // The real root declares sync options but is deliberately excluded
-          // from the sync-option admission policy (no managed label), so its
-          // operations legitimately carry none.
-          spec: { syncPolicy: { syncOptions: ["CreateNamespace=true"] } },
+          spec: {
+            source: RootApplicationSource,
+            syncPolicy: { syncOptions: ["CreateNamespace=true"] },
+          },
           status: {
             resources: [],
             operationState: {
