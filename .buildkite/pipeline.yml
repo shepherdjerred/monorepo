@@ -473,8 +473,14 @@ steps:
                 imagePullPolicy: IfNotPresent
                 resources:
                   # The checkout container separately requests its 1Gi tmpfs charge.
-                  requests: { cpu: "1", memory: "4Gi" }
-                  limits: { cpu: "4", memory: "8Gi" }
+                  # design-audit's build/lint/test and its own test:e2e run in this
+                  # same container alongside sjer.red/design-system/alert-dashboard/
+                  # evals; the combined peak (concurrent Playwright browser workers)
+                  # exceeded 8Gi and was OOM-killed (exit -7) reproducibly at the
+                  # same point across three consecutive attempts, independent of
+                  # overall cluster load.
+                  requests: { cpu: "1", memory: "5Gi" }
+                  limits: { cpu: "4", memory: "12Gi" }
                 volumeMounts:
                   # Mirror-backed checkouts: see the container-0 mounts in the
                   # shared pod anchors (turbo runs git in these containers).
@@ -546,8 +552,14 @@ steps:
                 imagePullPolicy: IfNotPresent
                 resources:
                   # The checkout container separately requests its 1Gi tmpfs charge.
-                  requests: { cpu: "1", memory: "4Gi" }
-                  limits: { cpu: "4", memory: "8Gi" }
+                  # design-audit's build/lint/test and its own test:e2e run in this
+                  # same container alongside sjer.red/design-system/alert-dashboard/
+                  # evals; the combined peak (concurrent Playwright browser workers)
+                  # exceeded 8Gi and was OOM-killed (exit -7) reproducibly at the
+                  # same point across three consecutive attempts, independent of
+                  # overall cluster load.
+                  requests: { cpu: "1", memory: "5Gi" }
+                  limits: { cpu: "4", memory: "12Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors
