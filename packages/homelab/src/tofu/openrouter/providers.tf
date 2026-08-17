@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 1.9.0"
 
   required_providers {
-    openrouterbyok = {
+    openrouter_byok = {
       source  = "shepherdjerred/openrouter-byok"
       version = "~> 0.1"
     }
@@ -21,7 +21,7 @@ provider "openrouter" {
   # Authenticated through OPENROUTER_API_KEY, which must be a management key.
 }
 
-provider "openrouterbyok" {}
+provider "openrouter_byok" {}
 
 provider "onepassword" {
   url = var.op_connect_url
