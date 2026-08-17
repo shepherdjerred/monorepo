@@ -49,6 +49,14 @@ func keepsLowercaseLedCodes() {
     #expect(OTPParser().parse(body: "Your OTP is a7b9c2.", metadata: metadata)?.code == "a7b9c2")
 }
 
+@Test("keeps alphanumeric codes that begin with digits")
+func keepsDigitLedCodes() {
+    let metadata = MessageMetadata(sender: "Acme <security@acme.example>", subject: "Sign in", date: nil, messageID: "message-8")
+
+    #expect(OTPParser().parse(body: "Your verification code is 1234AB.", metadata: metadata)?.code == "1234AB")
+    #expect(OTPParser().parse(body: "Your OTP is 1234ABCD.", metadata: metadata)?.code == "1234ABCD")
+}
+
 @Test("rejects a long candidate that is part of an address")
 func rejectsCodeInsideAddress() {
     let metadata = MessageMetadata(sender: "Acme <security@acme.example>", subject: "Sign in", date: nil, messageID: "message-6")

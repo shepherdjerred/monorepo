@@ -117,11 +117,16 @@ public struct OTPParser {
             return (compact, range)
         }
 
-        let characters = Array(compact)
-        if let firstLetterIndex = characters.firstIndex(where: { !$0.isNumber }), firstLetterIndex >= 4 {
-            let numericPrefix = String(characters[..<firstLetterIndex])
+        // A separator can cause a numeric code followed by a short word ("482913 to") to be
+        // captured as one candidate. Keep the numeric code in that case, but preserve compact
+        // digit-led alphanumeric codes such as "1234AB".
+        if rawCode.contains(where: { $0 == " " || $0 == "-" }),
+           let firstLetterIndex = compact.firstIndex(where: { !$0.isNumber }),
+           compact[..<firstLetterIndex].count >= 4 {
+            let numericPrefix = String(compact[..<firstLetterIndex])
             return (numericPrefix, NSRange(location: range.location, length: numericPrefix.utf16.count))
         }
+
         // The candidate pattern tolerates single separators, so a preceding word can be captured
         // together with the code ("is 482913"). Drop such a prefix only when a separator actually
         // divided it from the rest — scanning for the first digit would truncate a genuine
