@@ -10,7 +10,6 @@ import { buildBettingRows } from "#src/betting/components.ts";
 import { isBettableGame } from "#src/betting/eligibility.ts";
 import {
   bettingEnabledGuilds,
-  computeClosesAt,
   openBettingPoolsForPrematch,
 } from "#src/betting/pool-open.ts";
 import { buildPrediction } from "#src/betting/prediction-inputs.ts";
@@ -48,7 +47,7 @@ export type BucksPrematchAttachment = {
   bettingGuildIds: Set<DiscordGuildId>;
   /** The button rows, or empty when nobody in the game can be bet on. */
   rows: ActionRowBuilder<ButtonBuilder>[];
-  /** The prediction + countdown lines appended to the message content. */
+  /** An interesting prediction line appended to the message content. */
   footer: string;
   matchId: string;
 };
@@ -137,13 +136,7 @@ export async function prepareBucksPrematch(
           roster: buildRosterForButtons(input.gameInfo, trackedAliasByPuuid),
         });
 
-  const footer = bucksPrematchLine({
-    closesAt: computeClosesAt({
-      detectedAt: input.detectedAt,
-      gameStartTime: input.gameInfo.gameStartTime,
-    }),
-    prediction,
-  });
+  const footer = bucksPrematchLine({ prediction });
 
   return { bettingGuildIds, rows, footer, matchId };
 }

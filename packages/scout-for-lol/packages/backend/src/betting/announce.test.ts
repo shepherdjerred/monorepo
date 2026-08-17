@@ -46,13 +46,9 @@ describe("predictionVerdict", () => {
     expect(predictionVerdict(prediction(0.5, 100), 200)).toBeUndefined();
   });
 
-  test("still scores a hair either side of the coin flip", () => {
-    expect(predictionVerdict(prediction(0.5001, 100), 100)).toBe(
-      "Scout called it.",
-    );
-    expect(predictionVerdict(prediction(0.4999, 100), 100)).toBe(
-      "Scout was wrong.",
-    );
+  test("declines to score a near-even call", () => {
+    expect(predictionVerdict(prediction(0.51, 100), 100)).toBeUndefined();
+    expect(predictionVerdict(prediction(0.49, 100), 100)).toBeUndefined();
   });
 
   test("has no verdict without a prediction or a decided result", () => {

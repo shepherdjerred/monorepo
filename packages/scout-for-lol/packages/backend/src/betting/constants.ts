@@ -79,27 +79,6 @@ export const REMAKE_MAX_DURATION_SECONDS = 300;
  */
 export const BUCKS_EARNING_QUEUES: readonly QueueType[] = ["solo", "flex"];
 
-/**
- * How the feature describes its own scope, defined once so every surface says
- * the same thing.
- *
- * Bryan Bucks is not a Scout-wide feature and is not intended to become one.
- * `betting_enabled` is off by default and overridden true for exactly one
- * guild, and that guild runs the beta bot — so in practice this only ever
- * appears in beta. There is deliberately **no** environment gate: the guild
- * override is the mechanism, and adding a second one would mean two places to
- * check when the answer is "is it on here?".
- *
- * `/bb` is registered per guild (see `guildScopedCommandGroups`), so nobody
- * outside those guilds ever sees it in the picker. These strings are for the
- * people who *do* see it: they explain that a balance here means nothing
- * anywhere else, and that this is not a feature the rest of Scout has.
- */
-export const BUCKS_SCOPE_TAG = "one server only";
-
-export const BUCKS_SCOPE_NOTE =
-  "Bryan Bucks is a private, single-server experiment — it runs in one Discord server (on beta Scout) and is not a Scout-wide feature.";
-
 /** Riot's two team identifiers on Summoner's Rift. */
 export const BLUE_TEAM_ID = 100;
 export const RED_TEAM_ID = 200;

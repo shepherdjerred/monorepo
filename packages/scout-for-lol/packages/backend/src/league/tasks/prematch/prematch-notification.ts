@@ -164,9 +164,11 @@ function buildPrematchPayload(input: {
 
   // The fallback path still carries buttons: a market's validity depends on the
   // game, not on whether the image rendered. The prediction is absent here
-  // because no ranks were fetched, so the footer is just the countdown.
+  // because no ranks were fetched, so there is no extra message content.
   return {
-    ...(input.betsOpen ? { content: input.bucks.footer } : {}),
+    ...(input.betsOpen && input.bucks.footer.length > 0
+      ? { content: input.bucks.footer }
+      : {}),
     embeds: [input.fallbackEmbed()],
     components,
   };

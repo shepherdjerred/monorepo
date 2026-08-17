@@ -9,7 +9,7 @@ import {
 import type { EarnedAward } from "#src/betting/earnings.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPool } from "#src/betting/sweep.ts";
-import { BUCKS_SCOPE_TAG } from "#src/betting/constants.ts";
+import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { send } from "#src/league/discord/channel.ts";
@@ -37,21 +37,20 @@ function formatPrediction(raw: string | null): string | undefined {
     return undefined;
   }
   const parsed = BucksPredictionSchema.safeParse(JSON.parse(raw));
-  return parsed.success ? parsed.data.sentence : undefined;
+  return parsed.success && shouldDisplayPrediction(parsed.data.winProbability)
+    ? parsed.data.sentence
+    : undefined;
 }
 
-/** The coin flip. The prediction formula has no intercept, so a symmetric lobby
- * returns exactly this — a supported result, not a rounding artifact. */
+/** The neutral midpoint used to decide which side of a prediction won. */
 const COIN_FLIP = 0.5;
 
 /**
  * Score the stored prediction against the result, or return nothing.
  *
- * Exactly `0.500` is a *declined* call, not a call that the subject loses:
- * `prediction.ts` has no intercept, so a symmetric lobby lands here by design.
- * Reading it with `> 0.5` alone made the sentence retroactively claim a
- * direction it never took — "Scout was wrong." after a win, "Scout called it."
- * after a loss — from a forecast that said 50/50.
+ * Near-even calls are declined, not counted as calls the subject loses or
+ * wins. Reading them with `> 0.5` alone would turn an uninteresting forecast
+ * into a retroactive directional claim.
  */
 export function predictionVerdict(
   prediction: BucksPrediction | undefined,
@@ -60,7 +59,7 @@ export function predictionVerdict(
   if (
     winningTeamId === undefined ||
     prediction === undefined ||
-    prediction.winProbability === COIN_FLIP
+    !shouldDisplayPrediction(prediction.winProbability)
   ) {
     return undefined;
   }
@@ -80,7 +79,7 @@ function formatSettlementBody(input: {
 
   if (summary.voidReason === undefined) {
     lines.push(
-      `💰 **Bryan Bucks** _(${BUCKS_SCOPE_TAG})_ — pool ${(summary.winnersPool + summary.losersPool).toString()} BB (winners ${summary.winnersPool.toString()} / losers ${summary.losersPool.toString()})`,
+      `💰 **Bryan Bucks** — pool ${(summary.winnersPool + summary.losersPool).toString()} BB (winners ${summary.winnersPool.toString()} / losers ${summary.losersPool.toString()})`,
     );
   } else {
     const reason =
@@ -91,7 +90,7 @@ function formatSettlementBody(input: {
           : summary.voidReason === "expired"
             ? "This game never resolved — every bet refunded."
             : "Unsupported game mode — every bet refunded.";
-    lines.push(`💰 **Bryan Bucks** _(${BUCKS_SCOPE_TAG})_ — ${reason}`);
+    lines.push(`💰 **Bryan Bucks** — ${reason}`);
   }
 
   if (input.predictionSentence !== undefined) {
