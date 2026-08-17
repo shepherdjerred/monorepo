@@ -70,8 +70,10 @@ describe("promoted Scout controls", () => {
     );
 
     expect(
-      screen.getByRole("alertdialog", { name: "Default portal" }),
-    ).toBeTruthy();
+      document.body.contains(
+        screen.getByRole("alertdialog", { name: "Default portal" }),
+      ),
+    ).toBe(true);
     expect(portalRoot().querySelector('[role="alertdialog"]')).toBeNull();
   });
 
@@ -102,10 +104,10 @@ describe("promoted Scout controls", () => {
     trigger.focus();
     await user.keyboard("{Enter}");
     expect(
-      within(container).getByRole("alertdialog", {
-        name: "Delete this night?",
-      }),
-    ).toBeTruthy();
+      container.contains(
+        screen.getByRole("alertdialog", { name: "Delete this night?" }),
+      ),
+    ).toBe(true);
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     expect(document.activeElement).toBe(trigger);
   });
@@ -129,8 +131,8 @@ describe("promoted Scout controls", () => {
     trigger.focus();
     await user.keyboard("{Enter}");
     expect(
-      within(container).getByRole("dialog", { name: "Mobile roster" }),
-    ).toBeTruthy();
+      container.contains(screen.getByRole("dialog", { name: "Mobile roster" })),
+    ).toBe(true);
     await user.keyboard("{Escape}");
     expect(document.activeElement).toBe(trigger);
   });
@@ -198,15 +200,16 @@ describe("promoted Scout controls", () => {
       </ScoutThemeProvider>,
     );
 
-    expect(screen.getByText("JP")).toBeTruthy();
+    expect(screen.getByText("JP").textContent).toBe("JP");
     expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe(
       "70",
     );
-    expect(screen.getByText("Bench player")).toBeTruthy();
+    expect(screen.getByText("Bench player").textContent).toBe("Bench player");
     fireEvent.focus(screen.getByRole("button", { name: "Roster help" }));
     const tooltip = await within(container).findByRole("tooltip");
     expect(tooltip.textContent).toBe("First ten ready players");
     await user.click(screen.getByRole("button", { name: "Create toast" }));
-    expect(await screen.findByText("Night created")).toBeTruthy();
+    const toastMessage = await screen.findByText("Night created");
+    expect(toastMessage.textContent).toBe("Night created");
   });
 });
