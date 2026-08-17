@@ -78,7 +78,7 @@ const SEARCHABLE_ZONES: Zone[] = [
   ...ALL_ZONES,
 ];
 
-function labelForValue(value: string): string {
+export function labelForValue(value: string): string {
   return makeZone(value).label;
 }
 

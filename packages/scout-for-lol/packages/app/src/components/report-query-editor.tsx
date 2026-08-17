@@ -29,6 +29,10 @@ export default function ReportQueryEditor(props: {
     };
   }, []);
 
+  // The wrapper is controlled through `value`, so it already owns the model
+  // text; this only re-runs the squiggles after a parent-driven edit. Writing
+  // the model here too would be a second, competing source of truth and would
+  // reset the whole document on every external update.
   useEffect(() => {
     const editor = editorRef.current;
     const monaco = monacoRef.current;
@@ -36,8 +40,7 @@ export default function ReportQueryEditor(props: {
       return;
     }
     const model = editor.getModel();
-    if (model !== null && model.getValue() !== props.value) {
-      model.setValue(props.value);
+    if (model !== null) {
       updateScoutQlDiagnostics(monaco, model);
     }
   }, [props.value]);
@@ -61,10 +64,6 @@ export default function ReportQueryEditor(props: {
     editorRef.current = editor;
     monacoRef.current = monaco;
     registerScoutQlLanguage(monaco);
-    const model = editor.getModel();
-    if (model !== null && model.getValue() !== props.value) {
-      model.setValue(props.value);
-    }
     refreshDiagnostics();
     const container = containerRef.current;
     if (container !== null) {
