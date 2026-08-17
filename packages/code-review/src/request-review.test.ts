@@ -64,7 +64,7 @@ describe("requestReviewAtHead", () => {
     const posted = stubGitHub([]);
     expect(
       await requestReviewAtHead({ ...request, provider: qodoProvider }),
-    ).toBe(true);
+    ).toBe("requested");
     expect(posted).toHaveLength(1);
     expect(posted[0]?.url).toBe(
       "https://api.github.com/repos/o/r/issues/2095/comments",
@@ -80,7 +80,7 @@ describe("requestReviewAtHead", () => {
     ]);
     expect(
       await requestReviewAtHead({ ...request, provider: qodoProvider }),
-    ).toBe(false);
+    ).toBe("already-requested");
     expect(posted).toHaveLength(0);
   });
 
@@ -93,7 +93,7 @@ describe("requestReviewAtHead", () => {
     ]);
     expect(
       await requestReviewAtHead({ ...request, provider: qodoProvider }),
-    ).toBe(false);
+    ).toBe("already-requested");
     expect(posted).toHaveLength(0);
   });
 
@@ -103,7 +103,7 @@ describe("requestReviewAtHead", () => {
     ]);
     expect(
       await requestReviewAtHead({ ...request, provider: qodoProvider }),
-    ).toBe(true);
+    ).toBe("requested");
     expect(posted).toHaveLength(1);
   });
 
@@ -111,7 +111,7 @@ describe("requestReviewAtHead", () => {
     const posted = stubGitHub([]);
     expect(
       await requestReviewAtHead({ ...request, provider: greptileProvider }),
-    ).toBe(false);
+    ).toBe("unsupported");
     expect(posted).toHaveLength(0);
   });
 

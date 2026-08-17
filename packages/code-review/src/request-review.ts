@@ -33,12 +33,26 @@ export function buildReviewRequestMarker(
 }
 
 /**
+ * What asking for a review came to.
+ *
+ * Three outcomes rather than a boolean, because "no comment was posted" covers
+ * two situations a reader has to tell apart: a provider that reviews on its own
+ * and is never asked, and a request that some run had already made. Logging
+ * both as the latter said a marker suppressed a request that was never
+ * attempted.
+ */
+export type ReviewRequestOutcome =
+  | "requested"
+  | "already-requested"
+  | "unsupported";
+
+/**
  * Ask `provider` to review `head`, unless it already has been asked.
  *
- * Returns whether a comment was posted. Errors propagate: a request that cannot
- * be posted must fail the caller loudly, because silently skipping it restores
- * exactly the behaviour this exists to remove — waiting out the full timeout
- * for a review nobody asked for.
+ * Errors propagate: a request that cannot be posted must fail the caller
+ * loudly, because silently skipping it restores exactly the behaviour this
+ * exists to remove — waiting out the full timeout for a review nobody asked
+ * for.
  */
 export async function requestReviewAtHead(input: {
   repo: string;
@@ -46,19 +60,19 @@ export async function requestReviewAtHead(input: {
   head: string;
   token: string;
   provider: ReviewProvider;
-}): Promise<boolean> {
+}): Promise<ReviewRequestOutcome> {
   const strategy = input.provider.requestReview;
-  if (strategy === null) return false;
+  if (strategy === null) return "unsupported";
 
   const marker = buildReviewRequestMarker(input.provider.id, input.head);
-  if (await hasComment(input, marker)) return false;
+  if (await hasComment(input, marker)) return "already-requested";
 
   await postJson(
     `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/comments`,
     { body: strategy.buildComment(marker) },
     input.token,
   );
-  return true;
+  return "requested";
 }
 
 /** Whether any comment on the PR already contains `marker`. */

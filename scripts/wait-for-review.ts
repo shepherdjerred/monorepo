@@ -495,7 +495,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
       // provider has already reviewed is never asked again; the marker makes a
       // repeat impossible even so.
       if (!requested && stateResult.reviewedCommit !== head) {
-        const posted = await requestReviewAtHead({
+        const outcome = await requestReviewAtHead({
           repo,
           number,
           head,
@@ -506,7 +506,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
         console.log(
           JSON.stringify({
             level: "info",
-            msg: posted ? "review-requested" : "review-request-already-present",
+            msg: `review-request-${outcome}`,
             component: "review-gate",
             provider: provider.id,
             repo,
