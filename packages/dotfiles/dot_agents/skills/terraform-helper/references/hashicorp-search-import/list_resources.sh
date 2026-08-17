@@ -40,7 +40,26 @@ if [ -n "$PROVIDER" ]; then
             '{($provider): (.provider_schemas[$key].list_resource_schemas // {} | keys | sort)}'
     fi
 else
-    # All providers
+    # All providers — detect short-name collisions before producing lossy keys.
+    # from_entries silently overwrites duplicate keys, so two providers with the
+    # same final path segment (e.g. hashicorp/foo and acme/foo) would otherwise
+    # drop one provider's resources without any error.
+    collisions=$(printf '%s\n' "$schema_json" | jq -r '
+        .provider_schemas
+        | keys
+        | map({source: ., short: (split("/")[-1])})
+        | group_by(.short)
+        | map(select(length > 1))
+        | map("\(.[0].short): " + (map(.source) | join(", ")))
+        | .[]
+    ')
+    if [ -n "$collisions" ]; then
+        echo "Multiple providers share the same short name; results would be lossy:" >&2
+        printf '%s\n' "$collisions" >&2
+        echo "Re-run with a specific fully-qualified provider argument instead." >&2
+        exit 1
+    fi
+
     printf '%s\n' "$schema_json" | jq -r '
         .provider_schemas
         | to_entries
