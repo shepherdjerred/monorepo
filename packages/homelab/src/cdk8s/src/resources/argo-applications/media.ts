@@ -20,6 +20,7 @@ export function createMediaApp(chart: Chart) {
       },
       syncPolicy: {
         automated: { enabled: true },
+        syncOptions: ["ServerSideApply=true"],
       },
     },
   });
