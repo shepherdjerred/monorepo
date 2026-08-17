@@ -1316,7 +1316,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9778@sha256:2e1ec2296c52b917217ae0ae8446cfded84d804544184339f052ffba2376e78b",
+      "value": "2.0.0-9802@sha256:d6f59c3369c4e0d316bf26438b905d6050333d82725f0cbf7773ec8980fbccd7",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
