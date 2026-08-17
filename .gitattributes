@@ -62,6 +62,12 @@ packages/tasknotes-core/bindings/csharp/**  linguist-generated=true whitespace=-
 *.otf     binary
 *.pdf     binary
 *.bin     binary
+*.dopus   binary
+# The voice wake models and their smoke WAV are SHA-256-pinned by
+# packages/streambot/assets/voice/wake-verifier.json — any normalization would
+# break the manifest the runtime validates against.
+*.onnx    binary
+*.wav     binary
 
 # --- Out-of-scope trees: preserve as-committed, never normalize ---
 # Both are read-only / frozen per CLAUDE.md. Place LAST so they override

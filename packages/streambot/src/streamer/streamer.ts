@@ -5,8 +5,8 @@ import {
   Streamer,
   Utils,
   createSeekablePlayer,
-  type MediaConnectionCloseInfo,
   type Player,
+  type ReceivedVoiceAudio,
 } from "@shepherdjerred/discord-video-stream";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
@@ -44,7 +44,6 @@ import {
   streamSegmentsTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 import {
-  createVoiceCloseTracker,
   EMPTY_VOICE_CLOSE_SOURCE,
   type VoiceCloseInfo,
   type VoiceCloseSource,
@@ -56,6 +55,8 @@ import type {
   StreamerLike,
   StreamObserverFactory,
 } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
+import { AssistantAudioOutput } from "@shepherdjerred/streambot/streamer/assistant-audio-output.ts";
+import { joinStreamerVoice } from "@shepherdjerred/streambot/streamer/join-voice.ts";
 const log = logger.child("streamer");
 /**
  * Owns the selfbot voice connection and ffmpeg streaming via `@shepherdjerred/discord-video-stream`
@@ -71,14 +72,15 @@ export class StreambotStreamer implements StreamerLike {
   private readonly streamer: Streamer;
   /** This userbot's account token (one per pool entry). */
   private readonly userToken: UserToken;
-  /** Only `config.stream.*` is read here; the discord token comes from {@link userToken}. */
-  private readonly config: Pick<Config, "stream">;
+  /** Only `config.stream.*` and `config.voice.*` are read here; the discord token comes from {@link userToken}. */
+  private readonly config: Pick<Config, "stream" | "voice">;
   /** Injectable clock (ms) so position tracking is deterministic in tests. */
   private readonly now: () => number;
   /** Injectable player factory (defaults to the fork's real one) so tests can supply a fake. */
   private readonly createPlayer: PlayerFactory;
   /** Injectable observer factory so startup and seek races are deterministic in tests. */
   private readonly createObserver: StreamObserverFactory;
+  private readonly joinStreamerVoice: typeof joinStreamerVoice;
   private player: Player | null = null;
   /** Last known playback offset (seconds), captured per segment so a HW→SW retry can resume there. */
   private lastPlaybackPositionSeconds = 0;
@@ -101,9 +103,12 @@ export class StreambotStreamer implements StreamerLike {
   private voiceCloseListener: ((info: VoiceCloseInfo) => void) | null = null;
   /** Session-layer callback for mid-stream ffmpeg stalls; cleared between sessions. */
   private stallListener: ((info: StallInfo) => void) | null = null;
+  private voiceAudioListener: ((audio: ReceivedVoiceAudio) => void) | null =
+    null;
+  private readonly assistantOutput: AssistantAudioOutput;
   constructor(
     userToken: UserToken,
-    config: Pick<Config, "stream">,
+    config: Pick<Config, "stream" | "voice">,
     now: () => number = Date.now,
     dependencies: PlayerFactory | StreamerDependencies = {},
   ) {
@@ -118,8 +123,16 @@ export class StreambotStreamer implements StreamerLike {
       typeof dependencies === "function"
         ? createStreamObserver
         : (dependencies.createObserver ?? createStreamObserver);
+    this.joinStreamerVoice =
+      typeof dependencies === "function"
+        ? joinStreamerVoice
+        : (dependencies.joinStreamerVoice ?? joinStreamerVoice);
     this.client = new Client();
     this.streamer = new Streamer(this.client);
+    this.assistantOutput = new AssistantAudioOutput(
+      () => this.player,
+      () => this.streamer.voiceConnection,
+    );
     // Gateway health observability: a dropped/invalidated userbot gateway kills streaming
     // capability out from under the pool — surface it instead of nothing. (Voice-connection
     // deaths have their own recovery path; this covers the main gateway.)
@@ -188,10 +201,24 @@ export class StreambotStreamer implements StreamerLike {
   }
   /** Apply a volume percentage (0-200) to the live stream; false when nothing is playing. */
   async setVolume(percent: number): Promise<boolean> {
-    if (this.player === null) {
-      return false;
-    }
-    return this.player.setVolume(Math.max(0, percent) / 100);
+    return this.assistantOutput.setVolume(percent);
+  }
+  async setAssistantSpeaking(speaking: boolean): Promise<void> {
+    await this.assistantOutput.setSpeaking(speaking);
+  }
+  sendAssistantOpus(opus: Uint8Array): void {
+    this.assistantOutput.sendOpus(opus);
+  }
+  assistantUserId(): string {
+    return this.userId();
+  }
+  assistantDaveReady(): boolean {
+    return this.streamer.voiceConnection?.webRtcConn.daveReady ?? false;
+  }
+  setVoiceAudioListener(
+    listener: ((audio: ReceivedVoiceAudio) => void) | null,
+  ): void {
+    this.voiceAudioListener = listener;
   }
   /** Seek the live stream to an absolute offset (seconds); false when nothing is playing. */
   async seek(seconds: number): Promise<boolean> {
@@ -281,6 +308,8 @@ export class StreambotStreamer implements StreamerLike {
     this.segmentStartedAtMs = null;
     this.voiceCloseTracker?.release();
     this.voiceCloseTracker = null;
+    this.voiceAudioListener = null;
+    this.assistantOutput.reset();
     try {
       this.streamer.stopStream();
     } catch (error) {
@@ -296,42 +325,14 @@ export class StreambotStreamer implements StreamerLike {
   readonly joinVoice = async (input: JoinVoiceInput): Promise<VoiceHandle> => {
     this.voiceCloseTracker?.release();
     this.voiceCloseTracker = null;
-    await this.streamer.joinVoice(input.guildId, input.channelId);
-    const connection = this.streamer.voiceConnection;
-    if (connection === undefined) {
-      throw new Error("voice connection missing after joinVoice resolved");
-    }
-    const activeConnection = connection;
-    // Surface Discord-side connection deaths (the fork emits `close` for non-resumable,
-    // remotely-initiated closes). VoiceConnection also relays its active Go-Live child's close,
-    // so this one observer covers either transport without a listener-installation race.
-    const voiceCloseListener = this.voiceCloseListener;
-    function detachCloseHandler(): void {
-      activeConnection.off("close", onClose);
-    }
-    const tracker = createVoiceCloseTracker(detachCloseHandler);
-    const onClose = (info: MediaConnectionCloseInfo) => {
-      const close: VoiceCloseInfo = {
-        code: info.code,
-        deliberate: info.deliberate,
-        atMs: this.now(),
-      };
-      // Once Discord has explicitly disconnected the streamer, a later transient close from the
-      // other media transport must not erase that classification. A late deliberate close may,
-      // however, replace the transient signal that started recovery.
-      if (!tracker.record(close)) {
-        return;
-      }
-      log.warn("Discord media connection closed", {
-        guildId: input.guildId,
-        channelId: input.channelId,
-        code: close.code,
-        deliberate: close.deliberate,
-      });
-      voiceCloseListener?.(close);
-    };
-    activeConnection.on("close", onClose);
-    this.voiceCloseTracker = tracker;
+    this.voiceCloseTracker = await this.joinStreamerVoice({
+      streamer: this.streamer,
+      input,
+      receiveAudio: this.config.voice.enabled,
+      now: this.now,
+      onClose: this.voiceCloseListener,
+      onAudio: this.voiceAudioListener,
+    });
     log.info("joined voice", {
       guildId: input.guildId,
       channelId: input.channelId,
@@ -540,10 +541,11 @@ export class StreambotStreamer implements StreamerLike {
     try {
       await player.start();
       playbackStarted = true;
+      this.assistantOutput.setDesiredVolume(input.volume);
       // Start the public elapsed clock only after playback attaches successfully.
       this.segmentStartedAtMs = this.now();
       try {
-        await player.setVolume(Math.max(0, input.volume) / 100);
+        await this.assistantOutput.apply();
       } catch (error) {
         log.warn("initial setVolume failed", { error: getErrorMessage(error) });
       }

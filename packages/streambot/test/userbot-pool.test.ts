@@ -11,7 +11,7 @@ import {
   type GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 
-const STREAM_CONFIG: Pick<Config, "stream"> = {
+const STREAM_CONFIG: Pick<Config, "stream" | "voice"> = {
   stream: {
     width: 1280,
     height: 720,
@@ -22,6 +22,14 @@ const STREAM_CONFIG: Pick<Config, "stream"> = {
     vaapiDevice: "/dev/dri/renderD128",
     readrate: 1,
     readrateInitialBurst: 2.5,
+  },
+  voice: {
+    enabled: false,
+    assetsDir: "/opt/streambot/voice",
+    runtime: "auto",
+    preRollMs: 1200,
+    maxUtteranceMs: 15_000,
+    transactionTimeoutMs: 30_000,
   },
 };
 
@@ -40,6 +48,15 @@ function fakeStreamer(guilds: GuildId[], onLogin?: () => Promise<void>) {
     runStream: () => Promise.resolve(),
     leaveVoice: () => Promise.resolve(),
     setVolume: () => Promise.resolve(true),
+    setAssistantSpeaking: () => Promise.resolve(),
+    sendAssistantOpus: () => {
+      /* voice is disabled in this fake */
+    },
+    assistantUserId: () => "200000000000000000",
+    assistantDaveReady: () => false,
+    setVoiceAudioListener: () => {
+      /* voice is disabled in this fake */
+    },
     seek: () => Promise.resolve(true),
     getPosition: () => null,
     lastVoiceCloseInfo: () => null,

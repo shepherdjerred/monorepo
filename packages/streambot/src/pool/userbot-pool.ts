@@ -27,7 +27,7 @@ export type UserbotProvider = {
 /** Factory for pooled streamers — injectable so tests can supply fakes without a live gateway. */
 export type StreamerFactory = (
   token: UserToken,
-  config: Pick<Config, "stream">,
+  config: Pick<Config, "stream" | "voice">,
 ) => StreamerLike;
 
 /**
@@ -44,7 +44,7 @@ export class UserbotPool implements UserbotProvider {
 
   constructor(
     tokens: readonly UserToken[],
-    config: Pick<Config, "stream">,
+    config: Pick<Config, "stream" | "voice">,
     createStreamer: StreamerFactory = (token, cfg) =>
       new StreambotStreamer(token, cfg),
   ) {

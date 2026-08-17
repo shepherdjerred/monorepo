@@ -34,8 +34,15 @@ import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts"
 import type { PlaylistItem } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
+import {
+  PlaybackCommandBoundaryError,
+  PlaybackCommandService,
+  type PlaybackCommandResult,
+} from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 
 const SOURCES_TIMEOUT_MS = 15_000;
+
+type PlaybackCommandDenial = { outcome: "denied"; message: string };
 const SUBTITLE_ENUMERATION_TIMEOUT_MS = 15_000;
 
 /**
@@ -124,9 +131,11 @@ export type CommandHandlerDeps = {
  */
 export class CommandHandler {
   private readonly deps: CommandHandlerDeps;
+  private readonly playback: PlaybackCommandService;
 
   constructor(deps: CommandHandlerDeps) {
     this.deps = deps;
+    this.playback = new PlaybackCommandService(deps);
   }
 
   async run(interaction: CommandInteraction): Promise<void> {
@@ -218,7 +227,7 @@ export class CommandHandler {
         await this.handleSources(interaction);
         return true;
       case "help":
-        await interaction.reply(helpText());
+        await interaction.reply(helpText(this.deps.config.voice.enabled));
         return true;
       default:
         return false;
@@ -244,27 +253,23 @@ export class CommandHandler {
   }
 
   private async handleSkip(interaction: CommandInteraction): Promise<void> {
-    if (
-      !canControlItem(
-        interaction.userId,
-        this.deps.view().current?.requesterId ?? null,
-        this.deps.config.discord.adminIds,
-      )
-    ) {
-      await interaction.reply("Only the requester or an admin can skip this.");
-      return;
-    }
-    this.deps.dispatch({ type: "SKIP" });
-    await interaction.reply("⏭️ Skipped.");
+    const result = this.runBoundary(() =>
+      this.playback.skip(interaction.userId),
+    );
+    await interaction.reply(
+      result.outcome === "skipped" ? "⏭️ Skipped." : result.message,
+    );
   }
 
   private async handleStop(interaction: CommandInteraction): Promise<void> {
-    if (!isAdmin(interaction.userId, this.deps.config.discord.adminIds)) {
-      await interaction.reply("Only an admin can stop playback.");
-      return;
-    }
-    this.deps.dispatch({ type: "STOP" });
-    await interaction.reply("⏹️ Stopped and cleared the queue.");
+    const result = this.runBoundary(() =>
+      this.playback.stop(interaction.userId),
+    );
+    await interaction.reply(
+      result.outcome === "stopped"
+        ? "⏹️ Stopped and cleared the queue."
+        : result.message,
+    );
   }
 
   private async handleRemove(interaction: CommandInteraction): Promise<void> {
@@ -308,9 +313,7 @@ export class CommandHandler {
   }
 
   private async handleShuffle(interaction: CommandInteraction): Promise<void> {
-    const count = this.deps.view().queue.length;
-    this.deps.dispatch({ type: "SHUFFLE" });
-    await interaction.reply(`🔀 Shuffled ${String(count)} item(s).`);
+    await interaction.reply(this.playback.shuffle().message);
   }
 
   private async handleLoop(interaction: CommandInteraction): Promise<void> {
@@ -321,48 +324,58 @@ export class CommandHandler {
       await interaction.reply("Invalid loop mode.");
       return;
     }
-    this.deps.dispatch({ type: "SET_LOOP", mode: parsed.data });
+    this.playback.setLoop(parsed.data);
     await interaction.reply(`🔁 Loop: **${parsed.data}**.`);
   }
 
   private async handleVolume(interaction: CommandInteraction): Promise<void> {
     const level = interaction.getIntegerRequired("level");
-    this.deps.dispatch({ type: "SET_VOLUME", volume: level });
-    const applied = await this.deps.setVolume(level);
+    const result = await this.playback.setVolume(level);
     await interaction.reply(
-      applied
-        ? `🔊 Volume → ${String(level)}%.`
-        : `Volume set to ${String(level)}% for the next video.`,
+      result.outcome === "volume-deferred"
+        ? `Volume set to ${String(level)}% for the next video.`
+        : `🔊 Volume → ${String(level)}%.`,
     );
   }
 
   private async handleSeek(interaction: CommandInteraction): Promise<void> {
-    const current = this.deps.view().current;
-    if (current === null) {
-      await interaction.reply("Nothing is playing.");
-      return;
-    }
-    if (
-      !canControlItem(
-        interaction.userId,
-        current.requesterId,
-        this.deps.config.discord.adminIds,
-      )
-    ) {
-      await interaction.reply("Only the requester or an admin can seek this.");
-      return;
-    }
     const seconds = parseTimecode(interaction.getStringRequired("position"));
     if (seconds === null) {
       await interaction.reply("Invalid timestamp. Try 90, 1:30, or 1:02:03.");
       return;
     }
-    const applied = await this.deps.seek(seconds);
-    await interaction.reply(
-      applied
-        ? `⏩ Seeked to ${formatTimecode(seconds)}.`
-        : "Nothing is playing.",
+    const result = await this.runBoundaryAsync(() =>
+      this.playback.seek(interaction.userId, seconds, false),
     );
+    await interaction.reply(
+      result.outcome === "seeked" ? `⏩ ${result.message}` : result.message,
+    );
+  }
+
+  private runBoundary(
+    operation: () => PlaybackCommandResult,
+  ): PlaybackCommandResult | PlaybackCommandDenial {
+    try {
+      return operation();
+    } catch (error) {
+      if (error instanceof PlaybackCommandBoundaryError) {
+        return { outcome: "denied", message: error.message };
+      }
+      throw error;
+    }
+  }
+
+  private async runBoundaryAsync(
+    operation: () => Promise<PlaybackCommandResult>,
+  ): Promise<PlaybackCommandResult | PlaybackCommandDenial> {
+    try {
+      return await operation();
+    } catch (error) {
+      if (error instanceof PlaybackCommandBoundaryError) {
+        return { outcome: "denied", message: error.message };
+      }
+      throw error;
+    }
   }
 
   private async handleChapter(interaction: CommandInteraction): Promise<void> {

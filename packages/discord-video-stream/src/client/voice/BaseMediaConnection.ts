@@ -16,6 +16,9 @@ import type {
 } from "./VoiceMessageTypes.js";
 import type { Streamer } from "../Streamer.js";
 
+// Davey's ambient const enum cannot be referenced by consumers using verbatimModuleSyntax.
+const DAVE_MEDIA_TYPE_AUDIO = 0;
+
 type VoiceConnectionStatus = {
   hasSession: boolean;
   hasToken: boolean;
@@ -59,7 +62,34 @@ export type MediaConnectionCloseInfo = {
 type MediaConnectionEvents = {
   select_protocol_ack: [];
   close: [MediaConnectionCloseInfo];
+  audio: [ReceivedVoiceAudio];
+  audio_error: [Error];
 };
+
+export type ReceivedVoiceAudio = {
+  userId: string;
+  ssrc: number;
+  opus: Uint8Array;
+};
+
+export type MediaConnectionOptions = {
+  receiveAudio?: boolean;
+};
+
+export function voiceAudioSdpDirection(receiveAudio: boolean): "sendrecv" | "inactive" {
+  return receiveAudio ? "sendrecv" : "inactive";
+}
+
+export function prepareReceivedOpus(options: {
+  payload: Uint8Array;
+  daveProtocolVersion: number;
+  daveReady: boolean;
+  decrypt?: (payload: Uint8Array) => Uint8Array;
+}): Uint8Array | null {
+  if (options.daveProtocolVersion === 0) return options.payload;
+  if (!options.daveReady || options.decrypt === undefined) return null;
+  return options.decrypt(options.payload);
+}
 
 /** The subset of the WebSocket surface the voice gateway uses — narrow so tests can inject a fake. */
 export type VoiceGatewaySocket = Pick<
@@ -92,6 +122,8 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
   private _daveProtocolVersion = 0;
   private _davePendingTransitions = new Map<number, number>();
   private _daveDowngraded = false;
+  private readonly _receiveAudio: boolean;
+  private readonly _audioUsersBySsrc = new Map<number, string>();
 
   private _logger = new Log("conn");
   private _loggerDave = new Log("conn:dave");
@@ -101,6 +133,7 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
     botId: string,
     channelId: string,
     callback: (conn: WebRtcConnWrapper) => void,
+    options: MediaConnectionOptions = {},
   ) {
     super();
     this._streamer = streamer;
@@ -115,6 +148,7 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
     this.channelId = channelId;
     this.botId = botId;
     this.ready = callback;
+    this._receiveAudio = options.receiveAudio ?? false;
     this._webRtcWrapper = new WebRtcConnWrapper(this);
   }
 
@@ -136,12 +170,17 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
     return this._streamer;
   }
 
+  public get receiveAudio(): boolean {
+    return this._receiveAudio;
+  }
+
   public abstract get daveChannelId(): string;
 
   stop(): void {
     this._closed = true;
     this._webRtcWrapper.close();
     this.ws?.close();
+    this._audioUsersBySsrc.clear();
   }
 
   /** Seam for tests to inject a fake websocket; production returns a real one. */
@@ -238,6 +277,9 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
   }
 
   handleReady(d: Message.Ready): void {
+    // A (re)connected voice session renegotiates SSRCs; mappings from the previous session are
+    // stale and repopulate from this session's SPEAKING frames.
+    this._audioUsersBySsrc.clear();
     // we hardcoded the STREAMS_SIMULCAST, which will always be array of 1
     const stream = d.streams[0];
     if (stream === undefined) throw new Error("Voice READY had no stream");
@@ -282,7 +324,7 @@ a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extension
 a=setup:passive
 a=mid:0
 a=maxptime:60
-a=inactive
+a=${voiceAudioSdpDirection(this._receiveAudio)}
 ${iceUsername}
 ${icePassword}
 ${fingerprint}
@@ -428,7 +470,7 @@ a=ice-lite
         // session description
         this.handleProtocolAck(d);
       } else if (op === VoiceOpCodes.SPEAKING) {
-        // ignore speaking updates
+        this.handleSpeakingUpdate(d);
       } else if (op === VoiceOpCodes.HEARTBEAT_ACK) {
         // ignore heartbeat acknowledgements
       } else if (op === VoiceOpCodes.RESUMED) {
@@ -439,6 +481,7 @@ a=ice-lite
         });
       } else if (op === VoiceOpCodes.CLIENT_DISCONNECT) {
         this._connectedUsers.delete(d.user_id);
+        this.handleClientDisconnect(d.user_id);
       } else if (op === VoiceOpCodes.DAVE_PREPARE_TRANSITION) {
         this._loggerDave.debug("Preparing for DAVE transition", d);
         this._davePendingTransitions.set(d.transition_id, d.protocol_version);
@@ -534,12 +577,67 @@ a=ice-lite
     }
   }
 
-  public get daveReady() {
-    return this._daveProtocolVersion && this._daveSession?.ready;
+  public get daveReady(): boolean {
+    return this._daveProtocolVersion > 0 && this._daveSession?.ready === true;
   }
 
   public get daveSession() {
     return this._daveSession;
+  }
+
+  public handleIncomingAudioPacket(packet: Uint8Array): void {
+    if (!this._receiveAudio) return;
+    try {
+      const parsed = parseRtpPacket(packet);
+      const userId = this._audioUsersBySsrc.get(parsed.ssrc);
+      if (userId === undefined || userId === this.botId) return;
+
+      const daveSession = this._daveSession;
+      const opus = prepareReceivedOpus({
+        payload: parsed.payload,
+        daveProtocolVersion: this._daveProtocolVersion,
+        daveReady: Boolean(this.daveReady),
+        ...(daveSession === undefined
+          ? {}
+          : {
+              decrypt: (payload: Uint8Array) =>
+                daveSession.decrypt(
+                  userId,
+                  DAVE_MEDIA_TYPE_AUDIO,
+                  Buffer.from(payload),
+                ),
+            }),
+      });
+      if (opus === null) return;
+      this.emit("audio", { userId, ssrc: parsed.ssrc, opus });
+    } catch (error) {
+      this.emit(
+        "audio_error",
+        error instanceof Error
+          ? error
+          : new Error("Voice audio receive processing failed"),
+      );
+    }
+  }
+
+  /** Voice-gateway speaker mapping, public so transports can be tested without a live socket. */
+  public handleSpeakingUpdate(update: Message.SpeakingUpdate): void {
+    if (!this._receiveAudio) return;
+    // A rejoining user speaks with a fresh SSRC and Discord recycles the old one, but not every
+    // departure emits CLIENT_DISCONNECT. A stale row would then attribute the recycled SSRC's
+    // audio — and the permissions derived from it downstream — to the wrong user.
+    for (const [ssrc, mappedUserId] of this._audioUsersBySsrc) {
+      if (mappedUserId === update.user_id && ssrc !== update.ssrc) {
+        this._audioUsersBySsrc.delete(ssrc);
+      }
+    }
+    this._audioUsersBySsrc.set(update.ssrc, update.user_id);
+  }
+
+  public handleClientDisconnect(userId: string): void {
+    for (const [ssrc, mappedUserId] of this._audioUsersBySsrc) {
+      if (mappedUserId === userId) this._audioUsersBySsrc.delete(ssrc);
+    }
   }
 
   setupHeartbeat(interval: number): void {
@@ -702,4 +800,53 @@ a=ice-lite
       ssrc: this._webRtcParams.audioSsrc,
     });
   }
+}
+
+export function parseRtpPacket(packet: Uint8Array): {
+  ssrc: number;
+  payload: Uint8Array;
+} {
+  const firstByte = packet[0];
+  if (
+    packet.byteLength < 12 ||
+    firstByte === undefined ||
+    (firstByte & 0xc0) !== 0x80
+  ) {
+    throw new Error("Invalid RTP packet");
+  }
+  const view = new DataView(packet.buffer, packet.byteOffset, packet.byteLength);
+  const csrcCount = firstByte & 0x0f;
+  let payloadOffset = 12 + csrcCount * 4;
+  if (payloadOffset > packet.byteLength) throw new Error("Invalid RTP CSRC list");
+
+  const hasExtension = (firstByte & 0x10) !== 0;
+  if (hasExtension) {
+    if (payloadOffset + 4 > packet.byteLength) {
+      throw new Error("Invalid RTP extension header");
+    }
+    const extensionWords = view.getUint16(payloadOffset + 2);
+    payloadOffset += 4 + extensionWords * 4;
+  }
+  if (payloadOffset > packet.byteLength) throw new Error("Invalid RTP payload offset");
+
+  let payloadEnd = packet.byteLength;
+  const hasPadding = (firstByte & 0x20) !== 0;
+  if (hasPadding) {
+    const paddingLength = packet[packet.byteLength - 1];
+    if (paddingLength === undefined || paddingLength === 0) {
+      throw new Error("Invalid RTP padding");
+    }
+    payloadEnd -= paddingLength;
+  }
+  if (payloadEnd < payloadOffset) throw new Error("Invalid RTP payload length");
+
+  return {
+    ssrc: view.getUint32(8),
+    // A view, not a copy: this runs per packet on the receive hot path, and most packets are
+    // dropped (unmapped SSRC, own bot) before the payload is ever read. The DAVE path copies the
+    // view into decrypt's input Buffer anyway; on the passthrough path the emitted opus therefore
+    // aliases the packet buffer, whose only other bytes are the RTP header — a consumer zeroing
+    // its opus erases exactly the voice payload, and each packet is a fresh buffer per message.
+    payload: packet.subarray(payloadOffset, payloadEnd),
+  };
 }

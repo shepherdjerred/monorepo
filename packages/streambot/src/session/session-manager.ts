@@ -6,10 +6,8 @@ import {
   createPosterFetcher,
   type PosterFetcher,
 } from "@shepherdjerred/streambot/metadata/tmdb.ts";
-import {
-  createPlaybackMachine,
-  type PlaybackActors,
-} from "@shepherdjerred/streambot/machine/playback-machine.ts";
+import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
+import { buildPlaybackActors } from "@shepherdjerred/streambot/session/playback-actors.ts";
 import type {
   ResolvedSource,
   ResolveSourceInput,
@@ -27,7 +25,6 @@ import {
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 import type { UserbotProvider } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import {
-  deleteState,
   listPersistedStateFiles,
   saveState,
   stateFilePath,
@@ -58,6 +55,14 @@ import type {
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
+import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
+import type { SpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
+import { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
+import { createSessionVoiceAssistant } from "@shepherdjerred/streambot/session/voice-session-factory.ts";
+import { destroySession } from "@shepherdjerred/streambot/session/destroy-session.ts";
+import { deleteSessionStateAfterFlush } from "@shepherdjerred/streambot/session/delete-session-state.ts";
 
 const log = logger.child("session-manager");
 
@@ -76,6 +81,14 @@ export type SessionManagerDeps = {
   ) => Promise<void>;
   /** Discord effects for the player card, plus its message → session routing table. */
   readonly cards: PlayerCardPort;
+  readonly library?: () => readonly LibraryEntry[];
+  readonly resolvePlaySource?: (
+    source: Source,
+    signal: AbortSignal,
+  ) => Promise<ResolvedSource>;
+  readonly voiceModels?: LocalVoiceModels | null;
+  /** Loaded at boot alongside the models; fatal when missing while voice is enabled. */
+  readonly voiceFeedbackClips?: SpokenFeedbackClips | null;
 };
 
 // Re-exported for existing consumers (command-bot) — the canonical home is session-types.ts.
@@ -263,19 +276,7 @@ export class SessionManager {
     const sessions = [...this.sessions.values()];
     this.sessions.clear();
     for (const session of sessions) {
-      session.entry.userbot.setVoiceCloseListener(null);
-      session.entry.userbot.setStallListener(null);
-      if (session.checkpointTimer !== null) {
-        clearInterval(session.checkpointTimer);
-        session.checkpointTimer = null;
-      }
-      // Await the final card edit: a shutdown calls process.exit() right after, which would
-      // otherwise cut the REST call off and leave live buttons on a dead session.
-      await session.card.finalize();
-      // Persist final position BEFORE stopping — getPosition() goes null once the stream stops.
-      await this.saveSnapshot(session);
-      session.unsubscribe();
-      session.actor.stop();
+      await destroySession(session, (active) => this.saveSnapshot(active));
     }
   }
 
@@ -293,6 +294,16 @@ export class SessionManager {
       log.info("streamer detach notification with no active session", params);
       return;
     }
+    this.beginVoiceRecovery(session);
+  }
+
+  /**
+   * Abort the in-flight assistant turn first: one that outlives the reconnect delay keeps its
+   * teardown hold, so the dead session stays in `sessions` and the recovery timer mistakes it for
+   * a live replacement and skips the reconnect entirely.
+   */
+  private beginVoiceRecovery(session: Session): void {
+    session.voiceAssistant?.abortActiveTransaction("voice connection lost");
     void this.voiceRecovery.beginRecovery(session);
   }
 
@@ -313,12 +324,11 @@ export class SessionManager {
 
   private spawn(params: SpawnParams): Session {
     const { entry } = params;
-    const actors: PlaybackActors = {
-      joinVoice: entry.userbot.joinVoice,
+    const actors = buildPlaybackActors({
+      entry,
       resolveSource: this.deps.resolveSource,
-      runStream: entry.userbot.runStream,
-      leaveVoice: entry.userbot.leaveVoice,
-    };
+      teardownHold: () => session.teardownHold,
+    });
     const actor = createActor(createPlaybackMachine(actors), {
       input: params.input,
       inspect: createPlaybackInspector(
@@ -373,11 +383,16 @@ export class SessionManager {
       recoveredFromVoiceLoss: params.recoveredFromVoiceLoss ?? false,
       voiceRecoveryStarted: false,
       pendingSubtitleMenu: false,
+      voiceAssistant: null,
+      teardownHold: new TeardownHold(() => {
+        this.teardown(session);
+      }),
     };
+    session.voiceAssistant = createSessionVoiceAssistant(this.deps, session);
     // Trigger 1: the fork's voice ws `close` event (fires even when the main gateway never
     // reports the streamer leaving — the silent-to-EOF case).
     entry.userbot.setVoiceCloseListener(() => {
-      void this.voiceRecovery.beginRecovery(session);
+      this.beginVoiceRecovery(session);
     });
     // Stall watchdog: ffmpeg alive but producing nothing → the machine's bounded stall recovery
     // (retry at position, pipeline ladder). Without this the machine would sit in `streaming`
@@ -402,7 +417,7 @@ export class SessionManager {
       if (stateName !== "idle") {
         session.hasStarted = true;
       } else if (session.hasStarted && snapshot.context.queue.length === 0) {
-        this.teardown(session);
+        session.teardownHold.request();
       }
     });
     session.unsubscribe = () => {
@@ -442,6 +457,8 @@ export class SessionManager {
     session.actor.stop();
     session.entry.userbot.setVoiceCloseListener(null);
     session.entry.userbot.setStallListener(null);
+    session.voiceAssistant?.close();
+    session.entry.userbot.setVoiceAudioListener(null);
     this.deps.pool.release(session.entry);
     // A preserved file only makes sense for an error-driven end; a natural finish (lastError
     // null) has nothing to resume even mid-recovery, so it cleans up as usual.
@@ -453,8 +470,8 @@ export class SessionManager {
         lastError,
       });
     } else {
-      // Delete resume state only AFTER any in-flight checkpoint settles (see deleteStateAfterFlush).
-      void this.deleteStateAfterFlush(session);
+      // Delete resume state only AFTER any in-flight checkpoint settles (see deleteSessionStateAfterFlush).
+      void deleteSessionStateAfterFlush(this.deps.config.state.dir, session);
     }
     queueLength.set(this.totalQueueLength());
     if (this.sessions.size === 0) {
@@ -474,27 +491,6 @@ export class SessionManager {
     ) {
       this.voiceRecovery.rearmAfterFailedRecovery(session);
     }
-  }
-
-  /**
-   * Drain any in-flight checkpoint, then delete the session's resume-state file. A checkpoint that
-   * started before teardown could otherwise complete its write AFTER the delete, re-creating a stale
-   * file that would wrongly resume the just-finished item on the next boot. `session.torndown` blocks
-   * writes still queued on the tail; awaiting the tail drains the one that may already be mid-write.
-   */
-  private async deleteStateAfterFlush(session: Session): Promise<void> {
-    try {
-      await session.snapshotTail;
-    } catch {
-      // Checkpoint write failures are already logged in writeSnapshot; delete regardless.
-    }
-    await deleteState(
-      stateFilePath(
-        this.deps.config.state.dir,
-        session.guildId,
-        session.voiceChannelId,
-      ),
-    );
   }
 
   /** Pool-wide queue length across all active sessions (for the global queue-length gauge). */

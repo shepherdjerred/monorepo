@@ -27,11 +27,35 @@ function num(value: string | undefined): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+function str(value: string | undefined): string | undefined {
+  // An explicitly-empty environment variable means "unset", not "the empty
+  // string". Several schema fields are `.min(1)`, so passing "" through fails
+  // validation and crashes startup — including on deployments that never turn
+  // the corresponding feature on. A `.default()` does not rescue it either,
+  // since defaults only apply to undefined.
+  return value === undefined || value === "" ? undefined : value;
+}
+
 function bool(value: string | undefined): boolean | undefined {
   if (value === undefined) {
     return undefined;
   }
   return value.toLowerCase() === "true";
+}
+
+/**
+ * Strict variant for the production voice kill switch: a misspelled or oddly-formatted value
+ * ("tru", "1", " true") must fail startup loudly, not silently disable the only rollout and
+ * rollback control.
+ */
+function strictBool(
+  name: string,
+  value: string | undefined,
+): boolean | undefined {
+  if (value === undefined || value === "") return undefined;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  throw new Error(`${name} must be exactly "true" or "false", got: ${value}`);
 }
 
 /**
@@ -63,6 +87,18 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       vaapiDevice: env["VAAPI_DEVICE"],
       readrate: num(env["STREAM_READRATE"]),
       readrateInitialBurst: num(env["STREAM_READRATE_INITIAL_BURST"]),
+    },
+    voice: {
+      enabled: strictBool(
+        "VOICE_ASSISTANT_ENABLED",
+        env["VOICE_ASSISTANT_ENABLED"],
+      ),
+      openAiApiKey: str(env["OPENAI_API_KEY"]),
+      assetsDir: str(env["VOICE_ASSETS_DIR"]),
+      runtime: env["VOICE_KWS_RUNTIME"],
+      preRollMs: num(env["VOICE_PRE_ROLL_MS"]),
+      maxUtteranceMs: num(env["VOICE_MAX_UTTERANCE_MS"]),
+      transactionTimeoutMs: num(env["VOICE_TRANSACTION_TIMEOUT_MS"]),
     },
     subtitles: {
       enabled: bool(env["SUBTITLES_ENABLED"]),

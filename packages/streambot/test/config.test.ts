@@ -32,6 +32,14 @@ describe("loadConfig", () => {
     expect(config.stream.vaapiDevice).toBe("/dev/dri/renderD128");
     expect(config.idleTimeoutSeconds).toBe(300);
     expect(config.ytDlpPath).toBe("/usr/local/bin/yt-dlp");
+    expect(config.voice).toEqual({
+      enabled: false,
+      assetsDir: "/opt/streambot/voice",
+      runtime: "auto",
+      preRollMs: 2000,
+      maxUtteranceMs: 15_000,
+      transactionTimeoutMs: 30_000,
+    });
   });
 
   test("throws when a required value is missing", () => {
@@ -110,5 +118,47 @@ describe("loadConfig", () => {
       delaySeconds: 2,
       maxAttempts: 5,
     });
+  });
+
+  test("requires a dedicated OpenAI key when voice is enabled", () => {
+    expect(() =>
+      loadConfig({ ...VALID, VOICE_ASSISTANT_ENABLED: "true" }),
+    ).toThrow("Invalid streambot configuration");
+    const config = loadConfig({
+      ...VALID,
+      VOICE_ASSISTANT_ENABLED: "true",
+      OPENAI_API_KEY: "project-key",
+    });
+    expect(config.voice.enabled).toBe(true);
+    expect(config.voice.openAiApiKey).toBe("project-key");
+  });
+});
+
+describe("empty environment variables", () => {
+  test("an explicitly-empty OPENAI_API_KEY is treated as unset", () => {
+    // `openAiApiKey` is `z.string().min(1).optional()`, so passing "" straight
+    // through fails validation and crashes startup — on deployments that never
+    // enable voice at all, which is what makes it a real foot-gun.
+    const config = loadConfig({ ...VALID, OPENAI_API_KEY: "" });
+
+    expect(config.voice.openAiApiKey).toBeUndefined();
+    expect(config.voice.enabled).toBe(false);
+  });
+
+  test("an explicitly-empty VOICE_ASSETS_DIR falls back to the default", () => {
+    // `.default()` only applies to undefined, so "" would reach `.min(1)` and
+    // throw rather than yielding the default.
+    const config = loadConfig({ ...VALID, VOICE_ASSETS_DIR: "" });
+
+    expect(config.voice.assetsDir).toBe("/opt/streambot/voice");
+  });
+
+  test("a real OPENAI_API_KEY still comes through", () => {
+    const config = loadConfig({
+      ...VALID,
+      OPENAI_API_KEY: "sk-not-a-real-key",
+    });
+
+    expect(config.voice.openAiApiKey).toBe("sk-not-a-real-key");
   });
 });

@@ -33,7 +33,7 @@ function uid(value: string): UserId {
   return UserIdSchema.parse(value);
 }
 
-function makeConfig(adminIds: string[]) {
+function makeConfig(adminIds: string[], voiceEnabled = false) {
   return loadConfig({
     BOT_TOKEN: "bot-token",
     TOKEN: "user-token",
@@ -42,6 +42,12 @@ function makeConfig(adminIds: string[]) {
     VIDEO_CHANNEL_ID: CHANNEL,
     ADMIN_IDS: adminIds.join(","),
     VIDEOS_DIR: "/tmp/videos",
+    ...(voiceEnabled
+      ? {
+          VOICE_ASSISTANT_ENABLED: "true",
+          OPENAI_API_KEY: "test-openai-key",
+        }
+      : {}),
   });
 }
 
@@ -78,6 +84,7 @@ function makeHandler(over: {
   resolvePlayError?: Error;
   subtitleCandidates?: SubtitleCandidate[];
   subtitleMenuAlreadyPending?: boolean;
+  voiceEnabled?: boolean;
   /**
    * Stable identity of the currently-playing source, as `currentSourceId()` reports it. Defaults to
    * `"file:/current"` when `view.current` is set, else `null`. Pass an array to make consecutive
@@ -100,7 +107,7 @@ function makeHandler(over: {
         : [over.currentSourceId];
   let sourceIdReadIndex = 0;
   const deps: CommandHandlerDeps = {
-    config: makeConfig(over.adminIds ?? []),
+    config: makeConfig(over.adminIds ?? [], over.voiceEnabled),
     dispatch: (event) => events.push(event),
     view: () => over.view ?? EMPTY_VIEW,
     library: () => over.library ?? [],
@@ -1036,12 +1043,21 @@ describe("help", () => {
     expect(reply).toContain("/stream play");
     expect(reply).toContain("Supported sources");
     expect(reply).toContain("yt-dlp");
+    expect(reply).not.toContain("Voice commands");
     // Discord rejects messages over 2000 chars.
     expect(reply.length).toBeLessThanOrEqual(2000);
   });
 
+  test("advertises voice commands only when the feature is enabled", async () => {
+    const h = makeHandler({ voiceEnabled: true });
+    const fake = fakeInteraction({ sub: "help" });
+    await h.handler.run(fake.interaction);
+    expect(fake.replies[0]).toContain("Voice commands");
+    expect(fake.replies[0]).toContain("Hey Streambot");
+  });
+
   test("lists every registered subcommand (drift guard)", () => {
-    const text = helpText();
+    const text = helpText(false);
     const options = commandJson[0]?.options ?? [];
     expect(options.length).toBeGreaterThan(0);
     for (const option of options) {

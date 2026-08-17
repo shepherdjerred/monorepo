@@ -4,6 +4,7 @@ import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as common from "@grafana/grafana-foundation-sdk/common";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
+import { addVoiceAssistantPanels } from "./streambot-voice-panels.ts";
 
 /**
  * Grafana dashboard for streambot (the Discord media streamer).
@@ -416,6 +417,9 @@ export function createStreambotDashboard() {
       .fillOpacity(10)
       .gridPos({ x: 0, y: 51, w: 24, h: 6 }),
   );
+
+  // Row 6 — Voice assistant (no user, transcript, or media-query labels)
+  addVoiceAssistantPanels(builder);
 
   return builder.build();
 }

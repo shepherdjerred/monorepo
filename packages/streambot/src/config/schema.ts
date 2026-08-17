@@ -4,6 +4,33 @@ import {
   UserIdSchema,
   UserTokenSchema,
 } from "@shepherdjerred/streambot/types/ids.ts";
+import { VOICE_WAKE_WINDOW_MS } from "@shepherdjerred/streambot/voice/constants.ts";
+
+/** Local wake-word activation plus a one-shot, server-side OpenAI Realtime command turn. */
+export const VoiceConfigSchema = z
+  .strictObject({
+    enabled: z.boolean().default(false),
+    openAiApiKey: z.string().min(1).optional(),
+    assetsDir: z.string().min(1).default("/opt/streambot/voice"),
+    runtime: z.enum(["auto", "native", "wasm"]).default("auto"),
+    preRollMs: z.number().int().min(0).max(3000).default(VOICE_WAKE_WINDOW_MS),
+    maxUtteranceMs: z.number().int().positive().max(15_000).default(15_000),
+    transactionTimeoutMs: z
+      .number()
+      .int()
+      .positive()
+      .max(30_000)
+      .default(30_000),
+  })
+  .superRefine((voice, context) => {
+    if (voice.enabled && voice.openAiApiKey === undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["openAiApiKey"],
+        message: "OPENAI_API_KEY is required when voice is enabled",
+      });
+    }
+  });
 
 /**
  * Runtime configuration. Parsed once at boot from the process environment and never read
@@ -69,6 +96,14 @@ export const ConfigSchema = z.strictObject({
      * the unbounded buffer growth / GC pauses that `readrate: 1` was introduced to fix.
      */
     readrateInitialBurst: z.number().positive().default(2.5),
+  }),
+  voice: VoiceConfigSchema.default({
+    enabled: false,
+    assetsDir: "/opt/streambot/voice",
+    runtime: "auto",
+    preRollMs: VOICE_WAKE_WINDOW_MS,
+    maxUtteranceMs: 15_000,
+    transactionTimeoutMs: 30_000,
   }),
   subtitles: z.strictObject({
     /** Burn in subtitles by default when a track is found (per-request `subtitles:off` overrides). */

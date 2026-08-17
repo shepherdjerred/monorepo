@@ -29,6 +29,95 @@ command bot plus a **pool of streamer userbots**:
   (`idle → joining → resolving → streaming → … → waiting → leaving`, plus `failed`/retry). All I/O
   lives in invoked actors; the machine itself is pure and unit-tested. One actor per active session.
 
+## Hybrid voice assistant
+
+When `VOICE_ASSISTANT_ENABLED=true`, each active playback session also owns one isolated voice
+assistant (`src/voice/`). The normal Discord voice connection receives DAVE-decrypted, identified
+speaker Opus; Go Live remains the separate movie transport. Permissive sherpa phrase/fragment
+matches provisionally lock one speaker, then a phrase-specific in-process ONNX verifier decides
+from the two-second rolling window. That window is an **alignment contract**, not a buffer size:
+the verifier scores the last two seconds it is handed and was trained with the phrase end-aligned
+(+/-200 ms jitter), so the wake phrase must finish near the window's end. It is therefore anchored
+to sherpa's per-token `timestamps` plus a per-fragment tail (`VOICE_FRAGMENT_TAIL_MS`), never to a
+fixed delay after sherpa's emission — the decoder reports a match a variable ~280 ms after the
+audio it matched, and the six declared fragments end at very different points in the phrase
+(`HEY` leaves most of "streambot" unsaid; `STREAMBOT` and `BOT` end with it). Closing the window a
+constant time after emission put every real wake at the classifier's 0.002 floor and produced 0/11
+live recall while end-aligned offline evaluation read 94%. A runtime reporting no timestamp falls
+back to a fixed delay set to the measured zero-false-accept point, so the failure direction is
+"no wake" rather than unbounded cloud calls. Silero starts at the candidate boundary. Only after both local
+layers pass does a fresh official Realtime SDK WebSocket commit audio to unprompted English
+`gpt-transcribe`. A rejected leading wake prefix closes silently. An accepted prefix deletes the
+audio conversation item, inserts command-only text, and permits one `gpt-realtime-2.1`/`marin`
+response with at most one typed playback mutation.
+
+The native sherpa addon is preferred and image-smoked under Bun/Linux; bundled in-process WASM is
+the fallback. Both runtimes must recognize the packaged official positive fixture, not merely load
+the model. KWS, mel, embedding, phrase-classifier, and Silero files live at
+`/opt/streambot/voice`, are pinned and checksum-verified in
+the Docker build, and must never be downloaded at runtime. Missing assets, a failed recognition
+smoke, or key configuration are fatal when voice is enabled. No audio or transcript is persisted,
+and voice metrics must never
+label user IDs, transcripts, or media queries. Tool calls derive the Discord user from the detected
+speaker and go through `commands/playback-command-service.ts`; do not accept identity or URLs from
+model arguments. Transient assistant ducking is a multiplier over the latest desired volume and
+must restore on success, failure, timeout, interruption, and teardown.
+
+For local tuning on macOS, `bun run voice:harness` replaces only the outer adapters: AVFoundation
+microphone PCM is encoded with `DiscordOpusEncoder` and enters the same decoder/KWS/VAD lifecycle,
+while a dry-run `VoiceCommandPort` records the typed operation instead of touching playback. The
+same `gpt-transcribe` hard gate and command-only `gpt-realtime-2.1` transaction run after both
+local layers; the ephemeral transcript is displayed only for diagnosis. Prepare the pinned
+assets once with `bun run voice:harness:prepare`; recordings, transcripts, and queries are never
+written to disk by default, and probe results are tuning evidence rather than a human acceptance
+holdout. The explicit `--save-recordings` diagnostic mode persists private raw-microphone and exact
+OpenAI-input WAVs under `.context`; it still never persists transcripts or tool queries.
+Replay saved samples offline with `bun run voice:harness:evaluate`. The command uses FFmpeg only to
+normalize each source, then enters the production Discord Opus encoder/decoder and complete local
+`VoiceAudioLifecycle` cascade; it never constructs Realtime or contacts OpenAI. Output
+distinguishes sherpa candidates from phrase-verifier passes. Use `--runtime both
+--require-perfect` for a blocking native/WASM comparison.
+
+Production ships with voice enabled (`VOICE_ASSISTANT_ENABLED=true` in the homelab chart); the
+flag is the single GitOps rollback knob and there is intentionally no guild allowlist. The merge
+bar is the deterministic suite plus the image's two-runtime recognition smoke; wake quality is
+measured (not gated) by the operator-run corpus evaluation, whose reports live in
+`voice-training/reports/`. A missed wake means repeating yourself; a local false accept costs one
+rate-limited transcription that the transcript gate rejects. The live e2e matrix and the
+three-speaker human holdout remain available as diagnostics, not merge gates; the
+`voice-training/` recipe is the improvement path when live quality warrants it. `.dopus` fixtures are versioned length-prefixed 20 ms Discord
+Opus packets; offline evaluation must enter `DiscordOpusDecoder` and `VoiceAudioLifecycle`, never a
+test-only recognizer path. The final image must not contain the corpus. Corpus evaluation is an
+operator-run acceptance measurement, not a build step — the image build's only voice gate is the
+two-runtime recognition smoke. Run the evaluation inside the built image (deployment UID and
+runtime environment) and commit the report to `voice-training/reports/`:
+
+```bash
+docker run --rm -u 1000:1000 -e HOME=/tmp -e VOICE_ASSETS_DIR=/opt/streambot/voice \
+  -v "$PWD/test/fixtures/voice-corpus:/app/packages/streambot/test/fixtures/voice-corpus:ro" \
+  -v "$PWD/voice-training/reports:/reports" \
+  <streambot-image> bun run voice:corpus:evaluate --report /reports/corpus-report-<date>.json
+```
+
+The phrase-verifier manifest is a startup contract: it must attest at least 20,000 positive
+utterances, 40,000 adversarial near-matches, 25 hours of general negative speech/noise, and no
+human holdout inclusion, and it must contain the SHA-256 of all three ONNX assets. Do not package
+the rejected prototype or weaken these minima to make a smoke pass. Per playback session, cloud
+verification allows a burst of two and five attempts per rolling minute; a transcript rejection
+adds a three-second cooldown. These bound bursts, not spend: the production ceiling lives on the
+OpenAI project token, so exhausting it is an expected recurring state. `quota-errors.ts` classifies
+OpenAI's documented spend refusals (`insufficient_quota`, `billing_hard_limit_reached`) apart from
+transient failures — a bare HTTP 429 is ordinary throttling and must not match — and the session
+then announces once with accurate wording, counts a `quota` transcript outcome, and holds the
+limiter in a bounded backoff so later wakes never open a connection. A refused request bills
+nothing, so the backoff self-heals at period rollover without operator action.
+Train from LiveKit commit `95448a7559c453fcd87645bd67b247ffb45f85b0` with
+`voice-training/streambot-cascade.yaml`, select the threshold only on the synthetic tuning split,
+then run `bun run voice:verifier:package --livekit-dir <checkout> --model-dir <run>
+--threshold <reviewed>`; packaging fails without the full ACAV100M general-negative feature asset.
+It also packages and hashes a generated positive smoke WAV, which both native and WASM image
+smokes must classify as accepted. See `voice-training/README.md` for the persistent-worker runbook.
+
 Resume: per-`(guild, channel)` state files `playback-state-<guildId>-<channelId>.json` (schema v2).
 On restart the session manager re-acquires a member-userbot per persisted session and resumes it.
 
@@ -70,6 +159,8 @@ stream files/URLs directly with ffmpeg instead of automating a browser.
 - `src/streamer/` — selfbot + `@dank074` stream driver.
 - `src/observability/` — `metrics.ts` (`prom-client` registry + `Bun.serve` `/metrics`),
   `stream-observer.ts` (maps the fork's `StreamObserver` callbacks → metrics/logs).
+- `src/voice/` — local sherpa models, speaker-locking audio lifecycle, bounded Realtime tools, and
+  per-session assistant ownership.
 - `src/util/` — structured logger, errors.
 - `test/` — `bun:test`; the machine is the most heavily tested surface.
 - `integration/` — real-ffmpeg integration tests (`bun run test:integration`); need real
@@ -213,6 +304,49 @@ export BOT_TOKEN=$(echo "$J" | jq -r '.fields[]|select((.label//.id)=="BOT_TOKEN
 export USER_TOKENS=$(echo "$J" | jq -r '.fields[]|select((.label//.id)=="TOKEN").value')
 VIDEOS_DIR=/tmp E2E_GUILD_ID=1337623164146155593 E2E_VIDEO_CHANNEL_ID=1337623164955398253 bun run e2e
 ```
+
+The hybrid assistant has a separate macOS operator harness: `bun run e2e:voice-assistant`. It
+requires voice enabled with the dedicated OpenAI key and extracted model assets, two Streambot
+`USER_TOKENS`, `E2E_GUILD_ID`, two comma-separated `E2E_VOICE_CHANNEL_IDS`, and two independent
+`E2E_VOICE_SPEAKER_TOKENS`. It sends selected canonical `.dopus` fixtures (or one optional
+`E2E_VOICE_RAW_FILE` human holdout) rather than synthesizing at runtime. It requires assistant DAVE
+readiness, filters replies by the session's userbot ID, decodes and validates them, checks exact
+metric deltas, exercises source restrictions/all tools/permissions/duck restoration/stop teardown,
+runs two same-guild sessions concurrently, and defaults to a 30-minute negative soak
+(`E2E_VOICE_NEGATIVE_SOAK_MINUTES`). It is manual and must pass twice consecutively.
+Run it separately with an intentionally invalid key and
+`E2E_VOICE_EXPECT_INVALID_CREDENTIALS=true` to prove a real Discord wake fails before
+transcription, reply audio, ducking, or tools while Go Live continues.
+
+Corpus generation is the only networked corpus command:
+
+```bash
+bun run voice:corpus:generate
+bun run voice:corpus:generate --refresh
+bun run voice:corpus:verify
+VOICE_ASSETS_DIR=/opt/streambot/voice bun run voice:corpus:evaluate
+bun run voice:human:evaluate --input-dir <repo>/.context/streambot-human-holdout \
+  --assets-dir /opt/streambot/voice
+bun run voice:harness:prepare
+bun run voice:harness --list-devices
+OPENAI_API_KEY=... bun run voice:harness --device <avfoundation-index>
+OPENAI_API_KEY=... bun run voice:harness --device <avfoundation-index> --save-recordings
+bun run voice:harness:evaluate \
+  --positive-dir ../../.context/streambot-voice-recordings \
+  --positive-pattern '^trial-' \
+  --negative-dir ../../.context/streambot-kws-negatives \
+  --runtime native
+```
+
+The probe is non-persistent by default. `--save-recordings` is an explicit debugging mode that
+writes both the pre-Opus microphone PCM and the exact post-Opus/post-lifecycle PCM committed to
+OpenAI as lossless 24 kHz mono WAV files under `.context/streambot-voice-recordings`, prints
+peak/RMS levels, and zeroes its in-memory copies after each trial. `--recordings-dir <path>`
+overrides that location and implies recording.
+
+The human input manifest has exactly three `speaker-1`…`speaker-3` groups, each with five
+`positive`, three `near-match`, and two `background` clips. Only aggregate results survive; the
+input directory is deleted after evaluation.
 
 `bun run e2e:voice-recovery` uses the same environment and dedicated server. It lets a short
 subtitled fixture reach natural EOF and verifies the machine advances to its idle-wait state without

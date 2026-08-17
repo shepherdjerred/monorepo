@@ -1,0 +1,62 @@
+# LiveKit livekit-wakeword training input for the Streambot phrase verifier.
+# Pinned upstream commit: 95448a7559c453fcd87645bd67b247ffb45f85b0
+# Run against a pinned checkout with the full ACAV100M feature setup; do not use
+# the formal synthetic or human holdouts as training inputs.
+model_name: hey_streambot_cascade
+target_phrases: ["hey streambot"]
+
+n_samples: 40000
+n_samples_val: 4000
+n_background_samples: 45000
+n_background_samples_val: 2000
+tts_batch_size: 80
+
+custom_negative_phrases:
+  - "streambot"
+  - "stream bot"
+  - "hey streamer"
+  - "hey dream bot"
+  - "hey steam bot"
+  - "hey screen bot"
+  - "hey street bot"
+  - "hey streetbot"
+  - "hey shrimp bot"
+  - "a stream bought"
+  - "the stream buffered"
+  - "test the stream"
+  - "start the stream"
+  - "stop the stream"
+  - "thanks for watching"
+  - "please stop the current video"
+
+noise_scales: [0.667, 0.8, 0.98]
+noise_scale_ws: [0.667, 0.8, 0.98]
+length_scales: [0.65, 0.8, 1.0, 1.2, 1.4]
+slerp_weights: [0.15, 0.3, 0.5, 0.7, 0.85]
+
+data_dir: /data
+output_dir: /output
+
+augmentation:
+  clip_duration: 2.0
+  batch_size: 32
+  rounds: 2
+  background_paths: [/data/backgrounds]
+  rir_paths: [/data/rirs]
+
+model:
+  model_type: conv_attention
+  model_size: medium
+
+steps: 100000
+learning_rate: 0.0001
+weight_decay: 0.01
+label_smoothing: 0.05
+max_negative_weight: 5000
+target_fp_per_hour: 0.02
+
+batch_n_per_class:
+  positive: 64
+  adversarial_negative: 128
+  ACAV100M_sample: 512
+  background_noise: 128

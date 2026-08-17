@@ -24,10 +24,11 @@ export type PaginatedPages = {
 };
 
 /**
- * The `/stream help` reference: a grouped command list plus a "Supported sources" note. Static (no
- * playback state). Must stay under Discord's 2000-char message limit.
+ * The `/stream help` reference: a grouped command list plus a "Supported sources" note. It has no
+ * playback state, but only advertises voice commands when the validated feature flag is enabled.
+ * Must stay under Discord's 2000-char message limit.
  */
-export function helpText(): string {
+export function helpText(voiceEnabled: boolean): string {
   return [
     "🎬 **Streambot** — `/stream` commands",
     "",
@@ -38,6 +39,14 @@ export function helpText(): string {
     "• `/stream stop` — stop & clear the queue _(admin)_",
     "• `/stream seek <pos>` — jump to a timestamp (`90`, `1:30`, `1:02:03`)",
     "",
+    ...(voiceEnabled
+      ? [
+          "**Voice commands**",
+          "• During playback, say **Hey Streambot**, then one command: play, skip, stop, seek, volume, loop, shuffle, remove, move, clear, chapters, subtitles off, search, queue, or now playing.",
+          "• Wake detection stays local; only that speaker's command is sent. Say “local” or “YouTube” to force a source; use titles, not URLs.",
+          "",
+        ]
+      : []),
     "**Queue**",
     "• `/stream queue` · `nowplaying` · `remove <index>` · `move <from> <to>`",
     "• `/stream clear` _(admin)_ · `shuffle` · `loop <off|track|queue>` · `volume <0-200>`",
