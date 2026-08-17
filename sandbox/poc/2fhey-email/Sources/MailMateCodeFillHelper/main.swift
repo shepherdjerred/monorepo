@@ -7,6 +7,7 @@ private enum HelperError: Error, CustomStringConvertible {
     case usage
     case invalidBodyEncoding
     case missingMessageID
+    case inputTooLarge(Int)
 
     var description: String {
         switch self {
@@ -16,8 +17,26 @@ private enum HelperError: Error, CustomStringConvertible {
             return "MailMate supplied a body that is not valid UTF-8"
         case .missingMessageID:
             return "MailMate did not provide MM_MESSAGE_ID"
+        case let .inputTooLarge(limit):
+            return "MailMate supplied a body larger than \(limit) bytes"
         }
     }
+}
+
+private let maximumInputBytes = 1_048_576
+
+// A verification-code mail is tiny, so reading an arbitrarily large body into memory only risks
+// spiking or killing the helper. Read in chunks and stop as soon as the cap is exceeded.
+private func readBoundedInput() throws -> Data {
+    let handle = FileHandle.standardInput
+    var input = Data()
+    while let chunk = try handle.read(upToCount: 65_536), !chunk.isEmpty {
+        input.append(chunk)
+        if input.count > maximumInputBytes {
+            throw HelperError.inputTooLarge(maximumInputBytes)
+        }
+    }
+    return input
 }
 
 private func run() throws {
@@ -31,7 +50,7 @@ private func run() throws {
     let messageID = environment["MM_MESSAGE_ID"]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     guard !messageID.isEmpty else { throw HelperError.missingMessageID }
 
-    let input = FileHandle.standardInput.readDataToEndOfFile()
+    let input = try readBoundedInput()
     guard let body = String(data: input, encoding: .utf8) else {
         throw HelperError.invalidBodyEncoding
     }
