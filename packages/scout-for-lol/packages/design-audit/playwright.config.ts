@@ -24,17 +24,15 @@ const browsers = isNightly
   ? (["chromium", "firefox", "webkit"] as const)
   : (["chromium"] as const);
 
-// `dev:design-audit` (scripts/dev-web.ts) hard-fails when required Scout
-// secrets are missing or still look like unresolved 1Password references
-// (`op://...`). CI injects fully-resolved secrets directly into the
-// container env via `buildkite-ci-secrets`, so the command can run as-is
-// there; a local developer's shell instead holds `op://` template values
-// from dev-web.env.tpl and needs `op run` to resolve them first, exactly
-// like the `dev:web` local-dev command does.
+// `dev:design-audit` (scripts/dev-web.ts) boots the real Scout backend, which
+// normally requires real DISCORD_TOKEN/DISCORD_CLIENT_SECRET/
+// JWT_SIGNING_SECRET/RIOT_API_KEY (and a live Discord login). The design
+// audit only exercises read-only UI routes via the dev-login session, so
+// SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true tells dev-web.ts to skip that
+// requirement entirely (see scripts/dev-web.ts) rather than needing either
+// real CI secrets or a local 1Password session just to smoke-test the UI.
 const devDesignAuditCommand =
-  env["CI"] === "true"
-    ? "bun --no-install run dev:design-audit"
-    : "op run --env-file=dev-web.env.tpl -- bun run dev:design-audit";
+  "SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true bun --no-install run dev:design-audit";
 
 const projects: Project[] = [];
 for (const browser of browsers) {
