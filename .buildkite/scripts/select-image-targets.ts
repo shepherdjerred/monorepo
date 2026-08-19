@@ -61,6 +61,9 @@ const GLOBAL_IMAGE_INPUTS = [
   // The image lane writes the digest handoff every downstream release step
   // reads, so a change to the producer must rebuild every target once.
   ".buildkite/scripts/buildkite-handoff.ts",
+  // Visibility is part of the image publication contract; changing the
+  // reconciliation helper must rebuild every target before downstream pulls.
+  ".buildkite/scripts/ghcr-package-visibility.ts",
   ".buildkite/scripts/ghcr-public-access.ts",
   ".buildkite/scripts/image-targets.ts",
   ".buildkite/scripts/migration-core.ts",

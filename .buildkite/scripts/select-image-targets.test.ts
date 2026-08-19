@@ -142,6 +142,7 @@ describe("selectImageTargets", () => {
       ".buildkite/scripts/bake-retry.ts",
       ".buildkite/scripts/buildkit-env.ts",
       ".buildkite/scripts/buildkite-handoff.ts",
+      ".buildkite/scripts/ghcr-package-visibility.ts",
       ".buildkite/scripts/ghcr-public-access.ts",
       ".buildkite/scripts/image-targets.ts",
       ".buildkite/scripts/migration-core.ts",
