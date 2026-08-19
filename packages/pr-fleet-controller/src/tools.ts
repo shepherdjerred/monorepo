@@ -373,7 +373,7 @@ export function createWorkerTools(
             recordProgress("lease.granted", { kind: "heavy" });
             const result = await environment.runLocalCommand({
               executable: resolveWorkerShell(),
-              args: ["-lc", input.command],
+              args: ["-c", input.command],
               cwd: worktree,
               timeoutMs: input.timeoutMs,
               signal,
