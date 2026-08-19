@@ -61,15 +61,37 @@ describe("independent merge-tree", () => {
     await git(seed, ["push", "origin", "main"]);
 
     await git(root, ["clone", origin, checkout]);
+    await git(checkout, ["fetch", "origin", "refs/heads/main"]);
+    const fetchHeadBefore = await git(checkout, ["rev-parse", "FETCH_HEAD"]);
     const result = await checkMergeConflicts(7, "main", headSha, checkout);
     expect(result.hasConflicts).toBe(true);
     expect(result.conflictingFiles).toContain("shared.txt");
     expect(result.upToDate).toBe(false);
     expect(result.headSha).toBe(headSha);
+    expect(await git(checkout, ["rev-parse", "FETCH_HEAD"])).toBe(
+      fetchHeadBefore,
+    );
+    expect(
+      await git(checkout, [
+        "for-each-ref",
+        "--format=%(refname)",
+        "refs/toolkit/pr-health",
+      ]),
+    ).toBe("");
 
     const staleHeadSha = await git(seed, ["rev-parse", "main"]);
     await expect(
       checkMergeConflicts(7, "main", staleHeadSha, checkout),
     ).rejects.toThrow("does not match GitHub head");
+    expect(await git(checkout, ["rev-parse", "FETCH_HEAD"])).toBe(
+      fetchHeadBefore,
+    );
+    expect(
+      await git(checkout, [
+        "for-each-ref",
+        "--format=%(refname)",
+        "refs/toolkit/pr-health",
+      ]),
+    ).toBe("");
   });
 });

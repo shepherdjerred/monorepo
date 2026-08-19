@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 export type MergeCheckResult = {
   readonly hasConflicts: boolean;
   readonly conflictingFiles: readonly string[];
@@ -10,6 +12,15 @@ type GitResult = {
   readonly exitCode: number;
   readonly stdout: string;
   readonly stderr: string;
+};
+
+type MergeCheckContext = {
+  readonly prNumber: number;
+  readonly baseBranch: string;
+  readonly headSha: string;
+  readonly baseRef: string;
+  readonly headRef: string;
+  readonly cwd: string;
 };
 
 async function runGit(
@@ -54,30 +65,46 @@ function conflictingFilesFromMergeTree(output: string): string[] {
     .filter((line) => line.length > 0);
 }
 
-export async function checkMergeConflicts(
-  prNumber: number,
-  baseBranch: string,
-  headSha: string,
-  cwd = process.cwd(),
+async function deleteTemporaryRefs(
+  refs: readonly string[],
+  cwd: string,
+): Promise<void> {
+  const deletions = await Promise.all(
+    refs.map(async (ref) => ({
+      ref,
+      result: await runGit(["update-ref", "-d", ref], cwd),
+    })),
+  );
+  for (const deletion of deletions) {
+    assertGitSuccess(
+      deletion.result,
+      `Failed to delete temporary ref ${deletion.ref}`,
+    );
+  }
+}
+
+async function checkMergeConflictsWithRefs(
+  context: MergeCheckContext,
 ): Promise<MergeCheckResult> {
-  const baseFetch = await runGit(
+  const { prNumber, baseBranch, headSha, baseRef, headRef, cwd } = context;
+  const fetch = await runGit(
     [
       "fetch",
+      "--atomic",
       "--no-tags",
+      "--no-write-fetch-head",
       "origin",
-      `+refs/heads/${baseBranch}:refs/remotes/origin/${baseBranch}`,
+      `+refs/heads/${baseBranch}:${baseRef}`,
+      `+refs/pull/${String(prNumber)}/head:${headRef}`,
     ],
     cwd,
   );
-  assertGitSuccess(baseFetch, `Failed to fetch origin/${baseBranch}`);
-
-  const headFetch = await runGit(
-    ["fetch", "--no-tags", "origin", `refs/pull/${String(prNumber)}/head`],
-    cwd,
+  assertGitSuccess(
+    fetch,
+    `Failed to fetch origin/${baseBranch} and PR #${String(prNumber)} head`,
   );
-  assertGitSuccess(headFetch, `Failed to fetch PR #${String(prNumber)} head`);
 
-  const fetchedHead = await runGit(["rev-parse", "FETCH_HEAD"], cwd);
+  const fetchedHead = await runGit(["rev-parse", `${headRef}^{commit}`], cwd);
   assertGitSuccess(
     fetchedHead,
     `Failed to resolve fetched PR #${String(prNumber)} head`,
@@ -89,20 +116,8 @@ export async function checkMergeConflicts(
     );
   }
 
-  const headObject = await runGit(
-    ["cat-file", "-e", `${headSha}^{commit}`],
-    cwd,
-  );
-  assertGitSuccess(headObject, `PR head ${headSha} is unavailable locally`);
-
   const mergeTree = await runGit(
-    [
-      "merge-tree",
-      "--write-tree",
-      "--name-only",
-      `origin/${baseBranch}`,
-      headSha,
-    ],
+    ["merge-tree", "--write-tree", "--name-only", baseRef, headRef],
     cwd,
   );
   if (mergeTree.exitCode !== 0 && mergeTree.exitCode !== 1) {
@@ -110,7 +125,7 @@ export async function checkMergeConflicts(
   }
 
   const ancestor = await runGit(
-    ["merge-base", "--is-ancestor", `origin/${baseBranch}`, headSha],
+    ["merge-base", "--is-ancestor", baseRef, headRef],
     cwd,
   );
   if (ancestor.exitCode !== 0 && ancestor.exitCode !== 1) {
@@ -127,4 +142,42 @@ export async function checkMergeConflicts(
     baseBranch,
     headSha,
   };
+}
+
+export async function checkMergeConflicts(
+  prNumber: number,
+  baseBranch: string,
+  headSha: string,
+  cwd = process.cwd(),
+): Promise<MergeCheckResult> {
+  const refNamespace = `refs/toolkit/pr-health/${randomUUID()}`;
+  const baseRef = `${refNamespace}/base`;
+  const headRef = `${refNamespace}/head`;
+  const temporaryRefs = [baseRef, headRef];
+
+  let result: MergeCheckResult;
+  try {
+    result = await checkMergeConflictsWithRefs({
+      prNumber,
+      baseBranch,
+      headSha,
+      baseRef,
+      headRef,
+      cwd,
+    });
+  } catch (error) {
+    try {
+      await deleteTemporaryRefs(temporaryRefs, cwd);
+    } catch (cleanupError) {
+      throw new AggregateError(
+        [error, cleanupError],
+        "Merge check and temporary ref cleanup both failed",
+        { cause: cleanupError },
+      );
+    }
+    throw error;
+  }
+
+  await deleteTemporaryRefs(temporaryRefs, cwd);
+  return result;
 }
