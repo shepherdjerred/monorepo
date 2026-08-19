@@ -3,6 +3,7 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   type BucksPoolParticipant,
+  type RiotTeamId,
 } from "@scout-for-lol/data";
 import type { InteractionEditReplyOptions } from "discord.js";
 import { parseBucksCustomId } from "#src/betting/custom-id.ts";
@@ -10,6 +11,7 @@ import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { placeBet, type PlaceBetResult } from "#src/betting/place-bet.ts";
 import { cancelBet, type CancelBetResult } from "#src/betting/cancel-bet.ts";
 import { announceBetPlacement } from "#src/betting/announce.ts";
+import { teamIdForSubjectOutcome, teamName } from "#src/betting/team.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -40,13 +42,11 @@ export type BetButtonInteraction = {
  * user input at a system boundary, so none of them are errors. */
 export function describeResult(
   result: PlaceBetResult,
-  subjectAlias: string,
-  betOnWin: boolean,
+  selectedTeamId: RiotTeamId,
 ): string {
   switch (result.kind) {
     case "placed": {
-      const side = betOnWin ? "WINS" : "LOSES";
-      return `✅ Bet placed: **${subjectAlias} ${side}** for **${result.totalStake.toString()} BB** total. Balance: **${result.balanceAfter.toString()} BB**. ${HOUSE_CUT_TERMS}`;
+      return `✅ Bet placed: **${teamName(selectedTeamId)} wins** for **${result.totalStake.toString()} BB** total. Balance: **${result.balanceAfter.toString()} BB**. ${HOUSE_CUT_TERMS}`;
     }
     case "window_closed":
       return "⏰ Betting has closed for this game.";
@@ -145,12 +145,10 @@ export async function handleBetButton(
   const subject = subjectFrom(roster, parsed.subjectIndex);
   if (subject?.puuid == null) {
     await interaction.editReply({
-      content: "🤔 That player isn't in this game any more.",
+      content: "🤔 That game's betting anchor isn't available any more.",
     });
     return;
   }
-
-  const alias = subject.trackedAlias ?? "that player";
 
   if (parsed.action === "x") {
     const cancelled = await cancelBet(
@@ -162,6 +160,7 @@ export async function handleBetButton(
   }
 
   const betOnWin = parsed.side === "W";
+  const selectedTeamId = teamIdForSubjectOutcome(subject.teamId, betOnWin);
   const result = await placeBet(
     {
       matchId: parsed.matchId,
@@ -175,7 +174,7 @@ export async function handleBetButton(
   );
 
   await interaction.editReply({
-    content: describeResult(result, alias, betOnWin),
+    content: describeResult(result, selectedTeamId),
   });
 
   if (result.kind === "placed") {
@@ -184,8 +183,7 @@ export async function handleBetButton(
         matchId: parsed.matchId,
         serverId,
         discordId,
-        subjectAlias: alias,
-        subjectWins: betOnWin,
+        teamId: selectedTeamId,
         stake: parsed.amount,
         totalStake: result.totalStake,
       },

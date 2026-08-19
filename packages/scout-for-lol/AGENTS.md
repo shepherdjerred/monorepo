@@ -901,8 +901,10 @@ remain full refunds with no cut.
   payout, cut, net payout, and net winnings so Discord copy never has to
   reconstruct the arithmetic from ledger rows.
 - **One pool per `(matchId, serverId)`; a bet stores a `predictedTeamId`.**
-  Every 5v5 outcome is one binary event, so with two tracked players on opposite
-  teams "A wins" _is_ "B loses". The UI still says "bet LOSE on Jerred".
+  Every 5v5 outcome is one binary event, so the prematch UI offers Blue and Red
+  exactly once each rather than repeating WIN/LOSE controls for every tracked
+  player. `/bb bet` also names the team directly; its tracked-player `game`
+  option identifies the open pool and does not define the wagered outcome.
 - **Settlement idempotency is the `poolState` column, not a marker table.**
   Unlike `MatchAiAttempt` — marked _before_ its call because OpenAI spend cannot
   join a transaction — every side effect here is local, so the transition
@@ -945,14 +947,17 @@ remain full refunds with no cut.
   and is left alone.
 - **A custom ID carries a key, never state.** Buttons encode a roster _index_
   into the pool's frozen snapshot, so they survive a restart and stay inside
-  Discord's 100-character cap. Parsing never throws — it is an unauthenticated
-  surface, and every field is re-validated against server state before a Buck
-  moves. But **not throwing is not the same as not answering**: `isBucksCustomId`
-  is only a prefix check, so once `routeButton` claims a `bb:` interaction it owes
-  Discord an acknowledgement within seconds or the clicker is shown "This
-  interaction failed". An ID that is claimed by namespace and then fails to parse
-  is closed out with a silent `deferUpdate()` and counted as `bb/malformed`, never
-  as `bb/success`.
+  Discord's 100-character cap. That participant is a display-only game anchor:
+  the visible Blue/Red choice is translated into the existing WIN/LOSE bit
+  relative to the anchor, while `predictedTeamId` remains the authoritative
+  wager. Parsing never throws — it is an unauthenticated surface, and every
+  field is re-validated against server state before a Buck moves. But **not
+  throwing is not the same as not answering**: `isBucksCustomId` is only a
+  prefix check, so once `routeButton` claims a `bb:` interaction it owes Discord
+  an acknowledgement within seconds or the clicker is shown "This interaction
+  failed". An ID that is claimed by namespace and then fails to parse is closed
+  out with a silent `deferUpdate()` and counted as `bb/malformed`, never as
+  `bb/success`.
 - **Near-even predictions stay internal.** The formula has no intercept, so a
   symmetric lobby returns exactly `0.500`; calls that display as 45–55% are
   omitted from prematch and settlement copy while remaining available for

@@ -7,6 +7,9 @@ import {
   BucksPoolRosterSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  type BucksPoolParticipant,
+  type LeaguePuuid,
+  type RiotTeamId,
 } from "@scout-for-lol/data/index.ts";
 import {
   getLedgerPage,
@@ -25,6 +28,12 @@ import {
 } from "#src/betting/constants.ts";
 import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { renderBucksHistory } from "#src/betting/navigation.ts";
+import {
+  BucksTeamChoiceSchema,
+  shortTeamName,
+  subjectWinsForTeam,
+  teamIdForChoice,
+} from "#src/betting/team.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
@@ -87,21 +96,21 @@ export const bbCommand = new SlashCommandBuilder()
   .addSubcommand((sub) =>
     sub
       .setName("bet")
-      .setDescription("Bet on a live game; 20% win and cancellation house cuts")
+      .setDescription("Bet on Blue or Red; 20% win and cancellation house cuts")
       .addStringOption((option) =>
         option
-          .setName("player")
-          .setDescription("The tracked player to bet on")
+          .setName("game")
+          .setDescription("A tracked player in the game")
           .setRequired(true),
       )
       .addStringOption((option) =>
         option
-          .setName("side")
-          .setDescription("Whether they win or lose")
+          .setName("team")
+          .setDescription("The team to win")
           .setRequired(true)
           .addChoices(
-            { name: "WIN", value: "win" },
-            { name: "LOSE", value: "lose" },
+            { name: "Blue", value: "blue" },
+            { name: "Red", value: "red" },
           ),
       )
       .addIntegerOption((option) =>
@@ -158,6 +167,61 @@ export function buildPersonalBucksEmbed(
   return embed;
 }
 
+type OpenBettingPool = {
+  matchId: string;
+  roster: string;
+};
+
+export type OpenGameAnchor = {
+  matchId: string;
+  subjectPuuid: LeaguePuuid;
+  subjectTeamId: RiotTeamId;
+};
+
+function parseRoster(raw: string): BucksPoolParticipant[] {
+  return BucksPoolRosterSchema.parse(JSON.parse(raw)).participants;
+}
+
+export function trackedGameLabels(
+  roster: readonly BucksPoolParticipant[],
+): string[] {
+  return roster.flatMap((participant) =>
+    participant.trackedAlias === undefined || participant.puuid === null
+      ? []
+      : [`${participant.trackedAlias} (${shortTeamName(participant.teamId)})`],
+  );
+}
+
+export function resolveOpenGameByAlias(
+  pools: readonly OpenBettingPool[],
+  requestedAlias: string,
+): OpenGameAnchor | undefined {
+  const normalizedAlias = requestedAlias.toLowerCase();
+  const matches: OpenGameAnchor[] = [];
+
+  for (const pool of pools) {
+    const subject = parseRoster(pool.roster).find(
+      (participant) =>
+        participant.puuid !== null &&
+        participant.trackedAlias?.toLowerCase() === normalizedAlias,
+    );
+    if (subject !== undefined && subject.puuid !== null) {
+      matches.push({
+        matchId: pool.matchId,
+        subjectPuuid: subject.puuid,
+        subjectTeamId: subject.teamId,
+      });
+    }
+  }
+
+  if (matches.length > 1) {
+    throw new Error(
+      `Tracked alias ${requestedAlias} matched ${matches.length.toString()} open Bryan Bucks pools`,
+    );
+  }
+  return matches[0];
+}
+
 async function replyBalance(
   interaction: ChatInputCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
@@ -200,7 +264,7 @@ export function buildBbRulesEmbed(): EmbedBuilder {
       {
         name: "Placing a bet",
         value:
-          `Stake **${MIN_STAKE.toString()}-${MAX_STAKE.toString()} BB** on a tracked player to WIN or LOSE. ` +
+          `Stake **${MIN_STAKE.toString()}-${MAX_STAKE.toString()} BB** on the Blue or Red Team in a tracked player's game. ` +
           `The market stays open for ${Math.floor(BETTING_WINDOW_MS / 60_000).toString()} minutes after Scout detects the game. ` +
           "You can add to a position or cancel it before the window closes for a 20% house cut, rounded to the nearest BB; after that, it is locked.",
       },
@@ -251,17 +315,17 @@ async function replyOpen(
     const closesAtUnix = Math.floor(pool.closesAt.getTime() / 1000);
     const bluePlayers =
       pool.blue.trackedPlayers.length > 0
-        ? pool.blue.trackedPlayers.join(", ")
+        ? pool.blue.trackedPlayers.map((alias) => `\`${alias}\``).join(", ")
         : "No tracked players";
     const redPlayers =
       pool.red.trackedPlayers.length > 0
-        ? pool.red.trackedPlayers.join(", ")
+        ? pool.red.trackedPlayers.map((alias) => `\`${alias}\``).join(", ")
         : "No tracked players";
     return [
       `## ${bluePlayers} vs ${redPlayers}`,
       `Closes <t:${closesAtUnix.toString()}:R>`,
-      `🔵 **Blue:** ${pool.blue.totalStake.toString()} BB across ${pool.blue.betCount.toString()} bet(s) — ${bluePlayers}`,
-      `🔴 **Red:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} bet(s) — ${redPlayers}`,
+      `🔵 **Blue Team:** ${pool.blue.totalStake.toString()} BB across ${pool.blue.betCount.toString()} bet(s) — game: ${bluePlayers}`,
+      `🔴 **Red Team:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} bet(s) — game: ${redPlayers}`,
     ].join("\n");
   });
   const chunks = splitMessageIntoChunks(
@@ -282,8 +346,10 @@ async function replyBet(
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
   discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
 ): Promise<void> {
-  const requestedAlias = interaction.options.getString("player", true);
-  const betOnWin = interaction.options.getString("side", true) === "win";
+  const requestedAlias = interaction.options.getString("game", true);
+  const selectedTeamId = teamIdForChoice(
+    BucksTeamChoiceSchema.parse(interaction.options.getString("team", true)),
+  );
   const stake = interaction.options.getInteger("amount", true);
 
   // Free text rather than autocomplete: matching an alias against the open
@@ -294,41 +360,26 @@ async function replyBet(
     select: { matchId: true, roster: true },
   });
 
-  for (const pool of pools) {
-    const roster = BucksPoolRosterSchema.parse(
-      JSON.parse(pool.roster),
-    ).participants;
-    const subject = roster.find(
-      (participant) =>
-        participant.trackedAlias?.toLowerCase() ===
-        requestedAlias.toLowerCase(),
-    );
-    if (subject?.puuid == null) {
-      continue;
-    }
-
+  const game = resolveOpenGameByAlias(pools, requestedAlias);
+  if (game !== undefined) {
+    const subjectWins = subjectWinsForTeam(game.subjectTeamId, selectedTeamId);
     const result = await placeBet({
-      matchId: pool.matchId,
+      matchId: game.matchId,
       serverId,
       discordId,
-      subjectPuuid: subject.puuid,
-      subjectWins: betOnWin,
+      subjectPuuid: game.subjectPuuid,
+      subjectWins,
       stake,
     });
     await interaction.editReply({
-      content: describeResult(
-        result,
-        subject.trackedAlias ?? requestedAlias,
-        betOnWin,
-      ),
+      content: describeResult(result, selectedTeamId),
     });
     if (result.kind === "placed") {
       await announceBetPlacement({
-        matchId: pool.matchId,
+        matchId: game.matchId,
         serverId,
         discordId,
-        subjectAlias: subject.trackedAlias ?? requestedAlias,
-        subjectWins: betOnWin,
+        teamId: selectedTeamId,
         stake,
         totalStake: result.totalStake,
       });
@@ -336,13 +387,9 @@ async function replyBet(
     return;
   }
 
-  const available = pools
-    .flatMap(
-      (pool) =>
-        BucksPoolRosterSchema.parse(JSON.parse(pool.roster)).participants,
-    )
-    .map((participant) => participant.trackedAlias)
-    .filter((alias) => alias !== undefined);
+  const available = pools.flatMap((pool) =>
+    trackedGameLabels(parseRoster(pool.roster)),
+  );
 
   await interaction.editReply({
     content:

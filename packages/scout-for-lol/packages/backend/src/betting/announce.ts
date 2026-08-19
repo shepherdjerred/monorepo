@@ -8,12 +8,14 @@ import {
   type BucksPrediction,
   type DiscordChannelId,
   type DiscordGuildId,
+  type RiotTeamId,
 } from "@scout-for-lol/data";
 import type { EarnedAward } from "#src/betting/earnings.ts";
 import { HOUSE_CUT_PLACEMENT_NOTE } from "#src/betting/house-cut.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPool } from "#src/betting/sweep.ts";
 import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
+import { teamName } from "#src/betting/team.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
@@ -81,13 +83,11 @@ export function predictionVerdict(
 
 export function formatBetPlacementAnnouncement(input: {
   discordId: string;
-  subjectAlias: string;
-  subjectWins: boolean;
+  teamId: RiotTeamId;
   stake: number;
   totalStake: number;
 }): string {
-  const side = input.subjectWins ? "WINS" : "LOSES";
-  return `🎲 <@${input.discordId}> staked **${input.stake.toString()} BB** on **${input.subjectAlias} ${side}** (position: **${input.totalStake.toString()} BB**). ${HOUSE_CUT_PLACEMENT_NOTE}`;
+  return `🎲 <@${input.discordId}> staked **${input.stake.toString()} BB** on **${teamName(input.teamId)} to win** (position: **${input.totalStake.toString()} BB**). ${HOUSE_CUT_PLACEMENT_NOTE}`;
 }
 
 /**
@@ -101,8 +101,7 @@ export async function announceBetPlacement(
     matchId: string;
     serverId: ReturnType<typeof DiscordGuildIdSchema.parse>;
     discordId: string;
-    subjectAlias: string;
-    subjectWins: boolean;
+    teamId: RiotTeamId;
     stake: number;
     totalStake: number;
   },

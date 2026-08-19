@@ -9,8 +9,10 @@ import { z } from "zod";
  *
  * **The ID carries a key, never state.** `subjectIndex` points into the pool's
  * own frozen roster rather than naming a player, so a button keeps working
- * across a bot restart with nothing held in memory. It also keeps the ID short:
- * a PUUID is 78 characters and Discord's cap is 100.
+ * across a bot restart with nothing held in memory. The visible controls name
+ * Blue and Red directly; `side` is the compatibility adapter that expresses
+ * that team choice relative to this anchor. It also keeps the ID short: a PUUID
+ * is 78 characters and Discord's cap is 100.
  *
  * **A malformed ID is never fatal.** This is an unauthenticated input surface —
  * anyone can craft a component interaction — so parsing returns a result rather
@@ -35,7 +37,7 @@ export const BucksCustomIdSchema = z.strictObject({
   matchId: z.string().min(1),
   /** Index into `BucksMatchPool.roster.participants`. */
   subjectIndex: z.number().int().min(0).max(9),
-  /** Whether the bettor is backing the subject to win or to lose. */
+  /** Whether the selected team matches the anchor's team. */
   side: BucksSideSchema,
   /** Stake in Bucks. Zero for a cancel, where it carries no meaning. */
   amount: z.number().int().min(0).max(1000),
