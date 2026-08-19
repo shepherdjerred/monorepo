@@ -96,7 +96,7 @@ export async function handleCustomRiotCallback(
             })
           : null;
       publishCustomSnapshot(mutation.snapshot);
-      if (voiceReturn !== null) await voiceReturn;
+      if (voiceReturn !== null) void voiceReturn;
     }
     return new Response(null, { status: 200 });
   } catch (error) {

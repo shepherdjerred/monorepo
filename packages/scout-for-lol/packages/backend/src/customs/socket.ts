@@ -105,9 +105,10 @@ export const customSocketHandlers: Bun.WebSocketHandler<CustomSocketData> = {
   close(socket) {
     removeCustomSocket(socket);
   },
-  message() {
+  message(socket) {
     // Commands travel through authenticated tRPC. The socket is deliberately
     // server-to-client only so one protocol cannot become a second mutation authority.
+    socket.close(1008, "Client messages unsupported");
   },
 };
 

@@ -84,14 +84,16 @@ function corsHeadersFor(request: Request): Record<string, string> {
     allowedOrigin !== undefined &&
     origin === allowedOrigin
   ) {
+    const isCustomsActivity = origin === customsOrigin;
     return {
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers":
-        origin === customsOrigin
-          ? "Content-Type, Authorization"
-          : "Content-Type, X-CSRF-Token",
-      "Access-Control-Allow-Credentials": "true",
+      "Access-Control-Allow-Headers": isCustomsActivity
+        ? "Content-Type, Authorization"
+        : "Content-Type, X-CSRF-Token",
+      ...(isCustomsActivity
+        ? {}
+        : { "Access-Control-Allow-Credentials": "true" }),
       Vary: "Origin",
     };
   }

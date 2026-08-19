@@ -19,9 +19,9 @@ const ACTIVITY_REFRESH_GRACE_SECONDS = 12 * 60 * 60;
 const logger = createLogger("customs-activity-auth");
 
 class CustomAuthHttpError extends Error {
-  readonly status: 401 | 403;
+  readonly status: 401 | 403 | 503;
 
-  constructor(status: 401 | 403, message: string) {
+  constructor(status: 401 | 403 | 503, message: string) {
     super(message);
     this.status = status;
   }
@@ -54,7 +54,10 @@ const RawDiscordActivityInstanceSchema = z.object({
 
 function customsConfiguration(): CustomsConfiguration {
   if (configuration.customs === undefined) {
-    throw new Error("Scout Customs is not configured");
+    throw new CustomAuthHttpError(
+      503,
+      "Scout Customs is unavailable in this environment",
+    );
   }
   return configuration.customs;
 }

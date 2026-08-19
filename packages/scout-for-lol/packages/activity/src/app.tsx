@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CustomNightSnapshot } from "@scout-for-lol/data";
 import { Skeleton } from "@scout-for-lol/design-system/components/skeleton";
 import { Toaster } from "@scout-for-lol/design-system/components/toaster";
 import { useEffect } from "react";
@@ -6,6 +7,7 @@ import { CustomsDashboard } from "@/components/customs-dashboard";
 import { JoinNight } from "@/components/join-night";
 import { StartNight } from "@/components/start-night";
 import { fireAndForget } from "@/lib/fire-and-forget";
+import { newestCustomSnapshot } from "@/lib/newest-custom-snapshot";
 import { useCustomSocket } from "@/hooks/use-custom-socket";
 import { useActivitySession } from "@/lib/activity-session";
 import { useTRPC } from "@/lib/activity-api";
@@ -13,7 +15,21 @@ import { useTRPC } from "@/lib/activity-api";
 function ActivityContent() {
   const session = useActivitySession();
   const trpc = useTRPC();
-  const active = useQuery(trpc.customs.active.queryOptions());
+  const queryClient = useQueryClient();
+  const activeQuery = trpc.customs.active.queryOptions();
+  const active = useQuery({
+    ...activeQuery,
+    queryFn: async (context) => {
+      const queryFn = activeQuery.queryFn;
+      if (queryFn === undefined)
+        throw new Error("Customs active query is missing its query function");
+      const candidate = await queryFn(context);
+      const current = queryClient.getQueryData<CustomNightSnapshot | null>(
+        trpc.customs.active.queryKey(),
+      );
+      return newestCustomSnapshot(current, candidate);
+    },
+  });
   useCustomSocket();
 
   useEffect(() => {

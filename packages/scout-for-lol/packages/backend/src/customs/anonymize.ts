@@ -245,7 +245,31 @@ export async function anonymizeCustomParticipant(params: {
   if (!params.execute || (consents === 0 && nights.length === 0)) return report;
 
   await params.prisma.$transaction(async (transaction) => {
-    for (const night of nights) {
+    // Re-read inside the write transaction. The initial report query is only a
+    // preview; using it for the write would allow a concurrent anonymization to
+    // be overwritten by a stale snapshot.
+    const currentNights = await transaction.customNight.findMany({
+      where: {
+        guildId,
+        participants: { some: { discordId } },
+      },
+      include: {
+        activePointer: true,
+        participants: true,
+        games: { include: { participants: true } },
+        auditEvents: true,
+      },
+    });
+    const currentActiveNight = currentNights.find(
+      (night) => night.activePointer !== null || night.state !== "ENDED",
+    );
+    if (currentActiveNight !== undefined) {
+      throw new Error(
+        `Cannot anonymize an active custom night (${currentActiveNight.id}); end it first`,
+      );
+    }
+
+    for (const night of currentNights) {
       const strings = new Set<string>([discordId]);
       const numbers = new Set<number>();
       for (const participant of night.participants) {
@@ -283,6 +307,8 @@ export async function anonymizeCustomParticipant(params: {
         discordId,
         sensitive,
       });
+      const nextRevision = night.revision + 1;
+      const updatedSnapshot = { ...snapshot, revision: nextRevision };
       for (const game of night.games) {
         const gameSnapshot = anonymizeGameSnapshot(
           CustomGameSnapshotSchema.parse(JSON.parse(game.snapshot)),
@@ -317,19 +343,26 @@ export async function anonymizeCustomParticipant(params: {
       await transaction.customNightParticipant.deleteMany({
         where: { nightId: night.id, discordId },
       });
-      await transaction.customNight.update({
-        where: { id: night.id },
+      const updatedNight = await transaction.customNight.updateMany({
+        where: { id: night.id, revision: night.revision },
         data: {
-          hostDiscordId: DiscordAccountIdSchema.parse(snapshot.hostDiscordId),
-          cohostDiscordIds: JSON.stringify(snapshot.cohostDiscordIds),
-          revision: snapshot.revision,
-          snapshot: JSON.stringify(snapshot),
+          hostDiscordId: DiscordAccountIdSchema.parse(
+            updatedSnapshot.hostDiscordId,
+          ),
+          cohostDiscordIds: JSON.stringify(updatedSnapshot.cohostDiscordIds),
+          revision: nextRevision,
+          snapshot: JSON.stringify(updatedSnapshot),
         },
       });
+      if (updatedNight.count !== 1) {
+        throw new Error(
+          `Custom night ${night.id} changed during anonymization; retry the operation`,
+        );
+      }
       await transaction.customAuditEvent.create({
         data: {
           nightId: night.id,
-          revision: snapshot.revision,
+          revision: nextRevision,
           actorId: ANONYMIZED_DISCORD_ID,
           action: "PARTICIPANT_ANONYMIZED",
           payload: JSON.stringify({ recordsRemoved: true }),

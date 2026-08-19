@@ -234,6 +234,8 @@ export async function commitCustomMutation(params: {
     const current = parseCustomNightSnapshot(row.snapshot);
     if (current.revision !== params.expectedRevision)
       return { applied: false, snapshot: current };
+    if (current.state === "ENDED")
+      throw new Error("Custom night has ended and cannot be changed");
 
     const updated = CustomNightSnapshotSchema.parse({
       ...params.update(current),
