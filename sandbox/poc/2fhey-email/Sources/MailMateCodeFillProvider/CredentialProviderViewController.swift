@@ -13,6 +13,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     private var records: [OTPRecord] = []
     private var choiceViews: [NSView] = []
     private var stackView: NSStackView?
+    private var identityStoreSyncTask: Task<Void, Never>?
 
     override func loadView() {
         logger.debug("event=provider_view_loaded")
@@ -195,29 +196,50 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         let recordValues = ServiceIdentity.matchingValues(for: service)
         let requestedValues = ServiceIdentity.matchingValues(for: serviceIdentifier)
         return recordValues.contains { recordValue in
-            requestedValues.contains { requestedValue in
-                requestedValue == recordValue ||
-                    requestedValue.hasSuffix(".\(recordValue)") ||
-                    recordValue.hasSuffix(".\(requestedValue)")
-            }
+            requestedValues.contains { requestedValue in requestedValue == recordValue }
         }
     }
 
     private func synchronizeIdentityStore(_ records: [OTPRecord]) {
-        ASCredentialIdentityStore.shared.getState { [logger] state in
-            guard state.isEnabled else {
-                logger.info("event=identity_store_sync outcome=disabled record_count=\(records.count, privacy: .public)")
-                return
+        let previousTask = identityStoreSyncTask
+        identityStoreSyncTask = Task { @MainActor [weak self] in
+            await previousTask?.value
+            guard let self else { return }
+            await self.replaceIdentities(records)
+        }
+    }
+
+    private func replaceIdentities(_ records: [OTPRecord]) async {
+        let state = await credentialIdentityStoreState()
+        guard state else {
+            logger.info("event=identity_store_sync outcome=disabled record_count=\(records.count, privacy: .public)")
+            return
+        }
+        let identities = CredentialIdentityBuilder.identities(for: records)
+        logger.info("event=identity_store_sync outcome=attempt identity_count=\(identities.count, privacy: .public)")
+        let result = await replaceCredentialIdentities(identities)
+        if result {
+            logger.info("event=identity_store_sync outcome=success identity_count=\(identities.count, privacy: .public)")
+        } else {
+            logger.error("event=identity_store_sync outcome=error identity_count=\(identities.count, privacy: .public)")
+        }
+    }
+
+    private func credentialIdentityStoreState() async -> Bool {
+        await withCheckedContinuation { continuation in
+            ASCredentialIdentityStore.shared.getState { state in
+                continuation.resume(returning: state.isEnabled)
             }
-            let identities = CredentialIdentityBuilder.identities(for: records)
-            logger.info("event=identity_store_sync outcome=attempt identity_count=\(identities.count, privacy: .public)")
+        }
+    }
+
+    private func replaceCredentialIdentities(_ identities: [ASCredentialIdentity]) async -> Bool {
+        await withCheckedContinuation { continuation in
             ASCredentialIdentityStore.shared.replaceCredentialIdentities(identities) { success, error in
-                if success {
-                    logger.info("event=identity_store_sync outcome=success identity_count=\(identities.count, privacy: .public)")
-                    return
+                if let error {
+                    self.logger.error("event=identity_store_sync replacement_error detail=\(error.localizedDescription, privacy: .public)")
                 }
-                let detail = error.map { ": \($0.localizedDescription)" } ?? "."
-                logger.error("event=identity_store_sync outcome=error identity_count=\(identities.count, privacy: .public) detail=\(detail, privacy: .public)")
+                continuation.resume(returning: success)
             }
         }
     }
