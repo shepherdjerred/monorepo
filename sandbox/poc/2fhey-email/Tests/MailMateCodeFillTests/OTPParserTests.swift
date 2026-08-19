@@ -114,6 +114,18 @@ func rejectsKeywordSubstrings() {
     #expect(OTPParser().parse(body: "The author reference is 482913.", metadata: metadata) == nil)
 }
 
+@Test("derives service only from the actual mailbox")
+func rejectsSenderDisplayDomainInjection() {
+    let metadata = MessageMetadata(
+        sender: "Support @evil.example <security@bank.example>",
+        subject: "Sign in",
+        date: nil,
+        messageID: "message-sender-domain"
+    )
+
+    #expect(OTPParser().parse(body: "Your verification code is 482913.", metadata: metadata)?.service == "bank.example")
+}
+
 @Test("parses a canonical MailMate body fixture")
 func parsesCanonicalFixture() throws {
     guard let url = Bundle.module.url(forResource: "verification-code", withExtension: "txt", subdirectory: "Fixtures") else {
