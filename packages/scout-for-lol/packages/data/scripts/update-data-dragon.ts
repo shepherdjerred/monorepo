@@ -1502,10 +1502,19 @@ async function main(): Promise<void> {
       /^\d+\.\d+\.\d+$/.test(argument),
     );
     if (process.argv.includes("--classic-assets-only")) {
-      const version = requestedVersion ?? (await readPreviousVersion());
-      if (version === undefined) {
+      const previousVersion = await readPreviousVersion();
+      if (previousVersion === undefined) {
         throw new Error("--classic-assets-only requires a Data Dragon version");
       }
+      if (
+        requestedVersion !== undefined &&
+        requestedVersion !== previousVersion
+      ) {
+        throw new Error(
+          `--classic-assets-only must use the committed Data Dragon version ${previousVersion}; received ${requestedVersion}`,
+        );
+      }
+      const version = previousVersion;
       const cdVersion = getCommunityDragonVersion(version);
       await createDirectories();
       await downloadClassicBackground(cdVersion);
