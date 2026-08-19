@@ -3,6 +3,7 @@ import { bucksTestRoster } from "#src/testing/bucks-fixtures.ts";
 import {
   bbCommand,
   resolveOpenGameByAlias,
+  trackedGameAliases,
   trackedGameLabels,
 } from "#src/discord/commands/bb.ts";
 
@@ -93,10 +94,14 @@ describe("/bb bet", () => {
     ).toThrow("matched 2 open Bryan Bucks pools");
   });
 
-  test("labels every tracked game anchor with its team", () => {
+  test("labels every tracked game anchor with a copyable alias and its team", () => {
     expect(trackedGameLabels(bucksTestRoster())).toEqual([
-      "jerred (Blue)",
-      "bryan (Red)",
+      "game: `jerred` — Blue Team",
+      "game: `bryan` — Red Team",
     ]);
+  });
+
+  test("suggests only aliases accepted by the game selector", () => {
+    expect(trackedGameAliases(bucksTestRoster())).toEqual(["jerred", "bryan"]);
   });
 });

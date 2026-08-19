@@ -188,7 +188,19 @@ export function trackedGameLabels(
   return roster.flatMap((participant) =>
     participant.trackedAlias === undefined || participant.puuid === null
       ? []
-      : [`${participant.trackedAlias} (${shortTeamName(participant.teamId)})`],
+      : [
+          `game: \`${participant.trackedAlias}\` — ${shortTeamName(participant.teamId)} Team`,
+        ],
+  );
+}
+
+export function trackedGameAliases(
+  roster: readonly BucksPoolParticipant[],
+): string[] {
+  return roster.flatMap((participant) =>
+    participant.trackedAlias === undefined || participant.puuid === null
+      ? []
+      : [participant.trackedAlias],
   );
 }
 
@@ -388,14 +400,14 @@ async function replyBet(
   }
 
   const available = pools.flatMap((pool) =>
-    trackedGameLabels(parseRoster(pool.roster)),
+    trackedGameAliases(parseRoster(pool.roster)),
   );
 
   await interaction.editReply({
     content:
       available.length === 0
         ? "No games are open for betting right now."
-        : `No open game for **${requestedAlias}**. Try: ${available.join(", ")}.`,
+        : `No open game for **${requestedAlias}**. Valid game aliases: ${available.map((alias) => `\`${alias}\``).join(", ")}.`,
   });
 }
 
