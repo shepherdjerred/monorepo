@@ -63,6 +63,13 @@ The static Buildkite pipeline ([`.buildkite/pipeline.yml`](../../../../.buildkit
 - The `argocd` stack is operator-run only — it is not in the CI plan/apply loops.
 - `asuswrt` is not in the CI loops either, and cannot be: the CI pod has tailnet-only egress and cannot reach the LAN routers. It is run by hand from a machine on both the LAN and the tailnet — see [`asuswrt/README.md`](asuswrt/README.md).
 
+Until the encrypted-state migration has been verified for every existing remote
+object, `tofu-stack.ts ... apply` refuses to run unless
+`TOFU_STATE_ENCRYPTION_MIGRATION_APPROVED=true` is supplied at the operator or
+Buildkite boundary. Set it only after checking the encrypted state passphrase,
+remote object, and restore path. Remove the fallback and this temporary gate in
+a separately reviewed migration-completion change.
+
 ## What's Managed
 
 ### Cloudflare

@@ -36,6 +36,8 @@ function homelabRoot(): string {
 }
 
 const STACKS_REL = "src/tofu";
+const STATE_ENCRYPTION_MIGRATION_APPROVAL =
+  "TOFU_STATE_ENCRYPTION_MIGRATION_APPROVED";
 
 /**
  * The optional secrets a stack may consume, mapped from a plain env var name to
@@ -332,10 +334,21 @@ async function main(): Promise<void> {
     return;
   }
 
-  const env = buildTofuEnv(
-    stack,
-    await Bun.file(`${stackDir}/state-encryption.tf`).exists(),
-  );
+  const encryptsState = await Bun.file(
+    `${stackDir}/state-encryption.tf`,
+  ).exists();
+  const env = buildTofuEnv(stack, encryptsState);
+  if (
+    action === "apply" &&
+    encryptsState &&
+    optionalEnv(STATE_ENCRYPTION_MIGRATION_APPROVAL) !== "true"
+  ) {
+    throw new Error(
+      `Refusing to apply encrypted stack "${stack}" without ` +
+        `${STATE_ENCRYPTION_MIGRATION_APPROVAL}=true. Verify the remote state ` +
+        "object and restore path before deliberately migrating it.",
+    );
+  }
 
   const localProviderRoot =
     stack === "openrouter" ? await configureLocalOpenRouterProvider(env) : null;
