@@ -204,11 +204,17 @@ export async function reviewHarvestCommand(
         token,
         provider,
       });
+      if (reviewedHead !== prHead) {
+        console.log(
+          `#${String(number)} ${provider.displayName}: not retryable — PR head changed during harvest; run harvest again`,
+        );
+        continue;
+      }
       const state = await reviewStateFor({
         repo,
         number,
         token,
-        head: reviewedHead,
+        head: prHead,
         provider,
       });
       const verdict = harvestVerdict({
@@ -221,6 +227,13 @@ export async function reviewHarvestCommand(
       if (!verdict.retryable) {
         console.log(
           `#${String(number)} ${provider.displayName}: not retryable — ${verdict.reason}`,
+        );
+        continue;
+      }
+      const latestHead = await fetchHeadSha({ repo, number, token });
+      if (latestHead !== prHead) {
+        console.log(
+          `#${String(number)} ${provider.displayName}: not retryable — PR head changed during harvest; run harvest again`,
         );
         continue;
       }
