@@ -27,6 +27,21 @@ function repositoryDirectoryName(repository: string): string {
   return `repo-${safe}`;
 }
 
+function pathsOverlap(first: string, second: string): boolean {
+  const resolvedFirst = path.resolve(first);
+  const resolvedSecond = path.resolve(second);
+  const secondRelativeToFirst = path.relative(resolvedFirst, resolvedSecond);
+  const firstRelativeToSecond = path.relative(resolvedSecond, resolvedFirst);
+  return (
+    secondRelativeToFirst === "" ||
+    (!secondRelativeToFirst.startsWith("..") &&
+      !path.isAbsolute(secondRelativeToFirst)) ||
+    firstRelativeToSecond === "" ||
+    (!firstRelativeToSecond.startsWith("..") &&
+      !path.isAbsolute(firstRelativeToSecond))
+  );
+}
+
 export function resolveManagedCheckoutPaths(options: {
   repository: string;
   stateDirectory: string;
@@ -42,9 +57,9 @@ export function resolveManagedCheckoutPaths(options: {
     options.worktreeRoot ??
       path.join(stateDirectory, "worktrees", directoryName),
   );
-  if (checkout === worktreeRoot) {
+  if (pathsOverlap(checkout, worktreeRoot)) {
     throw new Error(
-      "Managed checkout and worktree root must be different paths",
+      "Managed checkout and worktree root must be disjoint paths",
     );
   }
   return { checkout, worktreeRoot };
@@ -135,14 +150,14 @@ export async function prepareManagedCheckout(
   const sourceCheckout = path.resolve(options.sourceCheckout);
   const checkout = path.resolve(options.checkout);
   const worktreeRoot = path.resolve(options.worktreeRoot);
-  if (checkout === worktreeRoot) {
-    throw new Error(
-      "Managed checkout and worktree root must be different paths",
-    );
-  }
   if (await refersToSameDirectory(sourceCheckout, checkout)) {
     throw new Error(
       "Managed checkout must differ from the checkout that launched the controller",
+    );
+  }
+  if (pathsOverlap(checkout, worktreeRoot)) {
+    throw new Error(
+      "Managed checkout and worktree root must be disjoint paths",
     );
   }
 

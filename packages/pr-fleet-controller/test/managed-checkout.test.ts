@@ -75,6 +75,26 @@ describe("managed checkouts", () => {
     });
   });
 
+  test("rejects overlapping custom checkout and worktree paths", () => {
+    expect(() =>
+      resolveManagedCheckoutPaths({
+        repository: "shepherdjerred/monorepo",
+        stateDirectory: "/private/state/pr-fleet-controller",
+        checkout: "/private/state/pr-fleet-controller/checkout",
+        worktreeRoot: "/private/state/pr-fleet-controller/checkout/worktrees",
+      }),
+    ).toThrow("must be disjoint");
+
+    expect(() =>
+      resolveManagedCheckoutPaths({
+        repository: "shepherdjerred/monorepo",
+        stateDirectory: "/private/state/pr-fleet-controller",
+        checkout: "/private/state/pr-fleet-controller/checkouts",
+        worktreeRoot: "/private/state/pr-fleet-controller",
+      }),
+    ).toThrow("must be disjoint");
+  });
+
   test("creates an isolated clone and copies local git-spice metadata", async () => {
     const sourceCheckout = await temporaryDirectory("pr-fleet-source-");
     const parent = await temporaryDirectory("pr-fleet-managed-");
