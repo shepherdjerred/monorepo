@@ -8,3 +8,13 @@ variable "asuswrt_password" {
   type        = string
   sensitive   = true
 }
+
+variable "tofu_state_encryption_passphrase" {
+  description = "OpenTofu state and plan encryption passphrase from 1Password"
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = length(var.tofu_state_encryption_passphrase) >= 16
+    error_message = "The OpenTofu state encryption passphrase must be at least 16 characters."
+  }
+}

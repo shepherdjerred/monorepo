@@ -53,6 +53,7 @@ const OPTIONAL_SECRET_ENV: readonly [source: string, target: string][] = [
   ["GH_TOKEN", "TF_VAR_github_token"],
   ["CLOUDFLARE_ACCOUNT_ID", "TF_VAR_cloudflare_account_id"],
   ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_API_TOKEN"],
+  ["CLOUDFLARE_API_TOKENS_JSON", "TF_VAR_cloudflare_api_tokens"],
   ["TAILSCALE_OAUTH_CLIENT_ID", "TAILSCALE_OAUTH_CLIENT_ID"],
   ["TAILSCALE_OAUTH_CLIENT_SECRET", "TAILSCALE_OAUTH_CLIENT_SECRET"],
   ["BUILDKITE_API_TOKEN", "TF_VAR_buildkite_api_token"],

@@ -22,14 +22,14 @@ type client struct {
 }
 
 type byokRequest struct {
-	Provider       string   `json:"provider"`
-	Key            string   `json:"key"`
-	Name           string   `json:"name,omitempty"`
-	WorkspaceID    string   `json:"workspace_id,omitempty"`
-	AllowedModels  []string `json:"allowed_models,omitempty"`
-	AllowedUserIDs []string `json:"allowed_user_ids,omitempty"`
-	Disabled       *bool    `json:"disabled,omitempty"`
-	IsFallback     *bool    `json:"is_fallback,omitempty"`
+	Provider       string    `json:"provider"`
+	Key            string    `json:"key"`
+	Name           *string   `json:"name,omitempty"`
+	WorkspaceID    *string   `json:"workspace_id,omitempty"`
+	AllowedModels  *[]string `json:"allowed_models,omitempty"`
+	AllowedUserIDs *[]string `json:"allowed_user_ids,omitempty"`
+	Disabled       *bool     `json:"disabled,omitempty"`
+	IsFallback     *bool     `json:"is_fallback,omitempty"`
 }
 
 type byokResponse struct {

@@ -183,10 +183,10 @@ func requestFromModel(model byokModel) byokRequest {
 	return byokRequest{
 		Provider:       model.Provider.ValueString(),
 		Key:            model.Key.ValueString(),
-		Name:           model.Name.ValueString(),
-		WorkspaceID:    model.WorkspaceID.ValueString(),
-		AllowedModels:  stringSet(model.AllowedModels),
-		AllowedUserIDs: stringSet(model.AllowedUsers),
+		Name:           stringPointer(model.Name),
+		WorkspaceID:    stringPointer(model.WorkspaceID),
+		AllowedModels:  stringSetPointer(model.AllowedModels),
+		AllowedUserIDs: stringSetPointer(model.AllowedUsers),
 		Disabled:       boolPointer(model.Disabled),
 		IsFallback:     boolPointer(model.IsFallback),
 	}
@@ -202,6 +202,22 @@ func stringSet(value types.Set) []string {
 		result = append(result, element.(types.String).ValueString())
 	}
 	return result
+}
+
+func stringPointer(value types.String) *string {
+	if value.IsNull() || value.IsUnknown() {
+		return nil
+	}
+	result := value.ValueString()
+	return &result
+}
+
+func stringSetPointer(value types.Set) *[]string {
+	if value.IsNull() || value.IsUnknown() {
+		return nil
+	}
+	result := stringSet(value)
+	return &result
 }
 
 func boolPointer(value types.Bool) *bool {

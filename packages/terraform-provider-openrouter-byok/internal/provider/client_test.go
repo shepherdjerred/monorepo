@@ -33,7 +33,7 @@ func TestClientCRUD(t *testing.T) {
 	defer server.Close()
 
 	client := newClient(server.URL, "management-key")
-	request := byokRequest{Provider: "openai", Key: secret, Name: "primary"}
+	request := byokRequest{Provider: "openai", Key: secret, Name: stringPointerForTest("primary")}
 	created, err := client.create(context.Background(), request)
 	if err != nil || created.ID != "byok-1" {
 		t.Fatalf("create = %#v, %v", created, err)
@@ -42,7 +42,7 @@ func TestClientCRUD(t *testing.T) {
 	if err != nil || status != http.StatusOK || read.Name != "primary" {
 		t.Fatalf("read = %#v, %d, %v", read, status, err)
 	}
-	updated, err := client.update(context.Background(), created.ID, byokRequest{Provider: "openai", Key: secret, Name: "rotated"})
+	updated, err := client.update(context.Background(), created.ID, byokRequest{Provider: "openai", Key: secret, Name: stringPointerForTest("rotated")})
 	if err != nil || updated.Name != "rotated" {
 		t.Fatalf("update = %#v, %v", updated, err)
 	}
@@ -54,6 +54,10 @@ func TestClientCRUD(t *testing.T) {
 	if strings.Join(seen, ",") != "POST /byok,GET /byok/byok-1,PATCH /byok/byok-1,DELETE /byok/byok-1" {
 		t.Fatalf("request sequence = %q", strings.Join(seen, ","))
 	}
+}
+
+func stringPointerForTest(value string) *string {
+	return &value
 }
 
 func TestClientNotFoundAndSecretRedaction(t *testing.T) {
