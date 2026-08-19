@@ -106,6 +106,7 @@ describe("managed checkouts", () => {
       commandResult(0),
       commandResult(0),
       commandResult(0),
+      commandResult(0),
     ]);
 
     try {
@@ -129,13 +130,11 @@ describe("managed checkouts", () => {
         },
         {
           cwd: parent,
-          args: [
-            "clone",
-            "--origin",
-            "origin",
-            "https://github.com/example/repository.git",
-            checkout,
-          ],
+          args: ["clone", "--origin", "origin", sourceCheckout, checkout],
+        },
+        {
+          cwd: checkout,
+          args: ["-c", 'git remote set-url origin "$PR_FLEET_REMOTE_URL"'],
         },
         {
           cwd: sourceCheckout,
@@ -314,6 +313,32 @@ describe("managed checkout safety", () => {
     }
   });
 
+  test("does not remove a file at the managed checkout path", async () => {
+    const sourceCheckout = await temporaryDirectory("pr-fleet-source-");
+    const parent = await temporaryDirectory("pr-fleet-managed-");
+    const checkout = path.join(parent, "checkout");
+    await writeFile(checkout, "keep me\n");
+    const runner = commandRunner([]);
+
+    try {
+      await expect(
+        prepareManagedCheckout({
+          sourceCheckout,
+          checkout,
+          worktreeRoot: path.join(parent, "worktrees"),
+          run: runner.run,
+        }),
+      ).rejects.toThrow("is not a directory");
+      expect(await Bun.file(checkout).text()).toBe("keep me\n");
+      expect(runner.requests).toEqual([]);
+    } finally {
+      await Promise.all([
+        rm(sourceCheckout, { recursive: true, force: true }),
+        rm(parent, { recursive: true, force: true }),
+      ]);
+    }
+  });
+
   test("rejects the checkout that launched the controller", async () => {
     const sourceCheckout = await temporaryDirectory("pr-fleet-source-");
     const runner = commandRunner([]);
@@ -340,6 +365,7 @@ describe("managed checkout safety", () => {
     const runner = commandRunner([
       commandResult(0, "https://github.com/example/repository.git\n"),
       commandResult(0),
+      commandResult(0),
       commandResult(1),
       commandResult(0),
       commandResult(0),
@@ -354,13 +380,8 @@ describe("managed checkout safety", () => {
       });
       expect(runner.requests.map((request) => request.args)).toEqual([
         ["remote", "get-url", "origin"],
-        [
-          "clone",
-          "--origin",
-          "origin",
-          "https://github.com/example/repository.git",
-          checkout,
-        ],
+        ["clone", "--origin", "origin", sourceCheckout, checkout],
+        ["-c", 'git remote set-url origin "$PR_FLEET_REMOTE_URL"'],
         ["show-ref", "--verify", "--quiet", "refs/spice/data"],
         ["update-ref", "-d", "refs/spice/data"],
         ["fetch", "--prune", "origin"],

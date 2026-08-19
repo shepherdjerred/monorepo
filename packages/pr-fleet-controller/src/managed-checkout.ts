@@ -113,12 +113,37 @@ async function mustRunGit(
 async function directoryExists(candidate: string): Promise<boolean> {
   try {
     const stats = await lstat(candidate);
-    return stats.isDirectory();
+    if (!stats.isDirectory()) {
+      throw new Error(`Managed checkout path ${candidate} is not a directory`);
+    }
+    return true;
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === "ENOENT") {
       return false;
     }
     throw error;
+  }
+}
+
+async function setManagedOrigin(
+  run: PrepareManagedCheckoutOptions["run"],
+  checkout: string,
+  remoteUrl: string,
+): Promise<void> {
+  const result = await run({
+    executable: "sh",
+    args: ["-c", 'git remote set-url origin "$PR_FLEET_REMOTE_URL"'],
+    cwd: checkout,
+    timeoutMs: GIT_TIMEOUT_MS,
+    maxOutputBytes: GIT_OUTPUT_LIMIT_BYTES,
+    sensitiveOutput: true,
+    env: { ...Bun.env, PR_FLEET_REMOTE_URL: remoteUrl },
+  });
+  if (result.exitCode !== 0) {
+    throw commandFailure(
+      `Could not set managed checkout origin ${checkout}`,
+      result,
+    );
   }
 }
 
@@ -220,9 +245,10 @@ export async function prepareManagedCheckout(
       await mustRunGit(
         options.run,
         path.dirname(checkout),
-        ["clone", "--origin", "origin", remoteUrl, checkout],
+        ["clone", "--origin", "origin", sourceCheckout, checkout],
         `Could not create managed checkout ${checkout}`,
       );
+      await setManagedOrigin(options.run, checkout, remoteUrl);
     } catch (error) {
       await rm(checkout, { recursive: true, force: true });
       throw error;

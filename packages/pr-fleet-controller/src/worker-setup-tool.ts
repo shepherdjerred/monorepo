@@ -25,7 +25,36 @@ export const SETUP_COMMANDS = [
 
 const MAX_SETUP_COMMAND_OUTPUT_BYTES = 100_000;
 
-export function createSetupWorktreeTool(options: {
+type ReleasedLease = {
+  kind: "setup" | "heavy" | "stack-write";
+  durationMs: number;
+};
+
+function releaseSetupLeases(
+  store: FleetStore,
+  pr: PrState,
+  kinds: readonly ReleasedLease["kind"][],
+): ReleasedLease[] {
+  const released: ReleasedLease[] = [];
+  for (const kind of kinds) {
+    const durationMs = store.releaseLease(pr.identity.number, kind, pr.stackId);
+    if (durationMs !== null) {
+      released.push({ kind, durationMs });
+    }
+  }
+  return released;
+}
+
+function recordReleasedLeases(
+  recordProgress: CreateSetupWorktreeToolOptions["recordProgress"],
+  released: readonly ReleasedLease[],
+): void {
+  for (const lease of released) {
+    recordProgress("lease.released", lease);
+  }
+}
+
+type CreateSetupWorktreeToolOptions = {
   pr: PrState;
   store: FleetStore;
   environment: FleetEnvironment;
@@ -41,7 +70,11 @@ export function createSetupWorktreeTool(options: {
     kind: ProgressEventKind,
     payload: Record<string, unknown>,
   ) => void;
-}) {
+};
+
+export function createSetupWorktreeTool(
+  options: CreateSetupWorktreeToolOptions,
+) {
   const {
     pr,
     store,
@@ -72,49 +105,59 @@ export function createSetupWorktreeTool(options: {
           });
           throw new Error("Stack write lease is not available for setup");
         }
-        recordProgress("lease.granted", { kind: "stack-write" });
+        try {
+          recordProgress("lease.granted", { kind: "stack-write" });
+        } catch (error) {
+          recordReleasedLeases(
+            recordProgress,
+            releaseSetupLeases(store, pr, ["stack-write"]),
+          );
+          throw error;
+        }
         const setupLease = store.requestLeaseDecision(pr, "setup");
         if (!setupLease.granted) {
+          const released = releaseSetupLeases(store, pr, ["stack-write"]);
           recordProgress("lease.denied", {
             kind: "setup",
             reason: setupLease.reason,
           });
-          const durationMs = store.releaseLease(
-            pr.identity.number,
-            "stack-write",
-            pr.stackId,
-          );
-          if (durationMs !== null) {
-            recordProgress("lease.released", {
-              kind: "stack-write",
-              durationMs,
-            });
-          }
+          recordReleasedLeases(recordProgress, released);
           throw new Error("Setup lease is not available");
         }
-        recordProgress("lease.granted", { kind: "setup" });
+        try {
+          recordProgress("lease.granted", { kind: "setup" });
+        } catch (error) {
+          recordReleasedLeases(
+            recordProgress,
+            releaseSetupLeases(store, pr, ["setup", "stack-write"]),
+          );
+          throw error;
+        }
         const heavyLease = store.requestLeaseDecision(pr, "heavy");
         if (!heavyLease.granted) {
+          const released = releaseSetupLeases(store, pr, [
+            "stack-write",
+            "setup",
+          ]);
           recordProgress("lease.denied", {
             kind: "heavy",
             reason: heavyLease.reason,
           });
-          for (const kind of ["stack-write", "setup"] as const) {
-            const durationMs = store.releaseLease(
-              pr.identity.number,
-              kind,
-              pr.stackId,
-            );
-            if (durationMs !== null) {
-              recordProgress("lease.released", { kind, durationMs });
-            }
-          }
+          recordReleasedLeases(recordProgress, released);
           throw new Error("Heavy lease is not available for generation");
         }
-        recordProgress("lease.granted", { kind: "heavy" });
-        const completed: string[] = [];
-        recordProgress("setup.started", { headSha });
         try {
+          recordProgress("lease.granted", { kind: "heavy" });
+        } catch (error) {
+          recordReleasedLeases(
+            recordProgress,
+            releaseSetupLeases(store, pr, ["heavy", "stack-write", "setup"]),
+          );
+          throw error;
+        }
+        const completed: string[] = [];
+        try {
+          recordProgress("setup.started", { headSha });
           await requireCurrentInheritedWipInspection({
             store,
             pr,
@@ -167,16 +210,10 @@ export function createSetupWorktreeTool(options: {
           });
           throw error;
         } finally {
-          for (const kind of ["stack-write", "heavy", "setup"] as const) {
-            const durationMs = store.releaseLease(
-              pr.identity.number,
-              kind,
-              pr.stackId,
-            );
-            if (durationMs !== null) {
-              recordProgress("lease.released", { kind, durationMs });
-            }
-          }
+          recordReleasedLeases(
+            recordProgress,
+            releaseSetupLeases(store, pr, ["stack-write", "heavy", "setup"]),
+          );
         }
       }),
   });

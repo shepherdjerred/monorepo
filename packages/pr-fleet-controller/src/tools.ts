@@ -369,8 +369,8 @@ export function createWorkerTools(
             });
             throw new Error("Heavy lease is not available");
           }
-          recordProgress("lease.granted", { kind: "heavy" });
           try {
+            recordProgress("lease.granted", { kind: "heavy" });
             const result = await environment.runLocalCommand({
               executable: resolveWorkerShell(),
               args: ["-lc", input.command],
@@ -421,8 +421,8 @@ export function createWorkerTools(
             });
             throw new Error("Stack write lease is not available");
           }
-          recordProgress("lease.granted", { kind: "stack-write" });
           try {
+            recordProgress("lease.granted", { kind: "stack-write" });
             await assertCurrentWorktreeHead({
               environment,
               pr,
