@@ -225,6 +225,7 @@ export async function commitCustomMutation(params: {
   ) => Promise<void>;
   additionalGames?: readonly CustomGameSnapshot[];
   auditGameId?: string;
+  allowEnded?: boolean;
 }): Promise<CustomMutationResult> {
   return await params.prisma.$transaction(async (transaction) => {
     const row = await transaction.customNight.findUnique({
@@ -234,7 +235,7 @@ export async function commitCustomMutation(params: {
     const current = parseCustomNightSnapshot(row.snapshot);
     if (current.revision !== params.expectedRevision)
       return { applied: false, snapshot: current };
-    if (current.state === "ENDED")
+    if (current.state === "ENDED" && params.allowEnded !== true)
       throw new Error("Custom night has ended and cannot be changed");
 
     const updated = CustomNightSnapshotSchema.parse({
@@ -285,7 +286,7 @@ export async function commitCustomMutation(params: {
         payload: JSON.stringify(params.payload),
       },
     });
-    if (updated.state === "ENDED") {
+    if (updated.state === "ENDED" && current.state !== "ENDED") {
       await transaction.customActiveNight.delete({
         where: { guildId: DiscordGuildIdSchema.parse(updated.guildId) },
       });

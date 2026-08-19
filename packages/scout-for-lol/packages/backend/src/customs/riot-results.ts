@@ -261,6 +261,14 @@ function verifiedNightState(snapshot: CustomNightSnapshot) {
   return nightState;
 }
 
+function refreshResultSnapshot(
+  snapshot: CustomNightSnapshot,
+  now: Date,
+): CustomNightSnapshot {
+  if (snapshot.state === "ENDED") return snapshot;
+  return refreshSnapshot(snapshot, now);
+}
+
 export async function recordRiotTournamentResult(params: {
   prisma: ExtendedPrismaClient;
   nightId: string;
@@ -304,11 +312,11 @@ export async function recordRiotTournamentResult(params: {
         disagreed: game.resultSource === "MANUAL" && game.winner !== winner,
       },
       update: (current) => {
-        if (!isCurrentGame) return refreshSnapshot(current, now);
+        if (!isCurrentGame) return refreshResultSnapshot(current, now);
         const activeGame = currentGame(current);
         if (activeGame.id !== game.id)
           throw new Error("Current custom game changed during Riot result");
-        return refreshSnapshot(
+        return refreshResultSnapshot(
           {
             ...current,
             state: nightState,
@@ -341,6 +349,7 @@ export async function recordRiotTournamentResult(params: {
             },
           ],
       auditGameId: game.id,
+      allowEnded: true,
     });
     if (mutation.applied) return mutation;
     snapshot = mutation.snapshot;

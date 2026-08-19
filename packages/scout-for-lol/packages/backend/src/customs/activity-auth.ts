@@ -14,6 +14,7 @@ import configuration, {
 import { createLogger } from "#src/logger.ts";
 
 const DISCORD_API_BASE = "https://discord.com/api/v10";
+const DISCORD_REQUEST_TIMEOUT_MILLISECONDS = 30_000;
 const ACTIVITY_TOKEN_TTL_SECONDS = 10 * 60;
 const ACTIVITY_REFRESH_GRACE_SECONDS = 12 * 60 * 60;
 const logger = createLogger("customs-activity-auth");
@@ -94,15 +95,39 @@ async function readJson(response: Response): Promise<unknown> {
   return JSON.parse(body);
 }
 
+async function requestDiscord(
+  fetcher: typeof fetch,
+  input: string,
+  init: RequestInit,
+): Promise<Response> {
+  try {
+    return await fetcher(input, {
+      ...init,
+      signal:
+        init.signal ??
+        AbortSignal.timeout(DISCORD_REQUEST_TIMEOUT_MILLISECONDS),
+    });
+  } catch {
+    throw new CustomAuthHttpError(
+      503,
+      "Discord Activity authentication service is unavailable",
+    );
+  }
+}
+
 async function requestDiscordToken(params: {
   fetcher: typeof fetch;
   grant: URLSearchParams;
 }) {
-  const response = await params.fetcher(`${DISCORD_API_BASE}/oauth2/token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: params.grant,
-  });
+  const response = await requestDiscord(
+    params.fetcher,
+    `${DISCORD_API_BASE}/oauth2/token`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.grant,
+    },
+  );
   return RawDiscordTokenResponseSchema.parse(await readJson(response));
 }
 
@@ -111,9 +136,11 @@ async function validateDiscordIdentity(params: {
   expectedApplicationId: string;
   fetcher: typeof fetch;
 }): Promise<string> {
-  const response = await params.fetcher(`${DISCORD_API_BASE}/oauth2/@me`, {
-    headers: { Authorization: `Bearer ${params.accessToken}` },
-  });
+  const response = await requestDiscord(
+    params.fetcher,
+    `${DISCORD_API_BASE}/oauth2/@me`,
+    { headers: { Authorization: `Bearer ${params.accessToken}` } },
+  );
   const oauth = RawDiscordOauthMeSchema.parse(await readJson(response));
   if (oauth.application.id !== params.expectedApplicationId) {
     throw new CustomAuthHttpError(
@@ -141,7 +168,8 @@ async function validateLiveInstance(params: {
   discordId: string;
   fetcher: typeof fetch;
 }): Promise<void> {
-  const response = await params.fetcher(
+  const response = await requestDiscord(
+    params.fetcher,
     `${DISCORD_API_BASE}/applications/${params.config.applicationId}/activity-instances/${params.instanceId}`,
     { headers: { Authorization: `Bot ${params.config.botToken}` } },
   );

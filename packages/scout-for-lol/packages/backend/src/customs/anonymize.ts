@@ -7,6 +7,7 @@ import {
   type CustomGameSnapshot,
   type CustomNightSnapshot,
 } from "@scout-for-lol/data";
+import type { Prisma } from "#generated/prisma/client/index.js";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { recruitmentCounts } from "#src/customs/snapshot.ts";
 
@@ -47,6 +48,28 @@ const FREE_TEXT_KEYS = new Set([
   "warnings",
 ]);
 const WORD_CHARACTER = /[\p{L}\p{N}_]/u;
+
+function identityNightWhere(
+  guildId: string,
+  discordId: string,
+): Prisma.CustomNightWhereInput {
+  const parsedGuildId = DiscordGuildIdSchema.parse(guildId);
+  const parsedDiscordId = DiscordAccountIdSchema.parse(discordId);
+  return {
+    guildId: parsedGuildId,
+    OR: [
+      { hostDiscordId: parsedDiscordId },
+      { cohostDiscordIds: { contains: JSON.stringify(parsedDiscordId) } },
+      { participants: { some: { discordId: parsedDiscordId } } },
+      {
+        games: {
+          some: { participants: { some: { discordId: parsedDiscordId } } },
+        },
+      },
+      { auditEvents: { some: { actorId: parsedDiscordId } } },
+    ],
+  };
+}
 
 function isWordCharacter(value: string | undefined): boolean {
   return value !== undefined && WORD_CHARACTER.test(value);
@@ -193,10 +216,7 @@ export async function anonymizeCustomParticipant(params: {
   const guildId = DiscordGuildIdSchema.parse(params.guildId);
   const discordId = DiscordAccountIdSchema.parse(params.discordId);
   const nights = await params.prisma.customNight.findMany({
-    where: {
-      guildId,
-      participants: { some: { discordId } },
-    },
+    where: identityNightWhere(guildId, discordId),
     include: {
       activePointer: true,
       participants: true,
@@ -249,10 +269,7 @@ export async function anonymizeCustomParticipant(params: {
     // preview; using it for the write would allow a concurrent anonymization to
     // be overwritten by a stale snapshot.
     const currentNights = await transaction.customNight.findMany({
-      where: {
-        guildId,
-        participants: { some: { discordId } },
-      },
+      where: identityNightWhere(guildId, discordId),
       include: {
         activePointer: true,
         participants: true,

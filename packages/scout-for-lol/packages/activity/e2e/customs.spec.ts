@@ -452,6 +452,15 @@ const visualLayouts = [
   { name: "mobile", width: 390, height: 844 },
 ] as const;
 const visualStates = ["recruiting", "drafting"] as const;
+const visualScreenshotOptions = {
+  animations: "disabled",
+  fullPage: true,
+  // The committed baselines are generated on the developer workstation while
+  // CI renders Chromium in Linux. Keep visual assertions strict enough to
+  // catch layout/content changes, while allowing the small font/rasterization
+  // delta between those renderers.
+  maxDiffPixelRatio: 0.025,
+} as const;
 
 for (const theme of visualThemes) {
   for (const layout of visualLayouts) {
@@ -486,7 +495,7 @@ for (const theme of visualThemes) {
         }
         await expect(page).toHaveScreenshot(
           `customs-${visualState}-${theme.skin}-${theme.mode}-${layout.name}.png`,
-          { animations: "disabled", fullPage: true },
+          visualScreenshotOptions,
         );
       });
     }

@@ -49,6 +49,15 @@ type ActivitySessionState =
 
 const ActivitySessionContext = createContext<ActivitySession | null>(null);
 
+class ActivityAuthRequestError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 function activityEnvironment() {
   return ActivityEnvSchema.parse({
     clientId: import.meta.env["VITE_DISCORD_CLIENT_ID"],
@@ -64,7 +73,8 @@ async function authRequest(path: string, body: unknown) {
   });
   const text = await response.text();
   if (!response.ok)
-    throw new Error(
+    throw new ActivityAuthRequestError(
+      response.status,
       `Activity authentication failed (${response.status.toString()}): ${text}`,
     );
   return CustomAuthResponseSchema.parse(JSON.parse(text));
@@ -78,6 +88,23 @@ function assertContractHash(auth: CustomAuthResponse): void {
     );
   }
 }
+
+function shouldRetryActivityRefresh(error: unknown): boolean {
+  if (error instanceof ActivityAuthRequestError) {
+    return error.status >= 500 || error.status === 408 || error.status === 429;
+  }
+  if (error instanceof Error) {
+    return !(
+      error.message === "Discord identity changed during Activity refresh" ||
+      error.message ===
+        "Scout Customs was updated while this Activity was open. Close and reopen it."
+    );
+  }
+  return true;
+}
+
+const ACTIVITY_REFRESH_RETRY_INITIAL_DELAY = 30_000;
+const ACTIVITY_REFRESH_RETRY_MAX_DELAY = 5 * 60_000;
 
 async function startActivitySession(): Promise<ActivitySession> {
   const { clientId } = activityEnvironment();
@@ -215,6 +242,9 @@ export function ActivitySessionProvider({ children }: { children: ReactNode }) {
     )
       return;
     const delay = customActivityRefreshDelay(refreshAuth.expiresAt);
+    let retryDelay = ACTIVITY_REFRESH_RETRY_INITIAL_DELAY;
+    let timer: ReturnType<typeof globalThis.setTimeout> | undefined;
+    let disposed = false;
     const refresh = async () => {
       try {
         const auth = await authRequest("/api/customs/auth/refresh", {
@@ -234,18 +264,28 @@ export function ActivitySessionProvider({ children }: { children: ReactNode }) {
               }
             : current,
         );
+        retryDelay = ACTIVITY_REFRESH_RETRY_INITIAL_DELAY;
       } catch (error) {
-        setState({
-          status: "error",
-          message: error instanceof Error ? error.message : String(error),
-        });
+        if (disposed) return;
+        if (!shouldRetryActivityRefresh(error)) {
+          setState({
+            status: "error",
+            message: error instanceof Error ? error.message : String(error),
+          });
+          return;
+        }
+        timer = globalThis.setTimeout(() => {
+          void refresh();
+        }, retryDelay);
+        retryDelay = Math.min(ACTIVITY_REFRESH_RETRY_MAX_DELAY, retryDelay * 2);
       }
     };
-    const timer = globalThis.setTimeout(() => {
+    timer = globalThis.setTimeout(() => {
       void refresh();
     }, delay);
     return () => {
-      globalThis.clearTimeout(timer);
+      disposed = true;
+      if (timer !== undefined) globalThis.clearTimeout(timer);
     };
   }, [refreshAuth, refreshIdentityId, refreshSdk]);
 
