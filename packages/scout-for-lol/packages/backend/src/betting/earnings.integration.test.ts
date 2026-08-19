@@ -159,6 +159,24 @@ describe("awardBucksForMatch", () => {
     expect(entries.every((e) => e.matchId === MATCH_ID)).toBe(true);
   });
 
+  test("awards the normal Bucks for League Classic", async () => {
+    await trackPlayer({
+      serverId: ENABLED_GUILD,
+      discordId: DiscordAccountIdSchema.parse("16050917270473910"),
+      alias: "classic-mvp",
+      puuid: mvpPuuid,
+    });
+
+    const awards = await awardBucksForMatch(withQueue(4310), db);
+
+    expect(awards[0]?.reasons.toSorted()).toEqual(
+      mvpParticipant.win ? ["mvp", "played", "win"] : ["mvp", "played"],
+    );
+    expect(awards[0]?.total).toBe(mvpParticipant.win ? 3 : 2);
+    const account = await db.bucksAccount.findFirstOrThrow();
+    expect(account.balance).toBe(SEED_GRANT + (mvpParticipant.win ? 3 : 2));
+  });
+
   test("awards two Bucks for a win that is not MVP", async () => {
     await trackPlayer({
       serverId: ENABLED_GUILD,
@@ -199,8 +217,8 @@ describe("awardBucksForMatch", () => {
       puuid: plainWinner.puuid,
     });
 
-    await awardBucksForMatch(fixture, db);
-    const second = await awardBucksForMatch(fixture, db);
+    await awardBucksForMatch(withQueue(4310), db);
+    const second = await awardBucksForMatch(withQueue(4310), db);
 
     expect(second).toEqual([]);
     const account = await db.bucksAccount.findFirstOrThrow();
@@ -274,6 +292,18 @@ describe("awardBucksForMatch", () => {
 
     // 450 is ARAM: a real game, but deliberately outside the economy.
     expect(await awardBucksForMatch(withQueue(450), db)).toEqual([]);
+    expect(await db.bucksMatchEarning.count()).toBe(0);
+  });
+
+  test("pays nothing for Classic ARAM Mayhem", async () => {
+    await trackPlayer({
+      serverId: ENABLED_GUILD,
+      discordId: DiscordAccountIdSchema.parse("16050917270473911"),
+      alias: "classic-mayhem",
+      puuid: plainWinner.puuid,
+    });
+
+    expect(await awardBucksForMatch(withQueue(2450), db)).toEqual([]);
     expect(await db.bucksMatchEarning.count()).toBe(0);
   });
 
