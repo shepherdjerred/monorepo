@@ -7,9 +7,9 @@
       "buildNumber": 9840
     },
     "shepherdjerred/birmel": {
-      "buildNumber": 9947,
       "version": "2.0.0-9947",
-      "digest": "sha256:a8bc336e81fbab09dd5494a865e06dc93378231884c23836b12a85ab4b1b31b8"
+      "digest": "sha256:a8bc336e81fbab09dd5494a865e06dc93378231884c23836b12a85ab4b1b31b8",
+      "buildNumber": 9947
     },
     "shepherdjerred/discord-plays-mario-kart": {
       "version": "2.0.0-9840",
@@ -32,9 +32,9 @@
       "buildNumber": 9840
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 9945,
-      "version": "2.0.0-9945",
-      "digest": "sha256:046ea090939cc17f75c593a17feb45046877836a54c7fa99e6c92eeade86c963"
+      "buildNumber": 9964,
+      "version": "2.0.0-9964",
+      "digest": "sha256:69e448cedc7d3a3a1571ce861c4bb1a5133e781b74b18d66a6a8334a467e9613"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-9840",
@@ -52,9 +52,9 @@
       "buildNumber": 9840
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 9947,
       "version": "2.0.0-9947",
-      "digest": "sha256:6dffd4317473536eef952ad7210fde39500a0cc4e7c0908be47feb800e9874d5"
+      "digest": "sha256:6dffd4317473536eef952ad7210fde39500a0cc4e7c0908be47feb800e9874d5",
+      "buildNumber": 9947
     },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-9840",
