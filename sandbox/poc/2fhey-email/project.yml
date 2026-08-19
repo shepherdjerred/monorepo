@@ -49,6 +49,7 @@ targets:
       - target: MailMateCodeFillProvider
         embed: true
       - target: MailMateCodeFillHelper
+        embed: false
     postCompileScripts:
       - name: Embed MailMate helper
         basedOnDependencyAnalysis: false
