@@ -243,7 +243,9 @@ describe("awardBucksForMatch", () => {
     "awards the Ranked 5s participation bonus as a distinct ledger row",
     assertRanked5sParticipationBonus,
   );
+});
 
+describe("awardBucksForMatch additional cases", () => {
   test("stacks the Clash bonus with the win and MVP rewards", async () => {
     await trackPlayer({
       serverId: ENABLED_GUILD,
