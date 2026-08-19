@@ -26,8 +26,9 @@ the plist.
 # What did I work on last week?
 toolkit history recent --since 7d
 
-# Didn't I solve this before?
-toolkit history search "argocd prune" --since 90d --include-excerpts
+# Didn't I solve this before? Narrow first, then inspect one selected record.
+toolkit history search "argocd prune" --since 90d
+toolkit history show <ID_FROM_SEARCH> --query "argocd prune"
 
 # Limit the search to one client or return structured output.
 toolkit history search "ingress" --source conductor --json
@@ -38,10 +39,29 @@ toolkit history daemon status --json
 ```
 
 Supported sources are `conductor`, `claude`, `codex`, `cursor`,
-`opencode-conductor`, and `opencode-standalone`. Search defaults to metadata
-and match results. `--include-excerpts` reopens the original stores read-only
-and returns bounded excerpts without persisting transcript bodies in the
-index.
+`opencode-conductor`, and `opencode-standalone`. Search uses BM25 relevance;
+recency only breaks ties. Unquoted terms are AND-prefix matches. To request an
+exact phrase, preserve literal quotes in the query, for example
+`toolkit history search '"Bryan Bucks"'`.
+
+Search and recent hide the current Conductor/Codex run and group parallel
+sessions that opened with the same normalized prompt. Use `--include-current`
+or `--include-duplicates` to override those defaults. `--include-excerpts`
+reopens only returned records and adds 360-character dialogue-first excerpts.
+
+`show` is the normal second stage. By default it returns the opening request
+plus latest dialogue, bounded to eight messages and 6,000 characters. With
+`--query`, it centers on the best dialogue match and admits only matching tool
+messages; `--include-tools` admits all nearby tools. System instructions,
+reasoning, and compaction records are excluded. Cursor messages use `unknown`
+because its flattened index has no roles. IDs are local to the current rebuild;
+rerun search if an ID is missing.
+
+Search JSON is `{ query, results, warnings }`, recent JSON is
+`{ results, warnings }`, and show JSON is `{ record, messages, truncated }`.
+Human-readable source warnings go to stderr. An unavailable source is silent in
+an all-source query when it is merely uninstalled, but warns when explicitly
+requested.
 
 For “what is the current status?”, use history to find the relevant branch,
 PR, or workspace, then verify the live state separately with `toolkit deployed`,

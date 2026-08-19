@@ -1,22 +1,34 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import type { HistoryPaths } from "./paths.ts";
+import { scanCodexCatalog } from "./codex-catalog.ts";
+import {
+  readCodexHistoryJsonl,
+  scanCodexHistoryJsonl,
+} from "./codex-history.ts";
+import { createConductorSource } from "./conductor.ts";
+import { createCursorSource } from "./cursor.ts";
+import {
+  historyMessageRole,
+  INDEXED_MESSAGE_PARSE_LIMIT,
+  makeHistoryDocument,
+  openingPrompt,
+  parseCodexItem,
+  parseConversationEnvelope,
+} from "./messages.ts";
 import { createOpenCodeSources } from "./opencode.ts";
+import type { HistoryPaths } from "./paths.ts";
 import {
   filesUnder,
   firstText,
   pathExists,
   readDatabase,
   requireTables,
-  rowValue,
   rows,
-  RowSchema,
+  sourceReadResult,
   sourceResult,
 } from "./sources-shared.ts";
 import {
-  cleanText,
-  extractText,
   parseJsonLine,
   parseRecord,
   parseTimestamp,
@@ -24,55 +36,68 @@ import {
 } from "./text.ts";
 import type {
   HistoryDocument,
+  HistoryMessage,
+  HistoryRecord,
   HistorySource,
+  HistorySourceReadResult,
   HistorySourceResult,
 } from "./types.ts";
 
-async function scanConductor(
-  paths: HistoryPaths,
-): Promise<HistorySourceResult> {
-  const files = (await pathExists(paths.conductorDb))
-    ? [paths.conductorDb]
-    : [];
-  return sourceResult("conductor", files, () => {
-    const database = readDatabase(paths.conductorDb);
-    try {
-      requireTables(database, "Conductor", ["sessions", "session_messages"]);
-      const sessionRows = rows(
-        database,
-        `SELECT s.id, s.title, s.created_at, s.updated_at, s.model,
-                s.agent_type, s.workspace_id,
-                GROUP_CONCAT(COALESCE(sm.content, sm.full_message, ''), '\n') AS body
-           FROM sessions s
-           LEFT JOIN session_messages sm ON sm.session_id = s.id
-          GROUP BY s.id, s.title, s.created_at, s.updated_at, s.model,
-                   s.agent_type, s.workspace_id`,
-        RowSchema,
-      );
-      return sessionRows.map((row) => {
-        const body = stringValue(rowValue(row, "body")) ?? "";
-        const title = stringValue(rowValue(row, "title")) ?? "Untitled";
-        const createdAt =
-          stringValue(rowValue(row, "created_at")) ?? new Date(0).toISOString();
-        const updatedAt = stringValue(rowValue(row, "updated_at")) ?? createdAt;
-        return {
-          source: "conductor",
-          sourceId: String(rowValue(row, "id")),
-          title: firstText(title, "Conductor session"),
-          path: paths.conductorDb,
-          workspace: stringValue(rowValue(row, "workspace_id")),
-          agent:
-            stringValue(rowValue(row, "agent_type")) ??
-            stringValue(rowValue(row, "model")),
-          createdAt: parseTimestamp(createdAt, new Date(0)),
-          updatedAt: parseTimestamp(updatedAt, new Date(0)),
-          searchText: `${title}\n${body}`,
-        } satisfies HistoryDocument;
-      });
-    } finally {
-      database.close();
+function placeholders(count: number): string {
+  return Array.from({ length: count }, () => "?").join(", ");
+}
+
+function batches<T>(values: readonly T[], size = 8): T[][] {
+  const result: T[][] = [];
+  for (let offset = 0; offset < values.length; offset += size) {
+    result.push(values.slice(offset, offset + size));
+  }
+  return result;
+}
+
+type ClaudeTranscript = {
+  readonly messages: readonly HistoryMessage[];
+  readonly createdAt: string | null;
+  readonly updatedAt: string | null;
+  readonly runtimeId: string | null;
+};
+
+async function readClaudeTranscript(
+  file: string,
+  maxCharacters = Number.POSITIVE_INFINITY,
+): Promise<ClaudeTranscript> {
+  const raw = await Bun.file(file).text();
+  const messages: HistoryMessage[] = [];
+  let createdAt: string | null = null;
+  let updatedAt: string | null = null;
+  let runtimeId: string | null = null;
+  for (const line of raw.split("\n")) {
+    if (line.trim().length === 0) {
+      continue;
     }
-  });
+    const value = parseJsonLine(line);
+    const record = parseRecord(value);
+    if (record === null) {
+      continue;
+    }
+    runtimeId ??=
+      stringValue(record["sessionId"]) ?? stringValue(record["session_id"]);
+    const timestamp = stringValue(record["timestamp"]);
+    if (timestamp !== null) {
+      const parsedTimestamp = parseTimestamp(timestamp, new Date(0));
+      createdAt ??= parsedTimestamp;
+      updatedAt = parsedTimestamp;
+    }
+    messages.push(
+      ...parseConversationEnvelope(
+        value,
+        historyMessageRole(record["type"]),
+        timestamp === null ? null : parseTimestamp(timestamp, new Date(0)),
+        maxCharacters,
+      ),
+    );
+  }
+  return { messages, createdAt, updatedAt, runtimeId };
 }
 
 async function scanClaude(paths: HistoryPaths): Promise<HistorySourceResult> {
@@ -80,185 +105,169 @@ async function scanClaude(paths: HistoryPaths): Promise<HistorySourceResult> {
   return sourceResult("claude", files, async () => {
     const documents: HistoryDocument[] = [];
     for (const file of files) {
-      const raw = await Bun.file(file).text();
-      const lines = raw.split("\n");
-      const textChunks: string[] = [];
-      let createdAt: string | null = null;
-      let updatedAt: string | null = null;
-      let title: string | null = null;
-      for (const line of lines) {
-        if (line.trim().length === 0) {
-          continue;
-        }
-        const value = parseJsonLine(line);
-        const record = parseRecord(value);
-        if (record === null) {
-          continue;
-        }
-        const timestamp = stringValue(record["timestamp"]);
-        if (createdAt === null && timestamp !== null) {
-          createdAt = parseTimestamp(timestamp, new Date(0));
-        }
-        if (timestamp !== null) {
-          updatedAt = parseTimestamp(timestamp, new Date(0));
-        }
-        const text = cleanText(extractText(record));
-        if (text.length > 0) {
-          textChunks.push(text);
-          if (
-            title === null &&
-            (record["type"] === "user" || record["type"] === "human")
-          ) {
-            title = firstText(text, "Claude Code session");
-          }
-        }
-      }
+      const transcript = await readClaudeTranscript(
+        file,
+        INDEXED_MESSAGE_PARSE_LIMIT,
+      );
       const info = await stat(file);
-      const fallback = new Date(info.mtimeMs);
-      documents.push({
-        source: "claude",
-        sourceId: path.relative(paths.claudeProjects, file),
-        title: title ?? path.basename(file, ".jsonl"),
-        path: file,
-        workspace: path.dirname(path.dirname(file)),
-        agent: "Claude Code",
-        createdAt: createdAt ?? fallback.toISOString(),
-        updatedAt: updatedAt ?? fallback.toISOString(),
-        searchText: textChunks.join("\n"),
-      });
+      const fallback = new Date(info.mtimeMs).toISOString();
+      const firstUser = openingPrompt(transcript.messages);
+      documents.push(
+        makeHistoryDocument(
+          {
+            source: "claude",
+            sourceId: path.relative(paths.claudeProjects, file),
+            title: firstText(
+              firstUser ?? path.basename(file, ".jsonl"),
+              "Claude Code session",
+            ),
+            path: file,
+            workspace: path.dirname(path.dirname(file)),
+            agent: "Claude Code",
+            createdAt: transcript.createdAt ?? fallback,
+            updatedAt: transcript.updatedAt ?? fallback,
+            runtimeId: transcript.runtimeId,
+          },
+          transcript.messages,
+        ),
+      );
     }
     return documents;
   });
 }
 
+async function readClaude(
+  _paths: HistoryPaths,
+  records: readonly HistoryRecord[],
+): Promise<HistorySourceReadResult> {
+  return sourceReadResult(
+    "claude",
+    records.map((record) => record.sourceId),
+    async () => {
+      const messages = new Map<string, readonly HistoryMessage[]>();
+      for (const record of records) {
+        const transcript = await readClaudeTranscript(record.path);
+        messages.set(record.sourceId, transcript.messages);
+      }
+      return messages;
+    },
+  );
+}
+
 type CodexItem = {
   readonly threadId: string;
-  readonly itemJson: string;
   readonly createdAtMs: number;
+  readonly updatedAtMs: number;
 };
 
-function scanCodexThreadDatabase(filePath: string): HistoryDocument[] {
+function codexThreadMessages(
+  filePath: string,
+  threadIds: readonly string[] | null = null,
+  maxCharacters = Number.POSITIVE_INFINITY,
+): ReadonlyMap<string, readonly HistoryMessage[]> {
   const database = readDatabase(filePath);
   try {
     requireTables(database, "Codex thread history", ["thread_items"]);
-    const itemRows = rows(
-      database,
-      "SELECT thread_id, item_json, created_at_ms FROM thread_items ORDER BY thread_id, rollout_ordinal",
-      z.object({
-        thread_id: z.string(),
-        item_json: z.string(),
-        created_at_ms: z.number(),
-      }),
-    );
-    const groups = new Map<string, CodexItem[]>();
-    for (const row of itemRows) {
-      const group = groups.get(row.thread_id) ?? [];
-      group.push({
-        threadId: row.thread_id,
-        itemJson: row.item_json,
-        createdAtMs: row.created_at_ms,
-      });
-      groups.set(row.thread_id, group);
-    }
-    return [...groups.values()].map((items) => {
-      const first = items[0];
-      if (first === undefined) {
-        throw new TypeError("Codex thread group was empty");
+    const selectedThreadIds =
+      threadIds ??
+      rows(
+        database,
+        "SELECT DISTINCT thread_id FROM thread_items ORDER BY thread_id",
+        z.object({ thread_id: z.string() }),
+      ).map((row) => row.thread_id);
+    const messages = new Map<string, HistoryMessage[]>();
+    for (const batch of batches(selectedThreadIds)) {
+      const itemRows = rows(
+        database,
+        `SELECT rowid AS history_rowid, thread_id
+           FROM thread_items
+          WHERE thread_id IN (${placeholders(batch.length)})
+          ORDER BY thread_id, rollout_ordinal`,
+        z.object({ history_rowid: z.number(), thread_id: z.string() }),
+        batch,
+      );
+      const readItem = database.prepare(
+        `SELECT item_json, item_type, created_at_ms
+           FROM thread_items WHERE rowid = ?`,
+      );
+      for (const metadata of itemRows) {
+        const row = z
+          .object({
+            item_json: z.string(),
+            item_type: z.string(),
+            created_at_ms: z.number(),
+          })
+          .parse(readItem.get(metadata.history_rowid));
+        const createdAt = new Date(row.created_at_ms).toISOString();
+        const entries = parseCodexItem(
+          row.item_type,
+          parseJsonLine(row.item_json),
+          createdAt,
+          maxCharacters,
+        );
+        const existing = messages.get(metadata.thread_id) ?? [];
+        existing.push(...entries);
+        messages.set(metadata.thread_id, existing);
       }
-      const text = items
-        .map((item) => extractText(parseJsonLine(item.itemJson)))
-        .filter((chunk) => chunk.length > 0)
-        .join("\n");
-      const createdAt = new Date(first.createdAtMs).toISOString();
-      const updatedAt = new Date(
-        items.at(-1)?.createdAtMs ?? first.createdAtMs,
-      ).toISOString();
-      return {
-        source: "codex",
-        sourceId: `${filePath}:${first.threadId}`,
-        title: firstText(text, first.threadId),
-        path: filePath,
-        workspace: null,
-        agent: "Codex",
-        createdAt,
-        updatedAt,
-        searchText: text,
-      } satisfies HistoryDocument;
-    });
+    }
+    return messages;
   } finally {
     database.close();
   }
 }
 
-async function scanCodexHistoryJsonl(
-  filePath: string,
-): Promise<HistoryDocument[]> {
-  const raw = await Bun.file(filePath).text();
-  const info = await stat(filePath);
-  return raw
-    .split("\n")
-    .map((line, index) => ({ line: line.trim(), index }))
-    .filter((entry) => entry.line.length > 0)
-    .map((entry) => {
-      const value = parseJsonLine(entry.line);
-      const record = parseRecord(value);
-      const text = cleanText(extractText(value));
-      const timestamp =
-        record?.["timestamp"] ?? record?.["created_at"] ?? record?.["time"];
-      const updatedAt = parseTimestamp(timestamp, new Date(info.mtimeMs));
-      return {
-        source: "codex",
-        sourceId: `${filePath}:line:${String(entry.index + 1)}`,
-        title: firstText(text, "Codex history entry"),
-        path: filePath,
-        workspace: null,
-        agent: "Codex",
-        createdAt: updatedAt,
-        updatedAt,
-        searchText: text,
-      } satisfies HistoryDocument;
-    });
-}
-
-function scanCodexCatalog(filePath: string): HistoryDocument[] {
+function scanCodexThreadDatabase(filePath: string): HistoryDocument[] {
   const database = readDatabase(filePath);
+  let items: readonly CodexItem[];
   try {
-    requireTables(database, "Codex catalog", ["local_thread_catalog"]);
-    const catalogRows = rows(
+    requireTables(database, "Codex thread history", ["thread_items"]);
+    items = rows(
       database,
-      `SELECT host_id, thread_id, display_title, source_created_at,
-              source_updated_at, cwd, model_provider, git_branch
-         FROM local_thread_catalog
-        WHERE missing_candidate = 0`,
-      RowSchema,
+      `SELECT thread_id, min(created_at_ms) AS created_at_ms,
+              max(created_at_ms) AS updated_at_ms
+         FROM thread_items
+        GROUP BY thread_id
+        ORDER BY thread_id`,
+      z
+        .object({
+          thread_id: z.string(),
+          created_at_ms: z.number(),
+          updated_at_ms: z.number(),
+        })
+        .transform((row) => ({
+          threadId: row.thread_id,
+          createdAtMs: row.created_at_ms,
+          updatedAtMs: row.updated_at_ms,
+        })),
     );
-    return catalogRows.map((row) => {
-      const title =
-        stringValue(rowValue(row, "display_title")) ?? "Codex thread";
-      const workspace = stringValue(rowValue(row, "cwd"));
-      const branch = stringValue(rowValue(row, "git_branch"));
-      const text = `${title}\n${workspace ?? ""}\n${branch ?? ""}`;
-      return {
-        source: "codex",
-        sourceId: `${filePath}:${String(rowValue(row, "host_id"))}:${String(rowValue(row, "thread_id"))}`,
-        title: firstText(title, "Codex thread"),
-        path: filePath,
-        workspace,
-        agent: stringValue(rowValue(row, "model_provider")) ?? "Codex",
-        createdAt: parseTimestamp(
-          rowValue(row, "source_created_at"),
-          new Date(0),
-        ),
-        updatedAt: parseTimestamp(
-          rowValue(row, "source_updated_at"),
-          new Date(0),
-        ),
-        searchText: text,
-      } satisfies HistoryDocument;
-    });
   } finally {
     database.close();
   }
+  const messages = codexThreadMessages(
+    filePath,
+    null,
+    INDEXED_MESSAGE_PARSE_LIMIT,
+  );
+  return items.map((item) => {
+    const threadMessages = messages.get(item.threadId) ?? [];
+    return makeHistoryDocument(
+      {
+        source: "codex",
+        sourceId: `${filePath}:${item.threadId}`,
+        title: firstText(
+          openingPrompt(threadMessages) ?? item.threadId,
+          item.threadId,
+        ),
+        path: filePath,
+        workspace: null,
+        agent: "Codex",
+        createdAt: new Date(item.createdAtMs).toISOString(),
+        updatedAt: new Date(item.updatedAtMs).toISOString(),
+        runtimeId: item.threadId,
+      },
+      threadMessages,
+    );
+  });
 }
 
 async function scanCodex(paths: HistoryPaths): Promise<HistorySourceResult> {
@@ -278,14 +287,53 @@ async function scanCodex(paths: HistoryPaths): Promise<HistorySourceResult> {
     }
   }
   return sourceResult("codex", existingFiles, async () => {
-    const documents: HistoryDocument[] = [];
+    const threadDocuments: HistoryDocument[] = [];
     for (const file of threadFiles) {
       if (await pathExists(file)) {
-        documents.push(...scanCodexThreadDatabase(file));
+        threadDocuments.push(...scanCodexThreadDatabase(file));
       }
     }
+    const catalogDocuments = (await pathExists(paths.codexCatalogDb))
+      ? scanCodexCatalog(paths.codexCatalogDb)
+      : [];
+    const catalogByThread = new Map(
+      catalogDocuments.flatMap((document) =>
+        document.runtimeId === null
+          ? []
+          : [[document.runtimeId, document] as const],
+      ),
+    );
+    const indexedThreadIds = new Set(
+      threadDocuments.flatMap((document) =>
+        document.runtimeId === null ? [] : [document.runtimeId],
+      ),
+    );
+    const documents = threadDocuments.map((document) => {
+      const catalog =
+        document.runtimeId === null
+          ? undefined
+          : catalogByThread.get(document.runtimeId);
+      if (catalog === undefined) {
+        return document;
+      }
+      return {
+        ...document,
+        title: catalog.title,
+        workspace: catalog.workspace,
+        agent: catalog.agent,
+        toolOutputText: [document.toolOutputText, catalog.toolOutputText]
+          .filter((text) => text.length > 0)
+          .join("\n"),
+      } satisfies HistoryDocument;
+    });
     if (await pathExists(paths.codexCatalogDb)) {
-      documents.push(...scanCodexCatalog(paths.codexCatalogDb));
+      documents.push(
+        ...catalogDocuments.filter(
+          (document) =>
+            document.runtimeId === null ||
+            !indexedThreadIds.has(document.runtimeId),
+        ),
+      );
     }
     if (await pathExists(paths.codexHistoryJsonl)) {
       documents.push(...(await scanCodexHistoryJsonl(paths.codexHistoryJsonl)));
@@ -294,57 +342,93 @@ async function scanCodex(paths: HistoryPaths): Promise<HistorySourceResult> {
   });
 }
 
-async function scanCursor(paths: HistoryPaths): Promise<HistorySourceResult> {
-  const files = (await pathExists(paths.cursorConversationDb))
-    ? [paths.cursorConversationDb]
-    : [];
-  return sourceResult("cursor", files, () => {
-    const database = readDatabase(paths.cursorConversationDb);
-    try {
-      requireTables(database, "Cursor conversation search", [
-        "conversations",
-        "conversation_fts",
-      ]);
-      const conversationRows = rows(
-        database,
-        `SELECT c.fts_rowid, c.source, c.scope, c.id, c.title, c.updated_at,
-                f.body
-           FROM conversations c
-           JOIN conversation_fts f ON f.rowid = c.fts_rowid`,
-        RowSchema,
+async function readCodex(
+  paths: HistoryPaths,
+  records: readonly HistoryRecord[],
+): Promise<HistorySourceReadResult> {
+  return sourceReadResult(
+    "codex",
+    records.map((record) => record.sourceId),
+    async () => {
+      const result = new Map<string, readonly HistoryMessage[]>();
+      const catalogDocuments = (await pathExists(paths.codexCatalogDb))
+        ? scanCodexCatalog(paths.codexCatalogDb)
+        : [];
+      const catalogByThread = new Map(
+        catalogDocuments.flatMap((document) =>
+          document.runtimeId === null
+            ? []
+            : [[document.runtimeId, document] as const],
+        ),
       );
-      return conversationRows.map((row) => {
-        const title =
-          stringValue(rowValue(row, "title")) ?? "Cursor conversation";
-        const body = stringValue(rowValue(row, "body")) ?? "";
-        const updatedAt = parseTimestamp(
-          rowValue(row, "updated_at"),
-          new Date(0),
-        );
-        return {
-          source: "cursor",
-          sourceId: `${String(rowValue(row, "source"))}:${String(rowValue(row, "scope"))}:${String(rowValue(row, "id"))}`,
-          title: firstText(title, "Cursor conversation"),
-          path: paths.cursorConversationDb,
-          workspace: stringValue(rowValue(row, "scope")),
-          agent: "Cursor",
-          createdAt: updatedAt,
-          updatedAt,
-          searchText: `${title}\n${body}`,
-        } satisfies HistoryDocument;
-      });
-    } finally {
-      database.close();
-    }
-  });
+      const catalogBySourceId = new Map(
+        catalogDocuments.map((document) => [document.sourceId, document]),
+      );
+      const catalogMessages = (
+        document: HistoryDocument | undefined,
+      ): readonly HistoryMessage[] => {
+        if (document === undefined) {
+          return [];
+        }
+        const text = [document.title, document.toolOutputText]
+          .filter((part) => part.length > 0)
+          .join("\n");
+        return [{ role: "tool", text, createdAt: document.updatedAt }];
+      };
+      const byPath = Map.groupBy(records, (record) => record.path);
+      for (const [filePath, fileRecords] of byPath) {
+        if (/thread_history_.*\.sqlite$/u.test(filePath)) {
+          const threadIds = fileRecords.map((record) =>
+            record.sourceId.slice(filePath.length + 1),
+          );
+          const messages = codexThreadMessages(filePath, threadIds);
+          for (const record of fileRecords) {
+            const threadId = record.sourceId.slice(filePath.length + 1);
+            const threadMessages = messages.get(threadId);
+            if (threadMessages === undefined) {
+              continue;
+            }
+            result.set(record.sourceId, [
+              ...threadMessages,
+              ...catalogMessages(catalogByThread.get(threadId)),
+            ]);
+          }
+        } else if (filePath === paths.codexHistoryJsonl) {
+          const selected = new Set(
+            fileRecords.map((record) => record.sourceId),
+          );
+          const messages = await readCodexHistoryJsonl(filePath, selected);
+          for (const record of fileRecords) {
+            const recordMessages = messages.get(record.sourceId);
+            if (recordMessages !== undefined) {
+              result.set(record.sourceId, recordMessages);
+            }
+          }
+        } else {
+          for (const record of fileRecords) {
+            const document = catalogBySourceId.get(record.sourceId);
+            if (document !== undefined) {
+              result.set(record.sourceId, catalogMessages(document));
+            }
+          }
+        }
+      }
+      return result;
+    },
+  );
 }
 
 export function createHistorySources(): readonly HistorySource[] {
   return [
-    { name: "conductor", label: "Conductor", scan: scanConductor },
-    { name: "claude", label: "Claude Code", scan: scanClaude },
-    { name: "codex", label: "Codex", scan: scanCodex },
-    { name: "cursor", label: "Cursor", scan: scanCursor },
+    createConductorSource(),
+    {
+      name: "claude",
+      label: "Claude Code",
+      scan: scanClaude,
+      read: readClaude,
+    },
+    { name: "codex", label: "Codex", scan: scanCodex, read: readCodex },
+    createCursorSource(),
     ...createOpenCodeSources(),
   ];
 }

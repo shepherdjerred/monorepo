@@ -7,10 +7,12 @@ import {
   HistoryDaemonStatusSchema,
   HistoryDaemonResponseSchema,
 } from "./ipc.ts";
-import type { HistoryRuntimePaths } from "./paths.ts";
+import type { HistoryPaths, HistoryRuntimePaths } from "./paths.ts";
 import type { HistoryDaemonState } from "./ipc.ts";
+import type { HistorySource, HistorySourceResult } from "./types.ts";
 
 const INTERVAL_SECONDS = 30;
+const SOURCE_SCAN_CONCURRENCY = 2;
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -28,6 +30,27 @@ async function logLine(
     mode: 0o600,
   });
   await chmod(logPath, 0o600);
+}
+
+export async function scanHistorySources(
+  sources: readonly HistorySource[],
+  paths: HistoryPaths,
+): Promise<HistorySourceResult[]> {
+  const results: HistorySourceResult[] = [];
+  for (
+    let offset = 0;
+    offset < sources.length;
+    offset += SOURCE_SCAN_CONCURRENCY
+  ) {
+    results.push(
+      ...(await Promise.all(
+        sources
+          .slice(offset, offset + SOURCE_SCAN_CONCURRENCY)
+          .map(async (source) => source.scan(paths)),
+      )),
+    );
+  }
+  return results;
 }
 
 export async function runHistoryDaemon(): Promise<void> {
@@ -61,9 +84,7 @@ export async function runHistoryDaemon(): Promise<void> {
     }
     scanning = true;
     try {
-      const results = await Promise.all(
-        sources.map((source) => source.scan(paths)),
-      );
+      const results = await scanHistorySources(sources, paths);
       await index.ingest(results, force);
       lastScanAt = new Date().toISOString();
       await logLine(runtimePaths, "history scan complete", {

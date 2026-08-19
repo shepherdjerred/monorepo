@@ -1,10 +1,13 @@
 import { Database } from "bun:sqlite";
 import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { z } from "zod";
 import type {
   HistoryDocument,
+  HistoryMessage,
   HistorySourceName,
+  HistorySourceReadResult,
   HistorySourceResult,
 } from "./types.ts";
 
@@ -14,10 +17,11 @@ export function rows<T extends z.ZodType>(
   database: Database,
   sql: string,
   schema: T,
+  values: readonly (string | number)[] = [],
 ): z.infer<T>[] {
   return database
     .prepare(sql)
-    .all()
+    .all(...values)
     .map((row: unknown) => schema.parse(row));
 }
 
@@ -130,4 +134,77 @@ export async function sourceResult(
 
 export function readDatabase(filePath: string): Database {
   return new Database(filePath, { readonly: true, strict: true });
+}
+
+type DatabaseOpener = (filePath: string) => Database;
+
+function isCantOpen(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("SQLITE_CANTOPEN") ||
+    message.toLocaleLowerCase().includes("unable to open database file")
+  );
+}
+
+export async function readCursorDatabase(
+  filePath: string,
+  openOrdinary: DatabaseOpener = readDatabase,
+): Promise<Database> {
+  let ordinary: Database | null = null;
+  try {
+    ordinary = openOrdinary(filePath);
+    ordinary.query("SELECT 1").get();
+    return ordinary;
+  } catch (error: unknown) {
+    ordinary?.close();
+    if (!isCantOpen(error)) {
+      throw error;
+    }
+    try {
+      const wal = await stat(`${filePath}-wal`);
+      if (wal.size > 0) {
+        throw new Error(
+          `Cursor database cannot be opened read-only while its live WAL is present: ${filePath}-wal`,
+          { cause: error },
+        );
+      }
+    } catch (walError: unknown) {
+      const code = z
+        .object({ code: z.string().optional() })
+        .safeParse(walError);
+      if (!code.success || code.data.code !== "ENOENT") {
+        throw walError;
+      }
+    }
+    const immutableUrl = pathToFileURL(filePath);
+    immutableUrl.searchParams.set("immutable", "1");
+    return new Database(immutableUrl.href, { readonly: true, strict: true });
+  }
+}
+
+export async function sourceReadResult(
+  source: HistorySourceName,
+  requestedSourceIds: readonly string[],
+  read: () =>
+    | ReadonlyMap<string, readonly HistoryMessage[]>
+    | Promise<ReadonlyMap<string, readonly HistoryMessage[]>>,
+): Promise<HistorySourceReadResult> {
+  try {
+    const messages = await read();
+    return {
+      source,
+      messages,
+      missingSourceIds: requestedSourceIds.filter(
+        (sourceId) => !messages.has(sourceId),
+      ),
+      error: null,
+    };
+  } catch (error: unknown) {
+    return {
+      source,
+      messages: new Map(),
+      missingSourceIds: [],
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
