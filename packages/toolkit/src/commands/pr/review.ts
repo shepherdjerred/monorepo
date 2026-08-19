@@ -10,7 +10,6 @@ import {
   fetchHeadSha,
   listFindings,
   resolveFinding,
-  reviewStateFor,
   type Finding,
 } from "#lib/review/findings.ts";
 import {
@@ -18,10 +17,14 @@ import {
   harvestVerdict,
   REQUIRED_REVIEW_GATES,
 } from "#lib/review/harvest.ts";
-import { resolveProvider } from "@shepherdjerred/code-review";
+import {
+  resolveProvider,
+  type ReviewProvider,
+} from "@shepherdjerred/code-review";
 
 export type ReviewOptions = {
   repo?: string | undefined;
+  provider?: string | undefined;
   json?: boolean | undefined;
   finding?: string | undefined;
   evidence?: string | undefined;
@@ -43,6 +46,12 @@ function maxBlockingPriority(): number {
     );
   }
   return parsed;
+}
+
+function selectedProvider(options: ReviewOptions): ReviewProvider | undefined {
+  return options.provider === undefined
+    ? undefined
+    : resolveProvider(options.provider);
 }
 
 /**
@@ -99,10 +108,12 @@ export async function reviewListCommand(
 ): Promise<void> {
   const repo = options.repo ?? DEFAULT_REPO;
   const number = requirePr(prNumber);
+  const provider = selectedProvider(options);
   const { head, findings } = await listFindings({
     repo,
     number,
     token: requireToken(),
+    provider,
   });
 
   if (options.json === true) {
@@ -140,7 +151,13 @@ export async function reviewResolveCommand(
   }
 
   const token = requireToken();
-  const { findings } = await listFindings({ repo, number, token });
+  const provider = selectedProvider(options);
+  const { findings } = await listFindings({
+    repo,
+    number,
+    token,
+    provider,
+  });
   const matches = findings.filter(
     (finding) => finding.key === key || finding.title === key,
   );
@@ -214,24 +231,21 @@ export async function reviewHarvestCommand(
         continue;
       }
 
-      const { head: reviewedHead, findings } = await listFindings({
+      const {
+        head: reviewedHead,
+        findings,
+        reviewState,
+      } = await listFindings({
         repo,
         number,
         token,
         provider,
         head: prHead,
-      });
-      const state = await reviewStateFor({
-        repo,
-        number,
-        token,
-        head: prHead,
-        provider,
       });
       const verdict = harvestVerdict({
         gate,
-        reviewedAtHead: state.reviewedAtHead,
-        completionSignal: state.completionSignal,
+        reviewedAtHead: reviewState.reviewedCommit === prHead,
+        completionSignal: reviewState.completionSignal,
         blockingCount: findings.filter(
           (finding) =>
             !finding.isResolved &&

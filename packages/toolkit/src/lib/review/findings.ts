@@ -18,6 +18,7 @@ import {
 import {
   fetchReviewThreads,
   resolveReviewState,
+  type ReviewStateResult,
 } from "@shepherdjerred/code-review/github";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import { markQodoFindingResolved } from "@shepherdjerred/code-review/qodo";
@@ -45,9 +46,13 @@ export async function listFindings(input: {
   repo: string;
   number: number;
   token: string;
-  provider?: ReviewProvider;
-  head?: string;
-}): Promise<{ head: string; findings: Finding[] }> {
+  provider?: ReviewProvider | undefined;
+  head?: string | undefined;
+}): Promise<{
+  head: string;
+  findings: Finding[];
+  reviewState: ReviewStateResult;
+}> {
   const provider = input.provider ?? resolveRequiredReviewProvider();
   const head = input.head ?? (await fetchHeadSha(input));
   const state = await resolveReviewState({
@@ -76,7 +81,7 @@ export async function listFindings(input: {
         isProviderAuthor(provider, thread.authorLogin) && !thread.isOutdated,
     )
     .map((thread, index) => toFinding(thread, provider, index));
-  return { head, findings };
+  return { head, findings, reviewState: state };
 }
 
 /**

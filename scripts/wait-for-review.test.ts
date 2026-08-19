@@ -176,6 +176,17 @@ describe("review gate source", () => {
     }
   });
 
+  test("both required gates remain independently retryable", async () => {
+    const pipeline = await Bun.file(
+      `${import.meta.dir}/../.buildkite/pipeline.yml`,
+    ).text();
+    for (const stepKey of ["review-gate", "codex-review-gate"]) {
+      expect(reviewGateStepBlockText(pipeline, stepKey)).not.toContain(
+        "cancel_on_build_failing",
+      );
+    }
+  });
+
   test("the gate script checks out a ref and runs the gate from it", async () => {
     const script = await Bun.file(
       `${import.meta.dir}/../.buildkite/scripts/review-gate.sh`,

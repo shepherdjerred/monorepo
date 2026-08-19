@@ -1033,7 +1033,6 @@ steps:
     key: review-gate
     timeout_in_minutes: 60
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
-    cancel_on_build_failing: true
     env:
       REVIEW_PROVIDER: qodo
     command: |
@@ -1051,7 +1050,6 @@ steps:
     key: codex-review-gate
     timeout_in_minutes: 60
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
-    cancel_on_build_failing: true
     env:
       REVIEW_PROVIDER: codex
     command: |
