@@ -299,7 +299,7 @@ describe("command process-group termination", () => {
     const directory = await mkdtemp(path.join(tmpdir(), "shell-command-"));
     try {
       const result = await runCommand({
-        executable: "/bin/zsh",
+        executable: "/bin/sh",
         args: ["-lc", 'printf \'%s:%s\' "$PR_FLEET_TEST" "$PWD"'],
         cwd: directory,
         timeoutMs: 30_000,

@@ -192,7 +192,9 @@ describe("managed checkouts", () => {
       await rm(parent, { recursive: true, force: true });
     }
   });
+});
 
+describe("managed checkout safety", () => {
   test("refuses to reuse a dirty managed clone without resetting it", async () => {
     const sourceCheckout = await temporaryDirectory("pr-fleet-source-");
     const checkout = await temporaryDirectory("pr-fleet-managed-");
