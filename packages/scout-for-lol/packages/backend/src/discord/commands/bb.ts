@@ -1,8 +1,4 @@
-import {
-  type ChatInputCommandInteraction,
-  EmbedBuilder,
-  SlashCommandBuilder,
-} from "discord.js";
+import { EmbedBuilder } from "discord.js";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -15,7 +11,6 @@ import {
 import { placeBet } from "#src/betting/place-bet.ts";
 import { describeResult } from "#src/betting/bet-button.ts";
 import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
-import { MIN_STAKE } from "#src/betting/constants.ts";
 import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { renderBucksHistory } from "#src/betting/navigation.ts";
 import { getOpenMarketAggregates } from "#src/betting/open-market.ts";
@@ -34,6 +29,11 @@ import { getFlag } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
 import { buildBbPrizesEmbed } from "#src/discord/commands/bb-prizes.ts";
+import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
+import {
+  replyBucksAsk,
+  type BucksAskAgentRunner,
+} from "#src/discord/commands/bb-ask.ts";
 import {
   buildOpenMarketSections,
   buildUnknownGameReplyChunks,
@@ -80,83 +80,6 @@ const BUCKS_COLOR = 0x2e_cc_71;
 export function isPublicBbSubcommand(subcommand: string): boolean {
   return subcommand === "rules" || subcommand === "prizes";
 }
-
-export const bbCommand = new SlashCommandBuilder()
-  .setName("bb")
-  .setDescription("Bryan Bucks — betting, balances, and prizes")
-  .addSubcommand((sub) =>
-    sub.setName("balance").setDescription("Check your Bryan Bucks balance"),
-  )
-  .addSubcommand((sub) =>
-    sub.setName("prizes").setDescription("See what your Bryan Bucks can buy"),
-  )
-  .addSubcommand((sub) =>
-    sub.setName("rules").setDescription("How Bryan Bucks works"),
-  )
-  .addSubcommand((sub) =>
-    sub
-      .setName("history")
-      .setDescription("How you earned and spent your Bryan Bucks"),
-  )
-  .addSubcommand((sub) =>
-    sub.setName("open").setDescription("Games you can still bet on"),
-  )
-  .addSubcommand((sub) =>
-    sub
-      .setName("bet")
-      .setDescription("Offer up to an amount; only matched Bucks are at risk")
-      .addStringOption((option) =>
-        option
-          .setName("game")
-          .setDescription("A tracked player in the game")
-          .setRequired(true),
-      )
-      .addStringOption((option) =>
-        option
-          .setName("team")
-          .setDescription("The team to win")
-          .setRequired(true)
-          .addChoices(
-            { name: "Blue", value: "blue" },
-            { name: "Red", value: "red" },
-          ),
-      )
-      .addIntegerOption((option) =>
-        option
-          .setName("amount")
-          .setDescription("How many whole Bryan Bucks")
-          .setRequired(true)
-          .setMinValue(MIN_STAKE),
-      ),
-  )
-  .addSubcommand((sub) =>
-    sub
-      .setName("parlay")
-      .setDescription("Bet YES or NO on a tracked player's live parlay")
-      .addStringOption((option) =>
-        option
-          .setName("player")
-          .setDescription("A tracked player in the parlay")
-          .setRequired(true),
-      )
-      .addStringOption((option) =>
-        option
-          .setName("side")
-          .setDescription("Whether every parlay leg will hit")
-          .setRequired(true)
-          .addChoices(
-            { name: "YES", value: "YES" },
-            { name: "NO", value: "NO" },
-          ),
-      )
-      .addIntegerOption((option) =>
-        option
-          .setName("amount")
-          .setDescription("How many whole Bryan Bucks")
-          .setRequired(true)
-          .setMinValue(MIN_STAKE),
-      ),
-  );
 
 export function buildPersonalBucksEmbed(
   view: PersonalBucksView,
@@ -208,7 +131,7 @@ export function buildPersonalBucksEmbed(
 }
 
 async function replyBalance(
-  interaction: ChatInputCommandInteraction,
+  interaction: BbCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
   discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
 ): Promise<void> {
@@ -226,20 +149,16 @@ async function replyBalance(
   });
 }
 
-async function replyPrizes(
-  interaction: ChatInputCommandInteraction,
-): Promise<void> {
+async function replyPrizes(interaction: BbCommandInteraction): Promise<void> {
   await interaction.editReply({ embeds: [buildBbPrizesEmbed()] });
 }
 
-async function replyRules(
-  interaction: ChatInputCommandInteraction,
-): Promise<void> {
+async function replyRules(interaction: BbCommandInteraction): Promise<void> {
   await interaction.editReply({ embeds: [buildBbRulesEmbed()] });
 }
 
 async function replyHistory(
-  interaction: ChatInputCommandInteraction,
+  interaction: BbCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
   discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
 ): Promise<void> {
@@ -248,7 +167,7 @@ async function replyHistory(
 }
 
 async function editReplyInChunks(
-  interaction: ChatInputCommandInteraction,
+  interaction: BbCommandInteraction,
   chunks: readonly string[],
 ): Promise<void> {
   const first = chunks[0];
@@ -262,7 +181,7 @@ async function editReplyInChunks(
 }
 
 async function replyOpen(
-  interaction: ChatInputCommandInteraction,
+  interaction: BbCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
 ): Promise<void> {
   const pools = await getOpenMarketAggregates({ serverId });
@@ -304,7 +223,7 @@ async function replyOpen(
 }
 
 async function replyParlay(
-  interaction: ChatInputCommandInteraction,
+  interaction: BbCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
   discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
 ): Promise<void> {
@@ -360,7 +279,7 @@ async function replyParlay(
 }
 
 async function replyBet(
-  interaction: ChatInputCommandInteraction,
+  interaction: BbCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
   discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
 ): Promise<void> {
@@ -416,7 +335,8 @@ async function replyBet(
 }
 
 export async function executeBb(
-  interaction: ChatInputCommandInteraction,
+  interaction: BbCommandInteraction,
+  dependencies: { runAskAgent?: BucksAskAgentRunner } = {},
 ): Promise<void> {
   const subcommand = interaction.options.getSubcommand();
 
@@ -440,8 +360,8 @@ export async function executeBb(
       return;
     }
 
-    // Only rules and the prize catalog are public. Wallets, positions, and
-    // market inspection stay private to the caller.
+    // Only rules and the prize catalog are public. Analysis starts private and
+    // can be explicitly published by its asker.
     const ephemeral = !isPublicBbSubcommand(subcommand);
     await interaction.deferReply({ ephemeral });
 
@@ -462,6 +382,16 @@ export async function executeBb(
         break;
       case "open":
         await replyOpen(interaction, serverId);
+        break;
+      case "ask":
+        await replyBucksAsk(
+          interaction,
+          serverId,
+          discordId,
+          dependencies.runAskAgent === undefined
+            ? {}
+            : { runAgent: dependencies.runAskAgent },
+        );
         break;
       case "bet":
         await replyBet(interaction, serverId, discordId);

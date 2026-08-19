@@ -72,11 +72,11 @@ export function createQuotaEngine<Scope extends string, Identity>(options: {
   const bucketId = (rule: QuotaRule<Scope>, identity: Identity): string =>
     `${rule.scope}:${rule.window}:${options.scopeKey(rule.scope, identity)}`;
 
-  const currentBucket = (
+  const activeBucket = (
     rule: QuotaRule<Scope>,
     identity: Identity,
     now: number,
-  ): Bucket => {
+  ): Bucket | undefined => {
     const id = bucketId(rule, identity);
     const existing = buckets.get(id);
     if (
@@ -85,15 +85,29 @@ export function createQuotaEngine<Scope extends string, Identity>(options: {
     ) {
       return existing;
     }
+    return undefined;
+  };
+
+  const currentBucket = (
+    rule: QuotaRule<Scope>,
+    identity: Identity,
+    now: number,
+  ): Bucket => {
+    const existing = activeBucket(rule, identity, now);
+    if (existing !== undefined) return existing;
     const bucket = { startedAt: now, used: 0, reserved: 0 };
-    buckets.set(id, bucket);
+    buckets.set(bucketId(rule, identity), bucket);
     return bucket;
   };
 
   return {
     snapshots: (identity, now) =>
       options.rules.map((rule) => {
-        const bucket = currentBucket(rule, identity, now);
+        const bucket = activeBucket(rule, identity, now) ?? {
+          startedAt: now,
+          used: 0,
+          reserved: 0,
+        };
         const used = Math.min(rule.limit, bucket.used + bucket.reserved);
         return {
           scope: rule.scope,

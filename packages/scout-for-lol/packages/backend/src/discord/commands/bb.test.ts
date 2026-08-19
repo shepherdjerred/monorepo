@@ -7,7 +7,7 @@ import {
   resolveOpenGameByAlias,
   trackedGameAliases,
 } from "#src/discord/commands/bb-market.ts";
-import { bbCommand } from "#src/discord/commands/bb.ts";
+import { bbCommand } from "#src/discord/commands/bb-definition.ts";
 
 function pool(matchId: string) {
   return {

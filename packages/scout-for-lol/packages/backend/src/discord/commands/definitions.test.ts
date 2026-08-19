@@ -5,6 +5,8 @@ import {
 } from "#src/discord/commands/definitions.ts";
 import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
+import { isPublicBbSubcommand } from "#src/discord/commands/bb.ts";
+import { bbCommand } from "#src/discord/commands/bb-definition.ts";
 
 const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
 
@@ -84,6 +86,26 @@ describe("registered Discord commands", () => {
         ],
       }),
     );
+  });
+
+  test("registers a bounded one-shot /bb ask subcommand that starts private", () => {
+    const ask = bbCommand
+      .toJSON()
+      .options?.find((option) => option.name === "ask");
+    if (ask === undefined || !("options" in ask)) {
+      throw new Error("/bb ask should be a subcommand with a question option");
+    }
+    expect(ask.options).toContainEqual(
+      expect.objectContaining({
+        name: "question",
+        required: true,
+        min_length: 1,
+        max_length: 500,
+      }),
+    );
+    expect(isPublicBbSubcommand("ask")).toBe(false);
+    expect(isPublicBbSubcommand("rules")).toBe(true);
+    expect(isPublicBbSubcommand("prizes")).toBe(true);
   });
 
   test("does not register autocomplete options", () => {
