@@ -74,6 +74,9 @@ func validatesDomainServiceIdentifiers() {
     #expect(!ServiceIdentity.isDomain("acme.example."))
     #expect(!ServiceIdentity.isDomain("-acme.example"))
     #expect(!ServiceIdentity.isDomain("acme.123"))
+    #expect(ServiceIdentity.matchingValues(for: "localhost").contains(ServiceIdentity.localURLIdentifier))
+    #expect(ServiceIdentity.matchingValues(for: "http://127.0.0.1:8788").contains("localhost"))
+    #expect(ServiceIdentity.matchingValues(for: "Your verification code").isEmpty)
 }
 
 @Test("requires contextual evidence")

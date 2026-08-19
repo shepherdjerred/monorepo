@@ -41,6 +41,18 @@ func consumesRecord() throws {
     #expect(try store.read(now: Date(timeIntervalSince1970: 101)).map(\.messageID) == ["one"])
 }
 
+@Test("consumes a record and returns remaining records under one lock")
+func consumesAndReadsRemainingRecords() throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = try CodeStore(directory: directory)
+    try store.append(makeRecord(code: "111111", messageID: "one", detectedAt: 100), now: Date(timeIntervalSince1970: 100))
+    try store.append(makeRecord(code: "222222", messageID: "two", detectedAt: 101), now: Date(timeIntervalSince1970: 101))
+
+    #expect(try store.consumeAndReadRemaining(messageID: "two", now: Date(timeIntervalSince1970: 101)).map(\.messageID) == ["one"])
+    #expect(try store.read(now: Date(timeIntervalSince1970: 101)).map(\.messageID) == ["one"])
+}
+
 @Test("serializes concurrent writers without losing records")
 func serializesConcurrentWriters() throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
