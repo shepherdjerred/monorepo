@@ -50,39 +50,6 @@ export const SelectScrollDownButton = forwardRef<
 export const SelectContent = forwardRef<
   React.ComponentRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
-<<<<<<< HEAD
->(({ className, children, position = "popper", ...props }, ref) => (
-  <SelectPrimitive.Portal>
-    <SelectPrimitive.Content
-      ref={ref}
-      position={position}
-      className={cn("scout-select-content", className)}
-      {...props}
-    >
-      <SelectScrollUpButton />
-      <SelectPrimitive.Viewport className="scout-select-viewport">
-        {children}
-      </SelectPrimitive.Viewport>
-      <SelectScrollDownButton />
-    </SelectPrimitive.Content>
-  </SelectPrimitive.Portal>
-));
-||||||| parent of d890ebc9a (feat(scout-for-lol): standardize Customs on shared design system)
->(({ className, children, position = "popper", ...props }, ref) => (
-  <SelectPrimitive.Portal>
-    <SelectPrimitive.Content
-      ref={ref}
-      position={position}
-      className={cn("scout-select-content", className)}
-      {...props}
-    >
-      <SelectScrollUpButton />
-      <SelectPrimitive.Viewport>{children}</SelectPrimitive.Viewport>
-      <SelectScrollDownButton />
-    </SelectPrimitive.Content>
-  </SelectPrimitive.Portal>
-));
-=======
 >(({ className, children, position = "popper", ...props }, ref) => {
   const container = useScoutPortalContainer();
   return (
@@ -102,7 +69,6 @@ export const SelectContent = forwardRef<
     </SelectPrimitive.Portal>
   );
 });
->>>>>>> d890ebc9a (feat(scout-for-lol): standardize Customs on shared design system)
 SelectContent.displayName = "SelectContent";
 export const SelectLabel = forwardRef<
   React.ComponentRef<typeof SelectPrimitive.Label>,
