@@ -7,6 +7,7 @@ import { createScoutDashboard } from "./scout-dashboard.ts";
 import { createSmartctlDashboard } from "./smartctl-dashboard.ts";
 import { createTasknotesDashboard } from "./tasknotes-dashboard.ts";
 import { createTemporalDashboard } from "./temporal-dashboard.ts";
+import { createStreambotVoiceDashboard } from "./streambot-voice-dashboard.ts";
 import { createVeleroDashboard } from "./velero-dashboard.ts";
 import { createZfsDashboard } from "./zfs-dashboard.ts";
 
@@ -19,6 +20,7 @@ const dashboardJson = [
   createSmartctlDashboard(),
   createTasknotesDashboard(),
   createTemporalDashboard(),
+  createStreambotVoiceDashboard(),
   createVeleroDashboard(),
   createZfsDashboard(),
 ]

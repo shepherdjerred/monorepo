@@ -4,6 +4,15 @@ import {
   voiceReplyPacketsTotal,
   voiceReplySendFailuresTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
+import {
+  voiceReplyBytesTotal,
+  voiceReplyDurationSeconds,
+} from "@shepherdjerred/streambot/observability/voice-diagnostic-metrics.ts";
+import {
+  NOOP_VOICE_ATTEMPT_OBSERVER,
+  type VoiceAttemptHandle,
+} from "@shepherdjerred/streambot/voice/attempt-context.ts";
+import type { VoiceSessionTelemetry } from "@shepherdjerred/streambot/observability/voice-session.ts";
 
 export type AssistantAudioSink = {
   readonly enqueue: (pcm24k: Uint8Array) => void;
@@ -19,8 +28,22 @@ export class PacedAssistantSender implements AssistantAudioSink {
   private wake: (() => void) | null = null;
   private done = false;
   private cancelled = false;
+  private sendFailed = false;
+  private sentPackets = 0;
+  private sentBytes = 0;
+  private readonly attempt: VoiceAttemptHandle;
+  private readonly telemetry: VoiceSessionTelemetry | undefined;
 
-  constructor(private readonly streamer: StreamerLike) {}
+  constructor(
+    private readonly streamer: StreamerLike,
+    options: {
+      readonly attempt?: VoiceAttemptHandle;
+      readonly telemetry?: VoiceSessionTelemetry;
+    } = {},
+  ) {
+    this.attempt = options.attempt ?? NOOP_VOICE_ATTEMPT_OBSERVER.begin();
+    this.telemetry = options.telemetry;
+  }
 
   enqueue(pcm24k: Uint8Array): void {
     if (this.cancelled) return;
@@ -41,6 +64,12 @@ export class PacedAssistantSender implements AssistantAudioSink {
     if (this.task === null) {
       this.done = true;
       this.encoder.close();
+      this.attempt.reply({
+        outcome: "cancelled-no-audio",
+        packets: 0,
+        bytes: 0,
+        durationMs: 0,
+      });
       this.finishTask ??= Promise.resolve();
       return this.finishTask;
     }
@@ -52,16 +81,58 @@ export class PacedAssistantSender implements AssistantAudioSink {
   }
 
   private async complete(flush: boolean): Promise<void> {
+    const startedAt = performance.now();
+    let outcome = this.cancelled ? "cancelled" : "success";
     try {
-      if (flush && !this.cancelled) this.queue.push(...this.encoder.finish());
-      this.done = true;
-      this.start();
-      this.wake?.();
-      this.wake = null;
-      await this.task;
+      await this.attempt.runStage(
+        "streambot.voice.reply_delivery",
+        {},
+        async (span) => {
+          try {
+            if (flush && !this.cancelled)
+              this.queue.push(...this.encoder.finish());
+            this.done = true;
+            this.start();
+            this.wake?.();
+            this.wake = null;
+            await this.task;
+            if (this.sendFailed) {
+              outcome = "failure";
+              throw new Error("Assistant reply delivery failed");
+            }
+          } finally {
+            this.encoder.close();
+            try {
+              await this.streamer.setAssistantSpeaking(false);
+            } finally {
+              this.telemetry?.duckChanged(false, outcome);
+            }
+            span.setAttribute("streambot.voice.reply.outcome", outcome);
+          }
+        },
+      );
+    } catch (error) {
+      outcome = "failure";
+      this.attempt.reply({
+        outcome,
+        packets: this.sentPackets,
+        bytes: this.sentBytes,
+        durationMs: performance.now() - startedAt,
+      });
+      throw error;
     } finally {
-      this.encoder.close();
-      await this.streamer.setAssistantSpeaking(false);
+      voiceReplyDurationSeconds.observe(
+        { outcome },
+        (performance.now() - startedAt) / 1000,
+      );
+      if (outcome !== "failure") {
+        this.attempt.reply({
+          outcome,
+          packets: this.sentPackets,
+          bytes: this.sentBytes,
+          durationMs: performance.now() - startedAt,
+        });
+      }
     }
   }
 
@@ -71,6 +142,7 @@ export class PacedAssistantSender implements AssistantAudioSink {
 
   private async run(): Promise<void> {
     await this.streamer.setAssistantSpeaking(true);
+    this.telemetry?.duckChanged(true);
     while (!this.done || this.queue.length > 0) {
       const packet = this.queue.shift();
       if (packet === undefined) {
@@ -88,10 +160,13 @@ export class PacedAssistantSender implements AssistantAudioSink {
         // whatever actually ended the turn. There is nothing left to send to,
         // so count it and stop pumping.
         voiceReplySendFailuresTotal.inc();
-
+        this.sendFailed = true;
         return;
       }
       voiceReplyPacketsTotal.inc();
+      voiceReplyBytesTotal.inc(packet.byteLength);
+      this.sentPackets += 1;
+      this.sentBytes += packet.byteLength;
       await Bun.sleep(20);
     }
   }

@@ -1,6 +1,7 @@
 import type { createSeekablePlayer } from "@shepherdjerred/discord-video-stream";
 import type { joinStreamerVoice } from "@shepherdjerred/streambot/streamer/join-voice.ts";
 import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
+import type { VoiceReceiveObserver } from "@shepherdjerred/discord-video-stream";
 import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
 import type {
   JoinVoiceInput,
@@ -53,6 +54,8 @@ export type StreamerLike = PooledUserbot & {
   setVoiceAudioListener: (
     listener: ((audio: ReceivedVoiceAudio) => void) | null,
   ) => void;
+  /** Receive-path metrics/log hooks applied to the active transport and the next join. */
+  setVoiceReceiveObserver: (observer: VoiceReceiveObserver | null) => void;
   seek: (seconds: number) => Promise<boolean>;
   getPosition: () => number | null;
   /** Most recent Discord-side voice ws close observed on this userbot, or null if none yet. */

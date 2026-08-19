@@ -10,10 +10,8 @@ import type {
   VoiceCommandInvocation,
   VoiceCommandPort,
 } from "@shepherdjerred/streambot/voice/voice-tools.ts";
-import {
-  type CompletedVoiceTurn,
-  VoiceAudioLifecycle,
-} from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";
+import { VoiceAudioLifecycle } from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";
+import type { CompletedVoiceTurn } from "@shepherdjerred/streambot/voice/audio-lifecycle-types.ts";
 
 const SILENCE_DURATION_MS = 2000;
 const PCM_SAMPLE_RATE = 24_000;

@@ -63,6 +63,7 @@ import { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts
 import { createSessionVoiceAssistant } from "@shepherdjerred/streambot/session/voice-session-factory.ts";
 import { destroySession } from "@shepherdjerred/streambot/session/destroy-session.ts";
 import { deleteSessionStateAfterFlush } from "@shepherdjerred/streambot/session/delete-session-state.ts";
+import type { VoiceCaptureManager } from "@shepherdjerred/streambot/voice/capture-manager.ts";
 
 const log = logger.child("session-manager");
 
@@ -89,6 +90,8 @@ export type SessionManagerDeps = {
   readonly voiceModels?: LocalVoiceModels | null;
   /** Loaded at boot alongside the models; fatal when missing while voice is enabled. */
   readonly voiceFeedbackClips?: SpokenFeedbackClips | null;
+  /** Process-wide diagnostic capture and attempt-correlation owner. */
+  readonly voiceCaptureManager?: VoiceCaptureManager;
 };
 
 // Re-exported for existing consumers (command-bot) — the canonical home is session-types.ts.
@@ -233,9 +236,11 @@ export class SessionManager {
     });
     if (moved) {
       // The card's click routing is keyed by voice channel, which just changed.
-      this.sessions
-        .get(keyOf(params.guildId, params.toChannelId))
-        ?.card.reown(params.toChannelId);
+      const session = this.sessions.get(
+        keyOf(params.guildId, params.toChannelId),
+      );
+      session?.card.reown(params.toChannelId);
+      session?.voiceAssistant?.moveChannel(params.toChannelId);
     }
     return moved;
   }

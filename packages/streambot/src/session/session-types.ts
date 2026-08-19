@@ -15,6 +15,11 @@ import type {
 } from "@shepherdjerred/streambot/types/ids.ts";
 import type { VoiceAssistantSession } from "@shepherdjerred/streambot/voice/voice-assistant-session.ts";
 import type { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
+import type {
+  VoiceDebugCaptureStatus,
+  VoiceDebugStartResult,
+  VoiceDebugStopResult,
+} from "@shepherdjerred/streambot/voice/capture-manager.ts";
 
 /** How often to checkpoint a session's playback state to disk for resume. */
 export const CHECKPOINT_MS = 10 * 1000;
@@ -35,6 +40,9 @@ export type SessionHandle = {
   assistantUserId: () => string | null;
   /** Current DAVE readiness of the normal assistant voice transport. */
   assistantDaveReady: () => boolean;
+  startVoiceDebugCapture: (durationSeconds: number) => VoiceDebugStartResult;
+  stopVoiceDebugCapture: () => VoiceDebugStopResult;
+  voiceDebugCaptureStatus: () => VoiceDebugCaptureStatus | null;
   /** Enumerate burnable subtitle candidates for the currently-playing item (`/stream subtitles`'s picker). Empty when nothing is playing. */
   listSubtitleCandidates: (signal: AbortSignal) => Promise<SubtitleCandidate[]>;
   /**
@@ -128,6 +136,9 @@ export const EMPTY_HANDLE: SessionHandle = {
   seek: () => Promise.resolve(false),
   assistantUserId: () => null,
   assistantDaveReady: () => false,
+  startVoiceDebugCapture: () => ({ outcome: "disabled" }),
+  stopVoiceDebugCapture: () => ({ outcome: "none" }),
+  voiceDebugCaptureStatus: () => null,
   listSubtitleCandidates: () => Promise.resolve([]),
   currentSourceId: () => null,
   hasPendingSubtitleMenu: () => false,

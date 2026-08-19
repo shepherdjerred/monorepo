@@ -56,12 +56,26 @@ the fallback. Both runtimes must recognize the packaged official positive fixtur
 the model. KWS, mel, embedding, phrase-classifier, and Silero files live at
 `/opt/streambot/voice`, are pinned and checksum-verified in
 the Docker build, and must never be downloaded at runtime. Missing assets, a failed recognition
-smoke, or key configuration are fatal when voice is enabled. No audio or transcript is persisted,
-and voice metrics must never
-label user IDs, transcripts, or media queries. Tool calls derive the Discord user from the detected
+smoke, or key configuration are fatal when voice is enabled. Production diagnostics deliberately
+persist every wake candidate and operator-triggered debug window in the private, 90-day
+`streambot-voice-captures` bucket. Captures can contain decoded user audio, Discord IDs,
+transcripts, normalized commands, media queries, and validated tool arguments/results. Raw audio
+must never enter logs, traces, metrics, or error reporting; credentials must never enter any
+diagnostic surface. Counters and histograms must use finite labels only. Guild/channel IDs are
+allowed only on active-session gauges and those series must be removed at session teardown. Tool
+calls derive the Discord user from the detected
 speaker and go through `commands/playback-command-service.ts`; do not accept identity or URLs from
 model arguments. Transient assistant ducking is a multiplier over the latest desired volume and
 must restore on success, failure, timeout, interruption, and teardown.
+
+Every wake candidate owns a Streambot-local attempt context from candidate detection through local
+verification, endpointing, cloud transcription/prefix verification, tools, reply drain, and one
+terminal outcome. The controlled root and child spans carry the capture ID; structured logs add the
+active trace/span IDs. OpenAI SDK tracing stays disabled. Offline probes and corpus evaluation use
+the no-op attempt implementation and do not upload captures. The capture queue is non-blocking,
+two-worker, and bounded to 128 MiB; upload or OTLP failure degrades observability only. Audio objects
+must upload before the versioned `manifest.json` commit marker. Graceful shutdown flushes capture,
+log, and trace exporters before exit.
 
 For local tuning on macOS, `bun run voice:harness` replaces only the outer adapters: AVFoundation
 microphone PCM is encoded with `DiscordOpusEncoder` and enters the same decoder/KWS/VAD lifecycle,
@@ -365,6 +379,20 @@ scraped by a ServiceMonitor (homelab `streambot.ts`). The headline metric is
 playback will stutter once the buffer drains; read it alongside `streambot_send_frametime_ratio`
 (send-bound vs transcode-bound) and `streambot_source_info` (ffprobe codec/resolution/HDR/audio).
 Grafana dashboard: `packages/homelab/src/cdk8s/grafana/streambot-dashboard.ts` (uid `streambot`).
+The complete voice surface is
+`packages/homelab/src/cdk8s/grafana/streambot-voice-dashboard.ts` (uid `streambot-voice`), with
+Tempo/Loki drill-downs by trace and capture ID. Voice telemetry initializes before local voice
+models so startup and transport work can be observed. `service.name` is always `streambot`.
+Stdout remains structured JSON and is mirrored to Loki through OTLP; controlled traces go to Tempo.
+Transcripts, normalized commands, IDs, and validated tool arguments/results are permitted in those
+private diagnostic records. Raw audio and credentials are prohibited.
+
+The receive observer in `@shepherdjerred/discord-video-stream` reports only bounded packet outcomes,
+bytes, speaking mappings, and DAVE readiness; observer exceptions are isolated and cannot change
+packet delivery. Five minutes without ingress emits one info log and the next packet emits one
+recovery log. Inactivity never alerts by itself. Alerting begins at an active-but-unready receive
+path, elevated decrypt/decode/malformed traffic, quota/cloud/reply failure, capture loss/pressure,
+a turn older than 35 seconds, or playback left ducked after a turn ends.
 The ffmpeg/send signals come from the vendored fork's optional `StreamObserver`
 (`@shepherdjerred/discord-video-stream`), threaded via the prepare/play options in `streamer.ts`.
 

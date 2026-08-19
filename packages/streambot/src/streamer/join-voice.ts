@@ -2,6 +2,7 @@ import {
   type MediaConnectionCloseInfo,
   type ReceivedVoiceAudio,
   type Streamer,
+  type VoiceReceiveObserver,
 } from "@shepherdjerred/discord-video-stream";
 import type { JoinVoiceInput } from "@shepherdjerred/streambot/machine/types.ts";
 import type {
@@ -11,6 +12,7 @@ import type {
 import { createVoiceCloseTracker } from "@shepherdjerred/streambot/streamer/voice-close-source.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { withVoiceSpan } from "@shepherdjerred/streambot/observability/tracing.ts";
 
 const log = logger.child("streamer");
 
@@ -25,12 +27,26 @@ export async function joinStreamerVoice(options: {
   now: () => number;
   onClose: ((info: VoiceCloseInfo) => void) | null;
   onAudio: ((audio: ReceivedVoiceAudio) => void) | null;
+  receiveObserver: VoiceReceiveObserver | null;
 }): Promise<VoiceCloseTracker> {
-  await options.streamer.joinVoice(
-    options.input.guildId,
-    options.input.channelId,
+  await withVoiceSpan(
+    "streambot.voice.transport_join",
     {
-      receiveAudio: options.receiveAudio,
+      "discord.guild_id": options.input.guildId,
+      "discord.channel_id": options.input.channelId,
+      "streambot.voice.receive_audio": options.receiveAudio,
+    },
+    async () => {
+      await options.streamer.joinVoice(
+        options.input.guildId,
+        options.input.channelId,
+        {
+          receiveAudio: options.receiveAudio,
+          ...(options.receiveObserver === null
+            ? {}
+            : { receiveObserver: options.receiveObserver }),
+        },
+      );
     },
   );
   const connection = options.streamer.voiceConnection;

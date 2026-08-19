@@ -173,6 +173,7 @@ Error opening input files: Input/output error`;
           transcript: "Hey Streambot, skip.",
           wakeVerified: true,
           mutated: true,
+          normalizedCommand: "skip",
         });
       },
     });
@@ -211,6 +212,7 @@ Error opening input files: Input/output error`;
           transcript: null,
           wakeVerified: false,
           mutated: false,
+          normalizedCommand: null,
         });
       },
     });

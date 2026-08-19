@@ -1,9 +1,9 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import {
-  register,
   startMetricsServer,
   stopMetricsServer,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
+import { register } from "@shepherdjerred/streambot/observability/metrics-registry.ts";
 
 const TEST_PORT = 19_466;
 

@@ -99,6 +99,19 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       preRollMs: num(env["VOICE_PRE_ROLL_MS"]),
       maxUtteranceMs: num(env["VOICE_MAX_UTTERANCE_MS"]),
       transactionTimeoutMs: num(env["VOICE_TRANSACTION_TIMEOUT_MS"]),
+      capture: {
+        enabled: strictBool(
+          "VOICE_CAPTURE_ENABLED",
+          env["VOICE_CAPTURE_ENABLED"],
+        ),
+        bucket: str(env["VOICE_CAPTURE_BUCKET"]),
+        endpoint: str(env["S3_ENDPOINT"]),
+        region: str(env["AWS_REGION"]),
+        forcePathStyle: strictBool(
+          "S3_FORCE_PATH_STYLE",
+          env["S3_FORCE_PATH_STYLE"],
+        ),
+      },
     },
     subtitles: {
       enabled: bool(env["SUBTITLES_ENABLED"]),
@@ -131,6 +144,12 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
     ffprobePath: env["FFPROBE_PATH"],
     observability: {
       metricsPort: num(env["METRICS_PORT"]),
+      telemetry: {
+        enabled: strictBool("TELEMETRY_ENABLED", env["TELEMETRY_ENABLED"]),
+        serviceName: str(env["TELEMETRY_SERVICE_NAME"]),
+        otlpEndpoint: str(env["OTLP_ENDPOINT"]),
+        lokiOtlpEndpoint: str(env["LOKI_OTLP_ENDPOINT"]),
+      },
     },
   };
 
@@ -139,6 +158,19 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
     const issues = z.flattenError(parsed.error);
     logger.error("Invalid streambot configuration", { issues });
     throw new Error("Invalid streambot configuration", { cause: parsed.error });
+  }
+  if (
+    parsed.data.voice.capture.enabled &&
+    (str(env["AWS_ACCESS_KEY_ID"]) === undefined ||
+      str(env["AWS_SECRET_ACCESS_KEY"]) === undefined)
+  ) {
+    logger.error("Invalid streambot configuration", {
+      issues: {
+        voiceCapture:
+          "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are required when voice capture is enabled",
+      },
+    });
+    throw new Error("Invalid streambot configuration");
   }
   return parsed.data;
 }

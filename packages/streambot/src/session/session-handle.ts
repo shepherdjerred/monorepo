@@ -29,6 +29,14 @@ export function buildSessionHandle(
     seek: (seconds) => session.entry.userbot.seek(seconds),
     assistantUserId: () => session.entry.userbot.assistantUserId(),
     assistantDaveReady: () => session.entry.userbot.assistantDaveReady(),
+    startVoiceDebugCapture: (durationSeconds) =>
+      session.voiceAssistant?.startDebugCapture(durationSeconds) ?? {
+        outcome: "disabled",
+      },
+    stopVoiceDebugCapture: () =>
+      session.voiceAssistant?.stopDebugCapture() ?? { outcome: "none" },
+    voiceDebugCaptureStatus: () =>
+      session.voiceAssistant?.debugCaptureStatus() ?? null,
     listSubtitleCandidates: (signal) => {
       const current = session.actor.getSnapshot().context.current;
       if (current === null) return Promise.resolve([]);

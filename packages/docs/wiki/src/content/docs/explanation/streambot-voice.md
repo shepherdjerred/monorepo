@@ -1,6 +1,6 @@
 ---
 title: Streambot voice assistant
-description: Local wake-word privacy with one-shot OpenAI speech transactions bound to existing Discord playback permissions.
+description: Why Streambot combines local wake gates, bounded OpenAI turns, correlated telemetry, and short-lived private diagnostic audio.
 ---
 
 Streambot listens for voice commands only while a playback session exists. The cheap, continuous
@@ -68,8 +68,9 @@ do with a slash command.
 - The utterance ends locally and both it and the whole cloud transaction are capped. Cloud
   verification is rate-limited per playback session by
   [`cloud-verification-rate-limiter.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/cloud-verification-rate-limiter.ts),
-  with a cooldown after a rejected transcript. All PCM and verifier features are erased after
-  accepted, rejected, interrupted, and timed-out trials.
+  with a cooldown after a rejected transcript. Working PCM and verifier features are erased after
+  accepted, rejected, interrupted, and timed-out trials; the exact bounded diagnostic clip is
+  separately queued for private, time-limited storage.
 
 ## Audio paths and privacy
 
@@ -88,14 +89,27 @@ manifest/checksums, ONNX runtime, or Silero VAD model is invalid —
 [`local-models.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/local-models.ts)
 treats every one of those as fatal rather than degrading to a weaker gate.
 
-Each locally verified candidate is transcribed ephemerally with no prompt naming Streambot. A
+Each locally verified candidate is transcribed with no prompt naming Streambot. A
 local false accept therefore transmits the ~2 s pre-roll plus the utterance to the transcription
 endpoint before the transcript gate rejects it and the turn closes. Queue and now-playing tool
 results sent to OpenAI are requester-anonymous: no Discord user IDs leave the process. A
 rejected prefix closes silently before `response.create`; an accepted prefix replaces the committed
-audio item with command-only text. SDK audio history and tracing are disabled. Metrics contain only
-bounded stage outcomes, usage, concurrency, and latency—never speakers, transcripts, or media
-queries. The OpenAI project should use zero-data retention when that control is available.
+audio item with command-only text. OpenAI SDK tracing is disabled. Streambot instead creates one
+controlled trace rooted at each wake candidate, with child spans for verification, endpointing,
+OpenAI, tools, and reply delivery. Private OTLP logs and traces may contain Discord IDs,
+transcripts, normalized commands, and validated tool inputs/results so an operator can reconstruct
+the turn. They never contain credentials or raw audio. Metrics remain bounded: counters and
+histograms have finite labels, while guild and channel IDs appear only on active-session gauges
+that disappear at teardown. The OpenAI project should use zero-data retention when that control is
+available.
+
+Diagnostic audio has a different boundary from telemetry. Every wake candidate stores the exact
+16 kHz mono verifier window when rejected, or the full endpointed utterance when accepted. This is
+the audio the detector actually evaluated, after Discord Opus decode and resampling. An admin can
+also open a short, process-wide debug window to capture each speaker separately when a wake is
+missed before candidate detection. These private objects expire after 90 days and are not backed up.
+Audio uploads first; a versioned `manifest.json` uploads last, so a manifest is the commit marker for
+a complete capture. Storage or OTLP outages reduce evidence but never delay or fail a voice command.
 
 ## Launch posture
 
@@ -118,9 +132,12 @@ recognition smoke. Wake quality is **measured, not gated**: the operator-run cor
 ([`corpus-evaluator.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/corpus-evaluator.ts))
 writes date-stamped reports to `packages/streambot/voice-training/reports/`, and the live
 two-account e2e matrix plus the three-speaker human holdout remain available as diagnostics.
-After a deploy, the Grafana voice panels (wake candidates, cloud verifications, failures, duck
-transitions) are the observation surface; the emergency rollback is the kill switch back to
-`false`.
+After a deploy, the dedicated Streambot Voice dashboard separates transport readiness, ingress,
+activation, quality, cloud/tool activity, output/ducking, and capture health. A trace ID drills into
+Tempo and correlated Loki records; a capture ID finds the private manifest and WAV. Five quiet
+minutes produce one diagnostic info log and the next packet produces a recovery log. Silence alone
+does not notify because an empty voice channel is normal. The emergency rollback is the kill switch
+back to `false`.
 
 The full phrase-verifier recipe and operator procedure live in
 [`packages/streambot/voice-training/`](https://github.com/shepherdjerred/monorepo/tree/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/voice-training).
@@ -138,4 +155,5 @@ emergency rollback is the same global kill switch set back to `false`.
 ## Related
 
 - [Run the Streambot voice probe](/how-to/run-the-streambot-voice-probe/) — exercise the cascade from a macOS console
+- [Diagnose Streambot voice](/how-to/diagnose-streambot-voice/) — capture a missed wake and follow metrics, traces, logs, and WAVs
 - [Streambot voice configuration](/reference/streambot-voice/) — variables, model assets, and fixed limits

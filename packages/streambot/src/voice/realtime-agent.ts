@@ -21,11 +21,17 @@ import {
   voiceTurnsTotal,
   voiceWakeToReplySeconds,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
+import { voiceCloudRequestsTotal } from "@shepherdjerred/streambot/observability/voice-diagnostic-metrics.ts";
 import {
   PacedAssistantSender,
   type AssistantAudioSink,
 } from "@shepherdjerred/streambot/voice/assistant-sink.ts";
 import type { SpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
+import {
+  NOOP_VOICE_ATTEMPT_OBSERVER,
+  type VoiceAttemptHandle,
+} from "@shepherdjerred/streambot/voice/attempt-context.ts";
+import type { VoiceSessionTelemetry } from "@shepherdjerred/streambot/observability/voice-session.ts";
 
 import {
   bindPlaybackVoiceCommandPort,
@@ -60,6 +66,8 @@ export type RealtimeVoiceTurnInput = {
   readonly signal?: AbortSignal;
   /** Test seam; production omits this and gets the official server WebSocket transport. */
   readonly createTransport?: () => RealtimeTransportLayer;
+  readonly attempt?: VoiceAttemptHandle;
+  readonly telemetry?: VoiceSessionTelemetry;
 };
 
 export type RealtimeCommandTurnInput = {
@@ -72,12 +80,15 @@ export type RealtimeCommandTurnInput = {
   readonly signal?: AbortSignal;
   /** Test seam; production omits this and gets the official server WebSocket transport. */
   readonly createTransport?: () => RealtimeTransportLayer;
+  /** No-op in local probes/corpus evaluation. */
+  readonly attempt?: VoiceAttemptHandle;
 };
 
 export type RealtimeCommandTurnResult = {
   readonly transcript: string | null;
   readonly wakeVerified: boolean;
   readonly mutated: boolean;
+  readonly normalizedCommand: string | null;
 };
 
 const TranscriptionCompletedEventSchema = z.object({
@@ -208,7 +219,9 @@ export async function runRealtimeCommandTurn(
   if (config.openAiApiKey === undefined) {
     throw new Error("Voice assistant enabled without an OpenAI API key");
   }
+  const apiKey = config.openAiApiKey;
   const mutationGate = new VoiceMutationGate();
+  const attempt = input.attempt ?? NOOP_VOICE_ATTEMPT_OBSERVER.begin();
   const timeoutSignal = AbortSignal.timeout(config.transactionTimeoutMs);
   const transactionSignal =
     input.signal === undefined
@@ -222,10 +235,11 @@ export async function runRealtimeCommandTurn(
       input.commands,
       mutationGate,
       transactionSignal,
+      attempt,
     ),
   });
   const session = new RealtimeSession(agent, {
-    apiKey: config.openAiApiKey,
+    apiKey,
     transport: input.createTransport?.() ?? "websocket",
     model: VOICE_REALTIME_MODEL,
     historyStoreAudio: false,
@@ -290,14 +304,18 @@ export async function runRealtimeCommandTurn(
   voiceConcurrentTurns.inc();
   try {
     const interruption = aborted(transactionSignal);
-    await Promise.race([
-      session.connect({
-        apiKey: config.openAiApiKey,
-        model: VOICE_REALTIME_MODEL,
-      }),
-      interruption,
-      sessionFailure,
-    ]);
+    voiceCloudRequestsTotal.inc({ stage: "connect", outcome: "request" });
+    await attempt.runStage("streambot.voice.openai.connect", {}, async () => {
+      await Promise.race([
+        session.connect({
+          apiKey,
+          model: VOICE_REALTIME_MODEL,
+        }),
+        interruption,
+        sessionFailure,
+      ]);
+    });
+    voiceCloudRequestsTotal.inc({ stage: "connect", outcome: "success" });
     failureStage = "transcription";
     const pcm24k = wakePcmToOpenAiPcm(input.pcm16k);
     const transcriptionStartedAtMs = Date.now();
@@ -310,18 +328,34 @@ export async function runRealtimeCommandTurn(
       pcm24kCopy.fill(0);
       pcm24k.fill(0);
     }
-    const transcriptionResult = await Promise.race([
-      transcription,
-      interruption,
-      sessionFailure,
-    ]);
+    voiceCloudRequestsTotal.inc({
+      stage: "transcription",
+      outcome: "request",
+    });
+    const transcriptionResult = await attempt.runStage(
+      "streambot.voice.openai.transcription",
+      {},
+      async () =>
+        await Promise.race([transcription, interruption, sessionFailure]),
+    );
+    voiceCloudRequestsTotal.inc({
+      stage: "transcription",
+      outcome: "success",
+    });
     voiceActivationStageLatencySeconds.observe(
       { stage: "cloud-transcription" },
       (Date.now() - transcriptionStartedAtMs) / 1000,
     );
     recordTranscriptionUsage(transcriptionResult.usage);
+    attempt.cloudUsage({ transcription: transcriptionResult.usage });
     const verified = verifyWakeTranscript(transcriptionResult.transcript);
     if (verified === null) {
+      attempt.transcription({
+        transcript: transcriptionResult.transcript,
+        normalizedCommand: null,
+        outcome: "rejected",
+      });
+      attempt.cloudOutcome("transcript-rejected");
       voiceTranscriptVerificationsTotal.inc({ outcome: "rejected" });
       voiceTurnsTotal.inc({ outcome: "transcript-rejected" });
       // Still response.create-free: the retry line is a local pre-rendered clip, so nothing
@@ -337,8 +371,14 @@ export async function runRealtimeCommandTurn(
         transcript: transcriptionResult.transcript,
         wakeVerified: false,
         mutated: false,
+        normalizedCommand: null,
       };
     }
+    attempt.transcription({
+      transcript: transcriptionResult.transcript,
+      normalizedCommand: verified.command,
+      outcome: "accepted",
+    });
     voiceTranscriptVerificationsTotal.inc({ outcome: "accepted" });
     if (verified.command.length === 0) {
       // A bare "Hey Streambot" used to bill a full Realtime response just to ask what to play.
@@ -355,6 +395,7 @@ export async function runRealtimeCommandTurn(
         transcript: transcriptionResult.transcript,
         wakeVerified: true,
         mutated: false,
+        normalizedCommand: "",
       };
     }
     failureStage = "verified-command";
@@ -396,8 +437,16 @@ export async function runRealtimeCommandTurn(
     });
     await Promise.race([created, interruption, sessionFailure]);
     failureStage = "response";
-    session.transport.sendEvent({ type: "response.create" });
-    await Promise.race([completed, interruption, sessionFailure]);
+    voiceCloudRequestsTotal.inc({ stage: "response", outcome: "request" });
+    await attempt.runStage(
+      "streambot.voice.openai.response",
+      { "streambot.voice.normalized_command": verified.command },
+      async () => {
+        session.transport.sendEvent({ type: "response.create" });
+        await Promise.race([completed, interruption, sessionFailure]);
+      },
+    );
+    voiceCloudRequestsTotal.inc({ stage: "response", outcome: "success" });
     // `audio_stopped` only means Realtime finished generating. The sink still paces whatever it
     // queued at 20 ms per packet, so leaving this await unraced lets a long or fast-generated
     // reply drain past the transaction timeout — holding the duck down, the teardown hold open,
@@ -410,19 +459,29 @@ export async function runRealtimeCommandTurn(
       voiceAudioTokensTotal.inc({ direction: "input" }, inputAudio);
     if (outputAudio > 0)
       voiceAudioTokensTotal.inc({ direction: "output" }, outputAudio);
+    attempt.cloudUsage({
+      transcription: transcriptionResult.usage,
+      realtime: {
+        inputAudioTokens: inputAudio,
+        outputAudioTokens: outputAudio,
+      },
+    });
     voiceTurnsTotal.inc({
       outcome: mutationGate.hasMutated ? "command" : "no-command",
     });
+    attempt.cloudOutcome("success");
     return {
       transcript: transcriptionResult.transcript,
       wakeVerified: true,
       mutated: mutationGate.hasMutated,
+      normalizedCommand: verified.command,
     };
   } catch (error) {
     if (input.signal?.aborted === true) {
       voiceTurnsTotal.inc({ outcome: "interrupted" });
     } else {
       voiceOpenAiFailuresTotal.inc({ stage: failureStage });
+      voiceCloudRequestsTotal.inc({ stage: failureStage, outcome: "failure" });
       voiceTurnsTotal.inc({ outcome: "error" });
     }
     try {
@@ -448,7 +507,11 @@ export async function runRealtimeVoiceTurn(
     pcm16k: input.pcm16k,
     activatedAtMs: input.activatedAtMs,
     commands: bindPlaybackVoiceCommandPort(input.service, input.userId),
-    assistantAudio: new PacedAssistantSender(input.streamer),
+    assistantAudio: new PacedAssistantSender(input.streamer, {
+      ...(input.attempt === undefined ? {} : { attempt: input.attempt }),
+      ...(input.telemetry === undefined ? {} : { telemetry: input.telemetry }),
+    }),
+    ...(input.attempt === undefined ? {} : { attempt: input.attempt }),
     ...(input.feedbackClips === undefined
       ? {}
       : { feedbackClips: input.feedbackClips }),

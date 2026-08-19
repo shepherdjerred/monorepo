@@ -5,7 +5,7 @@ import {
   DiscordOpusEncoder,
   Streamer,
 } from "@shepherdjerred/discord-video-stream";
-import { register } from "@shepherdjerred/streambot/observability/metrics.ts";
+import { register } from "@shepherdjerred/streambot/observability/metrics-registry.ts";
 import type { SessionHandle } from "@shepherdjerred/streambot/session/session-types.ts";
 import type { ChannelId } from "@shepherdjerred/streambot/types/ids.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";

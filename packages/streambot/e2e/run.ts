@@ -34,7 +34,7 @@ import {
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
-import { register } from "@shepherdjerred/streambot/observability/metrics.ts";
+import { register } from "@shepherdjerred/streambot/observability/metrics-registry.ts";
 
 /**
  * End-to-end test, run manually with real credentials (`bun run e2e`; formerly the `e2eStreambot`

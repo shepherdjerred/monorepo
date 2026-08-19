@@ -9,20 +9,11 @@
  * for realtime send stutter — `streambot_nodejs_eventloop_lag_seconds`.
  */
 
-import {
-  Counter,
-  Gauge,
-  Histogram,
-  collectDefaultMetrics,
-  Registry,
-} from "prom-client";
+import { Counter, Gauge, Histogram } from "prom-client";
+import { register } from "@shepherdjerred/streambot/observability/metrics-registry.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("metrics");
-
-export const register = new Registry();
-register.setDefaultLabels({ app: "streambot" });
-collectDefaultMetrics({ register, prefix: "streambot_" });
 
 // --- ffmpeg transcode realtime health --------------------------------------
 

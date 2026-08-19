@@ -19,6 +19,8 @@ export function createSessionVoiceAssistant(
     config: deps.config,
     models,
     streamer: userbot,
+    guildId: session.guildId,
+    channelId: session.voiceChannelId,
     commands: {
       config: deps.config,
       dispatch: (event) => {
@@ -37,5 +39,8 @@ export function createSessionVoiceAssistant(
     ...(deps.voiceFeedbackClips == null
       ? {}
       : { feedbackClips: deps.voiceFeedbackClips }),
+    ...(deps.voiceCaptureManager === undefined
+      ? {}
+      : { captureManager: deps.voiceCaptureManager }),
   });
 }

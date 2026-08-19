@@ -15,6 +15,13 @@ import type {
   GatewayResponse,
 } from "./VoiceMessageTypes.js";
 import type { Streamer } from "../Streamer.js";
+import type {
+  VoiceDaveObservation,
+  VoiceReceiveObserver,
+  VoiceReceivePacketObservation,
+  VoiceReceiveStateObservation,
+  VoiceSpeakingObservation,
+} from "./VoiceReceiveObserver.js";
 
 // Davey's ambient const enum cannot be referenced by consumers using verbatimModuleSyntax.
 const DAVE_MEDIA_TYPE_AUDIO = 0;
@@ -74,6 +81,7 @@ export type ReceivedVoiceAudio = {
 
 export type MediaConnectionOptions = {
   receiveAudio?: boolean;
+  receiveObserver?: VoiceReceiveObserver;
 };
 
 export function voiceAudioSdpDirection(receiveAudio: boolean): "sendrecv" | "inactive" {
@@ -123,7 +131,11 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
   private _davePendingTransitions = new Map<number, number>();
   private _daveDowngraded = false;
   private readonly _receiveAudio: boolean;
+  private _receiveObserver: VoiceReceiveObserver | undefined;
   private readonly _audioUsersBySsrc = new Map<number, string>();
+  private readonly _speakingSsrcs = new Set<number>();
+  private _lastDaveObservation: string | undefined;
+  private _receiveReady = false;
 
   private _logger = new Log("conn");
   private _loggerDave = new Log("conn:dave");
@@ -149,7 +161,10 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
     this.botId = botId;
     this.ready = callback;
     this._receiveAudio = options.receiveAudio ?? false;
+    this._receiveObserver = options.receiveObserver;
     this._webRtcWrapper = new WebRtcConnWrapper(this);
+    this.reportReceiveState();
+    this.reportDaveState();
   }
 
   public abstract get serverId(): string | null;
@@ -178,9 +193,82 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
 
   stop(): void {
     this._closed = true;
+    this.setReceiveReady(false);
     this._webRtcWrapper.close();
     this.ws?.close();
     this._audioUsersBySsrc.clear();
+    this._speakingSsrcs.clear();
+  }
+
+  /** Replace receive telemetry without renegotiating the active Discord media connection. */
+  public setReceiveObserver(observer: VoiceReceiveObserver | undefined): void {
+    this._receiveObserver = observer;
+    if (observer === undefined) return;
+    this.reportReceiveState();
+    // DAVE reporting is normally transition-deduplicated. A replacement observer still needs the
+    // current state immediately so a channel move cannot leave its fresh gauges at zero.
+    this._lastDaveObservation = undefined;
+    this.reportDaveState();
+    for (const [ssrc, userId] of this._audioUsersBySsrc) {
+      this.observeSpeaking({
+        state: "mapped",
+        userId,
+        ssrc,
+        speaking: this._speakingSsrcs.has(ssrc),
+      });
+    }
+  }
+
+  private observePacket(observation: VoiceReceivePacketObservation): void {
+    this.observe(() => this._receiveObserver?.onPacket?.(observation));
+  }
+
+  private observeSpeaking(observation: VoiceSpeakingObservation): void {
+    this.observe(() => this._receiveObserver?.onSpeaking?.(observation));
+  }
+
+  private observeDave(observation: VoiceDaveObservation): void {
+    this.observe(() => this._receiveObserver?.onDaveState?.(observation));
+  }
+
+  private observeReceiveState(observation: VoiceReceiveStateObservation): void {
+    this.observe(() => this._receiveObserver?.onReceiveState?.(observation));
+  }
+
+  private setReceiveReady(ready: boolean): void {
+    if (ready === this._receiveReady) return;
+    this._receiveReady = ready;
+    this.reportReceiveState();
+  }
+
+  private reportReceiveState(): void {
+    this.observeReceiveState({ ready: this._receiveReady });
+  }
+
+  private observe(callback: () => void): void {
+    try {
+      callback();
+    } catch (error) {
+      this.emit(
+        "audio_error",
+        error instanceof Error
+          ? error
+          : new Error("Voice receive observer failed"),
+      );
+    }
+  }
+
+  private reportDaveState(): void {
+    const required = this._daveProtocolVersion > 0;
+    const observation = {
+      protocolVersion: this._daveProtocolVersion,
+      required,
+      ready: !required || this.daveReady,
+    };
+    const key = `${observation.protocolVersion}:${observation.ready}`;
+    if (key === this._lastDaveObservation) return;
+    this._lastDaveObservation = key;
+    this.observeDave(observation);
   }
 
   /** Seam for tests to inject a fake websocket; production returns a real one. */
@@ -230,6 +318,7 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
 
         this.interval && clearInterval(this.interval);
         this.status.started = false;
+        this.setReceiveReady(false);
         const canResume = e.code === 4_015 || e.code < 4_000;
 
         // A locally-initiated stop() closes the ws with a resumable-looking code (1000/1005);
@@ -280,6 +369,7 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
     // A (re)connected voice session renegotiates SSRCs; mappings from the previous session are
     // stale and repopulate from this session's SPEAKING frames.
     this._audioUsersBySsrc.clear();
+    this._speakingSsrcs.clear();
     // we hardcoded the STREAMS_SIMULCAST, which will always be array of 1
     const stream = d.streams[0];
     if (stream === undefined) throw new Error("Voice READY had no stream");
@@ -377,6 +467,7 @@ a=ice-lite
       [audioSection, videoSection, videoRtpMap].join("\n"),
       "answer",
     );
+    this.setReceiveReady(this._receiveAudio);
     this.emit("select_protocol_ack");
   }
 
@@ -411,6 +502,7 @@ a=ice-lite
       this._daveSession.reset();
       this._daveSession.setPassthroughMode(true, 10);
     }
+    this.reportDaveState();
   }
 
   processInvalidCommit(transitionId: number) {
@@ -446,6 +538,7 @@ a=ice-lite
     this._loggerDave.debug(`Pending transition ID ${transitionId} executed`, {
       transitionId,
     });
+    this.reportDaveState();
   }
 
   setupEvents(): void {
@@ -475,6 +568,7 @@ a=ice-lite
         // ignore heartbeat acknowledgements
       } else if (op === VoiceOpCodes.RESUMED) {
         this.status.started = true;
+        this.setReceiveReady(true);
       } else if (op === VoiceOpCodes.CLIENTS_CONNECT) {
         d.user_ids.forEach((id) => {
           this._connectedUsers.add(id);
@@ -575,6 +669,7 @@ a=ice-lite
         break;
       }
     }
+    this.reportDaveState();
   }
 
   public get daveReady(): boolean {
@@ -587,16 +682,56 @@ a=ice-lite
 
   public handleIncomingAudioPacket(packet: Uint8Array): void {
     if (!this._receiveAudio) return;
+    let parsed: ReturnType<typeof parseRtpPacket>;
     try {
-      const parsed = parseRtpPacket(packet);
-      const userId = this._audioUsersBySsrc.get(parsed.ssrc);
-      if (userId === undefined || userId === this.botId) return;
+      parsed = parseRtpPacket(packet);
+    } catch (error) {
+      this.observePacket({ outcome: "malformed", packetBytes: packet.byteLength });
+      this.emit(
+        "audio_error",
+        error instanceof Error
+          ? error
+          : new Error("Voice audio receive processing failed"),
+      );
+      return;
+    }
 
+    const userId = this._audioUsersBySsrc.get(parsed.ssrc);
+    if (userId === undefined) {
+      this.observePacket({
+        outcome: "unmapped-ssrc",
+        packetBytes: packet.byteLength,
+        ssrc: parsed.ssrc,
+      });
+      return;
+    }
+    if (userId === this.botId) {
+      this.observePacket({
+        outcome: "self",
+        packetBytes: packet.byteLength,
+        ssrc: parsed.ssrc,
+        userId,
+      });
+      return;
+    }
+
+    if (this._daveProtocolVersion > 0 && !this.daveReady) {
+      this.observePacket({
+        outcome: "dave-not-ready",
+        packetBytes: packet.byteLength,
+        ssrc: parsed.ssrc,
+        userId,
+      });
+      return;
+    }
+
+    let opus: Uint8Array;
+    try {
       const daveSession = this._daveSession;
-      const opus = prepareReceivedOpus({
+      const prepared = prepareReceivedOpus({
         payload: parsed.payload,
         daveProtocolVersion: this._daveProtocolVersion,
-        daveReady: Boolean(this.daveReady),
+        daveReady: this.daveReady,
         ...(daveSession === undefined
           ? {}
           : {
@@ -608,16 +743,39 @@ a=ice-lite
                 ),
             }),
       });
-      if (opus === null) return;
-      this.emit("audio", { userId, ssrc: parsed.ssrc, opus });
+      if (prepared === null) {
+        this.observePacket({
+          outcome: "dave-not-ready",
+          packetBytes: packet.byteLength,
+          ssrc: parsed.ssrc,
+          userId,
+        });
+        return;
+      }
+      opus = prepared;
     } catch (error) {
+      this.observePacket({
+        outcome: "decrypt-error",
+        packetBytes: packet.byteLength,
+        ssrc: parsed.ssrc,
+        userId,
+      });
       this.emit(
         "audio_error",
         error instanceof Error
           ? error
-          : new Error("Voice audio receive processing failed"),
+          : new Error("Voice audio decryption failed"),
       );
+      return;
     }
+
+    this.emit("audio", { userId, ssrc: parsed.ssrc, opus });
+    this.observePacket({
+      outcome: "accepted",
+      packetBytes: packet.byteLength,
+      ssrc: parsed.ssrc,
+      userId,
+    });
   }
 
   /** Voice-gateway speaker mapping, public so transports can be tested without a live socket. */
@@ -629,14 +787,41 @@ a=ice-lite
     for (const [ssrc, mappedUserId] of this._audioUsersBySsrc) {
       if (mappedUserId === update.user_id && ssrc !== update.ssrc) {
         this._audioUsersBySsrc.delete(ssrc);
+        this._speakingSsrcs.delete(ssrc);
+        this.observeSpeaking({
+          state: "disconnected",
+          userId: mappedUserId,
+          ssrc,
+          speaking: false,
+        });
       }
     }
     this._audioUsersBySsrc.set(update.ssrc, update.user_id);
+    if (update.speaking === 0) {
+      this._speakingSsrcs.delete(update.ssrc);
+    } else {
+      this._speakingSsrcs.add(update.ssrc);
+    }
+    this.observeSpeaking({
+      state: "mapped",
+      userId: update.user_id,
+      ssrc: update.ssrc,
+      speaking: update.speaking !== 0,
+    });
   }
 
   public handleClientDisconnect(userId: string): void {
     for (const [ssrc, mappedUserId] of this._audioUsersBySsrc) {
-      if (mappedUserId === userId) this._audioUsersBySsrc.delete(ssrc);
+      if (mappedUserId === userId) {
+        this._audioUsersBySsrc.delete(ssrc);
+        this._speakingSsrcs.delete(ssrc);
+        this.observeSpeaking({
+          state: "disconnected",
+          userId,
+          ssrc,
+          speaking: false,
+        });
+      }
     }
   }
 
