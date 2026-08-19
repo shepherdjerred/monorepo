@@ -1,5 +1,14 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  mock,
+  test,
+} from "bun:test";
+import {
+  BucksPoolRosterSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
   LoadingScreenDataSchema,
@@ -11,14 +20,17 @@ import {
   prepareBucksPrematch,
   type PrematchHookDependencies,
 } from "#src/betting/prematch-hook.ts";
+import { openBettingPoolsForPrematch } from "#src/betting/pool-open.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
 
 const ENABLED = DiscordGuildIdSchema.parse("1337623164146155593");
 const DISABLED = DiscordGuildIdSchema.parse("2337623164146155593");
+const { prisma: db } = createTestDatabase("bucks-prematch-hook");
 
 /**
  * A spy for the one step that costs a lake read.
@@ -106,13 +118,18 @@ function loadingScreen(): LoadingScreenData {
   });
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  await db.bucksMatchPool.deleteMany();
   clearFlagOverrides("betting_enabled");
   addFlagOverride("betting_enabled", true, { server: ENABLED });
 });
 
 afterEach(() => {
   resetFlagOverrides("betting_enabled");
+});
+
+afterAll(async () => {
+  await db.$disconnect();
 });
 
 describe("prepareBucksPrematch", () => {
@@ -205,4 +222,56 @@ describe("prepareBucksPrematch", () => {
     // place-bet integration suites; this file is only about what work is done
     // before that point.
   });
+
+  for (const queue of [
+    { type: "ranked 5s", id: 710 },
+    { type: "clash", id: 700 },
+  ] as const) {
+    test(`proceeds for ${queue.type}`, async () => {
+      const { dependencies, buildPrediction } = spyDependencies();
+
+      await prepareBucksPrematch(
+        {
+          gameInfo: gameInfo({ gameQueueConfigId: queue.id }),
+          trackedPlayers: [trackedPlayer()],
+          queueType: queue.type,
+          targetGuildIds: [ENABLED],
+          loadingScreenData: loadingScreen(),
+          detectedAt: new Date(),
+        },
+        dependencies,
+      );
+
+      expect(buildPrediction).toHaveBeenCalled();
+    });
+  }
+
+  for (const queue of [
+    { type: "ranked 5s", id: 710 },
+    { type: "clash", id: 700 },
+  ] as const) {
+    test(`opens a ${queue.type} market for a standard 5v5`, async () => {
+      const matchId = `NA1_${queue.id.toString()}`;
+      const opened = await openBettingPoolsForPrematch(
+        {
+          matchId,
+          gameInfo: gameInfo({ gameQueueConfigId: queue.id }),
+          queueType: queue.type,
+          guildIds: [ENABLED],
+          detectedAt: new Date(),
+          trackedAliasByPuuid: new Map([[puuidFor(0), "jerred"]]),
+        },
+        db,
+      );
+
+      expect(opened).toEqual(new Set([ENABLED]));
+      const pool = await db.bucksMatchPool.findUniqueOrThrow({
+        where: { matchId_serverId: { matchId, serverId: ENABLED } },
+      });
+      expect(pool.queueType).toBe(queue.type);
+      expect(
+        BucksPoolRosterSchema.parse(JSON.parse(pool.roster)).participants,
+      ).toHaveLength(10);
+    });
+  }
 });

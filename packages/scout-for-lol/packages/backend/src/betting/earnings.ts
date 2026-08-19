@@ -3,6 +3,7 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
+  type BucksLedgerKind,
   parseQueueType,
   type QueueType,
   type RawMatch,
@@ -23,10 +24,9 @@ const logger = createLogger("betting-earnings");
 /**
  * Awarding Bucks for playing.
  *
- * +1 for finishing an eligible game, +1 more for winning, +1 more for being
- * the game's MVP. Three separate ledger rows rather than one combined award,
- * because "how did they get these points" is the requirement and a single +3
- * forces the reader to reconstruct which conditions fired.
+ * the game's MVP. Ranked 5s adds +1 for participating and standard Clash adds
+ * +10. Every reward stays in its own ledger row so "how did they get these
+ * points" never depends on reconstructing a combined total.
  *
  * Gated on `betting_enabled` deliberately. An ungated economy would accrue
  * silently in every server Scout is in, and enabling the flag later would hand
@@ -92,12 +92,32 @@ async function findEarnTargets(
   return targets;
 }
 
+export type EarnedAwardReason =
+  | "played"
+  | "ranked 5s bonus"
+  | "clash bonus"
+  | "win"
+  | "mvp";
+
+type EarnedReward = {
+  kind: BucksLedgerKind;
+  amount: number;
+};
+
+const EARNED_REWARDS = {
+  played: { kind: "earn_game", amount: 1 },
+  "ranked 5s bonus": { kind: "earn_ranked_5s_bonus", amount: 1 },
+  "clash bonus": { kind: "earn_clash_bonus", amount: 10 },
+  win: { kind: "earn_win", amount: 1 },
+  mvp: { kind: "earn_mvp", amount: 1 },
+} satisfies Record<EarnedAwardReason, EarnedReward>;
+
 export type EarnedAward = {
   serverId: string;
   discordId: string;
   alias: string;
-  /** Which of the three conditions fired, in award order. */
-  reasons: ("played" | "win" | "mvp")[];
+  /** Which rewards fired, in ledger order. */
+  reasons: EarnedAwardReason[];
   total: number;
 };
 
@@ -202,6 +222,7 @@ async function awardForGuild(input: {
 
       const awards: EarnedAward[] = [];
       let entryCount = 0;
+      let totalAwarded = 0;
 
       for (const target of input.targets) {
         const accountId = accountIds.get(target.discordId);
@@ -215,6 +236,12 @@ async function awardForGuild(input: {
           input.mvpPuuid === target.participant.puuid;
 
         const reasons: EarnedAward["reasons"] = ["played"];
+        if (input.queueType === "ranked 5s") {
+          reasons.push("ranked 5s bonus");
+        }
+        if (input.queueType === "clash") {
+          reasons.push("clash bonus");
+        }
         if (won) {
           reasons.push("win");
         }
@@ -222,17 +249,13 @@ async function awardForGuild(input: {
           reasons.push("mvp");
         }
 
-        const kinds = {
-          played: "earn_game",
-          win: "earn_win",
-          mvp: "earn_mvp",
-        } as const;
-
+        let total = 0;
         for (const reason of reasons) {
+          const reward = EARNED_REWARDS[reason];
           await applyBucksDelta(tx, {
             bucksAccountId: accountId,
-            delta: 1,
-            kind: kinds[reason],
+            delta: reward.amount,
+            kind: reward.kind,
             matchId: input.matchId,
             context: {
               type: "earn",
@@ -249,6 +272,8 @@ async function awardForGuild(input: {
             },
           });
           entryCount += 1;
+          totalAwarded += reward.amount;
+          total += reward.amount;
         }
 
         awards.push({
@@ -256,7 +281,7 @@ async function awardForGuild(input: {
           discordId: target.discordId,
           alias: target.alias,
           reasons,
-          total: reasons.length,
+          total,
         });
       }
 
@@ -271,7 +296,7 @@ async function awardForGuild(input: {
       });
 
       logger.info(
-        `🪙 Awarded ${entryCount.toString()} Bryan Buck(s) for ${input.matchId}`,
+        `🪙 Awarded ${totalAwarded.toString()} Bryan Buck(s) for ${input.matchId}`,
       );
       return awards;
     });

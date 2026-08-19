@@ -27,13 +27,15 @@ import { QueueTypeSchema } from "#src/model/state.ts";
 export type RiotTeamId = z.infer<typeof RiotTeamIdSchema>;
 export const RiotTeamIdSchema = z.union([z.literal(100), z.literal(200)]);
 
-/** Why a ledger row exists. Three separate `earn_*` kinds rather than one
- * combined award, because "how did they get these points" is the requirement
- * and a single `+3` forces the reader to reconstruct which conditions fired. */
+/** Why a ledger row exists. Separate `earn_*` kinds rather than one combined
+ * award, because "how did they get these points" is the requirement and a
+ * single total forces the reader to reconstruct which conditions fired. */
 export type BucksLedgerKind = z.infer<typeof BucksLedgerKindSchema>;
 export const BucksLedgerKindSchema = z.enum([
   "seed",
   "earn_game",
+  "earn_ranked_5s_bonus",
+  "earn_clash_bonus",
   "earn_win",
   "earn_mvp",
   "bet_stake",

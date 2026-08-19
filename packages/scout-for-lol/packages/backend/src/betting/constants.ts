@@ -82,17 +82,19 @@ export const REMAKE_MAX_DURATION_SECONDS = 300;
 /**
  * Queues that earn Bucks and can carry a market.
  *
- * Deliberately its own list rather than the existing `isRankedQueue` helper,
  * which also matches "clash" and "aram clash". That helper exists to gate AI
  * review spend; reusing it would mean a future tweak to review heuristics
- * silently moves the economy. Solo and flex are also exactly the queues the
- * MVP weights are calibrated for. Classic intentionally has no prediction
- * inputs, but it still has a binary 5v5 outcome and can carry a market.
+ * silently moves the economy. Solo and flex are exactly the queues the MVP
+ * weights are calibrated for. Classic intentionally has no prediction inputs,
+ * but it still has a binary 5v5 outcome and can carry a market. Standard Clash
+ * is included; ARAM Clash is not.
  */
 export const BUCKS_EARNING_QUEUES: readonly QueueType[] = [
   "solo",
   "flex",
   "classic",
+  "ranked 5s",
+  "clash",
 ];
 
 /** Riot's two team identifiers on Summoner's Rift. */
