@@ -147,6 +147,7 @@ export async function importCustomMatchDetails(params: {
       },
     },
   });
+  if (previousRow !== null && previousRow.importedAt === null) return null;
   const previousParticipants =
     previousRow === null
       ? []
