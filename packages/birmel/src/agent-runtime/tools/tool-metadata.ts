@@ -40,7 +40,6 @@ const TOOL_METADATA = new Map<string, BirmelToolMetadata>([
   ],
   ["manage-guild", metadata("manage-guild", "server", "write")],
   ["manage-channel", metadata("manage-channel", "server", "destructive")],
-  ["manage-database", metadata("manage-database", "server", "read")],
   ["moderate-member", metadata("moderate-member", "moderation", "destructive")],
   ["manage-role", metadata("manage-role", "moderation", "destructive")],
   ["manage-member", metadata("manage-member", "moderation", "destructive")],

@@ -45,6 +45,15 @@ const specialistRoutes = SpecialistRoutesSchema.parse([
   "editor",
 ]);
 
+const primaryToolBySpecialist: Record<SpecialistId, string> = {
+  messaging: "get-activity-stats",
+  server: "manage-guild",
+  moderation: "moderate-member",
+  music: "music-playback",
+  automation: "web-research",
+  editor: "connect-github",
+};
+
 function successfulResult(text: string) {
   return {
     text,
@@ -118,6 +127,8 @@ describe("executeRoutedTurn", () => {
       persona: "Compact persona",
       route: {
         route: "direct",
+        disposition: "conversation",
+        primaryToolId: null,
         confidence: 1,
         rationale: "Ordinary conversation",
       },
@@ -153,6 +164,8 @@ describe("executeRoutedTurn", () => {
         persona: "Compact persona",
         route: {
           route: expectedSpecialist,
+          disposition: "supported",
+          primaryToolId: primaryToolBySpecialist[expectedSpecialist],
           confidence: 0.95,
           rationale: `Needs ${expectedSpecialist}`,
         },

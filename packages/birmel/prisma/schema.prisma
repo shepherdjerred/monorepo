@@ -312,6 +312,8 @@ model AgentRun {
   triggerKind              String
   persona                  String?
   route                    String?
+  routeDisposition         String?
+  primaryToolId            String?
   status                   String    @default("admitted")
   responseMessageId        String?
   incidentId               String?   @unique

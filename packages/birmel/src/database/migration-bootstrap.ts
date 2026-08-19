@@ -6,6 +6,7 @@ export const BASELINE_MIGRATION = "20260808000000_baseline";
 export const REQUIRED_MIGRATIONS = [
   BASELINE_MIGRATION,
   "20260808010000_birmel_3_runtime",
+  "20260818000000_agent_run_route_capability",
 ] as const;
 
 export const LEGACY_BASELINE_MIGRATIONS = [

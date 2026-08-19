@@ -16,6 +16,8 @@ export const DiscordIdSchema = z.string().regex(/^\d+$/);
 export const TriggerKindSchema = z.enum([
   "mention",
   "wake-word",
+  "learned-alias",
+  "reply",
   "engaged-follow-up",
   "session-thread",
   "job",
@@ -108,11 +110,54 @@ export type SpecialistId = z.infer<typeof SpecialistIdSchema>;
 export const RouteIdSchema = z.union([z.literal("direct"), SpecialistIdSchema]);
 export type RouteId = z.infer<typeof RouteIdSchema>;
 
-export const RouteDecisionSchema = z.strictObject({
-  route: RouteIdSchema,
-  confidence: z.number().min(0).max(1),
-  rationale: z.string().max(500),
-});
+export const RouteDispositionSchema = z.enum([
+  "conversation",
+  "supported",
+  "unsupported",
+]);
+export type RouteDisposition = z.infer<typeof RouteDispositionSchema>;
+
+export const RouteDecisionSchema = z
+  .strictObject({
+    route: RouteIdSchema,
+    disposition: RouteDispositionSchema,
+    primaryToolId: z.string().min(1).max(64).nullable(),
+    confidence: z.number().min(0).max(1),
+    rationale: z.string().max(500),
+  })
+  .superRefine((decision, context) => {
+    if (decision.disposition === "supported") {
+      if (decision.route === "direct") {
+        context.addIssue({
+          code: "custom",
+          path: ["route"],
+          message: "Supported work must select a specialist route",
+        });
+      }
+      if (decision.primaryToolId === null) {
+        context.addIssue({
+          code: "custom",
+          path: ["primaryToolId"],
+          message: "Supported work must name its primary registered tool",
+        });
+      }
+      return;
+    }
+    if (decision.route !== "direct") {
+      context.addIssue({
+        code: "custom",
+        path: ["route"],
+        message: "Conversation and unsupported work must use the direct route",
+      });
+    }
+    if (decision.primaryToolId !== null) {
+      context.addIssue({
+        code: "custom",
+        path: ["primaryToolId"],
+        message: "Conversation and unsupported work cannot name a primary tool",
+      });
+    }
+  });
 export type RouteDecision = z.infer<typeof RouteDecisionSchema>;
 
 export const ToolRiskClassSchema = z.enum([
@@ -167,9 +212,9 @@ export const MemoryCandidateSchema = z.object({
   confidence: z.number().min(0).max(1),
   salience: z.number().min(0).max(1),
   origin: MemoryOriginSchema,
-  validFrom: z.iso.datetime().nullable().default(null),
-  validUntil: z.iso.datetime().nullable().default(null),
-  relatedUserIds: z.array(DiscordIdSchema).default([]),
+  validFrom: z.iso.datetime().nullable(),
+  validUntil: z.iso.datetime().nullable(),
+  relatedUserIds: z.array(DiscordIdSchema),
   sourceDiscordMessageIds: z.array(DiscordIdSchema).min(1),
 });
 export type MemoryCandidate = z.infer<typeof MemoryCandidateSchema>;

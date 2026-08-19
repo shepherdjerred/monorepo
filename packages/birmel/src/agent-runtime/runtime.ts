@@ -63,6 +63,6 @@ export async function executeRoutedTurn(options: {
   const dependencies = options.dependencies ?? defaultDependencies;
   const packet = createSpecialistTaskPacket(options);
   return options.route.route === "direct"
-    ? await dependencies.direct(packet)
-    : await dependencies.specialist(options.route.route, packet);
+    ? await dependencies.direct(packet, options.route)
+    : await dependencies.specialist(options.route.route, packet, options.route);
 }

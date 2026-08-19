@@ -8,18 +8,25 @@ implementation of context, memory, sessions, jobs, or orchestration.
 
 Every turn follows one pipeline:
 
-`Discord event -> admission/AgentRun dedup -> ContextBundle -> typed route -> direct or one specialist -> one edited Discord reply -> typed claim extraction`
+`Discord event -> admission/AgentRun dedup -> ContextBundle -> capability-grounded route -> direct or one specialist -> one edited Discord reply -> human claims plus curated self-memory`
 
 - Admission lives in `src/discord/events/message-create.ts`. Only configured
   trusted users may trigger the bot or invoke any capability. Active session
-  threads bypass mention/classifier gating for those users only.
+  threads, replies to Birmel, and active persona aliases bypass classifier
+  gating for those users only. Learned aliases are guild-scoped wake names.
+  Admission is serialized per channel so an alias trigger is visible to its
+  immediate follow-up; only the bounded admission phase is queued, never the
+  agent turn, and bot/untrusted messages are rejected before enqueueing. Wake
+  boundaries are Unicode-aware.
 - `src/context/turn-context.ts` creates the only `ContextBundle`. Its budgets
   are defined in `src/agent-runtime/contracts.ts`; do not persist assembled
   context or model reasoning.
-- `src/agent-runtime/router.ts` returns exactly one route: `direct`,
-  `messaging`, `server`, `moderation`, `music`, `automation`, or `editor`.
-  Direct conversation is tool-free. A tool route runs exactly one AI SDK
-  `ToolLoopAgent` specialist for at most eight steps.
+- `src/agent-runtime/router.ts` returns exactly one route and one disposition:
+  `conversation`, `supported`, or `unsupported`. A supported route must name a
+  registered primary tool owned by the selected specialist, and that tool must
+  succeed before the runtime accepts the result. Direct conversation and
+  unsupported work are tool-free. A supported tool route runs exactly one AI
+  SDK `ToolLoopAgent` specialist for at most eight steps.
 - `src/agent-runtime/message-handler.ts` owns Discord delivery. A source turn
   gets one placeholder reply and one final edit. Source-channel messaging tools
   must not send an additional final response.
@@ -39,6 +46,12 @@ Tools live under `src/agent-tools/tools/` and are adapted by
 - Guild and actor identity come from `RequestContext`, never model input.
 - The validated `TRUSTED_USER_IDS` allowlist governs all tools, editor/shell
   access, jobs, and stored-job execution.
+- The router capability catalog is generated from the executable specialist
+  sets. There is no generic SQL or database-inspection tool. Use the scoped
+  activity tool for activity questions.
+- Missing capability is an honest product limitation, not a safety refusal.
+  Trusted users may perform ordinary supported writes. Only bulk destructive
+  and bulk-creation effects are prohibited by the core policy.
 
 ## Context, persona, and memory
 
@@ -51,12 +64,28 @@ friend context is resolved just in time from mentioned names/aliases and
 relevant lore; never inject the complete lore/style corpus.
 
 Durable memory consists only of `MemoryClaim` plus append-only
-`MemoryRevision` provenance. Extraction reads raw recent Discord messages, not
-retrieved memories or assembled prompts. Explicit statements outrank inferred
-claims; unresolved contradictions remain uncertain. `forget` tombstones a
-claim, while privacy erase physically deletes the claim and its revisions.
-The historical `/app/data/mastra-memory.db` is a forensic PVC artifact and must
-never be opened by runtime code.
+`MemoryRevision` provenance. Human-claim extraction reads raw Discord messages,
+not retrieved memories or assembled prompts, and rejects bot-authored evidence.
+Curated self-memory may retain only an accepted alias, a durable commitment, or
+an experience backed by an exact successful tool invocation and its bounded,
+redacted result summary from the current turn. It is
+grounded in the current user message plus the delivered Birmel reply; prior bot
+messages are never self-memory evidence. Accepted aliases use the canonical
+`identity.alias` predicate at persona scope and become wake names throughout
+that guild; the human-claim path must reject that predicate. Alias persistence
+requires a bounded wake-name shape plus explicit
+affirmative proposal and acceptance language; negations and rejection wording
+must fail closed. An invalid self-memory candidate is observed
+and rejected without discarding valid claims. Commitments copy explicit
+commitment language from the delivered reply, use canonical claim fields, and
+use a grounded topic as their stable family identity so unrelated promises can
+coexist. Non-alias memory may never use the reserved alias predicate, and alias
+whitespace is canonicalized before persistence. Commitments may target only a
+grounded user. Explicit statements outrank inferred claims; unresolved
+contradictions remain uncertain. `forget` tombstones a claim, while privacy
+erase physically deletes the claim and its revisions. The historical
+`/app/data/mastra-memory.db` is a forensic PVC artifact and must never be opened
+by runtime code.
 
 ## Sessions and jobs
 

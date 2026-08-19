@@ -16,6 +16,7 @@ import {
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { manageMessageTool } from "@shepherdjerred/birmel/agent-tools/tools/discord/messages.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
+import { getCapabilityCatalog } from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
 
 const trustedUserId = "186665676134547461";
 
@@ -120,18 +121,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
     id: "manage-channel",
     specialist: "server",
     riskClass: "destructive",
-    timeoutMs: 30_000,
-    requiredRequestContext: [
-      "guildId",
-      "channelId",
-      "userId",
-      "sourceMessageId",
-    ],
-  },
-  {
-    id: "manage-database",
-    specialist: "server",
-    riskClass: "read",
     timeoutMs: 30_000,
     requiredRequestContext: [
       "guildId",
@@ -520,6 +509,19 @@ describe("tool metadata contracts", () => {
       mismatchedAssignments: [],
       registeredIds: expectedMetadata.map(({ id }) => id).toSorted(),
     });
+  });
+
+  test("builds the capability catalog from executable tools without generic SQL", () => {
+    const catalog = getCapabilityCatalog();
+    const ids = catalog.map(({ id }) => id);
+
+    expect(ids).toContain("get-activity-stats");
+    expect(ids).toContain("connect-github");
+    expect(ids).not.toContain("manage-database");
+    expect(JSON.stringify(catalog).toLocaleLowerCase()).not.toContain("sql");
+    expect(JSON.stringify(catalog).toLocaleLowerCase()).not.toContain(
+      "database",
+    );
   });
 });
 

@@ -79,6 +79,8 @@ describe("successful deterministic turn flow", () => {
     expect(result.contextCalls).toBe(1);
     expect(result.routerCalls).toBe(1);
     expect(result.memoryExtractionCalls).toBe(1);
+    expect(result.routeDispositions).toEqual(["conversation"]);
+    expect(result.primaryToolIds).toEqual([null]);
   });
 
   test("typed specialist route executes exactly one specialist and one validated tool", () => {
@@ -91,6 +93,8 @@ describe("successful deterministic turn flow", () => {
     expect(result.specialistCalls).toBe(1);
     expect(result.toolCalls).toBe(1);
     expect(result.memoryExtractionCalls).toBe(1);
+    expect(result.routeDispositions).toEqual(["supported"]);
+    expect(result.primaryToolIds).toEqual(["manage-message"]);
   });
 
   test("restart-safe Discord message deduplication produces only one response", () => {
@@ -240,6 +244,18 @@ describe("boundary failures", () => {
     expect(result.incidentIds).toEqual([]);
     expect(result.memoryExtractionCalls).toBe(1);
   });
+
+  test("post-response memory extraction failure warns without replacing the delivered reply", () => {
+    const result = resultFor("memory-extraction-failure");
+
+    expect(result.runStatuses).toEqual(["completed"]);
+    expect(result.editAttempts).toHaveLength(1);
+    expect(result.deliveredEdits).toHaveLength(1);
+    expect(result.deliveredEdits[0]).toMatch(/^direct reply/u);
+    expect(result.memoryExtractionCalls).toBe(1);
+    expect(result.memoryExtractionErrors).toBe(1);
+    expect(result.incidentIds).toEqual([]);
+  });
 });
 
 test("AgentRun SQLite schema and rows contain no assembled prompt or message content", () => {
@@ -252,6 +268,8 @@ test("AgentRun SQLite schema and rows contain no assembled prompt or message con
   expect(normalizedColumns).not.toContain("prompt");
   expect(normalizedColumns).not.toContain("content");
   expect(normalizedColumns).not.toContain("assembled");
+  expect(normalizedColumns).toContain("routedisposition");
+  expect(normalizedColumns).toContain("primarytoolid");
   expect(result.serializedAgentRuns).not.toContain(
     "ASSEMBLED_PROMPT_CONTENT_SENTINEL",
   );

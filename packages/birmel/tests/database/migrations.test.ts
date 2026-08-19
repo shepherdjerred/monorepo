@@ -25,9 +25,16 @@ const RUNTIME_MIGRATION_URL = new URL(
   "../../prisma/migrations/20260808010000_birmel_3_runtime/migration.sql",
   import.meta.url,
 );
+const ROUTE_CAPABILITY_MIGRATION_URL = new URL(
+  "../../prisma/migrations/20260818000000_agent_run_route_capability/migration.sql",
+  import.meta.url,
+);
 
 const BASELINE_SQL = await Bun.file(BASELINE_MIGRATION_URL).text();
 const RUNTIME_SQL = await Bun.file(RUNTIME_MIGRATION_URL).text();
+const ROUTE_CAPABILITY_SQL = await Bun.file(
+  ROUTE_CAPABILITY_MIGRATION_URL,
+).text();
 
 const FINAL_TABLES = [
   "AgentJob",
@@ -203,6 +210,9 @@ function expectFinalSchema(
   expect(tableColumns(database, "MemoryClaim")).toContain("identityKey");
   expect(tableColumns(database, "MemoryRevision")).toContain(
     "sourceDiscordMessageIds",
+  );
+  expect(tableColumns(database, "AgentRun")).toEqual(
+    expect.arrayContaining(["routeDisposition", "primaryToolId"]),
   );
 
   const foreignKeyViolations = database
@@ -773,6 +783,7 @@ describe("Birmel database migrations", () => {
       try {
         database.run(BASELINE_SQL);
         database.run(RUNTIME_SQL);
+        database.run(ROUTE_CAPABILITY_SQL);
         expectFinalSchema(database, false);
 
         const agentRunColumns = tableColumns(database, "AgentRun");
@@ -796,5 +807,5 @@ describe("Birmel database migrations", () => {
         database.close();
       }
     });
-  });
+  }, 30_000);
 });

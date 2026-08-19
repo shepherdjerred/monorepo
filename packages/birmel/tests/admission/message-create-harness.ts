@@ -8,16 +8,23 @@ import { resetConfig } from "@shepherdjerred/birmel/config/index.ts";
 const BOT_ID = "100000000000000001";
 const TRUSTED_USER_ID = "100000000000000002";
 const UNTRUSTED_USER_ID = "100000000000000003";
+const SECOND_TRUSTED_USER_ID = "100000000000000008";
 const GUILD_ID = "100000000000000004";
+const OTHER_GUILD_ID = "100000000000000009";
 const CHANNEL_ID = "100000000000000005";
+const OTHER_CHANNEL_ID = "100000000000000010";
+const OTHER_GUILD_CHANNEL_ID = "100000000000000011";
 const THREAD_ID = "100000000000000006";
 const VOICE_CHANNEL_ID = "100000000000000007";
 
-const trustedUserIds = [TRUSTED_USER_ID];
+const trustedUserIds = [TRUSTED_USER_ID, SECOND_TRUSTED_USER_ID];
 let recentlyEngaged = false;
 let classifierDecision = false;
 let classifierCalls = 0;
 let activeSessionId: string | null = null;
+const acceptedAliasesByGuild = new Map<string, string[]>();
+let aliasLookupGate: Promise<void> | null = null;
+let aliasLookupCalls = 0;
 
 const previousTrustedUserIds = Bun.env["TRUSTED_USER_IDS"];
 Bun.env["TRUSTED_USER_IDS"] = JSON.stringify(trustedUserIds);
@@ -67,6 +74,16 @@ void mock.module("@shepherdjerred/birmel/persona/guild-persona.ts", () => ({
   getGuildPersona: () => Promise.resolve("virmel"),
 }));
 
+void mock.module("@shepherdjerred/birmel/memory/aliases.ts", () => ({
+  listActivePersonaAliases: async ({ guildId }: { guildId: string }) => {
+    aliasLookupCalls += 1;
+    if (aliasLookupCalls === 1 && aliasLookupGate !== null) {
+      await aliasLookupGate;
+    }
+    return acceptedAliasesByGuild.get(guildId) ?? [];
+  },
+}));
+
 void mock.module("@shepherdjerred/birmel/sessions/service.ts", () => ({
   getActiveSessionForThread: () =>
     Promise.resolve(activeSessionId == null ? null : { id: activeSessionId }),
@@ -103,6 +120,9 @@ type FakeMessageOptions = {
   mentionsBot?: boolean;
   thread?: boolean;
   image?: boolean;
+  repliesToBot?: boolean;
+  guildId?: string;
+  channelId?: string;
 };
 
 function fakeMessage(
@@ -123,19 +143,20 @@ function fakeMessage(
   }
   return {
     id: options.id ?? nextMessageId(),
-    guild: { id: GUILD_ID },
+    guild: { id: options.guildId ?? GUILD_ID },
     author: {
       id: options.authorId ?? TRUSTED_USER_ID,
       username: "trusted-friend",
       bot: options.authorBot ?? false,
     },
     channel: {
-      id: thread ? THREAD_ID : CHANNEL_ID,
+      id: thread ? THREAD_ID : (options.channelId ?? CHANNEL_ID),
       isThread: () => thread,
     },
     mentions: {
       has: (userId: string) =>
         options.mentionsBot === true && userId === BOT_ID,
+      repliedUser: options.repliesToBot === true ? { id: BOT_ID } : undefined,
     },
     member: { voice: { channelId: VOICE_CHANNEL_ID } },
     content: options.content ?? "hello",
@@ -155,14 +176,37 @@ async function drainAdmission(): Promise<void> {
   await Bun.sleep(5);
 }
 
+function pauseNextAliasLookup(): () => void {
+  let release: (() => void) | null = null;
+  aliasLookupCalls = 0;
+  aliasLookupGate = new Promise((resolve) => {
+    release = resolve;
+  });
+  return () => {
+    if (release === null) {
+      throw new Error("Alias lookup gate was not initialized");
+    }
+    release();
+    aliasLookupGate = null;
+  };
+}
+
 let deliveries: MessageContext[] = [];
 
 beforeEach(() => {
-  trustedUserIds.splice(0, trustedUserIds.length, TRUSTED_USER_ID);
+  trustedUserIds.splice(
+    0,
+    trustedUserIds.length,
+    TRUSTED_USER_ID,
+    SECOND_TRUSTED_USER_ID,
+  );
   recentlyEngaged = false;
   classifierDecision = false;
   classifierCalls = 0;
   activeSessionId = null;
+  aliasLookupGate = null;
+  aliasLookupCalls = 0;
+  acceptedAliasesByGuild.clear();
   deliveries = [];
   setMessageHandler((context) => {
     deliveries.push(context);
@@ -221,6 +265,108 @@ describe("Birmel 3.0 Discord admission", () => {
     await drainAdmission();
     expect(deliveries).toHaveLength(0);
     expect(classifierCalls).toBe(1);
+  });
+
+  test("admits direct replies to Birmel without classification", async () => {
+    emitMessage(
+      fakeMessage({ repliesToBot: true, content: "following up directly" }),
+    );
+    await drainAdmission();
+
+    expect(deliveries).toHaveLength(1);
+    expect(deliveries[0]?.turn.triggerKind).toBe("reply");
+    expect(classifierCalls).toBe(0);
+  });
+
+  test("admits a learned alias across trusted users and channels only within its guild", async () => {
+    acceptedAliasesByGuild.set(GUILD_ID, ["Compyutah"]);
+    emitMessage(
+      fakeMessage({
+        authorId: SECOND_TRUSTED_USER_ID,
+        channelId: OTHER_CHANNEL_ID,
+        content: "Compyutah, give me a hand",
+      }),
+    );
+    await drainAdmission();
+    recentlyEngaged = false;
+    emitMessage(
+      fakeMessage({
+        authorId: SECOND_TRUSTED_USER_ID,
+        guildId: OTHER_GUILD_ID,
+        channelId: OTHER_GUILD_CHANNEL_ID,
+        content: "Compyutah, give me a hand",
+      }),
+    );
+    await drainAdmission();
+
+    expect(deliveries).toHaveLength(1);
+    expect(deliveries[0]?.turn).toMatchObject({
+      guildId: GUILD_ID,
+      channelId: OTHER_CHANNEL_ID,
+      userId: SECOND_TRUSTED_USER_ID,
+      triggerKind: "learned-alias",
+    });
+    expect(classifierCalls).toBe(0);
+  });
+
+  test("uses Unicode-aware boundaries for learned aliases", async () => {
+    acceptedAliasesByGuild.set(GUILD_ID, ["Birmél"]);
+    emitMessage(fakeMessage({ content: "ÉBirmél is one larger word" }));
+    await drainAdmission();
+    emitMessage(fakeMessage({ content: "Birmél, hello" }));
+    await drainAdmission();
+
+    expect(deliveries).toHaveLength(1);
+    expect(deliveries[0]?.turn.triggerKind).toBe("learned-alias");
+    expect(classifierCalls).toBe(0);
+  });
+
+  test("orders alias admission before an immediate channel follow-up", async () => {
+    acceptedAliasesByGuild.set(GUILD_ID, ["Compyutah"]);
+    classifierDecision = true;
+    const releaseAliasLookup = pauseNextAliasLookup();
+
+    emitMessage(fakeMessage({ content: "Compyutah, are you there?" }));
+    emitMessage(fakeMessage({ content: "And can you help me?" }));
+    await drainAdmission();
+    expect(deliveries).toHaveLength(0);
+
+    releaseAliasLookup();
+    await drainAdmission();
+    expect(deliveries.map(({ turn }) => turn.triggerKind)).toEqual([
+      "learned-alias",
+      "engaged-follow-up",
+    ]);
+    expect(classifierCalls).toBe(1);
+  });
+
+  test("does not hold the admission queue for a complete agent turn", async () => {
+    acceptedAliasesByGuild.set(GUILD_ID, ["Compyutah"]);
+    classifierDecision = true;
+    const firstMessageId = nextMessageId();
+    const firstTurnGate = Promise.withResolvers<undefined>();
+    setMessageHandler(async (context) => {
+      deliveries.push(context);
+      if (context.message.id === firstMessageId) {
+        await firstTurnGate.promise;
+      }
+    });
+
+    emitMessage(
+      fakeMessage({
+        id: firstMessageId,
+        content: "Compyutah, start something slow",
+      }),
+    );
+    await drainAdmission();
+    emitMessage(fakeMessage({ content: "Can this follow-up be admitted?" }));
+    await drainAdmission();
+
+    expect(deliveries.map(({ turn }) => turn.triggerKind)).toEqual([
+      "learned-alias",
+      "engaged-follow-up",
+    ]);
+    firstTurnGate.resolve(undefined);
   });
 
   test("lets trusted actors bypass classification in an active session thread", async () => {

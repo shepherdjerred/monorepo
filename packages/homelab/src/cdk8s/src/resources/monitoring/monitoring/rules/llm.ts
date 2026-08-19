@@ -60,6 +60,32 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
+          alert: "BirmelAdmissionClassifierErrors",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum(increase(birmel_admission_classifier_total{outcome="error"}[15m])) > 0',
+          ),
+          labels: { severity: "warning", category: "llm" },
+          annotations: {
+            summary: "Birmel admission classification is failing closed",
+            description: escapePrometheusTemplate(
+              "At least one ambiguous Birmel follow-up could not be classified in the last 15 minutes. Direct mentions, replies, sessions, and learned aliases remain deterministic; inspect the admission span and schema or provider error before widening admission.",
+            ),
+          },
+        },
+        {
+          alert: "BirmelMemoryExtractionErrors",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum(increase(birmel_memory_extraction_total{outcome="error"}[15m])) > 0',
+          ),
+          labels: { severity: "warning", category: "llm" },
+          annotations: {
+            summary: "Birmel post-response memory extraction is failing",
+            description: escapePrometheusTemplate(
+              "At least one delivered Birmel turn failed post-response memory extraction in the last 15 minutes. The Discord response was already delivered; inspect the correlated memory extraction span and structured-output error before treating continuity as healthy.",
+            ),
+          },
+        },
+        {
           alert: "OpenRouterBroadcastPipelineFailure",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'sum(increase(openrouter_broadcast_requests_total{outcome=~"archive_error|forward_error"}[10m])) > 0',

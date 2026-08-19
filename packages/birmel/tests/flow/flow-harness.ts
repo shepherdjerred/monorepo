@@ -1,5 +1,4 @@
 import { mock } from "bun:test";
-import { Database } from "bun:sqlite";
 import { z } from "zod";
 import type { PrismaClient } from "#generated/prisma/client/index.js";
 import {
@@ -14,6 +13,7 @@ import {
   type FlowScenario,
   type FlowScenarioResult,
 } from "./contracts.ts";
+import { inspectAgentRunDatabase } from "./database-inspection.ts";
 import { createContextBundle } from "./fixtures.ts";
 import {
   createFlowMessageContext,
@@ -22,7 +22,7 @@ import {
   waitForFirstFlowPlaceholder,
 } from "./message-fixture.ts";
 import { suppressAutomaticMemoryExtraction } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
-
+import { memoryExtractionErrorCount } from "./metrics-inspection.ts";
 const RuntimeOptionsSchema = z.object({
   turn: TurnInputSchema,
   route: RouteDecisionSchema,
@@ -47,12 +47,11 @@ const AgentRunRowSchema = z.object({
   incidentId: z.string().nullable(),
   errorClass: z.string().nullable(),
   finishReason: z.string().nullable(),
+  routeDisposition: z.string().nullable(),
+  primaryToolId: z.string().nullable(),
 });
 const AgentRunRowsSchema = z.array(AgentRunRowSchema);
-const ColumnRowsSchema = z.array(z.object({ name: z.string() }));
-
 const scenarios = FlowScenarioSchema.options;
-
 type MutableScenarioState = {
   scenario: FlowScenario;
   replyCalls: number;
@@ -72,7 +71,6 @@ type MutableScenarioState = {
   concurrentGate: Promise<void>;
   releaseConcurrentGate?: () => void;
 };
-
 function createState(scenario: FlowScenario): MutableScenarioState {
   let releaseConcurrentGate: (() => void) | undefined;
   const concurrentGate = new Promise<void>((resolve) => {
@@ -133,6 +131,8 @@ void mock.module("@shepherdjerred/birmel/agent-runtime/router.ts", () => ({
       return RouteDecisionSchema.parse({
         route: "direct",
         secondRoute: "server",
+        disposition: "conversation",
+        primaryToolId: null,
         confidence: 1,
         rationale: "Ambiguous output",
       });
@@ -143,6 +143,8 @@ void mock.module("@shepherdjerred/birmel/agent-runtime/router.ts", () => ({
       state.scenario === "tool-output-failure";
     return RouteDecisionSchema.parse({
       route: specialist ? "messaging" : "direct",
+      disposition: specialist ? "supported" : "conversation",
+      primaryToolId: specialist ? "manage-message" : null,
       confidence: 1,
       rationale: specialist ? "Requires one messaging tool" : "Direct chat",
     });
@@ -194,7 +196,14 @@ void mock.module("@shepherdjerred/birmel/agent-runtime/runtime.ts", () => ({
       outputTokens: 8,
       stepCount: 2,
       toolEvents: [
-        { toolId: "manage-message", content: "Tool manage-message completed" },
+        {
+          toolCallId: "flow-tool-call-1",
+          toolId: "manage-message",
+          inputSummary: "{}",
+          resultSummary: "Message completed",
+          content: "Tool manage-message completed",
+          success: true,
+        },
       ],
     };
   },
@@ -205,6 +214,9 @@ void mock.module(
   () => ({
     extractAndApplyTurnMemory: () => {
       state.memoryExtractionCalls += 1;
+      if (state.scenario === "memory-extraction-failure") {
+        return Promise.reject(new Error("MEMORY_EXTRACTION_SECRET_EXCEPTION"));
+      }
       return Promise.resolve();
     },
   }),
@@ -310,6 +322,8 @@ async function queryScenarioRuns(prisma: PrismaClient, messageIds: string[]) {
         incidentId: true,
         errorClass: true,
         finishReason: true,
+        routeDisposition: true,
+        primaryToolId: true,
       },
     }),
   );
@@ -323,6 +337,7 @@ async function runScenario(options: {
   databasePath: string;
 }): Promise<FlowScenarioResult> {
   state = createState(options.scenario);
+  const extractionErrorsBefore = await memoryExtractionErrorCount();
   const base = 10_000_000_000_000_000n + BigInt(options.index * 10);
   const firstId = base.toString();
   const secondId = (base + 1n).toString();
@@ -382,26 +397,13 @@ async function runScenario(options: {
   }
 
   const rows = await queryScenarioRuns(options.prisma, messageIds);
+  const extractionErrorsAfter = await memoryExtractionErrorCount();
   let agentRunColumns: string[] = [];
   let serializedAgentRuns = JSON.stringify(rows);
   if (options.scenario === "agent-run-persistence") {
-    const database = new Database(options.databasePath, {
-      readonly: true,
-      strict: true,
-    });
-    try {
-      agentRunColumns = ColumnRowsSchema.parse(
-        database
-          .query<{ name: string }, []>("PRAGMA table_info('AgentRun')")
-          .all(),
-      ).map((row) => row.name);
-      const persistedRows: unknown = database
-        .query("SELECT * FROM AgentRun WHERE discordMessageId = ?")
-        .all(firstId);
-      serializedAgentRuns = JSON.stringify(persistedRows);
-    } finally {
-      database.close();
-    }
+    const inspection = inspectAgentRunDatabase(options.databasePath, firstId);
+    agentRunColumns = inspection.columns;
+    serializedAgentRuns = inspection.serializedRows;
   }
 
   return {
@@ -417,6 +419,7 @@ async function runScenario(options: {
     specialistCalls: state.specialistCalls,
     toolCalls: state.toolCalls,
     memoryExtractionCalls: state.memoryExtractionCalls,
+    memoryExtractionErrors: extractionErrorsAfter - extractionErrorsBefore,
     sessionEventCalls: state.sessionEventCalls,
     deliveryOrder: state.deliveryOrder,
     incidentIds: rows.flatMap((row) =>
@@ -431,6 +434,8 @@ async function runScenario(options: {
     finishReasons: rows.flatMap((row) =>
       row.finishReason == null ? [] : [row.finishReason],
     ),
+    routeDispositions: rows.map(({ routeDisposition }) => routeDisposition),
+    primaryToolIds: rows.map(({ primaryToolId }) => primaryToolId),
     agentRunColumns,
     serializedAgentRuns,
     secondReplyObservedWhileFirstBlocked:
@@ -485,7 +490,6 @@ async function main(): Promise<void> {
     await disconnectPrisma();
   }
 }
-
 try {
   await main();
 } catch (error) {

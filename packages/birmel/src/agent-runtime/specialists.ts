@@ -1,7 +1,10 @@
 import { generateText, stepCountIs, ToolLoopAgent } from "ai";
+import { redactSecrets } from "@shepherdjerred/llm-observability";
 import { z } from "zod";
 import {
+  RouteDecisionSchema,
   SpecialistTaskPacketSchema,
+  type RouteDecision,
   type SpecialistId,
   type SpecialistTaskPacket,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
@@ -14,7 +17,11 @@ import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getOpenRouterProviderOptions } from "./provider-options.ts";
-import { CORE_SYSTEM_POLICY, specialistInstructions } from "./prompts.ts";
+import {
+  directInstructions,
+  isolatedSpecialistInstructions,
+  specialistInstructions,
+} from "./prompts.ts";
 
 const logger = loggers.agent.child("execution");
 
@@ -25,15 +32,21 @@ const ToolIdSchema = z
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const EffectDispositionSchema = z.enum(["not_applied", "applied", "unknown"]);
 const ToolResultForSessionSchema = z.object({
+  toolCallId: z.string().min(1).max(200),
   toolName: ToolIdSchema,
+  input: z.unknown(),
   output: z.object({
     success: z.boolean(),
+    message: z.string().min(1),
     effectDisposition: EffectDispositionSchema.optional(),
   }),
 });
 const SessionToolEventSchema = z.strictObject({
+  toolCallId: z.string().min(1).max(200),
   toolId: ToolIdSchema,
-  content: z.string().min(1).max(96),
+  inputSummary: z.string().min(1).max(384),
+  resultSummary: z.string().min(1).max(384),
+  content: z.string().min(1).max(1024),
   success: z.boolean(),
   effectDisposition: EffectDispositionSchema.optional(),
 });
@@ -51,11 +64,13 @@ export type AgentExecutionResult = {
 
 export type DirectExecutor = (
   packet: SpecialistTaskPacket,
+  decision: RouteDecision,
 ) => Promise<AgentExecutionResult>;
 
 export type SpecialistExecutor = (
   specialist: SpecialistId,
   packet: SpecialistTaskPacket,
+  decision: RouteDecision,
 ) => Promise<AgentExecutionResult>;
 
 export type IsolatedAgentOptions = {
@@ -64,6 +79,21 @@ export type IsolatedAgentOptions = {
   textVerbosity?: "low" | "medium" | "high";
   timeoutMs?: number;
 };
+
+function boundedText(value: string, maxLength: number): string {
+  return value.length <= maxLength
+    ? value
+    : `${value.slice(0, maxLength - 1)}…`;
+}
+
+function boundedSummary(value: unknown): string {
+  const redacted = redactSecrets(value);
+  const serialized = z
+    .string()
+    .min(1)
+    .parse(typeof redacted === "string" ? redacted : JSON.stringify(redacted));
+  return boundedText(serialized, 384);
+}
 
 export function summarizeToolResultForSession(
   rawToolResult: unknown,
@@ -79,14 +109,43 @@ export function summarizeToolResultForSession(
     );
   }
   const status = toolResult.output.success ? "succeeded" : "failed";
+  const inputSummary = boundedSummary(toolResult.input);
+  const resultSummary = toolResult.output.success
+    ? boundedSummary(toolResult.output.message)
+    : "Tool reported failure";
+  const content = boundedText(
+    `Tool ${toolResult.toolName} call ${toolResult.toolCallId} ${status}; input=${inputSummary}; result=${resultSummary}`,
+    1024,
+  );
   return SessionToolEventSchema.parse({
+    toolCallId: toolResult.toolCallId,
     toolId: toolResult.toolName,
-    content: `Tool ${toolResult.toolName} ${status}`,
+    inputSummary,
+    resultSummary,
+    content,
     success: toolResult.output.success,
     ...(toolResult.output.effectDisposition == null
       ? {}
       : { effectDisposition: toolResult.output.effectDisposition }),
   });
+}
+
+export function requireSuccessfulPrimaryTool(
+  rawDecision: RouteDecision,
+  toolEvents: SessionToolEvent[],
+): void {
+  const decision = RouteDecisionSchema.parse(rawDecision);
+  if (decision.disposition !== "supported") {
+    throw new Error("Specialist execution requires a supported route decision");
+  }
+  const succeeded = toolEvents.some(
+    ({ toolId, success }) => toolId === decision.primaryToolId && success,
+  );
+  if (!succeeded) {
+    throw new Error(
+      `Supported route did not complete its primary tool successfully: ${decision.primaryToolId ?? "null"}`,
+    );
+  }
 }
 
 function taskPrompt(packet: SpecialistTaskPacket): string {
@@ -111,8 +170,12 @@ function taskMessages(packet: SpecialistTaskPacket) {
   ];
 }
 
-export const executeDirect: DirectExecutor = async (rawPacket) => {
+export const executeDirect: DirectExecutor = async (rawPacket, rawDecision) => {
   const packet = SpecialistTaskPacketSchema.parse(rawPacket);
+  const decision = RouteDecisionSchema.parse(rawDecision);
+  if (decision.route !== "direct") {
+    throw new Error("Direct executor received a specialist route");
+  }
   const config = getConfig();
   const runtime = getLlmRuntime();
   return await withSpan(
@@ -129,7 +192,7 @@ export const executeDirect: DirectExecutor = async (rawPacket) => {
       const startedAt = performance.now();
       const result = await generateText({
         model: runtime.languageModel(config.openRouter.model),
-        system: `${CORE_SYSTEM_POLICY}\n\n${packet.persona}`,
+        system: `${directInstructions(decision)}\n\n${packet.persona}`,
         messages: taskMessages(packet),
         maxOutputTokens: config.openRouter.maxTokens,
         abortSignal: AbortSignal.timeout(config.agent.responseTimeoutMs),
@@ -172,6 +235,7 @@ export const executeDirect: DirectExecutor = async (rawPacket) => {
 async function executeSpecialistWithOptions(
   specialist: SpecialistId,
   rawPacket: SpecialistTaskPacket,
+  decision: RouteDecision | null,
   options: IsolatedAgentOptions,
 ): Promise<AgentExecutionResult> {
   const packet = SpecialistTaskPacketSchema.parse(rawPacket);
@@ -196,7 +260,11 @@ async function executeSpecialistWithOptions(
         model: runtime.languageModel(options.model ?? config.openRouter.model, [
           "tools",
         ]),
-        instructions: `${specialistInstructions(specialist)}\n\n${packet.persona}`,
+        instructions: `${
+          decision === null
+            ? isolatedSpecialistInstructions(specialist)
+            : specialistInstructions(specialist, decision)
+        }\n\n${packet.persona}`,
         tools,
         stopWhen: stepCountIs(config.agent.maxSteps),
         prepareStep: ({ stepNumber }) =>
@@ -216,6 +284,15 @@ async function executeSpecialistWithOptions(
           sessionId: packet.threadId ?? packet.channelId,
         }),
       });
+      const toolEvents = result.steps.flatMap((step) =>
+        step.toolResults.map((toolResult) =>
+          summarizeToolResultForSession(toolResult, registeredToolIds),
+        ),
+      );
+      if (decision !== null) {
+        requireSuccessfulPrimaryTool(decision, toolEvents);
+        span.setAttribute("birmel.primary_tool_succeeded", true);
+      }
       span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
       span.setAttribute(
         "gen_ai.usage.input_tokens",
@@ -241,11 +318,7 @@ async function executeSpecialistWithOptions(
         inputTokens: result.usage.inputTokens ?? 0,
         outputTokens: result.usage.outputTokens ?? 0,
         stepCount: result.steps.length,
-        toolEvents: result.steps.flatMap((step) =>
-          step.toolResults.map((toolResult) =>
-            summarizeToolResultForSession(toolResult, registeredToolIds),
-          ),
-        ),
+        toolEvents,
       };
     },
   );
@@ -254,11 +327,17 @@ async function executeSpecialistWithOptions(
 export const executeSpecialist: SpecialistExecutor = async (
   specialist,
   rawPacket,
-) => await executeSpecialistWithOptions(specialist, rawPacket, {});
+  decision,
+) => await executeSpecialistWithOptions(specialist, rawPacket, decision, {});
 
 export async function executeIsolatedAutomationAgent(
   packet: SpecialistTaskPacket,
   options: IsolatedAgentOptions,
 ): Promise<AgentExecutionResult> {
-  return await executeSpecialistWithOptions("automation", packet, options);
+  return await executeSpecialistWithOptions(
+    "automation",
+    packet,
+    null,
+    options,
+  );
 }

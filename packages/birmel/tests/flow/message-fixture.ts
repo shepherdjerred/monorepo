@@ -36,6 +36,7 @@ export function createFlowMessageContext(
       }
       return Promise.resolve({
         id: responseMessageId,
+        author: { id: "55555555555555555" },
         edit: (editedPayload: string) => {
           state.editAttempts.push(editedPayload);
           state.deliveryOrder.push(`edit:${options.messageId}`);
