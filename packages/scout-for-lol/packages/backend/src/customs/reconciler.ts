@@ -169,7 +169,7 @@ async function pollResult(
   database: ExtendedPrismaClient,
   nightId: string,
 ): Promise<void> {
-  const game = await database.customGame.findFirst({
+  const games = await database.customGame.findMany({
     where: {
       nightId,
       state: { in: ["RESULT_PENDING", "MANUAL"] },
@@ -177,17 +177,17 @@ async function pollResult(
     },
     orderBy: { sequence: "asc" },
   });
-  if (game?.tournamentCode === undefined || game.tournamentCode === null)
-    return;
-  const results = await getTournamentGames(game.tournamentCode);
-  const result = results.at(-1);
-  if (result === undefined) return;
-  const mutation = await recordRiotTournamentResult({
-    prisma: database,
-    nightId,
-    result,
-  });
-  if (mutation.applied) {
+  for (const game of games) {
+    if (game.tournamentCode === null) continue;
+    const results = await getTournamentGames(game.tournamentCode);
+    const result = results.at(-1);
+    if (result === undefined) continue;
+    const mutation = await recordRiotTournamentResult({
+      prisma: database,
+      nightId,
+      result,
+    });
+    if (!mutation.applied) continue;
     const voiceReturn =
       mutation.snapshot.currentGame?.id === game.id
         ? returnCustomResultPlayersToLobby({
@@ -198,6 +198,7 @@ async function pollResult(
         : null;
     publishCustomSnapshot(mutation.snapshot);
     if (voiceReturn !== null) await voiceReturn;
+    return;
   }
 }
 

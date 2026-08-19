@@ -206,6 +206,17 @@ export function ActivitySessionProvider({ children }: { children: ReactNode }) {
         ]);
       } catch (error) {
         if (!lifecycle.signal.aborted) {
+          if (stopLayout !== undefined) {
+            fireAndForget(stopLayout, "layout unsubscribe after setup failure");
+            stopLayout = undefined;
+          }
+          if (stopParticipants !== undefined) {
+            fireAndForget(
+              stopParticipants,
+              "participants unsubscribe after setup failure",
+            );
+            stopParticipants = undefined;
+          }
           setState({
             status: "error",
             message: error instanceof Error ? error.message : String(error),

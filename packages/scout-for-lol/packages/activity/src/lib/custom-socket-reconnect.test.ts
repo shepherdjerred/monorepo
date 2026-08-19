@@ -12,8 +12,8 @@ describe("custom Activity WebSocket reconnect policy", () => {
     expect(customSocketReconnectDelay(11)).toBe(30_000);
   });
 
-  test("stops after the bounded retry budget", () => {
-    expect(customSocketReconnectDelay(12)).toBeNull();
+  test("keeps retrying after prolonged outages", () => {
+    expect(customSocketReconnectDelay(12)).toBe(30_000);
   });
 
   test("rejects invalid retry counters", () => {

@@ -34,7 +34,6 @@ export function useCustomSocket(): void {
 
     const scheduleReconnect = (): void => {
       const delay = customSocketReconnectDelay(reconnectAttempt);
-      if (delay === null) return;
       reconnectAttempt += 1;
       reconnectTimer = globalThis.setTimeout(() => {
         reconnectTimer = null;
