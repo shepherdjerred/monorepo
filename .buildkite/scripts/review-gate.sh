@@ -75,8 +75,8 @@ if [[ "${REVIEW_PROVIDER:-qodo}" == "codex" ]] && \
     exit 1
   fi
   echo "Codex gate bootstrap: main lacks Codex acceptance; using the PR provider boundary with the main parser"
-  cp "$PR_WAIT_SCRIPT" "$GATE_DIR/.review-gate-wait-for-review.ts"
-  WAIT_SCRIPT="$GATE_DIR/.review-gate-wait-for-review.ts"
+  cp "$PR_WAIT_SCRIPT" "$GATE_DIR/scripts/.review-gate-wait-for-review.ts"
+  WAIT_SCRIPT="$GATE_DIR/scripts/.review-gate-wait-for-review.ts"
 fi
 
 REVIEW_GATE_PARSER_COMMIT="$GATE_SHA" bun --no-install "$WAIT_SCRIPT"
