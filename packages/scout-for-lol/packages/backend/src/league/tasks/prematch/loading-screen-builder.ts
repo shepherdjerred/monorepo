@@ -398,18 +398,17 @@ export async function buildLoadingScreenData(
     gameInfo.gameQueueConfigId,
     gameInfo.gameMode,
   );
-  const queueDisplayName =
-    queueType === "classic" && !isClassicAsset
-      ? QueueDisplayNameSchema.parse("Summoner's Rift")
-      : makeQueueDisplayName(queueType);
+  const isOrdinaryClassicQueue = queueType === "normal" && !isClassicAsset;
+  const queueDisplayName = isOrdinaryClassicQueue
+    ? QueueDisplayNameSchema.parse("Summoner's Rift")
+    : makeQueueDisplayName(queueType);
   const isRanked =
     gameInfo.gameQueueConfigId === RANKED_SOLO_QUEUE_ID ||
     gameInfo.gameQueueConfigId === RANKED_FLEX_QUEUE_ID ||
     gameInfo.gameQueueConfigId === RANKED_5S_QUEUE_ID;
-  const layout =
-    queueType === "classic" && !isClassicAsset
-      ? "standard"
-      : loadingScreenLayoutForQueueType(queueType);
+  const layout = isOrdinaryClassicQueue
+    ? "standard"
+    : loadingScreenLayoutForQueueType(queueType);
   let mapName: ReturnType<typeof mapIdToName>;
   try {
     mapName =
