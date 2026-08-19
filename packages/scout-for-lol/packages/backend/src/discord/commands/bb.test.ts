@@ -2,9 +2,10 @@ import { describe, expect, test } from "bun:test";
 import { bucksTestRoster } from "#src/testing/bucks-fixtures.ts";
 import {
   bbCommand,
+  buildOpenMarketSections,
+  formatGameSelectors,
   resolveOpenGameByAlias,
   trackedGameAliases,
-  trackedGameLabels,
 } from "#src/discord/commands/bb.ts";
 
 function pool(matchId: string) {
@@ -88,20 +89,62 @@ describe("/bb bet", () => {
     expect(resolveOpenGameByAlias([pool("NA1_1")], "missing")).toBeUndefined();
   });
 
+  test("does not match a tracked alias whose participant was scrubbed", () => {
+    const roster = bucksTestRoster().map((participant, index) =>
+      index === 1
+        ? { ...participant, puuid: null, trackedAlias: "scrubbed" }
+        : participant,
+    );
+    expect(
+      resolveOpenGameByAlias(
+        [
+          {
+            matchId: "NA1_scrubbed",
+            roster: JSON.stringify({ participants: roster }),
+          },
+        ],
+        "scrubbed",
+      ),
+    ).toBeUndefined();
+  });
+
   test("refuses to choose arbitrarily when an alias matches multiple pools", () => {
     expect(() =>
       resolveOpenGameByAlias([pool("NA1_1"), pool("NA1_2")], "jerred"),
     ).toThrow("matched 2 open Bryan Bucks pools");
   });
 
-  test("labels every tracked game anchor with a copyable alias and its team", () => {
-    expect(trackedGameLabels(bucksTestRoster())).toEqual([
-      "game: `jerred` — Blue Team",
-      "game: `bryan` — Red Team",
+  test("formats every suggested game alias as a copyable selector", () => {
+    expect(formatGameSelectors(["jerred", "bryan"])).toEqual([
+      "game: `jerred`",
+      "game: `bryan`",
     ]);
   });
 
   test("suggests only aliases accepted by the game selector", () => {
     expect(trackedGameAliases(bucksTestRoster())).toEqual(["jerred", "bryan"]);
+  });
+
+  test("shows every open-game alias with its Blue or Red team", () => {
+    const sections = buildOpenMarketSections([
+      {
+        matchId: "NA1_open",
+        closesAt: new Date("2030-01-01T00:10:00Z"),
+        blue: {
+          trackedPlayers: ["jerred", "friend"],
+          totalStake: 6,
+          betCount: 2,
+        },
+        red: { trackedPlayers: ["bryan"], totalStake: 5, betCount: 1 },
+      },
+    ]);
+
+    expect(sections).toHaveLength(1);
+    expect(sections[0]).toContain(
+      "🔵 **Blue Team:** 6 BB across 2 bet(s) — game: `jerred`, game: `friend`",
+    );
+    expect(sections[0]).toContain(
+      "🔴 **Red Team:** 5 BB across 1 bet(s) — game: `bryan`",
+    );
   });
 });

@@ -15,6 +15,7 @@ import {
   getLedgerPage,
   getOpenMarketAggregates,
   getPersonalBucksView,
+  type OpenMarketAggregate,
   type PersonalBucksView,
 } from "#src/betting/accounts.ts";
 import { placeBet } from "#src/betting/place-bet.ts";
@@ -22,17 +23,19 @@ import { describeResult } from "#src/betting/bet-button.ts";
 import { announceBetPlacement } from "#src/betting/announce.ts";
 import {
   BETTING_WINDOW_MS,
+  BLUE_TEAM_ID,
   MAX_STAKE,
   MIN_STAKE,
+  RED_TEAM_ID,
   SEED_GRANT,
 } from "#src/betting/constants.ts";
 import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { renderBucksHistory } from "#src/betting/navigation.ts";
 import {
   BucksTeamChoiceSchema,
-  shortTeamName,
   subjectWinsForTeam,
   teamIdForChoice,
+  teamName,
 } from "#src/betting/team.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
@@ -134,7 +137,7 @@ export function buildPersonalBucksEmbed(
       position.poolState === "open" && position.closesAt.getTime() > now
         ? `closes <t:${Math.floor(position.closesAt.getTime() / 1000).toString()}:R>`
         : "locked";
-    return `• **${position.subjectAlias} ${position.side}** — ${position.stake.toString()} BB · ${state}`;
+    return `• **${teamName(position.teamId)}** — game: \`${position.gameAlias}\` · ${position.stake.toString()} BB · ${state}`;
   });
   if (view.pendingPositionCount > view.pendingPositions.length) {
     positions.push(
@@ -182,16 +185,8 @@ function parseRoster(raw: string): BucksPoolParticipant[] {
   return BucksPoolRosterSchema.parse(JSON.parse(raw)).participants;
 }
 
-export function trackedGameLabels(
-  roster: readonly BucksPoolParticipant[],
-): string[] {
-  return roster.flatMap((participant) =>
-    participant.trackedAlias === undefined || participant.puuid === null
-      ? []
-      : [
-          `game: \`${participant.trackedAlias}\` — ${shortTeamName(participant.teamId)} Team`,
-        ],
-  );
+export function formatGameSelectors(aliases: readonly string[]): string[] {
+  return aliases.map((alias) => `game: \`${alias}\``);
 }
 
 export function trackedGameAliases(
@@ -271,7 +266,7 @@ export function buildBbRulesEmbed(): EmbedBuilder {
         name: "Eligibility & earnings",
         value:
           `Your Discord account must be linked to a tracked player. A new wallet starts with **${SEED_GRANT.toString()} BB**. ` +
-          "Eligible ranked games award **+1 BB** for playing, **+1 BB** for winning, and **+1 BB** for MVP.",
+          "Eligible games award **+1 BB** for playing, **+1 BB** for winning, and **+1 BB** for MVP.",
       },
       {
         name: "Placing a bet",
@@ -323,23 +318,7 @@ async function replyOpen(
     return;
   }
 
-  const sections = pools.map((pool) => {
-    const closesAtUnix = Math.floor(pool.closesAt.getTime() / 1000);
-    const bluePlayers =
-      pool.blue.trackedPlayers.length > 0
-        ? pool.blue.trackedPlayers.map((alias) => `\`${alias}\``).join(", ")
-        : "No tracked players";
-    const redPlayers =
-      pool.red.trackedPlayers.length > 0
-        ? pool.red.trackedPlayers.map((alias) => `\`${alias}\``).join(", ")
-        : "No tracked players";
-    return [
-      `## ${bluePlayers} vs ${redPlayers}`,
-      `Closes <t:${closesAtUnix.toString()}:R>`,
-      `🔵 **Blue Team:** ${pool.blue.totalStake.toString()} BB across ${pool.blue.betCount.toString()} bet(s) — game: ${bluePlayers}`,
-      `🔴 **Red Team:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} bet(s) — game: ${redPlayers}`,
-    ].join("\n");
-  });
+  const sections = buildOpenMarketSections(pools);
   const chunks = splitMessageIntoChunks(
     `${sections.join("\n\n")}\n\n${HOUSE_CUT_TERMS}`,
   );
@@ -351,6 +330,28 @@ async function replyOpen(
   for (const chunk of chunks.slice(1)) {
     await interaction.followUp({ content: chunk, ephemeral: true });
   }
+}
+
+export function buildOpenMarketSections(
+  pools: readonly OpenMarketAggregate[],
+): string[] {
+  return pools.map((pool) => {
+    const closesAtUnix = Math.floor(pool.closesAt.getTime() / 1000);
+    const blueSelectors = formatGameSelectors(pool.blue.trackedPlayers);
+    const redSelectors = formatGameSelectors(pool.red.trackedPlayers);
+    const bluePlayers =
+      blueSelectors.length > 0
+        ? blueSelectors.join(", ")
+        : "No tracked players";
+    const redPlayers =
+      redSelectors.length > 0 ? redSelectors.join(", ") : "No tracked players";
+    return [
+      `## ${bluePlayers} vs ${redPlayers}`,
+      `Closes <t:${closesAtUnix.toString()}:R>`,
+      `🔵 **${teamName(BLUE_TEAM_ID)}:** ${pool.blue.totalStake.toString()} BB across ${pool.blue.betCount.toString()} bet(s) — ${bluePlayers}`,
+      `🔴 **${teamName(RED_TEAM_ID)}:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} bet(s) — ${redPlayers}`,
+    ].join("\n");
+  });
 }
 
 async function replyBet(

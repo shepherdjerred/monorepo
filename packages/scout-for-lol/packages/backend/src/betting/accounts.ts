@@ -261,8 +261,8 @@ export async function getLedgerPage(
 
 export type PendingPosition = {
   matchId: string;
-  subjectAlias: string;
-  side: "WIN" | "LOSE";
+  gameAlias: string;
+  teamId: RiotTeamId;
   stake: number;
   closesAt: Date;
   poolState: string;
@@ -338,11 +338,8 @@ export async function getPersonalBucksView(
         }
         return {
           matchId: bet.pool.matchId,
-          subjectAlias: subject.trackedAlias,
-          side:
-            RiotTeamIdSchema.parse(bet.predictedTeamId) === subject.teamId
-              ? "WIN"
-              : "LOSE",
+          gameAlias: subject.trackedAlias,
+          teamId: RiotTeamIdSchema.parse(bet.predictedTeamId),
           stake: bet.stake,
           closesAt: bet.pool.closesAt,
           poolState: BucksPoolStateSchema.parse(bet.pool.poolState),
@@ -375,7 +372,10 @@ function marketSide(
   );
   return {
     trackedPlayers: roster
-      .filter((participant) => participant.teamId === teamId)
+      .filter(
+        (participant) =>
+          participant.teamId === teamId && participant.puuid !== null,
+      )
       .map((participant) => participant.trackedAlias)
       .filter((alias) => alias !== undefined),
     totalStake: sideBets.reduce((total, bet) => total + bet.stake, 0),

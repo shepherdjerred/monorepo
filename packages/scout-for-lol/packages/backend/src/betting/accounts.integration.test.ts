@@ -144,7 +144,13 @@ describe("personal positions and open markets", () => {
         serverId: SERVER_A,
         detectedAt: new Date("2030-01-01T00:00:00Z"),
         closesAt: new Date("2030-01-01T00:10:00Z"),
-        roster: JSON.stringify({ participants: bucksTestRoster() }),
+        roster: JSON.stringify({
+          participants: bucksTestRoster().map((participant, index) =>
+            index === 1
+              ? { ...participant, puuid: null, trackedAlias: "scrubbed" }
+              : participant,
+          ),
+        }),
       },
     });
     await db.bucksBet.createMany({
@@ -186,9 +192,21 @@ describe("personal positions and open markets", () => {
     );
     expect(personal?.pendingPositions).toEqual([
       expect.objectContaining({
-        subjectAlias: "jerred",
-        side: "WIN",
+        gameAlias: "jerred",
+        teamId: 100,
         stake: 20,
+      }),
+    ]);
+
+    const redAnchorPersonal = await getPersonalBucksView(
+      { serverId: SERVER_A, discordId: USER_B },
+      db,
+    );
+    expect(redAnchorPersonal?.pendingPositions).toEqual([
+      expect.objectContaining({
+        gameAlias: "bryan",
+        teamId: 100,
+        stake: 30,
       }),
     ]);
 
@@ -211,6 +229,7 @@ describe("personal positions and open markets", () => {
       }),
     ]);
     const rendered = JSON.stringify(markets);
+    expect(rendered).not.toContain("scrubbed");
     expect(rendered).not.toContain(USER_A);
     expect(rendered).not.toContain(USER_B);
     expect(rendered).not.toContain(HOUSE_ACCOUNT_DISCORD_ID);
