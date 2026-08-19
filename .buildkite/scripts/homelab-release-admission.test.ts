@@ -37,6 +37,21 @@ describe("homelab release admission", () => {
     ).toBe("superseded");
   });
 
+  test("admits equivalent commit SHAs regardless of hex casing", () => {
+    const uppercaseBuildCommit = buildCommit.toUpperCase();
+    expect(
+      decideHomelabReleaseAdmission({
+        buildCommit: uppercaseBuildCommit,
+        currentMainCommit: buildCommit,
+        buildNumber: 42,
+      }),
+    ).toMatchObject({
+      outcome: "admitted",
+      buildCommit,
+      currentMainCommit: buildCommit,
+    });
+  });
+
   test("rejects malformed handoffs and origin output", async () => {
     expect(() =>
       parseHomelabReleaseAdmission({ outcome: "admitted" }),
@@ -45,8 +60,17 @@ describe("homelab release admission", () => {
       parseOriginMainLsRemote(`${buildCommit}\trefs/heads/other\n`),
     ).toThrow("could not resolve the exact origin/main commit");
     await expect(
-      resolveOriginMainCommit(async () => ({ exitCode: 2, stdout: "" })),
+      resolveOriginMainCommit("main", async () => ({
+        exitCode: 2,
+        stdout: "",
+      })),
     ).rejects.toThrow("could not resolve origin/main");
+    expect(
+      parseOriginMainLsRemote(
+        `${buildCommit.toUpperCase()}\trefs/heads/trunk\n`,
+        "trunk",
+      ),
+    ).toBe(buildCommit);
   });
 
   test("does not invalidate an admitted handoff when main advances later", () => {

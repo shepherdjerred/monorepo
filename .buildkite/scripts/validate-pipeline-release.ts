@@ -68,6 +68,7 @@ export function validateHomelabReleaseAdmission(
   for (const step of [
     "helm-push",
     "tofu-apply",
+    "tofu-github",
     "argocd-sync",
     "tofu-cloudflare",
   ]) {

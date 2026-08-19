@@ -107,6 +107,7 @@ if [ "$$release_admission" != "admitted" ]; then exit 1; fi
       ["homelab-release-admission", admittedStep],
       ["helm-push", mutatingStep],
       ["tofu-apply", mutatingStep],
+      ["tofu-github", mutatingStep],
       [
         "argocd-sync",
         `${mutatingStep}\nbuildkite-agent artifact upload "homelab-release-result.json"`,

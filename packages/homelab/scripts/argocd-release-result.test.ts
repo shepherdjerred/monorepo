@@ -17,7 +17,7 @@ test("records applied verification separately from ArgoCD's intentional terminal
     schema: "homelab-release-result/v1",
     outcome: "applied-verified",
     terminalOperationState: "terminated-after-applied",
-    finalHealth: "all-expected-applications-synced-healthy",
+    finalHealth: "all-expected-child-applications-synced-healthy",
     resourceIdentities: ["v1/ConfigMap/ns/apps", "v1/ConfigMap/ns/zebra"],
     applications: [
       { name: "apps", revision: "2.0.0-42" },

@@ -48,11 +48,14 @@ export function decideHomelabReleaseAdmission(input: {
   readonly buildNumber: number;
 }): HomelabReleaseAdmission {
   validatedInput(input);
+  const buildCommit = input.buildCommit.toLowerCase();
+  const currentMainCommit = input.currentMainCommit.toLowerCase();
   return {
     schema: "homelab-release-admission/v1",
-    outcome:
-      input.buildCommit === input.currentMainCommit ? "admitted" : "superseded",
-    ...input,
+    outcome: buildCommit === currentMainCommit ? "admitted" : "superseded",
+    buildCommit,
+    currentMainCommit,
+    buildNumber: input.buildNumber,
   };
 }
 
@@ -79,32 +82,38 @@ export function parseHomelabReleaseAdmission(
     currentMainCommit,
     buildNumber: exactBuildNumber,
   });
+  const canonicalBuildCommit = buildCommit.toLowerCase();
+  const canonicalCurrentMainCommit = currentMainCommit.toLowerCase();
   return {
     schema,
     outcome,
-    buildCommit,
-    currentMainCommit,
+    buildCommit: canonicalBuildCommit,
+    currentMainCommit: canonicalCurrentMainCommit,
     buildNumber: exactBuildNumber,
   };
 }
 
-export function parseOriginMainLsRemote(output: string): string {
+export function parseOriginMainLsRemote(
+  output: string,
+  branchName = "main",
+): string {
+  const expectedRef = `refs/heads/${branchName}`;
   const lines = output.trim().split("\n");
   if (lines.length !== 1) {
     throw new Error(
-      "origin/main resolution returned an unexpected number of refs",
+      `origin/${branchName} resolution returned an unexpected number of refs`,
     );
   }
   const [commit, ref, ...extra] = lines[0]?.split("\t") ?? [];
   if (
     commit === undefined ||
-    ref !== "refs/heads/main" ||
+    ref !== expectedRef ||
     extra.length > 0 ||
     !COMMIT_PATTERN.test(commit)
   ) {
-    throw new Error("could not resolve the exact origin/main commit");
+    throw new Error(`could not resolve the exact origin/${branchName} commit`);
   }
-  return commit;
+  return commit.toLowerCase();
 }
 
 type CommandResult = {
@@ -131,6 +140,7 @@ async function runCommand(
 }
 
 export async function resolveOriginMainCommit(
+  branchName = "main",
   runner: CommandRunner = runCommand,
 ): Promise<string> {
   const result = await runner([
@@ -138,14 +148,14 @@ export async function resolveOriginMainCommit(
     "ls-remote",
     "--exit-code",
     "origin",
-    "refs/heads/main",
+    `refs/heads/${branchName}`,
   ]);
   if (result.exitCode !== 0) {
     throw new Error(
-      `could not resolve origin/main for homelab release admission (exit ${result.exitCode.toString()})`,
+      `could not resolve origin/${branchName} for homelab release admission (exit ${result.exitCode.toString()})`,
     );
   }
-  return parseOriginMainLsRemote(result.stdout);
+  return parseOriginMainLsRemote(result.stdout, branchName);
 }
 
 function requiredEnvironment(name: string): string {
@@ -157,13 +167,16 @@ function requiredEnvironment(name: string): string {
 }
 
 async function admit(): Promise<void> {
-  if (requiredEnvironment("BUILDKITE_BRANCH") !== "main") {
-    throw new Error("homelab release admission only supports main builds");
+  const defaultBranch = Bun.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] ?? "main";
+  if (requiredEnvironment("BUILDKITE_BRANCH") !== defaultBranch) {
+    throw new Error(
+      `homelab release admission only supports ${defaultBranch} builds`,
+    );
   }
   const buildNumber = Number(requiredEnvironment("BUILDKITE_BUILD_NUMBER"));
   const admission = decideHomelabReleaseAdmission({
     buildCommit: requiredEnvironment("BUILDKITE_COMMIT"),
-    currentMainCommit: await resolveOriginMainCommit(),
+    currentMainCommit: await resolveOriginMainCommit(defaultBranch),
     buildNumber,
   });
   await writeJsonHandoff(HANDOFF_KEY, HANDOFF_ARTIFACT, admission);

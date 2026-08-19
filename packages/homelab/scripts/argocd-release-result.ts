@@ -12,7 +12,7 @@ export type HomelabReleaseResult = {
     readonly revision: string;
   }[];
   readonly terminalOperationState: "terminated-after-applied";
-  readonly finalHealth: "all-expected-applications-synced-healthy";
+  readonly finalHealth: "all-expected-child-applications-synced-healthy";
 };
 
 export function appliedVerifiedReleaseResult(input: {
@@ -35,6 +35,6 @@ export function appliedVerifiedReleaseResult(input: {
       left.name.localeCompare(right.name),
     ),
     terminalOperationState: "terminated-after-applied",
-    finalHealth: "all-expected-applications-synced-healthy",
+    finalHealth: "all-expected-child-applications-synced-healthy",
   };
 }
