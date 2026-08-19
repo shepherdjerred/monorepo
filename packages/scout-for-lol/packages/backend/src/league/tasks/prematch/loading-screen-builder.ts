@@ -16,6 +16,7 @@ import {
   parseTeam,
   mapIdToName,
   makeQueueDisplayName,
+  QueueDisplayNameSchema,
   LeaguePuuidSchema,
   LoadingScreenDataSchema,
   SummonerSpellIdSchema,
@@ -31,6 +32,7 @@ import {
   getModernChampionIdForClassic,
   getModernSpellIdForClassic,
   loadingScreenLayoutForQueueType,
+  isClassicAssetMode,
 } from "@scout-for-lol/data/index.ts";
 import {
   getChampionDisplayName,
@@ -38,6 +40,7 @@ import {
 } from "#src/utils/champion.ts";
 import { getRankByPuuid } from "#src/league/model/rank.ts";
 import { createLogger } from "#src/logger.ts";
+import { classicAssetResolutionFailuresTotal } from "#src/metrics/index.ts";
 
 const logger = createLogger("prematch-loading-screen-builder");
 
@@ -391,12 +394,21 @@ export async function buildLoadingScreenData(
     );
   }
 
-  const queueDisplayName = makeQueueDisplayName(queueType);
+  const isClassicAsset = isClassicAssetMode(
+    gameInfo.gameQueueConfigId,
+    gameInfo.gameMode,
+  );
+  const isOrdinaryClassicQueue = queueType === "normal" && !isClassicAsset;
+  const queueDisplayName = isOrdinaryClassicQueue
+    ? QueueDisplayNameSchema.parse("Summoner's Rift")
+    : makeQueueDisplayName(queueType);
   const isRanked =
     gameInfo.gameQueueConfigId === RANKED_SOLO_QUEUE_ID ||
     gameInfo.gameQueueConfigId === RANKED_FLEX_QUEUE_ID ||
     gameInfo.gameQueueConfigId === RANKED_5S_QUEUE_ID;
-  const layout = loadingScreenLayoutForQueueType(queueType);
+  const layout = isOrdinaryClassicQueue
+    ? "standard"
+    : loadingScreenLayoutForQueueType(queueType);
   let mapName: ReturnType<typeof mapIdToName>;
   try {
     mapName =
@@ -413,9 +425,26 @@ export async function buildLoadingScreenData(
 
   if (layout === "classic") {
     const participants = orderClassicParticipants(
-      gameInfo.participants.map((participant) =>
-        buildClassicParticipant(participant, trackedPuuids),
-      ),
+      gameInfo.participants.map((participant) => {
+        try {
+          return buildClassicParticipant(participant, trackedPuuids);
+        } catch (error) {
+          const reason =
+            error instanceof Error && error.message.includes("asset")
+              ? "asset"
+              : "mapping";
+          classicAssetResolutionFailuresTotal.inc({
+            phase: "prematch",
+            reason,
+          });
+          logger.error(
+            "Classic prematch champion asset resolution failed",
+            error,
+            { championId: participant.championId },
+          );
+          throw error;
+        }
+      }),
     );
     return LoadingScreenDataSchema.parse({
       gameId: GameIdSchema.parse(gameInfo.gameId),

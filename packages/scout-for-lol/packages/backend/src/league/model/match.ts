@@ -20,6 +20,7 @@ import {
   getOutcome,
   getTeams,
   isClassicQueueType,
+  isClassicAssetMode,
   ClassicQueueTypeSchema,
   PlayerConfigEntrySchema,
   QueueTypeSchema,
@@ -55,15 +56,20 @@ export function toMatch(
   if (queueType === "arena") {
     throw new Error("arena matches are not supported");
   }
-  if (isClassicQueueType(queueType)) {
+  if (
+    isClassicQueueType(queueType) &&
+    isClassicAssetMode(rawMatch.info.queueId, rawMatch.info.gameMode)
+  ) {
     throw new Error(
-      `${ClassicQueueTypeSchema.parse(queueType)} matches are not supported`,
+      `${ClassicQueueTypeSchema.parse(queueType)} matches must be processed by the Classic report model`,
     );
   }
   const completedQueueType =
-    queueType === undefined
-      ? undefined
-      : CompletedQueueTypeSchema.parse(queueType);
+    queueType === "classic"
+      ? "normal"
+      : queueType === undefined
+        ? undefined
+        : CompletedQueueTypeSchema.parse(queueType);
 
   // Build CompletedMatch.players for all tracked players, skipping any with missing participant data
   const matchPlayers = players

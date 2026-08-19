@@ -1,211 +1,471 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Lulu": {
-      "id": "Jade_Lulu",
-      "key": "60117",
+      "id": "Lulu",
+      "key": "117",
       "name": "Lulu",
-      "title": "The Fae Sorceress",
+      "title": "the Fae Sorceress",
       "image": {
-        "full": "Jade_Lulu.png",
+        "full": "Lulu.png",
         "sprite": "champion2.png",
         "group": "champion",
-        "x": 336,
+        "x": 288,
         "y": 48,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60117000",
+          "id": "117000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60117002",
+          "id": "117001",
+          "num": 1,
+          "name": "Bittersweet Lulu",
+          "chromas": false
+        },
+        {
+          "id": "117002",
           "num": 2,
           "name": "Wicked Lulu",
           "chromas": false
         },
         {
-          "id": "60117014",
-          "num": 14,
-          "name": "Cosmic Enchantress Lulu",
+          "id": "117003",
+          "num": 3,
+          "name": "Dragon Trainer Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117004",
+          "num": 4,
+          "name": "Winter Wonder Lulu",
           "chromas": false
         },
         {
-          "id": "60117016",
+          "id": "117005",
+          "num": 5,
+          "name": "Pool Party Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117006",
+          "num": 6,
+          "name": "Star Guardian Lulu",
+          "chromas": false
+        },
+        {
+          "id": "117007",
+          "num": 7,
+          "name": "Pool Party Lulu (Catseye)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "117008",
+          "num": 8,
+          "name": "Pool Party Lulu (Sandstone)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "117009",
+          "num": 9,
+          "name": "Pool Party Lulu (Peridot)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "117010",
+          "num": 10,
+          "name": "Pool Party Lulu (Ruby)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "117011",
+          "num": 11,
+          "name": "Pool Party Lulu (Turquoise)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "117012",
+          "num": 12,
+          "name": "Pool Party Lulu (Citrine)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "117013",
+          "num": 13,
+          "name": "Pool Party Lulu (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 5
+        },
+        {
+          "id": "117014",
+          "num": 14,
+          "name": "Cosmic Enchantress Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117015",
+          "num": 15,
+          "name": "Pajama Guardian Lulu",
+          "chromas": false
+        },
+        {
+          "id": "117016",
           "num": 16,
           "name": "Cosmic Enchantress Lulu (Rose Quartz)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60117017",
+          "id": "117017",
           "num": 17,
           "name": "Cosmic Enchantress Lulu (Ruby)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60117018",
+          "id": "117018",
           "num": 18,
           "name": "Cosmic Enchantress Lulu (Catseye)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60117019",
+          "id": "117019",
           "num": 19,
           "name": "Cosmic Enchantress Lulu (Turquoise)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60117020",
+          "id": "117020",
           "num": 20,
           "name": "Cosmic Enchantress Lulu (Obsidian)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60117037",
-          "num": 37,
-          "name": "Monster Tamer Lulu",
+          "id": "117021",
+          "num": 21,
+          "name": "Dragon Trainer Lulu (Turquoise)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "117022",
+          "num": 22,
+          "name": "Dragon Trainer Lulu (Pearl)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "117023",
+          "num": 23,
+          "name": "Dragon Trainer Lulu (Ruby)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "117024",
+          "num": 24,
+          "name": "Dragon Trainer Lulu (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "117025",
+          "num": 25,
+          "name": "Dragon Trainer Lulu (Obsidian)",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "117026",
+          "num": 26,
+          "name": "Space Groove Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117027",
+          "num": 27,
+          "name": "Prestige Space Groove Lulu",
           "chromas": false
         },
         {
-          "id": "60117038",
+          "id": "117028",
+          "num": 28,
+          "name": "Space Groove Lulu (Ruby)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "117029",
+          "num": 29,
+          "name": "Space Groove Lulu (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "117030",
+          "num": 30,
+          "name": "Space Groove Lulu (Peridot)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "117031",
+          "num": 31,
+          "name": "Space Groove Lulu (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "117032",
+          "num": 32,
+          "name": "Space Groove Lulu (Citrine)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "117033",
+          "num": 33,
+          "name": "Space Groove Lulu (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "117034",
+          "num": 34,
+          "name": "Space Groove Lulu (Turquoise)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "117035",
+          "num": 35,
+          "name": "Space Groove Lulu (Obsidian)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "117036",
+          "num": 36,
+          "name": "Space Groove Lulu (Disco)",
+          "chromas": false,
+          "parentSkin": 26
+        },
+        {
+          "id": "117037",
+          "num": 37,
+          "name": "Monster Tamer Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117038",
           "num": 38,
           "name": "Monster Tamer Lulu (Ruby)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60117039",
+          "id": "117039",
           "num": 39,
           "name": "Monster Tamer Lulu (Amethyst)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60117040",
+          "id": "117040",
           "num": 40,
           "name": "Monster Tamer Lulu (Turquoise)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60117041",
+          "id": "117041",
           "num": 41,
           "name": "Monster Tamer Lulu (Emerald)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60117042",
+          "id": "117042",
           "num": 42,
           "name": "Monster Tamer Lulu (Rose Quartz)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60117043",
+          "id": "117043",
           "num": 43,
           "name": "Monster Tamer Lulu (Sapphire)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60117044",
+          "id": "117044",
           "num": 44,
           "name": "Monster Tamer Lulu (Obsidian)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60117045",
+          "id": "117045",
           "num": 45,
           "name": "Monster Tamer Lulu (Pearl)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60117046",
+          "id": "117046",
           "num": 46,
           "name": "Cafe Cuties Lulu",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60117047",
+          "id": "117047",
           "num": 47,
           "name": "Cafe Cuties Lulu (Ruby)",
           "chromas": false,
           "parentSkin": 46
         },
         {
-          "id": "60117048",
+          "id": "117048",
           "num": 48,
           "name": "Cafe Cuties Lulu (Catseye)",
           "chromas": false,
           "parentSkin": 46
         },
         {
-          "id": "60117049",
+          "id": "117049",
           "num": 49,
           "name": "Cafe Cuties Lulu (Emerald)",
           "chromas": false,
           "parentSkin": 46
         },
         {
-          "id": "60117050",
+          "id": "117050",
           "num": 50,
           "name": "Cafe Cuties Lulu (Tanzanite)",
           "chromas": false,
           "parentSkin": 46
         },
         {
-          "id": "60117051",
+          "id": "117051",
           "num": 51,
           "name": "Cafe Cuties Lulu (Sapphire)",
           "chromas": false,
           "parentSkin": 46
         },
         {
-          "id": "60117052",
+          "id": "117052",
           "num": 52,
           "name": "Cafe Cuties Lulu (Rose Quartz)",
           "chromas": false,
           "parentSkin": 46
         },
         {
-          "id": "60117053",
+          "id": "117053",
           "num": 53,
           "name": "Cafe Cuties Lulu (Turquoise)",
           "chromas": false,
           "parentSkin": 46
         },
         {
-          "id": "60117054",
+          "id": "117054",
           "num": 54,
           "name": "Cafe Cuties Lulu (Obsidian)",
           "chromas": false,
           "parentSkin": 46
         },
         {
-          "id": "60117055",
+          "id": "117055",
           "num": 55,
           "name": "Arcana Lulu",
           "chromas": false
+        },
+        {
+          "id": "117056",
+          "num": 56,
+          "name": "Faerie Court Lulu",
+          "chromas": true
+        },
+        {
+          "id": "117057",
+          "num": 57,
+          "name": "Faerie Court Lulu (Ruby)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117058",
+          "num": 58,
+          "name": "Faerie Court Lulu (Emerald)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117059",
+          "num": 59,
+          "name": "Faerie Court Lulu (Catseye)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117060",
+          "num": 60,
+          "name": "Faerie Court Lulu (Pearl)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117061",
+          "num": 61,
+          "name": "Faerie Court Lulu (Turquoise)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117062",
+          "num": 62,
+          "name": "Faerie Court Lulu (Obsidian)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117063",
+          "num": 63,
+          "name": "Faerie Court Lulu (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 56
+        },
+        {
+          "id": "117064",
+          "num": 64,
+          "name": "Faerie Court Lulu (Sapphire)",
+          "chromas": false,
+          "parentSkin": 56
         }
       ],
-      "lore": "- Glitterdance (Q) bolts can not deal damage to the same target",
-      "blurb": "- Glitterdance (Q) bolts can not deal damage to the same target",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "The yordle mage Lulu is known for conjuring dreamlike illusions and fanciful creatures as she roams Runeterra with her fairy companion Pix. Lulu shapes reality on a whim, warping the fabric of the world, and what she views as the constraints of this mundane, physical realm. While others might consider her magic at best unnatural, and at worst dangerous, she believes everyone could use a touch of enchantment.",
+      "blurb": "The yordle mage Lulu is known for conjuring dreamlike illusions and fanciful creatures as she roams Runeterra with her fairy companion Pix. Lulu shapes reality on a whim, warping the fabric of the world, and what she views as the constraints of this...",
+      "allytips": [
+        "Glitterlance can be fired at odd angles depending on where your cursor is - Moving your cursor closer to Pix and Lulu will change your area of effect size considerably.",
+        "Consider casting Help, Pix! on ranged attackers for the Pix boost and Wild Growth on Tanks or Fighters for the added initiation power."
+      ],
+      "enemytips": [
+        "The shots from Lulu's faerie can be intercepted - hide behind your minions to avoid the additional Faerie attacks.",
+        "Lulu excels when opponents heavily commit. Don't give her this chance! Use heavy harass tactics instead to force Lulu and her partner out of lane."
+      ],
       "tags": [
         "Support",
         "Mage"
@@ -218,42 +478,40 @@
         "difficulty": 5
       },
       "stats": {
-        "hp": 497,
-        "hpperlevel": 82,
-        "mp": 255,
+        "hp": 565,
+        "hpperlevel": 92,
+        "mp": 350,
         "mpperlevel": 55,
-        "movespeed": 325,
-        "armor": 16.7,
-        "armorperlevel": 3.7,
+        "movespeed": 330,
+        "armor": 26,
+        "armorperlevel": 4.6,
         "spellblock": 30,
-        "spellblockperlevel": 0,
+        "spellblockperlevel": 1.3,
         "attackrange": 550,
-        "hpregen": 5.6,
+        "hpregen": 6,
         "hpregenperlevel": 0.6,
-        "mpregen": 5.5,
-        "mpregenperlevel": 0.5,
+        "mpregen": 11,
+        "mpregenperlevel": 0.6,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 46.6,
+        "attackdamage": 47,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.25,
         "attackspeed": 0.625
       },
       "spells": [
         {
-          "id": "Jade_LuluQ",
+          "id": "LuluQ",
           "name": "Glitterlance",
-          "description": "Pix and Lulu each fire a bolt of magical energy that heavily slows all enemies it hits. An enemy can only be damaged by one bolt.",
-          "tooltip": "Lulu and Pix each fire a piercing bolt dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, enemies hit are <status>Slowed</status> by {{ slowamount*-100 }}%, decaying over {{ slowduration }} seconds.<br /><br />An enemy can only be damaged by one bolt.{{ spellmodifierdescriptionappend }}",
+          "description": "Pix and Lulu each fire a bolt of magical energy that damages and heavily slows all enemies it hits.",
+          "tooltip": "Lulu and Pix each fire a piercing bolt dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowamount*-100 }}%, decaying over {{ slowduration }} seconds.<br /><br />Enemies take <magicDamage>{{ bonusmissiledamage }} magic damage</magicDamage> from additional bolts.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
-              "Slow Duration",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ slowduration }} -> {{ slowdurationNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
@@ -267,13 +525,13 @@
           ],
           "cooldownBurn": "7",
           "cost": [
+            50,
+            55,
             60,
             65,
-            70,
-            75,
-            80
+            70
           ],
-          "costBurn": "60/65/70/75/80",
+          "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
@@ -373,61 +631,59 @@
           ],
           "rangeBurn": "925",
           "image": {
-            "full": "Jade_LuluQ.png",
+            "full": "LuluQ.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 96,
-            "y": 96,
+            "x": 384,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_LuluW",
+          "id": "LuluW",
           "name": "Whimsy",
-          "description": "If cast on an ally, grants them movement speed and ability power for a short time. If cast on an enemy, turns them into an adorable critter that can't attack or cast spells.",
-          "tooltip": "On Ally Cast: Target ally gains <speed>{{ msboost*100 }}% Movement Speed</speed> and <magicDamage>{{ apboost }} Ability Power</magicDamage> for {{ buffduration }} seconds.<br /><br />On Enemy Cast: <status>Polymorphs</status> an enemy champion for {{ polymorphduration }} seconds, disabling their ability to attack or cast spells and <status>Slows</status> by 60.</mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "If cast on an ally, grants them Attack Speed and Move Speed for a short time. If cast on an enemy, turns them into an adorable critter that can't attack or cast spells.",
+          "tooltip": "When used on an ally, Lulu grants <speed>{{ totalms }} Move Speed</speed> and <attackSpeed>{{ asbonus*100 }}% Attack Speed</attackSpeed> for {{ msduration }} seconds.<br /><br />When used on an enemy, Lulu <status>Polymorphs</status> them for {{ ccduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Bonus Ability Power",
-              "Polymorph Duration",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
+              "Move Speed and Attack Speed Duration",
+              "Attack Speed",
+              "Polymorph Duration"
             ],
             "effect": [
-              "{{ apboost }} -> {{ apboostNL }}",
-              "{{ polymorphduration }} -> {{ polymorphdurationNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ msduration }} -> {{ msdurationNL }}",
+              "{{ asbonus*100.000000 }}% -> {{ asbonusnl*100.000000 }}%",
+              "{{ ccduration }} -> {{ ccdurationNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
             18,
-            16.5,
-            15,
-            13.5,
-            12
+            18,
+            18,
+            18,
+            18
           ],
-          "cooldownBurn": "18/16.5/15/13.5/12",
+          "cooldownBurn": "18",
           "cost": [
             65,
-            70,
-            75,
-            80,
-            85
+            65,
+            65,
+            65,
+            65
           ],
-          "costBurn": "65/70/75/80/85",
+          "costBurn": "65",
           "datavalues": {},
           "effect": [
             null,
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              0.25,
+              0.25,
+              0.25,
+              0.25,
+              0.25
             ],
             [
               0,
@@ -437,39 +693,39 @@
               0
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              1.2,
+              1.4,
+              1.6,
+              1.8,
+              2
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              -60,
+              -60,
+              -60,
+              -60,
+              -60
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              3,
+              3.25,
+              3.5,
+              3.75,
+              4
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              0.01,
+              0.01,
+              0.01,
+              0.01,
+              0.01
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              0.2,
+              0.225,
+              0.25,
+              0.275,
+              0.3
             ],
             [
               0,
@@ -495,13 +751,13 @@
           ],
           "effectBurn": [
             null,
+            "0.25",
             "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
+            "1.2/1.4/1.6/1.8/2",
+            "-60",
+            "3/3.25/3.5/3.75/4",
+            "0.01",
+            "0.2/0.225/0.25/0.275/0.3",
             "0",
             "0",
             "0"
@@ -518,21 +774,21 @@
           ],
           "rangeBurn": "650",
           "image": {
-            "full": "Jade_LuluW.png",
+            "full": "LuluW.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 144,
-            "y": 96,
+            "x": 432,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_LuluE",
+          "id": "LuluE",
           "name": "Help, Pix!",
           "description": "If cast on an ally, commands Pix to jump to an ally and shield them. He then follows them and aids their attacks. If cast on an enemy, commands Pix to jump to an enemy and damage them. He then follows them and grants you vision of that enemy.",
-          "tooltip": "On Ally Cast: Commands Pix to jump to an ally and then follow and aid their attacks instead of Lulu's for 6 seconds. Upon arrival, Pix <shield>shields for {{ totalshield }} damage</shield> for 6 seconds.<br /><br />On Enemy Cast: Pix deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to target enemy unit. Pix then follows and grants vision of them for 6 seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "tooltip": "When used on an ally, Pix jumps to them and grants <spellName>Pix, Faerie Companion</spellName> for {{ pixonallyduration }} seconds. If the ally is a champion, Pix also grants <shield>{{ totalshield }} Shield</shield> for {{ shieldduration }} seconds.<br /><br />When used on an enemy champion, Pix hampers them, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and granting <keywordStealth>True Sight</keywordStealth> of them for {{ pixonenemyduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Shield Amount",
@@ -550,20 +806,20 @@
           "maxrank": 5,
           "cooldown": [
             10,
-            10,
-            10,
-            10,
-            10
+            9.5,
+            9,
+            8.5,
+            8
           ],
-          "cooldownBurn": "10",
+          "cooldownBurn": "10/9.5/9/8.5/8",
           "cost": [
             60,
+            65,
             70,
-            80,
-            90,
-            100
+            75,
+            80
           ],
-          "costBurn": "60/70/80/90/100",
+          "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
@@ -663,10 +919,10 @@
           ],
           "rangeBurn": "650",
           "image": {
-            "full": "Jade_LuluE.png",
+            "full": "LuluE.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 192,
+            "x": 0,
             "y": 96,
             "w": 48,
             "h": 48
@@ -674,10 +930,10 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_LuluR",
+          "id": "LuluR",
           "name": "Wild Growth",
           "description": "Lulu enlarges an ally, knocking nearby enemies into the air and granting the ally a large amount of bonus health. For the next few seconds, that ally gains an aura that slows nearby enemies.",
-          "tooltip": "Lulu enlarges her ally, <status>Knocking Up</status> nearby enemies into the air. For {{ buffduration }} seconds, her ally gains <scaleHealth>{{ totalbonushealth }} bonus health</scaleHealth> and nearby enemies are <status>Slowed</status> by {{ slowpercent }}% for 1 second.</mainText>{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Lulu enlarges an ally, <status>Knocking Up</status> surrounding enemies for {{ knockbackduration }} second. The enlarged ally gains <healing>{{ totalbonushealth }} max Health</healing> and <status>Slows</status> surrounding enemies by {{ slowpercent }}% for {{ buffduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Bonus Health",
@@ -692,17 +948,17 @@
           },
           "maxrank": 3,
           "cooldown": [
-            110,
-            95,
+            120,
+            100,
             80
           ],
-          "cooldownBurn": "110/95/80",
+          "cooldownBurn": "120/100/80",
           "cost": [
-            150,
-            150,
-            150
+            100,
+            100,
+            100
           ],
-          "costBurn": "150",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -780,10 +1036,10 @@
           ],
           "rangeBurn": "900",
           "image": {
-            "full": "Jade_LuluR.png",
+            "full": "LuluR.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 240,
+            "x": 48,
             "y": 96,
             "w": 48,
             "h": 48
@@ -795,10 +1051,10 @@
         "name": "Pix, Faerie Companion",
         "description": "Pix fires magical bolts of energy whenever the champion he's following attacks another enemy unit. These bolts are homing, but can be intercepted by other units.",
         "image": {
-          "full": "Jade_Lulu_PixFaerieCompanion.png",
+          "full": "Lulu_PixFaerieCompanion.png",
           "sprite": "passive2.png",
           "group": "passive",
-          "x": 336,
+          "x": 288,
           "y": 48,
           "w": 48,
           "h": 48

@@ -1,201 +1,544 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Blitzcrank": {
-      "id": "Jade_Blitzcrank",
-      "key": "60053",
+      "id": "Blitzcrank",
+      "key": "53",
       "name": "Blitzcrank",
-      "title": "The Great Steam Golem",
+      "title": "the Great Steam Golem",
       "image": {
-        "full": "Jade_Blitzcrank.png",
-        "sprite": "champion1.png",
+        "full": "Blitzcrank.png",
+        "sprite": "champion0.png",
         "group": "champion",
-        "x": 240,
-        "y": 96,
+        "x": 288,
+        "y": 48,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60053000",
+          "id": "53000",
           "num": 0,
           "name": "default",
           "chromas": true
         },
         {
-          "id": "60053001",
+          "id": "53001",
           "num": 1,
           "name": "Rusty Blitzcrank",
           "chromas": false
         },
         {
-          "id": "60053005",
+          "id": "53002",
+          "num": 2,
+          "name": "Goalkeeper Blitzcrank",
+          "chromas": false
+        },
+        {
+          "id": "53003",
+          "num": 3,
+          "name": "Boom Boom Blitzcrank",
+          "chromas": false
+        },
+        {
+          "id": "53004",
+          "num": 4,
+          "name": "Piltover Customs Blitzcrank",
+          "chromas": false
+        },
+        {
+          "id": "53005",
           "num": 5,
           "name": "Definitely Not Blitzcrank",
           "chromas": false
         },
         {
-          "id": "60053006",
+          "id": "53006",
           "num": 6,
           "name": "iBlitzcrank",
           "chromas": false
         },
         {
-          "id": "60053007",
+          "id": "53007",
           "num": 7,
           "name": "Riot Blitzcrank",
           "chromas": false
         },
         {
-          "id": "60053008",
+          "id": "53008",
           "num": 8,
           "name": "Blitzcrank Steel Molten",
           "chromas": false,
           "parentSkin": 0
         },
         {
-          "id": "60053009",
+          "id": "53009",
           "num": 9,
           "name": "Blitzcrank Steel Cobalt",
           "chromas": false,
           "parentSkin": 0
         },
         {
-          "id": "60053010",
+          "id": "53010",
           "num": 10,
           "name": "Blitzcrank Steel Gunmetal",
           "chromas": false,
           "parentSkin": 0
         },
         {
-          "id": "60053029",
-          "num": 29,
-          "name": "Space Groove Blitz & Crank",
+          "id": "53011",
+          "num": 11,
+          "name": "Battle Boss Blitzcrank",
+          "chromas": true
+        },
+        {
+          "id": "53012",
+          "num": 12,
+          "name": "Battle Boss Blitzcrank (Catseye)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53013",
+          "num": 13,
+          "name": "Battle Boss Blitzcrank (Rainbow)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53014",
+          "num": 14,
+          "name": "Battle Boss Blitzcrank (Citrine)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53015",
+          "num": 15,
+          "name": "Battle Boss Blitzcrank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53016",
+          "num": 16,
+          "name": "Battle Boss Blitzcrank (Ruby)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53017",
+          "num": 17,
+          "name": "Battle Boss Blitzcrank (Sapphire)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53018",
+          "num": 18,
+          "name": "Battle Boss Blitzcrank (Pearl)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53019",
+          "num": 19,
+          "name": "Battle Boss Blitzcrank (Turquoise)",
+          "chromas": false,
+          "parentSkin": 11
+        },
+        {
+          "id": "53020",
+          "num": 20,
+          "name": "Lancer Rogue Blitzcrank",
           "chromas": false
         },
         {
-          "id": "60053030",
+          "id": "53021",
+          "num": 21,
+          "name": "Lancer Paragon Blitzcrank",
+          "chromas": false
+        },
+        {
+          "id": "53022",
+          "num": 22,
+          "name": "Witch's Brew Blitzcrank",
+          "chromas": true
+        },
+        {
+          "id": "53023",
+          "num": 23,
+          "name": "Witch's Brew Blitzcrank (Ruby)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "53024",
+          "num": 24,
+          "name": "Witch's Brew Blitzcrank (Catseye)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "53025",
+          "num": 25,
+          "name": "Witch's Brew Blitzcrank (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "53026",
+          "num": 26,
+          "name": "Witch's Brew Blitzcrank (Emerald)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "53027",
+          "num": 27,
+          "name": "Witch's Brew Blitzcrank (Turquoise)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "53028",
+          "num": 28,
+          "name": "Witch's Brew Blitzcrank (Obsidian)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "53029",
+          "num": 29,
+          "name": "Space Groove Blitz & Crank",
+          "chromas": true
+        },
+        {
+          "id": "53030",
           "num": 30,
           "name": "Space Groove Blitz & Crank (Ruby)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60053031",
+          "id": "53031",
           "num": 31,
           "name": "Space Groove Blitz & Crank (Catseye)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60053032",
+          "id": "53032",
           "num": 32,
           "name": "Space Groove Blitz & Crank (Amethyst)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60053033",
+          "id": "53033",
           "num": 33,
           "name": "Space Groove Blitz & Crank (Rose Quartz)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60053034",
+          "id": "53034",
           "num": 34,
           "name": "Space Groove Blitz & Crank (Pearl)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60053035",
+          "id": "53035",
           "num": 35,
           "name": "Space Groove Blitz & Crank (Disco)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60053056",
-          "num": 56,
-          "name": "Beezcrank",
-          "chromas": false
+          "id": "53036",
+          "num": 36,
+          "name": "Victorious Blitzcrank",
+          "chromas": true
         },
         {
-          "id": "60053057",
+          "id": "53037",
+          "num": 37,
+          "name": "Victorious Blitzcrank (Solo/Duo Platinum)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53038",
+          "num": 38,
+          "name": "Victorious Blitzcrank (Solo/Duo Diamond)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53039",
+          "num": 39,
+          "name": "Victorious Blitzcrank (Solo/Duo Master)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53040",
+          "num": 40,
+          "name": "Victorious Blitzcrank (Solo/Duo Grandmaster)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53041",
+          "num": 41,
+          "name": "Victorious Blitzcrank (Solo/Duo Challenger)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53042",
+          "num": 42,
+          "name": "Victorious Blitzcrank (Flex Platinum)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53043",
+          "num": 43,
+          "name": "Victorious Blitzcrank (Flex Diamond)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53044",
+          "num": 44,
+          "name": "Victorious Blitzcrank (Flex Master)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53045",
+          "num": 45,
+          "name": "Victorious Blitzcrank (Flex Grandmaster)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53046",
+          "num": 46,
+          "name": "Victorious Blitzcrank (Flex Challenger)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "53047",
+          "num": 47,
+          "name": "Zenith Games Blitzcrank",
+          "chromas": true
+        },
+        {
+          "id": "53048",
+          "num": 48,
+          "name": "Zenith Games Blitzcrank (Ruby)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53049",
+          "num": 49,
+          "name": "Zenith Games Blitzcrank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53050",
+          "num": 50,
+          "name": "Zenith Games Blitzcrank (Citrine)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53051",
+          "num": 51,
+          "name": "Zenith Games Blitzcrank (Sapphire)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53052",
+          "num": 52,
+          "name": "Zenith Games Blitzcrank (Emerald)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53053",
+          "num": 53,
+          "name": "Zenith Games Blitzcrank (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53054",
+          "num": 54,
+          "name": "Zenith Games Blitzcrank (Pearl)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53055",
+          "num": 55,
+          "name": "Zenith Games Blitzcrank (Obsidian)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "53056",
+          "num": 56,
+          "name": "Beezcrank",
+          "chromas": true
+        },
+        {
+          "id": "53057",
           "num": 57,
           "name": "Beezcrank (Ruby)",
           "chromas": false,
           "parentSkin": 56
         },
         {
-          "id": "60053058",
+          "id": "53058",
           "num": 58,
           "name": "Beezcrank (Sapphire)",
           "chromas": false,
           "parentSkin": 56
         },
         {
-          "id": "60053059",
+          "id": "53059",
           "num": 59,
           "name": "Beezcrank (Emerald)",
           "chromas": false,
           "parentSkin": 56
         },
         {
-          "id": "60053060",
+          "id": "53060",
           "num": 60,
           "name": "Beezcrank (Pearl)",
           "chromas": false,
           "parentSkin": 56
         },
         {
-          "id": "60053061",
+          "id": "53061",
           "num": 61,
           "name": "Beezcrank (Obsidian)",
           "chromas": false,
           "parentSkin": 56
         },
         {
-          "id": "60053062",
+          "id": "53062",
           "num": 62,
           "name": "Beezcrank (Amethyst)",
           "chromas": false,
           "parentSkin": 56
         },
         {
-          "id": "60053063",
+          "id": "53063",
           "num": 63,
           "name": "Beezcrank (Rose Quartz)",
           "chromas": false,
           "parentSkin": 56
         },
         {
-          "id": "60053064",
+          "id": "53064",
           "num": 64,
           "name": "Beezcrank (Rainbow)",
           "chromas": false,
           "parentSkin": 56
         },
         {
-          "id": "60053075",
+          "id": "53066",
+          "num": 66,
+          "name": "Bubble Bash Blitzcrank",
+          "chromas": false
+        },
+        {
+          "id": "53067",
+          "num": 67,
+          "name": "Bubble Bash Blitzcrank (Ruby)",
+          "chromas": true,
+          "parentSkin": 66
+        },
+        {
+          "id": "53068",
+          "num": 68,
+          "name": "Bubble Bash Blitzcrank (Catseye)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53069",
+          "num": 69,
+          "name": "Bubble Bash Blitzcrank (Emerald)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53070",
+          "num": 70,
+          "name": "Bubble Bash Blitzcrank (Turquoise)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53071",
+          "num": 71,
+          "name": "Bubble Bash Blitzcrank (Pearl)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53072",
+          "num": 72,
+          "name": "Bubble Bash Blitzcrank (Obsidian)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53073",
+          "num": 73,
+          "name": "Bubble Bash Blitzcrank (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53074",
+          "num": 74,
+          "name": "Bubble Bash Blitzcrank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 66
+        },
+        {
+          "id": "53075",
           "num": 75,
           "name": "Rustier Blitzcrank",
           "chromas": false
         },
         {
-          "id": "60053076",
+          "id": "53076",
           "num": 76,
           "name": "Rustiest Blitzcrank",
           "chromas": false
         }
       ],
-      "lore": "- Static Field (R) passive zaps nearby enemies",
-      "blurb": "- Static Field (R) passive zaps nearby enemies",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Blitzcrank is an enormous, near-indestructible automaton from Zaun, originally built to dispose of hazardous waste. However, he found this primary purpose too restricting, and modified his own form to better serve the fragile people of the Sump. Blitzcrank selflessly uses his strength and durability to protect others, extending a helpful metal fist or burst of energy to subdue any troublemakers.",
+      "blurb": "Blitzcrank is an enormous, near-indestructible automaton from Zaun, originally built to dispose of hazardous waste. However, he found this primary purpose too restricting, and modified his own form to better serve the fragile people of the Sump...",
+      "allytips": [
+        "The 1-2-3 combo of Rocket Grab, Power Fist, and Static Field can devastate an individual opponent.",
+        "Using Blitzcrank's grab to pull an enemy into your tower range followed by a Power Fist will allow the tower to get several hits on them."
+      ],
+      "enemytips": [
+        "Blitzcrank's passive Mana Barrier grants him a shield when he is low on health.",
+        "Staying behind creeps can prevent you from being Rocket Grabbed. Blitzcrank's Rocket Grab only pulls the first enemy target it encounters."
+      ],
       "tags": [
         "Tank",
         "Support"
@@ -208,33 +551,33 @@
         "difficulty": 4
       },
       "stats": {
-        "hp": 518,
-        "hpperlevel": 95,
-        "mp": 240,
+        "hp": 600,
+        "hpperlevel": 109,
+        "mp": 267,
         "mpperlevel": 40,
         "movespeed": 325,
-        "armor": 22,
-        "armorperlevel": 3.5,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
+        "armor": 37,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
         "attackrange": 125,
-        "hpregen": 8,
+        "hpregen": 7.5,
         "hpregenperlevel": 0.75,
-        "mpregen": 7.1,
-        "mpregenperlevel": 0.5,
+        "mpregen": 8.5,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 59.16,
+        "attackdamage": 62,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 1.13,
         "attackspeed": 0.625
       },
       "spells": [
         {
-          "id": "Jade_BlitzcrankRocketGrab",
+          "id": "RocketGrab",
           "name": "Rocket Grab",
           "description": "Blitzcrank fires their right hand to grab an opponent on its path, dealing damage and dragging it back to them.",
-          "tooltip": "Blitzcrank fires their right hand, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, <status>Stuns</status> the target and <status>Pulling</status> them to themself.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Blitzcrank fires their right hand, <status>Pulling</status> the first enemy hit towards them and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -255,13 +598,13 @@
           ],
           "cooldownBurn": "20/19/18/17/16",
           "cost": [
-            120,
-            120,
-            120,
-            120,
-            120
+            100,
+            100,
+            100,
+            100,
+            100
           ],
-          "costBurn": "120",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -361,10 +704,10 @@
           ],
           "rangeBurn": "1079",
           "image": {
-            "full": "Jade_BlitzcrankRocketGrab.png",
-            "sprite": "spell6.png",
+            "full": "RocketGrab.png",
+            "sprite": "spell2.png",
             "group": "spell",
-            "x": 192,
+            "x": 384,
             "y": 48,
             "w": 48,
             "h": 48
@@ -372,10 +715,10 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_BlitzcrankOverdrive",
+          "id": "Overdrive",
           "name": "Overdrive",
-          "description": "Blitzcrank supercharges themself to get dramatically increased movement and attack speed.",
-          "tooltip": "Blitzcrank supercharges themself to increase <speed>Movement Speed</speed> by {{ movespeedmod*100 }}% and <attackSpeed>Attack Speed</attackSpeed> by {{ attackspeedmod*100 }}% for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Blitzcrank super charges themself to get dramatically increased Move and Attack Speed. They are temporarily slowed after the effect ends.",
+          "tooltip": "Blitzcrank supercharges themself, gaining <speed>{{ movespeedmod*100 }}% decaying Move Speed</speed> and <attackSpeed>{{ attackspeedmod*100 }}% Attack Speed</attackSpeed> for {{ duration }} seconds.<br /><br />Afterwards, Blitzcrank is <status>Slowed</status> by {{ movespeedmodreduction*100 }}% for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Move Speed",
@@ -502,10 +845,10 @@
           ],
           "rangeBurn": "1",
           "image": {
-            "full": "Jade_BlitzcrankOverdrive.png",
-            "sprite": "spell6.png",
+            "full": "Overdrive.png",
+            "sprite": "spell2.png",
             "group": "spell",
-            "x": 240,
+            "x": 432,
             "y": 48,
             "w": 48,
             "h": 48
@@ -513,10 +856,10 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_BlitzcrankPowerFist",
+          "id": "PowerFist",
           "name": "Power Fist",
-          "description": "Blitzcrank charges up their fist to make their next attack deal double damage and pop their target up in the air.",
-          "tooltip": "Blitzcrank charges up their fist to make their next attack deal <physicalDamage>{{ totaldamage }} Physical Damage</physicalDamage> and their target is <status>Knocked Up</status> for {{ ccduration }} second.{{ spellmodifierdescriptionappend }}",
+          "description": "Blitzcrank charges up their fist to make the next attack deal double damage and pop their target up in the air.",
+          "tooltip": "Blitzcrank charges up their fist, causing their next Attack to <status>Knock Up</status> for {{ ccduration }} second(s) and deal <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown"
@@ -527,13 +870,13 @@
           },
           "maxrank": 5,
           "cooldown": [
-            9,
-            8,
             7,
+            6.5,
             6,
+            5.5,
             5
           ],
-          "cooldownBurn": "9/8/7/6/5",
+          "cooldownBurn": "7/6.5/6/5.5/5",
           "cost": [
             25,
             25,
@@ -641,44 +984,48 @@
           ],
           "rangeBurn": "300",
           "image": {
-            "full": "Jade_BlitzcrankPowerFist.png",
-            "sprite": "spell6.png",
+            "full": "PowerFist.png",
+            "sprite": "spell2.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_BlitzcrankStaticField",
+          "id": "StaticField",
           "name": "Static Field",
-          "description": "Passively causes lightning bolts to damage a nearby enemy. Additionally, Blitzcrank can activate this ability to damage nearby enemies and silence them for 0.5 seconds, but doing so removes the passive lightning until Static Field becomes available again.",
-          "tooltip": "<spellPassive>Passive: </spellPassive>Lightning arcs off of Blitzcrank to hit a random nearby enemy for <magicDamage>{{ passivedamage }} magic damage</magicDamage> every 2.5 seconds.<br /><br /><spellActive>Active: </spellActive>Deals <magicDamage>{{ activedamage }} magic damage</magicDamage> and <status>Silences</status> surrounding enemy units for 0.5 seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Enemies attacked by Blitzcrank are marked and take lightning damage after 1 second. Additionally, Blitzcrank can activate this ability to remove nearby enemies' shields, damage them, and silence them briefly.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>While this ability is available, lightning charges Blitzcrank's fists, marking those  Attacked. After 1 second, they are shocked for <magicDamage>{{ passivedamage }} magic damage</magicDamage>.<br /><br /><spellActive>Active: </spellActive>Blitzcrank overcharges, dealing <magicDamage>{{ activedamage }} magic damage</magicDamage> and <status>Silencing</status> nearby enemies for {{ silenceduration }} seconds. Their shields are also destroyed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Lightning Damage",
-              "Active Base Damage"
+              "Passive Base Damage",
+              "Passive AP Ratio",
+              "Active Base Damage",
+              "Active Cooldown"
             ],
             "effect": [
               "{{ passivebasedamage }} -> {{ passivebasedamageNL }}",
-              "{{ activebasedamage }} -> {{ activebasedamageNL }}"
+              "{{ passiveapratio*100.000000 }}% -> {{ passiveaprationl*100.000000 }}%",
+              "{{ activebasedamage }} -> {{ activebasedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            30,
-            30,
-            30
+            60,
+            40,
+            20
           ],
-          "cooldownBurn": "30",
+          "cooldownBurn": "60/40/20",
           "cost": [
-            150,
-            150,
-            150
+            100,
+            100,
+            100
           ],
-          "costBurn": "150",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -756,11 +1103,11 @@
           ],
           "rangeBurn": "600",
           "image": {
-            "full": "Jade_BlitzcrankStaticField.png",
-            "sprite": "spell6.png",
+            "full": "StaticField.png",
+            "sprite": "spell2.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 48,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -769,13 +1116,13 @@
       ],
       "passive": {
         "name": "Mana Barrier",
-        "description": "When Blitzcrank life is brought below 20% health they activate Mana Barrier. This creates a mana shield equal to 50% of their mana for 10 seconds. Mana Barrier can only occur once every 90 seconds.",
+        "description": "Blitzcrank gains a shield based on their mana when dropping to low health.",
         "image": {
-          "full": "Jade_Blitzcrank_ManaBarrier.png",
-          "sprite": "passive1.png",
+          "full": "Blitzcrank_ManaBarrier.png",
+          "sprite": "passive0.png",
           "group": "passive",
-          "x": 240,
-          "y": 96,
+          "x": 288,
+          "y": 48,
           "w": 48,
           "h": 48
         }

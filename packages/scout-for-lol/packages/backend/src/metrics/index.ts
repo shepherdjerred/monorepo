@@ -240,6 +240,17 @@ export const prematchLoadingScreenGeneratedTotal = new Counter({
 });
 
 /**
+ * Classic champion asset resolution failures. Labels are intentionally
+ * bounded; the offending Riot IDs are recorded in the structured log entry.
+ */
+export const classicAssetResolutionFailuresTotal = new Counter({
+  name: "classic_asset_resolution_failures_total",
+  help: "Classic champion asset resolution failures before the error is rethrown",
+  labelNames: ["phase", "reason"] as const,
+  registers: [registry],
+});
+
+/**
  * Loading screen generation duration in seconds
  */
 export const prematchLoadingScreenDurationSeconds = new Histogram({

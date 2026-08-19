@@ -45,6 +45,7 @@ export function loadingScreenLayoutForQueueType(
       "quickplay",
       "swiftplay",
       "brawl",
+      "normal",
       "draft pick",
       "easy doom bots",
       "normal doom bots",

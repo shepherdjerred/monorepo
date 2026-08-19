@@ -1,203 +1,580 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Sivir": {
-      "id": "Jade_Sivir",
-      "key": "60015",
+      "id": "Sivir",
+      "key": "15",
       "name": "Sivir",
-      "title": "The Battle Mistress",
+      "title": "the Battle Mistress",
       "image": {
-        "full": "Jade_Sivir.png",
-        "sprite": "champion3.png",
+        "full": "Sivir.png",
+        "sprite": "champion4.png",
         "group": "champion",
-        "x": 192,
+        "x": 240,
         "y": 0,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60015000",
+          "id": "15000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60015004",
+          "id": "15001",
+          "num": 1,
+          "name": "Warrior Princess Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15002",
+          "num": 2,
+          "name": "Spectacular Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15003",
+          "num": 3,
+          "name": "Huntress Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15004",
           "num": 4,
           "name": "Bandit Sivir",
           "chromas": false
         },
         {
-          "id": "60015005",
+          "id": "15005",
           "num": 5,
           "name": "PAX Sivir",
           "chromas": false
         },
         {
-          "id": "60015009",
+          "id": "15006",
+          "num": 6,
+          "name": "Snowstorm Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15007",
+          "num": 7,
+          "name": "Warden Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15008",
+          "num": 8,
+          "name": "Victorious Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15009",
           "num": 9,
           "name": "Neo PAX Sivir",
           "chromas": false
         },
         {
-          "id": "60015010",
+          "id": "15010",
           "num": 10,
           "name": "Pizza Delivery Sivir",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60015011",
+          "id": "15011",
           "num": 11,
           "name": "Pizza Delivery Sivir (Catseye)",
           "chromas": false,
           "parentSkin": 10
         },
         {
-          "id": "60015012",
+          "id": "15012",
           "num": 12,
           "name": "Pizza Delivery Sivir (Aquamarine)",
           "chromas": false,
           "parentSkin": 10
         },
         {
-          "id": "60015013",
+          "id": "15013",
           "num": 13,
           "name": "Pizza Delivery Sivir (Rose Quartz)",
           "chromas": false,
           "parentSkin": 10
         },
         {
-          "id": "60015014",
+          "id": "15014",
           "num": 14,
           "name": "Pizza Delivery Sivir (Amethyst)",
           "chromas": false,
           "parentSkin": 10
         },
         {
-          "id": "60015015",
+          "id": "15015",
           "num": 15,
           "name": "Pizza Delivery Sivir (Obsidian)",
           "chromas": false,
           "parentSkin": 10
         },
         {
-          "id": "60015034",
+          "id": "15016",
+          "num": 16,
+          "name": "Blood Moon Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15017",
+          "num": 17,
+          "name": "Snowstorm Sivir (Golden)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "15018",
+          "num": 18,
+          "name": "Blood Moon Sivir (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15019",
+          "num": 19,
+          "name": "Blood Moon Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15020",
+          "num": 20,
+          "name": "Blood Moon Sivir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15021",
+          "num": 21,
+          "name": "Blood Moon Sivir (Citrine)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15022",
+          "num": 22,
+          "name": "Blood Moon Sivir (Turquoise)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15023",
+          "num": 23,
+          "name": "Blood Moon Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15024",
+          "num": 24,
+          "name": "Blood Moon Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "15025",
+          "num": 25,
+          "name": "Odyssey Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15026",
+          "num": 26,
+          "name": "Odyssey Sivir (Merc)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15027",
+          "num": 27,
+          "name": "Odyssey Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15028",
+          "num": 28,
+          "name": "Odyssey Sivir (Catseye)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15029",
+          "num": 29,
+          "name": "Odyssey Sivir (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15030",
+          "num": 30,
+          "name": "Odyssey Sivir (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15031",
+          "num": 31,
+          "name": "Odyssey Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15032",
+          "num": 32,
+          "name": "Odyssey Sivir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15033",
+          "num": 33,
+          "name": "Odyssey Sivir (Rainbow)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "15034",
           "num": 34,
           "name": "Cafe Cuties Sivir",
           "chromas": true
         },
         {
-          "id": "60015035",
+          "id": "15035",
           "num": 35,
           "name": "Cafe Cuties Sivir (Ruby)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60015036",
+          "id": "15036",
           "num": 36,
           "name": "Cafe Cuties Sivir (Catseye)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60015037",
+          "id": "15037",
           "num": 37,
           "name": "Cafe Cuties Sivir (Turquoise)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60015038",
+          "id": "15038",
           "num": 38,
           "name": "Cafe Cuties Sivir (Rose Quartz)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60015039",
+          "id": "15039",
           "num": 39,
           "name": "Cafe Cuties Sivir (Emerald)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60015040",
+          "id": "15040",
           "num": 40,
           "name": "Cafe Cuties Sivir (Sapphire)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60015041",
+          "id": "15041",
           "num": 41,
           "name": "Cafe Cuties Sivir (Tanzanite)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60015042",
+          "id": "15042",
           "num": 42,
           "name": "Cafe Cuties Sivir (Obsidian)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60015043",
+          "id": "15043",
           "num": 43,
           "name": "Solar Eclipse Sivir",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60015044",
+          "id": "15044",
           "num": 44,
           "name": "Solar Eclipse Sivir (Ruby)",
           "chromas": false,
           "parentSkin": 43
         },
         {
-          "id": "60015045",
+          "id": "15045",
           "num": 45,
           "name": "Solar Eclipse Sivir (Catseye)",
           "chromas": false,
           "parentSkin": 43
         },
         {
-          "id": "60015046",
+          "id": "15046",
           "num": 46,
           "name": "Solar Eclipse Sivir (Tanzanite)",
           "chromas": false,
           "parentSkin": 43
         },
         {
-          "id": "60015047",
+          "id": "15047",
           "num": 47,
           "name": "Solar Eclipse Sivir (Pearl)",
           "chromas": false,
           "parentSkin": 43
         },
         {
-          "id": "60015048",
+          "id": "15048",
           "num": 48,
           "name": "Solar Eclipse Sivir (Rose Quartz)",
           "chromas": false,
           "parentSkin": 43
         },
         {
-          "id": "60015049",
+          "id": "15049",
           "num": 49,
           "name": "Solar Eclipse Sivir (Obsidian)",
           "chromas": false,
           "parentSkin": 43
+        },
+        {
+          "id": "15050",
+          "num": 50,
+          "name": "Mythmaker Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15051",
+          "num": 51,
+          "name": "Prestige Mythmaker Sivir",
+          "chromas": false
+        },
+        {
+          "id": "15052",
+          "num": 52,
+          "name": "Mythmaker Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15053",
+          "num": 53,
+          "name": "Mythmaker Sivir (Citrine)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15054",
+          "num": 54,
+          "name": "Mythmaker Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15055",
+          "num": 55,
+          "name": "Mythmaker Sivir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15056",
+          "num": 56,
+          "name": "Mythmaker Sivir (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15057",
+          "num": 57,
+          "name": "Mythmaker Sivir (Emerald)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15058",
+          "num": 58,
+          "name": "Mythmaker Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15059",
+          "num": 59,
+          "name": "Mythmaker Sivir (Pearl)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15060",
+          "num": 60,
+          "name": "Mythmaker Sivir (Gilded)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15061",
+          "num": 61,
+          "name": "Primal Ambush Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15062",
+          "num": 62,
+          "name": "Primal Ambush Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15063",
+          "num": 63,
+          "name": "Primal Ambush Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15064",
+          "num": 64,
+          "name": "Primal Ambush Sivir (Turquoise)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15065",
+          "num": 65,
+          "name": "Primal Ambush Sivir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15066",
+          "num": 66,
+          "name": "Primal Ambush Sivir (Emerald)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15067",
+          "num": 67,
+          "name": "Primal Ambush Sivir (Citrine)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15068",
+          "num": 68,
+          "name": "Primal Ambush Sivir (Amethyst)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15069",
+          "num": 69,
+          "name": "Primal Ambush Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 61
+        },
+        {
+          "id": "15070",
+          "num": 70,
+          "name": "Ann-Sivir-sary",
+          "chromas": false
+        },
+        {
+          "id": "15071",
+          "num": 71,
+          "name": "Mythmaker Sivir (Paragon)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "15072",
+          "num": 72,
+          "name": "PROJECT: Sivir",
+          "chromas": true
+        },
+        {
+          "id": "15073",
+          "num": 73,
+          "name": "PROJECT: Sivir (Ruby)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15074",
+          "num": 74,
+          "name": "PROJECT: Sivir (Catseye)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15075",
+          "num": 75,
+          "name": "PROJECT: Sivir (Sapphire)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15076",
+          "num": 76,
+          "name": "PROJECT: Sivir (Emerald)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15077",
+          "num": 77,
+          "name": "PROJECT: Sivir (Obsidian)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15078",
+          "num": 78,
+          "name": "PROJECT: Sivir (Pearl)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15079",
+          "num": 79,
+          "name": "PROJECT: Sivir (Turquoise)",
+          "chromas": false,
+          "parentSkin": 72
+        },
+        {
+          "id": "15080",
+          "num": 80,
+          "name": "PROJECT: Sivir (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 72
         }
       ],
-      "lore": "- Ricochet (W) toggles bouncing randomly attacks <br>- Spell Shield (E) gain mana instead of health when triggered",
-      "blurb": "- Ricochet (W) toggles bouncing randomly attacks <br>- Spell Shield (E) gain mana instead of health when triggered",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Sivir is a renowned fortune hunter and mercenary captain who plies her trade in the deserts of Shurima. Armed with her legendary jeweled crossblade, she has fought and won countless battles for those who can afford her exorbitant price. Known for her fearless resolve and endless ambition, she prides herself on recovering buried treasures from the perilous tombs of Shurima—for a generous bounty. With ancient forces stirring the very bones of Shurima, Sivir finds herself torn between conflicting destinies.",
+      "blurb": "Sivir is a renowned fortune hunter and mercenary captain who plies her trade in the deserts of Shurima. Armed with her legendary jeweled crossblade, she has fought and won countless battles for those who can afford her exorbitant price. Known for her...",
+      "allytips": [
+        "Sivir's Boomerang Blade returns to her after reaching the max range, so you can shift position to hit enemies who would otherwise have evaded it.",
+        "Ricochet resets Sivir's basic attack timer on activation, so activating this immediately after landing a normal basic attack will maximize damage output.",
+        "Try saving Spell Shield for enemy abilities that can disable you such as stuns and roots."
+      ],
+      "enemytips": [
+        "Boomerang Blade costs a lot of mana to cast, so dodging it sets Sivir back. If it hits you on the way out, avoid its path on the way back.",
+        "Sivir is a powerful pushing champion, so leaving her unattended in a lane for too long will often result in your turrets being destroyed.",
+        "When laning against Sivir, it is possible to throw off the timing of her Spell Shield by faking an advance, then backing off."
+      ],
       "tags": [
         "Marksman"
       ],
@@ -209,60 +586,62 @@
         "difficulty": 4
       },
       "stats": {
-        "hp": 460,
-        "hpperlevel": 82,
-        "mp": 246,
-        "mpperlevel": 43,
+        "hp": 600,
+        "hpperlevel": 104,
+        "mp": 340,
+        "mpperlevel": 45,
         "movespeed": 335,
-        "armor": 20,
-        "armorperlevel": 3.25,
-        "spellblock": 30,
-        "spellblockperlevel": 0,
-        "attackrange": 425,
-        "hpregen": 4.8,
+        "armor": 30,
+        "armorperlevel": 4,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
+        "attackrange": 500,
+        "hpregen": 3.25,
         "hpregenperlevel": 0.55,
-        "mpregen": 7,
-        "mpregenperlevel": 0.5,
+        "mpregen": 6,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 52,
+        "attackdamage": 60,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 3.28,
-        "attackspeed": 0.679
+        "attackspeedperlevel": 1.6,
+        "attackspeed": 0.625
       },
       "spells": [
         {
-          "id": "Jade_SivirQ",
+          "id": "SivirQ",
           "name": "Boomerang Blade",
           "description": "Sivir hurls her crossblade like a boomerang, dealing damage each way.",
-          "tooltip": "Sivir hurls her crossblade like a boomerang, which deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first unit and {{ falloffratio*100 }}% reduced damage to each subsequent target down to a minimum of {{ falloffminimum*100 }}%.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Sivir hurls her crossblade like a boomerang, dealing <physicalDamage>{{ totaldamage }}</physicalDamage> to all enemies it cuts through. Hitting non-champions reduces the damage to subsequent targets, down to a minimum of {{ falloffminimum*100 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
+              "Cooldown",
               "Mana Cost"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
+            10,
+            9.5,
             9,
-            9,
-            9,
-            9,
-            9
+            8.5,
+            8
           ],
-          "cooldownBurn": "9",
+          "cooldownBurn": "10/9.5/9/8.5/8",
           "cost": [
-            80,
-            90,
-            100,
-            110,
-            120
+            55,
+            60,
+            65,
+            70,
+            75
           ],
-          "costBurn": "80/90/100/110/120",
+          "costBurn": "55/60/65/70/75",
           "datavalues": {},
           "effect": [
             null,
@@ -362,10 +741,10 @@
           ],
           "rangeBurn": "1200",
           "image": {
-            "full": "Jade_SivirQ.png",
-            "sprite": "spell10.png",
+            "full": "SivirQ.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 0,
+            "x": 192,
             "y": 48,
             "w": 48,
             "h": 48
@@ -373,27 +752,170 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_SivirW",
+          "id": "SivirW",
           "name": "Ricochet",
-          "description": "Sivir's next basic attack will bounce between targets, dealing reduced damage with each successive hit.",
-          "tooltip": "Sivir's basic attack will bounce to <attention>{{ maxbounces }}</attention> additional targets, dealing {{ falloffratio*100 }}% less damage with each bounce.{{ spellmodifierdescriptionappend }}",
+          "description": "Sivir's next few basic attacks gain additional attack speed and bounce to nearby targets, dealing reduced damage while bouncing.",
+          "tooltip": "For the next {{ buffduration }} seconds, Sivir gains <attackSpeed>{{ ricochetattackspeed*100 }}% Attack Speed</attackSpeed> and her auto attacks are empowered to bounce to additional surrounding enemies dealing <physicalDamage>{{ bouncedamage }} physical damage</physicalDamage> each bounce for up to {{ maxbounces }} bounces.<br /><br />These bounces critically strike if the attack generating them does.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Max Bounces"
+              "Attack Speed",
+              "Total AD Ratio"
             ],
             "effect": [
-              "{{ maxbounces }} -> {{ maxbouncesNL }}"
+              "{{ ricochetattackspeed*100.000000 }}% -> {{ ricochetattackspeednl*100.000000 }}%",
+              "{{ bounceadratio*100.000000 }}% -> {{ bounceadrationl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            0.5,
-            0.5,
-            0.5,
-            0.5,
-            0.5
+            12,
+            12,
+            12,
+            12,
+            12
           ],
-          "cooldownBurn": "0.5",
+          "cooldownBurn": "12",
+          "cost": [
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "costBurn": "60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            20,
+            20,
+            20,
+            20,
+            20
+          ],
+          "rangeBurn": "20",
+          "image": {
+            "full": "SivirW.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 240,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SivirE",
+          "name": "Spell Shield",
+          "description": "Creates a magical barrier that blocks a single enemy ability cast on Sivir. She receives health and a burst of movement speed if a spell is blocked.",
+          "tooltip": "Sivir creates a magical barrier for {{ spellshieldduration }} seconds that blocks the next incoming enemy Ability. If an ability is blocked, Sivir restores <healing>{{ totalheal }} health</healing> and triggers Fleet of Foot.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Total AD Ratio",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ healratio*100.000000 }}% -> {{ healrationl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            24,
+            22.5,
+            21,
+            19.5,
+            18
+          ],
+          "cooldownBurn": "24/22.5/21/19.5/18",
           "cost": [
             0,
             0,
@@ -406,164 +928,25 @@
           "effect": [
             null,
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.5
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              55,
+              55,
+              55,
+              55,
+              55
             ],
             [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
-          "vars": [],
-          "costType": " {{ abilityresourcename }}",
-          "maxammo": "-1",
-          "range": [
-            20,
-            20,
-            20,
-            20,
-            20
-          ],
-          "rangeBurn": "20",
-          "image": {
-            "full": "Jade_SivirW.png",
-            "sprite": "spell10.png",
-            "group": "spell",
-            "x": 48,
-            "y": 48,
-            "w": 48,
-            "h": 48
-          },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
-        },
-        {
-          "id": "Jade_SivirE",
-          "name": "Spell Shield",
-          "description": "Sivir creates a magical barrier on herself that blocks a single enemy ability. She regains Mana if an ability is successfully blocked.",
-          "tooltip": "Sivir creates a spell shield for {{ duration }} seconds that blocks the next incoming enemy ability. If an ability is blocked by the shield, Sivir regains <scaleMana>{{ manareturn }} Mana</scaleMana>.{{ spellmodifierdescriptionappend }}",
-          "leveltip": {
-            "label": [
-              "Cooldown"
-            ],
-            "effect": [
-              "{{ cooldown }} -> {{ cooldownNL }}"
-            ]
-          },
-          "maxrank": 5,
-          "cooldown": [
-            22,
-            19,
-            16,
-            13,
-            10
-          ],
-          "cooldownBurn": "22/19/16/13/10",
-          "cost": [
-            75,
-            75,
-            75,
-            75,
-            75
-          ],
-          "costBurn": "75",
-          "datavalues": {},
-          "effect": [
-            null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
+              60,
+              60,
+              60,
+              60,
+              60
             ],
             [
               0,
@@ -617,9 +1000,9 @@
           ],
           "effectBurn": [
             null,
-            "0",
-            "0",
-            "0",
+            "1.5",
+            "55",
+            "60",
             "0",
             "0",
             "0",
@@ -640,10 +1023,10 @@
           ],
           "rangeBurn": "20",
           "image": {
-            "full": "Jade_SivirE.png",
-            "sprite": "spell10.png",
+            "full": "SivirE.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 96,
+            "x": 288,
             "y": 48,
             "w": 48,
             "h": 48
@@ -651,27 +1034,29 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_SivirR",
+          "id": "SivirR",
           "name": "On The Hunt",
-          "description": "Sivir leads her allies into battle granting them increased Movement and Attack Speeds for a period of time.",
-          "tooltip": "Sivir's battle prowess emanates for {{ ultduration }} seconds, increasing her <attackSpeed>Attack Speed by {{ huntattackspeed*100 }}%</attackSpeed> and <speed>Movement Speed by {{ ms*100 }}%</speed>. Nearby allies gain {{ alliedeffectiveness*100 }}% of Sivir's benefits for the duration.{{ spellmodifierdescriptionappend }}",
+          "description": "Sivir leads her allies in battle, granting them a surge of Move Speed for a period of time. In addition, Sivir's attacks reduce her spell cooldowns.",
+          "tooltip": "Sivir rallies her nearby allies, granting them <speed>{{ maxms*100 }}% Move Speed</speed> for {{ ultduration }} seconds.<br /><br />Sivir's attacks against champions while On The Hunt reduce the cooldown of her basic abilities by {{ attackcooldownrefund }} seconds.<br /><br />Takedowns on recently damaged enemies refreshes the duration of the hunt.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Attack Speed %",
-              "Cooldown"
+              "Cooldown",
+              "Max Move Speed",
+              "Duration"
             ],
             "effect": [
-              "{{ huntattackspeed*100.000000 }}% -> {{ huntattackspeednl*100.000000 }}%",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ maxms*100.000000 }}% -> {{ maxmsnl*100.000000 }}%",
+              "{{ ultduration }} -> {{ ultdurationNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
+            120,
             100,
-            90,
             80
           ],
-          "cooldownBurn": "100/90/80",
+          "cooldownBurn": "120/100/80",
           "cost": [
             100,
             100,
@@ -755,10 +1140,10 @@
           ],
           "rangeBurn": "1000",
           "image": {
-            "full": "Jade_SivirR.png",
-            "sprite": "spell10.png",
+            "full": "SivirR.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 144,
+            "x": 336,
             "y": 48,
             "w": 48,
             "h": 48
@@ -768,12 +1153,12 @@
       ],
       "passive": {
         "name": "Fleet of Foot",
-        "description": "Sivir gains a short burst of Movement Speed when she attacks an enemy champion.",
+        "description": "Sivir gains a short burst of Move Speed when she attacks an enemy champion.",
         "image": {
-          "full": "Jade_Sivir_Passive.png",
-          "sprite": "passive3.png",
+          "full": "Sivir_Passive.png",
+          "sprite": "passive4.png",
           "group": "passive",
-          "x": 192,
+          "x": 240,
           "y": 0,
           "w": 48,
           "h": 48

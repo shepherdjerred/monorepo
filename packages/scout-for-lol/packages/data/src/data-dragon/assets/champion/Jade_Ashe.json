@@ -1,160 +1,662 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Ashe": {
-      "id": "Jade_Ashe",
-      "key": "60022",
+      "id": "Ashe",
+      "key": "22",
       "name": "Ashe",
-      "title": "The Frost Archer",
+      "title": "the Frost Archer",
       "image": {
-        "full": "Jade_Ashe.png",
-        "sprite": "champion1.png",
+        "full": "Ashe.png",
+        "sprite": "champion0.png",
         "group": "champion",
-        "x": 192,
-        "y": 96,
+        "x": 0,
+        "y": 48,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60022000",
+          "id": "22000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60022005",
+          "id": "22001",
+          "num": 1,
+          "name": "Freljord Ashe",
+          "chromas": false
+        },
+        {
+          "id": "22002",
+          "num": 2,
+          "name": "Sherwood Forest Ashe",
+          "chromas": false
+        },
+        {
+          "id": "22003",
+          "num": 3,
+          "name": "Woad Ashe",
+          "chromas": false
+        },
+        {
+          "id": "22004",
+          "num": 4,
+          "name": "Queen Ashe",
+          "chromas": false
+        },
+        {
+          "id": "22005",
           "num": 5,
           "name": "Amethyst Ashe",
           "chromas": false
         },
         {
-          "id": "60022006",
+          "id": "22006",
           "num": 6,
           "name": "Heartseeker Ashe",
           "chromas": false
         },
         {
-          "id": "60022007",
+          "id": "22007",
           "num": 7,
           "name": "Marauder Ashe",
           "chromas": false
         },
         {
-          "id": "60022008",
+          "id": "22008",
           "num": 8,
           "name": "PROJECT: Ashe",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60022011",
+          "id": "22009",
+          "num": 9,
+          "name": "Worlds 2017 Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22010",
+          "num": 10,
+          "name": "Worlds 2017 Ashe Chroma",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "22011",
           "num": 11,
           "name": "Cosmic Queen Ashe",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60022012",
+          "id": "22012",
           "num": 12,
           "name": "Cosmic Queen Ashe (Obsidian)",
           "chromas": false,
           "parentSkin": 11
         },
         {
-          "id": "60022013",
+          "id": "22013",
           "num": 13,
           "name": "Cosmic Queen Ashe (Rose Quartz)",
           "chromas": false,
           "parentSkin": 11
         },
         {
-          "id": "60022014",
+          "id": "22014",
           "num": 14,
           "name": "Cosmic Queen Ashe (Emerald)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 11
         },
         {
-          "id": "60022015",
+          "id": "22015",
           "num": 15,
           "name": "Cosmic Queen Ashe (Sapphire)",
           "chromas": false,
           "parentSkin": 11
         },
         {
-          "id": "60022016",
+          "id": "22016",
           "num": 16,
           "name": "Cosmic Queen Ashe (Ruby)",
           "chromas": false,
           "parentSkin": 11
         },
         {
-          "id": "60022017",
+          "id": "22017",
           "num": 17,
           "name": "High Noon Ashe",
           "chromas": true
         },
         {
-          "id": "60022018",
+          "id": "22018",
           "num": 18,
           "name": "High Noon Ashe (Ruby)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60022019",
+          "id": "22019",
           "num": 19,
           "name": "High Noon Ashe (Aquamarine)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60022020",
+          "id": "22020",
           "num": 20,
           "name": "High Noon Ashe (Obsidian)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60022021",
+          "id": "22021",
           "num": 21,
           "name": "High Noon Ashe (Nomad)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60022022",
+          "id": "22022",
           "num": 22,
           "name": "High Noon Ashe (Amethyst)",
           "chromas": false,
           "parentSkin": 17
         },
         {
-          "id": "60022062",
+          "id": "22023",
+          "num": 23,
+          "name": "Fae Dragon Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22024",
+          "num": 24,
+          "name": "Fae Dragon Ashe (Ruby)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "22025",
+          "num": 25,
+          "name": "Fae Dragon Ashe (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "22026",
+          "num": 26,
+          "name": "Fae Dragon Ashe (Sapphire)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "22027",
+          "num": 27,
+          "name": "Fae Dragon Ashe (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "22028",
+          "num": 28,
+          "name": "Fae Dragon Ashe (Pearl)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "22029",
+          "num": 29,
+          "name": "Fae Dragon Ashe (Obsidian)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "22030",
+          "num": 30,
+          "name": "Fae Dragon Ashe (Jadeclaw)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "22031",
+          "num": 31,
+          "name": "Fae Dragon Ashe (Rainbow)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "22032",
+          "num": 32,
+          "name": "Coven Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22033",
+          "num": 33,
+          "name": "Coven Ashe (Ruby)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "22034",
+          "num": 34,
+          "name": "Coven Ashe (Emerald)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "22035",
+          "num": 35,
+          "name": "Coven Ashe (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "22036",
+          "num": 36,
+          "name": "Coven Ashe (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "22037",
+          "num": 37,
+          "name": "Coven Ashe (Catseye)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "22038",
+          "num": 38,
+          "name": "Coven Ashe (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "22039",
+          "num": 39,
+          "name": "Coven Ashe (Obsidian)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "22040",
+          "num": 40,
+          "name": "Coven Ashe (Pearl)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "22041",
+          "num": 41,
+          "name": "Coven Ashe (Dark Ritual)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "22042",
+          "num": 42,
+          "name": "Fae Dragon Ashe (Emberclaw)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "22043",
+          "num": 43,
+          "name": "Ocean Song Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22044",
+          "num": 44,
+          "name": "Ocean Song Ashe (Ruby)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "22045",
+          "num": 45,
+          "name": "Ocean Song Ashe (Catseye)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "22046",
+          "num": 46,
+          "name": "Ocean Song Ashe (Emerald)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "22047",
+          "num": 47,
+          "name": "Ocean Song Ashe (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "22048",
+          "num": 48,
+          "name": "Ocean Song Ashe (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "22049",
+          "num": 49,
+          "name": "Ocean Song Ashe (Sapphire)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "22050",
+          "num": 50,
+          "name": "Ocean Song Ashe (Pearl)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "22051",
+          "num": 51,
+          "name": "Ocean Song Ashe (Obsidian)",
+          "chromas": false,
+          "parentSkin": 43
+        },
+        {
+          "id": "22052",
+          "num": 52,
+          "name": "Lunar Empress Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22053",
+          "num": 53,
+          "name": "Lunar Empress Ashe (Ruby)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "22054",
+          "num": 54,
+          "name": "Lunar Empress Ashe  (Sapphire)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "22055",
+          "num": 55,
+          "name": "Lunar Empress Ashe  (Emerald)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "22056",
+          "num": 56,
+          "name": "Lunar Empress Ashe  (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "22057",
+          "num": 57,
+          "name": "Lunar Empress Ashe  (Turquoise)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "22058",
+          "num": 58,
+          "name": "Lunar Empress Ashe (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "22059",
+          "num": 59,
+          "name": "Lunar Empress Ashe (Pearl)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "22060",
+          "num": 60,
+          "name": "Lunar Empress Ashe  (Obsidian)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "22061",
+          "num": 61,
+          "name": "Lunar Empress Ashe  (Resplendent)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "22062",
           "num": 62,
-          "name": "PROJECT: Ashe Mythic Chroma",
-          "chromas": true,
+          "name": "PROJECT: Ashe (Mythic)",
+          "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60022065",
-          "num": 65,
-          "name": "Crystalis Motus Ashe",
-          "chromas": false
+          "id": "22063",
+          "num": 63,
+          "name": "DRX Ashe",
+          "chromas": true
         },
         {
-          "id": "60022066",
+          "id": "22064",
+          "num": 64,
+          "name": "DRX Ashe (Elite)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "22065",
+          "num": 65,
+          "name": "Crystalis Motus Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22066",
           "num": 66,
           "name": "Crystalis Motus Ashe (Reclaimed)",
           "chromas": false,
           "parentSkin": 65
+        },
+        {
+          "id": "22067",
+          "num": 67,
+          "name": "Infernal Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22068",
+          "num": 68,
+          "name": "Infernal Ashe (Ruby)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "22069",
+          "num": 69,
+          "name": "Infernal Ashe (Catseye)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "22070",
+          "num": 70,
+          "name": "Infernal Ashe (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "22071",
+          "num": 71,
+          "name": "Infernal Ashe (Emerald)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "22072",
+          "num": 72,
+          "name": "Infernal Ashe (Amethyst)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "22073",
+          "num": 73,
+          "name": "Infernal Ashe (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "22074",
+          "num": 74,
+          "name": "Infernal Ashe (Turquoise)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "22075",
+          "num": 75,
+          "name": "Infernal Ashe (Pearl)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "22076",
+          "num": 76,
+          "name": "Spirit Blossom Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22077",
+          "num": 77,
+          "name": "Spirit Blossom Ashe (Ruby)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "22078",
+          "num": 78,
+          "name": "Spirit Blossom Ashe (Turquoise)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "22079",
+          "num": 79,
+          "name": "Spirit Blossom Ashe (Catseye)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "22080",
+          "num": 80,
+          "name": "Spirit Blossom Ashe (Sapphire)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "22081",
+          "num": 81,
+          "name": "Spirit Blossom Ashe (Obsidian)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "22082",
+          "num": 82,
+          "name": "Spirit Blossom Ashe (Pearl)",
+          "chromas": false,
+          "parentSkin": 76
+        },
+        {
+          "id": "22083",
+          "num": 83,
+          "name": "Fae Dragon Ashe (Paragon)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "22084",
+          "num": 84,
+          "name": "Firecracker Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22085",
+          "num": 85,
+          "name": "Firecracker Ashe (Ruby)",
+          "chromas": false,
+          "parentSkin": 84
+        },
+        {
+          "id": "22086",
+          "num": 86,
+          "name": "Firecracker Ashe (Turquoise)",
+          "chromas": false,
+          "parentSkin": 84
+        },
+        {
+          "id": "22087",
+          "num": 87,
+          "name": "Firecracker Ashe (Emerald)",
+          "chromas": false,
+          "parentSkin": 84
+        },
+        {
+          "id": "22088",
+          "num": 88,
+          "name": "Firecracker Ashe (Sapphire)",
+          "chromas": false,
+          "parentSkin": 84
+        },
+        {
+          "id": "22089",
+          "num": 89,
+          "name": "Firecracker Ashe (Amethyst)",
+          "chromas": false,
+          "parentSkin": 84
+        },
+        {
+          "id": "22090",
+          "num": 90,
+          "name": "Firecracker Ashe (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 84
+        },
+        {
+          "id": "22091",
+          "num": 91,
+          "name": "Firecracker Ashe (Obsidian)",
+          "chromas": false,
+          "parentSkin": 84
+        },
+        {
+          "id": "22092",
+          "num": 92,
+          "name": "Firecracker Ashe (Pearl)",
+          "chromas": false,
+          "parentSkin": 84
         }
       ],
-      "lore": "- Frost Shot (Q) toggles slowing basic attacks<br>- Focus (P) builds up critical strikes out of combat<br>- Hawkshot (E) grants bonus gold on kill",
-      "blurb": "- Frost Shot (Q) toggles slowing basic attacks<br>- Focus (P) builds up critical strikes out of combat<br>- Hawkshot (E) grants bonus gold on kill",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Iceborn warmother of the Avarosan tribe, Ashe commands the most populous horde in the north. Stoic, intelligent, and idealistic, yet uncomfortable with her role as leader, she taps into the ancestral magics of her lineage to wield a bow of True Ice. With her people's belief that she is the mythological hero Avarosa reincarnated, Ashe hopes to unify the Freljord once more by retaking their ancient, tribal lands.",
+      "blurb": "Iceborn warmother of the Avarosan tribe, Ashe commands the most populous horde in the north. Stoic, intelligent, and idealistic, yet uncomfortable with her role as leader, she taps into the ancestral magics of her lineage to wield a bow of True Ice...",
+      "allytips": [
+        "Try to fire Enchanted Crystal Arrow in the same direction enemies are moving, so it is more likely to hit.",
+        "Volley arrows are blocked by the first enemy they hit, so keep your distance to avoid having them all absorbed by enemy frontliners.",
+        "Hawkshot reveals units in brush. If a team fight is occuring in the jungle it can give you a significant advantage."
+      ],
+      "enemytips": [
+        "Ashe has very few defensive options, and she's a good target to gank.",
+        "Be wary of moving around the map alone if Ashe has not recently cast her Enchanted Crystal Arrow."
+      ],
       "tags": [
         "Marksman",
         "Support"
@@ -167,58 +669,60 @@
         "difficulty": 4
       },
       "stats": {
-        "hp": 474,
-        "hpperlevel": 79,
-        "mp": 208,
+        "hp": 610,
+        "hpperlevel": 101,
+        "mp": 280,
         "mpperlevel": 35,
         "movespeed": 325,
-        "armor": 18.9,
-        "armorperlevel": 3.4,
-        "spellblock": 30,
-        "spellblockperlevel": 0,
+        "armor": 26,
+        "armorperlevel": 4.6,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 600,
-        "hpregen": 5.05,
+        "hpregen": 3.5,
         "hpregenperlevel": 0.55,
-        "mpregen": 6.7,
-        "mpregenperlevel": 0.4,
+        "mpregen": 7,
+        "mpregenperlevel": 0.65,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 49,
+        "attackdamage": 59,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 4,
+        "attackspeedperlevel": 3,
         "attackspeed": 0.658
       },
       "spells": [
         {
-          "id": "Jade_AsheQ",
-          "name": "Frost Shot",
-          "description": "While active, each of Ashe's basic attacks slow her targets. This drains Mana with each attack.",
-          "tooltip": "<toggle>Toggle:</toggle> Basic Attacks <status>Slow</status> enemies by {{ slowpercent*-100 }}% over {{ slowduration }} seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "id": "AsheQ",
+          "name": "Ranger's Focus",
+          "description": "Ashe builds up Focus by attacking. At maximum Focus, Ashe can cast Ranger's Focus to consume all stacks of Focus, temporarily increasing her Attack Speed and transforming her basic attack into a powerful flurry attack for the duration.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Ashe's Attacks grant a stack for {{ stackduration }} seconds. At {{ maxstacks }} stacks, she may activate this Ability.<br /><br /><spellPassive>Active:</spellPassive> Ashe gains <attackSpeed>{{ bonusas }}% Attack Speed</attackSpeed> and her Attacks deal <physicalDamage>{{ empowereddamage }} damage</physicalDamage> instead for {{ buffduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Slow"
+              "Attack Speed",
+              "Flurry Attack Damage ratio"
             ],
             "effect": [
-              "{{ slowpercent*-100.000000 }} -> {{ slowpercentnl*-100.000000 }}"
+              "{{ bonusas }}% -> {{ bonusasNL }}%",
+              "{{ damageperstrike*100.000000 }}% -> {{ damageperstrikenl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
-          "cooldownBurn": "1",
-          "cost": [
             0,
             0,
             0,
             0,
             0
           ],
-          "costBurn": "0",
+          "cooldownBurn": "0",
+          "cost": [
+            30,
+            30,
+            30,
+            30,
+            30
+          ],
+          "costBurn": "30",
           "datavalues": {},
           "effect": [
             null,
@@ -251,18 +755,18 @@
               60
             ],
             [
-              0.22,
-              0.235,
-              0.25,
-              0.265,
-              0.28
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              1.1,
-              1.175,
-              1.25,
-              1.325,
-              1.4
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               1,
@@ -299,8 +803,8 @@
             "4",
             "6",
             "20/30/40/50/60",
-            "0.22/0.235/0.25/0.265/0.28",
-            "1.1/1.175/1.25/1.325/1.4",
+            "0",
+            "0",
             "1",
             "1",
             "1",
@@ -318,57 +822,61 @@
           ],
           "rangeBurn": "400",
           "image": {
-            "full": "Jade_AsheQ.png",
-            "sprite": "spell6.png",
+            "full": "AsheQ.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 0,
-            "y": 48,
+            "x": 192,
+            "y": 144,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_AsheVolley",
+          "id": "Volley",
           "name": "Volley",
-          "description": "Ashe fires 7 arrows in a cone for increased damage.  Volley also applies Ashe's current level of Frost Shot.",
-          "tooltip": "Fires arrows in a cone, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. <spellName>Volley</spellName> applies <spellName>Frost Shot's</spellName> <status>Slow</status> effect.</mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "Ashe fires arrows in a cone for increased damage. Also applies Frost Shot.",
+          "tooltip": "Ashe fires a volley of {{ numberofarrowstooltip }} arrows, each dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. Enemies can be hit by multiple arrows, but only take damage from the first.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
+              "Arrows Fired",
               "Damage",
-              "Cooldown"
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
+              "{{ numberofarrowstooltip }} -> {{ numberofarrowstooltipNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            16,
-            13,
-            10,
-            7,
+            18,
+            14.5,
+            11,
+            7.5,
             4
           ],
-          "cooldownBurn": "16/13/10/7/4",
+          "cooldownBurn": "18/14.5/11/7.5/4",
           "cost": [
+            75,
+            70,
+            65,
             60,
-            60,
-            60,
-            60,
-            60
+            55
           ],
-          "costBurn": "60",
+          "costBurn": "75/70/65/60/55",
           "datavalues": {},
           "effect": [
             null,
             [
-              0,
-              0,
-              0,
-              0,
-              0
+              5,
+              7,
+              9,
+              11,
+              13
             ],
             [
               0,
@@ -436,7 +944,7 @@
           ],
           "effectBurn": [
             null,
-            "0",
+            "5/7/9/11/13",
             "0",
             "0",
             "0",
@@ -459,40 +967,38 @@
           ],
           "rangeBurn": "1200",
           "image": {
-            "full": "Jade_AsheVolley.png",
-            "sprite": "spell6.png",
+            "full": "Volley.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 48,
-            "y": 48,
+            "x": 240,
+            "y": 144,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_AsheSpiritOfTheHawk",
+          "id": "AsheSpiritOfTheHawk",
           "name": "Hawkshot",
-          "description": "Each time Ashe kills a unit, she gains some extra gold. Ashe can activate to send her Hawk Spirit on a scouting mission.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Ashe gains <gold>{{ additionalgold }} extra gold</gold> whenever she kills an enemy.<br /><br /><spellActive>Active:</spellActive> Ashe sends forth a hawk to grant vision in an area for 5 seconds. It also reveals the area as it flies through.</mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "Ashe sends her Hawk Spirit on a scouting mission anywhere on the map.",
+          "tooltip": "Ashe sends forth a hawk to grant vision for 5 seconds anywhere on the map. It also reveals the area around it as it flies.<br /><br />This Ability has 2 charges ({{ chargecooldown }} second recharge).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Range",
-              "Bonus Gold"
+              "Recharge Time"
             ],
             "effect": [
-              "{{ castrange }} -> {{ castrangeNL }}",
-              "{{ additionalgold }} -> {{ additionalgoldNL }}"
+              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            60,
-            60,
-            60,
-            60,
-            60
+            5,
+            5,
+            5,
+            5,
+            5
           ],
-          "cooldownBurn": "60",
+          "cooldownBurn": "5",
           "cost": [
             0,
             0,
@@ -589,32 +1095,32 @@
             "0"
           ],
           "vars": [],
-          "costType": " {{ abilityresourcename }}",
-          "maxammo": "1",
+          "costType": "No Cost",
+          "maxammo": "2",
           "range": [
-            2500,
-            3250,
-            4000,
-            4750,
-            5500
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
           ],
-          "rangeBurn": "2500/3250/4000/4750/5500",
+          "rangeBurn": "25000",
           "image": {
-            "full": "Jade_AsheSpiritOfTheHawk.png",
-            "sprite": "spell6.png",
+            "full": "AsheSpiritOfTheHawk.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 96,
-            "y": 48,
+            "x": 288,
+            "y": 144,
             "w": 48,
             "h": 48
           },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
+          "resource": "No Cost"
         },
         {
-          "id": "Jade_AsheEnchantedCrystalArrow",
+          "id": "EnchantedCrystalArrow",
           "name": "Enchanted Crystal Arrow",
-          "description": "Ashe fires a missile of ice in a straight line.  If the arrow collides with an enemy Champion, it deals damage and stuns the Champion for up to 3.5 seconds, based on how far the arrow has traveled.  In addition, surrounding enemy units take damage and are slowed.",
-          "tooltip": "Ashe launches a crystal arrow of ice in a line that <status>Stuns</status> an enemy Champion dealing <magicDamage>{{ rmaindamage }} magic damage</magicDamage>. <status>Stun</status> duration increases with distance travelled, up to {{ maxstunduration }} seconds. Surrounding enemies are <status>Slowed</status> by 50% for 3 seconds and take <magicDamage>{{ rmaindamagesplashtooltip }} damage.</magicDamage></mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "Ashe fires a missile of ice in a straight line. If the arrow collides with an enemy Champion, it deals damage and stuns the Champion, stunning for longer the farther arrow has traveled. In addition, surrounding enemy units take damage and are slowed.",
+          "tooltip": "Ashe launches a crystal arrow of ice that <status>Stuns</status> the first champion hit and deals <magicDamage>{{ rmaindamage }} magic damage</magicDamage>. The <status>Stun</status> duration increases with distance travelled, up to {{ maxstunduration }} seconds. Surrounding enemies are <status>Slowed</status> by <spellName>Frost Shot</spellName>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -628,16 +1134,16 @@
           "maxrank": 3,
           "cooldown": [
             100,
-            90,
-            80
+            80,
+            60
           ],
-          "cooldownBurn": "100/90/80",
+          "cooldownBurn": "100/80/60",
           "cost": [
-            150,
-            150,
-            150
+            100,
+            100,
+            100
           ],
-          "costBurn": "150",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -715,11 +1221,11 @@
           ],
           "rangeBurn": "25000",
           "image": {
-            "full": "Jade_AsheEnchantedCrystalArrow.png",
-            "sprite": "spell6.png",
+            "full": "EnchantedCrystalArrow.png",
+            "sprite": "spell1.png",
             "group": "spell",
-            "x": 144,
-            "y": 48,
+            "x": 336,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -727,14 +1233,14 @@
         }
       ],
       "passive": {
-        "name": "Focus",
-        "description": "Ashe gains stacks of <spellName>Focus</spellName> while out-of-combat. When Ashe has 100 stacks of <spellName>Focus</spellName>, her next basic Attack will critically strike.",
+        "name": "Frost Shot",
+        "description": "Ashe's attacks slow their target, causing her to deal increased damage to these targets.<br><br>Ashe's critical strikes deal no bonus damage but apply an empowered slow to the target.",
         "image": {
-          "full": "Jade_Ashe_P.png",
-          "sprite": "passive1.png",
+          "full": "Ashe_P.png",
+          "sprite": "passive0.png",
           "group": "passive",
-          "x": 192,
-          "y": 96,
+          "x": 0,
+          "y": 48,
           "w": 48,
           "h": 48
         }

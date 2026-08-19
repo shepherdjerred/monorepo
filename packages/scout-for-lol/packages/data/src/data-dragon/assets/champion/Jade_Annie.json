@@ -1,165 +1,433 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Annie": {
-      "id": "Jade_Annie",
-      "key": "60001",
+      "id": "Annie",
+      "key": "1",
       "name": "Annie",
-      "title": "The Dark Child",
+      "title": "the Dark Child",
       "image": {
-        "full": "Jade_Annie.png",
-        "sprite": "champion1.png",
+        "full": "Annie.png",
+        "sprite": "champion0.png",
         "group": "champion",
-        "x": 144,
-        "y": 96,
+        "x": 384,
+        "y": 0,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60001000",
+          "id": "1000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60001001",
+          "id": "1001",
           "num": 1,
           "name": "Goth Annie",
           "chromas": false
         },
         {
-          "id": "60001005",
+          "id": "1002",
+          "num": 2,
+          "name": "Red Riding Annie",
+          "chromas": false
+        },
+        {
+          "id": "1003",
+          "num": 3,
+          "name": "Annie in Wonderland",
+          "chromas": false
+        },
+        {
+          "id": "1004",
+          "num": 4,
+          "name": "Prom Queen Annie",
+          "chromas": false
+        },
+        {
+          "id": "1005",
           "num": 5,
           "name": "Frostfire Annie",
           "chromas": false
         },
         {
-          "id": "60001008",
+          "id": "1006",
+          "num": 6,
+          "name": "Reverse Annie",
+          "chromas": false
+        },
+        {
+          "id": "1007",
+          "num": 7,
+          "name": "FrankenTibbers Annie",
+          "chromas": false
+        },
+        {
+          "id": "1008",
           "num": 8,
           "name": "Panda Annie",
           "chromas": false
         },
         {
-          "id": "60001009",
+          "id": "1009",
           "num": 9,
           "name": "Sweetheart Annie",
           "chromas": false
         },
         {
-          "id": "60001011",
+          "id": "1010",
+          "num": 10,
+          "name": "Hextech Annie",
+          "chromas": false
+        },
+        {
+          "id": "1011",
           "num": 11,
           "name": "Super Galaxy Annie",
           "chromas": false
         },
         {
-          "id": "60001012",
+          "id": "1012",
           "num": 12,
           "name": "Annie-Versary",
           "chromas": false
         },
         {
-          "id": "60001022",
+          "id": "1013",
+          "num": 13,
+          "name": "Lunar Beast Annie",
+          "chromas": true
+        },
+        {
+          "id": "1014",
+          "num": 14,
+          "name": "Lunar Beast Annie (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1015",
+          "num": 15,
+          "name": "Lunar Beast Annie (Vitality)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1016",
+          "num": 16,
+          "name": "Lunar Beast Annie (Citrine)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1017",
+          "num": 17,
+          "name": "Lunar Beast Annie (Amethyst)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1018",
+          "num": 18,
+          "name": "Lunar Beast Annie (Sapphire)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1019",
+          "num": 19,
+          "name": "Lunar Beast Annie (Obsidian)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1020",
+          "num": 20,
+          "name": "Lunar Beast Annie (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "1022",
           "num": 22,
           "name": "Cafe Cuties Annie",
           "chromas": false
         },
         {
-          "id": "60001023",
+          "id": "1023",
           "num": 23,
           "name": "Cafe Cuties Annie (Ruby)",
-          "chromas": false,
+          "chromas": true,
           "parentSkin": 22
         },
         {
-          "id": "60001024",
+          "id": "1024",
           "num": 24,
           "name": "Cafe Cuties Annie (Catseye)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60001025",
+          "id": "1025",
           "num": 25,
           "name": "Cafe Cuties Annie (Emerald)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60001026",
+          "id": "1026",
           "num": 26,
           "name": "Cafe Cuties Annie (Aquamarine)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60001027",
+          "id": "1027",
           "num": 27,
           "name": "Cafe Cuties Annie (Tanzanite)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60001028",
+          "id": "1028",
           "num": 28,
           "name": "Cafe Cuties Annie (Rose Quartz)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60001029",
+          "id": "1029",
           "num": 29,
           "name": "Cafe Cuties Annie (Pearl)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60001030",
+          "id": "1030",
           "num": 30,
           "name": "Cafe Cuties Annie (Obsidian)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60001060",
+          "id": "1031",
+          "num": 31,
+          "name": "Fright Night Annie",
+          "chromas": false
+        },
+        {
+          "id": "1032",
+          "num": 32,
+          "name": "Fright Night Annie (Ruby)",
+          "chromas": true,
+          "parentSkin": 31
+        },
+        {
+          "id": "1033",
+          "num": 33,
+          "name": "Fright Night Annie (Catseye)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1034",
+          "num": 34,
+          "name": "Fright Night Annie (Emerald)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1035",
+          "num": 35,
+          "name": "Fright Night Annie (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1036",
+          "num": 36,
+          "name": "Fright Night Annie (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1037",
+          "num": 37,
+          "name": "Fright Night Annie (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1038",
+          "num": 38,
+          "name": "Fright Night Annie (Pearl)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1039",
+          "num": 39,
+          "name": "Fright Night Annie (Obsidian)",
+          "chromas": false,
+          "parentSkin": 31
+        },
+        {
+          "id": "1040",
+          "num": 40,
+          "name": "Winterblessed Annie",
+          "chromas": false
+        },
+        {
+          "id": "1041",
+          "num": 41,
+          "name": "Winterblessed Annie (Ruby)",
+          "chromas": true,
+          "parentSkin": 40
+        },
+        {
+          "id": "1042",
+          "num": 42,
+          "name": "Winterblessed Annie (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1043",
+          "num": 43,
+          "name": "Winterblessed Annie (Catseye)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1044",
+          "num": 44,
+          "name": "Winterblessed Annie (Emerald)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1045",
+          "num": 45,
+          "name": "Winterblessed Annie (Sapphire)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1046",
+          "num": 46,
+          "name": "Winterblessed Annie (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1047",
+          "num": 47,
+          "name": "Winterblessed Annie (Rainbow)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1048",
+          "num": 48,
+          "name": "Winterblessed Annie (Obsidian)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1049",
+          "num": 49,
+          "name": "Winterblessed Annie (Wreathguard)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "1050",
+          "num": 50,
+          "name": "Battle Princess Annie",
+          "chromas": false
+        },
+        {
+          "id": "1051",
+          "num": 51,
+          "name": "Battle Princess Annie (Ruby)",
+          "chromas": true,
+          "parentSkin": 50
+        },
+        {
+          "id": "1052",
+          "num": 52,
+          "name": "Battle Princess Annie (Citrine)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1053",
+          "num": 53,
+          "name": "Battle Princess Annie (Turquoise)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1054",
+          "num": 54,
+          "name": "Battle Princess Annie (Sapphire)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1055",
+          "num": 55,
+          "name": "Battle Princess Annie (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1056",
+          "num": 56,
+          "name": "Battle Princess Annie (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1057",
+          "num": 57,
+          "name": "Battle Princess Annie (Pearl)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1058",
+          "num": 58,
+          "name": "Battle Princess Annie (Obsidian)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "1059",
+          "num": 59,
+          "name": "Pandemonium Annie",
+          "chromas": false
+        },
+        {
+          "id": "1060",
           "num": 60,
           "name": "Goth Annie Modern",
           "chromas": false
-        },
-        {
-          "id": "60001301",
-          "num": 301,
-          "name": "Classic Annie",
-          "chromas": false
-        },
-        {
-          "id": "60001302",
-          "num": 302,
-          "name": "Classic Annie (Goth)",
-          "chromas": false,
-          "parentSkin": 301
-        },
-        {
-          "id": "60001303",
-          "num": 303,
-          "name": "Classic Annie (Founder's Goth)",
-          "chromas": false,
-          "parentSkin": 301
-        },
-        {
-          "id": "60001305",
-          "num": 305,
-          "name": "Classic Annie (Prom)",
-          "chromas": false,
-          "parentSkin": 301
         }
       ],
-      "lore": "- Tibbers (R) dies when Annie does<br>- Pyromania (P) Stacks reset on death<br>- Molten Shield (E) doesn't grant movement speed",
-      "blurb": "- Tibbers (R) dies when Annie does<br>- Pyromania (P) Stacks reset on death<br>- Molten Shield (E) doesn't grant movement speed",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Dangerous, yet disarmingly precocious, Annie is a child mage with immense pyromantic power. Even in the shadows of the mountains north of Noxus, she is a magical outlier. Her natural affinity for fire manifested early in life through unpredictable, emotional outbursts, though she eventually learned to control these “playful tricks.” Her favorite includes the summoning of her beloved teddy bear, Tibbers, as a fiery protector. Lost in the perpetual innocence of childhood, Annie wanders the dark forests, always looking for someone to play with.",
+      "blurb": "Dangerous, yet disarmingly precocious, Annie is a child mage with immense pyromantic power. Even in the shadows of the mountains north of Noxus, she is a magical outlier. Her natural affinity for fire manifested early in life through unpredictable...",
+      "allytips": [
+        "Storing a stun for use with her ultimate can turn the tide of a team fight.",
+        "Striking killing blows on minions with Disintegrate enables Annie to farm extremely well early in the game.",
+        "Molten Shield is a good spell to cast to work up to Annie's stun, so sometimes it's beneficial to grab at least 1 rank in it early."
+      ],
+      "enemytips": [
+        "Annie's summoned bear, Tibbers, burns opposing units around himself. Try to keep your distance from him after he's been summoned.",
+        "Summoner Smite can be used to help take down Tibbers.",
+        "Keep an eye out for a white, swirling power around Annie. It means she's ready to unleash her stun."
+      ],
       "tags": [
         "Mage",
         "Support"
@@ -172,33 +440,33 @@
         "difficulty": 6
       },
       "stats": {
-        "hp": 460,
-        "hpperlevel": 76,
-        "mp": 300,
-        "mpperlevel": 50,
+        "hp": 560,
+        "hpperlevel": 96,
+        "mp": 418,
+        "mpperlevel": 25,
         "movespeed": 335,
-        "armor": 16.5,
+        "armor": 23,
         "armorperlevel": 4,
         "spellblock": 30,
-        "spellblockperlevel": 0,
+        "spellblockperlevel": 1.3,
         "attackrange": 625,
-        "hpregen": 5.05,
+        "hpregen": 5.5,
         "hpregenperlevel": 0.55,
-        "mpregen": 7.5,
-        "mpregenperlevel": 0.6,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 50.625,
+        "attackdamage": 50,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 1.36,
-        "attackspeed": 0.579
+        "attackspeed": 0.61
       },
       "spells": [
         {
-          "id": "Jade_AnnieQ",
+          "id": "AnnieQ",
           "name": "Disintegrate",
-          "description": "Annie hurls a mana-infused fireball, dealing damage and refunding the mana cost if it destroys the target.",
-          "tooltip": "Annie hurls a ball of fire dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Mana cost is refunded if <spellName>Disintegrate</spellName> kills the target.{{ spellmodifierdescriptionappend }}",
+          "description": "Annie hurls a Mana infused fireball, dealing damage and refunding the Mana cost if it destroys the target.",
+          "tooltip": "Annie hurls a fireball, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. If the target dies, Annie refunds the Mana cost and reduces the Cooldown by 50%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -325,21 +593,21 @@
           ],
           "rangeBurn": "625",
           "image": {
-            "full": "Jade_AnnieQ.png",
-            "sprite": "spell6.png",
+            "full": "AnnieQ.png",
+            "sprite": "spell1.png",
             "group": "spell",
             "x": 288,
-            "y": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_AnnieW",
+          "id": "AnnieW",
           "name": "Incinerate",
           "description": "Annie casts a blazing cone of fire, dealing damage to all enemies in the area.",
-          "tooltip": "Annie casts a cone of fire dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to all enemies in the area.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Annie projects a wave of fire, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -352,21 +620,21 @@
           },
           "maxrank": 5,
           "cooldown": [
-            8,
-            8,
-            8,
-            8,
-            8
+            7,
+            7,
+            7,
+            7,
+            7
           ],
-          "cooldownBurn": "8",
+          "cooldownBurn": "7",
           "cost": [
             70,
+            75,
             80,
-            90,
-            100,
-            110
+            85,
+            90
           ],
-          "costBurn": "70/80/90/100/110",
+          "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
@@ -466,31 +734,31 @@
           ],
           "rangeBurn": "600",
           "image": {
-            "full": "Jade_AnnieW.png",
-            "sprite": "spell6.png",
+            "full": "AnnieW.png",
+            "sprite": "spell1.png",
             "group": "spell",
             "x": 336,
-            "y": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_AnnieE",
+          "id": "AnnieE",
           "name": "Molten Shield",
-          "description": "Increases Annie's Armor and Magic Resist and damages enemies who hit Annie with basic attacks.",
-          "tooltip": "Annie surrounds herself in a flame barrier, increasing her <scaleArmor>Armor </scaleArmor>and <scaleMR>Magic Resist by {{ resistances }}</scaleMR> for {{ shieldduration }} seconds. Enemies who attack Annie are dealt <magicDamage>{{ damagereturn }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "description": "Grants Annie or an ally a shield, a burst of Move Speed, and damages enemies who strike her with attacks or spells.",
+          "tooltip": "Annie grants an ally champion <shield>{{ shieldblocktotal }} Shield</shield> for {{ shieldduration }} seconds and <speed>{{ movespeedcalc }} Decaying Move Speed</speed> for {{ movementspeedduration }} seconds. While the shield holds, enemies who hit the shielded ally with an Attack or Ability receive <magicDamage>{{ damagereturn }} magic damage</magicDamage> once per shield.<br /><br />Tibbers always gains the effects of <spellName>Molten Shield</spellName> when summoned.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
-              "Armor Bonus",
-              "Magic Resist Bonus"
+              "Shield Health",
+              "Damage Reflection",
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
+              "{{ shieldamount }} -> {{ shieldamountNL }}",
               "{{ damagereflection }} -> {{ damagereflectionNL }}",
-              "{{ resistances }} -> {{ resistancesNL }}",
-              "{{ resistances }} -> {{ resistancesNL }}"
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
@@ -503,13 +771,13 @@
           ],
           "cooldownBurn": "10",
           "cost": [
-            20,
-            20,
-            20,
-            20,
-            20
+            60,
+            65,
+            70,
+            75,
+            80
           ],
-          "costBurn": "20",
+          "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
@@ -609,42 +877,46 @@
           ],
           "rangeBurn": "800",
           "image": {
-            "full": "Jade_AnnieE.png",
-            "sprite": "spell6.png",
+            "full": "AnnieE.png",
+            "sprite": "spell1.png",
             "group": "spell",
             "x": 384,
-            "y": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_AnnieR",
+          "id": "AnnieR",
           "name": "Summon: Tibbers",
           "description": "Annie wills her bear Tibbers to life, dealing damage to units in the area. Tibbers can attack and also burns enemies that stand near him.",
-          "tooltip": "Tibbers appears in a burst of flame dealing <magicDamage>{{ initialburstdamage }} magic damage</magicDamage> to enemies in the target area.<br /><br />For the next {{ tibberslifetime }} seconds, Tibbers chases down enemies and deals <magicDamage>{{ tibbersauradamage }} magic damage</magicDamage> each second to nearby foes.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Annie gains <magicPen>{{ rpercentpenbuff*100 }}% Magic Penetration</magicPen>.<br /><br />Annie summons her bear Tibbers, dealing <magicDamage>{{ initialburstdamage }} magic damage</magicDamage>. For the next {{ tibberslifetime }} seconds, Tibbers burns nearby enemies for <magicDamage>{{ tibbersauradamage }} magic damage per second</magicDamage>.<br /><br />Tibbers becomes enraged when summoned, if Annie stuns an enemy champion, and if Annie dies. When enraged, Tibbers gains <attackSpeed>275% Attack Speed</attackSpeed> and <speed>100% Move Speed</speed> decaying over 3 seconds.<br /><br /><recast>Recast:</recast> Manually issue orders to Tibbers.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
-              "Tibbers Health",
-              "Tibbers Armor and Magic Resist",
-              "Tibbers Attack Damage"
+              "Initial Damage",
+              "Aura Damage",
+              "Attack Damage",
+              "Bonus Move Speed",
+              "Cooldown",
+              "Magic Penetration"
             ],
             "effect": [
               "{{ initialdamage }} -> {{ initialdamageNL }}",
-              "{{ health }} -> {{ healthNL }}",
-              "{{ tibberstotalresists }} -> {{ tibberstotalresistsNL }}",
-              "{{ tibbersaa }} -> {{ tibbersaaNL }}"
+              "{{ auradamage }} -> {{ auradamageNL }}",
+              "{{ tibbersattackdamage }} -> {{ tibbersattackdamageNL }}",
+              "{{ tibbersbonusms }} -> {{ tibbersbonusmsNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ rpercentpenbuff*100.000000 }}% -> {{ rpercentpenbuffnl*100.000000 }}%"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            120,
-            120,
-            120
+            130,
+            115,
+            100
           ],
-          "cooldownBurn": "120",
+          "cooldownBurn": "130/115/100",
           "cost": [
             100,
             100,
@@ -728,11 +1000,11 @@
           ],
           "rangeBurn": "600",
           "image": {
-            "full": "Jade_AnnieR.png",
-            "sprite": "spell6.png",
+            "full": "AnnieR.png",
+            "sprite": "spell1.png",
             "group": "spell",
             "x": 432,
-            "y": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -741,13 +1013,13 @@
       ],
       "passive": {
         "name": "Pyromania",
-        "description": "After casting 4 spells, Annie's next offensive spell Stuns the target(s) for 1.75 seconds.",
+        "description": "After casting 4 spells, Annie's next offensive spell will stun the target.<br><br>Annie begins the game and respawns with Pyromania available.",
         "image": {
-          "full": "Jade_Annie_Passive.png",
-          "sprite": "passive1.png",
+          "full": "Annie_Passive.png",
+          "sprite": "passive0.png",
           "group": "passive",
-          "x": 144,
-          "y": 96,
+          "x": 384,
+          "y": 0,
           "w": 48,
           "h": 48
         }

@@ -1,176 +1,583 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Lux": {
-      "id": "Jade_Lux",
-      "key": "60099",
+      "id": "Lux",
+      "key": "99",
       "name": "Lux",
-      "title": "The Lady of Luminosity",
+      "title": "the Lady of Luminosity",
       "image": {
-        "full": "Jade_Lux.png",
+        "full": "Lux.png",
         "sprite": "champion2.png",
         "group": "champion",
-        "x": 384,
+        "x": 336,
         "y": 48,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60099000",
+          "id": "99000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60099002",
+          "id": "99001",
+          "num": 1,
+          "name": "Sorceress Lux",
+          "chromas": false
+        },
+        {
+          "id": "99002",
           "num": 2,
           "name": "Spellthief Lux",
           "chromas": false
         },
         {
-          "id": "60099017",
+          "id": "99003",
+          "num": 3,
+          "name": "Commando Lux",
+          "chromas": false
+        },
+        {
+          "id": "99004",
+          "num": 4,
+          "name": "Imperial Lux",
+          "chromas": false
+        },
+        {
+          "id": "99005",
+          "num": 5,
+          "name": "Steel Legion Lux",
+          "chromas": false
+        },
+        {
+          "id": "99006",
+          "num": 6,
+          "name": "Star Guardian Lux",
+          "chromas": false
+        },
+        {
+          "id": "99007",
+          "num": 7,
+          "name": "Elementalist Lux",
+          "chromas": false
+        },
+        {
+          "id": "99008",
+          "num": 8,
+          "name": "Lunar Empress Lux",
+          "chromas": true
+        },
+        {
+          "id": "99009",
+          "num": 9,
+          "name": "Lunar Empress Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "99010",
+          "num": 10,
+          "name": "Lunar Empress Lux (Peridot)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "99011",
+          "num": 11,
+          "name": "Lunar Empress Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "99012",
+          "num": 12,
+          "name": "Lunar Empress Lux (Amethyst)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "99013",
+          "num": 13,
+          "name": "Lunar Empress Lux (Turquoise)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "99014",
+          "num": 14,
+          "name": "Pajama Guardian Lux",
+          "chromas": false
+        },
+        {
+          "id": "99015",
+          "num": 15,
+          "name": "Battle Academia Lux",
+          "chromas": false
+        },
+        {
+          "id": "99016",
+          "num": 16,
+          "name": "Prestige Battle Academia Lux",
+          "chromas": false
+        },
+        {
+          "id": "99017",
           "num": 17,
           "name": "Dark Cosmic Lux",
           "chromas": false
         },
         {
-          "id": "60099018",
+          "id": "99018",
           "num": 18,
           "name": "Cosmic Lux",
           "chromas": false
         },
         {
-          "id": "60099061",
-          "num": 61,
-          "name": "Faerie Court Lux",
+          "id": "99019",
+          "num": 19,
+          "name": "Space Groove Lux",
+          "chromas": true
+        },
+        {
+          "id": "99020",
+          "num": 20,
+          "name": "Space Groove Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99021",
+          "num": 21,
+          "name": "Space Groove Lux (Sapphire)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99022",
+          "num": 22,
+          "name": "Space Groove Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99023",
+          "num": 23,
+          "name": "Space Groove Lux (Citrine)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99024",
+          "num": 24,
+          "name": "Space Groove Lux (Emerald)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99025",
+          "num": 25,
+          "name": "Space Groove Lux (Amethyst)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99026",
+          "num": 26,
+          "name": "Space Groove Lux (Obsidian)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99027",
+          "num": 27,
+          "name": "Space Groove Lux (Rainbow)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99028",
+          "num": 28,
+          "name": "Space Groove Lux (Disco)",
+          "chromas": false,
+          "parentSkin": 19
+        },
+        {
+          "id": "99029",
+          "num": 29,
+          "name": "Porcelain Lux",
+          "chromas": true
+        },
+        {
+          "id": "99030",
+          "num": 30,
+          "name": "Porcelain Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99031",
+          "num": 31,
+          "name": "Porcelain Lux (Sapphire)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99032",
+          "num": 32,
+          "name": "Porcelain Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99033",
+          "num": 33,
+          "name": "Porcelain Lux (Catseye)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99034",
+          "num": 34,
+          "name": "Porcelain Lux (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99035",
+          "num": 35,
+          "name": "Porcelain Lux (Obsidian)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99036",
+          "num": 36,
+          "name": "Porcelain Lux (Emerald)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99037",
+          "num": 37,
+          "name": "Porcelain Lux (Pearl)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99038",
+          "num": 38,
+          "name": "Soul Fighter Lux",
+          "chromas": true
+        },
+        {
+          "id": "99039",
+          "num": 39,
+          "name": "Prestige Battle Academia Lux (2022)",
           "chromas": false
         },
         {
-          "id": "60099062",
+          "id": "99040",
+          "num": 40,
+          "name": "Prestige Porcelain Lux",
+          "chromas": false
+        },
+        {
+          "id": "99041",
+          "num": 41,
+          "name": "Porcelain Lux (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "99042",
+          "num": 42,
+          "name": "Empyrean Lux",
+          "chromas": true
+        },
+        {
+          "id": "99043",
+          "num": 43,
+          "name": "Empyrean Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99044",
+          "num": 44,
+          "name": "Empyrean Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99045",
+          "num": 45,
+          "name": "Empyrean Lux (Catseye)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99046",
+          "num": 46,
+          "name": "Empyrean Lux (Emerald)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99047",
+          "num": 47,
+          "name": "Empyrean Lux (Sapphire)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99048",
+          "num": 48,
+          "name": "Empyrean Lux (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99049",
+          "num": 49,
+          "name": "Empyrean Lux (Pearl)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99050",
+          "num": 50,
+          "name": "Empyrean Lux (Obsidian)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99051",
+          "num": 51,
+          "name": "Empyrean Lux (Neon Flare)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "99052",
+          "num": 52,
+          "name": "Soul Fighter Lux (Ruby)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99053",
+          "num": 53,
+          "name": "Soul Fighter Lux (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99054",
+          "num": 54,
+          "name": "Soul Fighter Lux (Turquoise)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99055",
+          "num": 55,
+          "name": "Soul Fighter Lux (Emerald)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99056",
+          "num": 56,
+          "name": "Soul Fighter Lux (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99057",
+          "num": 57,
+          "name": "Soul Fighter Lux (Amethyst)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99058",
+          "num": 58,
+          "name": "Soul Fighter Lux (Obsidian)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99059",
+          "num": 59,
+          "name": "Soul Fighter Lux (Citrine)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99060",
+          "num": 60,
+          "name": "Soul Fighter Lux (Limitless)",
+          "chromas": false,
+          "parentSkin": 38
+        },
+        {
+          "id": "99061",
+          "num": 61,
+          "name": "Faerie Court Lux",
+          "chromas": true
+        },
+        {
+          "id": "99062",
           "num": 62,
           "name": "Faerie Court Lux (Ruby)",
           "chromas": false,
           "parentSkin": 61
         },
         {
-          "id": "60099063",
+          "id": "99063",
           "num": 63,
           "name": "Faerie Court Lux (Rose Quartz)",
           "chromas": false,
           "parentSkin": 61
         },
         {
-          "id": "60099064",
+          "id": "99064",
           "num": 64,
           "name": "Faerie Court Lux (Tanzanite)",
           "chromas": false,
           "parentSkin": 61
         },
         {
-          "id": "60099065",
+          "id": "99065",
           "num": 65,
           "name": "Faerie Court Lux (Catseye)",
           "chromas": false,
           "parentSkin": 61
         },
         {
-          "id": "60099066",
+          "id": "99066",
           "num": 66,
           "name": "Faerie Court Lux (Emerald)",
           "chromas": false,
           "parentSkin": 61
         },
         {
-          "id": "60099067",
+          "id": "99067",
           "num": 67,
           "name": "Faerie Court Lux (Sapphire)",
           "chromas": false,
           "parentSkin": 61
         },
         {
-          "id": "60099068",
+          "id": "99068",
           "num": 68,
           "name": "Faerie Court Lux (Pearl)",
           "chromas": false,
           "parentSkin": 61
         },
         {
-          "id": "60099069",
+          "id": "99069",
           "num": 69,
           "name": "Faerie Court Lux (Turquoise)",
           "chromas": false,
           "parentSkin": 61
         },
         {
-          "id": "60099072",
-          "num": 72,
-          "name": "Panda Pal Lux",
-          "chromas": false
+          "id": "99070",
+          "num": 70,
+          "name": "Prestige Spirit Blossom Lux",
+          "chromas": true
         },
         {
-          "id": "60099073",
+          "id": "99071",
+          "num": 71,
+          "name": "Prestige Spirit Blossom Lux (Vivid)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "99072",
+          "num": 72,
+          "name": "Panda Pal Lux",
+          "chromas": true
+        },
+        {
+          "id": "99073",
           "num": 73,
           "name": "Panda Pal Lux (Ruby)",
           "chromas": false,
           "parentSkin": 72
         },
         {
-          "id": "60099074",
+          "id": "99074",
           "num": 74,
           "name": "Panda Pal Lux (Turquoise)",
           "chromas": false,
           "parentSkin": 72
         },
         {
-          "id": "60099075",
+          "id": "99075",
           "num": 75,
           "name": "Panda Pal Lux (Rose Quartz)",
           "chromas": false,
           "parentSkin": 72
         },
         {
-          "id": "60099076",
+          "id": "99076",
           "num": 76,
           "name": "Panda Pal Lux (Catseye)",
           "chromas": false,
           "parentSkin": 72
         },
         {
-          "id": "60099077",
+          "id": "99077",
           "num": 77,
           "name": "Panda Pal Lux (Amethyst)",
           "chromas": false,
           "parentSkin": 72
         },
         {
-          "id": "60099078",
+          "id": "99078",
           "num": 78,
           "name": "Panda Pal Lux (Sapphire)",
           "chromas": false,
           "parentSkin": 72
         },
         {
-          "id": "60099079",
+          "id": "99079",
           "num": 79,
           "name": "Panda Pal Lux (Pearl)",
           "chromas": false,
           "parentSkin": 72
         },
         {
-          "id": "60099080",
+          "id": "99080",
           "num": 80,
           "name": "Panda Pal Lux (Obsidian)",
           "chromas": false,
           "parentSkin": 72
+        },
+        {
+          "id": "99081",
+          "num": 81,
+          "name": "Porcelain Lux (Beacon)",
+          "chromas": false,
+          "parentSkin": 29
         }
       ],
-      "lore": "- Light Binding's (Q) second target is half as affective<br>- Final Spark (R) is now German - Finales Funkeln",
-      "blurb": "- Light Binding's (Q) second target is half as affective<br>- Final Spark (R) is now German - Finales Funkeln",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Luxanna Crownguard hails from Demacia, an insular realm where magical abilities are viewed with fear and suspicion. Able to bend light to her will, she grew up dreading discovery and exile, and was forced to keep her power secret, in order to preserve her family's noble status. Nonetheless, Lux's optimism and resilience have led her to embrace her unique talents, and she now covertly wields them in service of her homeland.",
+      "blurb": "Luxanna Crownguard hails from Demacia, an insular realm where magical abilities are viewed with fear and suspicion. Able to bend light to her will, she grew up dreading discovery and exile, and was forced to keep her power secret, in order to preserve...",
+      "allytips": [
+        "Lux has great zone control abilities. Try to set up Lucent Singularity to prevent an enemy's advance or escape.",
+        "If you have trouble landing Prismatic Barrier, remember that it returns to you after it reaches max range. Try positioning yourself to hit your allies with its return trip.",
+        "Lucent Singularity is a great scouting tool. Try throwing it into brush before walking into it to check for ambushes."
+      ],
+      "enemytips": [
+        "Lux has powerful zone control abilities. Try to spread out and attack from different directions so she cannot lock down a specific area.",
+        "When retreating with low health, be prepared to dodge Lux's Final Spark, a red targeting beam fires prior to the main beam, so try to move to the side if possible."
+      ],
       "tags": [
         "Mage",
         "Support"
@@ -183,78 +590,74 @@
         "difficulty": 5
       },
       "stats": {
-        "hp": 424,
-        "hpperlevel": 79,
-        "mp": 300,
-        "mpperlevel": 50,
+        "hp": 580,
+        "hpperlevel": 99,
+        "mp": 440,
+        "mpperlevel": 23.5,
         "movespeed": 330,
-        "armor": 16,
-        "armorperlevel": 4,
+        "armor": 21,
+        "armorperlevel": 5.2,
         "spellblock": 30,
-        "spellblockperlevel": 0,
+        "spellblockperlevel": 1.3,
         "attackrange": 550,
-        "hpregen": 5.05,
+        "hpregen": 5.5,
         "hpregenperlevel": 0.55,
-        "mpregen": 6.6,
-        "mpregenperlevel": 0.6,
+        "mpregen": 9,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 53.3,
+        "attackdamage": 54,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 1.36,
-        "attackspeed": 0.625
+        "attackspeedperlevel": 3,
+        "attackspeed": 0.669
       },
       "spells": [
         {
-          "id": "Jade_LuxLightBinding",
+          "id": "LuxLightBinding",
           "name": "Light Binding",
           "description": "Lux releases a sphere of light that binds and deals damage to up to two enemy units.",
-          "tooltip": "Fires a ball of light, <status>Rooting</status> the first enemy hit for 2 seconds and dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage>. The second enemy is dealt <magicDamage>{{ halftotaldamagett }}</magicDamage> and <status>Rooted</status> for 1 second.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Lux fires a ball of light, <status>Rooting</status> the first two enemies for {{ rootduration }} seconds and dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage> to each.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
+              "Damage"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            15,
-            14,
-            13,
-            12,
-            11
+            10,
+            10,
+            10,
+            10,
+            10
           ],
-          "cooldownBurn": "15/14/13/12/11",
+          "cooldownBurn": "10",
           "cost": [
             50,
-            60,
-            70,
-            80,
-            90
+            50,
+            50,
+            50,
+            50
           ],
-          "costBurn": "50/60/70/80/90",
+          "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
             [
-              80,
-              120,
-              160,
-              200,
-              240
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              50,
-              50,
-              50,
-              50,
-              50
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               2,
@@ -315,8 +718,8 @@
           ],
           "effectBurn": [
             null,
-            "80/120/160/200/240",
-            "50",
+            "0",
+            "0",
             "2",
             "0",
             "0",
@@ -338,10 +741,10 @@
           ],
           "rangeBurn": "1175",
           "image": {
-            "full": "Jade_LuxLightBinding.png",
+            "full": "LuxLightBinding.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 288,
+            "x": 96,
             "y": 96,
             "w": 48,
             "h": 48
@@ -349,37 +752,39 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_LuxPrismaticWave",
+          "id": "LuxPrismaticWave",
           "name": "Prismatic Barrier",
           "description": "Lux throws her wand and bends the light around any friendly target it touches, protecting them from enemy damage.",
-          "tooltip": "Throws Lux's wand to a target location and back, <shield>shielding</shield> herself and all allied Champions it touches from <shield>{{ totalshieldtt }} damage</shield> for 3 seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Lux throws her wand, granting <shield>{{ totalshieldtt }} Shield</shield> for {{ shieldduration }} seconds to allies it passes through. Then it returns, granting the same <shield>Shield</shield> on its return.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Shield Amount",
-              "Cooldown"
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ baseshieldamount }} -> {{ baseshieldamountNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            14,
-            13,
             12,
+            11.5,
             11,
+            10.5,
             10
           ],
-          "cooldownBurn": "14/13/12/11/10",
+          "cooldownBurn": "12/11.5/11/10.5/10",
           "cost": [
             60,
-            60,
-            60,
-            60,
-            60
+            65,
+            70,
+            75,
+            80
           ],
-          "costBurn": "60",
+          "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
@@ -391,11 +796,11 @@
               10
             ],
             [
-              40,
-              55,
-              70,
-              85,
-              100
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               2.5,
@@ -457,7 +862,7 @@
           "effectBurn": [
             null,
             "2/4/6/8/10",
-            "40/55/70/85/100",
+            "0",
             "2.5",
             "100",
             "0",
@@ -479,10 +884,10 @@
           ],
           "rangeBurn": "1150",
           "image": {
-            "full": "Jade_LuxPrismaticWave.png",
+            "full": "LuxPrismaticWave.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 336,
+            "x": 144,
             "y": 96,
             "w": 48,
             "h": 48
@@ -490,39 +895,41 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_LuxLightStrikeKugel",
+          "id": "LuxLightStrikeKugel",
           "name": "Lucent Singularity",
           "description": "Fires an anomaly of twisted light to an area, which slows nearby enemies. Lux can detonate it to damage enemies in the area of effect.",
-          "tooltip": "Create a zone that <status>Slows</status> enemies by {{ slowpercent }}%. After 5 seconds the zone detonates dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage>.<br /><br /><recast>Recast</recast> to detonate early.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Lux creates a light zone that <status>Slows</status> by {{ slowpercent }}% and reveals the area. After {{ slowzoneduration }} seconds or on <recast>Recasting</recast> this Ability, it detonates, dealing <magicDamage>{{ totaldamagett }} magic damage</magicDamage> and <status>Slowing</status> for an additional {{ slowlingerduration }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage",
+              "Damage",
               "Movement Slow",
-              "@AbilityResourceName@ Cost"
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
             ],
             "effect": [
-              "{{ damage }} -> {{ damageNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ slowpercent }}% -> {{ slowpercentNL }}%",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
             10,
-            10,
-            10,
-            10,
-            10
+            9.5,
+            9,
+            8.5,
+            8
           ],
-          "cooldownBurn": "10",
+          "cooldownBurn": "10/9.5/9/8.5/8",
           "cost": [
             70,
-            85,
+            80,
+            90,
             100,
-            115,
-            130
+            110
           ],
-          "costBurn": "70/85/100/115/130",
+          "costBurn": "70/80/90/100/110",
           "datavalues": {},
           "effect": [
             null,
@@ -534,9 +941,9 @@
               45
             ],
             [
-              60,
-              105,
-              150,
+              65,
+              115,
+              165,
               215,
               265
             ],
@@ -600,7 +1007,7 @@
           "effectBurn": [
             null,
             "25/30/35/40/45",
-            "60/105/150/215/265",
+            "65/115/165/215/265",
             "5",
             "310",
             "0",
@@ -614,18 +1021,18 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            1000,
-            1000,
-            1000,
-            1000,
-            1000
+            1100,
+            1100,
+            1100,
+            1100,
+            1100
           ],
-          "rangeBurn": "1000",
+          "rangeBurn": "1100",
           "image": {
-            "full": "Jade_LuxLightStrikeKugel.png",
+            "full": "LuxLightStrikeKugel.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 384,
+            "x": 192,
             "y": 96,
             "w": 48,
             "h": 48
@@ -633,13 +1040,13 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_LuxR",
-          "name": "Finales Funkeln",
-          "description": "After gathering energy, Lux fires a beam of light that deals damage to all targets in the area.  In addition, triggers Lux's passive ability and refreshes the Illumination debuff duration.",
-          "tooltip": "Channels a dazzling ray of light dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to all enemies in a line. <spellName>Finales Funkeln</spellName> ignites and refreshes <spellName>Illumination</spellName>.{{ spellmodifierdescriptionappend }}",
+          "id": "LuxR",
+          "name": "Final Spark",
+          "description": "After gathering energy, Lux fires a beam of light that deals damage to all targets in the area. In addition, triggers Lux's passive ability and refreshes the Illumination debuff duration.",
+          "tooltip": "Lux fires a dazzling ray of light, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to all enemies in a line.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage",
+              "Damage",
               "Cooldown"
             ],
             "effect": [
@@ -649,11 +1056,11 @@
           },
           "maxrank": 3,
           "cooldown": [
-            80,
-            65,
-            50
+            60,
+            50,
+            40
           ],
-          "cooldownBurn": "80/65/50",
+          "cooldownBurn": "60/50/40",
           "cost": [
             100,
             100,
@@ -737,10 +1144,10 @@
           ],
           "rangeBurn": "3340",
           "image": {
-            "full": "Jade_LuxR.png",
+            "full": "LuxR.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 432,
+            "x": 240,
             "y": 96,
             "w": 48,
             "h": 48
@@ -750,12 +1157,12 @@
       ],
       "passive": {
         "name": "Illumination",
-        "description": "Lux's damaging spells charge the target with energy for 6 seconds. Lux's next attack ignites the energy, dealing bonus magic damage (depending on Lux's level) to the target.",
+        "description": "Lux's damaging spells charge the target with energy for a few seconds. Lux's next attack ignites the energy, dealing bonus magic damage (depending on Lux's level) to the target.",
         "image": {
-          "full": "Jade_LuxIlluminatingFraulein.png",
+          "full": "LuxIlluminatingFraulein.png",
           "sprite": "passive2.png",
           "group": "passive",
-          "x": 384,
+          "x": 336,
           "y": 48,
           "w": 48,
           "h": 48

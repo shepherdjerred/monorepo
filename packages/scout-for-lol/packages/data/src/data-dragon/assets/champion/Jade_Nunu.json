@@ -1,190 +1,398 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Nunu": {
-      "id": "Jade_Nunu",
-      "key": "60020",
+      "id": "Nunu",
+      "key": "20",
       "name": "Nunu & Willump",
-      "title": "The Yeti Rider",
+      "title": "the Boy and His Yeti",
       "image": {
-        "full": "Jade_Nunu.png",
-        "sprite": "champion2.png",
+        "full": "Nunu.png",
+        "sprite": "champion3.png",
         "group": "champion",
         "x": 288,
-        "y": 96,
+        "y": 0,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60020000",
+          "id": "20000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60020003",
+          "id": "20001",
+          "num": 1,
+          "name": "Sasquatch Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "20002",
+          "num": 2,
+          "name": "Workshop Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "20003",
           "num": 3,
           "name": "Grungy Nunu & Willump",
           "chromas": false
         },
         {
-          "id": "60020004",
+          "id": "20004",
           "num": 4,
           "name": "Nunu & Willump Bot",
           "chromas": false
         },
         {
-          "id": "60020026",
-          "num": 26,
-          "name": "Nunu & Beelump",
+          "id": "20005",
+          "num": 5,
+          "name": "Demolisher Nunu & Willump",
           "chromas": false
         },
         {
-          "id": "60020027",
+          "id": "20006",
+          "num": 6,
+          "name": "TPA Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "20007",
+          "num": 7,
+          "name": "Zombie Nunu & Willump",
+          "chromas": false
+        },
+        {
+          "id": "20008",
+          "num": 8,
+          "name": "Papercraft Nunu & Willump",
+          "chromas": true
+        },
+        {
+          "id": "20009",
+          "num": 9,
+          "name": "Papercraft Nunu & Willump (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "20010",
+          "num": 10,
+          "name": "Papercraft Nunu & Willump (Pearl)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "20011",
+          "num": 11,
+          "name": "Papercraft Nunu & Willump (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "20012",
+          "num": 12,
+          "name": "Papercraft Nunu & Willump (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "20013",
+          "num": 13,
+          "name": "Papercraft Nunu & Willump (Amethyst)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "20014",
+          "num": 14,
+          "name": "Papercraft Nunu & Willump (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "20015",
+          "num": 15,
+          "name": "Papercraft Nunu & Willump (Catseye)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "20016",
+          "num": 16,
+          "name": "Space Groove Nunu & Willump",
+          "chromas": true
+        },
+        {
+          "id": "20017",
+          "num": 17,
+          "name": "Space Groove Nunu & Willump (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "20018",
+          "num": 18,
+          "name": "Space Groove Nunu & Willump (Catseye)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "20019",
+          "num": 19,
+          "name": "Space Groove Nunu & Willump (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "20020",
+          "num": 20,
+          "name": "Space Groove Nunu & Willump (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "20021",
+          "num": 21,
+          "name": "Space Groove Nunu & Willump (Turquoise)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "20022",
+          "num": 22,
+          "name": "Space Groove Nunu & Willump (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "20023",
+          "num": 23,
+          "name": "Space Groove Nunu & Willump (Obsidian)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "20024",
+          "num": 24,
+          "name": "Space Groove Nunu & Willump (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "20025",
+          "num": 25,
+          "name": "Space Groove Nunu & Willump (Disco)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "20026",
+          "num": 26,
+          "name": "Nunu & Beelump",
+          "chromas": true
+        },
+        {
+          "id": "20027",
           "num": 27,
           "name": "Nunu & Beelump (Ruby)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60020028",
+          "id": "20028",
           "num": 28,
           "name": "Nunu & Beelump (Tanzanite)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60020029",
+          "id": "20029",
           "num": 29,
           "name": "Nunu & Beelump (Sapphire)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60020030",
+          "id": "20030",
           "num": 30,
           "name": "Nunu & Beelump (Emerald)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60020031",
+          "id": "20031",
           "num": 31,
           "name": "Nunu & Beelump (Rose Quartz)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60020032",
+          "id": "20032",
           "num": 32,
           "name": "Nunu & Beelump (Pearl)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60020033",
+          "id": "20033",
           "num": 33,
           "name": "Nunu & Beelump (Obsidian)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60020034",
+          "id": "20034",
           "num": 34,
           "name": "Nunu & Beelump (Rainbow)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60020044",
-          "num": 44,
-          "name": "Fright Night Nunu & Willump",
-          "chromas": false
+          "id": "20035",
+          "num": 35,
+          "name": "Cosmic Paladins Nunu & Willump",
+          "chromas": true
         },
         {
-          "id": "60020045",
+          "id": "20036",
+          "num": 36,
+          "name": "Cosmic Paladins Nunu & Willump (Ruby)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "20037",
+          "num": 37,
+          "name": "Cosmic Paladins Nunu & Willump (Catseye)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "20038",
+          "num": 38,
+          "name": "Cosmic Paladins Nunu & Willump (Turquoise)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "20039",
+          "num": 39,
+          "name": "Cosmic Paladins Nunu & Willump (Emerald)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "20040",
+          "num": 40,
+          "name": "Cosmic Paladins Nunu & Willump (Pearl)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "20041",
+          "num": 41,
+          "name": "Cosmic Paladins Nunu & Willump (Obsidian)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "20042",
+          "num": 42,
+          "name": "Cosmic Paladins Nunu & Willump (Amethyst)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "20043",
+          "num": 43,
+          "name": "Cosmic Paladins Nunu & Willump (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 35
+        },
+        {
+          "id": "20044",
+          "num": 44,
+          "name": "Fright Night Nunu & Willump",
+          "chromas": true
+        },
+        {
+          "id": "20045",
           "num": 45,
           "name": "Fright Night Nunu & Willump (Ruby)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60020046",
+          "id": "20046",
           "num": 46,
           "name": "Fright Night Nunu & Willump (Catseye)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60020047",
+          "id": "20047",
           "num": 47,
           "name": "Fright Night Nunu & Willump (Emerald)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60020048",
+          "id": "20048",
           "num": 48,
           "name": "Fright Night Nunu & Willump (Sapphire)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60020049",
+          "id": "20049",
           "num": 49,
           "name": "Fright Night Nunu & Willump (Obsidian)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60020050",
+          "id": "20050",
           "num": 50,
           "name": "Fright Night Nunu & Willump (Tanzanite)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60020051",
+          "id": "20051",
           "num": 51,
           "name": "Fright Night Nunu & Willump (Citrine)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60020052",
+          "id": "20052",
           "num": 52,
           "name": "Fright Night Nunu & Willump (Rose Quartz)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60020053",
+          "id": "20053",
           "num": 53,
           "name": "Fright Night Nunu & Willump (Ghoulish)",
           "chromas": false,
           "parentSkin": 44
-        },
-        {
-          "id": "60020301",
-          "num": 301,
-          "name": "Classic Nunu & Willump",
-          "chromas": false
-        },
-        {
-          "id": "60020302",
-          "num": 302,
-          "name": "Classic Nunu & Willump (Sasquatch)",
-          "chromas": false,
-          "parentSkin": 301
         }
       ],
-      "lore": "- Blood Boil (W) grants attack and movement speed<br>- Ice Blast (E) a single point and click snowball<br>- Consume (Q) can't target champions but gain buffs based on whats eaten<br>- Visionary (P) every 5 basic attacks the next spell costs no mana - Nunu & Willump get an extra line as they are 2 characters",
-      "blurb": "- Blood Boil (W) grants attack and movement speed<br>- Ice Blast (E) a single point and click snowball<br>- Consume (Q) can't target champions but gain buffs based on whats eaten<br>- Visionary (P) every 5 basic attacks the next spell costs no mana -...",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Once upon a time, there was a boy who wanted to prove he was a hero by slaying a fearsome monster—only to discover that the beast, a lonely and magical yeti, merely needed a friend. Bound together by ancient power and a shared love of snowballs, Nunu and Willump now ramble wildly across the Freljord, breathing life into imagined adventures. They hope that somewhere out there, they will find Nunu's mother. If they can save her, maybe they will be heroes after all…",
+      "blurb": "Once upon a time, there was a boy who wanted to prove he was a hero by slaying a fearsome monster—only to discover that the beast, a lonely and magical yeti, merely needed a friend. Bound together by ancient power and a shared love of snowballs, Nunu...",
+      "allytips": [
+        "Consume allows Nunu to stay in a lane against ranged opponents.",
+        "You can choose to interrupt Absolute Zero early for partial damage if an opponent is about to run out of range.",
+        "It's often beneficial to delay the casting of Absolute Zero until the initial round of disables are used. Try to hang back before rushing into a team fight."
+      ],
+      "enemytips": [
+        "Interrupting the charge up on Absolute Zero will lower the amount of damage your team takes.",
+        "Using Summoner Flash is a surefire way to escape Absolute Zero.",
+        "Biggest Snowball Ever moves very fast but cannot turn as quickly, so don't try to escape it by running away in a straight line.  Instead, make sudden, sharp turns."
+      ],
       "tags": [
         "Tank",
         "Mage"
@@ -197,56 +405,56 @@
         "difficulty": 4
       },
       "stats": {
-        "hp": 533,
-        "hpperlevel": 96,
-        "mp": 255,
+        "hp": 610,
+        "hpperlevel": 90,
+        "mp": 280,
         "mpperlevel": 42,
-        "movespeed": 350,
-        "armor": 24,
-        "armorperlevel": 3.5,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
+        "movespeed": 345,
+        "armor": 29,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
         "attackrange": 125,
-        "hpregen": 7.85,
+        "hpregen": 5,
         "hpregenperlevel": 0.8,
-        "mpregen": 7.1,
+        "mpregen": 7,
         "mpregenperlevel": 0.5,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 54.51,
+        "attackdamage": 61,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.25,
         "attackspeed": 0.625
       },
       "spells": [
         {
-          "id": "Jade_NunuQ",
+          "id": "NunuQ",
           "name": "Consume",
-          "description": "Nunu commands the yeti to take a bite out of a target minion or monster, dealing heavy damage to it and healing himself.",
-          "tooltip": "Commands the yeti to bite out of a minion or monster, dealing <trueDamage>{{ basedamage }} true damage</trueDamage> to the target and <healing>healing</healing> himself for {{ totalhealing }}.<br /><br />Nunu gains bonuses for {{ consumeduration }} seconds based on what he consumed.<br /><br /><attention>Wolves</attention> or <attention>Reptiles: </attention>Your attacks and spells deal an additional <magicDamage>1% of your maximum health as magic damage</magicDamage>.<br /><attention>Golems:</attention> 10% increased Size and <scaleHealth>Maximum Health</scaleHealth>.<br /><attention>Wraiths:</attention> Killing a unit grants <speed>15% Movement Speed</speed> for 3 seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "Willump takes a bite out of a minion, monster, or enemy champion, dealing damage and healing himself.",
+          "tooltip": "Nunu asks Willump to take a bite of an enemy, dealing <trueDamage>{{ monsterminiondamage }} true damage</trueDamage> and restoring <healing>{{ monsterhealing }} Health</healing> when used against a minion or jungle monster. Against a champion, it instead deals <magicDamage>{{ totalchampiondamage }} magic damage</magicDamage> and restores <healing>{{ championhealing }} Health</healing>.<br /><br />The <healing>healing</healing> is increased by {{ lowhealthhealingscalar*100 }}% when Nunu and Willump are below {{ lowhealththreshhold*100 }}% Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
-              "Healing",
-              "Cooldown",
-              "Consumed Buff Duration"
+              "Monster Damage",
+              "Champion Damage",
+              "Heal",
+              "Cooldown"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ monsterminiondamage }} -> {{ monsterminiondamageNL }}",
+              "{{ championdamage }} -> {{ championdamageNL }}",
               "{{ basehealing }} -> {{ basehealingNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ consumeduration }} -> {{ consumedurationNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            17,
-            15,
             13,
+            12,
             11,
+            10,
             9
           ],
-          "cooldownBurn": "17/15/13/11/9",
+          "cooldownBurn": "13/12/11/10/9",
           "cost": [
             60,
             60,
@@ -343,7 +551,7 @@
             "0"
           ],
           "vars": [],
-          "costType": " {{ abilityresourcename }}",
+          "costType": " Mana",
           "maxammo": "-1",
           "range": [
             125,
@@ -354,48 +562,48 @@
           ],
           "rangeBurn": "125",
           "image": {
-            "full": "Jade_NunuQ.png",
-            "sprite": "spell9.png",
+            "full": "NunuQ.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 384,
             "y": 48,
             "w": 48,
             "h": 48
           },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
+          "resource": "{{ cost }} Mana"
         },
         {
-          "id": "Jade_NunuW",
-          "name": "Blood Boil",
-          "description": "Nunu invigorates himself and an allied unit by heating their blood, increasing their Movement and Attack Speeds.",
-          "tooltip": "The heat of Nunu and a target ally's blood rises, increasing <speed>Movement Speed by {{ movespeed*100 }}%</speed> and <attackSpeed>Attack Speed by {{ attackspeed*100 }}%</attackSpeed> for 12 seconds. Nunu may target themself.</mainText>{{ spellmodifierdescriptionappend }}",
+          "id": "NunuW",
+          "name": "Biggest Snowball Ever!",
+          "description": "Willump creates a snowball that grows in size and speed as he rolls it.  The snowball damages and knocks up enemies.",
+          "tooltip": "Nunu and Willump create a snowball that grows in size and speed as they roll it. They turn slower while rolling it, but can increase turning speed by holding the turn.<br /><br />The snowball does between <magicDamage>{{ noimpactsnowballdamage }}</magicDamage> and <magicDamage>{{ maximumsnowballdamage }} magic damage</magicDamage>, and <status>Knocks Up</status> for between {{ baseknockupduration }} and {{ maximumstunduration }} seconds when it collides with a champion, large monster or wall. These values scale up with distance rolled.<br /><br />Nunu and Willump can <recast>Recast</recast> to let the snowball go early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Attack Speed",
-              "Move Speed"
+              "Base Damage",
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
-              "{{ movespeed*100.000000 }}% -> {{ movespeednl*100.000000 }}%"
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            15,
-            15,
-            15,
-            15,
-            15
+            14,
+            14,
+            14,
+            14,
+            14
           ],
-          "cooldownBurn": "15",
+          "cooldownBurn": "14",
           "cost": [
             50,
-            50,
-            50,
-            50,
-            50
+            55,
+            60,
+            65,
+            70
           ],
-          "costBurn": "50",
+          "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
@@ -487,16 +695,16 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            700,
-            700,
-            700,
-            700,
-            700
+            7500,
+            7500,
+            7500,
+            7500,
+            7500
           ],
-          "rangeBurn": "700",
+          "rangeBurn": "7500",
           "image": {
-            "full": "Jade_NunuW.png",
-            "sprite": "spell9.png",
+            "full": "NunuW.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 432,
             "y": 48,
@@ -506,39 +714,41 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_NunuE",
-          "name": "Ice Blast",
-          "description": "Nunu launches a ball of ice at an enemy unit, dealing damage and temporarily slowing their Movement and Attack Speeds.",
-          "tooltip": "Nunu launches a ball of ice at an enemy unit, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> their Movement Speed by {{ slowamount*-100 }}% and Attack Speed by 25% for 3 seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "id": "NunuE",
+          "name": "Snowball Barrage",
+          "description": "Nunu throws multiple snowballs that damage enemies.  When he's finished, Willump roots any champions or large monsters that were hit by a snowball.",
+          "tooltip": "Nunu throws three snowballs, dealing <magicDamage>{{ totalsnowballdamage }} magic damage</magicDamage> per snowball and <status>Slowing</status> enemies hit by all three by {{ slowamount*-100 }}% for {{ slowduration }} second. Nunu can <recast>Recast</recast> this up to twice more.<br /><br />After {{ totalspellduration }} seconds, Nunu <status>Roots</status> all nearby enemies that had been <status>Slowed</status> by the snowballs for {{ rootduration }} seconds and deals an additional <magicDamage>{{ totalrootdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
-              "Mana Cost",
-              "Movement Slow"
+              "Movement Slow",
+              "Cooldown",
+              "Mana Cost"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cost }} -> {{ costNL }}",
-              "{{ slowamount*-100.000000 }}% -> {{ slowamountnl*-100.000000 }}%"
+              "{{ slowamount*-100.000000 }}% -> {{ slowamountnl*-100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            6,
-            6,
-            6,
-            6,
-            6
+            14,
+            13,
+            12,
+            11,
+            10
           ],
-          "cooldownBurn": "6",
+          "cooldownBurn": "14/13/12/11/10",
           "cost": [
-            75,
-            85,
-            95,
-            105,
-            115
+            50,
+            55,
+            60,
+            65,
+            70
           ],
-          "costBurn": "75/85/95/105/115",
+          "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
@@ -630,16 +840,16 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            550,
-            550,
-            550,
-            550,
-            550
+            625,
+            625,
+            625,
+            625,
+            625
           ],
-          "rangeBurn": "550",
+          "rangeBurn": "625",
           "image": {
-            "full": "Jade_NunuE.png",
-            "sprite": "spell9.png",
+            "full": "NunuE.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 0,
             "y": 96,
@@ -649,17 +859,19 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_NunuR",
+          "id": "NunuR",
           "name": "Absolute Zero",
-          "description": "Nunu begins to sap the area of heat, slowing all nearby enemies. When the spell ends, he deals massive damage to all enemies caught in the area.",
-          "tooltip": "Nunu saps the area of heat, channeling up to 3 seconds, enemies within the zone are <status>Slowed</status> by 50% and their <attackSpeed>Attack Speed</attackSpeed> reduced by 25%.<br /><br />Enemies caught in the area when the channel ends receive up to <magicDamage>{{ totaldamage }} magic damage</magicDamage>, depending on how long the spell was channeled.</mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "Nunu & Willump create a powerful blizzard in an area that slows enemies and deals massive damage at the end.",
+          "tooltip": "Nunu and Willump channel a powerful blizzard for up to {{ channelduration }} seconds. Enemies inside are <status>Slowed</status> by {{ slowstartamount*-100 }}%, increasing to {{ maxslowamount*-100 }}% over the duration. Nunu and Willump also gain <shield>{{ totalshieldamount }} Shield</shield> for the duration before decaying over {{ shielddecayduration }} seconds afterwards.<br /><br />When the blizzard ends, it detonates, dealing up to <magicDamage>{{ maximumdamage }} magic damage</magicDamage> based on channel time. Nunu and Willump can <recast>Recast</recast> to end the blizzard early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
+              "Shield Amount",
               "Cooldown"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ baseshieldamount }} -> {{ baseshieldamountNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -753,8 +965,8 @@
           ],
           "rangeBurn": "650",
           "image": {
-            "full": "Jade_NunuR.png",
-            "sprite": "spell9.png",
+            "full": "NunuR.png",
+            "sprite": "spell10.png",
             "group": "spell",
             "x": 48,
             "y": 96,
@@ -765,14 +977,14 @@
         }
       ],
       "passive": {
-        "name": "Visionary",
-        "description": "Nunu can cast a spell for free after 5 attacks.",
+        "name": "Call of the Freljord",
+        "description": "Nunu increases the attack speed and Move Speed of Willump and a nearby ally, and causes Willump's basic attacks to damage enemies around the target.",
         "image": {
-          "full": "Jade_NunuPassive.png",
-          "sprite": "passive2.png",
+          "full": "NunuPassive.png",
+          "sprite": "passive3.png",
           "group": "passive",
           "x": 288,
-          "y": 96,
+          "y": 0,
           "w": 48,
           "h": 48
         }

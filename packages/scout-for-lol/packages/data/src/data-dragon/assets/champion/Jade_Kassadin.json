@@ -1,133 +1,247 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Kassadin": {
-      "id": "Jade_Kassadin",
-      "key": "60038",
+      "id": "Kassadin",
+      "key": "38",
       "name": "Kassadin",
-      "title": "The Void Walker",
+      "title": "the Void Walker",
       "image": {
-        "full": "Jade_Kassadin.png",
-        "sprite": "champion2.png",
+        "full": "Kassadin.png",
+        "sprite": "champion1.png",
         "group": "champion",
-        "x": 48,
-        "y": 48,
+        "x": 432,
+        "y": 96,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60038000",
+          "id": "38000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60038003",
+          "id": "38001",
+          "num": 1,
+          "name": "Festival Kassadin",
+          "chromas": false
+        },
+        {
+          "id": "38002",
+          "num": 2,
+          "name": "Deep One Kassadin",
+          "chromas": false
+        },
+        {
+          "id": "38003",
           "num": 3,
           "name": "Pre-Void Kassadin",
           "chromas": false
         },
         {
-          "id": "60038004",
+          "id": "38004",
           "num": 4,
           "name": "Harbinger Kassadin",
           "chromas": false
         },
         {
-          "id": "60038005",
+          "id": "38005",
           "num": 5,
           "name": "Cosmic Reaver Kassadin",
           "chromas": false
         },
         {
-          "id": "60038014",
+          "id": "38006",
+          "num": 6,
+          "name": "Count Kassadin",
+          "chromas": true
+        },
+        {
+          "id": "38008",
+          "num": 8,
+          "name": "Count Kassadin (Ruby)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "38009",
+          "num": 9,
+          "name": "Count Kassadin (Citrine)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "38010",
+          "num": 10,
+          "name": "Count Kassadin (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "38011",
+          "num": 11,
+          "name": "Count Kassadin (Emerald)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "38012",
+          "num": 12,
+          "name": "Count Kassadin (Obsidian)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "38013",
+          "num": 13,
+          "name": "Count Kassadin (Pearl)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "38014",
           "num": 14,
           "name": "Hextech Kassadin",
           "chromas": false
         },
         {
-          "id": "60038015",
+          "id": "38015",
           "num": 15,
           "name": "Shockblade Kassadin",
           "chromas": false
         },
         {
-          "id": "60038016",
+          "id": "38016",
           "num": 16,
           "name": "Shockblade Kassadin (Ruby)",
-          "chromas": false,
+          "chromas": true,
           "parentSkin": 15
         },
         {
-          "id": "60038017",
+          "id": "38017",
           "num": 17,
           "name": "Shockblade Kassadin (Catseye)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60038018",
+          "id": "38018",
           "num": 18,
           "name": "Shockblade Kassadin (Emerald)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60038019",
+          "id": "38019",
           "num": 19,
           "name": "Shockblade Kassadin (Amethyst)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60038020",
+          "id": "38020",
           "num": 20,
           "name": "Shockblade Kassadin (Rose Quartz)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60038021",
+          "id": "38021",
           "num": 21,
           "name": "Shockblade Kassadin (Turquoise)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60038022",
+          "id": "38022",
           "num": 22,
           "name": "Shockblade Kassadin (Obsidian)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60038023",
+          "id": "38023",
           "num": 23,
           "name": "Shockblade Kassadin (Pearl)",
           "chromas": false,
           "parentSkin": 15
         },
         {
-          "id": "60038301",
-          "num": 301,
-          "name": "Classic Kassadin",
+          "id": "38024",
+          "num": 24,
+          "name": "Dragonmancer Kassadin",
           "chromas": false
         },
         {
-          "id": "60038302",
-          "num": 302,
-          "name": "Classic Kassadin (Pre-Void)",
+          "id": "38025",
+          "num": 25,
+          "name": "Dragonmancer Kassadin (Ruby)",
           "chromas": true,
-          "parentSkin": 301
+          "parentSkin": 24
+        },
+        {
+          "id": "38026",
+          "num": 26,
+          "name": "Dragonmancer Kassadin (Citrine)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "38027",
+          "num": 27,
+          "name": "Dragonmancer Kassadin (Emerald)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "38028",
+          "num": 28,
+          "name": "Dragonmancer Kassadin (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "38029",
+          "num": 29,
+          "name": "Dragonmancer Kassadin (Sapphire)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "38030",
+          "num": 30,
+          "name": "Dragonmancer Kassadin (Amethyst)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "38031",
+          "num": 31,
+          "name": "Dragonmancer Kassadin (Pearl)",
+          "chromas": false,
+          "parentSkin": 24
+        },
+        {
+          "id": "38032",
+          "num": 32,
+          "name": "Dragonmancer Kassadin (Obsidian)",
+          "chromas": false,
+          "parentSkin": 24
         }
       ],
-      "lore": "- Force Pulse (E) requires 6 casts around him to then cast<br>- Riftwalk (R) can stack 10 times<br>- Void Stone (P) transforms some magic damage prevented into attack speed",
-      "blurb": "- Force Pulse (E) requires 6 casts around him to then cast<br>- Riftwalk (R) can stack 10 times<br>- Void Stone (P) transforms some magic damage prevented into attack speed",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Cutting a burning swath through the darkest places of the world, Kassadin knows his days are numbered. A widely traveled Shuriman guide and adventurer, he had chosen to raise a family among the peaceful southern tribes—until the day his village was consumed by the Void. He vowed vengeance, combining a number of arcane artifacts and forbidden technologies for the struggle ahead. Finally, Kassadin set out for the wastelands of Icathia, ready to face any monstrous Void-construct in his search for their self-proclaimed prophet, Malzahar.",
+      "blurb": "Cutting a burning swath through the darkest places of the world, Kassadin knows his days are numbered. A widely traveled Shuriman guide and adventurer, he had chosen to raise a family among the peaceful southern tribes—until the day his village was...",
+      "allytips": [
+        "Kassadin has multiple item paths; he can go caster via Mana and Ability Power or anti-caster with Cooldown Reduction and Magic Resist.",
+        "Kassadin's ultimate has many uses and is on a shorter cooldown than most, use it often.",
+        "Try to get the Ancient Golem buff to counteract Riftwalk's increasing Mana cost."
+      ],
+      "enemytips": [
+        "Kassadin deals mostly magic damage. If he's doing well consider buying magic resist items like Mercury's Treads and Banshee's Veil.",
+        "Each time Kassadin consecutively uses Riftwalk, he pays more and more mana. Keep this in mind as you chase him.",
+        "It takes 6 spell casts for Kassadin's slow, Force Pulse, to become castable. If he levels up that ability, judiciously use your own skills while laning against him."
+      ],
       "tags": [
         "Assassin",
         "Mage"
@@ -140,62 +254,64 @@
         "difficulty": 8
       },
       "stats": {
-        "hp": 511,
-        "hpperlevel": 78,
-        "mp": 275,
-        "mpperlevel": 45,
-        "movespeed": 340,
-        "armor": 21.2,
-        "armorperlevel": 3.2,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
-        "attackrange": 125,
-        "hpregen": 7.45,
+        "hp": 646,
+        "hpperlevel": 113,
+        "mp": 400,
+        "mpperlevel": 87,
+        "movespeed": 335,
+        "armor": 21,
+        "armorperlevel": 4,
+        "spellblock": 30,
+        "spellblockperlevel": 1.3,
+        "attackrange": 150,
+        "hpregen": 6,
         "hpregenperlevel": 0.5,
-        "mpregen": 7.5,
-        "mpregenperlevel": 0.6,
+        "mpregen": 6,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 56.2,
+        "attackdamage": 59,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 3.7,
         "attackspeed": 0.64
       },
       "spells": [
         {
-          "id": "Jade_KassadinQ",
+          "id": "NullLance",
           "name": "Null Sphere",
-          "description": "Kassadin fires an ethereal bolt of void energy, dealing damage and silencing the target for a duration.",
-          "tooltip": "Kassadin fires a void bolt, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Silencing</status> the target for {{ silenceduration }} second(s).{{ spellmodifierdescriptionappend }}",
+          "description": "Kassadin fires an orb of void energy at a target, dealing damage and interrupting channels. The excess energy forms around himself, granting a temporary shield that absorbs magic damage.",
+          "tooltip": "Kassadin fires an orb of void energy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and interrupting channels. Kassadin also gains <shield>{{ totalshield }} Magic Shield</shield> for 1.5 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage",
-              "Silence Duration",
-              "@AbilityResourceName@ Cost"
+              "Damage",
+              "Shield Amount",
+              "@AbilityResourceName@ Cost",
+              "Cooldown"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ silenceduration }} -> {{ silencedurationNL }}",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ shieldamount }} -> {{ shieldamountNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
             9,
-            9,
-            9,
-            9,
-            9
+            8.5,
+            8,
+            7.5,
+            7
           ],
-          "cooldownBurn": "9",
+          "cooldownBurn": "9/8.5/8/7.5/7",
           "cost": [
+            60,
+            65,
             70,
-            80,
-            90,
-            100,
-            110
+            75,
+            80
           ],
-          "costBurn": "70/80/90/100/110",
+          "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
@@ -295,10 +411,10 @@
           ],
           "rangeBurn": "650",
           "image": {
-            "full": "Jade_KassadinQ.png",
-            "sprite": "spell7.png",
+            "full": "NullLance.png",
+            "sprite": "spell6.png",
             "group": "spell",
-            "x": 384,
+            "x": 0,
             "y": 144,
             "w": 48,
             "h": 48
@@ -306,37 +422,39 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_KassadinW",
+          "id": "NetherBlade",
           "name": "Nether Blade",
-          "description": "Passive: Kassadin's basic attacks restore Mana. The Mana restored is tripled against enemy champions. Active: Kassadin's basic attacks deal additional magic damage.",
-          "tooltip": "<spellPassive>Passive: </spellPassive>Kassadin's basic attacks draw energy from the void, restoring <scaleMana>{{ managainamount }} Mana</scaleMana> each hit. If the target is an enemy champion, the <scaleMana>Mana</scaleMana> restored is tripled to {{ managainamount*3 }}.<br /><br /><spellActive>Active: </spellActive>Kassadin charges his nether blade for 5 seconds causing his basic attacks to deal an additional <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "description": "Passive: Kassadin's basic attacks deal bonus magic damage. Active: Kassadin's next basic attack deals significant bonus magic damage and restores Mana.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Kassadin's Attacks deal an additional <magicDamage>{{ onhitdamage }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Kassadin charges his blade, causing his next Attack to deal <magicDamage>{{ activedamage }} magic damage</magicDamage> and restore <scaleMana>{{ missingmanaratio }}% missing Mana</scaleMana>, increased to <scaleMana>{{ championmissingmanaratio }}%</scaleMana> against champions.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage",
-              "Base Mana Restore"
+              "Active Damage",
+              "Base Mana Restore",
+              "Champion Mana Restore"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ managainamount }} -> {{ managainamountNL }}"
+              "{{ activebasedamage }} -> {{ activebasedamageNL }}",
+              "{{ missingmanaratio }}% -> {{ missingmanaratioNL }}%",
+              "{{ championmissingmanaratio }}% -> {{ championmissingmanaratioNL }}%"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            12,
-            12,
-            12,
-            12,
-            12
+            7,
+            7,
+            7,
+            7,
+            7
           ],
-          "cooldownBurn": "12",
+          "cooldownBurn": "7",
           "cost": [
-            25,
-            25,
-            25,
-            25,
-            25
+            1,
+            1,
+            1,
+            1,
+            1
           ],
-          "costBurn": "25",
+          "costBurn": "1",
           "datavalues": {},
           "effect": [
             null,
@@ -348,11 +466,11 @@
               6
             ],
             [
-              20,
-              20,
-              20,
-              20,
-              20
+              25,
+              25,
+              25,
+              25,
+              25
             ],
             [
               50,
@@ -414,7 +532,7 @@
           "effectBurn": [
             null,
             "4/4.5/5/5.5/6",
-            "20",
+            "25",
             "50/75/100/125/150",
             "20/22.5/25/27.5/30",
             "0",
@@ -436,10 +554,10 @@
           ],
           "rangeBurn": "1",
           "image": {
-            "full": "Jade_KassadinW.png",
-            "sprite": "spell7.png",
+            "full": "NetherBlade.png",
+            "sprite": "spell6.png",
             "group": "spell",
-            "x": 432,
+            "x": 48,
             "y": 144,
             "w": 48,
             "h": 48
@@ -447,37 +565,41 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_KassadinE",
+          "id": "ForcePulse",
           "name": "Force Pulse",
           "description": "Kassadin draws energy from spells cast in his vicinity. Upon charging up, Kassadin can use Force Pulse to damage and slow enemies in a cone in front of him.",
-          "tooltip": "Kassadin draws energy from spells cast in his vicinity (1800 range), gaining a charge whenever a spell is cast near him. Upon reaching 6 charges, Kassadin can use <spellName>Force Pulse</spellName> to deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slow</status> enemies by {{ movespeedmod*-100 }}% for 3 seconds in a cone in front of him.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Force Pulse's</spellName> Cooldown is reduced by {{ reductionperspellcast }} second whenever any Ability is used near Kassadin.<br /><br /><spellActive>Active:</spellActive> Kassadin unleashes a void pulse, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowamount }}% for {{ slowduration }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage",
-              "Slow"
+              "Damage",
+              "Slow",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ damage }} -> {{ damageNL }}",
-              "{{ movespeedmod*-100.000000 }}% -> {{ movespeedmodnl*-100.000000 }}%"
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount }}% -> {{ slowamountNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            6,
-            6,
-            6,
-            6,
-            6
+            21,
+            20,
+            19,
+            18,
+            17
           ],
-          "cooldownBurn": "6",
+          "cooldownBurn": "21/20/19/18/17",
           "cost": [
-            80,
-            80,
-            80,
-            80,
+            60,
+            65,
+            70,
+            75,
             80
           ],
-          "costBurn": "80",
+          "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
@@ -490,10 +612,10 @@
             ],
             [
               50,
+              55,
               60,
-              70,
-              80,
-              90
+              65,
+              70
             ],
             [
               1,
@@ -555,7 +677,7 @@
           "effectBurn": [
             null,
             "0",
-            "50/60/70/80/90",
+            "50/55/60/65/70",
             "1",
             "0",
             "0",
@@ -577,44 +699,46 @@
           ],
           "rangeBurn": "400",
           "image": {
-            "full": "Jade_KassadinE.png",
-            "sprite": "spell8.png",
+            "full": "ForcePulse.png",
+            "sprite": "spell6.png",
             "group": "spell",
-            "x": 0,
-            "y": 0,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_KassadinR",
+          "id": "RiftWalk",
           "name": "Riftwalk",
-          "description": "Kassadin teleports to a nearby location dealing damage to nearby enemy units. Additionally, multiple Riftwalks in a short period of time cause them to cost additional Mana and deal additional damage.",
-          "tooltip": "Kassadin teleports to a nearby location dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to surrounding enemy units. Additionally, each subsequent <spellName>Riftwalk</spellName> within the next 8 seconds costs <scaleMana>100 additional Mana</scaleMana> and deals <magicDamage>{{ damage }} additional damage</magicDamage>, stacks up to 10 times.{{ spellmodifierdescriptionappend }}",
+          "description": "Kassadin teleports to a nearby location dealing damage to nearby enemy units. Multiple Riftwalks in a short period of time cost additional Mana but also deal additional damage.",
+          "tooltip": "Kassadin teleports to a nearby location, dealing <magicDamage>{{ basedamage }} magic damage</magicDamage>.<br /><br />Each subsequent use of this Ability within the next {{ rstackduration }} seconds doubles the Mana cost and deals an additional <magicDamage>{{ bonusdamage }} magic damage</magicDamage>. The cost and damage increases can stack up to {{ maxstacks }} times.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage",
+              "Damage",
+              "Damage Per Stack",
               "Cooldown"
             ],
             "effect": [
-              "{{ damage }} -> {{ damageNL }}",
+              "{{ rbasedamage }} -> {{ rbasedamageNL }}",
+              "{{ stackdamage }} -> {{ stackdamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            7,
-            6,
-            5
+            5,
+            3.5,
+            2
           ],
-          "cooldownBurn": "7/6/5",
+          "cooldownBurn": "5/3.5/2",
           "cost": [
-            100,
-            100,
-            100
+            40,
+            40,
+            40
           ],
-          "costBurn": "100",
+          "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
@@ -686,17 +810,17 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            700,
-            700,
-            700
+            500,
+            500,
+            500
           ],
-          "rangeBurn": "700",
+          "rangeBurn": "500",
           "image": {
-            "full": "Jade_KassadinR.png",
-            "sprite": "spell8.png",
+            "full": "RiftWalk.png",
+            "sprite": "spell6.png",
             "group": "spell",
-            "x": 48,
-            "y": 0,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -705,13 +829,13 @@
       ],
       "passive": {
         "name": "Void Stone",
-        "description": "Kassadin takes 15% reduced <magicDamage>magic damage</magicDamage> and transforms this damage into bonus <attackSpeed>Attack Speed</attackSpeed>.",
+        "description": "Kassadin takes reduced magic damage and ignores unit collision.",
         "image": {
-          "full": "Jade_Kassadin_Passive.png",
-          "sprite": "passive2.png",
+          "full": "Kassadin_Passive.png",
+          "sprite": "passive1.png",
           "group": "passive",
-          "x": 48,
-          "y": 48,
+          "x": 432,
+          "y": 96,
           "w": 48,
           "h": 48
         }

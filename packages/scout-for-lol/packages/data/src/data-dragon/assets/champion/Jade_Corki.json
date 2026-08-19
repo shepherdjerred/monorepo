@@ -1,245 +1,335 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Corki": {
-      "id": "Jade_Corki",
-      "key": "60042",
+      "id": "Corki",
+      "key": "42",
       "name": "Corki",
-      "title": "The Daring Bombardier",
+      "title": "the Daring Bombardier",
       "image": {
-        "full": "Jade_Corki.png",
-        "sprite": "champion1.png",
+        "full": "Corki.png",
+        "sprite": "champion0.png",
         "group": "champion",
-        "x": 384,
+        "x": 192,
         "y": 96,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60042000",
+          "id": "42000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60042001",
+          "id": "42001",
           "num": 1,
           "name": "UFO Corki",
           "chromas": false
         },
         {
-          "id": "60042005",
+          "id": "42002",
+          "num": 2,
+          "name": "Ice Toboggan Corki",
+          "chromas": false
+        },
+        {
+          "id": "42003",
+          "num": 3,
+          "name": "Red Baron Corki",
+          "chromas": false
+        },
+        {
+          "id": "42004",
+          "num": 4,
+          "name": "Hot Rod Corki",
+          "chromas": false
+        },
+        {
+          "id": "42005",
           "num": 5,
           "name": "Urfrider Corki",
           "chromas": false
         },
         {
-          "id": "60042006",
+          "id": "42006",
           "num": 6,
           "name": "Dragonwing Corki",
+          "chromas": true
+        },
+        {
+          "id": "42007",
+          "num": 7,
+          "name": "Fnatic Corki",
           "chromas": false
         },
         {
-          "id": "60042008",
+          "id": "42008",
           "num": 8,
           "name": "Arcade Corki",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60042009",
+          "id": "42009",
           "num": 9,
           "name": "Arcade Corki (Pearl)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60042010",
+          "id": "42010",
           "num": 10,
           "name": "Arcade Corki (Ruby)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60042011",
+          "id": "42011",
           "num": 11,
           "name": "Arcade Corki (Turquoise)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60042012",
+          "id": "42012",
           "num": 12,
           "name": "Arcade Corki (Citrine)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60042013",
+          "id": "42013",
           "num": 13,
           "name": "Arcade Corki (Sapphire)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60042014",
+          "id": "42014",
           "num": 14,
           "name": "Arcade Corki (Obsidian)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60042015",
+          "id": "42015",
           "num": 15,
           "name": "Arcade Corki (Catseye)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60042016",
+          "id": "42016",
           "num": 16,
           "name": "Arcade Corki (Rose Quartz)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60042017",
+          "id": "42017",
           "num": 17,
           "name": "Dragonwing Corki (Golden)",
           "chromas": false,
           "parentSkin": 6
         },
         {
-          "id": "60042018",
+          "id": "42018",
           "num": 18,
           "name": "Corgi Corki",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60042019",
+          "id": "42019",
           "num": 19,
           "name": "Corgi Corki (Obsidian)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60042020",
+          "id": "42020",
           "num": 20,
           "name": "Corgi Corki (Pearl)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60042021",
+          "id": "42021",
           "num": 21,
           "name": "Corgi Corki (Ruby)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60042022",
+          "id": "42022",
           "num": 22,
           "name": "Corgi Corki (Amethyst)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60042023",
+          "id": "42023",
           "num": 23,
           "name": "Corgi Corki (Rainbow)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60042024",
+          "id": "42024",
           "num": 24,
           "name": "Corgi Corki (Rose Quartz)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60042025",
+          "id": "42025",
           "num": 25,
           "name": "Corgi Corki (Aquamarine)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60042026",
+          "id": "42026",
           "num": 26,
           "name": "Astronaut Corki",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60042027",
+          "id": "42027",
           "num": 27,
           "name": "Astronaut Corki (Ruby)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60042028",
+          "id": "42028",
           "num": 28,
           "name": "Astronaut Corki (Sapphire)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60042029",
+          "id": "42029",
           "num": 29,
           "name": "Astronaut Corki (Catseye)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60042030",
+          "id": "42030",
           "num": 30,
           "name": "Astronaut Corki (Rose Quartz)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60042031",
+          "id": "42031",
           "num": 31,
           "name": "Astronaut Corki (Emerald)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60042032",
+          "id": "42032",
           "num": 32,
           "name": "Astronaut Corki (Tanzanite)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60042033",
+          "id": "42033",
           "num": 33,
           "name": "Astronaut Corki (Turquoise)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60042034",
+          "id": "42034",
           "num": 34,
           "name": "Astronaut Corki (Citrine)",
           "chromas": false,
           "parentSkin": 26
         },
         {
-          "id": "60042035",
+          "id": "42035",
           "num": 35,
           "name": "Dragonwing Corki (Meteorite)",
           "chromas": false,
           "parentSkin": 6
+        },
+        {
+          "id": "42036",
+          "num": 36,
+          "name": "Brick Toy Corki",
+          "chromas": true
+        },
+        {
+          "id": "42037",
+          "num": 37,
+          "name": "Brick Toy Corki (Ruby)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42038",
+          "num": 38,
+          "name": "Brick Toy Corki (Emerald)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42039",
+          "num": 39,
+          "name": "Brick Toy Corki (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42040",
+          "num": 40,
+          "name": "Brick Toy Corki (Sapphire)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42041",
+          "num": 41,
+          "name": "Brick Toy Corki (Turquoise)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42042",
+          "num": 42,
+          "name": "Brick Toy Corki (Amethyst)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42043",
+          "num": 43,
+          "name": "Brick Toy Corki (Pearl)",
+          "chromas": false,
+          "parentSkin": 36
+        },
+        {
+          "id": "42044",
+          "num": 44,
+          "name": "Brick Toy Corki (Obsidian)",
+          "chromas": false,
+          "parentSkin": 36
         }
       ],
-      "lore": "- Phosphorus Bomb (Q) is an instant explosion",
-      "blurb": "- Phosphorus Bomb (Q) is an instant explosion",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "The yordle pilot Corki loves two things above all others: flying, and his glamorous mustache... though not necessarily in that order. After leaving Bandle City, he settled in Piltover and fell in love with the wondrous machines he found there. He dedicated himself to the development of flying contraptions, leading an aerial defense force of seasoned veterans known as the Screaming Yipsnakes. Calm under fire, Corki patrols the skies around his adopted home, and has never encountered a problem that a good missile barrage couldn't solve.",
+      "blurb": "The yordle pilot Corki loves two things above all others: flying, and his glamorous mustache... though not necessarily in that order. After leaving Bandle City, he settled in Piltover and fell in love with the wondrous machines he found there. He...",
+      "allytips": [
+        "Phosphorus Bomb can be used to reveal enemy units that might be hiding in a nearby patch of brush.",
+        "Valkyrie can be used defensively as well, so try using it for a quick escape.",
+        "Corki can continue to attack while using Gatling Gun. Maximizing Gatling Gun is key to mastering Corki."
+      ],
+      "enemytips": [
+        "Watch out for Corki's Missile Barrage. They deal splash damage, so you can get hit even when hiding behind minions.",
+        "Corki is vulnerable after he uses his Valkyrie or Special Delivery, so try switching focus to him if he uses them to enter a fight."
+      ],
       "tags": [
         "Marksman",
         "Mage"
@@ -252,336 +342,54 @@
         "difficulty": 6
       },
       "stats": {
-        "hp": 457,
-        "hpperlevel": 82,
-        "mp": 280,
-        "mpperlevel": 37,
+        "hp": 610,
+        "hpperlevel": 100,
+        "mp": 350,
+        "mpperlevel": 40,
         "movespeed": 325,
-        "armor": 21,
-        "armorperlevel": 3.5,
-        "spellblock": 30,
-        "spellblockperlevel": 0,
+        "armor": 27,
+        "armorperlevel": 4.5,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 550,
-        "hpregen": 5.05,
+        "hpregen": 5.5,
         "hpregenperlevel": 0.55,
-        "mpregen": 7.05,
-        "mpregenperlevel": 0.55,
+        "mpregen": 7.4,
+        "mpregenperlevel": 0.7,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 51.2,
+        "attackdamage": 52,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 2.3,
-        "attackspeed": 0.658
+        "attackspeedperlevel": 2.8,
+        "attackspeed": 0.644
       },
       "spells": [
         {
-          "id": "Jade_CorkiQ",
+          "id": "PhosphorusBomb",
           "name": "Phosphorus Bomb",
-          "description": "Corki fires a flash bomb at a target location. This attack reveals non-stealthed units around the blast and champions for 6 seconds.",
-          "tooltip": "Deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>  to enemies in a target area. In addition, the blast <status>Reveals</status> the area and champions hit by the blast for 6 seconds (does not reveal stealth).</mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "Corki fires a flash bomb at a target location, dealing magic damage to enemies in the area. This attack additionally reveals units in the area for a duration.",
+          "tooltip": "Corki lobs a bomb, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. The area and champions hit are revealed for {{ revealduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
+              "Cooldown",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
+            9,
+            8.5,
             8,
-            8,
-            8,
-            8,
-            8
+            7.5,
+            7
           ],
-          "cooldownBurn": "8",
-          "cost": [
-            80,
-            90,
-            100,
-            110,
-            120
-          ],
-          "costBurn": "80/90/100/110/120",
-          "datavalues": {},
-          "effect": [
-            null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
-          "vars": [],
-          "costType": " {{ abilityresourcename }}",
-          "maxammo": "-1",
-          "range": [
-            600,
-            600,
-            600,
-            600,
-            600
-          ],
-          "rangeBurn": "600",
-          "image": {
-            "full": "Jade_CorkiQ.png",
-            "sprite": "spell6.png",
-            "group": "spell",
-            "x": 288,
-            "y": 96,
-            "w": 48,
-            "h": 48
-          },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
-        },
-        {
-          "id": "Jade_CorkiW",
-          "name": "Valkyrie",
-          "description": "Corki surges to target location, dropping bombs that create a trail of destruction for opponents who remain in the fire.",
-          "tooltip": "Corki surges to target location, dealing <magicDamage>{{ totaldamage }} magic damage </magicDamage>per second to enemies in the fire left along his path.</mainText>{{ spellmodifierdescriptionappend }}",
-          "leveltip": {
-            "label": [
-              "Damage Over Time",
-              "Cooldown"
-            ],
-            "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
-            ]
-          },
-          "maxrank": 5,
-          "cooldown": [
-            26,
-            23,
-            20,
-            17,
-            14
-          ],
-          "cooldownBurn": "26/23/20/17/14",
-          "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
-          ],
-          "costBurn": "50",
-          "datavalues": {},
-          "effect": [
-            null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
-          "vars": [],
-          "costType": " {{ abilityresourcename }}",
-          "maxammo": "-1",
-          "range": [
-            600,
-            600,
-            600,
-            600,
-            600
-          ],
-          "rangeBurn": "600",
-          "image": {
-            "full": "Jade_CorkiW.png",
-            "sprite": "spell6.png",
-            "group": "spell",
-            "x": 336,
-            "y": 96,
-            "w": 48,
-            "h": 48
-          },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
-        },
-        {
-          "id": "Jade_CorkiE",
-          "name": "Gatling Gun",
-          "description": "Corki's gatling gun rapidly fires in a cone in front of him, dealing damage and reducing enemy armor.",
-          "tooltip": "Corki's gatling gun fires in a cone in front of him for 4 seconds, dealing <physicalDamage>{{ totaldamagetooltiponly }} physical damage</physicalDamage> and <status>reducing {{ armormod*-1 }} armor</status> per second. The armor reduction stacks and lasts 2 seconds.</mainText>{{ spellmodifierdescriptionappend }}",
-          "leveltip": {
-            "label": [
-              "Damage",
-              "Armor Reduction",
-              "@AbilityResourceName@ Cost"
-            ],
-            "effect": [
-              "{{ tooltipdamage }} -> {{ tooltipdamageNL }}",
-              "{{ armormod*-1.000000 }} -> {{ armormodnl*-1.000000 }}",
-              "{{ cost }} -> {{ costNL }}"
-            ]
-          },
-          "maxrank": 5,
-          "cooldown": [
-            16,
-            16,
-            16,
-            16,
-            16
-          ],
-          "cooldownBurn": "16",
+          "cooldownBurn": "9/8.5/8/7.5/7",
           "cost": [
             60,
             65,
@@ -681,6 +489,149 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
+            825,
+            825,
+            825,
+            825,
+            825
+          ],
+          "rangeBurn": "825",
+          "image": {
+            "full": "PhosphorusBomb.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 0,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "CarpetBomb",
+          "name": "Valkyrie",
+          "description": "Corki flies a short distance, dropping bombs that create a trail of fire that damages opponents who remain in it.",
+          "tooltip": "Corki flies over and scorches a path, burning it for {{ trailduration }} seconds. Enemies in the fire take up to <magicDamage>{{ maximumdamage }} magic damage</magicDamage> over the duration.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage Over Time",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            20,
+            18,
+            16,
+            14,
+            12
+          ],
+          "cooldownBurn": "20/18/16/14/12",
+          "cost": [
+            80,
+            85,
+            90,
+            95,
+            100
+          ],
+          "costBurn": "80/85/90/95/100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
             600,
             600,
             600,
@@ -689,44 +640,185 @@
           ],
           "rangeBurn": "600",
           "image": {
-            "full": "Jade_CorkiE.png",
-            "sprite": "spell6.png",
+            "full": "CarpetBomb.png",
+            "sprite": "spell3.png",
             "group": "spell",
-            "x": 384,
-            "y": 96,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_CorkiR",
-          "name": "Missile Barrage",
-          "description": "Corki fires a missile toward his target location that explodes on impact, dealing damage to enemies in an area. Corki stores one missile every 12 seconds up to 7 missiles total. Every 3rd missile will be a Big One, dealing extra damage.",
-          "tooltip": "Corki fires a missile toward his targeted location that will collide with the first enemy it hits. Each missile deals <magicDamage>{{ totaldamage }}  magic damage</magicDamage> in an area.<br /><br />This Ability has 7 charges ({{ ammorechargetime }} second refresh).<br /><br />Every 3rd missile will be a Big One, dealing <magicDamage>{{ totaldamagebig }} magic damage</magicDamage>  instead.</mainText>{{ spellmodifierdescriptionappend }}",
+          "id": "GGun",
+          "name": "Gatling Gun",
+          "description": "Corki's gatling gun rapidly fires in a cone in front of him, dealing damage and reducing enemy Armor and Magic Resist.",
+          "tooltip": "Corki fires a gatling gun in front of him, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> over {{ sprayduration }} seconds and shredding up to <scaleArmor>{{ shredmax*-1 }} Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
-              "Recharge Time"
+              "Defense Reduction",
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
+              "{{ shredmax*-1.000000 }} -> {{ shredmaxnl*-1.000000 }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
+          "cooldownBurn": "12",
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            600,
+            600,
+            600,
+            600,
+            600
+          ],
+          "rangeBurn": "600",
+          "image": {
+            "full": "GGun.png",
+            "sprite": "spell3.png",
+            "group": "spell",
+            "x": 96,
+            "y": 48,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "MissileBarrage",
+          "name": "Missile Barrage",
+          "description": "Corki fires a missile toward his target location that explodes on impact, dealing damage to enemies in an area. Corki stores missiles over time, up to a maximum. Every 3rd missile fired will be a Big One, dealing extra damage.",
+          "tooltip": "Corki fires a missile that explodes on the first enemy hit, dealing <physicalDamage>{{ rsmallmissiledamage }} physical damage</physicalDamage> to surrounding enemies. Every third missile instead deals <physicalDamage>{{ rbigmissiledamage }} physical damage</physicalDamage>.<br /><br />This Ability has up to {{ maxammotooltip }} charges. Basic attacks against champions reduce the time between charges by <attention>{{ attackrefund }}</attention> seconds on hit.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            1.2,
-            1.2,
-            1.2
+            2,
+            2,
+            2
           ],
-          "cooldownBurn": "1.2",
+          "cooldownBurn": "2",
           "cost": [
-            20,
-            20,
-            20
+            35,
+            35,
+            35
           ],
-          "costBurn": "20",
+          "costBurn": "35",
           "datavalues": {},
           "effect": [
             null,
@@ -796,7 +888,7 @@
           ],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
-          "maxammo": "7",
+          "maxammo": "4",
           "range": [
             1225,
             1225,
@@ -804,11 +896,11 @@
           ],
           "rangeBurn": "1225",
           "image": {
-            "full": "Jade_CorkiR.png",
-            "sprite": "spell6.png",
+            "full": "MissileBarrage.png",
+            "sprite": "spell3.png",
             "group": "spell",
-            "x": 432,
-            "y": 96,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -816,13 +908,13 @@
         }
       ],
       "passive": {
-        "name": "Hextech Shrapnel Shells",
-        "description": "Corki's basic attacks deal bonus true damage to minions, monsters, and champions.",
+        "name": "Hextech Munitions",
+        "description": "A percentage of Corki's basic attack damage is dealt as bonus <trueDamage>true damage</trueDamage>.",
         "image": {
-          "full": "Jade_Corki_RapidReload.png",
-          "sprite": "passive1.png",
+          "full": "Corki_RapidReload.png",
+          "sprite": "passive0.png",
           "group": "passive",
-          "x": 384,
+          "x": 192,
           "y": 96,
           "w": 48,
           "h": 48

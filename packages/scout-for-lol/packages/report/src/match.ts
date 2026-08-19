@@ -13,6 +13,7 @@ import {
   getOutcome,
   getTeams,
   isClassicQueueType,
+  isClassicAssetMode,
   ClassicQueueTypeSchema,
   participantToChampion,
   QueueTypeSchema,
@@ -57,15 +58,20 @@ export function toMatch(
   if (queueType === "arena") {
     throw new Error("arena matches are not supported");
   }
-  if (isClassicQueueType(queueType)) {
+  if (
+    isClassicQueueType(queueType) &&
+    isClassicAssetMode(rawMatch.info.queueId, rawMatch.info.gameMode)
+  ) {
     throw new Error(
       `${ClassicQueueTypeSchema.parse(queueType)} matches are not supported`,
     );
   }
   const completedQueueType =
-    queueType === undefined
-      ? undefined
-      : CompletedQueueTypeSchema.parse(queueType);
+    queueType === "classic"
+      ? "normal"
+      : queueType === undefined
+        ? undefined
+        : CompletedQueueTypeSchema.parse(queueType);
 
   return {
     queueType: completedQueueType,

@@ -1,239 +1,433 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Sion": {
-      "id": "Jade_Sion",
-      "key": "60014",
+      "id": "Sion",
+      "key": "14",
       "name": "Sion",
-      "title": "The Undead Champion",
+      "title": "The Undead Juggernaut",
       "image": {
-        "full": "Jade_Sion.png",
-        "sprite": "champion3.png",
+        "full": "Sion.png",
+        "sprite": "champion4.png",
         "group": "champion",
-        "x": 144,
+        "x": 192,
         "y": 0,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60014000",
+          "id": "14000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60014003",
+          "id": "14001",
+          "num": 1,
+          "name": "Hextech Sion",
+          "chromas": false
+        },
+        {
+          "id": "14002",
+          "num": 2,
+          "name": "Barbarian Sion",
+          "chromas": false
+        },
+        {
+          "id": "14003",
           "num": 3,
           "name": "Lumberjack Sion",
           "chromas": false
         },
         {
-          "id": "60014005",
-          "num": 5,
-          "name": "Mecha Zero Sion",
+          "id": "14004",
+          "num": 4,
+          "name": "Warmonger Sion",
           "chromas": false
         },
         {
-          "id": "60014006",
+          "id": "14005",
+          "num": 5,
+          "name": "Mecha Zero Sion",
+          "chromas": true
+        },
+        {
+          "id": "14006",
           "num": 6,
           "name": "Mecha Zero Sion (Ruby)",
           "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60014007",
+          "id": "14007",
           "num": 7,
           "name": "Mecha Zero Sion (Pearl)",
           "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60014008",
+          "id": "14008",
           "num": 8,
           "name": "Mecha Zero Sion (Sapphire)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60014009",
+          "id": "14009",
           "num": 9,
           "name": "Mecha Zero Sion (Rose Quartz)",
           "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60014010",
+          "id": "14010",
           "num": 10,
           "name": "Mecha Zero Sion (Catseye)",
           "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60014011",
+          "id": "14011",
           "num": 11,
           "name": "Mecha Zero Sion (Tanzanite)",
           "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60014012",
+          "id": "14012",
           "num": 12,
           "name": "Mecha Zero Sion (Obsidian)",
           "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60014013",
+          "id": "14013",
           "num": 13,
           "name": "Mecha Zero Sion (Meteorite)",
           "chromas": false,
           "parentSkin": 5
         },
         {
-          "id": "60014022",
-          "num": 22,
-          "name": "Blackfrost Sion",
-          "chromas": false
+          "id": "14014",
+          "num": 14,
+          "name": "Worldbreaker Sion",
+          "chromas": true
         },
         {
-          "id": "60014023",
+          "id": "14015",
+          "num": 15,
+          "name": "Worldbreaker Sion (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14016",
+          "num": 16,
+          "name": "Worldbreaker Sion (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14017",
+          "num": 17,
+          "name": "Worldbreaker Sion (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14018",
+          "num": 18,
+          "name": "Worldbreaker Sion (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14019",
+          "num": 19,
+          "name": "Worldbreaker Sion (Citrine)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14020",
+          "num": 20,
+          "name": "Worldbreaker Sion (Amethyst)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14021",
+          "num": 21,
+          "name": "Worldbreaker Sion (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "14022",
+          "num": 22,
+          "name": "Blackfrost Sion",
+          "chromas": true
+        },
+        {
+          "id": "14023",
           "num": 23,
           "name": "Blackfrost Sion (Ruby)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60014024",
+          "id": "14024",
           "num": 24,
           "name": "Blackfrost Sion (Aquamarine)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60014025",
+          "id": "14025",
           "num": 25,
           "name": "Blackfrost Sion (Emerald)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60014026",
+          "id": "14026",
           "num": 26,
           "name": "Blackfrost Sion (Amethyst)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60014027",
+          "id": "14027",
           "num": 27,
           "name": "Blackfrost Sion (Rose Quartz)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60014028",
+          "id": "14028",
           "num": 28,
           "name": "Blackfrost Sion (Obsidian)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60014029",
+          "id": "14029",
           "num": 29,
           "name": "Blackfrost Sion (Pearl)",
           "chromas": false,
           "parentSkin": 22
         },
         {
-          "id": "60014030",
+          "id": "14030",
           "num": 30,
           "name": "High Noon Sion",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60014031",
+          "id": "14031",
           "num": 31,
           "name": "High Noon Sion (Ruby)",
           "chromas": false,
           "parentSkin": 30
         },
         {
-          "id": "60014032",
+          "id": "14032",
           "num": 32,
           "name": "High Noon Sion (Citrine)",
           "chromas": false,
           "parentSkin": 30
         },
         {
-          "id": "60014033",
+          "id": "14033",
           "num": 33,
           "name": "High Noon Sion (Emerald)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 30
         },
         {
-          "id": "60014034",
+          "id": "14034",
           "num": 34,
           "name": "High Noon Sion (Turquoise)",
           "chromas": false,
           "parentSkin": 30
         },
         {
-          "id": "60014035",
+          "id": "14035",
           "num": 35,
           "name": "High Noon Sion (Aquamarine)",
           "chromas": false,
           "parentSkin": 30
         },
         {
-          "id": "60014036",
+          "id": "14036",
           "num": 36,
           "name": "High Noon Sion (Rose Quartz)",
           "chromas": false,
           "parentSkin": 30
         },
         {
-          "id": "60014037",
+          "id": "14037",
           "num": 37,
           "name": "High Noon Sion (Pearl)",
           "chromas": false,
           "parentSkin": 30
         },
         {
-          "id": "60014038",
+          "id": "14038",
           "num": 38,
           "name": "High Noon Sion (Obsidian)",
           "chromas": false,
           "parentSkin": 30
         },
         {
-          "id": "60014039",
+          "id": "14039",
           "num": 39,
           "name": "High Noon Sion (Nomad)",
           "chromas": false,
           "parentSkin": 30
         },
         {
-          "id": "60014301",
-          "num": 301,
-          "name": "Classic Sion",
+          "id": "14040",
+          "num": 40,
+          "name": "Cosmic Paladin Sion",
+          "chromas": true
+        },
+        {
+          "id": "14041",
+          "num": 41,
+          "name": "Cosmic Paladin Sion (Ruby)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14042",
+          "num": 42,
+          "name": "Cosmic Paladin Sion (Turquoise)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14043",
+          "num": 43,
+          "name": "Cosmic Paladin Sion (Catseye)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14044",
+          "num": 44,
+          "name": "Cosmic Paladin Sion (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14045",
+          "num": 45,
+          "name": "Cosmic Paladin Sion (Emerald)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14046",
+          "num": 46,
+          "name": "Cosmic Paladin Sion (Obsidian)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14047",
+          "num": 47,
+          "name": "Cosmic Paladin Sion (Pearl)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14048",
+          "num": 48,
+          "name": "Cosmic Paladin Sion (Amethyst)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "14049",
+          "num": 49,
+          "name": "Grand Reckoning Sion",
           "chromas": false
         },
         {
-          "id": "60014302",
-          "num": 302,
-          "name": "Classic Sion (Hextech)",
-          "chromas": true,
-          "parentSkin": 301
+          "id": "14050",
+          "num": 50,
+          "name": "Pizza Chef Sion",
+          "chromas": true
+        },
+        {
+          "id": "14051",
+          "num": 51,
+          "name": "Pizza Chef Sion (Ruby)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14052",
+          "num": 52,
+          "name": "Pizza Chef Sion (Catseye)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14053",
+          "num": 53,
+          "name": "Pizza Chef Sion (Emerald)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14054",
+          "num": 54,
+          "name": "Pizza Chef Sion (Sapphire)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14055",
+          "num": 55,
+          "name": "Pizza Chef Sion (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14056",
+          "num": 56,
+          "name": "Pizza Chef Sion (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14057",
+          "num": 57,
+          "name": "Pizza Chef Sion (Pearl)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14058",
+          "num": 58,
+          "name": "Pizza Chef Sion (Obsidian)",
+          "chromas": false,
+          "parentSkin": 50
         }
       ],
-      "lore": "- The Abilities are completely different. Read the descriptions<br>- Sion has Ability Power and Attack Damage builds<br>- Damage dealer not a Juggernaut",
-      "blurb": "- The Abilities are completely different. Read the descriptions<br>- Sion has Ability Power and Attack Damage builds<br>- Damage dealer not a Juggernaut",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "A war hero from a bygone era, Sion was revered in Noxus for choking the life out of a Demacian king with his bare hands—but, denied oblivion, he was resurrected to serve his empire even in death. His indiscriminate slaughter claimed all who stood in his way, regardless of allegiance, proving he no longer retained his former humanity. Even so, with crude armor bolted onto rotten flesh, Sion continues to charge into battle with reckless abandon, struggling to remember his true self between the swings of his mighty axe.",
+      "blurb": "A war hero from a bygone era, Sion was revered in Noxus for choking the life out of a Demacian king with his bare hands—but, denied oblivion, he was resurrected to serve his empire even in death. His indiscriminate slaughter claimed all who stood in his...",
+      "allytips": [
+        "You only have very slight turning ability during Unstoppable Onslaught, so make sure to use it in straight paths.",
+        "Roar of the Slayer is a great setup ability to land a very powerful Decimating Smash.",
+        "The Soul Furnace buff displays how much shield strength is remaining, use this information to time its explosion perfectly."
+      ],
+      "enemytips": [
+        "Even if Sion still hits a Decimating Smash, making him release the charge earlier reduces its impact.",
+        "Use the time after Sion has died to reposition and prepare for his return."
+      ],
       "tags": [
         "Tank",
         "Fighter"
@@ -246,60 +440,66 @@
         "difficulty": 5
       },
       "stats": {
-        "hp": 507,
-        "hpperlevel": 104,
-        "mp": 240,
-        "mpperlevel": 40,
+        "hp": 655,
+        "hpperlevel": 87,
+        "mp": 400,
+        "mpperlevel": 52,
         "movespeed": 345,
-        "armor": 25,
-        "armorperlevel": 3.25,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
-        "attackrange": 125,
-        "hpregen": 8.85,
-        "hpregenperlevel": 0.95,
-        "mpregen": 6.7,
-        "mpregenperlevel": 0.4,
+        "armor": 36,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 175,
+        "hpregen": 9,
+        "hpregenperlevel": 0.8,
+        "mpregen": 8,
+        "mpregenperlevel": 0.6,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 58.7075,
+        "attackdamage": 68,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 1.63,
-        "attackspeed": 0.625
+        "attackspeedperlevel": 1.3,
+        "attackspeed": 0.679
       },
       "spells": [
         {
-          "id": "Jade_SionQ",
-          "name": "Cryptic Gaze",
-          "description": "Sion's stare terrifies a single enemy, dealing damage and stunning them.",
-          "tooltip": "Blasts a single enemy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Stunning</status> for 1.5 seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "id": "SionQ",
+          "name": "Decimating Smash",
+          "description": "Sion charges a powerful swing in an area in front of himself that will deal damage to enemies when released. If he charges for enough time, enemies hit by the swing will also be knocked up and stunned.",
+          "tooltip": "<charge>Begin Charging</charge>: Sion charges a heavy blow for up to 2 seconds.<br /><br /><release>Release</release>: Sion slams his axe down, briefly <status>Slowing</status> and dealing between <physicalDamage>{{ mindamagetotal }} and {{ maxdamagetotal }} physical damage</physicalDamage> based on charge time. If Sion charged for at least 1 second, enemies are <status>Knocked Up</status> and <status>Stunned</status> for between {{ basestuntime }} and 2.25 seconds based on charge time.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
+              "Minimum Damage",
+              "Maximum Damage",
+              "Attack Damage Ratio",
+              "Attack Damage Ratio",
               "Cooldown"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ lowdamage }} -> {{ lowdamageNL }}",
+              "{{ highdamage }} -> {{ highdamageNL }}",
+              "{{ adratiomin*100.000000 }}% -> {{ adratiominnl*100.000000 }}%",
+              "{{ adratiomax*100.000000 }}% -> {{ adratiomaxnl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            12,
-            11,
             10,
             9,
-            8
+            8,
+            7,
+            6
           ],
-          "cooldownBurn": "12/11/10/9/8",
+          "cooldownBurn": "10/9/8/7/6",
           "cost": [
-            100,
-            100,
-            100,
-            100,
-            100
+            45,
+            45,
+            45,
+            45,
+            45
           ],
-          "costBurn": "100",
+          "costBurn": "45",
           "datavalues": {},
           "effect": [
             null,
@@ -391,56 +591,62 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            550,
-            550,
-            550,
-            550,
-            550
+            10000,
+            10000,
+            10000,
+            10000,
+            10000
           ],
-          "rangeBurn": "550",
+          "rangeBurn": "10000",
           "image": {
-            "full": "Jade_SionQ.png",
-            "sprite": "spell10.png",
+            "full": "SionQ.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 288,
-            "y": 0,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_SionW",
-          "name": "Death's Caress",
-          "description": "Sion surrounds himself with a damage-absorbing shield.  If the shield is not destroyed in 10 seconds then it will explode, dealing damage to surrounding enemies. Cast again after 4 seconds to manually detonate.",
-          "tooltip": "Sion surrounds himself with a shield which absorbs <shield>{{ totalshield }} damage</shield>. If the shield is not destroyed in 10 seconds, it will explode, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to surrounding enemies.<br /><br /><recast>Recast</recast> after 4 seconds to manually detonate.</mainText>{{ spellmodifierdescriptionappend }}",
+          "id": "SionW",
+          "name": "Soul Furnace",
+          "description": "Sion shields himself and can reactivate after 3 seconds to deal Magic Damage to enemies nearby. When Sion kills enemies, he passively gains maximum Health.",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Sion gains <scaleHealth>{{ hpperkill }} max Health</scaleHealth> when he kills a unit, or <scaleHealth>{{ hpperchampkill }}</scaleHealth> for champion takedowns, large minions and large monsters.<br /><br /><spellActive>Active</spellActive>: Sion gains <shield>{{ totalshield }} Shield</shield> for 6 seconds. After {{ detonaterecastcooldown }} seconds if the shield still holds, Sion can <recast>Recast</recast> to detonate the shield to deal <magicDamage>{{ totaldamage }} plus {{ maxhpdamageratio }}% max Health magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Shield Amount",
-              "Mana Cost"
+              "Damage",
+              "Max Health Shield Ratio",
+              "Mana Cost",
+              "Cooldown"
             ],
             "effect": [
               "{{ baseshield }} -> {{ baseshieldNL }}",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ shieldpercenthealthtooltip*100.000000 }}% -> {{ shieldpercenthealthtooltipnl*100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            8,
-            8,
-            8,
-            8,
-            8
+            15,
+            14,
+            13,
+            12,
+            11
           ],
-          "cooldownBurn": "8",
+          "cooldownBurn": "15/14/13/12/11",
           "cost": [
-            70,
+            75,
             80,
+            85,
             90,
-            100,
-            110
+            95
           ],
-          "costBurn": "70/80/90/100/110",
+          "costBurn": "75/80/85/90/95",
           "datavalues": {},
           "effect": [
             null,
@@ -532,58 +738,60 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            100,
-            100,
-            100,
-            100,
-            100
+            500,
+            500,
+            500,
+            500,
+            500
           ],
-          "rangeBurn": "100",
+          "rangeBurn": "500",
           "image": {
-            "full": "Jade_SionW.png",
-            "sprite": "spell10.png",
+            "full": "SionW.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 336,
-            "y": 0,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_SionE",
-          "name": "Enrage",
-          "description": "While active Sion gains Attack Damage at the cost of Health on each basic attack. Additonally, he permanently increases his maximum Health whenever he kills a unit.",
-          "tooltip": "<toggle>Toggle: </toggle>Sion's <physicalDamage>Attack Damage</physicalDamage> is increased by {{ bonusdamage }} and he permanently gains <scaleHealth>{{ hpgainreduced }} maximum Health</scaleHealth> per kill. This bonus is doubled against Champions, large minions and large monsters<br /><br /><scaleHealth>Total Health gained: +{{ f1 }}</scaleHealth>{{ spellmodifierdescriptionappend }}",
+          "id": "SionE",
+          "name": "Roar of the Slayer",
+          "description": "Sion fires a short range shockwave that damages and slows and reduces the Armor of the first enemy hit. If the shockwave hits a minion or monster, it will be knocked back, damaging, slowing, and reducing the Armor of all enemies that it passes through.",
+          "tooltip": "Sion fires a shockwave, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, <status>Slowing</status> them by {{ slowamount }}% for {{ slowduration }} seconds and removing <scaleArmor>{{ armorshred }}% Armor</scaleArmor> for {{ armorshredduration }} seconds. Non-champions hit are <status>Knocked Back</status>. Enemies hit by a <status>Knocked Back</status> unit take the same damage and effects.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
-              "Health Per Kill",
-              "Health Cost"
+              "Slow",
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ bonusdamage }} -> {{ bonusdamageNL }}",
-              "{{ hpgainreduced }} -> {{ hpgainreducedNL }}",
-              "{{ healthcost }} -> {{ healthcostNL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowamount }}% -> {{ slowamountNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            0,
-            0,
-            0,
-            0,
-            0
+            12,
+            11,
+            10,
+            9,
+            8
           ],
-          "cooldownBurn": "0",
+          "cooldownBurn": "12/11/10/9/8",
           "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
+            35,
+            40,
+            45,
+            50,
+            55
           ],
-          "costBurn": "0",
+          "costBurn": "35/40/45/50/55",
           "datavalues": {},
           "effect": [
             null,
@@ -672,49 +880,53 @@
             "0"
           ],
           "vars": [],
-          "costType": " Health per Attack",
+          "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            0,
-            0,
-            0,
-            0,
-            0
+            800,
+            800,
+            800,
+            800,
+            800
           ],
-          "rangeBurn": "0",
+          "rangeBurn": "800",
           "image": {
-            "full": "Jade_SionE.png",
-            "sprite": "spell10.png",
+            "full": "SionE.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 384,
-            "y": 0,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
-          "resource": "{{ healthcost }} Health per Attack"
+          "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_SionR",
-          "name": "Cannibalism",
-          "description": "Sion consumes some of his enemies' life force on each attack, leeching health to himself and nearby allies. The smell of flesh also renews Sion's fervor, increasing his Attack Speed.",
-          "tooltip": "Grants Sion <lifeSteal>{{ lifestealpercent*100 }}% Lifesteal</lifeSteal> and <attackSpeed>{{ attackspeedmod*100 }}% Attack Speed</attackSpeed> for 20 seconds. Additionally, Sion's basic attacks <healing>heal</healing> surrounding allies for {{ healpercent*100 }}% of the damage dealt.</mainText>{{ spellmodifierdescriptionappend }}",
+          "id": "SionR",
+          "name": "Unstoppable Onslaught",
+          "description": "Sion charges in a direction, ramping up speed over time. He can steer his charge slightly with the mouse cursor location. When he collides with an enemy he deals damage and knocks them up based on the distance he has charged.",
+          "tooltip": "Sion charges Unstoppably in a direction for 8 seconds, turning towards the mouse cursor. Sion stops on colliding with an enemy champion or wall or on <recast>Recasting</recast> this Ability.  <br /><br />At the end of the charge, Sion deals between <physicalDamage>{{ mindamagetotal }} and {{ maxdamagetotal }} physical damage</physicalDamage> based on distance travelled. Enemies close to Sion are <status>Stunned</status> for between {{ minstunduration }} and {{ maxstunduration }} seconds based on distance travelled. Enemies in a larger area are <status>Slowed</status> by {{ slowamount }}% for 3 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Ally Heal",
-              "Life Steal"
+              "Minimum Damage",
+              "Maximum Damage",
+              "Slow",
+              "Cooldown"
             ],
             "effect": [
-              "{{ healpercent*100.000000 }}% -> {{ healpercentnl*100.000000 }}%",
-              "{{ lifestealpercent*100.000000 }}% -> {{ lifestealpercentnl*100.000000 }}%"
+              "{{ mindamage }} -> {{ mindamageNL }}",
+              "{{ maxdamage }} -> {{ maxdamageNL }}",
+              "{{ slowamount }}% -> {{ slowamountNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            90,
-            90,
-            90
+            140,
+            100,
+            60
           ],
-          "cooldownBurn": "90",
+          "cooldownBurn": "140/100/60",
           "cost": [
             100,
             100,
@@ -792,17 +1004,17 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            100,
-            100,
-            100
+            7500,
+            7500,
+            7500
           ],
-          "rangeBurn": "100",
+          "rangeBurn": "7500",
           "image": {
-            "full": "Jade_SionR.png",
-            "sprite": "spell10.png",
+            "full": "SionR.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 432,
-            "y": 0,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -810,13 +1022,13 @@
         }
       ],
       "passive": {
-        "name": "Feel No Pain",
-        "description": "Sion has a 40% chance to ignore up to 30/40/50 damage each time he is attacked.",
+        "name": "Glory in Death",
+        "description": "After being killed, Sion will temporarily reanimate with rapidly decaying Health. His attacks become very rapid, heal him, and deal bonus damage based on his target's maximum Health.",
         "image": {
-          "full": "Jade_Sion_Passive1.png",
-          "sprite": "passive3.png",
+          "full": "Sion_Passive1.png",
+          "sprite": "passive4.png",
           "group": "passive",
-          "x": 144,
+          "x": 192,
           "y": 0,
           "w": 48,
           "h": 48

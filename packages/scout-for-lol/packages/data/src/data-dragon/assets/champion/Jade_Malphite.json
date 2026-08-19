@@ -1,189 +1,415 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Malphite": {
-      "id": "Jade_Malphite",
-      "key": "60054",
+      "id": "Malphite",
+      "key": "54",
       "name": "Malphite",
       "title": "Shard of the Monolith",
       "image": {
-        "full": "Jade_Malphite.png",
+        "full": "Malphite.png",
         "sprite": "champion2.png",
         "group": "champion",
-        "x": 432,
+        "x": 384,
         "y": 48,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60054000",
+          "id": "54000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60054001",
+          "id": "54001",
           "num": 1,
           "name": "Shamrock Malphite",
           "chromas": false
         },
         {
-          "id": "60054005",
+          "id": "54002",
+          "num": 2,
+          "name": "Coral Reef Malphite",
+          "chromas": false
+        },
+        {
+          "id": "54003",
+          "num": 3,
+          "name": "Marble Malphite",
+          "chromas": false
+        },
+        {
+          "id": "54004",
+          "num": 4,
+          "name": "Obsidian Malphite",
+          "chromas": false
+        },
+        {
+          "id": "54005",
           "num": 5,
           "name": "Glacial Malphite",
           "chromas": false
         },
         {
-          "id": "60054023",
+          "id": "54006",
+          "num": 6,
+          "name": "Mecha Malphite",
+          "chromas": true
+        },
+        {
+          "id": "54007",
+          "num": 7,
+          "name": "Ironside Malphite",
+          "chromas": false
+        },
+        {
+          "id": "54008",
+          "num": 8,
+          "name": "Mecha Malphite (Catseye)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54009",
+          "num": 9,
+          "name": "Mecha Malphite (Emerald)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54010",
+          "num": 10,
+          "name": "Mecha Malphite (Obsidian)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54011",
+          "num": 11,
+          "name": "Mecha Malphite (Sandstone)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54012",
+          "num": 12,
+          "name": "Mecha Malphite (Pearl)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54013",
+          "num": 13,
+          "name": "Mecha Malphite (Sapphire)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54014",
+          "num": 14,
+          "name": "Mecha Malphite (Granite)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54015",
+          "num": 15,
+          "name": "Mecha Malphite (Citrine)",
+          "chromas": false,
+          "parentSkin": 6
+        },
+        {
+          "id": "54016",
+          "num": 16,
+          "name": "Odyssey Malphite",
+          "chromas": true
+        },
+        {
+          "id": "54017",
+          "num": 17,
+          "name": "Odyssey Malphite (Ruby)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "54018",
+          "num": 18,
+          "name": "Odyssey Malphite (Emerald)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "54019",
+          "num": 19,
+          "name": "Odyssey Malphite (Pearl)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "54020",
+          "num": 20,
+          "name": "Odyssey Malphite (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "54021",
+          "num": 21,
+          "name": "Odyssey Malphite (Sapphire)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "54022",
+          "num": 22,
+          "name": "Odyssey Malphite (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 16
+        },
+        {
+          "id": "54023",
           "num": 23,
           "name": "Dark Star Malphite",
           "chromas": false
         },
         {
-          "id": "60054024",
+          "id": "54024",
           "num": 24,
           "name": "Prestige Dark Star Malphite",
           "chromas": false
         },
         {
-          "id": "60054027",
-          "num": 27,
-          "name": "Old God Malphite",
-          "chromas": false
+          "id": "54025",
+          "num": 25,
+          "name": "FPX Malphite",
+          "chromas": true
         },
         {
-          "id": "60054028",
+          "id": "54026",
+          "num": 26,
+          "name": "FPX Malphite (Elite)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "54027",
+          "num": 27,
+          "name": "Old God Malphite",
+          "chromas": true
+        },
+        {
+          "id": "54028",
           "num": 28,
           "name": "Old God Malphite (Ruby)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60054029",
+          "id": "54029",
           "num": 29,
           "name": "Old God Malphite (Catseye)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60054030",
+          "id": "54030",
           "num": 30,
           "name": "Old God Malphite (Emerald)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60054031",
+          "id": "54031",
           "num": 31,
           "name": "Old God Malphite (Tanzanite)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60054032",
+          "id": "54032",
           "num": 32,
           "name": "Old God Malphite (Sapphire)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60054033",
+          "id": "54033",
           "num": 33,
           "name": "Old God Malphite (Rose Quartz)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60054034",
+          "id": "54034",
           "num": 34,
           "name": "Old God Malphite (Pearl)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60054035",
+          "id": "54035",
           "num": 35,
           "name": "Old God Malphite (Obsidian)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60054036",
+          "id": "54036",
           "num": 36,
           "name": "Old God Malphite (Dark Ritual)",
           "chromas": false,
           "parentSkin": 27
         },
         {
-          "id": "60054048",
-          "num": 48,
-          "name": "Pool Party Malphite",
-          "chromas": false
+          "id": "54037",
+          "num": 37,
+          "name": "Lunar Guardian Malphite",
+          "chromas": true
         },
         {
-          "id": "60054049",
+          "id": "54038",
+          "num": 38,
+          "name": "Lunar Guardian Malphite (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54039",
+          "num": 39,
+          "name": "Lunar Guardian Malphite (Emerald)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54040",
+          "num": 40,
+          "name": "Lunar Guardian Malphite (Sapphire)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54041",
+          "num": 41,
+          "name": "Lunar Guardian Malphite (Turquoise)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54042",
+          "num": 42,
+          "name": "Lunar Guardian Malphite (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54043",
+          "num": 43,
+          "name": "Lunar Guardian Malphite (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54044",
+          "num": 44,
+          "name": "Lunar Guardian Malphite (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54045",
+          "num": 45,
+          "name": "Lunar Guardian Malphite (Obsidian)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54046",
+          "num": 46,
+          "name": "Lunar Guardian Malphite (Resplendent)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "54047",
+          "num": 47,
+          "name": "FPX Malphite (Tenfold Triumph)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "54048",
+          "num": 48,
+          "name": "Pool Party Malphite",
+          "chromas": true
+        },
+        {
+          "id": "54049",
           "num": 49,
           "name": "Pool Party Malphite (Ruby)",
           "chromas": false,
           "parentSkin": 48
         },
         {
-          "id": "60054050",
+          "id": "54050",
           "num": 50,
           "name": "Pool Party Malphite (Catseye)",
           "chromas": false,
           "parentSkin": 48
         },
         {
-          "id": "60054051",
+          "id": "54051",
           "num": 51,
           "name": "Pool Party Malphite (Sapphire)",
           "chromas": false,
           "parentSkin": 48
         },
         {
-          "id": "60054052",
+          "id": "54052",
           "num": 52,
           "name": "Pool Party Malphite (Emerald)",
           "chromas": false,
           "parentSkin": 48
         },
         {
-          "id": "60054053",
+          "id": "54053",
           "num": 53,
           "name": "Pool Party Malphite (Meteorite)",
           "chromas": false,
           "parentSkin": 48
         },
         {
-          "id": "60054054",
+          "id": "54054",
           "num": 54,
           "name": "Pool Party Malphite (Obsidian)",
           "chromas": false,
           "parentSkin": 48
         },
         {
-          "id": "60054055",
+          "id": "54055",
           "num": 55,
           "name": "Pool Party Malphite (Pearl)",
           "chromas": false,
           "parentSkin": 48
         },
         {
-          "id": "60054056",
+          "id": "54056",
           "num": 56,
           "name": "Pool Party Malphite (Rose Quartz)",
           "chromas": false,
           "parentSkin": 48
         }
       ],
-      "lore": "- Brutal Strikes (W) cleave is a passive and actively increases his damage",
-      "blurb": "- Brutal Strikes (W) cleave is a passive and actively increases his damage",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "A massive creature of living stone, Malphite struggles to impose blessed order on a chaotic world. Birthed as a servitor-shard to an otherworldly obelisk known as the Monolith, he used his tremendous elemental strength to maintain and protect his progenitor, but ultimately failed. The only survivor of the destruction that followed, Malphite now endures Runeterra's soft folk and their fluid temperaments, while struggling to find a new role worthy of the last of his kind.",
+      "blurb": "A massive creature of living stone, Malphite struggles to impose blessed order on a chaotic world. Birthed as a servitor-shard to an otherworldly obelisk known as the Monolith, he used his tremendous elemental strength to maintain and protect his...",
+      "allytips": [
+        "Armor naturally reduces the rate that attacks go through Granite Shield, so Brutal Strikes will strengthen the shield against physical damage.",
+        "Despite his abilities scaling on Armor, some games require Malphite to get Magic Resist. When those games occur, try getting Aegis of the Legion, Mercury's Treads, and Guardian Angel."
+      ],
+      "enemytips": [
+        "If you're a physical damage character stay behind your allies when fighting Malphite. Ground Slam can significantly reduce your damage output.",
+        "Malphite is one of a couple tanks who are capable of jungling. Watch out if he gets Smite."
+      ],
       "tags": [
         "Tank",
         "Mage"
@@ -196,37 +422,38 @@
         "difficulty": 2
       },
       "stats": {
-        "hp": 513,
-        "hpperlevel": 90,
-        "mp": 255,
-        "mpperlevel": 40,
+        "hp": 665,
+        "hpperlevel": 104,
+        "mp": 280,
+        "mpperlevel": 60,
         "movespeed": 335,
-        "armor": 25.75,
-        "armorperlevel": 3.75,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
+        "armor": 40,
+        "armorperlevel": 4.95,
+        "spellblock": 28,
+        "spellblockperlevel": 2.05,
         "attackrange": 125,
-        "hpregen": 8,
+        "hpregen": 7,
         "hpregenperlevel": 0.55,
-        "mpregen": 6.95,
+        "mpregen": 7.3,
         "mpregenperlevel": 0.55,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 59.675,
+        "attackdamage": 62,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 3.4,
-        "attackspeed": 0.638
+        "attackspeed": 0.736
       },
       "spells": [
         {
-          "id": "Jade_MalphiteSeismicShard",
+          "id": "SeismicShard",
           "name": "Seismic Shard",
-          "description": "Using his primal elemental magic, Malphite sends a shard of the earth through the ground at his foe, dealing damage upon impact and stealing movement speed for 4 seconds.",
-          "tooltip": "Deals <magicDamage>{{ qdamagecalc }} magic damage</magicDamage> and steals <speed>{{ speedsteal }}% Movement Speed</speed> from the target for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Malphite sends a shard of the earth through the ground at his foe, dealing damage upon impact and stealing Move Speed for 3 seconds.",
+          "tooltip": "Malphite launches a shard of earth at an enemy, dealing <magicDamage>{{ qdamagecalc }} magic damage</magicDamage> and <status>Slowing</status> them by {{ speedsteal }}% for {{ slowduration }} seconds. Malphite also steals the amount <status>Slowed</status>, gaining it as <speed>Move Speed</speed> for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "@AbilityResourceName@ Cost",
-              "Damage"
+              "Damage",
+              "Slow"
             ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
@@ -350,52 +577,54 @@
           ],
           "rangeBurn": "625",
           "image": {
-            "full": "Jade_MalphiteSeismicShard.png",
+            "full": "SeismicShard.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 0,
-            "y": 144,
+            "x": 288,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_MalphiteObduracy",
-          "name": "Brutal Strikes",
-          "description": "Malphite starts to hit with such force that his attacks deal damage to all units in front of him. Activating Brutal Strikes greatly increases his Armor and Attack Damage for a short amount of time.",
-          "tooltip": "<spellPassive>Passive: </spellPassive>Malphite's basic attacks hit units near his target for {{ jade_malphiteobduracypercentdamage*100 }}% of his <physicalDamage>Attack Damage</physicalDamage>.<br /><br /><spellActive>Active: </spellActive>Malphite's <scaleArmor>Armor</scaleArmor> and <physicalDamage>Attack Damage</physicalDamage> increase by {{ armorbonus*100 }}% for 6 seconds.{{ spellmodifierdescriptionappend }}",
+          "id": "Obduracy",
+          "name": "Thunderclap",
+          "description": "Malphite attacks with such force that it creates a sonic boom. For the next few seconds, his attacks create aftershocks in front of him.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Malphite gains <scaleArmor>{{ bonusarmorpassive*100 }}% Armor (%i:scaleArmor%{{ f1 }})</scaleArmor>. This effect is increased to <scaleArmor>{{ bonusarmorpassive*300 }}% (%i:scaleArmor%{{ f2 }})</scaleArmor> while <spellName>Granite Shield</spellName> is active.<br /><br /><spellPassive>Active: </spellPassive>Malphite's next Attack deals an additional <physicalDamage>{{ totalbonusdamage }} physical damage</physicalDamage> and creates an aftershock which deals <physicalDamage>{{ thunderclapsplash }} physical damage</physicalDamage> %i:OnHit% <OnHit>On-Hit</OnHit> in their direction. His Attacks continue to create aftershocks %i:OnHit% <OnHit>On-Hit</OnHit> for the next {{ thunderclapbuffduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "@AbilityResourceName@ Cost",
-              "Cleave Amount",
-              "Bonus AD Percentage",
-              "Armor Bonus"
+              "Armor",
+              "Damage",
+              "Aftershock Splash Damage",
+              "Cooldown"
             ],
             "effect": [
               "{{ cost }} -> {{ costNL }}",
-              "{{ jade_malphiteobduracypercentdamage*100.000000 }}% -> {{ jade_malphiteobduracypercentdamagenl*100.000000 }}%",
-              "{{ adbonus*100.000000 }}% -> {{ adbonusnl*100.000000 }}%",
-              "{{ armorbonus*100.000000 }}% -> {{ armorbonusnl*100.000000 }}%"
+              "{{ bonusarmorpassive*100.000000 }}% -> {{ bonusarmorpassivenl*100.000000 }}%",
+              "{{ thunderclapbasedamage }} -> {{ thunderclapbasedamageNL }}",
+              "{{ thunderclapsplashdamage }} -> {{ thunderclapsplashdamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            14,
-            14,
-            14,
-            14,
-            14
+            10,
+            9.5,
+            9,
+            8.5,
+            8
           ],
-          "cooldownBurn": "14",
+          "cooldownBurn": "10/9.5/9/8.5/8",
           "cost": [
-            50,
-            55,
-            60,
-            65,
-            70
+            30,
+            35,
+            40,
+            45,
+            50
           ],
-          "costBurn": "50/55/60/65/70",
+          "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
@@ -495,21 +724,21 @@
           ],
           "rangeBurn": "400",
           "image": {
-            "full": "Jade_MalphiteObduracy.png",
+            "full": "Obduracy.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 48,
-            "y": 144,
+            "x": 336,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_MalphiteLandslide",
+          "id": "Landslide",
           "name": "Ground Slam",
-          "description": "Malphite slams the ground sending out a shockwave that deals magic damage based on his Armor as damage and reduces the Attack speed of enemies for a short duration.",
-          "tooltip": "Malphite slams the ground dealing <magicDamage>{{ edamagecalc }} magic damage</magicDamage> to surrounding enemies, reducing their Attack Speed by {{ asreduction*-100 }}% for {{ duration }} seconds.<br /><br />This ability gains damage equal to {{ armorscaling_jade*100 }}% of Malphite's Armor.{{ spellmodifierdescriptionappend }}",
+          "description": "Malphite slams the ground, sending out a shockwave that deals magic damage based on his Armor and reduces the Attack Speed of enemies for a short duration.",
+          "tooltip": "Malphite slams the ground, dealing <magicDamage>{{ edamagecalc }} magic damage</magicDamage> and reducing <attackSpeed>Attack Speed by {{ asreduction }}%</attackSpeed> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -518,7 +747,7 @@
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ asreduction*-100.000000 }}% -> {{ asreductionnl*-100.000000 }}%",
+              "{{ asreduction }}% -> {{ asreductionNL }}%",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
@@ -638,21 +867,21 @@
           ],
           "rangeBurn": "400",
           "image": {
-            "full": "Jade_MalphiteLandslide.png",
+            "full": "Landslide.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 96,
-            "y": 144,
+            "x": 384,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_MalphiteUFSlash",
+          "id": "UFSlash",
           "name": "Unstoppable Force",
-          "description": "Malphite ferociously charges to a location, damaging enemies and knocking them into the air.",
-          "tooltip": "Malphite charges toward the target area, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Knocking</status> enemies into the air for {{ knockupduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Malphite launches himself to a location at high speed, damaging enemies and knocking them into the air.",
+          "tooltip": "Malphite charges with the force of a landslide, dashing Unstoppably. At the end of the dash, Malphite <status>Knocks Up</status> for {{ knockupduration }} seconds and deals <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
@@ -753,11 +982,11 @@
           ],
           "rangeBurn": "1000",
           "image": {
-            "full": "Jade_MalphiteUFSlash.png",
+            "full": "UFSlash.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 144,
-            "y": 144,
+            "x": 432,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -766,12 +995,12 @@
       ],
       "passive": {
         "name": "Granite Shield",
-        "description": "Malphite is shielded by a layer of rock which absorbs damage up to 10% of his maximum Health. If Malphite has not been hit for 10 seconds, this effect recharges.",
+        "description": "Malphite is shielded by a layer of rock which absorbs damage up to 10% of his maximum Health. If Malphite has not been hit for a few seconds, this effect recharges.",
         "image": {
-          "full": "Jade_Malphite_GraniteShield.png",
+          "full": "Malphite_GraniteShield.png",
           "sprite": "passive2.png",
           "group": "passive",
-          "x": 432,
+          "x": 384,
           "y": 48,
           "w": 48,
           "h": 48
