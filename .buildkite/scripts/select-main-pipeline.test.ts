@@ -53,18 +53,21 @@ test("keeps only required main jobs when no optional lane changed", () => {
     "alert-dashboard-sqlite",
     "release-please",
     "build-summary",
+    "homelab-release-admission",
   ]);
   const rendered = renderSteps(steps, selected);
   validateRenderedSteps(rendered);
   expect(rendered.map((step) => step["key"])).toEqual([
     "verify",
     "alert-dashboard-sqlite",
+    "homelab-release-admission",
     "release-please",
     "build-summary",
   ]);
-  expect(rendered[3]?.["depends_on"]).toEqual([
+  expect(rendered[4]?.["depends_on"]).toEqual([
     "ci-selector-base",
     "verify",
+    "homelab-release-admission",
     "release-please",
   ]);
 });
@@ -212,6 +215,7 @@ test("rejects missing dependencies before dynamic upload", () => {
   const missingDependencySteps = new Map([
     ["verify", { key: "verify", depends_on: "missing-step" }],
     ["alert-dashboard-sqlite", { key: "alert-dashboard-sqlite" }],
+    ["homelab-release-admission", { key: "homelab-release-admission" }],
     ["release-please", { key: "release-please" }],
     ["build-summary", { key: "build-summary" }],
   ]);

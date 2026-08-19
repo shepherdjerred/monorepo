@@ -15,6 +15,7 @@ const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   "alert-dashboard-sqlite": [],
   "release-please": [],
   "build-summary": [],
+  "homelab-release-admission": [],
   "playwright-e2e-main": ["playwright"],
   "resume-build-main": ["resume"],
   "docker-e2e-main": ["docker-e2e"],
