@@ -4,6 +4,7 @@
 import {
   resolveQueueTypeFromGame,
   isClassicQueueType,
+  isClassicAssetMode,
   getLaneOpponent,
   parseTeam,
   invertTeam,
@@ -24,37 +25,38 @@ const ReviewToolQueueTypeSchema = QueueTypeSchema.exclude([
   "classic aram mayhem",
 ]);
 
+const baseMatchTypeByQueueType: Record<
+  Exclude<QueueType, "classic" | "classic aram mayhem">,
+  "arena" | "aram" | "ranked" | "unranked"
+> = {
+  solo: "ranked",
+  flex: "ranked",
+  "ranked 5s": "ranked",
+  clash: "unranked",
+  "aram clash": "unranked",
+  aram: "aram",
+  arurf: "unranked",
+  urf: "unranked",
+  quickplay: "unranked",
+  swiftplay: "unranked",
+  arena: "arena",
+  brawl: "unranked",
+  "aram mayhem": "aram",
+  normal: "unranked",
+  "draft pick": "unranked",
+  "easy doom bots": "unranked",
+  "normal doom bots": "unranked",
+  "hard doom bots": "unranked",
+  custom: "unranked",
+};
+
 /**
  * Get the base example match structure for a given queue type
  */
 function getBaseMatch(
   queueType: Exclude<QueueType, "classic" | "classic aram mayhem"> | undefined,
 ): CompletedMatch | ArenaMatch {
-  switch (queueType) {
-    case "arena":
-      return getExampleMatch("arena");
-    case "aram":
-    case "aram mayhem":
-      return getExampleMatch("aram");
-    case "solo":
-    case "flex":
-    case "ranked 5s":
-      return getExampleMatch("ranked");
-    case "clash":
-    case "aram clash":
-    case "arurf":
-    case "urf":
-    case "quickplay":
-    case "swiftplay":
-    case "brawl":
-    case "draft pick":
-    case "easy doom bots":
-    case "normal doom bots":
-    case "hard doom bots":
-    case "custom":
-    case undefined:
-      return getExampleMatch("unranked");
-  }
+  return getExampleMatch(baseMatchTypeByQueueType[queueType ?? "custom"]);
 }
 
 /**
@@ -114,15 +116,20 @@ export function convertRawMatchToInternalFormat(
     rawMatch.info.gameMode,
     rawMatch.info.gameType,
   );
-  if (isClassicQueueType(queueType)) {
+  if (
+    isClassicQueueType(queueType) &&
+    isClassicAssetMode(rawMatch.info.queueId, rawMatch.info.gameMode)
+  ) {
     throw new Error(
       "League Classic matches are not supported by the review tool",
     );
   }
   const reviewToolQueueType =
-    queueType === undefined
-      ? undefined
-      : ReviewToolQueueTypeSchema.parse(queueType);
+    queueType === "classic"
+      ? "normal"
+      : queueType === undefined
+        ? undefined
+        : ReviewToolQueueTypeSchema.parse(queueType);
   const baseMatch = getBaseMatch(reviewToolQueueType);
   const reorderedParticipants = reorderParticipants(
     rawMatch.info.participants,
