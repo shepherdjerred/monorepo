@@ -14,3 +14,7 @@ export function getDashboardUrl(): string {
 export function getDocsUrl(): string {
   return `${getOrigin()}/docs/`;
 }
+
+export function getExploreConversationUrl(conversationId: string): string {
+  return `${getOrigin()}/app/explore/${conversationId}`;
+}

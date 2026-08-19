@@ -1,14 +1,14 @@
 ---
 title: Why Scout is web-first
-description: Why configuration moved to the browser and only seven commands remain in Discord — and what that costs.
+description: Why configuration and conversation history live in the browser while Discord keeps a small in-the-moment surface.
 sidebar:
   order: 4
 ---
 
 Scout used to be configured entirely through Discord. There were command trees
 for subscriptions, players, accounts, competitions, reports, and permissions —
-dozens of subcommands. Today there are seven commands, and everything else lives
-in the browser.
+dozens of subcommands. Today there are seven global commands, one allowlisted
+Explore command, and everything else lives in the browser.
 
 This page is about why, including the parts that got worse.
 
@@ -18,7 +18,9 @@ Discord commands have a real advantage: zero context switch. You are already in
 the channel, talking to the people you play with, and tracking a player is one
 line. That is why `/track` still exists — the fastest possible path from "we
 should track this person" to a working subscription, with no browser, no sign-in,
-and no navigation.
+and no navigation. `/scout ask` follows the same principle for a different
+moment: ask one question while discussing a game, see the answer privately, and
+decide whether it belongs in the channel.
 
 That advantage is specific to short, single-purpose actions. It does not survive
 contact with complexity.
@@ -51,9 +53,12 @@ a query editor with completion and inline errors, a preview of what a report
 will produce before you save it, and an interface that can display a permission
 matrix without inventing a syntax for it.
 
-A dashboard also lets Scout add capability without adding vocabulary. Reports
-and ScoutQL could not exist as a slash command in any tolerable form; as a page
-with an editor and a preview, they are ordinary.
+A dashboard also lets Scout add capability without adding command vocabulary.
+Creating and maintaining saved reports or ScoutQL is still the wrong shape for a
+slash command; as a page with an editor and a preview, it is ordinary. Explore
+keeps one narrow Discord entry point because natural-language input is already
+one field. Its conversation history, follow-ups, branches, traces, and sharing
+remain in the web UI.
 
 ## What this costs
 
@@ -79,10 +84,16 @@ it was the main argument against the change.
 The rule is roughly: **Discord for things you do in the moment, the browser for
 things you decide.**
 
-Tracking a player and checking what is tracked are momentary — you do them while
-talking about them, so they stayed as commands. Choosing which queues route to
-which channel, who has access, and what the weekly report measures are
-decisions, made once and revisited rarely. Those moved.
+Tracking a player, checking what is tracked, and asking one data question are
+momentary — you do them while talking, so they have lightweight commands.
+Choosing which queues route to which channel, who has access, what a weekly
+report measures, or how an Explore conversation continues are longer-lived
+decisions. Those stay in the browser.
+
+The publication boundary is explicit. `/scout ask` starts private, saves the
+same conversation the web app would, and posts nothing until the asker presses
+**Post publicly**. That posts a frozen copy, not a live query and not an
+owner-only link.
 
 Notifications, of course, remain entirely in Discord. That was never in
 question: Discord is where the server experiences Scout, and the dashboard is

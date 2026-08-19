@@ -12,6 +12,20 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 08 18",
+    banner: "Ask Scout from Discord",
+    sections: [
+      {
+        title: "Explore",
+        color: "blue",
+        items: [
+          "Explore-enabled servers can use /scout ask for a private, saved answer about Scout's match data",
+          "Open the conversation in web Explore for follow-ups, or post the frozen question, answer, caveats, and chart to the channel",
+        ],
+      },
+    ],
+  }),
+  buildChangelogEntry({
     date: "2026 08 15",
     banner: "Updated for League patch 26.16",
     sections: [

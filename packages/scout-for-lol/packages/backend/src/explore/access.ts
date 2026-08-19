@@ -26,6 +26,11 @@ export function isExploreConfigured(): boolean {
   return exploreAllowlist().length > 0;
 }
 
+/** Whether Discord Explore is enabled in this exact guild right now. */
+export function isExploreGuildAllowed(guildId: string): boolean {
+  return exploreAllowlist().includes(guildId);
+}
+
 /**
  * The access decision itself, separated from fetching the user's servers so
  * it can be tested without a Discord double.

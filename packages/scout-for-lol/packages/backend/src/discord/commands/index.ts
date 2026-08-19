@@ -15,6 +15,7 @@ import { executeHelp } from "#src/discord/commands/help.ts";
 import { executeList } from "#src/discord/commands/list.ts";
 import { executeTrack } from "#src/discord/commands/track.ts";
 import { executeBb } from "#src/discord/commands/bb.ts";
+import { executeScout } from "#src/discord/commands/scout.ts";
 
 const logger = createLogger("discord-commands");
 
@@ -62,6 +63,9 @@ export async function handleChatInputCommand(
         break;
       case "bb":
         await executeBb(interaction);
+        break;
+      case "scout":
+        await executeScout(interaction);
         break;
       default:
         await interaction.reply({

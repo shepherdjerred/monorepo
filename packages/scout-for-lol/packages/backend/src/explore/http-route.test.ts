@@ -4,7 +4,7 @@ import {
   EXPLORE_ANSWER_MAX_LENGTH,
   ExploreAnswerSchema,
 } from "@scout-for-lol/data";
-import { clampAnswer } from "#src/explore/http-route.ts";
+import { clampAnswer } from "#src/explore/run-turn.ts";
 
 /**
  * A stopped turn is the one answer path that does not go through

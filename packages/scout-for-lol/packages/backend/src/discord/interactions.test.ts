@@ -19,7 +19,7 @@ function fakeInteraction(customId: string, guildId: string | null = null) {
   const interaction: RoutableButtonInteraction = {
     customId,
     guildId,
-    user: { id: USER_ID },
+    user: { id: USER_ID, username: "tester" },
     deferred: false,
     replied: false,
     deferUpdate: mock(() => {
@@ -33,6 +33,10 @@ function fakeInteraction(customId: string, guildId: string | null = null) {
     editReply: mock(() => {
       calls.push("editReply");
       return Promise.resolve(undefined);
+    }),
+    followUp: mock(() => {
+      calls.push("followUp");
+      return Promise.resolve({ delete: () => Promise.resolve(undefined) });
     }),
   };
   return { interaction, calls };
@@ -105,5 +109,11 @@ describe("routeButton", () => {
     );
     await routeButton(interaction);
     expect(calls).toEqual(["deferReply", "editReply"]);
+  });
+
+  test("acknowledges a malformed Scout component with a private explanation", async () => {
+    const { interaction, calls } = fakeInteraction("scout:1:publish:broken");
+    await routeButton(interaction);
+    expect(calls).toEqual(["deferUpdate", "followUp"]);
   });
 });

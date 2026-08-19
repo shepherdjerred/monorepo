@@ -20,8 +20,8 @@ import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 
 const trpc = await createOfflineTrpcHarness("explore-http-e2e");
-const { handleExploreRoute, persistPartialAnswer } =
-  await import("#src/explore/http-route.ts");
+const { handleExploreRoute } = await import("#src/explore/http-route.ts");
+const { persistPartialAnswer } = await import("#src/explore/run-turn.ts");
 
 const allowedGuild = DiscordGuildIdSchema.parse("100000000000009401");
 const otherGuild = DiscordGuildIdSchema.parse("100000000000009402");

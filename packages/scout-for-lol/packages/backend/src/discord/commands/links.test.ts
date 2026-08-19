@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { resetConfigurationForTests } from "#src/configuration.ts";
-import { getDocsUrl } from "#src/discord/commands/links.ts";
+import {
+  getDocsUrl,
+  getExploreConversationUrl,
+} from "#src/discord/commands/links.ts";
 import { buildDiscordInstallUrl } from "#src/lib/discord/install-url.ts";
 
 const originalOrigin = Bun.env["WEB_APP_ORIGIN"];
@@ -20,6 +23,9 @@ describe("stage-aware Discord links", () => {
     resetConfigurationForTests();
 
     expect(getDocsUrl()).toBe("https://beta.scout-for-lol.com/docs/");
+    expect(getExploreConversationUrl("conversation-id")).toBe(
+      "https://beta.scout-for-lol.com/app/explore/conversation-id",
+    );
   });
 
   test("keeps applications.commands in the install URL", () => {
