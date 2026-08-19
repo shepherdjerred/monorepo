@@ -14,9 +14,6 @@
     "lint": "bun x --no-install eslint src tests",
     "format": "bun x --no-install prettier --check ."
   },
-  "dependencies": {
-    "@scout-for-lol/design-system": "workspace:*"
-  },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
     "@playwright/test": "1.62.0",
