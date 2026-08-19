@@ -7,6 +7,7 @@ struct SetupView: View {
     @State private var identityStatus = "AutoFill identities have not been refreshed yet."
     @State private var integrationStatus = "Checking the MailMate bundle installation…"
     @State private var diagnosticsStatus = ""
+    @State private var refreshGeneration = 0
 
     private let mailMateBundlesURL = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/MailMate/Bundles", isDirectory: true)
@@ -156,6 +157,8 @@ struct SetupView: View {
 
     private func refreshCredentialIdentities() {
         let startedAt = Date()
+        refreshGeneration += 1
+        let generation = refreshGeneration
         CodeFillObservability.appLogger.info("event=identity_refresh outcome=started")
         Task.detached(priority: .userInitiated) {
             do {
@@ -165,16 +168,29 @@ struct SetupView: View {
                 CodeFillObservability.appLogger.info("event=identity_refresh outcome=records_loaded record_count=\(records.count, privacy: .public) identity_count=\(identities.count, privacy: .public)")
 
                 await MainActor.run {
+                    guard generation == refreshGeneration else {
+                        CodeFillObservability.appLogger.info("event=identity_refresh outcome=stale_snapshot")
+                        return
+                    }
                     ASCredentialIdentityStore.shared.getState { state in
-                        guard state.isEnabled else {
-                            CodeFillObservability.appLogger.info("event=identity_refresh outcome=disabled duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
-                            Task { @MainActor in
-                                identityStatus = "AutoFill identity store is disabled. Enable MailMate CodeFill in System Settings first."
+                        let isEnabled = state.isEnabled
+                        Task { @MainActor in
+                            guard generation == refreshGeneration else {
+                                CodeFillObservability.appLogger.info("event=identity_refresh outcome=stale_state")
+                                return
                             }
-                            return
-                        }
-                        ASCredentialIdentityStore.shared.replaceCredentialIdentities(identities) { success, error in
-                            Task { @MainActor in
+                            guard isEnabled else {
+                                CodeFillObservability.appLogger.info("event=identity_refresh outcome=disabled duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
+                                identityStatus = "AutoFill identity store is disabled. Enable MailMate CodeFill in System Settings first."
+                                return
+                            }
+                            ASCredentialIdentityStore.shared.replaceCredentialIdentities(identities) { success, error in
+                                Task { @MainActor in
+                                    guard generation == refreshGeneration else {
+                                        CodeFillObservability.appLogger.info("event=identity_refresh outcome=stale_completion")
+                                        refreshCredentialIdentities()
+                                        return
+                                    }
                                 if success {
                                     CodeFillObservability.appLogger.info("event=identity_refresh outcome=success identity_count=\(identities.count, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
                                     identityStatus = identities.isEmpty
@@ -185,12 +201,17 @@ struct SetupView: View {
                                     CodeFillObservability.appLogger.error("event=identity_refresh outcome=error identity_count=\(identities.count, privacy: .public) detail=\(detail, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
                                     identityStatus = "Could not register AutoFill identities\(detail)"
                                 }
+                                }
                             }
                         }
                     }
                 }
             } catch {
                 await MainActor.run {
+                    guard generation == refreshGeneration else {
+                        CodeFillObservability.appLogger.info("event=identity_refresh outcome=stale_store_error")
+                        return
+                    }
                     identityStatus = "Could not read pending MailMate codes: \(error.localizedDescription)"
                     CodeFillObservability.appLogger.error("event=identity_refresh outcome=store_error error=\(CodeFillObservability.errorSummary(error), privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
                 }

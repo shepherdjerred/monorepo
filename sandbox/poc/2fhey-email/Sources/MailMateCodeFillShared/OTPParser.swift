@@ -28,6 +28,10 @@ public struct OTPParser {
         metadata: MessageMetadata,
         detectedAt: Date = Date()
     ) -> OTPRecord? {
+        let recordDetectedAt = min(metadata.date ?? detectedAt, detectedAt)
+        guard recordDetectedAt.addingTimeInterval(lifetime) > detectedAt else {
+            return nil
+        }
         let sanitizedBody = Self.urlPattern.stringByReplacingMatches(
             in: body,
             range: NSRange(body.startIndex..., in: body),
@@ -80,8 +84,8 @@ public struct OTPParser {
             service: Self.service(from: metadata),
             sender: Self.senderLabel(from: metadata.sender),
             messageID: metadata.messageID,
-            detectedAt: detectedAt,
-            expiresAt: detectedAt.addingTimeInterval(lifetime)
+            detectedAt: recordDetectedAt,
+            expiresAt: recordDetectedAt.addingTimeInterval(lifetime)
         )
     }
 
@@ -92,9 +96,8 @@ public struct OTPParser {
         let afterLength = min(18, body.utf16.count - afterStart)
         let bodyNSString = NSString(string: body)
         let context = (bodyNSString.substring(with: beforeRange) + bodyNSString.substring(with: NSRange(location: afterStart, length: afterLength))).lowercased()
-        let falsePositiveWords = ["phone", "tel", "date", "order", "invoice", "amount", "price", "year", "http", "www", "account", "reference", "ticket"]
+        let falsePositiveWords = ["phone", "tel", "date", "order", "invoice", "amount", "price", "year", "http", "www", "reference", "ticket"]
         guard !falsePositiveWords.contains(where: context.contains) else { return true }
-        if code.count == 4, code.hasPrefix("19") || code.hasPrefix("20") { return true }
         if rawCode.contains(" ") || rawCode.contains("-") { return false }
         guard code.count >= 7 else { return false }
         return Self.overlapsEmailAddress(body: body, range: range)
