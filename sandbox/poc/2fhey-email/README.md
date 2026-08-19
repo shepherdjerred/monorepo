@@ -123,9 +123,9 @@ demo server, and release script report lifecycle, success/error outcomes,
 record counts, and durations. The shell bundle uses the system `logger`
 process, while native components use the CodeFill subsystem. Message IDs,
 sender addresses, services, and other correlation values are hashed; email
-bodies, subjects, and OTP values are never logged or persisted. The setup
-window includes **Open Console logs** and **Copy diagnostics** actions for
-support reports.
+bodies and subjects are never logged or persisted; short-lived OTP records are
+stored in the App Group until use or expiry. The setup window includes **Open
+Console logs** and **Copy diagnostics** actions for support reports.
 
 ## Local AutoFill test page
 
