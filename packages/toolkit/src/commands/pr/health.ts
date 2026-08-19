@@ -46,6 +46,8 @@ function statusForBuildkiteBuild(state: string): HealthStatus {
     case "canceled":
     case "cancelled":
     case "timed_out":
+    case "skipped":
+    case "not_run":
       return "UNHEALTHY";
     case "scheduled":
     case "running":
@@ -54,8 +56,6 @@ function statusForBuildkiteBuild(state: string): HealthStatus {
     case "blocked":
     case "canceling":
     case "cancelling":
-    case "skipped":
-    case "not_run":
       return "PENDING";
     default:
       throw new Error(`Unknown Buildkite build state: ${state}`);

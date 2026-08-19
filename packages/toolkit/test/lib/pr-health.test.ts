@@ -105,6 +105,13 @@ describe("PR health CI fixtures", () => {
     ).toBe("UNHEALTHY");
   });
 
+  test.each(["skipped", "not_run"])(
+    "terminal %s build is unhealthy",
+    (state) => {
+      expect(ciHealth(HEAD_SHA, [], build(state)).status).toBe("UNHEALTHY");
+    },
+  );
+
   test("absent exact-head Buildkite build is pending", () => {
     const result = ciHealth(HEAD_SHA, [], null);
     expect(result.status).toBe("PENDING");
