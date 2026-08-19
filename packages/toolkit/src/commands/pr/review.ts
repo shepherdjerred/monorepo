@@ -7,12 +7,18 @@
  */
 
 import {
+  fetchHeadSha,
   listFindings,
   resolveFinding,
   reviewStateFor,
   type Finding,
 } from "#lib/review/findings.ts";
-import { gateStatusFor, harvestVerdict } from "#lib/review/harvest.ts";
+import {
+  gateStatusFor,
+  harvestVerdict,
+  REQUIRED_REVIEW_GATES,
+} from "#lib/review/harvest.ts";
+import { resolveProvider } from "@shepherdjerred/code-review";
 
 export type ReviewOptions = {
   repo?: string | undefined;
@@ -174,30 +180,63 @@ export async function reviewHarvestCommand(
   }
 
   for (const number of numbers) {
-    const { head, findings } = await listFindings({ repo, number, token });
-    const state = await reviewStateFor({ repo, number, token, head });
-    const gate = await gateStatusFor({ repo, ref: head, token });
-    const verdict = harvestVerdict({
-      gate,
-      reviewedAtHead: state.reviewedAtHead,
-      completionSignal: state.completionSignal,
-      blockingCount: findings.filter((finding) => !finding.isResolved).length,
-    });
+    const prHead = await fetchHeadSha({ repo, number, token });
+    for (const gateDefinition of REQUIRED_REVIEW_GATES) {
+      const provider = resolveProvider(gateDefinition.providerId);
+      const gate = await gateStatusFor({
+        repo,
+        ref: prHead,
+        token,
+        context: gateDefinition.context,
+      });
+      if (gate?.state !== "failure") {
+        const reason =
+          gate === null ? "no gate status" : `gate is ${gate.state}`;
+        console.log(
+          `#${String(number)} ${provider.displayName}: not retryable — ${reason}`,
+        );
+        continue;
+      }
 
-    if (!verdict.retryable) {
-      console.log(`#${String(number)}: not retryable — ${verdict.reason}`);
-      continue;
-    }
-    // Retrying is a write, so it is opt-in. Printing the command by default
-    // makes the read-only run useful rather than merely safe.
-    if (options.all !== true) {
+      const { head: reviewedHead, findings } = await listFindings({
+        repo,
+        number,
+        token,
+        provider,
+      });
+      const state = await reviewStateFor({
+        repo,
+        number,
+        token,
+        head: reviewedHead,
+        provider,
+      });
+      const verdict = harvestVerdict({
+        gate,
+        reviewedAtHead: state.reviewedAtHead,
+        completionSignal: state.completionSignal,
+        blockingCount: findings.filter((finding) => !finding.isResolved).length,
+      });
+
+      if (!verdict.retryable) {
+        console.log(
+          `#${String(number)} ${provider.displayName}: not retryable — ${verdict.reason}`,
+        );
+        continue;
+      }
+      // Retrying is a write, so it is opt-in. Printing the command by default
+      // makes the read-only run useful rather than merely safe.
+      if (options.all !== true) {
+        console.log(
+          `#${String(number)} ${provider.displayName}: retryable — toolkit bk job retry ${verdict.jobId}`,
+        );
+        continue;
+      }
+      retryBuildkiteJob(verdict.jobId);
       console.log(
-        `#${String(number)}: retryable — toolkit bk job retry ${verdict.jobId}`,
+        `#${String(number)} ${provider.displayName}: retried ${verdict.jobId}`,
       );
-      continue;
     }
-    retryBuildkiteJob(verdict.jobId);
-    console.log(`#${String(number)}: retried ${verdict.jobId}`);
   }
 }
 

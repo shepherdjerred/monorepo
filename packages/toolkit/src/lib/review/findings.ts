@@ -288,7 +288,7 @@ async function resolveThread(token: string, threadId: string): Promise<void> {
   );
 }
 
-async function fetchHeadSha(input: {
+export async function fetchHeadSha(input: {
   repo: string;
   number: number;
   token: string;

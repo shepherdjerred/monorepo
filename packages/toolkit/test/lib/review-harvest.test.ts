@@ -1,8 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import {
+  CODEX_GATE_CONTEXT,
+  GATE_CONTEXT,
   harvestVerdict,
   jobIdFromTargetUrl,
   nextPageUrl,
+  REQUIRED_REVIEW_GATES,
   type GateStatus,
 } from "#lib/review/harvest.ts";
 
@@ -11,6 +14,19 @@ const failed: GateStatus = {
   state: "failure",
   targetUrl: `https://buildkite.com/sjerred/monorepo/builds/9633#${JOB}`,
 };
+
+test("declares independent Qodo and Codex gate contexts", () => {
+  expect(GATE_CONTEXT).toBe(
+    "buildkite/monorepo/pr/robot-face-qodo-review-gate-required",
+  );
+  expect(CODEX_GATE_CONTEXT).toBe(
+    "buildkite/monorepo/pr/robot-face-codex-review-gate-required",
+  );
+  expect(REQUIRED_REVIEW_GATES).toEqual([
+    { providerId: "qodo", context: GATE_CONTEXT },
+    { providerId: "codex", context: CODEX_GATE_CONTEXT },
+  ]);
+});
 
 describe("jobIdFromTargetUrl", () => {
   test("reads the job out of the URL fragment", () => {
