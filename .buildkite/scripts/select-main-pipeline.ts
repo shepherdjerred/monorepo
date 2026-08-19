@@ -216,33 +216,60 @@ export function pipelineUploadArguments(
   return argumentsList;
 }
 
-async function prepareBase(): Promise<string> {
-  const exitCode = await runCommand([
+type BaseMetadataReader = () => Promise<{
+  readonly text: string;
+  readonly exitCode: number;
+}>;
+
+type ChangedFilesReader = (base: string) => Promise<{
+  readonly text: string;
+  readonly exitCode: number;
+}>;
+
+export async function prepareBase(
+  run: typeof runCommand = runCommand,
+  readMetadata: BaseMetadataReader = async () => {
+    const result = Bun.spawn(
+      ["buildkite-agent", "meta-data", "get", "ci-changed-base"],
+      { stdout: "pipe", stderr: "inherit", env: processEnv() },
+    );
+    return {
+      text: await new Response(result.stdout).text(),
+      exitCode: await result.exited,
+    };
+  },
+): Promise<string> {
+  const exitCode = await run([
     "bun",
     "--no-install",
     ".buildkite/scripts/prepare-ci-changed-base.ts",
   ]);
   if (exitCode !== 0) throw new Error("main CI base selection failed");
-  const result = Bun.spawn(
-    ["buildkite-agent", "meta-data", "get", "ci-changed-base"],
-    { stdout: "pipe", stderr: "inherit" },
-  );
-  const baseText = await new Response(result.stdout).text();
-  const base = baseText.trim();
-  const metadataExitCode = await result.exited;
+  const metadata = await readMetadata();
+  const base = metadata.text.trim();
+  const metadataExitCode = metadata.exitCode;
   if (metadataExitCode !== 0 || base.length === 0) {
     throw new Error("main CI base metadata is unavailable");
   }
   return base;
 }
 
-export async function writeSelectorChangedFiles(base: string): Promise<string> {
-  const child = Bun.spawn(
-    ["git", "diff", "--no-renames", "--name-only", base, "HEAD"],
-    { stdout: "pipe", stderr: "inherit" },
-  );
-  const changedFiles = await new Response(child.stdout).text();
-  const exitCode = await child.exited;
+export async function writeSelectorChangedFiles(
+  base: string,
+  readDiff: ChangedFilesReader = async (diffBase) => {
+    const result = Bun.spawn(
+      ["git", "diff", "--no-renames", "--name-only", diffBase, "HEAD"],
+      { stdout: "pipe", stderr: "inherit", env: processEnv() },
+    );
+    return {
+      text: await new Response(result.stdout).text(),
+      exitCode: await result.exited,
+    };
+  },
+): Promise<string> {
+  const diff = await readDiff(base);
+  const changedFiles = diff.text;
+  const exitCode = diff.exitCode;
   if (exitCode !== 0) {
     throw new Error(`selector changed-file diff exited ${exitCode.toString()}`);
   }
@@ -252,10 +279,13 @@ export async function writeSelectorChangedFiles(base: string): Promise<string> {
   return path;
 }
 
-async function selectLanes(base: string): Promise<Map<string, boolean>> {
+export async function selectLanes(
+  base: string,
+  run: typeof runCommand = runCommand,
+): Promise<Map<string, boolean>> {
   const decisions = new Map<string, boolean>();
   for (const lane of SELECTOR_LANES) {
-    const exitCode = await runCommand(
+    const exitCode = await run(
       ["bun", "--no-install", ".buildkite/scripts/ci-changed.ts", lane],
       { CI_CHANGED_BASE: base },
     );
@@ -358,18 +388,30 @@ export function validateRenderedSteps(rendered: readonly PipelineStep[]): void {
   }
 }
 
-async function uploadPipeline(
+type PipelineUploader = (
+  command: readonly string[],
+  payload: string,
+) => Promise<number>;
+
+export async function uploadPipeline(
   document: PipelineDocument,
   steps: readonly PipelineStep[],
   changedFilesPath: string | undefined,
+  upload: PipelineUploader = async (command, payload) => {
+    const child = Bun.spawn([...command], {
+      stdin: new Blob([payload]),
+      stdout: "inherit",
+      stderr: "inherit",
+      env: processEnv(),
+    });
+    return child.exited;
+  },
 ): Promise<void> {
   const payload = pipelinePayload(document, steps, Bun.env);
-  const child = Bun.spawn(pipelineUploadArguments(changedFilesPath), {
-    stdin: new Blob([payload]),
-    stdout: "inherit",
-    stderr: "inherit",
-  });
-  const exitCode = await child.exited;
+  const exitCode = await upload(
+    pipelineUploadArguments(changedFilesPath),
+    payload,
+  );
   if (exitCode !== 0)
     throw new Error(`pipeline upload failed with ${exitCode.toString()}`);
 }
@@ -390,20 +432,26 @@ export const SELECTED_STEPS_METADATA_KEY = "ci-selected-main-steps";
  * complete graph. Every caller therefore records the set it is about to
  * upload, and the value never outlives the attempt that wrote it.
  */
-async function recordSelectedSteps(
+type MetadataWriter = (command: readonly string[]) => Promise<number>;
+
+export async function recordSelectedSteps(
   selected: ReadonlySet<string>,
+  writeMetadata: MetadataWriter = async (command) => {
+    const child = Bun.spawn([...command], {
+      stdout: "inherit",
+      stderr: "inherit",
+      env: processEnv(),
+    });
+    return child.exited;
+  },
 ): Promise<void> {
-  const child = Bun.spawn(
-    [
-      "buildkite-agent",
-      "meta-data",
-      "set",
-      SELECTED_STEPS_METADATA_KEY,
-      [...selected].sort().join("\n"),
-    ],
-    { stdout: "inherit", stderr: "inherit" },
-  );
-  const exitCode = await child.exited;
+  const exitCode = await writeMetadata([
+    "buildkite-agent",
+    "meta-data",
+    "set",
+    SELECTED_STEPS_METADATA_KEY,
+    [...selected].sort().join("\n"),
+  ]);
   if (exitCode !== 0) {
     throw new Error(
       `could not record selected main steps (exit ${exitCode.toString()})`,
@@ -411,29 +459,70 @@ async function recordSelectedSteps(
   }
 }
 
-async function annotateFallback(reason: string): Promise<void> {
-  const child = Bun.spawn(
-    [
-      "buildkite-agent",
-      "annotate",
-      "--style",
-      "warning",
-      "--context",
-      "ci-selector",
-      `Main CI selection failed open; uploaded the complete graph. ${reason}`,
-    ],
-    { stdout: "inherit", stderr: "inherit" },
-  );
-  if ((await child.exited) !== 0) {
+type FallbackAnnotator = (command: readonly string[]) => Promise<number>;
+
+export async function annotateFallback(
+  reason: string,
+  annotate: FallbackAnnotator = async (command) => {
+    const child = Bun.spawn([...command], {
+      stdout: "inherit",
+      stderr: "inherit",
+      env: processEnv(),
+    });
+    return child.exited;
+  },
+): Promise<void> {
+  const exitCode = await annotate([
+    "buildkite-agent",
+    "annotate",
+    "--style",
+    "warning",
+    "--context",
+    "ci-selector",
+    `Main CI selection failed open; uploaded the complete graph. ${reason}`,
+  ]);
+  if (exitCode !== 0) {
     console.error("WARN: could not annotate main CI selector fallback");
   }
 }
 
-async function main(): Promise<number> {
-  fixedCorpusMode(Bun.env);
-  const document = parsePipeline(
-    await Bun.file(".buildkite/pipeline.yml").text(),
-  );
+type SelectionDependencies = {
+  readonly prepareBase: () => Promise<string>;
+  readonly writeChangedFiles: (base: string) => Promise<string>;
+  readonly selectLanes: (base: string) => Promise<Map<string, boolean>>;
+  readonly recordSelectedSteps: (
+    selected: ReadonlySet<string>,
+  ) => Promise<void>;
+  readonly uploadPipeline: (
+    document: PipelineDocument,
+    steps: readonly PipelineStep[],
+    changedFilesPath: string | undefined,
+  ) => Promise<void>;
+  readonly annotateFallback: (reason: string) => Promise<void>;
+  readonly deleteChangedFiles: (path: string) => Promise<void>;
+};
+
+const productionSelectionDependencies: SelectionDependencies = {
+  prepareBase,
+  writeChangedFiles: writeSelectorChangedFiles,
+  selectLanes,
+  recordSelectedSteps,
+  uploadPipeline,
+  annotateFallback,
+  deleteChangedFiles: async (path) => {
+    try {
+      await Bun.file(path).delete();
+    } catch (error: unknown) {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.error(`WARN: could not delete ${path}: ${reason}`);
+    }
+  },
+};
+
+export async function runSelection(
+  document: PipelineDocument,
+  dependencies: SelectionDependencies = productionSelectionDependencies,
+): Promise<number> {
   let steps: Map<string, PipelineStep> | undefined;
   let changedFilesPath: string | undefined;
   let uploaded = false;
@@ -441,9 +530,9 @@ async function main(): Promise<number> {
   try {
     steps = mainSteps(document);
     assertSelectionContract(steps);
-    const base = await prepareBase();
-    changedFilesPath = await writeSelectorChangedFiles(base);
-    const decisions = await selectLanes(base);
+    const base = await dependencies.prepareBase();
+    changedFilesPath = await dependencies.writeChangedFiles(base);
+    const decisions = await dependencies.selectLanes(base);
     const selected = selectedKeys(steps, decisions);
     const rendered = renderSteps(steps, selected);
     validateRenderedSteps(rendered);
@@ -453,8 +542,8 @@ async function main(): Promise<number> {
     // into a hard failure. Recording first also keeps the metadata a truthful
     // description of what gets uploaded, because a failure here still falls
     // back to the complete graph.
-    await recordSelectedSteps(selected);
-    await uploadPipeline(document, rendered, changedFilesPath);
+    await dependencies.recordSelectedSteps(selected);
+    await dependencies.uploadPipeline(document, rendered, changedFilesPath);
     uploaded = true;
     console.log(`Uploaded ${selected.size.toString()} selected main CI steps`);
     return 0;
@@ -476,31 +565,28 @@ async function main(): Promise<number> {
     // a metadata write must never be what leaves main with no steps at all. A
     // stale value only mislabels rows in the summary annotation.
     try {
-      await recordSelectedSteps(new Set());
+      await dependencies.recordSelectedSteps(new Set());
     } catch (clearError) {
       const detail =
         clearError instanceof Error ? clearError.message : String(clearError);
       console.error(`WARN: could not clear the recorded selection: ${detail}`);
     }
-    await uploadPipeline(document, rendered, changedFilesPath);
-    await annotateFallback(reason);
+    await dependencies.uploadPipeline(document, rendered, changedFilesPath);
+    await dependencies.annotateFallback(reason);
     return 0;
   } finally {
     if (changedFilesPath !== undefined) {
-      // Best-effort by design. This runs after the upload, and a throw from
-      // `finally` replaces the outcome of the block it follows — so a failed
-      // unlink of a scratch file would exit nonzero on a build whose steps are
-      // already scheduled, which is exactly the hard failure the upload
-      // ordering above exists to prevent. The file lives in the agent's
-      // temporary directory and is reclaimed with the workspace.
-      try {
-        await Bun.file(changedFilesPath).delete();
-      } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error);
-        console.error(`WARN: could not delete ${changedFilesPath}: ${reason}`);
-      }
+      await dependencies.deleteChangedFiles(changedFilesPath);
     }
   }
+}
+
+async function main(): Promise<number> {
+  fixedCorpusMode(Bun.env);
+  const document = parsePipeline(
+    await Bun.file(".buildkite/pipeline.yml").text(),
+  );
+  return runSelection(document);
 }
 
 if (import.meta.main) process.exitCode = await main();

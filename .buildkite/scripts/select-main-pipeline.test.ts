@@ -1,15 +1,22 @@
 import { expect, test } from "bun:test";
 import {
   assertSelectionContract,
+  annotateFallback,
   mainSteps,
   parsePipeline,
   pipelinePayload,
   pipelineUploadArguments,
+  prepareBase,
+  recordSelectedSteps,
   renderFallbackSteps,
   renderSteps,
+  runSelection,
   runCommand,
+  selectLanes,
   selectedKeys,
   validateRenderedSteps,
+  uploadPipeline,
+  writeSelectorChangedFiles,
 } from "./select-main-pipeline.ts";
 
 const repoRoot = new URL("../..", import.meta.url).pathname;
@@ -313,4 +320,231 @@ test("preserves native path filters when the selector diff is available", () => 
     "/tmp/selector-changes",
   );
   expect(rendered[1]?.["if_changed"]).toBe("packages/alert-dashboard/**");
+});
+
+test("prepares the selector base from successful metadata", async () => {
+  const commands: string[][] = [];
+  const base = await prepareBase(
+    async (command) => {
+      commands.push([...command]);
+      return 0;
+    },
+    async () => ({ text: "  abc123  ", exitCode: 0 }),
+  );
+  expect(base).toBe("abc123");
+  expect(commands).toHaveLength(1);
+  await expect(
+    prepareBase(
+      async () => 1,
+      async () => ({ text: "abc123", exitCode: 0 }),
+    ),
+  ).rejects.toThrow("main CI base selection failed");
+  await expect(
+    prepareBase(
+      async () => 0,
+      async () => ({ text: "", exitCode: 0 }),
+    ),
+  ).rejects.toThrow("main CI base metadata is unavailable");
+  await expect(
+    prepareBase(
+      async () => 0,
+      async () => ({ text: "abc123", exitCode: 1 }),
+    ),
+  ).rejects.toThrow("main CI base metadata is unavailable");
+});
+
+test("writes selector changed files and fails on a diff error", async () => {
+  const path = await writeSelectorChangedFiles("base-sha", async (base) => {
+    expect(base).toBe("base-sha");
+    return { text: "packages/example/file.ts\n", exitCode: 0 };
+  });
+  expect(await Bun.file(path).text()).toBe("packages/example/file.ts\n");
+  await Bun.file(path).delete();
+  await expect(
+    writeSelectorChangedFiles("base-sha", async () => ({
+      text: "",
+      exitCode: 1,
+    })),
+  ).rejects.toThrow("selector changed-file diff exited 1");
+  const livePath = await writeSelectorChangedFiles("HEAD");
+  expect(await Bun.file(livePath).exists()).toBe(true);
+  await Bun.file(livePath).delete();
+});
+
+test("selects changed lanes and fails on an unexpected selector exit", async () => {
+  const decisions = await selectLanes("base-sha", async (command) => {
+    return command.at(-1) === "images" ? 0 : 78;
+  });
+  expect(decisions.get("images")).toBe(true);
+  expect(decisions.get("playwright")).toBe(false);
+  await expect(
+    selectLanes("base-sha", async (command) =>
+      command.at(-1) === "images" ? 1 : 78,
+    ),
+  ).rejects.toThrow("CI selector failed for lane images");
+});
+
+test("uploads and records selector metadata through their command seams", async () => {
+  const uploadCalls: { command: readonly string[]; payload: string }[] = [];
+  const uploadDocument = parsePipeline("steps:\n  - key: verify\n");
+  await uploadPipeline(
+    uploadDocument,
+    uploadDocument.steps,
+    undefined,
+    async (command, payload) => {
+      uploadCalls.push({ command, payload });
+      return 0;
+    },
+  );
+  expect(uploadCalls[0]?.command).toEqual([
+    "buildkite-agent",
+    "pipeline",
+    "upload",
+    "--replace",
+  ]);
+  expect(uploadCalls[0]?.payload).toContain('"steps"');
+  await expect(
+    uploadPipeline(
+      uploadDocument,
+      uploadDocument.steps,
+      undefined,
+      async () => 1,
+    ),
+  ).rejects.toThrow("pipeline upload failed with 1");
+
+  const temporaryDirectory = `/tmp/select-main-pipeline-${crypto.randomUUID()}`;
+  expect(await Bun.spawn(["mkdir", "-p", temporaryDirectory]).exited).toBe(0);
+  const fakeAgent = `${temporaryDirectory}/buildkite-agent`;
+  await Bun.write(fakeAgent, "#!/bin/sh\ncat >/dev/null\n");
+  expect(await Bun.spawn(["chmod", "+x", fakeAgent]).exited).toBe(0);
+  const previousPath = Bun.env["PATH"];
+  Bun.env["PATH"] = `${temporaryDirectory}:${previousPath ?? ""}`;
+  const previousProcessPath = process.env["PATH"];
+  process.env["PATH"] = `${temporaryDirectory}:${previousProcessPath ?? ""}`;
+  try {
+    await uploadPipeline(uploadDocument, uploadDocument.steps, undefined);
+    await recordSelectedSteps(new Set(["verify"]));
+    await annotateFallback("test fallback");
+    await expect(prepareBase(async () => 0)).rejects.toThrow(
+      "main CI base metadata is unavailable",
+    );
+  } finally {
+    if (previousPath === undefined) delete Bun.env["PATH"];
+    else Bun.env["PATH"] = previousPath;
+    if (previousProcessPath === undefined) delete process.env["PATH"];
+    else process.env["PATH"] = previousProcessPath;
+    await Bun.file(fakeAgent).delete();
+    expect(await Bun.spawn(["rmdir", temporaryDirectory]).exited).toBe(0);
+  }
+
+  const metadata: string[][] = [];
+  await recordSelectedSteps(
+    new Set(["verify", "release-please"]),
+    async (command) => {
+      metadata.push([...command]);
+      return 0;
+    },
+  );
+  expect(metadata[0]?.slice(0, 4)).toEqual([
+    "buildkite-agent",
+    "meta-data",
+    "set",
+    "ci-selected-main-steps",
+  ]);
+  await expect(recordSelectedSteps(new Set(), async () => 1)).rejects.toThrow(
+    "could not record selected main steps (exit 1)",
+  );
+});
+
+test("annotates selector fallback and tolerates annotation failure", async () => {
+  const commands: readonly string[][] = [];
+  const captured = [...commands];
+  await annotateFallback("selector failed", async (command) => {
+    captured.push([...command]);
+    return 0;
+  });
+  expect(captured[0]?.at(-1)).toBe(
+    "Main CI selection failed open; uploaded the complete graph. selector failed",
+  );
+  await annotateFallback("annotation unavailable", async () => 1);
+});
+
+test("runs the selected graph and cleans up its changed-file list", async () => {
+  const selectionDocument = parsePipeline(`steps:
+  - key: verify
+  - key: alert-dashboard-sqlite
+  - key: homelab-release-admission
+  - key: release-please
+  - key: build-summary
+    depends_on:
+      - verify
+      - alert-dashboard-sqlite
+      - homelab-release-admission
+      - release-please
+`);
+  const calls: string[] = [];
+  const result = await runSelection(selectionDocument, {
+    prepareBase: async () => "base-sha",
+    writeChangedFiles: async () => "/tmp/selector-changes",
+    selectLanes: async () => new Map(),
+    recordSelectedSteps: async (selected) => {
+      calls.push(`record:${String(selected.size)}`);
+    },
+    uploadPipeline: async (_document, steps, changedFilesPath) => {
+      calls.push(
+        `upload:${String(steps.length)}:${changedFilesPath ?? "none"}`,
+      );
+    },
+    annotateFallback: async () => {
+      calls.push("annotate");
+    },
+    deleteChangedFiles: async (path) => {
+      calls.push(`delete:${path}`);
+    },
+  });
+  expect(result).toBe(0);
+  expect(calls).toEqual([
+    "record:5",
+    "upload:5:/tmp/selector-changes",
+    "delete:/tmp/selector-changes",
+  ]);
+});
+
+test("falls back to the complete graph when selection fails", async () => {
+  const fallbackDocument = parsePipeline(`steps:
+  - key: verify
+  - key: alert-dashboard-sqlite
+  - key: homelab-release-admission
+  - key: release-please
+  - key: build-summary
+`);
+  const calls: string[] = [];
+  const result = await runSelection(fallbackDocument, {
+    prepareBase: async () => {
+      throw new Error("selector unavailable");
+    },
+    writeChangedFiles: async () => "/tmp/unreachable",
+    selectLanes: async () => new Map(),
+    recordSelectedSteps: async (selected) => {
+      calls.push(`record:${String(selected.size)}`);
+      throw new Error("metadata unavailable");
+    },
+    uploadPipeline: async (_document, steps, changedFilesPath) => {
+      calls.push(
+        `upload:${String(steps.length)}:${changedFilesPath ?? "none"}`,
+      );
+    },
+    annotateFallback: async (reason) => {
+      calls.push(`annotate:${reason}`);
+    },
+    deleteChangedFiles: async () => {
+      calls.push("delete");
+    },
+  });
+  expect(result).toBe(0);
+  expect(calls).toEqual([
+    "record:0",
+    "upload:5:none",
+    "annotate:selector unavailable",
+  ]);
 });
