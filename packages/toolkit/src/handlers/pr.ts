@@ -42,6 +42,7 @@ async function handleReview(args: string[]): Promise<void> {
       json: { type: "boolean", default: false },
       finding: { type: "string" },
       evidence: { type: "string" },
+      provider: { type: "string" },
       retry: { type: "boolean", default: false },
     },
     allowPositionals: true,
@@ -52,6 +53,7 @@ async function handleReview(args: string[]): Promise<void> {
     json: values.json,
     finding: values.finding,
     evidence: values.evidence,
+    provider: values.provider,
     all: values.retry,
   };
   // Handled before the switch rather than as a case: `process.exit` returns
@@ -115,6 +117,7 @@ Options:
   --profile <name>      (asset) AWS profile to use (overrides AWS_PROFILE)
   --finding <key>       (review resolve) Finding key or exact title
   --evidence <text>     (review resolve) Why it is resolved; required
+  --provider <id>       (review list/resolve) Provider (default: qodo)
   --retry               (review harvest) Re-run the eligible jobs
 
 Credentials (asset):

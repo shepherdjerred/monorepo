@@ -14,6 +14,14 @@ const GITHUB_API = "https://api.github.com";
 
 export const GATE_CONTEXT =
   "buildkite/monorepo/pr/robot-face-qodo-review-gate-required";
+export const CODEX_GATE_CONTEXT =
+  "buildkite/monorepo/pr/robot-face-codex-review-gate-required";
+
+/** The independent provider gates that must be harvested for a PR. */
+export const REQUIRED_REVIEW_GATES = [
+  { providerId: "qodo", context: GATE_CONTEXT },
+  { providerId: "codex", context: CODEX_GATE_CONTEXT },
+] as const;
 
 const StatusSchema = z.object({
   state: z.string(),
