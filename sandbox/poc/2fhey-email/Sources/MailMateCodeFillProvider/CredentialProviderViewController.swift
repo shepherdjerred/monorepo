@@ -169,15 +169,27 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
                 return
             }
             Task.detached(priority: .userInitiated) { [logger] in
-                do {
-                    let store = try CodeStore(applicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier)
-                    let remainingRecords = try store.consumeAndReadRemaining(messageID: record.messageID)
-                    logger.info("event=credential_completion outcome=consumed remaining_record_count=\(remainingRecords.count, privacy: .public) message_id_hash=\(CodeFillObservability.fingerprint(record.messageID), privacy: .public)")
-                    Task { @MainActor [weak self] in
-                        self?.synchronizeIdentityStore(remainingRecords)
+                for attempt in 1...3 {
+                    do {
+                        let store = try CodeStore(applicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier)
+                        let remainingRecords = try store.consumeAndReadRemaining(messageID: record.messageID)
+                        logger.info("event=credential_completion outcome=consumed remaining_record_count=\(remainingRecords.count, privacy: .public) message_id_hash=\(CodeFillObservability.fingerprint(record.messageID), privacy: .public) attempt=\(attempt, privacy: .public)")
+                        Task { @MainActor [weak self] in
+                            self?.synchronizeIdentityStore(remainingRecords)
+                        }
+                        return
+                    } catch {
+                        guard attempt < 3 else {
+                            logger.error("event=credential_completion outcome=consume_error attempts=\(attempt, privacy: .public) error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
+                            return
+                        }
+                        do {
+                            try await Task.sleep(for: .milliseconds(100))
+                        } catch {
+                            logger.error("event=credential_completion outcome=consume_retry_cancelled attempt=\(attempt, privacy: .public)")
+                            return
+                        }
                     }
-                } catch {
-                    logger.error("event=credential_completion outcome=consume_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
                 }
             }
         }
