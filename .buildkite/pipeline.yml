@@ -1761,9 +1761,8 @@ steps:
         flock -x 9
         bun --no-install packages/homelab/scripts/tofu-stack.ts cloudflare apply
       ) 9>/buildkite/tofu-plugin-cache/.lock
-    # Safe to retry: tofu re-plans from state, and the scripts only exit 34
-    # (the retryable code) on classified transient failures.
-    retry: *retry
+    # No automatic retry: a token value may only be available during the
+    # original apply, so inspect state and the 1Password handoff first.
     plugins:
       - kubernetes:
           <<: *pod_tofu_kubernetes

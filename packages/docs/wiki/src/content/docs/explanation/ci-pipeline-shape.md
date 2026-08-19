@@ -27,10 +27,13 @@ any two of them would lose information the pipeline is built to preserve.
   exporter/collector/object-store path broke rather than a query. See the
   `docker-e2e` and `alert-dashboard-sqlite` steps in
   [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
-- **OpenTofu** stays split into infrastructure stacks, GitHub resources, and
-  Cloudflare resources. Those three have different ordering, concurrency,
-  credentials, and retry safety — one lane would have to take the strictest of
-  each. The three `tofu-*` steps live in
+- **OpenTofu** stays split into infrastructure stacks, GitHub resources,
+  platform accounts, and Cloudflare resources. Those four have different
+  ordering, concurrency, credentials, and retry safety — one lane would have to
+  take the strictest of each. The platform-account lane applies OpenAI,
+  Anthropic, Discord, and OpenRouter settings before ArgoCD sync. Generated
+  credentials cross through a concealed 1Password handoff, so that lane has no
+  automatic retry. The four `tofu-*` steps live in
   [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
 - **Scout** has three deliberate promotion phases: archive and deploy beta, mint
   the immutable tag, then reconcile the production `versions.ts` pin. They are

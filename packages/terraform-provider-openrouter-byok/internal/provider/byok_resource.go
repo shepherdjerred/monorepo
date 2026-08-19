@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -16,6 +17,7 @@ import (
 
 var _ resource.Resource = &byokResource{}
 var _ resource.ResourceWithConfigure = &byokResource{}
+var _ resource.ResourceWithImportState = &byokResource{}
 
 type byokResource struct {
 	client *client
@@ -108,6 +110,12 @@ func (r *byokResource) Configure(_ context.Context, req resource.ConfigureReques
 		return
 	}
 	r.client = c
+}
+
+// ImportState adopts a credential created before an ambiguous API failure.
+// Read then refreshes its metadata; the write-only key remains configuration-only.
+func (r *byokResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *byokResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
