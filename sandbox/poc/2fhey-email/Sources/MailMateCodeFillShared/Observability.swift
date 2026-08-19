@@ -17,6 +17,7 @@ public enum CodeFillObservability {
 
     private static let saltLock = NSLock()
     nonisolated(unsafe) private static var cachedSalt: Data?
+    nonisolated(unsafe) private static var cachedSaltIsFallback = false
     private static let saltFileName = "observability-fingerprint-salt.bin"
 
     // Domains, senders, and message IDs are guessable, so an unsalted digest is reversible by
@@ -24,7 +25,8 @@ public enum CodeFillObservability {
     // fingerprints stay comparable across the helper, app, and extension.
     private static func salt() -> Data {
         saltLock.lock()
-        if let cachedSalt {
+        let fallbackSalt = cachedSalt
+        if let cachedSalt, !cachedSaltIsFallback {
             saltLock.unlock()
             return cachedSalt
         }
@@ -36,12 +38,12 @@ public enum CodeFillObservability {
             // Unit tests and command-line invocations do not have the production App Group. Keep
             // those environments usable without pretending their process-local salt is shared.
             let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
-            return cacheSalt(generated)
+            return fallbackSalt ?? cacheSalt(generated, isFallback: true)
         }
 
         let saltURL = containerURL.appendingPathComponent(saltFileName)
         if let stored = readSalt(at: saltURL) {
-            return cacheSalt(stored)
+            return cacheSalt(stored, isFallback: false)
         }
 
         // A unique temporary file plus link(2) gives us create-if-absent semantics without a
@@ -53,12 +55,12 @@ public enum CodeFillObservability {
             try generated.write(to: temporaryURL, options: .atomic)
             if link(temporaryURL.path, saltURL.path) == 0 {
                 unlink(temporaryURL.path)
-                return cacheSalt(generated)
+                return cacheSalt(generated, isFallback: false)
             }
             let failure = errno
             unlink(temporaryURL.path)
             if failure == EEXIST, let stored = readSalt(at: saltURL) {
-                return cacheSalt(stored)
+                return cacheSalt(stored, isFallback: false)
             }
         } catch {
             unlink(temporaryURL.path)
@@ -69,11 +71,11 @@ public enum CodeFillObservability {
         let deadline = Date().addingTimeInterval(0.25)
         while Date() < deadline {
             if let stored = readSalt(at: saltURL) {
-                return cacheSalt(stored)
+                return cacheSalt(stored, isFallback: false)
             }
             usleep(10_000)
         }
-        return cacheSalt(generated)
+        return fallbackSalt ?? cacheSalt(generated, isFallback: true)
     }
 
     private static func readSalt(at url: URL) -> Data? {
@@ -81,11 +83,12 @@ public enum CodeFillObservability {
         return data
     }
 
-    private static func cacheSalt(_ salt: Data) -> Data {
+    private static func cacheSalt(_ salt: Data, isFallback: Bool) -> Data {
         saltLock.lock()
         defer { saltLock.unlock() }
-        if let cachedSalt { return cachedSalt }
+        if let cachedSalt, (!cachedSaltIsFallback || isFallback) { return cachedSalt }
         cachedSalt = salt
+        cachedSaltIsFallback = isFallback
         return salt
     }
 

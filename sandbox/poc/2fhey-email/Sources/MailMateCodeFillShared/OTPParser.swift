@@ -8,7 +8,10 @@ public struct OTPParser {
     }
 
     private static let keywordPattern = makeExpression(
-        "(?i)(verification|verificaci[oó]n|v[eé]rification|verifizierung|sicherheitscode|one[- ]?time|authentication|authentifizierung|auth|login|sign[- ]?in|passcode|otp|two[- ]?factor|2fa|c[oó]de|pin|验证码|認証コード)"
+        "(?i)(?<![A-Za-z0-9])(verification|verificaci[oó]n|v[eé]rification|verifizierung|sicherheitscode|one[- ]?time|authentication|authentifizierung|auth|login|sign[- ]?in|passcode|otp|two[- ]?factor|2fa|c[oó]de|pin|验证码|認証コード)(?![A-Za-z0-9])"
+    )
+    private static let explicitLabelPattern = makeExpression(
+        "(?i)(?<![A-Za-z0-9])(code|otp|pin|passcode)(?![A-Za-z0-9])"
     )
     private static let candidatePattern = makeExpression(
         "(?<![A-Za-z0-9])([A-Za-z0-9](?:[ -]?[A-Za-z0-9]){3,7})(?![A-Za-z0-9])"
@@ -41,6 +44,10 @@ public struct OTPParser {
             in: sanitizedBody,
             range: NSRange(sanitizedBody.startIndex..., in: sanitizedBody)
         )
+        let explicitLabelRanges = Self.explicitLabelPattern.matches(
+            in: sanitizedBody,
+            range: NSRange(sanitizedBody.startIndex..., in: sanitizedBody)
+        )
         let candidates = Self.candidatePattern.matches(
             in: sanitizedBody,
             range: NSRange(sanitizedBody.startIndex..., in: sanitizedBody)
@@ -64,10 +71,10 @@ public struct OTPParser {
                 NSMaxRange(keywordRange.range) >= match.range.location - 48 &&
                     keywordRange.range.location <= NSMaxRange(match.range) + 48
             }
-            let contextStart = max(0, match.range.location - 28)
-            let contextRange = NSRange(location: contextStart, length: match.range.location - contextStart)
-            let context = NSString(string: sanitizedBody).substring(with: contextRange).lowercased()
-            let explicitLabel = context.contains("code") || context.contains("otp") || context.contains("pin") || context.contains("passcode")
+            let explicitLabel = explicitLabelRanges.contains { labelRange in
+                NSMaxRange(labelRange.range) <= match.range.location &&
+                    match.range.location - NSMaxRange(labelRange.range) <= 28
+            }
             let score = (explicitLabel ? 4 : 0) + (hasNearbyKeyword ? 2 : 0) + (code.allSatisfy(\.isNumber) ? 1 : 0)
             return Candidate(code: code, range: normalized.range, score: score)
         }
