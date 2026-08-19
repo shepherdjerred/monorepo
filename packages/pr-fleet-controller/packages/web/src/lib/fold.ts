@@ -335,7 +335,10 @@ function applyPublicationProgress(
     }
     const stage = `${parsed.data.intent} ${parsed.data.stage} ${parsed.data.state}`;
     updateLatest(progress, event.timestamp, stage);
-    if (parsed.data.stage === "review" && parsed.data.state === "completed") {
+    if (
+      parsed.data.stage === "remote-head" &&
+      parsed.data.state === "completed"
+    ) {
       view.progress.publicationsConfirmed += 1;
       progress.blocker = null;
     }
@@ -358,6 +361,7 @@ function applyHeadTransition(
       return;
     }
     if (parsed.data.cause === "unexpected") {
+      markFailureSignal(view, event, "worktree-head-changed");
       recordFailure(view, prNumber, event.timestamp, "worktree-head-changed");
       return;
     }

@@ -255,6 +255,20 @@ describe("causal progress", () => {
         timestamp: "2026-08-09T20:00:03.000Z",
         kind: "publication.stage",
         correlation: { prNumber: 42 },
+        payload: {
+          intent: "fix",
+          stage: "remote-head",
+          state: "completed",
+        },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 5,
+        timestamp: "2026-08-09T20:00:04.000Z",
+        kind: "publication.stage",
+        correlation: { prNumber: 42 },
         payload: { intent: "fix", stage: "review", state: "completed" },
       }),
     );
@@ -266,6 +280,61 @@ describe("causal progress", () => {
     );
     expect(view.progress.prs.get(42)?.blocker).toBeNull();
     expect(view.progress.prs.get(42)?.failures.get("setup-required")).toBe(1);
+  });
+
+  test("counts a publication after remote-head confirmation even if review fails", () => {
+    const view = createRunView();
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 1,
+        timestamp: "2026-08-09T20:00:00.000Z",
+        kind: "publication.stage",
+        correlation: { prNumber: 42 },
+        payload: {
+          intent: "fix",
+          stage: "remote-head",
+          state: "completed",
+        },
+      }),
+    );
+
+    expect(view.progress.publicationsConfirmed).toBe(1);
+  });
+
+  test("deduplicates an unexpected HEAD transition and its tool failure", () => {
+    const view = createRunView();
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 1,
+        timestamp: "2026-08-09T20:00:00.000Z",
+        kind: "worktree.head.transition",
+        correlation: { prNumber: 42, toolCallId: "tool-head" },
+        payload: {
+          cause: "unexpected",
+          localHeadSha: "a".repeat(40),
+        },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 2,
+        timestamp: "2026-08-09T20:00:01.000Z",
+        kind: "tool.failed",
+        correlation: { prNumber: 42, toolCallId: "tool-head" },
+        payload: {
+          tool: "inspect_worktree_wip",
+          error: "Local HEAD changed",
+          failureClass: "worktree-head-changed",
+        },
+      }),
+    );
+
+    expect(
+      view.progress.prs.get(42)?.failures.get("worktree-head-changed"),
+    ).toBe(1);
   });
 
   test("clears a lease blocker when the same PR obtains the lease", () => {
