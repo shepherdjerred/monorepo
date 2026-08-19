@@ -457,7 +457,7 @@ describe("generateMatchReport Classic routing", () => {
 
     const result = toMatch([player], rawMatch, new Map());
 
-    expect(result?.queueType).toBeUndefined();
+    expect(result?.queueType).toBe("normal");
     expect(result?.players).toHaveLength(1);
   });
 

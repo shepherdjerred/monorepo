@@ -65,9 +65,11 @@ export function toMatch(
     );
   }
   const completedQueueType =
-    queueType === undefined || isClassicQueueType(queueType)
-      ? undefined
-      : CompletedQueueTypeSchema.parse(queueType);
+    queueType === "classic"
+      ? "normal"
+      : queueType === undefined
+        ? undefined
+        : CompletedQueueTypeSchema.parse(queueType);
 
   // Build CompletedMatch.players for all tracked players, skipping any with missing participant data
   const matchPlayers = players

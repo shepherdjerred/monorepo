@@ -18,6 +18,7 @@ export const QueueTypeSchema = z.enum([
   "classic aram mayhem",
   "brawl",
   "aram mayhem",
+  "normal",
   "draft pick",
   "easy doom bots",
   "normal doom bots",
@@ -179,6 +180,7 @@ export function queueTypeToDisplayString(queueType: QueueType): string {
     .with("classic aram mayhem", () => "ARAM: Mayhem Classic-ish")
     .with("brawl", () => "brawl")
     .with("aram mayhem", () => "ARAM: Mayhem")
+    .with("normal", () => "normal")
     .with("easy doom bots", () => "Easy Doom Bots")
     .with("normal doom bots", () => "Normal Doom Bots")
     .with("hard doom bots", () => "Hard Doom Bots")
