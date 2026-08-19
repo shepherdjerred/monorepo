@@ -222,6 +222,7 @@ function fixture(transactionTimeoutMs = 1000) {
     setVoiceAudioListener: (listener) => {
       voiceListener = listener;
     },
+    setVoiceReceiveObserver: () => null,
     seek: () => Promise.resolve(true),
     getPosition: () => 90,
     lastVoiceCloseInfo: () => null,

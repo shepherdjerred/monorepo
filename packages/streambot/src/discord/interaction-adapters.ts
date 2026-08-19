@@ -20,7 +20,9 @@ export function adaptCommandInteraction(
   return {
     userId: toUserId(interaction.user.id),
     subcommand: () => interaction.options.getSubcommand(),
+    subcommandGroup: () => interaction.options.getSubcommandGroup(false),
     getString: (name) => interaction.options.getString(name),
+    getInteger: (name) => interaction.options.getInteger(name),
     getStringRequired: (name) => interaction.options.getString(name, true),
     getIntegerRequired: (name) => interaction.options.getInteger(name, true),
     reply: async (content) => {
@@ -56,7 +58,9 @@ export function adaptCardInteraction(
   return {
     userId: toUserId(interaction.user.id),
     subcommand: () => subcommand,
+    subcommandGroup: () => null,
     getString: () => null,
+    getInteger: () => null,
     getStringRequired: (name) => unavailableOption(name),
     getIntegerRequired: (name) => unavailableOption(name),
     reply: async (content) => {

@@ -124,6 +124,131 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
         },
+        {
+          alert: "StreambotVoiceReceiveUnready",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "(streambot_voice_receive_ready == 0 or streambot_voice_dave_ready == 0) and on (guild_id, channel_id) streambot_voice_sessions_active == 1",
+          ),
+          for: "2m",
+          labels: { severity: "warning", category: "voice" },
+          annotations: {
+            summary:
+              "An active Streambot voice receive path has been unready for two minutes",
+            description: escapePrometheusTemplate(
+              "The Discord receive or required DAVE decrypt path is not ready for guild {{ $labels.guild_id }} channel {{ $labels.channel_id }}. Open the Streambot Voice dashboard and correlate the session with transport logs before restarting it.",
+            ),
+          },
+        },
+        {
+          alert: "StreambotVoiceIngressErrorsHigh",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            '(sum(increase(streambot_voice_receive_packets_total{outcome=~"decrypt-error|malformed"}[10m])) + sum(increase(streambot_voice_decode_errors_total[10m]))) / clamp_min(sum(increase(streambot_voice_receive_packets_total[10m])), 1) > 0.05 and sum(increase(streambot_voice_receive_packets_total[10m])) >= 100',
+          ),
+          labels: { severity: "warning", category: "voice" },
+          annotations: {
+            summary:
+              "More than 5% of Streambot voice ingress failed decrypt, decode, or validation",
+            description: escapePrometheusTemplate(
+              "At least 100 packets arrived in ten minutes and more than 5% were malformed, failed DAVE decryption, or failed Opus decoding. Inspect the ingress outcomes and correlated Loki logs before attributing the failure to wake detection.",
+            ),
+          },
+        },
+        {
+          alert: "StreambotVoiceQuotaExhausted",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum(increase(streambot_voice_transcript_verifications_total{outcome="quota"}[15m])) + sum(increase(streambot_voice_cloud_verification_rate_limits_total{reason="quota"}[15m])) > 0',
+          ),
+          labels: { severity: "warning", category: "voice" },
+          annotations: {
+            summary: "Streambot exhausted its OpenAI voice quota",
+            description: escapePrometheusTemplate(
+              "The voice assistant recorded quota exhaustion during the last 15 minutes. Slash commands and playback remain available; restore or raise the dedicated OpenAI project budget before expecting voice commands to work.",
+            ),
+          },
+        },
+        {
+          alert: "StreambotVoiceOpenAiFailures",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "sum(increase(streambot_voice_openai_failures_total[15m])) >= 3",
+          ),
+          labels: { severity: "warning", category: "voice" },
+          annotations: {
+            summary: "Streambot had three OpenAI voice failures in 15 minutes",
+            description: escapePrometheusTemplate(
+              "Use the Streambot Voice cloud-stage panels, then follow a trace into Tempo and its correlated logs in Loki to identify the failing OpenAI stage.",
+            ),
+          },
+        },
+        {
+          alert: "StreambotVoiceReplyDeliveryFailure",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "sum(increase(streambot_voice_reply_send_failures_total[15m])) + sum(increase(streambot_voice_turn_delivery_failures_total[15m])) > 0",
+          ),
+          labels: { severity: "warning", category: "voice" },
+          annotations: {
+            summary: "A Streambot voice reply failed delivery",
+            description: escapePrometheusTemplate(
+              "At least one assistant response failed while draining to Discord in the last 15 minutes. Inspect reply-delivery spans and the receive/session readiness panels for a simultaneous Discord voice loss.",
+            ),
+          },
+        },
+        {
+          alert: "StreambotVoiceCaptureFailures",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum(increase(streambot_voice_capture_uploads_total{outcome="failure"}[15m])) + sum(increase(streambot_voice_capture_drops_total[15m])) >= 3',
+          ),
+          labels: { severity: "warning", category: "voice" },
+          annotations: {
+            summary:
+              "Three Streambot diagnostic captures failed or were dropped",
+            description: escapePrometheusTemplate(
+              "Capture failures do not fail voice commands, but diagnostic evidence is being lost. Check SeaweedFS reachability, credentials, object upload logs, and queue capacity.",
+            ),
+          },
+        },
+        {
+          alert: "StreambotVoiceCaptureQueuePressure",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "streambot_voice_capture_queue_bytes > 100 * 1024 * 1024",
+          ),
+          for: "5m",
+          labels: { severity: "warning", category: "voice" },
+          annotations: {
+            summary:
+              "Streambot voice capture queue has retained more than 100 MiB for five minutes",
+            description: escapePrometheusTemplate(
+              "The bounded 128 MiB capture queue is close to dropping new evidence. Investigate SeaweedFS upload latency and failures; do not increase the queue until the storage path is understood.",
+            ),
+          },
+        },
+        {
+          alert: "StreambotVoiceTurnStuck",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "streambot_voice_turn_age_seconds > 35",
+          ),
+          labels: { severity: "warning", category: "voice" },
+          annotations: {
+            summary: "A Streambot voice turn is older than 35 seconds",
+            description: escapePrometheusTemplate(
+              "The active turn in guild {{ $labels.guild_id }} channel {{ $labels.channel_id }} exceeded the expected end-to-end budget. Follow its active trace to the verifier, OpenAI, tool, or reply stage that has not terminated.",
+            ),
+          },
+        },
+        {
+          alert: "StreambotVoicePlaybackDuckStuck",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "streambot_voice_duck_state == 1 and on (guild_id, channel_id) streambot_voice_turn_age_seconds == 0",
+          ),
+          for: "60s",
+          labels: { severity: "critical", category: "voice" },
+          annotations: {
+            summary:
+              "Streambot playback remained ducked after the voice turn ended",
+            description: escapePrometheusTemplate(
+              "Playback has stayed ducked for 60 seconds with no active turn in guild {{ $labels.guild_id }} channel {{ $labels.channel_id }}. This is a user-visible stuck state; inspect reply teardown and restore the session.",
+            ),
+          },
+        },
         // --- viewer-side symptoms ----------------------------------------------------
         {
           alert: "StreambotLateFramesElevated",

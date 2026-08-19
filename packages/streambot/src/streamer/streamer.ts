@@ -7,6 +7,7 @@ import {
   createSeekablePlayer,
   type Player,
   type ReceivedVoiceAudio,
+  type VoiceReceiveObserver,
 } from "@shepherdjerred/discord-video-stream";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
@@ -35,7 +36,6 @@ import {
   STALL_AFTER_SECONDS,
 } from "@shepherdjerred/streambot/observability/stream-observer.ts";
 import {
-  gatewayDisruptionsTotal,
   hwFallbackTotal,
   streamActive,
   streamCrashesTotal,
@@ -57,6 +57,7 @@ import type {
 } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import { AssistantAudioOutput } from "@shepherdjerred/streambot/streamer/assistant-audio-output.ts";
 import { joinStreamerVoice } from "@shepherdjerred/streambot/streamer/join-voice.ts";
+import { observeUserbotGateway } from "@shepherdjerred/streambot/streamer/gateway-observability.ts";
 const log = logger.child("streamer");
 /**
  * Owns the selfbot voice connection and ffmpeg streaming via `@shepherdjerred/discord-video-stream`
@@ -105,6 +106,7 @@ export class StreambotStreamer implements StreamerLike {
   private stallListener: ((info: StallInfo) => void) | null = null;
   private voiceAudioListener: ((audio: ReceivedVoiceAudio) => void) | null =
     null;
+  private voiceReceiveObserver: VoiceReceiveObserver | null = null;
   private readonly assistantOutput: AssistantAudioOutput;
   constructor(
     userToken: UserToken,
@@ -133,23 +135,7 @@ export class StreambotStreamer implements StreamerLike {
       () => this.player,
       () => this.streamer.voiceConnection,
     );
-    // Gateway health observability: a dropped/invalidated userbot gateway kills streaming
-    // capability out from under the pool — surface it instead of nothing. (Voice-connection
-    // deaths have their own recovery path; this covers the main gateway.)
-    this.client.on("shardDisconnect", (event) => {
-      gatewayDisruptionsTotal.inc({ client: "userbot", kind: "disconnect" });
-      log.warn("userbot gateway shard disconnected", { code: event.code });
-    });
-    this.client.on("invalidated", () => {
-      gatewayDisruptionsTotal.inc({ client: "userbot", kind: "invalidated" });
-      log.error(
-        "userbot gateway session invalidated — streaming is dead until the process restarts",
-      );
-    });
-    this.client.on("error", (error) => {
-      gatewayDisruptionsTotal.inc({ client: "userbot", kind: "error" });
-      log.warn("userbot client error", { error: getErrorMessage(error) });
-    });
+    observeUserbotGateway(this.client);
   }
   /**
    * Log in and wait for the gateway to finish hydrating — `client.guilds.cache` is empty until the
@@ -219,6 +205,10 @@ export class StreambotStreamer implements StreamerLike {
     listener: ((audio: ReceivedVoiceAudio) => void) | null,
   ): void {
     this.voiceAudioListener = listener;
+  }
+  setVoiceReceiveObserver(observer: VoiceReceiveObserver | null): void {
+    this.voiceReceiveObserver = observer;
+    this.streamer.voiceConnection?.setReceiveObserver(observer ?? undefined);
   }
   /** Seek the live stream to an absolute offset (seconds); false when nothing is playing. */
   async seek(seconds: number): Promise<boolean> {
@@ -309,6 +299,7 @@ export class StreambotStreamer implements StreamerLike {
     this.voiceCloseTracker?.release();
     this.voiceCloseTracker = null;
     this.voiceAudioListener = null;
+    this.voiceReceiveObserver = null;
     this.assistantOutput.reset();
     try {
       this.streamer.stopStream();
@@ -332,6 +323,7 @@ export class StreambotStreamer implements StreamerLike {
       now: this.now,
       onClose: this.voiceCloseListener,
       onAudio: this.voiceAudioListener,
+      receiveObserver: this.voiceReceiveObserver,
     });
     log.info("joined voice", {
       guildId: input.guildId,

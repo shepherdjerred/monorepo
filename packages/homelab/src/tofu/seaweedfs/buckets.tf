@@ -264,6 +264,37 @@ resource "terraform_data" "llm_archive_lifecycle" {
   }
 }
 
+# Private Streambot diagnostic audio. Captures are intentionally ephemeral and
+# are not mirrored or backed up: their purpose is short-lived voice-path
+# diagnosis, and they may contain user speech, Discord IDs, and transcripts.
+resource "aws_s3_bucket" "streambot_voice_captures" {
+  bucket = "streambot-voice-captures"
+}
+
+resource "terraform_data" "streambot_voice_captures_lifecycle" {
+  input = {
+    bucket       = aws_s3_bucket.streambot_voice_captures.id
+    expire_days  = 90
+    endpoint_url = "https://seaweedfs-s3.tailnet-1a49.ts.net"
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws s3api put-bucket-lifecycle-configuration \
+        --bucket "${self.input.bucket}" \
+        --endpoint-url "${self.input.endpoint_url}" \
+        --lifecycle-configuration '{
+          "Rules": [{
+            "ID": "expire-streambot-voice-captures",
+            "Status": "Enabled",
+            "Filter": {"Prefix": "voice-captures/"},
+            "Expiration": {"Days": ${self.input.expire_days}}
+          }]
+        }'
+    EOT
+  }
+}
+
 # Versioned scout-for-lol site artifacts — one prod-flavored build of the
 # marketing site + SPA per main build, under `2.0.0-<build>/` with a sibling
 # `2.0.0-<build>.json` manifest. Written by the CI sites step

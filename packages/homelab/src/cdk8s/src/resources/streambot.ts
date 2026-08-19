@@ -75,6 +75,23 @@ export function createStreambotDeployment(
     openAiItem.name,
   );
 
+  // Mirror the shared SeaweedFS credentials into the media namespace. Voice
+  // diagnostics use a private, lifecycle-managed bucket and never make the
+  // audio part of logs or telemetry.
+  const seaweedfsItem = new OnePasswordItem(chart, "streambot-seaweedfs-1p", {
+    spec: {
+      itemPath: vaultItemPath("vet52jaeh75chsalu6lulugium"),
+    },
+    metadata: {
+      name: "streambot-seaweedfs-s3-credentials",
+    },
+  });
+  const seaweedfsSecret = Secret.fromSecretName(
+    chart,
+    "streambot-seaweedfs-secret",
+    seaweedfsItem.name,
+  );
+
   // Small persistent volume for resume state (current item + playback position + queue). Survives
   // pod restarts so a deploy/crash mid-movie picks up where it left off. RWO + the Recreate strategy
   // below guarantees the old pod detaches before the new one attaches (a rolling update would
@@ -138,6 +155,29 @@ export function createStreambotDeployment(
         }),
         VOICE_ASSETS_DIR: EnvValue.fromValue("/opt/streambot/voice"),
         VOICE_KWS_RUNTIME: EnvValue.fromValue("auto"),
+        VOICE_CAPTURE_ENABLED: EnvValue.fromValue("true"),
+        VOICE_CAPTURE_BUCKET: EnvValue.fromValue("streambot-voice-captures"),
+        S3_ENDPOINT: EnvValue.fromValue(
+          "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+        ),
+        S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
+        AWS_REGION: EnvValue.fromValue("us-east-1"),
+        AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
+          secret: seaweedfsSecret,
+          key: "SEAWEEDFS_ACCESS_KEY_ID",
+        }),
+        AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
+          secret: seaweedfsSecret,
+          key: "SEAWEEDFS_SECRET_ACCESS_KEY",
+        }),
+        TELEMETRY_ENABLED: EnvValue.fromValue("true"),
+        TELEMETRY_SERVICE_NAME: EnvValue.fromValue("streambot"),
+        OTLP_ENDPOINT: EnvValue.fromValue(
+          "http://tempo.tempo.svc.cluster.local:4318",
+        ),
+        LOKI_OTLP_ENDPOINT: EnvValue.fromValue(
+          "http://loki-gateway.loki/otlp/v1/logs",
+        ),
         VIDEOS_DIR: EnvValue.fromValue("/data/videos"),
         MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),
         // Resume state lives on the persistent volume mounted at /state.

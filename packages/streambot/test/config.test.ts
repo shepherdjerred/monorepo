@@ -39,6 +39,11 @@ describe("loadConfig", () => {
       preRollMs: 2000,
       maxUtteranceMs: 15_000,
       transactionTimeoutMs: 30_000,
+      capture: {
+        enabled: false,
+        region: "us-east-1",
+        forcePathStyle: true,
+      },
     });
   });
 
@@ -131,6 +136,36 @@ describe("loadConfig", () => {
     });
     expect(config.voice.enabled).toBe(true);
     expect(config.voice.openAiApiKey).toBe("project-key");
+  });
+
+  test("requires complete private capture storage configuration", () => {
+    expect(() =>
+      loadConfig({
+        ...VALID,
+        VOICE_ASSISTANT_ENABLED: "true",
+        OPENAI_API_KEY: "openai-test-key",
+        VOICE_CAPTURE_ENABLED: "true",
+      }),
+    ).toThrow("Invalid streambot configuration");
+
+    const config = loadConfig({
+      ...VALID,
+      VOICE_ASSISTANT_ENABLED: "true",
+      OPENAI_API_KEY: "openai-test-key",
+      VOICE_CAPTURE_ENABLED: "true",
+      VOICE_CAPTURE_BUCKET: "streambot-voice-captures",
+      S3_ENDPOINT: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+      AWS_REGION: "us-east-1",
+      AWS_ACCESS_KEY_ID: "test-access-key",
+      AWS_SECRET_ACCESS_KEY: "test-secret-key",
+    });
+    expect(config.voice.capture).toEqual({
+      enabled: true,
+      bucket: "streambot-voice-captures",
+      endpoint: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+      region: "us-east-1",
+      forcePathStyle: true,
+    });
   });
 });
 

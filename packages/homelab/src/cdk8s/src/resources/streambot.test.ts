@@ -147,6 +147,48 @@ describe("streambot deployment (media namespace)", () => {
     expect(openAiKey.valueFrom.secretKeyRef.key).toBe("OPENAI_API_KEY");
   });
 
+  it("exports voice telemetry and private captures to in-cluster backends", () => {
+    const env = new Map(
+      (container?.env ?? []).map((variable) => [variable.name, variable]),
+    );
+    expect(env.get("TELEMETRY_ENABLED")?.value).toBe("true");
+    expect(env.get("TELEMETRY_SERVICE_NAME")?.value).toBe("streambot");
+    expect(env.get("OTLP_ENDPOINT")?.value).toBe(
+      "http://tempo.tempo.svc.cluster.local:4318",
+    );
+    expect(env.get("LOKI_OTLP_ENDPOINT")?.value).toBe(
+      "http://loki-gateway.loki/otlp/v1/logs",
+    );
+    expect(env.get("VOICE_CAPTURE_ENABLED")?.value).toBe("true");
+    expect(env.get("VOICE_CAPTURE_BUCKET")?.value).toBe(
+      "streambot-voice-captures",
+    );
+    expect(env.get("S3_ENDPOINT")?.value).toBe(
+      "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+    );
+    expect(env.get("S3_FORCE_PATH_STYLE")?.value).toBe("true");
+
+    const EnvFromSecretSchema = z.object({
+      name: z.string(),
+      valueFrom: z.object({
+        secretKeyRef: z.object({ key: z.string(), name: z.string() }),
+      }),
+    });
+    const accessKey = EnvFromSecretSchema.parse(env.get("AWS_ACCESS_KEY_ID"));
+    const secretKey = EnvFromSecretSchema.parse(
+      env.get("AWS_SECRET_ACCESS_KEY"),
+    );
+    expect(accessKey.valueFrom.secretKeyRef.key).toBe(
+      "SEAWEEDFS_ACCESS_KEY_ID",
+    );
+    expect(secretKey.valueFrom.secretKeyRef.key).toBe(
+      "SEAWEEDFS_SECRET_ACCESS_KEY",
+    );
+    expect(accessKey.valueFrom.secretKeyRef.name).toBe(
+      secretKey.valueFrom.secretKeyRef.name,
+    );
+  });
+
   it("runs as the non-root user", () => {
     expect(container?.securityContext?.runAsUser).toBe(1000);
   });

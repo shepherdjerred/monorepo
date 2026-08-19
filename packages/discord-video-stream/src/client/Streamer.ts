@@ -11,9 +11,11 @@ import type {
 import type { GatewayEvent, GatewayEventMap } from "./GatewayEvents.js";
 import type { WebRtcConnWrapper } from "./voice/WebRtcWrapper.js";
 import { generateStreamKey, parseStreamKey } from "../utils.js";
+import type { VoiceReceiveObserver } from "./voice/VoiceReceiveObserver.js";
 
 export type VoiceJoinOptions = {
   receiveAudio?: boolean;
+  receiveObserver?: VoiceReceiveObserver;
 };
 
 export function voiceStateAudioFlags(receiveAudio: boolean): {

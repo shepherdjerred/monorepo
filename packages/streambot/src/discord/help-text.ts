@@ -47,6 +47,9 @@ export function helpText(voiceEnabled: boolean): string {
           "",
         ]
       : []),
+    "**Diagnostics**",
+    "• `/stream voice-debug start [duration]`, `stop`, or `status` — private decoded-audio capture _(admin; voice must be enabled)_",
+    "",
     "**Queue**",
     "• `/stream queue` · `nowplaying` · `remove <index>` · `move <from> <to>`",
     "• `/stream clear` _(admin)_ · `shuffle` · `loop <off|track|queue>` · `volume <0-200>`",

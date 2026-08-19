@@ -1,10 +1,6 @@
 import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
 import { DiscordOpusDecoder } from "@shepherdjerred/discord-video-stream";
-import type {
-  KeywordDetectionEvidence,
-  LocalVoiceModels,
-  VoiceActivityDetector,
-} from "@shepherdjerred/streambot/voice/local-models.ts";
+import type { KeywordDetectionEvidence } from "@shepherdjerred/streambot/voice/local-models.ts";
 import {
   SpeakerRegistry,
   type SpeakerState,
@@ -19,95 +15,17 @@ import {
   VOICE_FRAGMENT_TAIL_MS,
   VOICE_VERIFICATION_DELAY_MS,
 } from "@shepherdjerred/streambot/voice/constants.ts";
+import { NOOP_VOICE_ATTEMPT_OBSERVER } from "@shepherdjerred/streambot/voice/attempt-context.ts";
+import type {
+  CompletedVoiceTurn,
+  PendingVoiceTurn,
+  VoiceAudioLifecycleOptions,
+  WakeCandidateEvidence,
+} from "@shepherdjerred/streambot/voice/audio-lifecycle-types.ts";
 
 const log = logger.child("voice-lifecycle");
 const SAMPLE_RATE = 16_000;
 const DEFAULT_POST_VERIFICATION_MS = 300;
-
-export type WakeCandidateEvidence = KeywordDetectionEvidence & {
-  readonly userId: string;
-  readonly detectedAtMs: number;
-};
-
-export type LocalWakeVerificationEvidence = {
-  readonly accepted: boolean;
-  readonly score: number;
-  readonly latencyMs: number;
-};
-
-type PendingTurn = {
-  readonly userId: string;
-  readonly candidate: WakeCandidateEvidence;
-  readonly vad: VoiceActivityDetector;
-  pcm: Float32Array[];
-  sampleCount: number;
-  postCandidateSamples: number;
-  /** Post-candidate samples to collect before the verification window closes. */
-  readonly verificationTargetSamples: number;
-  verificationStartedAtSamples: number;
-  postVerificationSamples: number;
-  sawSpeech: boolean;
-  vadCompleted: boolean;
-  localVerified: boolean;
-  verificationRunning: boolean;
-  inputEnded: boolean;
-  timer: ReturnType<typeof setTimeout>;
-  /** Wall-clock arrival of the last real packet; synthetic silence never refreshes it. */
-  lastPacketAtMs: number;
-  stopSilenceTicker: () => void;
-};
-
-export type CompletedVoiceTurn = {
-  readonly userId: string;
-  readonly pcm16k: Float32Array;
-  readonly activatedAtMs: number;
-};
-
-export type VoiceAudioLifecycleOptions = {
-  readonly models: LocalVoiceModels;
-  readonly preRollMs: number;
-  readonly maxUtteranceMs: number;
-  /** Fallback wait when a runtime reports no fragment timestamp. See `voice/constants.ts`. */
-  readonly verificationDelayMs?: number;
-  readonly postVerificationMs?: number;
-  readonly onCandidate?: (evidence: WakeCandidateEvidence) => void;
-  /** Called only after the phrase-specific verifier accepts the candidate. */
-  readonly onWake?: () => void;
-  /**
-   * The phrase verifier was handed the rolling window, with the promise that settles when the
-   * verification has been fully applied to this turn. Offline evaluation uses it to hold its
-   * simulated clock still while the verifier runs, so a fixture's measured endpoint stays a
-   * property of the audio rather than of how fast ONNX inference happened to be.
-   */
-  readonly onLocalVerificationScheduled?: (settled: Promise<void>) => void;
-  readonly onLocalVerification?: (
-    evidence: LocalWakeVerificationEvidence,
-  ) => void;
-  readonly onLocalVerificationError?: (error: unknown) => void;
-  /**
-   * The speaker's Opus decoder threw. The speaker's state is destroyed so the next packet
-   * rebuilds it — without this, a wedged decoder context would disable wake detection for that
-   * speaker forever, because the only other reset path requires a successful decode.
-   */
-  readonly onDecodeError?: (error: unknown) => void;
-  readonly onAbandoned?: (reason: "timeout" | "empty" | "closed") => void;
-  readonly onTurn: (turn: CompletedVoiceTurn) => Promise<void>;
-  readonly now?: () => number;
-  readonly createDecoder?: () => Pick<DiscordOpusDecoder, "decode" | "close">;
-  /**
-   * Repeating wall-clock ticker, active ONLY while a candidate is pending. Discord clients
-   * negotiate DTX and stop sending RTP during silence, so a purely packet-driven pipeline would
-   * never endpoint a live turn. Returns the stop function. Packet-clocked offline harnesses
-   * (corpus evaluation) must inject an inert ticker; if the ticker never fires, behavior degrades
-   * to the bounded max-utterance timeout — never to extra cloud calls.
-   */
-  readonly createSilenceTicker?: (
-    onTick: () => void,
-    intervalMs: number,
-  ) => () => void;
-  readonly dtxGapMs?: number;
-  readonly dtxTickMs?: number;
-};
 
 function defaultSilenceTicker(
   onTick: () => void,
@@ -141,7 +59,7 @@ function clearParts(parts: Float32Array[]): void {
 export class VoiceAudioLifecycle {
   private readonly options: VoiceAudioLifecycleOptions;
   private readonly speakers: SpeakerRegistry;
-  private pending: PendingTurn | null = null;
+  private pending: PendingVoiceTurn | null = null;
   private transactionRunning = false;
   private closed = false;
 
@@ -155,11 +73,18 @@ export class VoiceAudioLifecycle {
   }
 
   accept(audio: ReceivedVoiceAudio): void {
-    if (this.closed || this.transactionRunning) {
+    if (this.closed) {
+      this.options.onInputDrop?.("closed");
+      audio.opus.fill(0);
+      return;
+    }
+    if (this.transactionRunning) {
+      this.options.onInputDrop?.("transaction-running");
       audio.opus.fill(0);
       return;
     }
     if (this.pending !== null && this.pending.userId !== audio.userId) {
+      this.options.onInputDrop?.("other-speaker");
       audio.opus.fill(0);
       return;
     }
@@ -179,6 +104,7 @@ export class VoiceAudioLifecycle {
     if (decoded.length === 0) return;
     const samples = Float32Array.from(decoded);
     decoded.fill(0);
+    this.options.onDecoded?.({ userId: audio.userId, pcm16k: samples });
     if (this.pending === null) {
       this.speakers.pushRolling(
         speaker,
@@ -222,7 +148,7 @@ export class VoiceAudioLifecycle {
     if (this.closed) return;
     this.closed = true;
     if (this.pending !== null) {
-      this.discardPending(this.pending);
+      this.abandonPending(this.pending, "closed", "closed");
       this.options.onAbandoned?.("closed");
     }
     this.speakers.clearAll();
@@ -247,6 +173,9 @@ export class VoiceAudioLifecycle {
       speaker,
       match,
     );
+    const attempt =
+      this.options.beginAttempt?.(candidate) ??
+      NOOP_VOICE_ATTEMPT_OBSERVER.begin();
     const vad = this.options.models.createVad();
     const pcm = speaker.rolling;
     const sampleCount = speaker.rollingSamples;
@@ -256,12 +185,14 @@ export class VoiceAudioLifecycle {
     const vadCompleted = sawSpeech && vad.hasCompletedSpeech();
     speaker.rolling = [];
     speaker.rollingSamples = 0;
-    const pending: PendingTurn = {
+    const pending: PendingVoiceTurn = {
       userId,
       candidate,
+      attempt,
       vad,
       pcm,
       sampleCount,
+      dtxSamples: 0,
       postCandidateSamples: 0,
       verificationTargetSamples,
       verificationStartedAtSamples: 0,
@@ -299,7 +230,7 @@ export class VoiceAudioLifecycle {
    * packets would. A rejected verifier still discards the turn, so injection can never create
    * cloud traffic that real speech would not have.
    */
-  private onSilenceTick(pending: PendingTurn): void {
+  private onSilenceTick(pending: PendingVoiceTurn): void {
     if (this.pending !== pending || this.closed) return;
     const nowMs = this.options.now?.() ?? Date.now();
     const gapMs = this.options.dtxGapMs ?? VOICE_DTX_GAP_MS;
@@ -307,10 +238,11 @@ export class VoiceAudioLifecycle {
     const tickMs = this.options.dtxTickMs ?? VOICE_DTX_TICK_MS;
     this.acceptPending(
       new Float32Array(Math.ceil((tickMs / 1000) * SAMPLE_RATE)),
+      true,
     );
   }
 
-  private acceptPending(samples: Float32Array): void {
+  private acceptPending(samples: Float32Array, dtx = false): void {
     const pending = this.pending;
     if (pending === null) {
       samples.fill(0);
@@ -318,6 +250,7 @@ export class VoiceAudioLifecycle {
     }
     pending.pcm.push(samples);
     pending.sampleCount += samples.length;
+    if (dtx) pending.dtxSamples += samples.length;
     pending.postCandidateSamples += samples.length;
     if (pending.verificationRunning) {
       pending.postVerificationSamples =
@@ -379,7 +312,7 @@ export class VoiceAudioLifecycle {
     return Math.max(0, tailSamples - alreadyCollected);
   }
 
-  private startVerification(pending: PendingTurn): void {
+  private startVerification(pending: PendingVoiceTurn): void {
     if (this.pending !== pending || pending.verificationRunning) return;
     pending.verificationRunning = true;
     pending.verificationStartedAtSamples = pending.postCandidateSamples;
@@ -393,7 +326,7 @@ export class VoiceAudioLifecycle {
   }
 
   private async verify(
-    pending: PendingTurn,
+    pending: PendingVoiceTurn,
     verificationAudio: Float32Array,
     startedAtMs: number,
   ): Promise<void> {
@@ -406,7 +339,15 @@ export class VoiceAudioLifecycle {
         ...result,
         latencyMs: Math.max(0, completedAtMs - startedAtMs),
       });
+      pending.attempt.localVerification({
+        ...result,
+        latencyMs: Math.max(0, completedAtMs - startedAtMs),
+      });
       if (!result.accepted) {
+        const pcm16k = concatSamples(pending.pcm, pending.sampleCount);
+        this.recordEndpoint(pending, "local-rejected", pcm16k);
+        pending.attempt.finish("local-rejected");
+        pcm16k.fill(0);
         this.discardPending(pending);
         this.speakers.clearAll();
         return;
@@ -419,6 +360,16 @@ export class VoiceAudioLifecycle {
     } catch (error) {
       if (this.pending === pending && !this.closed) {
         this.options.onLocalVerificationError?.(error);
+        const pcm16k = concatSamples(pending.pcm, pending.sampleCount);
+        pending.attempt.recordStage(
+          "streambot.voice.local_verification",
+          Math.max(0, (this.options.now?.() ?? Date.now()) - startedAtMs),
+          {},
+          error,
+        );
+        this.recordEndpoint(pending, "local-verification-error", pcm16k);
+        pending.attempt.finish("local-verification-error", error);
+        pcm16k.fill(0);
         this.discardPending(pending);
         this.speakers.clearAll();
       }
@@ -428,7 +379,7 @@ export class VoiceAudioLifecycle {
   }
 
   private maybeFinish(
-    pending: PendingTurn,
+    pending: PendingVoiceTurn,
     reason: "vad" | "input-ended",
   ): void {
     if (this.pending !== pending || !pending.localVerified) return;
@@ -460,7 +411,7 @@ export class VoiceAudioLifecycle {
   }
 
   private finishPending(
-    pending: PendingTurn,
+    pending: PendingVoiceTurn,
     reason: "vad" | "timeout" | "input-ended",
   ): void {
     if (this.pending !== pending) return;
@@ -470,17 +421,24 @@ export class VoiceAudioLifecycle {
     pending.vad.flush();
     pending.vad.close();
     if (!pending.localVerified || !pending.sawSpeech) {
+      const abandoned = reason === "timeout" ? "timeout" : "empty";
+      const pcm16k = concatSamples(pending.pcm, pending.sampleCount);
+      this.recordEndpoint(pending, abandoned, pcm16k);
+      pending.attempt.finish(abandoned);
+      pcm16k.fill(0);
       clearParts(pending.pcm);
-      this.options.onAbandoned?.(reason === "timeout" ? "timeout" : "empty");
+      this.options.onAbandoned?.(abandoned);
       this.speakers.clearAll();
       return;
     }
     const pcm16k = concatSamples(pending.pcm, pending.sampleCount);
+    this.recordEndpoint(pending, reason, pcm16k);
     clearParts(pending.pcm);
     const turn: CompletedVoiceTurn = {
       userId: pending.userId,
       pcm16k,
       activatedAtMs: pending.candidate.detectedAtMs,
+      attempt: pending.attempt,
     };
     this.transactionRunning = true;
     this.speakers.clearAll();
@@ -501,6 +459,7 @@ export class VoiceAudioLifecycle {
       log.error("voice turn delivery failed", {
         error: getErrorMessage(error),
       });
+      turn.attempt.finish("delivery-error", error);
     } finally {
       turn.pcm16k.fill(0);
       this.transactionRunning = false;
@@ -508,11 +467,39 @@ export class VoiceAudioLifecycle {
     }
   }
 
-  private discardPending(pending: PendingTurn): void {
+  private discardPending(pending: PendingVoiceTurn): void {
     if (this.pending === pending) this.pending = null;
     clearTimeout(pending.timer);
     pending.stopSilenceTicker();
     pending.vad.close();
     clearParts(pending.pcm);
+  }
+
+  private abandonPending(
+    pending: PendingVoiceTurn,
+    endpointReason: string,
+    outcome: string,
+  ): void {
+    const pcm16k = concatSamples(pending.pcm, pending.sampleCount);
+    this.recordEndpoint(pending, endpointReason, pcm16k);
+    pending.attempt.finish(outcome);
+    pcm16k.fill(0);
+    this.discardPending(pending);
+  }
+
+  private recordEndpoint(
+    pending: PendingVoiceTurn,
+    reason: string,
+    pcm16k: Float32Array,
+  ): void {
+    const evidence = {
+      reason,
+      sampleCount: pending.sampleCount,
+      dtxSamples: pending.dtxSamples,
+      sawSpeech: pending.sawSpeech,
+      pcm16k,
+    };
+    pending.attempt.endpoint(evidence);
+    this.options.onEndpoint?.(evidence);
   }
 }

@@ -30,6 +30,11 @@ const STREAM_CONFIG: Pick<Config, "stream" | "voice"> = {
     preRollMs: 1200,
     maxUtteranceMs: 15_000,
     transactionTimeoutMs: 30_000,
+    capture: {
+      enabled: false,
+      region: "us-east-1",
+      forcePathStyle: true,
+    },
   },
 };
 
@@ -55,6 +60,9 @@ function fakeStreamer(guilds: GuildId[], onLogin?: () => Promise<void>) {
     assistantUserId: () => "200000000000000000",
     assistantDaveReady: () => false,
     setVoiceAudioListener: () => {
+      /* voice is disabled in this fake */
+    },
+    setVoiceReceiveObserver: () => {
       /* voice is disabled in this fake */
     },
     seek: () => Promise.resolve(true),
