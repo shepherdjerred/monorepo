@@ -200,7 +200,7 @@ struct SetupView: View {
                                     identityStatus = identities.isEmpty
                                         ? "No unexpired MailMate codes are available yet."
                                         : "Registered \(identities.count) native AutoFill identity entries."
-                                    scheduleBrokerShutdownIfNeeded(identities: identities)
+                                    scheduleBrokerShutdownIfNeeded(records: records)
                                 } else {
                                     let detail = error.map { ": \($0.localizedDescription)" } ?? "."
                                     CodeFillObservability.appLogger.error("event=identity_refresh outcome=error identity_count=\(identities.count, privacy: .public) detail=\(detail, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
@@ -244,12 +244,24 @@ struct SetupView: View {
         }
     }
 
-    private func scheduleBrokerShutdownIfNeeded(identities: [ASCredentialIdentity]) {
-        guard brokerMode, identities.isEmpty, !NSApp.isActive else { return }
+    private func scheduleBrokerShutdownIfNeeded(records: [OTPRecord]) {
+        guard brokerMode, records.isEmpty, !NSApp.isActive else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             guard brokerMode, !NSApp.isActive else { return }
-            CodeFillObservability.appLogger.info("event=broker_shutdown outcome=no_active_records")
-            NSApp.terminate(nil)
+            Task.detached(priority: .userInitiated) {
+                do {
+                    let store = try CodeStore(applicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier)
+                    let currentRecords = try store.read()
+                    guard currentRecords.isEmpty else { return }
+                    await MainActor.run {
+                        guard brokerMode, !NSApp.isActive else { return }
+                        CodeFillObservability.appLogger.info("event=broker_shutdown outcome=no_active_records")
+                        NSApp.terminate(nil)
+                    }
+                } catch {
+                    CodeFillObservability.appLogger.error("event=broker_shutdown outcome=store_read_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
+                }
+            }
         }
     }
 
