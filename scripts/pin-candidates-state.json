@@ -7,9 +7,9 @@
       "buildNumber": 9840
     },
     "shepherdjerred/birmel": {
-      "buildNumber": 9859,
       "version": "2.0.0-9859",
-      "digest": "sha256:29b59f6ef8726122953b15337c39e3e85b52d1e300240555fe3b963f78e2792b"
+      "digest": "sha256:29b59f6ef8726122953b15337c39e3e85b52d1e300240555fe3b963f78e2792b",
+      "buildNumber": 9859
     },
     "shepherdjerred/discord-plays-mario-kart": {
       "version": "2.0.0-9840",
@@ -22,9 +22,9 @@
       "buildNumber": 9840
     },
     "shepherdjerred/openrouter-broadcast-ingest": {
-      "buildNumber": 9865,
       "version": "2.0.0-9865",
-      "digest": "sha256:c2cf00d613bc3102177d9ab56abb886e7ad0f3a0d1d251fc7fd70ee77bfc2c86"
+      "digest": "sha256:c2cf00d613bc3102177d9ab56abb886e7ad0f3a0d1d251fc7fd70ee77bfc2c86",
+      "buildNumber": 9865
     },
     "shepherdjerred/scout-evals": {
       "version": "2.0.0-9840",
@@ -32,9 +32,9 @@
       "buildNumber": 9840
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 9859,
-      "version": "2.0.0-9859",
-      "digest": "sha256:e22fa9c383f06cec6b697ad0f6c3e3c39bbf2fd1c8b4262c285a835329037aa0"
+      "buildNumber": 9886,
+      "version": "2.0.0-9886",
+      "digest": "sha256:1b59f2a0bad5934c6d4f4e4cfbb1d772a2c9841d8a51bf6cff6d89d5b523feac"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-9840",
