@@ -147,6 +147,11 @@ export function settleWorkerFailure(
     return true;
   }
   if (error instanceof WorktreeHeadChangedError) {
+    store.activeRestacks.delete(prNumber);
+    store.completedRestacks.delete(prNumber);
+    store.clearControlledWorktreeHead(prNumber);
+    store.inheritedCommitInspections.delete(prNumber);
+    store.inheritedWipInspections.delete(prNumber);
     const current = store.prs.get(prNumber);
     if (current !== undefined) {
       store.prs.set(prNumber, {

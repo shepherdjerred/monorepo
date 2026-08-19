@@ -57,6 +57,15 @@ function commandFailure(action: string, result: CommandResult): Error {
   );
 }
 
+function normalizeRemoteUrl(url: string): string {
+  return url
+    .trim()
+    .replace(/^git@([^:]+):/, "https://$1/")
+    .replace(/\.git$/, "")
+    .replace(/\/+$/, "")
+    .toLowerCase();
+}
+
 async function runGit(
   run: PrepareManagedCheckoutOptions["run"],
   cwd: string,
@@ -158,6 +167,26 @@ export async function prepareManagedCheckout(
         `Managed checkout ${checkout} has local changes; refusing to reset or reuse it`,
       );
     }
+    const sourceRemote = await mustRunGit(
+      options.run,
+      sourceCheckout,
+      ["remote", "get-url", "origin"],
+      `Could not read origin from source checkout ${sourceCheckout}`,
+    );
+    const managedRemote = await mustRunGit(
+      options.run,
+      checkout,
+      ["remote", "get-url", "origin"],
+      `Could not read origin from managed checkout ${checkout}`,
+    );
+    if (
+      normalizeRemoteUrl(sourceRemote.stdout) !==
+      normalizeRemoteUrl(managedRemote.stdout)
+    ) {
+      throw new Error(
+        `Managed checkout ${checkout} points to a different repository than ${sourceCheckout}`,
+      );
+    }
   } else {
     await mkdir(path.dirname(checkout), { recursive: true, mode: 0o700 });
     const remote = await mustRunGit(
@@ -193,7 +222,14 @@ export async function prepareManagedCheckout(
       ["fetch", sourceCheckout, `+${GIT_SPICE_DATA_REF}:${GIT_SPICE_DATA_REF}`],
       `Could not copy git-spice metadata into managed checkout ${checkout}`,
     );
-  } else if (spiceRef.exitCode !== 1) {
+  } else if (spiceRef.exitCode === 1) {
+    await mustRunGit(
+      options.run,
+      checkout,
+      ["update-ref", "-d", GIT_SPICE_DATA_REF],
+      `Could not clear stale git-spice metadata from managed checkout ${checkout}`,
+    );
+  } else {
     throw commandFailure(
       `Could not inspect git-spice metadata in source checkout ${sourceCheckout}`,
       spiceRef,

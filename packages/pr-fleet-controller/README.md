@@ -122,7 +122,7 @@ Each worker receives:
   repairing a formatting-hook failure without exposing a general command;
 - serial worktree setup;
 - setup, heavy-command, and stack-write lease requests;
-- unrestricted shell access in the assigned worktree with the operator's normal
+- unrestricted shell access in the assigned worktree with a sanitized operator
   environment;
 - git-spice restack start/continue/publication for stacks, and bounded native
   rebase start/continue plus force-with-lease publication for ordinary branches;
@@ -137,15 +137,17 @@ remote PR head; any other transition remains operator-owned and requires fresh
 inspection. Commit subjects are checked against the same package/root scope
 rules as the commit-msg hook before paths are staged.
 
-Shell commands run through the operator's normal shell environment with network,
-filesystem, credentials, and installed tools available. Output remains bounded
-when returned to the model and persisted to the run bundle. Publication,
+Shell commands run through the operator's configured shell with network,
+filesystem, and installed tools available. Environment variables whose names
+identify credentials or other secrets are removed, command output is bounded,
+and command output is redacted from telemetry before it reaches the run bundle.
+Publication,
 worktree creation, current-head verification, review-request deduplication, and
 timers remain deterministic controller operations.
 
 Worktree setup automatically runs `mise trust --yes .mise.toml` for the assigned
 worktree, then installs the pinned toolchain, dependencies, and generated
-artifacts using the operator's normal environment.
+artifacts using the same sanitized worker environment.
 Command timeouts, cancellation, and shutdown terminate the command's complete
 POSIX
 process group so descendant processes cannot outlive the worker that spawned

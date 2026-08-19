@@ -220,7 +220,7 @@ describe("causal progress", () => {
         sequence: 1,
         timestamp: "2026-08-09T20:00:00.000Z",
         kind: "setup.required",
-        correlation: { prNumber: 42 },
+        correlation: { prNumber: 42, toolCallId: "tool-setup" },
         payload: { reason: "current-head-unprepared" },
       }),
     );
@@ -230,7 +230,7 @@ describe("causal progress", () => {
         sequence: 2,
         timestamp: "2026-08-09T20:00:01.000Z",
         kind: "tool.failed",
-        correlation: { prNumber: 42 },
+        correlation: { prNumber: 42, toolCallId: "tool-setup" },
         payload: {
           tool: "run_local_command",
           error: "Worktree setup must complete",
@@ -265,7 +265,53 @@ describe("causal progress", () => {
       "fix review completed",
     );
     expect(view.progress.prs.get(42)?.blocker).toBeNull();
-    expect(view.progress.prs.get(42)?.failures.get("setup-required")).toBe(2);
+    expect(view.progress.prs.get(42)?.failures.get("setup-required")).toBe(1);
+  });
+
+  test("clears a lease blocker when the same PR obtains the lease", () => {
+    const view = createRunView();
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 1,
+        timestamp: "2026-08-09T20:00:00.000Z",
+        kind: "lease.denied",
+        correlation: { prNumber: 42, toolCallId: "tool-lease" },
+        payload: { kind: "heavy", reason: "heavy-capacity" },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 2,
+        timestamp: "2026-08-09T20:00:01.000Z",
+        kind: "tool.failed",
+        correlation: { prNumber: 42, toolCallId: "tool-lease" },
+        payload: {
+          tool: "run_local_command",
+          error: "Heavy lease is not available",
+          failureClass: "lease-unavailable",
+        },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 3,
+        timestamp: "2026-08-09T20:00:02.000Z",
+        kind: "lease.granted",
+        correlation: { prNumber: 42, toolCallId: "tool-next" },
+        payload: { kind: "heavy" },
+      }),
+    );
+
+    expect(view.progress.prs.get(42)?.blocker).toBeNull();
+    expect(view.progress.prs.get(42)?.latest?.label).toBe(
+      "heavy lease granted",
+    );
+    expect(view.progress.prs.get(42)?.failures.get("lease-unavailable")).toBe(
+      1,
+    );
   });
 });
 

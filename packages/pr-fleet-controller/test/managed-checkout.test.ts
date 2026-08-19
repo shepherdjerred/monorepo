@@ -225,6 +225,33 @@ describe("managed checkout safety", () => {
     }
   });
 
+  test("rejects a clean managed clone for a different repository", async () => {
+    const sourceCheckout = await temporaryDirectory("pr-fleet-source-");
+    const checkout = await temporaryDirectory("pr-fleet-managed-");
+    const runner = commandRunner([
+      commandResult(0, "true\n"),
+      commandResult(0),
+      commandResult(0, "https://github.com/example/source.git\n"),
+      commandResult(0, "https://github.com/example/other.git\n"),
+    ]);
+
+    try {
+      await expect(
+        prepareManagedCheckout({
+          sourceCheckout,
+          checkout,
+          worktreeRoot: path.join(path.dirname(checkout), "worktrees"),
+          run: runner.run,
+        }),
+      ).rejects.toThrow("different repository");
+    } finally {
+      await Promise.all([
+        rm(sourceCheckout, { recursive: true, force: true }),
+        rm(checkout, { recursive: true, force: true }),
+      ]);
+    }
+  });
+
   test("rejects the checkout that launched the controller", async () => {
     const sourceCheckout = await temporaryDirectory("pr-fleet-source-");
     const runner = commandRunner([]);
@@ -253,6 +280,7 @@ describe("managed checkout safety", () => {
       commandResult(0),
       commandResult(1),
       commandResult(0),
+      commandResult(0),
     ]);
 
     try {
@@ -272,6 +300,7 @@ describe("managed checkout safety", () => {
           checkout,
         ],
         ["show-ref", "--verify", "--quiet", "refs/spice/data"],
+        ["update-ref", "-d", "refs/spice/data"],
         ["fetch", "--prune", "origin"],
       ]);
     } finally {

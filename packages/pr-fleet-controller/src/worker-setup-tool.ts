@@ -1,5 +1,6 @@
 import { tool as defineTool } from "ai";
 import { z } from "zod";
+import { workerCommandEnvironment } from "./command-environment.ts";
 import {
   invalidateInheritedWipInspection,
   requireCurrentInheritedWipInspection,
@@ -21,6 +22,8 @@ export const SETUP_COMMANDS = [
     args: ["turbo", "run", "generate", "--env-mode=loose"],
   },
 ] satisfies { executable: string; args: string[] }[];
+
+const MAX_SETUP_COMMAND_OUTPUT_BYTES = 100_000;
 
 export function createSetupWorktreeTool(options: {
   pr: PrState;
@@ -127,6 +130,9 @@ export function createSetupWorktreeTool(options: {
               cwd: worktree,
               timeoutMs: 900_000,
               signal,
+              env: workerCommandEnvironment(),
+              sensitiveOutput: true,
+              maxOutputBytes: MAX_SETUP_COMMAND_OUTPUT_BYTES,
             });
             if (result.exitCode !== 0) {
               const detail =

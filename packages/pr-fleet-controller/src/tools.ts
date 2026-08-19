@@ -1,10 +1,13 @@
 import { tool as defineTool } from "ai";
 import { z } from "zod";
+import { currentCommandCorrelation } from "./command-correlation.ts";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import {
   invalidateInheritedWipInspection,
   requireCurrentInheritedWipInspection,
+  WorktreeHeadChangedError,
 } from "./inherited-wip.ts";
+import { workerCommandEnvironment } from "./command-environment.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
 import {
   recordProgressEvent,
@@ -18,6 +21,51 @@ import { containedPath, createFileEditTools } from "./worker-file-edits.ts";
 import { createWorkerRestackTools } from "./worker-restack-tools.ts";
 import { createSetupWorktreeTool } from "./worker-setup-tool.ts";
 import { createWorkerWipTools } from "./worker-wip-tools.ts";
+
+const MAX_WORKER_COMMAND_OUTPUT_BYTES = 100_000;
+
+function resolveWorkerShell(): string {
+  const configuredShell = Bun.env["SHELL"];
+  if (configuredShell !== undefined) {
+    const resolved = Bun.which(configuredShell);
+    if (resolved !== null) {
+      return resolved;
+    }
+  }
+  const zsh = Bun.which("zsh");
+  if (zsh === null) {
+    throw new Error("A POSIX worker shell is required (SHELL or zsh)");
+  }
+  return zsh;
+}
+
+async function assertCurrentWorktreeHead(options: {
+  environment: FleetEnvironment;
+  pr: PrState;
+  store: FleetStore;
+  worktree: string;
+  signal: AbortSignal;
+}): Promise<void> {
+  const result = await options.environment.runLocalCommand({
+    executable: "git",
+    args: ["rev-parse", "HEAD"],
+    cwd: options.worktree,
+    timeoutMs: 30_000,
+    signal: options.signal,
+    sensitiveOutput: true,
+    maxOutputBytes: 128,
+    env: workerCommandEnvironment(),
+  });
+  if (result.exitCode !== 0) {
+    throw new Error(`Could not read worktree HEAD: ${result.stderr.trim()}`);
+  }
+  const expected = options.store.expectedWorktreeHead(options.pr);
+  if (expected === undefined || result.stdout.trim() !== expected) {
+    throw new WorktreeHeadChangedError(
+      "Worktree HEAD changed before publication; inspect again before publishing",
+    );
+  }
+}
 
 export const ConventionalCommitMessageSchema = z
   .string()
@@ -77,6 +125,7 @@ export function createWorkerTools(
       kind,
       payload,
       correlation: {
+        ...currentCommandCorrelation(),
         ...parentCorrelation(),
         prNumber: pr.identity.number,
         headSha: pr.identity.headSha,
@@ -321,14 +370,16 @@ export function createWorkerTools(
             throw new Error("Heavy lease is not available");
           }
           recordProgress("lease.granted", { kind: "heavy" });
-          const startedAt = performance.now();
           try {
             const result = await environment.runLocalCommand({
-              executable: "/bin/zsh",
+              executable: resolveWorkerShell(),
               args: ["-lc", input.command],
               cwd: worktree,
               timeoutMs: input.timeoutMs,
               signal,
+              env: workerCommandEnvironment(),
+              sensitiveOutput: true,
+              maxOutputBytes: MAX_WORKER_COMMAND_OUTPUT_BYTES,
             });
             return {
               exitCode: result.exitCode,
@@ -337,11 +388,17 @@ export function createWorkerTools(
               termination: result.termination,
             };
           } finally {
-            store.releaseLease(pr.identity.number, "heavy", pr.stackId);
-            recordProgress("lease.released", {
-              kind: "heavy",
-              durationMs: Math.round(performance.now() - startedAt),
-            });
+            const durationMs = store.releaseLease(
+              pr.identity.number,
+              "heavy",
+              pr.stackId,
+            );
+            if (durationMs !== null) {
+              recordProgress("lease.released", {
+                kind: "heavy",
+                durationMs,
+              });
+            }
           }
         }),
     }),
@@ -365,8 +422,14 @@ export function createWorkerTools(
             throw new Error("Stack write lease is not available");
           }
           recordProgress("lease.granted", { kind: "stack-write" });
-          const startedAt = performance.now();
           try {
+            await assertCurrentWorktreeHead({
+              environment,
+              pr,
+              store,
+              worktree,
+              signal,
+            });
             await requireCurrentInheritedWipInspection({
               store,
               pr,
@@ -391,11 +454,17 @@ export function createWorkerTools(
             });
             return published;
           } finally {
-            store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
-            recordProgress("lease.released", {
-              kind: "stack-write",
-              durationMs: Math.round(performance.now() - startedAt),
-            });
+            const durationMs = store.releaseLease(
+              pr.identity.number,
+              "stack-write",
+              pr.stackId,
+            );
+            if (durationMs !== null) {
+              recordProgress("lease.released", {
+                kind: "stack-write",
+                durationMs,
+              });
+            }
           }
         }),
     }),

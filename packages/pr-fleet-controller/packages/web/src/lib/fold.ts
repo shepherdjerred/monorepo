@@ -97,6 +97,7 @@ export type RunView = {
   lastEventSeq: number;
   runStatus: RunStatus;
   progress: FleetProgress;
+  failureSignals: Map<string, string>;
   counter: number;
 };
 
@@ -116,6 +117,7 @@ export function createRunView(): RunView {
       failures: new Map(),
       prs: new Map(),
     },
+    failureSignals: new Map(),
     counter: 0,
   };
 }
@@ -191,6 +193,33 @@ function recordFailure(
   updateLatest(progress, timestamp, label);
 }
 
+function failureSignalKey(event: RecordedRunEvent): string | null {
+  const toolCallId = event.correlation.toolCallId;
+  return toolCallId === undefined ? null : toolCallId;
+}
+
+function markFailureSignal(
+  view: RunView,
+  event: RecordedRunEvent,
+  failureClass: string,
+): void {
+  const key = failureSignalKey(event);
+  if (key !== null) {
+    view.failureSignals.set(key, failureClass);
+  }
+}
+
+function clearLeaseBlocker(
+  progress: PrProgress,
+  timestamp: string,
+  label: string,
+): void {
+  if (progress.blocker?.failureClass === "lease-unavailable") {
+    progress.blocker = null;
+    updateLatest(progress, timestamp, label);
+  }
+}
+
 function applyLeaseDenial(
   view: RunView,
   event: RecordedRunEvent,
@@ -204,12 +233,46 @@ function applyLeaseDenial(
     return;
   }
   view.progress.leaseDenials += 1;
+  markFailureSignal(view, event, "lease-unavailable");
+  recordFailure(view, prNumber, event.timestamp, "lease-unavailable");
   updateLatest(
     progress,
     event.timestamp,
     `Waiting for ${parsed.data.kind} lease`,
   );
-  recordFailure(view, prNumber, event.timestamp, "lease-unavailable");
+}
+
+function applyLeaseProgress(
+  event: RecordedRunEvent,
+  progress: PrProgress,
+): boolean {
+  if (event.kind === "lease.granted") {
+    const parsed = ProgressPayloadSchemas["lease.granted"].safeParse(
+      event.payload,
+    );
+    if (parsed.success) {
+      clearLeaseBlocker(
+        progress,
+        event.timestamp,
+        `${parsed.data.kind} lease granted`,
+      );
+    }
+    return true;
+  }
+  if (event.kind === "lease.released") {
+    const parsed = ProgressPayloadSchemas["lease.released"].safeParse(
+      event.payload,
+    );
+    if (parsed.success) {
+      clearLeaseBlocker(
+        progress,
+        event.timestamp,
+        `${parsed.data.kind} lease released`,
+      );
+    }
+    return true;
+  }
+  return false;
 }
 
 function applySetupProgress(
@@ -223,6 +286,7 @@ function applySetupProgress(
       event.payload,
     );
     if (parsed.success) {
+      markFailureSignal(view, event, "setup-required");
       recordFailure(view, prNumber, event.timestamp, "setup-required");
     }
     return true;
@@ -315,12 +379,21 @@ function applyProgressEvent(view: RunView, event: RecordedRunEvent): void {
     const failureClass = FleetFailureClassSchema.safeParse(
       event.payload["failureClass"],
     );
-    recordFailure(
-      view,
-      prNumber,
-      event.timestamp,
-      failureClass.success ? failureClass.data : "unknown",
-    );
+    const resolvedFailureClass = failureClass.success
+      ? failureClass.data
+      : "unknown";
+    const signalKey = failureSignalKey(event);
+    if (
+      signalKey !== null &&
+      view.failureSignals.get(signalKey) === resolvedFailureClass
+    ) {
+      view.failureSignals.delete(signalKey);
+      return;
+    }
+    recordFailure(view, prNumber, event.timestamp, resolvedFailureClass);
+    return;
+  }
+  if (applyLeaseProgress(event, progress)) {
     return;
   }
   if (event.kind === "lease.denied") {

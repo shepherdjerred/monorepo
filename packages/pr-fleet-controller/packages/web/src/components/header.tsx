@@ -95,7 +95,7 @@ export function Header({
           <Count label="paused" value={fleet.paused} />
           <Count label="setups" value={progress.setupsCompleted} />
           <Count label="published" value={progress.publicationsConfirmed} />
-          <Count label="leases" value={progress.leaseDenials} />
+          <Count label="lease denials" value={progress.leaseDenials} />
           <Count label="repeated" value={repeatedFailures} />
         </div>
       )}
