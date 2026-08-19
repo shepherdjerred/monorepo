@@ -137,6 +137,9 @@ export function resolveQueueTypeFromGame(
   }
   const mapped = parseQueueType(queueId);
   if (mapped !== undefined) {
+    if (mapped === "classic" && !isClassicAssetMode(queueId, gameMode)) {
+      return "normal";
+    }
     return mapped;
   }
   // Unknown queue ID: only treat as "custom" when the payload says so. A

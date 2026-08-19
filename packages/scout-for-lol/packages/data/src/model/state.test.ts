@@ -96,6 +96,13 @@ describe("League Classic queue resolution", () => {
     expect(resolveQueueTypeFromGame(0, "JADE", "CUSTOM_GAME")).toBe("classic");
   });
 
+  test.each([3260, 3262])(
+    "resolves ordinary CLASSIC queue %i as normal",
+    (queueId) => {
+      expect(resolveQueueTypeFromGame(queueId, "CLASSIC")).toBe("normal");
+    },
+  );
+
   test.each([2450, 3280])(
     "resolves queue %i as Classic ARAM Mayhem",
     (queueId) => {
