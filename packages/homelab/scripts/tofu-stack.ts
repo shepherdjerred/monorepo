@@ -130,21 +130,33 @@ const REQUIRED_STACK_ENV: Readonly<Record<string, readonly string[]>> = {
 };
 
 /**
- * The version the filesystem mirror publishes the in-repository BYOK provider
- * under. It must satisfy the `~> 0.1` constraint that
- * src/tofu/openrouter/providers.tf declares, and it names both the mirror
- * directory and the binary, so it lives here once rather than in each string.
- */
-const OPENROUTER_BYOK_VERSION = "0.1.0";
-
-/**
  * Build the local filesystem mirror needed by the in-repository BYOK provider.
  * Returns the temporary root so the caller can remove it once tofu has exited.
  */
 async function configureLocalOpenRouterProvider(
   env: Record<string, string>,
 ): Promise<string> {
-  const providerRoot = `${homelabRoot()}/../terraform-provider-openrouter-byok`;
+  const providerRoot = new URL(
+    "../../terraform-provider-openrouter-byok/",
+    import.meta.url,
+  ).pathname;
+  const lockfile = await Bun.file(
+    `${homelabRoot()}/${STACKS_REL}/openrouter/.terraform.lock.hcl`,
+  ).text();
+  const providerBlock =
+    /provider "registry\.opentofu\.org\/shepherdjerred\/openrouter-byok"\s*\{([\s\S]*?)\n\}/.exec(
+      lockfile,
+    );
+  const providerContents = providerBlock?.[1];
+  const version =
+    providerContents === undefined
+      ? undefined
+      : /^\s*version\s*=\s*"([^"]+)"/m.exec(providerContents)?.[1];
+  if (version === undefined) {
+    throw new Error(
+      "OpenRouter BYOK provider version is missing from src/tofu/openrouter/.terraform.lock.hcl",
+    );
+  }
   const tempRoot = `${Bun.env["TMPDIR"] ?? "/tmp"}/monorepo-openrouter-byok-${process.pid.toString()}`;
   const goosResult = await run(["go", "env", "GOOS"], { capture: true });
   const goarchResult = await run(["go", "env", "GOARCH"], { capture: true });
@@ -152,9 +164,9 @@ async function configureLocalOpenRouterProvider(
   const goarch = goarchResult.stdout.trim();
   const mirrorRoot =
     `${tempRoot}/mirror/registry.opentofu.org/shepherdjerred/openrouter-byok/` +
-    `${OPENROUTER_BYOK_VERSION}/${goos}_${goarch}`;
+    `${version}/${goos}_${goarch}`;
   await run(["mkdir", "-p", mirrorRoot]);
-  const binaryPath = `${mirrorRoot}/terraform-provider-openrouter-byok_v${OPENROUTER_BYOK_VERSION}`;
+  const binaryPath = `${mirrorRoot}/terraform-provider-openrouter-byok_v${version}`;
   await run(
     ["go", "build", "-trimpath", "-buildvcs=false", "-o", binaryPath, "."],
     { cwd: providerRoot, env },
@@ -234,6 +246,10 @@ function usage(): never {
   process.exit(1);
 }
 
+function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error));
+}
+
 async function main(): Promise<void> {
   const args = Bun.argv.slice(2);
   if (args.includes("--help") || args.includes("-h")) {
@@ -275,14 +291,33 @@ async function main(): Promise<void> {
 
   const localProviderRoot =
     stack === "openrouter" ? await configureLocalOpenRouterProvider(env) : null;
+  let tofuError: unknown;
   try {
     await runTofu(stack, action, root, env);
-  } finally {
-    // The mirror holds a freshly built provider binary and a CLI config that
-    // only this run uses, so it is removed however tofu exits.
-    if (localProviderRoot !== null) {
+  } catch (error) {
+    tofuError = error;
+  }
+
+  let cleanupError: unknown;
+  // The mirror holds a freshly built provider binary and a CLI config that
+  // only this run uses, so it is removed after tofu exits.
+  if (localProviderRoot !== null) {
+    try {
       await run(["rm", "-rf", localProviderRoot]);
+    } catch (error) {
+      cleanupError = error;
+      console.error(
+        `Failed to clean up OpenRouter provider mirror at ${localProviderRoot}:`,
+        error,
+      );
     }
+  }
+
+  if (tofuError !== undefined) {
+    throw toError(tofuError);
+  }
+  if (cleanupError !== undefined) {
+    throw toError(cleanupError);
   }
 }
 

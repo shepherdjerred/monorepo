@@ -71,7 +71,7 @@ func (c *client) request(ctx context.Context, method string, path string, body [
 	}
 	defer func() { _ = response.Body.Close() }()
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		return byokData{}, response.StatusCode, fmt.Errorf("OpenRouter BYOK API returned HTTP %d", response.StatusCode)
+		return byokData{}, response.StatusCode, fmt.Errorf("OpenRouter BYOK API %s %s returned HTTP %d", method, path, response.StatusCode)
 	}
 	if response.StatusCode == http.StatusNoContent {
 		return byokData{}, response.StatusCode, nil

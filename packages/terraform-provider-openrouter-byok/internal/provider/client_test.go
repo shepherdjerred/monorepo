@@ -77,7 +77,7 @@ func TestClientNotFoundAndSecretRedaction(t *testing.T) {
 		t.Fatalf("error leaked secret: %v", err)
 	}
 	_, err = client.create(context.Background(), byokRequest{Provider: "openai", Key: secret})
-	if err == nil || strings.Contains(err.Error(), secret) {
+	if err == nil || !strings.Contains(err.Error(), "POST /byok") || strings.Contains(err.Error(), secret) {
 		t.Fatalf("create error = %v", err)
 	}
 	status, err = client.delete(context.Background(), "missing")
