@@ -250,15 +250,18 @@ exit "$FAKE_EXIT_CODE"
     expect(result.signalCode).toBe("SIGTERM");
   });
 
-  test("forwards a parent signal to the child and terminates with it", async () => {
+  test("process replacement preserves application-specific signal handling", async () => {
     const directory = await fakePath();
     await writeExecutable(
       directory,
       "tailscale",
-      String.raw`#!/bin/sh
-trap 'printf "received\n"; exit 0' TERM
-printf "ready\n"
-while :; do sleep 1; done
+      `#!${process.execPath}
+process.on("SIGQUIT", () => {
+  console.log("received");
+  process.exit(0);
+});
+console.log("ready");
+setInterval(() => {}, 1000);
 `,
     );
     const entrypoint = path.resolve(import.meta.dir, "../../src/index.ts");
@@ -283,7 +286,7 @@ while :; do sleep 1; done
       }
       stdout += decoder.decode(read.value, { stream: true });
     }
-    child.kill("SIGTERM");
+    child.kill("SIGQUIT");
     while (true) {
       const read = await reader.read();
       if (read.done) {
@@ -295,8 +298,8 @@ while :; do sleep 1; done
     const exitCode = await child.exited;
     expect(stdout).toContain("ready");
     expect(stdout).toContain("received");
-    expect(exitCode).toBe(143);
-    expect(child.signalCode).toBe("SIGTERM");
+    expect(exitCode).toBe(0);
+    expect(child.signalCode).toBeNull();
   });
 
   for (const args of [["gf"], ["pr", "logs"], ["pr", "detect"]]) {

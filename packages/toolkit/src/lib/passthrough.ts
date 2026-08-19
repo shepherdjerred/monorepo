@@ -213,55 +213,35 @@ export function buildPassthroughInvocation(
   };
 }
 
-function isMissingExecutableError(error: unknown): boolean {
-  return (
-    error instanceof Error && error.message.includes("Executable not found")
-  );
+function resolveExecutable(invocation: PassthroughInvocation): string | null {
+  const pathValue = invocation.env["PATH"];
+  const options =
+    pathValue === undefined
+      ? { cwd: process.cwd() }
+      : { cwd: process.cwd(), PATH: pathValue };
+  return Bun.which(invocation.executable, options);
 }
 
-export async function runPassthrough(
+export function runPassthrough(
   invocation: PassthroughInvocation,
 ): Promise<number> {
-  try {
-    const child = Bun.spawn([invocation.executable, ...invocation.args], {
-      cwd: process.cwd(),
-      env: invocation.env,
-      stdin: "inherit",
-      stdout: "inherit",
-      stderr: "inherit",
-    });
-    const forwardedSignals = ["SIGHUP", "SIGINT", "SIGTERM"] as const;
-    let receivedSignal: NodeJS.Signals | null = null;
-    const handlers = new Map<NodeJS.Signals, () => void>();
-    for (const signal of forwardedSignals) {
-      const handler = (): void => {
-        receivedSignal = signal;
-        child.kill(signal);
-      };
-      handlers.set(signal, handler);
-      process.once(signal, handler);
-    }
-
-    let exitCode: number;
-    try {
-      exitCode = await child.exited;
-    } finally {
-      for (const [signal, handler] of handlers) {
-        process.off(signal, handler);
-      }
-    }
-    const terminationSignal = child.signalCode ?? receivedSignal;
-    if (terminationSignal !== null) {
-      process.kill(process.pid, terminationSignal);
-    }
-    return exitCode;
-  } catch (error) {
-    if (isMissingExecutableError(error)) {
-      console.error(
-        `toolkit: required executable not found: ${invocation.executable}`,
-      );
-      return 127;
-    }
-    throw error;
+  const executable = resolveExecutable(invocation);
+  if (executable === null) {
+    console.error(
+      `toolkit: required executable not found: ${invocation.executable}`,
+    );
+    return Promise.resolve(127);
   }
+
+  if (process.execve === undefined) {
+    return Promise.reject(
+      new Error("toolkit: process replacement is unavailable on this platform"),
+    );
+  }
+
+  return process.execve(
+    executable,
+    [invocation.executable, ...invocation.args],
+    invocation.env,
+  );
 }
