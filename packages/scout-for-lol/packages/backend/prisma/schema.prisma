@@ -713,6 +713,7 @@ model BucksAccount {
 
   ledgerEntries BucksLedgerEntry[]
   bets          BucksBet[]
+  parlayBets    BucksParlayBet[]
 
   @@unique([serverId, discordId])
   @@index([serverId, balance])
@@ -738,9 +739,10 @@ model BucksLedgerEntry {
   // read one query, and localizes any drift to a specific row.
   balanceAfter Int
 
-  // BucksLedgerKind (@scout-for-lol/data): seed | earn_game |
-  // earn_ranked_5s_bonus | earn_clash_bonus | earn_win | earn_mvp | bet_stake |
-  // bet_payout | bet_refund | house_rake | cancel_fee | adjustment.
+  // BucksLedgerKind: seed | earn_game | earn_ranked_5s_bonus |
+  // earn_clash_bonus | earn_win | earn_mvp | bet_stake | bet_payout |
+  // bet_refund | house_rake | cancel_fee | parlay_stake | parlay_reserve |
+  // parlay_payout | parlay_refund | parlay_release | adjustment.
   // Not a Prisma enum — the SQLite provider has none. Zod-validated on write
   // and on read.
   kind String
@@ -750,6 +752,9 @@ model BucksLedgerEntry {
 
   betId Int?
   bet   BucksBet? @relation(fields: [betId], references: [id])
+
+  parlayBetId Int?
+  parlayBet   BucksParlayBet? @relation(fields: [parlayBetId], references: [id])
 
   // Riot team IDs (100/200). Both null for seed/earn_*/adjustment.
   // `actualWinningTeamId` is also null for bet_stake (unknown at bet time) and
@@ -868,11 +873,104 @@ model BucksMatchPool {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  bets BucksBet[]
+  bets         BucksBet[]
+  parlayMarket BucksParlayMarket?
 
   @@unique([matchId, serverId])
   @@index([poolState, closesAt])
   @@index([matchId])
+}
+
+// One immutable, model-generated proposition per Riot match. The model chooses
+// only from the versioned criteria catalog; `criteria` is evaluated later by
+// deterministic code against the final RawMatch.
+model BucksParlayDefinition {
+  id             Int    @id @default(autoincrement())
+  matchId        String @unique
+  queueType      String
+  selectedTeamId Int
+
+  // JSON validated by ParlaySubjectsSchema / GeneratedParlaySchema.
+  subjects String
+  criteria String
+
+  yesProbabilityBps Int
+  promptVersion     String
+  catalogVersion    String
+  schemaVersion     Int
+  evaluatorVersion  String
+  generationContext String
+
+  requestedModel String
+  resolvedModel  String?
+  usage          String
+  durationMs     Int
+
+  createdAt DateTime @default(now())
+
+  markets BucksParlayMarket[]
+}
+
+// A guild-local publication of the match-global parlay. Its clock starts when
+// the follow-up is published and is independent from the outcome pool clock.
+model BucksParlayMarket {
+  id            Int                   @id @default(autoincrement())
+  definitionId  Int
+  definition    BucksParlayDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  outcomePoolId Int                   @unique
+  outcomePool   BucksMatchPool        @relation(fields: [outcomePoolId], references: [id], onDelete: Cascade)
+  matchId       String
+  serverId      String
+
+  publishedAt DateTime
+  closesAt    DateTime
+  messageRefs String   @default("[]")
+
+  // BucksParlayMarketState: publishing | open | closed | settled | voided.
+  marketState String    @default("publishing")
+  yesResult   Boolean?
+  legResults  String?
+  // BucksParlayVoidReason when voided.
+  voidReason  String?
+  settledAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bets BucksParlayBet[]
+
+  @@unique([matchId, serverId])
+  @@index([marketState, closesAt])
+  @@index([matchId])
+}
+
+// One fixed-odds YES/NO position per user and parlay market. Both the user
+// stake and the maximum house liability are debited when the quote is accepted.
+model BucksParlayBet {
+  id             Int               @id @default(autoincrement())
+  marketId       Int
+  market         BucksParlayMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  bucksAccountId Int
+  bucksAccount   BucksAccount      @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
+
+  // BucksParlaySide: YES | NO.
+  side         String
+  stake        Int
+  houseReserve Int
+  grossPayout  Int
+
+  // BucksBetOutcome: pending | won | lost | refunded.
+  betOutcome String    @default("pending")
+  payout     Int?
+  settledAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ledgerEntries BucksLedgerEntry[]
+
+  @@unique([marketId, bucksAccountId])
+  @@index([marketId, side])
 }
 
 // Exactly-once marker for Bucks EARNINGS on a (match, guild).

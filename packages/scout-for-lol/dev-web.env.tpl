@@ -44,6 +44,7 @@ WEB_APP_ORIGIN=http://localhost:5180
 # report-editor and Explore turn fails at the model call. Same BETA item as the
 # secrets above, and the same field the deployed beta backend reads.
 OPENROUTER_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/OPENROUTER_API_KEY
+BETTING_PARLAY_AI_MODEL=gpt-5.6-sol
 
 # Explore is gated on membership of an allowlisted Discord server, and an empty
 # list denies everyone. Left unset here because the right value is whichever

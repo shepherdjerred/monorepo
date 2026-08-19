@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { bucksTestRoster } from "#src/testing/bucks-fixtures.ts";
 import {
-  bbCommand,
   buildOpenMarketSections,
   buildUnknownGameReplyChunks,
   formatGameSelectors,
   resolveOpenGameByAlias,
   trackedGameAliases,
-} from "#src/discord/commands/bb.ts";
+} from "#src/discord/commands/bb-market.ts";
+import { bbCommand } from "#src/discord/commands/bb.ts";
 
 function pool(matchId: string) {
   return {
@@ -60,9 +60,9 @@ describe("/bb bet", () => {
         name: "amount",
         required: true,
         min_value: 1,
-        max_value: 1000,
       }),
     ]);
+    expect(JSON.stringify(bet.options)).not.toContain("max_value");
   });
 
   test("matches the game alias case-insensitively on either team", () => {

@@ -67,7 +67,7 @@ describe("Bryan Bucks custom IDs", () => {
       "bb:1:z:NA1_1:0:W:5", // unknown action
       "bb:1:b:NA1_1:99:W:5", // roster index out of range
       "bb:1:b:NA1_1:0:Q:5", // unknown side
-      "bb:1:b:NA1_1:0:W:9999", // stake over the cap
+      "bb:1:b:NA1_1:0:W:2147483648", // stake outside Int32 storage
       "bb:1:b:NA1_1:0:W:-1", // negative stake
       "bb:1:b:NA1_1:abc:W:5", // non-numeric index
       "bb:1:b::0:W:5", // empty match id

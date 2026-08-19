@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { BUCKS_INT32_MAX } from "@scout-for-lol/data";
 import {
   computeParimutuelPayouts,
   type ParimutuelBet,
@@ -25,6 +26,9 @@ function expectConserved(
   if (result.kind === "refund_all") {
     expect(result.totalStake).toBe(staked);
     return result;
+  }
+  if (result.kind === "storage_overflow") {
+    throw new Error("fixture unexpectedly overflowed Int32 storage");
   }
   const paid = result.allocations.reduce((total, a) => total + a.payout, 0);
   expect(paid).toBe(staked);
@@ -137,6 +141,21 @@ describe("computeParimutuelPayouts", () => {
   test("an empty pool is a refund of nothing", () => {
     const result = computeParimutuelPayouts([], BLUE);
     expect(result).toEqual({ kind: "refund_all", totalStake: 0 });
+  });
+
+  test("reports overflow instead of converting aggregate bigint math", () => {
+    expect(
+      computeParimutuelPayouts(
+        [bet(1, BLUE, BUCKS_INT32_MAX), bet(2, RED, BUCKS_INT32_MAX)],
+        BLUE,
+      ),
+    ).toEqual({ kind: "storage_overflow" });
+    expect(
+      computeParimutuelPayouts(
+        [bet(1, BLUE, BUCKS_INT32_MAX), bet(2, BLUE, BUCKS_INT32_MAX)],
+        BLUE,
+      ),
+    ).toEqual({ kind: "storage_overflow" });
   });
 
   test("conserves across a table of lopsided pools", () => {

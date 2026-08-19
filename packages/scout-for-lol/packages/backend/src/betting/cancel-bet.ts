@@ -154,14 +154,24 @@ export async function cancelBet(
       );
     }
 
-    // The ledger rows reference the bet, so credit and transfer before deleting
-    // it. The gross refund followed by a separate cut keeps both movements
-    // visible in the user's history.
+    // Release this position from the account's refund-headroom calculation
+    // before returning it. The transaction rolls this state back if the credit,
+    // house transfer, or later delete fails. The gross refund followed by a
+    // separate cut keeps both movements visible in the user's history.
+    await tx.bucksBet.update({
+      where: { id: bet.id },
+      data: {
+        betOutcome: "refunded",
+        payout: bet.stake,
+        settledAt: now,
+      },
+    });
     const refundBalance = await applyBucksDelta(tx, {
       bucksAccountId,
       delta: bet.stake,
       kind: "bet_refund",
       matchId: input.matchId,
+      betId: bet.id,
       predictedTeamId: bet.predictedTeamId,
       context: {
         type: "settlement",

@@ -26,6 +26,11 @@ const LEDGER_KIND_LABELS = {
   bet_refund: "bet refund",
   house_rake: "house cut on payout",
   cancel_fee: "house cut on cancellation",
+  parlay_stake: "parlay stake",
+  parlay_reserve: "parlay house reserve",
+  parlay_payout: "parlay payout",
+  parlay_refund: "parlay refund",
+  parlay_release: "parlay reserve release",
   adjustment: "adjustment",
 } satisfies Record<BucksLedgerKind, string>;
 

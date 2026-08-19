@@ -190,6 +190,10 @@ function computeConfiguration() {
       .asString(),
     openRouterApiKey: getOptionalEnvVar("OPENROUTER_API_KEY"),
     reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-5.6-sol"),
+    bettingParlayAiModel: getOptionalEnvVar(
+      "BETTING_PARLAY_AI_MODEL",
+      "gpt-5.6-sol",
+    ),
     exploreModel: env.get("EXPLORE_MODEL").default("gpt-5.6-sol").asString(),
     // Explore reads the whole lake, so access is an explicit allowlist of
     // Discord servers rather than a permission on any one of them. Unset
@@ -311,6 +315,9 @@ const configuration: Configuration = {
   },
   get reportAiModel() {
     return getConfiguration().reportAiModel;
+  },
+  get bettingParlayAiModel() {
+    return getConfiguration().bettingParlayAiModel;
   },
   get exploreModel() {
     return getConfiguration().exploreModel;

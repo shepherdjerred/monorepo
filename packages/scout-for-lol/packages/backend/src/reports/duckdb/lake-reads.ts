@@ -53,6 +53,12 @@ const HistoryGameRowSchema = z.object({
 
 export type LakeHistoryGameRow = z.infer<typeof HistoryGameRowSchema>;
 
+const QueueHistoryGameRowSchema = HistoryGameRowSchema.extend({
+  puuid: z.string(),
+});
+
+export type QueueHistoryGameRow = z.infer<typeof QueueHistoryGameRowSchema>;
+
 /**
  * The most recent games (newest first) for any of the given PUUIDs,
  * excluding one match id (the game currently under review). Reads parquet ∪
@@ -91,6 +97,53 @@ export async function fetchRecentGamesForPuuids(options: {
     );
     return rows.map((row) => HistoryGameRowSchema.parse(row));
   });
+}
+
+/** One query returning up to `limitPerPlayer` same-queue matches for every
+ * requested PUUID. The window is per player; a globally applied LIMIT would
+ * let one active player's history crowd every other tracked player out. */
+export async function fetchRecentQueueGamesForPuuids(options: {
+  puuids: string[];
+  queue: string;
+  excludeMatchId: string;
+  limitPerPlayer: number;
+  lakeDir?: string;
+  timeoutMs?: number;
+}): Promise<QueueHistoryGameRow[]> {
+  if (options.puuids.length === 0) return [];
+  const lakeDir = options.lakeDir ?? resolveLakeDir();
+  const files = await resolveLakeFiles(lakeDir);
+  const source = buildMatchesSource(files, {
+    sql: "puuid IN (SELECT unnest(?)) AND match_id <> ? AND queue = ?",
+    params: [
+      listParam(options.puuids),
+      scalarParam(options.excludeMatchId),
+      scalarParam(options.queue),
+    ],
+  });
+  if (source === undefined) return [];
+  const sql =
+    `WITH ranked_history AS (` +
+    `SELECT puuid, match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
+    `champion_name, team_position, queue, win, kills, deaths, assists, ` +
+    `creep_score, game_duration_seconds, team_id, ` +
+    `row_number() OVER (PARTITION BY puuid ORDER BY game_creation_at DESC) AS history_rank ` +
+    `FROM (${source.sql})) ` +
+    `SELECT puuid, match_id, game_creation_ms, champion_name, team_position, queue, ` +
+    `win, kills, deaths, assists, creep_score, game_duration_seconds, team_id ` +
+    `FROM ranked_history WHERE history_rank <= ? ORDER BY puuid, game_creation_ms DESC`;
+  const connectionOptions =
+    options.timeoutMs === undefined ? {} : { timeoutMs: options.timeoutMs };
+  return await withDuckDBConnection(async (session) => {
+    const rows = await session.run(
+      sql,
+      bindParams(session, [
+        ...source.params,
+        scalarParam(Math.floor(options.limitPerPlayer)),
+      ]),
+    );
+    return rows.map((row) => QueueHistoryGameRowSchema.parse(row));
+  }, connectionOptions);
 }
 
 const TeamRowSchema = z.object({

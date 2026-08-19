@@ -39,6 +39,7 @@ import {
   prepareBucksPrematch,
   type BucksPrematchAttachment,
 } from "#src/betting/prematch-hook.ts";
+import { startParlayGeneration } from "#src/betting/parlay-generate.ts";
 import type { MessageCreateOptions } from "discord.js";
 import type { LoadingScreenData } from "@scout-for-lol/data/index.ts";
 
@@ -408,6 +409,19 @@ export async function sendPrematchNotification(
   }
 
   await recordCoreOutputsDelivered(deliveredGuildIds, "prematch");
+
+  // The parlay is deliberately generated only after the ordinary prematch
+  // message and outcome-pool references are durable. This starts a caught
+  // background task, so the 30-second spectator polling lock is not held for
+  // the model's up-to-60-second deadline.
+  if (bucks.bettingGuildIds.size > 0) {
+    startParlayGeneration({
+      gameInfo,
+      trackedPlayers,
+      queueType,
+      loadingScreenData,
+    });
+  }
 
   logger.info(
     `[sendPrematchNotification] ✅ Notifications sent for game ${gameId}`,

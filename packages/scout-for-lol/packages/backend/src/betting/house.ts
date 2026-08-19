@@ -72,6 +72,7 @@ export async function transferHouseCut(
     context: BucksLedgerContext;
     matchId: string;
     betId: number;
+    houseRefundableHeld?: bigint | undefined;
   },
 ): Promise<number> {
   if (input.amount <= 0) {
@@ -94,6 +95,7 @@ export async function transferHouseCut(
     context: input.context,
     matchId: input.matchId,
     betId: input.betId,
+    knownRefundableHeld: input.houseRefundableHeld,
   });
   return balanceAfter;
 }

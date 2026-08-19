@@ -1,4 +1,5 @@
 import {
+  BucksStakeSchema,
   BucksPoolRosterSchema,
   type BucksPoolParticipant,
   type DiscordAccountId,
@@ -6,7 +7,6 @@ import {
   type LeaguePuuid,
   type RiotTeamId,
 } from "@scout-for-lol/data";
-import { MAX_STAKE, MIN_STAKE } from "#src/betting/constants.ts";
 import { teamIdForSubjectOutcome } from "#src/betting/team.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import {
@@ -15,8 +15,11 @@ import {
 } from "#src/betting/accounts.ts";
 import {
   applyBucksDelta,
+  BucksStorageOverflowError,
   InsufficientBucksError,
 } from "#src/betting/ledger.ts";
+import { addInt32 } from "#src/betting/parlay-odds.ts";
+import { bettingOversizedStakeRejectedTotal } from "#src/metrics/betting-parlay.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -45,8 +48,8 @@ export type PlaceBetResult =
   | { kind: "feature_disabled" }
   | { kind: "not_eligible" }
   | { kind: "unknown_subject"; validAliases: string[] }
-  | { kind: "invalid_stake"; min: number; max: number }
-  | { kind: "stake_cap"; existingStake: number; max: number }
+  | { kind: "invalid_stake" }
+  | { kind: "storage_limit" }
   | { kind: "insufficient"; balance: number; needed: number }
   | { kind: "side_conflict"; existingTeamId: number };
 
@@ -105,13 +108,8 @@ export async function placeBet(
     return { kind: "feature_disabled" };
   }
 
-  if (
-    !Number.isInteger(input.stake) ||
-    input.stake < MIN_STAKE ||
-    input.stake > MAX_STAKE
-  ) {
-    return { kind: "invalid_stake", min: MIN_STAKE, max: MAX_STAKE };
-  }
+  const stake = BucksStakeSchema.safeParse(input.stake);
+  if (!stake.success) return { kind: "invalid_stake" };
 
   const pool = await prismaClient.bucksMatchPool.findUnique({
     where: {
@@ -189,21 +187,10 @@ export async function placeBet(
         throw new SideConflictError(existing.predictedTeamId);
       }
 
-      // MAX_STAKE bounds a *position*, not a click. The range check above only
-      // sees the increment, so without this a bettor could walk an existing
-      // position past the cap one click at a time — and the cap is what keeps
-      // `stake * losersPool` inside Number.MAX_SAFE_INTEGER in the parimutuel
-      // allocation, so exceeding it is not merely a policy breach.
-      //
-      // Read-then-compare is safe here for the same reason the rest of this
-      // closure is: the claim above took the write lock for this transaction,
-      // so `existing.stake` cannot move underneath us.
-      if (existing !== null && existing.stake + input.stake > MAX_STAKE) {
-        return {
-          kind: "stake_cap",
-          existingStake: existing.stake,
-          max: MAX_STAKE,
-        };
+      const totalStake = addInt32(existing?.stake ?? 0, stake.data);
+      if (totalStake === undefined) {
+        bettingOversizedStakeRejectedTotal.inc({ market: "outcome" });
+        return { kind: "storage_limit" };
       }
 
       const bet =
@@ -214,19 +201,19 @@ export async function placeBet(
                 bucksAccountId: account.id,
                 predictedTeamId,
                 subjectPuuid: input.subjectPuuid,
-                stake: input.stake,
+                stake: stake.data,
               },
               select: { id: true, stake: true },
             })
           : await tx.bucksBet.update({
               where: { id: existing.id },
-              data: { stake: { increment: input.stake } },
+              data: { stake: totalStake },
               select: { id: true, stake: true },
             });
 
       const balanceAfter = await applyBucksDelta(tx, {
         bucksAccountId: account.id,
-        delta: -input.stake,
+        delta: -stake.data,
         kind: "bet_stake",
         matchId: input.matchId,
         betId: bet.id,
@@ -267,8 +254,12 @@ export async function placeBet(
       return {
         kind: "insufficient",
         balance: balance?.balance ?? 0,
-        needed: input.stake,
+        needed: stake.data,
       };
+    }
+    if (error instanceof BucksStorageOverflowError) {
+      bettingOversizedStakeRejectedTotal.inc({ market: "outcome" });
+      return { kind: "storage_limit" };
     }
     logger.error(
       `❌ Could not place a Bryan Bucks bet on ${input.matchId}:`,

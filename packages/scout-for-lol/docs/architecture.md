@@ -302,15 +302,48 @@ flowchart TB
 
 Required environment variables by component:
 
-| Variable             | Component | Required               |
-| -------------------- | --------- | ---------------------- |
-| `DISCORD_TOKEN`      | Backend   | Yes                    |
-| `APPLICATION_ID`     | Backend   | Yes                    |
-| `RIOT_API_KEY`       | Backend   | Yes                    |
-| `DATABASE_URL`       | Backend   | Yes                    |
-| `OPENROUTER_API_KEY` | Backend   | No (disables AI)       |
-| `S3_BUCKET_NAME`     | Backend   | No (disables storage)  |
-| `SENTRY_DSN`         | Backend   | No (disables tracking) |
+| Variable                  | Component | Required               |
+| ------------------------- | --------- | ---------------------- |
+| `DISCORD_TOKEN`           | Backend   | Yes                    |
+| `APPLICATION_ID`          | Backend   | Yes                    |
+| `RIOT_API_KEY`            | Backend   | Yes                    |
+| `DATABASE_URL`            | Backend   | Yes                    |
+| `OPENROUTER_API_KEY`      | Backend   | No (disables AI)       |
+| `BETTING_PARLAY_AI_MODEL` | Backend   | No (`gpt-5.6-sol`)     |
+| `S3_BUCKET_NAME`          | Backend   | No (disables storage)  |
+| `SENTRY_DSN`              | Backend   | No (disables tracking) |
+
+### Bryan Bucks parlays
+
+Eligible Solo/Duo and Flex prematch notifications keep the existing ten-minute
+outcome market and start one separate five-minute, live/in-play parlay market.
+The match-level definition is shared across guilds; stakes, house reserves,
+close state, and settlement remain guild-local.
+
+Discord delivery uses a durable `publishing` outbox state: preparation
+messages have no buttons, and the recurring prematch task retries activation
+after restarts. The five-minute clock begins only when persisted messages are
+successfully activated.
+
+GPT-5.6 Sol generates a versioned 2–6 leg criteria tree through OpenRouter with
+medium reasoning, a 4,096-token initial output limit, a 6,144-token truncated
+retry limit, and a shared 60-second deadline. It receives anonymous lobby and
+recent-form context plus the complete allowed field catalog. The model never
+supplies code, paths, settlement expressions, or authoritative result prose.
+Settlement evaluates only the persisted canonical tree against the final Riot
+`RawMatch`; remakes take precedence and refund both outcome and parlay markets.
+
+Neither market has a product stake cap. Positive whole-BB positions are bounded
+by wallet balance, parlay house liability, and the existing Int32 persistence
+domain. Parlay liability is reserved when the position is accepted; total
+positions are repriced with integer-ceiling fixed odds on every top-up. Credits
+also preserve Int32 headroom for every pending stake and house reserve, so a
+later cancellation, remake, or stale-market refund is always representable.
+
+Prompt rendering, semantic validation, catalog coverage, and evaluation run in
+ordinary offline tests. Run the opt-in production prompt acceptance suite with
+`bun --cwd packages/scout-for-lol/packages/backend run test:parlay:live`; it
+requires `OPENROUTER_API_KEY` and fails rather than skipping when absent.
 
 ## Next Steps
 

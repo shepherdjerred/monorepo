@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/bun";
 import {
   BucksPoolRosterSchema,
+  BUCKS_INT32_MAX,
   LeaguePuuidSchema,
   type BucksPoolParticipant,
   type BucksVoidReason,
@@ -9,19 +10,18 @@ import {
 } from "@scout-for-lol/data";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import { HOUSE_ACCOUNT_DISCORD_ID } from "#src/betting/constants.ts";
-import {
-  HOUSE_CUT_PERCENT,
-  settlementHouseCut,
-} from "#src/betting/house-cut.ts";
+import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
 import {
   ensureHouseAccountInTransaction,
   transferHouseCut,
 } from "#src/betting/house.ts";
+import { applyBucksDelta, refundableBucksHeld } from "#src/betting/ledger.ts";
 import {
-  computeParimutuelPayouts,
-  type ParimutuelBet,
-} from "#src/betting/parimutuel.ts";
-import { applyBucksDelta } from "#src/betting/ledger.ts";
+  loadPendingOutcomeBets,
+  planOutcomeSettlement,
+  type PendingBetRow,
+  type SettlementBet,
+} from "#src/betting/settlement-plan.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -45,22 +45,6 @@ const logger = createLogger("betting-settle");
  * would reintroduce the exact "marked but didn't happen" window it exists to
  * close.
  */
-
-export type SettlementBet = {
-  betId: number;
-  bucksAccountId: number;
-  discordId: string;
-  isHouse: boolean;
-  predictedTeamId: number;
-  stake: number;
-  grossPayout: number;
-  houseCut: number;
-  payout: number;
-  winnings: number;
-  won: boolean;
-  refunded: boolean;
-  subjectPuuid: string;
-};
 
 export type SettlementSummary = {
   matchId: string;
@@ -107,18 +91,11 @@ async function creditBet(
     voidReason: BucksVoidReason | undefined;
     winnersPool: number;
     losersPool: number;
+    refundableHeldAfterSettlement: bigint;
+    houseRefundableHeldAfterSettlement: bigint;
   },
 ): Promise<void> {
   const { bet } = input;
-
-  await tx.bucksBet.update({
-    where: { id: bet.betId },
-    data: {
-      betOutcome: bet.refunded ? "refunded" : bet.won ? "won" : "lost",
-      payout: bet.payout,
-      settledAt: new Date(),
-    },
-  });
 
   if (bet.grossPayout === 0) {
     // A losing bet already paid at stake time; there is nothing to move, and a
@@ -134,6 +111,7 @@ async function creditBet(
     betId: bet.betId,
     predictedTeamId: bet.predictedTeamId,
     actualWinningTeamId: input.winningTeamId,
+    knownRefundableHeld: input.refundableHeldAfterSettlement,
     context: {
       type: "settlement",
       subjectAlias: subjectAlias(input.roster, bet.subjectPuuid),
@@ -168,110 +146,9 @@ async function creditBet(
         grossAmount: bet.grossPayout,
         fee: bet.houseCut,
       },
+      houseRefundableHeld: input.houseRefundableHeldAfterSettlement,
     });
   }
-}
-
-type PendingBetRow = {
-  id: number;
-  bucksAccountId: number;
-  discordId: string;
-  isHouse: boolean;
-  predictedTeamId: number;
-  stake: number;
-  subjectPuuid: string;
-};
-
-/** Every stake handed straight back. Used for both a voided match and a
- * one-sided market, which are different reasons for the same arithmetic. */
-function refundAll(rows: readonly PendingBetRow[]): {
-  bets: SettlementBet[];
-  winnersPool: number;
-  losersPool: number;
-  houseCut: number;
-} {
-  return {
-    bets: rows.map((row) => ({
-      betId: row.id,
-      bucksAccountId: row.bucksAccountId,
-      discordId: row.discordId,
-      isHouse: row.isHouse,
-      predictedTeamId: row.predictedTeamId,
-      stake: row.stake,
-      grossPayout: row.stake,
-      houseCut: 0,
-      payout: row.stake,
-      winnings: 0,
-      won: false,
-      refunded: true,
-      subjectPuuid: row.subjectPuuid,
-    })),
-    winnersPool: 0,
-    losersPool: 0,
-    houseCut: 0,
-  };
-}
-
-function toSettlementBets(input: {
-  rows: readonly PendingBetRow[];
-  winningTeamId: number | undefined;
-  voidReason: BucksVoidReason | undefined;
-}): {
-  bets: SettlementBet[];
-  winnersPool: number;
-  losersPool: number;
-  houseCut: number;
-} {
-  // A void refunds everyone at 100%, whatever the result was.
-  if (input.voidReason !== undefined || input.winningTeamId === undefined) {
-    return refundAll(input.rows);
-  }
-
-  const parimutuelInput: ParimutuelBet[] = input.rows.map((row) => ({
-    betId: row.id,
-    predictedTeamId: row.predictedTeamId,
-    stake: row.stake,
-  }));
-  const result = computeParimutuelPayouts(parimutuelInput, input.winningTeamId);
-
-  if (result.kind === "refund_all") {
-    return refundAll(input.rows);
-  }
-
-  const byId = new Map(
-    result.allocations.map((allocation) => [allocation.betId, allocation]),
-  );
-  const bets = input.rows.map((row) => {
-    const allocation = byId.get(row.id);
-    const grossPayout = allocation?.payout ?? 0;
-    const grossWinnings = allocation?.winnings ?? 0;
-    const houseCut = settlementHouseCut({
-      grossPayout,
-      grossWinnings,
-      isHouse: row.isHouse,
-    });
-    return {
-      betId: row.id,
-      bucksAccountId: row.bucksAccountId,
-      discordId: row.discordId,
-      isHouse: row.isHouse,
-      predictedTeamId: row.predictedTeamId,
-      stake: row.stake,
-      grossPayout,
-      houseCut,
-      payout: grossPayout - houseCut,
-      winnings: grossWinnings - houseCut,
-      won: allocation !== undefined,
-      refunded: false,
-      subjectPuuid: row.subjectPuuid,
-    };
-  });
-  return {
-    winnersPool: result.winnersPool,
-    losersPool: result.losersPool,
-    houseCut: bets.reduce((total, bet) => total + bet.houseCut, 0),
-    bets,
-  };
 }
 
 /**
@@ -364,27 +241,7 @@ async function settleOnePool(input: {
       return;
     }
 
-    const rows = await tx.bucksBet.findMany({
-      where: { poolId: input.poolId, betOutcome: "pending" },
-      select: {
-        id: true,
-        bucksAccountId: true,
-        bucksAccount: { select: { discordId: true, isHouse: true } },
-        predictedTeamId: true,
-        stake: true,
-        subjectPuuid: true,
-      },
-      orderBy: { id: "asc" },
-    });
-    const pendingBets: PendingBetRow[] = rows.map((row) => ({
-      id: row.id,
-      bucksAccountId: row.bucksAccountId,
-      discordId: row.bucksAccount.discordId,
-      isHouse: row.bucksAccount.isHouse,
-      predictedTeamId: row.predictedTeamId,
-      stake: row.stake,
-      subjectPuuid: row.subjectPuuid,
-    }));
+    const pendingBets = await loadPendingOutcomeBets(tx, input.poolId);
 
     let voidReason: BucksVoidReason | undefined = input.classificationVoid;
     const humanBets = pendingBets.filter((bet) => !bet.isHouse);
@@ -420,11 +277,14 @@ async function settleOnePool(input: {
       }
     }
 
-    const settled = toSettlementBets({
-      rows: pendingBets,
+    const plan = await planOutcomeSettlement(tx, {
+      serverId: input.serverId,
+      pendingBets,
       winningTeamId: input.winningTeamId,
       voidReason,
     });
+    voidReason = plan.voidReason;
+    const settled = plan.settlement;
 
     // The terminal state. Unconditional: the claim above already established
     // that this transaction owns the pool, and it holds the write lock until
@@ -440,7 +300,29 @@ async function settleOnePool(input: {
       },
     });
 
+    // Release every position from refundable-headroom accounting before any
+    // payout or house cut is credited. Settling rows one at a time can
+    // otherwise reject a valid conserved settlement near the Int32 ceiling
+    // because later positions still appear refundable during an earlier
+    // credit. The transaction rolls all terminal writes back on any failure.
     for (const bet of settled.bets) {
+      await tx.bucksBet.update({
+        where: { id: bet.betId },
+        data: {
+          betOutcome: bet.refunded ? "refunded" : bet.won ? "won" : "lost",
+          payout: bet.payout,
+          settledAt,
+        },
+      });
+    }
+
+    for (const bet of settled.bets) {
+      const pendingBet = pendingBets.find((row) => row.id === bet.betId);
+      if (pendingBet === undefined) {
+        throw new Error(
+          `Settlement bet ${bet.betId.toString()} was not loaded from the pending pool`,
+        );
+      }
       await creditBet(tx, {
         bet,
         matchId: input.matchId,
@@ -450,15 +332,26 @@ async function settleOnePool(input: {
         voidReason,
         winnersPool: settled.winnersPool,
         losersPool: settled.losersPool,
+        refundableHeldAfterSettlement:
+          pendingBet.refundableHeld - BigInt(pendingBet.stake),
+        houseRefundableHeldAfterSettlement:
+          plan.houseRefundableHeldAfterSettlement,
       });
     }
 
     // Conservation, asserted rather than assumed. Human winners receive their
     // net payout and the house receives every cut, so together they must equal
     // the stakes held by the pool. Throwing rolls the whole settlement back.
-    const staked = settled.bets.reduce((total, bet) => total + bet.stake, 0);
-    const paid = settled.bets.reduce((total, bet) => total + bet.payout, 0);
-    if (paid + settled.houseCut !== staked) {
+    const staked = settled.bets.reduce(
+      (total, bet) => total + BigInt(bet.stake),
+      0n,
+    );
+    const paid = settled.bets.reduce(
+      (total, bet) => total + BigInt(bet.payout),
+      0n,
+    );
+    const houseCut = BigInt(settled.houseCut);
+    if (paid + houseCut !== staked) {
       throw new Error(
         `Settlement for ${input.matchId} did not conserve Bucks: staked ${staked.toString()}, paid ${paid.toString()}, house cut ${settled.houseCut.toString()}`,
       );
@@ -502,10 +395,12 @@ async function addHousePositionIfNeeded(input: {
     throw new Error("A human Bucks bet was missing its predicted team");
   }
   const humanTeamId = representative.predictedTeamId;
-  const houseStake = input.humanBets.reduce(
-    (total, bet) => total + bet.stake,
-    0,
+  const houseStakeValue = input.humanBets.reduce(
+    (total, bet) => total + BigInt(bet.stake),
+    0n,
   );
+  if (houseStakeValue > BigInt(BUCKS_INT32_MAX)) return "storage_overflow";
+  const houseStake = Number(houseStakeValue);
   const house = await ensureHouseAccountInTransaction(input.tx, input.serverId);
   if (house.balance < houseStake) {
     return "house_unavailable";
@@ -545,6 +440,8 @@ async function addHousePositionIfNeeded(input: {
     predictedTeamId: houseTeamId,
     stake: houseStake,
     subjectPuuid: representative.subjectPuuid,
+    balance: house.balance - houseStake,
+    refundableHeld: await refundableBucksHeld(input.tx, house.id),
   });
   return;
 }

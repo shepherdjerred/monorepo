@@ -11,6 +11,11 @@ import {
   parseBucksNavigationId,
   type BucksNavigationInteraction,
 } from "#src/betting/navigation.ts";
+import {
+  isParlayCustomId,
+  parseParlayCustomId,
+} from "#src/betting/parlay-custom-id.ts";
+import { handleParlayBetButton } from "#src/betting/parlay-bet-button.ts";
 import { createLogger } from "#src/logger.ts";
 import { discordComponentsTotal } from "#src/metrics/index.ts";
 import {
@@ -72,6 +77,28 @@ export type RoutableButtonInteraction = BetButtonInteraction &
 export async function routeButton(
   interaction: RoutableButtonInteraction,
 ): Promise<void> {
+  if (isParlayCustomId(interaction.customId)) {
+    try {
+      if (parseParlayCustomId(interaction.customId) === undefined) {
+        discordComponentsTotal.inc({ namespace: "bbp", status: "malformed" });
+        await interaction.deferUpdate();
+        return;
+      }
+      await handleParlayBetButton(interaction);
+      discordComponentsTotal.inc({ namespace: "bbp", status: "success" });
+    } catch (error) {
+      logger.error("❌ Error handling a Bryan Bucks parlay button:", error);
+      discordComponentsTotal.inc({ namespace: "bbp", status: "error" });
+      if (interaction.deferred && !interaction.replied) {
+        await interaction.editReply({
+          content:
+            "😵 Something went wrong placing that parlay bet. Try again shortly.",
+        });
+      }
+    }
+    return;
+  }
+
   if (isBucksNavigationId(interaction.customId)) {
     try {
       if (parseBucksNavigationId(interaction.customId) === undefined) {
