@@ -29,6 +29,7 @@ import {
 } from "@scout-for-lol/report";
 import { savePrematchImageToS3, savePrematchSvgToS3 } from "#src/storage/s3.ts";
 import {
+  classicAssetResolutionFailuresTotal,
   prematchLoadingScreenGeneratedTotal,
   prematchLoadingScreenDurationSeconds,
 } from "#src/metrics/index.ts";
@@ -300,6 +301,21 @@ export async function sendPrematchNotification(
       }
     })();
   } catch (error) {
+    if (loadingScreenData?.layout === "classic") {
+      classicAssetResolutionFailuresTotal.inc({
+        phase: "prematch",
+        reason: "asset",
+      });
+      logger.error(
+        "Classic prematch loading-screen asset rendering failed",
+        error,
+        {
+          championIds: loadingScreenData.participants.map(
+            (participant) => participant.championId,
+          ),
+        },
+      );
+    }
     const isRecoverable = error instanceof RecoverableLoadingScreenDataError;
     prematchLoadingScreenGeneratedTotal.inc({
       queue_type: queueType ?? "unknown",

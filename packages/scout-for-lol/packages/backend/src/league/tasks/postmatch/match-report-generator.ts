@@ -41,6 +41,7 @@ import {
   getLatestRankBefore,
 } from "#src/league/model/rank-history.ts";
 import {
+  classicAssetResolutionFailuresTotal,
   reportsGeneratedTotal,
   reportsFailedTotal,
   scoutItemCacheMissTotal,
@@ -163,7 +164,23 @@ async function processClassicMatch(
     );
     return undefined;
   }
-  const [attachment, embed] = await createMatchImage(classicMatch, matchId);
+  let attachment: AttachmentBuilder;
+  let embed: EmbedBuilder;
+  try {
+    [attachment, embed] = await createMatchImage(classicMatch, matchId);
+  } catch (error) {
+    classicAssetResolutionFailuresTotal.inc({
+      phase: "postmatch",
+      reason: "asset",
+    });
+    logger.error("Classic postmatch report asset rendering failed", error, {
+      championIds: [...classicMatch.teams.blue, ...classicMatch.teams.red].map(
+        (champion) => champion.championId,
+      ),
+      matchId,
+    });
+    throw error;
+  }
   return {
     content: formatGameCompletionMessage(
       classicMatch.players.map((player) => player.playerConfig.alias),
