@@ -27,7 +27,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
 - OpenTofu (`mise` manages the version)
 - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — SeaweedFS credentials for the state backend (needed by every stack's `init`)
 - Per-stack credentials:
-  - `cloudflare` — `CLOUDFLARE_API_TOKEN`, `TF_VAR_cloudflare_account_id`
+  - `cloudflare` — `CLOUDFLARE_API_TOKEN`, `TF_VAR_cloudflare_account_id`, and `CLOUDFLARE_API_TOKENS_JSON`
   - `github` — `TF_VAR_github_token` (fine-grained PAT, classic PAT, or GitHub App token)
   - `tailscale` — `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` (scope `acl`)
   - `buildkite` — `TF_VAR_buildkite_api_token`

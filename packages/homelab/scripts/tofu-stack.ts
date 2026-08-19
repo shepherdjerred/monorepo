@@ -136,6 +136,7 @@ const OPTIONAL_SECRET_ENV: readonly [source: string, target: string][] = [
  * treating them as optional.
  */
 const REQUIRED_STACK_ENV: Readonly<Record<string, readonly string[]>> = {
+  cloudflare: ["CLOUDFLARE_API_TOKENS_JSON"],
   openai: [
     "OPENAI_PROJECTS_JSON",
     "OPENAI_SERVICE_ACCOUNTS_JSON",
