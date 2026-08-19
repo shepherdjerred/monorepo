@@ -446,7 +446,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.sjerred.MailMateCodeFillHelper;
 				PRODUCT_NAME = MailMateCodeFillHelper;
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE_SPECIFIER = com.sjerred.MailMateCodeFillHelper;
 				SDKROOT = macosx;
 				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
 			};
