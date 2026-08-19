@@ -1,7 +1,7 @@
 import type { RawMatch } from "@scout-for-lol/data";
 import { awardBucksForMatch, type EarnedAward } from "#src/betting/earnings.ts";
 import {
-  settleBettingForMatch,
+  closeAndSettleBettingForMatch,
   type SettlementSummary,
 } from "#src/betting/settle.ts";
 import {
@@ -10,14 +10,19 @@ import {
 } from "#src/betting/parlay-settle.ts";
 import { disableClosedBettingMessages } from "#src/betting/message-controls.ts";
 import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
+import {
+  closeBettingWindowsForMatch,
+  type ClosedPool,
+} from "#src/betting/sweep.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 
 export async function refreshSettledPoolMessages(
-  settlements: readonly SettlementSummary[],
+  straightPools: readonly { matchId: string; serverId: string }[],
   parlaySettlements: readonly ParlaySettlementSummary[],
   refreshStraightPools: typeof refreshClosedBucksMessages = refreshClosedBucksMessages,
   disableParlayPools: typeof disableClosedBettingMessages = disableClosedBettingMessages,
 ): Promise<void> {
-  await refreshStraightPools(settlements);
+  await refreshStraightPools(straightPools);
   await disableParlayPools(parlaySettlements);
 }
 
@@ -32,18 +37,38 @@ export async function refreshSettledPoolMessages(
  * an outcome or parlay settlement failure cannot be masked by an earning
  * failure in the logs.
  */
-export async function settleAndAwardBucks(matchData: RawMatch): Promise<{
+export async function settleAndAwardBucks(
+  matchData: RawMatch,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<{
+  closures: ClosedPool[];
   settlements: SettlementSummary[];
   parlaySettlements: ParlaySettlementSummary[];
   earnings: EarnedAward[];
 }> {
-  const settlements = await settleBettingForMatch(matchData);
-  const parlaySettlements = await settleParlaysForMatch(matchData);
-  const earnings = await awardBucksForMatch(matchData);
+  const closures = await closeBettingWindowsForMatch(
+    matchData.metadata.matchId,
+    prismaClient,
+  );
+  const retry = await closeAndSettleBettingForMatch(matchData, prismaClient);
+  closures.push(...retry.closures);
+  const parlaySettlements = await settleParlaysForMatch(
+    matchData,
+    prismaClient,
+  );
+  const earnings = await awardBucksForMatch(matchData, prismaClient);
   // Discord cleanup runs after the committed local operations and regardless
   // of whether the caller suppresses an old match's post-match notification.
   // This also covers a remake or very short game that settles an `open` market
   // before the ordinary five-minute close sweep can remove its controls.
-  await refreshSettledPoolMessages(settlements, parlaySettlements);
-  return { settlements, parlaySettlements, earnings };
+  await refreshSettledPoolMessages(
+    [...closures, ...retry.settlements],
+    parlaySettlements,
+  );
+  return {
+    closures,
+    settlements: retry.settlements,
+    parlaySettlements,
+    earnings,
+  };
 }

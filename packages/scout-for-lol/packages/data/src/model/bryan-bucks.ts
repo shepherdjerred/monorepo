@@ -52,6 +52,12 @@ export const BucksLedgerKindSchema = z.enum([
   "earn_mvp",
   "bet_stake",
   "bet_payout",
+  "bet_unmatched_refund",
+  "bet_cancel_refund",
+  "bet_void_refund",
+  "winner_fee",
+  "house_match",
+  // Legacy kinds retained so historical rows remain parseable.
   "bet_refund",
   "house_rake",
   "cancel_fee",
@@ -69,6 +75,7 @@ export const BucksBetOutcomeSchema = z.enum([
   "won",
   "lost",
   "refunded",
+  "cancelled",
 ]);
 
 export type BucksPoolState = z.infer<typeof BucksPoolStateSchema>;
@@ -163,6 +170,38 @@ export const BucksPredictionSchema = z.strictObject({
   drivers: z.array(z.string()),
 });
 
+export const BUCKS_MATCHING_VERSION = 1;
+
+const MatchingAmountFields = {
+  submittedStake: z.number().int().positive(),
+  humanMatchedStake: z.number().int().nonnegative(),
+  houseMatchedStake: z.number().int().nonnegative(),
+  matchedStake: z.number().int().nonnegative(),
+  unmatchedStake: z.number().int().nonnegative(),
+};
+
+export type BucksMatchingAllocation = z.infer<
+  typeof BucksMatchingAllocationSchema
+>;
+export const BucksMatchingAllocationSchema = z.strictObject({
+  betId: z.number().int().positive(),
+  bucksAccountId: z.number().int().positive(),
+  predictedTeamId: RiotTeamIdSchema,
+  ...MatchingAmountFields,
+});
+
+/** Complete, versioned close-time allocation for one guild's match pool. */
+export type BucksMatchingSummary = z.infer<typeof BucksMatchingSummarySchema>;
+export const BucksMatchingSummarySchema = z.strictObject({
+  version: z.literal(BUCKS_MATCHING_VERSION),
+  humanMatchedPerSide: z.number().int().nonnegative(),
+  houseFill: z.number().int().nonnegative(),
+  houseTeamId: RiotTeamIdSchema.nullable(),
+  houseBetId: z.number().int().positive().nullable(),
+  totalMatchedPerSide: z.number().int().nonnegative(),
+  allocations: z.array(BucksMatchingAllocationSchema),
+});
+
 const MvpContextSchema = z.strictObject({
   score: z.number(),
   runnersUp: z.array(
@@ -219,7 +258,29 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     grossPayout: z.number().int().nonnegative().optional(),
     houseCut: z.number().int().nonnegative().optional(),
     netPayout: z.number().int().nonnegative().optional(),
+    submittedStake: z.number().int().nonnegative().optional(),
+    matchedStake: z.number().int().nonnegative().optional(),
+    unmatchedStake: z.number().int().nonnegative().optional(),
     voidReason: BucksVoidReasonSchema.optional(),
+  }),
+  z.strictObject({
+    type: z.literal("matching"),
+    source: z.enum(["unmatched_refund", "house_match"]),
+    matchingVersion: z.literal(BUCKS_MATCHING_VERSION),
+    subjectAlias: z.string(),
+    subjectPuuid: LeaguePuuidSchema,
+    backedAliases: z.array(z.string()),
+    opposingAliases: z.array(z.string()),
+    ...MatchingAmountFields,
+  }),
+  z.strictObject({
+    type: z.literal("cancellation"),
+    subjectAlias: z.string(),
+    backedAliases: z.array(z.string()),
+    opposingAliases: z.array(z.string()),
+    submittedStake: z.number().int().positive(),
+    fee: z.number().int().nonnegative(),
+    netRefund: z.number().int().nonnegative(),
   }),
   z.strictObject({
     type: z.literal("house_fee"),
@@ -227,6 +288,7 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     ratePercent: z.number().int().min(0).max(100),
     grossAmount: z.number().int().positive(),
     fee: z.number().int().positive(),
+    basis: z.enum(["matched_profit", "submitted_stake"]).optional(),
   }),
   z.strictObject({
     type: z.literal("parlay_stake"),

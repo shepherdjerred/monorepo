@@ -1,6 +1,6 @@
 import { retryPendingBucksEarnings } from "#src/betting/earnings-retry.ts";
 import { checkMatchHistory } from "#src/league/tasks/postmatch/match-history-polling.ts";
-import { voidStaleBettingPools } from "#src/betting/sweep.ts";
+import { voidStaleBettingPools } from "#src/betting/void-stale.ts";
 import { voidStaleParlayMarkets } from "#src/betting/parlay-sweep.ts";
 import { createLogger } from "#src/logger.ts";
 

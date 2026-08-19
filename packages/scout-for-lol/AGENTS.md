@@ -1407,3 +1407,4 @@ messaging real people.
 - Analytics is best effort. SDK and capture errors are logged and counted but
   must not fail product behavior; graceful shutdown must flush the SDK queue.
 - Slash-command analytics, Scout desktop, and Scout evals are out of scope.
+

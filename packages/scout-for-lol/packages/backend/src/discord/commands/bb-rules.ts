@@ -24,21 +24,20 @@ export function buildBbRulesEmbed(): EmbedBuilder {
       {
         name: "Placing a bet",
         value:
-          `Stake any positive whole-BB amount your wallet can cover on the Blue or Red Team in a tracked player's game; that market stays open for ${Math.floor(BETTING_WINDOW_MS / 60_000).toString()} minutes. ` +
+          `Offer any positive whole-BB amount your wallet can cover on the Blue or Red Team in a tracked player's game; that market stays open for ${Math.floor(BETTING_WINDOW_MS / 60_000).toString()} minutes. Only the final matched amount is at risk. ` +
           `A separate YES/NO parlay may open for ${Math.floor(PARLAY_BETTING_WINDOW_MS / 60_000).toString()} minutes, with its full house liability reserved when you bet. ` +
-          "You can add to a position before its window closes. Cancelling an outcome position has a 20% house cut; cancelling a parlay returns its full stake and releases the house reserve.",
+          "You can add to a position before its window closes. Cancelling an outcome offer costs 20% of the submitted amount, rounded to the nearest BB; cancelling a parlay returns its full stake and releases the house reserve.",
       },
       {
-        name: "Settlement",
+        name: "Outcome matching & settlement",
         value:
-          "Winners get their stakes back and split the losing side's pool in proportion to their stakes. " +
-          "The house takes 20% of each human winner's gross payout, rounded to the nearest BB, without cutting into winning principal. " +
-          "If people bet on only one side, the Bryan Bucks house matches the other side when its reserve can cover the stake.",
+          "Human offers match first at even money. The house then fills up to 5 BB of the remaining gap for the whole game, subject to its balance. Oversubscribed offers are matched proportionally, and all unmatched BB are refunded at close. " +
+          "A winner receives twice their matched stake before a fee of 20% of matched profit, rounded down.",
       },
       {
         name: "Refunds",
         value:
-          "All stakes are returned with no house cut when a game is voided or remade, cannot be settled, or the house cannot cover a one-sided market.",
+          "Outcome BB that do not match are refunded automatically with no fee. Matched outcome stakes are returned with no fee when a game is voided, remade, unsupported, or cannot be settled. Parlay voids return the stake and release the reserved house liability.",
       },
     );
 }

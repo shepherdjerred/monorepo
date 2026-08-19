@@ -213,7 +213,7 @@ async function processMatchAndUpdatePlayers(
   }
 
   // After the S3 gate and OUTSIDE `!silent`: Bucks are owed for the game even
-  // when no Discord message is worth sending. See settleAndAwardBucks.
+  // when the ordinary match report is suppressed. See settleAndAwardBucks.
   const bucks = await settleAndAwardBucks(matchData);
 
   if (!silent) {
@@ -234,10 +234,19 @@ async function processMatchAndUpdatePlayers(
         tags: { source: "process-match-throw", matchId },
       });
     }
+  }
 
+  const hasBettorNotice =
+    bucks.closures.some((pool) => pool.positions.length > 0) ||
+    bucks.settlements.some((summary) =>
+      summary.bets.some((bet) => !bet.isHouse),
+    );
+  if (!silent || hasBettorNotice) {
     // Announced after the report so it reads as a follow-up, and as its own
     // message rather than appended to the report's content, which the AI review
-    // already owns and which is delivered to every guild at once.
+    // already owns and which is delivered to every guild at once. A silent
+    // match still announces actual betting allocations or payouts: suppressing
+    // a stale report must not hide what happened to reserved BB.
     //
     // Its own error boundary, NOT the report's: the pool is already committed
     // as settled and a later pass returns no summary, so this announcement is

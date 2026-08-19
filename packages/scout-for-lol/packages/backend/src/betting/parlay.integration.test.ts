@@ -201,6 +201,7 @@ async function expectParlaySettlementBatchesHeadroom(): Promise<void> {
   const holdingsQueries = operations.filter((operation) =>
     [
       "BucksBet.aggregate",
+      "BucksBet.findMany",
       "BucksBet.groupBy",
       "BucksParlayBet.aggregate",
       "BucksParlayBet.groupBy",

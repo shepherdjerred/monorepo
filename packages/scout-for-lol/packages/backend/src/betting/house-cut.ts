@@ -1,40 +1,37 @@
 /**
  * The Bryan Bucks house cut.
  *
- * Bucks are integer-only, so every fee is rounded to the nearest whole Buck.
- * Twenty percent is one fifth; adding two before integer division implements
- * nearest-integer rounding for every non-negative amount without floating
- * point arithmetic.
+ * Bucks are integer-only. Winner fees round down so every winning 1 BB match
+ * remains profitable; voluntary cancellation keeps nearest-Buck rounding.
  */
 
 export const HOUSE_CUT_PERCENT = 20;
 
 export const HOUSE_CUT_TERMS =
-  "🏦 Outcome house cut: **20%** of winning payouts, rounded to the nearest BB. Winning principal is protected. Cancelling an outcome position costs **20%**, also rounded to the nearest BB; parlay cancellation is fully refunded.";
+  "🎯 An outcome amount is a maximum offer; only matched BB are at risk and unmatched BB are refunded at close. The house can fill up to **5 BB per game** after human matching. 🏦 Outcome winners pay **20% of matched profit**, rounded down. Cancelling an outcome offer costs **20%**, rounded to the nearest BB; parlay cancellation is fully refunded.";
 
-export const HOUSE_CUT_PLACEMENT_NOTE = "**20% house cut on winning payouts**.";
+export const HOUSE_CUT_PLACEMENT_NOTE =
+  "**Only matched BB are at risk; winners pay 20% of matched profit.**";
 
 function roundedHouseCut(amount: number): number {
   return Math.floor((amount + 2) / 5);
 }
 
 /**
- * Charge a human winner against the gross payout, but never take any of the
- * stake they put up. The cap makes a correct result worth at least principal
- * even in a very lopsided parimutuel pool.
+ * Charge a human winner against matched profit only. Even-money matching makes
+ * matched profit equal matched stake before the fee.
  */
 export function settlementHouseCut(input: {
-  grossPayout: number;
-  grossWinnings: number;
+  matchedProfit: number;
   isHouse: boolean;
 }): number {
   if (input.isHouse) {
     return 0;
   }
-  return Math.min(roundedHouseCut(input.grossPayout), input.grossWinnings);
+  return Math.floor(input.matchedProfit / 5);
 }
 
-/** A voluntary cancellation returns the stake less the rounded house cut. */
+/** A voluntary cancellation returns the offer less the rounded fee. */
 export function cancellationHouseCut(stake: number): number {
   return roundedHouseCut(stake);
 }

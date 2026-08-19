@@ -147,16 +147,14 @@ describe("handleBetButton", () => {
       const { interaction, replies } = fakeInteraction(customId);
       await handleBetButton(interaction, db);
 
-      expect(replies[0]).toContain("Bet placed");
+      expect(replies[0]).toContain("Offer placed");
       expect(replies[0]).toContain(expectedTeamName);
       expect(replies[0]).not.toContain("jerred WINS");
-      expect(replies[0]).toContain(
-        "winning payouts, rounded to the nearest BB",
-      );
-      expect(replies[0]).toContain("Winning principal is protected");
-      expect(replies[0]).toContain(
-        "Cancelling an outcome position costs **20%**, also rounded to the nearest BB",
-      );
+      expect(replies[0]).toContain("for up to");
+      expect(replies[0]).toContain("only matched BB are at risk");
+      expect(replies[0]).toContain("5 BB per game");
+      expect(replies[0]).toContain("20% of matched profit**, rounded down");
+      expect(replies[0]).toContain("parlay cancellation is fully refunded");
       expect(await db.bucksBet.count()).toBe(1);
       const bet = await db.bucksBet.findFirstOrThrow();
       expect(bet.predictedTeamId).toBe(expectedTeamId);
@@ -204,11 +202,22 @@ describe("handleBetButton", () => {
     const refreshes: { matchId: string; serverId: string }[] = [];
     await handleBetButton(interaction, db, recordingRefreshes(refreshes));
 
-    expect(replies[0]).toContain("Bet cancelled");
+    expect(replies[0]).toContain("Offer cancelled");
     expect(replies[0]).toContain(
-      "stake **5 BB** − **1 BB house cut** = **4 BB returned**",
+      "offered **5 BB** − **1 BB cancellation fee** = **4 BB returned**",
     );
-    expect(await db.bucksBet.count()).toBe(0);
+    expect(await db.bucksBet.count()).toBe(1);
+    expect(await db.bucksOpenPosition.count()).toBe(0);
+    expect(await db.bucksBet.findFirstOrThrow()).toEqual(
+      expect.objectContaining({
+        stake: 5,
+        matchedStake: 0,
+        unmatchedStake: 5,
+        fee: 1,
+        payout: 4,
+        betOutcome: "cancelled",
+      }),
+    );
 
     const account = await db.bucksAccount.findUniqueOrThrow({
       where: {
@@ -258,8 +267,11 @@ describe("handleBetButton", () => {
       return f;
     })();
 
-    expect(replies[0]).toContain("Bet placed");
-    const bet = await db.bucksBet.findFirstOrThrow();
+    expect(replies[0]).toContain("Offer placed");
+    expect(await db.bucksBet.count()).toBe(2);
+    const bet = await db.bucksBet.findFirstOrThrow({
+      where: { betOutcome: "pending" },
+    });
     expect(bet.predictedTeamId).toBe(200);
   });
 

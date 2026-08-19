@@ -68,7 +68,7 @@ export async function transferHouseCut(
     serverId: DiscordGuildId;
     bucksAccountId: number;
     amount: number;
-    kind: "house_rake" | "cancel_fee";
+    kind: "winner_fee" | "cancel_fee";
     context: BucksLedgerContext;
     matchId: string;
     betId: number;

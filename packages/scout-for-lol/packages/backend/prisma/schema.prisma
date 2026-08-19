@@ -675,8 +675,9 @@ model AuditLog {
 // Bryan Bucks — friendly betting economy
 //
 // Gated per guild by the `betting_enabled` flag. Players earn Bucks for ranked
-// games and stake them on whether a tracked player wins an in-progress game.
-// Payouts are parimutuel. No monetary value; nothing transfers to real goods.
+// games and offer up to an amount on whether a tracked player wins an
+// in-progress game. Human offers and a capped house fill determine the amount
+// actually at risk. No monetary value; nothing transfers to real goods.
 // ============================================================================
 
 // A Bryan Bucks wallet: one per (guild, Discord user).
@@ -714,6 +715,7 @@ model BucksAccount {
   ledgerEntries BucksLedgerEntry[]
   bets          BucksBet[]
   parlayBets    BucksParlayBet[]
+  openPositions BucksOpenPosition[]
 
   @@unique([serverId, discordId])
   @@index([serverId, balance])
@@ -731,18 +733,18 @@ model BucksLedgerEntry {
   bucksAccountId Int
   bucksAccount   BucksAccount @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
 
-  // Signed change. Negative = stake or house cut paid. Positive = earning,
-  // payout, refund, house cut received, or the one-time seed grant. Never zero.
+  // Signed change. Negative = reserved stake, match funding, or fee paid.
+  // Positive = earning, payout, refund, fee received, or seed grant. Never zero.
   delta Int
 
   // Balance AFTER this delta, as of the committing transaction. Makes an audit
   // read one query, and localizes any drift to a specific row.
   balanceAfter Int
 
-  // BucksLedgerKind: seed | earn_game | earn_ranked_5s_bonus |
-  // earn_clash_bonus | earn_win | earn_mvp | bet_stake | bet_payout |
-  // bet_refund | house_rake | cancel_fee | parlay_stake | parlay_reserve |
-  // parlay_payout | parlay_refund | parlay_release | adjustment.
+  // BucksLedgerKind (@scout-for-lol/data): seed | earn_* | bet_stake |
+  // bet_payout | bet_*_refund | winner_fee | house_match | cancel_fee |
+  // parlay_stake | parlay_reserve | parlay_payout | parlay_refund |
+  // parlay_release | legacy bet_refund/house_rake | adjustment.
   // Not a Prisma enum — the SQLite provider has none. Zod-validated on write
   // and on read.
   kind String
@@ -773,9 +775,8 @@ model BucksLedgerEntry {
 
 // One user's position on one match in one guild.
 //
-// Parimutuel: the stake is DEBITED at bet time, so the pool is real Bucks
-// rather than a promise, and the payout is computed at settlement from pool
-// totals.
+// `stake` is the maximum the user offered and is DEBITED at placement. At
+// close, only matched stake remains at risk and unmatched stake is refunded.
 model BucksBet {
   id             Int            @id @default(autoincrement())
   poolId         Int
@@ -791,30 +792,58 @@ model BucksBet {
   // the wager and settlement outcome.
   subjectPuuid String
 
-  // Running total staked. Adding to a position increments this; each increment
-  // writes its own bet_stake ledger row.
+  // Running submitted maximum. Adding to an open position increments this;
+  // each increment writes its own bet_stake ledger row.
   stake Int
 
-  // BucksBetOutcome: pending | won | lost | refunded.
+  // Null on historical rows written before close-time matching. For new rows,
+  // matchedStake == humanMatchedStake + houseMatchedStake and
+  // stake == matchedStake + unmatchedStake.
+  humanMatchedStake Int?
+  houseMatchedStake Int?
+  matchedStake      Int?
+  unmatchedStake    Int?
+
+  // BucksBetOutcome: pending | won | lost | refunded | cancelled.
   // Deliberately not named `status` — brand-prisma-types would type it
   // ParticipantStatus.
   betOutcome String @default("pending")
 
-  // Net Bucks returned after the house cut: principal + net winnings, the full
-  // stake on a mandatory refund, or 0 on a loss. Null while pending.
-  payout    Int?
-  settledAt DateTime?
+  // Matched-stake settlement accounting. Unmatched refunds are separate ledger
+  // entries and are not included here. Cancellation stores the gross submitted
+  // stake, fee, and net refund in these same lifecycle fields.
+  grossPayout Int?
+  fee         Int?
+  payout      Int?
+  cancelledAt DateTime?
+  settledAt   DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   ledgerEntries BucksLedgerEntry[]
+  openPosition  BucksOpenPosition?
 
-  // One position per user per pool. Betting the OTHER side is refused rather
-  // than netted: a hedged position has no parimutuel meaning and makes "what
-  // did they predict" unanswerable.
-  @@unique([poolId, bucksAccountId])
+  // Historical and cancelled attempts are retained. BucksOpenPosition owns the
+  // one-live-position constraint while the market is open.
+  @@index([poolId, bucksAccountId])
   @@index([poolId, predictedTeamId])
+}
+
+// The one currently editable offer for a user in a pool. Deleting this slot on
+// cancellation preserves the BucksBet and its ledger links while allowing a
+// fresh offer, including on the other side.
+model BucksOpenPosition {
+  poolId         Int
+  pool           BucksMatchPool @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  bucksAccountId Int
+  bucksAccount   BucksAccount   @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
+  betId          Int            @unique
+  bet            BucksBet       @relation(fields: [betId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+
+  @@id([poolId, bucksAccountId])
+  @@index([poolId])
 }
 
 // The betting market for one Riot match in one guild.
@@ -865,10 +894,16 @@ model BucksMatchPool {
   // exact "marked but didn't happen" window it was invented to close.
   poolState String @default("open")
 
+  // Set atomically with close-time allocation. matchingJson is a versioned
+  // BucksMatchingSummary and is the audit record for every matched/refunded BB.
+  matchedAt    DateTime?
+  matchingJson String?
+
   // Riot team ID that won. Non-null iff poolState == "settled".
   winningTeamId Int?
 
-  // BucksVoidReason: remake | no_counterparty | expired | unsupported_mode.
+  // BucksVoidReason: remake | expired | unsupported_mode, plus historical
+  // no_counterparty and house_unavailable values.
   // Non-null iff poolState == "voided".
   voidReason String?
 
@@ -880,8 +915,9 @@ model BucksMatchPool {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  bets         BucksBet[]
-  parlayMarket BucksParlayMarket?
+  bets          BucksBet[]
+  parlayMarket  BucksParlayMarket?
+  openPositions BucksOpenPosition[]
 
   @@unique([matchId, serverId])
   @@index([poolState, closesAt])

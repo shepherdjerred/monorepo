@@ -40,17 +40,10 @@ export type CancelBetResult =
 /**
  * Withdraw a position while the window is still open.
  *
- * The gross stake is credited, the cancellation cut is transferred to the
- * house, and the bet row is **deleted** rather than marked. Two reasons for the
- * delete: a parimutuel payout computed against a "cancelled but present" bet
- * would be wrong, and the `@@unique([poolId, bucksAccountId])` slot has to be
- * freed so the bettor can take a fresh position — including the other side,
- * which is the usual reason for cancelling.
- *
- * Cost of the delete, accepted deliberately: `BucksLedgerEntry.betId` is
- * `ON DELETE SET NULL`, so the earlier `bet_stake` rows keep their amount,
- * kind, match, and context but lose the link to the bet they funded. The
- * ledger still explains every Buck, which is the actual requirement.
+ * The gross submitted maximum is credited, the cancellation cut is transferred
+ * to the house, and the bet is retained as a terminal audit record. Only its
+ * BucksOpenPosition slot is deleted, which lets the bettor submit a fresh
+ * offer without severing any ledger links.
  */
 export async function cancelBet(
   input: {
@@ -93,13 +86,13 @@ export async function cancelBet(
       // no bet", and the caller renders it as one — but only for someone who
       // actually has a stake. Telling a non-bettor their position is locked
       // describes a bet they never placed, so check before claiming that.
-      const locked = await tx.bucksBet.findUnique({
+      const locked = await tx.bucksBet.findFirst({
         where: {
-          poolId_bucksAccountId: {
-            poolId: pool.id,
-            bucksAccountId,
-          },
+          poolId: pool.id,
+          bucksAccountId,
+          betOutcome: { not: "cancelled" },
         },
+        orderBy: { id: "desc" },
         select: { id: true },
       });
       if (locked === null) {
@@ -124,18 +117,28 @@ export async function cancelBet(
       return { kind: "window_closed" };
     }
 
-    const bet = await tx.bucksBet.findUnique({
+    const activePosition = await tx.bucksOpenPosition.findUnique({
       where: {
         poolId_bucksAccountId: {
           poolId: pool.id,
           bucksAccountId,
         },
       },
-      select: { id: true, stake: true, predictedTeamId: true },
+      select: {
+        bet: {
+          select: {
+            id: true,
+            stake: true,
+            predictedTeamId: true,
+            subjectPuuid: true,
+          },
+        },
+      },
     });
-    if (bet === null) {
+    if (activePosition === null) {
       return { kind: "no_bet" };
     }
+    const bet = activePosition.bet;
 
     const roster = BucksPoolRosterSchema.parse(
       JSON.parse(pool.roster),
@@ -150,41 +153,44 @@ export async function cancelBet(
     const refunded = bet.stake - houseCut;
     if (refunded + houseCut !== bet.stake) {
       throw new Error(
-        `Cancellation for ${input.matchId} did not conserve Bucks: stake ${bet.stake.toString()}, refund ${refunded.toString()}, house cut ${houseCut.toString()}`,
+        `Cancellation for ${input.matchId} did not conserve Bucks: offer ${bet.stake.toString()}, refund ${refunded.toString()}, cancellation fee ${houseCut.toString()}`,
       );
     }
 
     // Release this position from the account's refund-headroom calculation
     // before returning it. The transaction rolls this state back if the credit,
-    // house transfer, or later delete fails. The gross refund followed by a
-    // separate cut keeps both movements visible in the user's history.
+    // house transfer, or slot deletion fails. The gross refund followed by a
+    // separate fee keeps both movements paired to the retained bet.
     await tx.bucksBet.update({
       where: { id: bet.id },
       data: {
-        betOutcome: "refunded",
-        payout: bet.stake,
+        humanMatchedStake: 0,
+        houseMatchedStake: 0,
+        matchedStake: 0,
+        unmatchedStake: bet.stake,
+        betOutcome: "cancelled",
+        grossPayout: bet.stake,
+        fee: houseCut,
+        payout: refunded,
+        cancelledAt: now,
         settledAt: now,
       },
     });
     const refundBalance = await applyBucksDelta(tx, {
       bucksAccountId,
       delta: bet.stake,
-      kind: "bet_refund",
+      kind: "bet_cancel_refund",
       matchId: input.matchId,
       betId: bet.id,
       predictedTeamId: bet.predictedTeamId,
       context: {
-        type: "settlement",
+        type: "cancellation",
         subjectAlias: "cancelled before close",
         backedAliases: aliasesFor(bet.predictedTeamId),
         opposingAliases: aliasesFor(bet.predictedTeamId === 100 ? 200 : 100),
-        winnersPool: 0,
-        losersPool: 0,
-        stakeReturned: bet.stake,
-        winnings: 0,
-        grossPayout: bet.stake,
-        houseCut,
-        netPayout: refunded,
+        submittedStake: bet.stake,
+        fee: houseCut,
+        netRefund: refunded,
       },
     });
 
@@ -204,13 +210,14 @@ export async function cancelBet(
               ratePercent: HOUSE_CUT_PERCENT,
               grossAmount: bet.stake,
               fee: houseCut,
+              basis: "submitted_stake",
             },
           });
 
-    await tx.bucksBet.delete({ where: { id: bet.id } });
+    await tx.bucksOpenPosition.delete({ where: { betId: bet.id } });
 
     logger.info(
-      `↩️ Cancelled a Bryan Bucks bet on ${input.matchId}, refunding ${refunded.toString()} BB after a ${houseCut.toString()} BB house cut`,
+      `↩️ Cancelled a Bryan Bucks offer on ${input.matchId}, refunding ${refunded.toString()} BB after a ${houseCut.toString()} BB cancellation fee`,
     );
 
     return {

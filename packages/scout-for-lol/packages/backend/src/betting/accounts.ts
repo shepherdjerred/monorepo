@@ -302,20 +302,29 @@ export async function getLedgerPage(
 
 type PendingPositionBase = {
   matchId: string;
-  stake: number;
   closesAt: Date;
   poolState: string;
 };
 
-export type PendingPosition = PendingPositionBase &
-  (
-    | { marketType: "outcome"; gameAlias: string; teamId: RiotTeamId }
-    | { marketType: "parlay"; subjectAlias: string; side: "YES" | "NO" }
-  );
+export type PendingPosition =
+  | (PendingPositionBase & {
+      marketType: "outcome";
+      gameAlias: string;
+      teamId: RiotTeamId;
+      offeredStake: number;
+      matchedStake: number | null;
+      unmatchedStake: number | null;
+    })
+  | (PendingPositionBase & {
+      marketType: "parlay";
+      subjectAlias: string;
+      side: "YES" | "NO";
+      stake: number;
+    });
 
 export type PersonalBucksView = {
   balance: number;
-  totalStaked: number;
+  totalAtRisk: number;
   pendingPositionCount: number;
   pendingPositions: PendingPosition[];
 };
@@ -339,58 +348,53 @@ export async function getPersonalBucksView(
       return;
     }
 
-    const [outcomeAggregate, outcomeBets, parlayAggregate, parlayBets] =
-      await Promise.all([
-        tx.bucksBet.aggregate({
-          where: { bucksAccountId: account.id, betOutcome: "pending" },
-          _sum: { stake: true },
-          _count: true,
-        }),
-        tx.bucksBet.findMany({
-          where: { bucksAccountId: account.id, betOutcome: "pending" },
-          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-          take: 10,
-          select: {
-            id: true,
-            createdAt: true,
-            stake: true,
-            predictedTeamId: true,
-            subjectPuuid: true,
-            pool: {
-              select: {
-                matchId: true,
-                roster: true,
-                closesAt: true,
-                poolState: true,
-              },
+    const [outcomeBets, parlayAggregate, parlayBets] = await Promise.all([
+      tx.bucksBet.findMany({
+        where: { bucksAccountId: account.id, betOutcome: "pending" },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        select: {
+          id: true,
+          createdAt: true,
+          stake: true,
+          matchedStake: true,
+          unmatchedStake: true,
+          predictedTeamId: true,
+          subjectPuuid: true,
+          pool: {
+            select: {
+              matchId: true,
+              roster: true,
+              closesAt: true,
+              poolState: true,
             },
           },
-        }),
-        tx.bucksParlayBet.aggregate({
-          where: { bucksAccountId: account.id, betOutcome: "pending" },
-          _sum: { stake: true },
-          _count: true,
-        }),
-        tx.bucksParlayBet.findMany({
-          where: { bucksAccountId: account.id, betOutcome: "pending" },
-          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-          take: 10,
-          select: {
-            id: true,
-            createdAt: true,
-            stake: true,
-            side: true,
-            market: {
-              select: {
-                matchId: true,
-                closesAt: true,
-                marketState: true,
-                definition: { select: { subjects: true } },
-              },
+        },
+      }),
+      tx.bucksParlayBet.aggregate({
+        where: { bucksAccountId: account.id, betOutcome: "pending" },
+        _sum: { stake: true },
+        _count: true,
+      }),
+      tx.bucksParlayBet.findMany({
+        where: { bucksAccountId: account.id, betOutcome: "pending" },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: 10,
+        select: {
+          id: true,
+          createdAt: true,
+          stake: true,
+          side: true,
+          market: {
+            select: {
+              matchId: true,
+              closesAt: true,
+              marketState: true,
+              definition: { select: { subjects: true } },
             },
           },
-        }),
-      ]);
+        },
+      }),
+    ]);
 
     const outcomePositions = outcomeBets.map((bet) => {
       const roster = BucksPoolRosterSchema.parse(
@@ -411,7 +415,9 @@ export async function getPersonalBucksView(
         matchId: bet.pool.matchId,
         gameAlias: subject.trackedAlias,
         teamId: RiotTeamIdSchema.parse(bet.predictedTeamId),
-        stake: bet.stake,
+        offeredStake: bet.stake,
+        matchedStake: bet.matchedStake,
+        unmatchedStake: bet.unmatchedStake,
         closesAt: bet.pool.closesAt,
         poolState: BucksPoolStateSchema.parse(bet.pool.poolState),
       };
@@ -442,9 +448,12 @@ export async function getPersonalBucksView(
 
     return {
       balance: account.balance,
-      totalStaked:
-        (outcomeAggregate._sum.stake ?? 0) + (parlayAggregate._sum.stake ?? 0),
-      pendingPositionCount: outcomeAggregate._count + parlayAggregate._count,
+      totalAtRisk:
+        outcomeBets.reduce(
+          (total, bet) => total + (bet.matchedStake ?? bet.stake),
+          0,
+        ) + (parlayAggregate._sum.stake ?? 0),
+      pendingPositionCount: outcomeBets.length + parlayAggregate._count,
       pendingPositions,
     };
   });

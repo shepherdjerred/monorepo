@@ -180,20 +180,24 @@ export async function placeBet(
         return { kind: "window_closed" };
       }
 
-      const existing = await tx.bucksBet.findUnique({
+      const activePosition = await tx.bucksOpenPosition.findUnique({
         where: {
           poolId_bucksAccountId: {
             poolId: pool.id,
             bucksAccountId: account.id,
           },
         },
-        select: { id: true, predictedTeamId: true, stake: true },
+        select: {
+          bet: {
+            select: { id: true, predictedTeamId: true, stake: true },
+          },
+        },
       });
+      const existing = activePosition?.bet ?? null;
 
       if (existing !== null && existing.predictedTeamId !== predictedTeamId) {
-        // Hedging has no parimutuel meaning and would make "what did they
-        // predict" unanswerable in the ledger, so it is refused outright
-        // rather than netted off.
+        // A person gets one coherent offer per pool. They may cancel it and
+        // submit a fresh offer on the other side, but cannot hold both at once.
         throw new SideConflictError(existing.predictedTeamId);
       }
 
@@ -203,23 +207,32 @@ export async function placeBet(
         return { kind: "storage_limit" };
       }
 
-      const bet =
-        existing === null
-          ? await tx.bucksBet.create({
-              data: {
-                poolId: pool.id,
-                bucksAccountId: account.id,
-                predictedTeamId,
-                subjectPuuid: input.subjectPuuid,
-                stake: stake.data,
-              },
-              select: { id: true, stake: true },
-            })
-          : await tx.bucksBet.update({
-              where: { id: existing.id },
-              data: { stake: totalStake },
-              select: { id: true, stake: true },
-            });
+      let bet: { id: number; stake: number };
+      if (existing === null) {
+        bet = await tx.bucksBet.create({
+          data: {
+            poolId: pool.id,
+            bucksAccountId: account.id,
+            predictedTeamId,
+            subjectPuuid: input.subjectPuuid,
+            stake: input.stake,
+          },
+          select: { id: true, stake: true },
+        });
+        await tx.bucksOpenPosition.create({
+          data: {
+            poolId: pool.id,
+            bucksAccountId: account.id,
+            betId: bet.id,
+          },
+        });
+      } else {
+        bet = await tx.bucksBet.update({
+          where: { id: existing.id },
+          data: { stake: totalStake },
+          select: { id: true, stake: true },
+        });
+      }
 
       const balanceAfter = await applyBucksDelta(tx, {
         bucksAccountId: account.id,

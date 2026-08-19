@@ -1,193 +1,440 @@
 import * as Sentry from "@sentry/bun";
-import { VOID_GRACE_MS } from "#src/betting/constants.ts";
+import {
+  BUCKS_MATCHING_VERSION,
+  BucksMatchingSummarySchema,
+  BucksMessageRefsSchema,
+  BucksPoolRosterSchema,
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
+  RiotTeamIdSchema,
+  type BucksMatchingSummary,
+  type BucksPoolParticipant,
+  type RiotTeamId,
+} from "@scout-for-lol/data";
+import { HOUSE_MATCH_LIMIT } from "#src/betting/constants.ts";
+import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
+import { matchBucksOffers } from "#src/betting/matching.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-sweep");
 
-/**
- * The two background passes that keep pools from getting stuck.
- *
- * Neither is load-bearing for correctness at bet time — closure is enforced
- * against `closesAt` inside `placeBet`'s transaction — but without the second
- * one, staked Bucks from a match that never produces a post-match result would
- * be silently destroyed.
- *
- * Neither is gated on `betting_enabled`, for the same reason settlement is not:
- * the flag governs taking Bucks, not returning them. A guild removed from the
- * allowlist must still get its outstanding stakes refunded.
- */
+export type ClosedPosition = {
+  betId: number;
+  discordId: string;
+  teamId: RiotTeamId;
+  submittedStake: number;
+  matchedStake: number;
+  unmatchedStake: number;
+};
 
 export type ClosedPool = {
   matchId: string;
   serverId: string;
+  messageRefs: { channelId: string; messageId: string }[];
+  humanMatchedPerSide: number;
+  houseFill: number;
+  totalMatchedPerSide: number;
+  positions: ClosedPosition[];
 };
 
+function aliasesForTeam(
+  roster: readonly BucksPoolParticipant[],
+  teamId: number,
+): string[] {
+  return roster
+    .filter((participant) => participant.teamId === teamId)
+    .map((participant) => participant.trackedAlias)
+    .filter((alias) => alias !== undefined);
+}
+
+function subjectAlias(
+  roster: readonly BucksPoolParticipant[],
+  subjectPuuid: string,
+): string {
+  const subject = roster.find(
+    (participant) => participant.puuid === subjectPuuid,
+  );
+  return subject?.trackedAlias ?? "a tracked player";
+}
+
 /**
- * Move every expired open pool to `closed`.
- *
- * Purely so the state is queryable and the buttons can be greyed out; a bet
- * arriving between expiry and this sweep is already refused by `placeBet`.
- *
- * @returns the pools that this pass closed, with the messages whose components
- * should now be disabled
+ * Match one pool exactly once. The guarded pool update is deliberately the
+ * transaction's first statement: it owns both the SQLite write lock and the
+ * matching idempotency token before any offer or balance is read.
  */
+async function matchPoolAtClose(input: {
+  prismaClient: ExtendedPrismaClient;
+  poolId: number;
+  now: Date;
+  requireExpired: boolean;
+}): Promise<ClosedPool | undefined> {
+  const result = await input.prismaClient.$transaction(async (tx) => {
+    const claim = await tx.bucksMatchPool.updateMany({
+      where: {
+        id: input.poolId,
+        poolState: { in: ["open", "closed"] },
+        matchedAt: null,
+        ...(input.requireExpired ? { closesAt: { lte: input.now } } : {}),
+      },
+      data: {
+        poolState: "closed",
+        matchedAt: input.now,
+        updatedAt: input.now,
+      },
+    });
+    if (claim.count !== 1) {
+      return;
+    }
+
+    const pool = await tx.bucksMatchPool.findUniqueOrThrow({
+      where: { id: input.poolId },
+      select: {
+        matchId: true,
+        serverId: true,
+        roster: true,
+        messageRefs: true,
+      },
+    });
+    const roster = BucksPoolRosterSchema.parse(
+      JSON.parse(pool.roster),
+    ).participants;
+    const rows = await tx.bucksBet.findMany({
+      where: {
+        poolId: input.poolId,
+        betOutcome: "pending",
+        bucksAccount: { isHouse: false },
+      },
+      orderBy: { id: "asc" },
+      select: {
+        id: true,
+        bucksAccountId: true,
+        bucksAccount: { select: { discordId: true } },
+        predictedTeamId: true,
+        subjectPuuid: true,
+        stake: true,
+      },
+    });
+
+    const blueTotal = rows
+      .filter((row) => RiotTeamIdSchema.parse(row.predictedTeamId) === 100)
+      .reduce((sum, row) => sum + row.stake, 0);
+    const redTotal = rows
+      .filter((row) => RiotTeamIdSchema.parse(row.predictedTeamId) === 200)
+      .reduce((sum, row) => sum + row.stake, 0);
+    const gap = Math.abs(blueTotal - redTotal);
+    const serverId = DiscordGuildIdSchema.parse(pool.serverId);
+    const house =
+      gap === 0
+        ? undefined
+        : await ensureHouseAccountInTransaction(tx, serverId);
+    const matched = matchBucksOffers({
+      offers: rows.map((row) => ({
+        betId: row.id,
+        bucksAccountId: row.bucksAccountId,
+        predictedTeamId: RiotTeamIdSchema.parse(row.predictedTeamId),
+        submittedStake: row.stake,
+      })),
+      houseMaximum: HOUSE_MATCH_LIMIT,
+      houseBalance: house?.balance ?? 0,
+    });
+
+    const rowsById = new Map(rows.map((row) => [row.id, row]));
+    for (const allocation of matched.allocations) {
+      const row = rowsById.get(allocation.betId);
+      if (row === undefined) {
+        throw new Error(
+          `Matching allocation references missing bet ${allocation.betId.toString()}`,
+        );
+      }
+      const fullyUnmatched = allocation.matchedStake === 0;
+      await tx.bucksBet.update({
+        where: { id: allocation.betId },
+        data: {
+          humanMatchedStake: allocation.humanMatchedStake,
+          houseMatchedStake: allocation.houseMatchedStake,
+          matchedStake: allocation.matchedStake,
+          unmatchedStake: allocation.unmatchedStake,
+          ...(fullyUnmatched
+            ? {
+                betOutcome: "refunded",
+                grossPayout: 0,
+                fee: 0,
+                payout: 0,
+                settledAt: input.now,
+              }
+            : {}),
+        },
+      });
+
+      if (allocation.unmatchedStake > 0) {
+        await applyBucksDelta(tx, {
+          bucksAccountId: allocation.bucksAccountId,
+          delta: allocation.unmatchedStake,
+          kind: "bet_unmatched_refund",
+          matchId: pool.matchId,
+          betId: allocation.betId,
+          predictedTeamId: allocation.predictedTeamId,
+          context: {
+            type: "matching",
+            source: "unmatched_refund",
+            matchingVersion: BUCKS_MATCHING_VERSION,
+            subjectAlias: subjectAlias(roster, row.subjectPuuid),
+            subjectPuuid: LeaguePuuidSchema.parse(row.subjectPuuid),
+            backedAliases: aliasesForTeam(roster, allocation.predictedTeamId),
+            opposingAliases: aliasesForTeam(
+              roster,
+              allocation.predictedTeamId === 100 ? 200 : 100,
+            ),
+            submittedStake: allocation.submittedStake,
+            humanMatchedStake: allocation.humanMatchedStake,
+            houseMatchedStake: allocation.houseMatchedStake,
+            matchedStake: allocation.matchedStake,
+            unmatchedStake: allocation.unmatchedStake,
+          },
+        });
+      }
+    }
+
+    let houseBetId: number | null = null;
+    if (matched.houseFill > 0) {
+      if (house === undefined || matched.houseTeamId === null) {
+        throw new Error("A Bryan Bucks house fill was missing its house side");
+      }
+      const humanTeamId = matched.houseTeamId === 100 ? 200 : 100;
+      const representative = rows.find(
+        (row) => RiotTeamIdSchema.parse(row.predictedTeamId) === humanTeamId,
+      );
+      if (representative === undefined) {
+        throw new Error("A Bryan Bucks house fill had no human counterparty");
+      }
+      const houseBet = await tx.bucksBet.create({
+        data: {
+          poolId: input.poolId,
+          bucksAccountId: house.id,
+          predictedTeamId: matched.houseTeamId,
+          subjectPuuid: representative.subjectPuuid,
+          stake: matched.houseFill,
+          humanMatchedStake: matched.houseFill,
+          houseMatchedStake: 0,
+          matchedStake: matched.houseFill,
+          unmatchedStake: 0,
+        },
+        select: { id: true },
+      });
+      houseBetId = houseBet.id;
+      await applyBucksDelta(tx, {
+        bucksAccountId: house.id,
+        delta: -matched.houseFill,
+        kind: "house_match",
+        matchId: pool.matchId,
+        betId: houseBet.id,
+        predictedTeamId: matched.houseTeamId,
+        context: {
+          type: "matching",
+          source: "house_match",
+          matchingVersion: BUCKS_MATCHING_VERSION,
+          subjectAlias: subjectAlias(roster, representative.subjectPuuid),
+          subjectPuuid: LeaguePuuidSchema.parse(representative.subjectPuuid),
+          backedAliases: aliasesForTeam(roster, matched.houseTeamId),
+          opposingAliases: aliasesForTeam(roster, humanTeamId),
+          submittedStake: matched.houseFill,
+          humanMatchedStake: matched.houseFill,
+          houseMatchedStake: 0,
+          matchedStake: matched.houseFill,
+          unmatchedStake: 0,
+        },
+      });
+    }
+
+    const matchingSummary: BucksMatchingSummary =
+      BucksMatchingSummarySchema.parse({
+        version: BUCKS_MATCHING_VERSION,
+        humanMatchedPerSide: matched.humanMatchedPerSide,
+        houseFill: matched.houseFill,
+        houseTeamId: matched.houseTeamId,
+        houseBetId,
+        totalMatchedPerSide: matched.totalMatchedPerSide,
+        allocations: matched.allocations,
+      });
+    await tx.bucksMatchPool.update({
+      where: { id: input.poolId },
+      data: { matchingJson: JSON.stringify(matchingSummary) },
+    });
+    await tx.bucksOpenPosition.deleteMany({
+      where: { poolId: input.poolId },
+    });
+
+    return {
+      matchId: pool.matchId,
+      serverId: pool.serverId,
+      messageRefsJson: pool.messageRefs,
+      humanMatchedPerSide: matched.humanMatchedPerSide,
+      houseFill: matched.houseFill,
+      totalMatchedPerSide: matched.totalMatchedPerSide,
+      positions: matched.allocations.map((allocation) => {
+        const row = rowsById.get(allocation.betId);
+        if (row === undefined) {
+          throw new Error(
+            `Closed position references missing bet ${allocation.betId.toString()}`,
+          );
+        }
+        return {
+          betId: allocation.betId,
+          discordId: row.bucksAccount.discordId,
+          teamId: allocation.predictedTeamId,
+          submittedStake: allocation.submittedStake,
+          matchedStake: allocation.matchedStake,
+          unmatchedStake: allocation.unmatchedStake,
+        };
+      }),
+    };
+  });
+  if (result === undefined) {
+    return;
+  }
+
+  let messageRefs: ClosedPool["messageRefs"] = [];
+  try {
+    messageRefs = BucksMessageRefsSchema.parse(
+      JSON.parse(result.messageRefsJson),
+    ).map((ref) => ({ ...ref }));
+  } catch (error) {
+    // Delivery metadata is not part of the financial transaction. A damaged
+    // Discord reference must not roll matching and refunds back or leave a
+    // completed game's offers permanently reserved.
+    logger.error(
+      `❌ Bryan Bucks pool ${input.poolId.toString()} matched, but its Discord message refs were malformed:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: {
+        source: "betting-sweep-message-refs",
+        matchId: result.matchId,
+      },
+      extra: { poolId: input.poolId, serverId: result.serverId },
+    });
+  }
+
+  const { messageRefsJson: _messageRefsJson, ...closedPool } = result;
+  return { ...closedPool, messageRefs };
+}
+
+/** Match every expired window and return only pools claimed by this pass. */
 export async function closeExpiredBettingWindows(
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
 ): Promise<ClosedPool[]> {
-  try {
-    const expired = await prismaClient.bucksMatchPool.findMany({
-      where: { poolState: "open", closesAt: { lt: now } },
-      select: { id: true, matchId: true, serverId: true },
-    });
-    if (expired.length === 0) {
-      return [];
-    }
-
-    const closed: ClosedPool[] = [];
-    for (const pool of expired) {
-      // Guarded so two overlapping sweeps cannot both report the same pool and
-      // edit its messages twice.
-      const claim = await prismaClient.bucksMatchPool.updateMany({
-        where: { id: pool.id, poolState: "open" },
-        data: { poolState: "closed" },
+  const candidates = await prismaClient.bucksMatchPool.findMany({
+    where: {
+      poolState: { in: ["open", "closed"] },
+      matchedAt: null,
+      closesAt: { lte: now },
+    },
+    orderBy: { id: "asc" },
+    select: { id: true, matchId: true },
+  });
+  const closed: ClosedPool[] = [];
+  for (const candidate of candidates) {
+    try {
+      const result = await matchPoolAtClose({
+        prismaClient,
+        poolId: candidate.id,
+        now,
+        requireExpired: true,
       });
-      if (claim.count !== 1) {
-        continue;
+      if (result !== undefined) {
+        closed.push(result);
       }
-      closed.push({
-        matchId: pool.matchId,
-        serverId: pool.serverId,
+    } catch (error) {
+      logger.error(
+        `❌ Could not match Bryan Bucks pool ${candidate.matchId} at close:`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: { source: "betting-sweep-close", matchId: candidate.matchId },
       });
     }
-
-    if (closed.length > 0) {
-      logger.info(
-        `🔒 Closed ${closed.length.toString()} Bryan Bucks betting window(s)`,
-      );
-    }
-    return closed;
-  } catch (error) {
-    logger.error("❌ Could not close expired Bryan Bucks windows:", error);
-    Sentry.captureException(error, { tags: { source: "betting-sweep-close" } });
-    return [];
   }
+  if (closed.length > 0) {
+    logger.info(
+      `🔒 Matched ${closed.length.toString()} Bryan Bucks betting window(s)`,
+    );
+  }
+  return closed;
 }
 
-/**
- * Refund every pool that is long past its window and still unsettled.
- *
- * The grace period is six hours, chosen against two existing constants rather
- * than picked round: `ActiveGame`'s TTL and `MAX_DISCORD_ALERT_AGE_MS` are both
- * three hours, so by the time this fires the match can no longer arrive through
- * the normal post-match path at all.
- *
- * The trade is deliberate and stated: a match whose settlement kept throwing
- * ends in a refund rather than a wrong payout. Without this pass those stakes
- * would simply vanish.
- *
- * @returns how many pools were voided
- */
-export async function voidStaleBettingPools(
+/** Force any still-open pool for a completed match through matching first. */
+export async function closeBettingWindowsForMatch(
+  matchId: string,
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
-): Promise<number> {
-  const cutoff = new Date(now.getTime() - VOID_GRACE_MS);
-  let voided = 0;
-
+): Promise<ClosedPool[]> {
+  let candidates: { id: number }[];
   try {
-    const stale = await prismaClient.bucksMatchPool.findMany({
+    candidates = await prismaClient.bucksMatchPool.findMany({
       where: {
+        matchId,
         poolState: { in: ["open", "closed"] },
-        closesAt: { lt: cutoff },
-      },
-      select: { id: true, matchId: true },
-    });
-
-    for (const pool of stale) {
-      const refunded = await refundPool(prismaClient, pool.id, pool.matchId);
-      if (refunded) {
-        voided += 1;
-      }
-    }
-
-    if (voided > 0) {
-      logger.info(
-        `↩️ Voided ${voided.toString()} stale Bryan Bucks pool(s) and refunded every stake`,
-      );
-    }
-  } catch (error) {
-    logger.error("❌ Could not void stale Bryan Bucks pools:", error);
-    Sentry.captureException(error, { tags: { source: "betting-sweep-void" } });
-  }
-
-  return voided;
-}
-
-async function refundPool(
-  prismaClient: ExtendedPrismaClient,
-  poolId: number,
-  matchId: string,
-): Promise<boolean> {
-  return await prismaClient.$transaction(async (tx) => {
-    // Claim first: this both proves no settlement beat us to it and takes the
-    // write lock for the refunds below.
-    const claim = await tx.bucksMatchPool.updateMany({
-      where: { id: poolId, poolState: { in: ["open", "closed"] } },
-      data: {
-        poolState: "voided",
-        voidReason: "expired",
-        settledAt: new Date(),
-      },
-    });
-    if (claim.count !== 1) {
-      return false;
-    }
-
-    const bets = await tx.bucksBet.findMany({
-      where: { poolId, betOutcome: "pending" },
-      select: {
-        id: true,
-        bucksAccountId: true,
-        stake: true,
-        predictedTeamId: true,
-        subjectPuuid: true,
+        matchedAt: null,
       },
       orderBy: { id: "asc" },
+      select: { id: true },
     });
-
-    for (const bet of bets) {
-      await tx.bucksBet.update({
-        where: { id: bet.id },
-        data: {
-          betOutcome: "refunded",
-          payout: bet.stake,
-          settledAt: new Date(),
-        },
+  } catch (error) {
+    // This helper is called before every other post-match award and delivery.
+    // A transient candidate lookup failure is retryable on the next sweep and
+    // must not suppress parlays, earnings, the report, or cursor advancement.
+    logger.error(
+      `❌ Could not find Bryan Bucks pools to force-close for match ${matchId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "betting-sweep-force-close-query", matchId },
+    });
+    return [];
+  }
+  const closed: ClosedPool[] = [];
+  for (const candidate of candidates) {
+    try {
+      const result = await matchPoolAtClose({
+        prismaClient,
+        poolId: candidate.id,
+        now,
+        requireExpired: false,
       });
-      await applyBucksDelta(tx, {
-        bucksAccountId: bet.bucksAccountId,
-        delta: bet.stake,
-        kind: "bet_refund",
-        matchId,
-        betId: bet.id,
-        predictedTeamId: bet.predictedTeamId,
-        context: {
-          type: "settlement",
-          subjectAlias: "a tracked player",
-          backedAliases: [],
-          opposingAliases: [],
-          winnersPool: 0,
-          losersPool: 0,
-          stakeReturned: bet.stake,
-          winnings: 0,
-          voidReason: "expired",
-        },
+      if (result !== undefined) {
+        closed.push(result);
+      }
+    } catch (error) {
+      // A malformed pool for one guild must not block healthy guild pools,
+      // settlement, match awards, or the match-history cursor. The failed
+      // transaction rolls its claim back, so this pool remains retryable.
+      logger.error(
+        `❌ Could not force-close Bryan Bucks pool ${candidate.id.toString()} for match ${matchId}:`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: { source: "betting-sweep-force-close", matchId },
+        extra: { poolId: candidate.id },
       });
     }
+  }
+  return closed;
+}
 
-    return true;
+/** Close one known pool before resolving a stale-game refund. */
+export async function closeBettingPoolById(
+  poolId: number,
+  prismaClient: ExtendedPrismaClient = prisma,
+  now: Date = new Date(),
+): Promise<ClosedPool | undefined> {
+  return await matchPoolAtClose({
+    prismaClient,
+    poolId,
+    now,
+    requireExpired: false,
   });
 }
+
