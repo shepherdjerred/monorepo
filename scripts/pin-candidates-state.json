@@ -32,9 +32,9 @@
       "buildNumber": 9840
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 9886,
-      "version": "2.0.0-9886",
-      "digest": "sha256:1b59f2a0bad5934c6d4f4e4cfbb1d772a2c9841d8a51bf6cff6d89d5b523feac"
+      "buildNumber": 9893,
+      "version": "2.0.0-9893",
+      "digest": "sha256:e5f0474382188fb02497f514e9ce86afbf8f1abdcc1ede353640baedb2928263"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-9840",
