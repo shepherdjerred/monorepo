@@ -37,7 +37,7 @@ export function requiredArgument(
  * `depends_on: images`, and that step writes them on both its build and its
  * skip path, so an absent key means the contract broke and must fail loudly.
  */
-async function metadata(key: string): Promise<string> {
+export async function readRequiredMetadata(key: string): Promise<string> {
   const child = Bun.spawn(["buildkite-agent", "meta-data", "get", key], {
     stdout: "pipe",
     stderr: "inherit",
@@ -114,7 +114,7 @@ export async function readHandoffValue(
 
 async function main(): Promise<void> {
   const key = requiredArgument(Bun.argv, 2, "metadata key");
-  const value = await metadata(key);
+  const value = await readRequiredMetadata(key);
   process.stdout.write(await readHandoffValue(value));
 }
 

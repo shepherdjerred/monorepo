@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   validateAtomicRootSyncLifecycle,
+  validateHomelabReleaseAdmission,
   validateVersionCommitBackInstall,
 } from "./validate-pipeline-release.ts";
 
@@ -86,5 +87,44 @@ describe("version commit-back install contract", () => {
         ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/version-catalog' --production",
       ),
     ).toThrow("version commit-back is missing exact isolated-linker install");
+  });
+});
+
+describe("homelab release admission pipeline contract", () => {
+  const admittedStep = `
+depends_on: verify
+bun --no-install .buildkite/scripts/homelab-release-admission.ts admit
+`;
+  const mutatingStep = `
+depends_on: [homelab-release-admission]
+release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+if [ "$$release_admission" != "admitted" ]; then exit 1; fi
+`;
+
+  function releaseSteps(): Map<string, string> {
+    return new Map([
+      ["homelab-release-admission", admittedStep],
+      ["helm-push", mutatingStep],
+      ["tofu-apply", mutatingStep],
+      ["tofu-github", mutatingStep],
+      [
+        "argocd-sync",
+        `${mutatingStep}\nbuildkite-agent artifact upload "homelab-release-result.json"`,
+      ],
+      ["tofu-cloudflare", mutatingStep],
+    ]);
+  }
+
+  test("requires the handoff in every mutable homelab lane", () => {
+    expect(() => validateHomelabReleaseAdmission(releaseSteps())).not.toThrow();
+  });
+
+  test("rejects a mutable lane that can bypass admission", () => {
+    const steps = releaseSteps();
+    steps.set("tofu-cloudflare", "depends_on: argocd-sync");
+    expect(() => validateHomelabReleaseAdmission(steps)).toThrow(
+      "tofu-cloudflare is missing homelab release admission invariant",
+    );
   });
 });

@@ -10,14 +10,14 @@ const TOFU_CLOUDFLARE = path.join(
   "packages/homelab/src/tofu/cloudflare",
 );
 
-type TunnelBinding = {
+export type TunnelBinding = {
   file: string;
   line: number;
   fqdn: string;
   source: "subdomain" | "fqdn";
 };
 
-type DnsName = {
+export type DnsName = {
   file: string;
   line: number;
   resourceName: string;
@@ -27,7 +27,7 @@ type DnsName = {
   zoneRef: string | undefined;
 };
 
-type Zone = {
+export type Zone = {
   /** The HCL resource label, e.g. `sjer_red` */
   ref: string;
   /** The FQDN of the zone, e.g. `sjer.red` */
@@ -166,21 +166,25 @@ async function resolveDynamicHostnames(
   return hostnames;
 }
 
-async function collectTunnelBindings(): Promise<TunnelBinding[]> {
+export function isScannableTunnelBindingSource(rel: string): boolean {
+  return (
+    !rel.includes("node_modules") &&
+    !rel.includes("generated") &&
+    !rel.endsWith(".test.ts")
+  );
+}
+
+export async function collectTunnelBindings(
+  cdk8sResources = CDK8S_RESOURCES,
+): Promise<TunnelBinding[]> {
   const bindings: TunnelBinding[] = [];
   const glob = new Glob("**/*.ts");
   for await (const rel of glob.scan({
-    cwd: CDK8S_RESOURCES,
+    cwd: cdk8sResources,
     onlyFiles: true,
   })) {
-    if (
-      rel.includes("node_modules") ||
-      rel.includes("generated") ||
-      rel.endsWith(".test.ts")
-    ) {
-      continue;
-    }
-    const abs = path.join(CDK8S_RESOURCES, rel);
+    if (!isScannableTunnelBindingSource(rel)) continue;
+    const abs = path.join(cdk8sResources, rel);
     const text = await Bun.file(abs).text();
     if (!text.includes("createCloudflareTunnelBinding(")) continue;
     for (const match of text.matchAll(TUNNEL_BINDING_REGEX)) {
@@ -224,14 +228,16 @@ async function collectTunnelBindings(): Promise<TunnelBinding[]> {
   return bindings;
 }
 
-async function collectZones(): Promise<Map<string, Zone>> {
+export async function collectZones(
+  tofuCloudflare = TOFU_CLOUDFLARE,
+): Promise<Map<string, Zone>> {
   const zones = new Map<string, Zone>();
   const glob = new Glob("*.tf");
   for await (const rel of glob.scan({
-    cwd: TOFU_CLOUDFLARE,
+    cwd: tofuCloudflare,
     onlyFiles: true,
   })) {
-    const abs = path.join(TOFU_CLOUDFLARE, rel);
+    const abs = path.join(tofuCloudflare, rel);
     const text = await Bun.file(abs).text();
     for (const match of text.matchAll(ZONE_REGEX)) {
       const ref = match[1];
@@ -243,14 +249,16 @@ async function collectZones(): Promise<Map<string, Zone>> {
   return zones;
 }
 
-async function collectDnsNames(): Promise<DnsName[]> {
+export async function collectDnsNames(
+  tofuCloudflare = TOFU_CLOUDFLARE,
+): Promise<DnsName[]> {
   const names: DnsName[] = [];
   const glob = new Glob("*.tf");
   for await (const rel of glob.scan({
-    cwd: TOFU_CLOUDFLARE,
+    cwd: tofuCloudflare,
     onlyFiles: true,
   })) {
-    const abs = path.join(TOFU_CLOUDFLARE, rel);
+    const abs = path.join(tofuCloudflare, rel);
     const text = await Bun.file(abs).text();
     for (const block of extractDnsRecordBlocks(text)) {
       const nameMatch = DNS_NAME_FIELD.exec(block.body);
@@ -268,7 +276,7 @@ async function collectDnsNames(): Promise<DnsName[]> {
   return names;
 }
 
-function expandCoveredFqdns(
+export function expandCoveredFqdns(
   records: DnsName[],
   zones: Map<string, Zone>,
 ): Set<string> {
@@ -291,15 +299,37 @@ function expandCoveredFqdns(
   return covered;
 }
 
-async function main(): Promise<void> {
-  const [bindings, zones, records] = await Promise.all([
-    collectTunnelBindings(),
-    collectZones(),
-    collectDnsNames(),
-  ]);
+export function uncoveredTunnelBindings(
+  bindings: readonly TunnelBinding[],
+  zones: Map<string, Zone>,
+  records: readonly DnsName[],
+): TunnelBinding[] {
+  const covered = expandCoveredFqdns([...records], zones);
+  return bindings.filter((binding) => !covered.has(binding.fqdn));
+}
 
-  const covered = expandCoveredFqdns(records, zones);
-  const missing = bindings.filter((b) => !covered.has(b.fqdn));
+export async function evaluateTunnelDnsCoverage(
+  paths: {
+    readonly cdk8sResources?: string;
+    readonly tofuCloudflare?: string;
+  } = {},
+): Promise<{
+  readonly bindings: TunnelBinding[];
+  readonly missing: TunnelBinding[];
+}> {
+  const [bindings, zones, records] = await Promise.all([
+    collectTunnelBindings(paths.cdk8sResources),
+    collectZones(paths.tofuCloudflare),
+    collectDnsNames(paths.tofuCloudflare),
+  ]);
+  return {
+    bindings,
+    missing: uncoveredTunnelBindings(bindings, zones, records),
+  };
+}
+
+async function main(): Promise<void> {
+  const { bindings, missing } = await evaluateTunnelDnsCoverage();
 
   if (missing.length === 0) {
     console.log(
