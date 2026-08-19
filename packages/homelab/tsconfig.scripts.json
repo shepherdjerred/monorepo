@@ -26,6 +26,7 @@
     "scripts/velero-backups.ts",
     "scripts/velero-backups.test.ts",
     "scripts/tracker-tracker.ts",
-    "scripts/tracker-tracker.test.ts"
+    "scripts/tracker-tracker.test.ts",
+    "scripts/tofu-stack.ts"
   ]
 }

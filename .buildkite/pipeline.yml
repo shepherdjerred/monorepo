@@ -1150,7 +1150,7 @@ steps:
           export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
           export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
           flock -x 9
-          for stack in seaweedfs tailscale buildkite arr github cloudflare; do
+          for stack in seaweedfs tailscale buildkite arr github cloudflare discord openai anthropic openrouter; do
             bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" plan
           done
         ) 9>/buildkite/tofu-plugin-cache/.lock
@@ -1518,6 +1518,7 @@ steps:
     command: |
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       (
         export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
         export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -1547,6 +1548,7 @@ steps:
     command: |
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       (
         export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
         export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -1560,11 +1562,43 @@ steps:
             labels:
               ci.sjer.red/step-key: tofu-github
 
+  - label: ":key: OpenTofu apply — platform accounts"
+    key: tofu-platform
+    timeout_in_minutes: 60
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/tofu-platform
+    # Platform APIs can return a newly-created secret only once. There is no
+    # automatic retry here: inspect state and the 1Password handoff before
+    # deliberately resuming after a partial failure.
+    command: |
+      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
+      (
+        export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+        export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
+        flock -x 9
+        for stack in openai anthropic discord openrouter; do
+          bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" apply
+        done
+      ) 9>/buildkite/tofu-plugin-cache/.lock
+    plugins:
+      - kubernetes:
+          <<: *pod_tofu_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-platform
+
   - label: ":argo: sync + wait"
     key: argocd-sync
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
-    depends_on: [images, helm-push, tofu-apply]
+    # tofu-platform is in the chain so a deploy never lands before the platform
+    # credentials and 1Password handoffs from the same merge have been applied.
+    depends_on: [images, helm-push, tofu-apply, tofu-platform]
     concurrency: 1
     concurrency_group: monorepo/homelab-release
     concurrency_method: ordered
@@ -1852,6 +1886,7 @@ steps:
       - helm-push
       - tofu-apply
       - tofu-github
+      - tofu-platform
       - argocd-sync
       - scout-beta-release
       - publish

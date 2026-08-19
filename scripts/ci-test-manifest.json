@@ -418,6 +418,11 @@
       "steps": [{ "runner": "go", "args": ["./..."] }]
     },
     {
+      "package": "@shepherdjerred/terraform-provider-openrouter-byok",
+      "directory": "packages/terraform-provider-openrouter-byok",
+      "steps": [{ "runner": "go", "args": ["./..."] }]
+    },
+    {
       "package": "@shepherdjerred/toolkit",
       "directory": "packages/toolkit",
       "steps": [

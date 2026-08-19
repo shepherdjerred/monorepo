@@ -22,14 +22,13 @@
  *   TF_VAR_AVISTAZ_PID, TF_VAR_ANIMEZ_PASSWORD, TF_VAR_ANIMEZ_PID,
  */
 
-import { existsSync } from "node:fs";
 import {
   run,
   runAllowExit,
   requireEnv,
   optionalEnv,
-} from "../../../scripts/lib/run.ts";
-import { runMain } from "../../../scripts/lib/transient.ts";
+} from "@shepherdjerred/root-scripts/lib/run.ts";
+import { runMain } from "@shepherdjerred/root-scripts/lib/transient.ts";
 
 /** homelab package root = two levels up from this script (packages/homelab). */
 function homelabRoot(): string {
@@ -67,10 +66,118 @@ const OPTIONAL_SECRET_ENV: readonly [source: string, target: string][] = [
   ["AVISTAZ_PID", "TF_VAR_avistaz_pid"],
   ["ANIMEZ_PASSWORD", "TF_VAR_animez_password"],
   ["ANIMEZ_PID", "TF_VAR_animez_pid"],
+  [
+    "TOFU_STATE_ENCRYPTION_PASSPHRASE",
+    "TF_VAR_tofu_state_encryption_passphrase",
+  ],
+  ["OP_CONNECT_TOKEN", "OP_CONNECT_TOKEN"],
+  ["OP_CONNECT_URL", "TF_VAR_op_connect_url"],
+  ["OPENAI_ADMIN_KEY", "OPENAI_ADMIN_KEY"],
+  ["ANTHROPIC_ADMIN_KEY", "ANTHROPIC_ADMIN_KEY"],
+  ["OPENROUTER_API_KEY", "OPENROUTER_API_KEY"],
+  ["DISCORD_BOTS_JSON", "TF_VAR_discord_bots"],
+  ["DISCORD_BOT_TOKENS_JSON", "TF_VAR_discord_bot_tokens"],
+  ["DISCORD_PROVIDER_NAMES_JSON", "TF_VAR_discord_provider_names"],
+  ["OPENAI_PROJECTS_JSON", "TF_VAR_openai_projects"],
+  ["OPENAI_SERVICE_ACCOUNTS_JSON", "TF_VAR_openai_service_accounts"],
+  ["OPENAI_ORGANIZATION_USERS_JSON", "TF_VAR_openai_organization_users"],
+  ["OPENAI_PROJECT_USERS_JSON", "TF_VAR_openai_project_users"],
+  ["OPENAI_PROJECT_SPEND_ALERTS_JSON", "TF_VAR_openai_project_spend_alerts"],
+  ["ANTHROPIC_WORKSPACES_JSON", "TF_VAR_anthropic_workspaces"],
+  ["ANTHROPIC_API_KEYS_JSON", "TF_VAR_anthropic_api_keys"],
+  ["ANTHROPIC_WORKSPACE_MEMBERS_JSON", "TF_VAR_anthropic_workspace_members"],
+  ["ANTHROPIC_INVITES_JSON", "TF_VAR_anthropic_invites"],
+  ["OPENROUTER_WORKSPACES_JSON", "TF_VAR_openrouter_workspaces"],
+  ["OPENROUTER_GUARDRAILS_JSON", "TF_VAR_openrouter_guardrails"],
+  ["OPENROUTER_API_KEYS_JSON", "TF_VAR_openrouter_api_keys"],
+  ["OPENROUTER_BYOK_CREDENTIALS_JSON", "TF_VAR_openrouter_byok_credentials"],
+  ["OPENROUTER_BYOK_KEYS_JSON", "TF_VAR_openrouter_byok_keys"],
 ];
 
-/** Build the env the tofu subprocess runs with. */
-function buildTofuEnv(stack: string): Record<string, string> {
+/**
+ * Registry inputs whose stack drives `for_each` from them. Their OpenTofu
+ * variables default to `{}`, so an absent env var does not plan "no changes" —
+ * it plans the deletion of every project, credential, and bot the stack
+ * manages. Each stack therefore requires its own registries rather than
+ * treating them as optional.
+ */
+const REQUIRED_STACK_ENV: Readonly<Record<string, readonly string[]>> = {
+  openai: [
+    "OPENAI_PROJECTS_JSON",
+    "OPENAI_SERVICE_ACCOUNTS_JSON",
+    "OPENAI_ORGANIZATION_USERS_JSON",
+    "OPENAI_PROJECT_USERS_JSON",
+    "OPENAI_PROJECT_SPEND_ALERTS_JSON",
+  ],
+  anthropic: [
+    "ANTHROPIC_WORKSPACES_JSON",
+    "ANTHROPIC_API_KEYS_JSON",
+    "ANTHROPIC_WORKSPACE_MEMBERS_JSON",
+    "ANTHROPIC_INVITES_JSON",
+  ],
+  discord: [
+    "DISCORD_BOTS_JSON",
+    "DISCORD_BOT_TOKENS_JSON",
+    "DISCORD_PROVIDER_NAMES_JSON",
+  ],
+  openrouter: [
+    "OPENROUTER_WORKSPACES_JSON",
+    "OPENROUTER_GUARDRAILS_JSON",
+    "OPENROUTER_API_KEYS_JSON",
+    "OPENROUTER_BYOK_CREDENTIALS_JSON",
+    "OPENROUTER_BYOK_KEYS_JSON",
+  ],
+};
+
+/**
+ * The version the filesystem mirror publishes the in-repository BYOK provider
+ * under. It must satisfy the `~> 0.1` constraint that
+ * src/tofu/openrouter/providers.tf declares, and it names both the mirror
+ * directory and the binary, so it lives here once rather than in each string.
+ */
+const OPENROUTER_BYOK_VERSION = "0.1.0";
+
+/**
+ * Build the local filesystem mirror needed by the in-repository BYOK provider.
+ * Returns the temporary root so the caller can remove it once tofu has exited.
+ */
+async function configureLocalOpenRouterProvider(
+  env: Record<string, string>,
+): Promise<string> {
+  const providerRoot = `${homelabRoot()}/../terraform-provider-openrouter-byok`;
+  const tempRoot = `${Bun.env["TMPDIR"] ?? "/tmp"}/monorepo-openrouter-byok-${process.pid.toString()}`;
+  const goosResult = await run(["go", "env", "GOOS"], { capture: true });
+  const goarchResult = await run(["go", "env", "GOARCH"], { capture: true });
+  const goos = goosResult.stdout.trim();
+  const goarch = goarchResult.stdout.trim();
+  const mirrorRoot =
+    `${tempRoot}/mirror/registry.opentofu.org/shepherdjerred/openrouter-byok/` +
+    `${OPENROUTER_BYOK_VERSION}/${goos}_${goarch}`;
+  await run(["mkdir", "-p", mirrorRoot]);
+  const binaryPath = `${mirrorRoot}/terraform-provider-openrouter-byok_v${OPENROUTER_BYOK_VERSION}`;
+  await run(
+    ["go", "build", "-trimpath", "-buildvcs=false", "-o", binaryPath, "."],
+    { cwd: providerRoot, env },
+  );
+  const cliConfigPath = `${tempRoot}/tofu.tfrc`;
+  await Bun.write(
+    cliConfigPath,
+    `provider_installation {\n  filesystem_mirror {\n    path = "${tempRoot}/mirror"\n    include = ["registry.opentofu.org/shepherdjerred/openrouter-byok"]\n  }\n  direct {}\n}\n`,
+  );
+  env["TF_CLI_CONFIG_FILE"] = cliConfigPath;
+  return tempRoot;
+}
+
+/**
+ * Build the env the tofu subprocess runs with. `encryptsState` comes from the
+ * stack declaring a state-encryption.tf, whose passphrase variable has no
+ * default — so a missing passphrase must fail here rather than midway through
+ * `tofu init`.
+ */
+function buildTofuEnv(
+  stack: string,
+  encryptsState: boolean,
+): Record<string, string> {
   const env: Record<string, string> = {
     AWS_ACCESS_KEY_ID: requireEnv("AWS_ACCESS_KEY_ID"),
     AWS_SECRET_ACCESS_KEY: requireEnv("AWS_SECRET_ACCESS_KEY"),
@@ -91,6 +198,30 @@ function buildTofuEnv(stack: string): Record<string, string> {
     if (value !== null) {
       env[target] = value;
     }
+  }
+
+  // Deliberately not `requireEnv`: check-ci-env unions every requireEnv in a
+  // script's import graph, so literal calls here would demand every platform
+  // registry of every step that runs this script, including the infra stacks.
+  const missingRegistries = (REQUIRED_STACK_ENV[stack] ?? []).filter(
+    (source) => optionalEnv(source) === null,
+  );
+  if (missingRegistries.length > 0) {
+    throw new Error(
+      `Stack "${stack}" drives resources from registries that are missing from the ` +
+        `environment: ${missingRegistries.join(", ")}. These default to an empty map, so ` +
+        `running without them plans a destroy of everything the stack manages.`,
+    );
+  }
+  if (
+    encryptsState &&
+    optionalEnv("TOFU_STATE_ENCRYPTION_PASSPHRASE") === null
+  ) {
+    throw new Error(
+      `Stack "${stack}" encrypts its state and plan, so it requires ` +
+        `TOFU_STATE_ENCRYPTION_PASSPHRASE. Without it OpenTofu fails later, ` +
+        `inside init or plan, with a less actionable error.`,
+    );
   }
   return env;
 }
@@ -123,7 +254,7 @@ async function main(): Promise<void> {
 
   const root = homelabRoot();
   const stackDir = `${root}/${STACKS_REL}/${stack}`;
-  if (!existsSync(stackDir)) {
+  if (!(await Bun.file(`${stackDir}/providers.tf`).exists())) {
     throw new Error(`Unknown stack: ${stack} (no dir at ${stackDir})`);
   }
 
@@ -137,8 +268,30 @@ async function main(): Promise<void> {
     return;
   }
 
-  const env = buildTofuEnv(stack);
+  const env = buildTofuEnv(
+    stack,
+    await Bun.file(`${stackDir}/state-encryption.tf`).exists(),
+  );
 
+  const localProviderRoot =
+    stack === "openrouter" ? await configureLocalOpenRouterProvider(env) : null;
+  try {
+    await runTofu(stack, action, root, env);
+  } finally {
+    // The mirror holds a freshly built provider binary and a CLI config that
+    // only this run uses, so it is removed however tofu exits.
+    if (localProviderRoot !== null) {
+      await run(["rm", "-rf", localProviderRoot]);
+    }
+  }
+}
+
+async function runTofu(
+  stack: string,
+  action: "plan" | "apply",
+  root: string,
+  env: Record<string, string>,
+): Promise<void> {
   // `tofu init` — NOTE: the old code wrapped init in a bounded retry loop to
   // survive slow provider-registry / GitHub release CDN responses. That retry
   // is intentionally OMITTED here: this runs locally under an operator who can
