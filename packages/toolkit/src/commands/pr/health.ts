@@ -18,9 +18,9 @@ import type {
 import { formatHealthReport, formatJson } from "#lib/output/formatter.ts";
 
 const BUILDKITE_PIPELINE = "sjerred/monorepo";
+const MONOREPO_REPOSITORY = "shepherdjerred/monorepo";
 
 export type HealthOptions = {
-  repo?: string | undefined;
   json?: boolean | undefined;
 };
 
@@ -297,8 +297,8 @@ export async function healthCommand(
 ): Promise<void> {
   const pr =
     prNumber !== undefined && prNumber.length > 0
-      ? await getPullRequest(prNumber, options.repo)
-      : await getPullRequestForBranch(options.repo);
+      ? await getPullRequest(prNumber, MONOREPO_REPOSITORY)
+      : await getPullRequestForBranch(MONOREPO_REPOSITORY);
   if (pr === null) {
     console.error(
       prNumber !== undefined && prNumber.length > 0
@@ -310,9 +310,9 @@ export async function healthCommand(
 
   const [merge, githubChecks, buildkiteBuild, reviewMap] = await Promise.all([
     checkMergeConflicts(pr.number, pr.baseRefName, pr.headRefOid),
-    getGitHubChecks(pr.number, options.repo),
+    getGitHubChecks(pr.number, MONOREPO_REPOSITORY),
     getBuildkiteBuildForCommit(pr.headRefOid),
-    getLatestReviewsByAuthor(pr.number, options.repo),
+    getLatestReviewsByAuthor(pr.number, MONOREPO_REPOSITORY),
   ]);
   const report = buildPrHealthReport({
     pr,

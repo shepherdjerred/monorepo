@@ -307,4 +307,15 @@ while :; do sleep 1; done
       expect(result.stderr).toContain("Unknown");
     });
   }
+
+  test("rejects repository overrides for monorepo PR health", async () => {
+    const directory = await fakePath();
+    const result = await runToolkit(
+      directory,
+      ["pr", "health", "--repo", "owner/repo"],
+      "",
+    );
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain("Unknown option '--repo'");
+  });
 });

@@ -11,12 +11,11 @@ async function handleHealth(args: string[]): Promise<void> {
   const { values, positionals } = parseArgs({
     args,
     options: {
-      repo: { type: "string" },
       json: { type: "boolean", default: false },
     },
     allowPositionals: true,
   });
-  await healthCommand(positionals[0], { repo: values.repo, json: values.json });
+  await healthCommand(positionals[0], { json: values.json });
 }
 
 async function handleAsset(args: string[]): Promise<void> {
@@ -108,7 +107,7 @@ Subcommands:
                        landed late; --retry to actually re-run them
 
 Options:
-  --repo <owner/repo>   Repository (default: auto-detect)
+  --repo <owner/repo>   (review) Repository (default: auto-detect)
   --json                Output as JSON
   --markdown            (asset) Emit type-appropriate markdown (inline image
                         tags for images, labeled links for video/demo/player
