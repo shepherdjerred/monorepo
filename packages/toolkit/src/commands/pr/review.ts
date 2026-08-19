@@ -34,18 +34,21 @@ export type ReviewOptions = {
 const DEFAULT_REPO = "shepherdjerred/monorepo";
 const DEFAULT_MAX_BLOCKING_PRIORITY = 3;
 
-function maxBlockingPriority(): number {
-  const raw = Bun.env["REVIEW_MAX_BLOCKING_PRIORITY"];
-  if (raw === undefined || raw.trim() === "") {
+export function parseMaxBlockingPriority(raw: string | undefined): number {
+  const value = raw?.trim();
+  if (value === undefined || value === "") {
     return DEFAULT_MAX_BLOCKING_PRIORITY;
   }
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isInteger(parsed) || parsed < 0 || parsed > 3) {
+  if (!/^[0-3]$/.test(value)) {
     throw new Error(
-      `REVIEW_MAX_BLOCKING_PRIORITY must be an integer in [0,3], got ${raw}`,
+      `REVIEW_MAX_BLOCKING_PRIORITY must be an integer in [0,3], got ${raw ?? ""}`,
     );
   }
-  return parsed;
+  return Number.parseInt(value, 10);
+}
+
+function maxBlockingPriority(): number {
+  return parseMaxBlockingPriority(Bun.env["REVIEW_MAX_BLOCKING_PRIORITY"]);
 }
 
 function selectedProvider(options: ReviewOptions): ReviewProvider | undefined {

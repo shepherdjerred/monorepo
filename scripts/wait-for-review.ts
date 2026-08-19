@@ -101,16 +101,17 @@ function parsePositiveIntegerEnv(name: string, fallback: number): number {
   return parsed;
 }
 
-function parseMaxBlockingPriority(): number {
-  const raw = Bun.env["REVIEW_MAX_BLOCKING_PRIORITY"];
-  if (raw === undefined || raw.trim() === "") return 3;
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isInteger(parsed) || parsed < 0 || parsed > 3) {
+export function parseMaxBlockingPriority(
+  raw = Bun.env["REVIEW_MAX_BLOCKING_PRIORITY"],
+): number {
+  const value = raw?.trim();
+  if (value === undefined || value === "") return 3;
+  if (!/^[0-3]$/.test(value)) {
     throw new Error(
-      `REVIEW_MAX_BLOCKING_PRIORITY must be an integer in [0,3], got ${raw}`,
+      `REVIEW_MAX_BLOCKING_PRIORITY must be an integer in [0,3], got ${raw ?? ""}`,
     );
   }
-  return parsed;
+  return Number.parseInt(value, 10);
 }
 
 function repoFromEnvironment(): string {

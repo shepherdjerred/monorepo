@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   DEFAULT_TIMEOUT_SECONDS,
+  parseMaxBlockingPriority,
   resolveReviewGateProvider,
 } from "./wait-for-review.ts";
 
@@ -22,6 +23,23 @@ describe("resolveReviewGateProvider", () => {
     );
     expect(() => resolveReviewGateProvider("unknown")).toThrow(
       "CI review gate requires Qodo or Codex",
+    );
+  });
+});
+
+describe("parseMaxBlockingPriority", () => {
+  test("accepts the configured severity range and defaults to P3", () => {
+    expect(parseMaxBlockingPriority(undefined)).toBe(3);
+    expect(parseMaxBlockingPriority(" 2 ")).toBe(2);
+    expect(parseMaxBlockingPriority("0")).toBe(0);
+  });
+
+  test("rejects malformed priorities instead of accepting a prefix", () => {
+    expect(() => parseMaxBlockingPriority("2foo")).toThrow(
+      "REVIEW_MAX_BLOCKING_PRIORITY must be an integer in [0,3]",
+    );
+    expect(() => parseMaxBlockingPriority("4")).toThrow(
+      "REVIEW_MAX_BLOCKING_PRIORITY must be an integer in [0,3]",
     );
   });
 });

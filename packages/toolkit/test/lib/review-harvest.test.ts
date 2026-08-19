@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { parseMaxBlockingPriority } from "#commands/pr/review.ts";
 import {
   CODEX_GATE_CONTEXT,
   GATE_CONTEXT,
@@ -26,6 +27,12 @@ test("declares independent Qodo and Codex gate contexts", () => {
     { providerId: "qodo", context: GATE_CONTEXT },
     { providerId: "codex", context: CODEX_GATE_CONTEXT },
   ]);
+});
+
+test("rejects malformed blocking-priority configuration", () => {
+  expect(() => parseMaxBlockingPriority("2foo")).toThrow(
+    "REVIEW_MAX_BLOCKING_PRIORITY must be an integer in [0,3]",
+  );
 });
 
 describe("jobIdFromTargetUrl", () => {
