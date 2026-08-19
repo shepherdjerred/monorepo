@@ -24,13 +24,12 @@ set -euo pipefail
 # gate either way — as it does for every other check.
 #
 # During the one-time Qodo-to-Codex rollout, `main` may not yet know that
-# `REVIEW_PROVIDER=codex` is valid. In that case the Codex invocation uses only
-# the PR checkout's provider-selection boundary, after verifying the expected
-# migration marker; the review parser and all provider logic still come from
-# this fetched `main` worktree. Once `main` accepts Codex, this compatibility
-# path is unreachable and the normal main-sourced gate resumes automatically.
-# It exists to let the provider boundary land atomically without making PR
-# branches the permanent source of their own review gate.
+# `REVIEW_PROVIDER=codex` is valid. In that case the Codex invocation applies a
+# reviewed, provider-selection-only patch to the fetched `main` worktree. The
+# poll loop, parser, and provider adapters still execute from `main`, and the
+# patch must apply cleanly to the exact fetched source. Once `main` accepts
+# Codex, this compatibility path is unreachable and the normal main-sourced
+# gate resumes automatically.
 #
 # REVIEW_GATE_REF exists so a change to the gate itself can be exercised before
 # it lands, since once this is in place the gate no longer runs a PR's own
@@ -68,15 +67,14 @@ cd "$GATE_DIR"
 WAIT_SCRIPT="$GATE_DIR/scripts/wait-for-review.ts"
 if [[ "${REVIEW_PROVIDER:-qodo}" == "codex" ]] && \
   ! grep -Fq 'ciProviders = new Set(["qodo", "codex"])' "$WAIT_SCRIPT"; then
-  PR_WAIT_SCRIPT="${BUILDKITE_BUILD_CHECKOUT_PATH:-$PWD}/scripts/wait-for-review.ts"
-  if [[ ! -f "$PR_WAIT_SCRIPT" ]] || \
-    ! grep -Fq 'ciProviders = new Set(["qodo", "codex"])' "$PR_WAIT_SCRIPT"; then
-    echo "Codex gate bootstrap requires the PR provider boundary to be present" >&2
+  BOOTSTRAP_PATCH="${BUILDKITE_BUILD_CHECKOUT_PATH:-$PWD}/.buildkite/scripts/review-gate-codex-bootstrap.patch"
+  if [[ ! -f "$BOOTSTRAP_PATCH" ]] || \
+    ! git apply --check "$BOOTSTRAP_PATCH"; then
+    echo "Codex gate bootstrap patch does not apply to the fetched main source" >&2
     exit 1
   fi
-  echo "Codex gate bootstrap: main lacks Codex acceptance; using the PR provider boundary with the main parser"
-  cp "$PR_WAIT_SCRIPT" "$GATE_DIR/scripts/.review-gate-wait-for-review.ts"
-  WAIT_SCRIPT="$GATE_DIR/scripts/.review-gate-wait-for-review.ts"
+  echo "Codex gate bootstrap: applying the provider-selection patch to the main parser"
+  git apply "$BOOTSTRAP_PATCH"
 fi
 
 REVIEW_GATE_PARSER_COMMIT="$GATE_SHA" bun --no-install "$WAIT_SCRIPT"

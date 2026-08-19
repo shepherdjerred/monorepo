@@ -46,9 +46,10 @@ export async function listFindings(input: {
   number: number;
   token: string;
   provider?: ReviewProvider;
+  head?: string;
 }): Promise<{ head: string; findings: Finding[] }> {
   const provider = input.provider ?? resolveRequiredReviewProvider();
-  const head = await fetchHeadSha(input);
+  const head = input.head ?? (await fetchHeadSha(input));
   const state = await resolveReviewState({
     provider,
     repo: input.repo,

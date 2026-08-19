@@ -29,6 +29,21 @@ export type ReviewOptions = {
 };
 
 const DEFAULT_REPO = "shepherdjerred/monorepo";
+const DEFAULT_MAX_BLOCKING_PRIORITY = 3;
+
+function maxBlockingPriority(): number {
+  const raw = Bun.env["REVIEW_MAX_BLOCKING_PRIORITY"];
+  if (raw === undefined || raw.trim() === "") {
+    return DEFAULT_MAX_BLOCKING_PRIORITY;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isInteger(parsed) || parsed < 0 || parsed > 3) {
+    throw new Error(
+      `REVIEW_MAX_BLOCKING_PRIORITY must be an integer in [0,3], got ${raw}`,
+    );
+  }
+  return parsed;
+}
 
 /**
  * A GitHub token for the `code-review` library.
@@ -175,6 +190,7 @@ export async function reviewHarvestCommand(
   const repo = options.repo ?? DEFAULT_REPO;
   const token = requireToken();
   const numbers = prNumbers.map((value) => requirePr(value));
+  const blockingPriority = maxBlockingPriority();
   if (numbers.length === 0) {
     throw new Error("At least one pull request number is required");
   }
@@ -203,13 +219,8 @@ export async function reviewHarvestCommand(
         number,
         token,
         provider,
+        head: prHead,
       });
-      if (reviewedHead !== prHead) {
-        console.log(
-          `#${String(number)} ${provider.displayName}: not retryable — PR head changed during harvest; run harvest again`,
-        );
-        continue;
-      }
       const state = await reviewStateFor({
         repo,
         number,
@@ -221,7 +232,12 @@ export async function reviewHarvestCommand(
         gate,
         reviewedAtHead: state.reviewedAtHead,
         completionSignal: state.completionSignal,
-        blockingCount: findings.filter((finding) => !finding.isResolved).length,
+        blockingCount: findings.filter(
+          (finding) =>
+            !finding.isResolved &&
+            finding.priority !== null &&
+            finding.priority <= blockingPriority,
+        ).length,
       });
 
       if (!verdict.retryable) {
@@ -231,7 +247,7 @@ export async function reviewHarvestCommand(
         continue;
       }
       const latestHead = await fetchHeadSha({ repo, number, token });
-      if (latestHead !== prHead) {
+      if (reviewedHead !== prHead || latestHead !== prHead) {
         console.log(
           `#${String(number)} ${provider.displayName}: not retryable — PR head changed during harvest; run harvest again`,
         );

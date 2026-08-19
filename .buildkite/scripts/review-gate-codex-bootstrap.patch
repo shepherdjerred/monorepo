@@ -1,0 +1,36 @@
+diff --git a/scripts/wait-for-review.ts b/scripts/wait-for-review.ts
+--- a/scripts/wait-for-review.ts
++++ b/scripts/wait-for-review.ts
+@@ -22,7 +22,7 @@ import {
+   isBlocking,
+   isProviderAuthor,
+   REVIEW_SIGNAL_SCHEMA,
+-  REQUIRED_REVIEW_PROVIDER_ID,
++  resolveProvider,
+   reviewGateSkipReasonForAuthor,
+   resolveRequiredReviewProvider,
+   tallyFindings,
+@@ -75,16 +75,20 @@ export function resolveReviewGateProvider(
+   configuredProvider: string | undefined,
+ ): ReviewProvider {
+   const normalized = configuredProvider?.trim().toLowerCase();
++  const ciProviders = new Set(["qodo", "codex"]);
+   if (
+     normalized !== undefined &&
+     normalized !== "" &&
+-    normalized !== REQUIRED_REVIEW_PROVIDER_ID
++    !ciProviders.has(normalized)
+   ) {
+     throw new Error(
+-      `CI review gate requires Qodo; REVIEW_PROVIDER was ${String(configuredProvider)}.`,
++      `CI review gate requires Qodo or Codex; REVIEW_PROVIDER was ${String(configuredProvider)}.`,
+     );
+   }
+-  return resolveRequiredReviewProvider();
++  if (normalized === undefined || normalized === "") {
++    return resolveRequiredReviewProvider();
++  }
++  return resolveProvider(normalized);
+ }
+
+ function parsePositiveIntegerEnv(name: string, fallback: number): number {

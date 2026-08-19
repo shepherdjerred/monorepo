@@ -362,11 +362,11 @@ contain. A branch old enough to predate a parser fix counted findings that had
 already been fixed, and no change to that PR could clear it.
 
 While the Codex boundary is landing, the wrapper has a narrow compatibility
-path: if fetched `main` predates Codex acceptance, only the PR's verified
-provider-selection boundary is copied into the `main` worktree. The parser and
-provider adapters remain from `main`; once `main` accepts Codex, the path is
-automatically unreachable. This is a one-time rollout bridge, not a permanent
-PR-self-sourced gate.
+path: if fetched `main` predates Codex acceptance, a reviewed
+provider-selection-only patch is applied to the `main` worktree. The parser
+and provider adapters remain from `main`; once `main` accepts Codex, the path
+is automatically unreachable. This is a one-time rollout bridge, not a
+permanent PR-self-sourced gate.
 
 Each gate asks its provider to review the head before waiting on it. Qodo
 reviews a PR once, when it is opened, and Codex needs an explicit `@codex
