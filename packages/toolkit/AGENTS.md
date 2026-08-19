@@ -1,6 +1,8 @@
 # toolkit
 
-CLI utilities for development workflows, optimized for Claude Code consumption.
+The monorepo command hub. It delegates curated platform commands to their
+native CLIs with monorepo defaults and owns workflows that are specific to this
+repository.
 
 ## Commands
 
@@ -8,11 +10,10 @@ CLI utilities for development workflows, optimized for Claude Code consumption.
 # Development
 bun run src/index.ts pr health             # PR health check
 bun run src/index.ts deployed scout        # Is a service/commit live on the homelab?
-
 bun run src/index.ts alerts list           # Alert ledger occurrences
-bun run src/index.ts alerts list            # Alerts ledger occurrences
 bun run src/index.ts bugsink issues        # Bugsink issues
-bun run src/index.ts gf dashboards         # Grafana dashboards
+bun run src/index.ts prom query 'up == 0'  # GCX-backed Prometheus query
+bun run src/index.ts bk build list         # Native Buildkite CLI with repo defaults
 bun run src/index.ts screenshot stocks-sjer-red /   # Visually verify a frontend change
 
 # Build
@@ -31,12 +32,12 @@ bun scripts/install.ts                    # Installs to ~/.local/bin/toolkit
 ```
 src/
 ├── index.ts              # CLI entry point
+├── lib/passthrough.ts    # Typed native-CLI registry + transparent runner
 ├── handlers/             # Command routers
 │   ├── pr.ts             # toolkit pr
 │   ├── deployed.ts       # toolkit deployed
 │   ├── alerts.ts         # toolkit alerts
 │   ├── bugsink.ts        # toolkit bugsink
-│   ├── grafana.ts        # toolkit gf
 │   ├── history.ts        # toolkit history
 │   └── screenshot.ts     # toolkit screenshot
 ├── commands/
@@ -44,15 +45,14 @@ src/
 │   ├── deployed/         # `deployed` orchestration
 │   ├── alerts.ts         # Alert ledger subcommands
 │   ├── bugsink/          # Bugsink subcommands
-│   ├── grafana/          # Grafana subcommands
 │   ├── history/          # Local agent-history commands
 │   └── screenshot/       # `screenshot` orchestration
 └── lib/
     ├── github/           # GitHub API via gh CLI
+    ├── buildkite/        # Exact-head Buildkite CI evidence
     ├── deployed/         # Commit → homelab deploy trace (git/argocd/kubectl)
     ├── alerts.ts         # Alerts REST API client
     ├── bugsink/          # Bugsink REST API client
-    ├── grafana/          # Grafana REST API client
     ├── pinchtab-cli/     # PinchTab CLI wrapper (screenshot's browser driver)
     ├── screenshot/       # Package registry + dev-server lifecycle
     ├── history/          # Local agent-history index, source adapters, daemon
@@ -66,11 +66,46 @@ src/
 | `ALERT_DASHBOARD_URL` | Alerts service URL (defaults to the tailnet service)             |
 | `BUGSINK_URL`         | Bugsink instance URL (e.g., `https://bugsink.example.com`)       |
 | `BUGSINK_TOKEN`       | Bugsink API token                                                |
-| `GRAFANA_URL`         | Grafana instance URL                                             |
-| `GRAFANA_API_KEY`     | Grafana API key or service account token                         |
 | `AWS_PROFILE`         | AWS profile for `pr asset` (or pass `--profile`)                 |
 | `DISCORD_BOT_TOKEN`   | Discord bot token for `discord daemon start` (optional)          |
 | `DISCORD_USER_TOKEN`  | Discord user/selfbot token for `discord daemon start` (optional) |
+
+## Platform passthrough invariants
+
+`src/lib/passthrough.ts` is the single registry for `gh`, `bk`, `git-spice`,
+`linear`, `posthog`, `grafana`, `prom`, `loki`, `tempo`, `temporal`, `argocd`,
+`cf`, and `tailscale`.
+
+- Inject only the documented monorepo default. An explicit flag or non-empty
+  environment value wins.
+- Preserve every user argument and the `--` boundary. Do not translate old
+  toolkit syntax into native CLI syntax.
+- Spawn with inherited cwd, environment, stdin, stdout, and stderr. Do not
+  capture, decorate, or log successful passthrough output.
+- Mirror the child exit status and signal. A missing native executable prints
+  its name and exits 127.
+- Keep common plumbing (`git`, `bun`, `kubectl`, `helm`, `tofu`, `aws`, `op`,
+  `promtool`, `logcli`) outside the registry.
+
+Use fake PATH executables for subprocess tests. They must prove argument,
+stream, environment, exit, signal, and missing-executable behavior without
+contacting a service.
+
+## `pr health` — exact-head readiness
+
+PR health keeps the established JSON report shape and exit contract: healthy
+and pending exit 0; unhealthy exits 1. Its evidence boundary is deliberate:
+
+- `gh pr view`, `gh pr checks`, and reviews provide PR metadata.
+- `git merge-tree` checks the exact fetched PR head against current
+  `origin/main`; a fetch or merge-tree failure is an error, never a clean
+  result.
+- `bk build list --commit <head>` selects the newest exact-SHA build, then
+  `bk build view` supplies authoritative jobs and soft-failure metadata.
+
+GitHub Buildkite checks are advisory and may be stale. Never let their state
+override the exact-head Buildkite build. Hard failed jobs emit
+`toolkit bk job log <id> --agent` commands.
 
 ## `deployed` — is my commit/service live on the homelab?
 
@@ -276,7 +311,7 @@ Qodo's archive of previous results, which the parser excludes.
 
 `toolkit pr review harvest <PR…>` applies the stale-gate rule: a gate that
 failed, whose provider has since finished reviewing _this_ head with nothing
-blocking, is stale and passes on a re-run. It prints the `bk job retry` command
+blocking, is stale and passes on a re-run. It prints the `toolkit bk job retry` command
 by default and only re-runs jobs with `--retry`. The Buildkite job id comes out
 of the status URL's fragment, so the failed job is retried rather than the whole
 build.
@@ -287,8 +322,9 @@ rather than the CLI because it speaks GraphQL and paginates itself.
 
 ## Shared `lib/http` + `lib/config`
 
-The Grafana, Alerts, and Bugsink service clients share one HTTP layer instead
-of each re-implementing fetch + auth + error handling.
+The Alerts and Bugsink workflow clients share one HTTP layer instead of each
+re-implementing fetch + auth + error handling. Platform passthroughs do not use
+this layer.
 
 - **`src/lib/http.ts`** — `createHttpClient({ baseUrl, auth, errorLabel, headers?, normalizeUrl? })`
   returns a client with `get(endpoint, { schema, query? })`, `post(endpoint, { schema, body?, query? })`,
@@ -305,24 +341,26 @@ of each re-implementing fetch + auth + error handling.
   returns `undefined` when unset/empty. Both read `Bun.env` and treat `""` as
   absent.
 
-Each client (`src/lib/{grafana,alerts,bugsink}.ts`) keeps its original
-exported function signatures — callers and command handlers are unchanged — and
-delegates to a `createHttpClient` instance. Do not touch the github/s3/discord
-clients; they have different auth/transport shapes and are intentionally not on
-this layer. Unit tests live in `test/lib/` (`http.test.ts`, `config.test.ts`),
+Each Alerts/Bugsink client delegates to a `createHttpClient` instance. Do not
+route the GitHub, Buildkite, S3, Discord, or native passthrough transports
+through it; they have different process and authentication boundaries. Unit
+tests live in `test/lib/` (`http.test.ts`, `config.test.ts`),
 wired into the `test:unit` glob.
 
 ## Adding New Commands
 
-1. Create command file in `src/commands/<category>/`
-2. Create handler in `src/handlers/<category>.ts`
-3. Add routing in `src/index.ts`
-4. Update relevant skill in `skills/`
+1. For a native platform CLI, add one registry entry and mapping/subprocess
+   tests. Do not add a handler.
+2. For a monorepo workflow, create a command and handler, then route it in
+   `src/index.ts`.
+3. Update root/toolkit docs and the relevant repo-owned skill in the same
+   change.
 
 ## Design Principles
 
-- Use `gh` CLI for GitHub operations (no API tokens needed)
-- Use Bun shell (`$`) for subprocess execution
+- Prefer native CLIs for platform operations; toolkit supplies only defaults
+  and transparent process behavior.
+- Keep monorepo orchestration in toolkit-owned workflows.
 - Output markdown optimized for Claude Code
 - Include actionable commands in error output
 - Exit non-zero on unhealthy status

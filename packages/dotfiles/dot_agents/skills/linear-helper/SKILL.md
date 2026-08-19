@@ -6,9 +6,10 @@ description: Safely use Linear's CLI, API, MCP, and work-management features for
 # Linear Helper
 
 Use Linear as the repository's system of record for plans, open work, review
-queues, and follow-ups. The default workspace is `sjerred` (`monorepo`). This
-skill is intentionally operational; consult the focused references before
-unfamiliar API, agent, or portfolio work.
+queues, and follow-ups. `toolkit linear` delegates to the native CLI and
+supplies workspace `sjerred` (`monorepo`) unless an explicit workspace is
+passed. This skill is intentionally operational; consult the focused
+references before unfamiliar API, agent, or portfolio work.
 
 ## Authenticate and discover
 
@@ -16,19 +17,20 @@ The configured Fish environment supplies `LINEAR_API_KEY` through 1Password.
 It is deliberately not a CLI-managed login.
 
 ```bash
-linear --version
-linear auth whoami
-linear auth list
-linear --help
-linear issue --help
+toolkit linear --version
+toolkit linear auth whoami
+toolkit linear auth list
+toolkit linear --help
+toolkit linear issue --help
 ```
 
-- Never run `linear auth token`: it prints a credential.
-- Do not run `linear auth login` unless the user explicitly requests a change
+- Never run `toolkit linear auth token`: it prints a credential.
+- Do not run `toolkit linear auth login` unless the user explicitly requests a change
   to the credential-management boundary.
 - Outside the configured shell, repair the dotfiles path; do not paste or save
   a token. `op whoami` alone is not a useful probe for Desktop integration.
-- Use `--workspace sjerred` when the selected workspace is ambiguous.
+- Pass an explicit `--workspace` only when intentionally targeting a different
+  workspace.
 
 For the installed CLI's command groups and raw GraphQL escape hatch, read
 [CLI and API workflows](references/cli-and-api.md). The CLI is a convenient
@@ -41,14 +43,14 @@ Start with a precise identifier from the user, repository metadata, or the
 current branch. Do not infer an issue from a similar title.
 
 ```bash
-linear issue id
-linear issue view SJ-123
-linear issue list --team <team-key>
-linear issue mine --team <team-key>
-linear team list
-linear project list
-linear cycle list --team <team-key>
-linear initiative list
+toolkit linear issue id
+toolkit linear issue view SJ-123
+toolkit linear issue list --team <team-key>
+toolkit linear issue mine --team <team-key>
+toolkit linear team list
+toolkit linear project list
+toolkit linear cycle list --team <team-key>
+toolkit linear initiative list
 ```
 
 Use the appropriate object for the question:
@@ -64,7 +66,7 @@ Use the appropriate object for the question:
 
 `issue id` resolves only an identifier encoded in the current branch. The list
 and cycle commands need `--team <team-key>` unless the repository has a Linear
-default team configured; discover the key with `linear team list`.
+default team configured; discover the key with `toolkit linear team list`.
 
 Read [work-management workflows](references/work-management.md) for the
 object model, intake, planning, and GitHub handoff. It is grounded in the
@@ -78,11 +80,11 @@ target and verify the exact team, project, state, labels, assignee, and issue
 identifier. Then discover the exact CLI form:
 
 ```bash
-linear issue start SJ-123
-linear issue update --help
-linear issue comment --help
-linear issue create --help
-linear project update --help
+toolkit linear issue start SJ-123
+toolkit linear issue update --help
+toolkit linear issue comment --help
+toolkit linear issue create --help
+toolkit linear project update --help
 ```
 
 Use `issue start` only when active work is authorized. Create an issue only for

@@ -10,7 +10,7 @@
  * Read a required environment variable. Throws a friendly, actionable error
  * naming the variable and its purpose when it is unset or empty.
  *
- * @param name - The environment variable name, e.g. `"GRAFANA_URL"`.
+ * @param name - The environment variable name, e.g. `"BUGSINK_URL"`.
  * @param description - What the variable configures, used in the error message.
  */
 export function requireEnv(name: string, description: string): string {

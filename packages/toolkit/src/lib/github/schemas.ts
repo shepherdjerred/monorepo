@@ -16,11 +16,19 @@ export const PullRequestSchema = z.object({
   title: z.string(),
   url: z.string(),
   headRefName: z.string(),
+  headRefOid: z.string(),
   baseRefName: z.string(),
   state: z.enum(["OPEN", "CLOSED", "MERGED"]),
   isDraft: z.boolean(),
   mergeable: z.enum(["MERGEABLE", "CONFLICTING", "UNKNOWN"]),
   reviewDecision: ReviewDecisionSchema,
+});
+
+export const GitHubCheckSchema = z.object({
+  name: z.string(),
+  state: z.string(),
+  bucket: z.string(),
+  link: z.union([z.url(), z.literal("")]).optional(),
 });
 
 export const ReviewSchema = z.object({
@@ -37,27 +45,6 @@ export const ReviewSchema = z.object({
   submittedAt: z.string(),
 });
 
-export const CheckRunSchema = z.object({
-  name: z.string(),
-  status: z.string(),
-  conclusion: z.string().nullable(),
-  detailsUrl: z.string(),
-  workflowName: z.string(),
-});
-
-export const WorkflowRunSchema = z.object({
-  databaseId: z.number(),
-  name: z.string(),
-  status: z.string(),
-  conclusion: z.string().nullable(),
-  url: z.string(),
-  createdAt: z.string(),
-});
-
 export const ReviewsResponseSchema = z.object({
   reviews: z.array(ReviewSchema),
-});
-
-export const HeadRefResponseSchema = z.object({
-  headRefName: z.string(),
 });

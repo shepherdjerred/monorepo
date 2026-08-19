@@ -1,16 +1,16 @@
 # PostHog CLI and API operations
 
-`posthog-cli api` is an agent-oriented capability layer. Its tools and schemas
+`toolkit posthog api` is an agent-oriented capability layer. Its tools and schemas
 may change independently of the local CLI version, so discover instead of
 guessing.
 
 ```bash
-posthog-cli --version
-posthog-cli api --agent-help
-posthog-cli api search <capability>
-posthog-cli api info <tool>
-posthog-cli api schema <tool> <field>
-posthog-cli api call --json <tool> '<input-json>'
+toolkit posthog --version
+toolkit posthog api --agent-help
+toolkit posthog api search <capability>
+toolkit posthog api info <tool>
+toolkit posthog api schema <tool> <field>
+toolkit posthog api call --json <tool> '<input-json>'
 ```
 
 ## Schema-first read path
@@ -41,7 +41,7 @@ environment instead.
 
 ## Skills
 
-`posthog-cli api skill list` discovers vendor-provided task guidance. Treat it
+`toolkit posthog api skill list` discovers vendor-provided task guidance. Treat it
 as external code/documentation: inspect the target and content before install,
 and do not overwrite this repository's durable skill guidance without an
 authorized change.

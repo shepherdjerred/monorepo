@@ -43,7 +43,7 @@ packages/
 ├── tasks-for-obsidian/         # React Native task app
 ├── temporal/                   # Temporal workflows, schedules, and agent-task scheduler
 ├── terraform-provider-asuswrt/ # Terraform provider for AsusWRT
-├── toolkit/                    # CLI developer tools (pr, pd, bugsink, grafana)
+├── toolkit/                    # Monorepo command hub + repo-specific workflows
 ├── trmnl-dashboard/            # TRMNL e-ink dashboard
 ├── version-catalog/             # Language-neutral image/chart version catalog
 ├── webring/                    # Webring component (npm)
@@ -262,27 +262,27 @@ token, and do not use an interactive login as the normal setup path.
 For Linear, verify the ambient credential and workspace first:
 
 ```bash
-linear --version
-linear auth whoami
-linear issue id                 # resolve the issue attached to the branch
-linear issue view SJ-123        # inspect an issue
-linear issue list --team <key>  # list assigned/open work
+toolkit linear --version
+toolkit linear auth whoami
+toolkit linear issue id                 # resolve the issue attached to the branch
+toolkit linear issue view SJ-123        # inspect an issue
+toolkit linear issue list --team <key>  # list assigned/open work
 ```
 
-The configured workspace is `sjerred` (`monorepo`). Use
-`--workspace sjerred` when the current directory or default workspace is
-ambiguous. Linear owns plans, TODOs, review queues, and follow-ups; use the
+The configured workspace is `sjerred` (`monorepo`), which `toolkit linear`
+supplies unless an explicit workspace is passed. Linear owns plans, TODOs,
+review queues, and follow-ups; use the
 `linear-helper` skill before creating or changing work, and keep feature PRs on
 the repository's git-spice workflow. `issue id` needs a branch identifier, and
 issue/cycle lists need `--team <key>` unless the repository has a default team.
 
-For PostHog, use the agent-first API surface rather than `posthog-cli login`:
+For PostHog, use the agent-first API surface rather than interactive login:
 
 ```bash
-posthog-cli --version
-posthog-cli api search read-data-schema
-posthog-cli api info read-data-schema
-posthog-cli api call read-data-schema '{"query":{"kind":"events"}}'
+toolkit posthog --version
+toolkit posthog api search read-data-schema
+toolkit posthog api info read-data-schema
+toolkit posthog api call read-data-schema '{"query":{"kind":"events"}}'
 ```
 
 The shell supplies `POSTHOG_CLI_API_KEY` and project `549883`. Before any
@@ -310,7 +310,7 @@ cd packages/<name> && bunx eslint . --fix
 bun run verify
 
 # CI runs on Buildkite (NOT GitHub Actions) via the static .buildkite/pipeline.yml
-# Check CI status via Buildkite CLI or web UI, never `gh run`
+# Check CI with `toolkit bk` or `toolkit pr health`.
 
 # Foreground OpenRouter/AI SDK controller for the complete open PR fleet
 # (spawns a live dashboard with question answering only; --no-ui to suppress)
@@ -337,7 +337,7 @@ applies. Unrelated selectors keep their normal change-based behavior.
 After confirming the SHA is still current `main`, create the build with:
 
 ```bash
-bk build create \
+toolkit bk build create \
   --pipeline sjerred/monorepo \
   --branch main \
   --commit <current-main-sha> \
@@ -389,26 +389,27 @@ filtered install provides both native SDK runtimes without globally installed
 
 ## GitHub CLI in Codex
 
-`gh` works from Codex, but GitHub network access is sandboxed. Do not conclude that
-`gh` is broken just because the first attempt says it cannot connect to
+Use `toolkit gh` for monorepo GitHub work. The delegated `gh` process works
+from Codex, but GitHub network access is sandboxed. Do not conclude that it is
+broken just because the first attempt says it cannot connect to
 `api.github.com` or cannot resolve `github.com`.
 
-- For GitHub reads (`gh status`, `gh repo view/list`, `gh pr view/list/diff/checks`),
+- For GitHub reads (`toolkit gh status`, `toolkit gh repo view/list`, `toolkit gh pr view/list/diff/checks`),
   retry with Codex network escalation when the sandbox blocks the first attempt.
-- For publishing or mutating GitHub state, check `gh auth status` early and separate
+- For publishing or mutating GitHub state, check `toolkit gh auth status` early and separate
   auth failures from sandbox/network failures.
-- For GitHub writes (`gh pr comment`, `gh issue create`, `gh pr create`,
-  `gh pr review`, `gh pr merge`), require an explicit target and payload from the
+- For GitHub writes (`toolkit gh pr comment`, `toolkit gh issue create`,
+  `toolkit gh pr review`, `toolkit gh pr merge`), require an explicit target and payload from the
   user or task, then run with Codex escalation.
 - In Codex tool calls, escalation means rerunning `exec_command` with
   `sandbox_permissions: "require_escalated"` and a narrow `prefix_rule` such as
-  `["gh", "pr", "view"]` or `["gh", "pr", "comment"]`.
-- CI for this monorepo is Buildkite, not GitHub Actions. Do not use `gh run` as the
-  CI source of truth; use Buildkite tooling or the relevant PR/status surface.
+  `["toolkit", "gh", "pr", "view"]` or `["toolkit", "gh", "pr", "comment"]`.
+- CI for this monorepo is Buildkite, not GitHub Actions. Use `toolkit bk` or
+  `toolkit pr health` as the CI source of truth.
 - If a PR or push flow fails, report the exact layer: local git ref permission,
   GitHub auth, sandboxed network access, or remote rejection.
-- Feature PRs are created and updated with **git-spice** (`git-spice branch/stack
-submit`), as stacks — not `gh pr create`. See the `git-spice-helper` skill. `gh`
+- Feature PRs are created and updated with **git-spice** (`toolkit git-spice branch/stack
+submit`), as stacks — not the GitHub PR-create command. See the `git-spice-helper` skill. `gh`
   stays for PR reviews/comments/merge/queries and for automated single-PR bot flows
   (Temporal, release automation), whose clones have no local git-spice stack state.
 
@@ -637,7 +638,7 @@ script, each with its reason.
 ### Blocked review gate — `review-findings`
 
 ```bash
-GH_TOKEN=$(gh auth token) bun scripts/review-findings.ts list <pr>
+GH_TOKEN=$(toolkit gh auth token) bun scripts/review-findings.ts list <pr>
 ```
 
 Lists every finding blocking the required Qodo gate with its title, severity
@@ -699,7 +700,7 @@ Each package has its own AGENTS.md with specific instructions:
 - `packages/homelab/AGENTS.md` - K8s, cdk8s, OpenTofu infrastructure
 - `packages/scout-for-lol/AGENTS.md` - Match analysis pipeline
 - `packages/resume/AGENTS.md` - Resume site
-- `packages/toolkit/AGENTS.md` - CLI developer tools (pr, pd, bugsink, grafana)
+- `packages/toolkit/AGENTS.md` - platform CLI passthroughs and monorepo workflows
 - `packages/tasks-for-obsidian/AGENTS.md` - React Native task app, including native capture/detail, saved views, and bulk task organization
 - `packages/tasknotes-macos/AGENTS.md` - Native macOS app (Swift posture, macOS-only tasks)
 - `packages/docs/wiki/` - human-first public systems wiki

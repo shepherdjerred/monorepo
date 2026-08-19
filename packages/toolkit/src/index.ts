@@ -1,169 +1,129 @@
 #!/usr/bin/env bun
 
+import {
+  buildPassthroughInvocation,
+  runPassthrough,
+} from "#lib/passthrough.ts";
+
 const TOOLKIT_VERSION = "0.1.0";
 
 function printUsage(): void {
   console.log(`
-toolkit - CLI utilities for development workflows
+toolkit - the monorepo command hub
 
 Usage:
-  toolkit <command> [subcommand] [options]
+  toolkit <command> [arguments...]
 
-Commands:
-  pr health [PR_NUMBER]      Check PR health (conflicts, CI, approval)
-  pr logs <RUN_ID>           Get workflow run logs
-  pr detect                  Detect PR for current branch
-  pr asset <PR> <FILE|DIR...>  Upload PR media (images, video, .cast, demo dirs) to public.sjer.red
+Platform commands (native CLI passthroughs):
+  gh          GitHub CLI (GH_REPO=shepherdjerred/monorepo)
+  bk          Buildkite CLI (organization sjerred)
+  git-spice   Stacked branch and PR workflow
+  linear      Linear CLI (--workspace sjerred)
+  posthog     PostHog CLI (project 549883)
+  grafana     GCX (--context homelab)
+  prom        GCX metrics (--context homelab)
+  loki        GCX logs (--context homelab)
+  tempo       GCX traces (--context homelab)
+  temporal    Temporal CLI (--profile homelab)
+  argocd      Argo CD CLI (homelab server, --grpc-web)
+  cf          Cloudflare CLI
+  tailscale   Tailscale CLI
 
-  deployed [SELECTOR]        Is my commit/service deployed to the homelab k8s?
-  deployed <service>         e.g. scout, birmel — is its latest commit live?
-  deployed <service>/<var>   e.g. scout/prod — scope to one product variant
-  deployed <commit> --json   Trace a specific commit, JSON output
+Monorepo workflows:
+  pr health [PR_NUMBER]        Check merge, exact-head Buildkite CI, and review
+  pr asset <PR> <FILE|DIR...>  Upload review media to public.sjer.red
+  pr review <ACTION> <PR>      Inspect or resolve review-provider findings
+  deployed [SELECTOR]          Trace a commit or service to the live homelab
+  screenshot <PKG> [ROUTE]     Start a site and capture a browser screenshot
+  alerts <list|show>           Query the durable alert ledger
+  bugsink <SUBCOMMAND>         Query self-hosted error tracking
+  discord <SUBCOMMAND>         Use the local Discord session daemon
+  history <SUBCOMMAND>         Search private local agent history
 
-  screenshot <pkg> [route]   Boot a package's dev server, screenshot a route
-  screenshot --list          List screenshot-able packages
+Global options:
+  --version                    Print toolkit version
+  --help, -h                   Print this help
 
-  alerts list                List alert occurrences and history
-  alerts show <ID>           View an alert occurrence and timeline
-
-  bugsink issues             List unresolved Bugsink issues
-  bugsink issue <ID>         View Bugsink issue details
-  bugsink teams              List teams
-  bugsink team <UUID>        View team details
-  bugsink projects           List projects
-  bugsink project <ID>       View project details
-  bugsink events <ISSUE>     List events for an issue
-  bugsink event <UUID>       View event details
-  bugsink stacktrace <EVT>   Get event stacktrace (markdown)
-  bugsink releases           List releases
-  bugsink release <UUID>     View release details
-
-  grafana dashboards         Search dashboards
-  grafana dashboard <UID>    View dashboard details
-  grafana datasources        List datasources
-  grafana datasource <UID>   View datasource details
-  grafana query <EXPR>       Run PromQL query
-  grafana metrics            List Prometheus metric names
-  grafana labels             List Prometheus label names
-  grafana label-values <N>   List values for a Prometheus label
-  grafana logs <EXPR>        Run LogQL query
-  grafana log-labels         List Loki label names
-  grafana log-label-values <N>  List values for a Loki label
-  grafana alerts             List alert rules
-  grafana alert <UID>        View alert rule details
-  grafana annotations        List annotations
-  grafana annotate <TEXT>    Create an annotation
-  gf ...                     Alias for grafana
-
-  discord daemon start       Start session daemon (DISCORD_BOT_TOKEN / DISCORD_USER_TOKEN)
-  discord daemon stop|status Manage the daemon
-  discord send <CH> <MSG>    Send a message
-  discord read <CH> [-n 20]  Read recent messages (incl. embeds)
-  discord wait <CH>          Block until a matching message arrives
-  discord slash <CH> <BOT> <CMD> [ARGS...]  Invoke another bot's slash command
-  discord voice join|leave|states           Voice presence + who's streaming
-
-  history search <QUERY>                     Search local agent history
-  history recent                            Show recent indexed work
-  history sources                           Show source/index status
-  history daemon install|start|stop|status   Manage background ingestion
-  discord guilds|channels    Discovery
-  discord whoami             Daemon identities + uptime
-
-Global options (must come before the command):
-  --version                  Print toolkit version
-  --help, -h                 Print this help
-
-Command options (must come after the command):
-  --json                     Output as JSON, e.g. 'toolkit alerts list --json'
-
-Environment Variables:
-  ALERT_DASHBOARD_URL        Alerts service URL (tailnet default)
-  BUGSINK_URL                Bugsink instance URL
-  BUGSINK_TOKEN              Bugsink API token
-  GRAFANA_URL                Grafana instance URL
-  GRAFANA_API_KEY            Grafana API key or service account token
-  AWS_PROFILE                AWS profile for 'pr asset' (or use --profile)
-  DISCORD_BOT_TOKEN          Discord bot token (for 'discord daemon start')
-  DISCORD_USER_TOKEN         Discord user/selfbot token (for 'discord daemon start')
+Passthrough behavior:
+  Arguments after a platform command are passed to the native CLI unchanged.
+  Explicit flags and environment values override the defaults shown above.
 
 Examples:
+  toolkit gh pr view
+  toolkit bk build list --pipeline monorepo --branch main
+  toolkit prom query 'up == 0'
+  toolkit loki query '{namespace="temporal"}'
   toolkit pr health
-  toolkit deployed scout
   toolkit deployed scout/prod
-  toolkit screenshot stocks-sjer-red /
-  toolkit alerts list
-  toolkit gf dashboards
-  toolkit history daemon install
   toolkit history recent --since 7d
-  toolkit history search "kubernetes" --since 30d
 `);
 }
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0];
-  const subcommand = args[1];
 
   if (
     command === "--help" ||
     command === "-h" ||
-    command == null ||
+    command === undefined ||
     command.length === 0
   ) {
     printUsage();
-    process.exit(0);
+    return;
   }
 
   if (command === "--version" || command === "version") {
     console.log(`toolkit ${TOOLKIT_VERSION}`);
-    process.exit(0);
+    return;
   }
 
+  const passthrough = buildPassthroughInvocation(
+    command,
+    args.slice(1),
+    Bun.env,
+  );
+  if (passthrough !== null) {
+    process.exit(await runPassthrough(passthrough));
+  }
+
+  const subcommand = args[1];
   switch (command) {
     case "pr": {
       const { handlePrCommand } = await import("./handlers/pr.ts");
       await handlePrCommand(subcommand, args.slice(2));
-      break;
+      return;
     }
     case "deployed": {
       const { handleDeployedCommand } = await import("./handlers/deployed.ts");
-      // No sub-subcommand: the first token after `deployed` is the selector.
       await handleDeployedCommand(subcommand, args.slice(1));
-      break;
+      return;
     }
     case "screenshot": {
       const { handleScreenshotCommand } =
         await import("./handlers/screenshot.ts");
-      // No sub-subcommand: the first token after `screenshot` is the package alias.
       await handleScreenshotCommand(subcommand, args.slice(1));
-      break;
+      return;
     }
     case "alerts": {
       const { handleAlertsCommand } = await import("./handlers/alerts.ts");
       await handleAlertsCommand(subcommand, args.slice(2));
-      break;
+      return;
     }
     case "bugsink": {
       const { handleBugsinkCommand } = await import("./handlers/bugsink.ts");
       await handleBugsinkCommand(subcommand, args.slice(2));
-      break;
-    }
-    case "grafana":
-    case "gf": {
-      const { handleGrafanaCommand } = await import("./handlers/grafana.ts");
-      await handleGrafanaCommand(subcommand, args.slice(2));
-      break;
+      return;
     }
     case "discord": {
       const { handleDiscordCommand } = await import("./handlers/discord.ts");
       await handleDiscordCommand(subcommand, args.slice(2));
-      break;
+      return;
     }
     case "history": {
       const { handleHistoryCommand } = await import("./handlers/history.ts");
       await handleHistoryCommand(subcommand, args.slice(2));
-      break;
+      return;
     }
     default:
       console.error(`Unknown command: ${command}`);

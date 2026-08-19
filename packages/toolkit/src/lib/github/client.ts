@@ -5,6 +5,7 @@ export type GhCommandResult<T> = {
   success: boolean;
   data?: T | undefined;
   error?: string | undefined;
+  exitCode: number;
 };
 
 // Captures the real gh stderr instead of letting Bun throw a generic
@@ -21,12 +22,14 @@ export async function runGhCommand<T>(
   args: string[],
   schema: z.ZodType<T>,
   repo?: string,
+  acceptedExitCodes: readonly number[] = [0],
 ): Promise<GhCommandResult<T>> {
   const result = await runGh(args, repo);
-  if (result.exitCode !== 0) {
+  if (!acceptedExitCodes.includes(result.exitCode)) {
     const stderr = result.stderr.toString().trim();
     return {
       success: false,
+      exitCode: result.exitCode,
       error:
         stderr.length > 0
           ? stderr
@@ -36,7 +39,7 @@ export async function runGhCommand<T>(
 
   const stdout = result.stdout.toString().trim();
   if (!stdout) {
-    return { success: true, data: undefined };
+    return { success: true, data: undefined, exitCode: result.exitCode };
   }
 
   let json: unknown;
@@ -45,7 +48,7 @@ export async function runGhCommand<T>(
   } catch {
     // gh returned non-JSON output — callers that don't want typed data can
     // use runGhCommandRaw; swallow silently for schema callers.
-    return { success: true, data: undefined };
+    return { success: true, data: undefined, exitCode: result.exitCode };
   }
 
   // Schema validation failures used to be swallowed here, which turned a real
@@ -55,10 +58,11 @@ export async function runGhCommand<T>(
   if (!parsed.success) {
     return {
       success: false,
+      exitCode: result.exitCode,
       error: `gh output failed schema validation: ${parsed.error.message}`,
     };
   }
-  return { success: true, data: parsed.data };
+  return { success: true, data: parsed.data, exitCode: result.exitCode };
 }
 
 export async function runGhCommandRaw(
@@ -70,11 +74,16 @@ export async function runGhCommandRaw(
     const stderr = result.stderr.toString().trim();
     return {
       success: false,
+      exitCode: result.exitCode,
       error:
         stderr.length > 0
           ? stderr
           : `gh exited with code ${String(result.exitCode)}`,
     };
   }
-  return { success: true, data: result.stdout.toString() };
+  return {
+    success: true,
+    data: result.stdout.toString(),
+    exitCode: result.exitCode,
+  };
 }

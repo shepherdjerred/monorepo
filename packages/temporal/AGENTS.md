@@ -181,7 +181,7 @@ Workflow:
 - `RUNBOOK_PATH` — local override for the homelab-audit runbook (defaults to the bundled `runbooks/homelab-audit.md`)
 - `ALERT_DASHBOARD_URL` — in-cluster Alerts API URL (homelab audit)
 - `BUGSINK_URL`, `BUGSINK_TOKEN` — Bugsink REST API base + token (homelab audit)
-- `GRAFANA_URL`, `GRAFANA_API_KEY` — Grafana base + API key (PromQL/Loki via the `/api/datasources/proxy/<id>/...` endpoints)
+- `GRAFANA_URL`, `GRAFANA_API_KEY` — Grafana base + API key used to provision the worker's private GCX `homelab` context; operator queries run through `toolkit prom`, `toolkit loki`, `toolkit tempo`, and `toolkit grafana`.
 - `ARGOCD_SERVER`, `ARGOCD_AUTH_TOKEN` — ArgoCD server + token for `argocd app list` (homelab audit §13)
 - `CLOUDFLARE_API_TOKEN` — read-only Cloudflare token used by `tofu plan -detailed-exitcode` (homelab audit §4)
 - `TALOSCONFIG` — path to talosconfig (set to `/etc/talos/config` in cluster). Sourced via the projected volume that mounts 1P field `TALOSCONFIG_YAML` as a file. Marked optional in cdk8s — if the 1P field is unset, the file is absent and talosctl commands inside the audit fail fast with a clear error.
@@ -503,7 +503,7 @@ stable on both axes and additionally gives a genuinely changed proposal its own
 PR, rather than force-pushing over one an operator is part-way through
 adjudicating.
 
-To add a "regenerate X on a schedule, open a PR if it changed" job, mirror `data-dragon.ts`: a deterministic activity (no Claude), GitHub App token, path-scoped `git add`, plus a thin workflow, an export in `src/workflows/index.ts`, and a `SCHEDULES` entry (cron, `America/Los_Angeles`, `TASK_QUEUES.DEFAULT`). The worker pod has bun/git/gh/kubectl (in-cluster SA — `homelab-crd-imports-daily` runs `kubectl get crds` with the read-only `temporal-worker-crd-reader` ClusterRole) but **not** helm — add tools to the worker image build (`Dockerfile`) if the job needs them (`bunx turbo run smoke --filter=temporal` builds + smoke-tests the image; CI builds/smokes/pushes it on merge to main). CLIs a job needs from the repo itself (e.g. `cdk8s` for the CRD imports) come from the bot clone's workspace install via a package devDependency, not the image.
+To add a "regenerate X on a schedule, open a PR if it changed" job, mirror `data-dragon.ts`: a deterministic activity (no Claude), GitHub App token, path-scoped `git add`, plus a thin workflow, an export in `src/workflows/index.ts`, and a `SCHEDULES` entry (cron, `America/Los_Angeles`, `TASK_QUEUES.DEFAULT`). The worker pod has bun/git/gh/kubectl (in-cluster SA — `homelab-crd-imports-daily` runs `kubectl get crds` with the read-only `temporal-worker-crd-reader` ClusterRole) but **not** helm — add tools to the worker image build (`Dockerfile`) if the job needs them (`bunx turbo run smoke --filter=temporal` builds + smoke-tests the image; CI builds/smokes/pushes it on merge to main). The image smoke must cover each toolkit passthrough whose native target is installed in the image. CLIs a job needs from the repo itself (e.g. `cdk8s` for the CRD imports) come from the bot clone's workspace install via a package devDependency, not the image.
 
 ### Bot-clone environment — use `bot-clone.ts`, never hand-rolled installs
 

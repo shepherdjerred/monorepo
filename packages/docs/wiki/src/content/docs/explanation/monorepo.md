@@ -60,13 +60,32 @@ bootstrap path instead, where `select-main-pipeline.ts` uploads the subset of
 those same steps the commit actually needs. So the graph main runs is selected
 rather than authored — no step exists that is not in the checked-in file.
 
-This matters mostly because it breaks a common assumption: `gh run` is not the
-source of truth for CI here, and never will be. Buildkite tooling or the PR's
-status checks are.
+This matters mostly because it breaks a common assumption: GitHub Actions is
+not the source of truth for CI here. The exact Buildkite build for a commit is.
 
 CI itself runs on the homelab — a dedicated `liskov` worker under
 [Kueue admission](/explanation/homelab/buildkite-admission/). The homelab is
 therefore in the path of merging, which is a real coupling and an accepted one.
+
+## One command boundary for the stack
+
+The repository spans more control planes than its package graph suggests:
+GitHub, Buildkite, Linear, PostHog, Grafana, Temporal, ArgoCD, Cloudflare, and
+Tailscale all participate in ordinary work. `toolkit` is the stable entrypoint
+across that stack.
+
+It does not replace those platforms' native CLIs. For platform operations it
+delegates directly, adding only the monorepo's repository, organization,
+workspace, project, or homelab context. Native help, arguments, streams, and
+failure behavior remain intact. This keeps vendor capabilities current without
+growing a second API client inside the repo.
+
+Toolkit owns only the workflows that combine multiple sources or encode local
+policy. PR health, for example, joins GitHub review metadata with a fresh local
+merge-tree and the exact-head Buildkite build. Deployment tracing follows a
+commit farther still, through image publication, GitOps state, and the running
+pod digest. The distinction keeps one memorable command boundary without
+hiding which system is authoritative.
 
 ## What the strictness is for
 

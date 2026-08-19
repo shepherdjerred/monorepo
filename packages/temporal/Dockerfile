@@ -62,7 +62,8 @@ RUN cd packages/llm-models && bun run build
 # bundles the language-neutral JSON before Temporal imports it at startup.
 RUN cd packages/glitter-context && bun run build
 # Compile the in-tree toolkit CLI into a single static binary. The
-# homelab-audit runbook + preflight shell out to `toolkit alerts|bugsink|gf`;
+# homelab-audit runbook + preflight shell out through toolkit workflows and
+# native CLI passthroughs (`alerts`, `bugsink`, `prom`, `loki`, `grafana`);
 # it's compiled here (not `bun add -g`) because it lives in the workspace
 # source. `--external ffmpeg-static` matches the package's own build script (a
 # native shim that must not be bundled).
@@ -250,8 +251,8 @@ RUN set -e; \
     temporal --version
 
 # --- Grafana CLI (per-arch tarball, SHA256-verified) ---
-# Replaces the retired `toolkit gf` Grafana client for the homelab audit's
-# PromQL/LogQL evidence. The release layout matches temporalio/cli above: a bare
+# Supplies the native backend for toolkit's Grafana, Prometheus, Loki, and Tempo
+# passthroughs. The release layout matches temporalio/cli above: a bare
 # `gcx` binary at the tarball root plus a `<name>_<version>_checksums.txt`.
 RUN set -e; \
     arch="$(dpkg --print-architecture)"; \

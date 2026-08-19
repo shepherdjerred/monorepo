@@ -2,14 +2,12 @@ import type { z } from "zod";
 import type {
   PullRequestSchema,
   ReviewSchema,
-  CheckRunSchema,
-  WorkflowRunSchema,
+  GitHubCheckSchema,
 } from "./schemas.ts";
 
 export type PullRequest = z.infer<typeof PullRequestSchema>;
 export type Review = z.infer<typeof ReviewSchema>;
-export type CheckRun = z.infer<typeof CheckRunSchema>;
-export type WorkflowRun = z.infer<typeof WorkflowRunSchema>;
+export type GitHubCheck = z.infer<typeof GitHubCheckSchema>;
 
 export type HealthStatus = "HEALTHY" | "UNHEALTHY" | "PENDING";
 

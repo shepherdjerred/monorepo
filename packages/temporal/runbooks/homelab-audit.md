@@ -14,16 +14,16 @@ Repeatable procedure for a comprehensive health audit of the `torvalds` cluster.
 
 All tools must be authenticated before starting:
 
-| Tool       | Context                                                      | Check                                            |
-| ---------- | ------------------------------------------------------------ | ------------------------------------------------ |
-| `kubectl`  | `admin@torvalds`                                             | `kubectl get nodes`                              |
-| `talosctl` | `torvalds`                                                   | `talosctl version`                               |
-| `argocd`   | `admin`                                                      | `argocd app list`                                |
-| `velero`   | —                                                            | `velero backup get`                              |
-| `toolkit`  | Alerts + Grafana + Bugsink env vars                          | `toolkit gf query 'ALERTS{alertstate="firing"}'` |
-| `temporal` | `TEMPORAL_ADDRESS` points at the Temporal frontend service   | `temporal operator cluster health`               |
-| `bk`       | `BUILDKITE_API_TOKEN`, `BUILDKITE_ORGANIZATION_SLUG=sjerred` | `bk build list --pipeline monorepo --limit 1`    |
-| `gh`       | GitHub auth (`gh auth status`)                               | `gh pr list --limit 1`                           |
+| Tool               | Context                                                   | Check                                                 |
+| ------------------ | --------------------------------------------------------- | ----------------------------------------------------- |
+| `kubectl`          | `admin@torvalds`                                          | `kubectl get nodes`                                   |
+| `talosctl`         | `torvalds`                                                | `talosctl version`                                    |
+| `toolkit argocd`   | `admin`                                                   | `toolkit argocd app list`                             |
+| `velero`           | —                                                         | `velero backup get`                                   |
+| `toolkit`          | Command hub plus Alerts, Grafana, and Bugsink credentials | `toolkit prom query 'ALERTS{alertstate="firing"}'`    |
+| `toolkit temporal` | `TEMPORAL_ADDRESS` points at the frontend service         | `toolkit temporal operator cluster health`            |
+| `toolkit bk`       | `BUILDKITE_API_TOKEN`; organization defaults to `sjerred` | `toolkit bk build list --pipeline monorepo --limit 1` |
+| `toolkit gh`       | GitHub auth; repository defaults to this monorepo         | `toolkit gh pr list --limit 1`                        |
 
 ## Execution Strategy
 
@@ -95,13 +95,13 @@ kubectl get pvc -A                     # Pending, Lost PVCs
 ## Section 4: ArgoCD Health & Sync Status
 
 ```bash
-argocd app list                        # Sync status + health for all apps
+toolkit argocd app list                        # Sync status + health for all apps
 ```
 
 For any Degraded, OutOfSync, Missing, or Unknown apps:
 
 ```bash
-argocd app get <app-name>              # Detailed status, sync errors, conditions
+toolkit argocd app get <app-name>              # Detailed status, sync errors, conditions
 ```
 
 Note: OutOfSync with Healthy status and manual sync policy is normal — just means pending chart changes.
@@ -111,9 +111,9 @@ Note: OutOfSync with Healthy status and manual sync policy is normal — just me
 ### ZFS Health (via Prometheus)
 
 ```bash
-toolkit gf query 'zfs_zpool_fragmentation'                 # Fragmentation %, alert fires > 50
-toolkit gf query 'zfs_zpool_capacity_used_ratio'           # Pool utilization
-toolkit gf query 'node_zfs_arc_hits / (node_zfs_arc_hits + node_zfs_arc_misses)'   # ARC hit rate
+toolkit prom query 'zfs_zpool_fragmentation'                 # Fragmentation %, alert fires > 50
+toolkit prom query 'zfs_zpool_capacity_used_ratio'           # Pool utilization
+toolkit prom query 'node_zfs_arc_hits / (node_zfs_arc_hits + node_zfs_arc_misses)'   # ARC hit rate
 ```
 
 ### ZFS maintenance workflow
@@ -124,17 +124,17 @@ The weekly `zfs-maintenance-weekly` Temporal schedule discovers the managed
 different pool inventories.
 
 ```bash
-temporal schedule describe --schedule-id zfs-maintenance-weekly
-temporal workflow list --query "WorkflowType='runZfsMaintenanceWorkflow'"
+toolkit temporal schedule describe --schedule-id zfs-maintenance-weekly
+toolkit temporal workflow list --query "WorkflowType='runZfsMaintenanceWorkflow'"
 kubectl -n prometheus get pods -l app=zfs-zpool-collector -o wide
-toolkit gf query 'zfs_zpool_last_scrub_completion_timestamp'
+toolkit prom query 'zfs_zpool_last_scrub_completion_timestamp'
 ```
 
 For a failed or overdue run, select the Ready collector pod for the relevant
 node and inspect each pool it reports:
 
 ```bash
-temporal workflow describe --workflow-id <WORKFLOW_ID>
+toolkit temporal workflow describe --workflow-id <WORKFLOW_ID>
 kubectl -n prometheus exec <COLLECTOR_POD> -c zfs-zpool-collector -- zpool list -H -o name
 kubectl -n prometheus exec <COLLECTOR_POD> -c zfs-zpool-collector -- zpool status <POOL>
 ```
@@ -155,7 +155,7 @@ Flag: failed backups, backup item errors, schedules not running on time.
 ### PV Utilization
 
 ```bash
-toolkit gf query 'kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes > 0.85'
+toolkit prom query 'kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes > 0.85'
 ```
 
 ## Section 6: Monitoring Stack Health
@@ -163,11 +163,11 @@ toolkit gf query 'kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacit
 ### Firing Alerts
 
 ```bash
-toolkit gf query 'ALERTS{alertstate="firing"}'             # Primary source: all firing Prometheus alerts
-toolkit gf alerts                                          # Grafana-managed alert rules only
+toolkit prom query 'ALERTS{alertstate="firing"}'             # Primary source: all firing Prometheus alerts
+toolkit grafana alert rules list                                          # Grafana-managed alert rules only
 ```
 
-Note: `toolkit gf alerts` can legitimately return "No alert rules found" when
+Note: `toolkit grafana alert rules list` can legitimately return "No alert rules found" when
 alerting is implemented with PrometheusRule resources and Alertmanager routing.
 Do not mark that as a Grafana outage unless Prometheus firing-alert queries or
 scrape health also fail.
@@ -183,14 +183,14 @@ Flag: open occurrences whose underlying Prometheus alert has cleared (stale), or
 ### Scrape Targets
 
 ```bash
-toolkit gf query 'up == 0'                                 # Any scrape targets down
+toolkit prom query 'up == 0'                                 # Any scrape targets down
 ```
 
 ### Recent Error Logs (Loki)
 
 ```bash
-toolkit gf logs '{namespace=~".+"} |= "error"' --limit 30
-toolkit gf logs '{namespace=~".+"} |= "CrashLoopBackOff"' --limit 10
+toolkit loki query '{namespace=~".+"} |= "error"' --limit 30
+toolkit loki query '{namespace=~".+"} |= "CrashLoopBackOff"' --limit 10
 ```
 
 ## Section 7: Hardware / Physical Health
@@ -202,9 +202,9 @@ the `smartmon:*` prefix (colon separator = Prometheus recording rule).
 See `packages/homelab/src/cdk8s/src/resources/monitoring/smartmon.sh`.
 
 ```bash
-toolkit gf query 'smartmon:device_healthy'                # 1 = PASSED, 0 = FAILED
-toolkit gf query 'smartmon_temperature_celsius_raw_value' # Disk temp
-toolkit gf query 'smartmon_reallocated_sector_ct_raw_value > 0'
+toolkit prom query 'smartmon:device_healthy'                # 1 = PASSED, 0 = FAILED
+toolkit prom query 'smartmon_temperature_celsius_raw_value' # Disk temp
+toolkit prom query 'smartmon_reallocated_sector_ct_raw_value > 0'
 ```
 
 ### NVMe Health
@@ -212,16 +212,16 @@ toolkit gf query 'smartmon_reallocated_sector_ct_raw_value > 0'
 Emitted by the `nvme-metrics-collector` DaemonSet in `prometheus` ns.
 
 ```bash
-toolkit gf query 'nvme_available_spare_ratio'             # Spare block health
-toolkit gf query 'nvme_percentage_used_ratio'             # Wear level (0-1)
-toolkit gf query 'nvme_composite_temperature_celsius'     # Controller temp
+toolkit prom query 'nvme_available_spare_ratio'             # Spare block health
+toolkit prom query 'nvme_percentage_used_ratio'             # Wear level (0-1)
+toolkit prom query 'nvme_composite_temperature_celsius'     # Controller temp
 ```
 
 ### CPU Thermals
 
 ```bash
-toolkit gf query 'node_hwmon_temp_celsius'
-toolkit gf query 'rate(node_cpu_core_throttles_total[5m]) > 0'   # Thermal throttling
+toolkit prom query 'node_hwmon_temp_celsius'
+toolkit prom query 'rate(node_cpu_core_throttles_total[5m]) > 0'   # Thermal throttling
 ```
 
 ## Section 8: Network & Ingress
@@ -281,7 +281,7 @@ is intentionally read-only and does not have `pods/exec`.
 ```bash
 kubectl get pods -n temporal                              # server, ui, worker, postgresql all Running
 kubectl get deploy,sts -n temporal                        # replica readiness
-argocd app get temporal                                   # sync status / SyncError messages
+toolkit argocd app get temporal                                   # sync status / SyncError messages
 ```
 
 Flag: any pod not Running/Ready, `CreateContainerConfigError` (missing secret — often a 1Password Connect sync issue), ArgoCD app Degraded or OutOfSync with SyncError.
@@ -289,8 +289,8 @@ Flag: any pod not Running/Ready, `CreateContainerConfigError` (missing secret �
 ### Temporal frontend health
 
 ```bash
-temporal operator cluster health                          # gRPC ping to frontend (expect SERVING)
-temporal operator namespace list                          # expected namespaces (default)
+toolkit temporal operator cluster health                          # gRPC ping to frontend (expect SERVING)
+toolkit temporal operator namespace list                          # expected namespaces (default)
 ```
 
 Flag: non-SERVING status, gRPC connection error despite server pods Running (NetworkPolicy change, service endpoint mismatch), missing `default` namespace.
@@ -304,17 +304,17 @@ The Temporal CLI requires RFC3339 timestamps in query clauses. Compute them inli
 DAY_AGO="$(date -u -v-24H +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)"
 
 # Workflows that failed in the last 24h
-temporal workflow list --query "ExecutionStatus='Failed' AND CloseTime > '${DAY_AGO}'"
+toolkit temporal workflow list --query "ExecutionStatus='Failed' AND CloseTime > '${DAY_AGO}'"
 
 # Running executions older than a day (possible stuck)
-temporal workflow list --query "ExecutionStatus='Running' AND StartTime < '${DAY_AGO}'"
+toolkit temporal workflow list --query "ExecutionStatus='Running' AND StartTime < '${DAY_AGO}'"
 
 # Terminated / Canceled / TimedOut recently
-temporal workflow list --query "ExecutionStatus IN ('Terminated','Canceled','TimedOut') AND CloseTime > '${DAY_AGO}'"
+toolkit temporal workflow list --query "ExecutionStatus IN ('Terminated','Canceled','TimedOut') AND CloseTime > '${DAY_AGO}'"
 
 # Drill into a specific execution
-temporal workflow describe --workflow-id <WF_ID>
-temporal workflow show     --workflow-id <WF_ID>         # full event history
+toolkit temporal workflow describe --workflow-id <WF_ID>
+toolkit temporal workflow show     --workflow-id <WF_ID>         # full event history
 ```
 
 Flag: any recently-failed workflow, Running executions older than a day, Terminated executions not initiated by a known deploy/rotation.
@@ -322,8 +322,8 @@ Flag: any recently-failed workflow, Running executions older than a day, Termina
 ### Schedule health
 
 ```bash
-temporal schedule list                                    # one row per scheduled workflow
-temporal schedule describe --schedule-id <SCHED_ID>       # recent actions + next fire time
+toolkit temporal schedule list                                    # one row per scheduled workflow
+toolkit temporal schedule describe --schedule-id <SCHED_ID>       # recent actions + next fire time
 ```
 
 Flag: schedules with empty recent actions (never fired), paused without a documented reason, next fire time in the past.
@@ -331,9 +331,9 @@ Flag: schedules with empty recent actions (never fired), paused without a docume
 ### Prometheus view
 
 ```bash
-toolkit gf query 'rate(temporal_workflow_execution_failed_total[15m])'
-toolkit gf query 'temporal_workflow_task_timeout_count'
-toolkit gf query 'up{namespace="temporal"}'
+toolkit prom query 'rate(temporal_workflow_execution_failed_total[15m])'
+toolkit prom query 'temporal_workflow_task_timeout_count'
+toolkit prom query 'up{namespace="temporal"}'
 ```
 
 Flag: non-zero failure rate, scrape target down.
@@ -367,9 +367,9 @@ The removed `agent-task-timeout-watch` aggregate alert must not be used as a
 health signal. Query the SDK metrics instead:
 
 ```bash
-toolkit gf query 'temporal_worker_num_pollers{namespace="temporal",exported_namespace="default",task_queue="agent-task",poller_type="workflow_task"}'
-toolkit gf query 'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="temporal",exported_namespace="default",task_queue="agent-task"}[5m])))'
-toolkit gf query 'up{namespace="temporal",service=~".*temporal.*worker.*metrics.*|temporal-worker-app-metrics"}'
+toolkit prom query 'temporal_worker_num_pollers{namespace="temporal",exported_namespace="default",task_queue="agent-task",poller_type="workflow_task"}'
+toolkit prom query 'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="temporal",exported_namespace="default",task_queue="agent-task"}[5m])))'
+toolkit prom query 'up{namespace="temporal",service=~".*temporal.*worker.*metrics.*|temporal-worker-app-metrics"}'
 ```
 
 The corresponding warning alerts use a five-minute window. Do not change
@@ -380,14 +380,15 @@ until the canary and seven consecutive daily audits pass.
 
 ## Section 11: CI on `main`
 
-Buildkite is the source of truth for CI (pipeline `sjerred/monorepo`). **Do not use `gh run`** — this repo does not use GitHub Actions. Requires `BUILDKITE_API_TOKEN` in env; the scheduled audit worker also sets `BUILDKITE_ORGANIZATION_SLUG=sjerred` and `BUILDKITE_PIPELINE_SLUG=monorepo`.
+Buildkite is the source of truth for CI (pipeline `sjerred/monorepo`); this repo does not use GitHub Actions. Requires `BUILDKITE_API_TOKEN` in env; the scheduled audit worker also sets `BUILDKITE_ORGANIZATION_SLUG=sjerred` and `BUILDKITE_PIPELINE_SLUG=monorepo`.
 
 ### Is `main` green?
 
 ```bash
-bk build list --pipeline monorepo --branch main --limit 5                  # last 5 builds on main
-bk build list --pipeline monorepo --branch main --state failed --since 24h # recent failures on main
-bk build view --pipeline monorepo <BUILD_NUMBER>                           # details + failing job output
+toolkit bk build list --pipeline monorepo --branch main --limit 5                  # last 5 builds on main
+toolkit bk build list --pipeline monorepo --branch main --state failed --since 24h # recent failures on main
+toolkit bk build view --pipeline monorepo <BUILD_NUMBER>                           # build and job IDs
+toolkit bk job log <JOB_ID> --agent                                                # failed job log
 ```
 
 Flag: latest `main` build `failed` / `canceled` / `blocked`, or a sustained streak of failures (a red `main` means deploys are stale — last-green image is still running).
@@ -395,8 +396,8 @@ Flag: latest `main` build `failed` / `canceled` / `blocked`, or a sustained stre
 ### In-flight builds
 
 ```bash
-bk build list --pipeline monorepo --state running --limit 20               # currently running
-bk build list --pipeline monorepo --state scheduled --limit 20             # queued / waiting for agents
+toolkit bk build list --pipeline monorepo --state running --limit 20               # currently running
+toolkit bk build list --pipeline monorepo --state scheduled --limit 20             # queued / waiting for agents
 ```
 
 Flag: builds running >60 min (stuck), scheduled builds piling up (agent starvation — cross-check agent pool below).
@@ -405,7 +406,7 @@ Flag: builds running >60 min (stuck), scheduled builds piling up (agent starvati
 
 ```bash
 kubectl get pods -n buildkite                             # agent stack controller + active agents
-bk agent list                                             # connected agents
+toolkit bk agent list                                             # connected agents
 ```
 
 Flag: agent controller pod not Running, zero connected agents while builds are scheduled.
@@ -417,10 +418,10 @@ Long-lived, conflicted, or CI-failing PRs block releases and rot quickly. Check 
 ### PR inventory & CI rollup
 
 ```bash
-gh pr list --state open --limit 50 \
+toolkit gh pr list --state open --limit 50 \
   --json number,title,author,isDraft,mergeable,updatedAt,headRefName,statusCheckRollup
 
-gh pr list --state open --search "draft:false" \
+toolkit gh pr list --state open --search "draft:false" \
   --json number,title,updatedAt,mergeable,statusCheckRollup
 ```
 
@@ -432,7 +433,7 @@ For any PR flagged above:
 
 ```bash
 toolkit pr health <PR_NUMBER>                             # bundled conflicts + CI + approval check
-toolkit pr logs <RUN_ID>                                  # Buildkite logs for the failing check
+toolkit bk job log <JOB_ID> --agent                                  # Buildkite logs for the failing check
 ```
 
 Flag: merge conflicts against `main`, failing required checks, missing approvals on a PR otherwise ready.
@@ -440,7 +441,7 @@ Flag: merge conflicts against `main`, failing required checks, missing approvals
 ### Renovate / automation PRs
 
 ```bash
-gh pr list --state open --author "app/renovate" --json number,title,mergeable,statusCheckRollup
+toolkit gh pr list --state open --author "app/renovate" --json number,title,mergeable,statusCheckRollup
 ```
 
 Flag: Renovate PRs with failing CI (broken upgrade pipeline), or a large backlog of open Renovate PRs (automerge broken).
@@ -516,10 +517,10 @@ Commands for baseline evidence:
 APP=<app>
 NS=<namespace>
 
-argocd app get "$APP"
+toolkit argocd app get "$APP"
 kubectl get deploy,statefulset,daemonset,job,cronjob,pod,pvc -n "$NS" --ignore-not-found
-toolkit gf query "ALERTS{alertstate=\"firing\",namespace=\"$NS\"}"
-toolkit gf logs "{namespace=\"$NS\"} |~ \"(?i)(error|exception|failed|panic|fatal)\"" --limit 20
+toolkit prom query "ALERTS{alertstate=\"firing\",namespace=\"$NS\"}"
+toolkit loki query "{namespace=\"$NS\"} |~ \"(?i)(error|exception|failed|panic|fatal)\"" --limit 20
 ```
 
 If an app has no runtime workloads in its own ArgoCD resource inventory, do not

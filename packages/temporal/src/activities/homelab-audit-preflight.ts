@@ -1,4 +1,5 @@
 import { access } from "node:fs/promises";
+import { ensureGcxContext } from "./gcx-context.ts";
 
 export type HomelabAuditPreflightResult = {
   markdown: string;
@@ -181,6 +182,15 @@ function collectMissingEnvGroups(): string[] {
 
 async function collectRemoteWarnings(): Promise<string[]> {
   const warnings: string[] = [];
+  let gcxReady = true;
+
+  try {
+    await ensureGcxContext();
+  } catch (error) {
+    gcxReady = false;
+    const message = error instanceof Error ? error.message : String(error);
+    warnings.push(`GCX context: ${message}`);
+  }
 
   try {
     await access(CLOUDFLARE_TOFU_DIR);
@@ -194,6 +204,7 @@ async function collectRemoteWarnings(): Promise<string[]> {
     {
       name: "Buildkite",
       args: [
+        "toolkit",
         "bk",
         "build",
         "list",
@@ -205,13 +216,20 @@ async function collectRemoteWarnings(): Promise<string[]> {
         "1",
       ],
     },
-    { name: "Temporal", args: ["temporal", "operator", "cluster", "health"] },
-    { name: "Bugsink", args: ["toolkit", "bugsink", "projects", "--json"] },
     {
-      name: "Prometheus alerts",
-      args: ["toolkit", "gf", "query", 'ALERTS{alertstate="firing"}'],
+      name: "Temporal",
+      args: ["toolkit", "temporal", "operator", "cluster", "health"],
     },
-    { name: "ArgoCD", args: ["argocd", "app", "list", "--grpc-web"] },
+    { name: "Bugsink", args: ["toolkit", "bugsink", "projects", "--json"] },
+    ...(gcxReady
+      ? [
+          {
+            name: "Prometheus alerts",
+            args: ["toolkit", "prom", "query", 'ALERTS{alertstate="firing"}'],
+          },
+        ]
+      : []),
+    { name: "ArgoCD", args: ["toolkit", "argocd", "app", "list"] },
     { name: "Velero", args: ["velero", "backup", "get"] },
     {
       name: "Cloudflare tofu",
