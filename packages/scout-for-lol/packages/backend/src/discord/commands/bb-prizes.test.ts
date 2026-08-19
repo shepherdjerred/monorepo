@@ -117,8 +117,8 @@ describe("/bb command contract", () => {
       pendingPositionCount: 10,
       pendingPositions: Array.from({ length: 10 }, (_, index) => ({
         matchId: `NA1_${index.toString()}`,
-        subjectAlias: `player-${index.toString()}-${"x".repeat(500)}`,
-        side: "WIN",
+        gameAlias: `player-${index.toString()}-${"x".repeat(500)}`,
+        teamId: 100,
         stake: 1,
         closesAt: new Date(60_000),
         poolState: "open",
@@ -131,6 +131,30 @@ describe("/bb command contract", () => {
 
     expect(pendingField?.value.length).toBeLessThanOrEqual(1024);
     expect(pendingField?.value.endsWith("...")).toBe(true);
+  });
+
+  test("renders pending positions as direct team picks", () => {
+    const view: PersonalBucksView = {
+      balance: 20,
+      totalStaked: 5,
+      pendingPositionCount: 1,
+      pendingPositions: [
+        {
+          matchId: "NA1_1",
+          gameAlias: "bryan",
+          teamId: 200,
+          stake: 5,
+          closesAt: new Date(60_000),
+          poolState: "open",
+        },
+      ],
+    };
+
+    const rendered = JSON.stringify(buildPersonalBucksEmbed(view, 0).toJSON());
+    expect(rendered).toContain("Red Team");
+    expect(rendered).toContain("game: `bryan`");
+    expect(rendered).not.toContain("WIN");
+    expect(rendered).not.toContain("LOSE");
   });
 
   test("rules explain the complete economy", () => {

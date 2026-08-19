@@ -7,11 +7,15 @@ import {
   BucksPoolRosterSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  type BucksPoolParticipant,
+  type LeaguePuuid,
+  type RiotTeamId,
 } from "@scout-for-lol/data/index.ts";
 import {
   getLedgerPage,
   getOpenMarketAggregates,
   getPersonalBucksView,
+  type OpenMarketAggregate,
   type PersonalBucksView,
 } from "#src/betting/accounts.ts";
 import { placeBet } from "#src/betting/place-bet.ts";
@@ -19,12 +23,20 @@ import { describeResult } from "#src/betting/bet-button.ts";
 import { announceBetPlacement } from "#src/betting/announce.ts";
 import {
   BETTING_WINDOW_MS,
+  BLUE_TEAM_ID,
   MAX_STAKE,
   MIN_STAKE,
+  RED_TEAM_ID,
   SEED_GRANT,
 } from "#src/betting/constants.ts";
 import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { renderBucksHistory } from "#src/betting/navigation.ts";
+import {
+  BucksTeamChoiceSchema,
+  subjectWinsForTeam,
+  teamIdForChoice,
+  teamName,
+} from "#src/betting/team.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
@@ -87,21 +99,21 @@ export const bbCommand = new SlashCommandBuilder()
   .addSubcommand((sub) =>
     sub
       .setName("bet")
-      .setDescription("Bet on a live game; 20% win and cancellation house cuts")
+      .setDescription("Bet on Blue or Red; 20% win and cancellation house cuts")
       .addStringOption((option) =>
         option
-          .setName("player")
-          .setDescription("The tracked player to bet on")
+          .setName("game")
+          .setDescription("A tracked player in the game")
           .setRequired(true),
       )
       .addStringOption((option) =>
         option
-          .setName("side")
-          .setDescription("Whether they win or lose")
+          .setName("team")
+          .setDescription("The team to win")
           .setRequired(true)
           .addChoices(
-            { name: "WIN", value: "win" },
-            { name: "LOSE", value: "lose" },
+            { name: "Blue", value: "blue" },
+            { name: "Red", value: "red" },
           ),
       )
       .addIntegerOption((option) =>
@@ -125,7 +137,7 @@ export function buildPersonalBucksEmbed(
       position.poolState === "open" && position.closesAt.getTime() > now
         ? `closes <t:${Math.floor(position.closesAt.getTime() / 1000).toString()}:R>`
         : "locked";
-    return `• **${position.subjectAlias} ${position.side}** — ${position.stake.toString()} BB · ${state}`;
+    return `• **${teamName(position.teamId)}** — game: \`${position.gameAlias}\` · ${position.stake.toString()} BB · ${state}`;
   });
   if (view.pendingPositionCount > view.pendingPositions.length) {
     positions.push(
@@ -156,6 +168,65 @@ export function buildPersonalBucksEmbed(
   }
 
   return embed;
+}
+
+type OpenBettingPool = {
+  matchId: string;
+  roster: string;
+};
+
+export type OpenGameAnchor = {
+  matchId: string;
+  subjectPuuid: LeaguePuuid;
+  subjectTeamId: RiotTeamId;
+};
+
+function parseRoster(raw: string): BucksPoolParticipant[] {
+  return BucksPoolRosterSchema.parse(JSON.parse(raw)).participants;
+}
+
+export function formatGameSelectors(aliases: readonly string[]): string[] {
+  return aliases.map((alias) => `game: \`${alias}\``);
+}
+
+export function trackedGameAliases(
+  roster: readonly BucksPoolParticipant[],
+): string[] {
+  return roster.flatMap((participant) =>
+    participant.trackedAlias === undefined || participant.puuid === null
+      ? []
+      : [participant.trackedAlias],
+  );
+}
+
+export function resolveOpenGameByAlias(
+  pools: readonly OpenBettingPool[],
+  requestedAlias: string,
+): OpenGameAnchor | undefined {
+  const normalizedAlias = requestedAlias.toLowerCase();
+  const matches: OpenGameAnchor[] = [];
+
+  for (const pool of pools) {
+    const subject = parseRoster(pool.roster).find(
+      (participant) =>
+        participant.puuid !== null &&
+        participant.trackedAlias?.toLowerCase() === normalizedAlias,
+    );
+    if (subject !== undefined && subject.puuid !== null) {
+      matches.push({
+        matchId: pool.matchId,
+        subjectPuuid: subject.puuid,
+        subjectTeamId: subject.teamId,
+      });
+    }
+  }
+
+  if (matches.length > 1) {
+    throw new Error(
+      `Tracked alias ${requestedAlias} matched ${matches.length.toString()} open Bryan Bucks pools`,
+    );
+  }
+  return matches[0];
 }
 
 async function replyBalance(
@@ -200,7 +271,7 @@ export function buildBbRulesEmbed(): EmbedBuilder {
       {
         name: "Placing a bet",
         value:
-          `Stake **${MIN_STAKE.toString()}-${MAX_STAKE.toString()} BB** on a tracked player to WIN or LOSE. ` +
+          `Stake **${MIN_STAKE.toString()}-${MAX_STAKE.toString()} BB** on the Blue or Red Team in a tracked player's game. ` +
           `The market stays open for ${Math.floor(BETTING_WINDOW_MS / 60_000).toString()} minutes after Scout detects the game. ` +
           "You can add to a position or cancel it before the window closes for a 20% house cut, rounded to the nearest BB; after that, it is locked.",
       },
@@ -234,6 +305,20 @@ async function replyHistory(
   await interaction.editReply(renderBucksHistory(discordId, page));
 }
 
+async function editReplyInChunks(
+  interaction: ChatInputCommandInteraction,
+  chunks: readonly string[],
+): Promise<void> {
+  const first = chunks[0];
+  if (first === undefined) {
+    throw new Error("Bryan Bucks reply produced no Discord content");
+  }
+  await interaction.editReply({ content: first });
+  for (const chunk of chunks.slice(1)) {
+    await interaction.followUp({ content: chunk, ephemeral: true });
+  }
+}
+
 async function replyOpen(
   interaction: ChatInputCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
@@ -247,34 +332,45 @@ async function replyOpen(
     return;
   }
 
-  const sections = pools.map((pool) => {
+  const sections = buildOpenMarketSections(pools);
+  await editReplyInChunks(
+    interaction,
+    splitMessageIntoChunks(`${sections.join("\n\n")}\n\n${HOUSE_CUT_TERMS}`),
+  );
+}
+
+export function buildOpenMarketSections(
+  pools: readonly OpenMarketAggregate[],
+): string[] {
+  return pools.map((pool) => {
     const closesAtUnix = Math.floor(pool.closesAt.getTime() / 1000);
+    const blueSelectors = formatGameSelectors(pool.blue.trackedPlayers);
+    const redSelectors = formatGameSelectors(pool.red.trackedPlayers);
     const bluePlayers =
-      pool.blue.trackedPlayers.length > 0
-        ? pool.blue.trackedPlayers.join(", ")
+      blueSelectors.length > 0
+        ? blueSelectors.join(", ")
         : "No tracked players";
     const redPlayers =
-      pool.red.trackedPlayers.length > 0
-        ? pool.red.trackedPlayers.join(", ")
-        : "No tracked players";
+      redSelectors.length > 0 ? redSelectors.join(", ") : "No tracked players";
     return [
       `## ${bluePlayers} vs ${redPlayers}`,
       `Closes <t:${closesAtUnix.toString()}:R>`,
-      `🔵 **Blue:** ${pool.blue.totalStake.toString()} BB across ${pool.blue.betCount.toString()} bet(s) — ${bluePlayers}`,
-      `🔴 **Red:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} bet(s) — ${redPlayers}`,
+      `🔵 **${teamName(BLUE_TEAM_ID)}:** ${pool.blue.totalStake.toString()} BB across ${pool.blue.betCount.toString()} bet(s) — ${bluePlayers}`,
+      `🔴 **${teamName(RED_TEAM_ID)}:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} bet(s) — ${redPlayers}`,
     ].join("\n");
   });
-  const chunks = splitMessageIntoChunks(
-    `${sections.join("\n\n")}\n\n${HOUSE_CUT_TERMS}`,
+}
+
+export function buildUnknownGameReplyChunks(
+  requestedAlias: string,
+  availableAliases: readonly string[],
+): string[] {
+  return splitMessageIntoChunks(
+    [
+      `No open game for **${requestedAlias}**. Valid game aliases:`,
+      ...availableAliases.map((alias) => `- \`${alias}\``),
+    ].join("\n"),
   );
-  const first = chunks[0];
-  if (first === undefined) {
-    throw new Error("Open Bryan Bucks markets produced no Discord content");
-  }
-  await interaction.editReply({ content: first });
-  for (const chunk of chunks.slice(1)) {
-    await interaction.followUp({ content: chunk, ephemeral: true });
-  }
 }
 
 async function replyBet(
@@ -282,8 +378,10 @@ async function replyBet(
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
   discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
 ): Promise<void> {
-  const requestedAlias = interaction.options.getString("player", true);
-  const betOnWin = interaction.options.getString("side", true) === "win";
+  const requestedAlias = interaction.options.getString("game", true);
+  const selectedTeamId = teamIdForChoice(
+    BucksTeamChoiceSchema.parse(interaction.options.getString("team", true)),
+  );
   const stake = interaction.options.getInteger("amount", true);
 
   // Free text rather than autocomplete: matching an alias against the open
@@ -294,41 +392,26 @@ async function replyBet(
     select: { matchId: true, roster: true },
   });
 
-  for (const pool of pools) {
-    const roster = BucksPoolRosterSchema.parse(
-      JSON.parse(pool.roster),
-    ).participants;
-    const subject = roster.find(
-      (participant) =>
-        participant.trackedAlias?.toLowerCase() ===
-        requestedAlias.toLowerCase(),
-    );
-    if (subject?.puuid == null) {
-      continue;
-    }
-
+  const game = resolveOpenGameByAlias(pools, requestedAlias);
+  if (game !== undefined) {
+    const subjectWins = subjectWinsForTeam(game.subjectTeamId, selectedTeamId);
     const result = await placeBet({
-      matchId: pool.matchId,
+      matchId: game.matchId,
       serverId,
       discordId,
-      subjectPuuid: subject.puuid,
-      subjectWins: betOnWin,
+      subjectPuuid: game.subjectPuuid,
+      subjectWins,
       stake,
     });
     await interaction.editReply({
-      content: describeResult(
-        result,
-        subject.trackedAlias ?? requestedAlias,
-        betOnWin,
-      ),
+      content: describeResult(result, selectedTeamId),
     });
     if (result.kind === "placed") {
       await announceBetPlacement({
-        matchId: pool.matchId,
+        matchId: game.matchId,
         serverId,
         discordId,
-        subjectAlias: subject.trackedAlias ?? requestedAlias,
-        subjectWins: betOnWin,
+        teamId: selectedTeamId,
         stake,
         totalStake: result.totalStake,
       });
@@ -336,20 +419,21 @@ async function replyBet(
     return;
   }
 
-  const available = pools
-    .flatMap(
-      (pool) =>
-        BucksPoolRosterSchema.parse(JSON.parse(pool.roster)).participants,
-    )
-    .map((participant) => participant.trackedAlias)
-    .filter((alias) => alias !== undefined);
+  const available = pools.flatMap((pool) =>
+    trackedGameAliases(parseRoster(pool.roster)),
+  );
 
-  await interaction.editReply({
-    content:
-      available.length === 0
-        ? "No games are open for betting right now."
-        : `No open game for **${requestedAlias}**. Try: ${available.join(", ")}.`,
-  });
+  if (available.length === 0) {
+    await interaction.editReply({
+      content: "No games are open for betting right now.",
+    });
+    return;
+  }
+
+  await editReplyInChunks(
+    interaction,
+    buildUnknownGameReplyChunks(requestedAlias, available),
+  );
 }
 
 export async function executeBb(

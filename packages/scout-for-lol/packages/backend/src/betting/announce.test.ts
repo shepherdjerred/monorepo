@@ -433,13 +433,23 @@ describe("formatBetPlacementAnnouncement", () => {
     expect(
       formatBetPlacementAnnouncement({
         discordId: WINNER_DISCORD_ID,
-        subjectAlias: "Aaron",
-        subjectWins: true,
+        teamId: 100,
         stake: 5,
         totalStake: 10,
       }),
     ).toBe(
-      `🎲 <@${WINNER_DISCORD_ID}> staked **5 BB** on **Aaron WINS** (position: **10 BB**). **20% house cut on winning payouts**.`,
+      `🎲 <@${WINNER_DISCORD_ID}> staked **5 BB** on **Blue Team to win** (position: **10 BB**). **20% house cut on winning payouts**.`,
     );
+  });
+
+  test("names Red team placements directly", () => {
+    expect(
+      formatBetPlacementAnnouncement({
+        discordId: WINNER_DISCORD_ID,
+        teamId: 200,
+        stake: 1,
+        totalStake: 6,
+      }),
+    ).toContain("**Red Team to win**");
   });
 });

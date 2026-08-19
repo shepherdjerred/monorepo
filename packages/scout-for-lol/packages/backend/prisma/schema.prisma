@@ -781,8 +781,9 @@ model BucksBet {
   // Riot team ID the user is backing: 100 or 200.
   predictedTeamId Int
 
-  // Whose outcome the user framed the bet around, for display only. Every 5v5
-  // position reduces to a team, so this never affects settlement.
+  // Display-only tracked-player anchor used to identify the game and preserve
+  // the v1 subject-relative button encoding. `predictedTeamId` alone defines
+  // the wager and settlement outcome.
   subjectPuuid String
 
   // Running total staked. Adding to a position increments this; each increment

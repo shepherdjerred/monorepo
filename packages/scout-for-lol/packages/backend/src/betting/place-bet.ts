@@ -4,8 +4,10 @@ import {
   type DiscordAccountId,
   type DiscordGuildId,
   type LeaguePuuid,
+  type RiotTeamId,
 } from "@scout-for-lol/data";
 import { MAX_STAKE, MIN_STAKE } from "#src/betting/constants.ts";
+import { teamIdForSubjectOutcome } from "#src/betting/team.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import {
   ensureBucksAccount,
@@ -32,7 +34,12 @@ const logger = createLogger("betting-place-bet");
  * get a friendly ephemeral reply, not a Sentry event.
  */
 export type PlaceBetResult =
-  | { kind: "placed"; totalStake: number; balanceAfter: number; side: number }
+  | {
+      kind: "placed";
+      totalStake: number;
+      balanceAfter: number;
+      side: RiotTeamId;
+    }
   | { kind: "window_closed" }
   | { kind: "no_pool" }
   | { kind: "feature_disabled" }
@@ -48,13 +55,12 @@ export type PlaceBetInput = {
   serverId: DiscordGuildId;
   discordId: DiscordAccountId;
   /**
-   * The tracked player the bettor is framing the bet around. Branded, because
-   * both callers resolve it out of the pool's own roster snapshot rather than
-   * from free text — the button carries a roster index and `/bb bet` matches an
-   * alias.
+   * The tracked player used to identify this game and translate a direct team
+   * choice into the v1 subject-relative button contract. Branded because both
+   * callers resolve it out of the pool's frozen roster snapshot.
    */
   subjectPuuid: LeaguePuuid;
-  /** True when betting the subject WINS. */
+  /** Compatibility adapter: true when the selected team is the anchor's team. */
   subjectWins: boolean;
   stake: number;
   now?: Date;
@@ -125,13 +131,13 @@ export async function placeBet(
     return { kind: "unknown_subject", validAliases: aliasesOf(roster) };
   }
 
-  // "Bet that Jerred loses" and "bet that the other team wins" are the same
-  // position on a 5v5, so a subject plus a direction resolves to one team.
-  const predictedTeamId = input.subjectWins
-    ? subject.teamId
-    : subject.teamId === 100
-      ? 200
-      : 100;
+  // The public surfaces name Blue or Red directly. The v1 button contract and
+  // display-only subjectPuuid stay player-relative for compatibility, so the
+  // anchor plus direction resolves that direct choice back to one team.
+  const predictedTeamId = teamIdForSubjectOutcome(
+    subject.teamId,
+    input.subjectWins,
+  );
 
   // Eligibility and wallet creation sit outside the transaction on purpose: a
   // freshly seeded zero-risk wallet is harmless, and keeping the create out of

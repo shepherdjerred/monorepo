@@ -1,5 +1,9 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import { ButtonStyle } from "discord.js";
+import {
+  DiscordGuildIdSchema,
+  type BucksPoolParticipant,
+} from "@scout-for-lol/data/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   bucksTestDiscordId,
@@ -9,7 +13,10 @@ import {
   handleBetButton,
   type BetButtonInteraction,
 } from "#src/betting/bet-button.ts";
-import { formatBucksCustomId } from "#src/betting/custom-id.ts";
+import {
+  formatBucksCustomId,
+  parseBucksCustomId,
+} from "#src/betting/custom-id.ts";
 import { buildBettingRows } from "#src/betting/components.ts";
 import {
   HOUSE_ACCOUNT_DISCORD_ID,
@@ -55,6 +62,28 @@ function betId(subjectIndex: number, side: "W" | "L", amount: number) {
   });
 }
 
+function buttonIdForLabel(
+  roster: readonly BucksPoolParticipant[],
+  label: string,
+): string {
+  const row = buildBettingRows({ matchId: MATCH_ID, roster })[0];
+  if (row === undefined) {
+    throw new Error("expected a betting row");
+  }
+  const button = row.components.find((candidate) => {
+    const candidateJson = candidate.toJSON();
+    return "label" in candidateJson && candidateJson.label === label;
+  });
+  if (button === undefined) {
+    throw new Error(`expected a ${label} button`);
+  }
+  const json = button.toJSON();
+  if (!("custom_id" in json)) {
+    throw new Error("team betting buttons must carry a custom id");
+  }
+  return json.custom_id;
+}
+
 async function clearAll() {
   await db.bucksLedgerEntry.deleteMany();
   await db.bucksBet.deleteMany();
@@ -94,32 +123,58 @@ afterAll(async () => {
 });
 
 describe("handleBetButton", () => {
-  test("places a bet from a button click", async () => {
-    const { interaction, replies } = fakeInteraction(betId(0, "W", 5));
-    await handleBetButton(interaction, db);
+  test.each([
+    ["Blue · 1 BB", 100, 1, "Blue Team"],
+    ["Blue · 5 BB", 100, 5, "Blue Team"],
+    ["Red · 1 BB", 200, 1, "Red Team"],
+    ["Red · 5 BB", 200, 5, "Red Team"],
+  ])(
+    "%s places a direct team bet",
+    async (label, expectedTeamId, expectedStake, expectedTeamName) => {
+      const customId = buttonIdForLabel(bucksTestRoster(), label);
+      const { interaction, replies } = fakeInteraction(customId);
+      await handleBetButton(interaction, db);
 
-    expect(replies[0]).toContain("Bet placed");
-    expect(replies[0]).toContain("jerred WINS");
-    expect(replies[0]).toContain("winning payouts, rounded to the nearest BB");
-    expect(replies[0]).toContain("Winning principal is protected");
-    expect(replies[0]).toContain(
-      "Cancelling costs **20%**, also rounded to the nearest BB",
-    );
-    expect(await db.bucksBet.count()).toBe(1);
+      expect(replies[0]).toContain("Bet placed");
+      expect(replies[0]).toContain(expectedTeamName);
+      expect(replies[0]).not.toContain("jerred WINS");
+      expect(replies[0]).toContain(
+        "winning payouts, rounded to the nearest BB",
+      );
+      expect(replies[0]).toContain("Winning principal is protected");
+      expect(replies[0]).toContain(
+        "Cancelling costs **20%**, also rounded to the nearest BB",
+      );
+      expect(await db.bucksBet.count()).toBe(1);
+      const bet = await db.bucksBet.findFirstOrThrow();
+      expect(bet.predictedTeamId).toBe(expectedTeamId);
+      expect(bet.stake).toBe(expectedStake);
 
-    const account = await db.bucksAccount.findFirstOrThrow();
-    expect(account.balance).toBe(SEED_GRANT - 5);
-  });
+      const account = await db.bucksAccount.findFirstOrThrow();
+      expect(account.balance).toBe(SEED_GRANT - expectedStake);
+    },
+  );
 
-  test("a LOSE button backs the opposing team", async () => {
-    const { interaction, replies } = fakeInteraction(betId(0, "L", 1));
-    await handleBetButton(interaction, db);
+  test.each([
+    ["Blue · 1 BB", 100, "Blue Team"],
+    ["Red · 1 BB", 200, "Red Team"],
+  ])(
+    "%s persists the selected team through a Red-side anchor",
+    async (label, expectedTeamId, expectedTeamName) => {
+      const redAnchorRoster = bucksTestRoster().map((participant, index) => ({
+        ...participant,
+        trackedAlias: index === 5 ? "bryan" : undefined,
+      }));
+      const customId = buttonIdForLabel(redAnchorRoster, label);
 
-    expect(replies[0]).toContain("jerred LOSES");
-    const bet = await db.bucksBet.findFirstOrThrow();
-    // Subject index 0 is on team 100, so betting it loses backs team 200.
-    expect(bet.predictedTeamId).toBe(200);
-  });
+      const { interaction, replies } = fakeInteraction(customId);
+      await handleBetButton(interaction, db);
+
+      expect(replies[0]).toContain(expectedTeamName);
+      const bet = await db.bucksBet.findFirstOrThrow();
+      expect(bet.predictedTeamId).toBe(expectedTeamId);
+    },
+  );
 
   test("cancels a position and refunds it", async () => {
     await handleBetButton(fakeInteraction(betId(0, "W", 5)).interaction, db);
@@ -259,18 +314,69 @@ describe("handleBetButton", () => {
 });
 
 describe("buildBettingRows", () => {
-  test("builds one row of five components per tracked player", () => {
+  test("builds one row of five components for both team outcomes", () => {
     const rows = buildBettingRows({
       matchId: MATCH_ID,
       roster: bucksTestRoster(),
     });
 
-    // The fixture tracks two players, on opposite teams.
-    expect(rows).toHaveLength(2);
-    for (const row of rows) {
-      // Discord's per-row cap, which is what fixes the stake denominations.
-      expect(row.components).toHaveLength(5);
+    expect(rows).toHaveLength(1);
+    const row = rows[0];
+    if (row === undefined) {
+      throw new Error("expected a betting row");
     }
+    expect(row.components).toHaveLength(5);
+    expect(
+      row.components.map((button) => {
+        const json = button.toJSON();
+        return "label" in json ? json.label : undefined;
+      }),
+    ).toEqual([
+      "Blue · 1 BB",
+      "Blue · 5 BB",
+      "Red · 1 BB",
+      "Red · 5 BB",
+      "Cancel",
+    ]);
+    expect(row.components.map((button) => button.toJSON().style)).toEqual([
+      ButtonStyle.Primary,
+      ButtonStyle.Primary,
+      ButtonStyle.Danger,
+      ButtonStyle.Danger,
+      ButtonStyle.Secondary,
+    ]);
+  });
+
+  test("uses one tracked player as the anchor even when several share a team", () => {
+    const roster = bucksTestRoster().map((participant, index) => ({
+      ...participant,
+      trackedAlias: index === 0 ? "jerred" : index === 1 ? "aaron" : undefined,
+    }));
+
+    const rows = buildBettingRows({ matchId: MATCH_ID, roster });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.components).toHaveLength(5);
+  });
+
+  test("maps direct team choices through a Red-side anchor", () => {
+    const roster = bucksTestRoster().map((participant, index) => ({
+      ...participant,
+      trackedAlias: index === 5 ? "bryan" : undefined,
+    }));
+    const rows = buildBettingRows({ matchId: MATCH_ID, roster });
+    const row = rows[0];
+    if (row === undefined) {
+      throw new Error("expected a betting row");
+    }
+
+    const sides = row.components.slice(0, 4).map((button) => {
+      const json = button.toJSON();
+      if (!("custom_id" in json)) {
+        throw new Error("team betting buttons must carry a custom id");
+      }
+      return parseBucksCustomId(json.custom_id)?.side;
+    });
+    expect(sides).toEqual(["L", "L", "W", "W"]);
   });
 
   test("every button carries a parseable, in-range custom ID", () => {
@@ -298,5 +404,16 @@ describe("buildBettingRows", () => {
     expect(buildBettingRows({ matchId: MATCH_ID, roster: untracked })).toEqual(
       [],
     );
+  });
+
+  test("renders the whole team row disabled after the window closes", () => {
+    const rows = buildBettingRows({
+      matchId: MATCH_ID,
+      roster: bucksTestRoster(),
+      disabled: true,
+    });
+    expect(
+      rows[0]?.components.every((button) => button.toJSON().disabled),
+    ).toBe(true);
   });
 });

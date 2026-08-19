@@ -5,106 +5,77 @@ import {
   type APIActionRowComponent,
   type APIComponentInMessageActionRow,
 } from "discord.js";
-import type { BucksPoolParticipant } from "@scout-for-lol/data";
-import { BUTTON_STAKES } from "#src/betting/constants.ts";
+import type { BucksPoolParticipant, RiotTeamId } from "@scout-for-lol/data";
+import { BLUE_TEAM_ID, BUTTON_STAKES } from "#src/betting/constants.ts";
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
+import {
+  BETTING_TEAM_IDS,
+  shortTeamName,
+  subjectWinsForTeam,
+} from "#src/betting/team.ts";
 
 /**
  * The betting buttons attached to a prematch message.
  *
- * One row per tracked player, each holding exactly five components — Discord's
- * per-row cap — which is what fixes the stake denominations at two values plus
- * a cancel. Anything else goes through `/bb bet`.
+ * One row for the game's two possible outcomes. Each team gets the two fixed
+ * stake denominations and the fifth component cancels the bettor's position.
+ * Anything else goes through `/bb bet`.
  */
-
-/** Discord's cap on action rows in a message. */
-const MAX_ROWS = 5;
-
-/** Discord's cap on a button label. Aliases are truncated well inside it so a
- * long name cannot break the send. */
-const MAX_ALIAS_LENGTH = 12;
-
-function truncateAlias(alias: string): string {
-  if (alias.length <= MAX_ALIAS_LENGTH) {
-    return alias;
-  }
-  return `${alias.slice(0, MAX_ALIAS_LENGTH - 1)}…`;
-}
 
 export type BettableSubject = {
   /** Index into the pool's frozen roster — what the custom ID carries. */
   index: number;
-  alias: string;
+  /** Used only to translate a direct team choice into the v1 WIN/LOSE ID. */
+  teamId: RiotTeamId;
 };
 
 /**
- * The tracked players in a roster that can be bet on, in roster order.
+ * The first tracked player in roster order, used as this game's button anchor.
  *
- * A privacy-scrubbed participant carries no PUUID and so can never be a bet's
- * subject; it is skipped rather than rendered as an unusable button.
+ * The custom ID remains player-relative for compatibility, but the visible
+ * controls are team-relative. A privacy-scrubbed participant carries no PUUID
+ * and cannot anchor a bet.
  */
-export function bettableSubjects(
+export function bettingAnchor(
   roster: readonly BucksPoolParticipant[],
-): BettableSubject[] {
-  const subjects: BettableSubject[] = [];
+): BettableSubject | undefined {
   for (const [index, participant] of roster.entries()) {
     if (participant.trackedAlias === undefined || participant.puuid === null) {
       continue;
     }
-    subjects.push({ index, alias: participant.trackedAlias });
+    return { index, teamId: participant.teamId };
   }
-  return subjects;
+  return undefined;
 }
 
 function buildRow(input: {
   matchId: string;
-  subject: BettableSubject;
+  anchor: BettableSubject;
   /** Rendered greyed out once the window has closed. */
   disabled: boolean;
-  /** Only the first row names the player, since the rest are self-evident. */
-  showAlias: boolean;
 }): ActionRowBuilder<ButtonBuilder> {
-  const alias = truncateAlias(input.subject.alias);
   const buttons: ButtonBuilder[] = [];
 
-  for (const [position, stake] of BUTTON_STAKES.entries()) {
-    buttons.push(
-      new ButtonBuilder()
-        .setCustomId(
-          formatBucksCustomId({
-            action: "b",
-            matchId: input.matchId,
-            subjectIndex: input.subject.index,
-            side: "W",
-            amount: stake,
-          }),
-        )
-        .setLabel(
-          position === 0 && input.showAlias
-            ? `${alias} WIN ${stake.toString()}`
-            : `WIN ${stake.toString()}`,
-        )
-        .setStyle(ButtonStyle.Success)
-        .setDisabled(input.disabled),
-    );
-  }
-
-  for (const stake of BUTTON_STAKES) {
-    buttons.push(
-      new ButtonBuilder()
-        .setCustomId(
-          formatBucksCustomId({
-            action: "b",
-            matchId: input.matchId,
-            subjectIndex: input.subject.index,
-            side: "L",
-            amount: stake,
-          }),
-        )
-        .setLabel(`LOSE ${stake.toString()}`)
-        .setStyle(ButtonStyle.Danger)
-        .setDisabled(input.disabled),
-    );
+  for (const teamId of BETTING_TEAM_IDS) {
+    for (const stake of BUTTON_STAKES) {
+      buttons.push(
+        new ButtonBuilder()
+          .setCustomId(
+            formatBucksCustomId({
+              action: "b",
+              matchId: input.matchId,
+              subjectIndex: input.anchor.index,
+              side: subjectWinsForTeam(input.anchor.teamId, teamId) ? "W" : "L",
+              amount: stake,
+            }),
+          )
+          .setLabel(`${shortTeamName(teamId)} · ${stake.toString()} BB`)
+          .setStyle(
+            teamId === BLUE_TEAM_ID ? ButtonStyle.Primary : ButtonStyle.Danger,
+          )
+          .setDisabled(input.disabled),
+      );
+    }
   }
 
   buttons.push(
@@ -113,7 +84,7 @@ function buildRow(input: {
         formatBucksCustomId({
           action: "x",
           matchId: input.matchId,
-          subjectIndex: input.subject.index,
+          subjectIndex: input.anchor.index,
           side: "W",
           amount: 0,
         }),
@@ -137,15 +108,17 @@ export function buildBettingRows(input: {
   roster: readonly BucksPoolParticipant[];
   disabled?: boolean;
 }): ActionRowBuilder<ButtonBuilder>[] {
-  const subjects = bettableSubjects(input.roster).slice(0, MAX_ROWS);
-  return subjects.map((subject, position) =>
+  const anchor = bettingAnchor(input.roster);
+  if (anchor === undefined) {
+    return [];
+  }
+  return [
     buildRow({
       matchId: input.matchId,
-      subject,
+      anchor,
       disabled: input.disabled ?? false,
-      showAlias: position === 0 || subjects.length > 1,
     }),
-  );
+  ];
 }
 
 /**
@@ -167,7 +140,3 @@ export function disableRows(
     ),
   }));
 }
-
-/** How many players the message can offer buttons for, so callers can tell the
- * reader when some were left out. */
-export const MAX_BETTING_ROWS = MAX_ROWS;
