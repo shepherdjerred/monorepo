@@ -114,7 +114,7 @@ describe("Classic catalog refresh", () => {
         Jade_Akali: {
           id: "Jade_Akali",
           key: "60084",
-          name: "Akali",
+          name: "Historical Akali Name",
           modernKey: "84",
         },
       },

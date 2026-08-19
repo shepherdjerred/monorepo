@@ -381,8 +381,8 @@ export function mergeClassicChampionEntries(
   previousChampionList: ChampionListData | undefined,
   discoveredEntries: readonly ChampionListData["data"][string][],
 ): ChampionListData {
-  const normalByName = new Map(
-    Object.values(normalChampionList.data).map((entry) => [entry.name, entry]),
+  const normalByKey = new Map(
+    Object.values(normalChampionList.data).map((entry) => [entry.key, entry]),
   );
   const data = { ...normalChampionList.data };
   if (previousChampionList !== undefined) {
@@ -390,13 +390,20 @@ export function mergeClassicChampionEntries(
       if (!entry.id.startsWith("Jade_") || id in data) {
         continue;
       }
-      const modern = normalByName.get(entry.name);
+      const classicKey = Number(entry.key);
+      if (!Number.isInteger(classicKey) || classicKey < 60_000) {
+        throw new Error(
+          `Historical Classic entry ${entry.id} has invalid Classic key ${entry.key}`,
+        );
+      }
+      const modernKey = String(classicKey - 60_000);
+      const modern = normalByKey.get(modernKey);
       if (modern === undefined) {
         throw new Error(
           `Historical Classic entry ${entry.id} has no normal champion counterpart`,
         );
       }
-      data[id] = { ...entry, modernKey: entry.modernKey ?? modern.key };
+      data[id] = { ...entry, modernKey: modern.key };
     }
   }
   for (const entry of discoveredEntries) {
