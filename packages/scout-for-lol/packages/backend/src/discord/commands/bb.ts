@@ -4,31 +4,19 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 import {
-  BucksPoolRosterSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-  type BucksPoolParticipant,
-  type LeaguePuuid,
-  type RiotTeamId,
 } from "@scout-for-lol/data/index.ts";
 import {
   getLedgerPage,
   getOpenMarketAggregates,
   getPersonalBucksView,
-  type OpenMarketAggregate,
   type PersonalBucksView,
 } from "#src/betting/accounts.ts";
 import { placeBet } from "#src/betting/place-bet.ts";
 import { describeResult } from "#src/betting/bet-button.ts";
 import { announceBetPlacement } from "#src/betting/announce.ts";
-import {
-  BETTING_WINDOW_MS,
-  BLUE_TEAM_ID,
-  MAX_STAKE,
-  MIN_STAKE,
-  RED_TEAM_ID,
-  SEED_GRANT,
-} from "#src/betting/constants.ts";
+import { MIN_STAKE } from "#src/betting/constants.ts";
 import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { renderBucksHistory } from "#src/betting/navigation.ts";
 import {
@@ -37,10 +25,23 @@ import {
   teamIdForChoice,
   teamName,
 } from "#src/betting/team.ts";
+import { announceParlayPlacement } from "#src/betting/parlay-announce.ts";
+import { ParlaySubjectsSchema } from "#src/betting/parlay-criteria.ts";
+import { describeParlayResult } from "#src/betting/parlay-bet-button.ts";
+import { placeParlayBet } from "#src/betting/parlay-place-bet.ts";
+import { selectParlayMarketForAlias } from "#src/betting/parlay-market-selection.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
 import { buildBbPrizesEmbed } from "#src/discord/commands/bb-prizes.ts";
+import {
+  buildOpenMarketSections,
+  buildUnknownGameReplyChunks,
+  parseBettingRoster,
+  resolveOpenGameByAlias,
+  trackedGameAliases,
+} from "#src/discord/commands/bb-market.ts";
+import { buildBbRulesEmbed as createBbRulesEmbed } from "#src/discord/commands/bb-rules.ts";
 import {
   splitMessageIntoChunks,
   truncateEmbedFieldValue,
@@ -48,6 +49,10 @@ import {
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("command-bb");
+
+export function buildBbRulesEmbed(): EmbedBuilder {
+  return createBbRulesEmbed();
+}
 
 /**
  * `/bb` — the Bryan Bucks surface.
@@ -119,12 +124,37 @@ export const bbCommand = new SlashCommandBuilder()
       .addIntegerOption((option) =>
         option
           .setName("amount")
-          .setDescription(
-            `How many Bucks (${MIN_STAKE.toString()}-${MAX_STAKE.toString()})`,
-          )
+          .setDescription("How many whole Bryan Bucks")
           .setRequired(true)
-          .setMinValue(MIN_STAKE)
-          .setMaxValue(MAX_STAKE),
+          .setMinValue(MIN_STAKE),
+      ),
+  )
+  .addSubcommand((sub) =>
+    sub
+      .setName("parlay")
+      .setDescription("Bet YES or NO on a tracked player's live parlay")
+      .addStringOption((option) =>
+        option
+          .setName("player")
+          .setDescription("A tracked player in the parlay")
+          .setRequired(true),
+      )
+      .addStringOption((option) =>
+        option
+          .setName("side")
+          .setDescription("Whether every parlay leg will hit")
+          .setRequired(true)
+          .addChoices(
+            { name: "YES", value: "YES" },
+            { name: "NO", value: "NO" },
+          ),
+      )
+      .addIntegerOption((option) =>
+        option
+          .setName("amount")
+          .setDescription("How many whole Bryan Bucks")
+          .setRequired(true)
+          .setMinValue(MIN_STAKE),
       ),
   );
 
@@ -137,7 +167,10 @@ export function buildPersonalBucksEmbed(
       position.poolState === "open" && position.closesAt.getTime() > now
         ? `closes <t:${Math.floor(position.closesAt.getTime() / 1000).toString()}:R>`
         : "locked";
-    return `• **${teamName(position.teamId)}** — game: \`${position.gameAlias}\` · ${position.stake.toString()} BB · ${state}`;
+    if (position.marketType === "outcome") {
+      return `• **${teamName(position.teamId)}** — game: \`${position.gameAlias}\` · ${position.stake.toString()} BB · ${state}`;
+    }
+    return `• **${position.subjectAlias} ${position.side}** — ${position.stake.toString()} BB · ${state}`;
   });
   if (view.pendingPositionCount > view.pendingPositions.length) {
     positions.push(
@@ -170,65 +203,6 @@ export function buildPersonalBucksEmbed(
   return embed;
 }
 
-type OpenBettingPool = {
-  matchId: string;
-  roster: string;
-};
-
-export type OpenGameAnchor = {
-  matchId: string;
-  subjectPuuid: LeaguePuuid;
-  subjectTeamId: RiotTeamId;
-};
-
-function parseRoster(raw: string): BucksPoolParticipant[] {
-  return BucksPoolRosterSchema.parse(JSON.parse(raw)).participants;
-}
-
-export function formatGameSelectors(aliases: readonly string[]): string[] {
-  return aliases.map((alias) => `game: \`${alias}\``);
-}
-
-export function trackedGameAliases(
-  roster: readonly BucksPoolParticipant[],
-): string[] {
-  return roster.flatMap((participant) =>
-    participant.trackedAlias === undefined || participant.puuid === null
-      ? []
-      : [participant.trackedAlias],
-  );
-}
-
-export function resolveOpenGameByAlias(
-  pools: readonly OpenBettingPool[],
-  requestedAlias: string,
-): OpenGameAnchor | undefined {
-  const normalizedAlias = requestedAlias.toLowerCase();
-  const matches: OpenGameAnchor[] = [];
-
-  for (const pool of pools) {
-    const subject = parseRoster(pool.roster).find(
-      (participant) =>
-        participant.puuid !== null &&
-        participant.trackedAlias?.toLowerCase() === normalizedAlias,
-    );
-    if (subject !== undefined && subject.puuid !== null) {
-      matches.push({
-        matchId: pool.matchId,
-        subjectPuuid: subject.puuid,
-        subjectTeamId: subject.teamId,
-      });
-    }
-  }
-
-  if (matches.length > 1) {
-    throw new Error(
-      `Tracked alias ${requestedAlias} matched ${matches.length.toString()} open Bryan Bucks pools`,
-    );
-  }
-  return matches[0];
-}
-
 async function replyBalance(
   interaction: ChatInputCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
@@ -252,42 +226,6 @@ async function replyPrizes(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   await interaction.editReply({ embeds: [buildBbPrizesEmbed()] });
-}
-
-export function buildBbRulesEmbed(): EmbedBuilder {
-  return new EmbedBuilder()
-    .setTitle("📜 Bryan Bucks rules")
-    .setColor(BUCKS_COLOR)
-    .setDescription(
-      "Bryan Bucks are friendly points for tracked League players. They have no cash value.",
-    )
-    .addFields(
-      {
-        name: "Eligibility & earnings",
-        value:
-          `Your Discord account must be linked to a tracked player. A new wallet starts with **${SEED_GRANT.toString()} BB**. ` +
-          "Eligible ranked games award **+1 BB** for playing, **+1 BB** for winning, and **+1 BB** for MVP.",
-      },
-      {
-        name: "Placing a bet",
-        value:
-          `Stake **${MIN_STAKE.toString()}-${MAX_STAKE.toString()} BB** on the Blue or Red Team in a tracked player's game. ` +
-          `The market stays open for ${Math.floor(BETTING_WINDOW_MS / 60_000).toString()} minutes after Scout detects the game. ` +
-          "You can add to a position or cancel it before the window closes for a 20% house cut, rounded to the nearest BB; after that, it is locked.",
-      },
-      {
-        name: "Settlement",
-        value:
-          "Winners get their stakes back and split the losing side's pool in proportion to their stakes. " +
-          "The house takes 20% of each human winner's gross payout, rounded to the nearest BB, without cutting into winning principal. " +
-          "If people bet on only one side, the Bryan Bucks house matches the other side when its reserve can cover the stake.",
-      },
-      {
-        name: "Refunds",
-        value:
-          "All stakes are returned with no house cut when a game is voided or remade, cannot be settled, or the house cannot cover a one-sided market.",
-      },
-    );
 }
 
 async function replyRules(
@@ -324,8 +262,17 @@ async function replyOpen(
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
 ): Promise<void> {
   const pools = await getOpenMarketAggregates({ serverId });
+  const parlays = await prisma.bucksParlayMarket.findMany({
+    where: { serverId, marketState: "open", closesAt: { gt: new Date() } },
+    select: {
+      matchId: true,
+      closesAt: true,
+      definition: { select: { subjects: true } },
+    },
+    orderBy: { closesAt: "asc" },
+  });
 
-  if (pools.length === 0) {
+  if (pools.length === 0 && parlays.length === 0) {
     await interaction.editReply({
       content: `No games are open for betting right now.\n\n${HOUSE_CUT_TERMS}`,
     });
@@ -333,44 +280,79 @@ async function replyOpen(
   }
 
   const sections = buildOpenMarketSections(pools);
+  for (const parlay of parlays) {
+    const aliases = ParlaySubjectsSchema.parse(
+      JSON.parse(parlay.definition.subjects),
+    ).map((subject) => subject.alias);
+    const closesAtUnix = Math.floor(parlay.closesAt.getTime() / 1000);
+    sections.push(
+      [
+        `## Parlay · ${aliases.join(", ")}`,
+        `Match: \`${parlay.matchId}\``,
+        `Closes <t:${closesAtUnix.toString()}:R>`,
+      ].join("\n"),
+    );
+  }
   await editReplyInChunks(
     interaction,
     splitMessageIntoChunks(`${sections.join("\n\n")}\n\n${HOUSE_CUT_TERMS}`),
   );
 }
 
-export function buildOpenMarketSections(
-  pools: readonly OpenMarketAggregate[],
-): string[] {
-  return pools.map((pool) => {
-    const closesAtUnix = Math.floor(pool.closesAt.getTime() / 1000);
-    const blueSelectors = formatGameSelectors(pool.blue.trackedPlayers);
-    const redSelectors = formatGameSelectors(pool.red.trackedPlayers);
-    const bluePlayers =
-      blueSelectors.length > 0
-        ? blueSelectors.join(", ")
-        : "No tracked players";
-    const redPlayers =
-      redSelectors.length > 0 ? redSelectors.join(", ") : "No tracked players";
-    return [
-      `## ${bluePlayers} vs ${redPlayers}`,
-      `Closes <t:${closesAtUnix.toString()}:R>`,
-      `🔵 **${teamName(BLUE_TEAM_ID)}:** ${pool.blue.totalStake.toString()} BB across ${pool.blue.betCount.toString()} bet(s) — ${bluePlayers}`,
-      `🔴 **${teamName(RED_TEAM_ID)}:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} bet(s) — ${redPlayers}`,
-    ].join("\n");
+async function replyParlay(
+  interaction: ChatInputCommandInteraction,
+  serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
+  discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
+): Promise<void> {
+  const requestedAlias = interaction.options.getString("player", true);
+  const side = interaction.options.getString("side", true);
+  const stake = interaction.options.getInteger("amount", true);
+  const markets = await prisma.bucksParlayMarket.findMany({
+    where: { serverId, marketState: "open", closesAt: { gt: new Date() } },
+    select: {
+      matchId: true,
+      definition: { select: { subjects: true } },
+    },
   });
-}
+  const selection = selectParlayMarketForAlias(markets, requestedAlias);
+  if (selection.kind === "ambiguous") {
+    await interaction.editReply({
+      content:
+        `Multiple open parlays include **${requestedAlias}** (matches: ${selection.matchIds.map((matchId) => `\`${matchId}\``).join(", ")}). ` +
+        "Use the buttons on the desired parlay message.",
+    });
+    return;
+  }
+  if (selection.kind === "not_found") {
+    await interaction.editReply({
+      content:
+        selection.availableAliases.length === 0
+          ? "No parlays are open right now."
+          : `No open parlay for **${requestedAlias}**. Try: ${selection.availableAliases.join(", ")}.`,
+    });
+    return;
+  }
 
-export function buildUnknownGameReplyChunks(
-  requestedAlias: string,
-  availableAliases: readonly string[],
-): string[] {
-  return splitMessageIntoChunks(
-    [
-      `No open game for **${requestedAlias}**. Valid game aliases:`,
-      ...availableAliases.map((alias) => `- \`${alias}\``),
-    ].join("\n"),
-  );
+  const parsedSide = side === "YES" ? "YES" : "NO";
+  const result = await placeParlayBet({
+    matchId: selection.market.matchId,
+    serverId,
+    discordId,
+    side: parsedSide,
+    stake,
+  });
+  await interaction.editReply({ content: describeParlayResult(result) });
+  if (result.kind === "placed") {
+    await announceParlayPlacement({
+      matchId: selection.market.matchId,
+      serverId,
+      discordId,
+      side: parsedSide,
+      stake,
+      totalStake: result.totalStake,
+      grossPayout: result.grossPayout,
+    });
+  }
 }
 
 async function replyBet(
@@ -420,7 +402,7 @@ async function replyBet(
   }
 
   const available = pools.flatMap((pool) =>
-    trackedGameAliases(parseRoster(pool.roster)),
+    trackedGameAliases(parseBettingRoster(pool.roster)),
   );
 
   if (available.length === 0) {
@@ -486,6 +468,9 @@ export async function executeBb(
         break;
       case "bet":
         await replyBet(interaction, serverId, discordId);
+        break;
+      case "parlay":
+        await replyParlay(interaction, serverId, discordId);
         break;
       default:
         await interaction.editReply({

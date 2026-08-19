@@ -10,7 +10,7 @@
 export const HOUSE_CUT_PERCENT = 20;
 
 export const HOUSE_CUT_TERMS =
-  "🏦 House cut: **20%** of winning payouts, rounded to the nearest BB. Winning principal is protected. Cancelling costs **20%**, also rounded to the nearest BB.";
+  "🏦 Outcome house cut: **20%** of winning payouts, rounded to the nearest BB. Winning principal is protected. Cancelling an outcome position costs **20%**, also rounded to the nearest BB; parlay cancellation is fully refunded.";
 
 export const HOUSE_CUT_PLACEMENT_NOTE = "**20% house cut on winning payouts**.";
 

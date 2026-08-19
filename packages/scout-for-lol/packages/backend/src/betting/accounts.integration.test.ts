@@ -22,6 +22,9 @@ const USER_B = bucksTestDiscordId(2);
 
 async function clearAll(): Promise<void> {
   await db.bucksLedgerEntry.deleteMany();
+  await db.bucksParlayBet.deleteMany();
+  await db.bucksParlayMarket.deleteMany();
+  await db.bucksParlayDefinition.deleteMany();
   await db.bucksBet.deleteMany();
   await db.bucksMatchPool.deleteMany();
   await db.bucksAccount.deleteMany();
@@ -46,6 +49,72 @@ async function createLedger(accountId: number, count: number): Promise<void> {
       },
     });
   }
+}
+
+async function createPendingParlayPosition(input: {
+  poolId: number;
+  matchId: string;
+  accountId: number;
+}): Promise<void> {
+  const definition = await db.bucksParlayDefinition.create({
+    data: {
+      matchId: input.matchId,
+      queueType: "solo",
+      selectedTeamId: 100,
+      subjects: JSON.stringify([
+        { key: "P1", puuid: bucksTestPuuid(0), alias: "jerred" },
+      ]),
+      criteria: JSON.stringify({
+        version: 1,
+        yesProbabilityBps: 5000,
+        conditions: [
+          {
+            kind: "participant_numeric",
+            subject: "P1",
+            field: "kills",
+            operator: "gte",
+            threshold: 5,
+          },
+          {
+            kind: "team_objective_first",
+            team: "selected",
+            objective: "baron",
+            expected: true,
+          },
+        ],
+      }),
+      yesProbabilityBps: 5000,
+      promptVersion: "test",
+      catalogVersion: "test",
+      schemaVersion: 1,
+      evaluatorVersion: "1",
+      generationContext: "{}",
+      requestedModel: "test",
+      usage: "{}",
+      durationMs: 1,
+    },
+  });
+  const market = await db.bucksParlayMarket.create({
+    data: {
+      definitionId: definition.id,
+      outcomePoolId: input.poolId,
+      matchId: input.matchId,
+      serverId: SERVER_A,
+      publishedAt: new Date("2030-01-01T00:00:00Z"),
+      closesAt: new Date("2030-01-01T00:05:00Z"),
+      marketState: "open",
+    },
+  });
+  await db.bucksParlayBet.create({
+    data: {
+      marketId: market.id,
+      bucksAccountId: input.accountId,
+      side: "YES",
+      stake: 15,
+      houseReserve: 15,
+      grossPayout: 30,
+    },
+  });
 }
 
 describe("getLedgerPage", () => {
@@ -178,6 +247,11 @@ describe("personal positions and open markets", () => {
         },
       ],
     });
+    await createPendingParlayPosition({
+      poolId: pool.id,
+      matchId: pool.matchId,
+      accountId: caller.id,
+    });
 
     const personal = await getPersonalBucksView(
       { serverId: SERVER_A, discordId: USER_A },
@@ -186,17 +260,26 @@ describe("personal positions and open markets", () => {
     expect(personal).toEqual(
       expect.objectContaining({
         balance: 80,
-        totalStaked: 20,
-        pendingPositionCount: 1,
+        totalStaked: 35,
+        pendingPositionCount: 2,
       }),
     );
-    expect(personal?.pendingPositions).toEqual([
-      expect.objectContaining({
-        gameAlias: "jerred",
-        teamId: 100,
-        stake: 20,
-      }),
-    ]);
+    expect(personal?.pendingPositions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          marketType: "outcome",
+          gameAlias: "jerred",
+          teamId: 100,
+          stake: 20,
+        }),
+        expect.objectContaining({
+          marketType: "parlay",
+          subjectAlias: "Parlay (jerred)",
+          side: "YES",
+          stake: 15,
+        }),
+      ]),
+    );
 
     const redAnchorPersonal = await getPersonalBucksView(
       { serverId: SERVER_A, discordId: USER_B },
@@ -204,6 +287,7 @@ describe("personal positions and open markets", () => {
     );
     expect(redAnchorPersonal?.pendingPositions).toEqual([
       expect.objectContaining({
+        marketType: "outcome",
         gameAlias: "bryan",
         teamId: 100,
         stake: 30,

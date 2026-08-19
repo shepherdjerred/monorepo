@@ -176,7 +176,9 @@ export function formatSettlementBody(input: {
             ? "The Bryan Bucks house reserve was unavailable — every bet refunded."
             : summary.voidReason === "expired"
               ? "This game never resolved — every bet refunded."
-              : "Unsupported game mode — every bet refunded.";
+              : summary.voidReason === "storage_overflow"
+                ? "The result exceeded Bryan Bucks storage limits — every bet refunded."
+                : "Unsupported game mode — every bet refunded.";
     lines.push(
       `💰 **Bryan Bucks** — Pool **${pool.toString()} BB** · house cut **0 BB**. ${reason}`,
     );

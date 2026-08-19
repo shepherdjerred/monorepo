@@ -27,9 +27,21 @@ import { QueueTypeSchema } from "#src/model/state.ts";
 export type RiotTeamId = z.infer<typeof RiotTeamIdSchema>;
 export const RiotTeamIdSchema = z.union([z.literal(100), z.literal(200)]);
 
-/** Why a ledger row exists. Separate `earn_*` kinds rather than one combined
- * award, because "how did they get these points" is the requirement and a
- * single total forces the reader to reconstruct which conditions fired. */
+/** Prisma's SQLite `Int` client boundary. The economy intentionally remains
+ * on Int32 storage for this version even though the product no longer applies
+ * a smaller stake cap. */
+export const BUCKS_INT32_MAX = 2_147_483_647;
+
+/** Any positive whole-BB stake that the existing storage domain can hold. */
+export type BucksStake = z.infer<typeof BucksStakeSchema>;
+export const BucksStakeSchema = z
+  .number()
+  .int()
+  .positive()
+  .max(BUCKS_INT32_MAX);
+
+/** Why a ledger row exists. Separate `earn_*` and market movement kinds keep
+ * the explanation auditable without reconstructing a combined total. */
 export type BucksLedgerKind = z.infer<typeof BucksLedgerKindSchema>;
 export const BucksLedgerKindSchema = z.enum([
   "seed",
@@ -43,6 +55,11 @@ export const BucksLedgerKindSchema = z.enum([
   "bet_refund",
   "house_rake",
   "cancel_fee",
+  "parlay_stake",
+  "parlay_reserve",
+  "parlay_payout",
+  "parlay_refund",
+  "parlay_release",
   "adjustment",
 ]);
 
@@ -62,6 +79,31 @@ export const BucksPoolStateSchema = z.enum([
   "voided",
 ]);
 
+export type BucksParlaySide = z.infer<typeof BucksParlaySideSchema>;
+export const BucksParlaySideSchema = z.enum(["YES", "NO"]);
+
+export type BucksParlayMarketState = z.infer<
+  typeof BucksParlayMarketStateSchema
+>;
+export const BucksParlayMarketStateSchema = z.enum([
+  "publishing",
+  "open",
+  "closed",
+  "settled",
+  "voided",
+]);
+
+export type BucksParlayVoidReason = z.infer<typeof BucksParlayVoidReasonSchema>;
+export const BucksParlayVoidReasonSchema = z.enum([
+  "remake",
+  "expired",
+  "unsupported_mode",
+  "missing_data",
+  "unknown_evaluator",
+  "invalid_definition",
+  "storage_overflow",
+]);
+
 /**
  * Why a pool paid nobody.
  *
@@ -76,6 +118,7 @@ export const BucksVoidReasonSchema = z.enum([
   "house_unavailable",
   "expired",
   "unsupported_mode",
+  "storage_overflow",
 ]);
 
 /**
@@ -180,6 +223,31 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     ratePercent: z.number().int().min(0).max(100),
     grossAmount: z.number().int().positive(),
     fee: z.number().int().positive(),
+  }),
+  z.strictObject({
+    type: z.literal("parlay_stake"),
+    side: BucksParlaySideSchema,
+    yesProbabilityBps: z.number().int().min(1000).max(9000),
+    totalStake: BucksStakeSchema,
+    quotedGrossPayout: BucksStakeSchema,
+  }),
+  z.strictObject({
+    type: z.literal("parlay_reserve"),
+    side: BucksParlaySideSchema,
+    yesProbabilityBps: z.number().int().min(1000).max(9000),
+    totalStake: BucksStakeSchema,
+    totalReserve: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
+    quotedGrossPayout: BucksStakeSchema,
+  }),
+  z.strictObject({
+    type: z.literal("parlay_settlement"),
+    side: BucksParlaySideSchema,
+    yesResult: z.boolean().optional(),
+    stake: BucksStakeSchema,
+    reserve: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
+    grossPayout: BucksStakeSchema,
+    credited: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
+    voidReason: BucksParlayVoidReasonSchema.optional(),
   }),
   z.strictObject({
     type: z.literal("adjustment"),
