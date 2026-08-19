@@ -65,7 +65,7 @@ Each domain gets its own `.tf` file (e.g. `scout-for-lol-com.tf`) containing:
 | `cloudflare_record` (SPF)   | `v=spf1 -all` (reject all email, except `sjer.red`) |
 | `cloudflare_record` (DMARC) | `v=DMARC1; p=reject` policy                         |
 
-Domains: `scout-for-lol.com`, `discord-plays-pokemon.com`, `better-skill-capped.com`,
+Domains: `scout-for-lol.com`, `discord-plays-pokemon.com`, `better-skill-capped.com`, `clauderon.com`,
 `jerredshepherd.com`, `jerred.is`, `ts-mc.net`, `sjer.red`, `glitter-boys.com`, `shepherdjerred.com`
 
 ### GitHub
