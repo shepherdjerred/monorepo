@@ -27,6 +27,7 @@ import {
   type DiscordContext,
 } from "@shepherdjerred/birmel/observability/sentry.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
+import { memoryExtractionTotal } from "@shepherdjerred/birmel/observability/metrics.ts";
 import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
 import {
   appendSessionEvent,
@@ -289,21 +290,29 @@ async function processAdmittedTurn(
         messageId: context.turn.discordMessageId,
       });
     } else {
-      const config = getConfig();
-      const transcript = await getConversationTranscriptResult(
-        context.message,
-        {
-          windowMs: config.responder.transcriptWindowMs,
-          maxMessages: config.responder.transcriptMaxMessages,
-        },
-      );
       try {
+        const config = getConfig();
+        const transcript = await getConversationTranscriptResult(
+          context.message,
+          {
+            windowMs: config.responder.transcriptWindowMs,
+            maxMessages: config.responder.transcriptMaxMessages,
+          },
+        );
         await extractAndApplyTurnMemory({
           turn: context.turn,
           persona,
           rawRecentMessages: transcript.messages,
+          assistantMessage: {
+            id: deliveredResponseMessage.id,
+            userId: deliveredResponseMessage.author.id,
+            content: response,
+          },
+          toolEvents: execution.toolEvents,
         });
+        memoryExtractionTotal.inc({ outcome: "success" });
       } catch (error) {
+        memoryExtractionTotal.inc({ outcome: "error" });
         logger.error("Post-response memory extraction failed", error, {
           runId,
           messageId: context.turn.discordMessageId,

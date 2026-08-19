@@ -55,6 +55,11 @@ if (databaseUnavailable) {
             '20260808010000_birmel_3_runtime',
             '2026-08-08T00:01:00.000Z',
             NULL
+          ),
+          (
+            '20260818000000_agent_run_route_capability',
+            '2026-08-18T00:00:00.000Z',
+            NULL
           )
       `);
     }

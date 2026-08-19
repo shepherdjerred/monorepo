@@ -2,12 +2,28 @@
 
 Discord bot built on a single explicit AI SDK agent runtime. Every message turn
 follows one pipeline: a Discord event is admitted (trusted users only),
-assembled into a context bundle, routed to either tool-free direct conversation
-or exactly one tool-running specialist (`messaging`, `server`, `moderation`,
-`music`, `automation`, or `editor`), and answered with one edited Discord
-reply. On top of that runtime the bot keeps durable memory as revisioned
-claims, binds one active session to each Discord thread, runs a jobs system
-with durable effect checkpoints, and plays music through discord-player.
+assembled into a context bundle, and assigned one capability-grounded route.
+Conversation and unsupported work use the tool-free direct agent. Supported
+work uses exactly one specialist (`messaging`, `server`, `moderation`, `music`,
+`automation`, or `editor`) and one registered primary tool. The runtime then
+requires that primary tool to succeed and edits one Discord reply. Durable
+memory separates human claims from curated
+self-memory: accepted aliases, commitments, and experiences backed by a
+specific successful current-turn tool call and its bounded, redacted result.
+Aliases and persona memory cross trusted
+users and channels within one guild, never across guilds. Learned aliases need
+an explicit proposal, explicit acceptance, and a bounded wake-name shape; the
+general human-claim path cannot create them. Their whitespace and Unicode word
+boundaries are canonical, and per-channel admission preserves immediate
+follow-up order without queuing full agent turns; the queue is bounded and
+untrusted traffic never enters it. Negated proposals or rejections never create
+aliases. The bot exposes no generic SQL
+tool; scoped activity questions use the activity capability. Commitments retain
+an exact commitment excerpt from the delivered reply and a grounded stable
+topic, so unrelated promises do not overwrite each other.
+
+The runtime also binds one active session to each Discord thread, runs a jobs
+system with durable effect checkpoints, and plays music through discord-player.
 Health is exposed on `/live` (process) and `/ready` (migrations applied,
 Prisma connected, Discord ready, scheduler started).
 

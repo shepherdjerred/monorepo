@@ -93,7 +93,10 @@ describe("isolated scheduled agent", () => {
         ...agentResult,
         toolEvents: [
           {
+            toolCallId: "isolated-tool-call-1",
             toolId: "manage-message",
+            inputSummary: "{}",
+            resultSummary: "Tool reported failure",
             content: "Tool manage-message failed",
             success: false,
             effectDisposition: "not_applied",

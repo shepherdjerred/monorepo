@@ -2,11 +2,23 @@ import { expect, test } from "bun:test";
 import { getLlmRuleGroups } from "./llm.ts";
 
 test("keeps LLM recording and Broadcast alert coverage together", () => {
-  const rules = JSON.stringify(getLlmRuleGroups());
-  expect(rules).toContain("llm:requests:rate5m");
-  expect(rules).toContain("llm:request_duration:p95_5m");
-  expect(rules).toContain("LlmOpenRouterMetadataMissing");
-  expect(rules).toContain("LlmStructuredOutputExhausted");
-  expect(rules).toContain("OpenRouterBroadcastPipelineFailure");
-  expect(rules).toContain("OpenRouterBroadcastTargetDown");
+  const groups = getLlmRuleGroups();
+  const serialized = JSON.stringify(groups);
+  expect(serialized).toContain("llm:requests:rate5m");
+  expect(serialized).toContain("llm:request_duration:p95_5m");
+  expect(serialized).toContain("LlmOpenRouterMetadataMissing");
+  expect(serialized).toContain("LlmStructuredOutputExhausted");
+  expect(serialized).toContain("birmel_admission_classifier_total");
+  expect(serialized).toContain("birmel_memory_extraction_total");
+  expect(serialized).toContain("OpenRouterBroadcastPipelineFailure");
+  expect(serialized).toContain("OpenRouterBroadcastTargetDown");
+
+  const rules = groups.flatMap(({ rules: groupRules }) => groupRules);
+  for (const alertName of [
+    "BirmelAdmissionClassifierErrors",
+    "BirmelMemoryExtractionErrors",
+  ]) {
+    const alert = rules.find((rule) => rule?.alert === alertName);
+    expect(alert?.labels).toEqual({ severity: "warning", category: "llm" });
+  }
 });

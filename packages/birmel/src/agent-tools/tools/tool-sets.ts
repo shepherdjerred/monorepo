@@ -1,5 +1,10 @@
 import type { ToolSet } from "ai";
 import { z } from "zod";
+import {
+  BirmelToolMetadataSchema,
+  SpecialistIdSchema,
+} from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
+import { getRegisteredToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
 
 /**
  * Specialized tool sets for different agent types.
@@ -30,7 +35,6 @@ import { externalServiceTool } from "./external/web.ts";
 import { webResearchTool } from "./external/research.ts";
 import { manageMemoryTool } from "./memory/index.ts";
 import { manageAgentSessionTool } from "./sessions/index.ts";
-import { sqliteTools } from "./database/sqlite-query.ts";
 import { electionTools } from "./elections/elections.ts";
 import { getCandidateStatsTool } from "./elections/candidate-stats.ts";
 import { manageBirthdayTool } from "./birthdays/index.ts";
@@ -53,9 +57,9 @@ export const messagingToolSet = [
 ];
 
 /**
- * Server Agent - handles guild information, channels, and database reads
+ * Server Agent - handles guild information and channels
  */
-export const serverToolSet = [...guildTools, ...channelTools, ...sqliteTools];
+export const serverToolSet = [...guildTools, ...channelTools];
 
 /**
  * Moderation Agent - handles moderation, roles, automod, webhooks.
@@ -104,13 +108,7 @@ export const editorToolSet = [
   connectGitHubTool,
 ];
 
-export type AgentType =
-  | "messaging"
-  | "server"
-  | "moderation"
-  | "music"
-  | "automation"
-  | "editor";
+export type AgentType = z.infer<typeof SpecialistIdSchema>;
 
 /**
  * Get the appropriate tool set for an agent type
@@ -132,24 +130,74 @@ export function getToolSet(agentType: AgentType) {
   }
 }
 
+const CapabilityCatalogSourceSchema = z
+  .object({
+    id: z.string().min(1).max(64),
+    description: z.string().min(1).max(600),
+    birmelMetadata: BirmelToolMetadataSchema,
+  })
+  .loose();
+
+export const CapabilityCatalogEntrySchema = z.strictObject({
+  id: z.string().min(1).max(64),
+  specialist: SpecialistIdSchema,
+  riskClass: BirmelToolMetadataSchema.shape.riskClass,
+  description: z.string().min(1).max(600),
+});
+export type CapabilityCatalogEntry = z.infer<
+  typeof CapabilityCatalogEntrySchema
+>;
+
+const CapabilityCatalogSchema = z
+  .array(CapabilityCatalogEntrySchema)
+  .min(1)
+  .max(64);
+
 /**
- * Get description for each agent type (used by Agent Networks for routing)
+ * Build the router catalog from the actual specialist tool sets. The metadata
+ * registry must match the executable inventory exactly so routing cannot
+ * advertise a stale or unregistered capability.
  */
-export function getAgentDescription(agentType: AgentType): string {
-  switch (agentType) {
-    case "messaging":
-      return "Send, edit, delete, pin messages. Create and summarize Discord threads. Create polls. Track activity. Manage agent sessions and durable memories.";
-    case "server":
-      return "Get server/guild information. List, create, modify channels. Search and manage members. Query database.";
-    case "moderation":
-      return "Kick, ban, timeout, warn members. Manage role definitions. Grant/revoke roles to members. Change member nicknames. Configure automod rules. Manage webhooks and invites. Add emojis/stickers.";
-    case "music":
-      return "Play, pause, skip, stop music. Manage queue. Control volume and loop mode.";
-    case "automation":
-      return "Create durable cron/jobs/reminders. Run shell commands. Use PinchTab browser automation and web research. Manage elections and birthdays. Schedule events and background sessions.";
-    case "editor":
-      return "Edit files in allowed repositories. Create pull requests. Connect GitHub account. List available repos. Approve or reject pending changes.";
+export function getCapabilityCatalog(): CapabilityCatalogEntry[] {
+  const entries: CapabilityCatalogEntry[] = [];
+  const observedIds = new Set<string>();
+  for (const specialist of SpecialistIdSchema.options) {
+    for (const rawTool of getToolSet(specialist)) {
+      const tool = CapabilityCatalogSourceSchema.parse(rawTool);
+      if (tool.birmelMetadata.specialist !== specialist) {
+        throw new Error(
+          `Tool ${tool.id} is registered under ${specialist} but owned by ${tool.birmelMetadata.specialist}`,
+        );
+      }
+      if (tool.birmelMetadata.id !== tool.id) {
+        throw new Error(`Tool metadata ID does not match ${tool.id}`);
+      }
+      if (observedIds.has(tool.id)) {
+        throw new Error(`Tool ${tool.id} is registered more than once`);
+      }
+      observedIds.add(tool.id);
+      entries.push(
+        CapabilityCatalogEntrySchema.parse({
+          id: tool.id,
+          specialist,
+          riskClass: tool.birmelMetadata.riskClass,
+          description: tool.description,
+        }),
+      );
+    }
   }
+  const metadataIds = getRegisteredToolMetadata()
+    .map(({ id }) => id)
+    .toSorted();
+  const executableIds = [...observedIds].toSorted();
+  if (JSON.stringify(metadataIds) !== JSON.stringify(executableIds)) {
+    throw new Error(
+      "Birmel tool metadata and executable capability inventory differ",
+    );
+  }
+  return CapabilityCatalogSchema.parse(
+    entries.toSorted((left, right) => left.id.localeCompare(right.id)),
+  );
 }
 
 /**

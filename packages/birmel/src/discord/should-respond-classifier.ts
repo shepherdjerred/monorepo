@@ -5,12 +5,13 @@ import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { buildConfiguredPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { admissionClassifierTotal } from "@shepherdjerred/birmel/observability/metrics.ts";
 
 const logger = loggers.discord.child("should-respond-classifier");
 
-const ClassificationSchema = z.object({
+export const ClassificationSchema = z.strictObject({
   shouldRespond: z.boolean(),
-  reason: z.string().max(300).optional(),
+  reason: z.string().max(300).nullable(),
 });
 
 export type ClassifyShouldRespondInput = {
@@ -38,7 +39,7 @@ export async function classifyShouldRespond(
         const result = await generateValidatedObject(getLlmRuntime(), {
           model: config.openRouter.classifierModel,
           system:
-            "Decide whether the elected persona should reply to the latest Discord message. Reply only when it is directed at the assistant or naturally continues the assistant's active conversation. Ignore unrelated side chatter.",
+            "Decide whether the elected persona should reply to the latest Discord message. Reply only when it is directed at the assistant or naturally continues the assistant's active conversation. Ignore unrelated side chatter. Always return reason; use null when no reason is needed.",
           prompt: `${buildConfiguredPersonaProjection(input.persona, config.persona.enabled)}\n\nRecent conversation:\n${input.transcript.length === 0 ? "(none)" : input.transcript}\n\nLatest message:\n${input.latestMessage}`,
           schema: ClassificationSchema,
           schemaName: "birmel_should_respond",
@@ -56,8 +57,12 @@ export async function classifyShouldRespond(
           personaId: input.persona,
           shouldRespond: result.object.shouldRespond,
         });
+        admissionClassifierTotal.inc({
+          outcome: result.object.shouldRespond ? "respond" : "ignore",
+        });
         return result.object.shouldRespond;
       } catch (error) {
+        admissionClassifierTotal.inc({ outcome: "error" });
         span.setAttribute("birmel.admission.should_respond", false);
         span.setAttribute(
           "error.type",

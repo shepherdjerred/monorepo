@@ -55,7 +55,12 @@ export async function recordAgentRunRoute(
 ): Promise<void> {
   await prisma.agentRun.update({
     where: { id: runId },
-    data: { route: decision.route, status: "running" },
+    data: {
+      route: decision.route,
+      routeDisposition: decision.disposition,
+      primaryToolId: decision.primaryToolId,
+      status: "running",
+    },
   });
 }
 
