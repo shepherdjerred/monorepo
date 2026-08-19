@@ -1,11 +1,17 @@
 import { describe, expect, test } from "bun:test";
 import {
   ParlayConditionSchema,
+  PARLAY_SUBJECT_ALIAS_MAX_LENGTH,
   ParlaySubjectsSchema,
 } from "#src/betting/parlay-criteria.ts";
-import { formatParlaySettlement } from "#src/betting/parlay-announce.ts";
+import {
+  announceParlaySettlements,
+  formatParlaySettlement,
+  formatParlaySettlementChunks,
+} from "#src/betting/parlay-announce.ts";
 import { buildParlayButtons } from "#src/betting/parlay-components.ts";
 import { buildParlayMessage } from "#src/betting/parlay-publish.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 
 const subjects = ParlaySubjectsSchema.parse([
   {
@@ -34,6 +40,37 @@ const criteria = {
   conditions: [participantCondition, objectiveCondition],
 };
 
+function largeSettlementSummary(
+  messageRefs: ParlaySettlementSummary["messageRefs"] = [],
+): ParlaySettlementSummary {
+  const renderedLegs = Array.from(
+    { length: 6 },
+    (_, index) =>
+      `${"a".repeat(PARLAY_SUBJECT_ALIAS_MAX_LENGTH)} ${"resolves a deliberately verbose canonical result ".repeat(4)}leg ${(index + 1).toString()}`,
+  );
+  return {
+    matchId: "NA1_42",
+    serverId: "1337623164146155593",
+    yesResult: true,
+    voidReason: undefined,
+    messageRefs,
+    legs: renderedLegs.map((rendered) => ({
+      condition: participantCondition,
+      rendered,
+      actualValue: 2_147_483_647,
+      passed: true,
+    })),
+    bets: Array.from({ length: 15 }, (_, index) => ({
+      discordId: (1_000_000_000_000_000_000n + BigInt(index)).toString(),
+      side: "YES",
+      stake: 2_147_483_647,
+      grossPayout: 2_147_483_647,
+      payout: 2_147_483_647,
+      outcome: "won",
+    })),
+  };
+}
+
 describe("parlay Discord experience", () => {
   test("renders a dedicated live-market follow-up and five actions", () => {
     const content = buildParlayMessage({
@@ -54,6 +91,55 @@ describe("parlay Discord experience", () => {
         "label" in component ? component.label : undefined,
       ),
     ).toEqual(["YES 1", "YES 5", "NO 1", "NO 5", "Cancel"]);
+  });
+
+  test("keeps the largest supported publication within one Discord message", () => {
+    const longSubjects = ParlaySubjectsSchema.parse([
+      {
+        key: "P1",
+        puuid: "test-puuid".padEnd(78, "x"),
+        alias: "a".repeat(PARLAY_SUBJECT_ALIAS_MAX_LENGTH),
+      },
+    ]);
+    const longCriteria = {
+      version: 1 as const,
+      yesProbabilityBps: 4000,
+      conditions: [
+        "magicDamageDealtToChampions",
+        "physicalDamageDealtToChampions",
+        "totalDamageShieldedOnTeammates",
+        "totalEnemyJungleMinionsKilled",
+        "totalAllyJungleMinionsKilled",
+        "visionWardsBoughtInGame",
+      ].map((field) =>
+        ParlayConditionSchema.parse({
+          kind: "participant_numeric",
+          subject: "P1",
+          field,
+          operator: "gte",
+          threshold: 10_000,
+        }),
+      ),
+    };
+    const content = buildParlayMessage({
+      criteria: longCriteria,
+      subjects: longSubjects,
+      closesAt: new Date("2026-08-18T12:05:00.000Z"),
+    });
+    expect(content.length).toBeLessThanOrEqual(1900);
+    expect(content).toContain("a".repeat(PARLAY_SUBJECT_ALIAS_MAX_LENGTH));
+  });
+
+  test("rejects subject aliases longer than the publication contract", () => {
+    expect(() =>
+      ParlaySubjectsSchema.parse([
+        {
+          key: "P1",
+          puuid: "test-puuid".padEnd(78, "x"),
+          alias: "a".repeat(PARLAY_SUBJECT_ALIAS_MAX_LENGTH + 1),
+        },
+      ]),
+    ).toThrow();
   });
 
   test("renders leg actuals, the overall side, positions, and payouts", () => {
@@ -92,5 +178,39 @@ describe("parlay Discord experience", () => {
     expect(content).toContain("actual **true**");
     expect(content).toContain("Overall result: **NO**");
     expect(content).toContain("NO 25 BB → won, 42 BB");
+  });
+
+  test("chunks a large settlement without dropping legs or positions", () => {
+    const summary = largeSettlementSummary();
+    const renderedLegs = summary.legs.map((leg) => leg.rendered);
+    const chunks = formatParlaySettlementChunks(summary);
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(chunks.every((chunk) => chunk.length <= 1900)).toBe(true);
+    const combined = chunks.join("\n");
+    for (const rendered of renderedLegs) {
+      expect(combined).toContain(rendered);
+    }
+    expect(combined).toContain("<@1000000000000000014>");
+  });
+
+  test("attempts later settlement chunks after one send fails", async () => {
+    const summary = largeSettlementSummary([
+      {
+        channelId: "1337623164146155593",
+        messageId: "1337623164146155594",
+      },
+    ]);
+    const chunks = formatParlaySettlementChunks(summary);
+    let attempts = 0;
+    await announceParlaySettlements([summary], {
+      sendMessage: async () => {
+        attempts += 1;
+        if (attempts === 1) {
+          throw new Error("transient Discord failure");
+        }
+      },
+    });
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(attempts).toBe(chunks.length);
   });
 });

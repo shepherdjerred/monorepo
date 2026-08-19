@@ -20,6 +20,7 @@ import {
 export const PARLAY_SCHEMA_VERSION = 1;
 export const PARLAY_CATALOG_VERSION = "2026-08-18";
 export const PARLAY_EVALUATOR_VERSION = "1";
+export const PARLAY_SUBJECT_ALIAS_MAX_LENGTH = 100;
 
 const NumericOperatorSchema = z.enum(["gte", "lte", "eq"]);
 const SelectedTeamSchema = z.literal("selected");
@@ -90,7 +91,7 @@ export type GeneratedParlay = z.infer<typeof GeneratedParlaySchema>;
 export const ParlaySubjectSchema = z.strictObject({
   key: z.string().regex(/^P[1-5]$/),
   puuid: LeaguePuuidSchema,
-  alias: z.string().min(1),
+  alias: z.string().min(1).max(PARLAY_SUBJECT_ALIAS_MAX_LENGTH),
 });
 
 export type ParlaySubject = z.infer<typeof ParlaySubjectSchema>;

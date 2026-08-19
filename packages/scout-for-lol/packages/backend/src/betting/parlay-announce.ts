@@ -7,6 +7,7 @@ import {
 } from "@scout-for-lol/data";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import { send } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -109,30 +110,48 @@ export function formatParlaySettlement(
   return lines.join("\n");
 }
 
+export function formatParlaySettlementChunks(
+  summary: ParlaySettlementSummary,
+): string[] {
+  return splitMessageIntoChunks(formatParlaySettlement(summary));
+}
+
+type SettlementAnnouncementDependencies = {
+  sendMessage?: (
+    options: Parameters<typeof send>[0],
+    channelId: Parameters<typeof send>[1],
+    serverId: Parameters<typeof send>[2],
+  ) => Promise<unknown>;
+};
+
 export async function announceParlaySettlements(
   summaries: readonly ParlaySettlementSummary[],
+  dependencies: SettlementAnnouncementDependencies = {},
 ): Promise<void> {
+  const sendMessage = dependencies.sendMessage ?? send;
   for (const summary of summaries) {
-    const content = formatParlaySettlement(summary);
+    const contents = formatParlaySettlementChunks(summary);
     for (const ref of summary.messageRefs) {
-      try {
-        await send(
-          { content, allowedMentions: { parse: [] } },
-          DiscordChannelIdSchema.parse(ref.channelId),
-          DiscordGuildIdSchema.parse(summary.serverId),
-        );
-      } catch (error) {
-        logger.error(
-          `Could not announce parlay settlement for ${summary.matchId} in ${ref.channelId}:`,
-          error,
-        );
-        Sentry.captureException(error, {
-          tags: {
-            source: "betting-parlay-settlement-announce",
-            matchId: summary.matchId,
-            channelId: ref.channelId,
-          },
-        });
+      for (const content of contents) {
+        try {
+          await sendMessage(
+            { content, allowedMentions: { parse: [] } },
+            DiscordChannelIdSchema.parse(ref.channelId),
+            DiscordGuildIdSchema.parse(summary.serverId),
+          );
+        } catch (error) {
+          logger.error(
+            `Could not announce parlay settlement for ${summary.matchId} in ${ref.channelId}:`,
+            error,
+          );
+          Sentry.captureException(error, {
+            tags: {
+              source: "betting-parlay-settlement-announce",
+              matchId: summary.matchId,
+              channelId: ref.channelId,
+            },
+          });
+        }
       }
     }
   }

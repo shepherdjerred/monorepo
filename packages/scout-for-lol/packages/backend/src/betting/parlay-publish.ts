@@ -14,6 +14,7 @@ import { buildParlayButtons } from "#src/betting/parlay-components.ts";
 import { formatDecimalOdds } from "#src/betting/parlay-odds.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
+import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import { send } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -83,13 +84,24 @@ export function buildParlayMessage(input: {
   const legs = renderParlay(input.criteria, input.subjects).map(
     (leg, index) => `${(index + 1).toString()}. ${leg}`,
   );
-  return [
+  const content = [
     "🎲 **Bryan Bucks Parlay** — every leg must hit for YES",
     ...legs,
     "",
     `**YES** ${probabilityPercent(yes)} (${formatDecimalOdds(yes)}×) · **NO** ${probabilityPercent(no)} (${formatDecimalOdds(no)}×)`,
     `Closes <t:${closeUnix.toString()}:R> · Live/in-play market: early game events may already be visible.`,
   ].join("\n");
+  const chunks = splitMessageIntoChunks(content);
+  if (chunks.length !== 1) {
+    throw new Error(
+      "Bryan Bucks parlay publication exceeds Discord's message limit.",
+    );
+  }
+  const message = chunks[0];
+  if (message === undefined) {
+    throw new Error("Bryan Bucks parlay publication rendered no content.");
+  }
+  return message;
 }
 
 async function activateMessageReference(input: {
