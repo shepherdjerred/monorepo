@@ -12,9 +12,10 @@ function lobby(teamIds: readonly number[]) {
 const STANDARD = lobby([100, 100, 100, 100, 100, 200, 200, 200, 200, 200]);
 
 describe("isBettableQueue", () => {
-  test("accepts ranked solo and flex", () => {
+  test("accepts ranked solo, flex, and League Classic", () => {
     expect(isBettableQueue("solo")).toBe(true);
     expect(isBettableQueue("flex")).toBe(true);
+    expect(isBettableQueue("classic")).toBe(true);
   });
 
   test("rejects clash and aram clash", () => {
@@ -25,8 +26,9 @@ describe("isBettableQueue", () => {
     expect(isBettableQueue("aram clash")).toBe(false);
   });
 
-  test("rejects non-ranked and unknown queues", () => {
+  test("rejects non-ranked, Classic Mayhem, and unknown queues", () => {
     expect(isBettableQueue("aram")).toBe(false);
+    expect(isBettableQueue("classic aram mayhem")).toBe(false);
     expect(isBettableQueue("arena")).toBe(false);
     expect(isBettableQueue("quickplay")).toBe(false);
     expect(isBettableQueue(undefined)).toBe(false);
@@ -68,9 +70,18 @@ describe("isBettableGame", () => {
     expect(isBettableGame({ queueType: "solo", participants: STANDARD })).toBe(
       true,
     );
+    expect(
+      isBettableGame({ queueType: "classic", participants: STANDARD }),
+    ).toBe(true);
     expect(isBettableGame({ queueType: "aram", participants: STANDARD })).toBe(
       false,
     );
+    expect(
+      isBettableGame({
+        queueType: "classic aram mayhem",
+        participants: STANDARD,
+      }),
+    ).toBe(false);
     expect(
       isBettableGame({ queueType: "solo", participants: lobby([100, 200]) }),
     ).toBe(false);

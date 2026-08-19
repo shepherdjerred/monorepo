@@ -23,8 +23,8 @@ const logger = createLogger("betting-earnings");
 /**
  * Awarding Bucks for playing.
  *
- * +1 for finishing a ranked game, +1 more for winning, +1 more for being the
- * game's MVP. Three separate ledger rows rather than one combined award,
+ * +1 for finishing an eligible game, +1 more for winning, +1 more for being
+ * the game's MVP. Three separate ledger rows rather than one combined award,
  * because "how did they get these points" is the requirement and a single +3
  * forces the reader to reconstruct which conditions fired.
  *
