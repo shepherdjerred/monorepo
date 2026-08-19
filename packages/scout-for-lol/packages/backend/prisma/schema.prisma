@@ -730,17 +730,17 @@ model BucksLedgerEntry {
   bucksAccountId Int
   bucksAccount   BucksAccount @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
 
-  // Signed change. Negative = stake placed. Positive = earning, payout, refund,
-  // or the one-time seed grant. Never zero.
+  // Signed change. Negative = stake or house cut paid. Positive = earning,
+  // payout, refund, house cut received, or the one-time seed grant. Never zero.
   delta Int
 
   // Balance AFTER this delta, as of the committing transaction. Makes an audit
   // read one query, and localizes any drift to a specific row.
   balanceAfter Int
 
-  // BucksLedgerKind (@scout-for-lol/data): seed | earn_game | earn_win |
+  // BucksLedgerKind (@scout-for-lol/data): seed | earn_game |
   // earn_ranked_5s_bonus | earn_clash_bonus | earn_win | earn_mvp | bet_stake |
-  // bet_payout | bet_refund | adjustment.
+  // bet_payout | bet_refund | house_rake | cancel_fee | adjustment.
   // Not a Prisma enum — the SQLite provider has none. Zod-validated on write
   // and on read.
   kind String
@@ -794,8 +794,8 @@ model BucksBet {
   // ParticipantStatus.
   betOutcome String @default("pending")
 
-  // Gross Bucks returned: stake + winnings, the full stake on a refund, or 0 on
-  // a loss. Null while pending.
+  // Net Bucks returned after the house cut: principal + net winnings, the full
+  // stake on a mandatory refund, or 0 on a loss. Null while pending.
   payout    Int?
   settledAt DateTime?
 

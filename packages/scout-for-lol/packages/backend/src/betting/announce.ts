@@ -1,21 +1,32 @@
 import * as Sentry from "@sentry/bun";
+import type { MessageCreateOptions } from "discord.js";
 import {
   BucksMessageRefsSchema,
   BucksPredictionSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   type BucksPrediction,
+  type DiscordChannelId,
+  type DiscordGuildId,
 } from "@scout-for-lol/data";
 import type { EarnedAward } from "#src/betting/earnings.ts";
+import { HOUSE_CUT_PLACEMENT_NOTE } from "#src/betting/house-cut.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPool } from "#src/betting/sweep.ts";
 import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
-import { send } from "#src/league/discord/channel.ts";
+import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
+import {
+  ChannelSendError,
+  send as sendChannelMessage,
+} from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
 
 const logger = createLogger("betting-announce");
+const MAX_SETTLEMENT_CHUNK_SEND_ATTEMPTS = 3;
+const SETTLEMENT_CHUNK_RETRY_BASE_DELAY_MS = 500;
 
 /**
  * Telling the channel what happened.
@@ -76,7 +87,7 @@ export function formatBetPlacementAnnouncement(input: {
   totalStake: number;
 }): string {
   const side = input.subjectWins ? "WINS" : "LOSES";
-  return `🎲 <@${input.discordId}> staked **${input.stake.toString()} BB** on **${input.subjectAlias} ${side}** (position: **${input.totalStake.toString()} BB**).`;
+  return `🎲 <@${input.discordId}> staked **${input.stake.toString()} BB** on **${input.subjectAlias} ${side}** (position: **${input.totalStake.toString()} BB**). ${HOUSE_CUT_PLACEMENT_NOTE}`;
 }
 
 /**
@@ -115,7 +126,7 @@ export async function announceBetPlacement(
     const content = formatBetPlacementAnnouncement(input);
     for (const ref of refs) {
       try {
-        await send(
+        await sendChannelMessage(
           {
             content,
             allowedMentions: { users: [input.discordId] },
@@ -150,10 +161,11 @@ export function formatSettlementBody(input: {
 }): string {
   const { summary } = input;
   const lines: string[] = [];
+  const pool = summary.bets.reduce((total, bet) => total + bet.stake, 0);
 
   if (summary.voidReason === undefined) {
     lines.push(
-      `💰 **Bryan Bucks** — pool ${(summary.winnersPool + summary.losersPool).toString()} BB (winners ${summary.winnersPool.toString()} / losers ${summary.losersPool.toString()})`,
+      `💰 **Bryan Bucks** — Pool **${pool.toString()} BB** · house cut **${summary.houseCut.toString()} BB** (winners ${summary.winnersPool.toString()} / losers ${summary.losersPool.toString()})`,
     );
   } else {
     const reason =
@@ -166,7 +178,9 @@ export function formatSettlementBody(input: {
             : summary.voidReason === "expired"
               ? "This game never resolved — every bet refunded."
               : "Unsupported game mode — every bet refunded.";
-    lines.push(`💰 **Bryan Bucks** — ${reason}`);
+    lines.push(
+      `💰 **Bryan Bucks** — Pool **${pool.toString()} BB** · house cut **0 BB**. ${reason}`,
+    );
   }
 
   if (input.predictionSentence !== undefined) {
@@ -195,11 +209,10 @@ export function formatSettlementBody(input: {
     lines.push("**Bets**");
     for (const bet of humanBets.slice(0, MAX_BET_ROWS)) {
       const result = bet.refunded
-        ? `refunded ${bet.payout.toString()} BB`
-        : `received ${bet.payout.toString()} BB` +
-          (bet.winnings > 0
-            ? ` (+${bet.winnings.toString()} BB winnings)`
-            : "");
+        ? `refunded ${bet.payout.toString()} BB (no house cut)`
+        : bet.won
+          ? `gross ${bet.grossPayout.toString()} BB − ${bet.houseCut.toString()} BB house cut = ${bet.payout.toString()} BB received (+${bet.winnings.toString()} BB net winnings)`
+          : "received 0 BB";
       lines.push(
         `• <@${bet.discordId}> staked ${bet.stake.toString()} BB → ${result}`,
       );
@@ -224,6 +237,122 @@ export function formatSettlementBody(input: {
   }
 
   return lines.join("\n");
+}
+
+/** Split a complete settlement without dropping any gross-cut-net detail. */
+export function splitSettlementBody(body: string): string[] {
+  const chunks = splitMessageIntoChunks(body);
+  if (chunks.length === 0) {
+    throw new Error("A Bryan Bucks settlement produced no Discord content");
+  }
+  return chunks;
+}
+
+export type SettlementDeliveryDependencies = {
+  sendMessage: (
+    options: MessageCreateOptions,
+    channelId: DiscordChannelId,
+    guildId: DiscordGuildId,
+  ) => Promise<unknown>;
+  sleep: (milliseconds: number) => Promise<void>;
+};
+
+const defaultSettlementDeliveryDependencies: SettlementDeliveryDependencies = {
+  sendMessage: async (options, channelId, guildId) =>
+    await sendChannelMessage(options, channelId, guildId),
+  sleep: async (milliseconds) => {
+    await Bun.sleep(milliseconds);
+  },
+};
+
+function settlementChunkNonce(
+  matchId: string,
+  channelId: DiscordChannelId,
+  chunkIndex: number,
+): string {
+  const deliveryKey = `${matchId}:${channelId}:${chunkIndex.toString()}`;
+  return `bbs:${Bun.hash(deliveryKey).toString(36)}`;
+}
+
+async function sendSettlementChunk(
+  dependencies: SettlementDeliveryDependencies,
+  input: {
+    options: MessageCreateOptions;
+    channelId: DiscordChannelId;
+    guildId: DiscordGuildId;
+    chunkIndex: number;
+  },
+): Promise<void> {
+  for (
+    let attempt = 1;
+    attempt <= MAX_SETTLEMENT_CHUNK_SEND_ATTEMPTS;
+    attempt++
+  ) {
+    try {
+      await dependencies.sendMessage(
+        input.options,
+        input.channelId,
+        input.guildId,
+      );
+      return;
+    } catch (error) {
+      const deterministicFailure =
+        error instanceof ChannelSendError && error.permissionError;
+      if (
+        attempt === MAX_SETTLEMENT_CHUNK_SEND_ATTEMPTS ||
+        deterministicFailure
+      ) {
+        throw error;
+      }
+      const delayMs = SETTLEMENT_CHUNK_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1);
+      logger.warn(
+        `🎲 Bryan Bucks settlement chunk ${(input.chunkIndex + 1).toString()} attempt ${attempt.toString()}/${MAX_SETTLEMENT_CHUNK_SEND_ATTEMPTS.toString()} failed; retrying in ${delayMs.toString()}ms: ${getErrorMessage(error)}`,
+      );
+      await dependencies.sleep(delayMs);
+    }
+  }
+}
+
+export async function sendSettlementMessages(
+  input: {
+    messages: readonly string[];
+    matchId: string;
+    channelId: string;
+    guildId: string;
+  },
+  dependencies: SettlementDeliveryDependencies = defaultSettlementDeliveryDependencies,
+): Promise<void> {
+  const channelId = DiscordChannelIdSchema.parse(input.channelId);
+  const guildId = DiscordGuildIdSchema.parse(input.guildId);
+  const failures: unknown[] = [];
+  for (const [chunkIndex, content] of input.messages.entries()) {
+    try {
+      await sendSettlementChunk(dependencies, {
+        options: {
+          content,
+          // Stable nonces make a transient retry idempotent at Discord.
+          nonce: settlementChunkNonce(input.matchId, channelId, chunkIndex),
+          enforceNonce: true,
+          // A fifteen-person settlement must not ping fifteen people.
+          allowedMentions: { parse: [] },
+        },
+        channelId,
+        guildId,
+        chunkIndex,
+      });
+    } catch (error) {
+      failures.push(error);
+      logger.error(
+        `🎲 Bryan Bucks settlement chunk ${(chunkIndex + 1).toString()}/${input.messages.length.toString()} failed after retries: ${getErrorMessage(error)}`,
+      );
+    }
+  }
+  if (failures.length > 0) {
+    throw new AggregateError(
+      failures,
+      `Bryan Bucks settlement failed to deliver ${failures.length.toString()}/${input.messages.length.toString()} chunk(s)`,
+    );
+  }
 }
 
 /**
@@ -275,6 +404,7 @@ export async function announceSettlements(
           summary.winningTeamId,
         ),
       });
+      const messages = splitSettlementBody(body);
 
       const refs = BucksMessageRefsSchema.parse(JSON.parse(pool.messageRefs));
       if (refs.length === 0) {
@@ -308,23 +438,18 @@ export async function announceSettlements(
         }
         continue;
       }
-      const guildId = DiscordGuildIdSchema.parse(summary.serverId);
-
       for (const ref of refs) {
         // Isolated per channel. The pool has already committed as settled and a
         // later pass returns no summary, so this delivery is one-shot: letting
         // a stale or no-longer-writable first ref throw would silently discard
         // the settlement for every healthy channel behind it.
         try {
-          await send(
-            {
-              content: body,
-              // A fifteen-person settlement must not ping fifteen people.
-              allowedMentions: { parse: [] },
-            },
-            DiscordChannelIdSchema.parse(ref.channelId),
-            guildId,
-          );
+          await sendSettlementMessages({
+            messages,
+            matchId: summary.matchId,
+            channelId: ref.channelId,
+            guildId: summary.serverId,
+          });
         } catch (error) {
           logger.error(
             `❌ Could not deliver the Bryan Bucks settlement for ${summary.matchId} to channel ${ref.channelId}:`,

@@ -23,6 +23,7 @@ import {
   MIN_STAKE,
   SEED_GRANT,
 } from "#src/betting/constants.ts";
+import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { renderBucksHistory } from "#src/betting/navigation.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
@@ -86,7 +87,7 @@ export const bbCommand = new SlashCommandBuilder()
   .addSubcommand((sub) =>
     sub
       .setName("bet")
-      .setDescription("Bet on a tracked player's live game")
+      .setDescription("Bet on a live game; 20% win and cancellation house cuts")
       .addStringOption((option) =>
         option
           .setName("player")
@@ -165,13 +166,13 @@ async function replyBalance(
   const view = await getPersonalBucksView({ serverId, discordId });
   if (view === undefined) {
     await interaction.editReply({
-      content:
-        "You don't have a Bryan Bucks wallet yet — place your first bet on a live game and you'll be given a starting balance.",
+      content: `You don't have a Bryan Bucks wallet yet — place your first bet on a live game and you'll be given a starting balance.\n\n${HOUSE_CUT_TERMS}`,
     });
     return;
   }
 
   await interaction.editReply({
+    content: HOUSE_CUT_TERMS,
     embeds: [buildPersonalBucksEmbed(view)],
   });
 }
@@ -201,18 +202,19 @@ export function buildBbRulesEmbed(): EmbedBuilder {
         value:
           `Stake **${MIN_STAKE.toString()}-${MAX_STAKE.toString()} BB** on a tracked player to WIN or LOSE. ` +
           `The market stays open for ${Math.floor(BETTING_WINDOW_MS / 60_000).toString()} minutes after Scout detects the game. ` +
-          "You can add to a position or cancel it for a full refund before the window closes; after that, it is locked.",
+          "You can add to a position or cancel it before the window closes for a 20% house cut, rounded to the nearest BB; after that, it is locked.",
       },
       {
         name: "Settlement",
         value:
           "Winners get their stakes back and split the losing side's pool in proportion to their stakes. " +
+          "The house takes 20% of each human winner's gross payout, rounded to the nearest BB, without cutting into winning principal. " +
           "If people bet on only one side, the Bryan Bucks house matches the other side when its reserve can cover the stake.",
       },
       {
         name: "Refunds",
         value:
-          "All stakes are returned when a game is voided or remade, cannot be settled, or the house cannot cover a one-sided market.",
+          "All stakes are returned with no house cut when a game is voided or remade, cannot be settled, or the house cannot cover a one-sided market.",
       },
     );
 }
@@ -240,7 +242,7 @@ async function replyOpen(
 
   if (pools.length === 0) {
     await interaction.editReply({
-      content: "No games are open for betting right now.",
+      content: `No games are open for betting right now.\n\n${HOUSE_CUT_TERMS}`,
     });
     return;
   }
@@ -262,7 +264,9 @@ async function replyOpen(
       `🔴 **Red:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} bet(s) — ${redPlayers}`,
     ].join("\n");
   });
-  const chunks = splitMessageIntoChunks(sections.join("\n\n"));
+  const chunks = splitMessageIntoChunks(
+    `${sections.join("\n\n")}\n\n${HOUSE_CUT_TERMS}`,
+  );
   const first = chunks[0];
   if (first === undefined) {
     throw new Error("Open Bryan Bucks markets produced no Discord content");

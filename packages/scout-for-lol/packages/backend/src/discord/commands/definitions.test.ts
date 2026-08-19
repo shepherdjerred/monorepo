@@ -93,4 +93,16 @@ describe("registered Discord commands", () => {
       ),
     ).not.toContainEqual(expect.objectContaining({ autocomplete: true }));
   });
+
+  test("defines no redemption, donation, burn, or claim command", () => {
+    const registered = [
+      ...commandDefinitions.map((command) => command.toJSON()),
+      ...guildScopedCommandGroups.flatMap((group) => group.payload),
+    ];
+    const serialized = JSON.stringify(registered).toLowerCase();
+
+    for (const absent of ["redeem", "redemption", "donate", "burn", "claim"]) {
+      expect(serialized).not.toContain(`"name":"${absent}"`);
+    }
+  });
 });

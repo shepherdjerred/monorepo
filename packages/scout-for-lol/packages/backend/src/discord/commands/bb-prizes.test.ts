@@ -12,6 +12,15 @@ import {
 } from "#src/discord/commands/bb-prizes.ts";
 
 describe("/bb prizes", () => {
+  test("offers no redemption, donation, burn, or claim command", () => {
+    const command = bbCommand.toJSON();
+    const names = command.options?.map((option) => option.name) ?? [];
+
+    for (const absent of ["redeem", "redemption", "donate", "burn", "claim"]) {
+      expect(names).not.toContain(absent);
+    }
+  });
+
   test("registers a no-option prizes subcommand", () => {
     const command = bbCommand.toJSON();
     const prizes = command.options?.find((option) => option.name === "prizes");
@@ -139,5 +148,8 @@ describe("/bb command contract", () => {
     ]) {
       expect(rendered).toContain(phrase);
     }
+    expect(rendered).toContain(
+      "cancel it before the window closes for a 20% house cut, rounded to the nearest BB",
+    );
   });
 });

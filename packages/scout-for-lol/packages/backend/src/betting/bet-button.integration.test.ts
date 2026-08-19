@@ -11,7 +11,11 @@ import {
 } from "#src/betting/bet-button.ts";
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
 import { buildBettingRows } from "#src/betting/components.ts";
-import { SEED_GRANT } from "#src/betting/constants.ts";
+import {
+  HOUSE_ACCOUNT_DISCORD_ID,
+  HOUSE_BANKROLL,
+  SEED_GRANT,
+} from "#src/betting/constants.ts";
 
 const { prisma: db } = createTestDatabase("bucks-bet-button");
 
@@ -96,6 +100,11 @@ describe("handleBetButton", () => {
 
     expect(replies[0]).toContain("Bet placed");
     expect(replies[0]).toContain("jerred WINS");
+    expect(replies[0]).toContain("winning payouts, rounded to the nearest BB");
+    expect(replies[0]).toContain("Winning principal is protected");
+    expect(replies[0]).toContain(
+      "Cancelling costs **20%**, also rounded to the nearest BB",
+    );
     expect(await db.bucksBet.count()).toBe(1);
 
     const account = await db.bucksAccount.findFirstOrThrow();
@@ -126,10 +135,27 @@ describe("handleBetButton", () => {
     await handleBetButton(interaction, db);
 
     expect(replies[0]).toContain("Bet cancelled");
+    expect(replies[0]).toContain(
+      "stake **5 BB** − **1 BB house cut** = **4 BB returned**",
+    );
     expect(await db.bucksBet.count()).toBe(0);
 
-    const account = await db.bucksAccount.findFirstOrThrow();
-    expect(account.balance).toBe(SEED_GRANT);
+    const account = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: { serverId: SERVER_ID, discordId: BETTOR },
+      },
+    });
+    expect(account.balance).toBe(SEED_GRANT - 1);
+
+    const house = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: {
+          serverId: SERVER_ID,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        },
+      },
+    });
+    expect(house.balance).toBe(HOUSE_BANKROLL + 1);
   });
 
   test("cancelling frees the slot so the other side can be backed", async () => {

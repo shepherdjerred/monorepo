@@ -2,15 +2,36 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  type BucksLedgerKind,
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import { getLedgerPage, type LedgerPage } from "#src/betting/accounts.ts";
+import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { BucksButtonEditReplyOptions } from "#src/betting/bet-button.ts";
 
 export const BUCKS_NAVIGATION_NAMESPACE = "bbnav";
 export const BUCKS_NAVIGATION_VERSION = "1";
+
+const LEDGER_KIND_LABELS = {
+  seed: "welcome grant",
+  earn_game: "game played",
+  earn_ranked_5s_bonus: "Ranked 5s bonus",
+  earn_clash_bonus: "Clash bonus",
+  earn_win: "game won",
+  earn_mvp: "game MVP",
+  bet_stake: "bet stake",
+  bet_payout: "gross bet payout",
+  bet_refund: "bet refund",
+  house_rake: "house cut on payout",
+  cancel_fee: "house cut on cancellation",
+  adjustment: "adjustment",
+} satisfies Record<BucksLedgerKind, string>;
+
+export function ledgerKindLabel(kind: BucksLedgerKind): string {
+  return LEDGER_KIND_LABELS[kind];
+}
 
 const BucksNavigationIdSchema = z.strictObject({
   action: z.literal("h"),
@@ -113,18 +134,23 @@ export function renderBucksHistory(
   page: LedgerPage,
 ): BucksButtonEditReplyOptions {
   if (page.entries.length === 0) {
-    return { content: "No Bryan Bucks history yet.", components: [] };
+    return {
+      content: `No Bryan Bucks history yet.\n\n${HOUSE_CUT_TERMS}`,
+      components: [],
+    };
   }
 
   const lines = page.entries.map((entry) => {
     const sign = entry.delta > 0 ? "+" : "";
     const where = entry.matchId === null ? "" : ` · ${entry.matchId}`;
-    return `\`${sign}${entry.delta.toString()}\` ${entry.kind}${where} → ${entry.balanceAfter.toString()} BB`;
+    return `\`${sign}${entry.delta.toString()}\` ${ledgerKindLabel(entry.kind)}${where} → ${entry.balanceAfter.toString()} BB`;
   });
   return {
     content: [
       `**Bryan Bucks history** · Page ${(page.page + 1).toString()}/${page.totalPages.toString()}`,
       ...lines,
+      "",
+      HOUSE_CUT_TERMS,
     ].join("\n"),
     components: navigationRow(ownerId, page),
   };

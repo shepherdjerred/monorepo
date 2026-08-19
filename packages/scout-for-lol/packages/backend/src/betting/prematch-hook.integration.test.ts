@@ -21,6 +21,7 @@ import {
   type PrematchHookDependencies,
 } from "#src/betting/prematch-hook.ts";
 import { openBettingPoolsForPrematch } from "#src/betting/pool-open.ts";
+import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
@@ -216,7 +217,7 @@ describe("prepareBucksPrematch", () => {
 
     // The complement of the three cases above: in scope, the work happens.
     expect(buildPrediction).toHaveBeenCalled();
-    expect(result.footer).toBe("");
+    expect(result.footer).toBe(HOUSE_CUT_TERMS);
 
     // Pool creation itself needs a database and is covered by the pool and
     // place-bet integration suites; this file is only about what work is done

@@ -1,12 +1,13 @@
 /**
  * Parimutuel payout allocation.
  *
- * Pure, integer-only, and closed: every Buck staked into a pool comes back out
- * of it. Human two-sided pools remain purely parimutuel; one-sided pools are
- * supplied a synthetic house position by settlement before reaching this
- * function. The sum of payouts always equals the sum of stakes. That identity
- * is asserted rather than assumed — a violation throws, and the caller runs
- * this inside a transaction so the throw rolls the settlement back instead of
+ * Pure, integer-only, and closed: it calculates gross payouts, so every Buck
+ * staked into a pool comes back out of this allocator. Human two-sided pools
+ * remain purely parimutuel; one-sided pools are supplied a synthetic house
+ * position by settlement before reaching this function. Settlement then
+ * transfers the configured cut from each human winner's gross allocation to
+ * the house. The gross identity here, and the net-plus-cuts identity there,
+ * are both asserted so a violation rolls the transaction back instead of
  * minting or destroying currency.
  */
 

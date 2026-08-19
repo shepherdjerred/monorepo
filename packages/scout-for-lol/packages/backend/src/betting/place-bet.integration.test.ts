@@ -17,7 +17,13 @@ import {
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { placeBet, type PlaceBetInput } from "#src/betting/place-bet.ts";
 import { cancelBet } from "#src/betting/cancel-bet.ts";
-import { MAX_STAKE, SEED_GRANT } from "#src/betting/constants.ts";
+import {
+  HOUSE_ACCOUNT_DISCORD_ID,
+  HOUSE_BANKROLL,
+  MAX_STAKE,
+  SEED_GRANT,
+} from "#src/betting/constants.ts";
+import { reconcileBucksBalances } from "#src/betting/reconcile.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
@@ -177,6 +183,115 @@ describe("placeBet — accepting a position", () => {
   });
 });
 
+describe("cancelBet — returning a position", () => {
+  test("returns a 5 BB stake less a paired 1 BB house cut", async () => {
+    await bet({ stake: 5 });
+
+    const result = await cancelBet(
+      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      db,
+    );
+    expect(result).toEqual({
+      kind: "cancelled",
+      stake: 5,
+      refunded: 4,
+      houseCut: 1,
+      balanceAfter: SEED_GRANT - 1,
+    });
+
+    const human = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: { serverId: SERVER_ID, discordId: BETTOR },
+      },
+    });
+    expect(
+      await db.bucksLedgerEntry.findMany({
+        where: { bucksAccountId: human.id },
+        orderBy: { id: "asc" },
+        select: { kind: true, delta: true, balanceAfter: true },
+      }),
+    ).toEqual([
+      { kind: "seed", delta: SEED_GRANT, balanceAfter: SEED_GRANT },
+      {
+        kind: "bet_stake",
+        delta: -5,
+        balanceAfter: SEED_GRANT - 5,
+      },
+      { kind: "bet_refund", delta: 5, balanceAfter: SEED_GRANT },
+      {
+        kind: "cancel_fee",
+        delta: -1,
+        balanceAfter: SEED_GRANT - 1,
+      },
+    ]);
+
+    const house = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: {
+          serverId: SERVER_ID,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        },
+      },
+    });
+    expect(house.balance).toBe(HOUSE_BANKROLL + 1);
+    expect(
+      await db.bucksLedgerEntry.findMany({
+        where: { bucksAccountId: house.id },
+        orderBy: { id: "asc" },
+        select: { kind: true, delta: true },
+      }),
+    ).toEqual([
+      { kind: "seed", delta: HOUSE_BANKROLL },
+      { kind: "cancel_fee", delta: 1 },
+    ]);
+    const pairedCut = await db.bucksLedgerEntry.findMany({
+      where: { kind: "cancel_fee" },
+      orderBy: { id: "asc" },
+      select: { bucksAccountId: true, delta: true, context: true },
+    });
+    expect(pairedCut).toHaveLength(2);
+    expect(pairedCut[0]).toMatchObject({
+      bucksAccountId: human.id,
+      delta: -1,
+    });
+    expect(pairedCut[1]).toMatchObject({ bucksAccountId: house.id, delta: 1 });
+    expect(pairedCut[0]?.context).toBe(pairedCut[1]?.context);
+    const cutContext: unknown = JSON.parse(pairedCut[0]?.context ?? "null");
+    expect(cutContext).toEqual({
+      type: "house_fee",
+      source: "cancellation",
+      ratePercent: 20,
+      grossAmount: 5,
+      fee: 1,
+    });
+    expect(await reconcileBucksBalances(db)).toEqual([]);
+  });
+
+  test("returns a 1 BB stake in full when rounding produces no cut", async () => {
+    await bet({ stake: 1 });
+
+    const result = await cancelBet(
+      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      db,
+    );
+    expect(result).toEqual({
+      kind: "cancelled",
+      stake: 1,
+      refunded: 1,
+      houseCut: 0,
+      balanceAfter: SEED_GRANT,
+    });
+    expect(
+      await db.bucksLedgerEntry.count({ where: { kind: "cancel_fee" } }),
+    ).toBe(0);
+    expect(
+      await db.bucksAccount.count({
+        where: { discordId: HOUSE_ACCOUNT_DISCORD_ID },
+      }),
+    ).toBe(0);
+  });
+});
+
 describe("placeBet — refusing a position", () => {
   test("refuses the opposing side and leaves the balance untouched", async () => {
     await bet({ stake: 5 });
@@ -206,6 +321,8 @@ describe("placeBet — refusing a position", () => {
 
   test("tells a bettor their position is locked once the window closes", async () => {
     await bet({ stake: 5 });
+    const balanceBefore = await db.bucksAccount.findFirstOrThrow();
+    const ledgerRowsBefore = await db.bucksLedgerEntry.count();
     await db.bucksMatchPool.updateMany({
       data: { closesAt: new Date(Date.now() - 1000) },
     });
@@ -215,6 +332,9 @@ describe("placeBet — refusing a position", () => {
       db,
     );
     expect(result.kind).toBe("window_closed");
+    expect(await db.bucksAccount.findFirstOrThrow()).toEqual(balanceBefore);
+    expect(await db.bucksLedgerEntry.count()).toBe(ledgerRowsBefore);
+    expect(await db.bucksBet.count()).toBe(1);
   });
 
   test("tells a bettor a settled game has already resolved, not that it is pending", async () => {
