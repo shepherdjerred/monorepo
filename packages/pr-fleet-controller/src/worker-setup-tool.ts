@@ -1,4 +1,5 @@
 import { tool as defineTool } from "ai";
+import path from "node:path";
 import { z } from "zod";
 import { workerCommandEnvironment } from "./command-environment.ts";
 import {
@@ -14,7 +15,6 @@ import type { PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 
 export const SETUP_COMMANDS = [
-  { executable: "mise", args: ["trust", "--yes", ".mise.toml"] },
   { executable: "mise", args: ["install", "--dry-run-code"] },
   { executable: "bun", args: ["install", "--frozen-lockfile"] },
   {
@@ -130,7 +130,10 @@ export function createSetupWorktreeTool(options: {
               cwd: worktree,
               timeoutMs: 900_000,
               signal,
-              env: workerCommandEnvironment(),
+              env: {
+                ...workerCommandEnvironment(),
+                MISE_TRUSTED_CONFIG_PATHS: path.join(worktree, ".mise.toml"),
+              },
               sensitiveOutput: true,
               maxOutputBytes: MAX_SETUP_COMMAND_OUTPUT_BYTES,
             });

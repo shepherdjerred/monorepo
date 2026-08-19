@@ -145,9 +145,11 @@ Publication,
 worktree creation, current-head verification, review-request deduplication, and
 timers remain deterministic controller operations.
 
-Worktree setup automatically runs `mise trust --yes .mise.toml` for the assigned
-worktree, then installs the pinned toolchain, dependencies, and generated
-artifacts using the same sanitized worker environment.
+Worktree setup marks only the assigned worktree's `.mise.toml` as trusted for
+the setup command processes via `MISE_TRUSTED_CONFIG_PATHS`; trust is not
+persisted in the operator's Mise data. It then installs the pinned toolchain,
+dependencies, and generated artifacts using the same sanitized worker
+environment.
 Command timeouts, cancellation, and shutdown terminate the command's complete
 POSIX
 process group so descendant processes cannot outlive the worker that spawned
