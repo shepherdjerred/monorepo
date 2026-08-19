@@ -4,6 +4,7 @@ import {
   type BucksPoolParticipant,
 } from "@scout-for-lol/data";
 import { VOID_GRACE_MS } from "#src/betting/constants.ts";
+import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { closeBettingPoolById } from "#src/betting/sweep.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -34,12 +35,14 @@ function subjectAlias(
 
 async function pendingMatchedBets(tx: Db, poolId: number) {
   const rows = await tx.bucksBet.findMany({
-    where: { poolId, betOutcome: "pending", matchedStake: { gt: 0 } },
+    where: { poolId, betOutcome: "pending" },
     orderBy: { id: "asc" },
     select: {
       id: true,
       bucksAccountId: true,
       stake: true,
+      humanMatchedStake: true,
+      houseMatchedStake: true,
       matchedStake: true,
       unmatchedStake: true,
       predictedTeamId: true,
@@ -47,15 +50,23 @@ async function pendingMatchedBets(tx: Db, poolId: number) {
     },
   });
   return rows.map((row) => {
-    if (row.matchedStake === null || row.unmatchedStake === null) {
+    const allocation = requireValidBucksAllocation({
+      betId: row.id,
+      submittedStake: row.stake,
+      humanMatchedStake: row.humanMatchedStake,
+      houseMatchedStake: row.houseMatchedStake,
+      matchedStake: row.matchedStake,
+      unmatchedStake: row.unmatchedStake,
+    });
+    if (allocation.matchedStake === 0) {
       throw new Error(
-        `Matched pool contains unallocated bet ${row.id.toString()}`,
+        `Matched pool contains pending unmatched bet ${row.id.toString()}`,
       );
     }
     return {
       ...row,
-      matchedStake: row.matchedStake,
-      unmatchedStake: row.unmatchedStake,
+      matchedStake: allocation.matchedStake,
+      unmatchedStake: allocation.unmatchedStake,
     };
   });
 }
@@ -150,11 +161,24 @@ export async function voidStaleBettingPools(
     });
 
     for (const pool of stale) {
-      if (pool.matchedAt === null) {
-        await closeBettingPoolById(pool.id, prismaClient, now);
-      }
-      if (await refundMatchedPool(prismaClient, pool.id, pool.matchId, now)) {
-        voided += 1;
+      try {
+        if (pool.matchedAt === null) {
+          await closeBettingPoolById(pool.id, prismaClient, now);
+        }
+        if (await refundMatchedPool(prismaClient, pool.id, pool.matchId, now)) {
+          voided += 1;
+        }
+      } catch (error) {
+        // A malformed pool remains retryable after its transaction rolls back,
+        // while later guild pools can still return their players' reserved BB.
+        logger.error(
+          `❌ Could not void stale Bryan Bucks pool ${pool.id.toString()} for match ${pool.matchId}:`,
+          error,
+        );
+        Sentry.captureException(error, {
+          tags: { source: "betting-sweep-void", matchId: pool.matchId },
+          extra: { poolId: pool.id },
+        });
       }
     }
 

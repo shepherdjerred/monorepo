@@ -33,6 +33,7 @@ const fixture = RawMatchSchema.parse(
 );
 
 const SERVER_A = DiscordGuildIdSchema.parse("1337623164146155593");
+const SERVER_B = DiscordGuildIdSchema.parse("1337623164146155594");
 const MATCH_ID = fixture.metadata.matchId;
 const WINNING_TEAM = fixture.info.teams.find((team) => team.win)?.teamId ?? 100;
 const LOSING_TEAM = WINNING_TEAM === 100 ? 200 : 100;
@@ -278,6 +279,43 @@ describe("settleBettingForMatch", () => {
       }),
     ).toEqual({ poolState: "settled" });
   });
+
+  test("rolls back a non-conserving allocation before paying either side", async () => {
+    const { pool, winner, loser } = await makeBalancedPool();
+    await closeBettingWindowsForMatch(MATCH_ID, db);
+    await db.bucksBet.updateMany({
+      where: { poolId: pool.id },
+      data: {
+        humanMatchedStake: 20,
+        houseMatchedStake: 0,
+        matchedStake: 20,
+        unmatchedStake: 0,
+      },
+    });
+    const balancesBefore = await db.bucksAccount.findMany({
+      where: { id: { in: [winner.account.id, loser.account.id] } },
+      orderBy: { id: "asc" },
+      select: { id: true, balance: true },
+    });
+
+    expect(await settleBettingForMatch(fixture, db)).toEqual([]);
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true, settledAt: true },
+      }),
+    ).toEqual({ poolState: "closed", settledAt: null });
+    expect(
+      await db.bucksAccount.findMany({
+        where: { id: { in: [winner.account.id, loser.account.id] } },
+        orderBy: { id: "asc" },
+        select: { id: true, balance: true },
+      }),
+    ).toEqual(balancesBefore);
+    expect(
+      await db.bucksLedgerEntry.count({ where: { kind: "bet_payout" } }),
+    ).toBe(0);
+  });
 });
 
 describe("refunds and house settlement", () => {
@@ -473,6 +511,92 @@ describe("voidStaleBettingPools", () => {
       { kind: "bet_unmatched_refund", delta: 5 },
       { kind: "bet_void_refund", delta: 5 },
     ]);
+  });
+
+  test("isolates a malformed pool and refunds later healthy pools", async () => {
+    const closesAt = new Date(Date.now() - VOID_GRACE_MS - 60_000);
+    const malformedPool = await db.bucksMatchPool.create({
+      data: {
+        matchId: MATCH_ID,
+        serverId: SERVER_B,
+        detectedAt: new Date(closesAt.getTime() - 600_000),
+        closesAt,
+        queueType: "flex",
+        roster: JSON.stringify({ invalid: true }),
+        poolState: "closed",
+      },
+    });
+    const healthyPool = await makePool(SERVER_A, closesAt);
+    const human = await makeBettor({
+      poolId: healthyPool.id,
+      discordId: bucksTestDiscordId(1),
+      teamId: WINNING_TEAM,
+      stake: 10,
+    });
+
+    expect(await voidStaleBettingPools(db)).toBe(1);
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: malformedPool.id },
+        select: { poolState: true, matchedAt: true },
+      }),
+    ).toEqual({ poolState: "closed", matchedAt: null });
+    expect(
+      await db.bucksAccount.findUniqueOrThrow({
+        where: { id: human.account.id },
+        select: { balance: true },
+      }),
+    ).toEqual({ balance: 100 });
+  });
+
+  test("rolls back a stale refund with a non-conserving allocation", async () => {
+    const closesAt = new Date(Date.now() - VOID_GRACE_MS - 60_000);
+    const pool = await makePool(SERVER_A, closesAt);
+    const first = await makeBettor({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(1),
+      teamId: WINNING_TEAM,
+      stake: 10,
+    });
+    const second = await makeBettor({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(2),
+      teamId: LOSING_TEAM,
+      stake: 10,
+    });
+    await closeBettingWindowsForMatch(MATCH_ID, db);
+    await db.bucksBet.update({
+      where: { id: first.bet.id },
+      data: {
+        humanMatchedStake: 15,
+        houseMatchedStake: 0,
+        matchedStake: 15,
+        unmatchedStake: 0,
+      },
+    });
+    const balancesBefore = await db.bucksAccount.findMany({
+      where: { id: { in: [first.account.id, second.account.id] } },
+      orderBy: { id: "asc" },
+      select: { id: true, balance: true },
+    });
+
+    expect(await voidStaleBettingPools(db)).toBe(0);
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true, settledAt: true },
+      }),
+    ).toEqual({ poolState: "closed", settledAt: null });
+    expect(
+      await db.bucksAccount.findMany({
+        where: { id: { in: [first.account.id, second.account.id] } },
+        orderBy: { id: "asc" },
+        select: { id: true, balance: true },
+      }),
+    ).toEqual(balancesBefore);
+    expect(
+      await db.bucksLedgerEntry.count({ where: { kind: "bet_void_refund" } }),
+    ).toBe(0);
   });
 });
 

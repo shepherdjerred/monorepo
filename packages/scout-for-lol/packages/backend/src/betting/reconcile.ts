@@ -6,6 +6,7 @@ import {
   type BucksAuditFinding,
 } from "#src/betting/reconcile-shared.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/lib/audit/index.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-reconcile");
@@ -19,7 +20,7 @@ export const BUCKS_RECONCILIATION_CRON = {
 } as const;
 
 async function auditAccountBalances(
-  prismaClient: ExtendedPrismaClient,
+  prismaClient: Db,
   findings: BucksAuditFinding[],
 ): Promise<number> {
   const accounts = await prismaClient.bucksAccount.findMany({
@@ -91,23 +92,27 @@ function reportAuditResult(
 export async function reconcileBucksBalances(
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<BucksAuditFinding[]> {
-  const findings: BucksAuditFinding[] = [];
-
   try {
-    const accountCount = await auditAccountBalances(prismaClient, findings);
-    await auditBucksPositions(prismaClient, findings);
-    await auditBucksMatchedPools(prismaClient, findings);
-    reportAuditResult(findings, accountCount);
+    const audit = await prismaClient.$transaction(async (tx) => {
+      // Every invariant is derived from one SQLite read snapshot. Without the
+      // shared transaction, a valid placement or settlement could commit
+      // between related-table queries and create a false discrepancy alert.
+      const findings: BucksAuditFinding[] = [];
+      const accountCount = await auditAccountBalances(tx, findings);
+      await auditBucksPositions(tx, findings);
+      await auditBucksMatchedPools(tx, findings);
+      return { findings, accountCount };
+    });
+    reportAuditResult(audit.findings, audit.accountCount);
+    return audit.findings;
   } catch (error) {
     logger.error("❌ Could not reconcile Bryan Bucks accounting:", error);
     Sentry.captureException(error, { tags: { source: "betting-reconcile" } });
-    findings.push(
+    return [
       auditFinding(
         "settlement",
         "Reconciliation query failed before completion",
       ),
-    );
+    ];
   }
-
-  return findings;
 }

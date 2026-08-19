@@ -17,6 +17,7 @@ import {
   applyBucksDelta,
   BucksStorageOverflowError,
 } from "#src/betting/ledger.ts";
+import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/sweep.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
@@ -64,6 +65,28 @@ type PendingMatchedBet = {
   unmatchedStake: number;
   subjectPuuid: string;
 };
+
+async function settleWithOverflowFallback(input: {
+  classificationVoid: BucksVoidReason | undefined;
+  settle: (
+    voidReason: BucksVoidReason | undefined,
+  ) => Promise<SettlementSummary | undefined>;
+}): Promise<SettlementSummary | undefined> {
+  try {
+    return await input.settle(input.classificationVoid);
+  } catch (error) {
+    if (
+      input.classificationVoid !== undefined ||
+      !(error instanceof BucksStorageOverflowError)
+    ) {
+      throw error;
+    }
+    // The attempted settlement rolled back. Claim the same pool again and
+    // return only matched principal, which placement headroom guarantees
+    // remains representable.
+    return await input.settle("storage_overflow");
+  }
+}
 
 function aliasesForTeam(
   roster: readonly BucksPoolParticipant[],
@@ -280,22 +303,10 @@ export async function settleBettingForMatch(
           voidReason,
         });
       try {
-        let summary: SettlementSummary | undefined;
-        try {
-          summary = await settle(classificationVoid);
-        } catch (error) {
-          if (
-            error instanceof BucksStorageOverflowError &&
-            classificationVoid === undefined
-          ) {
-            // The attempted settlement rolled back. Claim the same pool again
-            // and return only matched principal, which placement headroom
-            // guarantees remains representable.
-            summary = await settle("storage_overflow");
-          } else {
-            throw error;
-          }
-        }
+        const summary = await settleWithOverflowFallback({
+          classificationVoid,
+          settle,
+        });
         if (summary !== undefined) {
           summaries.push(summary);
         }
@@ -351,7 +362,6 @@ async function settleOnePool(input: {
       where: {
         poolId: input.poolId,
         betOutcome: "pending",
-        matchedStake: { gt: 0 },
       },
       orderBy: { id: "asc" },
       select: {
@@ -360,15 +370,25 @@ async function settleOnePool(input: {
         bucksAccount: { select: { discordId: true, isHouse: true } },
         predictedTeamId: true,
         stake: true,
+        humanMatchedStake: true,
+        houseMatchedStake: true,
         matchedStake: true,
         unmatchedStake: true,
         subjectPuuid: true,
       },
     });
     const pending: PendingMatchedBet[] = rows.map((row) => {
-      if (row.matchedStake === null || row.unmatchedStake === null) {
+      const allocation = requireValidBucksAllocation({
+        betId: row.id,
+        submittedStake: row.stake,
+        humanMatchedStake: row.humanMatchedStake,
+        houseMatchedStake: row.houseMatchedStake,
+        matchedStake: row.matchedStake,
+        unmatchedStake: row.unmatchedStake,
+      });
+      if (allocation.matchedStake === 0) {
         throw new Error(
-          `Matched pool ${input.matchId} contains unallocated bet ${row.id.toString()}`,
+          `Matched pool ${input.matchId} contains pending unmatched bet ${row.id.toString()}`,
         );
       }
       return {
@@ -378,8 +398,8 @@ async function settleOnePool(input: {
         isHouse: row.bucksAccount.isHouse,
         predictedTeamId: RiotTeamIdSchema.parse(row.predictedTeamId),
         submittedStake: row.stake,
-        matchedStake: row.matchedStake,
-        unmatchedStake: row.unmatchedStake,
+        matchedStake: allocation.matchedStake,
+        unmatchedStake: allocation.unmatchedStake,
         subjectPuuid: row.subjectPuuid,
       };
     });

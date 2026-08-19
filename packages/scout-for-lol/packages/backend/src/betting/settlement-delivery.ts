@@ -12,11 +12,13 @@ import {
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 
-const logger = createLogger("betting-settlement-delivery");
+const logger = createLogger("betting-financial-delivery");
 const MAX_SEND_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 500;
 
-export type SettlementDeliveryDependencies = {
+type FinancialMessageKind = "close" | "settlement";
+
+export type BettingDeliveryDependencies = {
   sendMessage: (
     options: MessageCreateOptions,
     channelId: DiscordChannelId,
@@ -25,7 +27,7 @@ export type SettlementDeliveryDependencies = {
   sleep: (milliseconds: number) => Promise<void>;
 };
 
-const defaultDependencies: SettlementDeliveryDependencies = {
+const defaultDependencies: BettingDeliveryDependencies = {
   sendMessage: async (options, channelId, guildId) =>
     await sendChannelMessage(options, channelId, guildId),
   sleep: async (milliseconds) => {
@@ -33,18 +35,21 @@ const defaultDependencies: SettlementDeliveryDependencies = {
   },
 };
 
-function settlementChunkNonce(
+function financialChunkNonce(
+  kind: FinancialMessageKind,
   matchId: string,
   channelId: DiscordChannelId,
   chunkIndex: number,
 ): string {
   const deliveryKey = `${matchId}:${channelId}:${chunkIndex.toString()}`;
-  return `bbs:${Bun.hash(deliveryKey).toString(36)}`;
+  const prefix = kind === "close" ? "bbc" : "bbs";
+  return `${prefix}:${Bun.hash(deliveryKey).toString(36)}`;
 }
 
-async function sendSettlementChunk(
-  dependencies: SettlementDeliveryDependencies,
+async function sendFinancialChunk(
+  dependencies: BettingDeliveryDependencies,
   input: {
+    kind: FinancialMessageKind;
     options: MessageCreateOptions;
     channelId: DiscordChannelId;
     guildId: DiscordGuildId;
@@ -67,10 +72,59 @@ async function sendSettlementChunk(
       }
       const delayMs = RETRY_BASE_DELAY_MS * 2 ** (attempt - 1);
       logger.warn(
-        `🎲 Bryan Bucks settlement chunk ${(input.chunkIndex + 1).toString()} attempt ${attempt.toString()}/${MAX_SEND_ATTEMPTS.toString()} failed; retrying in ${delayMs.toString()}ms: ${getErrorMessage(error)}`,
+        `🎲 Bryan Bucks ${input.kind} chunk ${(input.chunkIndex + 1).toString()} attempt ${attempt.toString()}/${MAX_SEND_ATTEMPTS.toString()} failed; retrying in ${delayMs.toString()}ms: ${getErrorMessage(error)}`,
       );
       await dependencies.sleep(delayMs);
     }
+  }
+}
+
+async function sendFinancialMessages(
+  input: {
+    kind: FinancialMessageKind;
+    messages: readonly string[];
+    matchId: string;
+    channelId: string;
+    guildId: string;
+  },
+  dependencies: BettingDeliveryDependencies,
+): Promise<void> {
+  const channelId = DiscordChannelIdSchema.parse(input.channelId);
+  const guildId = DiscordGuildIdSchema.parse(input.guildId);
+  const failures: unknown[] = [];
+  for (const [chunkIndex, content] of input.messages.entries()) {
+    try {
+      await sendFinancialChunk(dependencies, {
+        kind: input.kind,
+        options: {
+          content,
+          // Stable nonces make a transient retry idempotent at Discord.
+          nonce: financialChunkNonce(
+            input.kind,
+            input.matchId,
+            channelId,
+            chunkIndex,
+          ),
+          enforceNonce: true,
+          // Financial summaries must not ping every bettor they enumerate.
+          allowedMentions: { parse: [] },
+        },
+        channelId,
+        guildId,
+        chunkIndex,
+      });
+    } catch (error) {
+      failures.push(error);
+      logger.error(
+        `🎲 Bryan Bucks ${input.kind} chunk ${(chunkIndex + 1).toString()}/${input.messages.length.toString()} failed after retries: ${getErrorMessage(error)}`,
+      );
+    }
+  }
+  if (failures.length > 0) {
+    throw new AggregateError(
+      failures,
+      `Bryan Bucks ${input.kind} failed to deliver ${failures.length.toString()}/${input.messages.length.toString()} chunk(s)`,
+    );
   }
 }
 
@@ -81,37 +135,19 @@ export async function sendSettlementMessages(
     channelId: string;
     guildId: string;
   },
-  dependencies: SettlementDeliveryDependencies = defaultDependencies,
+  dependencies: BettingDeliveryDependencies = defaultDependencies,
 ): Promise<void> {
-  const channelId = DiscordChannelIdSchema.parse(input.channelId);
-  const guildId = DiscordGuildIdSchema.parse(input.guildId);
-  const failures: unknown[] = [];
-  for (const [chunkIndex, content] of input.messages.entries()) {
-    try {
-      await sendSettlementChunk(dependencies, {
-        options: {
-          content,
-          // Stable nonces make a transient retry idempotent at Discord.
-          nonce: settlementChunkNonce(input.matchId, channelId, chunkIndex),
-          enforceNonce: true,
-          // A fifteen-person settlement must not ping fifteen people.
-          allowedMentions: { parse: [] },
-        },
-        channelId,
-        guildId,
-        chunkIndex,
-      });
-    } catch (error) {
-      failures.push(error);
-      logger.error(
-        `🎲 Bryan Bucks settlement chunk ${(chunkIndex + 1).toString()}/${input.messages.length.toString()} failed after retries: ${getErrorMessage(error)}`,
-      );
-    }
-  }
-  if (failures.length > 0) {
-    throw new AggregateError(
-      failures,
-      `Bryan Bucks settlement failed to deliver ${failures.length.toString()}/${input.messages.length.toString()} chunk(s)`,
-    );
-  }
+  await sendFinancialMessages({ ...input, kind: "settlement" }, dependencies);
+}
+
+export async function sendCloseMessages(
+  input: {
+    messages: readonly string[];
+    matchId: string;
+    channelId: string;
+    guildId: string;
+  },
+  dependencies: BettingDeliveryDependencies = defaultDependencies,
+): Promise<void> {
+  await sendFinancialMessages({ ...input, kind: "close" }, dependencies);
 }

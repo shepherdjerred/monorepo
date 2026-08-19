@@ -10,7 +10,10 @@ import {
   bucksTestRoster,
 } from "#src/testing/bucks-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { closeExpiredBettingWindows } from "#src/betting/sweep.ts";
+import {
+  closeBettingWindowsForMatch,
+  closeExpiredBettingWindows,
+} from "#src/betting/sweep.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import {
   HOUSE_ACCOUNT_DISCORD_ID,
@@ -296,5 +299,38 @@ describe("closeExpiredBettingWindows", () => {
     const offerReadIndex = operations.indexOf("BucksBet.findMany");
     expect(claimIndex).toBeGreaterThanOrEqual(0);
     expect(claimIndex).toBeLessThan(offerReadIndex);
+  });
+});
+
+describe("closeBettingWindowsForMatch", () => {
+  test("isolates a malformed guild pool and closes healthy pools", async () => {
+    const healthyPool = await makePool();
+    await makeOffer({
+      poolId: healthyPool.id,
+      discordId: bucksTestDiscordId(1),
+      teamId: 100,
+      stake: 5,
+    });
+    const malformedServerId = DiscordGuildIdSchema.parse("1337623164146155594");
+    const malformedPool = await db.bucksMatchPool.create({
+      data: {
+        matchId: MATCH_ID,
+        serverId: malformedServerId,
+        detectedAt: new Date("2030-01-01T00:00:00Z"),
+        closesAt: new Date("2030-01-01T00:10:00Z"),
+        roster: "{}",
+      },
+    });
+
+    const closed = await closeBettingWindowsForMatch(MATCH_ID, db, NOW);
+
+    expect(closed).toHaveLength(1);
+    expect(closed[0]?.serverId).toBe(SERVER_ID);
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: malformedPool.id },
+        select: { poolState: true, matchedAt: true },
+      }),
+    ).toEqual({ poolState: "open", matchedAt: null });
   });
 });

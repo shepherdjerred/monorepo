@@ -7,9 +7,9 @@ import {
   auditFinding,
   type BucksAuditFinding,
 } from "#src/betting/reconcile-shared.ts";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/lib/audit/index.ts";
 
-async function loadMatchedPools(prismaClient: ExtendedPrismaClient) {
+async function loadMatchedPools(prismaClient: Db) {
   return await prismaClient.bucksMatchPool.findMany({
     where: { matchedAt: { not: null } },
     select: {
@@ -258,7 +258,7 @@ function auditMatchedPool(
 }
 
 export async function auditBucksMatchedPools(
-  prismaClient: ExtendedPrismaClient,
+  prismaClient: Db,
   findings: BucksAuditFinding[],
 ): Promise<void> {
   const pools = await loadMatchedPools(prismaClient);

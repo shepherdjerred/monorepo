@@ -67,6 +67,23 @@ export function resetPollingState(): void {
   isPollingInProgress = false;
   pollingStartTime = undefined;
 }
+
+type BucksPostmatchResult = Awaited<ReturnType<typeof settleAndAwardBucks>>;
+
+export function shouldAnnounceBucks(input: {
+  silent: boolean;
+  bucks: BucksPostmatchResult;
+}): boolean {
+  return (
+    !input.silent ||
+    input.bucks.closures.some((pool) => pool.positions.length > 0) ||
+    input.bucks.settlements.some((summary) =>
+      summary.bets.some((bet) => !bet.isHouse),
+    ) ||
+    input.bucks.parlaySettlements.some((summary) => summary.bets.length > 0)
+  );
+}
+
 function shouldSkipPollingRun(): boolean {
   if (!isPollingInProgress) {
     return false;
@@ -236,12 +253,7 @@ async function processMatchAndUpdatePlayers(
     }
   }
 
-  const hasBettorNotice =
-    bucks.closures.some((pool) => pool.positions.length > 0) ||
-    bucks.settlements.some((summary) =>
-      summary.bets.some((bet) => !bet.isHouse),
-    );
-  if (!silent || hasBettorNotice) {
+  if (shouldAnnounceBucks({ silent, bucks })) {
     // Announced after the report so it reads as a follow-up, and as its own
     // message rather than appended to the report's content, which the AI review
     // already owns and which is delivered to every guild at once. A silent

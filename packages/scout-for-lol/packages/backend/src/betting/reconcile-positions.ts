@@ -1,10 +1,10 @@
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/lib/audit/index.ts";
 import {
   auditFinding,
   type BucksAuditFinding,
 } from "#src/betting/reconcile-shared.ts";
 
-async function loadBets(prismaClient: ExtendedPrismaClient) {
+async function loadBets(prismaClient: Db) {
   return await prismaClient.bucksBet.findMany({
     orderBy: { id: "asc" },
     select: {
@@ -292,7 +292,7 @@ function auditBet(
 }
 
 async function auditActiveSlots(
-  prismaClient: ExtendedPrismaClient,
+  prismaClient: Db,
   findings: BucksAuditFinding[],
 ): Promise<ReadonlySet<number>> {
   const positions = await prismaClient.bucksOpenPosition.findMany({
@@ -331,7 +331,7 @@ async function auditActiveSlots(
 }
 
 export async function auditBucksPositions(
-  prismaClient: ExtendedPrismaClient,
+  prismaClient: Db,
   findings: BucksAuditFinding[],
 ): Promise<void> {
   const activeBetIds = await auditActiveSlots(prismaClient, findings);

@@ -112,12 +112,11 @@ function teamTotal(
   return Number(total);
 }
 
-/** Match humans first at even money, then use a bounded aggregate house fill. */
-export function matchBucksOffers(input: {
+function validateMatchingInput(input: {
   offers: readonly MatchableOffer[];
   houseMaximum: number;
   houseBalance: number;
-}): MatchingResult {
+}): void {
   if (
     !Number.isSafeInteger(input.houseMaximum) ||
     input.houseMaximum < 0 ||
@@ -141,6 +140,15 @@ export function matchBucksOffers(input: {
   ) {
     throw new Error("Bryan Bucks matching received duplicate bet IDs");
   }
+}
+
+/** Match humans first at even money, then use a bounded aggregate house fill. */
+export function matchBucksOffers(input: {
+  offers: readonly MatchableOffer[];
+  houseMaximum: number;
+  houseBalance: number;
+}): MatchingResult {
+  validateMatchingInput(input);
 
   const blueTotal = teamTotal(input.offers, 100);
   const redTotal = teamTotal(input.offers, 200);
