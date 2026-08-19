@@ -18,7 +18,7 @@ public struct OTPParser {
     )
     private static let urlPattern = makeExpression("(?i)https?://\\S+")
     private static let emailPattern = makeExpression("(?i)[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}")
-    private static let senderDomainPattern = makeExpression("@([A-Za-z0-9.-]+)")
+    private static let senderMailboxPattern = makeExpression("(?i)^[A-Z0-9._%+-]+@([A-Z0-9.-]+)$")
 
     public let lifetime: TimeInterval
 
@@ -158,12 +158,27 @@ public struct OTPParser {
     }
 
     private static func service(from metadata: MessageMetadata) -> String? {
-        if let domainMatch = senderDomainPattern.firstMatch(in: metadata.sender, range: NSRange(metadata.sender.startIndex..., in: metadata.sender)),
-           let domainRange = Range(domainMatch.range(at: 1), in: metadata.sender) {
-            return String(metadata.sender[domainRange]).lowercased()
+        if let mailbox = mailboxAddress(from: metadata.sender),
+           let domainMatch = senderMailboxPattern.firstMatch(in: mailbox, range: NSRange(mailbox.startIndex..., in: mailbox)),
+           let domainRange = Range(domainMatch.range(at: 1), in: mailbox) {
+            let domain = String(mailbox[domainRange]).lowercased()
+            if ServiceIdentity.isUsableService(domain) {
+                return domain
+            }
         }
         let subject = metadata.subject.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         return ServiceIdentity.isUsableService(subject) ? subject : nil
+    }
+
+    private static func mailboxAddress(from sender: String) -> String? {
+        let trimmed = sender.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let openingBracket = trimmed.lastIndex(of: "<"),
+           let closingBracket = trimmed[openingBracket...].firstIndex(of: ">"),
+           openingBracket < closingBracket {
+            let address = String(trimmed[trimmed.index(after: openingBracket)..<closingBracket])
+            return senderMailboxPattern.firstMatch(in: address, range: NSRange(address.startIndex..., in: address)) == nil ? nil : address
+        }
+        return senderMailboxPattern.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)) == nil ? nil : trimmed
     }
 
     private static func senderLabel(from sender: String) -> String {

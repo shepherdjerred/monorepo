@@ -45,6 +45,15 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: 63ZAG7X889
         SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
+      configs:
+        Release:
+          CODE_SIGN_IDENTITY: Apple Development
+          "CODE_SIGN_IDENTITY[sdk=macosx*]": Developer ID Application
+          CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: ""
+          "DEVELOPMENT_TEAM[sdk=macosx*]": 63ZAG7X889
+          PROVISIONING_PROFILE_SPECIFIER: ""
+          "PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]": com.sjerred.MailMateCodeFill
     dependencies:
       - target: MailMateCodeFillProvider
         embed: true
@@ -90,6 +99,14 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: 63ZAG7X889
         SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
+      configs:
+        Release:
+          "CODE_SIGN_IDENTITY[sdk=macosx*]": Developer ID Application
+          CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: ""
+          "DEVELOPMENT_TEAM[sdk=macosx*]": 63ZAG7X889
+          PROVISIONING_PROFILE_SPECIFIER: ""
+          "PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]": com.sjerred.MailMateCodeFill.Provider
     entitlements:
       path: Entitlements/MailMateCodeFillProvider.entitlements
       properties:
@@ -115,7 +132,13 @@ targets:
         SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
       configs:
         Release:
-          PROVISIONING_PROFILE_SPECIFIER: com.sjerred.MailMateCodeFillHelper
+          CODE_SIGN_IDENTITY: Apple Development
+          "CODE_SIGN_IDENTITY[sdk=macosx*]": Developer ID Application
+          CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: ""
+          "DEVELOPMENT_TEAM[sdk=macosx*]": 63ZAG7X889
+          PROVISIONING_PROFILE_SPECIFIER: ""
+          "PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]": com.sjerred.MailMateCodeFillHelper
     entitlements:
       path: Entitlements/MailMateCodeFillHelper.entitlements
       properties:
