@@ -1,4 +1,4 @@
-import { lstat, mkdir, realpath } from "node:fs/promises";
+import { lstat, mkdir, realpath, rm } from "node:fs/promises";
 import path from "node:path";
 import type { CommandRequest, CommandResult } from "./ports.ts";
 
@@ -216,12 +216,17 @@ export async function prepareManagedCheckout(
         `Source checkout ${sourceCheckout} has an empty origin URL`,
       );
     }
-    await mustRunGit(
-      options.run,
-      path.dirname(checkout),
-      ["clone", "--origin", "origin", remoteUrl, checkout],
-      `Could not create managed checkout ${checkout}`,
-    );
+    try {
+      await mustRunGit(
+        options.run,
+        path.dirname(checkout),
+        ["clone", "--origin", "origin", remoteUrl, checkout],
+        `Could not create managed checkout ${checkout}`,
+      );
+    } catch (error) {
+      await rm(checkout, { recursive: true, force: true });
+      throw error;
+    }
   }
 
   const spiceRef = await runGit(options.run, sourceCheckout, [

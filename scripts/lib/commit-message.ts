@@ -51,19 +51,7 @@ export async function validCommitScopes(
   repositoryRoot: string,
 ): Promise<string[]> {
   const packagesDirectory = path.join(repositoryRoot, "packages");
-  let entries: Awaited<ReturnType<typeof readdir>>;
-  try {
-    entries = await readdir(packagesDirectory, { withFileTypes: true });
-  } catch (error) {
-    if (
-      !(error instanceof Error) ||
-      !("code" in error) ||
-      error.code !== "ENOENT"
-    ) {
-      throw error;
-    }
-    entries = [];
-  }
+  const entries = await readdir(packagesDirectory, { withFileTypes: true });
   return [
     ...entries
       .filter((entry) => entry.isDirectory())

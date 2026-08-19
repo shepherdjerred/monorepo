@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
@@ -268,6 +268,48 @@ describe("managed checkout safety", () => {
       await Promise.all([
         rm(sourceCheckout, { recursive: true, force: true }),
         rm(checkout, { recursive: true, force: true }),
+      ]);
+    }
+  });
+
+  test("cleans a partial clone after the initial clone fails", async () => {
+    const sourceCheckout = await temporaryDirectory("pr-fleet-source-");
+    const parent = await temporaryDirectory("pr-fleet-managed-");
+    const checkout = path.join(parent, "checkout");
+    const requests: CommandRequest[] = [];
+    const run = async (request: CommandRequest): Promise<CommandResult> => {
+      requests.push(request);
+      if (request.args[0] === "remote") {
+        return commandResult(0, "https://github.com/example/repository.git\n");
+      }
+      if (request.args[0] === "clone") {
+        await mkdir(checkout);
+        await writeFile(path.join(checkout, "partial"), "incomplete\n");
+        return commandResult(128, "", "clone interrupted");
+      }
+      throw new Error(`Unexpected command: ${request.args.join(" ")}`);
+    };
+
+    try {
+      await expect(
+        prepareManagedCheckout({
+          sourceCheckout,
+          checkout,
+          worktreeRoot: path.join(parent, "worktrees"),
+          run,
+        }),
+      ).rejects.toThrow("Could not create managed checkout");
+      expect(await Bun.file(path.join(checkout, "partial")).exists()).toBe(
+        false,
+      );
+      expect(requests.map((request) => request.args[0])).toEqual([
+        "remote",
+        "clone",
+      ]);
+    } finally {
+      await Promise.all([
+        rm(sourceCheckout, { recursive: true, force: true }),
+        rm(parent, { recursive: true, force: true }),
       ]);
     }
   });
