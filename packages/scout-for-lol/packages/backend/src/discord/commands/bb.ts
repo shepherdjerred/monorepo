@@ -266,7 +266,7 @@ export function buildBbRulesEmbed(): EmbedBuilder {
         name: "Eligibility & earnings",
         value:
           `Your Discord account must be linked to a tracked player. A new wallet starts with **${SEED_GRANT.toString()} BB**. ` +
-          "Eligible games award **+1 BB** for playing, **+1 BB** for winning, and **+1 BB** for MVP.",
+          "Eligible ranked games award **+1 BB** for playing, **+1 BB** for winning, and **+1 BB** for MVP.",
       },
       {
         name: "Placing a bet",
