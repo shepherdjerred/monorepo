@@ -1072,6 +1072,7 @@ steps:
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
         - ".buildkite/scripts/read-buildkite-handoff.ts"
         - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/select-image-targets.ts"
         - ".buildkite/scripts/select-image-targets-lockfile.ts"
         - ".buildkite/scripts/select-image-targets-workspaces.ts"

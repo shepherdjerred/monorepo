@@ -419,8 +419,6 @@ test("uploads and records selector metadata through their command seams", async 
   expect(await Bun.spawn(["chmod", "+x", fakeAgent]).exited).toBe(0);
   const previousPath = Bun.env["PATH"];
   Bun.env["PATH"] = `${temporaryDirectory}:${previousPath ?? ""}`;
-  const previousProcessPath = process.env["PATH"];
-  process.env["PATH"] = `${temporaryDirectory}:${previousProcessPath ?? ""}`;
   try {
     await uploadPipeline(uploadDocument, uploadDocument.steps, undefined);
     await recordSelectedSteps(new Set(["verify"]));
@@ -431,8 +429,6 @@ test("uploads and records selector metadata through their command seams", async 
   } finally {
     if (previousPath === undefined) delete Bun.env["PATH"];
     else Bun.env["PATH"] = previousPath;
-    if (previousProcessPath === undefined) delete process.env["PATH"];
-    else process.env["PATH"] = previousProcessPath;
     await Bun.file(fakeAgent).delete();
     expect(await Bun.spawn(["rmdir", temporaryDirectory]).exited).toBe(0);
   }
@@ -490,9 +486,9 @@ test("runs the selected graph and cleans up its changed-file list", async () => 
     recordSelectedSteps: async (selected) => {
       calls.push(`record:${String(selected.size)}`);
     },
-    uploadPipeline: async (_document, steps, changedFilesPath) => {
+    uploadPipeline: async (_document, renderedSteps, changedFilesPath) => {
       calls.push(
-        `upload:${String(steps.length)}:${changedFilesPath ?? "none"}`,
+        `upload:${String(renderedSteps.length)}:${changedFilesPath ?? "none"}`,
       );
     },
     annotateFallback: async () => {
@@ -529,9 +525,9 @@ test("falls back to the complete graph when selection fails", async () => {
       calls.push(`record:${String(selected.size)}`);
       throw new Error("metadata unavailable");
     },
-    uploadPipeline: async (_document, steps, changedFilesPath) => {
+    uploadPipeline: async (_document, renderedSteps, changedFilesPath) => {
       calls.push(
-        `upload:${String(steps.length)}:${changedFilesPath ?? "none"}`,
+        `upload:${String(renderedSteps.length)}:${changedFilesPath ?? "none"}`,
       );
     },
     annotateFallback: async (reason) => {

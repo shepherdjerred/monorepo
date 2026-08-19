@@ -22,7 +22,7 @@ describe("run stderr capture", () => {
   const originalWrite = process.stderr.write.bind(process.stderr);
   afterEach(() => {
     process.stderr.write = originalWrite;
-    delete Bun.env[testEnvironmentName];
+    Bun.env[testEnvironmentName] = undefined;
   });
 
   test("runAllowExit returns a stderr tail and never throws on non-zero exit", async () => {
@@ -145,7 +145,7 @@ describe("run stderr capture", () => {
 });
 
 test("requires and optionally reads environment variables", () => {
-  delete Bun.env[testEnvironmentName];
+  Bun.env[testEnvironmentName] = undefined;
   expect(() => requireEnv(testEnvironmentName)).toThrow(
     `Missing required environment variable ${testEnvironmentName}`,
   );
@@ -156,7 +156,7 @@ test("requires and optionally reads environment variables", () => {
   expect(optionalEnv(testEnvironmentName)).toBe("value");
   Bun.env[testEnvironmentName] = "";
   expect(optionalEnv(testEnvironmentName)).toBeNull();
-  delete Bun.env[testEnvironmentName];
+  Bun.env[testEnvironmentName] = undefined;
 });
 
 test("returns the temporary base without a trailing slash", () => {
