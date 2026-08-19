@@ -62,6 +62,15 @@ describe("PR health CI fixtures", () => {
     expect(result.status).toBe("PENDING");
   });
 
+  test("waiting exact-head Buildkite build is pending", () => {
+    const result = ciHealth(
+      HEAD_SHA,
+      [githubCheck("pending")],
+      build("waiting"),
+    );
+    expect(result.status).toBe("PENDING");
+  });
+
   test("failed build is unhealthy and prints per-job log commands", () => {
     const result = ciHealth(
       HEAD_SHA,

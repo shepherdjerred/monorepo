@@ -50,6 +50,7 @@ function statusForBuildkiteBuild(state: string): HealthStatus {
     case "scheduled":
     case "running":
     case "creating":
+    case "waiting":
     case "blocked":
     case "canceling":
     case "cancelling":
