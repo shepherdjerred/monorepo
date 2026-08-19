@@ -305,6 +305,20 @@ async function replyHistory(
   await interaction.editReply(renderBucksHistory(discordId, page));
 }
 
+async function editReplyInChunks(
+  interaction: ChatInputCommandInteraction,
+  chunks: readonly string[],
+): Promise<void> {
+  const first = chunks[0];
+  if (first === undefined) {
+    throw new Error("Bryan Bucks reply produced no Discord content");
+  }
+  await interaction.editReply({ content: first });
+  for (const chunk of chunks.slice(1)) {
+    await interaction.followUp({ content: chunk, ephemeral: true });
+  }
+}
+
 async function replyOpen(
   interaction: ChatInputCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
@@ -319,17 +333,10 @@ async function replyOpen(
   }
 
   const sections = buildOpenMarketSections(pools);
-  const chunks = splitMessageIntoChunks(
-    `${sections.join("\n\n")}\n\n${HOUSE_CUT_TERMS}`,
+  await editReplyInChunks(
+    interaction,
+    splitMessageIntoChunks(`${sections.join("\n\n")}\n\n${HOUSE_CUT_TERMS}`),
   );
-  const first = chunks[0];
-  if (first === undefined) {
-    throw new Error("Open Bryan Bucks markets produced no Discord content");
-  }
-  await interaction.editReply({ content: first });
-  for (const chunk of chunks.slice(1)) {
-    await interaction.followUp({ content: chunk, ephemeral: true });
-  }
 }
 
 export function buildOpenMarketSections(
@@ -352,6 +359,18 @@ export function buildOpenMarketSections(
       `🔴 **${teamName(RED_TEAM_ID)}:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} bet(s) — ${redPlayers}`,
     ].join("\n");
   });
+}
+
+export function buildUnknownGameReplyChunks(
+  requestedAlias: string,
+  availableAliases: readonly string[],
+): string[] {
+  return splitMessageIntoChunks(
+    [
+      `No open game for **${requestedAlias}**. Valid game aliases:`,
+      ...availableAliases.map((alias) => `- \`${alias}\``),
+    ].join("\n"),
+  );
 }
 
 async function replyBet(
@@ -404,12 +423,17 @@ async function replyBet(
     trackedGameAliases(parseRoster(pool.roster)),
   );
 
-  await interaction.editReply({
-    content:
-      available.length === 0
-        ? "No games are open for betting right now."
-        : `No open game for **${requestedAlias}**. Valid game aliases: ${available.map((alias) => `\`${alias}\``).join(", ")}.`,
-  });
+  if (available.length === 0) {
+    await interaction.editReply({
+      content: "No games are open for betting right now.",
+    });
+    return;
+  }
+
+  await editReplyInChunks(
+    interaction,
+    buildUnknownGameReplyChunks(requestedAlias, available),
+  );
 }
 
 export async function executeBb(

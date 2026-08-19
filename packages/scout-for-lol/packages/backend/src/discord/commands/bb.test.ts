@@ -3,6 +3,7 @@ import { bucksTestRoster } from "#src/testing/bucks-fixtures.ts";
 import {
   bbCommand,
   buildOpenMarketSections,
+  buildUnknownGameReplyChunks,
   formatGameSelectors,
   resolveOpenGameByAlias,
   trackedGameAliases,
@@ -123,6 +124,22 @@ describe("/bb bet", () => {
 
   test("suggests only aliases accepted by the game selector", () => {
     expect(trackedGameAliases(bucksTestRoster())).toEqual(["jerred", "bryan"]);
+  });
+
+  test("keeps every suggested alias within Discord-safe reply chunks", () => {
+    const aliases = Array.from(
+      { length: 200 },
+      (_, index) => `tracked-player-${index.toString().padStart(3, "0")}`,
+    );
+    const chunks = buildUnknownGameReplyChunks("missing", aliases);
+    const fullReply = chunks.join("\n");
+
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(chunks.every((chunk) => chunk.length <= 1900)).toBe(true);
+    expect(fullReply).toContain("No open game for **missing**");
+    for (const alias of aliases) {
+      expect(fullReply).toContain(`- \`${alias}\``);
+    }
   });
 
   test("shows every open-game alias with its Blue or Red team", () => {
