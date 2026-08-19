@@ -245,6 +245,8 @@ export async function undoCustomDraftPick(params: {
         params.actor.discordAdministrator,
       );
       const game = currentGame(snapshot);
+      if (game.state !== "DRAFTING")
+        throw new Error("Cannot undo a draft pick outside the drafting phase");
       const participants = undoCustomPick(game.participants);
       return refreshSnapshot(
         {

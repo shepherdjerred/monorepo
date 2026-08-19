@@ -4,16 +4,20 @@ import { newestCustomSnapshot } from "@/lib/newest-custom-snapshot";
 
 const NOW = "2026-08-15T20:00:00.000Z";
 
-function snapshot(revision: number) {
+function snapshot(
+  revision: number,
+  id = "4df1fd22-770f-4f9b-a247-bd97a73c603d",
+  state: "RECRUITING" | "ENDED" = "RECRUITING",
+) {
   return CustomNightSnapshotSchema.parse({
-    id: "4df1fd22-770f-4f9b-a247-bd97a73c603d",
+    id,
     guildId: "12345678901234567",
     guildName: "Guild",
     launchChannelId: "12345678901234567",
     voiceLobbyChannelId: "12345678901234567",
     hostDiscordId: "12345678901234567",
     cohostDiscordIds: [],
-    state: "RECRUITING",
+    state,
     revision,
     participants: [],
     currentGame: null,
@@ -43,5 +47,19 @@ describe("newestCustomSnapshot", () => {
   test("accepts a strictly newer revision", () => {
     const candidate = snapshot(8);
     expect(newestCustomSnapshot(snapshot(7), candidate)).toBe(candidate);
+  });
+
+  test("accepts a snapshot from a new night even at a lower revision", () => {
+    const candidate = snapshot(0, "5df1fd22-770f-4f9b-a247-bd97a73c603d");
+    expect(newestCustomSnapshot(snapshot(7), candidate)).toBe(candidate);
+  });
+
+  test("clears an ended night when the active query returns null", () => {
+    expect(
+      newestCustomSnapshot(
+        snapshot(7, "4df1fd22-770f-4f9b-a247-bd97a73c603d", "ENDED"),
+        null,
+      ),
+    ).toBe(null);
   });
 });

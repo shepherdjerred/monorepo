@@ -36,7 +36,14 @@ async function claimTournamentProvisioning(params: {
   snapshot: CustomNightSnapshot;
   actorDiscordId: string;
   now: Date;
+  expectedRevision: number | undefined;
 }): Promise<CustomMutationResult & { claimId?: string }> {
+  if (
+    params.expectedRevision !== undefined &&
+    params.snapshot.revision !== params.expectedRevision
+  ) {
+    return { applied: false, snapshot: params.snapshot };
+  }
   const game = currentGame(params.snapshot);
   if (game.state !== "CODE_PENDING")
     throw new Error("Custom game is not waiting for a Tournament code");
@@ -48,7 +55,7 @@ async function claimTournamentProvisioning(params: {
   const result = await commitCustomMutation({
     prisma: params.prisma,
     nightId: params.snapshot.id,
-    expectedRevision: params.snapshot.revision,
+    expectedRevision: params.expectedRevision ?? params.snapshot.revision,
     actorDiscordId: params.actorDiscordId,
     action: "TOURNAMENT_CODE_PROVISIONING_STARTED",
     payload: { claimId, previousClaimId },
@@ -122,6 +129,7 @@ export async function provisionCustomTournamentCode(params: {
   prisma: ExtendedPrismaClient;
   nightId: string;
   actorDiscordId: string;
+  expectedRevision?: number;
   fetcher?: TournamentFetch;
 }) {
   const snapshot = await getCustomNight(params.prisma, params.nightId);
@@ -130,6 +138,7 @@ export async function provisionCustomTournamentCode(params: {
     prisma: params.prisma,
     snapshot,
     actorDiscordId: params.actorDiscordId,
+    expectedRevision: params.expectedRevision,
     now: new Date(),
   });
   if (!claim.applied || claim.claimId === undefined) return claim;

@@ -393,6 +393,7 @@ export const customsRouter = router({
           prisma,
           nightId: input.nightId,
           actorDiscordId: actor.discordId,
+          expectedRevision: input.expectedRevision,
         }),
       );
     }),
