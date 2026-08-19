@@ -152,8 +152,8 @@ public struct OTPParser {
            let domainRange = Range(domainMatch.range(at: 1), in: metadata.sender) {
             return String(metadata.sender[domainRange]).lowercased()
         }
-        let subject = metadata.subject.trimmingCharacters(in: .whitespacesAndNewlines)
-        return subject.isEmpty ? nil : subject
+        let subject = metadata.subject.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return ServiceIdentity.isUsableService(subject) ? subject : nil
     }
 
     private static func senderLabel(from sender: String) -> String {

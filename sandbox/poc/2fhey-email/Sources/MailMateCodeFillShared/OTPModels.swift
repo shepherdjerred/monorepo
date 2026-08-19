@@ -44,6 +44,8 @@ public struct OTPRecord: Codable, Equatable, Sendable {
 }
 
 public enum ServiceIdentity {
+    public static let localURLIdentifier = "http://127.0.0.1:8788"
+
     // OTPParser falls back to the message subject when the sender carries no domain, so a stored
     // service string is not necessarily usable as an AutoFill domain identifier.
     public static func isDomain(_ value: String) -> Bool {
@@ -58,5 +60,24 @@ public enum ServiceIdentity {
                 !label.hasPrefix("-") && !label.hasSuffix("-") &&
                 label.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-") }
         }
+    }
+
+    public static func isUsableService(_ value: String) -> Bool {
+        let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return isDomain(normalized) || normalized == "localhost" || normalized == "127.0.0.1"
+    }
+
+    public static func matchingValues(for value: String) -> [String] {
+        let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if normalized == "localhost" || normalized == "127.0.0.1" {
+            return [localURLIdentifier, "localhost", "127.0.0.1"]
+        }
+        if let url = URL(string: normalized), let host = url.host, isUsableService(host) {
+            if host == "localhost" || host == "127.0.0.1" {
+                return [localURLIdentifier, "localhost", "127.0.0.1"]
+            }
+            return [host]
+        }
+        return isDomain(normalized) ? [normalized] : []
     }
 }
