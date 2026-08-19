@@ -155,21 +155,24 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         }
         logger.info("event=credential_completion outcome=attempt \(CodeFillObservability.recordSummary(record), privacy: .public)")
         let credential = ASOneTimeCodeCredential(code: record.code)
-        extensionContext.completeOneTimeCodeRequest(using: credential) { [logger] expired in
+        let context = extensionContext
+        let providerLogger = logger
+        context.completeOneTimeCodeRequest(using: credential) { [weak self, logger = providerLogger] expired in
             guard !expired else {
                 logger.info("event=credential_completion outcome=expired_before_use message_id_hash=\(CodeFillObservability.fingerprint(record.messageID), privacy: .public)")
                 return
             }
-            do {
-                let store = try CodeStore(applicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier)
-                try store.consume(messageID: record.messageID)
-                let remainingRecords = try store.read()
-                logger.info("event=credential_completion outcome=consumed remaining_record_count=\(remainingRecords.count, privacy: .public) message_id_hash=\(CodeFillObservability.fingerprint(record.messageID), privacy: .public)")
-                Task { @MainActor [self] in
-                    synchronizeIdentityStore(remainingRecords)
+            Task.detached(priority: .userInitiated) { [logger] in
+                do {
+                    let store = try CodeStore(applicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier)
+                    let remainingRecords = try store.consumeAndReadRemaining(messageID: record.messageID)
+                    logger.info("event=credential_completion outcome=consumed remaining_record_count=\(remainingRecords.count, privacy: .public) message_id_hash=\(CodeFillObservability.fingerprint(record.messageID), privacy: .public)")
+                    Task { @MainActor [weak self] in
+                        self?.synchronizeIdentityStore(remainingRecords)
+                    }
+                } catch {
+                    logger.error("event=credential_completion outcome=consume_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
                 }
-            } catch {
-                logger.error("event=credential_completion outcome=consume_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
             }
         }
     }
@@ -184,12 +187,14 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         // A record with no derived service matches nothing in particular, and offering it to every
         // requesting site would leak codes across services.
         guard let service = record.service else { return false }
-        let normalizedService = service.lowercased()
-        let requestedValues = [serviceIdentifier.lowercased()] + (URL(string: serviceIdentifier)?.host.map { [$0.lowercased()] } ?? [])
-        return requestedValues.contains { requested in
-            requested == normalizedService ||
-                requested.hasSuffix(".\(normalizedService)") ||
-                normalizedService.hasSuffix(".\(requested)")
+        let recordValues = ServiceIdentity.matchingValues(for: service)
+        let requestedValues = ServiceIdentity.matchingValues(for: serviceIdentifier)
+        return recordValues.contains { recordValue in
+            requestedValues.contains { requestedValue in
+                requestedValue == recordValue ||
+                    requestedValue.hasSuffix(".\(recordValue)") ||
+                    recordValue.hasSuffix(".\(requestedValue)")
+            }
         }
     }
 

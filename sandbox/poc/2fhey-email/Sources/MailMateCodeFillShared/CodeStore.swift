@@ -74,15 +74,20 @@ public struct CodeStore {
     }
 
     public func consume(messageID: String, now: Date = Date()) throws {
+        _ = try consumeAndReadRemaining(messageID: messageID, now: now)
+    }
+
+    public func consumeAndReadRemaining(messageID: String, now: Date = Date()) throws -> [OTPRecord] {
         let startedAt = Date()
         do {
             let result = try withLock {
                 let records = try readUnlocked(now: now)
                 let remaining = records.filter { $0.messageID != messageID }
                 try writeUnlocked(remaining)
-                return (records.count != remaining.count, remaining.count)
+                return (records.count != remaining.count, remaining)
             }
-            CodeFillObservability.storeLogger.info("event=store_consume outcome=success record_found=\(result.0, privacy: .public) record_count=\(result.1, privacy: .public) message_id_hash=\(CodeFillObservability.fingerprint(messageID), privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
+            CodeFillObservability.storeLogger.info("event=store_consume outcome=success record_found=\(result.0, privacy: .public) record_count=\(result.1.count, privacy: .public) message_id_hash=\(CodeFillObservability.fingerprint(messageID), privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
+            return result.1
         } catch {
             CodeFillObservability.storeLogger.error("event=store_consume outcome=error error=\(CodeFillObservability.errorSummary(error), privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
             throw error

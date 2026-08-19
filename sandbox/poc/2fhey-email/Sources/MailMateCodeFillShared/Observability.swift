@@ -15,62 +15,78 @@ public enum CodeFillObservability {
     public static let storeLogger = Logger(subsystem: subsystem, category: "store")
     public static let providerLogger = Logger(subsystem: subsystem, category: "provider")
 
-    private static let saltDefaultsKey = "observability-fingerprint-salt"
     private static let saltLock = NSLock()
     nonisolated(unsafe) private static var cachedSalt: Data?
+    private static let saltFileName = "observability-fingerprint-salt.bin"
 
     // Domains, senders, and message IDs are guessable, so an unsalted digest is reversible by
     // anyone with log access. The salt is generated once and shared through the App Group so
     // fingerprints stay comparable across the helper, app, and extension.
     private static func salt() -> Data {
         saltLock.lock()
-        defer { saltLock.unlock() }
         if let cachedSalt {
+            saltLock.unlock()
             return cachedSalt
         }
+        saltLock.unlock()
 
-        let defaults = UserDefaults(suiteName: CodeFillConfiguration.applicationGroupIdentifier)
         guard let containerURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier
         ) else {
-            // Preserve the existing fallback for environments without an App Group, while the
-            // normal path below is serialized across all helper/app/extension processes.
+            // Unit tests and command-line invocations do not have the production App Group. Keep
+            // those environments usable without pretending their process-local salt is shared.
             let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
-            defaults?.set(generated, forKey: saltDefaultsKey)
-            cachedSalt = generated
-            return generated
+            return cacheSalt(generated)
         }
 
-        let lockURL = containerURL.appendingPathComponent("observability-salt.lock")
-        let lockDescriptor = open(lockURL.path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
-        guard lockDescriptor >= 0 else {
-            let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
-            cachedSalt = generated
-            return generated
+        let saltURL = containerURL.appendingPathComponent(saltFileName)
+        if let stored = readSalt(at: saltURL) {
+            return cacheSalt(stored)
         }
-        defer { close(lockDescriptor) }
-        // Never let observability initialization block an ingestion or provider flow forever.
-        // Another process may be stalled while holding this lock, so acquire it with a deadline.
-        let lockDeadline = Date().addingTimeInterval(2)
-        while flock(lockDescriptor, LOCK_EX | LOCK_NB) != 0 {
-            guard Date() < lockDeadline else {
-                let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
-                cachedSalt = generated
-                return generated
+
+        // A unique temporary file plus link(2) gives us create-if-absent semantics without a
+        // process-wide blocking lock. Exactly one process wins; every other process reads that
+        // canonical file and therefore uses the same fingerprint salt.
+        let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
+        let temporaryURL = containerURL.appendingPathComponent(".\(saltFileName).\(UUID().uuidString).tmp")
+        do {
+            try generated.write(to: temporaryURL, options: .atomic)
+            if link(temporaryURL.path, saltURL.path) == 0 {
+                unlink(temporaryURL.path)
+                return cacheSalt(generated)
+            }
+            let failure = errno
+            unlink(temporaryURL.path)
+            if failure == EEXIST, let stored = readSalt(at: saltURL) {
+                return cacheSalt(stored)
+            }
+        } catch {
+            unlink(temporaryURL.path)
+        }
+
+        // A failed read/create is exceptional, but observability must not stall OTP handling. A
+        // bounded retry lets a concurrently-created canonical file win before using a local salt.
+        let deadline = Date().addingTimeInterval(0.25)
+        while Date() < deadline {
+            if let stored = readSalt(at: saltURL) {
+                return cacheSalt(stored)
             }
             usleep(10_000)
         }
-        defer { _ = flock(lockDescriptor, LOCK_UN) }
+        return cacheSalt(generated)
+    }
 
-        if let stored = defaults?.data(forKey: saltDefaultsKey), stored.count == 32 {
-            cachedSalt = stored
-            return stored
-        }
-        let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
-        defaults?.set(generated, forKey: saltDefaultsKey)
-        _ = defaults?.synchronize()
-        cachedSalt = generated
-        return generated
+    private static func readSalt(at url: URL) -> Data? {
+        guard let data = try? Data(contentsOf: url), data.count == 32 else { return nil }
+        return data
+    }
+
+    private static func cacheSalt(_ salt: Data) -> Data {
+        saltLock.lock()
+        defer { saltLock.unlock() }
+        if let cachedSalt { return cachedSalt }
+        cachedSalt = salt
+        return salt
     }
 
     public static func fingerprint(_ value: String) -> String {
