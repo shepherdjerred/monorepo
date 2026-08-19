@@ -361,6 +361,13 @@ so each branch graded itself with whatever version of the parser it happened to
 contain. A branch old enough to predate a parser fix counted findings that had
 already been fixed, and no change to that PR could clear it.
 
+While the Codex boundary is landing, the wrapper has a narrow compatibility
+path: if fetched `main` predates Codex acceptance, only the PR's verified
+provider-selection boundary is copied into the `main` worktree. The parser and
+provider adapters remain from `main`; once `main` accepts Codex, the path is
+automatically unreachable. This is a one-time rollout bridge, not a permanent
+PR-self-sourced gate.
+
 Each gate asks its provider to review the head before waiting on it. Qodo
 reviews a PR once, when it is opened, and Codex needs an explicit `@codex
 review` trigger for a fresh head; polling alone can therefore burn the whole
@@ -373,9 +380,9 @@ that produced the counts. A finding count is only comparable against the parser
 that arrived at it — a local `probe-review-signal.ts` run from a stale checkout
 legitimately disagrees with CI.
 
-`REVIEW_GATE_REF` overrides the ref the gate runs from. It exists only so a
-change to the gate itself can be exercised before it lands, since the gate no
-longer runs a PR's own version of it. Set it when creating the build, as with
+`REVIEW_GATE_REF` overrides the ref the gate runs from. It exists so a change
+to the gate itself can be exercised before it lands, and for the one-time
+Codex rollout bridge described above. Set it when creating the build, as with
 `CI_IO_FIXED_CORPUS`; never in committed configuration.
 
 ### Release refinement providers
@@ -642,11 +649,14 @@ script, each with its reason.
 
 ```bash
 GH_TOKEN=$(toolkit gh auth token) bun scripts/review-findings.ts list <pr>
+toolkit pr review harvest <pr>
 ```
 
-Lists every finding blocking the required Qodo gate with its title, severity
-and location. Run it **before** pushing a fix: a fix pushed without resolving
-its thread only surfaces at the end of a ~7-minute gate cycle.
+The first command lists Qodo findings with title, severity and location. The
+harvest command independently evaluates both providers' Buildkite status and
+review state, so a stale Codex job is not hidden by a healthy Qodo gate. Run
+these **before** pushing a fix: a fix pushed without resolving its thread only
+surfaces at the end of a ~7-minute gate cycle.
 
 Qodo re-lists a finding it no longer stands behind rather than striking it, so
 a PR whose findings are all fixed or all wrong can stay blocked indefinitely.

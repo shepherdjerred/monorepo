@@ -23,6 +23,15 @@ set -euo pipefail
 # branch, so a branch that deliberately rewrites this step controls its own
 # gate either way — as it does for every other check.
 #
+# During the one-time Qodo-to-Codex rollout, `main` may not yet know that
+# `REVIEW_PROVIDER=codex` is valid. In that case the Codex invocation uses only
+# the PR checkout's provider-selection boundary, after verifying the expected
+# migration marker; the review parser and all provider logic still come from
+# this fetched `main` worktree. Once `main` accepts Codex, this compatibility
+# path is unreachable and the normal main-sourced gate resumes automatically.
+# It exists to let the provider boundary land atomically without making PR
+# branches the permanent source of their own review gate.
+#
 # REVIEW_GATE_REF exists so a change to the gate itself can be exercised before
 # it lands, since once this is in place the gate no longer runs a PR's own
 # version of it. Set it when creating the build, the way CI_IO_FIXED_CORPUS is
@@ -55,4 +64,19 @@ git worktree add --detach "$GATE_DIR" FETCH_HEAD
 cd "$GATE_DIR"
 "$GATE_DIR/.buildkite/scripts/bun-install.sh" --frozen-lockfile \
   --filter '@shepherdjerred/root-scripts' --production
-REVIEW_GATE_PARSER_COMMIT="$GATE_SHA" bun --no-install scripts/wait-for-review.ts
+
+WAIT_SCRIPT="$GATE_DIR/scripts/wait-for-review.ts"
+if [[ "${REVIEW_PROVIDER:-qodo}" == "codex" ]] && \
+  ! grep -Fq 'ciProviders = new Set(["qodo", "codex"])' "$WAIT_SCRIPT"; then
+  PR_WAIT_SCRIPT="${BUILDKITE_BUILD_CHECKOUT_PATH:-$PWD}/scripts/wait-for-review.ts"
+  if [[ ! -f "$PR_WAIT_SCRIPT" ]] || \
+    ! grep -Fq 'ciProviders = new Set(["qodo", "codex"])' "$PR_WAIT_SCRIPT"; then
+    echo "Codex gate bootstrap requires the PR provider boundary to be present" >&2
+    exit 1
+  fi
+  echo "Codex gate bootstrap: main lacks Codex acceptance; using the PR provider boundary with the main parser"
+  cp "$PR_WAIT_SCRIPT" "$GATE_DIR/.review-gate-wait-for-review.ts"
+  WAIT_SCRIPT="$GATE_DIR/.review-gate-wait-for-review.ts"
+fi
+
+REVIEW_GATE_PARSER_COMMIT="$GATE_SHA" bun --no-install "$WAIT_SCRIPT"
