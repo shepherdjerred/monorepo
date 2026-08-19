@@ -650,7 +650,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9964@sha256:69e448cedc7d3a3a1571ce861c4bb1a5133e781b74b18d66a6a8334a467e9613",
+      "value": "2.0.0-10087@sha256:07eab4a5ec64e9c657d3aeb8d688c0af2e9476326008799b5bf30d44bfa33a6e",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -742,7 +742,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9840@sha256:5d7fae964802dd215c6e422daba6f57174a94039e6710d8f36ece42b36702fa4",
+      "value": "2.0.0-10087@sha256:76d311168cfe78080cec03ec2c69196f4ad33c960b162f76bba5b0a219f01304",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful scout-evals image push."
