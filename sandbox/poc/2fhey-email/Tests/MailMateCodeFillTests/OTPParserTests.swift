@@ -57,6 +57,26 @@ func keepsDigitLedCodes() {
     #expect(OTPParser().parse(body: "Your OTP is 1234ABCD.", metadata: metadata)?.code == "1234ABCD")
 }
 
+@Test("accepts year-like codes with explicit verification context")
+func acceptsYearLikeCodes() {
+    let metadata = MessageMetadata(sender: "Acme <security@acme.example>", subject: "Sign in", date: nil, messageID: "message-year")
+
+    #expect(OTPParser().parse(body: "Your verification code is 2048.", metadata: metadata)?.code == "2048")
+    #expect(OTPParser().parse(body: "Your OTP is 1999.", metadata: metadata)?.code == "1999")
+}
+
+@Test("does not renew a code from an old message")
+func rejectsExpiredMessageDate() {
+    let metadata = MessageMetadata(
+        sender: "Acme <security@acme.example>",
+        subject: "Sign in",
+        date: Date(timeIntervalSince1970: 100),
+        messageID: "old-message"
+    )
+
+    #expect(OTPParser().parse(body: "Your verification code is 482913.", metadata: metadata, detectedAt: Date(timeIntervalSince1970: 1_000)) == nil)
+}
+
 @Test("rejects a long candidate that is part of an address")
 func rejectsCodeInsideAddress() {
     let metadata = MessageMetadata(sender: "Acme <security@acme.example>", subject: "Sign in", date: nil, messageID: "message-6")
