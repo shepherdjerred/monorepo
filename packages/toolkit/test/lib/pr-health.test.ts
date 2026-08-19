@@ -62,6 +62,16 @@ describe("PR health CI fixtures", () => {
     expect(result.status).toBe("PENDING");
   });
 
+  test("running build with a hard-failed job is unhealthy", () => {
+    const result = ciHealth(
+      HEAD_SHA,
+      [githubCheck("pending")],
+      build("running", [job("failed", false, "failed-job")]),
+    );
+    expect(result.status).toBe("UNHEALTHY");
+    expect(result.commands).toContain("toolkit bk job log failed-job --agent");
+  });
+
   test("waiting exact-head Buildkite build is pending", () => {
     const result = ciHealth(
       HEAD_SHA,

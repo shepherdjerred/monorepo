@@ -174,6 +174,9 @@ export function ciHealth(
     const hardFailures = build.jobs.filter(
       (job) => hardFailureJob(job.state) && job.soft_failed !== true,
     );
+    if (hardFailures.length > 0) {
+      buildkiteStatus = "UNHEALTHY";
+    }
     for (const job of hardFailures) {
       details.push(`Job "${job.name}" - ${job.state.toUpperCase()}`);
       if (loggableFailureJob(job.state)) {
