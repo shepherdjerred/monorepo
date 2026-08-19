@@ -59,8 +59,14 @@ commands/
 ├── onboarding.ts    # setup/status/invite/docs
 ├── track.ts         # Minimal current-channel subscription
 ├── list.ts          # Read-only subscription overview
+├── scout.ts         # Saved one-shot Explore question
 ├── links.ts         # Stage-aware dashboard/docs links
 └── index.ts         # Dispatcher and metrics
+
+discord/scout/
+├── custom-id.ts     # Versioned publish-button key
+├── messages.ts      # Bounded private/public frozen rendering
+└── publish.ts       # Owner-scoped public publication
 ```
 
 ### Lightweight Discord command flow
@@ -82,11 +88,13 @@ sequenceDiagram
     Handler->>Discord: Reply to interaction
 ```
 
-Discord registration intentionally exposes only `/help`, `/setup`, `/status`,
-`/invite`, `/docs`, `/track`, and `/list`. The dispatcher has no autocomplete
-path and no command-specific management tree. `/track` and `/list` call the
-shared subscription domain services; all advanced management is implemented in
-the web UI and its tRPC router.
+Discord registration keeps `/help`, `/setup`, `/status`, `/invite`, `/docs`,
+`/track`, and `/list` global. `/bb` and `/scout` are complete guild-scoped
+payloads reconciled after the gateway connects and whenever the bot joins a
+guild. `/scout ask` calls the same persisted Explore runner as HTTP/SSE; only
+delivery differs. Publishing reloads the frozen owner-scoped transcript and
+cannot call the agent or query engine. All configuration and Explore follow-ups
+remain in the web UI.
 
 ## Cron Job System
 

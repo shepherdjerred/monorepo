@@ -535,17 +535,18 @@ Enforced by ESLint:
 
 ### Command Structure
 
-Scout intentionally exposes only seven Discord commands: `/help`, `/setup`,
-`/status`, `/invite`, `/docs`, `/track`, and `/list`. The web dashboard is the
-canonical surface for filters, queues, channels, competitions, reports, roles,
-and audit history. Do not recreate the removed management command trees.
+Scout exposes seven global Discord commands: `/help`, `/setup`, `/status`,
+`/invite`, `/docs`, `/track`, and `/list`. The web dashboard is the canonical
+surface for filters, queues, channels, competitions, saved report
+configuration, roles, audit history, and Explore follow-ups. Do not recreate
+the removed management command trees.
 
-`/bb` (Bryan Bucks) is the one owner-approved exception, pinned by
-`definitions.test.ts`. It is gated to a single guild by the `betting_enabled`
-flag — effectively beta-only, since that guild runs the beta bot — and a balance
-you cannot check from the same place you place a bet is not usable. It is
-registered only in that guild, not globally. Adding anything else needs the
-same explicit decision.
+`/bb` (Bryan Bucks) and `/scout` are the owner-approved guild-scoped exceptions,
+pinned by `definitions.test.ts`. `/bb` follows `betting_enabled`; `/scout`
+follows `EXPLORE_GUILD_ALLOWLIST`. Neither may leak into the global picker.
+`/scout ask` starts one fresh, private, saved Explore conversation and may post
+its frozen result publicly; Discord never continues the conversation. Adding
+another command still needs the same explicit product decision.
 
 **Interactions are routed in `discord/interactions.ts`**, not in
 `discord/commands/index.ts`. That module is the single `interactionCreate`
@@ -556,8 +557,11 @@ dropped every message component.
 
 Definitions are collected in `packages/backend/src/discord/commands/definitions.ts`
 and registered with a full global `applicationCommands` replacement in
-`discord/rest.ts`, which also removes stale commands and autocomplete handlers.
-Handlers are dispatched by name in `discord/commands/index.ts`.
+`discord/rest.ts`. After the gateway connects, every guild in the client's
+cache receives its complete merged guild-command payload — including an empty
+payload when neither feature is enabled, which removes stale commands. A
+`guildCreate` event reconciles that guild immediately. Handlers are dispatched
+by name in `discord/commands/index.ts`.
 
 The retained `/track` and `/list` handlers validate boundary input with Zod,
 delegate to the existing subscription domain services, and use `replyError` for
@@ -743,6 +747,21 @@ SJ-147.
   everyone — it is the entire gate for this surface, so an omitted config must
   fail closed. Every tRPC procedure re-checks it, so losing membership removes
   access to conversations already saved.
+- **Discord Explore is one-shot and uses the same persisted turn runner.**
+  `/scout ask` is registered only in allowlisted guilds, re-checks that exact
+  guild on command and publish-button execution, creates a new user-owned
+  conversation, and renders the saved answer privately. Follow-ups happen only
+  in `/app/explore`. The Discord user upsert may refresh username/avatar but
+  must omit OAuth token fields. HTTP/SSE and Discord both call
+  `explore/run-turn.ts`, which owns quota charging, timeout, metrics, trace,
+  partial salvage, agent execution, answer persistence, and generated titles.
+- **Publishing is a frozen copy, not Explore sharing.** The versioned component
+  id is `scout:1:publish:<conversationId>:<assistantMessageId>`. On click, reload
+  the owner-scoped stored path and post only its question, answer, caveats, and
+  existing visualization. Never rerun the agent or ScoutQL, mint a share token,
+  expose the owner-only Explore URL, raw query, or trace, or allow generated
+  mentions. A successful click disables the private button; a failed send
+  leaves it retryable.
 - **The agent must never state a statistic it did not read from a query result
   in that turn**, and must describe the corpus as the matches Scout ingested
   rather than the League ladder. Both live in `explore/prompt.ts`. A
@@ -813,27 +832,17 @@ guild, **not** a second gate: there is deliberately no environment check, becaus
 one override should be the whole answer to "is it on here?".
 
 **`/bb` is registered per guild, not globally.** `commandDefinitions` holds the
-seven global commands; `guildScopedCommandGroups` (same file) maps a flag to a
-payload, and `discord/rest.ts` resolves it through `listGuildsWithFlagEnabled`
-and PUTs to `applicationGuildCommands` for each. A globally registered
-flag-gated command would sit in the picker of every guild Scout is in and do
-nothing there. Three consequences worth knowing. A guild PUT **replaces** that
-guild's whole command list for the app, so groups are merged per guild before
-sending. A guild the running bot is not in fails with `MISSING_ACCESS`, which is
-logged and skipped rather than fatal — otherwise the prod deployment would
-crash-loop over a command only beta serves; every _other_ failure propagates and
-exits, because startup reporting success over a guild whose registration was
-rejected leaves that guild without `/bb` until someone redeploys.
-
-And **registration reconciles, it does not only register.** Because the PUT is a
-replacement, it is also the only way to take a command back, so the loop runs
-over `listGuildsWithFlagDeclared` — every guild the flag names in _either_
-direction — and sends an empty payload to the ones it is switched off for.
-Visiting only the enabled guilds left `/bb` in a disabled guild's picker
-indefinitely. The corollary is a contract on withdrawal: **switch a guild's
-override to `value: false`; do not delete the entry.** A deleted override leaves
-no record that the guild was ever targeted, and nothing on either side can then
-tell it apart from a guild that never had the feature.
+seven global commands; `guildScopedCommandGroups` (same file) supplies an
+enabled-guild resolver and payload for both `/bb` and `/scout`.
+`discord/rest.ts` walks the connected client's complete guild cache and PUTs
+each guild's merged payload to `applicationGuildCommands`. A globally
+registered gated command would sit in every guild's picker and do nothing
+there. A guild PUT **replaces** that guild's whole command list for the app, so
+the groups must be merged before sending, and a guild where no group is enabled
+must receive `[]` to clear stale commands. A newly joined guild is reconciled
+from `guildCreate`; a guild the running bot cannot access is skipped only for
+Discord's `MISSING_ACCESS`, while every other registration failure remains
+fatal during startup.
 
 The feature scope remains enforced by the flag and guild-scoped registration;
 user-facing betting surfaces should not advertise the allowlist or the private

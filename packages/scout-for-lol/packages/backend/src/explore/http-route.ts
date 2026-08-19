@@ -1,10 +1,6 @@
 import * as Sentry from "@sentry/bun";
 import {
-  EXPLORE_ANSWER_MAX_LENGTH,
-  EXPLORE_INTERRUPTED_CAVEAT,
   EXPLORE_REQUEST_MAX_BYTES,
-  EXPLORE_STOPPED_CAVEAT,
-  EXPLORE_TIMEOUT_MS,
   ExploreHttpErrorSchema,
   ExploreShareTokenSchema,
   ExploreStreamEventSchema,
@@ -13,13 +9,10 @@ import {
   type ExploreMessage,
   type ExploreQuotaSnapshot,
   type ExploreStreamEvent,
-  type ExploreTraceEntry,
   type ExploreTurnRequest,
 } from "@scout-for-lol/data";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { streamExploreAgent } from "#src/explore/agent.ts";
+import { prisma } from "#src/database/index.ts";
 import {
-  getExploreQuotaStatus,
   tryStartExploreTurn,
   type ExploreRateLimitIdentity,
   type ExploreRateLimitTicket,
@@ -27,21 +20,19 @@ import {
 import {
   ExploreInvalidTurnError,
   ExploreNotFoundError,
-  appendExploreAnswer,
-  applyGeneratedTitle,
   loadExploreTranscript,
   loadSharedExploreTranscript,
   resolveRegenerateTarget,
   startExploreTurn,
 } from "#src/explore/store.ts";
 import { authenticateExploreRequest } from "#src/explore/http-auth.ts";
+import {
+  clampExploreMessage,
+  runPersistedExploreTurn,
+} from "#src/explore/run-turn.ts";
 import { createLogger } from "#src/logger.ts";
 import { readBodyWithinLimit } from "#src/utils/bounded-request-body.ts";
-import {
-  scoutExploreActiveRuns,
-  scoutExploreTurnDurationSeconds,
-  scoutExploreTurnsTotal,
-} from "#src/metrics/explore.ts";
+import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
 
 const STREAM_PATH = "/api/explore/stream";
 const SHARED_PREFIX = "/api/explore/shared/";
@@ -157,12 +148,6 @@ export async function handleExploreRoute(
       },
     });
 
-    // The turn is valid and now running, so it is charged. Everything that can
-    // reject a request — a bad target, an unreadable transcript — happens
-    // above this line and leaves the quota untouched, so a caller cannot spend
-    // the shared allowance on requests that never ran.
-    ticket.commit();
-
     return new Response(stream, {
       status: 200,
       headers: {
@@ -266,152 +251,26 @@ function runExploreTurnStream(input: {
   history: ExploreMessage[];
 }): void {
   const { controller, request, ticket, identity, started, history } = input;
-  const abortController = new AbortController();
-  const timeout = setTimeout(() => {
-    abortController.abort("Explore turn timed out.");
-  }, EXPLORE_TIMEOUT_MS);
   const writer = createSseWriter(controller);
   const abortFromRequest = () => {
     // Order matters: stop writing before unwinding the run, so nothing the
     // teardown emits can reach the controller the client just took away.
     writer.disconnected();
-    abortController.abort("Client disconnected.");
   };
   request.signal.addEventListener("abort", abortFromRequest);
-  let runStatus = "error";
-  const startedAt = Date.now();
-  scoutExploreActiveRuns.inc();
-
-  const emit = writer.emit;
-
-  emit({
-    type: "started",
-    runId: ticket.runId,
-    conversationId: started.conversationId,
-    questionMessageId: started.messageId,
-  });
-
-  // Accumulated as the run goes so a stopped turn can still be saved, and
-  // so the finished answer carries the trace the reasoning panel shows.
-  const trace: ExploreTraceEntry[] = [];
-  let streamedAnswer = "";
-  const record = (event: ExploreStreamEvent): void => {
-    if (event.type === "answer_delta") {
-      streamedAnswer += event.text;
-    }
-    if (event.type === "tool_result") {
-      trace.push({
-        toolName: event.toolName,
-        message: event.message,
-        ok: event.ok,
-      });
-    }
-    emit(event);
-  };
 
   void (async () => {
     try {
-      const result = await streamExploreAgent({
-        runId: ticket.runId,
-        question: started.question,
-        // Drop the question itself — the agent receives it as the current
-        // turn, and replaying it would duplicate it.
-        history: history.slice(0, -1),
-        abortSignal: abortController.signal,
-        emit: record,
+      await runPersistedExploreTurn({
+        ticket,
+        identity,
+        started,
+        history,
+        abortSignal: request.signal,
+        emit: writer.emit,
       });
-      const message = await appendExploreAnswer(prisma, {
-        conversationId: started.conversationId,
-        parentMessageId: started.messageId,
-        answer: result.answer,
-        preview: result.preview,
-        visualization: result.visualization,
-        trace,
-      });
-      // Only ever changes anything on a conversation still carrying its
-      // question-derived placeholder, so follow-up turns and manual renames
-      // both leave it alone. `started.title` is the conversation's *current*
-      // title, not necessarily that placeholder, so the comparison is made
-      // inside `applyGeneratedTitle` against the opening question instead.
-      const title =
-        result.answer.title === null
-          ? started.title
-          : await applyGeneratedTitle(prisma, {
-              conversationId: started.conversationId,
-              title: result.answer.title,
-            });
-      ticket.finish();
-      runStatus = "success";
-      emit({
-        type: "final",
-        message,
-        title,
-        quota: getExploreQuotaStatus(identity, Date.now()).quota,
-      });
-    } catch (error) {
-      runStatus = abortController.signal.aborted ? "cancelled" : "error";
-      // An interrupted turn keeps whatever it had already said — a deliberate
-      // stop and a mid-stream failure alike. Discarding the prose would leave
-      // a question with no answer under it, which reads as a bug rather than
-      // as an interruption.
-      //
-      // A non-abort failure is a real error the client will only see as a
-      // caveat (salvage emits `final`, not `error`), so the detail goes to
-      // logs and Sentry here rather than vanishing entirely.
-      if (!abortController.signal.aborted) {
-        logger.error("Explore turn failed mid-stream", errorMessage(error));
-        Sentry.captureException(error, {
-          tags: { source: "explore-turn-run" },
-        });
-      }
-      // Guarded on its own because this is a real database write inside a
-      // catch block: a throw here would escape the catch, skip both terminal
-      // events, and surface as an unhandled rejection from the voided async
-      // runner. Salvage is best effort — the turn has already failed, so
-      // failing to keep its remains must not also cost the caller its answer
-      // about what happened.
-      let salvaged: ExploreMessage | null = null;
-      try {
-        salvaged = await persistPartialAnswer(prisma, {
-          aborted: abortController.signal.aborted,
-          conversationId: started.conversationId,
-          parentMessageId: started.messageId,
-          text: streamedAnswer,
-          trace,
-        });
-      } catch (salvageError) {
-        logger.error(
-          "Failed to salvage a stopped explore turn",
-          errorMessage(salvageError),
-        );
-        Sentry.captureException(salvageError, {
-          tags: { source: "explore-salvage" },
-        });
-      }
-      if (salvaged === null) {
-        emit({
-          type: "error",
-          message: clampMessage(errorMessage(error)),
-          retryAfterSeconds: null,
-          quota: getExploreQuotaStatus(identity, Date.now()).quota,
-        });
-      } else {
-        emit({
-          type: "final",
-          message: salvaged,
-          title: started.title,
-          quota: getExploreQuotaStatus(identity, Date.now()).quota,
-        });
-      }
     } finally {
-      clearTimeout(timeout);
       request.signal.removeEventListener("abort", abortFromRequest);
-      ticket.finish();
-      scoutExploreActiveRuns.dec();
-      scoutExploreTurnsTotal.inc({ status: runStatus });
-      scoutExploreTurnDurationSeconds
-        .labels(runStatus)
-        .observe((Date.now() - startedAt) / 1000);
       // A no-op if the client already left: there is nobody to send `done`
       // to, and closing a closed controller throws the same way enqueueing
       // does. The salvage write above is what matters for that case, and it
@@ -509,39 +368,6 @@ async function resolveTurnTarget(
  * put a blank bubble under the question. Exported with an explicit client so
  * tests can drive the salvage semantics without streaming a turn.
  */
-export async function persistPartialAnswer(
-  client: ExtendedPrismaClient,
-  input: {
-    aborted: boolean;
-    conversationId: string;
-    parentMessageId: string;
-    text: string;
-    trace: ExploreTraceEntry[];
-  },
-): Promise<ExploreMessage | null> {
-  if (input.text.trim().length === 0) {
-    return null;
-  }
-  return await appendExploreAnswer(client, {
-    conversationId: input.conversationId,
-    parentMessageId: input.parentMessageId,
-    answer: {
-      answer: clampAnswer(input.text),
-      // A salvaged fragment is a poor summary of the conversation, and the
-      // placeholder is already a faithful one — leave the title alone.
-      title: null,
-      queryText: null,
-      caveats: [
-        input.aborted ? EXPLORE_STOPPED_CAVEAT : EXPLORE_INTERRUPTED_CAVEAT,
-      ],
-      followUps: [],
-    },
-    preview: null,
-    visualization: null,
-    trace: input.trace,
-  });
-}
-
 type ParsedRequestBody =
   | { ok: true; input: ExploreTurnRequest }
   | { ok: false; message: string };
@@ -572,7 +398,7 @@ function jsonError(
     ExploreHttpErrorSchema.parse({
       // Clamped here rather than at each call site: this is the one place
       // every error response is built, so nothing can route around it.
-      error: clampMessage(message),
+      error: clampExploreMessage(message),
       retryAfterSeconds: options.retryAfterSeconds ?? null,
       quota: options.quota ?? null,
     }),
@@ -599,33 +425,3 @@ function errorMessage(error: unknown): string {
  * stopped to keep. The caller has already refused an empty one, so the `min(1)`
  * end of the contract is covered.
  */
-export function clampAnswer(text: string): string {
-  const trimmed = text.trim();
-  if (trimmed.length <= EXPLORE_ANSWER_MAX_LENGTH) {
-    return trimmed;
-  }
-  return `${trimmed.slice(0, EXPLORE_ANSWER_MAX_LENGTH - 1)}…`;
-}
-
-/** The longest a message may be in `ExploreHttpErrorSchema` and the SSE error event. */
-const MESSAGE_MAX_LENGTH = 1000;
-
-/**
- * Fit a message inside the schema that will validate it.
- *
- * Both message fields are `.trim().min(1).max(1000)`, and both are parsed on
- * the way out — so an over-long message makes the *error response itself*
- * throw, turning a 400 into a crashed request. A Zod validation error grows
- * with the input, so a wide enough invalid body reaches that length on demand.
- * An empty message would fail `min(1)` just as hard, hence the fallback.
- */
-function clampMessage(message: string): string {
-  const trimmed = message.trim();
-  if (trimmed.length === 0) {
-    return "Request failed.";
-  }
-  if (trimmed.length <= MESSAGE_MAX_LENGTH) {
-    return trimmed;
-  }
-  return `${trimmed.slice(0, MESSAGE_MAX_LENGTH - 1)}…`;
-}

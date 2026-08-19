@@ -1,5 +1,5 @@
 import configuration from "#src/configuration.ts";
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, GatewayIntentBits, type Guild } from "discord.js";
 import { handleInteractions } from "#src/discord/interactions.ts";
 import {
   discordConnectionStatus,
@@ -57,29 +57,6 @@ client.on("reconnecting", () => {
   discordConnectionStatus.set(0);
 });
 
-// Skip the real Discord login under tests so importing this module (e.g. via
-// the report dispatcher or guild-membership helper) is side-effect free. Tests
-// that need client behavior mock it; production/dev/beta log in as normal.
-if (Bun.env.NODE_ENV === "test") {
-  logger.info("🧪 NODE_ENV=test — skipping Discord login");
-} else if (configuration.enableDiscordGateway) {
-  logger.info("🔑 Logging into Discord");
-  try {
-    await client.login(configuration.discordToken);
-    logger.info("✅ Successfully logged into Discord");
-  } catch (error) {
-    logger.error("❌ Failed to login to Discord:", error);
-    Sentry.captureException(error, {
-      tags: {
-        source: "discord-login",
-      },
-    });
-    throw error;
-  }
-} else {
-  logger.warn("⏭️  Discord gateway disabled — skipping Discord login");
-}
-
 client.on("ready", (readyClient) => {
   logger.info(`✅ Discord bot ready! Logged in as ${readyClient.user.tag}`);
   logger.info(
@@ -109,14 +86,48 @@ client.on("ready", (readyClient) => {
 
   handleInteractions(readyClient);
   logger.info("⚡ Discord command handler initialized");
+
+  void registerConnectedGuildCommands(readyClient.guilds.cache.keys());
 });
 
 // Handle bot being added to new servers
 client.on("guildCreate", (guild) => {
   logger.info(`[Guild Create] Bot added to new server: ${guild.name}`);
   discordGuildsGauge.set(client.guilds.cache.size);
-  void handleGuildCreate(guild);
+  void handleNewGuild(guild);
 });
+
+async function registerConnectedGuildCommands(
+  guildIds: Iterable<string>,
+): Promise<void> {
+  try {
+    const { registerDiscordCommands } = await import("#src/discord/rest.ts");
+    await registerDiscordCommands(guildIds);
+  } catch (error) {
+    logger.error("❌ Failed to register Discord commands:", error);
+    Sentry.captureException(error, {
+      tags: { source: "discord-command-registration" },
+    });
+    process.exit(1);
+  }
+}
+
+async function handleNewGuild(guild: Guild): Promise<void> {
+  try {
+    const { reconcileGuildScopedCommands } =
+      await import("#src/discord/rest.ts");
+    await reconcileGuildScopedCommands([guild.id]);
+  } catch (error) {
+    logger.error(
+      `[Guild Create] Failed to reconcile commands for ${guild.id}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "discord-guild-command-registration" },
+    });
+  }
+  await handleGuildCreate(guild);
+}
 
 // Handle bot being removed from servers (kicked, banned, or guild deleted)
 client.on("guildDelete", (guild) => {
@@ -124,5 +135,28 @@ client.on("guildDelete", (guild) => {
   discordGuildsGauge.set(client.guilds.cache.size);
   void handleGuildDelete(guild);
 });
+
+// Install every event handler before login so a fast gateway connection cannot
+// emit `ready` before command reconciliation is listening for it.
+// Tests stay side-effect free; production/dev/beta log in as normal.
+if (Bun.env.NODE_ENV === "test") {
+  logger.info("🧪 NODE_ENV=test — skipping Discord login");
+} else if (configuration.enableDiscordGateway) {
+  logger.info("🔑 Logging into Discord");
+  try {
+    await client.login(configuration.discordToken);
+    logger.info("✅ Successfully logged into Discord");
+  } catch (error) {
+    logger.error("❌ Failed to login to Discord:", error);
+    Sentry.captureException(error, {
+      tags: {
+        source: "discord-login",
+      },
+    });
+    throw error;
+  }
+} else {
+  logger.warn("⏭️  Discord gateway disabled — skipping Discord login");
+}
 
 export { client };

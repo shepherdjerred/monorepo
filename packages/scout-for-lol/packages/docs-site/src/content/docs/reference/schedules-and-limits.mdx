@@ -73,10 +73,32 @@ count and maximum when you hit one.
 
 ## Discord command limits
 
-| Limit                          | Value            |
-| ------------------------------ | ---------------- |
-| Subscriptions shown by `/list` | 25               |
-| Player alias length (`/track`) | 1–100 characters |
+| Limit                           | Value                    |
+| ------------------------------- | ------------------------ |
+| Subscriptions shown by `/list`  | 25                       |
+| Player alias length (`/track`)  | 1–100 characters         |
+| Explore question (`/scout ask`) | 1–2,000 characters       |
+| Discord message chunk           | at most 1,900 characters |
+
+## Explore question limits
+
+The web Explore UI and `/scout ask` spend from the same per-user and global
+allowances. Starting a question from Discord does not create a second quota.
+
+| Scope  | Window | Questions |
+| ------ | ------ | --------- |
+| user   | minute | 4         |
+| user   | hour   | 30        |
+| user   | day    | 100       |
+| user   | week   | 300       |
+| global | hour   | 120       |
+| global | day    | 600       |
+| global | week   | 2,000     |
+
+One person can have one Explore turn running at a time, and Scout runs at most
+five Explore turns globally at once. A turn times out after three minutes.
+Publishing a saved Discord answer consumes no question allowance because it
+does not rerun the model or query.
 
 ## Related
 

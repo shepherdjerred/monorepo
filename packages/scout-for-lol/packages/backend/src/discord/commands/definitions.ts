@@ -9,7 +9,9 @@ import {
 import { listCommand } from "#src/discord/commands/list.ts";
 import { trackCommand } from "#src/discord/commands/track.ts";
 import { bbCommand } from "#src/discord/commands/bb.ts";
-import type { FlagName } from "#src/configuration/flags.ts";
+import { scoutCommand } from "#src/discord/commands/scout-definition.ts";
+import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
+import { exploreAllowlist } from "#src/explore/access.ts";
 
 /**
  * The commands every guild gets, registered globally.
@@ -42,10 +44,23 @@ export const commandPayload = commandDefinitions.map((command) =>
  * separate edit here.
  */
 export type GuildScopedCommandGroup = {
-  flag: FlagName;
+  enabledGuildIds: () => string[];
   payload: RESTPostAPIApplicationCommandsJSONBody[];
 };
 
 export const guildScopedCommandGroups: GuildScopedCommandGroup[] = [
-  { flag: "betting_enabled", payload: [bbCommand.toJSON()] },
+  {
+    enabledGuildIds: () => listGuildsWithFlagEnabled("betting_enabled"),
+    payload: [bbCommand.toJSON()],
+  },
+  { enabledGuildIds: exploreAllowlist, payload: [scoutCommand.toJSON()] },
 ];
+
+/** Complete guild command payload; an empty array removes stale commands. */
+export function guildCommandPayload(
+  guildId: string,
+): RESTPostAPIApplicationCommandsJSONBody[] {
+  return guildScopedCommandGroups.flatMap((group) =>
+    group.enabledGuildIds().includes(guildId) ? group.payload : [],
+  );
+}

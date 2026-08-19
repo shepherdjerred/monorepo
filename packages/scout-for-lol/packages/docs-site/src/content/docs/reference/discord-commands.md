@@ -5,9 +5,10 @@ sidebar:
   order: 1
 ---
 
-Scout registers seven global slash commands. Every reply is **ephemeral** —
-visible only to the person who ran the command. Match notifications and reports
-are posted by Scout separately and are visible to the channel.
+Scout registers seven global slash commands. It also registers `/scout` only in
+servers enabled for the Explore beta. Command replies are **ephemeral** — visible
+only to the person who ran the command — unless the asker explicitly chooses
+**Post publicly** on a completed Scout answer.
 
 ## Command summary
 
@@ -20,6 +21,12 @@ are posted by Scout separately and are visible to the channel.
 | `/docs`   | Open Scout's documentation                      | none            |
 | `/track`  | Track one League player in this Discord channel | 3, all required |
 | `/list`   | List the players Scout tracks for this server   | none            |
+
+In Explore-enabled servers, Scout also registers this guild-scoped command:
+
+| Command      | Description                                   | Options              |
+| ------------ | --------------------------------------------- | -------------------- |
+| `/scout ask` | Ask a private question about Scout match data | `question`, required |
 
 ![The Discord slash-command entry for /track, showing the riot-id, region, and alias option pills with the riot-id hint "Riot ID, for example Faker#KR1".](../../../assets/discord-track-options.png)
 
@@ -80,9 +87,35 @@ gateway latency in milliseconds.
 ## `/help`
 
 An embed containing the dashboard URL, the documentation URL, the command list,
-and a summary of what the dashboard is for.
+and a summary of what the dashboard is for. It includes `/scout ask` only when
+run inside an Explore-enabled server.
 
-![The /help embed listing the dashboard and documentation links, the six other commands with one-line descriptions, and what the dashboard is for.](../../../assets/discord-help.png)
+![The /help embed listing the dashboard and documentation links, the lightweight commands with one-line descriptions, and what the dashboard is for.](../../../assets/discord-help.png)
+
+## `/scout ask`
+
+Asks Scout Explore a one-shot question over the match data Scout has ingested.
+The `question` option accepts 1–2,000 characters. The command is available only
+in servers listed by the operator-managed Explore allowlist and does not work in
+direct messages.
+
+Each invocation starts a **new saved Explore conversation** owned by the Discord
+user who ran it. The answer is initially private and can include caveats and a
+generated chart. Two buttons are shown:
+
+- **Open in Explore** opens the saved conversation in the stage-correct web app.
+- **Post publicly** copies the stored question, answer, caveats, and chart into
+  the channel, then changes to **Posted**.
+
+Publishing uses the frozen saved result. It does not run the model or ScoutQL
+again, does not create a public Explore share link, and does not include the raw
+ScoutQL, tool trace, or owner-only Explore URL. Generated text cannot mention
+Discord users or roles.
+
+Discord is deliberately one-shot: use **Open in Explore** for follow-up
+questions, conversation history, branching, sharing, and other Explore tools.
+Failed validation and runtime errors stay private. If a public post fails, its
+button remains available to retry the same saved result.
 
 ## `/setup`, `/invite`, `/docs`
 
@@ -95,9 +128,10 @@ Link-only commands:
 
 ## What is deliberately not a command
 
-Filters, additional channels, queue selection, mute, competitions, reports,
-roles, permissions, audit history, merges, transfers, and Discord links are
-dashboard-only. See [Why Scout is web-first](/docs/explanation/web-first/).
+Filters, additional channels, queue selection, mute, competitions, saved report
+configuration, roles, permissions, audit history, merges, transfers, Discord
+links, and Explore follow-ups are dashboard-only. See [Why Scout is
+web-first](/docs/explanation/web-first/).
 
 ## Related
 

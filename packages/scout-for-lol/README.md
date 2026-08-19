@@ -71,6 +71,11 @@ Scout automatically checks for matches every minute and posts:
 - `/docs` - Open the documentation
 - `/track` - Track one player in the current channel
 - `/list` - List tracked players (read-only)
+- `/scout ask` - Ask a private, saved Explore question in allowlisted servers;
+  optionally post the frozen answer and chart to the channel
+
+Continue `/scout ask` conversations in the web Explore UI. Discord questions
+are one-shot and each command starts a new saved conversation.
 
 ## Technical Details
 

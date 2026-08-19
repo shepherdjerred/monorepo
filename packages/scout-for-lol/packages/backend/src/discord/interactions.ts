@@ -1,4 +1,4 @@
-import type { Client, Interaction } from "discord.js";
+import { MessageFlags, type Client, type Interaction } from "discord.js";
 import { handleChatInputCommand } from "#src/discord/commands/index.ts";
 import {
   handleBetButton,
@@ -13,6 +13,14 @@ import {
 } from "#src/betting/navigation.ts";
 import { createLogger } from "#src/logger.ts";
 import { discordComponentsTotal } from "#src/metrics/index.ts";
+import {
+  handleScoutPublishButton,
+  type ScoutPublishButtonInteraction,
+} from "#src/discord/scout/publish.ts";
+import {
+  isScoutCustomId,
+  parseScoutPublishCustomId,
+} from "#src/discord/scout/custom-id.ts";
 
 const logger = createLogger("discord-interactions");
 
@@ -54,7 +62,9 @@ async function routeInteraction(interaction: Interaction): Promise<void> {
  * `as`-based mock helpers.
  */
 export type RoutableButtonInteraction = BetButtonInteraction &
-  BucksNavigationInteraction & {
+  BucksNavigationInteraction &
+  ScoutPublishButtonInteraction & {
+    deferUpdate: () => Promise<unknown>;
     deferred: boolean;
     replied: boolean;
   };
@@ -89,6 +99,10 @@ export async function routeButton(
     return;
   }
 
+  if (isScoutCustomId(interaction.customId)) {
+    await routeScoutButton(interaction);
+    return;
+  }
   if (!isBucksCustomId(interaction.customId)) {
     // Some other feature's component. Not ours to answer, and Discord shows the
     // clicker nothing for a component no handler claims.
@@ -129,5 +143,28 @@ export async function routeButton(
         content: "😵 Something went wrong placing that bet. Try again shortly.",
       });
     }
+  }
+}
+
+async function routeScoutButton(
+  interaction: RoutableButtonInteraction,
+): Promise<void> {
+  try {
+    const malformed =
+      parseScoutPublishCustomId(interaction.customId) === undefined;
+    await handleScoutPublishButton(interaction);
+    discordComponentsTotal.inc({
+      namespace: "scout",
+      status: malformed ? "malformed" : "success",
+    });
+  } catch (error) {
+    logger.error("❌ Error publishing a Scout answer:", error);
+    discordComponentsTotal.inc({ namespace: "scout", status: "error" });
+    await interaction.followUp({
+      content:
+        "Scout could not post that answer. The button is still available to retry.",
+      flags: MessageFlags.Ephemeral,
+      allowedMentions: { parse: [] },
+    });
   }
 }

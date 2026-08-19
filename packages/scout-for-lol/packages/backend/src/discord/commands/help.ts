@@ -2,9 +2,10 @@ import { EmbedBuilder, Colors, SlashCommandBuilder } from "discord.js";
 import { createLogger } from "#src/logger.ts";
 import { getDocsUrl, getDashboardUrl } from "#src/discord/commands/links.ts";
 import type { CommandReply } from "#src/discord/commands/define-command.ts";
+import { isExploreGuildAllowed } from "#src/explore/access.ts";
 
 const logger = createLogger("commands-help");
-type HelpInteraction = { reply: CommandReply };
+type HelpInteraction = { guildId: string | null; reply: CommandReply };
 
 export const helpCommand = new SlashCommandBuilder()
   .setName("help")
@@ -26,13 +27,7 @@ export async function executeHelp(interaction: HelpInteraction): Promise<void> {
       },
       {
         name: "Lightweight commands",
-        value:
-          "`/setup` — See the recommended web setup flow\n" +
-          "`/track` — Track one player in this channel\n" +
-          "`/list` — List tracked players\n" +
-          "`/status` — Check Scout's status\n" +
-          "`/invite` — Add Scout to another server\n" +
-          "`/docs` — Open the documentation",
+        value: commandList(interaction.guildId),
       },
       {
         name: "Use the dashboard for",
@@ -44,4 +39,19 @@ export async function executeHelp(interaction: HelpInteraction): Promise<void> {
 
   await interaction.reply({ embeds: [embed], ephemeral: true });
   logger.info("✅ Help command completed successfully");
+}
+
+function commandList(guildId: string | null): string {
+  const commands = [
+    "`/setup` — See the recommended web setup flow",
+    "`/track` — Track one player in this channel",
+    "`/list` — List tracked players",
+    "`/status` — Check Scout's status",
+    "`/invite` — Add Scout to another server",
+    "`/docs` — Open the documentation",
+  ];
+  if (guildId !== null && isExploreGuildAllowed(guildId)) {
+    commands.push("`/scout ask` — Ask a private, saved Explore question");
+  }
+  return commands.join("\n");
 }
