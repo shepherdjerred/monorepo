@@ -30,7 +30,6 @@
 		C0F85BC89ABB1CE75C132D2D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C302BED0C5F3BBA86EB23E66 /* main.swift */; };
 		D0C853254F8836A5D41AE1F9 /* CodeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA1DF4D5ACB8931CF6D31F6 /* CodeStore.swift */; };
 		D4CFAE80F8B1752DE481D4F5 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67E0C72FFC05440C0A75D0E7 /* AppConfiguration.swift */; };
-		DF8290113709CF5EF03645B9 /* MailMateCodeFillHelper.app in Resources */ = {isa = PBXBuildFile; fileRef = 2D25BFF6E1431BDC62928CED /* MailMateCodeFillHelper.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E687874377181E92C2755F3C /* CodeStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2162C39609ACB996090EEE09 /* CodeStoreTests.swift */; };
 		EF4D9BB0AFD73CF2C6F27363 /* CredentialIdentityBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C780930F93BA47172712185 /* CredentialIdentityBuilder.swift */; };
 		FD45A83E034BEAAFAECAD98E /* OTPParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA52D6E35587E22EF19F4B2D /* OTPParser.swift */; };
@@ -247,7 +246,6 @@
 			buildPhases = (
 				4A11239F7C63AE9221F56903 /* Sources */,
 				494A70711DB567E5E5907217 /* Embed MailMate helper */,
-				758085E9BD9629709D0D4652 /* Resources */,
 				3560A28C755440A5BFDD406F /* Embed Foundation Extensions */,
 			);
 			buildRules = (
@@ -295,14 +293,6 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		758085E9BD9629709D0D4652 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				DF8290113709CF5EF03645B9 /* MailMateCodeFillHelper.app in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		C6CFD63FC9FBD35514FC1D61 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;

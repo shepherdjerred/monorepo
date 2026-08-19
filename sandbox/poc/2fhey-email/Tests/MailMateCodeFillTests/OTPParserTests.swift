@@ -106,6 +106,14 @@ func requiresContext() {
     #expect(OTPParser().parse(body: "A random identifier is 482913.", metadata: metadata) == nil)
 }
 
+@Test("does not treat keyword substrings as verification context")
+func rejectsKeywordSubstrings() {
+    let metadata = MessageMetadata(sender: "news@example.test", subject: "Daily update", date: nil, messageID: "message-keyword-boundary")
+
+    #expect(OTPParser().parse(body: "Your postcode is 4829.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "The author reference is 482913.", metadata: metadata) == nil)
+}
+
 @Test("parses a canonical MailMate body fixture")
 func parsesCanonicalFixture() throws {
     guard let url = Bundle.module.url(forResource: "verification-code", withExtension: "txt", subdirectory: "Fixtures") else {
