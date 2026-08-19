@@ -11,9 +11,13 @@ description: |
 
 > **Current monorepo shape.** The repo runs a **static** Buildkite pipeline (`.buildkite/pipeline.yml`, replatformed 2026-07) on the homelab agent-stack in the `buildkite` namespace. CI runs on the dedicated `liskov` node. `BUILDKITE_MAX_IN_FLIGHT=24` is the count cap, and Kueue provides the resource-aware `80Gi / 24 CPU / 24 pods / 100Gi` admission layer. The explicitly marked Dagger/dynamic-pipeline section below is historical; the general Buildkite reference material remains valid.
 
+Use `toolkit bk` for monorepo operator commands. It delegates unchanged to the
+native Buildkite CLI and supplies organization `sjerred` unless the environment
+already selects another organization.
+
 ## Overview
 
-BuildKite is a CI/CD platform where builds run on your own infrastructure via agents. Pipelines are defined in YAML (static or dynamically generated). This monorepo formerly used BuildKite as its sole CI platform with dynamic TypeScript pipeline generation and Dagger for all build steps (removed 2026-07).
+BuildKite is a CI/CD platform where builds run on your own infrastructure via agents. Pipelines are defined in YAML (static or dynamically generated). This monorepo uses Buildkite as its sole CI platform; the former dynamic TypeScript/Dagger pipeline was replaced by the current static pipeline in 2026-07.
 
 ## Monorepo Fixed-Corpus CI I/O Builds
 
@@ -26,7 +30,7 @@ applies; unrelated selectors keep their normal change-based decisions.
 After confirming the SHA is still current `main`, create the build with:
 
 ```bash
-bk build create \
+toolkit bk build create \
   --pipeline sjerred/monorepo \
   --branch main \
   --commit <current-main-sha> \

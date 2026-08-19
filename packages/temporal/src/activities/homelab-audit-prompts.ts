@@ -102,17 +102,17 @@ Available tools (already authenticated in this environment — do not attempt to
 
 - \`kubectl\` — context \`admin@torvalds\`. Read-only RBAC; do not attempt write verbs.
 - \`talosctl\` — context \`torvalds\` (\`TALOSCONFIG=/etc/talos/config\` projected from the worker pod's secret). If talosctl errors with "Forbidden" or "no such file", note it in the audit and fall back to kubectl-derived signal for §1.
-- \`argocd\` — \`ARGOCD_SERVER\` + \`ARGOCD_AUTH_TOKEN\` are set; pass \`--grpc-web\` if the transport demands it.
+- \`toolkit argocd\` — \`ARGOCD_SERVER\` + \`ARGOCD_AUTH_TOKEN\` are set; the wrapper supplies \`--grpc-web\`.
 - \`velero\` — uses in-cluster auth.
 - \`tofu\` — for state inspection only. First confirm \`packages/homelab/src/cdk8s/src/tofu/cloudflare\` exists in the worker checkout, then run \`tofu -chdir=packages/homelab/src/cdk8s/src/tofu/cloudflare plan -detailed-exitcode\` to detect drift; exit code 2 from this command means "drift detected" (NOT a failure) — report the drift in the audit body and continue. Never run \`tofu apply\`.
-- \`gh\` — for the open-PR survey (§12).
-- \`bk\` — Buildkite CLI. \`BUILDKITE_API_TOKEN\`, \`BUILDKITE_ORGANIZATION_SLUG=sjerred\`, and \`BUILDKITE_PIPELINE_SLUG=monorepo\` are set; Buildkite is the source of truth for CI.
-- \`temporal\` — Temporal CLI. \`TEMPORAL_ADDRESS\` points at the in-cluster frontend service; do not use \`kubectl exec\` or \`kubectl port-forward\` for routine audit checks.
-- \`toolkit\` — local binary at /usr/local/bin/toolkit. Subcommands the runbook calls for:
+- \`toolkit gh\` — GitHub CLI for the open-PR survey (§12), scoped to this monorepo by default.
+- \`toolkit bk\` — Buildkite CLI. \`BUILDKITE_API_TOKEN\`, \`BUILDKITE_ORGANIZATION_SLUG=sjerred\`, and \`BUILDKITE_PIPELINE_SLUG=monorepo\` are set; Buildkite is the source of truth for CI.
+- \`toolkit temporal\` — Temporal CLI. \`TEMPORAL_ADDRESS\` points at the in-cluster frontend service; the wrapper's local homelab profile may be overridden by this explicit environment. Do not use \`kubectl exec\` or \`kubectl port-forward\` for routine audit checks.
+- \`toolkit\` — local binary at /usr/local/bin/toolkit. Monorepo workflows and observability passthroughs the runbook calls for:
   - \`toolkit alerts list --state open [--json]\` — open Alerts occurrences (§6).
   - \`toolkit bugsink issues [--json]\` — open Bugsink issues (§9). \`toolkit bugsink issue <ID>\` for details.
-  - \`toolkit gf query 'ALERTS{alertstate="firing"}'\` is the primary alert truth. \`toolkit gf alerts\` lists Grafana-managed rules only and may correctly return "No alert rules found" when PrometheusRule/Alertmanager owns alerting.
-  - \`toolkit gf query '<promql>'\` / \`toolkit gf logs '<logql>' --since 24h --limit 50\` (§6, §10).
+  - \`toolkit prom query 'ALERTS{alertstate="firing"}'\` is the primary alert truth. \`toolkit grafana alert rules list\` lists Grafana-managed rules only and may correctly return no rules when PrometheusRule/Alertmanager owns alerting.
+  - \`toolkit prom query '<promql>'\` / \`toolkit loki query '<logql>' --since 24h --limit 50\` (§6, §10).
   All required env vars (\`ALERT_DASHBOARD_URL\`, \`BUGSINK_URL\`, \`BUGSINK_TOKEN\`, \`GRAFANA_URL\`, \`GRAFANA_API_KEY\`) are already injected.
 `.trim();
 

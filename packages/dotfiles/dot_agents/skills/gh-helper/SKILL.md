@@ -1,7 +1,7 @@
 ---
 name: gh-helper
 description: |
-  Complete GitHub operations via gh CLI - repos, issues, PRs, code search, actions, file management
+  Complete GitHub operations via gh CLI - repos, issues, PRs, code search, releases, file management
   When user mentions GitHub, repositories, issues, PRs, gh command, code search, commits, file contents
 ---
 
@@ -14,10 +14,15 @@ Complete GitHub operations via `gh` CLI and GitHub API. This skill replaces GitH
 ## Monorepo workflow guard
 
 In `shepherdjerred/monorepo`, `git-spice-helper` is authoritative for every
-feature branch and PR. Use `gh` here for inspection, review comments, and other
-explicitly requested GitHub operations; do not create branches, create feature
-PRs, or merge them with the generic `gh` examples below. Load
-`git-spice-helper` before any branch or feature-PR mutation.
+feature branch and PR. Use `toolkit gh` here for inspection, review comments,
+and other explicitly requested GitHub operations; it supplies this repository
+as the default and otherwise preserves native CLI behavior. Do not create
+branches, create feature PRs, or merge them with the generic `gh` examples
+below. Load `git-spice-helper` before any branch or feature-PR mutation.
+
+This monorepo uses Buildkite, not GitHub Actions. Use `toolkit bk` or
+`toolkit pr health` for CI. The generic Actions examples later in this skill
+apply only to repositories that actually use GitHub Actions.
 
 ## MCP Tool Equivalents Reference
 
@@ -57,8 +62,6 @@ Safe read-only commands:
 - `gh repo view`, `gh repo list`
 - `gh issue list`, `gh issue view`
 - `gh pr list`, `gh pr view`, `gh pr diff`, `gh pr checks`
-- `gh run list`, `gh run view`, `gh run watch`
-- `gh workflow list`, `gh workflow view`
 - `gh release list`, `gh release view`
 - `gh search repos`, `gh search code`, `gh search issues`
 - `gh status`
@@ -538,56 +541,6 @@ gh api "/search/users?q=location:Seattle+followers:>100"
 
 # Search by email domain
 gh api "/search/users?q=email:@company.com"
-```
-
----
-
-## GitHub Actions
-
-### List Workflows
-
-```bash
-gh workflow list
-gh workflow list --all  # Include disabled
-```
-
-### View Workflow Runs
-
-```bash
-# List runs
-gh run list
-gh run list --workflow "CI"
-gh run list --branch main
-gh run list --status failure
-
-# View specific run
-gh run view 12345
-gh run view 12345 --log
-gh run view 12345 --log-failed
-
-# Watch run in real-time
-gh run watch 12345
-```
-
-### Trigger Workflow
-
-```bash
-# Trigger workflow_dispatch
-gh workflow run "Deploy" --ref main
-
-# With inputs
-gh workflow run "Deploy" -f environment=production -f version=1.0.0
-```
-
-### Cancel/Rerun Workflow
-
-```bash
-# Cancel
-gh run cancel 12345
-
-# Rerun
-gh run rerun 12345
-gh run rerun 12345 --failed  # Only failed jobs
 ```
 
 ---

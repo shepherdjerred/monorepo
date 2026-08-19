@@ -54,7 +54,7 @@ describe("parseCommand", () => {
   });
 
   it("should reject semicolons", () => {
-    expect(parseCommand("gh run list; rm -rf /")).toBeNull();
+    expect(parseCommand("toolkit bk build list; rm -rf /")).toBeNull();
   });
 
   it("should reject double ampersand", () => {
@@ -107,14 +107,21 @@ describe("parseCommand", () => {
 });
 
 describe("isAllowedCommand", () => {
-  it("should allow gh run list", () => {
-    const result = isAllowedCommand(["gh", "run", "list"]);
+  it("should allow toolkit bk build list", () => {
+    const result = isAllowedCommand(["toolkit", "bk", "build", "list"]);
     expect(result.allowed).toBe(true);
-    expect(result.matchedRule).toBe("List GitHub Actions runs");
+    expect(result.matchedRule).toBe("List Buildkite builds");
   });
 
-  it("should allow gh run list with extra args", () => {
-    const result = isAllowedCommand(["gh", "run", "list", "--limit", "10"]);
+  it("should allow toolkit bk build list with extra args", () => {
+    const result = isAllowedCommand([
+      "toolkit",
+      "bk",
+      "build",
+      "list",
+      "--limit",
+      "10",
+    ]);
     expect(result.allowed).toBe(true);
   });
 
@@ -190,9 +197,11 @@ describe("buildPermissionHandler - Tier 1 (auto-allow)", () => {
 });
 
 describe("buildPermissionHandler - Tier 2 (bash allowlist)", () => {
-  it("should allow gh run list", async () => {
+  it("should allow toolkit bk build list", async () => {
     const handler = buildPermissionHandler(testAgent, "session-1");
-    const result = await handler("Bash", { command: "gh run list" });
+    const result = await handler("Bash", {
+      command: "toolkit bk build list",
+    });
     expect(result.behavior).toBe("allow");
   });
 
@@ -213,7 +222,7 @@ describe("buildPermissionHandler - Tier 2 (bash allowlist)", () => {
   it("should reject commands with semicolons", async () => {
     const handler = buildPermissionHandler(testAgent, "session-1");
     const result = await handler("Bash", {
-      command: "gh run list; rm -rf /",
+      command: "toolkit bk build list; rm -rf /",
     });
     expect(result.behavior).toBe("deny");
   });

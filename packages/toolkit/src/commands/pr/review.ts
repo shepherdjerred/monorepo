@@ -192,7 +192,7 @@ export async function reviewHarvestCommand(
     // makes the read-only run useful rather than merely safe.
     if (options.all !== true) {
       console.log(
-        `#${String(number)}: retryable — bk job retry ${verdict.jobId}`,
+        `#${String(number)}: retryable — toolkit bk job retry ${verdict.jobId}`,
       );
       continue;
     }

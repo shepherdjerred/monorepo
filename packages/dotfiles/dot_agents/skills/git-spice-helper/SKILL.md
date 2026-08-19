@@ -9,9 +9,10 @@ description: |
 
 In this repo **every feature PR is created and managed with
 [git-spice](https://abhinav.github.io/git-spice/)** (`gs`), as a stack. A single
-PR is just a stack of one. You drive branches, restacks, and PRs with native
-`git-spice` commands — never hand-rolled `git rebase --onto` and never a bare
-`gh pr create` for feature work.
+PR is just a stack of one. Drive branches, restacks, and PRs through
+`toolkit git-spice`, which transparently delegates to the native CLI from the
+current checkout. Never use a hand-rolled `git rebase --onto` or a bare GitHub
+PR-create command for feature work.
 
 git-spice (by Abhinav Gupta, Go, GPL-3.0, currently **v0.31.x**, SemVer pre-1.0,
 needs **Git ≥ 2.38**) is offline-first: it only touches the network to
@@ -29,19 +30,20 @@ On this machine `gs` is defined two different ways:
   `/opt/homebrew/bin/gs` → **Ghostscript** (a PostScript interpreter, pulled in
   by `mactex`). Running `gs …` from a script/agent will invoke the wrong tool.
 
-**So: in every Bash/script/CI context call `git-spice` explicitly.** This skill
-writes `git-spice` in all runnable command blocks for copy-paste safety; the
-short `gs …` forms (e.g. `gs bc`, `gs ss`) are the interactive equivalents and
-are listed in `references/command-reference.md`.
+**So: use `toolkit git-spice` for agent/operator commands in this monorepo.**
+Repository automation that intentionally invokes the native executable may
+call `git-spice` directly, but it must never call `gs`. This skill writes
+`toolkit git-spice` in runnable operator blocks; the short `gs …` forms (for
+example `gs bc`, `gs ss`) are interactive equivalents only.
 
 ## When to load this skill — the gate
 
 Load this skill **before** running any of the following in this repo:
 
-- creating a branch (`git-spice branch create`, `git branch`, `git checkout -b`, `git switch -c`)
-- creating / updating / stacking a PR (`git-spice … submit`, `gh pr create` for feature work)
-- restacking / rebasing a stack (`git-spice … restack`, `git-spice … onto`, `git rebase`)
-- syncing a branch with trunk (`git-spice repo sync`)
+- creating a branch (`toolkit git-spice branch create`, `git branch`, `git checkout -b`, `git switch -c`)
+- creating / updating / stacking a PR (`toolkit git-spice … submit`, or a GitHub PR-create command for feature work)
+- restacking / rebasing a stack (`toolkit git-spice … restack`, `toolkit git-spice … onto`, `git rebase`)
+- syncing a branch with trunk (`toolkit git-spice repo sync`)
 
 `git commit` for normal edits does not require it; branch/stack/PR *management* does.
 
@@ -118,8 +120,8 @@ message is not `type(scope): …`, so the `commit-msg` hook would reject it. We 
 ### Auth setup (once)
 
 ```bash
-git-spice auth login          # choose "Service CLI (gh)" → reuses `gh auth token`
-git-spice auth status         # non-zero exit if logged out
+toolkit git-spice auth login          # choose "Service CLI (gh)" → reuses `gh auth token`
+toolkit git-spice auth status         # non-zero exit if logged out
 ```
 
 Do **not** set `GITHUB_TOKEN` in your interactive shell: if that env var is set,
@@ -137,13 +139,13 @@ checks staged files only; Buildkite runs the exhaustive whole-repo gate.
 ```bash
 # Start on feature/<slug> off origin/main (a stack of one).
 # To add a branch ON TOP of the current one:
-git-spice branch create feature/auth-api      # no commit (commit=false); name required
+toolkit git-spice branch create feature/auth-api      # no commit (commit=false); name required
 git add packages/…                            # stage the change
-git-spice commit create -m "feat(scout): expose authenticated report API"   # commit + auto-restack upstack
+toolkit git-spice commit create -m "feat(scout): expose authenticated report API"   # commit + auto-restack upstack
 # repeat to keep stacking:
-git-spice branch create feature/auth-ui
+toolkit git-spice branch create feature/auth-ui
 git add …
-git-spice commit create -m "feat(scout): render authenticated report controls"
+toolkit git-spice commit create -m "feat(scout): render authenticated report controls"
 ```
 
 `git-spice log short` (`gs ls`) shows the stack; add `-a` for every tracked branch.
@@ -151,26 +153,26 @@ git-spice commit create -m "feat(scout): render authenticated report controls"
 ### 2. Navigate the stack
 
 ```bash
-git-spice down          # move to the branch below (git-spice up / top / bottom too)
-git-spice up
-git-spice branch checkout feature/auth-api   # jump to a specific branch
+toolkit git-spice down          # move to the branch below (git-spice up / top / bottom too)
+toolkit git-spice up
+toolkit git-spice branch checkout feature/auth-api   # jump to a specific branch
 ```
 
 ### 3. Submit the stack of PRs
 
 ```bash
 # Review each complete base...branch diff and compose its final title/body.
-git-spice branch submit --dry-run \
+toolkit git-spice branch submit --dry-run \
   --title "feat(scout): add authenticated match reports" \
   --body "Why: ... What: ... Verification: ..."
-git-spice branch submit \
+toolkit git-spice branch submit \
   --title "feat(scout): add authenticated match reports" \
   --body "Why: ... What: ... Verification: ..."
 
 # For an existing, already-described stack, update branches without replacing
 # their narrative bodies from commit messages.
-git-spice stack submit --update-only
-# scope variants: git-spice branch submit | upstack submit | downstack submit
+toolkit git-spice stack submit --update-only
+# scope variants: toolkit git-spice branch submit | upstack submit | downstack submit
 ```
 
 Each PR targets its parent branch as base; git-spice posts a navigation comment
@@ -181,10 +183,10 @@ metadata, but do not publish it without checking the complete branch diff.
 ### 4. Address review feedback
 
 ```bash
-git-spice down                       # go to the branch under review
+toolkit git-spice down                       # go to the branch under review
 git add …                            # make the fix
-git-spice commit amend               # or: git-spice commit create -m "fix(scout): reject expired sessions"
-git-spice stack submit --update-only # force-push updates; preserves PR narratives
+toolkit git-spice commit amend               # or: toolkit git-spice commit create -m "fix(scout): reject expired sessions"
+toolkit git-spice stack submit --update-only # force-push updates; preserves PR narratives
 ```
 
 Review-fix commits still need specific subjects. Do not replace the PR body
@@ -194,8 +196,8 @@ branch-level `Why`/`What`/`Verification` narrative accurate.
 ### 5. Sync after a PR merges
 
 ```bash
-git-spice repo sync                  # pull main, delete merged branches, retarget survivors
-git-spice repo sync --restack        # …and rebase the survivors onto the new base
+toolkit git-spice repo sync                  # pull main, delete merged branches, retarget survivors
+toolkit git-spice repo sync --restack        # …and rebase the survivors onto the new base
 ```
 
 `repo sync` is **repo-global**: it touches every tracked branch, not just the
@@ -204,20 +206,20 @@ current stack.
 ### 6. Reorder / move branches
 
 ```bash
-git-spice upstack onto main          # move current branch + its upstack onto a new base
-git-spice branch onto feature/x      # move ONLY the current branch
-git-spice stack edit                 # reorder the whole (linear) stack in $EDITOR
-git-spice branch create feature/mid --insert   # insert a branch into the middle
+toolkit git-spice upstack onto main          # move current branch + its upstack onto a new base
+toolkit git-spice branch onto feature/x      # move ONLY the current branch
+toolkit git-spice stack edit                 # reorder the whole (linear) stack in $EDITOR
+toolkit git-spice branch create feature/mid --insert   # insert a branch into the middle
 ```
 
 ### 7. Resolve conflicts during a restack
 
-git-spice pauses on conflict just like `git rebase`:
+toolkit git-spice pauses on conflict just like `git rebase`:
 
 ```bash
 # …resolve the conflicted files, git add them…
-git-spice rebase continue            # (gs rbc) resume the paused git-spice op
-git-spice rebase abort               # (gs rba) revert to the pre-rebase state
+toolkit git-spice rebase continue            # (gs rbc) resume the paused git-spice op
+toolkit git-spice rebase abort               # (gs rba) revert to the pre-rebase state
 ```
 
 ## Safety rules (agent)

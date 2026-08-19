@@ -5,31 +5,19 @@ import type {
   ReportEvidenceReceiptV1,
   ReportEnvelopeV1,
 } from "#shared/report.ts";
+import { ensureGcxContext } from "./gcx-context.ts";
 import { collectBuildkite } from "./homelab-audit-buildkite.ts";
 import {
   interpretKubernetesWorkloads,
   KubernetesWorkloadListSchema,
 } from "./homelab-audit-kubernetes.ts";
 
-const PrometheusResultSchema = z.object({
-  results: z.record(
-    z.string(),
-    z.object({
-      frames: z.array(
-        z.object({
-          schema: z.object({
-            fields: z.array(
-              z.object({
-                name: z.string(),
-                labels: z.record(z.string(), z.string()).optional(),
-              }),
-            ),
-          }),
-          data: z.object({ values: z.array(z.array(z.unknown())) }),
-        }),
-      ),
-    }),
-  ),
+export const PrometheusResultSchema = z.object({
+  status: z.literal("success"),
+  data: z.object({
+    resultType: z.string(),
+    result: z.array(z.unknown()),
+  }),
 });
 const AlertOccurrenceSchema = z.object({
   id: z.string(),
@@ -133,10 +121,12 @@ async function commandCollector<T>(input: {
   args: string[];
   schema: z.ZodType<T>;
   interpret: (value: T) => { summary: string; findings: Finding[] };
+  prepare?: (() => Promise<void>) | undefined;
 }): Promise<CollectorResult> {
   const observedAt = new Date().toISOString();
   const command = input.args.join(" ");
   try {
+    await input.prepare?.();
     const stdout = await runCommand(input.args);
     const value = input.schema.parse(JSON.parse(stdout));
     const interpreted = input.interpret(value);
@@ -192,20 +182,10 @@ async function commandCollector<T>(input: {
   }
 }
 
-function prometheusCount(
+export function prometheusCount(
   value: z.infer<typeof PrometheusResultSchema>,
 ): number {
-  return Object.values(value.results).reduce(
-    (total, result) =>
-      total +
-      result.frames.reduce(
-        (frameTotal, frame) =>
-          frameTotal +
-          Math.max(0, ...frame.data.values.map((values) => values.length)),
-        0,
-      ),
-    0,
-  );
+  return value.data.result.length;
 }
 
 export function interpretArgoApplications(
@@ -377,13 +357,14 @@ export async function collectHomelabAuditEvidence(): Promise<HomelabAuditCollect
       label: "Firing Prometheus alerts",
       args: [
         "toolkit",
-        "gf",
+        "prom",
         "query",
         'ALERTS{alertstate="firing"}',
-        "--instant",
-        "--json",
+        "-o",
+        "json",
       ],
       schema: PrometheusResultSchema,
+      prepare: ensureGcxContext,
       interpret: (value) => {
         const count = prometheusCount(value);
         return {
@@ -434,7 +415,7 @@ export async function collectHomelabAuditEvidence(): Promise<HomelabAuditCollect
     commandCollector({
       id: "argocd-health",
       label: "ArgoCD application health",
-      args: ["argocd", "app", "list", "--grpc-web", "-o", "json"],
+      args: ["toolkit", "argocd", "app", "list", "-o", "json"],
       schema: ArgoApplicationsSchema,
       interpret: interpretArgoApplications,
     }),

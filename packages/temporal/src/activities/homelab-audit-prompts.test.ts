@@ -104,8 +104,8 @@ describe("buildAuditPrompt", () => {
         "Audit tooling preflight:\n\n- Remote checks: passed.",
     });
 
-    expect(prompt).toContain("`bk` — Buildkite CLI");
-    expect(prompt).toContain("`temporal` — Temporal CLI");
+    expect(prompt).toContain("`toolkit bk` — Buildkite CLI");
+    expect(prompt).toContain("`toolkit temporal` — Temporal CLI");
     expect(prompt).toContain("TEMPORAL_ADDRESS");
     expect(prompt).toContain('ALERTS{alertstate="firing"}');
     expect(prompt).toContain("Grafana-managed rules only");

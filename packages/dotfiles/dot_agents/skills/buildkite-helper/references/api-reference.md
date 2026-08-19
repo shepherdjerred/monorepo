@@ -102,10 +102,10 @@ Key mutations: `buildAnnotate`, `buildCreate`, `buildCancel`, pipeline/team/clus
 ## bk CLI
 
 ```bash
-bk auth login          # OAuth auth (v3.32.0+, stored in OS keychain)
-bk auth logout
-bk auth status
-bk auth switch         # Switch org
+toolkit bk auth login          # OAuth auth (v3.32.0+, stored in OS keychain)
+toolkit bk auth logout
+toolkit bk auth status
+toolkit bk auth switch         # Switch org
 ```
 
 ## buildkite-agent CLI

@@ -1,18 +1,17 @@
 # toolkit
 
-Command-line utilities for development workflows against this monorepo and the
-homelab: PR health and media hosting, deploy tracing, frontend screenshots,
-alert/error/metrics queries, and a Discord session daemon. Output is markdown
-optimized for agent (Claude Code) consumption; commands exit non-zero on
-unhealthy status.
+`toolkit` is the command entrypoint for the complete monorepo stack. It gives
+native platform CLIs stable monorepo defaults and retains the workflows that
+only make sense in this repository: deployment tracing, PR health and review
+media, alert/error triage, screenshots, Discord sessions, and private agent
+history.
 
-See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes, including the
-detailed design docs for `deployed`, `screenshot`, `discord`, and `pr asset`.
+See [AGENTS.md](AGENTS.md) for implementation invariants and contributor notes.
 
 ## Install and run
 
 ```bash
-# Run from source (development)
+# Run from source
 bun run src/index.ts pr health
 
 # Compile a standalone binary to dist/toolkit
@@ -22,193 +21,115 @@ bun run build
 bun run install:local
 ```
 
-After the global install, invoke everything as `toolkit <command> …`.
+## Platform commands
 
-## Commands
+Platform commands delegate to native CLIs. Explicit flags and environment
+values override the monorepo defaults.
 
-Global options are only `--version` and `--help`/`-h`, and they must come
-before the command — the top-level router treats any other leading flag as a
-command name and exits 1. `--json` is a per-command option parsed by each
-handler, so it goes _after_ the command (e.g. `toolkit alerts list --json`).
-Run `toolkit --help` for the built-in reference.
+| Command     | Native CLI    | Monorepo default                  |
+| ----------- | ------------- | --------------------------------- |
+| `gh`        | `gh`          | `GH_REPO=shepherdjerred/monorepo` |
+| `bk`        | `bk`          | Buildkite organization `sjerred`  |
+| `git-spice` | `git-spice`   | Current checkout                  |
+| `linear`    | `linear`      | `--workspace sjerred`             |
+| `posthog`   | `posthog-cli` | Project `549883`                  |
+| `grafana`   | `gcx`         | Context `homelab`                 |
+| `prom`      | `gcx metrics` | Context `homelab`                 |
+| `loki`      | `gcx logs`    | Context `homelab`                 |
+| `tempo`     | `gcx traces`  | Context `homelab`                 |
+| `temporal`  | `temporal`    | `--profile homelab`               |
+| `argocd`    | `argocd`      | Homelab server and `--grpc-web`   |
+| `cf`        | `cf`          | Native configured context         |
+| `tailscale` | `tailscale`   | Native local daemon               |
 
-### `pr` — pull request tooling
-
-| Command                        | Description                                                              |
-| ------------------------------ | ------------------------------------------------------------------------ |
-| `pr health [PR_NUMBER]`        | Check PR health: conflicts, CI, approval                                 |
-| `pr logs <RUN_ID>`             | Get workflow run logs                                                    |
-| `pr detect`                    | Detect the PR for the current branch                                     |
-| `pr asset <PR> <FILE\|DIR...>` | Upload PR media (images, video, `.cast`, demo dirs) to `public.sjer.red` |
-
-`pr asset` uploads to the `public-sjer-red` SeaweedFS bucket under
-`pr/assets/<PR>/` and prints one public URL per argument. Directories must
-contain a root `index.html`; asciinema `.cast` files get a generated
-self-contained HTML player page; `--markdown` emits ready-to-paste embed
-markdown per content type. Credentials come from the standard AWS toolchain
-(`--profile <name>` or `AWS_PROFILE`).
-
-```bash
-toolkit pr asset 1234 ./after.png ./flow.mp4 ./demo.cast ./demo-site --profile seaweedfs --markdown
-```
-
-### `deployed` — is my commit/service live on the homelab?
-
-| Command                        | Description                                                  |
-| ------------------------------ | ------------------------------------------------------------ |
-| `deployed [SELECTOR]`          | Trace HEAD (or `--commit <ref>`) through the deploy pipeline |
-| `deployed <service>`           | e.g. `scout`, `birmel` — is its latest commit live?          |
-| `deployed <service>/<variant>` | e.g. `scout/prod` — scope to one product variant             |
-| `deployed <commit> --json`     | Trace a specific commit, JSON output                         |
-
-Follows a commit through the two-build pipeline (feature merge → version bump →
-cdk8s synth + Helm push + ArgoCD sync) and reports a verdict per
-service/variant: `NOT_MERGED → PENDING → NO_IMAGE → PINNED → SYNCED → RUNNING`.
-Layers auto-degrade: the git trace always runs; `gh`, `argocd`, and `kubectl`
-add PR context and live pod confirmation when available (`--no-github`,
-`--no-cluster` to skip).
+Everything after the selected platform command is preserved, including
+`--help`, `--version`, and the `--` argument boundary. The child inherits the
+current directory, environment, and terminal streams. Toolkit mirrors its exit
+status or signal and returns 127 when the native executable is missing.
 
 ```bash
-toolkit deployed scout/prod
+toolkit gh pr view
+toolkit bk build list --pipeline monorepo --branch main
+toolkit linear issue view SJ-123
+toolkit posthog api search read-data-schema
+toolkit prom query 'up == 0'
+toolkit loki query '{namespace="temporal"} |= "error"' --since 1h
+toolkit tempo query --help
+toolkit grafana alert rules list
 ```
 
-### `screenshot` — visually verify a frontend change
+Common plumbing such as `git`, `bun`, `kubectl`, `helm`, `tofu`, `aws`, `op`,
+`promtool`, and `logcli` stays directly invoked.
 
-| Command                    | Description                                                |
-| -------------------------- | ---------------------------------------------------------- |
-| `screenshot <pkg> [route]` | Boot a registered package's dev server, screenshot a route |
-| `screenshot --list`        | List screenshot-able packages                              |
+## Monorepo workflows
 
-Spawns the package's dev server on its registered port and drives a
-PinchTab-controlled Chrome tab to capture the route. Requires a running
-PinchTab browser instance. The package registry lives in
-`src/lib/screenshot/catalog.ts`.
+### PR health, reviews, and media
 
-```bash
-toolkit screenshot stocks-sjer-red /
-```
+`toolkit pr health [PR_NUMBER] [--json]` combines three independent signals:
 
-### `alerts` — homelab alert ledger
+- a local merge-tree against freshly fetched `origin/main` and the exact PR
+  head;
+- the Buildkite build for that exact head SHA, including authoritative job
+  state and `toolkit bk job log <id> --agent` investigation commands;
+- GitHub PR/check/review metadata from `gh`.
 
-| Command            | Description                           |
-| ------------------ | ------------------------------------- |
-| `alerts list`      | List alert occurrences and history    |
-| `alerts show <ID>` | View an alert occurrence and timeline |
+GitHub’s Buildkite status can lag or describe a different state. The exact-head
+Buildkite build wins when they disagree. Healthy and pending reports exit 0;
+unhealthy reports exit 1. JSON retains the top-level `prNumber`, `prUrl`,
+`overallStatus`, `checks`, and `nextSteps` fields.
 
-### `bugsink` — self-hosted error tracking
+`toolkit pr review list|resolve|harvest` inspects and resolves code-review
+provider findings. `toolkit pr asset <PR> <file|dir...> [--markdown]` uploads
+the lightest useful review artifact to `public.sjer.red`; directories require
+a root `index.html`, and asciinema `.cast` files get a self-contained player.
 
-| Command                                   | Description                                   |
-| ----------------------------------------- | --------------------------------------------- |
-| `bugsink issues`                          | List unresolved issues                        |
-| `bugsink issue <ID>`                      | View issue details                            |
-| `bugsink teams` / `team <UUID>`           | List teams / view team details                |
-| `bugsink projects` / `project <ID>`       | List projects / view project details          |
-| `bugsink events <ISSUE>` / `event <UUID>` | List events for an issue / view event details |
-| `bugsink stacktrace <EVT>`                | Get an event stacktrace (markdown)            |
-| `bugsink releases` / `release <UUID>`     | List releases / view release details          |
+### Deployment and browser acceptance
 
-```bash
-BUGSINK_URL=https://bugsink.example.com BUGSINK_TOKEN=… toolkit bugsink issues
-```
+`toolkit deployed [SELECTOR]` traces a commit through merge, image publication,
+GitOps pinning, ArgoCD sync, and the running pod digest. Selectors include a
+service (`scout`), variant (`scout/prod`), or commit. Use `--json`,
+`--no-github`, or `--no-cluster` when needed.
 
-### `grafana` (alias `gf`) — dashboards, Prometheus, Loki, alerting
+`toolkit screenshot <package> [route]` starts a registered package on its fixed
+development port and drives a PinchTab-controlled browser. It fails if the port
+is already occupied rather than capturing an unrelated process.
 
-| Command                                          | Description                                |
-| ------------------------------------------------ | ------------------------------------------ |
-| `grafana dashboards` / `dashboard <UID>`         | Search dashboards / view dashboard details |
-| `grafana datasources` / `datasource <UID>`       | List datasources / view datasource details |
-| `grafana query <EXPR>`                           | Run a PromQL query                         |
-| `grafana metrics`                                | List Prometheus metric names               |
-| `grafana labels` / `label-values <NAME>`         | Prometheus label names / values            |
-| `grafana logs <EXPR>`                            | Run a LogQL query                          |
-| `grafana log-labels` / `log-label-values <NAME>` | Loki label names / values                  |
-| `grafana alerts` / `alert <UID>`                 | List alert rules / view rule details       |
-| `grafana annotations` / `annotate <TEXT>`        | List / create annotations                  |
+### Operations and local history
 
-```bash
-toolkit gf query 'up{job="birmel"}'
-```
+- `toolkit alerts list|show` queries the durable alert occurrence ledger.
+- `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
+  and releases in self-hosted Bugsink.
+- `toolkit discord ...` operates the private local Discord session daemon.
+- `toolkit history ...` searches the private, rebuildable local agent-history
+  index. It never treats prior conversation as current deployment truth.
 
-### `discord` — act on Discord through a session daemon
-
-A daemon logs in once (bot and/or userbot identity) and holds the gateway
-connection; one-shot commands talk to it over a unix socket in
-`~/.toolkit/discord/`. At least one of `DISCORD_BOT_TOKEN` /
-`DISCORD_USER_TOKEN` must be set when starting the daemon.
-
-| Command                                    | Description                                  |
-| ------------------------------------------ | -------------------------------------------- |
-| `discord daemon start [--ttl 30m]`         | Start the session daemon (tokens via env)    |
-| `discord daemon stop` / `daemon status`    | Manage the daemon                            |
-| `discord send <CH> <MSG>`                  | Send a message                               |
-| `discord read <CH> [-n 20]`                | Read recent messages (including embeds)      |
-| `discord wait <CH>`                        | Block until a matching message arrives       |
-| `discord slash <CH> <BOT> <CMD> [ARGS...]` | Invoke another bot's slash command (userbot) |
-| `discord voice join\|leave\|states`        | Voice presence + who's streaming             |
-| `discord guilds` / `discord channels`      | Discovery                                    |
-| `discord whoami`                           | Daemon identities + uptime                   |
-
-```bash
-toolkit discord daemon start --ttl 30m
-toolkit discord send 123456789012345678 "hello"
-```
-
-### `history` — search local agent conversations
-
-`history` maintains a private local index of Conductor, Claude Code, Codex,
-Cursor, bundled OpenCode, and standalone OpenCode conversations. Install the
-macOS LaunchAgent once; search itself only reads the index and never performs
-live service checks.
-
-| Command                                                           | Description                              |
-| ----------------------------------------------------------------- | ---------------------------------------- |
-| `history search <QUERY> [--since 7d] [--source NAME] [--limit N]` | Search indexed work                      |
-| `history search <QUERY> --include-excerpts`                       | Add bounded read-only source excerpts    |
-| `history recent [--since 7d] [--limit N]`                         | List recent indexed sessions             |
-| `history sources [--json]`                                        | Show source availability and scan errors |
-| `history daemon install`                                          | Install and start the macOS LaunchAgent  |
-| `history daemon status\|reindex`                                  | Inspect or refresh ingestion             |
-| `history daemon stop\|start\|uninstall`                           | Manage the LaunchAgent lifecycle         |
-
-```bash
-toolkit history daemon install
-toolkit history recent --since 7d
-toolkit history search "didn't I solve this before" --since 90d --include-excerpts
-toolkit history sources
-```
-
-The rebuildable index is `~/.toolkit/history/index.sqlite`; daemon state,
-socket, and logs are in that private directory. The LaunchAgent is
-`~/Library/LaunchAgents/com.jerred.toolkit-history.plist`. Transcript bodies
-are not copied into ordinary index tables, and standalone OpenCode's
-`~/.local/share/opencode/auth.json` is never read or indexed. Use `deployed`,
-`pr health`, or the relevant live client to verify current status after using
-history for context.
+Run `toolkit --help` or a workflow’s `--help` for the complete command surface.
 
 ## Environment variables
 
-| Variable              | Description                                                      |
-| --------------------- | ---------------------------------------------------------------- |
-| `ALERT_DASHBOARD_URL` | Alerts service URL (defaults to the tailnet service)             |
-| `BUGSINK_URL`         | Bugsink instance URL                                             |
-| `BUGSINK_TOKEN`       | Bugsink API token                                                |
-| `GRAFANA_URL`         | Grafana instance URL                                             |
-| `GRAFANA_API_KEY`     | Grafana API key or service account token                         |
-| `AWS_PROFILE`         | AWS profile for `pr asset` (or pass `--profile`)                 |
-| `DISCORD_BOT_TOKEN`   | Discord bot token for `discord daemon start` (optional)          |
-| `DISCORD_USER_TOKEN`  | Discord user/selfbot token for `discord daemon start` (optional) |
+Toolkit-owned workflows use these variables. Native passthrough credentials
+remain owned by their native CLIs and shell configuration.
+
+| Variable              | Purpose                                     |
+| --------------------- | ------------------------------------------- |
+| `ALERT_DASHBOARD_URL` | Alerts service URL                          |
+| `BUGSINK_URL`         | Bugsink instance URL                        |
+| `BUGSINK_TOKEN`       | Bugsink API token                           |
+| `AWS_PROFILE`         | AWS profile for `pr asset`                  |
+| `DISCORD_BOT_TOKEN`   | Bot identity for `discord daemon start`     |
+| `DISCORD_USER_TOKEN`  | Userbot identity for `discord daemon start` |
 
 ## Development
 
 ```bash
-bun run typecheck          # TypeScript
-bun run lint               # ESLint
-bun run test               # Unit tests (test/, scripts/)
-bun run test:integration   # Catalog drift tests (requires a git checkout)
+bun run typecheck
+bun run lint
+bun run test
+bun run build
+bun run test:integration
 ```
 
-Architecture: `src/index.ts` routes to per-group handlers in `src/handlers/`,
-which call command implementations in `src/commands/<group>/`. Service clients
-live in `src/lib/` — the Grafana, Alerts, and Bugsink clients share one
-Zod-validated HTTP layer (`src/lib/http.ts`); GitHub goes through the `gh` CLI
-and screenshots through the `pinchtab` CLI rather than bundled SDKs.
+`src/index.ts` separates platform passthroughs from monorepo workflow routers.
+The typed passthrough registry and subprocess runner live in
+`src/lib/passthrough.ts`; service-specific workflow code lives under
+`src/commands/` and `src/lib/`.

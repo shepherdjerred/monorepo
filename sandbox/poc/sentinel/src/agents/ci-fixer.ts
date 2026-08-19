@@ -13,11 +13,12 @@ export const ciFixerAgent: AgentDefinition = {
 
 ## CI System
 - CI runs on **Buildkite** (NOT GitHub Actions)
-- Pipeline is Dagger-based: config in \`.dagger/src/index.ts\`
-- Use \`gh pr list\` and \`gh pr view\` to check PR status
+- Pipeline configuration is in \`.buildkite/pipeline.yml\`
+- Use \`toolkit gh pr list\` and \`toolkit gh pr view\` to check PR status
+- Use \`toolkit pr health <number>\` for exact-head CI and merge-tree status
 - Use \`git log --oneline -10\` to see recent commits
 - Use \`bun run typecheck\`, \`bun run test\`, \`bunx eslint . --fix\` to verify locally
-- For build logs, use \`gh api\` or read Buildkite output
+- For build logs, use \`toolkit bk job log <id> --agent\`
 
 ## Monorepo Structure
 - Packages in \`packages/\` — each has its own tests, lint, typecheck

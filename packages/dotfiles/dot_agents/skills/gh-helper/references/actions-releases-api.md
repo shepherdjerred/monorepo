@@ -1,4 +1,4 @@
-# Code Search, GitHub Actions, Releases, Authentication & Advanced API
+# Code Search, Releases, Authentication, and Advanced API
 
 ## Code Search
 
@@ -32,56 +32,6 @@ gh api "/search/users?q=location:Seattle+followers:>100"
 
 # Search by email domain
 gh api "/search/users?q=email:@company.com"
-```
-
----
-
-## GitHub Actions
-
-### List Workflows
-
-```bash
-gh workflow list
-gh workflow list --all  # Include disabled
-```
-
-### View Workflow Runs
-
-```bash
-# List runs
-gh run list
-gh run list --workflow "CI"
-gh run list --branch main
-gh run list --status failure
-
-# View specific run
-gh run view 12345
-gh run view 12345 --log
-gh run view 12345 --log-failed
-
-# Watch run in real-time
-gh run watch 12345
-```
-
-### Trigger Workflow
-
-```bash
-# Trigger workflow_dispatch
-gh workflow run "Deploy" --ref main
-
-# With inputs
-gh workflow run "Deploy" -f environment=production -f version=1.0.0
-```
-
-### Cancel/Rerun Workflow
-
-```bash
-# Cancel
-gh run cancel 12345
-
-# Rerun
-gh run rerun 12345
-gh run rerun 12345 --failed  # Only failed jobs
 ```
 
 ---

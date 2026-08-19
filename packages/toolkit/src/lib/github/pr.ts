@@ -12,7 +12,7 @@ export async function getPullRequest(
       "view",
       String(prNumber),
       "--json",
-      "number,title,url,headRefName,baseRefName,state,isDraft,mergeable,reviewDecision",
+      "number,title,url,headRefName,headRefOid,baseRefName,state,isDraft,mergeable,reviewDecision",
     ],
     PullRequestSchema,
     repo,
@@ -43,7 +43,7 @@ export async function getPullRequestForBranch(
       "pr",
       "view",
       "--json",
-      "number,title,url,headRefName,baseRefName,state,isDraft,mergeable,reviewDecision",
+      "number,title,url,headRefName,headRefOid,baseRefName,state,isDraft,mergeable,reviewDecision",
     ],
     PullRequestSchema,
     repo,
@@ -73,11 +73,10 @@ export async function getReviews(
     repo,
   );
 
-  if (!result.success || !result.data) {
-    return [];
+  if (!result.success) {
+    throw new Error(result.error ?? "gh pr view reviews failed");
   }
-
-  return result.data.reviews;
+  return result.data?.reviews ?? [];
 }
 
 export async function getLatestReviewsByAuthor(

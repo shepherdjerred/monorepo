@@ -5,22 +5,23 @@ description: Safely use the repository's PostHog CLI and API for analytics, even
 
 # PostHog Helper
 
-Use `posthog-cli api` as the agent-first interface to the configured PostHog
-project. The Fish environment provides `POSTHOG_CLI_API_KEY` through 1Password
-and `POSTHOG_CLI_PROJECT_ID=549883`; keep that project-scoped credential path
-instead of creating a second token store.
+Use `toolkit posthog api` as the agent-first interface to the configured PostHog
+project. The Fish environment provides `POSTHOG_CLI_API_KEY` through 1Password;
+toolkit supplies project `549883` unless the environment selects another
+project. Keep that project-scoped credential path instead of creating a second
+token store.
 
 ## Authenticate and discover
 
 ```bash
-posthog-cli --version
-posthog-cli api --agent-help
-posthog-cli api search read-data-schema
-posthog-cli api info read-data-schema
-posthog-cli api call read-data-schema '{"query":{"kind":"events"}}'
+toolkit posthog --version
+toolkit posthog api --agent-help
+toolkit posthog api search read-data-schema
+toolkit posthog api info read-data-schema
+toolkit posthog api call read-data-schema '{"query":{"kind":"events"}}'
 ```
 
-Do not run `posthog-cli login` in normal repository work. It writes a personal
+Do not run `toolkit posthog login` in normal repository work. It writes a personal
 token outside the 1Password-backed environment. If credentials are unavailable,
 repair the dotfiles setup; never paste, print, or persist an API key.
 
@@ -68,10 +69,10 @@ user direction, inspect the target and input schema, dry-run the exact payload,
 and confirm only the approved action:
 
 ```bash
-posthog-cli api info <tool>
-posthog-cli api schema <tool> <field>
-posthog-cli api call --dry-run <tool> '<validated-json-input>'
-posthog-cli api call --confirm <tool> '<validated-json-input>'
+toolkit posthog api info <tool>
+toolkit posthog api schema <tool> <field>
+toolkit posthog api call --dry-run <tool> '<validated-json-input>'
+toolkit posthog api call --confirm <tool> '<validated-json-input>'
 ```
 
 Do not treat a source check or HTTP capture response as stored-event proof.
@@ -87,8 +88,8 @@ They prove different layers:
 Discover specialized PostHog skills before unfamiliar work:
 
 ```bash
-posthog-cli api skill list
-posthog-cli api skill install <skill-id>
+toolkit posthog api skill list
+toolkit posthog api skill install <skill-id>
 ```
 
 Do not install a vendor skill blindly into this repository. Confirm its target

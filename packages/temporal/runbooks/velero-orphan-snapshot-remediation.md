@@ -45,10 +45,10 @@ The audit workflow surfaces local ZFS-snapshot orphan counts via these Prometheu
 
 The audit only scans local ZFS snapshots — there is **no** R2 orphan metric or alert. Check for orphan R2 objects manually with the `aws s3 ls` steps below.
 
-Confirm with `toolkit gf query` and cross-check independently before destroying anything.
+Confirm with `toolkit prom query` and cross-check independently before destroying anything.
 
 ```bash
-toolkit gf query 'velero_orphan_local_snapshots_total'
+toolkit prom query 'velero_orphan_local_snapshots_total'
 ```
 
 Also confirm the workflow itself ran recently:
@@ -259,7 +259,7 @@ kubectl exec -n temporal deploy/temporal-temporal-server -- \
 Wait a few minutes, then re-query the metrics:
 
 ```bash
-toolkit gf query 'velero_orphan_local_snapshots_total'
+toolkit prom query 'velero_orphan_local_snapshots_total'
 ```
 
 The PagerDuty alerts auto-resolve once the metrics stay at 0 for the alert's `for:` window (default 24h, but the underlying alert clears as soon as Prometheus sees the new value).

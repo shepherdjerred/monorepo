@@ -8,9 +8,32 @@ type AllowlistEntry = {
 };
 
 const SAFE_COMMANDS: AllowlistEntry[] = [
+  // Buildkite CLI (read-only)
+  {
+    command: ["toolkit", "bk", "build", "list"],
+    description: "List Buildkite builds",
+  },
+  {
+    command: ["toolkit", "bk", "build", "view"],
+    description: "View a Buildkite build",
+  },
+  {
+    command: ["toolkit", "bk", "job", "log"],
+    description: "View a Buildkite job log",
+  },
+  {
+    command: ["toolkit", "pr", "health"],
+    description: "Check pull request health",
+  },
+  {
+    command: ["toolkit", "gh", "pr", "view"],
+    description: "View a GitHub PR through toolkit",
+  },
+  {
+    command: ["toolkit", "gh", "pr", "list"],
+    description: "List GitHub PRs through toolkit",
+  },
   // GitHub CLI (read-only)
-  { command: ["gh", "run", "list"], description: "List GitHub Actions runs" },
-  { command: ["gh", "run", "view"], description: "View GitHub Actions run" },
   { command: ["gh", "pr", "view"], description: "View a GitHub PR" },
   { command: ["gh", "pr", "list"], description: "List GitHub PRs" },
   { command: ["gh", "pr", "checks"], description: "View PR check status" },

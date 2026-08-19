@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { buildkiteBuildFinding } from "./homelab-audit-buildkite.ts";
 import {
   interpretArgoApplications,
+  prometheusCount,
+  PrometheusResultSchema,
   temporalHealthQueries,
 } from "./homelab-audit-collectors.ts";
 import { interpretKubernetesWorkloads } from "./homelab-audit-kubernetes.ts";
@@ -179,5 +181,30 @@ describe("homelab audit collector interpretation", () => {
       execution: "partial",
       verdict: "inconclusive",
     });
+  });
+});
+
+describe("GCX Prometheus evidence", () => {
+  test("parses and counts instant-vector results", () => {
+    const result = PrometheusResultSchema.parse({
+      status: "success",
+      data: {
+        resultType: "vector",
+        result: [
+          { metric: { alertname: "One" }, value: [1, "1"] },
+          { metric: { alertname: "Two" }, value: [1, "1"] },
+        ],
+      },
+    });
+    expect(prometheusCount(result)).toBe(2);
+  });
+
+  test("rejects a failed Prometheus response", () => {
+    expect(() =>
+      PrometheusResultSchema.parse({
+        status: "error",
+        data: { resultType: "vector", result: [] },
+      }),
+    ).toThrow();
   });
 });
