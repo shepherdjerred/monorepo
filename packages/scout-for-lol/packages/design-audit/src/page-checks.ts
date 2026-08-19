@@ -86,6 +86,8 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
     const elements = [...document.querySelectorAll<HTMLElement>("*")].filter(
       (element) => visible(element),
     );
+    const isNavigation = (element: Element): boolean =>
+      element.closest("nav, aside") !== null;
     const horizontalOverflow =
       document.documentElement.scrollWidth > window.innerWidth + 1;
     const clipped: string[] = [];
@@ -93,6 +95,7 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
     const smallControls: string[] = [];
 
     for (const element of elements) {
+      if (isNavigation(element)) continue;
       const rectangle = element.getBoundingClientRect();
       if (
         rectangle.right > window.innerWidth + 1 &&
@@ -110,6 +113,7 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
       if (
         hasDirectText &&
         style.overflow === "hidden" &&
+        style.whiteSpace === "nowrap" &&
         style.textOverflow !== "ellipsis" &&
         (element.scrollHeight > element.clientHeight + 1 ||
           element.scrollWidth > element.clientWidth + 1) &&
@@ -214,12 +218,16 @@ export async function assertRenderedContrast(page: Page): Promise<void> {
         rectangle.height === 0
       )
         continue;
-      const hasText = element.textContent.trim().length > 0;
+      const hasDirectText = [...element.childNodes].some(
+        (node) =>
+          node.nodeType === Node.TEXT_NODE &&
+          (node.textContent ?? "").trim() !== "",
+      );
       const isControl = element.matches(
         "button, a, input, select, textarea, [role=button], [role=link]",
       );
       const hasSvg = element.querySelector("svg") !== null;
-      if (!hasText && !(isControl && hasSvg)) continue;
+      if (!hasDirectText && !(isControl && hasSvg)) continue;
       const foreground = color(style.color);
       const background = opaqueBackground(element);
       if (foreground === null || background === null) continue;

@@ -8,6 +8,8 @@
     "check:tokens": "bun run src/static-token-check.ts",
     "test": "bun test src",
     "test:e2e": "playwright test",
+    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bun x --no-install eslint src tests",
     "format": "bun x --no-install prettier --check ."
