@@ -113,8 +113,8 @@ describe("formatSettlementBody", () => {
           serverId: summary.serverId,
           discordId: WINNER_DISCORD_ID,
           alias: "Aaron",
-          reasons: ["played", "win"],
-          total: 2,
+          reasons: ["played", "clash bonus"],
+          total: 11,
         },
       ],
       predictionSentence: undefined,
@@ -127,7 +127,7 @@ describe("formatSettlementBody", () => {
     expect(body).toContain(
       `• <@${LOSER_DISCORD_ID}> staked 10 BB → received 0 BB`,
     );
-    expect(body).toContain("🪙 **Aaron** +2 BB (played, win)");
+    expect(body).toContain("🪙 **Aaron** +11 BB (played, clash bonus)");
   });
 
   test("labels refunds while retaining the original stake", () => {

@@ -739,7 +739,8 @@ model BucksLedgerEntry {
   balanceAfter Int
 
   // BucksLedgerKind (@scout-for-lol/data): seed | earn_game | earn_win |
-  // earn_mvp | bet_stake | bet_payout | bet_refund | adjustment.
+  // earn_ranked_5s_bonus | earn_clash_bonus | earn_win | earn_mvp | bet_stake |
+  // bet_payout | bet_refund | adjustment.
   // Not a Prisma enum — the SQLite provider has none. Zod-validated on write
   // and on read.
   kind String

@@ -12,17 +12,17 @@ function lobby(teamIds: readonly number[]) {
 const STANDARD = lobby([100, 100, 100, 100, 100, 200, 200, 200, 200, 200]);
 
 describe("isBettableQueue", () => {
-  test("accepts ranked solo, flex, and League Classic", () => {
+  test("accepts every supported ranked queue", () => {
     expect(isBettableQueue("solo")).toBe(true);
     expect(isBettableQueue("flex")).toBe(true);
     expect(isBettableQueue("classic")).toBe(true);
+    expect(isBettableQueue("ranked 5s")).toBe(true);
+    expect(isBettableQueue("clash")).toBe(true);
   });
 
-  test("rejects clash and aram clash", () => {
-    // These are the two the shared `isRankedQueue` helper would have let in.
-    // Keeping them out is why the economy has its own queue list: a change to
-    // AI-review gating must not be able to move what earns Bucks.
-    expect(isBettableQueue("clash")).toBe(false);
+  test("rejects ARAM Clash", () => {
+    // The broader ranked helper permits this mode, but only standard Clash is
+    // part of the economy.
     expect(isBettableQueue("aram clash")).toBe(false);
   });
 

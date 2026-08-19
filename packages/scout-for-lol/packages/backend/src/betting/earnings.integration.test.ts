@@ -16,7 +16,10 @@ import {
   type RawMatch,
 } from "@scout-for-lol/data/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { awardBucksForMatch } from "#src/betting/earnings.ts";
+import {
+  awardBucksForMatch,
+  type EarnedAwardReason,
+} from "#src/betting/earnings.ts";
 import { computeMvp } from "#src/betting/mvp.ts";
 import {
   addFlagOverride,
@@ -60,6 +63,8 @@ if (
 ) {
   throw new Error("fixture should contain an MVP, another winner, and a loser");
 }
+
+const plainLoserPuuid = plainLoser.puuid;
 
 async function trackPlayer(input: {
   serverId: DiscordGuildId;
@@ -111,6 +116,32 @@ function withDuration(seconds: number): RawMatch {
     ...fixture,
     info: { ...fixture.info, gameDuration: seconds },
   });
+}
+
+async function assertRanked5sParticipationBonus() {
+  await trackPlayer({
+    serverId: ENABLED_GUILD,
+    discordId: DiscordAccountIdSchema.parse("16050917270473109"),
+    alias: "ranked-5s-player",
+    puuid: plainLoserPuuid,
+  });
+
+  const awards = await awardBucksForMatch(withQueue(710), db);
+  expect(awards[0]?.reasons).toEqual(["played", "ranked 5s bonus"]);
+  expect(awards[0]?.total).toBe(2);
+
+  const entries = await db.bucksLedgerEntry.findMany({
+    where: { kind: { startsWith: "earn_" } },
+    orderBy: { id: "asc" },
+  });
+  expect(entries.map((entry) => entry.kind)).toEqual([
+    "earn_game",
+    "earn_ranked_5s_bonus",
+  ]);
+  expect(entries.map((entry) => entry.delta)).toEqual([1, 1]);
+
+  const account = await db.bucksAccount.findFirstOrThrow();
+  expect(account.balance).toBe(SEED_GRANT + 2);
 }
 
 beforeEach(async () => {
@@ -208,6 +239,52 @@ describe("awardBucksForMatch", () => {
     expect(account.balance).toBe(SEED_GRANT + 1);
   });
 
+  test(
+    "awards the Ranked 5s participation bonus as a distinct ledger row",
+    assertRanked5sParticipationBonus,
+  );
+});
+
+describe("awardBucksForMatch additional cases", () => {
+  test("stacks the Clash bonus with the win and MVP rewards", async () => {
+    await trackPlayer({
+      serverId: ENABLED_GUILD,
+      discordId: DiscordAccountIdSchema.parse("16050917270473110"),
+      alias: "clash-mvp",
+      puuid: mvpPuuid,
+    });
+
+    const awards = await awardBucksForMatch(withQueue(700), db);
+    const expectedReasons: EarnedAwardReason[] = ["played", "clash bonus"];
+    if (mvpParticipant.win) {
+      expectedReasons.push("win");
+    }
+    expectedReasons.push("mvp");
+
+    expect(awards[0]?.reasons).toEqual(expectedReasons);
+    expect(awards[0]?.total).toBe(12 + (mvpParticipant.win ? 1 : 0));
+
+    const entries = await db.bucksLedgerEntry.findMany({
+      where: { kind: { startsWith: "earn_" } },
+      orderBy: { id: "asc" },
+    });
+    const expectedKinds = ["earn_game", "earn_clash_bonus"];
+    const expectedDeltas = [1, 10];
+    if (mvpParticipant.win) {
+      expectedKinds.push("earn_win");
+      expectedDeltas.push(1);
+    }
+    expectedKinds.push("earn_mvp");
+    expectedDeltas.push(1);
+    expect(entries.map((entry) => entry.kind)).toEqual(expectedKinds);
+    expect(entries.map((entry) => entry.delta)).toEqual(expectedDeltas);
+
+    const account = await db.bucksAccount.findFirstOrThrow();
+    expect(account.balance).toBe(
+      SEED_GRANT + 12 + (mvpParticipant.win ? 1 : 0),
+    );
+  });
+
   test("awarding the same match twice does not pay twice", async () => {
     // The regression guard for recoverMissedMatches and gap-detection replays.
     await trackPlayer({
@@ -217,17 +294,18 @@ describe("awardBucksForMatch", () => {
       puuid: plainWinner.puuid,
     });
 
-    await awardBucksForMatch(withQueue(4310), db);
-    const second = await awardBucksForMatch(withQueue(4310), db);
+    const clashMatch = withQueue(700);
+    await awardBucksForMatch(clashMatch, db);
+    const second = await awardBucksForMatch(clashMatch, db);
 
     expect(second).toEqual([]);
     const account = await db.bucksAccount.findFirstOrThrow();
-    expect(account.balance).toBe(SEED_GRANT + 2);
+    expect(account.balance).toBe(SEED_GRANT + 12);
     expect(
       await db.bucksLedgerEntry.count({
         where: { kind: { startsWith: "earn_" } },
       }),
-    ).toBe(2);
+    ).toBe(3);
   });
 
   test("pays a player tracked in two enabled guilds once in each", async () => {
