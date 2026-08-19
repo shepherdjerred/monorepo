@@ -46,7 +46,7 @@ resource "openrouter_api_key" "managed" {
 
 resource "openrouter_byok_credential" "managed" {
   for_each = var.openrouter_byok_credentials
-  provider = openrouter_byok
+  provider = openrouter-byok
 
   provider_name    = each.value.provider
   key              = var.openrouter_byok_keys[each.key]

@@ -53,6 +53,7 @@ func (r *byokResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"key": schema.StringAttribute{
 				Required:      true,
 				Sensitive:     true,
+				WriteOnly:     true,
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			// The API answers every field with a concrete value, so an omitted
