@@ -8,6 +8,7 @@ import MailMateCodeFillShared
 private enum HelperError: Error, CustomStringConvertible {
     case usage
     case invalidBodyEncoding
+    case invalidMessageDate
     case missingMessageID
     case inputTooLarge(Int)
 
@@ -17,6 +18,8 @@ private enum HelperError: Error, CustomStringConvertible {
             return "usage: MailMateCodeFillHelper --mailmate"
         case .invalidBodyEncoding:
             return "MailMate supplied a body that is not valid UTF-8"
+        case .invalidMessageDate:
+            return "MailMate supplied an invalid message date"
         case .missingMessageID:
             return "MailMate did not provide MM_MESSAGE_ID"
         case let .inputTooLarge(limit):
@@ -57,10 +60,11 @@ private func run() throws {
         throw HelperError.invalidBodyEncoding
     }
 
+    let messageDate = try parseDate(environment["MM_DATE"])
     let metadata = MessageMetadata(
         sender: environment["MM_FROM"] ?? "",
         subject: environment["MM_SUBJECT"] ?? "",
-        date: parseDate(environment["MM_DATE"]),
+        date: messageDate,
         messageID: messageID
     )
     CodeFillObservability.helperLogger.info("event=helper_input_received input_bytes=\(input.count, privacy: .public) \(CodeFillObservability.metadataSummary(metadata), privacy: .public)")
@@ -96,6 +100,13 @@ private func requestIdentityReconciliation() {
         return
     }
 
+    if let bundleIdentifier = Bundle(url: appURL)?.bundleIdentifier,
+       NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).contains(where: { !$0.isTerminated }) {
+        CodeFillObservability.helperLogger.info("event=identity_reconciliation outcome=already_running")
+        return
+    }
+    writeBrokerRequestMarker()
+
     let configuration = NSWorkspace.OpenConfiguration()
     configuration.activates = false
     configuration.hides = true
@@ -109,14 +120,46 @@ private func requestIdentityReconciliation() {
     }
 }
 
+private func writeBrokerRequestMarker() {
+    guard let containerURL = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier
+    ) else {
+        CodeFillObservability.helperLogger.error("event=identity_reconciliation outcome=app_group_unavailable")
+        return
+    }
+    let markerURL = containerURL.appendingPathComponent(CodeFillConfiguration.brokerRequestFileName)
+    do {
+        try Data().write(to: markerURL, options: .atomic)
+    } catch {
+        CodeFillObservability.helperLogger.error("event=identity_reconciliation outcome=marker_write_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
+    }
+}
+
 private func elapsedMilliseconds(since start: Date) -> Int {
     Int(Date().timeIntervalSince(start) * 1_000)
 }
 
-private func parseDate(_ value: String?) -> Date? {
-    guard let value, !value.isEmpty else { return nil }
-    let formatter = ISO8601DateFormatter()
-    return formatter.date(from: value)
+private func parseDate(_ value: String?) throws -> Date? {
+    guard let value else { return nil }
+    let normalizedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !normalizedValue.isEmpty else { return nil }
+
+    let iso8601Formatter = ISO8601DateFormatter()
+    if let date = iso8601Formatter.date(from: normalizedValue) {
+        return date
+    }
+
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    for format in ["EEE, dd MMM yyyy HH:mm:ss Z", "yyyy-MM-dd HH:mm:ss Z"] {
+        formatter.dateFormat = format
+        if let date = formatter.date(from: normalizedValue) {
+            return date
+        }
+    }
+
+    throw HelperError.invalidMessageDate
 }
 
 do {
