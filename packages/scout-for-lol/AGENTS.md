@@ -845,9 +845,11 @@ Discord's `MISSING_ACCESS`, while every other registration failure remains
 fatal during startup.
 
 The feature scope remains enforced by the flag and guild-scoped registration;
-user-facing betting surfaces should not advertise the allowlist or the private
-redemption joke. `/bb prizes` is the deliberate exception: it exposes the
-1:10 joke and its in-person-with-Bryan footer as a prize catalog.
+user-facing betting surfaces should not advertise the allowlist. `/bb prizes`
+is the deliberate exception: it displays the existing 1:10 catalog and
+in-person-with-Bryan footer as joke copy only. There is no command or accounting
+path to redeem, donate, burn, or claim Bucks, and nothing transfers to real
+goods.
 
 `/bb balance` and `/bb history` expose only the caller's wallet and positions;
 history uses caller-bound `bbnav:` component IDs and a frozen maximum ledger ID
@@ -859,14 +861,18 @@ run the cron, but only the Discord application in the one enabled guild posts;
 more than one enabled guild is a hard failure until an explicit channel mapping
 exists.
 
-Bucks exchange at 1:10 Bucks:CAD, in person only, from Bryan, who lives in rural
-Canada. There is no monetary component and nothing transfers to real goods.
-
 One-sided markets are matched by a synthetic per-guild house account with a
 bounded opening bankroll. The house is a real `BucksAccount` and `BucksBet`, so
 its seed, stake, payout, and balance are all ledger-audited; house accounts do
 not appear on the user leaderboard. If the reserve cannot cover the exposure,
 the market is voided with `house_unavailable` and user stakes are refunded.
+The house also receives two audited 20% cuts, rounded to the nearest whole Buck:
+one from each human winner's gross payout and one from a voluntarily cancelled
+position. A winning cut is capped at gross winnings so a correct bet always
+returns at least its stake; the house never charges itself. The ledger records
+the gross player credit, matching player debit, and matching house credit in one
+transaction. Remakes, expired or unsupported pools, and unavailable reserves
+remain full refunds with no cut.
 
 - **The allowlist gates taking Bucks, never returning them.** `betting_enabled`
   is checked in four places: command registration, pool creation, `placeBet`,
@@ -888,6 +894,12 @@ the market is voided with `house_unavailable` and user stakes are refunded.
   commit together. `reconcileBucksBalances` re-derives from the ledger and
   **reports** drift rather than correcting it — a mismatch is a bug in the
   chokepoint, and quietly patching it would hide that.
+- **House-cut conservation includes both destinations.** Settlement asserts
+  that net payouts plus house cuts equal all pool stakes. Cancellation asserts
+  that the returned amount plus its house cut equals the cancelled position.
+  The stored `BucksBet.payout` is net; settlement summaries retain gross
+  payout, cut, net payout, and net winnings so Discord copy never has to
+  reconstruct the arithmetic from ledger rows.
 - **One pool per `(matchId, serverId)`; a bet stores a `predictedTeamId`.**
   Every 5v5 outcome is one binary event, so with two tracked players on opposite
   teams "A wins" _is_ "B loses". The UI still says "bet LOSE on Jerred".
@@ -908,6 +920,9 @@ the market is voided with `house_unavailable` and user stakes are refunded.
   paths both announce the increment and current position in the pool's stored
   prematch message channels. The receipt is best-effort after the ledger
   transaction commits, so a Discord delivery failure never changes the bet.
+  Prematch markets, `/bb open`, placement confirmations and receipts,
+  settlement/refund messages, cancellation replies, and `/bb history` disclose
+  the house-cut policy or the exact gross-cut-net arithmetic relevant there.
 - **Settle and award outside the Discord path.** `settleAndAwardBucks` is called
   from `processMatchAndUpdatePlayers`, after the S3 ingest gate and outside
   `if (!silent)`. `processMatch` returns early with no subscribed channel and

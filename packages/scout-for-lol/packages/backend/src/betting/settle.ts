@@ -8,10 +8,15 @@ import {
   type RawMatch,
 } from "@scout-for-lol/data";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
+import { HOUSE_ACCOUNT_DISCORD_ID } from "#src/betting/constants.ts";
 import {
-  HOUSE_ACCOUNT_DISCORD_ID,
-  HOUSE_BANKROLL,
-} from "#src/betting/constants.ts";
+  HOUSE_CUT_PERCENT,
+  settlementHouseCut,
+} from "#src/betting/house-cut.ts";
+import {
+  ensureHouseAccountInTransaction,
+  transferHouseCut,
+} from "#src/betting/house.ts";
 import {
   computeParimutuelPayouts,
   type ParimutuelBet,
@@ -48,6 +53,8 @@ export type SettlementBet = {
   isHouse: boolean;
   predictedTeamId: number;
   stake: number;
+  grossPayout: number;
+  houseCut: number;
   payout: number;
   winnings: number;
   won: boolean;
@@ -62,6 +69,7 @@ export type SettlementSummary = {
   voidReason: BucksVoidReason | undefined;
   winnersPool: number;
   losersPool: number;
+  houseCut: number;
   bets: SettlementBet[];
 };
 
@@ -93,6 +101,7 @@ async function creditBet(
   input: {
     bet: SettlementBet;
     matchId: string;
+    serverId: DiscordGuildId;
     roster: readonly BucksPoolParticipant[];
     winningTeamId: number | undefined;
     voidReason: BucksVoidReason | undefined;
@@ -111,7 +120,7 @@ async function creditBet(
     },
   });
 
-  if (bet.payout === 0) {
+  if (bet.grossPayout === 0) {
     // A losing bet already paid at stake time; there is nothing to move, and a
     // zero-delta ledger row would be noise rather than history.
     return;
@@ -119,7 +128,7 @@ async function creditBet(
 
   await applyBucksDelta(tx, {
     bucksAccountId: bet.bucksAccountId,
-    delta: bet.payout,
+    delta: bet.grossPayout,
     kind: bet.refunded ? "bet_refund" : "bet_payout",
     matchId: input.matchId,
     betId: bet.betId,
@@ -137,9 +146,30 @@ async function creditBet(
       losersPool: input.losersPool,
       stakeReturned: bet.stake,
       winnings: bet.winnings,
+      grossPayout: bet.grossPayout,
+      houseCut: bet.houseCut,
+      netPayout: bet.payout,
       voidReason: input.voidReason,
     },
   });
+
+  if (bet.houseCut > 0) {
+    await transferHouseCut(tx, {
+      serverId: input.serverId,
+      bucksAccountId: bet.bucksAccountId,
+      amount: bet.houseCut,
+      kind: "house_rake",
+      matchId: input.matchId,
+      betId: bet.betId,
+      context: {
+        type: "house_fee",
+        source: "settlement",
+        ratePercent: HOUSE_CUT_PERCENT,
+        grossAmount: bet.grossPayout,
+        fee: bet.houseCut,
+      },
+    });
+  }
 }
 
 type PendingBetRow = {
@@ -158,6 +188,7 @@ function refundAll(rows: readonly PendingBetRow[]): {
   bets: SettlementBet[];
   winnersPool: number;
   losersPool: number;
+  houseCut: number;
 } {
   return {
     bets: rows.map((row) => ({
@@ -167,6 +198,8 @@ function refundAll(rows: readonly PendingBetRow[]): {
       isHouse: row.isHouse,
       predictedTeamId: row.predictedTeamId,
       stake: row.stake,
+      grossPayout: row.stake,
+      houseCut: 0,
       payout: row.stake,
       winnings: 0,
       won: false,
@@ -175,6 +208,7 @@ function refundAll(rows: readonly PendingBetRow[]): {
     })),
     winnersPool: 0,
     losersPool: 0,
+    houseCut: 0,
   };
 }
 
@@ -182,7 +216,12 @@ function toSettlementBets(input: {
   rows: readonly PendingBetRow[];
   winningTeamId: number | undefined;
   voidReason: BucksVoidReason | undefined;
-}): { bets: SettlementBet[]; winnersPool: number; losersPool: number } {
+}): {
+  bets: SettlementBet[];
+  winnersPool: number;
+  losersPool: number;
+  houseCut: number;
+} {
   // A void refunds everyone at 100%, whatever the result was.
   if (input.voidReason !== undefined || input.winningTeamId === undefined) {
     return refundAll(input.rows);
@@ -199,26 +238,39 @@ function toSettlementBets(input: {
     return refundAll(input.rows);
   }
 
-  const byId = new Map(result.allocations.map((a) => [a.betId, a]));
+  const byId = new Map(
+    result.allocations.map((allocation) => [allocation.betId, allocation]),
+  );
+  const bets = input.rows.map((row) => {
+    const allocation = byId.get(row.id);
+    const grossPayout = allocation?.payout ?? 0;
+    const grossWinnings = allocation?.winnings ?? 0;
+    const houseCut = settlementHouseCut({
+      grossPayout,
+      grossWinnings,
+      isHouse: row.isHouse,
+    });
+    return {
+      betId: row.id,
+      bucksAccountId: row.bucksAccountId,
+      discordId: row.discordId,
+      isHouse: row.isHouse,
+      predictedTeamId: row.predictedTeamId,
+      stake: row.stake,
+      grossPayout,
+      houseCut,
+      payout: grossPayout - houseCut,
+      winnings: grossWinnings - houseCut,
+      won: allocation !== undefined,
+      refunded: false,
+      subjectPuuid: row.subjectPuuid,
+    };
+  });
   return {
     winnersPool: result.winnersPool,
     losersPool: result.losersPool,
-    bets: input.rows.map((row) => {
-      const allocation = byId.get(row.id);
-      return {
-        betId: row.id,
-        bucksAccountId: row.bucksAccountId,
-        discordId: row.discordId,
-        isHouse: row.isHouse,
-        predictedTeamId: row.predictedTeamId,
-        stake: row.stake,
-        payout: allocation?.payout ?? 0,
-        winnings: allocation?.winnings ?? 0,
-        won: allocation !== undefined,
-        refunded: false,
-        subjectPuuid: row.subjectPuuid,
-      };
-    }),
+    houseCut: bets.reduce((total, bet) => total + bet.houseCut, 0),
+    bets,
   };
 }
 
@@ -392,6 +444,7 @@ async function settleOnePool(input: {
       await creditBet(tx, {
         bet,
         matchId: input.matchId,
+        serverId: input.serverId,
         roster: input.roster,
         winningTeamId: input.winningTeamId,
         voidReason,
@@ -400,13 +453,14 @@ async function settleOnePool(input: {
       });
     }
 
-    // Conservation, asserted rather than assumed. Throwing rolls the whole
-    // settlement back instead of minting or destroying Bucks.
+    // Conservation, asserted rather than assumed. Human winners receive their
+    // net payout and the house receives every cut, so together they must equal
+    // the stakes held by the pool. Throwing rolls the whole settlement back.
     const staked = settled.bets.reduce((total, bet) => total + bet.stake, 0);
     const paid = settled.bets.reduce((total, bet) => total + bet.payout, 0);
-    if (paid !== staked) {
+    if (paid + settled.houseCut !== staked) {
       throw new Error(
-        `Settlement for ${input.matchId} did not conserve Bucks: staked ${staked.toString()}, paid ${paid.toString()}`,
+        `Settlement for ${input.matchId} did not conserve Bucks: staked ${staked.toString()}, paid ${paid.toString()}, house cut ${settled.houseCut.toString()}`,
       );
     }
 
@@ -421,6 +475,7 @@ async function settleOnePool(input: {
       voidReason,
       winnersPool: settled.winnersPool,
       losersPool: settled.losersPool,
+      houseCut: settled.houseCut,
       bets: settled.bets,
     };
   });
@@ -492,47 +547,4 @@ async function addHousePositionIfNeeded(input: {
     subjectPuuid: representative.subjectPuuid,
   });
   return;
-}
-
-async function ensureHouseAccountInTransaction(
-  tx: Db,
-  serverId: DiscordGuildId,
-): Promise<{ id: number; balance: number }> {
-  const existing = await tx.bucksAccount.findUnique({
-    where: {
-      serverId_discordId: {
-        serverId,
-        discordId: HOUSE_ACCOUNT_DISCORD_ID,
-      },
-    },
-    select: { id: true, balance: true, isHouse: true },
-  });
-  if (existing !== null) {
-    if (!existing.isHouse) {
-      throw new Error(
-        `Bucks account ${existing.id.toString()} uses the reserved house account ID`,
-      );
-    }
-    return existing;
-  }
-
-  const created = await tx.bucksAccount.create({
-    data: {
-      serverId,
-      discordId: HOUSE_ACCOUNT_DISCORD_ID,
-      isHouse: true,
-      balance: 0,
-    },
-    select: { id: true },
-  });
-  const balance = await applyBucksDelta(tx, {
-    bucksAccountId: created.id,
-    delta: HOUSE_BANKROLL,
-    kind: "seed",
-    context: {
-      type: "seed",
-      note: "Opening bankroll for the Bryan Bucks house account",
-    },
-  });
-  return { id: created.id, balance };
 }

@@ -7,6 +7,8 @@ import {
   formatBetPlacementAnnouncement,
   formatSettlementBody,
   predictionVerdict,
+  sendSettlementMessages,
+  splitSettlementBody,
 } from "#src/betting/announce.ts";
 import { HOUSE_ACCOUNT_DISCORD_ID } from "#src/betting/constants.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
@@ -76,6 +78,7 @@ describe("formatSettlementBody", () => {
       voidReason: undefined,
       winnersPool: 10,
       losersPool: 10,
+      houseCut: 4,
       bets: [
         {
           betId: 1,
@@ -84,8 +87,10 @@ describe("formatSettlementBody", () => {
           isHouse: false,
           predictedTeamId: 100,
           stake: 10,
-          payout: 20,
-          winnings: 10,
+          grossPayout: 20,
+          houseCut: 4,
+          payout: 16,
+          winnings: 6,
           won: true,
           refunded: false,
           subjectPuuid: "winner-puuid",
@@ -97,6 +102,8 @@ describe("formatSettlementBody", () => {
           isHouse: false,
           predictedTeamId: 200,
           stake: 10,
+          grossPayout: 0,
+          houseCut: 0,
           payout: 0,
           winnings: 0,
           won: false,
@@ -122,8 +129,10 @@ describe("formatSettlementBody", () => {
     });
 
     expect(body).toContain(
-      `• <@${WINNER_DISCORD_ID}> staked 10 BB → received 20 BB (+10 BB winnings)`,
+      `• <@${WINNER_DISCORD_ID}> staked 10 BB → gross 20 BB − 4 BB house cut = 16 BB received (+6 BB net winnings)`,
     );
+    expect(body).toContain("Pool **20 BB** · house cut **4 BB**");
+    expect(body).toContain("house cut **4 BB**");
     expect(body).toContain(
       `• <@${LOSER_DISCORD_ID}> staked 10 BB → received 0 BB`,
     );
@@ -138,6 +147,7 @@ describe("formatSettlementBody", () => {
       voidReason: "no_counterparty",
       winnersPool: 0,
       losersPool: 0,
+      houseCut: 0,
       bets: [
         {
           betId: 1,
@@ -146,6 +156,8 @@ describe("formatSettlementBody", () => {
           isHouse: false,
           predictedTeamId: 100,
           stake: 10,
+          grossPayout: 10,
+          houseCut: 0,
           payout: 10,
           winnings: 0,
           won: false,
@@ -163,7 +175,66 @@ describe("formatSettlementBody", () => {
     });
 
     expect(body).toContain(
-      `• <@${WINNER_DISCORD_ID}> staked 10 BB → refunded 10 BB`,
+      `• <@${WINNER_DISCORD_ID}> staked 10 BB → refunded 10 BB (no house cut)`,
+    );
+    expect(body).toContain("Pool **10 BB** · house cut **0 BB**");
+  });
+});
+
+describe("formatSettlementBody house cuts", () => {
+  test("shows complete arithmetic when a small winning payout has no cut", () => {
+    const summary: SettlementSummary = {
+      matchId: "NA1_5000000042",
+      serverId: "1337623164146155593",
+      winningTeamId: 100,
+      voidReason: undefined,
+      winnersPool: 1,
+      losersPool: 1,
+      houseCut: 0,
+      bets: [
+        {
+          betId: 1,
+          bucksAccountId: 1,
+          discordId: WINNER_DISCORD_ID,
+          isHouse: false,
+          predictedTeamId: 100,
+          stake: 1,
+          grossPayout: 2,
+          houseCut: 0,
+          payout: 2,
+          winnings: 1,
+          won: true,
+          refunded: false,
+          subjectPuuid: "winner-puuid",
+        },
+        {
+          betId: 2,
+          bucksAccountId: 2,
+          discordId: LOSER_DISCORD_ID,
+          isHouse: false,
+          predictedTeamId: 200,
+          stake: 1,
+          grossPayout: 0,
+          houseCut: 0,
+          payout: 0,
+          winnings: 0,
+          won: false,
+          refunded: false,
+          subjectPuuid: "loser-puuid",
+        },
+      ],
+    };
+
+    const body = formatSettlementBody({
+      summary,
+      earnings: [],
+      predictionSentence: undefined,
+      predictionVerdictLine: undefined,
+    });
+
+    expect(body).toContain("Pool **2 BB** · house cut **0 BB**");
+    expect(body).toContain(
+      "staked 1 BB → gross 2 BB − 0 BB house cut = 2 BB received (+1 BB net winnings)",
     );
   });
 
@@ -175,6 +246,7 @@ describe("formatSettlementBody", () => {
       voidReason: undefined,
       winnersPool: 25,
       losersPool: 25,
+      houseCut: 10,
       bets: [
         {
           betId: 1,
@@ -183,8 +255,10 @@ describe("formatSettlementBody", () => {
           isHouse: false,
           predictedTeamId: 100,
           stake: 25,
-          payout: 50,
-          winnings: 25,
+          grossPayout: 50,
+          houseCut: 10,
+          payout: 40,
+          winnings: 15,
           won: true,
           refunded: false,
           subjectPuuid: "winner-puuid",
@@ -196,6 +270,8 @@ describe("formatSettlementBody", () => {
           isHouse: true,
           predictedTeamId: 200,
           stake: 25,
+          grossPayout: 0,
+          houseCut: 0,
           payout: 0,
           winnings: 0,
           won: false,
@@ -218,6 +294,138 @@ describe("formatSettlementBody", () => {
     expect(body).not.toContain(`<@${HOUSE_ACCOUNT_DISCORD_ID}>`);
     expect(body).toContain(`• <@${WINNER_DISCORD_ID}> staked 25 BB`);
   });
+
+  test("splits a full settlement without dropping payout arithmetic", () => {
+    const summary: SettlementSummary = {
+      matchId: "NA1_5000000042",
+      serverId: "1337623164146155593",
+      winningTeamId: 100,
+      voidReason: undefined,
+      winnersPool: 75,
+      losersPool: 75,
+      houseCut: 30,
+      bets: Array.from({ length: 15 }, (_, index) => ({
+        betId: index + 1,
+        bucksAccountId: index + 1,
+        discordId: bucksTestDiscordId(index + 1),
+        isHouse: false,
+        predictedTeamId: 100,
+        stake: 5,
+        grossPayout: 10,
+        houseCut: 2,
+        payout: 8,
+        winnings: 3,
+        won: true,
+        refunded: false,
+        subjectPuuid: `winner-puuid-${index.toString()}`,
+      })),
+    };
+    const body = formatSettlementBody({
+      summary,
+      earnings: [
+        {
+          serverId: summary.serverId,
+          discordId: WINNER_DISCORD_ID,
+          alias: "Aaron",
+          reasons: ["played", "ranked 5s bonus", "win", "mvp"],
+          total: 13,
+        },
+        {
+          serverId: summary.serverId,
+          discordId: bucksTestDiscordId(2),
+          alias: "Bryan",
+          reasons: ["played", "win"],
+          total: 7,
+        },
+        {
+          serverId: summary.serverId,
+          discordId: bucksTestDiscordId(3),
+          alias: "Chris",
+          reasons: ["played", "clash bonus", "win"],
+          total: 12,
+        },
+        {
+          serverId: summary.serverId,
+          discordId: bucksTestDiscordId(4),
+          alias: "Diana",
+          reasons: ["played", "win", "mvp"],
+          total: 9,
+        },
+      ],
+      predictionSentence:
+        "Scout gave this roster a decisive edge before the match started.",
+      predictionVerdictLine: "Scout called it.",
+    });
+
+    expect(body.length).toBeGreaterThan(1900);
+    const chunks = splitSettlementBody(body);
+    expect(chunks.length).toBeGreaterThan(1);
+    for (const chunk of chunks) {
+      expect(chunk.length).toBeLessThanOrEqual(1900);
+    }
+    const delivered = chunks.join("\n");
+    expect(delivered).toContain("Pool **75 BB** · house cut **30 BB**");
+    expect(delivered).toContain(
+      "gross 10 BB − 2 BB house cut = 8 BB received (+3 BB net winnings)",
+    );
+    expect(delivered).toContain("🪙 **Aaron** +13 BB");
+  });
+});
+
+describe("sendSettlementMessages", () => {
+  test("retries a failed chunk and still attempts every later chunk", async () => {
+    const attempts: {
+      content: string | undefined;
+      nonce: string | number | undefined;
+      enforceNonce: boolean | undefined;
+    }[] = [];
+    let sleeps = 0;
+
+    await expect(
+      sendSettlementMessages(
+        {
+          messages: ["first", "failed", "last"],
+          matchId: "NA1_5000000042",
+          channelId: "1337623164146155594",
+          guildId: "1337623164146155593",
+        },
+        {
+          sendMessage: (options) => {
+            attempts.push({
+              content: options.content,
+              nonce: options.nonce,
+              enforceNonce: options.enforceNonce,
+            });
+            return options.content === "failed"
+              ? Promise.reject(new Error("Discord delivery failed"))
+              : Promise.resolve(undefined);
+          },
+          sleep: () => {
+            sleeps += 1;
+            return Promise.resolve();
+          },
+        },
+      ),
+    ).rejects.toThrow("failed to deliver 1/3 chunk(s)");
+
+    expect(attempts.map((attempt) => attempt.content)).toEqual([
+      "first",
+      "failed",
+      "failed",
+      "failed",
+      "last",
+    ]);
+    expect(sleeps).toBe(2);
+    const failedAttempts = attempts.filter(
+      (attempt) => attempt.content === "failed",
+    );
+    expect(new Set(failedAttempts.map((attempt) => attempt.nonce)).size).toBe(
+      1,
+    );
+    expect(
+      failedAttempts.every((attempt) => attempt.enforceNonce === true),
+    ).toBe(true);
+  });
 });
 
 describe("formatBetPlacementAnnouncement", () => {
@@ -231,7 +439,7 @@ describe("formatBetPlacementAnnouncement", () => {
         totalStake: 10,
       }),
     ).toBe(
-      `🎲 <@${WINNER_DISCORD_ID}> staked **5 BB** on **Aaron WINS** (position: **10 BB**).`,
+      `🎲 <@${WINNER_DISCORD_ID}> staked **5 BB** on **Aaron WINS** (position: **10 BB**). **20% house cut on winning payouts**.`,
     );
   });
 });

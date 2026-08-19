@@ -6,6 +6,7 @@ import {
 } from "@scout-for-lol/data";
 import type { InteractionEditReplyOptions } from "discord.js";
 import { parseBucksCustomId } from "#src/betting/custom-id.ts";
+import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { placeBet, type PlaceBetResult } from "#src/betting/place-bet.ts";
 import { cancelBet, type CancelBetResult } from "#src/betting/cancel-bet.ts";
 import { announceBetPlacement } from "#src/betting/announce.ts";
@@ -45,7 +46,7 @@ export function describeResult(
   switch (result.kind) {
     case "placed": {
       const side = betOnWin ? "WINS" : "LOSES";
-      return `✅ Bet placed: **${subjectAlias} ${side}** for **${result.totalStake.toString()} BB** total. Balance: **${result.balanceAfter.toString()} BB**.`;
+      return `✅ Bet placed: **${subjectAlias} ${side}** for **${result.totalStake.toString()} BB** total. Balance: **${result.balanceAfter.toString()} BB**. ${HOUSE_CUT_TERMS}`;
     }
     case "window_closed":
       return "⏰ Betting has closed for this game.";
@@ -74,7 +75,7 @@ export function describeResult(
 export function describeCancel(result: CancelBetResult): string {
   switch (result.kind) {
     case "cancelled":
-      return `↩️ Bet cancelled. **${result.refunded.toString()} BB** returned; balance **${result.balanceAfter.toString()} BB**.`;
+      return `↩️ Bet cancelled: stake **${result.stake.toString()} BB** − **${result.houseCut.toString()} BB house cut** = **${result.refunded.toString()} BB returned**; balance **${result.balanceAfter.toString()} BB**.`;
     case "window_closed":
       return "⏰ Betting has closed for this game, so positions are locked in. Yours settles when the game ends.";
     case "already_resolved":

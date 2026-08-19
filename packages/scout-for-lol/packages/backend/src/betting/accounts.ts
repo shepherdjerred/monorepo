@@ -1,7 +1,9 @@
 import {
+  BucksLedgerKindSchema,
   BucksPoolRosterSchema,
   BucksPoolStateSchema,
   RiotTeamIdSchema,
+  type BucksLedgerKind,
   type DiscordAccountId,
   type DiscordGuildId,
   type RiotTeamId,
@@ -154,7 +156,7 @@ export type LedgerPageEntry = {
   id: number;
   delta: number;
   balanceAfter: number;
-  kind: string;
+  kind: BucksLedgerKind;
   matchId: string | null;
   context: string;
   createdAt: Date;
@@ -220,7 +222,6 @@ export async function getLedgerPage(
       snapshotId: null,
     };
   }
-
   const where = {
     bucksAccountId,
     id: { lte: snapshotId },
@@ -228,7 +229,7 @@ export async function getLedgerPage(
   const totalEntries = await prismaClient.bucksLedgerEntry.count({ where });
   const totalPages = Math.ceil(totalEntries / LEDGER_PAGE_SIZE);
   const page = Math.min(input.page, Math.max(totalPages - 1, 0));
-  const entries = await prismaClient.bucksLedgerEntry.findMany({
+  const rows = await prismaClient.bucksLedgerEntry.findMany({
     where,
     orderBy: { id: "desc" },
     skip: page * LEDGER_PAGE_SIZE,
@@ -243,6 +244,10 @@ export async function getLedgerPage(
       createdAt: true,
     },
   });
+  const entries = rows.map((row) => ({
+    ...row,
+    kind: BucksLedgerKindSchema.parse(row.kind),
+  }));
 
   return {
     entries,

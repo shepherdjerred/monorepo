@@ -3,6 +3,11 @@ import {
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
+import {
+  HOUSE_CUT_PERCENT,
+  cancellationHouseCut,
+} from "#src/betting/house-cut.ts";
+import { transferHouseCut } from "#src/betting/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { findBucksAccountId } from "#src/betting/accounts.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -20,7 +25,13 @@ const logger = createLogger("betting-cancel-bet");
  * money on the game that their stake was never recorded.
  */
 export type CancelBetResult =
-  | { kind: "cancelled"; refunded: number; balanceAfter: number }
+  | {
+      kind: "cancelled";
+      stake: number;
+      refunded: number;
+      houseCut: number;
+      balanceAfter: number;
+    }
   | { kind: "no_pool" }
   | { kind: "no_bet" }
   | { kind: "window_closed" }
@@ -29,10 +40,11 @@ export type CancelBetResult =
 /**
  * Withdraw a position while the window is still open.
  *
- * The whole stake comes back and the bet row is **deleted** rather than marked.
- * Two reasons: a parimutuel payout computed against a "cancelled but present"
- * bet would be wrong, and the `@@unique([poolId, bucksAccountId])` slot has to
- * be freed so the bettor can take a fresh position — including the other side,
+ * The gross stake is credited, the cancellation cut is transferred to the
+ * house, and the bet row is **deleted** rather than marked. Two reasons for the
+ * delete: a parimutuel payout computed against a "cancelled but present" bet
+ * would be wrong, and the `@@unique([poolId, bucksAccountId])` slot has to be
+ * freed so the bettor can take a fresh position — including the other side,
  * which is the usual reason for cancelling.
  *
  * Cost of the delete, accepted deliberately: `BucksLedgerEntry.betId` is
@@ -134,8 +146,18 @@ export async function cancelBet(
         .map((participant) => participant.trackedAlias)
         .filter((alias) => alias !== undefined);
 
-    // The ledger row references the bet, so credit before deleting it.
-    const balanceAfter = await applyBucksDelta(tx, {
+    const houseCut = cancellationHouseCut(bet.stake);
+    const refunded = bet.stake - houseCut;
+    if (refunded + houseCut !== bet.stake) {
+      throw new Error(
+        `Cancellation for ${input.matchId} did not conserve Bucks: stake ${bet.stake.toString()}, refund ${refunded.toString()}, house cut ${houseCut.toString()}`,
+      );
+    }
+
+    // The ledger rows reference the bet, so credit and transfer before deleting
+    // it. The gross refund followed by a separate cut keeps both movements
+    // visible in the user's history.
+    const refundBalance = await applyBucksDelta(tx, {
       bucksAccountId,
       delta: bet.stake,
       kind: "bet_refund",
@@ -150,15 +172,43 @@ export async function cancelBet(
         losersPool: 0,
         stakeReturned: bet.stake,
         winnings: 0,
+        grossPayout: bet.stake,
+        houseCut,
+        netPayout: refunded,
       },
     });
+
+    const balanceAfter =
+      houseCut === 0
+        ? refundBalance
+        : await transferHouseCut(tx, {
+            serverId: input.serverId,
+            bucksAccountId,
+            amount: houseCut,
+            kind: "cancel_fee",
+            matchId: input.matchId,
+            betId: bet.id,
+            context: {
+              type: "house_fee",
+              source: "cancellation",
+              ratePercent: HOUSE_CUT_PERCENT,
+              grossAmount: bet.stake,
+              fee: houseCut,
+            },
+          });
 
     await tx.bucksBet.delete({ where: { id: bet.id } });
 
     logger.info(
-      `↩️ Cancelled a Bryan Bucks bet on ${input.matchId}, refunding ${bet.stake.toString()} BB`,
+      `↩️ Cancelled a Bryan Bucks bet on ${input.matchId}, refunding ${refunded.toString()} BB after a ${houseCut.toString()} BB house cut`,
     );
 
-    return { kind: "cancelled", refunded: bet.stake, balanceAfter };
+    return {
+      kind: "cancelled",
+      stake: bet.stake,
+      refunded,
+      houseCut,
+      balanceAfter,
+    };
   });
 }

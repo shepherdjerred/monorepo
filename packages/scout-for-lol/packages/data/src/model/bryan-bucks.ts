@@ -41,6 +41,8 @@ export const BucksLedgerKindSchema = z.enum([
   "bet_stake",
   "bet_payout",
   "bet_refund",
+  "house_rake",
+  "cancel_fee",
   "adjustment",
 ]);
 
@@ -165,7 +167,19 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     losersPool: z.number().int(),
     stakeReturned: z.number().int(),
     winnings: z.number().int(),
+    /** Added with house cuts. Optional so historical ledger JSON remains
+     * parseable under the current schema. */
+    grossPayout: z.number().int().nonnegative().optional(),
+    houseCut: z.number().int().nonnegative().optional(),
+    netPayout: z.number().int().nonnegative().optional(),
     voidReason: BucksVoidReasonSchema.optional(),
+  }),
+  z.strictObject({
+    type: z.literal("house_fee"),
+    source: z.enum(["settlement", "cancellation"]),
+    ratePercent: z.number().int().min(0).max(100),
+    grossAmount: z.number().int().positive(),
+    fee: z.number().int().positive(),
   }),
   z.strictObject({
     type: z.literal("adjustment"),

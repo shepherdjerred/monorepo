@@ -1,4 +1,5 @@
 import type { BucksPrediction } from "@scout-for-lol/data";
+import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
 
 /**
@@ -21,19 +22,21 @@ const MAX_CONTENT_LENGTH = 2000;
 export function bucksPrematchLine(input: {
   prediction: BucksPrediction | undefined;
 }): string {
-  return input.prediction !== undefined &&
+  const prediction =
+    input.prediction !== undefined &&
     shouldDisplayPrediction(input.prediction.winProbability)
-    ? input.prediction.sentence
-    : "";
+      ? `${input.prediction.sentence}\n`
+      : "";
+  return `${prediction}${HOUSE_CUT_TERMS}`;
 }
 
 /**
- * Append the betting footer to a message, dropping it entirely rather than
- * truncating if it would overflow.
+ * Append the betting footer to a message, truncating the base if needed so an
+ * open market never loses its house-cut disclosure.
  *
- * The base sentence — who started a game — is the core product output and must
- * survive. A half-truncated prediction is worse than no prediction, so the
- * footer is all-or-nothing.
+ * The footer is internal, bounded copy. If it alone cannot fit, that is a
+ * broken caller contract and must fail loudly rather than sending partial
+ * terms.
  */
 export function appendBucksLine(base: string, footer: string): string {
   if (footer.length === 0) {
@@ -43,5 +46,9 @@ export function appendBucksLine(base: string, footer: string): string {
   if (combined.length <= MAX_CONTENT_LENGTH) {
     return combined;
   }
-  return base.slice(0, MAX_CONTENT_LENGTH);
+  const baseLength = MAX_CONTENT_LENGTH - footer.length - 2;
+  if (baseLength < 0) {
+    throw new Error("Bryan Bucks prematch footer exceeds Discord's limit");
+  }
+  return `${base.slice(0, baseLength)}\n\n${footer}`;
 }
