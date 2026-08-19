@@ -153,6 +153,11 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
             cancel(code: ProviderErrorCode.credentialIdentityNotFound)
             return
         }
+        guard !record.isExpired(at: Date()) else {
+            logger.info("event=credential_completion outcome=expired_before_submission message_id_hash=\(CodeFillObservability.fingerprint(record.messageID), privacy: .public)")
+            cancel(code: ProviderErrorCode.credentialIdentityNotFound)
+            return
+        }
         logger.info("event=credential_completion outcome=attempt \(CodeFillObservability.recordSummary(record), privacy: .public)")
         let credential = ASOneTimeCodeCredential(code: record.code)
         let context = extensionContext
