@@ -152,7 +152,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9840@sha256:2e4dcc399c9c9fcb930d7c0e6454ec1a47341dd2d55a68431899070fedc20094",
+      "value": "2.0.0-9990@sha256:400fc2b8fbf8f35be6eebb160b2e416aea4c2b87d02c226a5b966ebdc35d62d1",
       "notes": [
         "not managed by renovate — built from packages/streambot; CI's version commit-back fills the",
         "real tag@digest after the first image push. Seed digest is a placeholder until then."
@@ -755,7 +755,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9840@sha256:fa7cae75cf0fb2743c749e463ae079d791c134ec7878fe78c4b39b04d4ea696f",
+      "value": "2.0.0-9990@sha256:4a953ec28af5c8baaa89fa396b7dc1a166f5a10645fa13c6ff1b6ce6d2fceb2d",
       "notes": ["not managed by renovate"]
     },
     {
@@ -765,7 +765,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-9840@sha256:7ce9dfe1a7de53caa28b8885e876c473f146d83334c167fe4c1d3949af0269b7",
+      "value": "2.0.0-9990@sha256:cfec16bdd60dc3ad389b81f81f4337775cdd294a363ac604a5bc4d22d19069ea",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful image push."
