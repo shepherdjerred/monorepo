@@ -11,6 +11,11 @@ export const HISTORY_SOURCE_NAMES = [
 
 export type HistorySourceName = (typeof HISTORY_SOURCE_NAMES)[number];
 
+export type HistoryRuntimeRef = {
+  readonly source: HistorySourceName;
+  readonly runtimeId: string;
+};
+
 export type HistoryDocument = {
   readonly source: HistorySourceName;
   readonly sourceId: string;
@@ -20,7 +25,18 @@ export type HistoryDocument = {
   readonly agent: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
-  readonly searchText: string;
+  readonly runtimeId: string | null;
+  readonly openingPromptHash: string | null;
+  readonly dialogueText: string;
+  readonly toolOutputText: string;
+};
+
+export type HistoryMessageRole = "user" | "assistant" | "tool" | "unknown";
+
+export type HistoryMessage = {
+  readonly role: HistoryMessageRole;
+  readonly text: string;
+  readonly createdAt: string | null;
 };
 
 export type HistorySourceResult = {
@@ -35,6 +51,10 @@ export type HistorySource = {
   readonly name: HistorySourceName;
   readonly label: string;
   scan: (paths: HistoryPaths) => Promise<HistorySourceResult>;
+  read: (
+    paths: HistoryPaths,
+    records: readonly HistoryRecord[],
+  ) => Promise<HistorySourceReadResult>;
 };
 
 export type HistoryRecord = {
@@ -48,6 +68,29 @@ export type HistoryRecord = {
   readonly createdAt: string;
   readonly updatedAt: string;
   readonly excerpt: string | null;
+};
+
+export type IndexedHistoryRecord = HistoryRecord & {
+  readonly runtimeId: string | null;
+  readonly openingPromptHash: string | null;
+};
+
+export type HistoryGroupMember = Omit<HistoryRecord, "excerpt">;
+
+export type HistoryResult = HistoryRecord & {
+  readonly members: readonly HistoryGroupMember[];
+};
+
+export type HistorySourceReadResult = {
+  readonly source: HistorySourceName;
+  readonly messages: ReadonlyMap<string, readonly HistoryMessage[]>;
+  readonly missingSourceIds: readonly string[];
+  readonly error: string | null;
+};
+
+export type HistoryWarning = {
+  readonly source: HistorySourceName;
+  readonly message: string;
 };
 
 export type HistorySourceStatus = {

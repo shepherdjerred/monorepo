@@ -1,18 +1,13 @@
 import { parseArgs } from "node:util";
-import { HistoryIndex, parseLimit, parseSince } from "#lib/history/index.ts";
+import { parseMessageLimit, selectShowMessages } from "#lib/history/context.ts";
+import { HistoryIndex } from "#lib/history/index.ts";
+import { ftsQuery, parseLimit, parseSince } from "#lib/history/query.ts";
 import {
   historyDaemonRequest,
   HistoryDaemonResponseSchema,
   HistoryDaemonStatusSchema,
   pathExists,
 } from "#lib/history/ipc.ts";
-import {
-  defaultHistoryPaths,
-  defaultHistoryRuntimePaths,
-} from "#lib/history/paths.ts";
-import { createHistorySources } from "#lib/history/sources.ts";
-import { excerptForQuery } from "#lib/history/text.ts";
-import type { HistoryRecord, HistorySourceName } from "#lib/history/types.ts";
 import {
   HISTORY_LAUNCH_AGENT_LABEL,
   installLaunchAgent,
@@ -21,13 +16,29 @@ import {
   stopLaunchAgent,
   uninstallLaunchAgent,
 } from "#lib/history/launchd.ts";
+import { defaultHistoryRuntimePaths } from "#lib/history/paths.ts";
+import {
+  collectHistoryResults,
+  publicRecord,
+  sourceWarnings,
+} from "#lib/history/results.ts";
+import {
+  printHistoryWarnings,
+  renderHistoryRecords,
+  renderHistoryShow,
+} from "#lib/history/render.ts";
+import { currentHistoryRuntimes } from "#lib/history/runtime.ts";
+import { createHistorySources } from "#lib/history/sources.ts";
+import { addExcerpts, targetedMessages } from "#lib/history/targeted.ts";
+import type { HistorySourceName } from "#lib/history/types.ts";
 
 const USAGE = `
 toolkit history — search local agent conversation history
 
 Search and browse the existing local index:
-  toolkit history search <query> [--since 7d] [--source <name>] [--limit 20] [--include-excerpts] [--json]
-  toolkit history recent [--since 7d] [--source <name>] [--limit 20] [--json]
+  toolkit history search <query> [--since 7d] [--source <name>] [--limit 20] [--include-excerpts] [--include-current] [--include-duplicates] [--json]
+  toolkit history recent [--since 7d] [--source <name>] [--limit 20] [--include-current] [--include-duplicates] [--json]
+  toolkit history show <id> [--query <text>] [--messages 8] [--include-tools] [--json]
   toolkit history sources [--json]
 
 Manage background ingestion:
@@ -36,7 +47,6 @@ Manage background ingestion:
 
 Sources: conductor, claude, codex, cursor, opencode-conductor, opencode-standalone
 `;
-
 function parseSource(value: string | undefined): HistorySourceName | null {
   if (value === undefined) {
     return null;
@@ -64,6 +74,8 @@ function parseCommon(args: string[]) {
       source: { type: "string" },
       limit: { type: "string" },
       "include-excerpts": { type: "boolean", default: false },
+      "include-current": { type: "boolean", default: false },
+      "include-duplicates": { type: "boolean", default: false },
       json: { type: "boolean", default: false },
     },
     allowPositionals: true,
@@ -89,58 +101,14 @@ async function withReadOnlyIndex<T>(
   }
 }
 
-async function addExcerpts(
-  records: HistoryRecord[],
-  query: string,
-): Promise<HistoryRecord[]> {
-  if (records.length === 0) {
-    return records;
-  }
-  const paths = defaultHistoryPaths();
-  const documents = new Map<string, string>();
-  for (const source of createHistorySources()) {
-    const result = await source.scan(paths);
-    if (result.error !== null) {
-      continue;
-    }
-    for (const document of result.documents) {
-      documents.set(
-        `${document.source}:${document.sourceId}`,
-        document.searchText,
-      );
-    }
-  }
-  return records.map((record) => ({
-    ...record,
-    excerpt: excerptForQuery(
-      documents.get(`${record.source}:${record.sourceId}`) ?? "",
-      query,
-    ),
-  }));
+function sourceDefinitions() {
+  return createHistorySources();
 }
 
-function renderRecords(
-  title: string,
-  records: readonly HistoryRecord[],
-): string {
-  const lines = [`## ${title}`, ""];
-  if (records.length === 0) {
-    lines.push("No matching history.");
-    return lines.join("\n");
-  }
-  for (const record of records) {
-    lines.push(
-      `- **${record.title}** — ${record.source} — ${record.updatedAt}`,
-    );
-    if (record.workspace !== null) {
-      lines.push(`  Workspace: \`${record.workspace}\``);
-    }
-    lines.push(`  Source: \`${record.path}\` (${record.sourceId})`);
-    if (record.excerpt !== null && record.excerpt.length > 0) {
-      lines.push(`  Excerpt: ${record.excerpt}`);
-    }
-  }
-  return lines.join("\n");
+function sourceLabels() {
+  return new Map(
+    sourceDefinitions().map((source) => [source.name, source.label]),
+  );
 }
 
 async function searchCommand(args: string[]): Promise<void> {
@@ -154,17 +122,54 @@ async function searchCommand(args: string[]): Promise<void> {
   const source = parseSource(values.source);
   const since = parseSince(values.since);
   const limit = parseLimit(values.limit);
-  const records = await withReadOnlyIndex((index) =>
-    index.search(query, { since, source, limit }),
+  const runtimes = currentHistoryRuntimes();
+  const resultOptions = {
+    includeCurrent: values["include-current"],
+    includeDuplicates: values["include-duplicates"],
+    currentRuntimes: runtimes,
+    limit,
+  };
+  const excludedRuntimes = values["include-current"] ? [] : runtimes;
+  const indexed = await withReadOnlyIndex((index) =>
+    index.readSnapshot(() => ({
+      results: collectHistoryResults(
+        (offset, pageLimit) =>
+          index.search(query, {
+            since,
+            source,
+            limit: pageLimit,
+            offset,
+            excludedRuntimes,
+          }),
+        (openingPromptHash) =>
+          index.recent({
+            since,
+            source,
+            openingPromptHash,
+            excludedRuntimes,
+          }),
+        resultOptions,
+      ),
+      statuses: index.statuses(sourceLabels()),
+    })),
   );
   const enriched = values["include-excerpts"]
-    ? await addExcerpts(records, query)
-    : records;
+    ? await addExcerpts(indexed.results, query)
+    : { results: indexed.results, warnings: [] };
+  const warnings = [
+    ...sourceWarnings(indexed.statuses, source),
+    ...enriched.warnings,
+  ];
   if (values.json) {
-    console.log(JSON.stringify(enriched, null, 2));
+    console.log(
+      JSON.stringify({ query, results: enriched.results, warnings }, null, 2),
+    );
     return;
   }
-  console.log(renderRecords(`History search: ${query}`, enriched));
+  printHistoryWarnings(warnings);
+  console.log(
+    renderHistoryRecords(`History search: ${query}`, enriched.results),
+  );
 }
 
 async function recentCommand(args: string[]): Promise<void> {
@@ -172,44 +177,141 @@ async function recentCommand(args: string[]): Promise<void> {
   const source = parseSource(values.source);
   const since = parseSince(values.since);
   const limit = parseLimit(values.limit);
-  const records = await withReadOnlyIndex((index) =>
-    index.recent({ since, source, limit }),
+  const runtimes = currentHistoryRuntimes();
+  const resultOptions = {
+    includeCurrent: values["include-current"],
+    includeDuplicates: values["include-duplicates"],
+    currentRuntimes: runtimes,
+    limit,
+  };
+  const excludedRuntimes = values["include-current"] ? [] : runtimes;
+  const indexed = await withReadOnlyIndex((index) =>
+    index.readSnapshot(() => ({
+      results: collectHistoryResults(
+        (offset, pageLimit) =>
+          index.recent({
+            since,
+            source,
+            limit: pageLimit,
+            offset,
+            excludedRuntimes,
+          }),
+        (openingPromptHash) =>
+          index.recent({
+            since,
+            source,
+            openingPromptHash,
+            excludedRuntimes,
+          }),
+        resultOptions,
+      ),
+      statuses: index.statuses(sourceLabels()),
+    })),
   );
+  const warnings = sourceWarnings(indexed.statuses, source);
   if (values.json) {
-    console.log(JSON.stringify(records, null, 2));
+    console.log(
+      JSON.stringify({ results: indexed.results, warnings }, null, 2),
+    );
     return;
   }
-  console.log(renderRecords("Recent agent history", records));
+  printHistoryWarnings(warnings);
+  console.log(renderHistoryRecords("Recent agent history", indexed.results));
+}
+
+function parseShowId(value: string | undefined): number {
+  if (value === undefined || !/^[1-9]\d*$/u.test(value)) {
+    throw new RangeError(
+      "A positive local index ID is required. Usage: toolkit history show <id>",
+    );
+  }
+  const id = Number(value);
+  if (!Number.isSafeInteger(id)) {
+    throw new RangeError(
+      "A positive local index ID is required. Usage: toolkit history show <id>",
+    );
+  }
+  return id;
+}
+
+async function showCommand(args: string[]): Promise<void> {
+  const parsed = parseArgs({
+    args,
+    options: {
+      query: { type: "string" },
+      messages: { type: "string" },
+      "include-tools": { type: "boolean", default: false },
+      json: { type: "boolean", default: false },
+    },
+    allowPositionals: true,
+  });
+  const id = parseShowId(parsed.positionals[0]);
+  if (parsed.positionals.length > 1) {
+    throw new Error("show accepts exactly one local index ID");
+  }
+  const query = parsed.values.query ?? null;
+  if (query !== null) {
+    ftsQuery(query);
+  }
+  const record = await withReadOnlyIndex((index) => index.record(id));
+  if (record === null) {
+    throw new Error(
+      `History record ${String(id)} no longer exists. Local index IDs can change after a rebuild; rerun 'toolkit history search' and use the new ID.`,
+    );
+  }
+  const targeted = await targetedMessages([publicRecord(record)]);
+  if (targeted.warnings.length > 0) {
+    throw new Error(
+      targeted.warnings.map((warning) => warning.message).join("; "),
+    );
+  }
+  const selected = selectShowMessages(
+    targeted.messages.get(`${record.source}:${record.sourceId}`) ?? [],
+    {
+      query,
+      messageLimit: parseMessageLimit(parsed.values.messages),
+      includeTools: parsed.values["include-tools"],
+    },
+  );
+  const visibleRecord = publicRecord(record);
+  if (parsed.values.json) {
+    console.log(
+      JSON.stringify(
+        {
+          record: visibleRecord,
+          messages: selected.messages,
+          truncated: selected.truncated,
+        },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+  console.log(
+    renderHistoryShow(visibleRecord, selected.messages, selected.truncated),
+  );
 }
 
 async function sourcesCommand(args: string[]): Promise<void> {
   const { values } = parseCommon(args);
-  const sourceDefinitions = createHistorySources();
-  const labels = new Map(
-    sourceDefinitions.map((source) => [source.name, source.label]),
+  const statuses = await withReadOnlyIndex((index) =>
+    index.statuses(sourceLabels()),
   );
-  const statuses = await withReadOnlyIndex((index) => index.statuses(labels));
   if (values.json) {
     console.log(JSON.stringify(statuses, null, 2));
     return;
   }
-  console.log(
-    renderRecords(
-      "History sources",
-      statuses.map((status) => ({
-        id: 0,
-        source: status.source,
-        sourceId: status.source,
-        title: status.label,
-        path: status.error ?? (status.available ? "available" : "not found"),
-        workspace: null,
-        agent: `${String(status.indexedDocuments)} indexed`,
-        createdAt: status.lastScanAt ?? "never",
-        updatedAt: status.lastScanAt ?? "never",
-        excerpt: null,
-      })),
-    ),
-  );
+  const lines = ["## History sources", ""];
+  for (const status of statuses) {
+    lines.push(
+      `- **${status.label}** — ${status.available ? "available" : "unavailable"} — ${String(status.indexedDocuments)} indexed`,
+    );
+    if (status.error !== null) {
+      lines.push(`  Error: ${status.error}`);
+    }
+  }
+  console.log(lines.join("\n"));
 }
 
 async function daemonStatusCommand(json: boolean): Promise<void> {
@@ -279,7 +381,7 @@ async function daemonCommand(args: string[]): Promise<void> {
         HistoryDaemonResponseSchema,
         "/reindex",
       );
-      console.log("History reindex complete.");
+      console.log("History reindex requested.");
       break;
     case "serve": {
       const { runHistoryDaemon } = await import("#lib/history/serve.ts");
@@ -303,6 +405,9 @@ export async function handleHistoryCommand(
         break;
       case "recent":
         await recentCommand(args);
+        break;
+      case "show":
+        await showCommand(args);
         break;
       case "sources":
         await sourcesCommand(args);

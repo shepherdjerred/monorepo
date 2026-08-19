@@ -222,7 +222,8 @@ other live services.
 ```bash
 toolkit history daemon install
 toolkit history recent --since 7d
-toolkit history search "kubernetes ingress" --since 30d --include-excerpts
+toolkit history search "kubernetes ingress" --since 30d
+toolkit history show <ID_FROM_SEARCH> --query "kubernetes ingress"
 toolkit history sources --json
 toolkit history daemon status --json
 toolkit history daemon reindex
@@ -231,10 +232,19 @@ toolkit history daemon reindex
 The daemon is a user-scoped macOS LaunchAgent named
 `com.jerred.toolkit-history`. It polls every 30 seconds, owns writes to
 `~/.toolkit/history/index.sqlite`, and exposes a 0600 Unix socket for status and
-reindex requests. The index uses a contentless FTS5 table plus metadata; full
-transcript bodies are never stored in ordinary index tables. Excerpts are
-loaded read-only from the original source only when `--include-excerpts` is
-requested.
+reindex requests. The versioned index uses contentless FTS5 title, dialogue,
+and tool-output columns with BM25 weights `8.0`, `3.0`, and `0.25`; recency is
+only a tie-breaker. Full transcript bodies are never stored in ordinary index
+tables. Excerpts and `show` context use batched targeted reads of returned
+records.
+
+Search/recent hide the current `CONDUCTOR_SESSION_ID`/`CODEX_THREAD_ID` and
+group identical normalized opening prompts in earliest-anchored 30-minute
+clusters by default. `--include-current` and `--include-duplicates` override
+those behaviors. Search/recent JSON are warning-bearing envelopes; human source
+warnings go to stderr. `show` IDs are rebuild-local, and context is capped at
+eight messages/6,000 characters by default. Role-aware adapters omit system,
+reasoning, and compaction records. Cursor's flattened index uses `unknown`.
 
 Runtime files are private: `index.sqlite`, `daemon.sock`, `state.json`, and
 `logs/` are under `~/.toolkit/history/`; the plist is
@@ -247,8 +257,10 @@ with a source-specific schema error when a client changes, and report that
 error through `history sources` rather than silently claiming coverage. Never
 read standalone OpenCode `~/.local/share/opencode/auth.json`; credentials must
 not enter the index, excerpts, logs, tests, or commits. Source SQLite files and
-JSONL transcripts are always opened/read-only. Use the history skill for the
-full command recipes and source boundaries.
+JSONL transcripts are always opened/read-only. Cursor may use SQLite's immutable
+URI only after ordinary read-only access reports `CANTOPEN` and no live WAL is
+present. Use the history skill for the full command recipes and source
+boundaries.
 
 ## `pr asset` — PR media host
 
