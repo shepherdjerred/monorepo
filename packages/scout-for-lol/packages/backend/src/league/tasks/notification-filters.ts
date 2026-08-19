@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/bun";
 import {
   filtersPass,
   DiscordGuildIdSchema,
+  type DiscordChannelId,
   type DiscordGuildId,
   type QueueType,
 } from "@scout-for-lol/data/index.ts";
@@ -46,8 +47,12 @@ export async function deliverToChannels(params: {
   logPrefix: string;
   sentryTags: Record<string, string>;
   replyToMessageIds?: ReadonlyMap<string, string>;
-}): Promise<Set<DiscordGuildId>> {
+}): Promise<{
+  deliveredGuildIds: Set<DiscordGuildId>;
+  messageIdsByChannel: Map<DiscordChannelId, string>;
+}> {
   const deliveredGuildIds = new Set<DiscordGuildId>();
+  const messageIdsByChannel = new Map<DiscordChannelId, string>();
   for (const { channel, serverId } of params.channels) {
     try {
       const replyToMessageId = params.replyToMessageIds?.get(channel);
@@ -64,8 +69,9 @@ export async function deliverToChannels(params: {
               },
             };
       const guildId = DiscordGuildIdSchema.parse(serverId);
+      let sentMessage;
       try {
-        await send(message, channel, guildId);
+        sentMessage = await send(message, channel, guildId);
       } catch (error) {
         if (
           replyToMessageId !== undefined &&
@@ -75,12 +81,13 @@ export async function deliverToChannels(params: {
           // A reply requires Read Message History. Retry as a normal message
           // when that permission is missing; the post-match report itself is
           // still deliverable in channels where sending is allowed.
-          await send(params.message, channel, guildId);
+          sentMessage = await send(params.message, channel, guildId);
         } else {
           throw error;
         }
       }
       deliveredGuildIds.add(guildId);
+      messageIdsByChannel.set(channel, sentMessage.id);
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(
@@ -97,5 +104,5 @@ export async function deliverToChannels(params: {
       });
     }
   }
-  return deliveredGuildIds;
+  return { deliveredGuildIds, messageIdsByChannel };
 }

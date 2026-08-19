@@ -848,6 +848,13 @@ model BucksMatchPool {
   // re-deriving channel -> guild.
   messageRefs String @default("[]")
 
+  // The non-betting content of the prematch Discord message. Stored alongside
+  // messageRefs after delivery so live bet summaries can replace message
+  // content with a direct PATCH and no Read Message History permission. Null
+  // identifies a pre-deployment or not-yet-delivered pool and must not be
+  // edited, because reconstructing its existing message would be guesswork.
+  prematchContentBase String?
+
   // BucksPoolState: open | closed | settled | voided.
   //
   // Advanced only by guarded conditional updates. This column IS the settlement

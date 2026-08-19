@@ -11,6 +11,7 @@ import {
 } from "#src/testing/bucks-fixtures.ts";
 import {
   handleBetButton,
+  type BetButtonDependencies,
   type BetButtonInteraction,
 } from "#src/betting/bet-button.ts";
 import {
@@ -60,6 +61,17 @@ function betId(subjectIndex: number, side: "W" | "L", amount: number) {
     side,
     amount,
   });
+}
+
+function recordingRefreshes(
+  calls: { matchId: string; serverId: string }[],
+): BetButtonDependencies {
+  return {
+    refreshMessages: (input) => {
+      calls.push(input);
+      return Promise.resolve();
+    },
+  };
 }
 
 function buttonIdForLabel(
@@ -187,7 +199,8 @@ describe("handleBetButton", () => {
       amount: 0,
     });
     const { interaction, replies } = fakeInteraction(cancelId);
-    await handleBetButton(interaction, db);
+    const refreshes: { matchId: string; serverId: string }[] = [];
+    await handleBetButton(interaction, db, recordingRefreshes(refreshes));
 
     expect(replies[0]).toContain("Bet cancelled");
     expect(replies[0]).toContain(
@@ -211,6 +224,19 @@ describe("handleBetButton", () => {
       },
     });
     expect(house.balance).toBe(HOUSE_BANKROLL + 1);
+    expect(refreshes).toEqual([{ matchId: MATCH_ID, serverId: SERVER_ID }]);
+  });
+
+  test("refreshes the shared prematch summary after a placement", async () => {
+    const refreshes: { matchId: string; serverId: string }[] = [];
+
+    await handleBetButton(
+      fakeInteraction(betId(0, "W", 5)).interaction,
+      db,
+      recordingRefreshes(refreshes),
+    );
+
+    expect(refreshes).toEqual([{ matchId: MATCH_ID, serverId: SERVER_ID }]);
   });
 
   test("cancelling frees the slot so the other side can be backed", async () => {
@@ -282,10 +308,12 @@ describe("handleBetButton", () => {
     });
 
     const { interaction, replies } = fakeInteraction(betId(0, "W", 5));
-    await handleBetButton(interaction, db);
+    const refreshes: { matchId: string; serverId: string }[] = [];
+    await handleBetButton(interaction, db, recordingRefreshes(refreshes));
 
     expect(replies[0]).toContain("Betting has closed");
     expect(await db.bucksBet.count()).toBe(0);
+    expect(refreshes).toEqual([]);
   });
 
   test("ignores a custom ID it does not recognise", async () => {

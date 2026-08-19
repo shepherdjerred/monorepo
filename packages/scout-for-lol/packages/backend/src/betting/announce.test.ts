@@ -1,21 +1,33 @@
 import { describe, expect, test } from "bun:test";
+import type { MessageCreateOptions } from "discord.js";
 import {
   BucksPredictionSchema,
   type BucksPrediction,
 } from "@scout-for-lol/data/index.ts";
 import {
-  formatBetPlacementAnnouncement,
+  buildSettlementMessage,
   formatSettlementBody,
   predictionVerdict,
-  sendSettlementMessages,
-  splitSettlementBody,
+  sendSettlementMessage,
 } from "#src/betting/announce.ts";
 import { HOUSE_ACCOUNT_DISCORD_ID } from "#src/betting/constants.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
+import {
+  ChannelSendError,
+  markReplyPermissionError,
+} from "#src/league/discord/channel.ts";
 
 const WINNER_DISCORD_ID = bucksTestDiscordId(1);
 const LOSER_DISCORD_ID = bucksTestDiscordId(2);
+
+function firstEmbedJson(message: MessageCreateOptions) {
+  const embed = message.embeds?.[0];
+  if (embed === undefined) {
+    throw new Error("expected a settlement embed");
+  }
+  return "toJSON" in embed ? embed.toJSON() : embed;
+}
 
 function prediction(
   winProbability: number,
@@ -295,16 +307,16 @@ describe("formatSettlementBody house cuts", () => {
     expect(body).toContain(`• <@${WINNER_DISCORD_ID}> staked 25 BB`);
   });
 
-  test("splits a full settlement without dropping payout arithmetic", () => {
+  test("fits a full settlement into one bounded embed", () => {
     const summary: SettlementSummary = {
       matchId: "NA1_5000000042",
       serverId: "1337623164146155593",
       winningTeamId: 100,
       voidReason: undefined,
-      winnersPool: 75,
+      winnersPool: 80,
       losersPool: 75,
-      houseCut: 30,
-      bets: Array.from({ length: 15 }, (_, index) => ({
+      houseCut: 32,
+      bets: Array.from({ length: 16 }, (_, index) => ({
         betId: index + 1,
         bucksAccountId: index + 1,
         discordId: bucksTestDiscordId(index + 1),
@@ -320,7 +332,7 @@ describe("formatSettlementBody house cuts", () => {
         subjectPuuid: `winner-puuid-${index.toString()}`,
       })),
     };
-    const body = formatSettlementBody({
+    const outcomeInput = {
       summary,
       earnings: [
         {
@@ -347,7 +359,7 @@ describe("formatSettlementBody house cuts", () => {
         {
           serverId: summary.serverId,
           discordId: bucksTestDiscordId(4),
-          alias: "Diana",
+          alias: "DianaDianaDianaDianaDianaDianaDianaDianaDianaDiana",
           reasons: ["played", "win", "mvp"],
           total: 9,
         },
@@ -355,101 +367,203 @@ describe("formatSettlementBody house cuts", () => {
       predictionSentence:
         "Scout gave this roster a decisive edge before the match started.",
       predictionVerdictLine: "Scout called it.",
-    });
+    } satisfies Parameters<typeof formatSettlementBody>[0];
+    const body = formatSettlementBody(outcomeInput);
+    const message = buildSettlementMessage(outcomeInput);
 
     expect(body.length).toBeGreaterThan(1900);
-    const chunks = splitSettlementBody(body);
-    expect(chunks.length).toBeGreaterThan(1);
-    for (const chunk of chunks) {
-      expect(chunk.length).toBeLessThanOrEqual(1900);
-    }
-    const delivered = chunks.join("\n");
-    expect(delivered).toContain("Pool **75 BB** · house cut **30 BB**");
+    expect(message.content).toBeUndefined();
+    expect(message.embeds).toHaveLength(1);
+    expect(message.allowedMentions).toEqual({ parse: [] });
+    const embed = firstEmbedJson(message);
+    const fields = embed.fields ?? [];
+    expect(fields.every((field) => field.value.length <= 1024)).toBe(true);
+    const delivered = [
+      embed.description ?? "",
+      ...fields.map((field) => `${field.name}\n${field.value}`),
+    ].join("\n");
+    const embedLength =
+      (embed.title?.length ?? 0) +
+      (embed.description?.length ?? 0) +
+      fields.reduce(
+        (total, field) => total + field.name.length + field.value.length,
+        0,
+      );
+    expect(embedLength).toBeLessThanOrEqual(6000);
+    expect(delivered).toContain("Pool **80 BB** · house cut **32 BB**");
     expect(delivered).toContain(
       "gross 10 BB − 2 BB house cut = 8 BB received (+3 BB net winnings)",
     );
     expect(delivered).toContain("🪙 **Aaron** +13 BB");
+    expect(delivered).toContain("…and 1 more — see `/bb history`");
   });
 });
 
-describe("sendSettlementMessages", () => {
-  test("retries a failed chunk and still attempts every later chunk", async () => {
-    const attempts: {
-      content: string | undefined;
-      nonce: string | number | undefined;
-      enforceNonce: boolean | undefined;
-    }[] = [];
+describe("settlement outcome bounds", () => {
+  test("truncates an overlong earning alias without dropping the outcome", () => {
+    const message = buildSettlementMessage({
+      summary: {
+        matchId: "NA1_5000000042",
+        serverId: "1337623164146155593",
+        winningTeamId: 100,
+        voidReason: undefined,
+        winnersPool: 0,
+        losersPool: 0,
+        houseCut: 0,
+        bets: [],
+      },
+      earnings: [
+        {
+          serverId: "1337623164146155593",
+          discordId: WINNER_DISCORD_ID,
+          alias: "A".repeat(2000),
+          reasons: ["played"],
+          total: 1,
+        },
+      ],
+      predictionSentence: undefined,
+      predictionVerdictLine: undefined,
+    });
+
+    const fields = firstEmbedJson(message).fields ?? [];
+    expect(fields.every((field) => field.value.length <= 1024)).toBe(true);
+    expect(fields.map((field) => field.value).join("\n")).toContain(
+      `${"A".repeat(99)}…** +1 BB (played)`,
+    );
+  });
+});
+
+describe("sendSettlementMessage", () => {
+  test("retries one outcome with a stable nonce", async () => {
+    const attempts: MessageCreateOptions[] = [];
     let sleeps = 0;
+    let failuresRemaining = 2;
 
-    await expect(
-      sendSettlementMessages(
-        {
-          messages: ["first", "failed", "last"],
-          matchId: "NA1_5000000042",
-          channelId: "1337623164146155594",
-          guildId: "1337623164146155593",
+    await sendSettlementMessage(
+      {
+        message: { embeds: [{ title: "Outcome" }] },
+        matchId: "NA1_5000000042",
+        channelId: "1337623164146155594",
+        guildId: "1337623164146155593",
+      },
+      {
+        sendMessage: (options) => {
+          attempts.push(options);
+          if (failuresRemaining > 0) {
+            failuresRemaining -= 1;
+            return Promise.reject(new Error("Discord delivery failed"));
+          }
+          return Promise.resolve(undefined);
         },
-        {
-          sendMessage: (options) => {
-            attempts.push({
-              content: options.content,
-              nonce: options.nonce,
-              enforceNonce: options.enforceNonce,
-            });
-            return options.content === "failed"
-              ? Promise.reject(new Error("Discord delivery failed"))
-              : Promise.resolve(undefined);
-          },
-          sleep: () => {
-            sleeps += 1;
-            return Promise.resolve();
-          },
+        sleep: () => {
+          sleeps += 1;
+          return Promise.resolve();
         },
-      ),
-    ).rejects.toThrow("failed to deliver 1/3 chunk(s)");
+      },
+    );
 
-    expect(attempts.map((attempt) => attempt.content)).toEqual([
-      "first",
-      "failed",
-      "failed",
-      "failed",
-      "last",
-    ]);
+    expect(attempts).toHaveLength(3);
     expect(sleeps).toBe(2);
-    const failedAttempts = attempts.filter(
-      (attempt) => attempt.content === "failed",
+    expect(new Set(attempts.map((attempt) => attempt.nonce)).size).toBe(1);
+    expect(attempts.every((attempt) => attempt.enforceNonce === true)).toBe(
+      true,
     );
-    expect(new Set(failedAttempts.map((attempt) => attempt.nonce)).size).toBe(
-      1,
-    );
-    expect(
-      failedAttempts.every((attempt) => attempt.enforceNonce === true),
-    ).toBe(true);
-  });
-});
-
-describe("formatBetPlacementAnnouncement", () => {
-  test("shows the increment and the bettor's total position", () => {
-    expect(
-      formatBetPlacementAnnouncement({
-        discordId: WINNER_DISCORD_ID,
-        teamId: 100,
-        stake: 5,
-        totalStake: 10,
-      }),
-    ).toBe(
-      `🎲 <@${WINNER_DISCORD_ID}> staked **5 BB** on **Blue Team to win** (position: **10 BB**). **20% house cut on winning payouts**.`,
+    expect(attempts.every((attempt) => attempt.embeds?.length === 1)).toBe(
+      true,
     );
   });
 
-  test("names Red team placements directly", () => {
-    expect(
-      formatBetPlacementAnnouncement({
-        discordId: WINNER_DISCORD_ID,
-        teamId: 200,
-        stake: 1,
-        totalStake: 6,
-      }),
-    ).toContain("**Red Team to win**");
+  test("replies to the postmatch message without pinging bettors", async () => {
+    const attempts: MessageCreateOptions[] = [];
+    await sendSettlementMessage(
+      {
+        message: { embeds: [{ title: "Outcome" }] },
+        matchId: "NA1_5000000042",
+        channelId: "1337623164146155594",
+        guildId: "1337623164146155593",
+        postmatchMessageId: "postmatch-message",
+      },
+      {
+        sendMessage: (options) => {
+          attempts.push(options);
+          return Promise.resolve(undefined);
+        },
+        sleep: () => Promise.resolve(),
+      },
+    );
+
+    expect(attempts).toHaveLength(1);
+    expect(attempts[0]?.reply).toEqual({
+      messageReference: "postmatch-message",
+      failIfNotExists: false,
+    });
+    expect(attempts[0]?.allowedMentions).toEqual({ parse: [] });
+  });
+
+  test("falls back to one standalone outcome without reply permission", async () => {
+    const attempts: MessageCreateOptions[] = [];
+    const replyError = markReplyPermissionError(
+      new ChannelSendError(
+        "missing Read Message History",
+        "1337623164146155594",
+        true,
+      ),
+    );
+    await sendSettlementMessage(
+      {
+        message: { embeds: [{ title: "Outcome" }] },
+        matchId: "NA1_5000000042",
+        channelId: "1337623164146155594",
+        guildId: "1337623164146155593",
+        postmatchMessageId: "postmatch-message",
+      },
+      {
+        sendMessage: (options) => {
+          attempts.push(options);
+          return options.reply === undefined
+            ? Promise.resolve(undefined)
+            : Promise.reject(replyError);
+        },
+        sleep: () => Promise.resolve(),
+      },
+    );
+
+    expect(attempts).toHaveLength(2);
+    expect(attempts[0]?.reply).toBeDefined();
+    expect(attempts[1]?.reply).toBeUndefined();
+    expect(attempts[0]?.nonce).toBe(attempts[1]?.nonce);
+  });
+
+  test("falls back when Discord rejects the reply after preflight", async () => {
+    const attempts: MessageCreateOptions[] = [];
+    const replyError = new ChannelSendError(
+      "Discord rejected reply",
+      "1337623164146155594",
+      true,
+      { code: 50_013, message: "Missing Permissions" },
+    );
+
+    await sendSettlementMessage(
+      {
+        message: { embeds: [{ title: "Outcome" }] },
+        matchId: "NA1_5000000042",
+        channelId: "1337623164146155594",
+        guildId: "1337623164146155593",
+        postmatchMessageId: "postmatch-message",
+      },
+      {
+        sendMessage: (options) => {
+          attempts.push(options);
+          return options.reply === undefined
+            ? Promise.resolve(undefined)
+            : Promise.reject(replyError);
+        },
+        sleep: () => Promise.resolve(),
+      },
+    );
+
+    expect(attempts).toHaveLength(2);
+    expect(attempts[0]?.reply).toBeDefined();
+    expect(attempts[1]?.reply).toBeUndefined();
   });
 });

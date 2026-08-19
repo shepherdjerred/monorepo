@@ -10,7 +10,7 @@ import { parseBucksCustomId } from "#src/betting/custom-id.ts";
 import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { placeBet, type PlaceBetResult } from "#src/betting/place-bet.ts";
 import { cancelBet, type CancelBetResult } from "#src/betting/cancel-bet.ts";
-import { announceBetPlacement } from "#src/betting/announce.ts";
+import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
 import { teamIdForSubjectOutcome, teamName } from "#src/betting/team.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -36,6 +36,14 @@ export type BetButtonInteraction = {
   user: { id: string };
   deferReply: (options: { ephemeral: true }) => Promise<unknown>;
   editReply: (options: BucksButtonEditReplyOptions) => Promise<unknown>;
+};
+
+export type BetButtonDependencies = {
+  refreshMessages: typeof refreshBucksMessages;
+};
+
+const defaultDependencies: BetButtonDependencies = {
+  refreshMessages: refreshBucksMessages,
 };
 
 /** Turn a refusal into something a person can act on. Every branch is ordinary
@@ -106,6 +114,7 @@ function subjectFrom(
 export async function handleBetButton(
   interaction: BetButtonInteraction,
   prismaClient: ExtendedPrismaClient = prisma,
+  dependencies: BetButtonDependencies = defaultDependencies,
 ): Promise<void> {
   const parsed = parseBucksCustomId(interaction.customId);
   if (parsed === undefined) {
@@ -156,6 +165,12 @@ export async function handleBetButton(
       prismaClient,
     );
     await interaction.editReply({ content: describeCancel(cancelled) });
+    if (cancelled.kind === "cancelled") {
+      await dependencies.refreshMessages(
+        { matchId: parsed.matchId, serverId },
+        prismaClient,
+      );
+    }
     return;
   }
 
@@ -178,15 +193,8 @@ export async function handleBetButton(
   });
 
   if (result.kind === "placed") {
-    await announceBetPlacement(
-      {
-        matchId: parsed.matchId,
-        serverId,
-        discordId,
-        teamId: selectedTeamId,
-        stake: parsed.amount,
-        totalStake: result.totalStake,
-      },
+    await dependencies.refreshMessages(
+      { matchId: parsed.matchId, serverId },
       prismaClient,
     );
   }
