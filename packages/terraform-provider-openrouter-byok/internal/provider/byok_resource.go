@@ -119,12 +119,17 @@ func (r *byokResource) ImportState(ctx context.Context, req resource.ImportState
 }
 
 func (r *byokResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var config byokModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	var plan byokModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data, err := r.client.create(ctx, requestFromModel(plan))
+	data, err := r.client.create(ctx, requestFromModel(plan, config.Key))
 	if err != nil {
 		resp.Diagnostics.AddError("Create OpenRouter BYOK credential", err.Error())
 		return
@@ -153,6 +158,11 @@ func (r *byokResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 }
 
 func (r *byokResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var config byokModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	var plan byokModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -163,7 +173,7 @@ func (r *byokResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data, err := r.client.update(ctx, state.ID.ValueString(), requestFromModel(plan))
+	data, err := r.client.update(ctx, state.ID.ValueString(), requestFromModel(plan, config.Key))
 	if err != nil {
 		resp.Diagnostics.AddError("Update OpenRouter BYOK credential", err.Error())
 		return
@@ -188,10 +198,10 @@ func (r *byokResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-func requestFromModel(model byokModel) byokRequest {
+func requestFromModel(model byokModel, key types.String) byokRequest {
 	return byokRequest{
 		Provider:       model.Provider.ValueString(),
-		Key:            model.Key.ValueString(),
+		Key:            key.ValueString(),
 		Name:           stringPointer(model.Name),
 		WorkspaceID:    stringPointer(model.WorkspaceID),
 		AllowedModels:  stringSetPointer(model.AllowedModels),

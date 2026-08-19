@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func TestClientCRUD(t *testing.T) {
@@ -53,6 +55,16 @@ func TestClientCRUD(t *testing.T) {
 
 	if strings.Join(seen, ",") != "POST /byok,GET /byok/byok-1,PATCH /byok/byok-1,DELETE /byok/byok-1" {
 		t.Fatalf("request sequence = %q", strings.Join(seen, ","))
+	}
+}
+
+func TestRequestFromModelUsesConfiguredWriteOnlyKey(t *testing.T) {
+	request := requestFromModel(
+		byokModel{Provider: types.StringValue("openai")},
+		types.StringValue("configured-secret"),
+	)
+	if request.Key != "configured-secret" {
+		t.Fatalf("request key = %q, want configured key", request.Key)
 	}
 }
 
