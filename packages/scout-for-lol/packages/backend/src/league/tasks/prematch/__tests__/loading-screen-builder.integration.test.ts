@@ -397,6 +397,7 @@ describe("buildLoadingScreenData standard and custom layouts", () => {
     }
     expect(result.participants[0]?.championName).toBe("Akali");
     expect(result.participants[0]?.championName).not.toStartWith("Jade_");
+    expect(String(result.queueDisplayName)).toBe("Summoner's Rift");
   });
 
   test("queue 0 (Custom) with CLASSIC mode stays custom standard layout", async () => {

@@ -16,6 +16,7 @@ import {
   parseTeam,
   mapIdToName,
   makeQueueDisplayName,
+  QueueDisplayNameSchema,
   LeaguePuuidSchema,
   LoadingScreenDataSchema,
   SummonerSpellIdSchema,
@@ -393,14 +394,20 @@ export async function buildLoadingScreenData(
     );
   }
 
-  const queueDisplayName = makeQueueDisplayName(queueType);
+  const isClassicAsset = isClassicAssetMode(
+    gameInfo.gameQueueConfigId,
+    gameInfo.gameMode,
+  );
+  const queueDisplayName =
+    queueType === "classic" && !isClassicAsset
+      ? QueueDisplayNameSchema.parse("Summoner's Rift")
+      : makeQueueDisplayName(queueType);
   const isRanked =
     gameInfo.gameQueueConfigId === RANKED_SOLO_QUEUE_ID ||
     gameInfo.gameQueueConfigId === RANKED_FLEX_QUEUE_ID ||
     gameInfo.gameQueueConfigId === RANKED_5S_QUEUE_ID;
   const layout =
-    queueType === "classic" &&
-    !isClassicAssetMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)
+    queueType === "classic" && !isClassicAsset
       ? "standard"
       : loadingScreenLayoutForQueueType(queueType);
   let mapName: ReturnType<typeof mapIdToName>;

@@ -1,6 +1,7 @@
 import { describe, expect, mock, test } from "bun:test";
 import {
   type ClassicMatch,
+  type Player,
   PlayerConfigEntrySchema,
   RawMatchSchema,
   type RawMatch,
@@ -8,6 +9,7 @@ import {
 import { classicMatchToImage, classicMatchToSvg } from "@scout-for-lol/report";
 import { buildClassicMatch } from "./match-report-classic.ts";
 import { generateMatchReport } from "./match-report-generator.ts";
+import { toMatch } from "#src/league/model/match.ts";
 
 const fixtureUrl = new URL(
   "../../../../../../testdata/rift.json",
@@ -54,6 +56,20 @@ async function classicMatchFixture(
         item5: 771_026,
         item6: 0,
       })),
+    },
+  });
+}
+
+async function ordinaryClassicMatchFixture(): Promise<RawMatch> {
+  const input: unknown = await Bun.file(fixtureUrl).json();
+  const base = RawMatchSchema.parse(input);
+  return RawMatchSchema.parse({
+    ...base,
+    info: {
+      ...base.info,
+      queueId: 3260,
+      gameMode: "CLASSIC",
+      mapId: 11,
     },
   });
 }
@@ -420,6 +436,31 @@ describe("buildClassicMatch roster handling", () => {
 });
 
 describe("generateMatchReport Classic routing", () => {
+  test("allows ordinary CLASSIC queues through the standard match converter", async () => {
+    const rawMatch = await ordinaryClassicMatchFixture();
+    const trackedParticipant = rawMatch.info.participants[0];
+    if (trackedParticipant === undefined) {
+      throw new Error(
+        "Ordinary Classic fixture is missing its tracked participant",
+      );
+    }
+    const trackedPlayer = PlayerConfigEntrySchema.parse({
+      alias: "Ordinary Classic",
+      league: {
+        leagueAccount: {
+          puuid: trackedParticipant.puuid,
+          region: "AMERICA_NORTH",
+        },
+      },
+    });
+    const player: Player = { config: trackedPlayer, ranks: {} };
+
+    const result = toMatch([player], rawMatch, new Map());
+
+    expect(result?.queueType).toBeUndefined();
+    expect(result?.players).toHaveLength(1);
+  });
+
   test("routes before rank, timeline, history, and AI dependencies", async () => {
     const rawMatch = await classicMatchFixture();
     const trackedParticipant = rawMatch.info.participants[0];
