@@ -9,6 +9,7 @@ struct SetupView: View {
     @State private var diagnosticsStatus = ""
     @State private var refreshGeneration = 0
     @State private var expiryRefreshTask: Task<Void, Never>?
+    @State private var brokerMode = false
 
     private let mailMateBundlesURL = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/MailMate/Bundles", isDirectory: true)
@@ -89,6 +90,7 @@ struct SetupView: View {
         .formStyle(.grouped)
         .padding()
         .task {
+            brokerMode = MailMateCodeFillAppDelegate.launchedAsBroker
             refreshIntegrationStatus()
             refreshCredentialIdentities()
         }
@@ -198,6 +200,7 @@ struct SetupView: View {
                                     identityStatus = identities.isEmpty
                                         ? "No unexpired MailMate codes are available yet."
                                         : "Registered \(identities.count) native AutoFill identity entries."
+                                    scheduleBrokerShutdownIfNeeded(identities: identities)
                                 } else {
                                     let detail = error.map { ": \($0.localizedDescription)" } ?? "."
                                     CodeFillObservability.appLogger.error("event=identity_refresh outcome=error identity_count=\(identities.count, privacy: .public) detail=\(detail, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
@@ -238,6 +241,15 @@ struct SetupView: View {
             guard !Task.isCancelled else { return }
             CodeFillObservability.appLogger.info("event=identity_refresh outcome=expiry_timer_fired")
             refreshCredentialIdentities()
+        }
+    }
+
+    private func scheduleBrokerShutdownIfNeeded(identities: [ASCredentialIdentity]) {
+        guard brokerMode, identities.isEmpty, !NSApp.isActive else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            guard brokerMode, !NSApp.isActive else { return }
+            CodeFillObservability.appLogger.info("event=broker_shutdown outcome=no_active_records")
+            NSApp.terminate(nil)
         }
     }
 
