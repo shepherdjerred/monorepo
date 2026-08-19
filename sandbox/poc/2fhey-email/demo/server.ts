@@ -16,11 +16,11 @@ Bun.serve({
           headers: { "content-type": "text/html; charset=utf-8" },
         },
       );
-      logRequest(request, requestId, pathname, response.status, startedAt);
+      logRequest(request, requestId, response.status, startedAt);
       return response;
     }
     const response = new Response("Not found", { status: 404 });
-    logRequest(request, requestId, pathname, response.status, startedAt);
+    logRequest(request, requestId, response.status, startedAt);
     return response;
   },
 });
@@ -37,7 +37,6 @@ console.info(
 function logRequest(
   request: Request,
   requestId: string,
-  pathname: string,
   status: number,
   startedAt: number,
 ) {
@@ -46,7 +45,6 @@ function logRequest(
       event: "demo_http_request",
       request_id: requestId,
       method: request.method,
-      path: pathname,
       status,
       duration_ms: Math.round(performance.now() - startedAt),
     }),
