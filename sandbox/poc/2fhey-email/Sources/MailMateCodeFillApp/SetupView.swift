@@ -8,6 +8,7 @@ struct SetupView: View {
     @State private var integrationStatus = "Checking the MailMate bundle installation…"
     @State private var diagnosticsStatus = ""
     @State private var refreshGeneration = 0
+    @State private var expiryRefreshTask: Task<Void, Never>?
 
     private let mailMateBundlesURL = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/MailMate/Bundles", isDirectory: true)
@@ -172,6 +173,7 @@ struct SetupView: View {
                         CodeFillObservability.appLogger.info("event=identity_refresh outcome=stale_snapshot")
                         return
                     }
+                    scheduleIdentityExpiryRefresh(for: records)
                     ASCredentialIdentityStore.shared.getState { state in
                         let isEnabled = state.isEnabled
                         Task { @MainActor in
@@ -216,6 +218,26 @@ struct SetupView: View {
                     CodeFillObservability.appLogger.error("event=identity_refresh outcome=store_error error=\(CodeFillObservability.errorSummary(error), privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
                 }
             }
+        }
+    }
+
+    private func scheduleIdentityExpiryRefresh(for records: [OTPRecord]) {
+        expiryRefreshTask?.cancel()
+        guard let nextExpiration = records.map(\.expiresAt).min() else {
+            expiryRefreshTask = nil
+            return
+        }
+
+        let delay = max(0.1, nextExpiration.timeIntervalSinceNow)
+        expiryRefreshTask = Task { @MainActor in
+            do {
+                try await Task.sleep(for: .seconds(delay))
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
+            CodeFillObservability.appLogger.info("event=identity_refresh outcome=expiry_timer_fired")
+            refreshCredentialIdentities()
         }
     }
 

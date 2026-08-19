@@ -62,7 +62,7 @@ expiry.
 
 ## Remaining
 
-- [ ] Implement the invisible event-driven broker, expiry timer, and identity-
+- [x] Implement the invisible event-driven broker, expiry timer, and identity-
       store reconciliation independently of the setup window lifecycle.
 - [ ] Replace the single sender-derived service with normalized sender-domain
       and message-link identifiers, including deterministic localhost fixtures.
