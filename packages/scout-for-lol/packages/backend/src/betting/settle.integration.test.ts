@@ -20,7 +20,7 @@ import {
   HOUSE_BANKROLL,
   VOID_GRACE_MS,
 } from "#src/betting/constants.ts";
-import { getLeaderboard } from "#src/betting/accounts.ts";
+import { getFullLeaderboard } from "#src/betting/accounts.ts";
 
 const { prisma: db } = createTestDatabase("bucks-settle");
 
@@ -381,9 +381,13 @@ describe("one-sided house settlement", () => {
       { kind: "bet_stake", delta: -25 },
     ]);
 
-    expect(await getLeaderboard({ serverId: SERVER_A, limit: 10 }, db)).toEqual(
-      [{ discordId: only.account.discordId, balance: 150 }],
-    );
+    expect(await getFullLeaderboard({ serverId: SERVER_A }, db)).toEqual([
+      {
+        accountId: only.account.id,
+        discordId: only.account.discordId,
+        balance: 150,
+      },
+    ]);
 
     const settled = await db.bucksMatchPool.findUniqueOrThrow({
       where: { id: pool.id },

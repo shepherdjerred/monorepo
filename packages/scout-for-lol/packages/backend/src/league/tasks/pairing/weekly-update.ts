@@ -5,7 +5,6 @@ import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import {
   type ServerPairingStats,
   type PairingStatsEntry,
-  DiscordChannelIdSchema,
 } from "@scout-for-lol/data/index.ts";
 import {
   getServerPlayers,
@@ -25,11 +24,7 @@ import {
 import { subWeeks, startOfISOWeek, endOfISOWeek } from "date-fns";
 import * as Sentry from "@sentry/bun";
 import { deliverTrackedCoreOutput } from "#src/analytics/guild-lifecycle.ts";
-
-// Channel ID for Common Denominator updates
-const COMMON_DENOMINATOR_CHANNEL_ID = DiscordChannelIdSchema.parse(
-  "1337631455085334650",
-);
+import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
 
 const logger = createLogger("pairing-weekly-update");
 

@@ -543,10 +543,9 @@ and audit history. Do not recreate the removed management command trees.
 `/bb` (Bryan Bucks) is the one owner-approved exception, pinned by
 `definitions.test.ts`. It is gated to a single guild by the `betting_enabled`
 flag — effectively beta-only, since that guild runs the beta bot — and a balance
-you cannot check from the same place you place a bet is not usable. Because
-command registration is a global replace, `/bb` is _visible_ everywhere but
-_answers_ in one server, so its description and its not-enabled-here reply both
-say so. Adding anything else needs the same explicit decision.
+you cannot check from the same place you place a bet is not usable. It is
+registered only in that guild, not globally. Adding anything else needs the
+same explicit decision.
 
 **Interactions are routed in `discord/interactions.ts`**, not in
 `discord/commands/index.ts`. That module is the single `interactionCreate`
@@ -840,6 +839,16 @@ The feature scope remains enforced by the flag and guild-scoped registration;
 user-facing betting surfaces should not advertise the allowlist or the private
 redemption joke. `/bb prizes` is the deliberate exception: it exposes the
 1:10 joke and its in-person-with-Bryan footer as a prize catalog.
+
+`/bb balance` and `/bb history` expose only the caller's wallet and positions;
+history uses caller-bound `bbnav:` component IDs and a frozen maximum ledger ID
+so new entries cannot reshuffle pages. `/bb open` shows anonymous side totals,
+never bettor identities or inferred odds. There is no on-demand leaderboard:
+the complete non-house wallet list is posted Fridays at 5 PM
+America/Los_Angeles in the shared Common Denominator channel. Both deployments
+run the cron, but only the Discord application in the one enabled guild posts;
+more than one enabled guild is a hard failure until an explicit channel mapping
+exists.
 
 Bucks exchange at 1:10 Bucks:CAD, in person only, from Bryan, who lives in rural
 Canada. There is no monetary component and nothing transfers to real goods.
