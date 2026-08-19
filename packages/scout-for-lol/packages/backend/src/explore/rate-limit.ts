@@ -18,7 +18,7 @@ import {
  * conversation is many small turns rather than one expensive draft, but a
  * global ceiling still bounds total spend if several people explore at once.
  *
- * Buckets and the active-run guard live in this process's memory, so they
+ * Buckets and the active-run counters live in this process's memory, so they
  * reset on restart and would not be shared between replicas. That is exact
  * today rather than approximate: the backend deploys as a single replica with
  * the Recreate strategy (packages/homelab/src/cdk8s/src/resources/scout), so
@@ -83,7 +83,7 @@ const engine = createQuotaEngine<ExploreQuotaScope, ExploreRateLimitIdentity>({
     scope === "global" ? "global" : identity.userId,
 });
 
-const activeUserRuns = new Set<string>();
+const activeUserRuns = new Map<string, number>();
 let activeGlobalRuns = 0;
 
 export function getExploreQuotaStatus(
@@ -92,7 +92,7 @@ export function getExploreQuotaStatus(
 ): ExploreQuotaStatus {
   return {
     quota: engine.snapshots(identity, now),
-    activeRun: activeUserRuns.has(identity.userId),
+    activeRun: (activeUserRuns.get(identity.userId) ?? 0) > 0,
   };
 }
 
@@ -101,17 +101,6 @@ export function tryStartExploreTurn(
   now = Date.now(),
 ): ExploreRateLimitTicket | ExploreRateLimitRejection {
   const quota = engine.snapshots(identity, now);
-
-  // A conversation is sequential — a second concurrent turn would race the
-  // transcript it is supposed to be continuing.
-  if (activeUserRuns.has(identity.userId)) {
-    return {
-      allowed: false,
-      quota,
-      retryAfterSeconds: 30,
-      reason: "You already have a question running. Wait for it to finish.",
-    };
-  }
 
   if (activeGlobalRuns >= MAX_ACTIVE_GLOBAL_RUNS) {
     return {
@@ -132,7 +121,10 @@ export function tryStartExploreTurn(
     };
   }
 
-  activeUserRuns.add(identity.userId);
+  activeUserRuns.set(
+    identity.userId,
+    (activeUserRuns.get(identity.userId) ?? 0) + 1,
+  );
   activeGlobalRuns++;
   let finished = false;
   let committed = false;
@@ -154,7 +146,12 @@ export function tryStartExploreTurn(
         return;
       }
       finished = true;
-      activeUserRuns.delete(identity.userId);
+      const activeForUser = activeUserRuns.get(identity.userId) ?? 0;
+      if (activeForUser <= 1) {
+        activeUserRuns.delete(identity.userId);
+      } else {
+        activeUserRuns.set(identity.userId, activeForUser - 1);
+      }
       activeGlobalRuns = Math.max(0, activeGlobalRuns - 1);
     },
   };

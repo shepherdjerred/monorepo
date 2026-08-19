@@ -77,7 +77,16 @@ async function savedAnswer(answerText = "Ahri wins most often.") {
     preview: null,
     visualization: scoutTestVisualization,
     trace: [
-      { toolName: "run_report_query", message: "private trace", ok: true },
+      {
+        toolCallId: "call-private",
+        toolName: "run_report_query",
+        message: "private trace",
+        status: "succeeded",
+        durationMs: 1,
+        details: null,
+        rawInput: null,
+        rawOutput: null,
+      },
     ],
   });
   return {

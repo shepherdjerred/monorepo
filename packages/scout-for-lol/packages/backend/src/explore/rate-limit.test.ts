@@ -38,18 +38,40 @@ function minuteRemaining(id: DiscordAccountId, at: number): number {
 }
 
 describe("explore rate limit", () => {
-  test("a turn in flight blocks a second concurrent turn for the same user", () => {
+  test("one user can reserve concurrent turns in distinct conversations", () => {
     const first = tryStartExploreTurn({ userId }, now);
     if (!first.allowed) {
       throw new Error("expected the first turn to be allowed");
     }
 
     const second = tryStartExploreTurn({ userId }, now);
-    expect(second.allowed).toBe(false);
+    if (!second.allowed) {
+      throw new Error("expected the second turn to be allowed");
+    }
     expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(true);
 
     first.finish();
+    expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(true);
+    second.finish();
     expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(false);
+  });
+
+  test("the sixth concurrent turn is rejected by the global cap", () => {
+    const tickets = Array.from({ length: 5 }, () =>
+      tryStartExploreTurn({ userId }, now),
+    );
+    expect(tickets.every((ticket) => ticket.allowed)).toBe(true);
+
+    const rejected = tryStartExploreTurn({ userId: otherUserId }, now);
+    expect(rejected.allowed).toBe(false);
+    if (rejected.allowed) {
+      throw new Error("expected the global-cap rejection");
+    }
+    expect(rejected.reason).toMatch(/busy/i);
+
+    for (const ticket of tickets) {
+      if (ticket.allowed) ticket.finish();
+    }
   });
 
   test("the per-minute allowance is enforced and then resets", () => {

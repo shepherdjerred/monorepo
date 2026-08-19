@@ -1,8 +1,5 @@
 import * as Sentry from "@sentry/bun";
 import {
-  EXPLORE_ANSWER_MAX_LENGTH,
-  EXPLORE_INTERRUPTED_CAVEAT,
-  EXPLORE_STOPPED_CAVEAT,
   EXPLORE_TIMEOUT_MS,
   type ExploreMessage,
   type ExploreStreamEvent,
@@ -19,6 +16,11 @@ import {
   appendExploreAnswer,
   applyGeneratedTitle,
 } from "#src/explore/store.ts";
+import { persistPartialAnswer } from "#src/explore/partial-answer.ts";
+import {
+  finalizeExploreTrace,
+  recordExploreTraceEvent,
+} from "#src/explore/trace.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   scoutExploreActiveRuns,
@@ -33,6 +35,7 @@ export type StartedExploreTurn = {
   title: string;
   messageId: string;
   question: string;
+  expectedCurrentLeafId: string | null;
 };
 
 export type ExploreTurnTerminalEvent = Extract<
@@ -57,10 +60,10 @@ const defaultDependencies: ExploreTurnDependencies = {
 /**
  * Run and persist one Explore turn independently of its delivery adapter.
  *
- * HTTP streams every emitted event over SSE. Discord ignores the progressive
- * events and renders the returned frozen message after the same runner has
- * completed. Quota charging, timeout, trace collection, salvage, metrics, and
- * storage therefore cannot drift between the two entry points.
+ * Discord ignores the progressive events and renders the returned frozen
+ * message after this runner completes. The web app has a separate process-wide
+ * manager because navigation must detach observers without cancelling work;
+ * both paths share the same agent, trace, partial-answer, and storage helpers.
  */
 export async function runPersistedExploreTurn(
   input: {
@@ -96,13 +99,7 @@ export async function runPersistedExploreTurn(
     if (event.type === "answer_delta") {
       streamedAnswer += event.text;
     }
-    if (event.type === "tool_result") {
-      trace.push({
-        toolName: event.toolName,
-        message: event.message,
-        ok: event.ok,
-      });
-    }
+    recordExploreTraceEvent(trace, event);
     await input.emit(event);
   };
 
@@ -128,7 +125,8 @@ export async function runPersistedExploreTurn(
       answer: result.answer,
       preview: result.preview,
       visualization: result.visualization,
-      trace,
+      trace: finalizeExploreTrace(trace),
+      expectedCurrentLeafId: input.started.expectedCurrentLeafId,
     });
     const title =
       result.answer.title === null
@@ -159,9 +157,10 @@ export async function runPersistedExploreTurn(
     let salvaged: ExploreMessage | null = null;
     try {
       salvaged = await persistPartialAnswer(dependencies.client, {
-        aborted: abortController.signal.aborted,
+        stopped: input.abortSignal?.aborted === true,
         conversationId: input.started.conversationId,
         parentMessageId: input.started.messageId,
+        expectedCurrentLeafId: input.started.expectedCurrentLeafId,
         text: streamedAnswer,
         trace,
       });
@@ -206,47 +205,6 @@ export async function runPersistedExploreTurn(
       .labels(runStatus)
       .observe((dependencies.now() - startedAt) / 1000);
   }
-}
-
-/** Save usable prose from a stopped or failed turn. */
-export async function persistPartialAnswer(
-  client: ExtendedPrismaClient,
-  input: {
-    aborted: boolean;
-    conversationId: string;
-    parentMessageId: string;
-    text: string;
-    trace: ExploreTraceEntry[];
-  },
-): Promise<ExploreMessage | null> {
-  if (input.text.trim().length === 0) {
-    return null;
-  }
-  return await appendExploreAnswer(client, {
-    conversationId: input.conversationId,
-    parentMessageId: input.parentMessageId,
-    answer: {
-      answer: clampAnswer(input.text),
-      title: null,
-      queryText: null,
-      caveats: [
-        input.aborted ? EXPLORE_STOPPED_CAVEAT : EXPLORE_INTERRUPTED_CAVEAT,
-      ],
-      followUps: [],
-    },
-    preview: null,
-    visualization: null,
-    trace: input.trace,
-  });
-}
-
-/** Fit salvaged prose inside the persisted Explore answer contract. */
-export function clampAnswer(text: string): string {
-  const trimmed = text.trim();
-  if (trimmed.length <= EXPLORE_ANSWER_MAX_LENGTH) {
-    return trimmed;
-  }
-  return `${trimmed.slice(0, EXPLORE_ANSWER_MAX_LENGTH - 1)}…`;
 }
 
 const MESSAGE_MAX_LENGTH = 1000;

@@ -30,24 +30,32 @@ export function ExploreHeader(props: {
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex min-w-0 items-center gap-2">
-        <Sheet open={props.drawerOpen} onOpenChange={props.onDrawerOpenChange}>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="size-8 p-0 md:hidden"
-              aria-label="Conversations"
-            >
-              <Menu className="size-4" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetTitle className="text-sm font-medium">
-              Conversations
-            </SheetTitle>
-            {props.sidebar}
-          </SheetContent>
-        </Sheet>
+        {/* The wrapper owns responsive display. Button's design-system CSS
+            sets display directly, so putting md:hidden on the button itself
+            lets that later rule expose the mobile trigger on desktop. */}
+        <div className="md:hidden">
+          <Sheet
+            open={props.drawerOpen}
+            onOpenChange={props.onDrawerOpenChange}
+          >
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Conversations"
+                title="Conversations"
+              >
+                <Menu className="size-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetTitle className="text-sm font-medium">
+                Conversations
+              </SheetTitle>
+              {props.sidebar}
+            </SheetContent>
+          </Sheet>
+        </div>
         <h2 className="truncate text-xl font-semibold tracking-tight">
           {props.title}
         </h2>
@@ -76,8 +84,7 @@ export function ExploreHeader(props: {
           {props.actions.shared && (
             <Button
               variant="ghost"
-              size="sm"
-              className="size-8 p-0"
+              size="icon-sm"
               aria-label="Stop sharing"
               title="Stop sharing"
               disabled={props.actions.revoking}

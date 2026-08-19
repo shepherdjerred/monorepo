@@ -21,6 +21,7 @@ test("parses isolated ports and database URL", () => {
       webPort: 5181,
       databaseUrl: "file:./agent-one.db",
       discordGatewayEnabled: true,
+      backendWatchEnabled: true,
       marketingOrigin: "http://localhost:4321",
       docsOrigin: "http://localhost:4322",
     },
@@ -39,6 +40,7 @@ test("derives an isolated database for a non-default backend port", () => {
       webPort: 5181,
       databaseUrl: "file:./local-web-dev-3001.db",
       discordGatewayEnabled: true,
+      backendWatchEnabled: true,
       marketingOrigin: "http://localhost:4321",
       docsOrigin: "http://localhost:4322",
     },
@@ -54,9 +56,12 @@ test("rejects shared ports and non-file databases", () => {
   ).toThrow("local file: SQLite URL");
 });
 
-test("supports a secondary copy without the BETA gateway", () => {
+test("supports a stable secondary copy without the BETA gateway", () => {
   expect(
-    parseDevWebArgs(["--backend-port", "3001", "--no-discord-gateway"], {}),
+    parseDevWebArgs(
+      ["--backend-port", "3001", "--no-discord-gateway", "--no-backend-watch"],
+      {},
+    ),
   ).toEqual({
     kind: "options",
     options: {
@@ -64,6 +69,7 @@ test("supports a secondary copy without the BETA gateway", () => {
       webPort: 5180,
       databaseUrl: "file:./local-web-dev-3001.db",
       discordGatewayEnabled: false,
+      backendWatchEnabled: false,
       marketingOrigin: "http://localhost:4321",
       docsOrigin: "http://localhost:4322",
     },
@@ -88,6 +94,7 @@ test("configures alternate surface origins for a second stack", () => {
       webPort: 5180,
       databaseUrl: "file:./local-web-dev.db",
       discordGatewayEnabled: true,
+      backendWatchEnabled: true,
       marketingOrigin: "http://localhost:4324",
       docsOrigin: "http://localhost:4325",
     },

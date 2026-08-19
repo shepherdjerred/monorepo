@@ -1,19 +1,15 @@
 import { memo, useEffect, useState } from "react";
-import {
-  Check,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Copy,
-  Pencil,
-  RefreshCw,
-} from "lucide-react";
+import { Check, ChevronDown, Copy, Pencil, RefreshCw } from "lucide-react";
 import { REPORT_RENDER_KINDS } from "@scout-for-lol/data";
 import type {
   ExploreMessage,
+  ExploreTraceEntry,
   VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { Button } from "@scout-for-lol/design-system/components/button";
+import {
+  Button,
+  IconButton,
+} from "@scout-for-lol/design-system/components/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -23,6 +19,9 @@ import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
 import { ReportResultTable } from "#src/components/report-result-table.tsx";
+import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";
+import { ExploreVersionSwitcher } from "#src/components/explore-version-switcher.tsx";
+import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 import {
   SingleRowResult,
   isUngroupedResult,
@@ -59,12 +58,17 @@ export function ExploreTranscript(props: {
   pendingAnswer?: string | null;
   pendingQuestion?: string | null;
   activity?: string | null;
+  pendingTrace?: ExploreTraceEntry[];
   /** True while a turn is running, so a trailing question is not "interrupted". */
   turnActive?: boolean;
+  /** Owner-only raw tool payloads are never offered on the shared route. */
+  showRawTrace?: boolean;
   actions?: ExploreTranscriptActions;
 }) {
   const actions = props.actions ?? EMPTY_ACTIONS;
-  const stranded = strandedQuestion(props.messages, props.turnActive ?? false);
+  const turnActive = props.turnActive ?? false;
+  const latestMessageId = props.messages.at(-1)?.id ?? null;
+  const stranded = strandedQuestion(props.messages, turnActive);
   return (
     <div role="log" aria-label="Conversation">
       {/* Spacing carries the grouping: an answer sits close to the question it
@@ -77,7 +81,12 @@ export function ExploreTranscript(props: {
           </div>
         ) : (
           <div key={message.id} className="mt-3">
-            <AssistantTurn message={message} actions={actions} />
+            <AssistantTurn
+              message={message}
+              actions={actions}
+              showRawTrace={props.showRawTrace ?? false}
+              showFollowUps={!turnActive && message.id === latestMessageId}
+            />
           </div>
         ),
       )}
@@ -92,6 +101,8 @@ export function ExploreTranscript(props: {
         pendingQuestion={props.pendingQuestion ?? null}
         pendingAnswer={props.pendingAnswer ?? null}
         activity={props.activity ?? null}
+        trace={props.pendingTrace ?? []}
+        showRawTrace={props.showRawTrace ?? false}
       />
     </div>
   );
@@ -152,6 +163,8 @@ const PendingTurn = memo(function PendingTurnView(props: {
   pendingQuestion: string | null;
   pendingAnswer: string | null;
   activity: string | null;
+  trace: ExploreTraceEntry[];
+  showRawTrace: boolean;
 }) {
   return (
     <div aria-live="polite" className="space-y-6">
@@ -161,11 +174,20 @@ const PendingTurn = memo(function PendingTurnView(props: {
       {props.pendingAnswer !== null && (
         <MarkdownAnswer>{props.pendingAnswer}</MarkdownAnswer>
       )}
-      {props.activity !== null && (
+      {props.activity !== null && props.trace.length === 0 && (
         <p className="flex items-center gap-2 text-sm text-scout-subtle">
           <span className="inline-block size-2 animate-pulse rounded-full bg-current" />
           {props.activity}
         </p>
+      )}
+      {props.trace.length > 0 && (
+        <Disclosure label={`Steps (${String(props.trace.length)})`}>
+          <ExploreToolTrace
+            trace={props.trace}
+            showRaw={props.showRawTrace}
+            live
+          />
+        </Disclosure>
       )}
     </div>
   );
@@ -173,8 +195,8 @@ const PendingTurn = memo(function PendingTurnView(props: {
 
 function UserBubble(props: { content: string }) {
   return (
-    <div className="flex justify-end">
-      <p className="max-w-[80%] rounded-lg bg-scout-hover px-3 py-2 text-sm whitespace-pre-wrap">
+    <div className="flex w-full justify-end">
+      <p className="max-w-[80%] rounded-lg bg-scout-hover px-4 py-1.5 text-sm whitespace-pre-wrap">
         {props.content}
       </p>
     </div>
@@ -239,11 +261,17 @@ const UserTurn = memo(function UserTurnView(props: {
       <div className="flex items-center gap-1">
         {/* Always visible: it is the only signal that other versions of this
             question exist, so hiding it until hover would hide the feature. */}
-        <VersionSwitcher message={message} actions={actions} />
+        <ExploreVersionSwitcher
+          message={message}
+          onSelectVersion={actions.onSelectVersion}
+        />
         {actions.onEdit !== undefined && (
           <span className="opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
             <IconButton
               label="Edit this question"
+              size="icon-sm"
+              variant="ghost"
+              title="Edit this question"
               onClick={() => {
                 setEditing(true);
               }}
@@ -260,6 +288,8 @@ const UserTurn = memo(function UserTurnView(props: {
 const AssistantTurn = memo(function AssistantTurnView(props: {
   message: ExploreMessage;
   actions: ExploreTranscriptActions;
+  showRawTrace: boolean;
+  showFollowUps: boolean;
 }) {
   const { message, actions } = props;
   const chart = chartableSnapshot(message.visualization);
@@ -303,17 +333,23 @@ const AssistantTurn = memo(function AssistantTurnView(props: {
       )}
 
       <div className="flex flex-wrap items-center gap-1">
-        <VersionSwitcher message={message} actions={actions} />
+        <ExploreVersionSwitcher
+          message={message}
+          onSelectVersion={actions.onSelectVersion}
+        />
         <CopyButton content={message.content} />
         {actions.onRegenerate !== undefined && (
-          <IconButton
-            label="Answer again"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5"
             onClick={() => {
               actions.onRegenerate?.(message);
             }}
           >
             <RefreshCw className="size-3.5" />
-          </IconButton>
+            Answer again
+          </Button>
         )}
         <time
           dateTime={message.createdAt}
@@ -326,44 +362,37 @@ const AssistantTurn = memo(function AssistantTurnView(props: {
 
       {message.queryText !== null && (
         <Disclosure label="ScoutQL query">
-          <pre className="overflow-x-auto rounded-md bg-scout-hover p-3 text-xs">
-            <code>{message.queryText}</code>
-          </pre>
+          <ScoutQlCode queryText={message.queryText} />
         </Disclosure>
       )}
 
       {message.trace.length > 0 && (
         <Disclosure label={`Steps (${String(message.trace.length)})`}>
-          <ol className="space-y-1 rounded-md border p-3 text-xs text-scout-subtle">
-            {message.trace.map((entry, index) => (
-              <li key={`${entry.toolName}-${String(index)}`}>
-                <span className={entry.ok ? "" : "text-scout-danger"}>
-                  {entry.ok ? "✓" : "✕"}
-                </span>{" "}
-                <span className="font-medium">{entry.toolName}</span> —{" "}
-                {entry.message}
-              </li>
-            ))}
-          </ol>
+          <ExploreToolTrace
+            trace={message.trace}
+            showRaw={props.showRawTrace}
+          />
         </Disclosure>
       )}
 
-      {actions.onFollowUp !== undefined && message.followUps.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {message.followUps.map((followUp) => (
-            <Button
-              key={followUp}
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                actions.onFollowUp?.(followUp);
-              }}
-            >
-              {followUp}
-            </Button>
-          ))}
-        </div>
-      )}
+      {props.showFollowUps &&
+        actions.onFollowUp !== undefined &&
+        message.followUps.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {message.followUps.map((followUp) => (
+              <Button
+                key={followUp}
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  actions.onFollowUp?.(followUp);
+                }}
+              >
+                {followUp}
+              </Button>
+            ))}
+          </div>
+        )}
     </div>
   );
 });
@@ -402,58 +431,7 @@ function Disclosure(props: { label: string; children: React.ReactNode }) {
   );
 }
 
-/**
- * `‹ 2/3 ›` for a turn that has been edited or regenerated.
- *
- * Hidden entirely when there is only one version, and when the view has no
- * way to switch — the shared page shows a fixed path.
- */
-function VersionSwitcher(props: {
-  message: ExploreMessage;
-  actions: ExploreTranscriptActions;
-}) {
-  const { message, actions } = props;
-  const select = actions.onSelectVersion;
-  if (select === undefined || message.versionCount < 2) {
-    return null;
-  }
-  const previous = message.siblingIds[message.versionIndex - 1];
-  const next = message.siblingIds[message.versionIndex + 1];
-  return (
-    // Bordered and in body colour: as faint muted text this was routinely
-    // missed, and a reader who cannot see that an answer has versions has no
-    // way to know the other one exists.
-    <span className="flex items-center gap-0.5 rounded-md border border-scout-border px-1 text-xs">
-      <IconButton
-        label="Previous version"
-        disabled={previous === undefined}
-        onClick={() => {
-          if (previous !== undefined) {
-            select(previous);
-          }
-        }}
-      >
-        <ChevronLeft className="size-3.5" />
-      </IconButton>
-      <span className="tabular-nums">
-        {message.versionIndex + 1}/{message.versionCount}
-      </span>
-      <IconButton
-        label="Next version"
-        disabled={next === undefined}
-        onClick={() => {
-          if (next !== undefined) {
-            select(next);
-          }
-        }}
-      >
-        <ChevronRight className="size-3.5" />
-      </IconButton>
-    </span>
-  );
-}
-
-/** Copy, with the icon standing in for the toast this app does not have. */
+/** Copy with an inline state change; no toast system is needed for feedback. */
 function CopyButton(props: { content: string }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
@@ -469,35 +447,17 @@ function CopyButton(props: { content: string }) {
   }, [copied]);
 
   return (
-    <IconButton
-      label={copied ? "Copied" : "Copy this answer"}
+    <Button
+      variant="ghost"
+      size="sm"
+      className="gap-1.5"
       onClick={() => {
         void navigator.clipboard.writeText(props.content);
         setCopied(true);
       }}
     >
       {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-    </IconButton>
-  );
-}
-
-function IconButton(props: {
-  label: string;
-  disabled?: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="size-7 p-0"
-      aria-label={props.label}
-      title={props.label}
-      disabled={props.disabled ?? false}
-      onClick={props.onClick}
-    >
-      {props.children}
+      {copied ? "Copied" : "Copy"}
     </Button>
   );
 }

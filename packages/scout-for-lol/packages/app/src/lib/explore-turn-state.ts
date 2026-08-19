@@ -1,4 +1,9 @@
-import type { ExploreMessage, ExploreStreamEvent } from "@scout-for-lol/data";
+import {
+  ExploreTraceEntrySchema,
+  type ExploreMessage,
+  type ExploreStreamEvent,
+  type ExploreTraceEntry,
+} from "@scout-for-lol/data";
 
 /**
  * Pure state for one in-flight explore turn.
@@ -11,6 +16,8 @@ import type { ExploreMessage, ExploreStreamEvent } from "@scout-for-lol/data";
  * reducers; it decides nothing itself.
  */
 export type ExplorePendingTurn = {
+  /** Null only while the start mutation is still creating the server run. */
+  runId: string | null;
   /** Null until `started` arrives for a brand-new conversation. */
   conversationId: string | null;
   /** From the `started` event; null until it arrives. */
@@ -20,6 +27,8 @@ export type ExplorePendingTurn = {
   /** Streamed prose so far; replaced by the final message's content. */
   answer: string | null;
   activity: string | null;
+  /** Provider-id-keyed steps, updated in place as their results arrive. */
+  trace: ExploreTraceEntry[];
   /**
    * The on-screen leaf id when the turn began — how a stop tells a fresh
    * salvage row apart from the answer that was already there.
@@ -36,11 +45,13 @@ export function createPendingTurn(input: {
   leafIdAtStart: string | null;
 }): ExplorePendingTurn {
   return {
+    runId: null,
     conversationId: input.conversationId,
     questionMessageId: null,
     question: input.question,
     answer: null,
     activity: "Thinking…",
+    trace: [],
     leafIdAtStart: input.leafIdAtStart,
     finalMessageId: null,
     phase: "streaming",
@@ -61,15 +72,31 @@ export function applyStreamEvent(
   event: ExploreStreamEvent,
 ): ExplorePendingTurn {
   switch (event.type) {
+    case "snapshot": {
+      return {
+        ...turn,
+        runId: event.runId,
+        conversationId: event.conversationId,
+        questionMessageId: event.questionMessageId,
+        answer: event.answer,
+        activity: event.activity,
+        trace: event.trace,
+      };
+    }
     case "started": {
       return {
         ...turn,
+        runId: event.runId,
         conversationId: event.conversationId,
         questionMessageId: event.questionMessageId,
       };
     }
     case "tool_call": {
-      return { ...turn, activity: event.message };
+      return {
+        ...turn,
+        activity: event.message,
+        trace: applyTraceEvent(turn.trace, event),
+      };
     }
     case "answer_delta": {
       return { ...turn, answer: (turn.answer ?? "") + event.text };
@@ -80,13 +107,20 @@ export function applyStreamEvent(
         answer: event.message.content,
         finalMessageId: event.message.id,
         activity: null,
+        trace: event.message.trace,
       };
     }
     case "preview":
-    case "tool_result":
     case "error":
     case "done": {
       return turn;
+    }
+    case "tool_result": {
+      return {
+        ...turn,
+        activity: event.message,
+        trace: applyTraceEvent(turn.trace, event),
+      };
     }
   }
 }
@@ -98,65 +132,7 @@ export function markStopping(turn: ExplorePendingTurn): ExplorePendingTurn {
     phase: "stopping",
     activity:
       turn.answer === null ? null : "Stopped — saving the partial answer…",
-  };
-}
-
-/**
- * Has the persisted transcript caught up with this turn?
- *
- * True once the refetched messages contain the `final` message, or — for a
- * stop, which never gets a `final` — once the path ends in a fresh assistant
- * answer under this turn's question. `leafIdAtStart` excludes the answer that
- * was already on screen when a regenerate began; a persisted question with no
- * answer under it is deliberately not enough.
- */
-/**
- * Whether the conversation a pending turn belongs to has left the screen.
- *
- * The two explicit callbacks that abandon a turn — picking another conversation
- * and deleting this one — cannot see every way the route changes. Browser Back
- * and Forward move it directly, and a run left going keeps holding the one
- * active run the backend allows per user, blocking the next question.
- *
- * A turn whose conversation id is still null is never abandoned here: that is a
- * brand-new conversation waiting for `started`, and the navigation that assigns
- * its id would otherwise read as having navigated away from itself.
- */
-export function pendingTurnLeftTheScreen(input: {
-  pendingConversationId: string | null;
-  routeConversationId: string | null;
-}): boolean {
-  return (
-    input.pendingConversationId !== null &&
-    input.pendingConversationId !== input.routeConversationId
-  );
-}
-
-/**
- * When to re-read the transcript after a stop, or null when there is nothing
- * to read: the conversation was never created, so no row exists to fetch.
- *
- * A stop before `started` arrives still needs one read. The server persists the
- * question before it opens the stream, so by the time a stop is possible that
- * row exists — while the copy on screen is the pending turn's optimistic one,
- * which is cleared the moment the turn ends. Skipping the read there drops the
- * question the user just asked until some unrelated refetch happens to run.
- *
- * That case needs only the one read: nothing streamed, so there is no salvage
- * write to race, and `turnHasLanded` cannot judge arrival without a question id
- * anyway. Once `started` has arrived a partial answer may still be being
- * written, so those stops keep the bounded poll (~2.1s) — a salvage slower than
- * that shows up on the next natural refetch instead.
- */
-export function salvageRefreshDelays(
-  turn: ExplorePendingTurn,
-): { conversationId: string; delays: number[] } | null {
-  if (turn.conversationId === null) {
-    return null;
-  }
-  return {
-    conversationId: turn.conversationId,
-    delays: turn.questionMessageId === null ? [0] : [0, 600, 1500],
+    trace: interruptRunningTrace(turn.trace),
   };
 }
 
@@ -246,12 +222,23 @@ export function visiblePending(
   pendingQuestion: string | null;
   pendingAnswer: string | null;
   activity: string | null;
+  trace: ExploreTraceEntry[];
 } {
   if (turn === null) {
-    return { pendingQuestion: null, pendingAnswer: null, activity: null };
+    return {
+      pendingQuestion: null,
+      pendingAnswer: null,
+      activity: null,
+      trace: [],
+    };
   }
   if (turn.conversationId !== displayedConversationId) {
-    return { pendingQuestion: null, pendingAnswer: null, activity: null };
+    return {
+      pendingQuestion: null,
+      pendingAnswer: null,
+      activity: null,
+      trace: [],
+    };
   }
   const questionPersisted =
     (turn.questionMessageId !== null &&
@@ -262,5 +249,61 @@ export function visiblePending(
     pendingQuestion: questionPersisted ? null : turn.question,
     pendingAnswer: landed ? null : turn.answer,
     activity: landed ? null : turn.activity,
+    trace: landed ? [] : turn.trace,
   };
+}
+
+function applyTraceEvent(
+  trace: ExploreTraceEntry[],
+  event: Extract<ExploreStreamEvent, { type: "tool_call" | "tool_result" }>,
+): ExploreTraceEntry[] {
+  if (event.type === "tool_call") {
+    return [
+      ...trace,
+      ExploreTraceEntrySchema.parse({
+        toolCallId: event.toolCallId,
+        toolName: event.toolName,
+        message: event.message,
+        status: "running",
+        durationMs: null,
+        details: event.details,
+        rawInput: event.rawInput,
+        rawOutput: null,
+      }),
+    ];
+  }
+  const index = trace.findIndex(
+    (entry) => entry.toolCallId === event.toolCallId,
+  );
+  const current = index === -1 ? null : trace[index];
+  const completed = ExploreTraceEntrySchema.parse({
+    toolCallId: event.toolCallId,
+    toolName: event.toolName,
+    message: event.message,
+    status: event.status,
+    durationMs: event.durationMs,
+    details: event.details,
+    rawInput: current?.rawInput ?? null,
+    rawOutput: event.rawOutput,
+  });
+  if (index === -1) {
+    return [...trace, completed];
+  }
+  return trace.map((entry, entryIndex) =>
+    entryIndex === index ? completed : entry,
+  );
+}
+
+function interruptRunningTrace(
+  trace: ExploreTraceEntry[],
+): ExploreTraceEntry[] {
+  return trace.map((entry) =>
+    entry.status === "running"
+      ? ExploreTraceEntrySchema.parse({
+          ...entry,
+          status: "interrupted",
+          message: "Interrupted before this step finished.",
+        })
+      : entry,
+  );
 }

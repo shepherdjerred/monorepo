@@ -4,8 +4,6 @@ import {
   applyStreamEvent,
   createPendingTurn,
   markStopping,
-  pendingTurnLeftTheScreen,
-  salvageRefreshDelays,
   turnHasLanded,
   visiblePending,
 } from "#src/lib/explore-turn-state.ts";
@@ -63,6 +61,27 @@ describe("applyStreamEvent", () => {
     });
     expect(after.conversationId).toBe(CONVERSATION);
     expect(after.questionMessageId).toBe(QUESTION_ID);
+    expect(after.runId).toBe(RUN_ID);
+  });
+
+  test("a reconnect snapshot replaces prior deltas before streaming resumes", () => {
+    let turn = startedTurn();
+    turn = applyStreamEvent(turn, { type: "answer_delta", text: "Jinx Jinx" });
+    turn = applyStreamEvent(turn, {
+      type: "snapshot",
+      runId: RUN_ID,
+      conversationId: CONVERSATION,
+      questionMessageId: QUESTION_ID,
+      startedAt: "2026-08-18T12:00:00.000Z",
+      answer: "Jinx",
+      activity: "Querying match data.",
+      trace: [],
+    });
+    turn = applyStreamEvent(turn, { type: "answer_delta", text: " wins." });
+
+    expect(turn.answer).toBe("Jinx wins.");
+    expect(turn.activity).toBe("Querying match data.");
+    expect(turn.trace).toEqual([]);
   });
 
   test("answer deltas accumulate in order", () => {
@@ -70,6 +89,52 @@ describe("applyStreamEvent", () => {
     turn = applyStreamEvent(turn, { type: "answer_delta", text: "Jinx " });
     turn = applyStreamEvent(turn, { type: "answer_delta", text: "wins." });
     expect(turn.answer).toBe("Jinx wins.");
+  });
+
+  test("pairs live tool calls and results by provider call id", () => {
+    let turn = applyStreamEvent(startedTurn(), {
+      type: "tool_call",
+      toolCallId: "tool-1",
+      toolName: "run_report_query",
+      message: "Querying match data.",
+      details: {
+        kind: "execution",
+        queryText: "FROM matches SELECT games",
+        ok: null,
+        rowsReturned: null,
+        rowsScanned: null,
+        renderKind: null,
+      },
+      rawInput: {
+        kind: "value",
+        value: { queryText: "FROM matches SELECT games" },
+        byteLength: 46,
+      },
+    });
+    expect(turn.trace[0]?.status).toBe("running");
+
+    turn = applyStreamEvent(turn, {
+      type: "tool_result",
+      toolCallId: "tool-1",
+      toolName: "run_report_query",
+      status: "succeeded",
+      message: "Got results.",
+      durationMs: 125,
+      details: {
+        kind: "execution",
+        queryText: "FROM matches SELECT games",
+        ok: true,
+        rowsReturned: 1,
+        rowsScanned: 42,
+        renderKind: "TABLE",
+      },
+      rawOutput: null,
+    });
+
+    expect(turn.trace).toHaveLength(1);
+    expect(turn.trace[0]?.status).toBe("succeeded");
+    expect(turn.trace[0]?.durationMs).toBe(125);
+    expect(turn.trace[0]?.rawInput?.kind).toBe("value");
   });
 
   test("final pins the persisted message and replaces the streamed text", () => {
@@ -98,6 +163,7 @@ describe("visiblePending", () => {
       pendingQuestion: null,
       pendingAnswer: null,
       activity: null,
+      trace: [],
     });
   });
 
@@ -140,6 +206,7 @@ describe("visiblePending", () => {
       pendingQuestion: null,
       pendingAnswer: null,
       activity: null,
+      trace: [],
     });
   });
 });
@@ -184,110 +251,6 @@ describe("turnHasLanded", () => {
     const turn = startedTurn();
     expect(
       turnHasLanded(turn, [message({ id: QUESTION_ID, role: "user" })]),
-    ).toBe(false);
-  });
-});
-
-describe("salvageRefreshDelays", () => {
-  test("still reads once when the stop beat the started event", () => {
-    // The regression. The server persists the question before it opens the
-    // stream, so a stop this early leaves that row on disk while the only copy
-    // on screen is the pending turn's, which is cleared as the turn ends.
-    // Skipping the read drops the question the user just asked.
-    const turn = createPendingTurn({
-      conversationId: CONVERSATION,
-      question: "Who wins?",
-      leafIdAtStart: null,
-    });
-
-    expect(turn.questionMessageId).toBeNull();
-    expect(salvageRefreshDelays(turn)).toEqual({
-      conversationId: CONVERSATION,
-      delays: [0],
-    });
-  });
-
-  test("polls a bounded few times once the turn has a question id", () => {
-    // Only then can a partial answer be mid-write, and only then can
-    // `turnHasLanded` judge whether it arrived.
-    const turn = applyStreamEvent(
-      createPendingTurn({
-        conversationId: CONVERSATION,
-        question: "Who wins?",
-        leafIdAtStart: null,
-      }),
-      {
-        type: "started",
-        runId: RUN_ID,
-        conversationId: CONVERSATION,
-        questionMessageId: QUESTION_ID,
-      },
-    );
-
-    expect(salvageRefreshDelays(turn)).toEqual({
-      conversationId: CONVERSATION,
-      delays: [0, 600, 1500],
-    });
-  });
-
-  test("reads nothing when the conversation was never created", () => {
-    // A brand-new conversation stopped before `started`: there is no id to
-    // query, so there is nothing to read rather than something being skipped.
-    const turn = createPendingTurn({
-      conversationId: null,
-      question: "Who wins?",
-      leafIdAtStart: null,
-    });
-
-    expect(salvageRefreshDelays(turn)).toBeNull();
-  });
-});
-
-describe("pendingTurnLeftTheScreen", () => {
-  test("abandons a turn whose conversation is no longer routed to", () => {
-    // The regression: only two callbacks abandon a turn, and Back/Forward goes
-    // through neither — leaving a run holding the one active run per user.
-    expect(
-      pendingTurnLeftTheScreen({
-        pendingConversationId: CONVERSATION,
-        routeConversationId: OTHER_CONVERSATION,
-      }),
-    ).toBe(true);
-  });
-
-  test("abandons a turn when the route goes back to the list", () => {
-    expect(
-      pendingTurnLeftTheScreen({
-        pendingConversationId: CONVERSATION,
-        routeConversationId: null,
-      }),
-    ).toBe(true);
-  });
-
-  test("keeps a turn on the conversation still on screen", () => {
-    expect(
-      pendingTurnLeftTheScreen({
-        pendingConversationId: CONVERSATION,
-        routeConversationId: CONVERSATION,
-      }),
-    ).toBe(false);
-  });
-
-  // The case that makes this a comparison rather than a plain inequality: a new
-  // conversation has no id until `started`, and the navigation that assigns one
-  // would otherwise look like navigating away from the turn itself.
-  test("never abandons a turn that has not been placed yet", () => {
-    expect(
-      pendingTurnLeftTheScreen({
-        pendingConversationId: null,
-        routeConversationId: CONVERSATION,
-      }),
-    ).toBe(false);
-    expect(
-      pendingTurnLeftTheScreen({
-        pendingConversationId: null,
-        routeConversationId: null,
-      }),
     ).toBe(false);
   });
 });

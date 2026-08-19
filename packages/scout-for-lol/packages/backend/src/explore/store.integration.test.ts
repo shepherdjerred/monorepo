@@ -1,6 +1,10 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import type { DiscordAccountId, ExploreAttachPoint } from "@scout-for-lol/data";
+import {
+  ExploreTraceEntrySchema,
+  type DiscordAccountId,
+  type ExploreAttachPoint,
+} from "@scout-for-lol/data";
 import { testAccountId } from "#src/testing/test-ids.ts";
 import {
   ExploreInvalidTurnError,
@@ -23,6 +27,11 @@ import {
 const { prisma } = createTestDatabase("explore-store-test");
 const userId = testAccountId("1");
 const otherUserId = testAccountId("2");
+const TRACE_ENTRY = ExploreTraceEntrySchema.parse({
+  toolName: "run_report_query",
+  message: "Got results.",
+  ok: true,
+});
 
 async function seedUser(discordId: DiscordAccountId): Promise<void> {
   await prisma.user.upsert({
@@ -75,9 +84,7 @@ async function askAndAnswer(input: {
     answer: { ...ANSWER, answer: input.answer ?? ANSWER.answer },
     preview: null,
     visualization: null,
-    trace: [
-      { toolName: "run_report_query", message: "Got results.", ok: true },
-    ],
+    trace: [TRACE_ENTRY],
   });
   return {
     conversationId: started.conversationId,
@@ -175,9 +182,69 @@ describe("explore store", () => {
     expect(assistant?.queryText).toBe(ANSWER.queryText);
     expect(assistant?.caveats).toEqual(ANSWER.caveats);
     expect(assistant?.followUps).toEqual(ANSWER.followUps);
-    expect(assistant?.trace).toEqual([
-      { toolName: "run_report_query", message: "Got results.", ok: true },
+    expect(assistant?.trace).toEqual([TRACE_ENTRY]);
+  });
+});
+
+describe("explore store — background branches", () => {
+  test("a background answer does not move a branch another tab selected", async () => {
+    const first = await askAndAnswer({
+      conversationId: null,
+      question: "Which champion has the most games?",
+    });
+    const patchBranch = await askAndAnswer({
+      conversationId: first.conversationId,
+      question: "And by patch?",
+      answer: "Patch 26.15 favors Jinx.",
+    });
+    const queueBranch = await askAndAnswer({
+      conversationId: first.conversationId,
+      question: "And by queue?",
+      attach: { kind: "message", messageId: first.answerId },
+      answer: "ARAM favors Caitlyn.",
+    });
+    await setExploreLeaf(
+      prisma,
+      first.conversationId,
+      userId,
+      patchBranch.answerId,
+    );
+    const running = await startExploreTurn(prisma, {
+      conversationId: first.conversationId,
+      userId,
+      question: "What about this week?",
+      attach: { kind: "leaf" },
+    });
+
+    // Another tab switches back while the follow-up is still running.
+    expect(
+      await setExploreLeaf(
+        prisma,
+        first.conversationId,
+        userId,
+        queueBranch.questionId,
+      ),
+    ).toBe(true);
+    const backgroundAnswer = await appendExploreAnswer(prisma, {
+      conversationId: first.conversationId,
+      parentMessageId: running.messageId,
+      answer: { ...ANSWER, answer: "Patch 26.16 favors Caitlyn." },
+      preview: null,
+      visualization: null,
+      trace: [],
+      expectedCurrentLeafId: running.expectedCurrentLeafId,
+    });
+
+    expect(await path(first.conversationId)).toEqual([
+      "Which champion has the most games?",
+      ANSWER.answer,
+      "And by queue?",
+      "ARAM favors Caitlyn.",
     ]);
+    const stored = await prisma.exploreMessage.findUnique({
+      where: { id: backgroundAnswer.id },
+    });
+    expect(stored?.parentId).toBe(running.messageId);
   });
 });
 

@@ -1,9 +1,19 @@
 import { z } from "zod";
-import type { ExploreStreamEvent } from "@scout-for-lol/data";
+import {
+  EXPLORE_TRACE_PAYLOAD_MAX_BYTES,
+  EXPLORE_TRACE_TOTAL_MAX_BYTES,
+  type ExploreStreamEvent,
+  type ExploreTraceRawValue,
+} from "@scout-for-lol/data";
 import { parseAgentStreamChunk } from "#src/utils/agent-stream-chunk.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  inspectExploreToolCall,
+  inspectExploreToolResult,
+} from "#src/explore/tool-inspection.ts";
 
 const logger = createLogger("explore-stream");
+type JsonValue = z.infer<ReturnType<typeof z.json>>;
 
 /**
  * Tracks how much of the answer has already been sent to the client.
@@ -14,10 +24,20 @@ const logger = createLogger("explore-stream");
  */
 export type ExploreStreamState = {
   sentAnswerLength: number;
+  rawTraceBytes: number;
+  toolStartedAt: Map<string, number>;
+  now: () => number;
 };
 
-export function createExploreStreamState(): ExploreStreamState {
-  return { sentAnswerLength: 0 };
+export function createExploreStreamState(
+  now: () => number = Date.now,
+): ExploreStreamState {
+  return {
+    sentAnswerLength: 0,
+    rawTraceBytes: 0,
+    toolStartedAt: new Map(),
+    now,
+  };
 }
 
 export type ExploreAgentStreams = {
@@ -37,7 +57,7 @@ export async function drainExploreStreams(
   await Promise.all([
     (async () => {
       for await (const chunk of streams.stream) {
-        await emitExploreStreamChunk(chunk, emit);
+        await emitExploreStreamChunk(chunk, emit, streamState);
       }
     })(),
     (async () => {
@@ -84,6 +104,7 @@ export async function emitExploreAnswerSnapshot(
 export async function emitExploreStreamChunk(
   rawChunk: unknown,
   emit: (event: ExploreStreamEvent) => void | Promise<void>,
+  state: ExploreStreamState,
 ): Promise<void> {
   const chunk = parseAgentStreamChunk(rawChunk);
   if (chunk === null) {
@@ -104,19 +125,33 @@ export async function emitExploreStreamChunk(
       break;
     }
     case "tool-call": {
+      const inspection = inspectExploreToolCall(chunk.toolName, chunk.input);
+      state.toolStartedAt.set(chunk.toolCallId, state.now());
       await emit({
         type: "tool_call",
+        toolCallId: chunk.toolCallId,
         toolName: chunk.toolName,
         message: toolCallMessage(chunk.toolName),
+        details: inspection.details,
+        rawInput: boundedRawValue(inspection.rawInput, state),
       });
       break;
     }
     case "tool-result": {
+      const inspection = inspectExploreToolResult(
+        chunk.toolName,
+        chunk.input,
+        chunk.output,
+      );
       await emit({
         type: "tool_result",
+        toolCallId: chunk.toolCallId,
         toolName: chunk.toolName,
-        ok: chunk.ok,
-        message: toolResultMessage(chunk.toolName, chunk.ok),
+        status: "succeeded",
+        message: toolResultMessage(chunk.toolName, true),
+        durationMs: finishToolDuration(chunk.toolCallId, state),
+        details: inspection.details,
+        rawOutput: boundedRawValue(inspection.rawOutput, state),
       });
       break;
     }
@@ -129,17 +164,47 @@ export async function emitExploreStreamChunk(
       // it would leak internals to people who never ran the query.
       logger.warn("Explore tool failed", {
         toolName: chunk.toolName,
-        error: chunk.message,
       });
       await emit({
         type: "tool_result",
+        toolCallId: chunk.toolCallId,
         toolName: chunk.toolName,
-        ok: false,
+        status: "failed",
         message: toolResultMessage(chunk.toolName, false),
+        durationMs: finishToolDuration(chunk.toolCallId, state),
+        details: inspectExploreToolCall(chunk.toolName, chunk.input).details,
+        rawOutput: null,
       });
       break;
     }
   }
+}
+
+function finishToolDuration(
+  toolCallId: string,
+  state: ExploreStreamState,
+): number | null {
+  const startedAt = state.toolStartedAt.get(toolCallId);
+  state.toolStartedAt.delete(toolCallId);
+  return startedAt === undefined ? null : Math.max(0, state.now() - startedAt);
+}
+
+function boundedRawValue(
+  value: JsonValue | null,
+  state: ExploreStreamState,
+): ExploreTraceRawValue | null {
+  if (value === null) {
+    return null;
+  }
+  const byteLength = new TextEncoder().encode(JSON.stringify(value)).byteLength;
+  if (byteLength > EXPLORE_TRACE_PAYLOAD_MAX_BYTES) {
+    return { kind: "omitted", reason: "payload_limit", byteLength };
+  }
+  if (state.rawTraceBytes + byteLength > EXPLORE_TRACE_TOTAL_MAX_BYTES) {
+    return { kind: "omitted", reason: "turn_limit", byteLength };
+  }
+  state.rawTraceBytes += byteLength;
+  return { kind: "value", value, byteLength };
 }
 
 function toolCallMessage(toolName: string): string {

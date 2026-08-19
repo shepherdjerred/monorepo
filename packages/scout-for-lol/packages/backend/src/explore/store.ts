@@ -275,7 +275,12 @@ export async function startExploreTurn(
     question: string;
     attach: ExploreAttachPoint;
   },
-): Promise<{ conversationId: string; title: string; messageId: string }> {
+): Promise<{
+  conversationId: string;
+  title: string;
+  messageId: string;
+  expectedCurrentLeafId: string | null;
+}> {
   if (input.conversationId === null) {
     const title = titleFromQuestion(input.question);
     const created = await prisma.exploreConversation.create({
@@ -290,7 +295,12 @@ export async function startExploreTurn(
     if (messageId === undefined) {
       throw new Error("Conversation was created without its first message.");
     }
-    return { conversationId: created.id, title, messageId };
+    return {
+      conversationId: created.id,
+      title,
+      messageId,
+      expectedCurrentLeafId: null,
+    };
   }
 
   const existing = await prisma.exploreConversation.findFirst({
@@ -360,6 +370,7 @@ export async function startExploreTurn(
     conversationId: existing.id,
     title: existing.title,
     messageId: created.id,
+    expectedCurrentLeafId: created.id,
   };
 }
 
@@ -382,6 +393,7 @@ export async function resolveRegenerateTarget(
   title: string;
   messageId: string;
   question: string;
+  expectedCurrentLeafId: string | null;
 }> {
   const existing = await prisma.exploreConversation.findFirst({
     where: { id: input.conversationId, userId: input.userId },
@@ -404,6 +416,7 @@ export async function resolveRegenerateTarget(
     title: existing.title,
     messageId: parent.id,
     question: parent.content,
+    expectedCurrentLeafId: existing.currentLeafId,
   };
 }
 
@@ -416,6 +429,12 @@ export async function appendExploreAnswer(
     preview: ReportAiPreviewSummary | null;
     visualization: VisualizationSnapshot | null;
     trace: ExploreTraceEntry[];
+    /**
+     * Move the visible branch only if it still names the leaf this run began
+     * from. A background answer must not yank another tab away from a version
+     * the reader selected while the model was working.
+     */
+    expectedCurrentLeafId?: string | null;
   },
 ): Promise<ExploreMessage> {
   const row = await prisma.exploreMessage.create({
@@ -437,10 +456,20 @@ export async function appendExploreAnswer(
   });
   // The new answer becomes the branch the owner is reading, and the touch
   // reorders the sidebar by real activity.
-  await prisma.exploreConversation.update({
-    where: { id: input.conversationId },
-    data: { currentLeafId: row.id, updatedAt: new Date() },
-  });
+  if ("expectedCurrentLeafId" in input) {
+    await prisma.exploreConversation.updateMany({
+      where: {
+        id: input.conversationId,
+        currentLeafId: input.expectedCurrentLeafId,
+      },
+      data: { currentLeafId: row.id, updatedAt: new Date() },
+    });
+  } else {
+    await prisma.exploreConversation.update({
+      where: { id: input.conversationId },
+      data: { currentLeafId: row.id, updatedAt: new Date() },
+    });
+  }
 
   const siblings = await prisma.exploreMessage.findMany({
     where: { conversationId: input.conversationId },

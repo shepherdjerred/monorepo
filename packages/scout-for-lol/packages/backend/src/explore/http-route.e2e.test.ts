@@ -21,7 +21,7 @@ import { resetConfigurationForTests } from "#src/configuration.ts";
 
 const trpc = await createOfflineTrpcHarness("explore-http-e2e");
 const { handleExploreRoute } = await import("#src/explore/http-route.ts");
-const { persistPartialAnswer } = await import("#src/explore/run-turn.ts");
+const { persistPartialAnswer } = await import("#src/explore/partial-answer.ts");
 
 const allowedGuild = DiscordGuildIdSchema.parse("100000000000009401");
 const otherGuild = DiscordGuildIdSchema.parse("100000000000009402");
@@ -31,9 +31,6 @@ const cors: Record<string, string> = {};
 const ErrorBody = z.object({ error: z.string() });
 
 const { signSession } = await import("#src/trpc/jwt.ts");
-const { getExploreQuotaStatus, resetExploreRateLimitStateForTests } =
-  await import("#src/explore/rate-limit.ts");
-
 /** Headers for a request that passes session + CSRF + origin. */
 async function authedHeaders(): Promise<Record<string, string>> {
   const { jwt } = await signSession({ discordId: owner });
@@ -54,12 +51,16 @@ function setAllowlist(value: string | undefined): void {
   resetConfigurationForTests();
 }
 
-async function postTurn(headers: Record<string, string>): Promise<Response> {
+async function postObserver(
+  headers: Record<string, string>,
+): Promise<Response> {
   const response = await handleExploreRoute(
     new Request("http://localhost/api/explore/stream", {
       method: "POST",
       headers: { "content-type": "application/json", ...headers },
-      body: JSON.stringify({ conversationId: null, question: "Who wins?" }),
+      body: JSON.stringify({
+        runId: "00000000-0000-4000-8000-000000000001",
+      }),
     }),
     new URL("http://localhost/api/explore/stream"),
     cors,
@@ -127,6 +128,33 @@ async function seedSharedConversation(): Promise<string> {
         "SELECT champion, win_rate FROM match_participants GROUP BY champion",
       caveats: JSON.stringify(["Small sample."]),
       followUps: JSON.stringify(["How about by patch?"]),
+      trace: JSON.stringify([
+        {
+          toolCallId: "call-1",
+          toolName: "run_report_query",
+          message: "Got results.",
+          status: "succeeded",
+          durationMs: 125,
+          details: {
+            kind: "execution",
+            queryText: "FROM matches SELECT games",
+            ok: true,
+            rowsReturned: 1,
+            rowsScanned: 42,
+            renderKind: "TABLE",
+          },
+          rawInput: {
+            kind: "value",
+            value: { secret: "owner-only-input" },
+            byteLength: 29,
+          },
+          rawOutput: {
+            kind: "value",
+            value: { secret: "owner-only-output" },
+            byteLength: 30,
+          },
+        },
+      ]),
     },
   });
   // A share pins the path it was taken from, so later branching cannot change
@@ -169,14 +197,21 @@ async function branchAfterShare(shareToken: string): Promise<void> {
 }
 
 describe("explore http route", () => {
-  test("a turn without a session is rejected before any model call", async () => {
-    const response = await postTurn({});
+  test("an observer without a session is rejected", async () => {
+    const response = await postObserver({});
     expect(response.status).toBe(401);
     const body = ErrorBody.parse(await response.json());
     expect(body.error).toMatch(/sign in/i);
   });
 
-  test("a non-POST turn request is rejected", async () => {
+  test("an authenticated observer gets a safe 404 after a run finishes", async () => {
+    const response = await postObserver(await authedHeaders());
+    expect(response.status).toBe(404);
+    const body = ErrorBody.parse(await response.json());
+    expect(body.error).toMatch(/not found/i);
+  });
+
+  test("a non-POST observer request is rejected", async () => {
     const url = new URL("http://localhost/api/explore/stream");
     const response = await handleExploreRoute(
       new Request(url.toString(), { method: "GET" }),
@@ -237,150 +272,6 @@ describe("explore http route", () => {
   });
 });
 
-/**
- * How a turn is accounted for: the concurrency slot and the shared quota.
- *
- * Both are process-wide, so a request that never runs a turn must leave
- * neither behind — otherwise one caller degrades the surface for everyone.
- */
-describe("explore turn accounting", () => {
-  /**
-   * The rate-limit ticket is taken before the turn is set up and released only
-   * by `ticket.finish()`. A stored transcript that fails its schema throws
-   * during the load that happens after the ticket exists — so without a guard
-   * there, one unreadable row would hold that user's active-run slot (and one
-   * of five global slots) until the process restarted.
-   */
-  test("a turn that fails after taking its ticket still releases it", async () => {
-    resetExploreRateLimitStateForTests();
-
-    // A conversation whose stored assistant turn cannot be parsed back.
-    const conversation = await trpc.prisma.exploreConversation.create({
-      data: {
-        userId: owner,
-        title: "Broken",
-        messages: { create: { role: "user", content: "Which champion wins?" } },
-      },
-      include: { messages: true },
-    });
-    const question = conversation.messages[0];
-    if (question === undefined) {
-      throw new Error("expected the seeded question");
-    }
-    await trpc.prisma.exploreMessage.create({
-      data: {
-        conversationId: conversation.id,
-        parentId: question.id,
-        role: "assistant",
-        content: "Jinx.",
-        // Not a ReportAiPreviewSummary — parsing this row throws.
-        preview: JSON.stringify({ nonsense: true }),
-      },
-    });
-
-    const url = new URL("http://localhost/api/explore/stream");
-    const response = await handleExploreRoute(
-      new Request(url.toString(), {
-        method: "POST",
-        headers: await authedHeaders(),
-        body: JSON.stringify({
-          conversationId: conversation.id,
-          question: "And by patch?",
-        }),
-      }),
-      url,
-      cors,
-    );
-
-    expect(response?.status).toBe(500);
-    // The generic message, not the schema-parse exception text.
-    const body = ErrorBody.parse(await response?.json());
-    expect(body.error).toBe("Could not start this question.");
-    expect(body.error).not.toMatch(/schema/i);
-
-    // The real assertion: the slot is free again.
-    expect(getExploreQuotaStatus({ userId: owner }).activeRun).toBe(false);
-  });
-
-  /**
-   * Quota is the shared resource, so a request that never runs a turn must not
-   * spend any: otherwise an allowlisted caller could exhaust the global
-   * allowance by naming conversations that do not exist, and 429 everyone else.
-   */
-  test("a turn naming a conversation that does not exist costs no quota", async () => {
-    resetExploreRateLimitStateForTests();
-    const before = getExploreQuotaStatus({ userId: owner }).quota;
-
-    const url = new URL("http://localhost/api/explore/stream");
-    const response = await handleExploreRoute(
-      new Request(url.toString(), {
-        method: "POST",
-        headers: await authedHeaders(),
-        body: JSON.stringify({
-          // A well-formed id that resolves to nothing. A malformed one would
-          // be a 400 at schema-parse time, before the ticket exists — a
-          // different path that never risked the quota.
-          conversationId: "00000000-0000-4000-8000-000000000000",
-          question: "Who wins?",
-        }),
-      }),
-      url,
-      cors,
-    );
-
-    expect(response?.status).toBe(404);
-
-    const after = getExploreQuotaStatus({ userId: owner }).quota;
-    expect(after.map((entry) => entry.remaining)).toEqual(
-      before.map((entry) => entry.remaining),
-    );
-    // And the concurrency slot came back too.
-    expect(getExploreQuotaStatus({ userId: owner }).activeRun).toBe(false);
-  });
-
-  /**
-   * A regenerate must name the question to answer again. `attach` kinds other
-   * than `message` have no meaning without new question text, and letting one
-   * through would silently answer whatever the current leaf happens to be.
-   */
-  test("a regenerate that names no message is rejected as invalid", async () => {
-    resetExploreRateLimitStateForTests();
-    const conversation = await trpc.prisma.exploreConversation.create({
-      data: {
-        userId: owner,
-        title: "Champion win rates",
-        messages: { create: { role: "user", content: "Which champion wins?" } },
-      },
-    });
-    const before = getExploreQuotaStatus({ userId: owner }).quota;
-
-    const url = new URL("http://localhost/api/explore/stream");
-    const response = await handleExploreRoute(
-      new Request(url.toString(), {
-        method: "POST",
-        headers: await authedHeaders(),
-        body: JSON.stringify({
-          conversationId: conversation.id,
-          question: null,
-          attach: { kind: "leaf" },
-        }),
-      }),
-      url,
-      cors,
-    );
-
-    expect(response?.status).toBe(400);
-    const body = ErrorBody.parse(await response?.json());
-    expect(body.error).toMatch(/existing question/i);
-
-    const after = getExploreQuotaStatus({ userId: owner }).quota;
-    expect(after.map((entry) => entry.remaining)).toEqual(
-      before.map((entry) => entry.remaining),
-    );
-    expect(getExploreQuotaStatus({ userId: owner }).activeRun).toBe(false);
-  });
-});
-
 /** Seed a conversation with just its opening question, returning both ids. */
 async function seedQuestion(): Promise<{
   conversationId: string;
@@ -402,12 +293,28 @@ async function seedQuestion(): Promise<{
 }
 
 describe("explore salvage", () => {
+  test("a stop before prose still persists the stopped caveat", async () => {
+    const seeded = await seedQuestion();
+    const salvaged = await persistPartialAnswer(trpc.prisma, {
+      stopped: true,
+      conversationId: seeded.conversationId,
+      parentMessageId: seeded.questionId,
+      expectedCurrentLeafId: null,
+      text: "",
+      trace: [],
+    });
+
+    expect(salvaged?.content).toMatch(/stopped/i);
+    expect(salvaged?.caveats).toEqual([EXPLORE_STOPPED_CAVEAT]);
+  });
+
   test("a stopped turn with text is saved with the stop caveat", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
-      aborted: true,
+      stopped: true,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
+      expectedCurrentLeafId: null,
       text: "Jinx is ahead so far…",
       trace: [],
     });
@@ -423,9 +330,10 @@ describe("explore salvage", () => {
   test("an errored turn with streamed text is saved with the interrupted caveat", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
-      aborted: false,
+      stopped: false,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
+      expectedCurrentLeafId: null,
       text: "Jinx is ahead so far…",
       trace: [],
     });
@@ -443,9 +351,10 @@ describe("explore salvage", () => {
   test("an errored turn with no text saves nothing", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
-      aborted: false,
+      stopped: false,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
+      expectedCurrentLeafId: null,
       text: "   ",
       trace: [],
     });
@@ -499,15 +408,29 @@ describe("explore http route — remaining surface", () => {
     // A cached copy would outlive a revoked share, so nothing may store it.
     expect(response.headers.get("Cache-Control")).toBe("no-store");
 
+    const rawBody: unknown = await response.json();
     const body = z
       .object({
         conversation: z.object({ title: z.string() }),
-        messages: z.array(z.object({ content: z.string() })),
+        messages: z.array(
+          z.object({
+            content: z.string(),
+            trace: z.array(
+              z.object({
+                details: z.object({ kind: z.string() }).nullable(),
+                rawInput: z.null(),
+                rawOutput: z.null(),
+              }),
+            ),
+          }),
+        ),
       })
-      .parse(await response.json());
+      .parse(rawBody);
     expect(body.conversation.title).toBe("Champion win rates");
     expect(body.messages).toHaveLength(2);
     expect(body.messages[1]?.content).toBe("Jinx, over 42 games.");
+    expect(body.messages[1]?.trace[0]?.details?.kind).toBe("execution");
+    expect(JSON.stringify(rawBody)).not.toContain("owner-only");
   });
 
   test("an unknown or malformed share token is a 404", async () => {
@@ -547,8 +470,7 @@ describe("explore http route — remaining surface", () => {
 
   test("membership outside the allowlist is refused", async () => {
     setAllowlist(otherGuild);
-    // No session either, so this asserts the ordering: authentication first.
-    const response = await postTurn({});
-    expect(response.status).toBe(401);
+    const response = await postObserver(await authedHeaders());
+    expect(response.status).toBe(403);
   });
 });

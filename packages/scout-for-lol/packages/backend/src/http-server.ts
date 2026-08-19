@@ -10,7 +10,11 @@ import { handleDevLogin } from "#src/trpc/dev-login.ts";
 import { prisma } from "#src/database/index.ts";
 import { handleImageRoute } from "#src/trpc/image-routes.ts";
 import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
-import { handleExploreRoute } from "#src/explore/http-route.ts";
+import {
+  EXPLORE_STREAM_PATH,
+  handleExploreRoute,
+} from "#src/explore/http-route.ts";
+import { exploreRunManager } from "#src/explore/run-manager.ts";
 import { handleVersion } from "#src/http/version.ts";
 import {
   classifyMethod,
@@ -204,8 +208,15 @@ const server = Bun.serve({
   // beta/prod enableDevLogin is false, so the server binds all interfaces to
   // receive ingress traffic as usual.
   hostname: configuration.enableDevLogin ? "127.0.0.1" : "0.0.0.0",
-  async fetch(request) {
+  async fetch(request, bunServer) {
     const url = new URL(request.url);
+    // Explore can be quiet while the model reasons between tool calls. Bun's
+    // default 10-second idle timeout applies to streaming responses too, so
+    // disable it for this SSE request and let Explore's own bounded timeout
+    // abort the run instead.
+    if (url.pathname === EXPLORE_STREAM_PATH) {
+      bunServer.timeout(request, 0);
+    }
     return await withHttpMetrics(request, url, () => dispatch(request, url));
   },
   error(error) {
@@ -312,7 +323,7 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
     return reportAiResponse;
   }
 
-  // Explore: the SSE turn endpoint (session + allowlist) and the
+  // Explore: the SSE run-observer endpoint (session + allowlist) and the
   // unauthenticated shared-transcript read.
   const exploreResponse = await handleExploreRoute(
     request,
@@ -413,6 +424,7 @@ logger.info(`🔌 tRPC API: http://0.0.0.0:${port}/trpc`);
  */
 export async function shutdownHttpServer(): Promise<void> {
   logger.info("🛑 Shutting down HTTP server");
+  await exploreRunManager.shutdown();
   await server.stop();
   logger.info("✅ HTTP server shut down successfully");
 }

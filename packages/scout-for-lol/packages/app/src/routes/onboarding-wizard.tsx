@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { match } from "ts-pattern";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { SESSION_QUERY_OPTIONS } from "#src/lib/session-query.ts";
 import type { OnboardingOutcome } from "@scout-for-lol/data";
 import {
   reportOnboardingOutcome,
@@ -60,7 +61,7 @@ export function OnboardingWizard() {
   }, [state.step]);
 
   const meQuery = useQuery(
-    trpc.auth.sessionState.queryOptions(undefined, { retry: false }),
+    trpc.auth.sessionState.queryOptions(undefined, SESSION_QUERY_OPTIONS),
   );
   const guildsQuery = useQuery(trpc.guild.listManageable.queryOptions());
   const channelsQuery = useQuery(

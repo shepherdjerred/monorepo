@@ -37,6 +37,11 @@ export type ToolTracker = <T>(
   work: () => T | Promise<T>,
 ) => Promise<T>;
 
+export const EmptyToolInputSchema = z.object({}).strict();
+export const ScoutQlQueryToolInputSchema = z
+  .object({ queryText: ReportQueryTextSchema })
+  .strict();
+
 export const ValidationToolOutputSchema = z
   .object({
     ok: z.boolean(),
@@ -62,13 +67,13 @@ export const QueryResultToolOutputSchema = z
   })
   .strict();
 
-const FormatToolOutputSchema = z
+export const FormatToolOutputSchema = z
   .object({
     formattedQueryText: z.string(),
   })
   .strict();
 
-const LanguageToolOutputSchema = z
+export const LanguageToolOutputSchema = z
   .object({
     sources: z.array(
       z.object({
@@ -131,7 +136,10 @@ const LanguageToolOutputSchema = z
   })
   .strict();
 
-function languagePayload(): z.infer<typeof LanguageToolOutputSchema> {
+/** The generated language catalog shared by prompts and the reference tool. */
+export function scoutQlLanguageReference(): z.infer<
+  typeof LanguageToolOutputSchema
+> {
   return {
     sources: REPORT_SOURCES,
     metrics: REPORT_METRICS,
@@ -192,9 +200,10 @@ export function createLanguageTool(track: ToolTracker) {
   return tool({
     description:
       "Read ScoutQL sources, metrics, expressions, groupings, filters, render kinds/options, queues, and common examples.",
-    inputSchema: z.object({}).strict(),
+    inputSchema: EmptyToolInputSchema,
     outputSchema: LanguageToolOutputSchema,
-    execute: () => track("get_report_language", () => languagePayload()),
+    execute: () =>
+      track("get_report_language", () => scoutQlLanguageReference()),
   });
 }
 
@@ -202,7 +211,7 @@ export function createValidateTool(track: ToolTracker) {
   return tool({
     description:
       "Validate a ScoutQL report query and return diagnostics plus formatted text.",
-    inputSchema: z.object({ queryText: ReportQueryTextSchema }).strict(),
+    inputSchema: ScoutQlQueryToolInputSchema,
     outputSchema: ValidationToolOutputSchema,
     execute: (inputData) =>
       track("validate_report_query", () => validateQuery(inputData.queryText)),
@@ -212,7 +221,7 @@ export function createValidateTool(track: ToolTracker) {
 export function createFormatTool(track: ToolTracker) {
   return tool({
     description: "Format valid ScoutQL report query text for display.",
-    inputSchema: z.object({ queryText: ReportQueryTextSchema }).strict(),
+    inputSchema: ScoutQlQueryToolInputSchema,
     outputSchema: FormatToolOutputSchema,
     execute: (inputData) =>
       track("format_report_query", () => ({

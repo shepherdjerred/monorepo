@@ -1,5 +1,4 @@
 import { Output, stepCountIs, tool, ToolLoopAgent } from "ai";
-import { z } from "zod";
 import {
   EXPLORE_MAX_HISTORY_TURNS,
   EXPLORE_MAX_OUTPUT_TOKENS,
@@ -9,7 +8,6 @@ import {
   ExploreAnswerSchema,
   ExploreAnswerWireSchema,
   modelSupportsParameter,
-  ReportQueryTextSchema,
   type ExploreAnswer,
   type ExploreMessage,
   type ExploreStreamEvent,
@@ -32,9 +30,9 @@ import {
 } from "#src/metrics/explore.ts";
 import {
   createFormatTool,
-  createLanguageTool,
   createValidateTool,
   QueryResultToolOutputSchema,
+  ScoutQlQueryToolInputSchema,
   validateQuery,
   type ToolTracker,
 } from "#src/reports/ai/scoutql-tools.ts";
@@ -203,7 +201,7 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
   const runReportQuery = tool({
     description:
       "Run a valid ScoutQL query against all ingested match data and return the resulting rows. Every statistic you state must come from a result of this tool.",
-    inputSchema: z.object({ queryText: ReportQueryTextSchema }).strict(),
+    inputSchema: ScoutQlQueryToolInputSchema,
     outputSchema: QueryResultToolOutputSchema,
     execute: (inputData) =>
       track("run_report_query", async () => {
@@ -248,7 +246,6 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
   });
 
   return {
-    get_report_language: createLanguageTool(track),
     validate_report_query: createValidateTool(track),
     run_report_query: runReportQuery,
     format_report_query: createFormatTool(track),

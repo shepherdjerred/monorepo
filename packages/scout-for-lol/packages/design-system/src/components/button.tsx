@@ -18,6 +18,7 @@ export const buttonVariants = cva("scout-button", {
       sm: "scout-button--small",
       lg: "scout-button--large",
       icon: "scout-button--icon",
+      "icon-sm": "scout-button--icon-small",
     },
   },
   defaultVariants: { variant: "default", size: "default" },
@@ -40,6 +41,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
-export function IconButton(props: ButtonProps & { label: string }) {
-  return <Button {...props} size="icon" aria-label={props.label} />;
+export function IconButton({
+  label,
+  size = "icon",
+  ...props
+}: Omit<ButtonProps, "size"> & {
+  label: string;
+  size?: "icon" | "icon-sm";
+}) {
+  return <Button {...props} size={size} aria-label={label} />;
 }

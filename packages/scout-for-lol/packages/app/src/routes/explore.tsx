@@ -20,13 +20,10 @@ import {
   downloadMarkdown,
   exportFilename,
 } from "#src/lib/explore-export.ts";
-import {
-  pendingTurnLeftTheScreen,
-  visiblePending,
-} from "#src/lib/explore-turn-state.ts";
+import { visiblePending } from "#src/lib/explore-turn-state.ts";
 import { useExploreParams } from "#src/lib/route-params.ts";
 import { useExploreShare } from "#src/hooks/use-explore-share.ts";
-import { useExploreTurn } from "#src/hooks/use-explore-turn.ts";
+import { useExploreRuns } from "#src/components/explore-runs-context.ts";
 import { usePinnedScroll } from "#src/hooks/use-pinned-scroll.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
@@ -37,8 +34,8 @@ import { useTRPC } from "#src/lib/trpc.ts";
  * the transcript is authoritative on the server and this page only mirrors
  * it. The active conversation lives in the URL (`/explore/:conversationId`),
  * so refresh, Back, and deep links keep their place; the in-flight turn's
- * state lives in {@link useExploreTurn} and is keyed by conversation, so a
- * stream never renders under a conversation it does not belong to.
+ * state lives in the route-level Explore provider and is keyed by conversation,
+ * so navigation detaches the page without cancelling or misplacing the run.
  */
 export function Explore() {
   const { conversationId: routeConversationId } = useExploreParams();
@@ -51,6 +48,7 @@ export function Explore() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [renaming, setRenaming] = useState<ExploreConversation | null>(null);
   const [deleting, setDeleting] = useState<ExploreConversation | null>(null);
+  const runs = useExploreRuns();
 
   const {
     status,
@@ -63,15 +61,7 @@ export function Explore() {
     shared,
   } = useExploreConversation(conversationId);
 
-  const turn = useExploreTurn({
-    conversationId,
-    onConversationStarted: (id) => {
-      // Replace, not push: the transient blank `/explore` should not be a
-      // Back stop in the middle of a conversation.
-      void navigate(`/explore/${id}`, { replace: true });
-    },
-    restoreQuestion: setRestoredDraft,
-  });
+  const pendingTurn = runs.pendingTurn(conversationId);
 
   const share = useExploreShare({ conversationId, shareToken: shared });
 
@@ -98,14 +88,26 @@ export function Explore() {
   const ask = useCallback(
     (text: string) => {
       setRestoredDraft(null);
-      void turn.runTurn({
-        question: text,
-        attach: { kind: "leaf" },
-        displayQuestion: text,
-        leafIdAtStart: messages.at(-1)?.id ?? null,
-      });
+      void (async () => {
+        const started = await runs.startTurn({
+          conversationId,
+          question: text,
+          attach: { kind: "leaf" },
+          displayQuestion: text,
+          leafIdAtStart: messages.at(-1)?.id ?? null,
+        });
+        if (started === null) {
+          setRestoredDraft(text);
+        } else if (conversationId === null) {
+          // Replace, not push: the transient blank `/explore` should not be a
+          // Back stop in the middle of a conversation.
+          void navigate(`/explore/${started.conversationId}`, {
+            replace: true,
+          });
+        }
+      })();
     },
-    [messages, turn],
+    [conversationId, messages, navigate, runs],
   );
 
   const handleEdit = useCallback(
@@ -113,7 +115,8 @@ export function Explore() {
       // Editing forks the question: a sibling under the same parent, or a
       // new root when the edited question *is* the root — the fork a parent
       // id cannot name, which is why `attach` exists.
-      void turn.runTurn({
+      void runs.startTurn({
+        conversationId,
         question: edited,
         attach:
           message.parentId === null
@@ -123,7 +126,7 @@ export function Explore() {
         leafIdAtStart: messages.at(-1)?.id ?? null,
       });
     },
-    [messages, turn],
+    [conversationId, messages, runs],
   );
 
   const handleRegenerate = useCallback(
@@ -132,14 +135,15 @@ export function Explore() {
       if (message.parentId === null) {
         return;
       }
-      void turn.runTurn({
+      void runs.startTurn({
+        conversationId,
         question: null,
         attach: { kind: "message", messageId: message.parentId },
         displayQuestion: null,
         leafIdAtStart: messages.at(-1)?.id ?? null,
       });
     },
-    [messages, turn],
+    [conversationId, messages, runs],
   );
 
   const handleSelectVersion = useCallback(
@@ -180,9 +184,6 @@ export function Explore() {
   const handleDelete = useCallback(
     async (conversation: ExploreConversation) => {
       setError(null);
-      if (turn.pendingTurn?.conversationId === conversation.id) {
-        turn.abortForNavigation();
-      }
       try {
         await deleteMutation.mutateAsync({ conversationId: conversation.id });
         setDeleting(null);
@@ -206,19 +207,15 @@ export function Explore() {
       queryClient,
       refreshList,
       trpc.explore.get,
-      turn,
     ],
   );
 
   const openConversation = useCallback(
     (id: string | null) => {
-      if (turn.pendingTurn !== null) {
-        turn.abortForNavigation();
-      }
       void navigate(id === null ? "/explore" : `/explore/${id}`);
       setDrawerOpen(false);
     },
-    [navigate, turn],
+    [navigate],
   );
 
   // Answer a question whose turn was interrupted. Attaches to the question
@@ -226,14 +223,15 @@ export function Explore() {
   // that is the whole reason it is stranded.
   const handleRetry = useCallback(
     (question: ExploreMessage) => {
-      void turn.runTurn({
+      void runs.startTurn({
+        conversationId,
         question: null,
         attach: { kind: "message", messageId: question.id },
         displayQuestion: null,
         leafIdAtStart: messages.at(-1)?.id ?? null,
       });
     },
-    [messages, turn],
+    [conversationId, messages, runs],
   );
 
   const transcriptActions = useMemo<ExploreTranscriptActions>(
@@ -249,32 +247,17 @@ export function Explore() {
     [ask, handleEdit, handleRegenerate, handleRetry, handleSelectVersion],
   );
 
-  const { pendingQuestion, pendingAnswer, activity } = visiblePending(
-    turn.pendingTurn,
-    conversationId,
-    messages,
-  );
-
-  // The backstop for every route change the explicit callbacks cannot see —
-  // Back and Forward above all, which move the param without passing through
-  // `openConversation` or `handleDelete`. Those callbacks stay: they abandon
-  // the turn synchronously before navigating, which is a frame earlier than a
-  // re-render can, and deleting a conversation must abort before the delete.
-  useEffect(() => {
-    if (
-      pendingTurnLeftTheScreen({
-        pendingConversationId: turn.pendingTurn?.conversationId ?? null,
-        routeConversationId: conversationId,
-      })
-    ) {
-      turn.abortForNavigation();
-    }
-  }, [conversationId, turn]);
+  const {
+    pendingQuestion,
+    pendingAnswer,
+    activity,
+    trace: pendingTrace,
+  } = visiblePending(pendingTurn, conversationId, messages);
 
   const { bottomRef, scrollIfPinned } = usePinnedScroll();
   useEffect(() => {
     scrollIfPinned();
-  }, [transcript.data, pendingAnswer, activity, scrollIfPinned]);
+  }, [transcript.data, pendingAnswer, activity, pendingTrace, scrollIfPinned]);
 
   if (status.isLoading) {
     return <SectionSkeleton />;
@@ -317,7 +300,7 @@ export function Explore() {
     );
   }
 
-  const pageError = error ?? turn.error ?? share.error;
+  const pageError = error ?? runs.error(conversationId) ?? share.error;
 
   const headerActions =
     conversationId !== null && messages.length > 0
@@ -346,6 +329,7 @@ export function Explore() {
       }}
       onRename={setRenaming}
       onDelete={setDeleting}
+      statusForConversation={runs.status}
     />
   );
 
@@ -405,7 +389,9 @@ export function Explore() {
             pendingQuestion={pendingQuestion}
             pendingAnswer={pendingAnswer}
             activity={activity}
-            turnActive={turn.pendingTurn !== null}
+            pendingTrace={pendingTrace}
+            turnActive={pendingTurn !== null || !runs.discoverySettled}
+            showRawTrace
             actions={transcriptActions}
           />
         </div>
@@ -426,10 +412,12 @@ export function Explore() {
             earlier answer used to take the ask box off screen entirely. */}
         <div className="sticky bottom-0 max-w-3xl bg-background pt-2 pb-4">
           <ExploreComposer
-            active={turn.pendingTurn !== null}
+            active={pendingTurn !== null}
             restoredDraft={restoredDraft}
             onAsk={ask}
-            onStop={turn.stop}
+            onStop={() => {
+              runs.stop(conversationId);
+            }}
           />
           <ExploreQuota quota={quota} />
         </div>
