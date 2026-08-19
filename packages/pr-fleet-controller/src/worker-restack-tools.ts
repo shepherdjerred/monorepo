@@ -6,6 +6,7 @@ import {
   requireCurrentInheritedWipInspection,
 } from "./inherited-wip.ts";
 import type { CommandResult, FleetEnvironment } from "./ports.ts";
+import type { ProgressEventKind } from "./progress-events.ts";
 import type { PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 
@@ -15,6 +16,11 @@ type RecordTool = <T>(
   run: () => Promise<T>,
 ) => Promise<T>;
 
+type RecordProgress = (
+  kind: ProgressEventKind,
+  payload: Record<string, unknown>,
+) => void;
+
 type RestackToolOptions = {
   store: FleetStore;
   pr: PrState;
@@ -22,6 +28,7 @@ type RestackToolOptions = {
   worktree: string;
   signal: AbortSignal;
   record: RecordTool;
+  recordProgress?: RecordProgress;
   assertNotWaitingForAnswer: () => void;
 };
 
@@ -44,19 +51,59 @@ async function captureLocalHead(
 }
 
 async function recordActiveRestack(options: RestackToolOptions): Promise<void> {
+  const expectedLocalHead = options.store.expectedWorktreeHead(options.pr);
+  const localHeadSha = await captureLocalHead(options, "active restack");
   options.store.activeRestacks.set(options.pr.identity.number, {
     remoteHeadSha: options.pr.identity.headSha,
-    localHeadSha: await captureLocalHead(options, "active restack"),
+    localHeadSha,
   });
+  options.store.recordControlledWorktreeHead(
+    options.pr,
+    localHeadSha,
+    "restack",
+  );
+  if (expectedLocalHead !== localHeadSha) {
+    options.recordProgress?.("worktree.head.transition", {
+      cause: "restack",
+      localHeadSha,
+    });
+  }
 }
 
 async function recordCompletedRestack(
   options: RestackToolOptions,
 ): Promise<void> {
+  const expectedLocalHead = options.store.expectedWorktreeHead(options.pr);
+  const localHeadSha = await captureLocalHead(options, "completed restack");
   options.store.completedRestacks.set(options.pr.identity.number, {
     remoteHeadSha: options.pr.identity.headSha,
-    localHeadSha: await captureLocalHead(options, "completed restack"),
+    localHeadSha,
   });
+  options.store.recordControlledWorktreeHead(
+    options.pr,
+    localHeadSha,
+    "restack",
+  );
+  if (expectedLocalHead !== localHeadSha) {
+    options.recordProgress?.("worktree.head.transition", {
+      cause: "restack",
+      localHeadSha,
+    });
+  }
+}
+
+function releaseStackWriteLease(options: RestackToolOptions): void {
+  const durationMs = options.store.releaseLease(
+    options.pr.identity.number,
+    "stack-write",
+    options.pr.stackId,
+  );
+  if (durationMs !== null) {
+    options.recordProgress?.("lease.released", {
+      kind: "stack-write",
+      durationMs,
+    });
+  }
 }
 
 async function isRebaseInProgress(
@@ -131,6 +178,7 @@ async function requireCurrentCompletedRestack(
 
 export function createWorkerRestackTools(options: RestackToolOptions) {
   const { store, pr, environment, signal, record } = options;
+  const recordProgress: RecordProgress = options.recordProgress ?? (() => null);
   return {
     start_restack: defineTool({
       description:
@@ -143,9 +191,15 @@ export function createWorkerRestackTools(options: RestackToolOptions) {
       execute: (input) =>
         record("start_restack", input, async () => {
           options.assertNotWaitingForAnswer();
-          if (!store.requestLease(pr, "stack-write")) {
+          const stackWriteLease = store.requestLeaseDecision(pr, "stack-write");
+          if (!stackWriteLease.granted) {
+            recordProgress("lease.denied", {
+              kind: "stack-write",
+              reason: stackWriteLease.reason,
+            });
             throw new Error("Stack write lease is not available");
           }
+          recordProgress("lease.granted", { kind: "stack-write" });
           await requireCurrentInheritedWipInspection(options);
           invalidateInheritedWipInspection(options);
           store.completedRestacks.delete(pr.identity.number);
@@ -155,7 +209,7 @@ export function createWorkerRestackTools(options: RestackToolOptions) {
             result = await environment.startRestack(pr, signal);
           } catch (error) {
             store.activeRestacks.delete(pr.identity.number);
-            store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
+            releaseStackWriteLease(options);
             throw error;
           }
           const output = `${result.stdout}\n${result.stderr}`.trim();
@@ -168,7 +222,7 @@ export function createWorkerRestackTools(options: RestackToolOptions) {
           }
           store.activeRestacks.delete(pr.identity.number);
           if (result.exitCode !== 0) {
-            store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
+            releaseStackWriteLease(options);
             throw new Error(`git-spice restack failed: ${output}`);
           }
           await recordCompletedRestack(options);
@@ -231,7 +285,7 @@ export function createWorkerRestackTools(options: RestackToolOptions) {
             return await environment.publishRestack(pr, signal);
           } finally {
             store.completedRestacks.delete(pr.identity.number);
-            store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
+            releaseStackWriteLease(options);
           }
         }),
     }),

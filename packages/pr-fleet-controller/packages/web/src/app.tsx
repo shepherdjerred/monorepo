@@ -22,7 +22,11 @@ export function App(): ReactElement {
   }
   const entries: PrEntry[] = [...numbers]
     .sort((a, b) => b - a)
-    .map((number) => ({ number, state: stateByNumber.get(number) ?? null }));
+    .map((number) => ({
+      number,
+      state: stateByNumber.get(number) ?? null,
+      progress: view.progress.prs.get(number) ?? null,
+    }));
 
   return (
     <div className="app">
@@ -30,6 +34,7 @@ export function App(): ReactElement {
         manifest={meta.data?.manifest ?? null}
         summary={meta.data?.summary ?? null}
         fleet={view.fleet}
+        progress={view.progress}
         runStatus={view.runStatus}
         connected={connected}
         error={error}
@@ -44,6 +49,7 @@ export function App(): ReactElement {
               prNumber={selected}
               state={stateByNumber.get(selected) ?? null}
               items={view.prs.get(selected)?.timeline ?? []}
+              progress={view.progress.prs.get(selected) ?? null}
               interactive={meta.data?.interactive ?? false}
             />
           )}

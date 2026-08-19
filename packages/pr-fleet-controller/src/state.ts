@@ -6,6 +6,19 @@ import type {
   WorkerResult,
 } from "./schemas.ts";
 
+export type LeaseDecision =
+  | { granted: true }
+  | {
+      granted: false;
+      reason: "setup-held" | "heavy-capacity" | "stack-write-held";
+    };
+
+export type ControlledWorktreeHead = {
+  remoteHeadSha: string;
+  localHeadSha: string;
+  cause: "restack" | "publication";
+};
+
 const ACTIVE_STATUSES = new Set([
   "diagnosing",
   "editing",
@@ -55,7 +68,12 @@ export class FleetStore {
     number,
     { remoteHeadSha: string; localHeadSha: string }
   >();
+  // A controller-owned commit or restack legitimately moves HEAD in an
+  // operator worktree. This narrow, current-remote-head fence distinguishes
+  // that exact transition from an unobserved operator mutation.
+  readonly controlledWorktreeHeads = new Map<number, ControlledWorktreeHead>();
   readonly stackWriteOwners = new Map<string, number>();
+  readonly leaseStartedAt = new Map<string, number>();
   setupOwner: number | null = null;
   readonly heavyOwners = new Set<number>();
   workerLimit: number;
@@ -88,54 +106,113 @@ export class FleetStore {
   }
 
   requestLease(pr: PrState, kind: LeaseKind): boolean {
+    return this.requestLeaseDecision(pr, kind).granted;
+  }
+
+  requestLeaseDecision(pr: PrState, kind: LeaseKind): LeaseDecision {
     if (kind === "setup") {
       if (this.setupOwner !== null && this.setupOwner !== pr.identity.number) {
-        return false;
+        return { granted: false, reason: "setup-held" };
       }
       this.setupOwner = pr.identity.number;
-      return true;
+      this.#recordLeaseStart(pr.identity.number, kind);
+      return { granted: true };
     }
     if (kind === "heavy") {
       if (
         !this.heavyOwners.has(pr.identity.number) &&
         this.heavyOwners.size >= this.workerLimit
       ) {
-        return false;
+        return { granted: false, reason: "heavy-capacity" };
       }
       this.heavyOwners.add(pr.identity.number);
-      return true;
+      this.#recordLeaseStart(pr.identity.number, kind);
+      return { granted: true };
     }
     const owner = this.stackWriteOwners.get(pr.stackId);
     if (owner !== undefined && owner !== pr.identity.number) {
-      return false;
+      return { granted: false, reason: "stack-write-held" };
     }
     this.stackWriteOwners.set(pr.stackId, pr.identity.number);
-    return true;
+    this.#recordLeaseStart(pr.identity.number, kind);
+    return { granted: true };
+  }
+
+  #recordLeaseStart(prNumber: number, kind: LeaseKind): void {
+    const key = `${String(prNumber)}:${kind}`;
+    if (!this.leaseStartedAt.has(key)) {
+      this.leaseStartedAt.set(key, performance.now());
+    }
+  }
+
+  recordControlledWorktreeHead(
+    pr: PrState,
+    localHeadSha: string,
+    cause: ControlledWorktreeHead["cause"],
+  ): void {
+    this.controlledWorktreeHeads.set(pr.identity.number, {
+      remoteHeadSha: pr.identity.headSha,
+      localHeadSha,
+      cause,
+    });
+  }
+
+  expectedWorktreeHead(pr: PrState): string | undefined {
+    if (pr.worktreeContext?.remoteHeadSha !== pr.identity.headSha) {
+      return undefined;
+    }
+    const activeRestack = this.activeRestacks.get(pr.identity.number);
+    if (activeRestack?.remoteHeadSha === pr.identity.headSha) {
+      return activeRestack.localHeadSha;
+    }
+    const controlled = this.controlledWorktreeHeads.get(pr.identity.number);
+    if (controlled?.remoteHeadSha === pr.identity.headSha) {
+      return controlled.localHeadSha;
+    }
+    return pr.worktreeContext.localHeadSha;
+  }
+
+  clearControlledWorktreeHead(prNumber: number): void {
+    this.controlledWorktreeHeads.delete(prNumber);
   }
 
   releaseLeases(prNumber: number): void {
-    if (this.setupOwner === prNumber) {
-      this.setupOwner = null;
-    }
-    this.heavyOwners.delete(prNumber);
+    this.releaseLease(prNumber, "setup", "");
+    this.releaseLease(prNumber, "heavy", "");
     for (const [stackId, owner] of this.stackWriteOwners) {
       if (owner === prNumber) {
-        this.stackWriteOwners.delete(stackId);
+        this.releaseLease(prNumber, "stack-write", stackId);
       }
     }
   }
 
-  releaseLease(prNumber: number, kind: LeaseKind, stackId: string): void {
+  releaseLease(
+    prNumber: number,
+    kind: LeaseKind,
+    stackId: string,
+  ): number | null {
+    let released = false;
     if (kind === "setup" && this.setupOwner === prNumber) {
       this.setupOwner = null;
+      released = true;
     } else if (kind === "heavy") {
-      this.heavyOwners.delete(prNumber);
+      released = this.heavyOwners.delete(prNumber);
     } else if (
       kind === "stack-write" &&
       this.stackWriteOwners.get(stackId) === prNumber
     ) {
       this.stackWriteOwners.delete(stackId);
+      released = true;
     }
+    if (!released) {
+      return null;
+    }
+    const key = `${String(prNumber)}:${kind}`;
+    const startedAt = this.leaseStartedAt.get(key);
+    this.leaseStartedAt.delete(key);
+    return startedAt === undefined
+      ? null
+      : Math.round(performance.now() - startedAt);
   }
 
   addGuidance(prNumber: number, message: string): void {

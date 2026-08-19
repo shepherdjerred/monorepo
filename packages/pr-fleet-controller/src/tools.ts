@@ -1,21 +1,71 @@
 import { tool as defineTool } from "ai";
 import { z } from "zod";
-import { validateWorkerCommand } from "./command-policy.ts";
+import { currentCommandCorrelation } from "./command-correlation.ts";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import {
   invalidateInheritedWipInspection,
   requireCurrentInheritedWipInspection,
+  WorktreeHeadChangedError,
 } from "./inherited-wip.ts";
+import { workerCommandEnvironment } from "./command-environment.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
+import {
+  recordProgressEvent,
+  type ProgressEventKind,
+} from "./progress-events.ts";
 import { runRecordedToolOperation } from "./recorded-tool.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
-import { sandboxProfile, sanitizedEnvironment } from "./sandbox.ts";
 import { LeaseKindSchema, PrStateSchema, type PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 import { containedPath, createFileEditTools } from "./worker-file-edits.ts";
 import { createWorkerRestackTools } from "./worker-restack-tools.ts";
 import { createSetupWorktreeTool } from "./worker-setup-tool.ts";
 import { createWorkerWipTools } from "./worker-wip-tools.ts";
+
+const MAX_WORKER_COMMAND_OUTPUT_BYTES = 100_000;
+
+function resolveWorkerShell(): string {
+  const configuredShell = Bun.env["SHELL"];
+  if (configuredShell !== undefined) {
+    const resolved = Bun.which(configuredShell);
+    if (resolved !== null) {
+      return resolved;
+    }
+  }
+  const zsh = Bun.which("zsh");
+  if (zsh === null) {
+    throw new Error("A POSIX worker shell is required (SHELL or zsh)");
+  }
+  return zsh;
+}
+
+async function assertCurrentWorktreeHead(options: {
+  environment: FleetEnvironment;
+  pr: PrState;
+  store: FleetStore;
+  worktree: string;
+  signal: AbortSignal;
+}): Promise<void> {
+  const result = await options.environment.runLocalCommand({
+    executable: "git",
+    args: ["rev-parse", "HEAD"],
+    cwd: options.worktree,
+    timeoutMs: 30_000,
+    signal: options.signal,
+    sensitiveOutput: true,
+    maxOutputBytes: 128,
+    env: workerCommandEnvironment(),
+  });
+  if (result.exitCode !== 0) {
+    throw new Error(`Could not read worktree HEAD: ${result.stderr.trim()}`);
+  }
+  const expected = options.store.expectedWorktreeHead(options.pr);
+  if (expected === undefined || result.stdout.trim() !== expected) {
+    throw new WorktreeHeadChangedError(
+      "Worktree HEAD changed before publication; inspect again before publishing",
+    );
+  }
+}
 
 export const ConventionalCommitMessageSchema = z
   .string()
@@ -54,19 +104,11 @@ export function createWorkerTools(
   environment: FleetEnvironment,
   options: {
     signal: AbortSignal;
-    // Additional env-var names to scrub from validation/setup subprocesses
-    // beyond the credential heuristic.
-    extraSecretNames?: readonly string[];
     telemetry?: FleetTelemetry;
     parentCorrelation?: () => RunEventCorrelation;
   },
 ) {
-  const {
-    signal,
-    extraSecretNames = [],
-    telemetry,
-    parentCorrelation = () => ({}),
-  } = options;
+  const { signal, telemetry, parentCorrelation = () => ({}) } = options;
   if (pr.worktree === null) {
     throw new Error(
       `PR #${String(pr.identity.number)} has no assigned worktree`,
@@ -74,6 +116,23 @@ export function createWorkerTools(
   }
   const worktree = pr.worktree;
   const toolContext = { pr, telemetry, parentCorrelation };
+  const recordProgress = (
+    kind: ProgressEventKind,
+    payload: Record<string, unknown>,
+  ): void => {
+    recordProgressEvent({
+      telemetry,
+      kind,
+      payload,
+      correlation: {
+        ...currentCommandCorrelation(),
+        ...parentCorrelation(),
+        prNumber: pr.identity.number,
+        headSha: pr.identity.headSha,
+        generation: pr.agentGeneration,
+      },
+    });
+  };
   const assertNotWaitingForAnswer = (): void => {
     if (store.operatorRequests.has(pr.identity.number)) {
       throw new Error(
@@ -103,6 +162,7 @@ export function createWorkerTools(
       parentCorrelation,
       record: (tool, input, run) =>
         runRecordedTool(tool, input, toolContext, run),
+      recordProgress,
       assertNotWaitingForAnswer,
     }),
     read_file: defineTool({
@@ -231,12 +291,27 @@ export function createWorkerTools(
     request_lease: defineTool({
       description: "Request setup, heavy-command, or stack-write authority.",
       inputSchema: z.object({ kind: LeaseKindSchema }),
-      outputSchema: z.object({ granted: z.boolean() }),
+      outputSchema: z.object({
+        granted: z.boolean(),
+        reason: z
+          .enum(["setup-held", "heavy-capacity", "stack-write-held"])
+          .nullable(),
+      }),
       execute: (input) =>
         runRecordedTool("request_lease", input, toolContext, () => {
           assertNotWaitingForAnswer();
+          const decision = store.requestLeaseDecision(pr, input.kind);
+          if (decision.granted) {
+            recordProgress("lease.granted", { kind: input.kind });
+          } else {
+            recordProgress("lease.denied", {
+              kind: input.kind,
+              reason: decision.reason,
+            });
+          }
           return Promise.resolve({
-            granted: store.requestLease(pr, input.kind),
+            granted: decision.granted,
+            reason: decision.granted ? null : decision.reason,
           });
         }),
     }),
@@ -246,10 +321,10 @@ export function createWorkerTools(
       environment,
       worktree,
       signal,
-      extraSecretNames,
       assertNotWaitingForAnswer,
       record: (tool, input, run) =>
         runRecordedTool(tool, input, toolContext, run),
+      recordProgress,
     }),
     ...createWorkerRestackTools({
       store,
@@ -260,13 +335,13 @@ export function createWorkerTools(
       assertNotWaitingForAnswer,
       record: (tool, input, run) =>
         runRecordedTool(tool, input, toolContext, run),
+      recordProgress,
     }),
     run_local_command: defineTool({
       description:
-        "Run an approved local build, test, lint, typecheck, generator, or search command.",
+        "Run any shell command in the assigned worktree with the operator's normal environment. Use this for builds, tests, diagnostics, toolchain commands, and PR repair work. The command is recorded with bounded output and can be cancelled with the worker.",
       inputSchema: z.object({
-        executable: z.string().min(1),
-        args: z.array(z.string()).max(100),
+        command: z.string().min(1),
         timeoutMs: z.number().int().min(1000).max(900_000).default(120_000),
       }),
       outputSchema: z.object({
@@ -278,28 +353,33 @@ export function createWorkerTools(
       execute: (input) =>
         runRecordedTool("run_local_command", input, toolContext, async () => {
           assertNotWaitingForAnswer();
-          validateWorkerCommand(input.executable, input.args);
           if (store.setupWorktrees.get(worktree) !== pr.identity.headSha) {
+            recordProgress("setup.required", {
+              reason: "current-head-unprepared",
+            });
             throw new Error(
-              "Worktree setup must complete for the current head before validation",
+              "Worktree setup must complete for the current head before validation; call setup_worktree before retrying this command",
             );
           }
-          if (!store.requestLease(pr, "heavy")) {
+          const heavyLease = store.requestLeaseDecision(pr, "heavy");
+          if (!heavyLease.granted) {
+            recordProgress("lease.denied", {
+              kind: "heavy",
+              reason: heavyLease.reason,
+            });
             throw new Error("Heavy lease is not available");
           }
           try {
+            recordProgress("lease.granted", { kind: "heavy" });
             const result = await environment.runLocalCommand({
-              executable: "sandbox-exec",
-              args: [
-                "-p",
-                sandboxProfile(worktree),
-                input.executable,
-                ...input.args,
-              ],
+              executable: resolveWorkerShell(),
+              args: ["-c", input.command],
               cwd: worktree,
               timeoutMs: input.timeoutMs,
               signal,
-              env: sanitizedEnvironment(extraSecretNames),
+              env: workerCommandEnvironment(),
+              sensitiveOutput: true,
+              maxOutputBytes: MAX_WORKER_COMMAND_OUTPUT_BYTES,
             });
             return {
               exitCode: result.exitCode,
@@ -308,7 +388,17 @@ export function createWorkerTools(
               termination: result.termination,
             };
           } finally {
-            store.releaseLease(pr.identity.number, "heavy", pr.stackId);
+            const durationMs = store.releaseLease(
+              pr.identity.number,
+              "heavy",
+              pr.stackId,
+            );
+            if (durationMs !== null) {
+              recordProgress("lease.released", {
+                kind: "heavy",
+                durationMs,
+              });
+            }
           }
         }),
     }),
@@ -323,10 +413,23 @@ export function createWorkerTools(
       execute: (input) =>
         runRecordedTool("publish_fix", input, toolContext, async () => {
           assertNotWaitingForAnswer();
-          if (!store.requestLease(pr, "stack-write")) {
+          const stackWriteLease = store.requestLeaseDecision(pr, "stack-write");
+          if (!stackWriteLease.granted) {
+            recordProgress("lease.denied", {
+              kind: "stack-write",
+              reason: stackWriteLease.reason,
+            });
             throw new Error("Stack write lease is not available");
           }
           try {
+            recordProgress("lease.granted", { kind: "stack-write" });
+            await assertCurrentWorktreeHead({
+              environment,
+              pr,
+              store,
+              worktree,
+              signal,
+            });
             await requireCurrentInheritedWipInspection({
               store,
               pr,
@@ -334,14 +437,34 @@ export function createWorkerTools(
               worktree,
               signal,
             });
-            return await environment.publishFix(
+            const published = await environment.publishFix(
               pr,
               input.paths,
               input.message,
               signal,
             );
+            store.recordControlledWorktreeHead(
+              pr,
+              published.headSha,
+              "publication",
+            );
+            recordProgress("worktree.head.transition", {
+              cause: "publication",
+              localHeadSha: published.headSha,
+            });
+            return published;
           } finally {
-            store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
+            const durationMs = store.releaseLease(
+              pr.identity.number,
+              "stack-write",
+              pr.stackId,
+            );
+            if (durationMs !== null) {
+              recordProgress("lease.released", {
+                kind: "stack-write",
+                durationMs,
+              });
+            }
           }
         }),
     }),

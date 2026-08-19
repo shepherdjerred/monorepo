@@ -275,6 +275,70 @@ describe("inherited WIP evidence regressions", () => {
   });
 });
 
+test("permits only the exact controller-recorded worktree HEAD transition", () => {
+  const prIdentity = identity(42);
+  const pr = PrStateSchema.parse({
+    identity: prIdentity,
+    logicalOwner: "pr-42",
+    runtimeAgent: "pr-42-g1",
+    agentGeneration: 1,
+    model: "openai/gpt-5.6-terra",
+    status: "diagnosing",
+    classification: "actionable-red",
+    stackId: "pr-42",
+    worktree: "/tmp/worktrees/pr-42",
+    worktreeContext: {
+      ownership: "operator",
+      remoteHeadSha: prIdentity.headSha,
+      localHeadSha: prIdentity.headSha,
+      relation: "exact",
+      dirty: true,
+      stagedPaths: ["packages/example.ts"],
+      unstagedPaths: [],
+    },
+    setupComplete: true,
+    evidence: evidence(prIdentity),
+    lastAgentReportAt: null,
+    lastProgressAt: "2026-08-08T20:00:00.000Z",
+    noProgressTicks: 0,
+    prodSentAt: null,
+    escalation: null,
+    priority: 0,
+  });
+  const store = new FleetStore(1);
+  const controllerHead = "c".repeat(40);
+  const inspected: InheritedWipEvidence = {
+    localHeadSha: controllerHead,
+    status: "M  packages/example.ts\n",
+    statusComplete: true,
+    stagedDiff: "staged patch",
+    stagedDiffComplete: true,
+    unstagedDiff: "",
+    unstagedDiffComplete: true,
+    untrackedPaths: [],
+    untrackedPathsComplete: true,
+    hasWip: true,
+    fingerprint: "controller-transition",
+  };
+  store.recordControlledWorktreeHead(pr, controllerHead, "restack");
+  store.inheritedWipInspections.set(prIdentity.number, {
+    remoteHeadSha: prIdentity.headSha,
+    localHeadSha: controllerHead,
+    fingerprint: inspected.fingerprint,
+    complete: true,
+  });
+
+  expect(() =>
+    requireMatchingInheritedWipInspection(store, pr, inspected),
+  ).not.toThrow();
+  expect(() =>
+    requireMatchingInheritedWipInspection(store, pr, {
+      ...inspected,
+      localHeadSha: "d".repeat(40),
+    }),
+  ).toThrow(/HEAD changed/);
+});
+
 async function createRecorder(): Promise<RunRecorder> {
   const stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-review-"));
   temporaryDirectories.push(stateDirectory);

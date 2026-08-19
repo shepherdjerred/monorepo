@@ -18,6 +18,7 @@ import {
   readRunManifest,
   readRunSummary,
 } from "./run-recorder.ts";
+import { validateProgressEvent } from "./progress-events.ts";
 import { verifyCorrelationGraph } from "./replay-correlation.ts";
 import {
   verifyOperatorQuestionState,
@@ -379,6 +380,9 @@ export function replayRunBundle(
   const finalSnapshot = replaySnapshots(events, summary);
 
   verifyCorrelationGraph(events);
+  for (const event of events) {
+    validateProgressEvent(event.kind, event.payload);
+  }
 
   const run = replayLifecycle(events, "run", {
     started: "run.started",

@@ -217,6 +217,23 @@ body {
   color: var(--warn);
   font-weight: 600;
 }
+.pr-card-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-size: 11px;
+  min-width: 0;
+}
+.pr-card-progress > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.progress-blocker {
+  color: var(--warn);
+  flex-shrink: 0;
+}
 .badge {
   font-size: 10.5px;
   padding: 1px 7px;
@@ -293,6 +310,29 @@ body {
 }
 .evidence-grid .v {
   font-weight: 500;
+}
+.progress-panel {
+  margin: 18px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elev);
+}
+.progress-panel h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+.progress-grid {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 14px;
+}
+.progress-grid .k {
+  color: var(--text-dim);
+}
+.progress-grid .v {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .banner {
   margin: 10px 0 0;

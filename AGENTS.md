@@ -676,6 +676,13 @@ body-masked view and `bun run pr:fleet:replay --run <run-id-or-directory>` for
 deterministic offline integrity and lifecycle verification. These commands
 collect and inspect evidence; they do not run evals.
 
+The controller clones the repository into its private state directory before it
+allocates any worktrees. The checkout used to start the command supplies only
+the remote URL and local git-spice metadata; workers never reuse it. The default
+managed clone and its worktrees are sibling `checkouts/` and `worktrees/`
+directories under the state root. An explicit `--checkout` must likewise name a
+clean controller-owned clone, never a developer worktree.
+
 By default `pr:fleet` also builds and spawns a **narrowly controlled live web dashboard**
 (the `@shepherdjerred/pr-fleet-web` package) that streams the run bundle over SSE
 on loopback — a fleet overview plus a per-PR transcript including model reasoning.

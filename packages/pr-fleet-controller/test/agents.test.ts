@@ -188,6 +188,7 @@ describe("coerceWorkerResult", () => {
     validation: [],
     lastAction: "observed CI",
     blockers: [],
+    operatorRequestId: null,
     worktree: "/tmp/pr-fleet-42",
     worktreeDirty: false,
     setupLeaseReleased: true,
@@ -196,10 +197,7 @@ describe("coerceWorkerResult", () => {
   };
 
   test("returns the validated object when present", () => {
-    expect(coerceWorkerResult({ object: validResult })).toEqual({
-      ...validResult,
-      operatorRequestId: null,
-    });
+    expect(coerceWorkerResult({ object: validResult })).toEqual(validResult);
   });
 
   test("throws a legible error (not a raw Zod dump) when object is undefined", () => {
