@@ -1641,7 +1641,8 @@ async function main(): Promise<void> {
       augmentImagesCount +
       laneImagesCount +
       loadingImagesCount +
-      splashImagesCount;
+      splashImagesCount +
+      classicImagesCount;
     console.log(
       `\n✅ Successfully updated Data Dragon assets to version ${version}`,
     );
