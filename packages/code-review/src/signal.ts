@@ -33,7 +33,7 @@ export const ReviewSignalEventSchema = z.object({
   schema: z.literal(REVIEW_SIGNAL_SCHEMA),
   /** ISO timestamp the observation was stamped (caller-provided). */
   ts: z.string(),
-  /** Active provider id (`qodo` in CI; dormant adapters remain testable). */
+  /** Active provider id (Qodo or Codex in CI; dormant adapters remain testable). */
   provider: z.string(),
   pr: z.number().int().positive(),
   head_sha: z.string(),

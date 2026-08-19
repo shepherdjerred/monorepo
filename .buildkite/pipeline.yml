@@ -1022,11 +1022,10 @@ steps:
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
 
-  # Blocking required gate: Qodo must finish reviewing the exact PR head, and
-  # every unresolved Qodo finding at the configured severity must be addressed.
-  # Qodo is the only active provider in the registry; its persistent issue
-  # comment is bound to the head timestamp and its Action required/Remediation
-  # recommended findings are included in the same gate.
+  # Blocking required gates: Qodo and Codex must each finish reviewing the
+  # exact PR head, and every unresolved finding from either provider at the
+  # configured severity must be addressed. Each provider runs independently so
+  # its completion signal and findings are evaluated with its own adapter.
   # This budget stays above wait-for-review.ts's own deadline plus its install,
   # so the script always reports which provider and head it gave up on rather
   # than Buildkite killing the pod first.
@@ -1035,6 +1034,8 @@ steps:
     timeout_in_minutes: 60
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     cancel_on_build_failing: true
+    env:
+      REVIEW_PROVIDER: qodo
     command: |
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/review-gate.sh
@@ -1045,6 +1046,24 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: review-gate
+
+  - label: ":robot_face: Codex review gate (required)"
+    key: codex-review-gate
+    timeout_in_minutes: 60
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    cancel_on_build_failing: true
+    env:
+      REVIEW_PROVIDER: codex
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/review-gate.sh
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: codex-review-gate
 
   # ── PR-only dry-run lane: ONE pod validates every deploy path, no side
   # effects (the old pipeline's --dryrun plumbing). Replaces five micro-steps
