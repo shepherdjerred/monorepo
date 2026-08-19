@@ -317,6 +317,9 @@ export class CommandBot {
       hasPendingSubtitleMenu: handle.hasPendingSubtitleMenu,
       claimSubtitleMenu: handle.claimSubtitleMenu,
       releaseSubtitleMenu: handle.releaseSubtitleMenu,
+      startVoiceDebugCapture: handle.startVoiceDebugCapture,
+      stopVoiceDebugCapture: handle.stopVoiceDebugCapture,
+      voiceDebugCaptureStatus: handle.voiceDebugCaptureStatus,
     });
   }
 

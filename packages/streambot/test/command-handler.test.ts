@@ -70,6 +70,7 @@ type Harness = {
   handler: CommandHandler;
   events: PlaybackEvent[];
   announces: string[];
+  debugStarts: number[];
 };
 
 function makeHandler(over: {
@@ -96,6 +97,7 @@ function makeHandler(over: {
   const events: PlaybackEvent[] = [];
   const announces: string[] = [];
   const seeks: number[] = [];
+  const debugStarts: number[] = [];
   let subtitleMenuPending = over.subtitleMenuAlreadyPending ?? false;
   const defaultSourceId =
     (over.view?.current ?? null) === null ? null : "file:/current";
@@ -144,11 +146,30 @@ function makeHandler(over: {
     releaseSubtitleMenu: () => {
       subtitleMenuPending = false;
     },
+    startVoiceDebugCapture: (durationSeconds) => {
+      debugStarts.push(durationSeconds);
+      return {
+        outcome: "started",
+        status: {
+          captureId: "00000000-0000-4000-8000-000000000001",
+          guildId: GUILD,
+          channelId: CHANNEL,
+          startedAtMs: Date.now(),
+          expiresAtMs: Date.now() + durationSeconds * 1000,
+          speakerCount: 0,
+          bufferedBytes: 0,
+          truncated: false,
+        },
+      };
+    },
+    stopVoiceDebugCapture: () => ({ outcome: "none" }),
+    voiceDebugCaptureStatus: () => null,
   };
   return {
     handler: new CommandHandler(deps),
     events,
     announces,
+    debugStarts,
     seeks,
     subtitleMenuPending: () => subtitleMenuPending,
   };
@@ -157,6 +178,7 @@ function makeHandler(over: {
 type FakeOpts = {
   userId?: string;
   sub: string;
+  group?: string;
   strings?: Record<string, string>;
   integers?: Record<string, number>;
   /** What `replySelectMenu` resolves with — the user's (fake) pick, or null to simulate a timeout. */
@@ -179,7 +201,9 @@ function fakeInteraction(opts: FakeOpts): {
   const interaction: CommandInteraction = {
     userId: uid(opts.userId ?? REQUESTER),
     subcommand: () => opts.sub,
+    subcommandGroup: () => opts.group ?? null,
     getString: (name) => opts.strings?.[name] ?? null,
+    getInteger: (name) => opts.integers?.[name] ?? null,
     getStringRequired: (name) => {
       const value = opts.strings?.[name];
       if (value === undefined) {
@@ -491,6 +515,44 @@ describe("CommandHandler playlist expansion", () => {
 });
 
 describe("CommandHandler permissions", () => {
+  test("voice debug capture is admin-only and defaults to 60 seconds", async () => {
+    const denied = makeHandler({ adminIds: [ADMIN] });
+    const deniedInteraction = fakeInteraction({
+      sub: "start",
+      group: "voice-debug",
+      userId: OTHER,
+    });
+    await denied.handler.run(deniedInteraction.interaction);
+    expect(deniedInteraction.replies).toEqual([
+      "Only an admin can capture voice diagnostics.",
+    ]);
+    expect(denied.debugStarts).toEqual([]);
+
+    const allowed = makeHandler({ adminIds: [ADMIN] });
+    const allowedInteraction = fakeInteraction({
+      sub: "start",
+      group: "voice-debug",
+      userId: ADMIN,
+    });
+    await allowed.handler.run(allowedInteraction.interaction);
+    expect(allowed.debugStarts).toEqual([60]);
+    expect(allowedInteraction.replies[0]).toContain(
+      "Started private voice debug capture",
+    );
+  });
+
+  test("voice debug capture accepts an explicit bounded duration", async () => {
+    const harness = makeHandler({ adminIds: [ADMIN] });
+    const { interaction } = fakeInteraction({
+      sub: "start",
+      group: "voice-debug",
+      userId: ADMIN,
+      integers: { duration: 300 },
+    });
+    await harness.handler.run(interaction);
+    expect(harness.debugStarts).toEqual([300]);
+  });
+
   test("skip is denied for a non-requester non-admin", async () => {
     const h = makeHandler({ view: viewWithCurrent(OTHER) });
     const { interaction, replies } = fakeInteraction({

@@ -24,6 +24,9 @@ export function initializeSentry(): void {
     dsn,
     environment: Bun.env["ENVIRONMENT"] ?? "production",
     release: Bun.env["VERSION"],
+    // Streambot owns the global OpenTelemetry providers so its manually bounded voice spans and
+    // OTLP logs reach Tempo and Loki. Sentry remains the error-only Bugsink client.
+    skipOpenTelemetrySetup: true,
     // Bugsink does not support performance tracing.
     tracesSampleRate: 0,
   });

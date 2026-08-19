@@ -64,7 +64,9 @@ OPENAI_API_KEY=... bun run voice:harness --device <index> --save-recordings
 
 Saved files are lossless 24 kHz mono WAVs under
 `.context/streambot-voice-recordings`, with peak and RMS levels printed for
-each. Transcripts and tool queries are never saved, in either mode.
+each. Transcripts and tool queries are never saved by the local probe.
+Production wake captures use a different private, 90-day diagnostic contract;
+see [Diagnose Streambot voice](/how-to/diagnose-streambot-voice/).
 
 ## Replay saved samples offline
 
@@ -88,4 +90,5 @@ use it when a change could plausibly make the two runtimes disagree.
 ## Related
 
 - [Streambot voice assistant](/explanation/streambot-voice/) — why the cascade is shaped this way
-- [Streambot voice configuration](/reference/streambot-voice/) — variables, assets, and fixed limits
+- [Streambot voice reference](/reference/streambot-voice/) — variables, assets, diagnostics, and fixed limits
+- [Diagnose Streambot voice](/how-to/diagnose-streambot-voice/) — production metrics, traces, logs, and private captures

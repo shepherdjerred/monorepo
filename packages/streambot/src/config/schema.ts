@@ -21,6 +21,19 @@ export const VoiceConfigSchema = z
       .positive()
       .max(30_000)
       .default(30_000),
+    capture: z
+      .strictObject({
+        enabled: z.boolean().default(false),
+        bucket: z.string().min(1).optional(),
+        endpoint: z.url().optional(),
+        region: z.string().min(1).default("us-east-1"),
+        forcePathStyle: z.boolean().default(true),
+      })
+      .default({
+        enabled: false,
+        region: "us-east-1",
+        forcePathStyle: true,
+      }),
   })
   .superRefine((voice, context) => {
     if (voice.enabled && voice.openAiApiKey === undefined) {
@@ -28,6 +41,28 @@ export const VoiceConfigSchema = z
         code: "custom",
         path: ["openAiApiKey"],
         message: "OPENAI_API_KEY is required when voice is enabled",
+      });
+    }
+    if (voice.capture.enabled && !voice.enabled) {
+      context.addIssue({
+        code: "custom",
+        path: ["capture", "enabled"],
+        message: "Voice capture cannot be enabled while voice is disabled",
+      });
+    }
+    if (voice.capture.enabled && voice.capture.bucket === undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["capture", "bucket"],
+        message:
+          "VOICE_CAPTURE_BUCKET is required when voice capture is enabled",
+      });
+    }
+    if (voice.capture.enabled && voice.capture.endpoint === undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["capture", "endpoint"],
+        message: "S3_ENDPOINT is required when voice capture is enabled",
       });
     }
   });
@@ -104,6 +139,11 @@ export const ConfigSchema = z.strictObject({
     preRollMs: VOICE_WAKE_WINDOW_MS,
     maxUtteranceMs: 15_000,
     transactionTimeoutMs: 30_000,
+    capture: {
+      enabled: false,
+      region: "us-east-1",
+      forcePathStyle: true,
+    },
   }),
   subtitles: z.strictObject({
     /** Burn in subtitles by default when a track is found (per-request `subtitles:off` overrides). */
@@ -180,13 +220,38 @@ export const ConfigSchema = z.strictObject({
   ffmpegPath: z.string().min(1).default("ffmpeg"),
   /** ffprobe binary — chapter extraction, embedded subtitle detection, and source media probing. */
   ffprobePath: z.string().min(1).default("ffprobe"),
-  /** Observability: Prometheus metrics HTTP server. */
+  /** Observability: Prometheus plus correlated Tempo traces and Loki logs. */
   observability: z
     .strictObject({
       /** Port for the `/metrics` endpoint. `0` disables the metrics server entirely. */
       metricsPort: z.number().int().nonnegative().default(9466),
+      telemetry: z
+        .strictObject({
+          enabled: z.boolean().default(false),
+          serviceName: z.string().min(1).default("streambot"),
+          otlpEndpoint: z
+            .url()
+            .default("http://tempo.tempo.svc.cluster.local:4318"),
+          lokiOtlpEndpoint: z
+            .url()
+            .default("http://loki-gateway.loki/otlp/v1/logs"),
+        })
+        .default({
+          enabled: false,
+          serviceName: "streambot",
+          otlpEndpoint: "http://tempo.tempo.svc.cluster.local:4318",
+          lokiOtlpEndpoint: "http://loki-gateway.loki/otlp/v1/logs",
+        }),
     })
-    .default({ metricsPort: 9466 }),
+    .default({
+      metricsPort: 9466,
+      telemetry: {
+        enabled: false,
+        serviceName: "streambot",
+        otlpEndpoint: "http://tempo.tempo.svc.cluster.local:4318",
+        lokiOtlpEndpoint: "http://loki-gateway.loki/otlp/v1/logs",
+      },
+    }),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

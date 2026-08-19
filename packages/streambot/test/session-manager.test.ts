@@ -114,6 +114,9 @@ function fakeStreamer(): FakeStreamer {
     setVoiceAudioListener: () => {
       /* voice is disabled in this fake */
     },
+    setVoiceReceiveObserver: () => {
+      /* voice is disabled in this fake */
+    },
     seek: () => Promise.resolve(true),
     getPosition: () => positionSeconds.value,
     userId: () => "200000000000000000",

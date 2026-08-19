@@ -34,6 +34,12 @@ import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts"
 import type { PlaylistItem } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
+import type {
+  VoiceDebugCaptureStatus,
+  VoiceDebugStartResult,
+  VoiceDebugStopResult,
+} from "@shepherdjerred/streambot/voice/capture-manager.ts";
+import { runVoiceDebugCommand } from "@shepherdjerred/streambot/discord/voice-debug-command.ts";
 import {
   PlaybackCommandBoundaryError,
   PlaybackCommandService,
@@ -54,7 +60,9 @@ const SUBTITLE_ENUMERATION_TIMEOUT_MS = 15_000;
 export type CommandInteraction = {
   readonly userId: UserId;
   subcommand: () => string;
+  subcommandGroup: () => string | null;
   getString: (name: string) => string | null;
+  getInteger: (name: string) => number | null;
   getStringRequired: (name: string) => string;
   getIntegerRequired: (name: string) => number;
   /** Ephemeral ack to the invoker. */
@@ -123,6 +131,11 @@ export type CommandHandlerDeps = {
   readonly claimSubtitleMenu: () => boolean;
   /** Release the single-flight slot (call on pick, timeout, or error). */
   readonly releaseSubtitleMenu: () => void;
+  readonly startVoiceDebugCapture: (
+    durationSeconds: number,
+  ) => VoiceDebugStartResult;
+  readonly stopVoiceDebugCapture: () => VoiceDebugStopResult;
+  readonly voiceDebugCaptureStatus: () => VoiceDebugCaptureStatus | null;
 };
 
 /**
@@ -140,6 +153,10 @@ export class CommandHandler {
 
   async run(interaction: CommandInteraction): Promise<void> {
     const sub = interaction.subcommand();
+    if (interaction.subcommandGroup() === "voice-debug") {
+      await runVoiceDebugCommand(this.deps, sub, interaction);
+      return;
+    }
     if (await this.runPlaybackCommand(sub, interaction)) {
       return;
     }

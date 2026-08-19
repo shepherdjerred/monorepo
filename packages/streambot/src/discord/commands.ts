@@ -214,6 +214,29 @@ export const commandDefinitions = [
       sub
         .setName("help")
         .setDescription("List all commands and supported sources"),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("voice-debug")
+        .setDescription("Capture decoded voice input for diagnosis (admin)")
+        .addSubcommand((sub) =>
+          sub
+            .setName("start")
+            .setDescription("Start a private decoded-audio capture window")
+            .addIntegerOption((option) =>
+              option
+                .setName("duration")
+                .setDescription("capture duration in seconds (default 60)")
+                .setMinValue(10)
+                .setMaxValue(300),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("stop").setDescription("Stop the active capture window"),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("status").setDescription("Show capture window status"),
+        ),
     ),
 ];
 

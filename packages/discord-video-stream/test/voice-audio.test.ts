@@ -14,6 +14,12 @@ import {
   advanceRtpTimestamp,
   prepareAssistantOpus,
 } from "../src/client/voice/WebRtcWrapper.ts";
+import type {
+  VoiceDaveObservation,
+  VoiceReceivePacketObservation,
+  VoiceReceiveStateObservation,
+  VoiceSpeakingObservation,
+} from "../src/client/voice/VoiceReceiveObserver.ts";
 
 function rtpPacket(options: {
   ssrc: number;
@@ -209,6 +215,225 @@ describe("bidirectional voice policy", () => {
     connection.handleIncomingAudioPacket(new Uint8Array(4));
     expect(errors).toHaveLength(1);
     expect(errors[0]?.message).toContain("RTP");
+  });
+
+  test("observes bounded packet outcomes and speaker mappings", () => {
+    const packets: VoiceReceivePacketObservation[] = [];
+    const speaking: VoiceSpeakingObservation[] = [];
+    const dave: VoiceDaveObservation[] = [];
+    const receiveStates: VoiceReceiveStateObservation[] = [];
+    const streamer = new Streamer(new Client());
+    const connection = new VoiceConnection(
+      streamer,
+      "guild-1",
+      "bot-1",
+      "channel-1",
+      () => {},
+      {
+        receiveAudio: true,
+        receiveObserver: {
+          onPacket: (observation) => packets.push(observation),
+          onSpeaking: (observation) => speaking.push(observation),
+          onDaveState: (observation) => dave.push(observation),
+          onReceiveState: (observation) => receiveStates.push(observation),
+        },
+      },
+    );
+
+    connection.handleIncomingAudioPacket(
+      rtpPacket({ ssrc: 10, payload: [1, 2, 3] }),
+    );
+    connection.handleSpeakingUpdate({
+      speaking: 1,
+      delay: 0,
+      ssrc: 11,
+      user_id: "bot-1",
+    });
+    connection.handleIncomingAudioPacket(
+      rtpPacket({ ssrc: 11, payload: [1, 2, 3] }),
+    );
+    connection.handleSpeakingUpdate({
+      speaking: 1,
+      delay: 0,
+      ssrc: 12,
+      user_id: "speaker-1",
+    });
+    connection.handleIncomingAudioPacket(
+      rtpPacket({ ssrc: 12, payload: [1, 2, 3] }),
+    );
+    connection.handleIncomingAudioPacket(new Uint8Array(4));
+    connection.handleClientDisconnect("speaker-1");
+
+    expect(packets.map(({ outcome }) => outcome)).toEqual([
+      "unmapped-ssrc",
+      "self",
+      "accepted",
+      "malformed",
+    ]);
+    expect(packets.map(({ packetBytes }) => packetBytes)).toEqual([15, 15, 15, 4]);
+    expect(speaking).toEqual([
+      { state: "mapped", userId: "bot-1", ssrc: 11, speaking: true },
+      { state: "mapped", userId: "speaker-1", ssrc: 12, speaking: true },
+      {
+        state: "disconnected",
+        userId: "speaker-1",
+        ssrc: 12,
+        speaking: false,
+      },
+    ]);
+    expect(dave).toEqual([
+      { protocolVersion: 0, required: false, ready: true },
+    ]);
+    expect(receiveStates).toEqual([{ ready: false }]);
+  });
+
+  test("reports receive readiness across protocol setup and teardown", async () => {
+    const states: VoiceReceiveStateObservation[] = [];
+    const connection = new VoiceConnection(
+      new Streamer(new Client()),
+      "guild-1",
+      "bot-1",
+      "channel-1",
+      () => {},
+      {
+        receiveAudio: true,
+        receiveObserver: {
+          onReceiveState: (observation) => states.push(observation),
+        },
+      },
+    );
+    await connection.handleProtocolAck({
+      audio_codec: "opus",
+      video_codec: "H264",
+      media_session_id: "media-session",
+      dave_protocol_version: 0,
+      sdp: "c=IN IP4 127.0.0.1\na=rtcp:5000\na=ice-ufrag:test\na=ice-pwd:test\na=fingerprint:sha-256 test\na=candidate:test",
+    });
+    connection.stop();
+    expect(states).toEqual([{ ready: false }, { ready: true }, { ready: false }]);
+  });
+
+  test("never reports receive readiness when audio receive is disabled", async () => {
+    const states: VoiceReceiveStateObservation[] = [];
+    const connection = new VoiceConnection(
+      new Streamer(new Client()),
+      "guild-1",
+      "bot-1",
+      "channel-1",
+      () => {},
+      {
+        receiveAudio: false,
+        receiveObserver: {
+          onReceiveState: (observation) => states.push(observation),
+        },
+      },
+    );
+    await connection.handleProtocolAck({
+      audio_codec: "opus",
+      video_codec: "H264",
+      media_session_id: "media-session",
+      dave_protocol_version: 0,
+      sdp: "c=IN IP4 127.0.0.1\na=rtcp:5000\na=ice-ufrag:test\na=ice-pwd:test\na=fingerprint:sha-256 test\na=candidate:test",
+    });
+    connection.stop();
+    expect(states).toEqual([{ ready: false }]);
+  });
+
+  test("replaces an active observer and replays bounded receive state", async () => {
+    const firstPackets: VoiceReceivePacketObservation[] = [];
+    const replacementPackets: VoiceReceivePacketObservation[] = [];
+    const replacementSpeaking: VoiceSpeakingObservation[] = [];
+    const replacementDave: VoiceDaveObservation[] = [];
+    const replacementStates: VoiceReceiveStateObservation[] = [];
+    const connection = new VoiceConnection(
+      new Streamer(new Client()),
+      "guild-1",
+      "bot-1",
+      "channel-1",
+      () => {},
+      {
+        receiveAudio: true,
+        receiveObserver: {
+          onPacket: (observation) => firstPackets.push(observation),
+        },
+      },
+    );
+    connection.handleSpeakingUpdate({
+      speaking: 1,
+      delay: 0,
+      ssrc: 42,
+      user_id: "speaker-1",
+    });
+    await connection.handleProtocolAck({
+      audio_codec: "opus",
+      video_codec: "H264",
+      media_session_id: "media-session",
+      dave_protocol_version: 0,
+      sdp: "c=IN IP4 127.0.0.1\na=rtcp:5000\na=ice-ufrag:test\na=ice-pwd:test\na=fingerprint:sha-256 test\na=candidate:test",
+    });
+
+    connection.setReceiveObserver({
+      onPacket: (observation) => replacementPackets.push(observation),
+      onSpeaking: (observation) => replacementSpeaking.push(observation),
+      onDaveState: (observation) => replacementDave.push(observation),
+      onReceiveState: (observation) => replacementStates.push(observation),
+    });
+    connection.handleIncomingAudioPacket(
+      rtpPacket({ ssrc: 42, payload: [1, 2, 3] }),
+    );
+
+    expect(firstPackets).toEqual([]);
+    expect(replacementPackets.map(({ outcome }) => outcome)).toEqual([
+      "accepted",
+    ]);
+    expect(replacementStates).toEqual([{ ready: true }]);
+    expect(replacementDave).toEqual([
+      { protocolVersion: 0, required: false, ready: true },
+    ]);
+    expect(replacementSpeaking).toEqual([
+      {
+        state: "mapped",
+        userId: "speaker-1",
+        ssrc: 42,
+        speaking: true,
+      },
+    ]);
+  });
+
+  test("isolates observer failures from accepted audio delivery", () => {
+    const streamer = new Streamer(new Client());
+    const connection = new VoiceConnection(
+      streamer,
+      "guild-1",
+      "bot-1",
+      "channel-1",
+      () => {},
+      {
+        receiveAudio: true,
+        receiveObserver: {
+          onPacket: () => {
+            throw new Error("observer failed");
+          },
+        },
+      },
+    );
+    const received: Uint8Array[] = [];
+    const errors: Error[] = [];
+    connection.on("audio", ({ opus }) => received.push(opus));
+    connection.on("audio_error", (error) => errors.push(error));
+    connection.handleSpeakingUpdate({
+      speaking: 1,
+      delay: 0,
+      ssrc: 42,
+      user_id: "speaker-1",
+    });
+
+    connection.handleIncomingAudioPacket(
+      rtpPacket({ ssrc: 42, payload: [1, 2, 3] }),
+    );
+
+    expect(received).toEqual([new Uint8Array([1, 2, 3])]);
+    expect(errors.map(({ message }) => message)).toEqual(["observer failed"]);
   });
 
   test("decrypts and encrypts only across ready DAVE boundaries", () => {

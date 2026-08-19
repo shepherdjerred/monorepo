@@ -11,6 +11,7 @@ import { exportBuildkitdDashboardJson } from "@shepherdjerred/homelab/cdk8s/graf
 import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/zfs-dashboard.ts";
 import { exportTemporalDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/temporal-dashboard.ts";
 import { exportStreambotDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/streambot-dashboard.ts";
+import { exportStreambotVoiceDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/streambot-voice-dashboard.ts";
 import { exportStaticSiteProbesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/static-site-probes-dashboard.ts";
 import { exportDiscordPlaysDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/discord-plays-dashboard.ts";
 import { exportAlertDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/alert-dashboard.ts";
@@ -140,6 +141,13 @@ const STREAMBOT_DASHBOARD: DashboardConfig = {
   exportFn: exportStreambotDashboardJson,
 };
 
+const STREAMBOT_VOICE_DASHBOARD: DashboardConfig = {
+  id: "streambot-voice-dashboard-configmap",
+  name: "streambot-voice-dashboard",
+  jsonFilename: "streambot-voice.json",
+  exportFn: exportStreambotVoiceDashboardJson,
+};
+
 const DISCORD_PLAYS_DASHBOARD: DashboardConfig = {
   id: "discord-plays-dashboard-configmap",
   name: "discord-plays-dashboard",
@@ -163,6 +171,7 @@ const ALL_DASHBOARDS: DashboardConfig[] = [
   SMARTCTL_DASHBOARD,
   STATIC_SITE_PROBES_DASHBOARD,
   STREAMBOT_DASHBOARD,
+  STREAMBOT_VOICE_DASHBOARD,
   TASKNOTES_DASHBOARD,
   TEMPORAL_DASHBOARD,
   VELERO_DASHBOARD,

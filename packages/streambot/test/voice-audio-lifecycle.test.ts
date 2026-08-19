@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
+import { trace } from "@opentelemetry/api";
 import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
 import { VoiceAudioLifecycle } from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";
-import type { WakeCandidateEvidence } from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";
+import type { WakeCandidateEvidence } from "@shepherdjerred/streambot/voice/audio-lifecycle-types.ts";
 import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
+import type { VoiceAttemptHandle } from "@shepherdjerred/streambot/voice/attempt-context.ts";
 
 function audio(userId: string, marker: number): ReceivedVoiceAudio {
   return { userId, ssrc: marker, opus: new Uint8Array([marker]) };
@@ -50,6 +52,34 @@ function fakeModels(wakeOn: number, vadEndsOn: number): LocalVoiceModels {
     verifyWakePhrase: () => Promise.resolve({ accepted: true, score: 0.9 }),
     close: () => Promise.resolve(),
   };
+}
+
+function recordingAttempt() {
+  const finishes: string[] = [];
+  const endpoints: string[] = [];
+  const handle: VoiceAttemptHandle = {
+    captureId: crypto.randomUUID(),
+    traceId: undefined,
+    run: async (fn) => await fn(),
+    runStage: async (_name, _attributes, fn) => {
+      const span = trace.getTracer("voice-lifecycle-test").startSpan("test");
+      try {
+        return await fn(span);
+      } finally {
+        span.end();
+      }
+    },
+    recordStage: () => null,
+    localVerification: () => null,
+    endpoint: (evidence) => endpoints.push(evidence.reason),
+    transcription: () => null,
+    tool: () => null,
+    cloudOutcome: () => null,
+    cloudUsage: () => null,
+    reply: () => null,
+    finish: (outcome) => finishes.push(outcome),
+  };
+  return { handle, finishes, endpoints };
 }
 
 describe("VoiceAudioLifecycle", () => {
@@ -244,6 +274,84 @@ describe("VoiceAudioLifecycle", () => {
 });
 
 describe("VoiceAudioLifecycle endpointing and cleanup", () => {
+  test("ends a locally rejected attempt exactly once with its verifier audio", async () => {
+    const attempt = recordingAttempt();
+    const models = fakeModels(2, 4);
+    const lifecycle = new VoiceAudioLifecycle({
+      models: {
+        ...models,
+        verifyWakePhrase: () =>
+          Promise.resolve({ accepted: false, score: 0.1 }),
+      },
+      preRollMs: 0,
+      maxUtteranceMs: 15_000,
+      verificationDelayMs: 0,
+      postVerificationMs: 0,
+      createDecoder: () => ({
+        decode: (opus) => new Float32Array([opus[0] ?? 0]),
+        close: () => null,
+      }),
+      beginAttempt: () => attempt.handle,
+      onTurn: () => Promise.reject(new Error("rejected wake reached turn")),
+    });
+
+    lifecycle.accept(audio("speaker-a", 2));
+    lifecycle.accept(audio("speaker-a", 3));
+    await Bun.sleep(0);
+    lifecycle.close();
+
+    expect(attempt.endpoints).toEqual(["local-rejected"]);
+    expect(attempt.finishes).toEqual(["local-rejected"]);
+  });
+
+  test("ends a closed candidate exactly once", () => {
+    const attempt = recordingAttempt();
+    const lifecycle = new VoiceAudioLifecycle({
+      models: fakeModels(2, 4),
+      preRollMs: 0,
+      maxUtteranceMs: 15_000,
+      verificationDelayMs: 200,
+      createDecoder: () => ({
+        decode: (opus) => new Float32Array([opus[0] ?? 0]),
+        close: () => null,
+      }),
+      beginAttempt: () => attempt.handle,
+      onTurn: () => Promise.reject(new Error("closed wake reached turn")),
+    });
+
+    lifecycle.accept(audio("speaker-a", 2));
+    lifecycle.close();
+    lifecycle.close();
+
+    expect(attempt.endpoints).toEqual(["closed"]);
+    expect(attempt.finishes).toEqual(["closed"]);
+  });
+
+  test("ends a delivery failure exactly once", async () => {
+    const attempt = recordingAttempt();
+    const lifecycle = new VoiceAudioLifecycle({
+      models: fakeModels(2, 4),
+      preRollMs: 0,
+      maxUtteranceMs: 15_000,
+      verificationDelayMs: 0,
+      postVerificationMs: 0,
+      createDecoder: () => ({
+        decode: (opus) => new Float32Array([opus[0] ?? 0]),
+        close: () => null,
+      }),
+      beginAttempt: () => attempt.handle,
+      onTurn: () => Promise.reject(new Error("delivery failed")),
+    });
+
+    lifecycle.accept(audio("speaker-a", 2));
+    lifecycle.accept(audio("speaker-a", 4));
+    await Bun.sleep(0);
+    lifecycle.close();
+
+    expect(attempt.endpoints).toEqual(["vad"]);
+    expect(attempt.finishes).toEqual(["delivery-error"]);
+  });
+
   test("starts VAD at the candidate boundary while retaining pre-roll for submission", async () => {
     const vadInputs: number[] = [];
     const turns: number[][] = [];
@@ -360,6 +468,66 @@ describe("VoiceAudioLifecycle endpointing and cleanup", () => {
     lifecycle.accept(audio("speaker-a", 2));
     await Bun.sleep(5);
     expect(abandoned).toEqual(["timeout"]);
+    lifecycle.close();
+  });
+});
+
+describe("VoiceAudioLifecycle timeout isolation", () => {
+  test("a late verifier cannot revive a timed-out attempt or contaminate the next turn", async () => {
+    const firstVerification = Promise.withResolvers<{
+      accepted: boolean;
+      score: number;
+    }>();
+    const attempts = [recordingAttempt(), recordingAttempt()];
+    const turns: string[] = [];
+    let verificationCalls = 0;
+    let attemptIndex = 0;
+    const models = fakeModels(2, 4);
+    const lifecycle = new VoiceAudioLifecycle({
+      models: {
+        ...models,
+        verifyWakePhrase: () => {
+          verificationCalls += 1;
+          return verificationCalls === 1
+            ? firstVerification.promise
+            : Promise.resolve({ accepted: true, score: 0.9 });
+        },
+      },
+      preRollMs: 0,
+      maxUtteranceMs: 1,
+      verificationDelayMs: 0,
+      postVerificationMs: 0,
+      createDecoder: () => ({
+        decode: (opus) => new Float32Array([opus[0] ?? 0]),
+        close: () => null,
+      }),
+      beginAttempt: () => {
+        const attempt = attempts[attemptIndex];
+        if (attempt === undefined) throw new Error("Unexpected voice attempt");
+        attemptIndex += 1;
+        return attempt.handle;
+      },
+      onTurn: (turn) => {
+        turns.push(turn.userId);
+        return Promise.resolve();
+      },
+    });
+
+    lifecycle.accept(audio("speaker-a", 2));
+    lifecycle.accept(audio("speaker-a", 3));
+    await Bun.sleep(5);
+    expect(attempts[0]?.endpoints).toEqual(["timeout"]);
+    expect(attempts[0]?.finishes).toEqual(["timeout"]);
+
+    firstVerification.resolve({ accepted: true, score: 0.9 });
+    await Bun.sleep(0);
+    lifecycle.accept(audio("speaker-b", 2));
+    lifecycle.accept(audio("speaker-b", 4));
+    await Bun.sleep(0);
+
+    expect(turns).toEqual(["speaker-b"]);
+    expect(attempts[0]?.endpoints).toEqual(["timeout"]);
+    expect(attempts[0]?.finishes).toEqual(["timeout"]);
     lifecycle.close();
   });
 });

@@ -24,6 +24,11 @@ import { startGpuCollector } from "@shepherdjerred/streambot/observability/gpu-c
 import { initializeSentry } from "@shepherdjerred/streambot/observability/sentry.ts";
 import { initializeLocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
 import { loadSpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
+import {
+  initializeTelemetry,
+  shutdownTelemetry,
+} from "@shepherdjerred/streambot/observability/tracing.ts";
+import { VoiceCaptureManager } from "@shepherdjerred/streambot/voice/capture-manager.ts";
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
@@ -31,6 +36,10 @@ async function main(): Promise<void> {
   // Initialize before anything else so early failures are captured.
   initializeSentry();
   const config = loadConfig();
+  // Manual voice spans and correlated logs must be active before model initialization emits its
+  // first diagnostics. The OpenAI SDK's own tracing remains explicitly disabled per turn.
+  initializeTelemetry(config.observability);
+  const voiceCaptureManager = new VoiceCaptureManager(config.voice.capture);
   const voiceModels = await initializeLocalVoiceModels(config.voice);
   // Same posture as the models: pinned assets, loaded and validated at boot, fatal when broken.
   const voiceFeedbackClips =
@@ -112,6 +121,7 @@ async function main(): Promise<void> {
       resolveSource(config, source, signal),
     voiceModels,
     voiceFeedbackClips,
+    voiceCaptureManager,
   });
   refs.sessions = sessions;
 
@@ -133,6 +143,8 @@ async function main(): Promise<void> {
     await commandBot.destroy();
     await pool.destroy();
     await voiceModels?.close();
+    await voiceCaptureManager.shutdown();
+    await shutdownTelemetry();
     await stopMetricsServer();
     process.exit(0);
   }

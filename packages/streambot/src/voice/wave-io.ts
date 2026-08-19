@@ -1,3 +1,62 @@
+const WAV_HEADER_BYTES = 44;
+
+function writeAscii(view: DataView, offset: number, text: string): void {
+  for (let index = 0; index < text.length; index += 1) {
+    const codePoint = text.codePointAt(index);
+    if (codePoint === undefined) throw new Error("Invalid WAV header text");
+    view.setUint8(offset + index, codePoint);
+  }
+}
+
+/** Encode the exact mono Float32 samples consumed by voice detection as a PCM16 WAV. */
+export function encodePcm16MonoWave(
+  samples: Float32Array,
+  sampleRate: number,
+): Uint8Array {
+  return encodePcm16MonoWaveBytes(encodePcm16Samples(samples), sampleRate);
+}
+
+export function encodePcm16Samples(samples: Float32Array): Uint8Array {
+  const pcm = new Uint8Array(samples.length * 2);
+  const view = new DataView(pcm.buffer);
+  for (const [index, rawSample] of samples.entries()) {
+    const sample = Math.max(-1, Math.min(1, rawSample));
+    view.setInt16(
+      index * 2,
+      Math.round(sample < 0 ? sample * 32_768 : sample * 32_767),
+      true,
+    );
+  }
+  return pcm;
+}
+
+export function encodePcm16MonoWaveBytes(
+  pcm: Uint8Array,
+  sampleRate: number,
+): Uint8Array {
+  if (pcm.byteLength % 2 !== 0) {
+    throw new Error("PCM16 audio must contain complete samples");
+  }
+  const dataBytes = pcm.byteLength;
+  const wav = new Uint8Array(WAV_HEADER_BYTES + dataBytes);
+  const view = new DataView(wav.buffer);
+  writeAscii(view, 0, "RIFF");
+  view.setUint32(4, 36 + dataBytes, true);
+  writeAscii(view, 8, "WAVE");
+  writeAscii(view, 12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeAscii(view, 36, "data");
+  view.setUint32(40, dataBytes, true);
+  wav.set(pcm, WAV_HEADER_BYTES);
+  return wav;
+}
+
 /** Strict little PCM16 mono WAV reader for pinned voice assets; throws on anything else. */
 export async function readPcm16MonoWave(
   filename: string,

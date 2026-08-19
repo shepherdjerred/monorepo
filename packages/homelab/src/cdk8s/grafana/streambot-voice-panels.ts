@@ -1,17 +1,66 @@
+import * as common from "@grafana/grafana-foundation-sdk/common";
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
+import * as stat from "@grafana/grafana-foundation-sdk/stat";
 import * as timeseries from "@grafana/grafana-foundation-sdk/timeseries";
+
+const VOICE_DASHBOARD_LINK = new dashboard.DashboardLinkBuilder(
+  "Open Streambot Voice dashboard",
+)
+  .url("/d/streambot-voice/streambot-voice")
+  .keepTime(true);
 
 export function addVoiceAssistantPanels(
   builder: dashboard.DashboardBuilder,
 ): void {
   const prometheusDatasource = { type: "prometheus", uid: "Prometheus" };
-  builder.withRow(new dashboard.RowBuilder("Voice assistant"));
+  builder.withRow(new dashboard.RowBuilder("Voice assistant summary"));
+  builder.withPanel(
+    new stat.PanelBuilder()
+      .title("Active / ready voice sessions")
+      .description(
+        "Active playback sessions and sessions whose Discord receive/DAVE path is ready.",
+      )
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("sum(streambot_voice_sessions_active) or on() vector(0)")
+          .legendFormat("active"),
+      )
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            "sum(streambot_voice_receive_ready * on(guild_id, channel_id) streambot_voice_dave_ready) or on() vector(0)",
+          )
+          .legendFormat("ready"),
+      )
+      .links([VOICE_DASHBOARD_LINK])
+      .colorMode(common.BigValueColorMode.Background)
+      .gridPos({ x: 0, y: 58, w: 6, h: 7 }),
+  );
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("Voice ingress age")
+      .description(
+        "Seconds since the most recent Discord voice packet. Inactivity is diagnostic only and does not notify.",
+      )
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr("time() - (streambot_voice_last_packet_timestamp_seconds > 0)")
+          .legendFormat("{{guild_id}}/{{channel_id}}"),
+      )
+      .links([VOICE_DASHBOARD_LINK])
+      .unit("s")
+      .lineWidth(2)
+      .fillOpacity(10)
+      .gridPos({ x: 6, y: 58, w: 6, h: 7 }),
+  );
   builder.withPanel(
     new timeseries.PanelBuilder()
       .title("Voice activation funnel")
       .description(
-        "Privacy-safe cascade throughput: permissive local candidates, phrase-verifier passes, cloud transcript passes, commands, and retry responses.",
+        "Permissive candidates, local verifier passes, cloud prefix passes, and commands.",
       )
       .datasource(prometheusDatasource)
       .withTarget(
@@ -19,7 +68,7 @@ export function addVoiceAssistantPanels(
           .expr(
             "sum(rate(streambot_voice_wake_candidates_total[5m])) or on() vector(0)",
           )
-          .legendFormat("sherpa candidates/s"),
+          .legendFormat("candidates/s"),
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
@@ -42,96 +91,30 @@ export function addVoiceAssistantPanels(
           )
           .legendFormat("commands/s"),
       )
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            'sum(rate(streambot_voice_turns_total{outcome="no-command"}[5m])) or on() vector(0)',
-          )
-          .legendFormat("retries/s"),
-      )
+      .links([VOICE_DASHBOARD_LINK])
       .unit("none")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 0, y: 58, w: 8, h: 7 }),
+      .gridPos({ x: 12, y: 58, w: 6, h: 7 }),
   );
   builder.withPanel(
     new timeseries.PanelBuilder()
-      .title("Wake-to-reply latency p95")
+      .title("Voice failure rate")
       .description(
-        "Time from local wake detection to the first assistant audio packet.",
+        "OpenAI, reply-send, and turn-delivery failures divided by wake candidates.",
       )
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            "histogram_quantile(0.95, sum by (le) (rate(streambot_voice_wake_to_reply_seconds_bucket[5m]))) or on() vector(0)",
+            "(sum(rate(streambot_voice_openai_failures_total[5m])) + sum(rate(streambot_voice_reply_send_failures_total[5m])) + sum(rate(streambot_voice_turn_delivery_failures_total[5m]))) / clamp_min(sum(rate(streambot_voice_wake_candidates_total[5m])), 0.001)",
           )
-          .legendFormat("p95"),
+          .legendFormat("failures/candidate"),
       )
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            "histogram_quantile(0.95, sum by (stage, le) (rate(streambot_voice_activation_stage_latency_seconds_bucket[5m]))) or on() vector(0)",
-          )
-          .legendFormat("{{stage}} p95"),
-      )
-      .unit("s")
+      .links([VOICE_DASHBOARD_LINK])
+      .unit("percentunit")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 8, y: 58, w: 8, h: 7 }),
-  );
-  builder.withPanel(
-    new timeseries.PanelBuilder()
-      .title("Voice tool and OpenAI outcomes")
-      .description(
-        "Bounded tool/outcome counters plus Realtime failures; labels never contain request content.",
-      )
-      .datasource(prometheusDatasource)
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            "sum by (tool, outcome) (rate(streambot_voice_tool_calls_total[5m])) or on() vector(0)",
-          )
-          .legendFormat("{{tool}} {{outcome}}"),
-      )
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            "sum by (stage) (rate(streambot_voice_openai_failures_total[5m])) or on() vector(0)",
-          )
-          .legendFormat("OpenAI {{stage}}"),
-      )
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            "sum by (reason) (rate(streambot_voice_cloud_verification_rate_limits_total[5m])) or on() vector(0)",
-          )
-          .legendFormat("rate limit {{reason}}"),
-      )
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            "sum by (outcome) (rate(streambot_voice_transcript_verifications_total[5m])) or on() vector(0)",
-          )
-          .legendFormat("transcript {{outcome}}"),
-      )
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            "sum by (outcome) (rate(streambot_voice_local_verifications_total[5m])) or on() vector(0)",
-          )
-          .legendFormat("local {{outcome}}"),
-      )
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(
-            "sum by (unit, direction) (rate(streambot_voice_transcription_usage_total[5m])) or on() vector(0)",
-          )
-          .legendFormat("transcription {{direction}} {{unit}}/s"),
-      )
-      .unit("none")
-      .lineWidth(2)
-      .fillOpacity(10)
-      .gridPos({ x: 16, y: 58, w: 8, h: 7 }),
+      .gridPos({ x: 18, y: 58, w: 6, h: 7 }),
   );
 }

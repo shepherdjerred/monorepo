@@ -9,10 +9,10 @@ import {
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { createStreamObserver } from "@shepherdjerred/streambot/observability/stream-observer.ts";
 import {
-  register,
   startMetricsServer,
   stopMetricsServer,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
+import { register } from "@shepherdjerred/streambot/observability/metrics-registry.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 /**
