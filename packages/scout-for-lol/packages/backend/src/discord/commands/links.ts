@@ -16,5 +16,5 @@ export function getDocsUrl(): string {
 }
 
 export function getExploreConversationUrl(conversationId: string): string {
-  return `${getOrigin()}/app/explore/${conversationId}`;
+  return `${getOrigin()}/app/explore/${conversationId}/`;
 }

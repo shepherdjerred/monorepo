@@ -24,7 +24,7 @@ describe("stage-aware Discord links", () => {
 
     expect(getDocsUrl()).toBe("https://beta.scout-for-lol.com/docs/");
     expect(getExploreConversationUrl("conversation-id")).toBe(
-      "https://beta.scout-for-lol.com/app/explore/conversation-id",
+      "https://beta.scout-for-lol.com/app/explore/conversation-id/",
     );
   });
 
