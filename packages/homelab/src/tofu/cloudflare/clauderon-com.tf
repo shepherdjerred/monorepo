@@ -3,6 +3,14 @@ resource "cloudflare_zone" "clauderon_com" {
   name    = "clauderon.com"
 }
 
+# Preserve the existing record's state identity while changing its type. This
+# makes the CNAME-to-AAAA transition an ordered update rather than an
+# unrelated destroy/create pair.
+moved {
+  from = cloudflare_dns_record.clauderon_com_cname_apex
+  to   = cloudflare_dns_record.clauderon_com_apex
+}
+
 # The archived site is retired. Cloudflare's edge serves the redirect before
 # any origin fetch, so the discard address is never actually contacted.
 resource "cloudflare_dns_record" "clauderon_com_apex" {
@@ -32,6 +40,9 @@ resource "cloudflare_dns_record" "clauderon_com_apex_ipv4" {
   type    = "A"
   content = "192.0.2.1"
   proxied = true
+
+  # Cloudflare rejects A/AAAA records while the old apex CNAME still exists.
+  depends_on = [cloudflare_dns_record.clauderon_com_apex]
 }
 
 resource "cloudflare_dns_record" "clauderon_com_www_ipv4" {
