@@ -5,6 +5,12 @@ import {
   type BetButtonInteraction,
 } from "#src/betting/bet-button.ts";
 import { isBucksCustomId, parseBucksCustomId } from "#src/betting/custom-id.ts";
+import {
+  handleBucksNavigation,
+  isBucksNavigationId,
+  parseBucksNavigationId,
+  type BucksNavigationInteraction,
+} from "#src/betting/navigation.ts";
 import { createLogger } from "#src/logger.ts";
 import { discordComponentsTotal } from "#src/metrics/index.ts";
 
@@ -47,15 +53,42 @@ async function routeInteraction(interaction: Interaction): Promise<void> {
  * with no cast, and a test builds a plain one rather than reaching for the
  * `as`-based mock helpers.
  */
-export type RoutableButtonInteraction = BetButtonInteraction & {
-  deferUpdate: () => Promise<unknown>;
-  deferred: boolean;
-  replied: boolean;
-};
+export type RoutableButtonInteraction = BetButtonInteraction &
+  BucksNavigationInteraction & {
+    deferred: boolean;
+    replied: boolean;
+  };
 
 export async function routeButton(
   interaction: RoutableButtonInteraction,
 ): Promise<void> {
+  if (isBucksNavigationId(interaction.customId)) {
+    try {
+      if (parseBucksNavigationId(interaction.customId) === undefined) {
+        discordComponentsTotal.inc({
+          namespace: "bbnav",
+          status: "malformed",
+        });
+        await interaction.deferUpdate();
+        return;
+      }
+
+      await handleBucksNavigation(interaction);
+      discordComponentsTotal.inc({ namespace: "bbnav", status: "success" });
+    } catch (error) {
+      logger.error("❌ Error handling Bryan Bucks navigation:", error);
+      discordComponentsTotal.inc({ namespace: "bbnav", status: "error" });
+      if (interaction.deferred && !interaction.replied) {
+        await interaction.editReply({
+          content:
+            "😵 Something went wrong loading that page. Try again shortly.",
+          components: [],
+        });
+      }
+    }
+    return;
+  }
+
   if (!isBucksCustomId(interaction.customId)) {
     // Some other feature's component. Not ours to answer, and Discord shows the
     // clicker nothing for a component no handler claims.

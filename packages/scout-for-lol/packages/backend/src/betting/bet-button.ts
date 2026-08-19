@@ -4,6 +4,7 @@ import {
   DiscordGuildIdSchema,
   type BucksPoolParticipant,
 } from "@scout-for-lol/data";
+import type { InteractionEditReplyOptions } from "discord.js";
 import { parseBucksCustomId } from "#src/betting/custom-id.ts";
 import { placeBet, type PlaceBetResult } from "#src/betting/place-bet.ts";
 import { cancelBet, type CancelBetResult } from "#src/betting/cancel-bet.ts";
@@ -21,12 +22,17 @@ const logger = createLogger("betting-bet-button");
  * with no cast, and a test can pass a plain object with mock functions. That
  * avoids `castMock` in `discord-mocks.ts`, which is an `as` escape hatch.
  */
+export type BucksButtonEditReplyOptions = {
+  content: string;
+  components?: NonNullable<InteractionEditReplyOptions["components"]>;
+};
+
 export type BetButtonInteraction = {
   customId: string;
   guildId: string | null;
   user: { id: string };
   deferReply: (options: { ephemeral: true }) => Promise<unknown>;
-  editReply: (options: { content: string }) => Promise<unknown>;
+  editReply: (options: BucksButtonEditReplyOptions) => Promise<unknown>;
 };
 
 /** Turn a refusal into something a person can act on. Every branch is ordinary

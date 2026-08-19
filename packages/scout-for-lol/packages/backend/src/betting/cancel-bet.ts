@@ -4,6 +4,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
+import { findBucksAccountId } from "#src/betting/accounts.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -58,16 +59,8 @@ export async function cancelBet(
     return { kind: "no_pool" };
   }
 
-  const account = await prismaClient.bucksAccount.findUnique({
-    where: {
-      serverId_discordId: {
-        serverId: input.serverId,
-        discordId: input.discordId,
-      },
-    },
-    select: { id: true },
-  });
-  if (account === null) {
+  const bucksAccountId = await findBucksAccountId(input, prismaClient);
+  if (bucksAccountId === undefined) {
     // No wallet in this guild means no stake in this pool, so this is the same
     // answer as an empty bet slot rather than a distinct state.
     return { kind: "no_bet" };
@@ -92,7 +85,7 @@ export async function cancelBet(
         where: {
           poolId_bucksAccountId: {
             poolId: pool.id,
-            bucksAccountId: account.id,
+            bucksAccountId,
           },
         },
         select: { id: true },
@@ -123,7 +116,7 @@ export async function cancelBet(
       where: {
         poolId_bucksAccountId: {
           poolId: pool.id,
-          bucksAccountId: account.id,
+          bucksAccountId,
         },
       },
       select: { id: true, stake: true, predictedTeamId: true },
@@ -143,7 +136,7 @@ export async function cancelBet(
 
     // The ledger row references the bet, so credit before deleting it.
     const balanceAfter = await applyBucksDelta(tx, {
-      bucksAccountId: account.id,
+      bucksAccountId,
       delta: bet.stake,
       kind: "bet_refund",
       matchId: input.matchId,

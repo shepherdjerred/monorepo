@@ -1,5 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { bbCommand } from "#src/discord/commands/bb.ts";
+import {
+  bbCommand,
+  buildPersonalBucksEmbed,
+  buildBbRulesEmbed,
+  isPublicBbSubcommand,
+} from "#src/discord/commands/bb.ts";
+import type { PersonalBucksView } from "#src/betting/accounts.ts";
 import {
   BB_PRIZES,
   buildBbPrizesEmbed,
@@ -65,5 +71,73 @@ describe("/bb prizes", () => {
     }
 
     expect(rendered).not.toMatch(/one server|single-server|rural canada/iu);
+  });
+});
+
+describe("/bb command contract", () => {
+  test("removes the on-demand leaderboard and adds no-option rules/history", () => {
+    const command = bbCommand.toJSON();
+    const names = command.options?.map((option) => option.name) ?? [];
+    const history = command.options?.find(
+      (option) => option.name === "history",
+    );
+    const rules = command.options?.find((option) => option.name === "rules");
+
+    expect(names).not.toContain("leaderboard");
+    expect(rules).toEqual(
+      expect.objectContaining({ type: 1, name: "rules", options: [] }),
+    );
+    expect(history).toEqual(
+      expect.objectContaining({ type: 1, name: "history", options: [] }),
+    );
+  });
+
+  test("keeps personal and market views private", () => {
+    expect(isPublicBbSubcommand("balance")).toBe(false);
+    expect(isPublicBbSubcommand("history")).toBe(false);
+    expect(isPublicBbSubcommand("open")).toBe(false);
+    expect(isPublicBbSubcommand("bet")).toBe(false);
+    expect(isPublicBbSubcommand("rules")).toBe(true);
+    expect(isPublicBbSubcommand("prizes")).toBe(true);
+  });
+
+  test("keeps long pending-position aliases inside Discord's field limit", () => {
+    const view: PersonalBucksView = {
+      balance: 25,
+      totalStaked: 10,
+      pendingPositionCount: 10,
+      pendingPositions: Array.from({ length: 10 }, (_, index) => ({
+        matchId: `NA1_${index.toString()}`,
+        subjectAlias: `player-${index.toString()}-${"x".repeat(500)}`,
+        side: "WIN",
+        stake: 1,
+        closesAt: new Date(60_000),
+        poolState: "open",
+      })),
+    };
+
+    const pendingField = buildPersonalBucksEmbed(view, 0)
+      .toJSON()
+      .fields?.find((field) => field.name === "Pending positions");
+
+    expect(pendingField?.value.length).toBeLessThanOrEqual(1024);
+    expect(pendingField?.value.endsWith("...")).toBe(true);
+  });
+
+  test("rules explain the complete economy", () => {
+    const rendered = JSON.stringify(buildBbRulesEmbed().toJSON());
+    for (const phrase of [
+      "tracked League players",
+      "25 BB",
+      "+1 BB",
+      "1-1000 BB",
+      "10 minutes",
+      "cancel",
+      "split the losing side's pool",
+      "house matches",
+      "All stakes are returned",
+    ]) {
+      expect(rendered).toContain(phrase);
+    }
   });
 });

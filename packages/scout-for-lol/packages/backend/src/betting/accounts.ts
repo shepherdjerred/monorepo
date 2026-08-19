@@ -1,4 +1,11 @@
-import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
+import {
+  BucksPoolRosterSchema,
+  BucksPoolStateSchema,
+  RiotTeamIdSchema,
+  type DiscordAccountId,
+  type DiscordGuildId,
+  type RiotTeamId,
+} from "@scout-for-lol/data";
 import { SEED_GRANT } from "#src/betting/constants.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -49,6 +56,23 @@ export type BucksAccountRef = {
   id: number;
   balance: number;
 };
+
+/** The wallet ID for one Discord user in one guild, when it exists. */
+export async function findBucksAccountId(
+  input: { serverId: DiscordGuildId; discordId: DiscordAccountId },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<number | undefined> {
+  const account = await prismaClient.bucksAccount.findUnique({
+    where: {
+      serverId_discordId: {
+        serverId: input.serverId,
+        discordId: input.discordId,
+      },
+    },
+    select: { id: true },
+  });
+  return account?.id;
+}
 
 /**
  * Fetch or create this user's wallet in this guild.
@@ -126,24 +150,8 @@ export async function ensureBucksAccount(
   }
 }
 
-/** Current balance, or undefined when the user has never had a wallet here. */
-export async function getBalance(
-  input: { serverId: DiscordGuildId; discordId: DiscordAccountId },
-  prismaClient: ExtendedPrismaClient = prisma,
-): Promise<number | undefined> {
-  const account = await prismaClient.bucksAccount.findUnique({
-    where: {
-      serverId_discordId: {
-        serverId: input.serverId,
-        discordId: input.discordId,
-      },
-    },
-    select: { balance: true },
-  });
-  return account?.balance;
-}
-
 export type LedgerPageEntry = {
+  id: number;
   delta: number;
   balanceAfter: number;
   kind: string;
@@ -152,32 +160,81 @@ export type LedgerPageEntry = {
   createdAt: Date;
 };
 
-/** Most recent ledger rows, newest first — the "how did I get these" view. */
+export const LEDGER_PAGE_SIZE = 10;
+
+export type LedgerPage = {
+  entries: LedgerPageEntry[];
+  page: number;
+  pageSize: number;
+  totalEntries: number;
+  totalPages: number;
+  snapshotId: number | null;
+};
+
+/**
+ * One stable page of ledger rows, newest first.
+ *
+ * The first read freezes the account's maximum ledger ID. Every later page
+ * filters against that ID, so new earnings and settlements cannot move rows
+ * between pages while someone is navigating the response.
+ */
 export async function getLedgerPage(
   input: {
     serverId: DiscordGuildId;
     discordId: DiscordAccountId;
-    limit: number;
+    page: number;
+    snapshotId?: number;
   },
   prismaClient: ExtendedPrismaClient = prisma,
-): Promise<LedgerPageEntry[]> {
-  const account = await prismaClient.bucksAccount.findUnique({
+): Promise<LedgerPage> {
+  const bucksAccountId = await findBucksAccountId(input, prismaClient);
+  if (bucksAccountId === undefined) {
+    return {
+      entries: [],
+      page: 0,
+      pageSize: LEDGER_PAGE_SIZE,
+      totalEntries: 0,
+      totalPages: 0,
+      snapshotId: null,
+    };
+  }
+
+  const newest = await prismaClient.bucksLedgerEntry.findFirst({
     where: {
-      serverId_discordId: {
-        serverId: input.serverId,
-        discordId: input.discordId,
-      },
+      bucksAccountId,
+      ...(input.snapshotId === undefined
+        ? {}
+        : { id: { lte: input.snapshotId } }),
     },
+    orderBy: { id: "desc" },
     select: { id: true },
   });
-  if (account === null) {
-    return [];
+  const snapshotId = input.snapshotId ?? newest?.id ?? null;
+  if (snapshotId === null) {
+    return {
+      entries: [],
+      page: 0,
+      pageSize: LEDGER_PAGE_SIZE,
+      totalEntries: 0,
+      totalPages: 0,
+      snapshotId: null,
+    };
   }
-  return await prismaClient.bucksLedgerEntry.findMany({
-    where: { bucksAccountId: account.id },
-    orderBy: { createdAt: "desc" },
-    take: input.limit,
+
+  const where = {
+    bucksAccountId,
+    id: { lte: snapshotId },
+  };
+  const totalEntries = await prismaClient.bucksLedgerEntry.count({ where });
+  const totalPages = Math.ceil(totalEntries / LEDGER_PAGE_SIZE);
+  const page = Math.min(input.page, Math.max(totalPages - 1, 0));
+  const entries = await prismaClient.bucksLedgerEntry.findMany({
+    where,
+    orderBy: { id: "desc" },
+    skip: page * LEDGER_PAGE_SIZE,
+    take: LEDGER_PAGE_SIZE,
     select: {
+      id: true,
       delta: true,
       balanceAfter: true,
       kind: true,
@@ -186,17 +243,196 @@ export async function getLedgerPage(
       createdAt: true,
     },
   });
+
+  return {
+    entries,
+    page,
+    pageSize: LEDGER_PAGE_SIZE,
+    totalEntries,
+    totalPages,
+    snapshotId,
+  };
 }
 
-/** Top balances in a guild, for the leaderboard. */
-export async function getLeaderboard(
-  input: { serverId: DiscordGuildId; limit: number },
+export type PendingPosition = {
+  matchId: string;
+  subjectAlias: string;
+  side: "WIN" | "LOSE";
+  stake: number;
+  closesAt: Date;
+  poolState: string;
+};
+
+export type PersonalBucksView = {
+  balance: number;
+  totalStaked: number;
+  pendingPositionCount: number;
+  pendingPositions: PendingPosition[];
+};
+
+/** The caller's balance and at most ten of their pending positions. */
+export async function getPersonalBucksView(
+  input: { serverId: DiscordGuildId; discordId: DiscordAccountId },
   prismaClient: ExtendedPrismaClient = prisma,
-): Promise<{ discordId: string; balance: number }[]> {
-  return await prismaClient.bucksAccount.findMany({
+): Promise<PersonalBucksView | undefined> {
+  return await prismaClient.$transaction(async (tx) => {
+    const account = await tx.bucksAccount.findUnique({
+      where: {
+        serverId_discordId: {
+          serverId: input.serverId,
+          discordId: input.discordId,
+        },
+      },
+      select: { id: true, balance: true },
+    });
+    if (account === null) {
+      return;
+    }
+
+    const [aggregate, bets] = await Promise.all([
+      tx.bucksBet.aggregate({
+        where: { bucksAccountId: account.id, betOutcome: "pending" },
+        _sum: { stake: true },
+        _count: true,
+      }),
+      tx.bucksBet.findMany({
+        where: { bucksAccountId: account.id, betOutcome: "pending" },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: 10,
+        select: {
+          stake: true,
+          predictedTeamId: true,
+          subjectPuuid: true,
+          pool: {
+            select: {
+              matchId: true,
+              roster: true,
+              closesAt: true,
+              poolState: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      balance: account.balance,
+      totalStaked: aggregate._sum.stake ?? 0,
+      pendingPositionCount: aggregate._count,
+      pendingPositions: bets.map((bet) => {
+        const roster = BucksPoolRosterSchema.parse(
+          JSON.parse(bet.pool.roster),
+        ).participants;
+        const subject = roster.find(
+          (participant) => participant.puuid === bet.subjectPuuid,
+        );
+        if (subject?.trackedAlias === undefined) {
+          throw new Error(
+            `Pending Bryan Bucks position ${bet.pool.matchId} has no tracked subject`,
+          );
+        }
+        return {
+          matchId: bet.pool.matchId,
+          subjectAlias: subject.trackedAlias,
+          side:
+            RiotTeamIdSchema.parse(bet.predictedTeamId) === subject.teamId
+              ? "WIN"
+              : "LOSE",
+          stake: bet.stake,
+          closesAt: bet.pool.closesAt,
+          poolState: BucksPoolStateSchema.parse(bet.pool.poolState),
+        };
+      }),
+    };
+  });
+}
+
+export type OpenMarketSide = {
+  trackedPlayers: string[];
+  totalStake: number;
+  betCount: number;
+};
+
+export type OpenMarketAggregate = {
+  matchId: string;
+  closesAt: Date;
+  blue: OpenMarketSide;
+  red: OpenMarketSide;
+};
+
+function marketSide(
+  teamId: RiotTeamId,
+  roster: ReturnType<typeof BucksPoolRosterSchema.parse>["participants"],
+  bets: readonly { predictedTeamId: number; stake: number }[],
+): OpenMarketSide {
+  const sideBets = bets.filter(
+    (bet) => RiotTeamIdSchema.parse(bet.predictedTeamId) === teamId,
+  );
+  return {
+    trackedPlayers: roster
+      .filter((participant) => participant.teamId === teamId)
+      .map((participant) => participant.trackedAlias)
+      .filter((alias) => alias !== undefined),
+    totalStake: sideBets.reduce((total, bet) => total + bet.stake, 0),
+    betCount: sideBets.length,
+  };
+}
+
+/** Every currently open market, with anonymous stake aggregates only. */
+export async function getOpenMarketAggregates(
+  input: { serverId: DiscordGuildId; now?: Date },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<OpenMarketAggregate[]> {
+  const pools = await prismaClient.bucksMatchPool.findMany({
+    where: {
+      serverId: input.serverId,
+      poolState: "open",
+      closesAt: { gt: input.now ?? new Date() },
+    },
+    orderBy: [{ closesAt: "asc" }, { id: "asc" }],
+    select: {
+      matchId: true,
+      closesAt: true,
+      roster: true,
+      bets: {
+        where: { betOutcome: "pending", bucksAccount: { isHouse: false } },
+        select: { predictedTeamId: true, stake: true },
+      },
+    },
+  });
+
+  return pools.map((pool) => {
+    const roster = BucksPoolRosterSchema.parse(
+      JSON.parse(pool.roster),
+    ).participants;
+    return {
+      matchId: pool.matchId,
+      closesAt: pool.closesAt,
+      blue: marketSide(100, roster, pool.bets),
+      red: marketSide(200, roster, pool.bets),
+    };
+  });
+}
+
+export type FullLeaderboardRow = {
+  accountId: number;
+  discordId: string;
+  balance: number;
+};
+
+/** Every non-house wallet in one guild, for the scheduled weekly post only. */
+export async function getFullLeaderboard(
+  input: { serverId: DiscordGuildId },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<FullLeaderboardRow[]> {
+  const rows = await prismaClient.bucksAccount.findMany({
     where: { serverId: input.serverId, isHouse: false },
     orderBy: [{ balance: "desc" }, { id: "asc" }],
-    take: input.limit,
-    select: { discordId: true, balance: true },
+    select: { id: true, discordId: true, balance: true },
   });
+  return rows.map((row) => ({
+    accountId: row.id,
+    discordId: row.discordId,
+    balance: row.balance,
+  }));
 }

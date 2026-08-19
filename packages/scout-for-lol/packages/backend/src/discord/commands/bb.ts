@@ -9,18 +9,29 @@ import {
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
 import {
-  getBalance,
-  getLeaderboard,
   getLedgerPage,
+  getOpenMarketAggregates,
+  getPersonalBucksView,
+  type PersonalBucksView,
 } from "#src/betting/accounts.ts";
 import { placeBet } from "#src/betting/place-bet.ts";
 import { describeResult } from "#src/betting/bet-button.ts";
 import { announceBetPlacement } from "#src/betting/announce.ts";
-import { MAX_STAKE, MIN_STAKE } from "#src/betting/constants.ts";
+import {
+  BETTING_WINDOW_MS,
+  MAX_STAKE,
+  MIN_STAKE,
+  SEED_GRANT,
+} from "#src/betting/constants.ts";
+import { renderBucksHistory } from "#src/betting/navigation.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
 import { buildBbPrizesEmbed } from "#src/discord/commands/bb-prizes.ts";
+import {
+  splitMessageIntoChunks,
+  truncateEmbedFieldValue,
+} from "#src/discord/utils/message.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("command-bb");
@@ -46,11 +57,11 @@ const logger = createLogger("command-bb");
  * cannot drift in what they accept or how they explain a refusal.
  */
 
-const LEADERBOARD_SIZE = 10;
-const DEFAULT_HISTORY = 10;
-const MAX_HISTORY = 25;
-
 const BUCKS_COLOR = 0x2e_cc_71;
+
+export function isPublicBbSubcommand(subcommand: string): boolean {
+  return subcommand === "rules" || subcommand === "prizes";
+}
 
 export const bbCommand = new SlashCommandBuilder()
   .setName("bb")
@@ -62,19 +73,12 @@ export const bbCommand = new SlashCommandBuilder()
     sub.setName("prizes").setDescription("See what your Bryan Bucks can buy"),
   )
   .addSubcommand((sub) =>
-    sub.setName("leaderboard").setDescription("Who has the most Bryan Bucks"),
+    sub.setName("rules").setDescription("How Bryan Bucks works"),
   )
   .addSubcommand((sub) =>
     sub
       .setName("history")
-      .setDescription("How you earned and spent your Bryan Bucks")
-      .addIntegerOption((option) =>
-        option
-          .setName("count")
-          .setDescription(`How many entries (1-${MAX_HISTORY.toString()})`)
-          .setMinValue(1)
-          .setMaxValue(MAX_HISTORY),
-      ),
+      .setDescription("How you earned and spent your Bryan Bucks"),
   )
   .addSubcommand((sub) =>
     sub.setName("open").setDescription("Games you can still bet on"),
@@ -111,13 +115,55 @@ export const bbCommand = new SlashCommandBuilder()
       ),
   );
 
+export function buildPersonalBucksEmbed(
+  view: PersonalBucksView,
+  now: number = Date.now(),
+): EmbedBuilder {
+  const positions = view.pendingPositions.map((position) => {
+    const state =
+      position.poolState === "open" && position.closesAt.getTime() > now
+        ? `closes <t:${Math.floor(position.closesAt.getTime() / 1000).toString()}:R>`
+        : "locked";
+    return `• **${position.subjectAlias} ${position.side}** — ${position.stake.toString()} BB · ${state}`;
+  });
+  if (view.pendingPositionCount > view.pendingPositions.length) {
+    positions.push(
+      `…and ${(view.pendingPositionCount - view.pendingPositions.length).toString()} more pending position(s).`,
+    );
+  }
+
+  const embed = new EmbedBuilder()
+    .setTitle("💰 Your Bryan Bucks")
+    .setColor(BUCKS_COLOR)
+    .addFields(
+      {
+        name: "Available",
+        value: `**${view.balance.toString()} BB**`,
+        inline: true,
+      },
+      {
+        name: "Total staked",
+        value: `**${view.totalStaked.toString()} BB**`,
+        inline: true,
+      },
+    );
+  if (positions.length > 0) {
+    embed.addFields({
+      name: "Pending positions",
+      value: truncateEmbedFieldValue(positions.join("\n")),
+    });
+  }
+
+  return embed;
+}
+
 async function replyBalance(
   interaction: ChatInputCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
   discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
 ): Promise<void> {
-  const balance = await getBalance({ serverId, discordId });
-  if (balance === undefined) {
+  const view = await getPersonalBucksView({ serverId, discordId });
+  if (view === undefined) {
     await interaction.editReply({
       content:
         "You don't have a Bryan Bucks wallet yet — place your first bet on a live game and you'll be given a starting balance.",
@@ -125,52 +171,8 @@ async function replyBalance(
     return;
   }
 
-  const openBets = await prisma.bucksBet.findMany({
-    where: {
-      bucksAccount: { serverId, discordId },
-      betOutcome: "pending",
-    },
-    select: { stake: true },
-  });
-  const staked = openBets.reduce((total, bet) => total + bet.stake, 0);
-
   await interaction.editReply({
-    content:
-      `You have **${balance.toString()} BB**` +
-      (openBets.length > 0
-        ? ` with **${staked.toString()} BB** riding on ${openBets.length.toString()} open bet(s).`
-        : "."),
-  });
-}
-
-async function replyLeaderboard(
-  interaction: ChatInputCommandInteraction,
-  serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
-): Promise<void> {
-  const rows = await getLeaderboard({ serverId, limit: LEADERBOARD_SIZE });
-  if (rows.length === 0) {
-    await interaction.editReply({
-      content: "Nobody has any Bryan Bucks yet.",
-    });
-    return;
-  }
-
-  const embed = new EmbedBuilder()
-    .setTitle("💰 Bryan Bucks")
-    .setColor(BUCKS_COLOR)
-    .setDescription(
-      rows
-        .map(
-          (row, index) =>
-            `**${(index + 1).toString()}.** <@${row.discordId}> — ${row.balance.toString()} BB`,
-        )
-        .join("\n"),
-    );
-
-  await interaction.editReply({
-    embeds: [embed],
-    // A leaderboard should not ping the top ten people every time it is run.
-    allowedMentions: { parse: [] },
+    embeds: [buildPersonalBucksEmbed(view)],
   });
 }
 
@@ -180,37 +182,61 @@ async function replyPrizes(
   await interaction.editReply({ embeds: [buildBbPrizesEmbed()] });
 }
 
+export function buildBbRulesEmbed(): EmbedBuilder {
+  return new EmbedBuilder()
+    .setTitle("📜 Bryan Bucks rules")
+    .setColor(BUCKS_COLOR)
+    .setDescription(
+      "Bryan Bucks are friendly points for tracked League players. They have no cash value.",
+    )
+    .addFields(
+      {
+        name: "Eligibility & earnings",
+        value:
+          `Your Discord account must be linked to a tracked player. A new wallet starts with **${SEED_GRANT.toString()} BB**. ` +
+          "Eligible ranked games award **+1 BB** for playing, **+1 BB** for winning, and **+1 BB** for MVP.",
+      },
+      {
+        name: "Placing a bet",
+        value:
+          `Stake **${MIN_STAKE.toString()}-${MAX_STAKE.toString()} BB** on a tracked player to WIN or LOSE. ` +
+          `The market stays open for ${Math.floor(BETTING_WINDOW_MS / 60_000).toString()} minutes after Scout detects the game. ` +
+          "You can add to a position or cancel it for a full refund before the window closes; after that, it is locked.",
+      },
+      {
+        name: "Settlement",
+        value:
+          "Winners get their stakes back and split the losing side's pool in proportion to their stakes. " +
+          "If people bet on only one side, the Bryan Bucks house matches the other side when its reserve can cover the stake.",
+      },
+      {
+        name: "Refunds",
+        value:
+          "All stakes are returned when a game is voided or remade, cannot be settled, or the house cannot cover a one-sided market.",
+      },
+    );
+}
+
+async function replyRules(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
+  await interaction.editReply({ embeds: [buildBbRulesEmbed()] });
+}
+
 async function replyHistory(
   interaction: ChatInputCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
   discordId: ReturnType<typeof DiscordAccountIdSchema.parse>,
 ): Promise<void> {
-  const limit = interaction.options.getInteger("count") ?? DEFAULT_HISTORY;
-  const entries = await getLedgerPage({ serverId, discordId, limit });
-
-  if (entries.length === 0) {
-    await interaction.editReply({ content: "No Bryan Bucks history yet." });
-    return;
-  }
-
-  const lines = entries.map((entry) => {
-    const sign = entry.delta > 0 ? "+" : "";
-    const where = entry.matchId === null ? "" : ` · ${entry.matchId}`;
-    return `\`${sign}${entry.delta.toString()}\` ${entry.kind}${where} → ${entry.balanceAfter.toString()} BB`;
-  });
-
-  await interaction.editReply({ content: lines.join("\n") });
+  const page = await getLedgerPage({ serverId, discordId, page: 0 });
+  await interaction.editReply(renderBucksHistory(discordId, page));
 }
 
 async function replyOpen(
   interaction: ChatInputCommandInteraction,
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>,
 ): Promise<void> {
-  const pools = await prisma.bucksMatchPool.findMany({
-    where: { serverId, poolState: "open", closesAt: { gt: new Date() } },
-    select: { matchId: true, closesAt: true, roster: true },
-    orderBy: { closesAt: "asc" },
-  });
+  const pools = await getOpenMarketAggregates({ serverId });
 
   if (pools.length === 0) {
     await interaction.editReply({
@@ -219,18 +245,32 @@ async function replyOpen(
     return;
   }
 
-  const lines = pools.map((pool) => {
-    const roster = BucksPoolRosterSchema.parse(
-      JSON.parse(pool.roster),
-    ).participants;
-    const aliases = roster
-      .map((participant) => participant.trackedAlias)
-      .filter((alias) => alias !== undefined);
+  const sections = pools.map((pool) => {
     const closesAtUnix = Math.floor(pool.closesAt.getTime() / 1000);
-    return `**${aliases.join(", ")}** — closes <t:${closesAtUnix.toString()}:R>`;
+    const bluePlayers =
+      pool.blue.trackedPlayers.length > 0
+        ? pool.blue.trackedPlayers.join(", ")
+        : "No tracked players";
+    const redPlayers =
+      pool.red.trackedPlayers.length > 0
+        ? pool.red.trackedPlayers.join(", ")
+        : "No tracked players";
+    return [
+      `## ${bluePlayers} vs ${redPlayers}`,
+      `Closes <t:${closesAtUnix.toString()}:R>`,
+      `🔵 **Blue:** ${pool.blue.totalStake.toString()} BB across ${pool.blue.betCount.toString()} bet(s) — ${bluePlayers}`,
+      `🔴 **Red:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} bet(s) — ${redPlayers}`,
+    ].join("\n");
   });
-
-  await interaction.editReply({ content: lines.join("\n") });
+  const chunks = splitMessageIntoChunks(sections.join("\n\n"));
+  const first = chunks[0];
+  if (first === undefined) {
+    throw new Error("Open Bryan Bucks markets produced no Discord content");
+  }
+  await interaction.editReply({ content: first });
+  for (const chunk of chunks.slice(1)) {
+    await interaction.followUp({ content: chunk, ephemeral: true });
+  }
 }
 
 async function replyBet(
@@ -333,8 +373,9 @@ export async function executeBb(
       return;
     }
 
-    // The leaderboard and prize catalog are public; everything else is personal.
-    const ephemeral = subcommand !== "leaderboard" && subcommand !== "prizes";
+    // Only rules and the prize catalog are public. Wallets, positions, and
+    // market inspection stay private to the caller.
+    const ephemeral = !isPublicBbSubcommand(subcommand);
     await interaction.deferReply({ ephemeral });
 
     const discordId = DiscordAccountIdSchema.parse(interaction.user.id);
@@ -343,11 +384,11 @@ export async function executeBb(
       case "balance":
         await replyBalance(interaction, serverId, discordId);
         break;
-      case "leaderboard":
-        await replyLeaderboard(interaction, serverId);
-        break;
       case "prizes":
         await replyPrizes(interaction);
+        break;
+      case "rules":
+        await replyRules(interaction);
         break;
       case "history":
         await replyHistory(interaction, serverId, discordId);

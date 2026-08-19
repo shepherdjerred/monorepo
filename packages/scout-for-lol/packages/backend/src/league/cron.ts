@@ -16,6 +16,10 @@ import {
   runReportLakeFold,
   runReportLakeRebuild,
 } from "#src/report-lake/compactor.ts";
+import {
+  runWeeklyBucksLeaderboard,
+  WEEKLY_BUCKS_CRON,
+} from "#src/betting/weekly-leaderboard.ts";
 
 const logger = createLogger("league-cron");
 
@@ -34,6 +38,18 @@ export async function startCronJobs() {
     logMessage: "🔍 Running pre-match active game check",
     timezone: "America/Los_Angeles",
     runOnInit: true,
+  });
+
+  // Full wallet disclosure happens only on this fixed weekly cadence; there is
+  // deliberately no on-demand leaderboard command.
+  logger.info(
+    "📅 Setting up Bryan Bucks leaderboard (Friday 5 PM America/Los_Angeles)",
+  );
+  createCronJob({
+    ...WEEKLY_BUCKS_CRON,
+    task: async () => {
+      await runWeeklyBucksLeaderboard();
+    },
   });
 
   // check match history every minute
@@ -175,6 +191,7 @@ export async function startCronJobs() {
     "📊 Pre-match check (30s), match history polling (1min), competition lifecycle (15min), data validation (hourly), " +
       "match time refresh (6hr), scheduled reports (every minute), " +
       "report-lake fold (15min) and rebuild (2AM UTC), " +
-      "player pruning (3AM UTC), removed-guild reconciliation (4AM UTC) cron jobs are now active",
+      "player pruning (3AM UTC), removed-guild reconciliation (4AM UTC), and " +
+      "Bryan Bucks leaderboard (Friday 5PM PT) cron jobs are now active",
   );
 }
