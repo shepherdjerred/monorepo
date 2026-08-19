@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import Darwin
 #if SWIFT_PACKAGE
 import MailMateCodeFillShared
@@ -78,7 +79,34 @@ private func run() throws {
         name: CodeFillConfiguration.recordsDidChangeNotification,
         object: nil
     )
+    requestIdentityReconciliation()
     CodeFillObservability.helperLogger.info("event=helper_finished outcome=stored duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
+}
+
+// MailMate launches the helper independently of the containing app. Launch the app hidden so
+// its startup reconciliation can register the new identity even when the setup window is closed.
+// The distributed notification above still handles the common case where the app is already up.
+private func requestIdentityReconciliation() {
+    let appURL = Bundle.main.bundleURL
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+    guard appURL.pathExtension == "app" else {
+        CodeFillObservability.helperLogger.error("event=identity_reconciliation outcome=invalid_containing_app_path")
+        return
+    }
+
+    let configuration = NSWorkspace.OpenConfiguration()
+    configuration.activates = false
+    configuration.hides = true
+    configuration.promptsUserIfNeeded = false
+    NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { _, error in
+        if let error {
+            CodeFillObservability.helperLogger.error("event=identity_reconciliation outcome=error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
+        } else {
+            CodeFillObservability.helperLogger.info("event=identity_reconciliation outcome=launched")
+        }
+    }
 }
 
 private func elapsedMilliseconds(since start: Date) -> Int {

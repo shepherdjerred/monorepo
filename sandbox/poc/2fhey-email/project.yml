@@ -112,6 +112,9 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: 63ZAG7X889
         SWIFT_TREAT_WARNINGS_AS_ERRORS: "YES"
+      configs:
+        Release:
+          PROVISIONING_PROFILE_SPECIFIER: com.sjerred.MailMateCodeFillHelper
     entitlements:
       path: Entitlements/MailMateCodeFillHelper.entitlements
       properties:

@@ -123,6 +123,15 @@ public struct CodeStore {
     private func writeUnlocked(_ records: [OTPRecord]) throws {
         let url = directory.appendingPathComponent(Self.fileName)
         let temporaryURL = directory.appendingPathComponent(".\(Self.fileName).\(UUID().uuidString).tmp")
+        defer {
+            if fileManager.fileExists(atPath: temporaryURL.path) {
+                do {
+                    try fileManager.removeItem(at: temporaryURL)
+                } catch {
+                    CodeFillObservability.storeLogger.error("event=store_temporary_cleanup outcome=error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
+                }
+            }
+        }
         let data = try encoder.encode(records)
         try data.write(to: temporaryURL, options: .atomic)
         if fileManager.fileExists(atPath: url.path) {

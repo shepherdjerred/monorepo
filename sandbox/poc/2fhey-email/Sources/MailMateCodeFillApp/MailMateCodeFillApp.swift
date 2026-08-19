@@ -26,6 +26,11 @@ private final class MailMateCodeFillAppDelegate: NSObject, NSApplicationDelegate
             CodeFillObservability.appLogger.info("event=records_changed_notification_received")
             NotificationCenter.default.post(name: .codeFillRecordsDidChange, object: nil)
         }
+        if CommandLine.arguments.contains("--reconcile-identities") {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .codeFillRecordsDidChange, object: nil)
+            }
+        }
     }
 
     deinit {
