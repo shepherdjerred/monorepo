@@ -1,0 +1,135 @@
+//! External editor utilities for editing text in $EDITOR
+
+use anyhow::{Context, Result};
+use std::path::PathBuf;
+use std::time::SystemTime;
+
+/// Get the editor command from environment variables
+///
+/// Checks $VISUAL, then $EDITOR, then falls back to vim/nano/vi/notepad
+#[must_use]
+pub fn get_editor() -> String {
+    // Check VISUAL first (preferred for full-screen editors)
+    if let Ok(visual) = std::env::var("VISUAL")
+        && !visual.is_empty()
+    {
+        return visual;
+    }
+
+    // Check EDITOR
+    if let Ok(editor) = std::env::var("EDITOR")
+        && !editor.is_empty()
+    {
+        return editor;
+    }
+
+    // Platform-specific fallbacks
+    if cfg!(target_os = "windows") {
+        "notepad".to_owned()
+    } else {
+        // Try to find vim, nano, or vi
+        for editor in &["vim", "nano", "vi"] {
+            if which(editor) {
+                return editor.to_string();
+            }
+        }
+        // Last resort fallback
+        "vi".to_owned()
+    }
+}
+
+/// Check if a command exists in PATH
+fn which(command: &str) -> bool {
+    std::process::Command::new("which")
+        .arg(command)
+        .output()
+        .is_ok_and(|output| output.status.success())
+}
+
+/// Create a temporary file with the given content
+///
+/// Returns the path to the temp file
+///
+/// # Errors
+///
+/// Returns an error if the system time cannot be accessed or the file cannot be written.
+pub fn create_temp_file(content: &str) -> Result<PathBuf> {
+    // Use system temp directory
+    let temp_dir = std::env::temp_dir();
+
+    // Create unique filename using timestamp + PID + random to avoid collisions
+    let timestamp = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .context("Failed to get system time")?
+        .as_nanos();
+
+    let pid = std::process::id();
+    let random: u32 = rand::random();
+    let filename = format!("clauderon-prompt-{timestamp}-{pid}-{random}.txt");
+    let temp_path = temp_dir.join(filename);
+
+    // Write content to file
+    std::fs::write(&temp_path, content).with_context(|| {
+        format!(
+            "Failed to write temp file: {display}",
+            display = temp_path.display()
+        )
+    })?;
+
+    Ok(temp_path)
+}
+
+/// Read the content from a file
+///
+/// # Errors
+///
+/// Returns an error if the file cannot be read.
+pub fn read_file_content(path: &PathBuf) -> Result<String> {
+    std::fs::read_to_string(path)
+        .with_context(|| format!("Failed to read file: {display}", display = path.display()))
+}
+
+/// Clean up (delete) a temporary file
+///
+/// Logs errors but doesn't fail to avoid disrupting the workflow
+pub fn cleanup_temp_file(path: &PathBuf) {
+    if let Err(e) = std::fs::remove_file(path) {
+        // Log the error but don't fail - temp files will eventually be cleaned by OS
+        tracing::warn!("Failed to cleanup temp file {}: {}", path.display(), e);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Note: Tests for get_editor() with environment variables are skipped because
+    // std::env::set_var/remove_var are now unsafe in Rust 1.85+ and this crate
+    // has unsafe_code = "forbid". The get_editor() function itself is simple
+    // enough that the implementation is self-documenting.
+
+    #[test]
+    fn test_temp_file_roundtrip() {
+        let content = "Hello, world!\nLine 2\nLine 3";
+
+        let path = create_temp_file(content).expect("Failed to create temp file");
+        assert!(path.exists());
+
+        let read_content = read_file_content(&path).expect("Failed to read temp file");
+        assert_eq!(read_content, content);
+
+        cleanup_temp_file(&path);
+        assert!(!path.exists());
+    }
+
+    #[test]
+    fn test_temp_file_emoji() {
+        let content = "Hello 😀 emoji 🎉 test";
+
+        let path = create_temp_file(content).expect("Failed to create temp file");
+        let read_content = read_file_content(&path).expect("Failed to read temp file");
+        assert_eq!(read_content, content);
+
+        cleanup_temp_file(&path);
+    }
+}

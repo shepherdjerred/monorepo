@@ -1,0 +1,425 @@
+import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test";
+import { EventsClient } from "./events-client.ts";
+import type { SessionEvent } from "./events-client.ts";
+
+// Reusable noop functions for mock callbacks
+function noop(): void {
+  // intentionally empty
+}
+function noopEvent(_event: SessionEvent): void {
+  // intentionally empty
+}
+function noopError(_error: Error): void {
+  // intentionally empty
+}
+import {
+  SessionStatus,
+  BackendType,
+  AgentType,
+  ClaudeWorkingStatus,
+} from "@clauderon/shared";
+import type { Session } from "@clauderon/shared";
+
+// Mock WebSocket implementation
+class MockWebSocket {
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSING = 2;
+  static CLOSED = 3;
+
+  readyState = MockWebSocket.CONNECTING;
+  url: string;
+
+  private readonly eventListeners = new Map<
+    string,
+    ((...args: any[]) => void)[]
+  >();
+
+  constructor(url: string) {
+    this.url = url;
+    // Simulate async connection
+    setTimeout(() => {
+      this.readyState = MockWebSocket.OPEN;
+      this.dispatchEvent("open");
+    }, 0);
+  }
+
+  addEventListener(type: string, listener: (...args: any[]) => void): void {
+    const listeners = this.eventListeners.get(type) ?? [];
+    listeners.push(listener);
+    this.eventListeners.set(type, listeners);
+  }
+
+  removeEventListener(type: string, listener: (...args: any[]) => void): void {
+    const listeners = this.eventListeners.get(type);
+    if (listeners) {
+      this.eventListeners.set(
+        type,
+        listeners.filter((l) => l !== listener),
+      );
+    }
+  }
+
+  private dispatchEvent(type: string, event?: any): void {
+    const listeners = this.eventListeners.get(type) ?? [];
+    for (const listener of listeners) {
+      listener(event);
+    }
+  }
+
+  close(): void {
+    this.readyState = MockWebSocket.CLOSED;
+    this.dispatchEvent("close");
+  }
+
+  // Test helpers to simulate server messages
+  simulateMessage(data: string): void {
+    const event: any = { data };
+    this.dispatchEvent("message", event);
+  }
+
+  simulateError(event: unknown): void {
+    this.dispatchEvent("error", event);
+  }
+}
+
+// Helper to access private ws property without type assertions
+function getWs(client: EventsClient): MockWebSocket {
+  const clientAny: any = client;
+  return clientAny.ws;
+}
+
+// Helper to create a valid mock session
+function createMockSession(overrides: Partial<Session> = {}): Session {
+  return {
+    id: "session1",
+    name: "Test Session",
+    status: SessionStatus.Running,
+    backend: BackendType.Zellij,
+    agent: AgentType.ClaudeCode,
+    repo_path: "/tmp/repo",
+    worktree_path: "/tmp/worktree",
+    branch_name: "main",
+    initial_prompt: "test prompt",
+    dangerous_skip_checks: false,
+    claude_status: ClaudeWorkingStatus.Unknown,
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+let originalWebSocket: typeof WebSocket;
+
+beforeEach(() => {
+  originalWebSocket = globalThis.WebSocket;
+  const global: any = globalThis;
+  global.WebSocket = MockWebSocket;
+});
+
+afterEach(() => {
+  globalThis.WebSocket = originalWebSocket;
+});
+
+describe("EventsClient - constructor", () => {
+  test("uses default url when not provided", () => {
+    const client = new EventsClient();
+    expect(client).toBeDefined();
+  });
+
+  test("uses provided url", () => {
+    const client = new EventsClient({ url: "ws://custom:8080/ws/events" });
+    expect(client).toBeDefined();
+  });
+
+  test("auto-reconnect defaults to true", () => {
+    const client = new EventsClient();
+    expect(client).toBeDefined();
+  });
+});
+
+describe("EventsClient - connect", () => {
+  test("emits connected event on successful connection", async () => {
+    const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
+    const onConnected = mock(noop);
+
+    client.onConnected(onConnected);
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(onConnected).toHaveBeenCalledTimes(1);
+  });
+
+  test("does nothing if already connected", async () => {
+    const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
+    const onConnected = mock(noop);
+
+    client.onConnected(onConnected);
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    // Try connecting again
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    // Should only be called once
+    expect(onConnected).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("EventsClient - disconnect", () => {
+  test("emits disconnected event", async () => {
+    const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
+    const onDisconnected = mock(noop);
+
+    client.onDisconnected(onDisconnected);
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    client.disconnect();
+
+    expect(onDisconnected).toHaveBeenCalledTimes(1);
+  });
+
+  test("handles disconnect when not connected", () => {
+    const client = new EventsClient();
+    expect(() => {
+      client.disconnect();
+    }).not.toThrow();
+  });
+
+  test("prevents auto-reconnect after intentional disconnect", async () => {
+    const client = new EventsClient({
+      url: "ws://localhost:3030/ws/events",
+      autoReconnect: true,
+      reconnectDelay: 10,
+    });
+    const onConnected = mock(noop);
+
+    client.onConnected(onConnected);
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    client.disconnect();
+
+    // Wait for potential reconnect
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Should only be called once (initial connect)
+    expect(onConnected).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("EventsClient - onEvent", () => {
+  test("emits session_created event", async () => {
+    const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
+    const onEvent = mock(noopEvent);
+
+    client.onEvent(onEvent);
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const ws = getWs(client);
+
+    const event: SessionEvent = {
+      type: "session_created",
+      session: createMockSession(),
+    };
+
+    ws.simulateMessage(JSON.stringify({ type: "event", event }));
+
+    // emitSessionEvent is async, wait for it to resolve
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(onEvent).toHaveBeenCalledWith(event);
+  });
+
+  test("emits session_updated event", async () => {
+    const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
+    const onEvent = mock(noopEvent);
+
+    client.onEvent(onEvent);
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const ws = getWs(client);
+
+    const event: SessionEvent = {
+      type: "session_updated",
+      session: createMockSession({
+        status: SessionStatus.Archived,
+      }),
+    };
+
+    ws.simulateMessage(JSON.stringify({ type: "event", event }));
+
+    // emitSessionEvent is async, wait for it to resolve
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(onEvent).toHaveBeenCalledWith(event);
+  });
+
+  test("emits session_deleted event", async () => {
+    const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
+    const onEvent = mock(noopEvent);
+
+    client.onEvent(onEvent);
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const ws = getWs(client);
+
+    const event: SessionEvent = {
+      type: "session_deleted",
+      sessionId: "session1",
+    };
+
+    ws.simulateMessage(JSON.stringify({ type: "event", event }));
+
+    // emitSessionEvent is async, wait for it to resolve
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(onEvent).toHaveBeenCalledWith(event);
+  });
+
+  test("ignores connected acknowledgment message", async () => {
+    const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
+    const onEvent = mock(noopEvent);
+
+    client.onEvent(onEvent);
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const ws = getWs(client);
+
+    ws.simulateMessage(
+      JSON.stringify({ type: "connected", message: "Connected" }),
+    );
+
+    expect(onEvent).not.toHaveBeenCalled();
+  });
+});
+
+describe("EventsClient - onError", () => {
+  test("emits error for invalid JSON", async () => {
+    const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
+    const onError = mock(noopError);
+
+    client.onError(onError);
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const ws = getWs(client);
+
+    ws.simulateMessage("not valid json");
+
+    expect(onError).toHaveBeenCalledTimes(1);
+  });
+
+  test("emits error on WebSocket error", async () => {
+    const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
+    const onError = mock(noopError);
+
+    client.onError(onError);
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const ws = getWs(client);
+
+    ws.simulateError(new Error("Connection failed"));
+
+    expect(onError).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("EventsClient - auto-reconnect", () => {
+  test("reconnects after unexpected disconnect", async () => {
+    const client = new EventsClient({
+      url: "ws://localhost:3030/ws/events",
+      autoReconnect: true,
+      reconnectDelay: 10,
+    });
+    const onConnected = mock(noop);
+
+    client.onConnected(onConnected);
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const ws = getWs(client);
+
+    // Simulate unexpected close
+    ws.close();
+
+    // Wait for reconnect
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Should be called twice (initial + reconnect)
+    expect(onConnected).toHaveBeenCalledTimes(2);
+  });
+
+  test("does not reconnect when autoReconnect is false", async () => {
+    const client = new EventsClient({
+      url: "ws://localhost:3030/ws/events",
+      autoReconnect: false,
+      reconnectDelay: 10,
+    });
+    const onConnected = mock(noop);
+
+    client.onConnected(onConnected);
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const ws = getWs(client);
+
+    // Simulate unexpected close
+    ws.close();
+
+    // Wait for potential reconnect
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Should only be called once
+    expect(onConnected).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("EventsClient - listener management and connection state", () => {
+  test("unsubscribe removes listener", async () => {
+    const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
+    const onConnected = mock(noop);
+
+    const unsubscribe = client.onConnected(onConnected);
+    unsubscribe();
+
+    client.connect();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(onConnected).not.toHaveBeenCalled();
+  });
+
+  test("returns false when not connected", () => {
+    const client = new EventsClient();
+    expect(client.isConnected).toBe(false);
+  });
+
+  test("returns true when connected", async () => {
+    const client = new EventsClient({ url: "ws://localhost:3030/ws/events" });
+    client.connect();
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(client.isConnected).toBe(true);
+  });
+});

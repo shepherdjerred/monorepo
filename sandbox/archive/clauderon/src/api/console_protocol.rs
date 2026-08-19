@@ -1,0 +1,133 @@
+use serde::{Deserialize, Serialize};
+
+/// Console WebSocket protocol messages for terminal multiplexing.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ConsoleMessage {
+    /// Request to attach to a session's terminal.
+    Attach {
+        /// Target session identifier.
+        session_id: String,
+        /// Terminal rows to allocate.
+        rows: u16,
+        /// Terminal columns to allocate.
+        cols: u16,
+    },
+    /// Confirmation that attachment succeeded.
+    Attached,
+    /// Error message from the server.
+    Error {
+        /// Human-readable error description.
+        message: String,
+    },
+    /// Terminal output data from the session.
+    Output {
+        /// Raw terminal output bytes.
+        data: String,
+    },
+    /// Initial snapshot of terminal state when connecting.
+    /// Contains the complete screen buffer as escape sequences.
+    Snapshot {
+        /// Base64-encoded terminal content as escape sequences.
+        data: String,
+        /// Current terminal rows.
+        rows: u16,
+        /// Current terminal columns.
+        cols: u16,
+        /// Current cursor row (0-indexed).
+        cursor_row: u16,
+        /// Current cursor column (0-indexed).
+        cursor_col: u16,
+    },
+    /// Keyboard input data to send to the session.
+    Input {
+        /// Raw input bytes to write to the PTY.
+        data: String,
+    },
+    /// Request to resize the terminal.
+    Resize {
+        /// New terminal row count.
+        rows: u16,
+        /// New terminal column count.
+        cols: u16,
+    },
+    /// Send a Unix signal to the PTY process.
+    Signal {
+        /// Signal type to deliver.
+        signal: SignalType,
+    },
+}
+
+/// Unix signal types that can be sent to the PTY process.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum SignalType {
+    /// SIGINT - Interrupt signal (Ctrl+C)
+    Sigint,
+    /// SIGTSTP - Terminal stop signal (Ctrl+Z)
+    Sigtstp,
+    /// SIGQUIT - Quit with core dump (Ctrl+\)
+    Sigquit,
+    /// SIGTERM - Graceful termination request
+    Sigterm,
+    /// SIGKILL - Force kill (cannot be caught)
+    Sigkill,
+    /// SIGHUP - Hangup detected on controlling terminal
+    Sighup,
+    /// SIGUSR1 - User-defined signal 1
+    Sigusr1,
+    /// SIGUSR2 - User-defined signal 2
+    Sigusr2,
+    /// SIGCONT - Continue if stopped
+    Sigcont,
+}
+
+impl SignalType {
+    /// Get the Unix signal number for this signal type.
+    #[must_use]
+    pub const fn as_signal_number(self) -> i32 {
+        match self {
+            Self::Sighup => 1,
+            Self::Sigint => 2,
+            Self::Sigquit => 3,
+            Self::Sigkill => 9,
+            Self::Sigusr1 => 10,
+            Self::Sigusr2 => 12,
+            Self::Sigterm => 15,
+            Self::Sigcont => 18,
+            Self::Sigtstp => 20,
+        }
+    }
+
+    /// Get display name for this signal.
+    #[must_use]
+    pub const fn display_name(self) -> &'static str {
+        match self {
+            Self::Sigint => "SIGINT (Interrupt)",
+            Self::Sigquit => "SIGQUIT (Quit)",
+            Self::Sigtstp => "SIGTSTP (Stop)",
+            Self::Sigcont => "SIGCONT (Continue)",
+            Self::Sigterm => "SIGTERM (Terminate)",
+            Self::Sigkill => "SIGKILL (Force Kill)",
+            Self::Sighup => "SIGHUP (Hangup)",
+            Self::Sigusr1 => "SIGUSR1 (User Signal 1)",
+            Self::Sigusr2 => "SIGUSR2 (User Signal 2)",
+        }
+    }
+
+    /// Get description for this signal.
+    #[must_use]
+    pub const fn description(self) -> &'static str {
+        match self {
+            Self::Sigint => "Interrupt process (Ctrl+C)",
+            Self::Sigquit => "Quit with core dump (Ctrl+\\)",
+            Self::Sigtstp => "Suspend process (Ctrl+Z)",
+            Self::Sigcont => "Resume suspended process",
+            Self::Sigterm => "Graceful termination request",
+            Self::Sigkill => "Force kill (cannot be caught)",
+            Self::Sighup => "Terminal disconnected",
+            Self::Sigusr1 => "Application-defined signal 1",
+            Self::Sigusr2 => "Application-defined signal 2",
+        }
+    }
+}

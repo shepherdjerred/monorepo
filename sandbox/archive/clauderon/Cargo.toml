@@ -1,0 +1,235 @@
+[package]
+name = "clauderon"
+version = "0.2.2"
+edition = "2024"
+rust-version = "1.89"
+description = "Session management system for AI coding agents"
+license = "MIT"
+
+[[bin]]
+name = "clauderon"
+path = "src/main.rs"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.52.3", features = ["full"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+
+# CLI
+clap = { version = "4", features = ["derive", "env"] }
+
+# TUI
+ratatui = "0.30"
+crossterm = { version = "0.29", features = ["event-stream"] }
+unicode-width = "0.2"
+
+# PTY and terminal emulation
+pty-process = { version = "0.5", features = ["async"] }
+vt100 = "0.16"
+futures = "0.3"
+
+# Database
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "chrono", "uuid"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+typeshare = "1"
+
+# Types
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-appender = "0.2"
+
+# Error reporting
+sentry = { version = "0.48", default-features = false, features = ["backtrace", "contexts", "panic", "rustls", "reqwest", "tracing"] }
+
+# Utilities
+rand = "0.10"
+dirs = "6"
+exec = "0.3"
+async-trait = "0.1"
+nucleo-matcher = "0.3"
+fs2 = "0.4"
+include_dir = "0.7"
+mime_guess = "2"
+dashmap = "6"
+arboard = "3.4"  # Cross-platform clipboard access
+uzers = "0.12"  # Safe Unix user/group info (for getuid)
+walkdir = "2"  # Recursive directory traversal (for Codex history file search)
+
+# HTTP types
+http = "1"
+base64 = "0.22"
+
+# TLS (used by reqwest, rustls crypto provider)
+rustls = { version = "0.23.40", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+
+# Config files
+toml = "1"
+serde_yaml = "0.9"
+
+# Time handling
+time = "0.3"
+
+# HTTP/WebSocket server
+axum = { version = "0.8", features = ["ws"] }
+axum-extra = { version = "0.12", features = ["cookie", "multipart"] }
+tower = "0.5"
+tower-http = { version = "0.6.10", features = ["cors", "trace", "fs"] }
+hyper = { version = "1", features = ["full"] }
+hyper-util = { version = "0.1", features = ["tokio", "server"] }
+http-body-util = "0.1"
+
+# Authentication
+webauthn-rs = { version = "0.5.5", features = ["danger-allow-state-serialisation"] }
+webauthn-rs-proto = "0.5.5"
+
+# HTTP client (for Claude.ai API)
+reqwest = { version = "0.13.3", features = ["json", "rustls"], default-features = false }
+
+[dev-dependencies]
+tempfile = "3"
+proptest = "1.0"
+
+# HTTP client for integration tests
+reqwest = { version = "0.13.3", features = ["json", "blocking"] }
+tokio-test = "0.4"
+
+# Screenshot generation (TUI PNG rendering)
+image = "0.25"
+ab_glyph = "0.2"
+imageproc = "0.26"
+
+[lints.rust]
+unsafe_code = "forbid"
+deprecated = "allow"
+dead_code = "allow"
+unused_imports = "allow"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+# Allow noisy lints that don't meaningfully improve code quality
+module_name_repetitions = "allow"
+doc_markdown = "allow"
+similar_names = "allow"
+missing_const_for_fn = "allow"
+items_after_statements = "allow"
+# Format string inlining - too noisy and low value
+uninlined_format_args = "allow"
+# Collapsible if - stylistic preference
+collapsible_if = "allow"
+# Unused async - often kept for API consistency
+unused_async = "allow"
+# Option map_or_else - often less readable
+option_if_let_else = "allow"
+# Boolean not operation - subjective readability
+if_not_else = "allow"
+single_match_else = "allow"
+single_match = "allow"
+# Too many arguments - complex functions exist
+too_many_arguments = "allow"
+# Too many lines - complex functions exist
+too_many_lines = "allow"
+# Doc indentation - minor formatting
+doc_overindented_list_items = "allow"
+# More allowed lints
+struct_field_names = "allow"
+# Allow MSRV lint - version mismatch
+incompatible_msrv = "allow"
+# Debug format in bail
+use_debug = "allow"
+# IP address literal
+unreadable_literal = "allow"
+# Doc list items
+doc_lazy_continuation = "allow"
+# Unused self
+unused_self = "allow"
+# Let if seq - complex refactoring
+useless_let_if_seq = "allow"
+# Test-related lints
+used_underscore_binding = "allow"
+used_underscore_items = "allow"
+no_effect_underscore_binding = "allow"
+ignore_without_reason = "allow"
+# Significant drop tightening - optimization, not correctness
+significant_drop_tightening = "allow"
+# Unnecessary wraps - API consistency
+unnecessary_wraps = "allow"
+# Wildcard in or-patterns - style choice
+wildcard_in_or_patterns = "allow"
+# Manual let...else - style choice
+manual_let_else = "allow"
+# Restriction lints (cherry-picked)
+dbg_macro = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+todo = "warn"
+unimplemented = "warn"
+allow_attributes_without_reason = "warn"
+allow_attributes = "warn"
+undocumented_unsafe_blocks = "deny"
+exit = "deny"
+create_dir = "warn"
+clone_on_ref_ptr = "warn"
+unused_result_ok = "warn"
+str_to_string = "warn"
+format_push_string = "warn"
+mem_forget = "warn"
+multiple_inherent_impl = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+missing_assert_message = "warn"
+map_err_ignore = "warn"
+error_impl_error = "warn"
+
+# =============================================================================
+# Build Profiles - Optimized for compile time
+# =============================================================================
+
+[profile.dev]
+# Faster incremental builds
+incremental = true
+# Minimal debug info (faster compile, still get backtraces)
+debug = 1
+# Split debug info on macOS for faster linking
+split-debuginfo = "unpacked"
+
+[profile.dev.package."*"]
+# Optimize dependencies even in dev mode
+# This makes dependencies compile slower ONCE, but run much faster
+# Net win because deps are cached and your code changes frequently
+opt-level = 2
+
+[profile.release]
+# Use thin LTO for faster release builds (vs fat LTO)
+# ~10-20% faster compile, ~5% slower runtime (usually acceptable)
+lto = "thin"
+# Single codegen unit for better optimization (worth it for release)
+codegen-units = 1
+# Strip symbols for smaller binary
+strip = true
+
+[profile.test]
+# Faster test compilation
+incremental = true
+debug = 1
+# Light optimization for faster test execution (tests run faster)
+opt-level = 1
+# Split debug info on macOS for faster linking
+split-debuginfo = "unpacked"
+
+[profile.bench]
+# Inherit from release
+inherits = "release"

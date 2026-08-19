@@ -1,0 +1,137 @@
+import type { SessionModel } from "@clauderon/client";
+import type { AgentType } from "@clauderon/shared";
+import type { BackendType } from "@clauderon/shared";
+import { Label } from "@/components/ui/label";
+
+export type SessionFormData = {
+  initial_prompt: string;
+  backend: BackendType;
+  agent: AgentType;
+  model: SessionModel | undefined;
+  plan_mode: boolean;
+  dangerous_skip_checks: boolean;
+  container_image: string;
+  pull_policy: "always" | "if-not-present" | "never";
+  cpu_limit: string;
+  memory_limit: string;
+  storage_class: string;
+};
+
+export function AdvancedContainerSettings({
+  formData,
+  setFormData,
+}: {
+  formData: SessionFormData;
+  setFormData: React.Dispatch<React.SetStateAction<SessionFormData>>;
+}) {
+  return (
+    <details
+      className="space-y-2 border-2 border-primary p-4"
+      style={{ backgroundColor: "hsl(220, 15%, 98%)" }}
+    >
+      <summary className="font-semibold cursor-pointer hover:text-primary font-mono uppercase tracking-wider mb-4">
+        Advanced Container Settings
+      </summary>
+
+      <div className="pl-4 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="container_image">Custom Image (optional)</Label>
+          <input
+            type="text"
+            id="container_image"
+            placeholder="ghcr.io/user/image:tag"
+            value={formData.container_image}
+            onChange={(e) => {
+              setFormData({
+                ...formData,
+                container_image: e.target.value,
+              });
+            }}
+            className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Image must include:{" "}
+            <code className="font-mono bg-muted px-1 py-0.5 rounded">
+              claude
+            </code>
+            /
+            <code className="font-mono bg-muted px-1 py-0.5 rounded">
+              codex
+            </code>{" "}
+            CLI,{" "}
+            <code className="font-mono bg-muted px-1 py-0.5 rounded">bash</code>
+            ,{" "}
+            <code className="font-mono bg-muted px-1 py-0.5 rounded">curl</code>
+            ,{" "}
+            <code className="font-mono bg-muted px-1 py-0.5 rounded">git</code>{" "}
+            (recommended){" "}
+            <a
+              href="https://github.com/shepherdjerred/monorepo/blob/main/packages/clauderon/docs/IMAGE_COMPATIBILITY.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              View requirements
+            </a>
+          </p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="pull_policy">Pull Policy</Label>
+            <select
+              id="pull_policy"
+              value={formData.pull_policy}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (
+                  val === "always" ||
+                  val === "if-not-present" ||
+                  val === "never"
+                ) {
+                  setFormData({ ...formData, pull_policy: val });
+                }
+              }}
+              className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+            >
+              <option value="if-not-present">If Not Present</option>
+              <option value="always">Always</option>
+              <option value="never">Never</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="cpu_limit">CPU Limit</Label>
+            <input
+              type="text"
+              id="cpu_limit"
+              placeholder="2.0"
+              value={formData.cpu_limit}
+              onChange={(e) => {
+                setFormData({ ...formData, cpu_limit: e.target.value });
+              }}
+              className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="memory_limit">Memory Limit</Label>
+            <input
+              type="text"
+              id="memory_limit"
+              placeholder="2g"
+              value={formData.memory_limit}
+              onChange={(e) => {
+                setFormData({
+                  ...formData,
+                  memory_limit: e.target.value,
+                });
+              }}
+              className="w-full px-3 py-2 border-2 rounded font-mono text-sm"
+            />
+          </div>
+        </div>
+      </div>
+    </details>
+  );
+}

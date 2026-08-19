@@ -1,0 +1,59 @@
+---
+title: clauderon
+description: Session management for AI coding agents
+template: splash
+hero:
+  tagline: Manage all your AI coding agents from anywhere — TUI, Web, Mobile, or CLI
+  image:
+    file: ../../assets/hero.svg
+  actions:
+    - text: Get Started
+      link: /getting-started/introduction/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/shepherdjerred/monorepo/tree/main/packages/clauderon
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+<CardGrid stagger>
+  <Card title="Multi-Agent Support" icon="star">
+    Claude Code, Codex, and Gemini from one interface.
+  </Card>
+
+<Card title="Access Anywhere" icon="laptop">
+  TUI, Web UI, Mobile, or CLI.
+</Card>
+
+<Card title="Multiple Backends" icon="rocket">
+  Docker or Zellij — choose your isolation level.
+</Card>
+
+  <Card title="Session Management" icon="shield">
+    SQLite persistence, session archiving, and resume across restarts.
+  </Card>
+</CardGrid>
+
+## Terminal UI
+
+![TUI Session List](../../assets/screenshots/tui/session-list.png)
+
+![TUI Create Dialog](../../assets/screenshots/tui/create-dialog.png)
+
+## Web UI
+
+![Web Dashboard](../../assets/screenshots/web/dashboard.png)
+
+![Web Create Dialog](../../assets/screenshots/web/create-dialog.png)
+
+![Web Session Filters](../../assets/screenshots/web/session-filters.png)
+
+## Quick Install
+
+```bash
+curl -fsSL https://github.com/shepherdjerred/monorepo/releases/latest/download/clauderon-linux-x86_64 -o clauderon
+chmod +x clauderon && sudo mv clauderon /usr/local/bin/
+clauderon daemon
+```

@@ -1,0 +1,2606 @@
+use async_trait::async_trait;
+use std::path::{Path, PathBuf};
+use tokio::process::Command;
+use tracing::instrument;
+
+use super::container_config::{DockerConfig, ImageConfig, ResourceLimits};
+use super::traits::ExecutionBackend;
+use crate::backends::container_config::generate_plugin_config;
+use crate::core::AgentType;
+use crate::plugins::{PluginDiscovery, PluginManifest};
+
+/// Sanitize git config value to prevent environment variable injection
+///
+/// Removes newlines and other control characters that could be used for injection attacks
+fn sanitize_git_config_value(value: &str) -> String {
+    value
+        .chars()
+        .filter(|c| !c.is_control() || *c == '\t')
+        .collect()
+}
+
+/// Read git user configuration from the host system
+///
+/// Returns (user.name, user.email) if available from git config
+/// Values are sanitized to prevent environment variable injection
+async fn read_git_user_config() -> (Option<String>, Option<String>) {
+    let name = Command::new("git")
+        .args(["config", "--get", "user.name"])
+        .output()
+        .await
+        .ok()
+        .and_then(|output| {
+            if output.status.success() {
+                String::from_utf8(output.stdout)
+                    .ok()
+                    .map(|s| sanitize_git_config_value(s.trim()))
+                    .filter(|s| !s.is_empty())
+            } else {
+                None
+            }
+        });
+
+    let email = Command::new("git")
+        .args(["config", "--get", "user.email"])
+        .output()
+        .await
+        .ok()
+        .and_then(|output| {
+            if output.status.success() {
+                String::from_utf8(output.stdout)
+                    .ok()
+                    .map(|s| sanitize_git_config_value(s.trim()))
+                    .filter(|s| !s.is_empty())
+            } else {
+                None
+            }
+        });
+
+    (name, email)
+}
+
+/// Shared cache volumes used across all clauderon Docker containers for faster Rust builds:
+/// - clauderon-cargo-registry: Downloaded crates from crates.io (/workspace/.cargo/registry)
+/// - clauderon-cargo-git: Git dependencies (/workspace/.cargo/git)
+/// - clauderon-sccache: Compilation cache (/workspace/.cache/sccache)
+///
+/// Caches are mounted under /workspace (HOME) since containers run as non-root user.
+/// sccache (Mozilla's compilation cache) is configured via RUSTC_WRAPPER environment variable.
+/// If sccache is not installed in the dotfiles image, cargo will show a warning but continue
+/// to work. To enable sccache compilation caching, install it in the dotfiles image:
+///   cargo install sccache
+/// or add it to the Dockerfile.
+///
+/// Docker container backend
+#[derive(Debug)]
+pub struct DockerBackend {
+    /// Docker backend configuration (loaded from ~/.clauderon/docker-config.toml or defaults)
+    config: DockerConfig,
+}
+
+impl DockerBackend {
+    /// Create a new Docker backend.
+    ///
+    /// Loads configuration from `~/.clauderon/docker-config.toml` if present,
+    /// otherwise uses default configuration.
+    #[must_use]
+    pub fn new() -> Self {
+        let config = DockerConfig::load_or_default();
+        Self { config }
+    }
+
+    /// Create a Docker backend with custom configuration (for testing).
+    #[cfg(test)]
+    #[must_use]
+    pub fn with_config(config: DockerConfig) -> Self {
+        Self { config }
+    }
+
+    /// Validate a repository mount name
+    ///
+    /// Mount names must be:
+    /// - Alphanumeric + hyphens + underscores only
+    /// - Not reserved names (workspace, clauderon, repos)
+    /// - Maximum 64 characters
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the mount name is invalid.
+    fn validate_mount_name(mount_name: &str) -> anyhow::Result<()> {
+        // Check length
+        if mount_name.is_empty() {
+            anyhow::bail!("Mount name cannot be empty");
+        }
+        if mount_name.len() > 64 {
+            anyhow::bail!("Mount name cannot exceed 64 characters: {mount_name}");
+        }
+
+        // Check for valid characters (alphanumeric, hyphens, underscores)
+        if !mount_name
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        {
+            anyhow::bail!(
+                "Mount name can only contain alphanumeric characters, hyphens, and underscores: {mount_name}"
+            );
+        }
+
+        // Check for reserved names
+        let reserved = ["workspace", "clauderon", "repos"];
+        if reserved.contains(&mount_name.to_lowercase().as_str()) {
+            anyhow::bail!("Mount name '{mount_name}' is reserved");
+        }
+
+        Ok(())
+    }
+
+    /// Check if a container is running
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the docker command fails to execute.
+    pub async fn is_running(&self, name: &str) -> anyhow::Result<bool> {
+        let output = Command::new("docker")
+            .args(["ps", "--format", "{{.Names}}"])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            return Ok(false);
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        Ok(stdout.lines().any(|line| line == name))
+    }
+
+    /// Ensure cache directories exist in workdir with correct permissions.
+    ///
+    /// Creates .cargo/registry, .cargo/git, and .cache/sccache directories if they don't exist.
+    /// This prevents Docker from creating them as root when mounting named volumes.
+    ///
+    /// This is a best-effort operation - if directory creation fails, we log a warning and
+    /// continue. Docker will still create the directories, but they'll be owned by root.
+    fn ensure_cache_directories(workdir: &Path) {
+        let cache_dirs = [
+            workdir.join(".cargo/registry"),
+            workdir.join(".cargo/git"),
+            workdir.join(".cache/sccache"),
+        ];
+
+        for dir in &cache_dirs {
+            if let Err(e) = std::fs::create_dir_all(dir) {
+                tracing::warn!(
+                    path = %dir.display(),
+                    error = %e,
+                    "Failed to create cache directory"
+                );
+                // Continue anyway - Docker will create it, but as root
+            } else {
+                tracing::trace!(
+                    path = %dir.display(),
+                    "Created cache directory"
+                );
+            }
+        }
+    }
+
+    /// Ensure cache volumes exist with correct ownership for the current user.
+    ///
+    /// Docker named volumes are created with root ownership by default. When containers
+    /// run as non-root users (via --user), they can't write to these volumes.
+    ///
+    /// This function creates each cache volume and fixes ownership by running a small
+    /// alpine container that chowns the volume contents to the specified UID:GID.
+    ///
+    /// This is idempotent - if the volume already has correct ownership, the chown
+    /// is a fast no-op.
+    #[instrument(skip(self))]
+    async fn ensure_cache_volumes_with_ownership(&self, uid: u32, gid: u32) {
+        let volumes = [
+            "clauderon-cargo-registry",
+            "clauderon-cargo-git",
+            "clauderon-sccache",
+        ];
+
+        for volume_name in volumes {
+            // Create volume if it doesn't exist (idempotent)
+            let create_output = Command::new("docker")
+                .args(["volume", "create", volume_name])
+                .output()
+                .await;
+
+            if let Err(e) = create_output {
+                tracing::warn!(
+                    volume = volume_name,
+                    error = %e,
+                    "Failed to create Docker volume"
+                );
+                continue;
+            }
+
+            // Fix ownership using alpine container
+            // This is fast if ownership is already correct (chown is a no-op)
+            let chown_output = Command::new("docker")
+                .args([
+                    "run",
+                    "--rm",
+                    "-v",
+                    &format!("{volume_name}:/vol"),
+                    "alpine:latest",
+                    "chown",
+                    "-R",
+                    &format!("{uid}:{gid}"),
+                    "/vol",
+                ])
+                .output()
+                .await;
+
+            match chown_output {
+                Ok(output) if output.status.success() => {
+                    tracing::debug!(
+                        volume = volume_name,
+                        uid = uid,
+                        gid = gid,
+                        "Ensured volume ownership"
+                    );
+                }
+                Ok(output) => {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    tracing::warn!(
+                        volume = volume_name,
+                        stderr = %stderr,
+                        "Failed to fix volume ownership"
+                    );
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        volume = volume_name,
+                        error = %e,
+                        "Failed to run ownership fix container"
+                    );
+                }
+            }
+        }
+    }
+
+    /// Create a workspace volume for volume mode.
+    ///
+    /// Creates a named Docker volume for the session's workspace.
+    /// The volume name is `clauderon-{session_name}-workspace`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the docker volume create command fails.
+    #[instrument(skip(self))]
+    async fn create_workspace_volume(&self, session_name: &str) -> anyhow::Result<String> {
+        let volume_name = format!("clauderon-{session_name}-workspace");
+
+        let output = Command::new("docker")
+            .args(["volume", "create", &volume_name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to create workspace volume: {stderr}");
+        }
+
+        tracing::info!(
+            volume = %volume_name,
+            session = %session_name,
+            "Created workspace volume"
+        );
+
+        Ok(volume_name)
+    }
+
+    /// Clone a repository into a Docker volume.
+    ///
+    /// Runs an init container to clone the repo into the volume.
+    /// Uses the clone-then-branch strategy:
+    /// 1. Clone from remote (with base_branch if specified)
+    /// 2. Check if target branch exists on remote
+    /// 3. Create or checkout the branch
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if cloning fails.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "git clone operation requires many configuration parameters"
+    )]
+    #[instrument(skip(self))]
+    async fn clone_into_volume(
+        &self,
+        volume_name: &str,
+        git_remote_url: &str,
+        branch_name: &str,
+        base_branch: Option<&str>,
+        git_user_name: Option<&str>,
+        git_user_email: Option<&str>,
+        uid: u32,
+        gid: u32,
+    ) -> anyhow::Result<()> {
+        // Build the clone script
+        let base_branch_clone = base_branch.map_or_else(
+            || "git clone ${GIT_REMOTE_URL} .".to_owned(),
+            |b| format!("git clone --branch {b} --single-branch ${{GIT_REMOTE_URL}} ."),
+        );
+
+        let script = format!(
+            r#"
+set -e
+cd /workspace
+
+# Clone repo (with base_branch if specified, otherwise default branch)
+if [ ! -d ".git" ]; then
+  {base_branch_clone}
+else
+  echo "Repository already cloned"
+fi
+
+# Fetch latest changes
+git fetch --all
+
+# Check if target branch exists on remote
+if git ls-remote --heads origin "${{BRANCH_NAME}}" | grep -q "${{BRANCH_NAME}}"; then
+  # Branch exists on remote - fetch and checkout
+  git fetch origin "${{BRANCH_NAME}}"
+  git checkout -b "${{BRANCH_NAME}}" "origin/${{BRANCH_NAME}}" || git checkout "${{BRANCH_NAME}}"
+else
+  # Branch doesn't exist - create new local branch
+  git checkout -b "${{BRANCH_NAME}}" || git checkout "${{BRANCH_NAME}}"
+fi
+
+# Set git user config from env vars (if provided)
+if [ -n "$GIT_AUTHOR_NAME" ]; then
+  git config user.name "$GIT_AUTHOR_NAME"
+fi
+if [ -n "$GIT_AUTHOR_EMAIL" ]; then
+  git config user.email "$GIT_AUTHOR_EMAIL"
+fi
+
+# Create cache directories with correct permissions
+mkdir -p .cargo/registry .cargo/git .cache/sccache
+
+# Fix ownership
+chown -R {uid}:{gid} /workspace
+
+echo "Git setup complete: branch ${{BRANCH_NAME}}"
+"#
+        );
+
+        let mut args = vec![
+            "run".to_owned(),
+            "--rm".to_owned(),
+            "-v".to_owned(),
+            format!("{volume_name}:/workspace"),
+            "-e".to_owned(),
+            format!("GIT_REMOTE_URL={git_remote_url}"),
+            "-e".to_owned(),
+            format!("BRANCH_NAME={branch_name}"),
+        ];
+
+        if let Some(name) = git_user_name {
+            args.extend(["-e".to_owned(), format!("GIT_AUTHOR_NAME={name}")]);
+        }
+
+        if let Some(email) = git_user_email {
+            args.extend(["-e".to_owned(), format!("GIT_AUTHOR_EMAIL={email}")]);
+        }
+
+        args.extend([
+            "alpine/git:latest".to_owned(),
+            "/bin/sh".to_owned(),
+            "-c".to_owned(),
+            script,
+        ]);
+
+        tracing::info!(
+            volume = %volume_name,
+            remote = %git_remote_url,
+            branch = %branch_name,
+            base_branch = ?base_branch,
+            "Cloning repository into volume"
+        );
+
+        let output = Command::new("docker").args(&args).output().await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            tracing::error!(
+                volume = %volume_name,
+                stderr = %stderr,
+                stdout = %stdout,
+                "Failed to clone repository into volume"
+            );
+            anyhow::bail!("Failed to clone repository into volume: {stderr}");
+        }
+
+        tracing::info!(
+            volume = %volume_name,
+            branch = %branch_name,
+            "Successfully cloned repository into volume"
+        );
+
+        Ok(())
+    }
+
+    /// Delete a workspace volume.
+    ///
+    /// Called when deleting a session that used volume mode.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the docker volume rm command fails.
+    #[instrument(skip(self))]
+    async fn delete_workspace_volume(&self, session_name: &str) -> anyhow::Result<()> {
+        let volume_name = format!("clauderon-{session_name}-workspace");
+
+        let output = Command::new("docker")
+            .args(["volume", "rm", "-f", &volume_name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            tracing::warn!(
+                volume = %volume_name,
+                stderr = %stderr,
+                "Failed to delete workspace volume (may not exist)"
+            );
+        } else {
+            tracing::info!(
+                volume = %volume_name,
+                session = %session_name,
+                "Deleted workspace volume"
+            );
+        }
+
+        Ok(())
+    }
+
+    /// Pull the latest version of the Docker image
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the docker pull command fails.
+    #[instrument(skip(self))]
+    pub async fn pull_image(&self) -> anyhow::Result<()> {
+        let image = &self.config.image.image;
+        tracing::info!(image = %image, "Pulling Docker image");
+
+        let output = Command::new("docker")
+            .args(["pull", image])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            tracing::error!(
+                image = %image,
+                stderr = %stderr,
+                "Failed to pull Docker image"
+            );
+            anyhow::bail!("Failed to pull Docker image: {stderr}");
+        }
+
+        tracing::info!(image = %image, "Successfully pulled Docker image");
+        Ok(())
+    }
+
+    /// Build the docker run command arguments (exposed for testing)
+    ///
+    /// Returns all arguments that would be passed to `docker run`.
+    ///
+    /// # Arguments
+    ///
+    /// * `print_mode` - If true, run in non-interactive mode.
+    ///   Claude Code uses `--print --verbose`, Codex uses `codex exec`.
+    ///   The container will output the response and exit.
+    ///   If false, run interactively for `docker attach`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the proxy CA certificate is required but missing.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "container creation requires many configuration parameters"
+    )]
+    pub fn build_create_args(
+        name: &str,
+        workdir: &Path,
+        initial_workdir: &Path,
+        initial_prompt: &str,
+        uid: u32,
+        agent: AgentType,
+        print_mode: bool,
+        dangerous_skip_checks: bool,
+        images: &[String],
+        git_user_name: Option<&str>,
+        git_user_email: Option<&str>,
+        session_id: Option<&uuid::Uuid>,
+        http_port: Option<u16>,
+        config: &DockerConfig,
+        image_override: Option<&ImageConfig>,
+        resource_override: Option<&ResourceLimits>,
+        model: Option<&str>,
+        repositories: &[crate::core::SessionRepository],
+        volume_mode: bool,
+        workspace_volume: Option<&str>,
+    ) -> anyhow::Result<Vec<String>> {
+        let container_name = format!("clauderon-{name}");
+        let escaped_prompt = initial_prompt.replace('\'', "'\\''");
+
+        // Determine effective image configuration (override > config > default)
+        let image_config = image_override.unwrap_or(&config.image);
+
+        // Validate the effective image
+        image_config.validate()?;
+
+        let mut args = vec!["run".to_owned(), "-dit".to_owned()];
+
+        // Add pull policy flag if not default (IfNotPresent is Docker's default)
+        if let Some(pull_flag) = image_config.pull_policy.to_docker_flag() {
+            args.push("--pull".to_owned());
+            args.push(pull_flag.to_owned());
+        }
+
+        args.extend([
+            "--name".to_owned(),
+            container_name,
+            "--user".to_owned(),
+            uid.to_string(),
+        ]);
+
+        // Add resource limits if configured
+        let resource_limits = resource_override.or(config.resources.as_ref());
+        if let Some(resources) = resource_limits {
+            resources.validate()?;
+            args.extend(resources.to_docker_args());
+        }
+
+        // Mount repositories (volume mode, multi-repo mode, or legacy mode)
+        let working_dir = if volume_mode {
+            // VOLUME MODE: Use named Docker volume instead of bind mount
+            // The volume should already be created and have the repo cloned into it
+            let vol_name = workspace_volume.ok_or_else(|| {
+                anyhow::anyhow!("volume_mode is true but workspace_volume is not provided")
+            })?;
+
+            args.extend(["-v".to_owned(), format!("{vol_name}:/workspace")]);
+
+            // Set working directory based on initial_workdir
+            if initial_workdir.as_os_str().is_empty() {
+                "/workspace".to_owned()
+            } else {
+                format!("/workspace/{}", initial_workdir.display())
+            }
+        } else if repositories.is_empty() {
+            // LEGACY MODE: Single repository using workdir parameter (bind mount)
+            args.extend([
+                "-v".to_owned(),
+                format!("{display}:/workspace", display = workdir.display()),
+            ]);
+
+            // Set working directory based on initial_workdir
+            if initial_workdir.as_os_str().is_empty() {
+                "/workspace".to_owned()
+            } else {
+                format!("/workspace/{}", initial_workdir.display())
+            }
+        } else {
+            // MULTI-REPO MODE: Mount multiple repositories
+            // Find primary repository
+            let primary_repo = repositories.iter().find(|r| r.is_primary).ok_or_else(|| {
+                anyhow::anyhow!("No primary repository found in multi-repo session")
+            })?;
+
+            // Mount primary repository to /workspace
+            args.extend([
+                "-v".to_owned(),
+                format!(
+                    "{display}:/workspace",
+                    display = primary_repo.worktree_path.display()
+                ),
+            ]);
+
+            // Mount secondary repositories to /repos/{mount_name}
+            for repo in repositories.iter().filter(|r| !r.is_primary) {
+                // Validate mount name
+                Self::validate_mount_name(&repo.mount_name)?;
+
+                args.extend([
+                    "-v".to_owned(),
+                    format!(
+                        "{src}:/repos/{mount}",
+                        src = repo.worktree_path.display(),
+                        mount = repo.mount_name
+                    ),
+                ]);
+
+                tracing::info!(
+                    mount_name = %repo.mount_name,
+                    repo_path = %repo.repo_path.display(),
+                    worktree = %repo.worktree_path.display(),
+                    "Mounting secondary repository"
+                );
+            }
+
+            // Set working directory based on primary repo's subdirectory
+            if primary_repo.subdirectory.as_os_str().is_empty() {
+                "/workspace".to_owned()
+            } else {
+                format!("/workspace/{}", primary_repo.subdirectory.display())
+            }
+        };
+
+        args.extend([
+            "-w".to_owned(),
+            working_dir,
+            "-e".to_owned(),
+            "TERM=xterm-256color".to_owned(),
+            "-e".to_owned(),
+            "COLORTERM=truecolor".to_owned(),
+            "-e".to_owned(),
+            "HOME=/workspace".to_owned(),
+        ]);
+
+        // Add extra flags from config (advanced users only)
+        for flag in &config.extra_flags {
+            args.push(flag.clone());
+        }
+
+        if agent == AgentType::Codex {
+            args.extend(["-e".to_owned(), "CODEX_HOME=/workspace/.codex".to_owned()]);
+        }
+
+        // Mount shared Rust cargo and sccache cache volumes for faster builds
+        // These are shared across ALL clauderon sessions and persist between container restarts
+        // sccache provides compilation caching (path-independent, content-addressed)
+        // cargo caches provide dependency download caching
+        // Note: Mounted under /workspace (HOME) since containers run as non-root user
+        args.extend([
+            "-v".to_owned(),
+            "clauderon-cargo-registry:/workspace/.cargo/registry".to_owned(),
+            "-v".to_owned(),
+            "clauderon-cargo-git:/workspace/.cargo/git".to_owned(),
+            "-v".to_owned(),
+            "clauderon-sccache:/workspace/.cache/sccache".to_owned(),
+        ]);
+
+        // Configure sccache as Rust compiler wrapper (if installed in dotfiles image)
+        // If sccache is not installed, cargo will show a clear warning but continue to work
+        // This is a progressive enhancement - works without sccache, better with it
+        args.extend([
+            "-e".to_owned(),
+            "CARGO_HOME=/workspace/.cargo".to_owned(),
+            "-e".to_owned(),
+            "RUSTC_WRAPPER=sccache".to_owned(),
+            "-e".to_owned(),
+            "SCCACHE_DIR=/workspace/.cache/sccache".to_owned(),
+        ]);
+
+        // Add hook communication environment variables
+        // These allow Claude Code hooks to send status updates via HTTP to the daemon
+        // (Unix sockets don't work across the macOS VM boundary in Docker/OrbStack)
+        if let (Some(sid), Some(port)) = (session_id, http_port) {
+            args.extend([
+                "-e".to_owned(),
+                format!("CLAUDERON_SESSION_ID={sid}"),
+                "-e".to_owned(),
+                format!("CLAUDERON_HTTP_PORT={port}"),
+            ]);
+        }
+
+        // Mount uploads directory for image attachments
+        // - Read-write: allows bidirectional file communication between app and Claude
+        // - Shared across sessions with per-session subdirectories for isolation
+        // - Images uploaded via API (POST /api/sessions/{id}/upload) are stored here
+        // - Paths are translated from host to container in the agent command below
+        // - Note: The base .clauderon directory is NOT mounted for security reasons.
+        //   Only specific subdirectories like uploads/ are mounted. Hooks are created
+        //   inside the container via docker exec (see hooks/installer.rs).
+        let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/root".to_owned());
+        let uploads_dir = format!("{home_dir}/.clauderon/uploads");
+        args.extend([
+            "-v".to_owned(),
+            format!("{uploads_dir}:/workspace/.clauderon/uploads"),
+        ]);
+
+        // Detect if repositories are git worktrees and mount parent .git directories
+        // In multi-repo mode, check each repository; in legacy mode, check the single workdir
+        if !volume_mode {
+            let repos_to_check: Vec<&Path> = if repositories.is_empty() {
+                vec![workdir]
+            } else {
+                repositories
+                    .iter()
+                    .map(|r| r.worktree_path.as_path())
+                    .collect()
+            };
+
+            // Track mounted parent .git directories to avoid duplicates
+            let mut mounted_git_dirs = std::collections::HashSet::new();
+
+            for repo_workdir in repos_to_check {
+                match crate::utils::git::detect_worktree_parent_git_dir(repo_workdir) {
+                    Ok(Some(parent_git_dir)) => {
+                        // Only mount if not already mounted (multiple repos might share same parent)
+                        if mounted_git_dirs.insert(parent_git_dir.clone()) {
+                            tracing::info!(
+                                workdir = %repo_workdir.display(),
+                                parent_git = %parent_git_dir.display(),
+                                "Detected git worktree, mounting parent .git directory"
+                            );
+
+                            // Mount the parent .git directory to the same absolute path in the container
+                            // This allows git operations (including commits) to work correctly with worktrees
+                            // Read-write access is required for commits, branch operations, etc.
+                            //
+                            // NOTE: This requires the host and container to have compatible filesystem layouts.
+                            // The parent .git directory must be accessible at the same absolute path.
+                            // This works for most cases but may fail if:
+                            // - The parent repo is on a different volume than the worktree
+                            // - There are path conflicts in the container
+                            // - The worktree and parent repo are in very different directory structures
+                            args.extend([
+                                "-v".to_owned(),
+                                format!(
+                                    "{display1}:{display2}",
+                                    display1 = parent_git_dir.display(),
+                                    display2 = parent_git_dir.display()
+                                ),
+                            ]);
+                        }
+                    }
+                    Ok(None) => {
+                        // Not a git worktree, that's fine - normal git repos work without extra mounts
+                        tracing::debug!(
+                            workdir = %repo_workdir.display(),
+                            "Not a git worktree, skipping parent .git mount"
+                        );
+                    }
+                    Err(e) => {
+                        // Failed to detect worktree - log a warning but continue
+                        // Git operations may not work properly if this is actually a worktree
+                        tracing::warn!(
+                            workdir = %repo_workdir.display(),
+                            error = %e,
+                            "Failed to detect git worktree, git operations may not work correctly. \
+                            If this directory is a git worktree, you may need to fix the .git file or parent repository."
+                        );
+                    }
+                }
+            }
+        } // end !volume_mode check
+
+        // Git user configuration from host
+        // Set both AUTHOR and COMMITTER variables so git commits have proper attribution
+        if let Some(name) = git_user_name {
+            args.extend([
+                "-e".to_owned(),
+                format!("GIT_AUTHOR_NAME={name}"),
+                "-e".to_owned(),
+                format!("GIT_COMMITTER_NAME={name}"),
+            ]);
+        }
+        if let Some(email) = git_user_email {
+            args.extend([
+                "-e".to_owned(),
+                format!("GIT_AUTHOR_EMAIL={email}"),
+                "-e".to_owned(),
+                format!("GIT_COMMITTER_EMAIL={email}"),
+            ]);
+        }
+
+        // NOTE: We intentionally do NOT create a fake .credentials.json file.
+        // The ANTHROPIC_API_KEY env var is sufficient and avoids validation issues.
+        // When a credentials file exists, Claude Code validates it against the API,
+        // which would fail with our fake tokens. The env var path skips this validation.
+
+        if agent == AgentType::ClaudeCode {
+            // Create a temp directory for the session config.
+            // These temp directories persist after container deletion and are cleaned up by the OS.
+            // This is acceptable since the files are tiny (just .claude.json) and sessions are infrequent.
+            let config_dir = std::env::temp_dir().join(format!("clauderon-{name}"));
+
+            // Discover plugins from host
+            let plugin_discovery = PluginDiscovery::new(
+                dirs::home_dir()
+                    .unwrap_or_else(|| PathBuf::from("/tmp"))
+                    .join(".claude"),
+            );
+            let plugin_manifest = plugin_discovery.discover_plugins().unwrap_or_else(|e| {
+                tracing::warn!("Failed to discover plugins: {}", e);
+                PluginManifest::empty()
+            });
+
+            // Create the config directory if it doesn't exist
+            if let Err(e) = std::fs::create_dir_all(&config_dir) {
+                tracing::warn!(
+                    "Failed to create config directory at {:?}: {}",
+                    config_dir,
+                    e
+                );
+            } else {
+                // Write claude.json to skip onboarding and optionally suppress bypass permissions warning
+                // This tells Claude Code we've already completed the setup wizard
+                // Note: Claude Code writes to this file, so we can't mount it read-only
+                let claude_json_path = config_dir.join("claude.json");
+                let claude_json = if dangerous_skip_checks {
+                    // If bypass permissions is enabled, also suppress the warning
+                    r#"{"hasCompletedOnboarding": true, "bypassPermissionsModeAccepted": true}"#
+                } else {
+                    r#"{"hasCompletedOnboarding": true}"#
+                };
+                if let Err(e) = std::fs::write(&claude_json_path, claude_json) {
+                    tracing::warn!(
+                        "Failed to write claude.json file at {:?}: {}",
+                        claude_json_path,
+                        e
+                    );
+                } else {
+                    // Mount to /workspace/.claude.json since HOME=/workspace in container
+                    // Note: NOT read-only because Claude Code writes to it
+                    args.extend([
+                        "-v".to_owned(),
+                        format!(
+                            "{display}:/workspace/.claude.json",
+                            display = claude_json_path.display()
+                        ),
+                    ]);
+                }
+
+                // Generate and mount plugin configuration if plugins are available
+                if !plugin_manifest.installed_plugins.is_empty() {
+                    if let Err(e) = generate_plugin_config(&config_dir, &plugin_manifest) {
+                        tracing::warn!("Failed to generate plugin config: {}", e);
+                    } else {
+                        // Mount plugin marketplace config
+                        let plugin_config_path = config_dir.join("plugins/known_marketplaces.json");
+                        if plugin_config_path.exists() {
+                            args.extend([
+                                "-v".to_owned(),
+                                format!(
+                                    "{}:/workspace/.claude/plugins/known_marketplaces.json:ro",
+                                    plugin_config_path.display()
+                                ),
+                            ]);
+                        }
+
+                        // Mount marketplace directory read-only
+                        let host_plugins_dir = dirs::home_dir()
+                            .unwrap_or_else(|| PathBuf::from("/tmp"))
+                            .join(".claude/plugins/marketplaces");
+
+                        if host_plugins_dir.exists() {
+                            args.extend([
+                                "-v".to_owned(),
+                                format!(
+                                    "{}:/workspace/.claude/plugins/marketplaces:ro",
+                                    host_plugins_dir.display()
+                                ),
+                            ]);
+                            tracing::info!(
+                                "Mounted {} plugins from {} to container",
+                                plugin_manifest.installed_plugins.len(),
+                                host_plugins_dir.display()
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        // Add image and command
+        // Build a wrapper script that handles both initial creation and container restart:
+        // - On first run: session file doesn't exist → create new session with prompt
+        // - On restart: session file exists → resume session
+        let agent_cmd = {
+            use crate::agents::traits::Agent;
+            use crate::agents::{ClaudeCodeAgent, CodexAgent, GeminiCodeAgent};
+
+            // Helper to quote shell arguments
+            let quote_arg = |arg: &str| -> String {
+                if arg.contains('\'')
+                    || arg.contains(' ')
+                    || arg.contains('\n')
+                    || arg.contains('&')
+                    || arg.contains('|')
+                {
+                    let escaped = arg.replace('\'', "'\\''");
+                    format!("'{escaped}'")
+                } else {
+                    arg.to_owned()
+                }
+            };
+
+            // Translate image paths from host to container
+            // Host: /Users/name/.clauderon/uploads/... → Container: /workspace/.clauderon/uploads/...
+            let translated_images: Vec<String> = images
+                .iter()
+                .map(|image_path| {
+                    crate::utils::paths::translate_image_path_to_container(image_path)
+                })
+                .collect();
+
+            match agent {
+                AgentType::ClaudeCode => {
+                    let mut cmd_vec = ClaudeCodeAgent::new().start_command(
+                        &escaped_prompt,
+                        &translated_images,
+                        dangerous_skip_checks,
+                        None,
+                        model,
+                    ); // Don't pass session_id here, we handle it in the wrapper
+
+                    // Add print mode flags if enabled
+                    if print_mode {
+                        // Insert after "claude" but before other args
+                        cmd_vec.insert(1, "--print".to_owned());
+                        cmd_vec.insert(2, "--verbose".to_owned());
+                    }
+
+                    // If we have a session ID, generate a wrapper script that handles restart
+                    if let Some(sid) = session_id {
+                        let session_id_str = sid.to_string();
+
+                        // Build the create command (for first run)
+                        let mut create_cmd = vec!["claude".to_owned()];
+                        create_cmd.push("--session-id".to_owned());
+                        create_cmd.push(session_id_str.clone());
+                        // Add remaining args (skip "claude" at index 0)
+                        create_cmd.extend(cmd_vec.iter().skip(1).cloned());
+                        let create_cmd_str = create_cmd
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        // Build the resume command (for restart)
+                        // Use --resume to continue an existing session instead of --session-id
+                        // which would try to create a new session with that ID
+                        // --fork-session creates a new session ID from the session so we don't modify the original
+                        let resume_cmd_str = if dangerous_skip_checks {
+                            format!(
+                                "claude --dangerously-skip-permissions --resume {} --fork-session",
+                                quote_arg(&session_id_str)
+                            )
+                        } else {
+                            format!(
+                                "claude --resume {} --fork-session",
+                                quote_arg(&session_id_str)
+                            )
+                        };
+
+                        // Generate wrapper script that detects restart via session history file
+                        // Claude Code stores session history at: .claude/projects/<project-path>/<session-id>.jsonl
+                        // where project-path is the working directory with / replaced by -
+                        let project_path = if initial_workdir.as_os_str().is_empty() {
+                            "-workspace".to_owned()
+                        } else {
+                            format!(
+                                "-workspace-{}",
+                                initial_workdir.display().to_string().replace('/', "-")
+                            )
+                        };
+
+                        format!(
+                            r#"SESSION_ID="{session_id_str}"
+HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
+if [ -f "$HISTORY_FILE" ]; then
+    echo "Resuming existing session $SESSION_ID"
+    exec {resume_cmd_str}
+else
+    echo "Creating new session $SESSION_ID"
+    exec {create_cmd_str}
+fi"#,
+                        )
+                    } else {
+                        // No session ID - just run the command directly
+                        cmd_vec
+                            .iter()
+                            .map(|arg| quote_arg(arg))
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    }
+                }
+                AgentType::Codex => {
+                    let codex_preamble = r#"CODEX_HOME="/workspace/.codex"
+export CODEX_HOME
+mkdir -p "$CODEX_HOME"
+if [ -f /etc/clauderon/codex/auth.json ]; then
+    cp /etc/clauderon/codex/auth.json "$CODEX_HOME/auth.json"
+fi
+if [ -f /etc/clauderon/codex/config.toml ]; then
+    cp /etc/clauderon/codex/config.toml "$CODEX_HOME/config.toml"
+fi"#;
+                    if print_mode {
+                        let mut cmd_vec = vec!["codex".to_owned()];
+                        if dangerous_skip_checks {
+                            cmd_vec.push("--full-auto".to_owned());
+                        }
+                        cmd_vec.push("exec".to_owned());
+                        for image in &translated_images {
+                            cmd_vec.push("--image".to_owned());
+                            cmd_vec.push(image.clone());
+                        }
+                        if !escaped_prompt.is_empty() {
+                            cmd_vec.push(escaped_prompt);
+                        }
+                        let cmd = cmd_vec
+                            .iter()
+                            .map(|arg| quote_arg(arg))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+                        format!("{codex_preamble}\n{cmd}")
+                    } else {
+                        let create_cmd_vec = CodexAgent::new().start_command(
+                            &escaped_prompt,
+                            images,
+                            dangerous_skip_checks,
+                            None,
+                            model,
+                        );
+                        let create_cmd_str = create_cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        let mut resume_cmd_vec = vec!["codex".to_owned()];
+                        if dangerous_skip_checks {
+                            resume_cmd_vec.push("--full-auto".to_owned());
+                        }
+                        resume_cmd_vec.push("resume".to_owned());
+                        resume_cmd_vec.push("--last".to_owned());
+                        let resume_cmd_str = resume_cmd_vec
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        format!(
+                            r#"{codex_preamble}
+CODEX_DIR="/workspace/.codex/sessions"
+if [ -d "$CODEX_DIR" ] && [ "$(ls -A "$CODEX_DIR" 2>/dev/null)" ]; then
+    echo "Resuming last Codex session"
+    exec {resume_cmd_str}
+else
+    echo "Creating new Codex session"
+    exec {create_cmd_str}
+fi"#,
+                        )
+                    }
+                }
+                AgentType::Gemini => {
+                    let mut cmd_vec = GeminiCodeAgent::new().start_command(
+                        &escaped_prompt,
+                        &translated_images,
+                        dangerous_skip_checks,
+                        None,
+                        model,
+                    );
+
+                    // Add print mode flags if enabled
+                    if print_mode {
+                        cmd_vec.insert(1, "--print".to_owned());
+                    }
+
+                    // If we have a session ID, generate a wrapper script that handles restart
+                    if let Some(sid) = session_id {
+                        let session_id_str = sid.to_string();
+
+                        // Build the create command (for first run)
+                        let mut create_cmd = vec!["gemini".to_owned()];
+                        create_cmd.push("--session-id".to_owned());
+                        create_cmd.push(session_id_str.clone());
+                        // Add remaining args (skip "gemini" at index 0)
+                        create_cmd.extend(cmd_vec.iter().skip(1).cloned());
+                        let create_cmd_str = create_cmd
+                            .iter()
+                            .map(|a| quote_arg(a))
+                            .collect::<Vec<_>>()
+                            .join(" ");
+
+                        // Build the resume command (for restart)
+                        let resume_cmd_str = if dangerous_skip_checks {
+                            format!(
+                                "gemini --dangerously-skip-permissions --resume {} --fork-session",
+                                quote_arg(&session_id_str)
+                            )
+                        } else {
+                            format!(
+                                "gemini --resume {} --fork-session",
+                                quote_arg(&session_id_str)
+                            )
+                        };
+
+                        // Generate wrapper script that detects restart via session history file
+                        let project_path = if initial_workdir.as_os_str().is_empty() {
+                            "-workspace".to_owned()
+                        } else {
+                            format!(
+                                "-workspace-{}",
+                                initial_workdir.display().to_string().replace('/', "-")
+                            )
+                        };
+
+                        format!(
+                            r#"SESSION_ID="{session_id_str}"
+HISTORY_FILE="/workspace/.claude/projects/{project_path}/${{SESSION_ID}}.jsonl"
+if [ -f "$HISTORY_FILE" ]; then
+    echo "Resuming existing session $SESSION_ID"
+    exec {resume_cmd_str}
+else
+    echo "Creating new session $SESSION_ID"
+    exec {create_cmd_str}
+fi"#,
+                        )
+                    } else {
+                        // No session ID - just run the command directly
+                        cmd_vec
+                            .iter()
+                            .map(|arg| quote_arg(arg))
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    }
+                }
+            }
+        };
+
+        args.extend([
+            image_config.image.clone(),
+            "bash".to_owned(),
+            "-c".to_owned(),
+            agent_cmd,
+        ]);
+
+        tracing::info!(
+            image = %image_config.image,
+            pull_policy = %image_config.pull_policy,
+            has_resources = resource_limits.is_some(),
+            "Building Docker container with configured image settings"
+        );
+
+        Ok(args)
+    }
+
+    /// Build the attach command arguments (exposed for testing)
+    #[must_use]
+    pub fn build_attach_args(name: &str) -> Vec<String> {
+        vec![
+            "bash".to_owned(),
+            "-c".to_owned(),
+            format!("docker start {name} 2>/dev/null; docker attach {name}"),
+        ]
+    }
+
+    // Legacy method names for backward compatibility during migration
+
+    /// Create a new Docker container (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the container creation fails.
+    #[deprecated(note = "Use ExecutionBackend::create instead")]
+    pub async fn create_container(
+        &self,
+        name: &str,
+        workdir: &Path,
+        initial_prompt: &str,
+    ) -> anyhow::Result<String> {
+        self.create(
+            name,
+            workdir,
+            initial_prompt,
+            super::traits::CreateOptions {
+                agent: AgentType::ClaudeCode,
+                model: None, // Use default model
+                print_mode: false,
+                plan_mode: true, // Default to plan mode
+                images: vec![],
+                dangerous_skip_checks: false,
+                session_id: None,
+                initial_workdir: std::path::PathBuf::new(),
+                http_port: None,
+                container_image: None,
+                container_resources: None,
+                repositories: vec![], // Legacy single-repo mode
+                storage_class_override: None,
+                volume_mode: false,
+            },
+        )
+        .await
+    }
+
+    /// Check if a Docker container exists (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Docker command fails.
+    #[deprecated(note = "Use ExecutionBackend::exists instead")]
+    pub async fn container_exists(&self, name: &str) -> anyhow::Result<bool> {
+        self.exists(name).await
+    }
+
+    /// Delete a Docker container (legacy name)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the Docker command fails.
+    #[deprecated(note = "Use ExecutionBackend::delete instead")]
+    pub async fn delete_container(&self, name: &str) -> anyhow::Result<()> {
+        self.delete(name).await
+    }
+}
+
+impl Default for DockerBackend {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[async_trait]
+impl ExecutionBackend for DockerBackend {
+    /// Create a new Docker container with Claude Code
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the docker command fails.
+    #[instrument(skip(self, initial_prompt, options), fields(name = %name, workdir = %workdir.display()))]
+    async fn create(
+        &self,
+        name: &str,
+        workdir: &Path,
+        initial_prompt: &str,
+        options: super::traits::CreateOptions,
+    ) -> anyhow::Result<String> {
+        // Create a container name from the session name
+        let container_name = format!("clauderon-{name}");
+
+        // Create the container with the worktree mounted
+        // Run as current user to avoid root privileges (claude refuses --dangerously-skip-permissions as root)
+        let uid = uzers::get_current_uid();
+        let gid = uzers::get_current_gid();
+
+        // Ensure cache volumes exist with correct ownership before creating container
+        // This fixes permission issues with Docker named volumes (which are created as root by default)
+        self.ensure_cache_volumes_with_ownership(uid, gid).await;
+
+        // Read git user configuration from the host
+        let (git_user_name, git_user_email) = read_git_user_config().await;
+
+        // Ensure cache directories exist before creating container (only for non-volume mode)
+        // This prevents Docker from creating them as root when mounting named volumes
+        if !options.volume_mode {
+            Self::ensure_cache_directories(workdir);
+        }
+
+        // Handle volume mode: create volume and clone repo into it
+        let workspace_volume = if options.volume_mode {
+            // Get repository info - need at least one repository for volume mode
+            let primary_repo = options
+                .repositories
+                .iter()
+                .find(|r| r.is_primary)
+                .or_else(|| options.repositories.first())
+                .ok_or_else(|| anyhow::anyhow!("volume_mode requires at least one repository"))?;
+
+            // Get git remote URL from the repo_path
+            let remote_url = crate::utils::git::get_remote_url(&primary_repo.repo_path).await?;
+
+            // Create the workspace volume
+            let volume_name = self.create_workspace_volume(name).await?;
+
+            // Clone into the volume using clone-then-branch strategy
+            self.clone_into_volume(
+                &volume_name,
+                &remote_url,
+                &primary_repo.branch_name,
+                primary_repo.base_branch.as_deref(),
+                git_user_name.as_deref(),
+                git_user_email.as_deref(),
+                uid,
+                gid,
+            )
+            .await?;
+
+            Some(volume_name)
+        } else {
+            None
+        };
+
+        let args = Self::build_create_args(
+            name,
+            workdir,
+            &options.initial_workdir,
+            initial_prompt,
+            uid,
+            options.agent,
+            options.print_mode,
+            options.dangerous_skip_checks,
+            &options.images,
+            git_user_name.as_deref(),
+            git_user_email.as_deref(),
+            options.session_id.as_ref(),
+            options.http_port,
+            &self.config,
+            options.container_image.as_ref(),
+            options.container_resources.as_ref(),
+            options.model.as_deref(),
+            &options.repositories,
+            options.volume_mode,
+            workspace_volume.as_deref(),
+        )?;
+        let output = Command::new("docker").args(&args).output().await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            tracing::error!(
+                container_name = %container_name,
+                workdir = %workdir.display(),
+                stderr = %stderr,
+                "Failed to create Docker container"
+            );
+            anyhow::bail!("Failed to create Docker container: {stderr}");
+        }
+
+        let container_id = String::from_utf8_lossy(&output.stdout).trim().to_owned();
+
+        tracing::info!(
+            container_id = %container_id,
+            container_name = %container_name,
+            workdir = %workdir.display(),
+            "Created Docker container"
+        );
+
+        // Install Claude Code hooks inside the container for status tracking
+        if options.agent == AgentType::ClaudeCode
+            && let Err(e) = crate::hooks::install_hooks_in_container(&container_name).await
+        {
+            tracing::warn!(
+                container_name = %container_name,
+                error = %e,
+                "Failed to install hooks in container (non-fatal), status tracking may not work"
+            );
+        }
+
+        Ok(container_name)
+    }
+
+    /// Check if a Docker container exists
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the docker command fails to execute.
+    #[instrument(skip(self), fields(name = %name))]
+    async fn exists(&self, name: &str) -> anyhow::Result<bool> {
+        let output = Command::new("docker")
+            .args(["ps", "-a", "--format", "{{.Names}}"])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            return Ok(false);
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        Ok(stdout.lines().any(|line| line == name))
+    }
+
+    /// Delete a Docker container
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the docker command fails to execute.
+    #[instrument(skip(self), fields(name = %name))]
+    async fn delete(&self, name: &str) -> anyhow::Result<()> {
+        // Stop the container first
+        let _ = Command::new("docker").args(["stop", name]).output().await;
+
+        // Then remove it
+        let output = Command::new("docker")
+            .args(["rm", "-f", name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            tracing::warn!("Failed to remove Docker container: {stderr}");
+        }
+
+        tracing::info!(container = name, "Deleted Docker container");
+
+        // Also try to delete workspace volume (if it exists)
+        // Extract session name from container name (clauderon-{session_name})
+        if let Some(session_name) = name.strip_prefix("clauderon-") {
+            let _ = self.delete_workspace_volume(session_name).await;
+        }
+
+        Ok(())
+    }
+
+    /// Get the command to attach to a Docker container
+    /// Uses bash to start the container first if stopped, then attach
+    fn attach_command(&self, name: &str) -> Vec<String> {
+        Self::build_attach_args(name)
+    }
+
+    /// Get recent logs from a Docker container
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the docker logs command fails.
+    #[instrument(skip(self), fields(name = %name, lines = %lines))]
+    async fn get_output(&self, name: &str, lines: usize) -> anyhow::Result<String> {
+        let output = Command::new("docker")
+            .args(["logs", "--tail", &lines.to_string(), name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to get Docker logs: {stderr}");
+        }
+
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    }
+
+    /// Get Docker backend capabilities
+    ///
+    /// Docker with bind mounts preserves data because the code is on the host filesystem.
+    /// Docker supports starting stopped containers and updating images.
+    fn capabilities(&self) -> super::traits::BackendCapabilities {
+        super::traits::BackendCapabilities {
+            can_recreate: true,
+            can_update_image: true,
+            preserves_data_on_recreate: true,
+            can_start: true,
+            data_preservation_description: "Your code is safe (mounted from your computer). Only container-local files will be lost.",
+        }
+    }
+
+    /// Check the health of a Docker container
+    ///
+    /// Uses `docker inspect` to get detailed container state.
+    #[instrument(skip(self), fields(name = %name))]
+    async fn check_health(
+        &self,
+        name: &str,
+    ) -> anyhow::Result<super::traits::BackendResourceHealth> {
+        // Use docker inspect to get container state
+        let output = Command::new("docker")
+            .args(["inspect", "--format", "{{.State.Status}}", name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            // Container not found
+            if stderr.contains("No such") || stderr.contains("not found") {
+                return Ok(super::traits::BackendResourceHealth::NotFound);
+            }
+            anyhow::bail!("Failed to inspect Docker container: {stderr}");
+        }
+
+        let status = String::from_utf8_lossy(&output.stdout)
+            .trim()
+            .to_lowercase();
+
+        match status.as_str() {
+            "running" => Ok(super::traits::BackendResourceHealth::Running),
+            "exited" | "stopped" | "paused" | "created" => {
+                Ok(super::traits::BackendResourceHealth::Stopped)
+            }
+            "dead" => Ok(super::traits::BackendResourceHealth::Error {
+                message: "Container is in dead state".to_owned(),
+            }),
+            "restarting" => Ok(super::traits::BackendResourceHealth::Pending),
+            other => Ok(super::traits::BackendResourceHealth::Error {
+                message: format!("Unknown container state: {other}"),
+            }),
+        }
+    }
+
+    /// Start a stopped Docker container
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the container cannot be started.
+    #[instrument(skip(self), fields(name = %name))]
+    async fn start(&self, name: &str) -> anyhow::Result<()> {
+        tracing::info!(container = %name, "Starting stopped Docker container");
+
+        let output = Command::new("docker")
+            .args(["start", name])
+            .output()
+            .await?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("Failed to start Docker container: {stderr}");
+        }
+
+        tracing::info!(container = %name, "Successfully started Docker container");
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    /// Test that docker run uses -dit (detach + interactive + TTY), not just -d
+    #[test]
+    fn test_create_uses_dit_not_d() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // interactive mode
+            true,  // dangerous_skip_checks
+            &[],   // no images
+            None,  // git user name
+            None,  // git user email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Must have -dit for interactive TTY sessions
+        assert!(
+            args.contains(&"-dit".to_owned()),
+            "Expected -dit flag for TTY allocation, got: {args:?}"
+        );
+        // Should NOT have plain -d
+        assert!(
+            !args.contains(&"-d".to_owned()),
+            "Should not use -d alone, need -dit for interactive sessions"
+        );
+    }
+
+    /// Test sanitization of git config values to prevent injection attacks
+    #[test]
+    fn test_sanitize_git_config_removes_newlines() {
+        // Test newline injection attempt
+        let malicious = "John Doe\nGIT_EVIL=injected";
+        let sanitized = sanitize_git_config_value(malicious);
+        assert_eq!(sanitized, "John DoeGIT_EVIL=injected");
+        assert!(!sanitized.contains('\n'));
+    }
+
+    #[test]
+    fn test_sanitize_git_config_removes_control_chars() {
+        // Test various control characters
+        let malicious = "user\x00name\x01with\x02control";
+        let sanitized = sanitize_git_config_value(malicious);
+        assert!(!sanitized.contains('\x00'));
+        assert!(!sanitized.contains('\x01'));
+        assert!(!sanitized.contains('\x02'));
+        assert_eq!(sanitized, "usernamewithcontrol");
+    }
+
+    #[test]
+    fn test_sanitize_git_config_preserves_tabs() {
+        // Tabs should be preserved as they're valid in names
+        let with_tab = "John\tDoe";
+        let sanitized = sanitize_git_config_value(with_tab);
+        assert_eq!(sanitized, "John\tDoe");
+    }
+
+    #[test]
+    fn test_sanitize_git_config_preserves_normal_chars() {
+        // Normal characters should pass through
+        let normal = "John Doe <john@example.com>";
+        let sanitized = sanitize_git_config_value(normal);
+        assert_eq!(sanitized, normal);
+    }
+
+    /// Test that docker run includes --user flag with non-root UID
+    #[test]
+    fn test_create_runs_as_non_root() {
+        let uid = 1000u32;
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
+            "test prompt",
+            uid,
+            AgentType::ClaudeCode,
+            false, // print mode
+            true,  // dangerous_skip_checks
+            &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Find --user flag and verify it's followed by the UID
+        let user_idx = args.iter().position(|a| a == "--user");
+        assert!(user_idx.is_some(), "Expected --user flag, got: {args:?}");
+
+        let uid_arg = &args[user_idx.unwrap() + 1];
+        assert_eq!(
+            uid_arg, "1000",
+            "Expected UID 1000 after --user, got: {uid_arg}"
+        );
+    }
+
+    /// Test that initial_workdir is correctly set in Docker -w flag when subdirectory is provided
+    #[test]
+    fn test_initial_workdir_subdirectory() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::from("packages/foo"), // subdirectory
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print_mode
+            false, // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Find -w flag and verify it's set to /workspace/packages/foo
+        let w_idx = args.iter().position(|a| a == "-w");
+        assert!(
+            w_idx.is_some(),
+            "Expected -w flag for working directory, got: {args:?}"
+        );
+
+        let workdir = &args[w_idx.unwrap() + 1];
+        assert_eq!(
+            workdir, "/workspace/packages/foo",
+            "Expected working directory to be /workspace/packages/foo, got: {workdir}"
+        );
+    }
+
+    /// Test that initial_workdir with empty path uses /workspace as working directory
+    #[test]
+    fn test_initial_workdir_empty() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // empty initial_workdir
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print_mode
+            false, // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Find -w flag and verify it's set to /workspace
+        let w_idx = args.iter().position(|a| a == "-w");
+        assert!(
+            w_idx.is_some(),
+            "Expected -w flag for working directory, got: {args:?}"
+        );
+
+        let workdir = &args[w_idx.unwrap() + 1];
+        assert_eq!(
+            workdir, "/workspace",
+            "Expected working directory to be /workspace when initial_workdir is empty, got: {workdir}"
+        );
+    }
+
+    /// Test that Rust caching is configured with cargo and sccache volumes
+    #[test]
+    fn test_rust_caching_configured() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Check cargo cache volumes
+        let has_registry = args
+            .iter()
+            .any(|a| a.contains("clauderon-cargo-registry:/workspace/.cargo/registry"));
+        assert!(
+            has_registry,
+            "Expected clauderon-cargo-registry volume mount"
+        );
+
+        let has_git = args
+            .iter()
+            .any(|a| a.contains("clauderon-cargo-git:/workspace/.cargo/git"));
+        assert!(has_git, "Expected clauderon-cargo-git volume mount");
+
+        // Check sccache volume
+        let has_sccache = args
+            .iter()
+            .any(|a| a.contains("clauderon-sccache:/workspace/.cache/sccache"));
+        assert!(has_sccache, "Expected clauderon-sccache volume mount");
+
+        // Check cargo and sccache environment variables
+        let has_cargo_home = args.iter().any(|a| a == "CARGO_HOME=/workspace/.cargo");
+        assert!(has_cargo_home, "Expected CARGO_HOME=/workspace/.cargo");
+
+        let has_rustc_wrapper = args.iter().any(|a| a == "RUSTC_WRAPPER=sccache");
+        assert!(has_rustc_wrapper, "Expected RUSTC_WRAPPER=sccache");
+
+        let has_sccache_dir = args
+            .iter()
+            .any(|a| a == "SCCACHE_DIR=/workspace/.cache/sccache");
+        assert!(
+            has_sccache_dir,
+            "Expected SCCACHE_DIR=/workspace/.cache/sccache"
+        );
+    }
+
+    /// Test that attach command uses bash, not zsh (which doesn't exist in container)
+    #[test]
+    fn test_attach_uses_bash_not_zsh() {
+        let args = DockerBackend::build_attach_args("test-container");
+
+        // Should use bash
+        assert_eq!(args[0], "bash", "Expected bash, got: {}", args[0]);
+
+        // Should NOT contain zsh anywhere
+        let has_zsh = args.iter().any(|a| a.contains("zsh"));
+        assert!(!has_zsh, "Should not use zsh: {args:?}");
+    }
+
+    /// Test that attach command starts stopped containers first
+    #[test]
+    fn test_attach_starts_stopped_container() {
+        let args = DockerBackend::build_attach_args("test-container");
+
+        // The command string should contain both docker start and docker attach
+        let cmd_string = args.join(" ");
+        assert!(
+            cmd_string.contains("docker start"),
+            "Expected 'docker start' in attach command: {cmd_string}"
+        );
+        assert!(
+            cmd_string.contains("docker attach"),
+            "Expected 'docker attach' in attach command: {cmd_string}"
+        );
+
+        // docker start should come before docker attach
+        let start_pos = cmd_string.find("docker start");
+        let attach_pos = cmd_string.find("docker attach");
+        assert!(
+            start_pos < attach_pos,
+            "'docker start' should come before 'docker attach'"
+        );
+    }
+
+    /// Test that single quotes in prompts are properly escaped
+    #[test]
+    fn test_prompt_escaping() {
+        let prompt_with_quotes = "Say 'hello world'";
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
+            prompt_with_quotes,
+            1000,
+            AgentType::ClaudeCode,
+            false, // print mode
+            true,  // dangerous_skip_checks
+            &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Find the command argument (last one containing the prompt)
+        let cmd_arg = args.last().unwrap();
+
+        // Single quotes should be escaped as '\'' for shell safety
+        assert!(
+            cmd_arg.contains("'\\''"),
+            "Single quotes should be escaped as '\\'': {cmd_arg}"
+        );
+    }
+
+    /// Test that container name is prefixed with clauderon-
+    #[test]
+    fn test_container_name_prefixed() {
+        let args = DockerBackend::build_create_args(
+            "my-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print mode
+            true,  // dangerous_skip_checks
+            &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Find --name flag and verify the container name
+        let name_idx = args.iter().position(|a| a == "--name");
+        assert!(name_idx.is_some(), "Expected --name flag");
+
+        let container_name = &args[name_idx.unwrap() + 1];
+        assert!(
+            container_name.starts_with("clauderon-"),
+            "Container name should start with 'clauderon-': {container_name}"
+        );
+        assert_eq!(container_name, "clauderon-my-session");
+    }
+
+    /// Test that no proxy env vars are added
+    #[test]
+    fn test_no_proxy_config() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print mode
+            true,  // dangerous_skip_checks
+            &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Should NOT have HTTPS_PROXY
+        let has_https_proxy = args.iter().any(|a| a.contains("HTTPS_PROXY"));
+        assert!(
+            !has_https_proxy,
+            "No proxy config should not add HTTPS_PROXY"
+        );
+    }
+
+    /// Test that print mode adds --print --verbose flags
+    #[test]
+    fn test_print_mode_adds_flags() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            true, // print mode
+            true, // dangerous_skip_checks
+            &[],  // no images
+            None, // git_user_name
+            None, // git_user_email
+            None, // session_id
+            None, // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            cmd_arg.contains("--print"),
+            "Print mode should include --print flag: {cmd_arg}"
+        );
+        assert!(
+            cmd_arg.contains("--verbose"),
+            "Print mode should include --verbose flag: {cmd_arg}"
+        );
+    }
+
+    /// Test that interactive mode (non-print) does NOT have --print flag
+    #[test]
+    fn test_interactive_mode_no_print_flag() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // interactive mode
+            true,  // dangerous_skip_checks
+            &[],   // no images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            !cmd_arg.contains("--print"),
+            "Interactive mode should NOT include --print flag: {cmd_arg}"
+        );
+    }
+
+    /// Test that git worktrees get their parent .git directory mounted
+    #[test]
+    fn test_git_worktree_mounts_parent_git() {
+        use tempfile::tempdir;
+
+        // Create a fake worktree structure
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let repo_git = temp_dir.path().join("repo/.git");
+        let worktree_dir = temp_dir.path().join("worktree");
+
+        // Create the directory structure
+        std::fs::create_dir_all(&repo_git).expect("Failed to create repo .git");
+        std::fs::create_dir_all(repo_git.join("worktrees/test"))
+            .expect("Failed to create worktrees dir");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+
+        // Create HEAD file in .git directory (required for validation)
+        std::fs::write(repo_git.join("HEAD"), "ref: refs/heads/main")
+            .expect("Failed to write HEAD");
+
+        // Create a .git file that points to the parent repo
+        let git_file_content = format!(
+            "gitdir: {display}/worktrees/test",
+            display = repo_git.display()
+        );
+        std::fs::write(worktree_dir.join(".git"), git_file_content)
+            .expect("Failed to write .git file");
+
+        // Build args with the worktree directory
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            &PathBuf::new(), // initial_workdir
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Should have workspace mount
+        let has_workspace_mount = args.iter().any(|a| a.contains("/workspace"));
+        assert!(
+            has_workspace_mount,
+            "Expected /workspace mount, got: {args:?}"
+        );
+
+        // Should also have parent .git directory mount (read-write for commits)
+        // Use canonicalized path since the function resolves symlinks (e.g. /var -> /private/var on macOS)
+        let canonical_git = repo_git.canonicalize().expect("Failed to canonicalize");
+        let expected_git_mount = format!(
+            "{display1}:{display2}",
+            display1 = canonical_git.display(),
+            display2 = canonical_git.display()
+        );
+        let has_git_mount = args.iter().any(|a| a == &expected_git_mount);
+        assert!(
+            has_git_mount,
+            "Expected parent .git mount at {expected_git_mount}, got: {args:?}"
+        );
+    }
+
+    /// Test that non-worktree directories don't get extra git mounts
+    #[test]
+    fn test_non_worktree_no_extra_mounts() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let test_dir = temp_dir.path().join("test-repo");
+        std::fs::create_dir_all(&test_dir).expect("Failed to create test dir");
+
+        // Create a normal .git directory (not a worktree)
+        let git_dir = test_dir.join(".git");
+        std::fs::create_dir_all(&git_dir).expect("Failed to create .git dir");
+
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &test_dir,
+            &PathBuf::new(), // initial_workdir (empty = root)
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Count volume mounts (should have workspace + 3 cargo/sccache cache mounts + uploads + claude.json)
+        // Plugin mounts are optional (0-2 depending on environment)
+        let mount_count = args.iter().filter(|a| *a == "-v").count();
+        assert!(
+            (6..=8).contains(&mount_count),
+            "Normal git repo should have 6-8 mounts (base 6 + optional plugins), got {mount_count} mounts"
+        );
+    }
+
+    /// Test that uploads directory is mounted
+    #[test]
+    fn test_uploads_directory_mounted() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let test_dir = temp_dir.path().join("test-repo");
+        std::fs::create_dir_all(&test_dir).expect("Failed to create test dir");
+
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &test_dir,
+            &PathBuf::new(),
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false,
+            true,
+            &[],
+            None,
+            None,
+            None,
+            None,
+            &DockerConfig::default(),
+            None,
+            None,
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Should have uploads mount
+        let has_uploads_mount = args
+            .iter()
+            .any(|a| a.contains("/uploads:/workspace/.clauderon/uploads"));
+        assert!(
+            has_uploads_mount,
+            "Expected uploads directory mount, got: {args:?}"
+        );
+    }
+
+    /// Test that image paths are translated from host to container
+    #[test]
+    fn test_image_path_translation() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_owned());
+        let session_id = uuid::Uuid::new_v4();
+        let host_path = format!("{home}/.clauderon/uploads/{session_id}/test-image.png");
+
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            temp_dir.path(),
+            &PathBuf::new(),
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false,
+            true,
+            std::slice::from_ref(&host_path),
+            None,
+            None,
+            None,
+            None,
+            &DockerConfig::default(),
+            None,
+            None,
+            None, // model
+            &[],
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        let cmd_arg = args.last().unwrap();
+
+        // Host path should NOT appear in command
+        assert!(
+            !cmd_arg.contains(&host_path),
+            "Host path should be translated, not passed directly: {cmd_arg}"
+        );
+
+        // Container path SHOULD appear
+        assert!(
+            cmd_arg.contains("/workspace/.clauderon/uploads"),
+            "Container path should be used: {cmd_arg}"
+        );
+    }
+
+    /// Test git worktree with relative gitdir path
+    #[test]
+    fn test_git_worktree_relative_path() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let repo_git = temp_dir.path().join("repo/.git");
+        let worktree_dir = temp_dir.path().join("repo/worktrees/test-worktree");
+
+        // Create the directory structure
+        std::fs::create_dir_all(&repo_git).expect("Failed to create repo .git");
+        std::fs::create_dir_all(repo_git.join("worktrees/test"))
+            .expect("Failed to create worktrees dir");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+        std::fs::write(repo_git.join("HEAD"), "ref: refs/heads/main")
+            .expect("Failed to write HEAD");
+
+        // Create a .git file with RELATIVE path (common for worktrees in same repo tree)
+        let git_file_content = "gitdir: ../../.git/worktrees/test";
+        std::fs::write(worktree_dir.join(".git"), git_file_content)
+            .expect("Failed to write .git file");
+
+        // Build args - should resolve relative path correctly
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            &PathBuf::new(), // initial_workdir
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Should have parent .git directory mount
+        let has_git_mount = args
+            .iter()
+            .any(|a| a.contains(&format!("{display}:", display = repo_git.display())));
+        assert!(
+            has_git_mount,
+            "Expected parent .git mount for worktree with relative path, got: {args:?}"
+        );
+    }
+
+    /// Test git worktree with trailing whitespace in .git file
+    #[test]
+    fn test_git_worktree_trailing_whitespace() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let repo_git = temp_dir.path().join("repo/.git");
+        let worktree_dir = temp_dir.path().join("worktree");
+
+        std::fs::create_dir_all(&repo_git).expect("Failed to create repo .git");
+        std::fs::create_dir_all(repo_git.join("worktrees/test"))
+            .expect("Failed to create worktrees dir");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+        std::fs::write(repo_git.join("HEAD"), "ref: refs/heads/main")
+            .expect("Failed to write HEAD");
+
+        // Create .git file with trailing whitespace (common from manual editing)
+        let git_file_content = format!(
+            "gitdir: {display}/worktrees/test   \n",
+            display = repo_git.display()
+        );
+        std::fs::write(worktree_dir.join(".git"), git_file_content)
+            .expect("Failed to write .git file");
+
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            &PathBuf::new(), // initial_workdir
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Should still work despite whitespace
+        let has_git_mount = args
+            .iter()
+            .any(|a| a.contains(&format!("{display}:", display = repo_git.display())));
+        assert!(
+            has_git_mount,
+            "Expected parent .git mount despite trailing whitespace, got: {args:?}"
+        );
+    }
+
+    /// Test that malformed .git files don't crash, just skip the mount
+    #[test]
+    fn test_malformed_git_file_graceful_failure() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let worktree_dir = temp_dir.path().join("worktree");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+
+        // Create a malformed .git file (missing gitdir: line)
+        std::fs::write(worktree_dir.join(".git"), "invalid content\n")
+            .expect("Failed to write .git file");
+
+        // Should not panic, just skip the git mount
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            &PathBuf::new(), // initial_workdir
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Should have workspace + 3 cache mounts + uploads + claude.json (no git parent mount)
+        // Plugin mounts are optional (0-2 depending on environment)
+        let mount_count = args.iter().filter(|a| *a == "-v").count();
+        assert!(
+            (6..=8).contains(&mount_count),
+            "Malformed worktree should have 6-8 mounts (base 6 + optional plugins), got {mount_count} mounts"
+        );
+    }
+
+    /// Test that missing parent .git directory is handled gracefully
+    #[test]
+    fn test_missing_parent_git_graceful_failure() {
+        use tempfile::tempdir;
+
+        let temp_dir = tempdir().expect("Failed to create temp dir");
+        let worktree_dir = temp_dir.path().join("worktree");
+        std::fs::create_dir_all(&worktree_dir).expect("Failed to create worktree dir");
+
+        // Point to a non-existent parent .git directory
+        let fake_git_path = temp_dir.path().join("nonexistent/.git/worktrees/test");
+        let git_file_content = format!("gitdir: {display}", display = fake_git_path.display());
+        std::fs::write(worktree_dir.join(".git"), git_file_content)
+            .expect("Failed to write .git file");
+
+        // Should not panic, just skip the git mount and log a warning
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &worktree_dir,
+            &PathBuf::new(), // initial_workdir
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print_mode
+            true,  // dangerous_skip_checks
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Should have workspace + 3 cache mounts + uploads + claude.json (no git parent mount due to validation failure)
+        // Plugin mounts are optional (0-2 depending on environment)
+        let mount_count = args.iter().filter(|a| *a == "-v").count();
+        assert!(
+            (6..=8).contains(&mount_count),
+            "Worktree with missing parent should have 6-8 mounts (base 6 + optional plugins), got {mount_count} mounts"
+        );
+    }
+
+    /// Test that dangerous_skip_checks adds the right flags
+    #[test]
+    fn test_dangerous_skip_checks() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print_mode
+            true,  // dangerous_skip_checks = true
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Should include --dangerously-skip-permissions flag
+        let cmd_arg = args.last().unwrap();
+        assert!(
+            cmd_arg.contains("--dangerously-skip-permissions"),
+            "Flag should be present: {cmd_arg}"
+        );
+
+        // Should mount .claude.json with bypassPermissionsModeAccepted
+        let has_claude_json = args.iter().any(|a| a.contains(".claude.json"));
+        assert!(has_claude_json, "Should mount .claude.json");
+
+        // Verify the mount includes the container path
+        let claude_json_mount = args.iter().find(|a| a.contains(".claude.json")).unwrap();
+        assert!(
+            claude_json_mount.contains(":/workspace/.claude.json"),
+            "Should mount to /workspace/.claude.json: {claude_json_mount}"
+        );
+    }
+
+    /// Test that .claude.json is created without dangerous_skip_checks
+    #[test]
+    fn test_claude_json_without_dangerous_skip_checks() {
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // initial_workdir (empty = root)
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false, // print_mode
+            false, // dangerous_skip_checks = false
+            &[],   // images
+            None,  // git_user_name
+            None,  // git_user_email
+            None,  // session_id
+            None,  // http_port
+            &DockerConfig::default(),
+            None,  // image_override
+            None,  // resource_override
+            None,  // model
+            &[],   // repositories (empty = legacy mode)
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Should still mount .claude.json (for onboarding)
+        let has_claude_json = args.iter().any(|a| a.contains(".claude.json"));
+        assert!(
+            has_claude_json,
+            "Should mount .claude.json for onboarding even without bypass mode"
+        );
+    }
+
+    /// Test that session history file path uses correct project path based on initial_workdir
+    /// This fixes a bug where the wrapper script used hardcoded "-workspace" instead of
+    /// computing the project path from the actual working directory.
+    #[test]
+    fn test_session_history_project_path_with_subdirectory() {
+        let session_id = uuid::Uuid::new_v4();
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::from("packages/clauderon"), // subdirectory
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false,             // print_mode
+            false,             // dangerous_skip_checks
+            &[],               // images
+            None,              // git_user_name
+            None,              // git_user_email
+            Some(&session_id), // session_id - required for wrapper script generation
+            None,              // http_port
+            &DockerConfig::default(),
+            None,
+            None,
+            None,  // model
+            &[],   // repositories
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Find the bash command (last argument)
+        let cmd_arg = args.last().unwrap();
+
+        // The wrapper script should use the correct project path: -workspace-packages-clauderon
+        // (not the hardcoded -workspace)
+        assert!(
+            cmd_arg.contains("-workspace-packages-clauderon"),
+            "Expected project path '-workspace-packages-clauderon' in wrapper script, got: {cmd_arg}"
+        );
+        assert!(
+            !cmd_arg.contains("projects/-workspace/"),
+            "Should NOT use hardcoded '-workspace' project path when initial_workdir is set"
+        );
+    }
+
+    /// Test that session history file path uses -workspace when initial_workdir is empty
+    #[test]
+    fn test_session_history_project_path_at_root() {
+        let session_id = uuid::Uuid::new_v4();
+        let args = DockerBackend::build_create_args(
+            "test-session",
+            &PathBuf::from("/workspace"),
+            &PathBuf::new(), // empty initial_workdir = root
+            "test prompt",
+            1000,
+            AgentType::ClaudeCode,
+            false,             // print_mode
+            false,             // dangerous_skip_checks
+            &[],               // images
+            None,              // git_user_name
+            None,              // git_user_email
+            Some(&session_id), // session_id - required for wrapper script generation
+            None,              // http_port
+            &DockerConfig::default(),
+            None,
+            None,
+            None,  // model
+            &[],   // repositories
+            false, // volume_mode
+            None,  // workspace_volume
+        )
+        .expect("Failed to build args");
+
+        // Find the bash command (last argument)
+        let cmd_arg = args.last().unwrap();
+
+        // The wrapper script should use -workspace (no subdirectory suffix)
+        assert!(
+            cmd_arg.contains("projects/-workspace/"),
+            "Expected project path '-workspace' in wrapper script when initial_workdir is empty, got: {cmd_arg}"
+        );
+    }
+}
