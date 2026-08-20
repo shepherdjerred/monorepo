@@ -4,6 +4,7 @@ import {
   auditFinding,
   type BucksAuditSink,
 } from "#src/betting/reconcile-shared.ts";
+import { cancellationHouseCut } from "#src/betting/house-cut.ts";
 
 async function loadBets(prismaClient: Db, afterBetId: number) {
   const bets = await prismaClient.bucksBet.findMany({
@@ -208,6 +209,16 @@ function auditCancellation(
   }
   if (fee === null) {
     return;
+  }
+  const expectedFee = cancellationHouseCut(bet.stake);
+  if (fee !== expectedFee) {
+    findings.push(
+      auditFinding(
+        "fee",
+        `Stored cancellation fee ${fee.toString()} differs from required fee ${expectedFee.toString()} for a ${bet.stake.toString()} BB submitted offer`,
+        { poolId: bet.poolId, betId: bet.id },
+      ),
+    );
   }
   if (pairedFee !== 0 || ownFee !== -fee) {
     findings.push(

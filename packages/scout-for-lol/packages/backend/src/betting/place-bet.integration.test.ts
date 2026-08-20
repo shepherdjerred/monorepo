@@ -315,6 +315,47 @@ describe("cancelBet — returning a position", () => {
     });
     expect(house.balance).toBe(HOUSE_BANKROLL - SEED_GRANT);
   });
+
+  test("reconciliation recomputes the cancellation fee from the offer", async () => {
+    await bet({ stake: 3 });
+    await cancelBet(
+      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      db,
+    );
+    const cancelled = await db.bucksBet.findFirstOrThrow({
+      select: { id: true, bucksAccountId: true },
+    });
+    const house = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: true },
+      select: { id: true },
+    });
+
+    await db.bucksLedgerEntry.deleteMany({
+      where: { betId: cancelled.id, kind: "cancel_fee" },
+    });
+    await db.bucksBet.update({
+      where: { id: cancelled.id },
+      data: { fee: 0, payout: 3 },
+    });
+    await db.bucksAccount.update({
+      where: { id: cancelled.bucksAccountId },
+      data: { balance: SEED_GRANT },
+    });
+    await db.bucksAccount.update({
+      where: { id: house.id },
+      data: { balance: HOUSE_BANKROLL - SEED_GRANT },
+    });
+
+    expect(await reconcileBucksBalances(db)).toContainEqual(
+      expect.objectContaining({
+        kind: "fee",
+        betId: cancelled.id,
+        message: expect.stringContaining(
+          "differs from required fee 1 for a 3 BB submitted offer",
+        ),
+      }),
+    );
+  });
 });
 
 describe("placeBet — refusing a position", () => {
