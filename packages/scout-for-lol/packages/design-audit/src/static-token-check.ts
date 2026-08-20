@@ -2,6 +2,11 @@ import path from "node:path";
 
 type TokenName = "brand" | "accent" | "success" | "warning" | "danger" | "info";
 
+type OpenElement = {
+  name: string;
+  hasBackground: boolean;
+};
+
 export type InvalidTokenPair = {
   file: string;
   line: number;
@@ -20,6 +25,14 @@ const tokens: readonly TokenName[] = [
 
 function lineNumber(source: string, offset: number): number {
   return source.slice(0, offset).split("\n").length;
+}
+
+function closeElement(elements: OpenElement[], name: string): void {
+  for (let index = elements.length - 1; index >= 0; index -= 1) {
+    if (elements[index]?.name !== name) continue;
+    elements.splice(index, 1);
+    return;
+  }
 }
 
 export function findInvalidTokenPairs(
@@ -50,12 +63,28 @@ export function findInvalidTokenPairs(
     const backgroundOnLine = new RegExp(
       String.raw`\bbg-scout-${token}(?![/\w-])`,
     );
-    const openingTags = /<[a-z][^<>]*>/gi;
-    for (const match of source.matchAll(openingTags)) {
+    const elements = /<\/?([a-z][a-z0-9-]*)\b[^<>]*>/gi;
+    const openElements: OpenElement[] = [];
+    for (const match of source.matchAll(elements)) {
       const tag = match[0];
+      const name = match[1];
+      if (name === undefined) continue;
+      if (tag.startsWith("</")) {
+        closeElement(openElements, name);
+        continue;
+      }
       foreground.lastIndex = 0;
-      if (!backgroundOnLine.test(tag) || !foreground.test(tag)) continue;
-      addFinding(token, match.index);
+      const hasBackground = backgroundOnLine.test(tag);
+      const hasForeground = foreground.test(tag);
+      if (
+        hasForeground &&
+        (hasBackground || openElements.some((element) => element.hasBackground))
+      ) {
+        addFinding(token, match.index);
+      }
+      if (!tag.endsWith("/>")) {
+        openElements.push({ name, hasBackground });
+      }
     }
 
     const fieldPair = new RegExp(

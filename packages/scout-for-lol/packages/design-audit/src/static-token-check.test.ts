@@ -38,6 +38,15 @@ describe("Scout semantic token pairs", () => {
     ).toEqual([]);
   });
 
+  test("rejects a matching foreground inherited from an ancestor background", () => {
+    expect(
+      findInvalidTokenPairs(
+        '<div class="bg-scout-danger"><span class="text-scout-danger">Players</span></div>',
+        "fixture.tsx",
+      ),
+    ).toHaveLength(1);
+  });
+
   test("rejects same-token fields with whitespace after the background", () => {
     expect(
       findInvalidTokenPairs(

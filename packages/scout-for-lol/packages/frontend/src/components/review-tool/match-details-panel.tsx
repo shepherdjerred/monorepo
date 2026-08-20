@@ -172,10 +172,10 @@ export function MatchDetailsPanel({
                 <div className="space-y-1.5">
                   {match.teams.red.map((champion, idx) => (
                     <div key={idx} className="text-xs">
-                      <div className="font-medium text-scout-danger">
+                      <div className="font-medium text-scout-danger-ink">
                         {champion.riotIdGameName}
                       </div>
-                      <div className="text-scout-danger">
+                      <div className="text-scout-danger-ink">
                         {championNameToDisplayName(champion.championName)}
                       </div>
                     </div>
