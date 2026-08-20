@@ -153,6 +153,8 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
     const isClipped = (element: HTMLElement, rectangle: DOMRect): boolean =>
       !allowed(element, "data-design-audit-allow-overflow") &&
       element.closest(".right-sidebar") === null &&
+      // Monaco virtualizes its line layer inside an intentional clip region.
+      element.closest(".monaco-editor") === null &&
       !hasScrollableAncestor(element) &&
       (hasClippingAncestor(element, rectangle) ||
         (rectangle.right > window.innerWidth + 1 &&
