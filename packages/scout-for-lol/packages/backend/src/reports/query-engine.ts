@@ -475,13 +475,30 @@ function competitionRange(
   plan: ReportQueryPlan,
   nowInput: Date | undefined,
 ): { startDate: Date; endDate: Date } {
-  const fallback = windowRange(plan, nowInput);
+  // Intersect the competition's own dates with the period the query asked
+  // for. Taking only the competition's bounds discarded the query's window
+  // entirely, so `DURING BETWEEN` on a competition source silently widened to
+  // the whole competition.
+  const requested = windowRange(plan, nowInput);
   const now = nowInput ?? new Date();
   const configuredEnd = competition.endDate ?? now;
-  return {
-    startDate: competition.startDate ?? fallback.startDate,
-    endDate: new Date(Math.min(configuredEnd.getTime(), now.getTime())),
-  };
+  const startDate =
+    competition.startDate === null
+      ? requested.startDate
+      : new Date(
+          Math.max(
+            competition.startDate.getTime(),
+            requested.startDate.getTime(),
+          ),
+        );
+  const endDate = new Date(
+    Math.min(
+      configuredEnd.getTime(),
+      now.getTime(),
+      requested.endDate.getTime(),
+    ),
+  );
+  return { startDate, endDate };
 }
 
 function resolveCompetitionId(

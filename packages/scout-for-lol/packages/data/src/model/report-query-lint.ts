@@ -58,6 +58,7 @@ export function lintReportQuery(text: string): ReportDiagnostic[] {
   diagnostics.push(...orderAndLimitDiagnostics(ast));
   diagnostics.push(...whereDiagnostics(ast));
   diagnostics.push(...playerRefDiagnostics(ast));
+  diagnostics.push(...conflictingWindowDiagnostics(ast));
   diagnostics.push(...havingDiagnostics(ast));
   diagnostics.push(...windowDiagnostics(ast));
   diagnostics.push(...renderDiagnostics(ast));
@@ -89,6 +90,42 @@ function windowDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   if (ast.where.some((clause) => clause.kind === "lookback")) return [];
   if (ast.groupBy === undefined) return [];
   return [error(REPORT_WINDOW_REQUIRED_MESSAGE, ast.groupBy.span)];
+}
+
+/**
+ * Two clauses both stating a period. The compiler refuses this, but without a
+ * diagnostic the editor stayed silent until the query was actually run.
+ */
+function conflictingWindowDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
+  const lookback = ast.where.find((clause) => clause.kind === "lookback");
+  if (ast.during === undefined) {
+    if (lookback !== undefined && ast.analysis !== undefined) {
+      return [
+        error(
+          "An ANALYZE clause already states its time period; remove the timestamp lookback predicate.",
+          lookback.span,
+        ),
+      ];
+    }
+    return [];
+  }
+  if (ast.analysis !== undefined) {
+    return [
+      error(
+        "Do not combine ANALYZE with DURING; an ANALYZE clause already states its own time period.",
+        ast.during.span,
+      ),
+    ];
+  }
+  if (lookback !== undefined) {
+    return [
+      error(
+        "State the time period once: use either DURING or a timestamp lookback predicate, not both.",
+        ast.during.span,
+      ),
+    ];
+  }
+  return [];
 }
 
 function havingDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {

@@ -89,10 +89,23 @@ async function lookupTrackedAccounts(
 ): Promise<z.infer<typeof AccountRowSchema>[]> {
   if (accountsParquet === undefined || guildIds.length === 0) return [];
   return await runQuery(
-    `SELECT DISTINCT puuid, player_id, player_alias, discord_id
-       FROM read_parquet(?)
-      WHERE server_id IN (SELECT unnest(?))
-        AND (lower(player_alias) = ? OR lower(account_alias) = ?)`,
+    // Two hops on purpose. Matching `account_alias` finds one account, but the
+    // question is who that account belongs to, so the match is a seed and the
+    // person's other accounts come back with it. Without this, searching by an
+    // account alias undercounts exactly the multi-account players this exists
+    // to handle.
+    `WITH scoped AS (
+       SELECT * FROM read_parquet(?) WHERE server_id IN (SELECT unnest(?))
+     ),
+     seed AS (
+       SELECT player_id, discord_id FROM scoped
+        WHERE lower(player_alias) = ? OR lower(account_alias) = ?
+     )
+     SELECT DISTINCT puuid, player_id, player_alias, discord_id
+       FROM scoped
+      WHERE player_id IN (SELECT player_id FROM seed)
+         OR (discord_id IS NOT NULL
+             AND discord_id IN (SELECT discord_id FROM seed WHERE discord_id IS NOT NULL))`,
     [
       listParam([accountsParquet]),
       listParam(guildIds),

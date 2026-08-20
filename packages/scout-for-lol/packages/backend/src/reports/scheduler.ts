@@ -7,27 +7,27 @@ import {
   scheduledReportsActive,
   scheduledReportsDueTotal,
 } from "#src/metrics/report-runs.ts";
-import { REPORT_WINDOW_REQUIRED_MESSAGE } from "@scout-for-lol/data";
+import { parseAndCompile } from "@scout-for-lol/data";
 import { runReport, type ReportRunResult } from "#src/reports/runner.ts";
 import { createLogger } from "#src/logger.ts";
 
 /**
- * Whether a run failed because its stored ScoutQL no longer parses or compiles,
- * as opposed to a lake, Discord, or database fault.
+ * Whether a run failed because its stored ScoutQL no longer compiles, as
+ * opposed to a lake, Discord, or database fault.
  *
- * Matched on the compiler's own messages rather than an error subclass because
- * `parseAndCompile` throws plain Errors from a dozen validation sites; adding a
- * class hierarchy for one counter would be a larger change than the counter
- * justifies.
+ * Decided by re-compiling the stored text rather than by matching message
+ * prefixes. `parseAndCompile` throws plain Errors from a dozen validation
+ * sites, so any prefix list silently undercounts the moment a new one is
+ * added — and undercounting is the whole failure mode this metric exists to
+ * make visible.
  */
-function isReportCompileFailure(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  return (
-    error.message === REPORT_WINDOW_REQUIRED_MESSAGE ||
-    error.message.startsWith("Invalid report query") ||
-    error.message.startsWith("Invalid DURING clause") ||
-    error.message.startsWith("Unknown GROUP BY field")
-  );
+function isReportCompileFailure(queryText: string): boolean {
+  try {
+    parseAndCompile(queryText);
+    return false;
+  } catch {
+    return true;
+  }
 }
 
 const logger = createLogger("report-scheduler");
@@ -120,7 +120,7 @@ export async function runDueReports(
       // A stored query that no longer compiles is its own failure mode: the
       // catch below advances the schedule regardless, so without this counter
       // a language change that broke every saved report would be invisible.
-      if (isReportCompileFailure(error)) {
+      if (isReportCompileFailure(report.queryText)) {
         scheduledReportCompileFailuresTotal.inc({
           system_source: report.systemSource ?? "USER",
         });

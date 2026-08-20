@@ -178,14 +178,10 @@ function duringItems(): ReportCompletionItem[] {
     },
     {
       label: "BETWEEN dates",
-      insertText: "BETWEEN '2026-01-01' AND '2026-01-31'",
-      detail: "Cover two inclusive calendar dates.",
-      kind: "keyword",
-    },
-    {
-      label: "IN TIME ZONE",
-      insertText: "IN TIME ZONE 'UTC'",
-      detail: "Interpret calendar dates in an IANA timezone.",
+      // Carries its own timezone: `IN TIME ZONE` is only valid as part of this
+      // form, so offering it separately inserts something that cannot compile.
+      insertText: "BETWEEN '2026-01-01' AND '2026-01-31' IN TIME ZONE 'UTC'",
+      detail: "Cover two inclusive calendar dates, in a named timezone.",
       kind: "keyword",
     },
   ];
