@@ -1,14 +1,16 @@
 <script is:inline src="/assets/scout/brand/theme-bootstrap.js"></script>
 <script is:inline>
   const focusScrollableRegions = () => {
-    document.querySelectorAll("table, pre").forEach((element) => {
-      if (
-        element.scrollWidth > element.clientWidth &&
-        !element.hasAttribute("tabindex")
-      ) {
-        element.setAttribute("tabindex", "0");
-      }
-    });
+    document
+      .querySelectorAll(".scout-docs-table-scroll, pre")
+      .forEach((element) => {
+        if (
+          element.scrollWidth > element.clientWidth &&
+          !element.hasAttribute("tabindex")
+        ) {
+          element.setAttribute("tabindex", "0");
+        }
+      });
   };
 
   focusScrollableRegions();

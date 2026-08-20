@@ -15,39 +15,41 @@ import {
 >
   <div class="bg-scout-surface">
     <Navbar activePage="getting-started" />
-    <div class="relative px-6 lg:px-8">
-      <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
-        <p
-          class="text-sm font-semibold uppercase tracking-wide text-scout-brand"
-        >
-          Getting started
-        </p>
-        <h1
-          class="mt-4 text-4xl font-bold tracking-tight text-scout-ink sm:text-6xl"
-        >
-          Set up Scout in minutes.
-        </h1>
-        <p class="mt-6 text-lg leading-8 text-scout-subtle">
-          Sign in, add Scout to your Discord server, and choose the players and
-          channels you want to watch. Discord stays focused on notifications;
-          the dashboard handles the settings.
-        </p>
-        <div class="mt-10 flex flex-wrap gap-4">
-          <a
-            href={APP_DASHBOARD_URL}
-            data-scout-conversion={GET_STARTED_CLICK_EVENT}
-            data-scout-cta-location="getting-started"
-            class="rounded-md bg-scout-brand px-5 py-3 font-semibold text-scout-brand-ink shadow-sm hover:bg-scout-brand"
-            >Open the dashboard</a
+    <main>
+      <div class="relative px-6 lg:px-8">
+        <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
+          <p
+            class="text-sm font-semibold uppercase tracking-wide text-scout-brand"
           >
-          <a
-            href={DOCS_URL}
-            class="rounded-md border border-scout-border px-5 py-3 font-semibold text-scout-ink hover:bg-scout-raised"
-            >Read the documentation</a
+            Getting started
+          </p>
+          <h1
+            class="mt-4 text-4xl font-bold tracking-tight text-scout-ink sm:text-6xl"
           >
+            Set up Scout in minutes.
+          </h1>
+          <p class="mt-6 text-lg leading-8 text-scout-subtle">
+            Sign in, add Scout to your Discord server, and choose the players
+            and channels you want to watch. Discord stays focused on
+            notifications; the dashboard handles the settings.
+          </p>
+          <div class="mt-10 flex flex-wrap gap-4">
+            <a
+              href={APP_DASHBOARD_URL}
+              data-scout-conversion={GET_STARTED_CLICK_EVENT}
+              data-scout-cta-location="getting-started"
+              class="rounded-md bg-scout-brand px-5 py-3 font-semibold text-scout-brand-ink shadow-sm hover:bg-scout-brand"
+              >Open the dashboard</a
+            >
+            <a
+              href={DOCS_URL}
+              class="rounded-md border border-scout-border px-5 py-3 font-semibold text-scout-ink hover:bg-scout-raised"
+              >Read the documentation</a
+            >
+          </div>
         </div>
       </div>
-    </div>
+    </main>
     <Footer />
   </div>
 </Layout>

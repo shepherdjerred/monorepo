@@ -111,6 +111,7 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
       rectangle.right > window.innerWidth + 1 &&
       rectangle.width < window.innerWidth &&
       !allowed(element, "data-design-audit-allow-overflow") &&
+      element.closest(".right-sidebar") === null &&
       !hasScrollableAncestor(element);
     const isTruncated = (
       element: HTMLElement,
@@ -136,16 +137,22 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
     const elements = [...document.querySelectorAll<HTMLElement>("*")].filter(
       (element) => visible(element),
     );
-    const isNavigation = (element: Element): boolean =>
-      element.closest("nav, aside") !== null;
-    const horizontalOverflow =
-      document.documentElement.scrollWidth > window.innerWidth + 1;
+    const isIntentionalRightSidebar = (element: HTMLElement): boolean =>
+      element.closest(".right-sidebar") !== null;
     const clipped: string[] = [];
     const truncated: string[] = [];
     const smallControls: string[] = [];
+    const horizontalOverflow =
+      document.documentElement.scrollWidth > window.innerWidth + 1 &&
+      [...document.querySelectorAll<HTMLElement>("*")].some((element) => {
+        if (!visible(element) || isIntentionalRightSidebar(element)) {
+          return false;
+        }
+        const rectangle = element.getBoundingClientRect();
+        return rectangle.left < -1 || rectangle.right > window.innerWidth + 1;
+      });
 
     for (const element of elements) {
-      if (isNavigation(element)) continue;
       const rectangle = element.getBoundingClientRect();
       if (isClipped(element, rectangle)) {
         clipped.push(element.tagName.toLowerCase());

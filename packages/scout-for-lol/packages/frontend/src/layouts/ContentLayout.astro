@@ -20,17 +20,17 @@ if (typeof description !== "string" || description.length === 0) {
 <Layout title={title} description={description}>
   <div class="bg-scout-surface">
     <Navbar />
+    <main>
+      <div class="mx-auto max-w-3xl px-6 py-16 sm:py-20 lg:px-8">
+        <PageHeader title={title} subtitle={subtitle} />
 
-    <div class="mx-auto max-w-3xl px-6 py-16 sm:py-20 lg:px-8">
-      <PageHeader title={title} subtitle={subtitle} />
-
-      <article
-        class="prose prose-lg mt-10 max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-scout-ink prose-a:font-medium prose-a:text-scout-brand prose-a:no-underline hover:prose-a:underline"
-      >
-        <slot />
-      </article>
-    </div>
-
+        <article
+          class="prose prose-lg mt-10 max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-scout-ink prose-a:font-medium prose-a:text-scout-brand prose-a:no-underline hover:prose-a:underline"
+        >
+          <slot />
+        </article>
+      </div>
+    </main>
     <Footer />
   </div>
 </Layout>
