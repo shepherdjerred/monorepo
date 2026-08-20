@@ -35,7 +35,8 @@ describe("Scout Discord visualizations", () => {
     const tableJson = JSON.stringify(table.embeds);
     expect(table.files).toBeUndefined();
     expect(tableJson).toContain("Win rates");
-    expect(tableJson).toContain("| Games |");
+    expect(tableJson).toContain("Games");
+    expect(tableJson).not.toContain("| Games |");
     expect(tableJson).toContain("Aurora");
     expect(tableJson).toContain("100.0%");
 
@@ -53,8 +54,11 @@ describe("Scout Discord visualizations", () => {
       }),
     });
     const listJson = JSON.stringify(list.embeds);
-    expect(listJson).toContain("- Aurora:");
+    expect(listJson).toContain("- Aurora: Games: 8, Win rate: 100.0%");
     expect(listJson).not.toContain("| Games |");
+
+    const leaderboardJson = JSON.stringify(board.embeds);
+    expect(leaderboardJson).toContain("Games: 8 · Win rate: 100.0%");
 
     const kpi = exploreVisualizationPayload({
       ...answer,
@@ -81,11 +85,16 @@ describe("Scout Discord visualizations", () => {
 
     for (const kind of ["TABLE", "LIST", "LEADERBOARD", "KPI_CARD"] as const) {
       const embed = visualizationToEmbed(
-        VisualizationSnapshotSchema.parse({ ...longSnapshot, kind }),
+        VisualizationSnapshotSchema.parse({
+          ...longSnapshot,
+          kind,
+          title: "A title that is too long ".repeat(20),
+        }),
       );
       const description = embed?.data.description;
       expect(description).toBeString();
       expect(description?.length).toBeLessThanOrEqual(3900);
+      expect(embed?.data.title?.length).toBeLessThanOrEqual(256);
     }
   });
 

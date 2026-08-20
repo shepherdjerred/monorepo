@@ -10,6 +10,7 @@ import { visualizationSnapshotToImage } from "@scout-for-lol/report";
 const NATIVE_KINDS = new Set(["TABLE", "LIST", "LEADERBOARD", "KPI_CARD"]);
 const MAX_NATIVE_ROWS = 12;
 const MAX_EMBED_DESCRIPTION = 3900;
+const MAX_EMBED_TITLE = 256;
 const DESCRIPTION_TRUNCATION_SUFFIX =
   "\n\n_Visualization truncated to fit Discord._";
 
@@ -61,9 +62,16 @@ export function visualizationToEmbed(
     .setColor(Colors.DarkGold)
     .setDescription(description);
   if (snapshot.title !== null) {
-    embed.setTitle(snapshot.title);
+    embed.setTitle(truncateTitle(snapshot.title));
   }
   return embed;
+}
+
+function truncateTitle(title: string): string {
+  if (title.length <= MAX_EMBED_TITLE) {
+    return title;
+  }
+  return `${title.slice(0, MAX_EMBED_TITLE - 1)}…`;
 }
 
 function nativeDescription(snapshot: VisualizationSnapshot): string | null {
@@ -120,8 +128,13 @@ function formatList(snapshot: VisualizationSnapshot): string {
   const extra = allRows.length - rows.length;
   const lines = rows.map((row) => {
     const values = snapshot.series
-      .map((series) =>
-        formatSeriesValue(snapshot, series, row.values.get(series.id) ?? null),
+      .map(
+        (series) =>
+          `${escapeMarkdown(series.label)}: ${formatSeriesValue(
+            snapshot,
+            series,
+            row.values.get(series.id) ?? null,
+          )}`,
       )
       .join(", ");
     return `- ${escapeMarkdown(row.label)}: ${values}`;
@@ -138,8 +151,13 @@ function formatLeaderboard(snapshot: VisualizationSnapshot): string {
   const extra = allRows.length - rows.length;
   const lines = rows.map((row, index) => {
     const values = snapshot.series
-      .map((series) =>
-        formatSeriesValue(snapshot, series, row.values.get(series.id) ?? null),
+      .map(
+        (series) =>
+          `${escapeMarkdown(series.label)}: ${formatSeriesValue(
+            snapshot,
+            series,
+            row.values.get(series.id) ?? null,
+          )}`,
       )
       .join(" · ");
     return `**${(index + 1).toString()}.** ${escapeMarkdown(row.label)} — ${values}`;
@@ -156,28 +174,28 @@ function formatTable(snapshot: VisualizationSnapshot): string {
   const extra = allRows.length - rows.length;
   const headers = ["", ...snapshot.series.map((series) => series.label)];
   const lines = [
-    `| ${headers.map((header) => escapeTableCell(header)).join(" | ")} |`,
-    `| ${headers.map((_, index) => (index === 0 ? "---" : "---:")).join(" | ")} |`,
-    ...rows.map(
-      (row) =>
-        `| ${[
-          escapeTableCell(row.label),
-          ...snapshot.series.map((series) =>
-            escapeTableCell(
-              formatSeriesValue(
-                snapshot,
-                series,
-                row.values.get(series.id) ?? null,
-              ),
+    headers.map((header) => escapeTableCell(header)).join("    "),
+    headers.map(() => "----").join("    "),
+    ...rows.map((row) =>
+      [
+        escapeTableCell(row.label),
+        ...snapshot.series.map((series) =>
+          escapeTableCell(
+            formatSeriesValue(
+              snapshot,
+              series,
+              row.values.get(series.id) ?? null,
             ),
           ),
-        ].join(" | ")} |`,
+        ),
+      ].join("    "),
     ),
   ];
   if (extra > 0) {
     lines.push(`_…and ${extra.toString()} more rows_`);
   }
-  return lines.join("\n");
+  const codeFence = "```";
+  return `${codeFence}\n${lines.join("\n")}\n${codeFence}`;
 }
 
 function alignedRows(snapshot: VisualizationSnapshot): {
