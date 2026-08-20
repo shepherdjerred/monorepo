@@ -137,8 +137,24 @@ function truncateTableDescription(description: string): string {
     openingFence.length -
     closingFence.length -
     DESCRIPTION_TRUNCATION_SUFFIX.length;
-  const truncated = truncateLines(description, available);
+  const truncated = truncateTableLines(description, available);
   return `${openingFence}${truncated}${closingFence}${DESCRIPTION_TRUNCATION_SUFFIX}`;
+}
+
+function truncateTableLines(description: string, available: number): string {
+  const lines = description.split("\n");
+  const firstRows = lines.slice(0, 3);
+  const firstRowsLength = firstRows.reduce(
+    (total, line) => total + line.length,
+    firstRows.length - 1,
+  );
+  if (firstRows.length < 3 || firstRowsLength <= available) {
+    return truncateLines(description, available);
+  }
+  const lineBudget = Math.floor((available - 2) / 3);
+  return firstRows
+    .map((line) => truncateNativeCell(line, lineBudget))
+    .join("\n");
 }
 
 function truncateLines(description: string, available: number): string {

@@ -771,6 +771,42 @@ test("truncates oversized first rows at grapheme boundaries", () => {
   expect(description).toContain("Visualization truncated");
 });
 
+test("reserves a table row when long headers fill the embed", () => {
+  const columns = [
+    { key: "label", label: "Label", format: "text" as const },
+    ...Array.from({ length: 19 }, (_, index) => ({
+      key: `metric-${index.toString()}`,
+      label: "m".repeat(155),
+      format: "text" as const,
+    })),
+  ];
+  const snapshot = VisualizationSnapshotSchema.parse({
+    ...scoutTestVisualization,
+    kind: "TABLE",
+  });
+  const oversizedPreview = ReportAiPreviewSummarySchema.parse({
+    columns,
+    rows: [
+      {
+        label: "r".repeat(159),
+        values: Array.from({ length: 19 }, (_, index) => ({
+          column: `metric-${index.toString()}`,
+          value: "😀".repeat(80),
+        })),
+      },
+    ],
+    rowsReturned: 1,
+    rowsScanned: 1,
+    renderKind: "TABLE",
+  });
+
+  const description = visualizationToEmbed(snapshot, oversizedPreview)?.data
+    .description;
+  expect(description).toBeDefined();
+  expect(description).toContain("😀");
+  expect(description).toContain("Visualization truncated");
+});
+
 test("renders percent-stack snapshot values instead of raw preview values", () => {
   const snapshot = structuredClone(scoutTestVisualization);
   snapshot.display.stack = "percent";
