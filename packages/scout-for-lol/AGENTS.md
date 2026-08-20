@@ -913,6 +913,32 @@ principal and profit credits around the matching user debit and house credit;
 the payout rows still sum to the stored gross payout in one transaction.
 Remakes and expired or unsupported pools remain full refunds with no cut.
 
+`/bb ask` is a one-shot analyst over the invoking guild's Bryan Bucks data. It
+starts ephemeral and only the asker may copy the frozen bot-authored answer to
+the channel; both bettor and asker mentions are rendered with mentions disabled.
+The agent receives bounded, Zod-validated account, ledger, and betting
+aggregation tools — never SQL or raw Prisma — and every statistic it states
+must come from a tool result in that turn. The orchestrator rejects any answer
+without at least one successful tool result, including a refusal, so prompt
+instructions are not the provenance boundary. The account tool exposes only the
+asker’s current balance; it must not recreate the on-demand leaderboard that
+the fixed commands intentionally omit. Ledger queries require one or more
+non-betting earning or adjustment kinds and cannot filter or group by bettor,
+so their results cannot be combined with per-bettor betting P&L to reconstruct
+private balances. Generic betting totals include both outcome and parlay
+positions; player-subject attribution applies only to outcome positions. Keep
+current balance, ledger delta, and settled-bet P&L distinct; refunds are
+zero-net and excluded from win rate and ROI, pending positions have no P&L,
+house rows are always excluded, and
+"caused" is attribution to a player-framed position rather than literal
+causation. Subject aggregation keys by the frozen PUUID while displaying its
+newest recorded alias; historical aliases remain valid filters unless multiple
+PUUIDs reused one, in which case the tool reports the ambiguity without
+combining them. Counts and rows load from one database snapshot so settlement
+cannot split the facts. The command is stateless, supplies the model an injected
+current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
+(default `gpt-5.6-luna`) through the shared OpenRouter runtime and token budget.
+
 - **The allowlist gates taking Bucks, never returning them.** `betting_enabled`
   is checked in four places: command registration, pool creation, `placeBet`,
   and earning. Settlement and the refund sweeps are deliberately **not** gated —

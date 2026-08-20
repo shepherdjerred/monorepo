@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import {
-  bbCommand,
   buildPersonalBucksEmbed,
   buildBbRulesEmbed,
   isPublicBbSubcommand,
 } from "#src/discord/commands/bb.ts";
+import { bbCommand } from "#src/discord/commands/bb-definition.ts";
 import type { PersonalBucksView } from "#src/betting/accounts.ts";
 import {
   BB_PRIZES,

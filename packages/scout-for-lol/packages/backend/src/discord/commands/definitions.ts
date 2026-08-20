@@ -8,7 +8,7 @@ import {
 } from "#src/discord/commands/onboarding.ts";
 import { listCommand } from "#src/discord/commands/list.ts";
 import { trackCommand } from "#src/discord/commands/track.ts";
-import { bbCommand } from "#src/discord/commands/bb.ts";
+import { bbCommand } from "#src/discord/commands/bb-definition.ts";
 import { scoutCommand } from "#src/discord/commands/scout-definition.ts";
 import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
 import { exploreAllowlist } from "#src/explore/access.ts";

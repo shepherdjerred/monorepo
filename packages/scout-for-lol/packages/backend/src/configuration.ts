@@ -195,6 +195,7 @@ function computeConfiguration() {
       "gpt-5.6-sol",
     ),
     exploreModel: env.get("EXPLORE_MODEL").default("gpt-5.6-sol").asString(),
+    bucksAskModel: env.get("BB_ASK_MODEL").default("gpt-5.6-luna").asString(),
     // Explore reads the whole lake, so access is an explicit allowlist of
     // Discord servers rather than a permission on any one of them. Unset
     // means nobody — an empty list fails closed, which is the only safe
@@ -321,6 +322,9 @@ const configuration: Configuration = {
   },
   get exploreModel() {
     return getConfiguration().exploreModel;
+  },
+  get bucksAskModel() {
+    return getConfiguration().bucksAskModel;
   },
   get exploreGuildAllowlist() {
     return getConfiguration().exploreGuildAllowlist;

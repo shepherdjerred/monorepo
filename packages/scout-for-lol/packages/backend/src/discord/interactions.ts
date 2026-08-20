@@ -1,10 +1,24 @@
-import { MessageFlags, type Client, type Interaction } from "discord.js";
+import {
+  MessageFlags,
+  type ButtonInteraction,
+  type Client,
+  type Interaction,
+} from "discord.js";
 import { handleChatInputCommand } from "#src/discord/commands/index.ts";
 import {
   handleBetButton,
   type BetButtonInteraction,
 } from "#src/betting/bet-button.ts";
 import { isBucksCustomId, parseBucksCustomId } from "#src/betting/custom-id.ts";
+import {
+  isBucksAskCustomId,
+  parseBucksAskPublishCustomId,
+} from "#src/betting/ask-custom-id.ts";
+import {
+  handleBucksAskPublish,
+  type BucksAskPublicMessage,
+  type BucksAskPublishInteraction,
+} from "#src/betting/ask-publish.ts";
 import {
   handleBucksNavigation,
   isBucksNavigationId,
@@ -26,6 +40,7 @@ import {
   isScoutCustomId,
   parseScoutPublishCustomId,
 } from "#src/discord/scout/custom-id.ts";
+import { asTextChannel } from "#src/discord/utils/channel.ts";
 
 const logger = createLogger("discord-interactions");
 
@@ -50,12 +65,35 @@ export function handleInteractions(client: Client): void {
 
 async function routeInteraction(interaction: Interaction): Promise<void> {
   if (interaction.isButton()) {
-    await routeButton(interaction);
+    await routeButton(toRoutableButton(interaction));
     return;
   }
   if (interaction.isChatInputCommand()) {
     await handleChatInputCommand(interaction);
   }
+}
+
+function toRoutableButton(
+  interaction: ButtonInteraction,
+): RoutableButtonInteraction {
+  return Object.assign(interaction, {
+    sendPublic: async (message: BucksAskPublicMessage) =>
+      await sendBucksAskPublicMessage(interaction, message),
+  });
+}
+
+async function sendBucksAskPublicMessage(
+  interaction: ButtonInteraction,
+  message: BucksAskPublicMessage,
+): Promise<unknown> {
+  if (interaction.channel === null) {
+    throw new Error("The Bryan Bucks answer has no channel to post in");
+  }
+  const channel = asTextChannel(interaction.channel);
+  if (channel === undefined) {
+    throw new Error("The Bryan Bucks answer's channel is not sendable");
+  }
+  return await channel.send(message);
 }
 
 /**
@@ -68,7 +106,8 @@ async function routeInteraction(interaction: Interaction): Promise<void> {
  */
 export type RoutableButtonInteraction = BetButtonInteraction &
   BucksNavigationInteraction &
-  ScoutPublishButtonInteraction & {
+  ScoutPublishButtonInteraction &
+  BucksAskPublishInteraction & {
     deferUpdate: () => Promise<unknown>;
     deferred: boolean;
     replied: boolean;
@@ -77,6 +116,11 @@ export type RoutableButtonInteraction = BetButtonInteraction &
 export async function routeButton(
   interaction: RoutableButtonInteraction,
 ): Promise<void> {
+  if (isBucksAskCustomId(interaction.customId)) {
+    await routeBucksAskButton(interaction);
+    return;
+  }
+
   if (isParlayCustomId(interaction.customId)) {
     try {
       if (parseParlayCustomId(interaction.customId) === undefined) {
@@ -98,7 +142,6 @@ export async function routeButton(
     }
     return;
   }
-
   if (isBucksNavigationId(interaction.customId)) {
     try {
       if (parseBucksNavigationId(interaction.customId) === undefined) {
@@ -168,6 +211,31 @@ export async function routeButton(
     if (interaction.deferred && !interaction.replied) {
       await interaction.editReply({
         content: "😵 Something went wrong placing that bet. Try again shortly.",
+      });
+    }
+  }
+}
+
+async function routeBucksAskButton(
+  interaction: RoutableButtonInteraction,
+): Promise<void> {
+  try {
+    if (parseBucksAskPublishCustomId(interaction.customId) === undefined) {
+      discordComponentsTotal.inc({ namespace: "bbask", status: "malformed" });
+      await interaction.deferUpdate();
+      return;
+    }
+    const outcome = await handleBucksAskPublish(interaction);
+    discordComponentsTotal.inc({
+      namespace: "bbask",
+      status: outcome === "failed" ? "error" : "success",
+    });
+  } catch (error) {
+    logger.error("❌ Error publishing a Bryan Bucks answer:", error);
+    discordComponentsTotal.inc({ namespace: "bbask", status: "error" });
+    if (interaction.deferred && !interaction.replied) {
+      await interaction.editReply({
+        content: "I couldn't finish publishing that Bryan Bucks answer.",
       });
     }
   }
