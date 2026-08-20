@@ -89,6 +89,21 @@ export const MatchLakeRowSchema = z.object({
   wards_killed: z.number(),
   vision_wards_bought_in_game: z.number(),
   detector_wards_placed: z.number(),
+  // Pings. Carried for the Bryan Bucks parlay catalog, which prices OPPONENT
+  // ping totals — a subject's own pings are free to spam and so unbettable.
+  all_in_pings: z.number(),
+  assist_me_pings: z.number(),
+  basic_pings: z.number(),
+  command_pings: z.number(),
+  danger_pings: z.number(),
+  enemy_missing_pings: z.number(),
+  enemy_vision_pings: z.number(),
+  get_back_pings: z.number(),
+  hold_pings: z.number(),
+  need_vision_pings: z.number(),
+  on_my_way_pings: z.number(),
+  push_pings: z.number(),
+  vision_cleared_pings: z.number(),
   // Multikills / sprees
   double_kills: z.number(),
   triple_kills: z.number(),
@@ -233,6 +248,19 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     wards_killed: "INTEGER",
     vision_wards_bought_in_game: "INTEGER",
     detector_wards_placed: "INTEGER",
+    all_in_pings: "INTEGER",
+    assist_me_pings: "INTEGER",
+    basic_pings: "INTEGER",
+    command_pings: "INTEGER",
+    danger_pings: "INTEGER",
+    enemy_missing_pings: "INTEGER",
+    enemy_vision_pings: "INTEGER",
+    get_back_pings: "INTEGER",
+    hold_pings: "INTEGER",
+    need_vision_pings: "INTEGER",
+    on_my_way_pings: "INTEGER",
+    push_pings: "INTEGER",
+    vision_cleared_pings: "INTEGER",
     double_kills: "INTEGER",
     triple_kills: "INTEGER",
     quadra_kills: "INTEGER",
@@ -328,4 +356,43 @@ export function duckDbEmptySelect(
   return `SELECT ${Object.entries(columns)
     .map(([name, type]) => `CAST(NULL AS ${type}) AS ${name}`)
     .join(", ")} WHERE FALSE`;
+}
+
+/**
+ * Fingerprint of every lake table's column set, recorded in each build's
+ * manifest so the fold tier can tell that the schema moved under it.
+ *
+ * This exists because a lake read does not degrade when files disagree on
+ * columns — it fails outright. `buildUnionSource` selects an explicit column
+ * list across the whole parquet file list, so a file missing a column raises
+ * `Binder Error: Referenced column "x" not found` and takes down every report,
+ * Explore answer, and ScoutQL query with it. The fold tier hardlinks the
+ * previous build's parquet and appends only new fold files, so adding a column
+ * publishes exactly that mixed build. Comparing fingerprints lets the fold fall
+ * back to a full rebuild from S3, which rewrites every file at the new schema.
+ *
+ * `union_by_name=true` is deliberately NOT the fix: it fills missing columns
+ * with NULL, so every aggregate over pre-rebuild rows would be silently wrong
+ * instead of loudly broken.
+ *
+ * Column ORDER is not part of the fingerprint. Reads name their columns and
+ * union by name, so a cosmetic reorder is read-compatible and should not cost a
+ * full rebuild; a rename, addition, removal, or type change is not, and does.
+ */
+export function lakeSchemaFingerprint(): string {
+  const tables: Record<string, Record<string, DuckDbColumnType>> = {
+    matches: MATCH_LAKE_COLUMNS,
+    prematch: PREMATCH_LAKE_COLUMNS,
+    accounts: ACCOUNT_LAKE_COLUMNS,
+    competition_rank_history: COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
+  };
+  const hasher = new Bun.CryptoHasher("sha256");
+  for (const [table, columns] of Object.entries(tables)) {
+    const signature = Object.entries(columns)
+      .map(([name, type]) => `${name}:${type}`)
+      .sort()
+      .join(",");
+    hasher.update(`${table}=${signature}\n`);
+  }
+  return hasher.digest("hex").slice(0, 16);
 }
