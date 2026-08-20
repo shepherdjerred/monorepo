@@ -9,6 +9,7 @@ import { assertCustomGuildMember } from "#src/customs/discord-client.ts";
 import { getActiveCustomNight } from "#src/customs/repository.ts";
 import configuration from "#src/configuration.ts";
 import { prisma } from "#src/database/index.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("customs-socket");
@@ -133,19 +134,7 @@ export const customSocketHandlers: Bun.WebSocketHandler<CustomSocketData> = {
     const guildSockets = socketsByGuild.get(guildId) ?? new Set();
     guildSockets.add(socket);
     socketsByGuild.set(guildId, guildSockets);
-    try {
-      const snapshot = await getActiveCustomNight(prisma, guildId);
-      enqueueSnapshotDelivery(
-        socket,
-        JSON.stringify(
-          CustomSnapshotEnvelopeSchema.parse({ kind: "snapshot", snapshot }),
-        ),
-      );
-    } catch (error) {
-      removeCustomSocket(socket);
-      logger.error("Customs socket initialization failed", { error, guildId });
-      socket.close(1011, "Customs snapshot initialization failed");
-    }
+    enqueueInitialSnapshotDelivery(socket, guildId);
   },
   close(socket) {
     removeCustomSocket(socket);
@@ -163,6 +152,50 @@ export function publishCustomSnapshot(snapshot: CustomNightSnapshot): void {
   );
   for (const socket of socketsByGuild.get(snapshot.guildId) ?? []) {
     enqueueSnapshotDelivery(socket, envelope);
+  }
+}
+
+export async function shouldPublishCustomSnapshot(
+  database: ExtendedPrismaClient,
+  nightId: string,
+): Promise<boolean> {
+  const night = await database.customNight.findUnique({
+    where: { id: nightId },
+    select: { guildId: true },
+  });
+  if (night === null) throw new Error(`Custom night ${nightId} not found`);
+  const activeNight = await database.customActiveNight.findUnique({
+    where: { guildId: night.guildId },
+    select: { nightId: true },
+  });
+  return activeNight === null || activeNight.nightId === nightId;
+}
+
+function enqueueInitialSnapshotDelivery(
+  socket: Bun.ServerWebSocket<CustomSocketData>,
+  guildId: string,
+): void {
+  const previous = snapshotDeliveryQueues.get(socket) ?? Promise.resolve();
+  const delivery = deliverInitialSnapshotAfter(previous, socket, guildId);
+  snapshotDeliveryQueues.set(socket, delivery);
+}
+
+async function deliverInitialSnapshotAfter(
+  previous: Promise<void>,
+  socket: Bun.ServerWebSocket<CustomSocketData>,
+  guildId: string,
+): Promise<void> {
+  try {
+    await previous;
+    const snapshot = await getActiveCustomNight(prisma, guildId);
+    const envelope = JSON.stringify(
+      CustomSnapshotEnvelopeSchema.parse({ kind: "snapshot", snapshot }),
+    );
+    await sendSnapshotToAuthorizedSocket(socket, envelope);
+  } catch (error) {
+    removeCustomSocket(socket);
+    logger.error("Customs socket initialization failed", { error, guildId });
+    socket.close(1011, "Customs snapshot initialization failed");
   }
 }
 

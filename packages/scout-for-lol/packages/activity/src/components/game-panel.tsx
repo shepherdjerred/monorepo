@@ -189,13 +189,16 @@ function ActiveGamePanel({
       </CardHeader>
       <CardContent className="space-y-4">
         {game.state === "ROSTER_OPEN" && (
-          <Button
-            className="w-full"
-            disabled={!hostControl || captains.isPending}
-            onClick={() => void run(() => captains.mutateAsync(revision))}
-          >
-            Select random captains and sides
-          </Button>
+          <>
+            <Button
+              className="w-full"
+              disabled={!hostControl || captains.isPending}
+              onClick={() => void run(() => captains.mutateAsync(revision))}
+            >
+              Select random captains and sides
+            </Button>
+            {hostControl && <RosterCorrections snapshot={snapshot} />}
+          </>
         )}
 
         {(game.state === "DRAFTING" || teamsComplete) && (

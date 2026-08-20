@@ -12,10 +12,8 @@ import {
   provisionCustomTournamentCode,
   recordRiotTournamentResult,
 } from "#src/customs/riot-results.ts";
-import {
-  retryPendingCustomImports,
-  shouldPublishCustomSnapshot,
-} from "#src/customs/reconciler.ts";
+import { retryPendingCustomImports } from "#src/customs/reconciler.ts";
+import { shouldPublishCustomSnapshot } from "#src/customs/socket.ts";
 import {
   commitCustomMutation,
   getCustomNight,

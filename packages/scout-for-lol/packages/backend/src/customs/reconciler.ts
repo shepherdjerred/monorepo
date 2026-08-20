@@ -28,7 +28,10 @@ import {
   parseCustomNightSnapshot,
   shouldExpireCustomNight,
 } from "#src/customs/snapshot.ts";
-import { publishCustomSnapshot } from "#src/customs/socket.ts";
+import {
+  publishCustomSnapshot,
+  shouldPublishCustomSnapshot,
+} from "#src/customs/socket.ts";
 import { createSingleFlightRunner } from "#src/customs/single-flight.ts";
 import {
   getPendingCustomResultVoiceTargets,
@@ -199,22 +202,6 @@ async function recoverTournamentCode(
     if (recovered !== null) publishCustomSnapshot(recovered);
     throw error;
   }
-}
-
-export async function shouldPublishCustomSnapshot(
-  database: ExtendedPrismaClient,
-  nightId: string,
-): Promise<boolean> {
-  const night = await database.customNight.findUnique({
-    where: { id: nightId },
-    select: { guildId: true },
-  });
-  if (night === null) throw new Error(`Custom night ${nightId} not found`);
-  const activeNight = await database.customActiveNight.findUnique({
-    where: { guildId: night.guildId },
-    select: { nightId: true },
-  });
-  return activeNight === null || activeNight.nightId === nightId;
 }
 
 async function pollResult(
