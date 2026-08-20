@@ -35,6 +35,17 @@ final class MailMateCodeFillAppDelegate: NSObject, NSApplicationDelegate {
                 NotificationCenter.default.post(name: .codeFillRecordsDidChange, object: nil)
             }
         }
+        // A helper can write the marker after this method has consumed it but before AppKit
+        // reports that launch finished. Check again on the next run-loop turn and when the app
+        // becomes active so that marker ownership is acknowledged during this launch, never a
+        // later user launch.
+        DispatchQueue.main.async { [weak self] in
+            self?.acknowledgeBrokerRequestIfPresent()
+        }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        acknowledgeBrokerRequestIfPresent()
     }
 
     private func consumeBrokerRequest() -> Bool {
@@ -56,8 +67,17 @@ final class MailMateCodeFillAppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
+    private func acknowledgeBrokerRequestIfPresent() {
+        guard consumeBrokerRequest() else { return }
+        Self.launchedAsBroker = true
+        CodeFillObservability.appLogger.info("event=broker_request outcome=acknowledged")
+        NotificationCenter.default.post(name: .codeFillBrokerModeDidChange, object: nil)
+        NotificationCenter.default.post(name: .codeFillRecordsDidChange, object: nil)
+    }
+
 }
 
 extension Notification.Name {
     static let codeFillRecordsDidChange = Notification.Name("com.sjerred.MailMateCodeFill.appRecordsDidChange")
+    static let codeFillBrokerModeDidChange = Notification.Name("com.sjerred.MailMateCodeFill.appBrokerModeDidChange")
 }
