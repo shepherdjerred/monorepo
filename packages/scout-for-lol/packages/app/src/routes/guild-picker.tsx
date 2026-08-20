@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { SESSION_QUERY_OPTIONS } from "#src/lib/session-query.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
@@ -51,7 +52,7 @@ export function GuildPicker() {
   const trpc = useTRPC();
   const navigate = useNavigate();
   const meQuery = useQuery(
-    trpc.auth.sessionState.queryOptions(undefined, { retry: false }),
+    trpc.auth.sessionState.queryOptions(undefined, SESSION_QUERY_OPTIONS),
   );
   const { data } = useSuspenseQuery(
     trpc.guild.listManageable.queryOptions(undefined, {

@@ -31,6 +31,7 @@ export * from "./report-query-format.ts";
 export * from "./report-query-lint.ts";
 export * from "./report-query-metrics.ts";
 export * from "./report-query-complete.ts";
+export * from "./report-query-highlight.ts";
 export * from "./report-query-champions.ts";
 export * from "./report-query-temporal.ts";
 export * from "./temporal-analysis.ts";

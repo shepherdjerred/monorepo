@@ -18,7 +18,7 @@ import {
  * conversation is many small turns rather than one expensive draft, but a
  * global ceiling still bounds total spend if several people explore at once.
  *
- * Buckets and the active-run guard live in this process's memory, so they
+ * Buckets and the active-run counters live in this process's memory, so they
  * reset on restart and would not be shared between replicas. That is exact
  * today rather than approximate: the backend deploys as a single replica with
  * the Recreate strategy (packages/homelab/src/cdk8s/src/resources/scout), so
@@ -44,16 +44,16 @@ export type ExploreRateLimitRejection = {
   reason: string;
 };
 
+export class ExploreConversationBusyError extends Error {}
+
 /**
  * A granted turn, in two phases.
  *
- * Reserving takes the concurrency slot immediately — that is what bounds how
- * much work can be in flight — but does **not** spend quota. `commit()` does,
- * and is only called once the request has been validated and the turn is
- * actually starting. Without that split, a request with a bogus conversation
- * id was charged before anyone checked whether it referred to anything, so a
- * caller could drain the shared global allowance with requests that never ran
- * a turn.
+ * Reserving takes concurrency and quota capacity immediately, so concurrent
+ * requests cannot all claim the same last question. It does not permanently
+ * spend quota: `commit()` converts the hold to usage only after the request is
+ * validated and the turn is actually starting. `finish()` releases an
+ * uncommitted hold, so bogus conversation ids cannot drain the allowance.
  *
  * Both calls are idempotent, and `finish()` alone is the correct cleanup for
  * an early exit: nothing was spent yet, so there is nothing to refund.
@@ -61,6 +61,7 @@ export type ExploreRateLimitRejection = {
 export type ExploreRateLimitTicket = {
   allowed: true;
   runId: string;
+  claimConversation: (conversationId: string) => boolean;
   commit: () => void;
   finish: () => void;
 };
@@ -83,8 +84,16 @@ const engine = createQuotaEngine<ExploreQuotaScope, ExploreRateLimitIdentity>({
     scope === "global" ? "global" : identity.userId,
 });
 
-const activeUserRuns = new Set<string>();
+const activeUserRuns = new Map<string, number>();
 let activeGlobalRuns = 0;
+const activeConversationRuns = new Map<
+  string,
+  {
+    runId: string;
+    released: Promise<null>;
+    release: () => void;
+  }
+>();
 
 export function getExploreQuotaStatus(
   identity: ExploreRateLimitIdentity,
@@ -92,7 +101,7 @@ export function getExploreQuotaStatus(
 ): ExploreQuotaStatus {
   return {
     quota: engine.snapshots(identity, now),
-    activeRun: activeUserRuns.has(identity.userId),
+    activeRun: (activeUserRuns.get(identity.userId) ?? 0) > 0,
   };
 }
 
@@ -101,17 +110,6 @@ export function tryStartExploreTurn(
   now = Date.now(),
 ): ExploreRateLimitTicket | ExploreRateLimitRejection {
   const quota = engine.snapshots(identity, now);
-
-  // A conversation is sequential — a second concurrent turn would race the
-  // transcript it is supposed to be continuing.
-  if (activeUserRuns.has(identity.userId)) {
-    return {
-      allowed: false,
-      quota,
-      retryAfterSeconds: 30,
-      reason: "You already have a question running. Wait for it to finish.",
-    };
-  }
 
   if (activeGlobalRuns >= MAX_ACTIVE_GLOBAL_RUNS) {
     return {
@@ -132,14 +130,41 @@ export function tryStartExploreTurn(
     };
   }
 
-  activeUserRuns.add(identity.userId);
+  activeUserRuns.set(
+    identity.userId,
+    (activeUserRuns.get(identity.userId) ?? 0) + 1,
+  );
   activeGlobalRuns++;
+  const quotaReservation = engine.reserve(identity, now);
+  const runId = globalThis.crypto.randomUUID();
   let finished = false;
   let committed = false;
+  let claimedConversationId: string | null = null;
 
   return {
     allowed: true,
-    runId: globalThis.crypto.randomUUID(),
+    runId,
+    claimConversation: (conversationId) => {
+      if (finished) {
+        throw new Error("A finished Explore turn cannot claim a conversation.");
+      }
+      if (claimedConversationId !== null) {
+        return claimedConversationId === conversationId;
+      }
+      if (activeConversationRuns.has(conversationId)) {
+        return false;
+      }
+      const deferred = Promise.withResolvers<null>();
+      activeConversationRuns.set(conversationId, {
+        runId,
+        released: deferred.promise,
+        release: () => {
+          deferred.resolve(null);
+        },
+      });
+      claimedConversationId = conversationId;
+      return true;
+    },
     // Charged against `now` rather than commit time: the window a request
     // belongs to is when it arrived, and the two are milliseconds apart.
     commit: () => {
@@ -147,23 +172,50 @@ export function tryStartExploreTurn(
         return;
       }
       committed = true;
-      engine.consume(identity, now);
+      quotaReservation.commit();
     },
     finish: () => {
       if (finished) {
         return;
       }
       finished = true;
-      activeUserRuns.delete(identity.userId);
+      quotaReservation.release();
+      const activeForUser = activeUserRuns.get(identity.userId) ?? 0;
+      if (activeForUser <= 1) {
+        activeUserRuns.delete(identity.userId);
+      } else {
+        activeUserRuns.set(identity.userId, activeForUser - 1);
+      }
+      if (claimedConversationId !== null) {
+        const active = activeConversationRuns.get(claimedConversationId);
+        if (active?.runId === runId) {
+          activeConversationRuns.delete(claimedConversationId);
+          active.release();
+        }
+      }
       activeGlobalRuns = Math.max(0, activeGlobalRuns - 1);
     },
   };
+}
+
+/** Wait until the adapter currently owning a conversation has finished. */
+export async function waitForExploreConversation(
+  conversationId: string,
+): Promise<void> {
+  const active = activeConversationRuns.get(conversationId);
+  if (active !== undefined) {
+    await active.released;
+  }
 }
 
 export function resetExploreRateLimitStateForTests(): void {
   engine.reset();
   activeUserRuns.clear();
   activeGlobalRuns = 0;
+  for (const active of activeConversationRuns.values()) {
+    active.release();
+  }
+  activeConversationRuns.clear();
 }
 
 function quotaReason(snapshot: ExploreQuotaSnapshot): string {

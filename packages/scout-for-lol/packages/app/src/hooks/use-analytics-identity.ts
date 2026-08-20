@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { syncAnalyticsIdentity } from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { SESSION_QUERY_OPTIONS } from "#src/lib/session-query.ts";
 
 /**
  * Keep PostHog's identity in step with the web session, on every route.
@@ -25,12 +26,12 @@ export function useAnalyticsIdentity(): {
   // Same query key as the session guard, so React Query serves both from one
   // request rather than asking the server twice per navigation.
   const { data, isSuccess } = useQuery(
-    trpc.auth.sessionState.queryOptions(undefined, { retry: false }),
+    trpc.auth.sessionState.queryOptions(undefined, SESSION_QUERY_OPTIONS),
   );
 
   // `isSuccess` — not `!isLoading`. It is the only flag that means the server
-  // actually answered: a failed query also stops loading, and with retries off
-  // that failure would otherwise read as a confirmed signed-out session.
+  // actually answered: a failed query also stops loading after retries are
+  // exhausted, but that failure is still not a confirmed signed-out session.
   const analyticsUserId = data?.user?.analyticsUserId;
   useEffect(() => {
     syncAnalyticsIdentity({ sessionResolved: isSuccess, analyticsUserId });

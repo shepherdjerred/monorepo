@@ -7,6 +7,7 @@ import {
 import { queryClient } from "#src/lib/query-client.ts";
 import { trpcOptions } from "#src/lib/trpc-options.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
+import { SESSION_QUERY_OPTIONS } from "#src/lib/session-query.ts";
 
 /**
  * Data-router loaders. Every loader is **non-blocking**: it kicks off a
@@ -23,7 +24,10 @@ import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 export function requireSessionLoader(): null {
   void queryClient.prefetchQuery(
-    trpcOptions.auth.sessionState.queryOptions(undefined, { retry: false }),
+    trpcOptions.auth.sessionState.queryOptions(
+      undefined,
+      SESSION_QUERY_OPTIONS,
+    ),
   );
   void queryClient.prefetchQuery(
     trpcOptions.guild.listManageable.queryOptions(undefined, {

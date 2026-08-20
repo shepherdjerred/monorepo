@@ -20,18 +20,25 @@ const AgentStreamChunkSchema = z.discriminatedUnion("type", [
   }),
   z.looseObject({
     type: z.literal("tool-call"),
+    toolCallId: z.string().min(1),
     toolName: z.string(),
+    input: z.json(),
   }),
   // The AI SDK reports a failed tool as its own `tool-error` part rather than
   // as a `tool-result` carrying a flag, so a `tool-result` that arrives at all
   // succeeded.
   z.looseObject({
     type: z.literal("tool-result"),
+    toolCallId: z.string().min(1),
     toolName: z.string(),
+    input: z.json(),
+    output: z.json(),
   }),
   z.looseObject({
     type: z.literal("tool-error"),
+    toolCallId: z.string().min(1),
     toolName: z.string(),
+    input: z.json(),
     error: z.unknown(),
   }),
   z.looseObject({
@@ -40,12 +47,32 @@ const AgentStreamChunkSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
+type JsonValue = z.infer<ReturnType<typeof z.json>>;
+
 export type AgentStreamChunk =
   | { kind: "step-start" }
   | { kind: "text-delta"; text: string }
-  | { kind: "tool-call"; toolName: string }
-  | { kind: "tool-result"; toolName: string; ok: boolean }
-  | { kind: "tool-error"; toolName: string; message: string };
+  | {
+      kind: "tool-call";
+      toolCallId: string;
+      toolName: string;
+      input: JsonValue;
+    }
+  | {
+      kind: "tool-result";
+      toolCallId: string;
+      toolName: string;
+      input: JsonValue;
+      output: JsonValue;
+      ok: true;
+    }
+  | {
+      kind: "tool-error";
+      toolCallId: string;
+      toolName: string;
+      input: JsonValue;
+      message: string;
+    };
 
 /**
  * Note on structured output: there is deliberately no `object` member here.
@@ -79,19 +106,29 @@ export function parseAgentStreamChunk(
         : null;
     }
     case "tool-call": {
-      return { kind: "tool-call", toolName: chunk.toolName };
+      return {
+        kind: "tool-call",
+        toolCallId: chunk.toolCallId,
+        toolName: chunk.toolName,
+        input: chunk.input,
+      };
     }
     case "tool-result": {
       return {
         kind: "tool-result",
+        toolCallId: chunk.toolCallId,
         toolName: chunk.toolName,
+        input: chunk.input,
+        output: chunk.output,
         ok: true,
       };
     }
     case "tool-error": {
       return {
         kind: "tool-error",
+        toolCallId: chunk.toolCallId,
         toolName: chunk.toolName,
+        input: chunk.input,
         message: agentStreamErrorMessage(chunk.error),
       };
     }

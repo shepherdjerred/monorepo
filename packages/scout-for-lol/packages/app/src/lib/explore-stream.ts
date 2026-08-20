@@ -1,23 +1,22 @@
 import {
   ExploreStreamEventSchema,
   ExploreTranscriptSchema,
-  ExploreTurnRequestSchema,
+  ExploreRunObserveRequestSchema,
   type ExploreStreamEvent,
   type ExploreTranscript,
-  type ExploreTurnRequest,
 } from "@scout-for-lol/data";
 import { postEventStream } from "#src/lib/sse-stream.ts";
 import { httpErrorMessage } from "#src/lib/stream-http-error.ts";
 import { readCsrfCookie } from "#src/lib/trpc.ts";
 
-export async function streamExploreTurn(params: {
-  input: ExploreTurnRequest;
+export async function observeExploreRun(params: {
+  runId: string;
   signal: AbortSignal;
   onEvent: (event: ExploreStreamEvent) => void;
 }): Promise<void> {
   await postEventStream({
     url: "/api/explore/stream",
-    body: ExploreTurnRequestSchema.parse(params.input),
+    body: ExploreRunObserveRequestSchema.parse({ runId: params.runId }),
     signal: params.signal,
     csrfToken: readCsrfCookie(),
     parseEvent: (raw) => ExploreStreamEventSchema.parse(raw),

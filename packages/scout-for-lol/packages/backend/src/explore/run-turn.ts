@@ -1,8 +1,6 @@
 import * as Sentry from "@sentry/bun";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
-  EXPLORE_INTERRUPTED_CAVEAT,
-  EXPLORE_STOPPED_CAVEAT,
   EXPLORE_TIMEOUT_MS,
   type ExploreMessage,
   type ExploreStreamEvent,
@@ -11,14 +9,22 @@ import {
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import {
+  ExploreConversationBusyError,
   getExploreQuotaStatus,
   type ExploreRateLimitIdentity,
   type ExploreRateLimitTicket,
 } from "#src/explore/rate-limit.ts";
+import { appendExploreAnswer } from "#src/explore/store.ts";
 import {
-  appendExploreAnswer,
   applyGeneratedTitle,
-} from "#src/explore/store.ts";
+  rollbackGeneratedTitle,
+  type GeneratedTitleRollback,
+} from "#src/explore/generated-title.ts";
+import { persistPartialAnswer } from "#src/explore/partial-answer.ts";
+import {
+  finalizeExploreTrace,
+  recordExploreTraceEvent,
+} from "#src/explore/trace.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   scoutExploreActiveRuns,
@@ -33,12 +39,20 @@ export type StartedExploreTurn = {
   title: string;
   messageId: string;
   question: string;
+  expectedCurrentLeafId: string | null;
 };
 
 export type ExploreTurnTerminalEvent = Extract<
   ExploreStreamEvent,
   { type: "error" | "final" }
 >;
+export type ExploreTurnOutcome = Extract<
+  ExploreStreamEvent,
+  { type: "done" }
+>["outcome"];
+export type ExplorePersistedTurnResult = ExploreTurnTerminalEvent & {
+  outcome: ExploreTurnOutcome;
+};
 
 type ExploreTurnDependencies = {
   client: ExtendedPrismaClient;
@@ -57,10 +71,10 @@ const defaultDependencies: ExploreTurnDependencies = {
 /**
  * Run and persist one Explore turn independently of its delivery adapter.
  *
- * HTTP streams every emitted event over SSE. Discord ignores the progressive
- * events and renders the returned frozen message after the same runner has
- * completed. Quota charging, timeout, trace collection, salvage, metrics, and
- * storage therefore cannot drift between the two entry points.
+ * Discord ignores the progressive events and renders the returned frozen
+ * message after this runner completes. The web manager retains observer state
+ * around this runner; execution, quota, timeout, metrics, salvage, and storage
+ * remain here so the delivery adapters cannot drift.
  */
 export async function runPersistedExploreTurn(
   input: {
@@ -69,16 +83,35 @@ export async function runPersistedExploreTurn(
     started: StartedExploreTurn;
     history: ExploreMessage[];
     abortSignal?: AbortSignal;
+    abortOutcome?: () => Extract<ExploreTurnOutcome, "stopped" | "interrupted">;
     emit: (event: ExploreStreamEvent) => void | Promise<void>;
   },
   dependencies: ExploreTurnDependencies = defaultDependencies,
-): Promise<ExploreTurnTerminalEvent> {
+): Promise<ExplorePersistedTurnResult> {
+  if (!input.ticket.claimConversation(input.started.conversationId)) {
+    input.ticket.finish();
+    throw new ExploreConversationBusyError(
+      "This conversation already has an answer running.",
+    );
+  }
   const abortController = new AbortController();
+  let cancellationOutcome: Extract<
+    ExploreTurnOutcome,
+    "stopped" | "interrupted"
+  > | null = null;
+  const abort = (
+    outcome: Exclude<typeof cancellationOutcome, null>,
+    reason: unknown,
+  ): void => {
+    if (abortController.signal.aborted) return;
+    cancellationOutcome = outcome;
+    abortController.abort(reason);
+  };
   const timeout = setTimeout(() => {
-    abortController.abort("Explore turn timed out.");
+    abort("interrupted", "Explore turn timed out.");
   }, dependencies.timeoutMs);
   const abortFromCaller = () => {
-    abortController.abort(input.abortSignal?.reason);
+    abort(input.abortOutcome?.() ?? "stopped", input.abortSignal?.reason);
   };
   input.abortSignal?.addEventListener("abort", abortFromCaller);
   if (input.abortSignal?.aborted === true) {
@@ -89,20 +122,25 @@ export async function runPersistedExploreTurn(
   const startedAt = dependencies.now();
   scoutExploreActiveRuns.inc();
   input.ticket.commit();
+  let ticketFinished = false;
+  const finishTicket = (): void => {
+    if (ticketFinished) return;
+    ticketFinished = true;
+    input.ticket.finish();
+  };
 
   const trace: ExploreTraceEntry[] = [];
   let streamedAnswer = "";
+  let persistedMessage: ExploreMessage | null = null;
+  let generatedTitleRollback: GeneratedTitleRollback | null = null;
   const record = async (event: ExploreStreamEvent): Promise<void> => {
     if (event.type === "answer_delta") {
-      streamedAnswer += event.text;
+      const available = EXPLORE_ANSWER_MAX_LENGTH - streamedAnswer.length;
+      if (available > 0) {
+        streamedAnswer += event.text.slice(0, available);
+      }
     }
-    if (event.type === "tool_result") {
-      trace.push({
-        toolName: event.toolName,
-        message: event.message,
-        ok: event.ok,
-      });
-    }
+    recordExploreTraceEvent(trace, event);
     await input.emit(event);
   };
 
@@ -113,6 +151,7 @@ export async function runPersistedExploreTurn(
       conversationId: input.started.conversationId,
       questionMessageId: input.started.messageId,
     });
+    throwIfAborted(abortController.signal);
     const result = await dependencies.executeAgent({
       runId: input.ticket.runId,
       question: input.started.question,
@@ -122,34 +161,43 @@ export async function runPersistedExploreTurn(
       abortSignal: abortController.signal,
       emit: record,
     });
-    const message = await appendExploreAnswer(dependencies.client, {
+    throwIfAborted(abortController.signal);
+    persistedMessage = await appendExploreAnswer(dependencies.client, {
       conversationId: input.started.conversationId,
       parentMessageId: input.started.messageId,
       answer: result.answer,
       preview: result.preview,
       visualization: result.visualization,
-      trace,
+      trace: finalizeExploreTrace(trace),
+      expectedCurrentLeafId: input.started.expectedCurrentLeafId,
     });
-    const title =
-      result.answer.title === null
-        ? input.started.title
-        : await applyGeneratedTitle(dependencies.client, {
-            conversationId: input.started.conversationId,
-            title: result.answer.title,
-          });
-    input.ticket.finish();
+    throwIfAborted(abortController.signal);
+    let title = input.started.title;
+    if (result.answer.title !== null) {
+      const titleUpdate = await applyGeneratedTitle(dependencies.client, {
+        conversationId: input.started.conversationId,
+        title: result.answer.title,
+      });
+      title = titleUpdate.title;
+      generatedTitleRollback = titleUpdate.rollback;
+    }
+    throwIfAborted(abortController.signal);
+    finishTicket();
     runStatus = "success";
     const terminal: ExploreTurnTerminalEvent = {
       type: "final",
-      message,
+      message: persistedMessage,
       title,
       quota: getExploreQuotaStatus(input.identity, dependencies.now()).quota,
     };
     await input.emit(terminal);
-    return terminal;
+    return { ...terminal, outcome: "succeeded" };
   } catch (error) {
-    runStatus = abortController.signal.aborted ? "cancelled" : "error";
-    if (!abortController.signal.aborted) {
+    const outcome = abortController.signal.aborted
+      ? resolveCancellationOutcome(cancellationOutcome)
+      : "failed";
+    runStatus = outcome === "failed" ? "error" : "cancelled";
+    if (outcome === "failed") {
       logger.error("Explore turn failed mid-stream", errorMessage(error));
       Sentry.captureException(error, {
         tags: { source: "explore-turn-run" },
@@ -159,12 +207,20 @@ export async function runPersistedExploreTurn(
     let salvaged: ExploreMessage | null = null;
     try {
       salvaged = await persistPartialAnswer(dependencies.client, {
-        aborted: abortController.signal.aborted,
+        stopped: outcome === "stopped",
         conversationId: input.started.conversationId,
         parentMessageId: input.started.messageId,
+        expectedCurrentLeafId: input.started.expectedCurrentLeafId,
         text: streamedAnswer,
         trace,
+        existingMessageId: persistedMessage?.id ?? null,
       });
+      if (salvaged === null && generatedTitleRollback !== null) {
+        await rollbackGeneratedTitle(dependencies.client, {
+          conversationId: input.started.conversationId,
+          ...generatedTitleRollback,
+        });
+      }
     } catch (salvageError) {
       logger.error(
         "Failed to salvage a stopped explore turn",
@@ -175,7 +231,7 @@ export async function runPersistedExploreTurn(
       });
     }
 
-    input.ticket.finish();
+    finishTicket();
     const quota = getExploreQuotaStatus(
       input.identity,
       dependencies.now(),
@@ -184,7 +240,10 @@ export async function runPersistedExploreTurn(
       salvaged === null
         ? {
             type: "error",
-            message: clampExploreMessage(errorMessage(error)),
+            message:
+              outcome === "stopped"
+                ? "This question was stopped before an answer was produced."
+                : "This answer could not be completed.",
             retryAfterSeconds: null,
             quota,
           }
@@ -195,11 +254,11 @@ export async function runPersistedExploreTurn(
             quota,
           };
     await input.emit(terminal);
-    return terminal;
+    return { ...terminal, outcome };
   } finally {
     clearTimeout(timeout);
     input.abortSignal?.removeEventListener("abort", abortFromCaller);
-    input.ticket.finish();
+    finishTicket();
     scoutExploreActiveRuns.dec();
     scoutExploreTurnsTotal.inc({ status: runStatus });
     scoutExploreTurnDurationSeconds
@@ -208,59 +267,16 @@ export async function runPersistedExploreTurn(
   }
 }
 
-/** Save usable prose from a stopped or failed turn. */
-export async function persistPartialAnswer(
-  client: ExtendedPrismaClient,
-  input: {
-    aborted: boolean;
-    conversationId: string;
-    parentMessageId: string;
-    text: string;
-    trace: ExploreTraceEntry[];
-  },
-): Promise<ExploreMessage | null> {
-  if (input.text.trim().length === 0) {
-    return null;
-  }
-  return await appendExploreAnswer(client, {
-    conversationId: input.conversationId,
-    parentMessageId: input.parentMessageId,
-    answer: {
-      answer: clampAnswer(input.text),
-      title: null,
-      queryText: null,
-      caveats: [
-        input.aborted ? EXPLORE_STOPPED_CAVEAT : EXPLORE_INTERRUPTED_CAVEAT,
-      ],
-      followUps: [],
-    },
-    preview: null,
-    visualization: null,
-    trace: input.trace,
-  });
+function resolveCancellationOutcome(
+  outcome: Extract<ExploreTurnOutcome, "stopped" | "interrupted"> | null,
+): Extract<ExploreTurnOutcome, "stopped" | "interrupted"> {
+  return outcome ?? "interrupted";
 }
 
-/** Fit salvaged prose inside the persisted Explore answer contract. */
-export function clampAnswer(text: string): string {
-  const trimmed = text.trim();
-  if (trimmed.length <= EXPLORE_ANSWER_MAX_LENGTH) {
-    return trimmed;
+function throwIfAborted(signal: AbortSignal): void {
+  if (signal.aborted) {
+    throw new Error("Explore turn aborted.");
   }
-  return `${trimmed.slice(0, EXPLORE_ANSWER_MAX_LENGTH - 1)}…`;
-}
-
-const MESSAGE_MAX_LENGTH = 1000;
-
-/** Fit a message inside the HTTP and stream error schemas. */
-export function clampExploreMessage(message: string): string {
-  const trimmed = message.trim();
-  if (trimmed.length === 0) {
-    return "Request failed.";
-  }
-  if (trimmed.length <= MESSAGE_MAX_LENGTH) {
-    return trimmed;
-  }
-  return `${trimmed.slice(0, MESSAGE_MAX_LENGTH - 1)}…`;
 }
 
 function errorMessage(error: unknown): string {

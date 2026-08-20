@@ -10,7 +10,11 @@ import { handleDevLogin } from "#src/trpc/dev-login.ts";
 import { prisma } from "#src/database/index.ts";
 import { handleImageRoute } from "#src/trpc/image-routes.ts";
 import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
-import { handleExploreRoute } from "#src/explore/http-route.ts";
+import {
+  EXPLORE_STREAM_PATH,
+  handleExploreRoute,
+} from "#src/explore/http-route.ts";
+import { exploreRunManager } from "#src/explore/run-manager.ts";
 import { handleVersion } from "#src/http/version.ts";
 import {
   classifyMethod,
@@ -46,6 +50,7 @@ const EXPECTED_CLIENT_ERROR_CODES = new Set<string>([
   "UNPROCESSABLE_CONTENT",
   "TOO_MANY_REQUESTS",
   "CLIENT_CLOSED_REQUEST",
+  "SERVICE_UNAVAILABLE",
 ]);
 
 /**
@@ -204,9 +209,23 @@ const server = Bun.serve({
   // beta/prod enableDevLogin is false, so the server binds all interfaces to
   // receive ingress traffic as usual.
   hostname: configuration.enableDevLogin ? "127.0.0.1" : "0.0.0.0",
-  async fetch(request) {
+  async fetch(request, bunServer) {
     const url = new URL(request.url);
-    return await withHttpMetrics(request, url, () => dispatch(request, url));
+    const response = await withHttpMetrics(request, url, () =>
+      dispatch(request, url),
+    );
+    // Keep Bun's normal idle timeout through body parsing and authentication.
+    // Only a successfully authenticated SSE observer may stay quiet while the
+    // model reasons between tool calls; the run itself has a bounded timeout.
+    if (
+      url.pathname === EXPLORE_STREAM_PATH &&
+      response.status === 200 &&
+      response.headers.get("Content-Type")?.startsWith("text/event-stream") ===
+        true
+    ) {
+      bunServer.timeout(request, 0);
+    }
+    return response;
   },
   error(error) {
     logger.error("❌ HTTP server error:", error);
@@ -312,7 +331,7 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
     return reportAiResponse;
   }
 
-  // Explore: the SSE turn endpoint (session + allowlist) and the
+  // Explore: the SSE run-observer endpoint (session + allowlist) and the
   // unauthenticated shared-transcript read.
   const exploreResponse = await handleExploreRoute(
     request,
@@ -413,6 +432,7 @@ logger.info(`🔌 tRPC API: http://0.0.0.0:${port}/trpc`);
  */
 export async function shutdownHttpServer(): Promise<void> {
   logger.info("🛑 Shutting down HTTP server");
+  await exploreRunManager.shutdown();
   await server.stop();
   logger.info("✅ HTTP server shut down successfully");
 }

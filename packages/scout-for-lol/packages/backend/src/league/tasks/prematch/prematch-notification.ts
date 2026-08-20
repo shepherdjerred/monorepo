@@ -418,21 +418,7 @@ export async function sendPrematchNotification(
       }
     })();
   } catch (error) {
-    if (loadingScreenData?.layout === "classic") {
-      classicAssetResolutionFailuresTotal.inc({
-        phase: "prematch",
-        reason: "asset",
-      });
-      logger.error(
-        "Classic prematch loading-screen asset rendering failed",
-        error,
-        {
-          championIds: loadingScreenData.participants.map(
-            (participant) => participant.championId,
-          ),
-        },
-      );
-    }
+    recordClassicLoadingScreenFailure(loadingScreenData, error);
     const isRecoverable = error instanceof RecoverableLoadingScreenDataError;
     prematchLoadingScreenGeneratedTotal.inc({
       queue_type: queueType ?? "unknown",
@@ -516,4 +502,24 @@ export async function sendPrematchNotification(
     `[sendPrematchNotification] ✅ Notifications sent for game ${gameId}`,
   );
   return delivery.sentMessageIds;
+}
+
+function recordClassicLoadingScreenFailure(
+  loadingScreenData: LoadingScreenData | undefined,
+  error: unknown,
+): void {
+  if (loadingScreenData?.layout !== "classic") return;
+  classicAssetResolutionFailuresTotal.inc({
+    phase: "prematch",
+    reason: "asset",
+  });
+  logger.error(
+    "Classic prematch loading-screen asset rendering failed",
+    error,
+    {
+      championIds: loadingScreenData.participants.map(
+        (participant) => participant.championId,
+      ),
+    },
+  );
 }

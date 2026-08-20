@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { MessageSquare } from "lucide-react";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { SESSION_QUERY_OPTIONS } from "#src/lib/session-query.ts";
 import { track } from "#src/lib/analytics.ts";
 import {
   isFeedbackDismissed,
@@ -41,7 +42,7 @@ const MIN_ACCOUNT_AGE_DAYS = 7;
 export function FeedbackPrompt() {
   const trpc = useTRPC();
   const session = useQuery(
-    trpc.auth.sessionState.queryOptions(undefined, { retry: false }),
+    trpc.auth.sessionState.queryOptions(undefined, SESSION_QUERY_OPTIONS),
   );
   const user = session.data?.user ?? null;
 

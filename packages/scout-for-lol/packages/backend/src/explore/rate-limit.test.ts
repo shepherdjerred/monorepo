@@ -5,6 +5,7 @@ import {
   getExploreQuotaStatus,
   resetExploreRateLimitStateForTests,
   tryStartExploreTurn,
+  waitForExploreConversation,
 } from "#src/explore/rate-limit.ts";
 
 const userId = testAccountId("1");
@@ -38,18 +39,59 @@ function minuteRemaining(id: DiscordAccountId, at: number): number {
 }
 
 describe("explore rate limit", () => {
-  test("a turn in flight blocks a second concurrent turn for the same user", () => {
+  test("one user can reserve concurrent turns in distinct conversations", () => {
     const first = tryStartExploreTurn({ userId }, now);
     if (!first.allowed) {
       throw new Error("expected the first turn to be allowed");
     }
 
     const second = tryStartExploreTurn({ userId }, now);
-    expect(second.allowed).toBe(false);
+    if (!second.allowed) {
+      throw new Error("expected the second turn to be allowed");
+    }
     expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(true);
 
     first.finish();
+    expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(true);
+    second.finish();
     expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(false);
+  });
+
+  test("conversation claims serialize turns across adapters", async () => {
+    const first = tryStartExploreTurn({ userId }, now);
+    const second = tryStartExploreTurn({ userId }, now);
+    if (!first.allowed || !second.allowed) {
+      throw new Error("expected both turn slots to be allowed");
+    }
+
+    expect(first.claimConversation("conversation-a")).toBe(true);
+    expect(second.claimConversation("conversation-a")).toBe(false);
+    const released = waitForExploreConversation("conversation-a");
+    first.finish();
+    await released;
+    expect(second.claimConversation("conversation-a")).toBe(true);
+    second.finish();
+  });
+
+  test("the sixth concurrent turn is rejected by the global cap", () => {
+    const tickets = Array.from({ length: 5 }, (_, index) =>
+      tryStartExploreTurn(
+        { userId: testAccountId((index + 10).toString()) },
+        now,
+      ),
+    );
+    expect(tickets.every((ticket) => ticket.allowed)).toBe(true);
+
+    const rejected = tryStartExploreTurn({ userId: otherUserId }, now);
+    expect(rejected.allowed).toBe(false);
+    if (rejected.allowed) {
+      throw new Error("expected the global-cap rejection");
+    }
+    expect(rejected.reason).toMatch(/busy/i);
+
+    for (const ticket of tickets) {
+      if (ticket.allowed) ticket.finish();
+    }
   });
 
   test("the per-minute allowance is enforced and then resets", () => {
@@ -113,6 +155,26 @@ describe("explore rate limit", () => {
 
     expect(minuteRemaining(userId, now)).toBe(before);
     expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(false);
+  });
+
+  test("concurrent reservations cannot over-admit the final quota slot", () => {
+    for (let index = 0; index < 3; index++) {
+      completeTurn(userId, now);
+    }
+
+    const finalSlot = tryStartExploreTurn({ userId }, now);
+    if (!finalSlot.allowed) {
+      throw new Error("expected the final quota slot to be reserved");
+    }
+    const overLimit = tryStartExploreTurn({ userId }, now);
+    expect(overLimit.allowed).toBe(false);
+    expect(minuteRemaining(userId, now)).toBe(0);
+
+    finalSlot.finish();
+    expect(minuteRemaining(userId, now)).toBe(1);
+    const retry = tryStartExploreTurn({ userId }, now);
+    expect(retry.allowed).toBe(true);
+    if (retry.allowed) retry.finish();
   });
 
   test("a committed turn does spend its quota", () => {

@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
+  EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TITLE_MAX_LENGTH,
   ExploreAnswerSchema,
+  ExploreAnswerWireSchema,
   ExploreStreamEventSchema,
   type ExploreStreamEvent,
 } from "@scout-for-lol/data";
@@ -46,7 +48,7 @@ async function collect(
     if (snapshot.success) {
       await emitExploreAnswerSnapshot(snapshot.data.object, push, state);
     } else {
-      await emitExploreStreamChunk(chunk, push);
+      await emitExploreStreamChunk(chunk, push, state);
     }
   }
   const text = events
@@ -66,6 +68,21 @@ describe("explore stream mapping", () => {
     // earlier field is complete — the page would sit blank and then paste the
     // whole answer at once, with no error anywhere.
     expect(Object.keys(ExploreAnswerSchema.shape)[0]).toBe("answer");
+  });
+
+  test("the strict wire schema carries the generated conversation title", () => {
+    const parsed = ExploreAnswerSchema.parse(
+      ExploreAnswerWireSchema.parse({
+        answer: "Ambessa leads.",
+        title: "Champion win-rate leaders",
+        queryText: null,
+        caveats: [],
+        followUps: [],
+      }),
+    );
+
+    expect(Object.keys(ExploreAnswerWireSchema.shape)[0]).toBe("answer");
+    expect(parsed.title).toBe("Champion win-rate leaders");
   });
 
   test("an over-long title does not fail the whole answer", () => {
@@ -111,6 +128,21 @@ describe("explore stream mapping", () => {
     ).toHaveLength(1);
   });
 
+  test("partial snapshots stop at the persisted answer limit", async () => {
+    const prefix = "x".repeat(EXPLORE_ANSWER_MAX_LENGTH - 1);
+    const { events, text } = await collect([
+      objectChunk(prefix),
+      objectChunk(`${prefix}y${"z".repeat(100)}`),
+      objectChunk(`${prefix}y${"z".repeat(200)}`),
+    ]);
+
+    expect(text).toBe(`${prefix}y`);
+    expect(text).toHaveLength(EXPLORE_ANSWER_MAX_LENGTH);
+    expect(
+      events.filter((event) => event.type === "answer_delta"),
+    ).toHaveLength(2);
+  });
+
   test("a snapshot without `answer` yet emits nothing", async () => {
     const { events } = await collect([
       { type: "object", object: {} },
@@ -132,8 +164,24 @@ describe("explore stream mapping", () => {
 
   test("tool activity still surfaces alongside the answer", async () => {
     const { events } = await collect([
-      { type: "tool-call", toolName: "run_report_query" },
-      { type: "tool-result", toolName: "run_report_query" },
+      {
+        type: "tool-call",
+        toolCallId: "call-1",
+        toolName: "run_report_query",
+        input: { queryText: "FROM matches SELECT games" },
+      },
+      {
+        type: "tool-result",
+        toolCallId: "call-1",
+        toolName: "run_report_query",
+        input: { queryText: "FROM matches SELECT games" },
+        output: {
+          ok: true,
+          message: "Returned 1 row.",
+          formattedQueryText: "FROM matches SELECT games",
+          preview: null,
+        },
+      },
       objectChunk("Jinx leads."),
     ]);
 
@@ -142,6 +190,142 @@ describe("explore stream mapping", () => {
       "tool_result",
       "answer_delta",
     ]);
+  });
+});
+
+describe("explore tool stream inspection", () => {
+  test("records tool duration using the provider call id", async () => {
+    let now = 1000;
+    const state = createExploreStreamState(() => now);
+    const events: ExploreStreamEvent[] = [];
+    await emitExploreStreamChunk(
+      {
+        type: "tool-call",
+        toolCallId: "duration-call",
+        toolName: "format_report_query",
+        input: { queryText: "FROM matches SELECT games" },
+      },
+      (event) => {
+        events.push(event);
+      },
+      state,
+    );
+    now = 1275;
+    await emitExploreStreamChunk(
+      {
+        type: "tool-result",
+        toolCallId: "duration-call",
+        toolName: "format_report_query",
+        input: { queryText: "FROM matches SELECT games" },
+        output: { formattedQueryText: "FROM matches SELECT games" },
+      },
+      (event) => {
+        events.push(event);
+      },
+      state,
+    );
+
+    const result = events.find((event) => event.type === "tool_result");
+    expect(result?.durationMs).toBe(275);
+  });
+
+  test("a rejected query is reported as a failed tool result", async () => {
+    const { events } = await collect([
+      {
+        type: "tool-call",
+        toolCallId: "rejected-call",
+        toolName: "run_report_query",
+        input: { queryText: "FROM matches SELECT nope" },
+      },
+      {
+        type: "tool-result",
+        toolCallId: "rejected-call",
+        toolName: "run_report_query",
+        input: { queryText: "FROM matches SELECT nope" },
+        output: {
+          ok: false,
+          message: "Invalid query.",
+          formattedQueryText: null,
+          preview: null,
+        },
+      },
+    ]);
+
+    const result = events.find((event) => event.type === "tool_result");
+    expect(result?.status).toBe("failed");
+    expect(result?.details).toMatchObject({
+      kind: "execution",
+      ok: false,
+    });
+  });
+});
+
+describe("explore raw tool payload inspection", () => {
+  test("omits one raw payload above the per-payload inspection limit", async () => {
+    const { events } = await collect([
+      {
+        type: "tool-call",
+        toolCallId: "call-large",
+        toolName: "validate_report_query",
+        input: { queryText: "FROM matches SELECT games" },
+      },
+      {
+        type: "tool-result",
+        toolCallId: "call-large",
+        toolName: "validate_report_query",
+        input: { queryText: "FROM matches SELECT games" },
+        output: {
+          ok: false,
+          message: "Invalid query.",
+          diagnostics: ["x".repeat(70_000)],
+          formattedQueryText: null,
+        },
+      },
+    ]);
+    const result = events.find((event) => event.type === "tool_result");
+    expect(result?.status).toBe("failed");
+    expect(result?.rawOutput).toMatchObject({
+      kind: "omitted",
+      reason: "payload_limit",
+    });
+    expect(result?.details?.kind).toBe("validation");
+    if (result?.details?.kind === "validation") {
+      expect(result.details.diagnostics[0]?.length).toBeLessThanOrEqual(500);
+    }
+  });
+
+  test("enforces the aggregate raw inspection limit across a turn", async () => {
+    const chunks = Array.from({ length: 5 }, (_, index) => {
+      const toolCallId = `call-${index.toString()}`;
+      const input = { queryText: "FROM matches SELECT games" };
+      return [
+        {
+          type: "tool-call",
+          toolCallId,
+          toolName: "validate_report_query",
+          input,
+        },
+        {
+          type: "tool-result",
+          toolCallId,
+          toolName: "validate_report_query",
+          input,
+          output: {
+            ok: false,
+            message: "Invalid query.",
+            diagnostics: ["x".repeat(60_000)],
+            formattedQueryText: null,
+          },
+        },
+      ];
+    }).flat();
+    const { events } = await collect(chunks);
+    const results = events.filter((event) => event.type === "tool_result");
+
+    expect(results.at(-1)?.rawOutput).toMatchObject({
+      kind: "omitted",
+      reason: "turn_limit",
+    });
   });
 
   /**
@@ -156,7 +340,9 @@ describe("explore stream mapping", () => {
     const { events } = await collect([
       {
         type: "tool-error",
+        toolCallId: "call-1",
         toolName: "run_report_query",
+        input: { queryText: "FROM matches SELECT games" },
         error: rawError,
       },
     ]);
@@ -166,7 +352,7 @@ describe("explore stream mapping", () => {
     if (event?.type !== "tool_result") {
       throw new Error("expected a tool_result event");
     }
-    expect(event.ok).toBe(false);
+    expect(event.status).toBe("failed");
     expect(event.message.length).toBeLessThanOrEqual(500);
     expect(event.message).not.toContain("someInternalFrame");
     expect(event.message).not.toContain("xxxx");
@@ -237,6 +423,7 @@ describe("explore stream mapping", () => {
         () => {
           // discarded: this test only cares that the chunk throws
         },
+        createExploreStreamState(),
       ),
     ).rejects.toThrow(/upstream exploded/);
   });

@@ -113,6 +113,12 @@
   padding: 0;
 }
 
+.scout-button--icon-small {
+  width: 2rem;
+  min-height: 2rem;
+  padding: 0;
+}
+
 .scout-card,
 .scout-panel {
   color: var(--scout-color-text);
@@ -608,6 +614,7 @@ button.scout-control > span:first-child {
 .scout-page-frame {
   min-height: 100vh;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
 }
 

@@ -6,15 +6,28 @@ import {
   type DiscordAccountId,
   EXPLORE_TITLE_MAX_LENGTH,
   ExploreConversationIdSchema,
+  ExploreRunIdSchema,
+  ExploreRunObserveRequestSchema,
+  ExploreRunOutcomeResultSchema,
+  ExploreTurnRequestSchema,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import {
   assertExploreAccess,
   isExploreConfigured,
 } from "#src/explore/access.ts";
-import { getExploreQuotaStatus } from "#src/explore/rate-limit.ts";
 import {
-  deleteExploreConversation,
+  ExploreConversationBusyError,
+  getExploreQuotaStatus,
+} from "#src/explore/rate-limit.ts";
+import {
+  ExploreRunRateLimitedError,
+  ExploreRunUnavailableError,
+  exploreRunManager,
+} from "#src/explore/run-manager.ts";
+import {
+  ExploreInvalidTurnError,
+  ExploreNotFoundError,
   listExploreConversations,
   loadExploreTranscript,
   renameExploreConversation,
@@ -23,13 +36,18 @@ import {
   shareExploreConversation,
 } from "#src/explore/store.ts";
 import { scoutExploreSharesTotal } from "#src/metrics/explore.ts";
-import { protectedProcedure, router } from "#src/trpc/trpc.ts";
+import {
+  protectedProcedure,
+  router,
+  webMutationProcedure,
+} from "#src/trpc/trpc.ts";
 
 /**
  * Conversation management for explore.
  *
- * Asking a question streams over SSE (see explore/http-route.ts); everything
- * else — listing, reading, renaming, deleting, sharing — is ordinary tRPC.
+ * Starting and controlling a background answer uses tRPC; observers receive
+ * snapshots and live events over SSE (see explore/http-route.ts). Conversation
+ * management remains ordinary tRPC.
  * Every procedure re-checks the allowlist rather than trusting that the user
  * passed it when the conversation was created, so removing someone from an
  * allowlisted server takes their access away immediately.
@@ -75,6 +93,62 @@ export const exploreRouter = router({
     const userId = await requireExploreUser(ctx.user);
     return await listExploreConversations(prisma, userId);
   }),
+
+  activeRuns: exploreProcedure.query(async ({ ctx }) => {
+    const userId = await requireExploreUser(ctx.user);
+    return exploreRunManager.list(userId);
+  }),
+
+  runOutcome: exploreProcedure
+    .input(ExploreRunObserveRequestSchema)
+    .query(async ({ ctx, input }) => {
+      const userId = await requireExploreUser(ctx.user);
+      return ExploreRunOutcomeResultSchema.parse({
+        outcome: exploreRunManager.outcome(input.runId, userId),
+      });
+    }),
+
+  start: webMutationProcedure
+    .input(ExploreTurnRequestSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = await requireExploreUser(ctx.user);
+      try {
+        return await exploreRunManager.start({ userId }, input);
+      } catch (error) {
+        if (error instanceof ExploreConversationBusyError) {
+          throw new TRPCError({ code: "CONFLICT", message: error.message });
+        }
+        if (error instanceof ExploreRunRateLimitedError) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: error.message,
+          });
+        }
+        if (error instanceof ExploreRunUnavailableError) {
+          throw new TRPCError({
+            code: "SERVICE_UNAVAILABLE",
+            message: error.message,
+          });
+        }
+        if (error instanceof ExploreNotFoundError) {
+          throw new TRPCError({ code: "NOT_FOUND", message: error.message });
+        }
+        if (error instanceof ExploreInvalidTurnError) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: error.message });
+        }
+        throw error;
+      }
+    }),
+
+  stop: webMutationProcedure
+    .input(z.object({ runId: ExploreRunIdSchema }).strict())
+    .mutation(async ({ ctx, input }) => {
+      const userId = await requireExploreUser(ctx.user);
+      if (!exploreRunManager.stop(input.runId, userId)) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Run not found." });
+      }
+      return { ok: true };
+    }),
 
   get: exploreProcedure
     .input(conversationInput)
@@ -147,11 +221,18 @@ export const exploreRouter = router({
     .input(conversationInput)
     .mutation(async ({ ctx, input }) => {
       const userId = await requireExploreUser(ctx.user);
-      const deleted = await deleteExploreConversation(
-        prisma,
-        input.conversationId,
-        userId,
-      );
+      let deleted: boolean;
+      try {
+        deleted = await exploreRunManager.deleteConversationAndWait(
+          input.conversationId,
+          userId,
+        );
+      } catch (error) {
+        if (error instanceof ExploreConversationBusyError) {
+          throw new TRPCError({ code: "CONFLICT", message: error.message });
+        }
+        throw error;
+      }
       if (!deleted) {
         throw new TRPCError({
           code: "NOT_FOUND",

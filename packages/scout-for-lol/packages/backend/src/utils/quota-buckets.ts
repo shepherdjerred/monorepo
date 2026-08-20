@@ -40,10 +40,18 @@ export type QuotaSnapshot<Scope extends string> = {
 };
 
 export type QuotaEngine<Scope extends string, Identity> = {
-  /** Current usage for every rule, without consuming anything. */
+  /** Current committed plus reserved usage for every rule. */
   snapshots: (identity: Identity, now: number) => QuotaSnapshot<Scope>[];
   /** Charge one request against every rule. */
   consume: (identity: Identity, now: number) => void;
+  /** Hold one request against every rule until it commits or releases. */
+  reserve: (
+    identity: Identity,
+    now: number,
+  ) => {
+    commit: () => void;
+    release: () => void;
+  };
   /** Test-only: drop all bucket state. */
   reset: () => void;
 };
@@ -51,6 +59,7 @@ export type QuotaEngine<Scope extends string, Identity> = {
 type Bucket = {
   startedAt: number;
   used: number;
+  reserved: number;
 };
 
 export function createQuotaEngine<Scope extends string, Identity>(options: {
@@ -76,7 +85,7 @@ export function createQuotaEngine<Scope extends string, Identity>(options: {
     ) {
       return existing;
     }
-    const bucket = { startedAt: now, used: 0 };
+    const bucket = { startedAt: now, used: 0, reserved: 0 };
     buckets.set(id, bucket);
     return bucket;
   };
@@ -85,7 +94,7 @@ export function createQuotaEngine<Scope extends string, Identity>(options: {
     snapshots: (identity, now) =>
       options.rules.map((rule) => {
         const bucket = currentBucket(rule, identity, now);
-        const used = Math.min(rule.limit, bucket.used);
+        const used = Math.min(rule.limit, bucket.used + bucket.reserved);
         return {
           scope: rule.scope,
           window: rule.window,
@@ -101,6 +110,32 @@ export function createQuotaEngine<Scope extends string, Identity>(options: {
       for (const rule of options.rules) {
         currentBucket(rule, identity, now).used++;
       }
+    },
+    reserve: (identity, now) => {
+      const reservedBuckets = options.rules.map((rule) =>
+        currentBucket(rule, identity, now),
+      );
+      for (const bucket of reservedBuckets) {
+        bucket.reserved++;
+      }
+      let settled = false;
+      return {
+        commit: () => {
+          if (settled) return;
+          settled = true;
+          for (const bucket of reservedBuckets) {
+            bucket.reserved--;
+            bucket.used++;
+          }
+        },
+        release: () => {
+          if (settled) return;
+          settled = true;
+          for (const bucket of reservedBuckets) {
+            bucket.reserved--;
+          }
+        },
+      };
     },
     reset: () => {
       buckets.clear();

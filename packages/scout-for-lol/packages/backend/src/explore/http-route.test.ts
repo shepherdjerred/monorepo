@@ -4,7 +4,7 @@ import {
   EXPLORE_ANSWER_MAX_LENGTH,
   ExploreAnswerSchema,
 } from "@scout-for-lol/data";
-import { clampAnswer } from "#src/explore/run-turn.ts";
+import { clampAnswer } from "#src/explore/partial-answer.ts";
 
 /**
  * A stopped turn is the one answer path that does not go through
@@ -74,10 +74,13 @@ function fakeController() {
 describe("createSseWriter", () => {
   test("writes events as SSE frames", () => {
     const controller = fakeController();
-    createSseWriter(controller).emit({ type: "done" });
+    createSseWriter(controller).emit({
+      type: "done",
+      outcome: "succeeded",
+    });
 
     expect(controller.chunks).toEqual([
-      'event: done\ndata: {"type":"done"}\n\n',
+      'event: done\ndata: {"type":"done","outcome":"succeeded"}\n\n',
     ]);
   });
 
@@ -91,7 +94,7 @@ describe("createSseWriter", () => {
     writer.disconnected();
 
     expect(() => {
-      writer.emit({ type: "done" });
+      writer.emit({ type: "done", outcome: "succeeded" });
     }).not.toThrow();
     expect(controller.chunks).toEqual([]);
   });
@@ -103,7 +106,7 @@ describe("createSseWriter", () => {
     writer.disconnected();
 
     expect(() => {
-      writer.finish({ type: "done" });
+      writer.finish({ type: "done", outcome: "succeeded" });
     }).not.toThrow();
   });
 
@@ -111,8 +114,8 @@ describe("createSseWriter", () => {
     const controller = fakeController();
     const writer = createSseWriter(controller);
 
-    writer.finish({ type: "done" });
-    writer.emit({ type: "done" });
+    writer.finish({ type: "done", outcome: "succeeded" });
+    writer.emit({ type: "done", outcome: "succeeded" });
 
     expect(controller.isClosed()).toBe(true);
     expect(controller.chunks).toHaveLength(1);

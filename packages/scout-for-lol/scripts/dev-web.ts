@@ -11,6 +11,7 @@ type DevWebOptions = {
   readonly webPort: number;
   readonly databaseUrl: string;
   readonly discordGatewayEnabled: boolean;
+  readonly backendWatchEnabled: boolean;
   readonly marketingOrigin: string;
   readonly docsOrigin: string;
 };
@@ -85,6 +86,8 @@ export function parseDevWebArgs(
   );
   let databaseUrl: string | undefined;
   let discordGatewayEnabled = environment["SCOUT_DEV_NO_GATEWAY"] !== "true";
+  let backendWatchEnabled =
+    environment["SCOUT_DEV_NO_BACKEND_WATCH"] !== "true";
   let marketingOrigin = parseOrigin(
     environment["SCOUT_DEV_MARKETING_ORIGIN"] ?? "http://localhost:4321",
     "SCOUT_DEV_MARKETING_ORIGIN",
@@ -121,6 +124,10 @@ export function parseDevWebArgs(
       discordGatewayEnabled = false;
       continue;
     }
+    if (argument === "--no-backend-watch") {
+      backendWatchEnabled = false;
+      continue;
+    }
     if (argument === "--marketing-origin") {
       marketingOrigin = parseOrigin(
         requireCliValue(args, index, argument),
@@ -151,6 +158,7 @@ export function parseDevWebArgs(
       webPort,
       databaseUrl: databaseUrl ?? defaultDatabaseUrl(backendPort, environment),
       discordGatewayEnabled,
+      backendWatchEnabled,
       marketingOrigin,
       docsOrigin,
     },
@@ -165,6 +173,7 @@ Options:
   --web-port <port>      Vite SPA port (default: 5180)
   --database-url <url>   Local file: SQLite URL
   --no-discord-gateway   Run as a secondary UI/API copy without BETA gateway
+  --no-backend-watch     Keep the backend stable until this command is restarted
   --marketing-origin <url>  Marketing site origin for cross-surface links
   --docs-origin <url>       Docs site origin for cross-surface links
   --help                 Show this help
@@ -239,7 +248,10 @@ if (import.meta.main) {
       );
     }
 
-    const backend = Bun.spawn(["bun", "--watch", "src/index.ts"], {
+    const backendCommand = options.backendWatchEnabled
+      ? ["bun", "--watch", "src/index.ts"]
+      : ["bun", "src/index.ts"];
+    const backend = Bun.spawn(backendCommand, {
       cwd: backendCwd,
       env: environment,
       stdin: "inherit",
@@ -267,7 +279,7 @@ if (import.meta.main) {
       },
     );
     console.log(
-      `Scout local dev is starting\nSPA: ${webOrigin}/app/\nBackend: ${backendOrigin}/trpc/\nDatabase: ${options.databaseUrl}`,
+      `Scout local dev is starting\nSPA: ${webOrigin}/app/\nBackend: ${backendOrigin}/trpc/\nDatabase: ${options.databaseUrl}\nBackend watch: ${options.backendWatchEnabled ? "enabled" : "disabled"}`,
     );
     const stop = (): void => {
       backend.kill();

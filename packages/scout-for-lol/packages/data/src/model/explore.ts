@@ -40,6 +40,9 @@ export const EXPLORE_INTERRUPTED_CAVEAT =
 export const ExploreConversationIdSchema = z.uuid();
 export type ExploreConversationId = z.infer<typeof ExploreConversationIdSchema>;
 
+export const ExploreRunIdSchema = z.uuid();
+export type ExploreRunId = z.infer<typeof ExploreRunIdSchema>;
+
 /**
  * Share tokens are opaque and unguessable: the share link is the only
  * credential, so the token must not be derived from the conversation id.
@@ -149,9 +152,10 @@ export type ExploreAnswer = z.infer<typeof ExploreAnswerSchema>;
  * ("'required' ... must include every key in properties"). That is a hard 400
  * on every turn, not a soft downgrade, so the defaults cannot live on the wire.
  *
- * The model must therefore supply all four keys; `queryText` stays nullable
- * because a follow-up answered from the transcript legitimately ran no query,
- * and empty arrays express "no caveats/follow-ups". Parse the result through
+ * The model must therefore supply all five keys; `title` and `queryText` stay
+ * nullable because follow-ups do not rename an established conversation and
+ * can be answered from the transcript without another query. Empty arrays
+ * express "no caveats/follow-ups". Parse the result through
  * `ExploreAnswerSchema` to land in the domain type — the defaults there become
  * no-ops once every key is present, so the two schemas cannot drift apart in
  * what they accept.
@@ -159,23 +163,137 @@ export type ExploreAnswer = z.infer<typeof ExploreAnswerSchema>;
 export const ExploreAnswerWireSchema = z
   .object({
     answer: z.string().trim().min(1).max(EXPLORE_ANSWER_MAX_LENGTH),
+    title: z.string().trim().min(1).nullable(),
     queryText: ReportQueryTextSchema.nullable(),
     caveats: z.array(z.string().trim().min(1).max(300)).max(5),
     followUps: z.array(z.string().trim().min(1).max(200)).max(3),
   })
   .strict();
 
-/**
- * One step the agent took, kept so a reader can audit how an answer was
- * reached rather than taking the prose on trust.
- */
-export const ExploreTraceEntrySchema = z
+export const EXPLORE_TRACE_PAYLOAD_MAX_BYTES = 64 * 1024;
+export const EXPLORE_TRACE_TOTAL_MAX_BYTES = 256 * 1024;
+
+export const ExploreTraceStatusSchema = z.enum([
+  "running",
+  "succeeded",
+  "failed",
+  "interrupted",
+]);
+export type ExploreTraceStatus = z.infer<typeof ExploreTraceStatusSchema>;
+
+const ExploreTraceReferenceDetailsSchema = z
+  .object({
+    kind: z.literal("reference"),
+    sources: z.number().int().nonnegative().nullable(),
+    metrics: z.number().int().nonnegative().nullable(),
+    functions: z.number().int().nonnegative().nullable(),
+    groupBys: z.number().int().nonnegative().nullable(),
+    filters: z.number().int().nonnegative().nullable(),
+    renderKinds: z.number().int().nonnegative().nullable(),
+    renderOptions: z.number().int().nonnegative().nullable(),
+    queues: z.number().int().nonnegative().nullable(),
+    presets: z.number().int().nonnegative().nullable(),
+  })
+  .strict();
+
+const ExploreTraceValidationDetailsSchema = z
+  .object({
+    kind: z.literal("validation"),
+    queryText: ReportQueryTextSchema,
+    ok: z.boolean().nullable(),
+    diagnostics: z.array(z.string().max(500)).max(6),
+    formattedQueryText: ReportQueryTextSchema.nullable(),
+  })
+  .strict();
+
+const ExploreTraceFormatDetailsSchema = z
+  .object({
+    kind: z.literal("format"),
+    queryText: ReportQueryTextSchema,
+    formattedQueryText: ReportQueryTextSchema.nullable(),
+  })
+  .strict();
+
+const ExploreTraceExecutionDetailsSchema = z
+  .object({
+    kind: z.literal("execution"),
+    queryText: ReportQueryTextSchema,
+    ok: z.boolean().nullable(),
+    rowsReturned: z.number().int().nonnegative().nullable(),
+    rowsScanned: z.number().int().nonnegative().nullable(),
+    renderKind: z.string().nullable(),
+  })
+  .strict();
+
+export const ExploreTraceDetailsSchema = z.discriminatedUnion("kind", [
+  ExploreTraceReferenceDetailsSchema,
+  ExploreTraceValidationDetailsSchema,
+  ExploreTraceFormatDetailsSchema,
+  ExploreTraceExecutionDetailsSchema,
+]);
+export type ExploreTraceDetails = z.infer<typeof ExploreTraceDetailsSchema>;
+
+export const ExploreTraceRawValueSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("value"),
+      value: z.json(),
+      byteLength: z.number().int().nonnegative(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("omitted"),
+      reason: z.enum(["payload_limit", "turn_limit"]),
+      byteLength: z.number().int().nonnegative(),
+    })
+    .strict(),
+]);
+export type ExploreTraceRawValue = z.infer<typeof ExploreTraceRawValueSchema>;
+
+const RichExploreTraceEntrySchema = z
+  .object({
+    toolCallId: z.string().min(1).max(200),
+    toolName: z.string().min(1).max(100),
+    message: z.string().min(1).max(500),
+    status: ExploreTraceStatusSchema,
+    durationMs: z.number().int().nonnegative().nullable(),
+    details: ExploreTraceDetailsSchema.nullable(),
+    rawInput: ExploreTraceRawValueSchema.nullable(),
+    rawOutput: ExploreTraceRawValueSchema.nullable(),
+  })
+  .strict();
+
+const LegacyExploreTraceEntrySchema = z
   .object({
     toolName: z.string().min(1).max(100),
     message: z.string().min(1).max(500),
     ok: z.boolean(),
   })
   .strict();
+
+/**
+ * One auditable agent tool call. The legacy branch upgrades existing stored
+ * traces on read; new entries always carry a provider call id and rich state.
+ */
+export const ExploreTraceEntrySchema = z
+  .union([RichExploreTraceEntrySchema, LegacyExploreTraceEntrySchema])
+  .transform((entry) =>
+    "ok" in entry
+      ? {
+          toolCallId: `legacy-${entry.toolName}`,
+          toolName: entry.toolName,
+          message: entry.message,
+          status: ExploreTraceStatusSchema.parse(
+            entry.ok ? "succeeded" : "failed",
+          ),
+          durationMs: null,
+          details: null,
+          rawInput: null,
+          rawOutput: null,
+        }
+      : entry,
+  );
 
 export type ExploreTraceEntry = z.infer<typeof ExploreTraceEntrySchema>;
 
@@ -263,7 +381,69 @@ export const ExploreQuotaSnapshotSchema = z
 
 export type ExploreQuotaSnapshot = z.infer<typeof ExploreQuotaSnapshotSchema>;
 
+/** The stable identity returned when the backend starts or lists a live run. */
+export const ExploreActiveRunSchema = z
+  .object({
+    runId: ExploreRunIdSchema,
+    conversationId: ExploreConversationIdSchema,
+    questionMessageId: z.uuid(),
+    /** The branch leaf visible when this run began, for reconnect-safe version detection. */
+    leafIdAtStart: z.uuid().nullable(),
+    versionCountAtStart: z.number().int().nonnegative().default(0),
+    startedAt: z.iso.datetime(),
+  })
+  .strict();
+
+export type ExploreActiveRun = z.infer<typeof ExploreActiveRunSchema>;
+
+export const ExploreRunOutcomeSchema = z.enum([
+  "succeeded",
+  "failed",
+  "stopped",
+  "interrupted",
+]);
+export type ExploreRunOutcome = z.infer<typeof ExploreRunOutcomeSchema>;
+
+/** Attach an authenticated observer to a server-owned run. */
+export const ExploreRunObserveRequestSchema = z
+  .object({ runId: ExploreRunIdSchema })
+  .strict();
+
+export type ExploreRunObserveRequest = z.infer<
+  typeof ExploreRunObserveRequestSchema
+>;
+
+export const ExploreRunOutcomeResultSchema = z
+  .object({ outcome: ExploreRunOutcomeSchema.nullable() })
+  .strict();
+export type ExploreRunOutcomeResult = z.infer<
+  typeof ExploreRunOutcomeResultSchema
+>;
+
+/**
+ * Complete replaceable state sent whenever an observer attaches.
+ *
+ * Replacing from a snapshot before applying later deltas makes reconnects
+ * idempotent: a lost response can be observed again without appending the
+ * same answer fragment or tool result twice.
+ */
+export const ExploreRunSnapshotEventSchema = z
+  .object({
+    type: z.literal("snapshot"),
+    runId: ExploreRunIdSchema,
+    conversationId: ExploreConversationIdSchema,
+    questionMessageId: z.uuid(),
+    leafIdAtStart: z.uuid().nullable(),
+    versionCountAtStart: z.number().int().nonnegative().default(0),
+    startedAt: z.iso.datetime(),
+    answer: z.string().max(EXPLORE_ANSWER_MAX_LENGTH).nullable(),
+    activity: z.string().trim().min(1).max(500).nullable(),
+    trace: z.array(ExploreTraceEntrySchema),
+  })
+  .strict();
+
 export const ExploreStreamEventSchema = z.discriminatedUnion("type", [
+  ExploreRunSnapshotEventSchema,
   z
     .object({
       type: z.literal("started"),
@@ -281,16 +461,23 @@ export const ExploreStreamEventSchema = z.discriminatedUnion("type", [
   z
     .object({
       type: z.literal("tool_call"),
+      toolCallId: z.string().trim().min(1).max(200),
       toolName: z.string().trim().min(1).max(100),
       message: z.string().trim().min(1).max(500),
+      details: ExploreTraceDetailsSchema.nullable(),
+      rawInput: ExploreTraceRawValueSchema.nullable(),
     })
     .strict(),
   z
     .object({
       type: z.literal("tool_result"),
+      toolCallId: z.string().trim().min(1).max(200),
       toolName: z.string().trim().min(1).max(100),
-      ok: z.boolean(),
+      status: z.enum(["succeeded", "failed"]),
       message: z.string().trim().min(1).max(500),
+      durationMs: z.number().int().nonnegative().nullable(),
+      details: ExploreTraceDetailsSchema.nullable(),
+      rawOutput: ExploreTraceRawValueSchema.nullable(),
     })
     .strict(),
   z
@@ -322,7 +509,12 @@ export const ExploreStreamEventSchema = z.discriminatedUnion("type", [
       quota: z.array(ExploreQuotaSnapshotSchema).nullable().default(null),
     })
     .strict(),
-  z.object({ type: z.literal("done") }).strict(),
+  z
+    .object({
+      type: z.literal("done"),
+      outcome: ExploreRunOutcomeSchema,
+    })
+    .strict(),
 ]);
 
 export type ExploreStreamEvent = z.infer<typeof ExploreStreamEventSchema>;

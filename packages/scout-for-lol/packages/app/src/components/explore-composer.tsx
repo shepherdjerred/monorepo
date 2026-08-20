@@ -16,17 +16,22 @@ const MAX_COMPOSER_HEIGHT_PX = 200;
 export function ExploreComposer(props: {
   /** True while a turn is streaming — disables input, swaps Ask for Stop. */
   active: boolean;
+  /** Temporarily prevents submission without presenting a Stop action. */
+  disabled?: boolean;
   /** Question handed back by a failed turn, adopted into an empty box. */
   restoredDraft: string | null;
   onAsk: (question: string) => void;
   onStop: () => void;
 }) {
-  const { active, restoredDraft, onAsk, onStop } = props;
+  const { active, disabled = false, restoredDraft, onAsk, onStop } = props;
   const [question, setQuestion] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const wasActiveRef = useRef(false);
 
   const submit = (): void => {
+    if (active || disabled) {
+      return;
+    }
     const trimmed = question.trim();
     if (trimmed.length === 0) {
       return;
@@ -119,7 +124,7 @@ export function ExploreComposer(props: {
           }
         }}
         placeholder="Ask a question about match data…"
-        disabled={active}
+        disabled={active || disabled}
       />
       {active ? (
         <Button
@@ -133,7 +138,10 @@ export function ExploreComposer(props: {
           Stop
         </Button>
       ) : (
-        <Button type="submit" disabled={question.trim().length === 0}>
+        <Button
+          type="submit"
+          disabled={disabled || question.trim().length === 0}
+        >
           Ask
         </Button>
       )}

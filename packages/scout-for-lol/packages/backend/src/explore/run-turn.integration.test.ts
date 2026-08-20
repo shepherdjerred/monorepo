@@ -15,10 +15,22 @@ const userId = testAccountId("73");
 
 const successfulAgent = async (params: ExploreAgentParams) => {
   await params.emit({
-    type: "tool_result",
+    type: "tool_call",
+    toolCallId: "call-1",
     toolName: "run_report_query",
-    ok: true,
+    message: "Running query.",
+    details: null,
+    rawInput: null,
+  });
+  await params.emit({
+    type: "tool_result",
+    toolCallId: "call-1",
+    toolName: "run_report_query",
+    status: "succeeded",
     message: "Got results.",
+    durationMs: 7,
+    details: null,
+    rawOutput: null,
   });
   return {
     answer: {
@@ -95,6 +107,7 @@ describe("shared persisted Explore turn", () => {
     );
 
     expect(terminal.type).toBe("final");
+    expect(terminal.outcome).toBe("succeeded");
     const transcript = await loadExploreTranscript(
       prisma,
       prepared.started.conversationId,
@@ -103,7 +116,16 @@ describe("shared persisted Explore turn", () => {
     expect(transcript?.conversation.title).toBe("Most frequent winners");
     expect(transcript?.messages[1]?.content).toBe("Ahri wins most often.");
     expect(transcript?.messages[1]?.trace).toEqual([
-      { toolName: "run_report_query", ok: true, message: "Got results." },
+      {
+        toolCallId: "call-1",
+        toolName: "run_report_query",
+        message: "Got results.",
+        status: "succeeded",
+        durationMs: 7,
+        details: null,
+        rawInput: null,
+        rawOutput: null,
+      },
     ]);
     expect(getExploreQuotaStatus({ userId }).activeRun).toBe(false);
     expect(getExploreQuotaStatus({ userId }).quota[0]?.used).toBe(1);
@@ -127,6 +149,7 @@ describe("shared persisted Explore turn", () => {
     );
 
     expect(terminal.type).toBe("final");
+    expect(terminal.outcome).toBe("failed");
     if (terminal.type === "final") {
       expect(terminal.message.content).toBe("Partial evidence.");
       expect(terminal.message.caveats).toContain(
@@ -134,5 +157,85 @@ describe("shared persisted Explore turn", () => {
       );
     }
     expect(getExploreQuotaStatus({ userId }).activeRun).toBe(false);
+  });
+
+  test("a zero-prose cancellation rolls back its generated title", async () => {
+    const prepared = await preparedTurn();
+    const caller = new AbortController();
+    const cancelAfterTitle = prisma.$extends({
+      query: {
+        exploreConversation: {
+          async updateMany({ args, query }) {
+            const result = await query(args);
+            if (result.count > 0 && !caller.signal.aborted) {
+              caller.abort("Stopped while applying the generated title.");
+            }
+            return result;
+          },
+        },
+      },
+    });
+
+    const terminal = await runPersistedExploreTurn(
+      {
+        ...prepared,
+        identity: { userId },
+        abortSignal: caller.signal,
+        abortOutcome: () => "stopped",
+        emit: () => Promise.resolve(),
+      },
+      {
+        client: cancelAfterTitle,
+        executeAgent: successfulAgent,
+        now: Date.now,
+        timeoutMs: 10_000,
+      },
+    );
+
+    expect(terminal.type).toBe("error");
+    expect(terminal.outcome).toBe("stopped");
+    const transcript = await loadExploreTranscript(
+      prisma,
+      prepared.started.conversationId,
+      userId,
+    );
+    expect(transcript?.conversation.title).toBe("Who wins most often?");
+    expect(transcript?.messages).toHaveLength(1);
+    expect(transcript?.messages[0]?.role).toBe("user");
+  });
+
+  test("the first cancellation source determines the outcome", async () => {
+    const prepared = await preparedTurn();
+    const caller = new AbortController();
+    const timeoutAgent = async (params: ExploreAgentParams) =>
+      await new Promise<never>((_resolve, reject) => {
+        params.abortSignal.addEventListener(
+          "abort",
+          () => {
+            caller.abort("Stop arrived after the timeout.");
+            reject(new Error("timed out"));
+          },
+          { once: true },
+        );
+      });
+
+    const terminal = await runPersistedExploreTurn(
+      {
+        ...prepared,
+        identity: { userId },
+        abortSignal: caller.signal,
+        abortOutcome: () => "stopped",
+        emit: () => Promise.resolve(),
+      },
+      {
+        client: prisma,
+        executeAgent: timeoutAgent,
+        now: Date.now,
+        timeoutMs: 5,
+      },
+    );
+
+    expect(terminal.type).toBe("error");
+    expect(terminal.outcome).toBe("interrupted");
   });
 });

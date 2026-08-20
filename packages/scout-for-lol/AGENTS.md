@@ -105,11 +105,15 @@ then defaults to `local-web-dev-<backend-port>.db`:
 bun run --filter='./packages/scout-for-lol' dev:web -- \
   --backend-port 3001 \
   --web-port 5181 \
-  --no-discord-gateway
+  --no-discord-gateway \
+  --no-backend-watch
 ```
 
 Use `--database-url file:...` for an explicit local database. Ports are strict:
 a busy port fails instead of silently changing the URL.
+`--no-backend-watch` keeps a browser-testing backend stable while tests and
+code generation rewrite imported artifacts; restart `dev:web` deliberately
+after backend edits. Vite still hot-reloads app changes.
 
 Secrets are pulled at runtime via `op run --env-file=dev-web.env.tpl` — no
 plaintext credentials are written to disk. On macOS, test the exact `op`

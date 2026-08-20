@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from "react";
-import { MoreHorizontal, Plus, Search } from "lucide-react";
+import { LoaderCircle, MoreHorizontal, Plus, Search } from "lucide-react";
 import type { ExploreConversation } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Input } from "@scout-for-lol/design-system/components/input";
@@ -25,6 +25,9 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
   onNew: () => void;
   onRename: (conversation: ExploreConversation) => void;
   onDelete: (conversation: ExploreConversation) => void;
+  statusForConversation: (
+    conversationId: string,
+  ) => "running" | "completed" | "failed" | null;
 }) {
   const [search, setSearch] = useState("");
 
@@ -71,14 +74,19 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
                 <li key={conversation.id} className="group flex items-center">
                   <button
                     type="button"
-                    className={`flex-1 truncate rounded-md px-2 py-1.5 text-left text-sm hover:bg-scout-hover ${
+                    className={`flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-scout-hover ${
                       conversation.id === props.activeId ? "bg-scout-hover" : ""
                     }`}
                     onClick={() => {
                       props.onSelect(conversation.id);
                     }}
                   >
-                    {conversation.title}
+                    <span className="min-w-0 flex-1 truncate">
+                      {conversation.title}
+                    </span>
+                    <ConversationRunStatus
+                      status={props.statusForConversation(conversation.id)}
+                    />
                   </button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -125,6 +133,36 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
     </div>
   );
 });
+
+function ConversationRunStatus(props: {
+  status: "running" | "completed" | "failed" | null;
+}) {
+  if (props.status === null) return null;
+  if (props.status === "running") {
+    return (
+      <span
+        className="shrink-0 text-scout-subtle"
+        role="status"
+        aria-label="Answer running"
+      >
+        <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+      </span>
+    );
+  }
+  return (
+    <span
+      className={`size-2 shrink-0 rounded-full ${
+        props.status === "completed" ? "bg-scout-primary" : "bg-scout-danger"
+      }`}
+      role="status"
+      aria-label={
+        props.status === "completed"
+          ? "New answer available"
+          : "Answer needs attention"
+      }
+    />
+  );
+}
 
 function filterByTitle(
   conversations: ExploreConversation[],

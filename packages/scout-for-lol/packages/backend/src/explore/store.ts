@@ -76,7 +76,7 @@ type ConversationRow = {
   updatedAt: Date;
 };
 
-type MessageRow = {
+export type MessageRow = {
   id: string;
   parentId: string | null;
   role: string;
@@ -108,7 +108,7 @@ function parseJsonColumn<T>(
   return result.data;
 }
 
-function toMessage(
+export function toMessage(
   row: MessageRow,
   versions: { siblingIds: string[]; index: number; count: number },
 ): ExploreMessage {
@@ -151,7 +151,7 @@ function toConversation(row: ConversationRow): ExploreConversation {
 }
 
 /** Position and sibling ids, derived together so they cannot disagree. */
-function versionsOf(
+export function versionsOf(
   nodes: { id: string; parentId: string | null; createdAt: Date }[],
   messageId: string,
 ): { siblingIds: string[]; index: number; count: number } {
@@ -258,9 +258,7 @@ export async function loadSharedExploreTranscript(
 
 /**
  * Create the conversation if needed and append the user's question.
- *
- * Written before the model runs so the question survives a failed or abandoned
- * turn — a conversation that loses what was asked is not resumable.
+ * Saved before the model runs so a failed turn never loses its question.
  *
  * `attach` decides where the question lands: `leaf` continues the branch on
  * screen, `message` forks a sibling under a named parent (how editing works),
@@ -271,17 +269,23 @@ export async function startExploreTurn(
   prisma: ExtendedPrismaClient,
   input: {
     conversationId: string | null;
+    newId?: string;
     userId: DiscordAccountId;
     question: string;
     attach: ExploreAttachPoint;
   },
-): Promise<{ conversationId: string; title: string; messageId: string }> {
+): Promise<{
+  conversationId: string;
+  title: string;
+  messageId: string;
+  expectedCurrentLeafId: string | null;
+}> {
   if (input.conversationId === null) {
-    const title = titleFromQuestion(input.question);
     const created = await prisma.exploreConversation.create({
       data: {
+        ...(input.newId === undefined ? {} : { id: input.newId }),
         userId: input.userId,
-        title,
+        title: titleFromQuestion(input.question),
         messages: { create: { role: "user", content: input.question } },
       },
       include: { messages: true },
@@ -290,9 +294,13 @@ export async function startExploreTurn(
     if (messageId === undefined) {
       throw new Error("Conversation was created without its first message.");
     }
-    return { conversationId: created.id, title, messageId };
+    return {
+      conversationId: created.id,
+      title: created.title,
+      messageId,
+      expectedCurrentLeafId: null,
+    };
   }
-
   const existing = await prisma.exploreConversation.findFirst({
     where: { id: input.conversationId, userId: input.userId },
     include: { messages: true },
@@ -360,6 +368,7 @@ export async function startExploreTurn(
     conversationId: existing.id,
     title: existing.title,
     messageId: created.id,
+    expectedCurrentLeafId: created.id,
   };
 }
 
@@ -382,6 +391,7 @@ export async function resolveRegenerateTarget(
   title: string;
   messageId: string;
   question: string;
+  expectedCurrentLeafId: string | null;
 }> {
   const existing = await prisma.exploreConversation.findFirst({
     where: { id: input.conversationId, userId: input.userId },
@@ -404,6 +414,7 @@ export async function resolveRegenerateTarget(
     title: existing.title,
     messageId: parent.id,
     question: parent.content,
+    expectedCurrentLeafId: existing.currentLeafId,
   };
 }
 
@@ -416,6 +427,12 @@ export async function appendExploreAnswer(
     preview: ReportAiPreviewSummary | null;
     visualization: VisualizationSnapshot | null;
     trace: ExploreTraceEntry[];
+    /**
+     * Move the visible branch only if it still names the leaf this run began
+     * from. A background answer must not yank another tab away from a version
+     * the reader selected while the model was working.
+     */
+    expectedCurrentLeafId?: string | null;
   },
 ): Promise<ExploreMessage> {
   const row = await prisma.exploreMessage.create({
@@ -437,10 +454,20 @@ export async function appendExploreAnswer(
   });
   // The new answer becomes the branch the owner is reading, and the touch
   // reorders the sidebar by real activity.
-  await prisma.exploreConversation.update({
-    where: { id: input.conversationId },
-    data: { currentLeafId: row.id, updatedAt: new Date() },
-  });
+  if ("expectedCurrentLeafId" in input) {
+    await prisma.exploreConversation.updateMany({
+      where: {
+        id: input.conversationId,
+        currentLeafId: input.expectedCurrentLeafId,
+      },
+      data: { currentLeafId: row.id, updatedAt: new Date() },
+    });
+  } else {
+    await prisma.exploreConversation.update({
+      where: { id: input.conversationId },
+      data: { currentLeafId: row.id, updatedAt: new Date() },
+    });
+  }
 
   const siblings = await prisma.exploreMessage.findMany({
     where: { conversationId: input.conversationId },
@@ -490,66 +517,6 @@ export async function deleteExploreConversation(
     where: { id: conversationId, userId },
   });
   return result.count > 0;
-}
-
-/**
- * Replace the placeholder title with the one the agent produced.
- *
- * `titleFromQuestion` gives a conversation a name the instant it exists, so
- * the sidebar is never blank while the first turn streams; this swaps in the
- * model's summary once that turn finishes. The agent already runs structured
- * output, so the title rides along with the answer and costs no extra
- * completion — and it is written having seen the whole first exchange rather
- * than the question alone.
- *
- * Conditioned on the placeholder still being in place, in one statement rather
- * than a read-then-write: that makes it self-limiting to the first turn and
- * makes it impossible to clobber a rename, without either check racing.
- *
- * The placeholder is derived here rather than taken from the caller, and that
- * is the whole guard. A caller holding "the conversation's title" holds the
- * placeholder only on the very first turn; on every later one it holds whatever
- * the title has since become, so passing it in made the predicate compare a
- * value to itself and match unconditionally — replacing established generated
- * titles and manual renames alike. Recomputing it from the opening question
- * leaves no way to ask the wrong question.
- */
-export async function applyGeneratedTitle(
-  prisma: ExtendedPrismaClient,
-  input: { conversationId: string; title: string },
-): Promise<string> {
-  const conversation = await prisma.exploreConversation.findUnique({
-    where: { id: input.conversationId },
-    include: {
-      // The earliest root is the question `startExploreTurn` named the
-      // conversation after. Editing the opening question forks a *sibling*
-      // root rather than replacing it, so ordering matters.
-      messages: {
-        where: { parentId: null, role: "user" },
-        orderBy: { createdAt: "asc" },
-        take: 1,
-      },
-    },
-  });
-  if (conversation === null) {
-    throw new ExploreNotFoundError("Conversation not found.");
-  }
-  const opening = conversation.messages[0];
-  if (opening === undefined) {
-    throw new Error(
-      `Explore conversation ${input.conversationId} has no opening question.`,
-    );
-  }
-  const placeholder = titleFromQuestion(opening.content);
-  const title = titleFromQuestion(input.title);
-  if (title === placeholder || title.length === 0) {
-    return conversation.title;
-  }
-  const result = await prisma.exploreConversation.updateMany({
-    where: { id: input.conversationId, title: placeholder },
-    data: { title },
-  });
-  return result.count > 0 ? title : conversation.title;
 }
 
 export async function renameExploreConversation(
