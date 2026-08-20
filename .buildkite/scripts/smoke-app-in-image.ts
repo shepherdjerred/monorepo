@@ -455,6 +455,7 @@ const commands: Record<
       APPLICATION_ID: "000000000000000000",
       RIOT_API_KEY: "smoke-test-dummy",
       DATABASE_URL: "file:/tmp/smoke-test.db",
+      ENABLE_BACKGROUND_JOBS: "false",
       REPORT_LAKE_DIR: "/tmp/report-lake",
       PORT: "18791",
     },
