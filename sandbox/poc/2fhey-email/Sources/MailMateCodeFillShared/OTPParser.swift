@@ -21,7 +21,7 @@ public struct OTPParser {
     )
     private static let urlPattern = makeExpression("(?i)https?://\\S+")
     private static let bareURLPattern = makeExpression(
-        "(?i)(?<![\\p{L}\\p{N}@])(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+[A-Z]{2,}(?:/[^\\s]*)?"
+        "(?i)(?<![\\p{L}\\p{N}@.])(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?::\\d{1,5})?(?:/[^\\s]*)?"
     )
     private static let emailPattern = makeExpression("(?i)[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}")
     private static let senderMailboxPattern = makeExpression("(?i)^[A-Z0-9._%+-]+@([A-Z0-9.-]+)$")

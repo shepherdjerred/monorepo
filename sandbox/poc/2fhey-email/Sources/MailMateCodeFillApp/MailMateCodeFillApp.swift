@@ -39,13 +39,9 @@ final class MailMateCodeFillAppDelegate: NSObject, NSApplicationDelegate {
         // reports that launch finished. Check again on the next run-loop turn and when the app
         // becomes active so that marker ownership is acknowledged during this launch, never a
         // later user launch.
-        DispatchQueue.main.async { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             self?.acknowledgeBrokerRequestIfPresent()
         }
-    }
-
-    func applicationDidBecomeActive(_ notification: Notification) {
-        acknowledgeBrokerRequestIfPresent()
     }
 
     private func consumeBrokerRequest() -> Bool {
