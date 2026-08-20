@@ -30,10 +30,15 @@ public struct OTPParser {
     private static let phoneNumberPattern = makeExpression(
         "(?<![\\p{L}\\p{N}])\\(?\\d{3}\\)?[ .-]\\d{4}(?![\\p{L}\\p{N}])"
     )
+    private static let numericProsePattern = makeExpression(
+        "(?i)(?<![\\p{L}\\p{N}])\\d{1,4}[ \\x{00A0}\\x{2007}\\x{202F}]+(?:sec(?:ond)?s?|min(?:ute)?s?|h(?:our)?s?|day?s?|week?s?|month?s?|year?s?|am|pm|utc|gmt|cet|cest|est|edt|pst|pdt|bst|jst|aest|aedt)(?![\\p{L}\\p{N}])"
+    )
     private static let datePattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,\\s*|\\s+)\\d{4}|\\d{1,2}(?:st|nd|rd|th)?\\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{4})(?![\\p{L}\\p{N}])"
     )
-    private static let uriPattern = makeExpression("(?i)(?<![\\p{L}\\p{N}])[A-Z][A-Z0-9+.-]*://\\S+")
+    private static let uriPattern = makeExpression(
+        "(?i)(?<![\\p{L}\\p{N}])(?!(?:code|otp|pin|passcode):)[A-Z][A-Z0-9+.-]*:\\S+"
+    )
     private static let bareURLPattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}@.])(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?::\\d{1,5})?(?:[/?#][^\\s]*)?"
     )
@@ -85,10 +90,12 @@ public struct OTPParser {
             guard !Self.isInsideGroupedToken(body: sanitizedBody, range: match.range, rawCode: rawCode) else {
                 return nil
             }
-            let explicitLabel = explicitLabelRanges.contains { labelRange in
-                NSMaxRange(labelRange.range) <= match.range.location &&
-                    match.range.location - NSMaxRange(labelRange.range) <= 28
-            }
+            let explicitLabel = Self.hasExplicitLabel(
+                body: sanitizedBody,
+                labelRanges: explicitLabelRanges,
+                candidateRange: match.range,
+                maximumGap: 28
+            )
             guard let normalized = Self.normalizeCandidate(rawCode: rawCode, range: match.range, hasExplicitLabel: explicitLabel) else {
                 return nil
             }
@@ -96,10 +103,11 @@ public struct OTPParser {
             guard code.count >= 4, code.count <= 8, code.rangeOfCharacter(from: .decimalDigits) != nil else {
                 return nil
             }
-            let hasDirectExplicitLabel = Self.hasDirectExplicitLabel(
+            let hasDirectExplicitLabel = Self.hasExplicitLabel(
                 body: sanitizedBody,
                 labelRanges: explicitLabelRanges,
-                candidateRange: normalized.range
+                candidateRange: normalized.range,
+                maximumGap: 8
             )
             guard !Self.isFalsePositive(
                 body: sanitizedBody,
@@ -152,6 +160,11 @@ public struct OTPParser {
         }) {
             return true
         }
+        if Self.numericProsePattern.matches(in: body, range: NSRange(body.startIndex..., in: body)).contains(where: {
+            NSIntersectionRange($0.range, range).length > 0
+        }) {
+            return true
+        }
         if code.allSatisfy(\.isNumber), code.count >= 7, !hasDirectExplicitLabel,
            Self.phoneDeliveryPattern.firstMatch(in: context, range: NSRange(context.startIndex..., in: context)) != nil {
             return true
@@ -162,15 +175,16 @@ public struct OTPParser {
         return false
     }
 
-    private static func hasDirectExplicitLabel(
+    private static func hasExplicitLabel(
         body: String,
         labelRanges: [NSTextCheckingResult],
-        candidateRange: NSRange
+        candidateRange: NSRange,
+        maximumGap: Int
     ) -> Bool {
         labelRanges.contains { labelRange in
             let labelEnd = NSMaxRange(labelRange.range)
             let gapLength = candidateRange.location - labelEnd
-            guard gapLength >= 0, gapLength <= 8,
+            guard gapLength >= 0, gapLength <= maximumGap,
                   let gapRange = Range(NSRange(location: labelEnd, length: gapLength), in: body) else {
                 return false
             }

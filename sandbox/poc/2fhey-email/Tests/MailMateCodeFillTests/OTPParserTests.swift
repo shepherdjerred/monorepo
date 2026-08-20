@@ -97,9 +97,14 @@ func rejectsFalsePositives() {
     #expect(OTPParser().parse(body: "Expires on 20th August 2026.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Open example.com?code=482913 to continue.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Open myapp://verify?code=482913 to continue.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "Open myapp:verify?code=482913 to continue.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "Open otpauth:totp/acme?secret=482913 to continue.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "Expires in 30 mins. Use 482913 to sign in.", metadata: metadata)?.code == "482913")
     #expect(OTPParser().parse(body: "Your code was texted to 555-1234.", metadata: metadata) == nil)
     let subjectLabelMetadata = MessageMetadata(sender: "Billing <billing@example.test>", subject: "Your verification code", date: nil, messageID: "message-subject-phone")
     #expect(OTPParser().parse(body: "Phone: 4155550", metadata: subjectLabelMetadata) == nil)
+    #expect(OTPParser().parse(body: "2-factor authentication has been enabled", metadata: subjectLabelMetadata) == nil)
+    #expect(OTPParser().parse(body: "Code:482913", metadata: subjectLabelMetadata)?.code == "482913")
 }
 
 @Test("keeps a long code when an unrelated address appears in the body")
