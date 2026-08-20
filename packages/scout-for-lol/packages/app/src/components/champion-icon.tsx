@@ -20,6 +20,7 @@ export function ChampionIcon(props: {
   championName: string;
   size?: "sm" | "md";
   className?: string;
+  decorative?: boolean;
 }) {
   const display = championNameToDisplayName(props.championName);
   const pixels = props.size === "md" ? 40 : 32;
@@ -27,7 +28,7 @@ export function ChampionIcon(props: {
   return (
     <img
       src={getChampionImageUrl(props.championName)}
-      alt={display}
+      alt={props.decorative === true ? "" : display}
       title={display}
       width={pixels}
       height={pixels}

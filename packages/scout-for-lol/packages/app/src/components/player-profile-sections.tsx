@@ -129,7 +129,7 @@ export function ChampionPoolTable(props: {
             <TableRow key={row.championId}>
               <TableCell>
                 <span className="flex items-center gap-2">
-                  <ChampionIcon championName={row.championName} />
+                  <ChampionIcon championName={row.championName} decorative />
                   {championNameToDisplayName(row.championName)}
                 </span>
               </TableCell>
@@ -215,39 +215,39 @@ export function MatchHistoryList(props: { entries: MatchEntry[] }) {
           key={entry.matchId}
           className={`flex flex-wrap items-center gap-3 rounded-md border p-3 ${
             entry.win
-              ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/30"
-              : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30"
+              ? "border-scout-success bg-scout-success/10"
+              : "border-scout-danger bg-scout-danger/10"
           }`}
         >
           <ChampionIcon championName={entry.championName} size="md" />
           <div className="min-w-32">
-            <p className="text-sm font-medium">
+            <p className="text-sm font-medium text-scout-ink">
               {entry.win ? "Victory" : "Defeat"}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-scout-ink">
               {entry.queue ?? "Unknown queue"} ·{" "}
               {Math.round(entry.gameDurationSeconds / 60).toString()}m ·{" "}
               {formatRelative(entry.gameCreationMs)}
             </p>
           </div>
           <div className="min-w-28">
-            <p className="text-sm font-medium">
+            <p className="text-sm font-medium text-scout-ink">
               {entry.kills.toString()} / {entry.deaths.toString()} /{" "}
               {entry.assists.toString()}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-scout-ink">
               {formatKda(entry.kills, entry.deaths, entry.assists)} KDA
             </p>
           </div>
           <div className="min-w-28">
-            <p className="text-sm">
+            <p className="text-sm text-scout-ink">
               {entry.creepScore.toString()} CS
-              <span className="text-muted-foreground">
+              <span className="text-scout-ink">
                 {" "}
                 ({entry.csPerMinute.toFixed(1)}/m)
               </span>
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-scout-ink">
               {formatPercent(entry.killParticipation)} KP
             </p>
           </div>
