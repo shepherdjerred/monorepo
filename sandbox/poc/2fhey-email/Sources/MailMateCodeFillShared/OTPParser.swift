@@ -44,7 +44,7 @@ public struct OTPParser {
         "(?i)(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,\\s*|\\s+)\\d{4}|\\d{1,2}(?:st|nd|rd|th)?\\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{4})(?![\\p{L}\\p{N}])"
     )
     private static let uriPattern = makeExpression(
-        "(?i)(?<![\\p{L}\\p{N}])(?!(?:code|otp|pin|passcode):)[A-Z][A-Z0-9+.-]*:\\S+"
+        "(?i)(?<![\\p{L}\\p{N}])(?!(?:code|otp|pin|passcode):\\s*\\d{4,8}(?=[\\s.,!?;:]|$))[A-Z][A-Z0-9+.-]*:\\S+"
     )
     private static let bareURLPattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}@.])(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?::\\d{1,5})?(?:[/?#][^\\s]*)?"
@@ -251,6 +251,11 @@ public struct OTPParser {
                 return false
             }
             guard !body[gapRange].contains(where: \.isNewline) else { return false }
+            let hasCloserPrecedingCandidate = candidateRanges.contains { otherRange in
+                otherRange.location > candidateRange.location &&
+                    NSMaxRange(otherRange) <= labelRange.range.location
+            }
+            guard !hasCloserPrecedingCandidate else { return false }
             return !candidateRanges.contains { otherRange in
                 guard otherRange.location > candidateRange.location,
                       otherRange.location >= labelEnd else {
