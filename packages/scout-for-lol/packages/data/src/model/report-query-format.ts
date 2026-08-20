@@ -110,6 +110,10 @@ function formatWhereClause(clause: ReportWhereClause): string {
       (value) => `champion_id = champion(${quote(value.name)})`,
     )
     .with(
+      { kind: "player_ref" },
+      (value) => `player = player(${quote(value.name)})`,
+    )
+    .with(
       { kind: "lookback" },
       (value) =>
         `${value.field} >= CURRENT_TIMESTAMP - INTERVAL '${value.days.toString()} days'`,

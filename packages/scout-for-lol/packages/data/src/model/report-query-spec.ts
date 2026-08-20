@@ -224,6 +224,10 @@ export const ReportQueryPlanSchema = z
     championId: z.number().int().positive().optional(),
     minGames: z.number().int().positive().optional(),
     competitionId: z.number().int().positive().optional(),
+    // Names from `player('…')`, still unresolved. The backend turns these into
+    // PUUIDs at execution; the plan deliberately never carries a PUUID, so
+    // nothing that formats or persists a plan can leak one.
+    playerRefs: z.array(z.string().min(1)).default([]),
     // The time period the query covers. Deliberately has no default: a window
     // that can be omitted is a window nobody states, and an answer computed
     // over a narrower period than the reader assumed is indistinguishable from
@@ -320,6 +324,11 @@ export type ReportWhereClause =
   | { kind: "queue"; values: string[]; span: ReportQuerySpan }
   | { kind: "champion_id"; value: number; span: ReportQuerySpan }
   | { kind: "champion"; name: string; span: ReportQuerySpan }
+  // An unresolved player identity: a Scout alias, a Riot ID, or a bare game
+  // name. Stays unresolved through parse, format, and lint — resolving it to
+  // PUUIDs needs the lake plus a guild-scoped permission check, neither of
+  // which belongs in a pure module that also runs in the browser.
+  | { kind: "player_ref"; name: string; span: ReportQuerySpan }
   | {
       kind: "lookback";
       field: "game_creation_at" | "observed_at";

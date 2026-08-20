@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { parseAndCompile } from "#src/model/report-query-compile.ts";
 import { parseReportQuery } from "#src/model/report-query-parser.ts";
 import { lintReportQuery } from "#src/model/report-query-lint.ts";
+import { formatReportQuery } from "#src/model/report-query-format.ts";
 import { completeReportQuery } from "#src/model/report-query-complete.ts";
 import { reportChampionLiteral } from "#src/model/report-query-champions.ts";
 import { REPORT_WINDOW_REQUIRED_MESSAGE } from "#src/model/report-query-window.ts";
@@ -286,6 +287,42 @@ describe("a required time period", () => {
         lintReportQuery(repaired).filter((d) => d.severity === "error"),
       ).toEqual([]);
     }
+  });
+});
+
+describe("player('…') identity references", () => {
+  const QUERY =
+    "SELECT games FROM match_participants WHERE player = player('Long') GROUP BY player DURING ALL TIME";
+
+  test("keeps the name unresolved on the plan", () => {
+    expect(parseAndCompile(QUERY).playerRefs).toEqual(["Long"]);
+  });
+
+  // The property the whole design rests on. Stored query text is served to
+  // anonymous holders of a share link, baked into markdown exports, and
+  // replayed into the model's context on every follow-up — so the human name
+  // has to survive formatting, and a resolved PUUID must never reach it.
+  test("round-trips through the formatter as the author wrote it", () => {
+    expect(formatReportQuery(QUERY)).toContain("player = player('Long')");
+    expect(formatReportQuery(formatReportQuery(QUERY))).toBe(
+      formatReportQuery(QUERY),
+    );
+  });
+
+  test("switches quoting for a name containing an apostrophe", () => {
+    const query = `SELECT games FROM match_participants WHERE player = player("O'Brien") GROUP BY player DURING ALL TIME`;
+    expect(parseAndCompile(query).playerRefs).toEqual(["O'Brien"]);
+    expect(formatReportQuery(query)).toContain(`player = player("O'Brien")`);
+  });
+
+  test("a plain Riot ID on the left keeps working", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants WHERE player = 'Faker#NA1' GROUP BY player DURING ALL TIME",
+    );
+    expect(plan.playerRefs).toEqual([]);
+    expect(plan.filters).toEqual([
+      { field: "player", operator: "=", values: ["faker#na1"] },
+    ]);
   });
 });
 

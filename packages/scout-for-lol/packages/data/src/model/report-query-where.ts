@@ -19,6 +19,8 @@ export type ReportWhereFilters = {
   minGames?: number;
   competitionId?: number;
   lookbackDays?: number;
+  /** Names from `player('…')`, still unresolved — see the plan's player_ref. */
+  playerRefs?: string[];
   filters: ReportFilter[];
 };
 
@@ -40,6 +42,9 @@ export function compileReportWhere(
       })
       .with({ kind: "champion" }, (value) => {
         filters.championId = requireReportChampion(value.name).id;
+      })
+      .with({ kind: "player_ref" }, (value) => {
+        filters.playerRefs = [...(filters.playerRefs ?? []), value.name];
       })
       .with({ kind: "lookback" }, (value) => {
         const expectedField =

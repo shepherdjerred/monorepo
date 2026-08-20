@@ -20,6 +20,7 @@ export * from "./rank.ts";
 export * from "./report.ts";
 export * from "./explore.ts";
 export * from "./report-ai.ts";
+export * from "./report-query-call-forms.ts";
 export * from "./report-query-spec.ts";
 export * from "./report-query-window.ts";
 export * from "./report-query-expression.ts";

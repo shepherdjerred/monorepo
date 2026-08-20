@@ -38,6 +38,10 @@ import {
   Where,
 } from "#src/model/report-query-lexer.ts";
 import {
+  matchChampionClause,
+  matchPlayerClause,
+} from "#src/model/report-query-call-forms.ts";
+import {
   firstPositive,
   indexOfGroupBy,
   indexOfType,
@@ -390,6 +394,10 @@ function matchComparisonClause(
   if (champion !== undefined) {
     return champion;
   }
+  const playerRef = matchPlayerClause(slice, span);
+  if (playerRef !== undefined) {
+    return playerRef;
+  }
   const lookback = matchLookbackClause(slice, span);
   if (lookback !== undefined) {
     return lookback;
@@ -444,24 +452,6 @@ function comparisonOperator(token: IToken): string | undefined {
   if (token.tokenType === Greater) return ">";
   if (token.tokenType === GreaterEqual) return ">=";
   return undefined;
-}
-
-function matchChampionClause(
-  slice: IToken[],
-  span: ReportQuerySpan,
-): ReportWhereClause | undefined {
-  if (
-    normalize(slice[0]?.image ?? "") !== "champion_id" ||
-    slice[1]?.tokenType !== Equals ||
-    normalize(slice[2]?.image ?? "") !== "champion" ||
-    slice[3]?.tokenType !== LParen ||
-    slice[4]?.tokenType !== StringLiteral ||
-    slice[5]?.tokenType !== RParen ||
-    slice.length !== 6
-  ) {
-    return undefined;
-  }
-  return { kind: "champion", name: unquote(slice[4].image), span };
 }
 
 function matchLookbackClause(

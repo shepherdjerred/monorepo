@@ -15,7 +15,21 @@ export type ReportFilterInfo = {
 };
 
 const FILTER_DATA: [string, string, string][] = [
-  ["player", 'player = "<name>"', "Restrict to a player alias."],
+  [
+    "player",
+    'player = "<name>"',
+    "Restrict to one Riot ID exactly as recorded on the match. Matches only games played under that exact name — prefer player('<name>').",
+  ],
+  [
+    "player_call",
+    "player = player('<name>')",
+    "Restrict to a person: a Scout alias, a Riot ID, or a game name. Resolves to every account and every past name that person has used, so renames and alt accounts are included. Call resolve_player first to confirm who it matches.",
+  ],
+  [
+    "champion_call",
+    "champion_id = champion('<Display Name>')",
+    "Restrict to a champion by display name. Always prefer this over a raw numeric champion id.",
+  ],
   ["queue", "queue IN (solo, flex, …)", "Restrict to queue types."],
   ["champion_id", "champion_id = <number>", "Restrict to a champion id."],
   [

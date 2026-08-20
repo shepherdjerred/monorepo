@@ -182,6 +182,7 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
     championId: filters.championId,
     minGames: filters.minGames,
     competitionId: filters.competitionId,
+    playerRefs: filters.playerRefs ?? [],
     window,
     analysis,
     filters: filters.filters,
