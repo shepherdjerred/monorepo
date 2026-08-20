@@ -10,6 +10,7 @@ import {
   selectCaptains,
   snapshotCustomParticipant,
 } from "#src/customs/draft.ts";
+import { refreshCustomParticipantMappings } from "#src/customs/participant-mapping.ts";
 import {
   commitCustomMutation,
   getCustomNight,
@@ -113,6 +114,12 @@ export async function substituteCustomPlayer(params: {
   now?: Date;
 }): Promise<CustomMutationResult> {
   const now = params.now ?? new Date();
+  const original = await getCustomNight(params.prisma, params.nightId);
+  if (original === null) throw new Error("Custom night not found");
+  const refreshedParticipants = await refreshCustomParticipantMappings({
+    prisma: params.prisma,
+    snapshot: original,
+  });
   return await commitCustomMutation({
     ...params,
     actorDiscordId: params.actor.discordId,
@@ -152,22 +159,38 @@ export async function substituteCustomPlayer(params: {
       const incoming = snapshot.participants.find(
         (participant) => participant.discordId === params.incomingDiscordId,
       );
+      const refreshedIncoming = refreshedParticipants.find(
+        (participant) => participant.discordId === params.incomingDiscordId,
+      );
       if (outgoing === undefined || incoming === undefined)
         throw new Error("Both substitution players must belong to this night");
+      if (refreshedIncoming === undefined)
+        throw new Error("The incoming player is no longer in this night");
+      const participants = snapshot.participants.map((participant) =>
+        participant.discordId === refreshedIncoming.discordId
+          ? refreshedIncoming
+          : participant,
+      );
       const replacement = {
-        ...snapshotCustomParticipant(incoming, outgoing.rosterOrder),
+        ...snapshotCustomParticipant(refreshedIncoming, outgoing.rosterOrder),
         team: outgoing.team,
         side: outgoing.side,
         captain: outgoing.captain,
       };
-      const participants = game.participants.map((participant) =>
+      const gameParticipants = game.participants.map((participant) =>
         participant.discordId === outgoing.discordId
           ? replacement
           : participant,
       );
-      assertRosterLockable(nightRoster(snapshot, participants));
+      assertRosterLockable(
+        nightRoster({ ...snapshot, participants }, gameParticipants),
+      );
       return refreshSnapshot(
-        { ...snapshot, currentGame: { ...game, participants } },
+        {
+          ...snapshot,
+          participants,
+          currentGame: { ...game, participants: gameParticipants },
+        },
         now,
       );
     },

@@ -13,10 +13,18 @@ async function cleanupCustomVoiceOperation(
   const guild = await customsDiscordClient.guilds.fetch(snapshot.guildId);
   const lobby = await guild.channels
     .fetch(snapshot.voiceLobbyChannelId)
-    .then((channel) =>
-      channel?.type === ChannelType.GuildVoice ? channel : null,
-    )
-    .catch(() => null);
+    .then((channel) => {
+      if (channel === null) return null;
+      if (channel.type !== ChannelType.GuildVoice)
+        throw new Error(
+          "The configured Customs voice lobby is not a guild voice channel",
+        );
+      return channel;
+    })
+    .catch((error) => {
+      if (isMissingChannelError(error)) return null;
+      throw error;
+    });
   const ownedIds = [
     snapshot.teamAVoiceChannelId,
     snapshot.teamBVoiceChannelId,

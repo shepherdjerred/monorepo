@@ -54,7 +54,10 @@ export function CustomsDashboard({
   const trpc = useTRPC();
   const applySnapshot = useApplyCustomSnapshot();
   const capabilities = useQuery(
-    trpc.customs.capabilities.queryOptions(undefined, { staleTime: 30_000 }),
+    trpc.customs.capabilities.queryOptions(undefined, {
+      refetchInterval: 30_000,
+      staleTime: 30_000,
+    }),
   );
   const end = useMutation(trpc.customs.endNight.mutationOptions());
   const hostControl =

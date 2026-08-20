@@ -40,6 +40,7 @@ const NUMBER_IDENTITY_KEYS = new Set([
   "selectedAccountId",
 ]);
 const FREE_TEXT_KEYS = new Set([
+  "error",
   "failure",
   "failures",
   "message",
@@ -156,6 +157,10 @@ function anonymizeGameSnapshot(
     participants: game.participants.filter(
       (participant) => participant.discordId !== discordId,
     ),
+    voiceError:
+      game.voiceError === null
+        ? null
+        : redactText(game.voiceError, sensitive.strings),
     repeatChampionWarnings: game.repeatChampionWarnings.map((warning) =>
       redactText(warning, sensitive.strings),
     ),
