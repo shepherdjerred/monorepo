@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,14 +53,17 @@ export function CustomsDashboard({
     throw new Error("Joined Activity user is missing from the night");
   const trpc = useTRPC();
   const applySnapshot = useApplyCustomSnapshot();
+  const capabilities = useQuery(
+    trpc.customs.capabilities.queryOptions(undefined, { staleTime: 30_000 }),
+  );
   const end = useMutation(trpc.customs.endNight.mutationOptions());
   const hostControl =
     snapshot.hostDiscordId === participant.discordId ||
     snapshot.cohostDiscordIds.includes(participant.discordId) ||
-    participant.role === "ADMIN";
+    capabilities.data?.discordAdministrator === true;
   const canDelegateCohosts =
     snapshot.hostDiscordId === participant.discordId ||
-    participant.role === "ADMIN";
+    capabilities.data?.discordAdministrator === true;
   const endNight = async () => {
     try {
       applySnapshot(

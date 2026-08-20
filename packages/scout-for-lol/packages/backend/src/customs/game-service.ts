@@ -29,6 +29,7 @@ import {
   type CustomMutationResult,
 } from "#src/customs/repository.ts";
 import { refreshSnapshot } from "#src/customs/snapshot.ts";
+import { refreshCustomParticipantMappings } from "#src/customs/participant-mapping.ts";
 import type { CustomActor } from "#src/customs/service.ts";
 
 function currentGame(snapshot: CustomNightSnapshot) {
@@ -55,8 +56,12 @@ export async function prepareCustomGame(params: {
     params.actor.discordId,
     params.actor.discordAdministrator,
   );
+  const participants = await refreshCustomParticipantMappings({
+    prisma: params.prisma,
+    snapshot: original,
+  });
   const roster = selectCustomRoster({
-    participants: original.participants,
+    participants,
     mode: params.rosterMode,
     selectedDiscordIds: params.selectedDiscordIds,
   });
@@ -107,7 +112,7 @@ export async function prepareCustomGame(params: {
         completedAt: null,
       });
       return refreshSnapshot(
-        { ...snapshot, state, currentGame: currentGameSnapshot },
+        { ...snapshot, state, participants, currentGame: currentGameSnapshot },
         now,
       );
     },

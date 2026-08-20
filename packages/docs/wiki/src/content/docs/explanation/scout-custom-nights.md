@@ -26,6 +26,10 @@ flowchart LR
   D --> H[Private Scout guild history]
 ```
 
+The [custom-night repository](https://github.com/shepherdjerred/monorepo/blob/c16cb65c4eb4bde0e3a5c04a05d8f18977a411de/packages/scout-for-lol/packages/backend/src/customs/repository.ts)
+owns revisioned snapshots, while the [customs reconciler](https://github.com/shepherdjerred/monorepo/blob/c16cb65c4eb4bde0e3a5c04a05d8f18977a411de/packages/scout-for-lol/packages/backend/src/customs/reconciler.ts)
+recovers work after process or Activity restarts.
+
 ## The Activity is deliberately disposable
 
 Several friends can open or close the Activity during the same night. Discord's
@@ -38,6 +42,9 @@ revision the client saw. Scout commits a validated XState snapshot, normalized
 projections, and an audit event together. A stale command changes nothing and
 returns the newest complete snapshot. WebSocket messages use the same complete
 snapshots, so reconnecting never requires replaying an Activity's local history.
+The [Activity router](https://github.com/shepherdjerred/monorepo/blob/c16cb65c4eb4bde0e3a5c04a05d8f18977a411de/packages/scout-for-lol/packages/backend/src/trpc/router/customs.router.ts)
+and [snapshot socket](https://github.com/shepherdjerred/monorepo/blob/c16cb65c4eb4bde0e3a5c04a05d8f18977a411de/packages/scout-for-lol/packages/backend/src/customs/socket.ts)
+expose that contract to clients.
 
 ## A night contains games, not the reverse
 
@@ -50,6 +57,8 @@ rerolling a captain within each team, or redrafting with old or new captains all
 start from the previous game's immutable participant snapshot. Sitting out one
 game also breaks the consecutive-game champion comparison; Scout never compares
 against a game the player did not play.
+The [custom game service](https://github.com/shepherdjerred/monorepo/blob/c16cb65c4eb4bde0e3a5c04a05d8f18977a411de/packages/scout-for-lol/packages/backend/src/customs/game-service.ts)
+creates and advances those game snapshots.
 
 Availability stays outside both state machines. “Back in five” temporarily
 removes someone from the ready count. Passing the deadline marks them overdue
@@ -69,6 +78,9 @@ per night and one allowlisted code per game. A callback is preferred, polling
 recovers a missing callback, and a host can record a manual winner so another
 game can begin. A later Riot result replaces that manual answer without erasing
 the disagreement from the audit log.
+The [voice service](https://github.com/shepherdjerred/monorepo/blob/c16cb65c4eb4bde0e3a5c04a05d8f18977a411de/packages/scout-for-lol/packages/backend/src/customs/voice.ts)
+and [Riot result service](https://github.com/shepherdjerred/monorepo/blob/c16cb65c4eb4bde0e3a5c04a05d8f18977a411de/packages/scout-for-lol/packages/backend/src/customs/riot-results.ts)
+implement these external boundaries.
 
 ## Private history is not a rating system
 
@@ -84,3 +96,6 @@ they never enter Scout's global report lake or Explore data. An operator-only
 anonymization path removes a participant's consent and identity snapshots,
 deletes the affected night's detailed Match-V5 payloads, and retains an audit
 record that privacy work occurred.
+The [custom history router](https://github.com/shepherdjerred/monorepo/blob/c16cb65c4eb4bde0e3a5c04a05d8f18977a411de/packages/scout-for-lol/packages/backend/src/trpc/router/customs-history.ts)
+and [anonymization service](https://github.com/shepherdjerred/monorepo/blob/c16cb65c4eb4bde0e3a5c04a05d8f18977a411de/packages/scout-for-lol/packages/backend/src/customs/anonymize.ts)
+enforce those privacy boundaries.

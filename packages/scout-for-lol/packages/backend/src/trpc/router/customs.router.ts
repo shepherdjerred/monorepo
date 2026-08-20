@@ -81,6 +81,11 @@ export const customsRouter = router({
     return await getActiveCustomNight(prisma, ctx.activitySession.guildId);
   }),
 
+  capabilities: activityProcedure.query(async ({ ctx }) => {
+    const actor = await customActorForSession(ctx.activitySession);
+    return { discordAdministrator: actor.discordAdministrator };
+  }),
+
   createNight: activityProcedure
     .input(
       CustomCreateNightInputSchema.omit({

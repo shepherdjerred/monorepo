@@ -276,6 +276,28 @@ async function reconcileEndedVoiceCleanup(
   }
 }
 
+async function reconcilePendingRecruitmentCleanup(
+  database: ExtendedPrismaClient,
+): Promise<void> {
+  const pending = await database.customAuditEvent.findMany({
+    where: { action: "RECRUITMENT_MESSAGE_CLEANUP_PENDING" },
+    select: { nightId: true },
+    distinct: ["nightId"],
+  });
+  for (const { nightId } of pending) {
+    const snapshot = await getCustomNight(database, nightId);
+    if (snapshot === null) continue;
+    try {
+      await syncCustomRecruitmentMessage({ prisma: database, snapshot });
+    } catch (error) {
+      logger.error("Pending custom recruitment cleanup failed", {
+        error,
+        nightId,
+      });
+    }
+  }
+}
+
 export async function retryPendingCustomImports(
   database: ExtendedPrismaClient,
   importGame: typeof importCustomMatchDetails = importCustomMatchDetails,
@@ -363,6 +385,7 @@ export async function reconcileCustomNights(
     }
   }
   await reconcileEndedVoiceCleanup(database);
+  await reconcilePendingRecruitmentCleanup(database);
   await retryPendingCustomImports(database);
 }
 
