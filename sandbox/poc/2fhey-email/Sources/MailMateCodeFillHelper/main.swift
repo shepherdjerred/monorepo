@@ -97,12 +97,14 @@ private func requestIdentityReconciliation() {
         return
     }
 
+    writeBrokerRequestMarker()
+
     if let bundleIdentifier = Bundle(url: appURL)?.bundleIdentifier,
        NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).contains(where: { !$0.isTerminated }) {
+        removeBrokerRequestMarker()
         CodeFillObservability.helperLogger.info("event=identity_reconciliation outcome=already_running")
         return
     }
-    writeBrokerRequestMarker()
 
     let configuration = NSWorkspace.OpenConfiguration()
     configuration.activates = false
@@ -129,6 +131,22 @@ private func writeBrokerRequestMarker() {
         try Data().write(to: markerURL, options: .atomic)
     } catch {
         CodeFillObservability.helperLogger.error("event=identity_reconciliation outcome=marker_write_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
+    }
+}
+
+private func removeBrokerRequestMarker() {
+    guard let containerURL = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier
+    ) else {
+        return
+    }
+    let markerURL = containerURL.appendingPathComponent(CodeFillConfiguration.brokerRequestFileName)
+    do {
+        try FileManager.default.removeItem(at: markerURL)
+    } catch CocoaError.fileNoSuchFile {
+        return
+    } catch {
+        CodeFillObservability.helperLogger.error("event=identity_reconciliation outcome=marker_remove_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
     }
 }
 

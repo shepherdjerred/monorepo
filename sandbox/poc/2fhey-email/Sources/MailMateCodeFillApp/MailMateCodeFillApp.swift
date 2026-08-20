@@ -51,6 +51,7 @@ final class MailMateCodeFillAppDelegate: NSObject, NSApplicationDelegate {
             try FileManager.default.removeItem(at: markerURL)
         } catch {
             CodeFillObservability.appLogger.error("event=broker_request outcome=marker_remove_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
+            return false
         }
         return true
     }
