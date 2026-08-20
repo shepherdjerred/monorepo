@@ -178,7 +178,7 @@ export function ReportFormFields(props: {
         )}
         <CollapsibleContent className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label>Query</Label>
+            <p className="scout-label">Query</p>
             {queryHelpHref !== undefined && (
               <Button asChild variant="link" size="sm">
                 <Link to={queryHelpHref}>Full reference</Link>

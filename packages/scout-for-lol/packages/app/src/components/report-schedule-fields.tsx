@@ -6,7 +6,6 @@ import {
   ReportScheduleTimezoneSchema,
 } from "@scout-for-lol/data/model/competition-cron.ts";
 import { Input } from "@scout-for-lol/design-system/components/input";
-import { Label } from "@scout-for-lol/design-system/components/label";
 import {
   Select,
   SelectContent,
@@ -77,7 +76,7 @@ export function ReportScheduleFields(props: {
 
   return (
     <div className="space-y-3">
-      <Label>Schedule</Label>
+      <p className="scout-label">Schedule</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <Select
           value={selectValue}

@@ -26,7 +26,10 @@ import {
 import type { User } from "#generated/prisma/client/index.js";
 import { prisma } from "#src/database/index.ts";
 import { client as discordClient } from "#src/discord/client.ts";
-import { hasAdministrator } from "#src/lib/discord-rest.ts";
+import {
+  hasAdministrator,
+  isDevGuildOverrideGuild,
+} from "#src/lib/discord-rest.ts";
 import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 import { webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
 
@@ -60,7 +63,10 @@ export async function resolveGuildPermissions(
       message: "You are not a member of that guild",
     });
   }
-  if (!discordClient.guilds.cache.has(guildId)) {
+  if (
+    !discordClient.guilds.cache.has(guildId) &&
+    !isDevGuildOverrideGuild(guildId)
+  ) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Scout is not installed in that guild",

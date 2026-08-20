@@ -269,7 +269,7 @@ export function PlayerDetail() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">{alias}</h2>
+          <h1 className="text-xl font-semibold tracking-tight">{alias}</h1>
           <p className="text-sm text-scout-subtle">
             Updated {formatDate(player.updatedTime)}
           </p>

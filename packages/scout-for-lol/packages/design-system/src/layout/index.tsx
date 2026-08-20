@@ -107,6 +107,7 @@ function NavLinks(props: {
 }
 
 export function GlobalNavbar(props: {
+  landmark?: "header" | "div";
   signedIn?: boolean | undefined;
   currentPath?: string | undefined;
   utility?: ReactNode | undefined;
@@ -117,8 +118,9 @@ export function GlobalNavbar(props: {
   showGetStarted?: boolean | undefined;
   origins?: ScoutSurfaceOrigins | undefined;
 }) {
+  const Landmark = props.landmark ?? "header";
   return (
-    <header className="scout-navbar">
+    <Landmark className="scout-navbar">
       <Container className="scout-navbar__inner">
         <a
           href={surfaceHref(props.origins?.marketing, "/")}
@@ -171,7 +173,7 @@ export function GlobalNavbar(props: {
           </div>
         </div>
       </Container>
-    </header>
+    </Landmark>
   );
 }
 

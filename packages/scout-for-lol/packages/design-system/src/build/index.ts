@@ -86,9 +86,17 @@ export function scoutAssetStreamFailureAction(
   return headersSent ? "destroy" : "not-found";
 }
 
-function configureAssetServer(middlewares: Connect.Server): void {
+function configureAssetServer(
+  middlewares: Connect.Server,
+  base: string,
+): void {
+  const basePrefix = base === "/" ? "" : base.replace(/\/$/, "");
   middlewares.use((request, response, next) => {
-    const url = request.url?.split("?")[0];
+    const requestPath = request.url?.split("?")[0];
+    const url =
+      basePrefix.length > 0 && requestPath?.startsWith(`${basePrefix}/`)
+        ? requestPath.slice(basePrefix.length)
+        : requestPath;
     if (url === "/assets/scout/brand/theme-bootstrap.js") {
       response.setHeader("content-type", "text/javascript; charset=utf-8");
       response.end(SCOUT_THEME_BOOTSTRAP_SCRIPT);
@@ -141,10 +149,10 @@ export function scoutAssetsPlugin(options: { emit?: boolean } = {}): Plugin {
       outputRoot = resolve(config.root, config.build.outDir);
     },
     configureServer(server) {
-      configureAssetServer(server.middlewares);
+      configureAssetServer(server.middlewares, server.config.base);
     },
     configurePreviewServer(server) {
-      configureAssetServer(server.middlewares);
+      configureAssetServer(server.middlewares, server.config.base);
     },
     async closeBundle() {
       if (options.emit === true) {

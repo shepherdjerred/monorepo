@@ -163,7 +163,12 @@ These are the presets built into the report editor.
   <div>
     <h3>{preset.title}</h3>
     <p>{preset.description}</p>
-    <pre><code>{preset.query}</code></pre>
+    <pre
+      class="max-w-full overflow-x-auto"
+      data-design-audit-allow-overflow
+      tabindex="0"
+      aria-label="Scrollable query example"
+    ><code>{preset.query}</code></pre>
   </div>
 ))}
 

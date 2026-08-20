@@ -1,5 +1,6 @@
 import path from "node:path";
 import { adoptSeedIfUnseeded, resolveBackendLakeDir } from "./dev-lake-seed.ts";
+import { seedDesignAuditDatabase } from "../packages/backend/src/database/design-audit-seed.ts";
 import { requireCliValue, unresolvedSecrets } from "./migration-core.ts";
 
 const DEFAULT_BACKEND_PORT = 3000;
@@ -57,6 +58,9 @@ function defaultDatabaseUrl(
   backendPort: number,
   environment: Readonly<Record<string, string | undefined>>,
 ): string {
+  if (environment["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] === "true") {
+    return "file:./design-audit-local.db";
+  }
   const configured = environment["SCOUT_DEV_DATABASE_URL"];
   if (configured !== undefined) return parseDatabaseUrl(configured);
 
@@ -232,6 +236,21 @@ if (import.meta.main) {
       ENABLE_DISCORD_GATEWAY: options.discordGatewayEnabled ? "true" : "false",
       WEB_APP_ORIGIN: webOrigin,
       REPORT_LAKE_DIR: lakeDir,
+      ...(isDesignAuditBoot
+        ? {
+            JWT_SIGNING_SECRET:
+              Bun.env["JWT_SIGNING_SECRET"] ??
+              "design-audit-local-jwt-signing-secret-32-bytes",
+            DEV_USER_GUILDS:
+              Bun.env["DEV_USER_GUILDS"] ??
+              Bun.env["SCOUT_DESIGN_AUDIT_GUILD_ID"] ??
+              "1337623164146155593",
+            EXPLORE_GUILD_ALLOWLIST:
+              Bun.env["EXPLORE_GUILD_ALLOWLIST"] ??
+              Bun.env["SCOUT_DESIGN_AUDIT_GUILD_ID"] ??
+              "1337623164146155593",
+          }
+        : {}),
     };
 
     console.log(
@@ -252,6 +271,9 @@ if (import.meta.main) {
       throw new Error(
         `Prisma migrations failed with exit code ${migrationExitCode.toString()}`,
       );
+    }
+    if (isDesignAuditBoot) {
+      await seedDesignAuditDatabase(backendCwd);
     }
 
     const backendCommand = options.backendWatchEnabled

@@ -103,6 +103,7 @@ function QueueSelect(props: {
         <label className="flex w-fit cursor-pointer items-center gap-2 text-xs text-scout-subtle">
           <input
             type="checkbox"
+            className="size-6"
             checked={showUnavailable}
             disabled={props.disabled ?? false}
             onChange={(event) => {

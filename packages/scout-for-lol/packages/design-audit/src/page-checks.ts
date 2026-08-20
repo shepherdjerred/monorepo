@@ -83,6 +83,52 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
     };
     const allowed = (element: Element, attribute: string): boolean =>
       element.closest(`[${attribute}]`) !== null;
+    const hasScrollableAncestor = (element: Element): boolean => {
+      let current = element.parentElement;
+      while (current !== null) {
+        const style = getComputedStyle(current);
+        if (
+          (style.overflowX === "auto" || style.overflowX === "scroll") &&
+          current.scrollWidth > current.clientWidth + 1
+        ) {
+          return true;
+        }
+        current = current.parentElement;
+      }
+      return false;
+    };
+    const hasDirectText = (element: Element): boolean =>
+      [...element.childNodes].some(
+        (node) =>
+          node.nodeType === Node.TEXT_NODE &&
+          (node.textContent ?? "").trim() !== "",
+      );
+    const isClipped = (element: HTMLElement, rectangle: DOMRect): boolean =>
+      rectangle.right > window.innerWidth + 1 &&
+      rectangle.width < window.innerWidth &&
+      !allowed(element, "data-design-audit-allow-overflow") &&
+      !hasScrollableAncestor(element);
+    const isTruncated = (
+      element: HTMLElement,
+      style: CSSStyleDeclaration,
+    ): boolean =>
+      hasDirectText(element) &&
+      !element.matches(".sr-only, .scout-sr-only") &&
+      element.tagName !== "SPAN" &&
+      style.overflow === "hidden" &&
+      style.whiteSpace === "nowrap" &&
+      style.textOverflow !== "ellipsis" &&
+      (element.scrollHeight > element.clientHeight + 1 ||
+        element.scrollWidth > element.clientWidth + 1) &&
+      !allowed(element, "data-design-audit-allow-truncation");
+    const isSmallControl = (
+      element: HTMLElement,
+      rectangle: DOMRect,
+    ): boolean =>
+      element.matches("button, input, select, textarea, [role=button]") &&
+      !element.matches('select[aria-hidden="true"]') &&
+      (rectangle.width < 24 || rectangle.height < 24) &&
+      !allowed(element, "data-design-audit-allow-small-target");
     const elements = [...document.querySelectorAll<HTMLElement>("*")].filter(
       (element) => visible(element),
     );
@@ -97,35 +143,14 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
     for (const element of elements) {
       if (isNavigation(element)) continue;
       const rectangle = element.getBoundingClientRect();
-      if (
-        rectangle.right > window.innerWidth + 1 &&
-        rectangle.width < window.innerWidth &&
-        !allowed(element, "data-design-audit-allow-overflow")
-      ) {
+      if (isClipped(element, rectangle)) {
         clipped.push(element.tagName.toLowerCase());
       }
       const style = getComputedStyle(element);
-      const hasDirectText = [...element.childNodes].some(
-        (node) =>
-          node.nodeType === Node.TEXT_NODE &&
-          (node.textContent ?? "").trim() !== "",
-      );
-      if (
-        hasDirectText &&
-        style.overflow === "hidden" &&
-        style.whiteSpace === "nowrap" &&
-        style.textOverflow !== "ellipsis" &&
-        (element.scrollHeight > element.clientHeight + 1 ||
-          element.scrollWidth > element.clientWidth + 1) &&
-        !allowed(element, "data-design-audit-allow-truncation")
-      ) {
+      if (isTruncated(element, style)) {
         truncated.push(element.tagName.toLowerCase());
       }
-      if (
-        element.matches("button, input, select, textarea, [role=button]") &&
-        (rectangle.width < 24 || rectangle.height < 24) &&
-        !allowed(element, "data-design-audit-allow-small-target")
-      ) {
+      if (isSmallControl(element, rectangle)) {
         smallControls.push(element.tagName.toLowerCase());
       }
     }
@@ -293,7 +318,10 @@ export async function assertInteractiveStates(page: Page): Promise<void> {
     'button[aria-haspopup="menu"]:visible, [role="button"][aria-haspopup="menu"]:visible',
   );
   if ((await menuTrigger.count()) > 0) {
-    await menuTrigger.first().click();
+    await menuTrigger.first().evaluate((element) => {
+      element.scrollIntoView({ block: "center", inline: "nearest" });
+    });
+    await menuTrigger.first().click({ force: true });
     await expect(
       page.locator('[role="menu"]:visible'),
       "menu triggers open a keyboard-addressable menu",

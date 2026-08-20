@@ -91,7 +91,7 @@ const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
     </div>
   ) : asList ? (
     <div class={cn(asList ? "relative pl-16" : "flex flex-col", classNames)}>
-      <dt class="text-base font-semibold text-scout-ink ">
+      <div class="text-base font-semibold text-scout-ink ">
         <div
           class={cn(
             "absolute left-0 top-0",
@@ -104,9 +104,9 @@ const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
           {number && <span class="font-semibold">{number}</span>}
         </div>
         {title}
-      </dt>
+      </div>
       {description && (
-        <dd class="mt-2 text-base text-scout-subtle ">{description}</dd>
+        <p class="mt-2 text-base text-scout-subtle ">{description}</p>
       )}
       <slot />
     </div>

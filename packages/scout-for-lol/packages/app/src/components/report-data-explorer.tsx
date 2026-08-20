@@ -37,6 +37,15 @@ const SCOUTQL_INSERTABLE_IDS: ReadonlySet<string> = new Set<string>([
   ...REPORT_FILTERS.map((filter) => filter.id),
 ]);
 
+async function copyToClipboard(value: string): Promise<void> {
+  if (navigator.clipboard === undefined) return;
+  try {
+    await navigator.clipboard.writeText(value);
+  } catch {
+    // Clipboard access is optional in embedded and insecure browser contexts.
+  }
+}
+
 type ExplorerTableId = "match_participants" | "prematch_participants";
 type ExplorerOperator = "eq" | "contains" | "gte" | "lte";
 type ExplorerFilter = {
@@ -157,6 +166,7 @@ export function ReportDataExplorer(props: {
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
+                        className="size-6 shrink-0"
                         checked={selectedColumns.includes(column.id)}
                         onChange={() => {
                           setSelectedColumns((current) =>
@@ -171,10 +181,11 @@ export function ReportDataExplorer(props: {
                     </label>
                     <button
                       type="button"
+                      className="size-6 shrink-0"
                       aria-label={`Copy ${column.id}`}
                       title={`Copy ${column.id}`}
                       onClick={() => {
-                        void navigator.clipboard.writeText(column.id);
+                        void copyToClipboard(column.id);
                         track("data_explorer_action", {
                           action: "copy_column_id",
                         });
@@ -185,6 +196,7 @@ export function ReportDataExplorer(props: {
                     {SCOUTQL_INSERTABLE_IDS.has(column.id) && (
                       <button
                         type="button"
+                        className="size-6 shrink-0"
                         aria-label={`Insert ${column.id} into query`}
                         title={`Insert ${column.id} into query`}
                         onClick={() => {

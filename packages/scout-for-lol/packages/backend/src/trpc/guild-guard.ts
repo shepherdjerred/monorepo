@@ -8,7 +8,10 @@
 import { TRPCError } from "@trpc/server";
 import { ChannelType } from "discord.js";
 import type { User } from "#generated/prisma/client/index.js";
-import { hasAdministrator } from "#src/lib/discord-rest.ts";
+import {
+  hasAdministrator,
+  isDevGuildOverrideGuild,
+} from "#src/lib/discord-rest.ts";
 import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 import { client as discordClient } from "#src/discord/client.ts";
 
@@ -32,7 +35,10 @@ export async function assertGuildAdmin(params: {
       message: "Administrator permission required",
     });
   }
-  if (!discordClient.guilds.cache.has(params.guildId)) {
+  if (
+    !discordClient.guilds.cache.has(params.guildId) &&
+    !isDevGuildOverrideGuild(params.guildId)
+  ) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Scout is not installed in that guild",

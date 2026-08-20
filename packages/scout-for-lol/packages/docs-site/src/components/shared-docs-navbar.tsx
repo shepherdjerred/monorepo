@@ -26,6 +26,7 @@ export function SharedDocsNavbar(props: { children?: ReactNode }) {
     <ScoutThemeProvider surface="docs">
       <GlobalNavbar
         currentPath="/docs/"
+        landmark="div"
         origins={{ app: appOrigin, marketing: marketingOrigin }}
         showGetStarted={false}
         utility={props.children}

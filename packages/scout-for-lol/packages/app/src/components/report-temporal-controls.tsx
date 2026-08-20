@@ -36,6 +36,7 @@ export function ReportTemporalControls(props: {
       <label className="flex items-center gap-2 text-sm font-medium">
         <input
           type="checkbox"
+          className="size-6"
           checked={enabled}
           onChange={(event) => {
             update(event.target.checked ? base : null);

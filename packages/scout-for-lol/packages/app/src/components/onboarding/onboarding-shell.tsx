@@ -32,7 +32,7 @@ export function OnboardingShell(props: {
             <button
               type="button"
               onClick={props.onSkip}
-              className="text-sm text-scout-subtle hover:text-scout-ink"
+              className="min-h-6 px-1 text-sm text-scout-subtle hover:text-scout-ink"
             >
               Skip setup
             </button>

@@ -288,7 +288,7 @@ export function Explore() {
     // narrow retry (just this query) rather than a whole-page reload.
     return (
       <div className="rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center">
-        <h2 className="text-base font-semibold text-scout-danger">
+        <h2 className="text-base font-semibold text-scout-danger-ink">
           Explore couldn&apos;t load
         </h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-scout-subtle">

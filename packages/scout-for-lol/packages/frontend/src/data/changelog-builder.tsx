@@ -37,63 +37,72 @@ const colorClasses: Record<
     border: string;
     bg: string;
     titleText: string;
+    bodyText: string;
     dot: string;
     arrow: string;
   }
 > = {
   yellow: {
     border: "border-scout-warning ",
-    bg: "bg-scout-raised ",
-    titleText: "text-scout-ink ",
+    bg: "bg-scout-warning ",
+    titleText: "text-scout-warning-ink ",
+    bodyText: "text-scout-warning-ink ",
     dot: "bg-scout-warning ",
     arrow: "text-scout-warning-ink ",
   },
   indigo: {
     border: "border-scout-brand ",
     bg: "bg-scout-raised ",
-    titleText: "text-scout-ink ",
+    titleText: "text-scout-brand ",
+    bodyText: "text-scout-ink ",
     dot: "bg-scout-brand ",
     arrow: "text-scout-brand ",
   },
   blue: {
     border: "border-scout-brand ",
     bg: "bg-scout-raised ",
-    titleText: "text-scout-ink ",
+    titleText: "text-scout-brand ",
+    bodyText: "text-scout-ink ",
     dot: "bg-scout-brand ",
     arrow: "text-scout-brand ",
   },
   purple: {
     border: "border-scout-accent ",
-    bg: "bg-scout-raised ",
-    titleText: "text-scout-ink ",
+    bg: "bg-scout-accent ",
+    titleText: "text-scout-accent-ink ",
+    bodyText: "text-scout-accent-ink ",
     dot: "bg-scout-accent ",
     arrow: "text-scout-accent-ink ",
   },
   green: {
     border: "border-scout-success ",
-    bg: "bg-scout-raised ",
-    titleText: "text-scout-ink ",
+    bg: "bg-scout-success ",
+    titleText: "text-scout-success-ink ",
+    bodyText: "text-scout-success-ink ",
     dot: "bg-scout-success ",
     arrow: "text-scout-success-ink ",
   },
   red: {
     border: "border-scout-danger ",
-    bg: "bg-scout-raised ",
-    titleText: "text-scout-ink ",
+    bg: "bg-scout-danger ",
+    titleText: "text-scout-danger-ink ",
+    bodyText: "text-scout-danger-ink ",
     dot: "bg-scout-danger ",
     arrow: "text-scout-danger-ink ",
   },
   pink: {
     border: "border-scout-accent ",
-    bg: "bg-scout-raised ",
-    titleText: "text-scout-ink ",
+    bg: "bg-scout-accent ",
+    titleText: "text-scout-accent-ink ",
+    bodyText: "text-scout-accent-ink ",
     dot: "bg-scout-accent ",
     arrow: "text-scout-accent-ink ",
   },
   teal: {
     border: "border-scout-accent ",
-    bg: "bg-scout-raised ",
-    titleText: "text-scout-ink ",
+    bg: "bg-scout-accent ",
+    titleText: "text-scout-accent-ink ",
+    bodyText: "text-scout-accent-ink ",
     dot: "bg-scout-accent ",
     arrow: "text-scout-accent-ink ",
   },
@@ -121,7 +130,10 @@ export function ChangelogSection({
       </h3>
       <ul className="space-y-2 list-none pl-4">
         {items.map((item, index) => (
-          <li key={index} className="text-scout-ink flex items-start gap-3">
+          <li
+            key={index}
+            className={`${colors.bodyText} flex items-start gap-3`}
+          >
             <span className={`${colors.arrow} font-bold text-lg leading-none`}>
               →
             </span>
