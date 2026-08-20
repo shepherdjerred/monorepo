@@ -42,6 +42,11 @@ function isUnknownDiscordMessage(error: unknown): boolean {
   return parsed.success && parsed.data.code === 10_008;
 }
 
+function isUnknownDiscordChannel(error: unknown): boolean {
+  const parsed = DiscordApiErrorSchema.safeParse(error);
+  return parsed.success && parsed.data.code === 10_003;
+}
+
 async function cleanupPendingRecruitmentMessages(params: {
   prisma: ExtendedPrismaClient;
   nightId: string;
@@ -57,10 +62,27 @@ async function cleanupPendingRecruitmentMessages(params: {
     const payload = RecruitmentCleanupPayloadSchema.parse(
       JSON.parse(event.payload),
     );
-    const channel = await customsDiscordClient.channels.fetch(
-      payload.channelId,
-    );
-    if (channel === null || !channel.isTextBased() || channel.isDMBased())
+    let channel;
+    try {
+      channel = await customsDiscordClient.channels.fetch(payload.channelId);
+    } catch (error) {
+      if (!isUnknownDiscordChannel(error)) throw error;
+      channel = null;
+    }
+    if (channel === null) {
+      await params.prisma.customAuditEvent.update({
+        where: { id: event.id },
+        data: {
+          action: "RECRUITMENT_MESSAGE_CLEANED",
+          payload: JSON.stringify({
+            ...payload,
+            cleanedAt: new Date().toISOString(),
+          }),
+        },
+      });
+      continue;
+    }
+    if (!channel.isTextBased() || channel.isDMBased())
       throw new Error(
         "Recruitment cleanup channel is not a guild text channel",
       );
