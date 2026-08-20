@@ -45,28 +45,41 @@ public enum CodeFillObservability {
         if let stored = readSalt(at: saltURL) {
             return cacheSalt(stored, isFallback: false)
         }
-        if FileManager.default.fileExists(atPath: saltURL.path) {
-            quarantineInvalidSalt(at: saltURL)
-        }
 
-        // A unique temporary file plus link(2) gives us create-if-absent semantics without a
-        // process-wide blocking lock. Exactly one process wins; every other process reads that
-        // canonical file and therefore uses the same fingerprint salt.
-        let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
-        let temporaryURL = containerURL.appendingPathComponent(".\(saltFileName).\(UUID().uuidString).tmp")
-        do {
-            try generated.write(to: temporaryURL, options: .atomic)
-            if link(temporaryURL.path, saltURL.path) == 0 {
+        // The App Group is shared by several processes. A local NSLock cannot protect the
+        // invalid-salt recovery path: another process can install a replacement between this
+        // read and the quarantine move. Serialize the read/quarantine/create sequence with a
+        // filesystem lock, then re-read while holding it.
+        if let repaired = withSaltRepairLock(at: containerURL, operation: { () -> Data? in
+            if let stored = readSalt(at: saltURL) {
+                return stored
+            }
+            if FileManager.default.fileExists(atPath: saltURL.path) {
+                quarantineInvalidSalt(at: saltURL)
+                if let stored = readSalt(at: saltURL) {
+                    return stored
+                }
+            }
+
+            let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
+            let temporaryURL = containerURL.appendingPathComponent(".\(saltFileName).\(UUID().uuidString).tmp")
+            do {
+                try generated.write(to: temporaryURL, options: .atomic)
+                if link(temporaryURL.path, saltURL.path) == 0 {
+                    unlink(temporaryURL.path)
+                    return generated
+                }
+                let failure = errno
                 unlink(temporaryURL.path)
-                return cacheSalt(generated, isFallback: false)
+                if failure == EEXIST, let stored = readSalt(at: saltURL) {
+                    return stored
+                }
+            } catch {
+                unlink(temporaryURL.path)
             }
-            let failure = errno
-            unlink(temporaryURL.path)
-            if failure == EEXIST, let stored = readSalt(at: saltURL) {
-                return cacheSalt(stored, isFallback: false)
-            }
-        } catch {
-            unlink(temporaryURL.path)
+            return nil
+        }) {
+            return cacheSalt(repaired, isFallback: false)
         }
 
         // A failed read/create is exceptional, but observability must not stall OTP handling. A
@@ -78,7 +91,28 @@ public enum CodeFillObservability {
             }
             usleep(10_000)
         }
+        let generated = Data((0 ..< 32).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) })
         return fallbackSalt ?? cacheSalt(generated, isFallback: true)
+    }
+
+    private static func withSaltRepairLock(at containerURL: URL, operation: () -> Data?) -> Data? {
+        let lockURL = containerURL.appendingPathComponent(".\(saltFileName).lock")
+        let descriptor = open(lockURL.path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
+        guard descriptor >= 0 else {
+            storeLogger.error("event=observability_salt outcome=lock_open_error errno=\(errno, privacy: .public)")
+            return nil
+        }
+        guard flock(descriptor, LOCK_EX) == 0 else {
+            let failure = errno
+            close(descriptor)
+            storeLogger.error("event=observability_salt outcome=lock_acquire_error errno=\(failure, privacy: .public)")
+            return nil
+        }
+        defer {
+            _ = flock(descriptor, LOCK_UN)
+            close(descriptor)
+        }
+        return operation()
     }
 
     private static func readSalt(at url: URL) -> Data? {

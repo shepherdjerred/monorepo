@@ -106,6 +106,10 @@ struct SetupView: View {
         .onReceive(NotificationCenter.default.publisher(for: .codeFillRecordsDidChange)) { _ in
             refreshCredentialIdentities()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .codeFillBrokerModeDidChange)) { _ in
+            brokerMode = true
+            refreshCredentialIdentities()
+        }
     }
 
     private func installBundle() {
