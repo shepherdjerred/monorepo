@@ -75,9 +75,17 @@ brew trust --formula "$BUILDKITE_FORMULA"
 echo "==> Installing native CI packages"
 brew install "$BUILDKITE_FORMULA" mise xcodes xcodegen swiftlint tailscale
 
+AGENT_BUILD_PATH="$HOME/.buildkite-agent/builds"
+
 echo "==> Installing the repository-pinned Bun and Rust toolchains"
 mise install --cd "$REPO_ROOT" --yes bun rust
 mise reshim
+
+# Buildkite checks jobs out below the configured build path, not below this
+# bootstrap checkout. Trust that path so mise can load the job checkout's
+# repository-pinned tools when the native preflight runs through its shims.
+echo "==> Trusting Buildkite checkout configs"
+mise settings set trusted_config_paths "$AGENT_BUILD_PATH"
 
 # --- 3. Agent configuration ------------------------------------------------
 # Write the agent config with the macos-queue tag. chmod 600 — it holds the
@@ -97,7 +105,7 @@ token="$BUILDKITE_AGENT_TOKEN"
 name="%hostname-%spawn"
 tags="queue=macos,os=darwin,arch=$(uname -m)"
 tags-from-host=false
-build-path="$HOME/.buildkite-agent/builds"
+build-path="$AGENT_BUILD_PATH"
 git-clean-flags="-ffxdq"
 shell="/bin/bash -e -c"
 EOF
