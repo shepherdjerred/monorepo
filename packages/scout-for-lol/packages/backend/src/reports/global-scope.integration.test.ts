@@ -87,7 +87,8 @@ describe("global scope", () => {
     const global = await executeReportQuery({
       prisma,
       scope: GLOBAL_SCOPE,
-      queryText: "SELECT player, games FROM match_participants GROUP BY player",
+      queryText:
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
       now,
     });
 
@@ -101,7 +102,8 @@ describe("global scope", () => {
     const guild = await executeReportQuery({
       prisma,
       scope: guildScope(serverId),
-      queryText: "SELECT player, games FROM match_participants GROUP BY player",
+      queryText:
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
       now,
     });
     expect(
@@ -122,7 +124,8 @@ describe("global scope", () => {
     const global = await executeReportQuery({
       prisma,
       scope: GLOBAL_SCOPE,
-      queryText: "SELECT player, games FROM match_participants GROUP BY player",
+      queryText:
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
       now,
     });
     expect(global.rows).toHaveLength(3);
@@ -130,7 +133,8 @@ describe("global scope", () => {
     const guild = await executeReportQuery({
       prisma,
       scope: guildScope(serverId),
-      queryText: "SELECT player, games FROM match_participants GROUP BY player",
+      queryText:
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
       now,
     });
     expect(guild.rows).toHaveLength(1);
@@ -147,7 +151,8 @@ describe("global scope", () => {
     const global = await executeReportQuery({
       prisma,
       scope: GLOBAL_SCOPE,
-      queryText: "SELECT player, games FROM match_participants GROUP BY player",
+      queryText:
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
       now,
     });
 
@@ -160,7 +165,8 @@ describe("global scope", () => {
     const guild = await executeReportQuery({
       prisma,
       scope: guildScope(serverId),
-      queryText: "SELECT player, games FROM match_participants GROUP BY player",
+      queryText:
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
       now,
     });
     expect(guild.rows[0]?.label).toBe("Tracked Player");
@@ -190,7 +196,7 @@ describe("global scope", () => {
       prisma,
       scope: GLOBAL_SCOPE,
       queryText:
-        "SELECT champion, games FROM match_participants GROUP BY champion",
+        "SELECT champion, games FROM match_participants GROUP BY champion DURING LAST 30 DAYS",
       now,
     });
     expect(global.rows).toHaveLength(1);
@@ -210,7 +216,8 @@ describe("global scope", () => {
       executeReportQuery({
         prisma,
         scope: GLOBAL_SCOPE,
-        queryText: "SELECT group, games FROM player_groups GROUP BY group(2)",
+        queryText:
+          "SELECT group, games FROM player_groups GROUP BY group(2) DURING LAST 30 DAYS",
         now,
       }),
     ).rejects.toThrow(/not available in global scope/);

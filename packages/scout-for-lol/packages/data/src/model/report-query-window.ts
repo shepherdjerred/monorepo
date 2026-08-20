@@ -61,6 +61,18 @@ export function reportQueryWindowDays(
 const DURING_PATTERN =
   /^(?:last\s+(?<days>\d+)\s+days?|between\s+'(?<start>\d{4}-\d{2}-\d{2})'\s+and\s+'(?<end>\d{4}-\d{2}-\d{2})'(?:\s+in\s+time\s+zone\s+'(?<timezone>[^']+)')?|(?<allTime>all\s+time))$/iu;
 
+/**
+ * The one message for a missing time period, shared by the lint diagnostic and
+ * the compiler throw so the two cannot drift.
+ *
+ * It names three literal, copyable forms and where the clause goes, because an
+ * AI author only ever sees the first diagnostic and has to repair from it in a
+ * single step. It deliberately does NOT mention the accepted WHERE predicate
+ * form: offering two syntaxes for one concept is how you get half-blends.
+ */
+export const REPORT_WINDOW_REQUIRED_MESSAGE =
+  "Every report must state its time period. Add exactly one of: DURING LAST 30 DAYS, DURING BETWEEN '2026-01-01' AND '2026-06-30', DURING ALL TIME, or an ANALYZE … clause. It goes after GROUP BY (and after HAVING, if present).";
+
 export const INVALID_DURING_MESSAGE =
   "Invalid DURING clause. Expected DURING LAST <n> DAYS, DURING BETWEEN '<date>' AND '<date>' [IN TIME ZONE '<zone>'], or DURING ALL TIME.";
 

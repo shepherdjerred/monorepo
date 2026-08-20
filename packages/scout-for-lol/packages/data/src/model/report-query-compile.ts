@@ -5,7 +5,6 @@ import {
   ReportHavingOperatorSchema,
   ReportOrderBySchema,
   ReportOrderDirectionSchema,
-  ReportQueryPlanSchema,
   ReportSourceSchema,
   type ReportGroupBy,
   type ReportGroupSize,
@@ -15,6 +14,7 @@ import {
   type ReportQueryAst,
   type ReportQueryPlan,
   type ReportSelectItem,
+  parseReportQueryPlan,
 } from "#src/model/report-query-spec.ts";
 import {
   collectExpressionMetrics,
@@ -27,7 +27,10 @@ import {
   parseReportQuery,
 } from "#src/model/report-query-parser.ts";
 import { compileReportWhere } from "#src/model/report-query-where.ts";
-import { resolveReportQueryWindow } from "#src/model/report-query-window.ts";
+import {
+  REPORT_WINDOW_REQUIRED_MESSAGE,
+  resolveReportQueryWindow,
+} from "#src/model/report-query-window.ts";
 import {
   parseTemporalAnalysisClause,
   resolveTemporalBucket,
@@ -156,7 +159,19 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
         : undefined
       : PositiveIntSchema.parse(ast.limit.value);
 
-  return ReportQueryPlanSchema.parse({
+  const window = resolveReportQueryWindow({
+    duringClause: ast.during?.value,
+    lookbackDays: filters.lookbackDays,
+    analysis,
+  });
+  // Checked before the schema parse so the actionable message wins over a Zod
+  // dump. The schema still requires the field — this is the friendly path to
+  // the same refusal, not the only one.
+  if (window === undefined) {
+    throw new Error(REPORT_WINDOW_REQUIRED_MESSAGE);
+  }
+
+  return parseReportQueryPlan({
     source,
     groupBy,
     groupBys,
@@ -167,11 +182,7 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
     championId: filters.championId,
     minGames: filters.minGames,
     competitionId: filters.competitionId,
-    window: resolveReportQueryWindow({
-      duringClause: ast.during?.value,
-      lookbackDays: filters.lookbackDays,
-      analysis,
-    }),
+    window,
     analysis,
     filters: filters.filters,
     orderBy,

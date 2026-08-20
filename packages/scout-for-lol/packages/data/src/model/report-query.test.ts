@@ -4,6 +4,7 @@ import { parseReportQuery } from "#src/model/report-query-parser.ts";
 import { lintReportQuery } from "#src/model/report-query-lint.ts";
 import { completeReportQuery } from "#src/model/report-query-complete.ts";
 import { reportChampionLiteral } from "#src/model/report-query-champions.ts";
+import { REPORT_WINDOW_REQUIRED_MESSAGE } from "#src/model/report-query-window.ts";
 
 describe("parseAndCompile", () => {
   test("parses a leaderboard aggregate query", () => {
@@ -166,7 +167,7 @@ describe("parseAndCompile", () => {
     expect(reportChampionLiteral(99)).toBe(`'Lux'`);
 
     const plan = parseAndCompile(
-      `SELECT games FROM match_participants WHERE champion_id = champion(${reportChampionLiteral(145)}) GROUP BY player`,
+      `SELECT games FROM match_participants WHERE champion_id = champion(${reportChampionLiteral(145)}) GROUP BY player DURING LAST 30 DAYS`,
     );
     expect(plan.championId).toBe(145);
   });
@@ -198,7 +199,7 @@ describe("parseAndCompile", () => {
 
   test("compiles calculated outputs, aliases, two dimensions, and HAVING", () => {
     const plan = parseAndCompile(
-      "SELECT games, round((kills + assists) / games, 2) AS participation FROM match_participants GROUP BY champion, team_position HAVING games >= 5 AND participation > 3 ORDER BY participation DESC",
+      "SELECT games, round((kills + assists) / games, 2) AS participation FROM match_participants GROUP BY champion, team_position HAVING games >= 5 AND participation > 3 DURING LAST 30 DAYS ORDER BY participation DESC",
     );
     expect(plan.groupBys).toEqual(["champion", "team_position"]);
     expect(plan.metrics).toEqual(["games", "kills", "assists"]);
@@ -215,19 +216,21 @@ describe("parseAndCompile", () => {
   test("supports UTC temporal buckets and aggregate-all reports", () => {
     expect(
       parseAndCompile(
-        "SELECT games FROM match_participants GROUP BY month ORDER BY label ASC",
+        "SELECT games FROM match_participants GROUP BY month DURING LAST 30 DAYS ORDER BY label ASC",
       ).groupBys,
     ).toEqual(["month"]);
     expect(
       parseAndCompile(
-        "SELECT games, win_rate FROM match_participants GROUP BY all RENDER kpi_card WITH (y = (games, win_rate))",
+        "SELECT games, win_rate FROM match_participants GROUP BY all DURING LAST 30 DAYS RENDER kpi_card WITH (y = (games, win_rate))",
       ).groupBys,
     ).toEqual(["all"]);
   });
 
   test("rejects unknown source", () => {
     expect(() =>
-      parseAndCompile("SELECT games FROM nope GROUP BY player"),
+      parseAndCompile(
+        "SELECT games FROM nope GROUP BY player DURING LAST 30 DAYS",
+      ),
     ).toThrow();
   });
 
@@ -235,6 +238,54 @@ describe("parseAndCompile", () => {
     expect(() => parseAndCompile("SELECT games")).toThrow(
       "Invalid report query",
     );
+  });
+});
+
+describe("a required time period", () => {
+  const WINDOWLESS =
+    "SELECT games FROM match_participants GROUP BY player ORDER BY games DESC";
+
+  test("compiling without a period fails with the shared message", () => {
+    expect(() => parseAndCompile(WINDOWLESS)).toThrow(
+      REPORT_WINDOW_REQUIRED_MESSAGE,
+    );
+  });
+
+  test("lint reports the same message, anchored on GROUP BY", () => {
+    const firstError = lintReportQuery(WINDOWLESS).find(
+      (diagnostic) => diagnostic.severity === "error",
+    );
+    expect(firstError?.message).toBe(REPORT_WINDOW_REQUIRED_MESSAGE);
+
+    // The span must land on the GROUP BY clause — that is where the missing
+    // clause goes, and an author repairing from this diagnostic has nothing
+    // else to go on. The parser's groupBy span covers the dimension rather
+    // than the keyword, so the anchor is `player`.
+    expect(WINDOWLESS.slice(firstError?.span.start, firstError?.span.end)).toBe(
+      "player",
+    );
+  });
+
+  // The message is the entire repair instruction an AI author gets: it only
+  // ever sees diagnostics[0]. Every form it names must therefore actually work,
+  // or the retry loop cannot converge.
+  test("every form the message names compiles", () => {
+    const forms = [
+      "DURING LAST 30 DAYS",
+      "DURING BETWEEN '2026-01-01' AND '2026-06-30'",
+      "DURING ALL TIME",
+      "ANALYZE LAST 30 DAYS BUCKET BY DAY",
+    ];
+    for (const form of forms) {
+      const repaired = WINDOWLESS.replace(
+        "GROUP BY player",
+        `GROUP BY player ${form}`,
+      );
+      expect(() => parseAndCompile(repaired)).not.toThrow();
+      expect(
+        lintReportQuery(repaired).filter((d) => d.severity === "error"),
+      ).toEqual([]);
+    }
   });
 });
 
@@ -328,14 +379,14 @@ describe("DURING clause", () => {
 describe("RENDER clause", () => {
   test("defaults render to TABLE when no clause is present", () => {
     const plan = parseAndCompile(
-      "SELECT player, games FROM match_participants GROUP BY player",
+      "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS",
     );
     expect(plan.render).toEqual({ kind: "TABLE" });
   });
 
   test("parses a bare chart render clause (defaults resolve at render)", () => {
     const plan = parseAndCompile(
-      "SELECT player, win_rate FROM match_participants GROUP BY player ORDER BY win_rate DESC RENDER bar_chart",
+      "SELECT player, win_rate FROM match_participants GROUP BY player DURING LAST 30 DAYS ORDER BY win_rate DESC RENDER bar_chart",
     );
     expect(plan.render).toEqual({
       kind: "BAR_CHART",
@@ -346,7 +397,7 @@ describe("RENDER clause", () => {
 
   test("parses chart channels and options in the WITH clause", () => {
     const plan = parseAndCompile(
-      'SELECT player, games, win_rate FROM match_participants GROUP BY player LIMIT 5 RENDER line_chart WITH (x = label, y = win_rate, title = "Win %", y_axis = "Rate")',
+      'SELECT player, games, win_rate FROM match_participants GROUP BY player DURING LAST 30 DAYS LIMIT 5 RENDER line_chart WITH (x = label, y = win_rate, title = "Win %", y_axis = "Rate")',
     );
     expect(plan.render).toEqual({
       kind: "LINE_CHART",
@@ -357,7 +408,7 @@ describe("RENDER clause", () => {
 
   test("parses multi-series appearance options and custom colors", () => {
     const plan = parseAndCompile(
-      'SELECT games, wins, losses FROM match_participants GROUP BY week RENDER stacked_bar WITH (y = (wins, losses), theme = minimal_light, palette = colorblind, colors = (#112233, #abcdef), orientation = vertical, labels = value, legend = top, sort = asc, smooth = true, subtitle = "Weekly")',
+      'SELECT games, wins, losses FROM match_participants GROUP BY week DURING LAST 30 DAYS RENDER stacked_bar WITH (y = (wins, losses), theme = minimal_light, palette = colorblind, colors = (#112233, #abcdef), orientation = vertical, labels = value, legend = top, sort = asc, smooth = true, subtitle = "Weekly")',
     );
     expect(plan.render).toEqual({
       kind: "STACKED_BAR",
@@ -379,31 +430,31 @@ describe("RENDER clause", () => {
   test("rejects chart shapes that cannot render", () => {
     expect(() =>
       parseAndCompile(
-        "SELECT games, wins FROM match_participants GROUP BY player RENDER radar_chart WITH (y = (games, wins))",
+        "SELECT games, wins FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER radar_chart WITH (y = (games, wins))",
       ),
     ).toThrow("between three and eight");
     expect(() =>
       parseAndCompile(
-        "SELECT games FROM match_participants GROUP BY champion RENDER heatmap WITH (value = games)",
+        "SELECT games FROM match_participants GROUP BY champion DURING LAST 30 DAYS RENDER heatmap WITH (value = games)",
       ),
     ).toThrow("exactly two GROUP BY");
     expect(() =>
       parseAndCompile(
-        "SELECT games, wins, losses FROM match_participants GROUP BY champion, queue RENDER radar_chart WITH (y = (games, wins, losses))",
+        "SELECT games, wins, losses FROM match_participants GROUP BY champion, queue DURING LAST 30 DAYS RENDER radar_chart WITH (y = (games, wins, losses))",
       ),
     ).toThrow("exactly one GROUP BY");
   });
 
   test("parses a text render kind without a WITH clause", () => {
     const plan = parseAndCompile(
-      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard",
+      "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER leaderboard",
     );
     expect(plan.render).toEqual({ kind: "LEADERBOARD", options: {} });
   });
 
   test("parses a leaderboard mentions count", () => {
     const plan = parseAndCompile(
-      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions = 5)",
+      "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER leaderboard WITH (mentions = 5)",
     );
     expect(plan.render).toEqual({
       kind: "LEADERBOARD",
@@ -413,7 +464,7 @@ describe("RENDER clause", () => {
 
   test("parses a leaderboard mentions of all", () => {
     const plan = parseAndCompile(
-      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions = all)",
+      "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER leaderboard WITH (mentions = all)",
     );
     expect(plan.render).toEqual({
       kind: "LEADERBOARD",
@@ -423,7 +474,7 @@ describe("RENDER clause", () => {
 
   test("parses a leaderboard mentions of 0 to disable mentions", () => {
     const plan = parseAndCompile(
-      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions = 0)",
+      "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER leaderboard WITH (mentions = 0)",
     );
     expect(plan.render).toEqual({
       kind: "LEADERBOARD",
@@ -434,7 +485,7 @@ describe("RENDER clause", () => {
   test("rejects an unknown leaderboard WITH option", () => {
     expect(() =>
       parseAndCompile(
-        "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (theme = dark)",
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER leaderboard WITH (theme = dark)",
       ),
     ).toThrow('Unknown RENDER option "theme"');
   });
@@ -442,7 +493,7 @@ describe("RENDER clause", () => {
   test("rejects a negative leaderboard mentions count", () => {
     expect(() =>
       parseAndCompile(
-        "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions = -1)",
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER leaderboard WITH (mentions = -1)",
       ),
     ).toThrow('must be a non-negative integer or "all"');
   });
@@ -450,14 +501,14 @@ describe("RENDER clause", () => {
   test("rejects a non-integer leaderboard mentions count", () => {
     expect(() =>
       parseAndCompile(
-        "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions = 3.5)",
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER leaderboard WITH (mentions = 3.5)",
       ),
     ).toThrow('must be a non-negative integer or "all"');
   });
 
   test("rejects an empty leaderboard mentions value", () => {
     for (const query of [
-      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions =)",
+      "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER leaderboard WITH (mentions =)",
       'SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH (mentions = "")',
     ]) {
       expect(() => parseAndCompile(query)).toThrow(
@@ -468,8 +519,8 @@ describe("RENDER clause", () => {
 
   test("rejects an empty leaderboard WITH option list", () => {
     for (const query of [
-      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH ()",
-      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard WITH ( , )",
+      "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER leaderboard WITH ()",
+      "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER leaderboard WITH ( , )",
     ]) {
       expect(() => parseAndCompile(query)).toThrow(
         "RENDER leaderboard WITH (...) requires an option",
@@ -479,7 +530,7 @@ describe("RENDER clause", () => {
 
   test("ignores keywords inside a quoted render title", () => {
     const plan = parseAndCompile(
-      'SELECT player, games FROM match_participants GROUP BY player ORDER BY games DESC LIMIT 3 RENDER bar_chart WITH (title = "no limit here")',
+      'SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS ORDER BY games DESC LIMIT 3 RENDER bar_chart WITH (title = "no limit here")',
     );
     expect(plan.limit).toBe(3);
     expect(plan.orderBy).toBe("games");
@@ -493,7 +544,7 @@ describe("RENDER clause", () => {
   test("rejects an unknown render kind", () => {
     expect(() =>
       parseAndCompile(
-        "SELECT player, games FROM match_participants GROUP BY player RENDER pie_chart",
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER pie_chart",
       ),
     ).toThrow("Unknown RENDER kind");
   });
@@ -501,7 +552,7 @@ describe("RENDER clause", () => {
   test("rejects a y channel that is not a SELECTed metric", () => {
     expect(() =>
       parseAndCompile(
-        "SELECT player, games FROM match_participants GROUP BY player RENDER bar_chart WITH (y = win_rate)",
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER bar_chart WITH (y = win_rate)",
       ),
     ).toThrow('RENDER y = "win_rate" is not a SELECTed metric');
   });
@@ -509,14 +560,14 @@ describe("RENDER clause", () => {
   test("rejects unsupported WITH options on a table", () => {
     expect(() =>
       parseAndCompile(
-        "SELECT player, games FROM match_participants GROUP BY player RENDER table WITH (y = games)",
+        "SELECT player, games FROM match_participants GROUP BY player DURING LAST 30 DAYS RENDER table WITH (y = games)",
       ),
     ).toThrow("only supports the sparkline option");
   });
 
   test("lints an unknown render kind with a positioned error", () => {
     const text =
-      "select player, games from match_participants group by player render pie_chart";
+      "select player, games from match_participants group by player during last 30 days render pie_chart";
     const diagnostics = lintReportQuery(text);
     const renderError = diagnostics.find((d) =>
       d.message.includes("Unknown RENDER kind"),
@@ -527,7 +578,8 @@ describe("RENDER clause", () => {
 
 describe("parseReportQuery (AST + spans)", () => {
   test("captures spans for the source token", () => {
-    const text = "select games from match_participants group by player";
+    const text =
+      "select games from match_participants group by player during last 30 days";
     const { ast, diagnostics } = parseReportQuery(text);
     expect(diagnostics).toHaveLength(0);
     expect(ast.source?.value).toBe("match_participants");
@@ -544,7 +596,8 @@ describe("parseReportQuery (AST + spans)", () => {
 
 describe("lintReportQuery", () => {
   test("flags an unknown metric with a positioned error", () => {
-    const text = "select bogus from match_participants group by player";
+    const text =
+      "select bogus from match_participants group by player during last 30 days";
     const diagnostics = lintReportQuery(text);
     const unknown = diagnostics.find((d) => d.message.includes("bogus"));
     expect(unknown?.severity).toBe("error");
@@ -553,7 +606,7 @@ describe("lintReportQuery", () => {
 
   test("warns (not errors) on an unknown queue value", () => {
     const diagnostics = lintReportQuery(
-      "select games from match_participants where queue in (ranked_solo) group by player",
+      "select games from match_participants where queue in (ranked_solo) group by player during last 30 days",
     );
     const queueWarning = diagnostics.find((d) =>
       d.message.includes("ranked_solo"),
@@ -563,7 +616,7 @@ describe("lintReportQuery", () => {
 
   test("reports no diagnostics for a valid query", () => {
     const diagnostics = lintReportQuery(
-      "select games, win_rate from match_participants where queue in (solo) group by player order by games desc limit 10",
+      "select games, win_rate from match_participants where queue in (solo) group by player during last 30 days order by games desc limit 10",
     );
     expect(diagnostics).toHaveLength(0);
   });
@@ -571,7 +624,7 @@ describe("lintReportQuery", () => {
   test("does not flag ORDER BY on the group label column", () => {
     for (const orderTarget of ["group", "pair", "label"]) {
       const diagnostics = lintReportQuery(
-        `select group, games from player_groups group by group(2) order by ${orderTarget} asc`,
+        `select group, games from player_groups group by group(2) during last 30 days order by ${orderTarget} asc`,
       );
       expect(diagnostics).toHaveLength(0);
     }

@@ -56,7 +56,7 @@ describe("buildVisualizationSnapshot", () => {
 
   test("rejects charts that exceed the plotted series limit", () => {
     const plan = parseAndCompile(
-      "SELECT games FROM match_participants GROUP BY champion, queue RENDER donut_chart WITH (y = games)",
+      "SELECT games FROM match_participants GROUP BY champion, queue DURING LAST 30 DAYS RENDER donut_chart WITH (y = games)",
     );
     const rows = Array.from(
       { length: 9 },
@@ -104,7 +104,7 @@ describe("buildVisualizationSnapshot", () => {
 
   test("archives the complete chart option set", () => {
     const plan = parseAndCompile(
-      'SELECT games FROM match_participants GROUP BY champion RENDER bar_chart WITH (y = games, subtitle = "By champion", x_axis = "Champion", y_axis = "Games", theme = minimal_light, palette = team, colors = (#112233, #abcdef), orientation = horizontal, labels = value, legend = none, sort = asc)',
+      'SELECT games FROM match_participants GROUP BY champion DURING LAST 30 DAYS RENDER bar_chart WITH (y = games, subtitle = "By champion", x_axis = "Champion", y_axis = "Games", theme = minimal_light, palette = team, colors = (#112233, #abcdef), orientation = horizontal, labels = value, legend = none, sort = asc)',
     );
 
     const snapshot = buildVisualizationSnapshot(
@@ -222,7 +222,7 @@ describe("temporal visualization buckets", () => {
 
   test("orients heatmap snapshots using the configured dimensions", () => {
     const plan = parseAndCompile(
-      "SELECT games FROM match_participants GROUP BY champion, queue RENDER heatmap WITH (x = queue, series = champion, value = games)",
+      "SELECT games FROM match_participants GROUP BY champion, queue DURING LAST 30 DAYS RENDER heatmap WITH (x = queue, series = champion, value = games)",
     );
     const rows: ReportResultRow[] = [
       {
@@ -256,7 +256,7 @@ describe("temporal visualization buckets", () => {
 
   test("applies x and series encodings to categorical snapshots", () => {
     const plan = parseAndCompile(
-      "SELECT games FROM match_participants GROUP BY champion, queue RENDER bar_chart WITH (x = champion, series = queue, y = games)",
+      "SELECT games FROM match_participants GROUP BY champion, queue DURING LAST 30 DAYS RENDER bar_chart WITH (x = champion, series = queue, y = games)",
     );
     const rows: ReportResultRow[] = [
       categoricalRow("Ahri", "solo", 3),

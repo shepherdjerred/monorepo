@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
   DEFAULT_RENDER_SPEC,
-  REPORT_DEFAULT_LOOKBACK_DAYS,
   REPORT_DEFAULT_MAX_ROWS,
   ReportRenderSpecSchema,
 } from "#src/model/report.ts";
@@ -225,13 +224,11 @@ export const ReportQueryPlanSchema = z
     championId: z.number().int().positive().optional(),
     minGames: z.number().int().positive().optional(),
     competitionId: z.number().int().positive().optional(),
-    // The time period the query covers. Still defaulted here so this commit is
-    // behaviour-preserving; the default is removed once every author states a
-    // window explicitly, which is the point of the DURING clause.
-    window: ReportQueryWindowSchema.default({
-      kind: "relative",
-      days: REPORT_DEFAULT_LOOKBACK_DAYS,
-    }),
+    // The time period the query covers. Deliberately has no default: a window
+    // that can be omitted is a window nobody states, and an answer computed
+    // over a narrower period than the reader assumed is indistinguishable from
+    // a correct one.
+    window: ReportQueryWindowSchema,
     analysis: TemporalAnalysisSpecSchema.optional(),
     filters: z.array(z.custom<ReportFilter>()).default([]),
     orderBy: z.string().min(1).default("games"),
@@ -368,3 +365,26 @@ export type ReportParseResult = {
   ast: ReportQueryAst;
   diagnostics: ReportDiagnostic[];
 };
+
+/**
+ * Parse the assembled plan, turning a schema failure into a readable sentence.
+ *
+ * Everything reachable from query text is checked above with its own message,
+ * so a failure here means a hand-built plan or a new schema rule — but the
+ * result is still surfaced to an operator and to an AI author through
+ * `validate_report_query`, and a raw ZodError dump is not something either can
+ * act on.
+ */
+export function parseReportQueryPlan(candidate: unknown): ReportQueryPlan {
+  const result = ReportQueryPlanSchema.safeParse(candidate);
+  if (result.success) {
+    return result.data;
+  }
+  const detail = result.error.issues
+    .map((issue) => {
+      const path = issue.path.join(".");
+      return path.length > 0 ? `${path}: ${issue.message}` : issue.message;
+    })
+    .join("; ");
+  throw new Error(`Invalid report query plan. ${detail}`);
+}

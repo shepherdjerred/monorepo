@@ -126,7 +126,7 @@ async function seedSharedConversation(): Promise<string> {
       role: "assistant",
       content: "Jinx, over 42 games.",
       queryText:
-        "SELECT champion, win_rate FROM match_participants GROUP BY champion",
+        "SELECT champion, win_rate FROM match_participants GROUP BY champion DURING LAST 30 DAYS",
       caveats: JSON.stringify(["Small sample."]),
       followUps: JSON.stringify(["How about by patch?"]),
       trace: JSON.stringify([

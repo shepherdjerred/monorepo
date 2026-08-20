@@ -14,6 +14,11 @@ import {
   parseGroupByClauses,
 } from "#src/model/report-query-compile.ts";
 import { parseRenderClause } from "#src/model/report-query-render.ts";
+import {
+  INVALID_DURING_MESSAGE,
+  REPORT_WINDOW_REQUIRED_MESSAGE,
+  parseReportQueryWindowClause,
+} from "#src/model/report-query-window.ts";
 import { parseReportSelectItem } from "#src/model/report-query-expression.ts";
 import { tokenizeReportQuery } from "#src/model/report-query-lexer.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
@@ -52,8 +57,36 @@ export function lintReportQuery(text: string): ReportDiagnostic[] {
   diagnostics.push(...orderAndLimitDiagnostics(ast));
   diagnostics.push(...whereDiagnostics(ast));
   diagnostics.push(...havingDiagnostics(ast));
+  diagnostics.push(...windowDiagnostics(ast));
   diagnostics.push(...renderDiagnostics(ast));
   return diagnostics;
+}
+
+/**
+ * The time period: missing, or present but malformed.
+ *
+ * A missing period is anchored on the GROUP BY span, since that is where the
+ * clause belongs — pointing at the whole query would underline everything and
+ * say nothing about where to type.
+ */
+function windowDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
+  if (ast.during !== undefined) {
+    try {
+      parseReportQueryWindowClause(ast.during.value);
+      return [];
+    } catch (error_) {
+      return [
+        error(
+          error_ instanceof Error ? error_.message : INVALID_DURING_MESSAGE,
+          ast.during.span,
+        ),
+      ];
+    }
+  }
+  if (ast.analysis !== undefined) return [];
+  if (ast.where.some((clause) => clause.kind === "lookback")) return [];
+  if (ast.groupBy === undefined) return [];
+  return [error(REPORT_WINDOW_REQUIRED_MESSAGE, ast.groupBy.span)];
 }
 
 function havingDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {

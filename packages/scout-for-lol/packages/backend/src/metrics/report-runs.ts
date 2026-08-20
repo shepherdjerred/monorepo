@@ -99,3 +99,19 @@ export const scoutScheduledReportLastSuccessTimestamp = new Gauge({
   labelNames: ["report_id", "system_source", "title"] as const,
   registers: [registry],
 });
+
+/**
+ * Scheduled runs that failed because their stored ScoutQL no longer compiles.
+ *
+ * Separated from generic run failures because this one is silent and systemic:
+ * `runDueReports` catches, Sentries, and still advances `nextScheduledRunAt`,
+ * so a report that stops compiling simply never posts again and looks exactly
+ * like a quiet week. A language change that breaks stored queries shows up
+ * here as a step change rather than as a customer report.
+ */
+export const scheduledReportCompileFailuresTotal = new Counter({
+  name: "scheduled_report_compile_failures_total",
+  help: "Scheduled report runs that failed to compile their stored ScoutQL.",
+  labelNames: ["system_source"] as const,
+  registers: [registry],
+});

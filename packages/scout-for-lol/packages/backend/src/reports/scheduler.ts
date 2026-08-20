@@ -3,11 +3,32 @@ import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competit
 import * as Sentry from "@sentry/bun";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
+  scheduledReportCompileFailuresTotal,
   scheduledReportsActive,
   scheduledReportsDueTotal,
 } from "#src/metrics/report-runs.ts";
+import { REPORT_WINDOW_REQUIRED_MESSAGE } from "@scout-for-lol/data";
 import { runReport, type ReportRunResult } from "#src/reports/runner.ts";
 import { createLogger } from "#src/logger.ts";
+
+/**
+ * Whether a run failed because its stored ScoutQL no longer parses or compiles,
+ * as opposed to a lake, Discord, or database fault.
+ *
+ * Matched on the compiler's own messages rather than an error subclass because
+ * `parseAndCompile` throws plain Errors from a dozen validation sites; adding a
+ * class hierarchy for one counter would be a larger change than the counter
+ * justifies.
+ */
+function isReportCompileFailure(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.message === REPORT_WINDOW_REQUIRED_MESSAGE ||
+    error.message.startsWith("Invalid report query") ||
+    error.message.startsWith("Invalid DURING clause") ||
+    error.message.startsWith("Unknown GROUP BY field")
+  );
+}
 
 const logger = createLogger("report-scheduler");
 
@@ -96,6 +117,14 @@ export async function runDueReports(
       dispatched.push({ report, result });
     } catch (error) {
       earlyFailures++;
+      // A stored query that no longer compiles is its own failure mode: the
+      // catch below advances the schedule regardless, so without this counter
+      // a language change that broke every saved report would be invisible.
+      if (isReportCompileFailure(error)) {
+        scheduledReportCompileFailuresTotal.inc({
+          system_source: report.systemSource ?? "USER",
+        });
+      }
       logger.error(
         `[ReportScheduler] Failed to run report ${report.id.toString()}:`,
         error,
