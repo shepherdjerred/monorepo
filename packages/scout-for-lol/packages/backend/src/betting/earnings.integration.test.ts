@@ -508,4 +508,70 @@ describe("earning retry", () => {
     expect(completed.state).toBe("complete");
     expect(completed.entryCount).toBe(2);
   });
+
+  test("normal replays keep the original recipient snapshot", async () => {
+    const originalDiscordId = DiscordAccountIdSchema.parse("16050917270473111");
+    const replacementDiscordId =
+      DiscordAccountIdSchema.parse("16050917270473112");
+    const seeded = await ensureBucksAccount(
+      { serverId: ENABLED_GUILD, discordId: originalDiscordId },
+      db,
+    );
+    const house = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: {
+          serverId: ENABLED_GUILD,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        },
+      },
+    });
+    await db.bucksAccount.delete({ where: { id: seeded.id } });
+    await db.bucksAccount.update({
+      where: { id: house.id },
+      data: { balance: 0 },
+    });
+    await trackPlayer({
+      serverId: ENABLED_GUILD,
+      discordId: originalDiscordId,
+      alias: "retry-player",
+      puuid: plainWinner.puuid,
+    });
+
+    expect(await awardBucksForMatch(fixture, db)).toEqual([]);
+    const player = await db.player.findFirstOrThrow({
+      where: { alias: "retry-player" },
+    });
+    await db.player.update({
+      where: { id: player.id },
+      data: { discordId: replacementDiscordId },
+    });
+    await db.bucksAccount.update({
+      where: { id: house.id },
+      data: { balance: HOUSE_BANKROLL },
+    });
+
+    const awards = await awardBucksForMatch(fixture, db);
+    expect(awards).toHaveLength(1);
+    expect(awards[0]?.discordId).toBe(originalDiscordId);
+    expect(
+      await db.bucksAccount.findUnique({
+        where: {
+          serverId_discordId: {
+            serverId: ENABLED_GUILD,
+            discordId: replacementDiscordId,
+          },
+        },
+      }),
+    ).toBeNull();
+    expect(
+      await db.bucksAccount.findUniqueOrThrow({
+        where: {
+          serverId_discordId: {
+            serverId: ENABLED_GUILD,
+            discordId: originalDiscordId,
+          },
+        },
+      }),
+    ).toMatchObject({ balance: SEED_GRANT + 2 });
+  });
 });

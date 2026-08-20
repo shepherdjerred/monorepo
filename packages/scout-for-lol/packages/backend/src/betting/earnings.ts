@@ -21,6 +21,7 @@ import { getFlag } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import { createLogger } from "#src/logger.ts";
+import { z } from "zod";
 
 const logger = createLogger("betting-earnings");
 
@@ -122,6 +123,38 @@ function targetSnapshotJson(targets: readonly EarnTarget[]): string {
   );
 }
 
+const EarnTargetSnapshotSchema = z.array(
+  z.object({
+    discordId: z.string(),
+    alias: z.string(),
+    puuid: z.string(),
+  }),
+);
+
+function targetsFromSnapshot(
+  participants: readonly RawParticipant[],
+  serverId: string,
+  serialized: string,
+): EarnTarget[] {
+  const snapshots = EarnTargetSnapshotSchema.parse(JSON.parse(serialized));
+  return snapshots.map((snapshot) => {
+    const participant = participants.find(
+      (candidate) => candidate.puuid === snapshot.puuid,
+    );
+    if (participant === undefined) {
+      throw new Error(
+        `Pending Bryan Bucks target ${snapshot.puuid} is absent from the match`,
+      );
+    }
+    return {
+      serverId,
+      discordId: snapshot.discordId,
+      alias: snapshot.alias,
+      participant,
+    };
+  });
+}
+
 /**
  * Award Bucks for a finished match, exactly once per (match, guild).
  *
@@ -167,6 +200,7 @@ export async function awardBucksForMatch(
         serverId,
         matchCreatedAt: new Date(matchData.info.gameCreation),
         targets: guildTargets,
+        participants: matchData.info.participants,
         queueType,
         mvpPuuid: mvp?.puuid,
         mvpScore: mvp?.score,
@@ -189,6 +223,7 @@ export async function awardForGuild(input: {
   serverId: string;
   matchCreatedAt: Date;
   targets: readonly EarnTarget[];
+  participants: readonly RawParticipant[];
   queueType: QueueType;
   mvpPuuid: string | undefined;
   mvpScore: number | undefined;
@@ -247,10 +282,16 @@ export async function awardForGuild(input: {
     }
   }
 
+  const targets = targetsFromSnapshot(
+    input.participants,
+    serverId,
+    marker.targetSnapshotJson,
+  );
+
   // Wallets are created outside the transaction: creating one is idempotent and
   // a zero-risk row, and keeping it out keeps the write lock held briefly.
   const accountIds = new Map<string, number>();
-  for (const target of input.targets) {
+  for (const target of targets) {
     let account;
     try {
       account = await ensureBucksAccount(
@@ -305,7 +346,7 @@ export async function awardForGuild(input: {
       let entryCount = 0;
       let totalAwarded = 0;
 
-      for (const target of input.targets) {
+      for (const target of targets) {
         const accountId = accountIds.get(target.discordId);
         if (accountId === undefined) {
           continue;

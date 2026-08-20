@@ -162,6 +162,7 @@ export async function retryPendingBucksEarnings(
             marker.serverId,
             marker.targetSnapshotJson,
           ),
+          participants: match.info.participants,
           queueType,
           mvpPuuid: mvp?.puuid,
           mvpScore: mvp?.score,
