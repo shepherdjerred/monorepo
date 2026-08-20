@@ -2,7 +2,13 @@ import { defineConfig, devices, type Project } from "@playwright/test";
 import { env } from "node:process";
 import { viewports } from "./src/constants.ts";
 
-const isNightly = env["SCOUT_DESIGN_AUDIT_MODE"] === "nightly";
+const mode = env["SCOUT_DESIGN_AUDIT_MODE"];
+if (mode !== undefined && mode !== "pr" && mode !== "nightly") {
+  throw new Error(
+    `SCOUT_DESIGN_AUDIT_MODE must be pr or nightly, received ${mode}`,
+  );
+}
+const isNightly = mode === "nightly";
 const startLocalServers =
   env["SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS"] === "true";
 if (
@@ -46,7 +52,7 @@ for (const browser of browsers) {
             ? devices["iPhone 13"]
             : devices["Desktop Safari"]
           : viewport.isMobile
-            ? devices["iPhone 13"]
+            ? devices["Galaxy S9+"]
             : devices["Desktop Chrome"];
     projects.push({
       name: `${browser}-${viewport.name}`,

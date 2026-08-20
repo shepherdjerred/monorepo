@@ -36,9 +36,11 @@ bun run test:e2e
 ```
 
 Use `SCOUT_DESIGN_AUDIT_MODE=nightly` to add Firefox and WebKit to the
-Chromium matrix. Nightly CI must provide either one base URL or all three
-surface URLs, plus the dedicated read-only Discord credentials. Visual
-snapshots are updated only
+Chromium matrix. When local servers are enabled, as they are in CI, nightly
+uses the same deterministic fixture and needs no external origins or Discord
+credentials. An explicitly external or Beta audit must provide either one
+base URL or all three surface URLs, plus dedicated read-only Discord
+credentials. Visual snapshots are updated only
 through an explicit local Playwright update command after review; CI never
 updates them. The reviewed command is `bun x --no-install playwright test
 --update-snapshots` from this package directory.
