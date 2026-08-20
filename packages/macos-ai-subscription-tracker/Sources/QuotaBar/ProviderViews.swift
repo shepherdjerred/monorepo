@@ -220,19 +220,29 @@ struct WindowRow: View {
   }
 
   private func pacingCaption(_ pacing: WindowPacing) -> some View {
-    Text(
-      "pace \(WindowPacing.format(pacing.actualPacePerDay)) · even \(WindowPacing.format(pacing.evenPacePerDay))"
-    )
-    .font(.caption2)
-    .monospacedDigit()
-    .foregroundStyle(stale ? .secondary : pacingColor(for: pacing.status))
-    .help(pacingHelp(pacing))
-    .accessibilityHidden(true)
+    let label = pacingStatusLabel(pacing.status)
+    let actual = WindowPacing.format(pacing.actualPacePerDay)
+    let even = WindowPacing.format(pacing.evenPacePerDay)
+    return Text("\(label) · pace \(actual) · even \(even)")
+      .font(.caption2)
+      .monospacedDigit()
+      .foregroundStyle(stale ? .secondary : pacingColor(for: pacing.status))
+      .help(pacingHelp(pacing))
+      .accessibilityHidden(true)
+  }
+
+  private func pacingStatusLabel(_ status: WindowPacing.Status) -> String {
+    switch status {
+    case .ahead: return "ahead"
+    case .onPace: return "on pace"
+    case .behind: return "behind"
+    }
   }
 
   private func pacingHelp(_ pacing: WindowPacing) -> String {
     let days = String(format: "%.1f", pacing.daysRemaining)
-    return "You have \(remainingText) left with \(days) days to go: "
+    return "You are \(pacingStatusLabel(pacing.status)) of an even split: "
+      + "you have \(remainingText) left with \(days) days to go, or "
       + "\(WindowPacing.format(pacing.actualPacePerDay)) available per day vs "
       + "\(WindowPacing.format(pacing.evenPacePerDay)) at an even split."
   }
@@ -305,9 +315,10 @@ struct WindowRow: View {
       values.append("resets \(resetAt.formatted(date: .abbreviated, time: .shortened))")
     }
     if let pacing = WindowPacing.compute(window: window, at: date) {
-      values.append(
-        "pace \(WindowPacing.format(pacing.actualPacePerDay)), even split \(WindowPacing.format(pacing.evenPacePerDay))"
-      )
+      let label = pacingStatusLabel(pacing.status)
+      let actual = WindowPacing.format(pacing.actualPacePerDay)
+      let even = WindowPacing.format(pacing.evenPacePerDay)
+      values.append("\(label), pace \(actual), even split \(even)")
     }
     return values.joined(separator: ", ")
   }
