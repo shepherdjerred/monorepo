@@ -104,6 +104,10 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
     gold_spent: participant.goldSpent,
     total_damage_dealt: participant.totalDamageDealt,
     total_damage_dealt_to_champions: participant.totalDamageDealtToChampions,
+    magic_damage_dealt_to_champions: participant.magicDamageDealtToChampions,
+    physical_damage_dealt_to_champions:
+      participant.physicalDamageDealtToChampions,
+    true_damage_dealt_to_champions: participant.trueDamageDealtToChampions,
     total_damage_taken: participant.totalDamageTaken,
     damage_self_mitigated: participant.damageSelfMitigated,
     damage_dealt_to_objectives: participant.damageDealtToObjectives,

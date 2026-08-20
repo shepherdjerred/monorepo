@@ -76,6 +76,12 @@ export const MatchLakeRowSchema = z.object({
   // Damage
   total_damage_dealt: z.number(),
   total_damage_dealt_to_champions: z.number(),
+  // Damage splits. Parlay thresholds are only as good as the history behind
+  // them, so a field the model may propose has to be a column it can be priced
+  // against; magicDamageDealtToChampions is already used by live parlays.
+  magic_damage_dealt_to_champions: z.number(),
+  physical_damage_dealt_to_champions: z.number(),
+  true_damage_dealt_to_champions: z.number(),
   total_damage_taken: z.number(),
   damage_self_mitigated: z.number(),
   damage_dealt_to_objectives: z.number(),
@@ -237,6 +243,9 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     gold_spent: "INTEGER",
     total_damage_dealt: "INTEGER",
     total_damage_dealt_to_champions: "INTEGER",
+    magic_damage_dealt_to_champions: "INTEGER",
+    physical_damage_dealt_to_champions: "INTEGER",
+    true_damage_dealt_to_champions: "INTEGER",
     total_damage_taken: "INTEGER",
     damage_self_mitigated: "INTEGER",
     damage_dealt_to_objectives: "INTEGER",
