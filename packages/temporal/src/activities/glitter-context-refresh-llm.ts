@@ -198,9 +198,17 @@ export function useGlitterObjectArtifact<Response>(input: {
   artifact: GenerationArtifactResult<GlitterObjectArtifact<Response>>;
   budget: GenerationBudget;
 }): Response {
-  input.budget.record(input.artifact);
-  if (input.artifact.response.outcome === "failure") {
-    throw new Error(input.artifact.response.error);
+  const response = readGlitterObjectArtifact(input);
+  if (response.outcome === "failure") {
+    throw new Error(response.error);
   }
-  return input.artifact.response.value;
+  return response.value;
+}
+
+export function readGlitterObjectArtifact<Response>(input: {
+  artifact: GenerationArtifactResult<GlitterObjectArtifact<Response>>;
+  budget: GenerationBudget;
+}): GlitterObjectArtifact<Response> {
+  input.budget.record(input.artifact);
+  return input.artifact.response;
 }

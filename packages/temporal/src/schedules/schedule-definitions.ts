@@ -379,7 +379,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
   {
     id: "glitter-context-refresh-weekly",
     workflowType: "runGlitterContextRefresh",
-    args: [{ maxEstimatedCostUsd: 10 }],
+    args: [{ maxEstimatedCostUsd: 100 }],
     // Monday 11:00 PT, isolated from Discord capture and after other PR jobs.
     cronExpression: "0 11 * * 1",
     taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
