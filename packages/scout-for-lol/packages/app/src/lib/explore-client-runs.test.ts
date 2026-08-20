@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  clearExploreClientError,
   moveExploreClientRun,
   removeExploreClientRun,
   setExploreClientRun,
@@ -42,5 +43,18 @@ describe("Explore provider run map", () => {
     expect(
       removeExploreClientRun(state, "conversation-b").has("conversation-a"),
     ).toBe(true);
+  });
+
+  test("discovering a run clears only that conversation's stale error", () => {
+    const errors = new Map([
+      ["conversation-a", "Old failure"],
+      ["conversation-b", "Different failure"],
+    ]);
+
+    const cleared = clearExploreClientError(errors, "conversation-a");
+
+    expect(cleared.has("conversation-a")).toBe(false);
+    expect(cleared.get("conversation-b")).toBe("Different failure");
+    expect(errors.get("conversation-a")).toBe("Old failure");
   });
 });

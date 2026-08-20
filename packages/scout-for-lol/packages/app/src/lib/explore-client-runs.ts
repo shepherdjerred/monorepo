@@ -36,3 +36,13 @@ export function moveExploreClientRun(
   next.set(toKey, run);
   return next;
 }
+
+export function clearExploreClientError(
+  current: Map<string, string>,
+  conversationId: string,
+): Map<string, string> {
+  if (!current.has(conversationId)) return current;
+  const next = new Map(current);
+  next.delete(conversationId);
+  return next;
+}

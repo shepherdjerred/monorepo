@@ -21,6 +21,7 @@ import {
 } from "#src/lib/explore-turn-state.ts";
 import { observeExploreRun } from "#src/lib/explore-stream.ts";
 import {
+  clearExploreClientError,
   moveExploreClientRun,
   removeExploreClientRun,
   setExploreClientRun,
@@ -287,6 +288,9 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
 
     for (const rawSummary of activeRuns.data) {
       const summary = ExploreActiveRunSchema.parse(rawSummary);
+      setErrors((current) =>
+        clearExploreClientError(current, summary.conversationId),
+      );
       if (!runsRef.current.has(summary.conversationId)) {
         const seeded = applyStreamEvent(
           createPendingTurn({
@@ -358,11 +362,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
           turn: initial,
         });
       });
-      setErrors((current) => {
-        const next = new Map(current);
-        next.delete(key);
-        return next;
-      });
+      setErrors((current) => clearExploreClientError(current, key));
 
       try {
         const summary = ExploreActiveRunSchema.parse(
@@ -466,11 +466,9 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
       error: (conversationId) =>
         errors.get(conversationKey(conversationId)) ?? null,
       clearError: (conversationId) => {
-        setErrors((current) => {
-          const next = new Map(current);
-          next.delete(conversationKey(conversationId));
-          return next;
-        });
+        setErrors((current) =>
+          clearExploreClientError(current, conversationKey(conversationId)),
+        );
       },
       startTurn,
       stop,
