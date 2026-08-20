@@ -3,7 +3,7 @@ import { refreshSettledPoolMessages } from "#src/betting/postmatch-hook.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 
 describe("refreshSettledPoolMessages", () => {
-  test("removes straight-bet controls even when no outcome is announced", async () => {
+  test("removes straight-bet controls once even when no outcome is announced", async () => {
     const settlement: SettlementSummary = {
       matchId: "NA1_123",
       serverId: "guild-one",
@@ -20,7 +20,7 @@ describe("refreshSettledPoolMessages", () => {
     }[])[] = [];
 
     await refreshSettledPoolMessages(
-      [settlement],
+      [settlement, settlement],
       [],
       (pools) => {
         refreshed.push(pools);

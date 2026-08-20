@@ -896,18 +896,22 @@ rounding. Every credit preserves enough Int32 headroom to return all pending
 stakes and house reserves, including cancellation and void paths.
 
 A new wallet's welcome grant is transferred from that house bankroll (paired
-`seed` ledger rows), not minted. One-sided markets are matched by a synthetic
-per-guild house account with a bounded opening bankroll. The house is a real
-`BucksAccount` and `BucksBet`, so its seed, stake, payout, and balance are all
-ledger-audited; house accounts do not appear on the user leaderboard. If the reserve cannot cover the exposure,
-the market is voided with `house_unavailable` and user stakes are refunded.
-The house also receives two audited 20% cuts, rounded to the nearest whole Buck:
-one from each human winner's gross payout and one from a voluntarily cancelled
-position. A winning cut is capped at gross winnings so a correct bet always
-returns at least its stake; the house never charges itself. The ledger records
-the gross player credit, matching player debit, and matching house credit in one
-transaction. Remakes, expired or unsupported pools, and unavailable reserves
-remain full refunds with no cut.
+`seed` ledger rows), not minted. One-sided markets are matched by the same
+synthetic per-guild house account with a bounded opening bankroll. The house is
+a real `BucksAccount` and `BucksBet`, so its seed, stake, payout, and balance are
+all ledger-audited; house accounts do not appear on the user leaderboard. At
+outcome-market close, human offers match first; the house then fills up to 5 BB
+total, capped by its available balance.
+An underfunded house provides a smaller fill rather than voiding the market, and
+every remaining unmatched human BB is refunded.
+
+The house also receives two audited 20% cuts with distinct rounding rules: a
+human winner pays 20% of matched profit rounded down, while a voluntarily
+cancelled outcome offer pays 20% of submitted stake rounded to the nearest BB.
+The house never charges itself. A fee-paying winner's payout is recorded as
+principal and profit credits around the matching user debit and house credit;
+the payout rows still sum to the stored gross payout in one transaction.
+Remakes and expired or unsupported pools remain full refunds with no cut.
 
 - **The allowlist gates taking Bucks, never returning them.** `betting_enabled`
   is checked in four places: command registration, pool creation, `placeBet`,
@@ -959,9 +963,12 @@ remain full refunds with no cut.
 - **Successful mutations refresh the prematch message instead of posting a
   receipt.** Button and `/bb` placement or cancellation confirmations remain
   ephemeral. After the ledger transaction commits, a per-pool queue re-reads
-  current bets and best-effort edits every stored prematch message with Blue and
-  Red totals plus each named human position. House positions stay hidden,
-  cancellations disappear, and mention notifications are suppressed. The pool
+  current offers and best-effort edits every stored prematch message with Blue
+  and Red totals plus each named human position. At close the same message
+  becomes the receipt: it shows every human's offered, matched, and refunded BB,
+  equal final matched totals, and any aggregate house fill without exposing the
+  synthetic house account. Cancellations disappear from the public digest while
+  remaining in the audit tables, and mention notifications are suppressed. The pool
   records `prematchContentBase` atomically with its message refs so refreshes do
   not require Read Message History; legacy pools without that base remain
   settlement-safe and are not edited. Close and settlement run the same refresh

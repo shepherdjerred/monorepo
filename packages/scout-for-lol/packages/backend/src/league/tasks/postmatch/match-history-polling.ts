@@ -67,6 +67,23 @@ export function resetPollingState(): void {
   isPollingInProgress = false;
   pollingStartTime = undefined;
 }
+
+type BucksPostmatchResult = Awaited<ReturnType<typeof settleAndAwardBucks>>;
+
+export function shouldAnnounceBucks(input: {
+  silent: boolean;
+  bucks: BucksPostmatchResult;
+}): boolean {
+  return (
+    !input.silent ||
+    input.bucks.closures.some((pool) => pool.positions.length > 0) ||
+    input.bucks.settlements.some((summary) =>
+      summary.bets.some((bet) => !bet.isHouse),
+    ) ||
+    input.bucks.parlaySettlements.some((summary) => summary.bets.length > 0)
+  );
+}
+
 function shouldSkipPollingRun(): boolean {
   if (!isPollingInProgress) {
     return false;
@@ -213,8 +230,9 @@ async function processMatchAndUpdatePlayers(
   }
 
   // After the S3 gate and OUTSIDE `!silent`: Bucks are owed for the game even
-  // when no Discord message is worth sending. See settleAndAwardBucks.
+  // when the ordinary match report is suppressed. See settleAndAwardBucks.
   const bucks = await settleAndAwardBucks(matchData);
+  let postmatchMessageIds = new Map<DiscordChannelId, string>();
 
   if (!silent) {
     // Report generation runs only AFTER the durable copy succeeded. A
@@ -222,7 +240,6 @@ async function processMatchAndUpdatePlayers(
     // failure) still swallows + advances: the authoritative S3 write already
     // succeeded, and these failures are deterministic — retrying every poll
     // would re-run the whole AI pipeline and burn tokens for nothing.
-    let postmatchMessageIds = new Map<DiscordChannelId, string>();
     try {
       postmatchMessageIds = await processMatch(matchData, allTrackedPlayers);
     } catch (error) {
@@ -234,17 +251,27 @@ async function processMatchAndUpdatePlayers(
         tags: { source: "process-match-throw", matchId },
       });
     }
+  }
 
+  if (shouldAnnounceBucks({ silent, bucks })) {
     // Announced after the report so it reads as a follow-up, and as its own
     // message rather than appended to the report's content, which the AI review
-    // already owns and which is delivered to every guild at once.
+    // already owns and which is delivered to every guild at once. A silent
+    // match still announces actual betting allocations or payouts: suppressing
+    // a stale report must not hide what happened to reserved BB.
     //
     // Its own error boundary, NOT the report's: the pool is already committed
     // as settled and a later pass returns no summary, so this announcement is
     // one-shot. Sharing a `try` with report generation and Discord delivery
     // meant a render crash or a failed send discarded the settlement summary
     // outright, and the bettors were never told what happened to their stakes.
-    await announceSettlements({ matchId, ...bucks, postmatchMessageIds });
+    await announceSettlements({
+      matchId,
+      closures: bucks.closures,
+      settlements: bucks.settlements,
+      earnings: bucks.earnings,
+      postmatchMessageIds,
+    });
     await announceParlaySettlements(bucks.parlaySettlements);
   }
 

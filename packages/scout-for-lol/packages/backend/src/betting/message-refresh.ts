@@ -69,6 +69,9 @@ async function refreshOnce(
           id: true,
           predictedTeamId: true,
           stake: true,
+          matchedStake: true,
+          unmatchedStake: true,
+          betOutcome: true,
           bucksAccount: {
             select: { discordId: true, isHouse: true },
           },
@@ -92,19 +95,41 @@ async function refreshOnce(
     pool.predictionJson === null
       ? undefined
       : BucksPredictionSchema.parse(JSON.parse(pool.predictionJson));
+  const poolState = BucksPoolStateSchema.parse(pool.poolState);
+  const currentBets = pool.bets.filter((bet) => bet.betOutcome !== "cancelled");
   const positions: BucksPrematchPosition[] = pool.bets
-    .filter((bet) => !bet.bucksAccount.isHouse)
+    .filter(
+      (bet) => bet.betOutcome !== "cancelled" && !bet.bucksAccount.isHouse,
+    )
     .map((bet) => ({
       discordId: bet.bucksAccount.discordId,
       teamId: RiotTeamIdSchema.parse(bet.predictedTeamId),
-      stake: bet.stake,
+      offeredStake: bet.stake,
+      matchedStake: bet.matchedStake,
+      unmatchedStake: bet.unmatchedStake,
     }));
+  const houseBets = currentBets.filter((bet) => bet.bucksAccount.isHouse);
+  if (poolState === "open" && houseBets.length > 0) {
+    throw new Error(`Open Bryan Bucks pool ${input.matchId} has a house bet`);
+  }
+  const houseMatches = houseBets.map((bet) => {
+    if (bet.matchedStake === null) {
+      throw new Error(
+        `House bet ${bet.id.toString()} in ${input.matchId} has no matched stake`,
+      );
+    }
+    return {
+      teamId: RiotTeamIdSchema.parse(bet.predictedTeamId),
+      matchedStake: bet.matchedStake,
+    };
+  });
   const content = appendBucksLine(
     pool.prematchContentBase,
     bucksPrematchSummary({
       prediction,
-      poolState: BucksPoolStateSchema.parse(pool.poolState),
+      poolState,
       positions,
+      houseMatches,
     }),
   );
 
@@ -184,12 +209,16 @@ export async function refreshBucksMessages(
 
 export async function refreshClosedBucksMessages(
   closed: readonly { matchId: string; serverId: string }[],
+  prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
   for (const pool of closed) {
-    await refreshBucksMessages({
-      matchId: pool.matchId,
-      serverId: DiscordGuildIdSchema.parse(pool.serverId),
-      removeComponents: true,
-    });
+    await refreshBucksMessages(
+      {
+        matchId: pool.matchId,
+        serverId: DiscordGuildIdSchema.parse(pool.serverId),
+        removeComponents: true,
+      },
+      prismaClient,
+    );
   }
 }

@@ -4,7 +4,7 @@ import {
   type LeaguePuuid,
   type RiotTeamId,
 } from "@scout-for-lol/data";
-import type { OpenMarketAggregate } from "#src/betting/accounts.ts";
+import type { OpenMarketAggregate } from "#src/betting/open-market.ts";
 import { BLUE_TEAM_ID, RED_TEAM_ID } from "#src/betting/constants.ts";
 import { teamName } from "#src/betting/team.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
@@ -84,8 +84,8 @@ export function buildOpenMarketSections(
     return [
       `## ${bluePlayers} vs ${redPlayers}`,
       `Closes <t:${closesAtUnix.toString()}:R>`,
-      `🔵 **${teamName(BLUE_TEAM_ID)}:** ${pool.blue.totalStake.toString()} BB across ${pool.blue.betCount.toString()} bet(s) — ${bluePlayers}`,
-      `🔴 **${teamName(RED_TEAM_ID)}:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} bet(s) — ${redPlayers}`,
+      `🔵 **${teamName(BLUE_TEAM_ID)} offers:** ${pool.blue.totalStake.toString()} BB across ${pool.blue.betCount.toString()} offer(s) — ${bluePlayers}`,
+      `🔴 **${teamName(RED_TEAM_ID)} offers:** ${pool.red.totalStake.toString()} BB across ${pool.red.betCount.toString()} offer(s) — ${redPlayers}`,
     ].join("\n");
   });
 }

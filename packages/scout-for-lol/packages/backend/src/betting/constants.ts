@@ -60,6 +60,9 @@ export const SEED_GRANT = 25;
  */
 export const HOUSE_BANKROLL = 10_000;
 
+/** Maximum aggregate house exposure added to one guild's game pool. */
+export const HOUSE_MATCH_LIMIT = 5;
+
 /** Synthetic, non-user Discord ID used only by the per-server house account. */
 export const HOUSE_ACCOUNT_DISCORD_ID =
   DiscordAccountIdSchema.parse("10000000000000000");

@@ -4,12 +4,12 @@ import {
   BucksPredictionSchema,
   type BucksPrediction,
 } from "@scout-for-lol/data/index.ts";
+import { sendSettlementMessage } from "#src/betting/announce.ts";
 import {
   buildSettlementMessage,
   formatSettlementBody,
   predictionVerdict,
-  sendSettlementMessage,
-} from "#src/betting/announce.ts";
+} from "#src/betting/outcome-message.ts";
 import { HOUSE_ACCOUNT_DISCORD_ID } from "#src/betting/constants.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
@@ -98,7 +98,9 @@ describe("formatSettlementBody", () => {
           discordId: WINNER_DISCORD_ID,
           isHouse: false,
           predictedTeamId: 100,
-          stake: 10,
+          submittedStake: 10,
+          matchedStake: 10,
+          unmatchedStake: 0,
           grossPayout: 20,
           houseCut: 4,
           payout: 16,
@@ -113,7 +115,9 @@ describe("formatSettlementBody", () => {
           discordId: LOSER_DISCORD_ID,
           isHouse: false,
           predictedTeamId: 200,
-          stake: 10,
+          submittedStake: 10,
+          matchedStake: 10,
+          unmatchedStake: 0,
           grossPayout: 0,
           houseCut: 0,
           payout: 0,
@@ -141,12 +145,11 @@ describe("formatSettlementBody", () => {
     });
 
     expect(body).toContain(
-      `• <@${WINNER_DISCORD_ID}> staked 10 BB → gross 20 BB − 4 BB house cut = 16 BB received (+6 BB net winnings)`,
+      `• <@${WINNER_DISCORD_ID}> offered 10 BB · matched 10 BB · refunded 0 BB → gross 20 BB − 4 BB winner fee = 16 BB received (+6 BB net winnings)`,
     );
-    expect(body).toContain("Pool **20 BB** · house cut **4 BB**");
-    expect(body).toContain("house cut **4 BB**");
+    expect(body).toContain("Matched pool **20 BB** · winner fees **4 BB**");
     expect(body).toContain(
-      `• <@${LOSER_DISCORD_ID}> staked 10 BB → received 0 BB`,
+      `• <@${LOSER_DISCORD_ID}> offered 10 BB · matched 10 BB · refunded 0 BB → lost 10 BB`,
     );
     expect(body).toContain("🪙 **Aaron** +11 BB (played, clash bonus)");
   });
@@ -167,7 +170,9 @@ describe("formatSettlementBody", () => {
           discordId: WINNER_DISCORD_ID,
           isHouse: false,
           predictedTeamId: 100,
-          stake: 10,
+          submittedStake: 14,
+          matchedStake: 10,
+          unmatchedStake: 4,
           grossPayout: 10,
           houseCut: 0,
           payout: 10,
@@ -187,9 +192,9 @@ describe("formatSettlementBody", () => {
     });
 
     expect(body).toContain(
-      `• <@${WINNER_DISCORD_ID}> staked 10 BB → refunded 10 BB (no house cut)`,
+      `• <@${WINNER_DISCORD_ID}> offered 14 BB · matched 10 BB · refunded 4 BB → matched stake refunded 10 BB (no winner fee)`,
     );
-    expect(body).toContain("Pool **10 BB** · house cut **0 BB**");
+    expect(body).toContain("Matched pool **10 BB** · winner fees **0 BB**");
   });
 });
 
@@ -210,7 +215,9 @@ describe("formatSettlementBody house cuts", () => {
           discordId: WINNER_DISCORD_ID,
           isHouse: false,
           predictedTeamId: 100,
-          stake: 1,
+          submittedStake: 1,
+          matchedStake: 1,
+          unmatchedStake: 0,
           grossPayout: 2,
           houseCut: 0,
           payout: 2,
@@ -225,7 +232,9 @@ describe("formatSettlementBody house cuts", () => {
           discordId: LOSER_DISCORD_ID,
           isHouse: false,
           predictedTeamId: 200,
-          stake: 1,
+          submittedStake: 1,
+          matchedStake: 1,
+          unmatchedStake: 0,
           grossPayout: 0,
           houseCut: 0,
           payout: 0,
@@ -244,9 +253,9 @@ describe("formatSettlementBody house cuts", () => {
       predictionVerdictLine: undefined,
     });
 
-    expect(body).toContain("Pool **2 BB** · house cut **0 BB**");
+    expect(body).toContain("Matched pool **2 BB** · winner fees **0 BB**");
     expect(body).toContain(
-      "staked 1 BB → gross 2 BB − 0 BB house cut = 2 BB received (+1 BB net winnings)",
+      "offered 1 BB · matched 1 BB · refunded 0 BB → gross 2 BB − 0 BB winner fee = 2 BB received (+1 BB net winnings)",
     );
   });
 
@@ -266,7 +275,9 @@ describe("formatSettlementBody house cuts", () => {
           discordId: WINNER_DISCORD_ID,
           isHouse: false,
           predictedTeamId: 100,
-          stake: 25,
+          submittedStake: 25,
+          matchedStake: 25,
+          unmatchedStake: 0,
           grossPayout: 50,
           houseCut: 10,
           payout: 40,
@@ -281,7 +292,9 @@ describe("formatSettlementBody house cuts", () => {
           discordId: HOUSE_ACCOUNT_DISCORD_ID,
           isHouse: true,
           predictedTeamId: 200,
-          stake: 25,
+          submittedStake: 25,
+          matchedStake: 25,
+          unmatchedStake: 0,
           grossPayout: 0,
           houseCut: 0,
           payout: 0,
@@ -304,9 +317,11 @@ describe("formatSettlementBody house cuts", () => {
       "🏦 Bryan Bucks house matched 25 BB on the other side.",
     );
     expect(body).not.toContain(`<@${HOUSE_ACCOUNT_DISCORD_ID}>`);
-    expect(body).toContain(`• <@${WINNER_DISCORD_ID}> staked 25 BB`);
+    expect(body).toContain(`• <@${WINNER_DISCORD_ID}> offered 25 BB`);
   });
+});
 
+describe("settlement outcome message", () => {
   test("fits a full settlement into one bounded embed", () => {
     const summary: SettlementSummary = {
       matchId: "NA1_5000000042",
@@ -322,7 +337,9 @@ describe("formatSettlementBody house cuts", () => {
         discordId: bucksTestDiscordId(index + 1),
         isHouse: false,
         predictedTeamId: 100,
-        stake: 5,
+        submittedStake: 5,
+        matchedStake: 5,
+        unmatchedStake: 0,
         grossPayout: 10,
         houseCut: 2,
         payout: 8,
@@ -390,9 +407,11 @@ describe("formatSettlementBody house cuts", () => {
         0,
       );
     expect(embedLength).toBeLessThanOrEqual(6000);
-    expect(delivered).toContain("Pool **80 BB** · house cut **32 BB**");
     expect(delivered).toContain(
-      "gross 10 BB − 2 BB house cut = 8 BB received (+3 BB net winnings)",
+      "Matched pool **80 BB** · winner fees **32 BB**",
+    );
+    expect(delivered).toContain(
+      "gross 10 BB − 2 BB winner fee = 8 BB received (+3 BB net winnings)",
     );
     expect(delivered).toContain("🪙 **Aaron** +13 BB");
     expect(delivered).toContain("…and 1 more — see `/bb history`");

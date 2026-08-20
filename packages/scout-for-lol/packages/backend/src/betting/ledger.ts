@@ -96,13 +96,12 @@ export async function refundableBucksHeldForAccounts(
     ),
   ];
   const [outcomeRows, humanParlayRows, houseParlayRows] = await Promise.all([
-    tx.bucksBet.groupBy({
-      by: ["bucksAccountId"],
+    tx.bucksBet.findMany({
       where: {
         bucksAccountId: { in: accountIds },
         betOutcome: "pending",
       },
-      _sum: { stake: true },
+      select: { bucksAccountId: true, stake: true, matchedStake: true },
     }),
     tx.bucksParlayBet.groupBy({
       by: ["bucksAccountId"],
@@ -124,9 +123,14 @@ export async function refundableBucksHeldForAccounts(
     }),
   ]);
 
-  const outcomeByAccount = new Map(
-    outcomeRows.map((row) => [row.bucksAccountId, row._sum.stake ?? 0]),
-  );
+  const outcomeByAccount = new Map<number, bigint>();
+  for (const row of outcomeRows) {
+    outcomeByAccount.set(
+      row.bucksAccountId,
+      (outcomeByAccount.get(row.bucksAccountId) ?? 0n) +
+        BigInt(row.matchedStake ?? row.stake),
+    );
+  }
   const parlayByAccount = new Map(
     humanParlayRows.map((row) => [row.bucksAccountId, row._sum.stake ?? 0]),
   );
@@ -142,7 +146,7 @@ export async function refundableBucksHeldForAccounts(
   return new Map(
     accounts.map((account) => [
       account.id,
-      BigInt(outcomeByAccount.get(account.id) ?? 0) +
+      (outcomeByAccount.get(account.id) ?? 0n) +
         (account.isHouse
           ? (reserveByServer.get(account.serverId) ?? 0n)
           : BigInt(parlayByAccount.get(account.id) ?? 0)),
@@ -164,10 +168,14 @@ export async function refundableBucksHeld(
     where: { id: bucksAccountId },
     select: { serverId: true, isHouse: true },
   });
-  const outcome = await tx.bucksBet.aggregate({
+  const outcomeRows = await tx.bucksBet.findMany({
     where: { bucksAccountId, betOutcome: "pending" },
-    _sum: { stake: true },
+    select: { stake: true, matchedStake: true },
   });
+  const outcomeHeld = outcomeRows.reduce(
+    (total, row) => total + BigInt(row.matchedStake ?? row.stake),
+    0n,
+  );
   if (account.isHouse) {
     const parlay = await tx.bucksParlayBet.aggregate({
       where: {
@@ -176,15 +184,13 @@ export async function refundableBucksHeld(
       },
       _sum: { houseReserve: true },
     });
-    return (
-      BigInt(outcome._sum.stake ?? 0) + BigInt(parlay._sum.houseReserve ?? 0)
-    );
+    return outcomeHeld + BigInt(parlay._sum.houseReserve ?? 0);
   }
   const parlay = await tx.bucksParlayBet.aggregate({
     where: { bucksAccountId, betOutcome: "pending" },
     _sum: { stake: true },
   });
-  return BigInt(outcome._sum.stake ?? 0) + BigInt(parlay._sum.stake ?? 0);
+  return outcomeHeld + BigInt(parlay._sum.stake ?? 0);
 }
 
 /**

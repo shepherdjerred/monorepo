@@ -38,7 +38,7 @@ describe("/bb bet", () => {
       expect.objectContaining({
         type: 1,
         name: "bet",
-        description: "Bet on Blue or Red; 20% win and cancellation house cuts",
+        description: "Offer up to an amount; only matched Bucks are at risk",
       }),
     );
     expect(bet.options).toEqual([
@@ -158,10 +158,10 @@ describe("/bb bet", () => {
 
     expect(sections).toHaveLength(1);
     expect(sections[0]).toContain(
-      "🔵 **Blue Team:** 6 BB across 2 bet(s) — game: `jerred`, game: `friend`",
+      "🔵 **Blue Team offers:** 6 BB across 2 offer(s) — game: `jerred`, game: `friend`",
     );
     expect(sections[0]).toContain(
-      "🔴 **Red Team:** 5 BB across 1 bet(s) — game: `bryan`",
+      "🔴 **Red Team offers:** 5 BB across 1 offer(s) — game: `bryan`",
     );
   });
 });

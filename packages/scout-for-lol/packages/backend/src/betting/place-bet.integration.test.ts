@@ -189,7 +189,7 @@ describe("placeBet — accepting a position", () => {
 });
 
 describe("cancelBet — returning a position", () => {
-  test("returns a 5 BB stake less a paired 1 BB house cut", async () => {
+  test("returns a 5 BB offer less a paired 1 BB cancellation fee", async () => {
     await bet({ stake: 5 });
 
     const result = await cancelBet(
@@ -222,7 +222,7 @@ describe("cancelBet — returning a position", () => {
         delta: -5,
         balanceAfter: SEED_GRANT - 5,
       },
-      { kind: "bet_refund", delta: 5, balanceAfter: SEED_GRANT },
+      { kind: "bet_cancel_refund", delta: 5, balanceAfter: SEED_GRANT },
       {
         kind: "cancel_fee",
         delta: -1,
@@ -269,7 +269,22 @@ describe("cancelBet — returning a position", () => {
       ratePercent: 20,
       grossAmount: 5,
       fee: 1,
+      basis: "submitted_stake",
     });
+    const retained = await db.bucksBet.findFirstOrThrow();
+    expect(retained).toMatchObject({
+      betOutcome: "cancelled",
+      stake: 5,
+      matchedStake: 0,
+      unmatchedStake: 5,
+      grossPayout: 5,
+      fee: 1,
+      payout: 4,
+    });
+    expect(await db.bucksOpenPosition.count()).toBe(0);
+    expect(
+      await db.bucksLedgerEntry.count({ where: { betId: retained.id } }),
+    ).toBe(4);
     expect(await reconcileBucksBalances(db)).toEqual([]);
   });
 
@@ -299,6 +314,47 @@ describe("cancelBet — returning a position", () => {
       },
     });
     expect(house.balance).toBe(HOUSE_BANKROLL - SEED_GRANT);
+  });
+
+  test("reconciliation recomputes the cancellation fee from the offer", async () => {
+    await bet({ stake: 3 });
+    await cancelBet(
+      { matchId: MATCH_ID, serverId: SERVER_ID, discordId: BETTOR },
+      db,
+    );
+    const cancelled = await db.bucksBet.findFirstOrThrow({
+      select: { id: true, bucksAccountId: true },
+    });
+    const house = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: true },
+      select: { id: true },
+    });
+
+    await db.bucksLedgerEntry.deleteMany({
+      where: { betId: cancelled.id, kind: "cancel_fee" },
+    });
+    await db.bucksBet.update({
+      where: { id: cancelled.id },
+      data: { fee: 0, payout: 3 },
+    });
+    await db.bucksAccount.update({
+      where: { id: cancelled.bucksAccountId },
+      data: { balance: SEED_GRANT },
+    });
+    await db.bucksAccount.update({
+      where: { id: house.id },
+      data: { balance: HOUSE_BANKROLL - SEED_GRANT },
+    });
+
+    expect(await reconcileBucksBalances(db)).toContainEqual(
+      expect.objectContaining({
+        kind: "fee",
+        betId: cancelled.id,
+        message: expect.stringContaining(
+          "differs from required fee 1 for a 3 BB submitted offer",
+        ),
+      }),
+    );
   });
 });
 

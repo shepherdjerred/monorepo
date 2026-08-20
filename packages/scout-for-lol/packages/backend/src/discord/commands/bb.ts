@@ -9,7 +9,6 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import {
   getLedgerPage,
-  getOpenMarketAggregates,
   getPersonalBucksView,
   type PersonalBucksView,
 } from "#src/betting/accounts.ts";
@@ -19,6 +18,7 @@ import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
 import { MIN_STAKE } from "#src/betting/constants.ts";
 import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { renderBucksHistory } from "#src/betting/navigation.ts";
+import { getOpenMarketAggregates } from "#src/betting/open-market.ts";
 import {
   BucksTeamChoiceSchema,
   subjectWinsForTeam,
@@ -104,7 +104,7 @@ export const bbCommand = new SlashCommandBuilder()
   .addSubcommand((sub) =>
     sub
       .setName("bet")
-      .setDescription("Bet on Blue or Red; 20% win and cancellation house cuts")
+      .setDescription("Offer up to an amount; only matched Bucks are at risk")
       .addStringOption((option) =>
         option
           .setName("game")
@@ -163,14 +163,18 @@ export function buildPersonalBucksEmbed(
   now: number = Date.now(),
 ): EmbedBuilder {
   const positions = view.pendingPositions.map((position) => {
-    const state =
+    const timing =
       position.poolState === "open" && position.closesAt.getTime() > now
         ? `closes <t:${Math.floor(position.closesAt.getTime() / 1000).toString()}:R>`
         : "locked";
     if (position.marketType === "outcome") {
-      return `• **${teamName(position.teamId)}** — game: \`${position.gameAlias}\` · ${position.stake.toString()} BB · ${state}`;
+      const amount =
+        position.matchedStake === null
+          ? `offered up to ${position.offeredStake.toString()} BB · match pending`
+          : `matched ${position.matchedStake.toString()} BB · refunded ${(position.unmatchedStake ?? 0).toString()} BB`;
+      return `• **${teamName(position.teamId)}** — game: \`${position.gameAlias}\` · ${amount} · ${timing}`;
     }
-    return `• **${position.subjectAlias} ${position.side}** — ${position.stake.toString()} BB · ${state}`;
+    return `• **${position.subjectAlias} ${position.side}** — ${position.stake.toString()} BB · ${timing}`;
   });
   if (view.pendingPositionCount > view.pendingPositions.length) {
     positions.push(
@@ -188,8 +192,8 @@ export function buildPersonalBucksEmbed(
         inline: true,
       },
       {
-        name: "Total staked",
-        value: `**${view.totalStaked.toString()} BB**`,
+        name: "Reserved / at risk",
+        value: `**${view.totalAtRisk.toString()} BB**`,
         inline: true,
       },
     );

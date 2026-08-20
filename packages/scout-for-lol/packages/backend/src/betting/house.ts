@@ -56,7 +56,7 @@ export async function ensureHouseAccountInTransaction(
 /**
  * Transfer an already-funded fee from a human wallet to the house.
  *
- * Callers first credit the gross payout or refund. Keeping the debit and
+ * Callers first ensure the wallet can fund the fee. Keeping the debit and
  * matching credit as separate ledger rows makes the cut visible from both
  * accounts while the caller's transaction keeps the transfer all-or-nothing.
  *
@@ -68,7 +68,7 @@ export async function transferHouseCut(
     serverId: DiscordGuildId;
     bucksAccountId: number;
     amount: number;
-    kind: "house_rake" | "cancel_fee";
+    kind: "winner_fee" | "cancel_fee";
     context: BucksLedgerContext;
     matchId: string;
     betId: number;

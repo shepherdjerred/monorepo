@@ -72,7 +72,7 @@ const MIN_GAMES_FOR_FORM = 5;
 const MIN_GAMES_FOR_CHAMPION = 3;
 
 /** Never state certainty. A 5% floor keeps an upset from reading as impossible
- * and keeps parimutuel odds meaningful. */
+ * and keeps the displayed call useful. */
 const MIN_PROBABILITY = 0.05;
 const MAX_PROBABILITY = 0.95;
 

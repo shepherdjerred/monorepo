@@ -54,7 +54,7 @@ export function describeResult(
 ): string {
   switch (result.kind) {
     case "placed": {
-      return `✅ Bet placed: **${teamName(selectedTeamId)} wins** for **${result.totalStake.toString()} BB** total. Balance: **${result.balanceAfter.toString()} BB**. ${HOUSE_CUT_TERMS}`;
+      return `✅ Offer placed: **${teamName(selectedTeamId)} wins** for up to **${result.totalStake.toString()} BB**. The final matched amount will be announced at close. Available balance: **${result.balanceAfter.toString()} BB**. ${HOUSE_CUT_TERMS}`;
     }
     case "window_closed":
       return "⏰ Betting has closed for this game.";
@@ -67,7 +67,7 @@ export function describeResult(
     case "unknown_subject":
       return `🤔 That player isn't in this game. Try: ${result.validAliases.join(", ")}.`;
     case "invalid_stake":
-      return "💱 Stakes must be a positive whole number of BB.";
+      return "💱 Offers must be a positive whole number of BB.";
     case "storage_limit":
       return "💱 That position is too large for the current Bryan Bucks storage format.";
     case "insufficient":
@@ -85,13 +85,13 @@ export function describeResult(
 export function describeCancel(result: CancelBetResult): string {
   switch (result.kind) {
     case "cancelled":
-      return `↩️ Bet cancelled: stake **${result.stake.toString()} BB** − **${result.houseCut.toString()} BB house cut** = **${result.refunded.toString()} BB returned**; balance **${result.balanceAfter.toString()} BB**.`;
+      return `↩️ Offer cancelled: offered **${result.stake.toString()} BB** − **${result.houseCut.toString()} BB cancellation fee** = **${result.refunded.toString()} BB returned**; balance **${result.balanceAfter.toString()} BB**.`;
     case "window_closed":
-      return "⏰ Betting has closed for this game, so positions are locked in. Yours settles when the game ends.";
+      return "⏰ Betting has closed for this game. Your offer can no longer be cancelled; check the close announcement for your final matched amount and any unmatched refund.";
     case "already_resolved":
       return result.poolState === "settled"
         ? "✅ This game has already settled, so there's nothing left to cancel — check your balance for the payout."
-        : "🚫 This game's market was voided, so every stake was already returned.";
+        : "🚫 This game's market was voided, so matched BB were refunded and unmatched BB were already returned.";
     case "no_bet":
       return "🤷 You don't have a bet to cancel on this game.";
     case "no_pool":

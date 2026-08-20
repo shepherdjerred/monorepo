@@ -1,50 +1,44 @@
 import * as Sentry from "@sentry/bun";
 import {
-  BucksPoolRosterSchema,
   BUCKS_INT32_MAX,
-  LeaguePuuidSchema,
+  BucksPoolRosterSchema,
+  RiotTeamIdSchema,
   type BucksPoolParticipant,
   type BucksVoidReason,
-  type DiscordGuildId,
   type RawMatch,
 } from "@scout-for-lol/data";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
-import { HOUSE_ACCOUNT_DISCORD_ID } from "#src/betting/constants.ts";
-import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
+import { settlementHouseCut } from "#src/betting/house-cut.ts";
+import { BucksStorageOverflowError } from "#src/betting/ledger.ts";
+import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
+import { creditBet } from "#src/betting/settlement-ledger.ts";
 import {
-  ensureHouseAccountInTransaction,
-  transferHouseCut,
-} from "#src/betting/house.ts";
-import { applyBucksDelta, refundableBucksHeld } from "#src/betting/ledger.ts";
-import {
-  loadPendingOutcomeBets,
-  planOutcomeSettlement,
-  type PendingBetRow,
-  type SettlementBet,
-} from "#src/betting/settlement-plan.ts";
+  closeBettingWindowsForMatch,
+  type ClosedPool,
+} from "#src/betting/sweep.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-settle");
 
-/**
- * Paying out a finished match.
- *
- * Deliberately **not** gated on `betting_enabled`. The flag governs taking
- * Bucks, never returning them: stakes were already debited when the bets were
- * placed, so a guild removed from the allowlist mid-match must still have its
- * pool settled or refunded. Refusing would strand real balances, which is worse
- * than paying out one last match. `placeBet` carries the gate instead, so no
- * *new* stake can be taken.
- *
- * Idempotency is the `poolState` column itself, not a separate marker table.
- * `MatchAiAttempt` has to be marked *before* its call because OpenAI spend is
- * external and cannot join a database transaction; every side effect here is
- * local, so the state transition commits *with* the payouts. A separate marker
- * would reintroduce the exact "marked but didn't happen" window it exists to
- * close.
- */
+export type SettlementBet = {
+  betId: number;
+  bucksAccountId: number;
+  discordId: string;
+  isHouse: boolean;
+  predictedTeamId: number;
+  submittedStake: number;
+  matchedStake: number;
+  unmatchedStake: number;
+  grossPayout: number;
+  houseCut: number;
+  payout: number;
+  winnings: number;
+  won: boolean;
+  refunded: boolean;
+  subjectPuuid: string;
+};
 
 export type SettlementSummary = {
   matchId: string;
@@ -57,125 +51,174 @@ export type SettlementSummary = {
   bets: SettlementBet[];
 };
 
-function aliasesForTeam(
-  roster: readonly BucksPoolParticipant[],
-  teamId: number,
-): string[] {
-  return roster
-    .filter((participant) => participant.teamId === teamId)
-    .map((participant) => participant.trackedAlias)
-    .filter((alias) => alias !== undefined);
-}
+type PendingMatchedBet = {
+  id: number;
+  bucksAccountId: number;
+  discordId: string;
+  isHouse: boolean;
+  predictedTeamId: number;
+  submittedStake: number;
+  matchedStake: number;
+  unmatchedStake: number;
+  subjectPuuid: string;
+};
 
-function subjectAlias(
-  roster: readonly BucksPoolParticipant[],
-  puuid: string,
-): string {
-  const found = roster.find((participant) => participant.puuid === puuid);
-  return found?.trackedAlias ?? "a tracked player";
-}
-
-/**
- * Credit one settled bet and record why. Refunds and payouts are distinct
- * ledger kinds even when the number is identical, so a reader never has to
- * decode arithmetic to learn what happened.
- */
-async function creditBet(
-  tx: Db,
-  input: {
-    bet: SettlementBet;
-    matchId: string;
-    serverId: DiscordGuildId;
-    roster: readonly BucksPoolParticipant[];
-    winningTeamId: number | undefined;
-    voidReason: BucksVoidReason | undefined;
-    winnersPool: number;
-    losersPool: number;
-    refundableHeldAfterSettlement: bigint;
-    houseRefundableHeldAfterSettlement: bigint;
-  },
-): Promise<void> {
-  const { bet } = input;
-
-  if (bet.grossPayout === 0) {
-    // A losing bet already paid at stake time; there is nothing to move, and a
-    // zero-delta ledger row would be noise rather than history.
-    return;
+async function settleWithOverflowFallback(input: {
+  classificationVoid: BucksVoidReason | undefined;
+  settle: (
+    voidReason: BucksVoidReason | undefined,
+  ) => Promise<SettlementSummary | undefined>;
+}): Promise<SettlementSummary | undefined> {
+  try {
+    return await input.settle(input.classificationVoid);
+  } catch (error) {
+    if (
+      input.classificationVoid !== undefined ||
+      !(error instanceof BucksStorageOverflowError)
+    ) {
+      throw error;
+    }
+    // The attempted settlement rolled back. Claim the same pool again and
+    // return only matched principal, which placement headroom guarantees
+    // remains representable.
+    return await input.settle("storage_overflow");
   }
+}
 
-  await applyBucksDelta(tx, {
-    bucksAccountId: bet.bucksAccountId,
-    delta: bet.grossPayout,
-    kind: bet.refunded ? "bet_refund" : "bet_payout",
-    matchId: input.matchId,
-    betId: bet.betId,
-    predictedTeamId: bet.predictedTeamId,
-    actualWinningTeamId: input.winningTeamId,
-    knownRefundableHeld: input.refundableHeldAfterSettlement,
-    context: {
-      type: "settlement",
-      subjectAlias: subjectAlias(input.roster, bet.subjectPuuid),
-      backedAliases: aliasesForTeam(input.roster, bet.predictedTeamId),
-      opposingAliases: aliasesForTeam(
-        input.roster,
-        bet.predictedTeamId === 100 ? 200 : 100,
-      ),
-      winnersPool: input.winnersPool,
-      losersPool: input.losersPool,
-      stakeReturned: bet.stake,
-      winnings: bet.winnings,
-      grossPayout: bet.grossPayout,
-      houseCut: bet.houseCut,
-      netPayout: bet.payout,
-      voidReason: input.voidReason,
-    },
+function settleMatchedBets(input: {
+  rows: readonly PendingMatchedBet[];
+  winningTeamId: number | undefined;
+  voidReason: BucksVoidReason | undefined;
+}): {
+  bets: SettlementBet[];
+  winnersPool: number;
+  losersPool: number;
+  houseCut: number;
+} {
+  const voided =
+    input.voidReason !== undefined || input.winningTeamId === undefined;
+  const bets = input.rows.map((row): SettlementBet => {
+    if (voided) {
+      return {
+        betId: row.id,
+        bucksAccountId: row.bucksAccountId,
+        discordId: row.discordId,
+        isHouse: row.isHouse,
+        predictedTeamId: row.predictedTeamId,
+        submittedStake: row.submittedStake,
+        matchedStake: row.matchedStake,
+        unmatchedStake: row.unmatchedStake,
+        grossPayout: row.matchedStake,
+        houseCut: 0,
+        payout: row.matchedStake,
+        winnings: 0,
+        won: false,
+        refunded: true,
+        subjectPuuid: row.subjectPuuid,
+      };
+    }
+
+    const won = row.predictedTeamId === input.winningTeamId;
+    const grossPayout = won ? row.matchedStake * 2 : 0;
+    if (grossPayout > BUCKS_INT32_MAX) {
+      // Gross payout, fee, and net payout are persisted as Prisma Int fields.
+      // Raise the typed error before any terminal state is written so the
+      // transaction can retry through the storage-overflow refund path.
+      throw new BucksStorageOverflowError(row.bucksAccountId);
+    }
+    const grossProfit = won ? row.matchedStake : 0;
+    const houseCut = settlementHouseCut({
+      matchedProfit: grossProfit,
+      isHouse: row.isHouse,
+    });
+    return {
+      betId: row.id,
+      bucksAccountId: row.bucksAccountId,
+      discordId: row.discordId,
+      isHouse: row.isHouse,
+      predictedTeamId: row.predictedTeamId,
+      submittedStake: row.submittedStake,
+      matchedStake: row.matchedStake,
+      unmatchedStake: row.unmatchedStake,
+      grossPayout,
+      houseCut,
+      payout: grossPayout - houseCut,
+      winnings: grossProfit - houseCut,
+      won,
+      refunded: false,
+      subjectPuuid: row.subjectPuuid,
+    };
   });
 
-  if (bet.houseCut > 0) {
-    await transferHouseCut(tx, {
-      serverId: input.serverId,
-      bucksAccountId: bet.bucksAccountId,
-      amount: bet.houseCut,
-      kind: "house_rake",
-      matchId: input.matchId,
-      betId: bet.betId,
-      context: {
-        type: "house_fee",
-        source: "settlement",
-        ratePercent: HOUSE_CUT_PERCENT,
-        grossAmount: bet.grossPayout,
-        fee: bet.houseCut,
-      },
-      houseRefundableHeld: input.houseRefundableHeldAfterSettlement,
-    });
-  }
+  const winnersPool =
+    input.winningTeamId === undefined
+      ? 0
+      : input.rows
+          .filter((row) => row.predictedTeamId === input.winningTeamId)
+          .reduce((sum, row) => sum + row.matchedStake, 0);
+  const losersPool =
+    input.winningTeamId === undefined
+      ? 0
+      : input.rows
+          .filter((row) => row.predictedTeamId !== input.winningTeamId)
+          .reduce((sum, row) => sum + row.matchedStake, 0);
+  return {
+    bets,
+    winnersPool,
+    losersPool,
+    houseCut: bets.reduce((sum, bet) => sum + bet.houseCut, 0),
+  };
 }
 
+async function markBetSettled(
+  tx: Db,
+  bet: SettlementBet,
+  settledAt: Date,
+): Promise<void> {
+  await tx.bucksBet.update({
+    where: { id: bet.betId },
+    data: {
+      betOutcome: bet.refunded ? "refunded" : bet.won ? "won" : "lost",
+      grossPayout: bet.grossPayout,
+      fee: bet.houseCut,
+      payout: bet.payout,
+      settledAt,
+    },
+  });
+}
+
+export type BettingSettlementResult = {
+  closures: ClosedPool[];
+  settlements: SettlementSummary[];
+};
+
 /**
- * Settle every guild's pool for a finished match.
- *
- * Swallows its own errors and reports them: a settlement failure must not stop
- * the match report from being delivered. The 6-hour stale sweep is the backstop
- * that refunds anything this could never resolve.
- *
- * @returns one summary per guild that was settled by *this* call, for the
- * announcement. A pool another tick already settled yields nothing, which is
- * what stops a duplicate announcement.
+ * Match any still-open pools, then settle every guild pool at fixed even
+ * money. Returning the close summaries matters when this call is retrying a
+ * transiently failed post-match close: those users still need their final
+ * matched and refunded receipt.
  */
-export async function settleBettingForMatch(
+export async function closeAndSettleBettingForMatch(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
-): Promise<SettlementSummary[]> {
+): Promise<BettingSettlementResult> {
   const matchId = matchData.metadata.matchId;
+  const closures: ClosedPool[] = [];
   const summaries: SettlementSummary[] = [];
 
   try {
+    // A very short game can resolve before the 30-second close sweep. Matching
+    // must still happen before any outcome is read into settlement arithmetic.
+    closures.push(
+      ...(await closeBettingWindowsForMatch(matchId, prismaClient)),
+    );
+
     const pools = await prismaClient.bucksMatchPool.findMany({
-      where: { matchId, poolState: { in: ["open", "closed"] } },
+      where: { matchId, poolState: "closed", matchedAt: { not: null } },
       select: { id: true, serverId: true, roster: true },
     });
     if (pools.length === 0) {
-      return summaries;
+      return { closures, settlements: summaries };
     }
 
     const outcome = classifyMatchForBetting(matchData);
@@ -185,18 +228,38 @@ export async function settleBettingForMatch(
       outcome.kind === "void" ? outcome.reason : undefined;
 
     for (const pool of pools) {
-      const summary = await settleOnePool({
-        prismaClient,
-        poolId: pool.id,
-        serverId: pool.serverId,
-        matchId,
-        roster: BucksPoolRosterSchema.parse(JSON.parse(pool.roster))
-          .participants,
-        winningTeamId,
-        classificationVoid,
-      });
-      if (summary !== undefined) {
-        summaries.push(summary);
+      const settle = async (voidReason: BucksVoidReason | undefined) =>
+        await settleOnePool({
+          prismaClient,
+          poolId: pool.id,
+          serverId: pool.serverId,
+          matchId,
+          roster: BucksPoolRosterSchema.parse(JSON.parse(pool.roster))
+            .participants,
+          winningTeamId,
+          voidReason,
+        });
+      try {
+        const summary = await settleWithOverflowFallback({
+          classificationVoid,
+          settle,
+        });
+        if (summary !== undefined) {
+          summaries.push(summary);
+        }
+      } catch (error) {
+        logger.error(
+          `❌ Could not settle Bryan Bucks pool ${pool.id.toString()} for ${matchId}:`,
+          error,
+        );
+        Sentry.captureException(error, {
+          tags: {
+            source: "betting-settle-pool",
+            matchId,
+            serverId: pool.serverId,
+          },
+          extra: { poolId: pool.id },
+        });
       }
     }
   } catch (error) {
@@ -206,242 +269,144 @@ export async function settleBettingForMatch(
     });
   }
 
-  return summaries;
+  return { closures, settlements: summaries };
+}
+
+/** Settle every guild pool for a finished match at fixed even money. */
+export async function settleBettingForMatch(
+  matchData: RawMatch,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<SettlementSummary[]> {
+  const result = await closeAndSettleBettingForMatch(matchData, prismaClient);
+  return result.settlements;
 }
 
 async function settleOnePool(input: {
   prismaClient: ExtendedPrismaClient;
   poolId: number;
-  serverId: DiscordGuildId;
+  serverId: string;
   matchId: string;
   roster: readonly BucksPoolParticipant[];
   winningTeamId: number | undefined;
-  classificationVoid: BucksVoidReason | undefined;
+  voidReason: BucksVoidReason | undefined;
 }): Promise<SettlementSummary | undefined> {
   return await input.prismaClient.$transaction(async (tx) => {
     const settledAt = new Date();
-
-    // FIRST statement, exactly as in `placeBet`. A conditional update both
-    // proves no other tick has settled this pool and upgrades the transaction
-    // to a writer in one round trip, so every read below is protected by the
-    // lock we now hold.
-    //
-    // Reading the bets first would establish a deferred read snapshot, and a
-    // concurrent `placeBet` or close sweep committing before this write would
-    // fail the upgrade with SQLITE_BUSY_SNAPSHOT — which `busy_timeout` does
-    // not retry. `settleBettingForMatch` swallows that, the match cursor still
-    // advances, and the pool is eventually refunded as stale instead of paying
-    // its winners.
     const claim = await tx.bucksMatchPool.updateMany({
-      where: { id: input.poolId, poolState: { in: ["open", "closed"] } },
+      where: {
+        id: input.poolId,
+        poolState: "closed",
+        matchedAt: { not: null },
+      },
       data: { updatedAt: settledAt },
     });
     if (claim.count !== 1) {
-      // Another tick already settled this pool.
       return;
     }
 
-    const pendingBets = await loadPendingOutcomeBets(tx, input.poolId);
-
-    let voidReason: BucksVoidReason | undefined = input.classificationVoid;
-    const humanBets = pendingBets.filter((bet) => !bet.isHouse);
-
-    // A one-sided decided market is matched by the per-guild house account.
-    // The house stake is real: it is debited before the synthetic bet enters
-    // the same parimutuel allocation as human bets. If its audited reserve is
-    // too small, preserve the old safe behavior and refund everyone.
-    if (
-      voidReason === undefined &&
-      input.winningTeamId !== undefined &&
-      humanBets.length > 0
-    ) {
-      voidReason = await addHousePositionIfNeeded({
-        tx,
+    const rows = await tx.bucksBet.findMany({
+      where: {
         poolId: input.poolId,
-        serverId: input.serverId,
-        matchId: input.matchId,
-        roster: input.roster,
-        humanBets,
-        pendingBets,
-      });
-    }
-
-    // This remains a defensive fallback for legacy pools with no human bets on
-    // which a house position could be created, or for an unresolved outcome.
-    if (voidReason === undefined) {
-      const hasBothSides =
-        pendingBets.some((row) => row.predictedTeamId === 100) &&
-        pendingBets.some((row) => row.predictedTeamId === 200);
-      if (!hasBothSides && pendingBets.length > 0) {
-        voidReason = "no_counterparty";
-      }
-    }
-
-    const plan = await planOutcomeSettlement(tx, {
-      serverId: input.serverId,
-      pendingBets,
-      winningTeamId: input.winningTeamId,
-      voidReason,
+        betOutcome: "pending",
+      },
+      orderBy: { id: "asc" },
+      select: {
+        id: true,
+        bucksAccountId: true,
+        bucksAccount: { select: { discordId: true, isHouse: true } },
+        predictedTeamId: true,
+        stake: true,
+        humanMatchedStake: true,
+        houseMatchedStake: true,
+        matchedStake: true,
+        unmatchedStake: true,
+        subjectPuuid: true,
+      },
     });
-    voidReason = plan.voidReason;
-    const settled = plan.settlement;
+    const pending: PendingMatchedBet[] = rows.map((row) => {
+      const allocation = requireValidBucksAllocation({
+        betId: row.id,
+        submittedStake: row.stake,
+        humanMatchedStake: row.humanMatchedStake,
+        houseMatchedStake: row.houseMatchedStake,
+        matchedStake: row.matchedStake,
+        unmatchedStake: row.unmatchedStake,
+      });
+      if (allocation.matchedStake === 0) {
+        throw new Error(
+          `Matched pool ${input.matchId} contains pending unmatched bet ${row.id.toString()}`,
+        );
+      }
+      return {
+        id: row.id,
+        bucksAccountId: row.bucksAccountId,
+        discordId: row.bucksAccount.discordId,
+        isHouse: row.bucksAccount.isHouse,
+        predictedTeamId: RiotTeamIdSchema.parse(row.predictedTeamId),
+        submittedStake: row.stake,
+        matchedStake: allocation.matchedStake,
+        unmatchedStake: allocation.unmatchedStake,
+        subjectPuuid: row.subjectPuuid,
+      };
+    });
+    const settled = settleMatchedBets({
+      rows: pending,
+      winningTeamId: input.winningTeamId,
+      voidReason: input.voidReason,
+    });
 
-    // The terminal state. Unconditional: the claim above already established
-    // that this transaction owns the pool, and it holds the write lock until
-    // commit, so no `where` clause can add anything here.
     await tx.bucksMatchPool.update({
       where: { id: input.poolId },
       data: {
-        poolState: voidReason === undefined ? "settled" : "voided",
+        poolState: input.voidReason === undefined ? "settled" : "voided",
         winningTeamId:
-          voidReason === undefined ? (input.winningTeamId ?? null) : null,
-        voidReason: voidReason ?? null,
+          input.voidReason === undefined ? (input.winningTeamId ?? null) : null,
+        voidReason: input.voidReason ?? null,
         settledAt,
       },
     });
 
-    // Release every position from refundable-headroom accounting before any
-    // payout or house cut is credited. Settling rows one at a time can
-    // otherwise reject a valid conserved settlement near the Int32 ceiling
-    // because later positions still appear refundable during an earlier
-    // credit. The transaction rolls all terminal writes back on any failure.
+    // Release every now-impossible refund reservation before any account is
+    // credited. In particular, a losing synthetic house stake must not consume
+    // Int32 headroom needed for a winner fee credited later in this transaction.
     for (const bet of settled.bets) {
-      await tx.bucksBet.update({
-        where: { id: bet.betId },
-        data: {
-          betOutcome: bet.refunded ? "refunded" : bet.won ? "won" : "lost",
-          payout: bet.payout,
-          settledAt,
-        },
-      });
+      await markBetSettled(tx, bet, settledAt);
     }
 
     for (const bet of settled.bets) {
-      const pendingBet = pendingBets.find((row) => row.id === bet.betId);
-      if (pendingBet === undefined) {
-        throw new Error(
-          `Settlement bet ${bet.betId.toString()} was not loaded from the pending pool`,
-        );
-      }
       await creditBet(tx, {
         bet,
         matchId: input.matchId,
         serverId: input.serverId,
         roster: input.roster,
         winningTeamId: input.winningTeamId,
-        voidReason,
+        voidReason: input.voidReason,
         winnersPool: settled.winnersPool,
         losersPool: settled.losersPool,
-        refundableHeldAfterSettlement:
-          pendingBet.refundableHeld - BigInt(pendingBet.stake),
-        houseRefundableHeldAfterSettlement:
-          plan.houseRefundableHeldAfterSettlement,
       });
     }
 
-    // Conservation, asserted rather than assumed. Human winners receive their
-    // net payout and the house receives every cut, so together they must equal
-    // the stakes held by the pool. Throwing rolls the whole settlement back.
-    const staked = settled.bets.reduce(
-      (total, bet) => total + BigInt(bet.stake),
-      0n,
-    );
-    const paid = settled.bets.reduce(
-      (total, bet) => total + BigInt(bet.payout),
-      0n,
-    );
-    const houseCut = BigInt(settled.houseCut);
-    if (paid + houseCut !== staked) {
+    const staked = settled.bets.reduce((sum, bet) => sum + bet.matchedStake, 0);
+    const paid = settled.bets.reduce((sum, bet) => sum + bet.payout, 0);
+    if (paid + settled.houseCut !== staked) {
       throw new Error(
-        `Settlement for ${input.matchId} did not conserve Bucks: staked ${staked.toString()}, paid ${paid.toString()}, house cut ${settled.houseCut.toString()}`,
+        `Settlement for ${input.matchId} did not conserve matched Bucks: staked ${staked.toString()}, paid ${paid.toString()}, winner fees ${settled.houseCut.toString()}`,
       );
     }
 
     logger.info(
-      `💸 Settled ${settled.bets.length.toString()} Bryan Bucks bet(s) for ${input.matchId}`,
+      `💸 Settled ${settled.bets.length.toString()} matched Bryan Bucks position(s) for ${input.matchId}`,
     );
-
     return {
       matchId: input.matchId,
       serverId: input.serverId,
-      winningTeamId: voidReason === undefined ? input.winningTeamId : undefined,
-      voidReason,
+      winningTeamId:
+        input.voidReason === undefined ? input.winningTeamId : undefined,
+      voidReason: input.voidReason,
       winnersPool: settled.winnersPool,
       losersPool: settled.losersPool,
       houseCut: settled.houseCut,
       bets: settled.bets,
     };
   });
-}
-
-async function addHousePositionIfNeeded(input: {
-  tx: Db;
-  poolId: number;
-  serverId: DiscordGuildId;
-  matchId: string;
-  roster: readonly BucksPoolParticipant[];
-  humanBets: readonly PendingBetRow[];
-  pendingBets: PendingBetRow[];
-}): Promise<BucksVoidReason | undefined> {
-  const hasBothHumanSides =
-    input.humanBets.some((row) => row.predictedTeamId === 100) &&
-    input.humanBets.some((row) => row.predictedTeamId === 200);
-  if (hasBothHumanSides) {
-    return;
-  }
-
-  const representative = input.humanBets[0];
-  if (representative === undefined) {
-    throw new Error("A human Bucks bet was missing its predicted team");
-  }
-  const humanTeamId = representative.predictedTeamId;
-  const houseStakeValue = input.humanBets.reduce(
-    (total, bet) => total + BigInt(bet.stake),
-    0n,
-  );
-  if (houseStakeValue > BigInt(BUCKS_INT32_MAX)) return "storage_overflow";
-  const houseStake = Number(houseStakeValue);
-  const house = await ensureHouseAccountInTransaction(input.tx, input.serverId);
-  if (house.balance < houseStake) {
-    return "house_unavailable";
-  }
-
-  const houseTeamId = humanTeamId === 100 ? 200 : 100;
-  const houseBet = await input.tx.bucksBet.create({
-    data: {
-      poolId: input.poolId,
-      bucksAccountId: house.id,
-      predictedTeamId: houseTeamId,
-      subjectPuuid: representative.subjectPuuid,
-      stake: houseStake,
-    },
-    select: { id: true },
-  });
-  await applyBucksDelta(input.tx, {
-    bucksAccountId: house.id,
-    delta: -houseStake,
-    kind: "bet_stake",
-    matchId: input.matchId,
-    betId: houseBet.id,
-    predictedTeamId: houseTeamId,
-    context: {
-      type: "stake",
-      subjectAlias: subjectAlias(input.roster, representative.subjectPuuid),
-      subjectPuuid: LeaguePuuidSchema.parse(representative.subjectPuuid),
-      backedAliases: aliasesForTeam(input.roster, houseTeamId),
-      opposingAliases: aliasesForTeam(input.roster, humanTeamId),
-    },
-  });
-  input.pendingBets.push({
-    id: houseBet.id,
-    bucksAccountId: house.id,
-    discordId: HOUSE_ACCOUNT_DISCORD_ID,
-    isHouse: true,
-    predictedTeamId: houseTeamId,
-    stake: houseStake,
-    subjectPuuid: representative.subjectPuuid,
-    balance: house.balance - houseStake,
-    refundableHeld: await refundableBucksHeld(input.tx, house.id),
-  });
-  return;
 }

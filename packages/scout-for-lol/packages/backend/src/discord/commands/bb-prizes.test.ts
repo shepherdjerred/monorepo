@@ -132,14 +132,16 @@ describe("/bb command contract", () => {
   test("keeps long pending-position aliases inside Discord's field limit", () => {
     const view: PersonalBucksView = {
       balance: 25,
-      totalStaked: 10,
+      totalAtRisk: 10,
       pendingPositionCount: 10,
       pendingPositions: Array.from({ length: 10 }, (_, index) => ({
         marketType: "outcome" as const,
         matchId: `NA1_${index.toString()}`,
         gameAlias: `player-${index.toString()}-${"x".repeat(500)}`,
         teamId: 100,
-        stake: 1,
+        offeredStake: 1,
+        matchedStake: null,
+        unmatchedStake: null,
         closesAt: new Date(60_000),
         poolState: "open",
       })),
@@ -156,7 +158,7 @@ describe("/bb command contract", () => {
   test("renders pending positions as direct team picks", () => {
     const view: PersonalBucksView = {
       balance: 20,
-      totalStaked: 5,
+      totalAtRisk: 5,
       pendingPositionCount: 1,
       pendingPositions: [
         {
@@ -164,7 +166,9 @@ describe("/bb command contract", () => {
           matchId: "NA1_1",
           gameAlias: "bryan",
           teamId: 200,
-          stake: 5,
+          offeredStake: 5,
+          matchedStake: null,
+          unmatchedStake: null,
           closesAt: new Date(60_000),
           poolState: "open",
         },
@@ -174,6 +178,7 @@ describe("/bb command contract", () => {
     const rendered = JSON.stringify(buildPersonalBucksEmbed(view, 0).toJSON());
     expect(rendered).toContain("Red Team");
     expect(rendered).toContain("game: `bryan`");
+    expect(rendered).toContain("offered up to 5 BB");
     expect(rendered).not.toContain("WIN");
     expect(rendered).not.toContain("LOSE");
   });
@@ -181,7 +186,7 @@ describe("/bb command contract", () => {
   test("renders pending parlays independently from direct team picks", () => {
     const view: PersonalBucksView = {
       balance: 20,
-      totalStaked: 5,
+      totalAtRisk: 5,
       pendingPositionCount: 1,
       pendingPositions: [
         {
@@ -213,14 +218,15 @@ describe("/bb command contract", () => {
       "5 minutes",
       "YES/NO parlay",
       "cancel",
-      "split the losing side's pool",
-      "house matches",
-      "All stakes are returned",
+      "Human offers match first",
+      "house then fills up to 5 BB",
+      "all unmatched BB are refunded",
+      "Matched outcome stakes are returned",
     ]) {
       expect(rendered).toContain(phrase);
     }
     expect(rendered).toContain(
-      "Cancelling an outcome position has a 20% house cut",
+      "Cancelling an outcome offer costs 20% of the submitted amount",
     );
     expect(rendered).toContain(
       "cancelling a parlay returns its full stake and releases the house reserve",

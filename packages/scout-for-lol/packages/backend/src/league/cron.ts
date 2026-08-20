@@ -20,6 +20,10 @@ import {
   runWeeklyBucksLeaderboard,
   WEEKLY_BUCKS_CRON,
 } from "#src/betting/weekly-leaderboard.ts";
+import {
+  BUCKS_RECONCILIATION_CRON,
+  reconcileBucksBalances,
+} from "#src/betting/reconcile.ts";
 
 const logger = createLogger("league-cron");
 
@@ -49,6 +53,14 @@ export async function startCronJobs() {
     ...WEEKLY_BUCKS_CRON,
     task: async () => {
       await runWeeklyBucksLeaderboard();
+    },
+  });
+
+  logger.info("📅 Setting up Bryan Bucks reconciliation (daily 5 AM UTC)");
+  createCronJob({
+    ...BUCKS_RECONCILIATION_CRON,
+    task: async () => {
+      await reconcileBucksBalances();
     },
   });
 
@@ -192,6 +204,6 @@ export async function startCronJobs() {
       "match time refresh (6hr), scheduled reports (every minute), " +
       "report-lake fold (15min) and rebuild (2AM UTC), " +
       "player pruning (3AM UTC), removed-guild reconciliation (4AM UTC), and " +
-      "Bryan Bucks leaderboard (Friday 5PM PT) cron jobs are now active",
+      "Bryan Bucks reconciliation (5AM UTC) and leaderboard (Friday 5PM PT) cron jobs are now active",
   );
 }

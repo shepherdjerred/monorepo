@@ -8,7 +8,6 @@ import {
   HouseInsufficientError,
   getFullLeaderboard,
   getLedgerPage,
-  getOpenMarketAggregates,
   getPersonalBucksView,
 } from "#src/betting/accounts.ts";
 import {
@@ -16,6 +15,7 @@ import {
   HOUSE_BANKROLL,
   SEED_GRANT,
 } from "#src/betting/constants.ts";
+import { getOpenMarketAggregates } from "#src/betting/open-market.ts";
 import {
   bucksTestDiscordId,
   bucksTestPuuid,
@@ -370,7 +370,7 @@ describe("personal positions and open markets", () => {
     expect(personal).toEqual(
       expect.objectContaining({
         balance: 80,
-        totalStaked: 35,
+        totalAtRisk: 35,
         pendingPositionCount: 2,
       }),
     );
@@ -380,7 +380,9 @@ describe("personal positions and open markets", () => {
           marketType: "outcome",
           gameAlias: "jerred",
           teamId: 100,
-          stake: 20,
+          offeredStake: 20,
+          matchedStake: null,
+          unmatchedStake: null,
         }),
         expect.objectContaining({
           marketType: "parlay",
@@ -400,7 +402,9 @@ describe("personal positions and open markets", () => {
         marketType: "outcome",
         gameAlias: "bryan",
         teamId: 100,
-        stake: 30,
+        offeredStake: 30,
+        matchedStake: null,
+        unmatchedStake: null,
       }),
     ]);
 
@@ -429,7 +433,7 @@ describe("personal positions and open markets", () => {
     expect(rendered).not.toContain(HOUSE_ACCOUNT_DISCORD_ID);
   });
 
-  test("caps the detailed personal position list at ten without understating total stake", async () => {
+  test("caps the detailed personal position list at ten without understating total risk", async () => {
     const caller = await db.bucksAccount.create({
       data: { serverId: SERVER_A, discordId: USER_A, balance: 100 },
     });
@@ -460,7 +464,7 @@ describe("personal positions and open markets", () => {
     );
     expect(personal?.pendingPositionCount).toBe(11);
     expect(personal?.pendingPositions).toHaveLength(10);
-    expect(personal?.totalStaked).toBe(66);
+    expect(personal?.totalAtRisk).toBe(66);
   });
 });
 
