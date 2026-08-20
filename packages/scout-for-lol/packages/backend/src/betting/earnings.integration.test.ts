@@ -26,7 +26,12 @@ import {
   clearFlagOverrides,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
-import { SEED_GRANT } from "#src/betting/constants.ts";
+import {
+  HOUSE_ACCOUNT_DISCORD_ID,
+  HOUSE_BANKROLL,
+  SEED_GRANT,
+} from "#src/betting/constants.ts";
+import { ensureBucksAccount } from "#src/betting/accounts.ts";
 
 const { prisma: db } = createTestDatabase("bucks-earnings");
 
@@ -432,5 +437,60 @@ describe("awardBucksForMatch additional cases", () => {
         where: { kind: { startsWith: "earn_" } },
       }),
     ).toBe(marker.entryCount);
+  });
+});
+
+describe("earning retry", () => {
+  test("retains an exhausted-house earning for a later retry", async () => {
+    const seeded = await ensureBucksAccount(
+      {
+        serverId: ENABLED_GUILD,
+        discordId: DiscordAccountIdSchema.parse("16050917270473110"),
+      },
+      db,
+    );
+    const house = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: {
+          serverId: ENABLED_GUILD,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        },
+      },
+    });
+    await db.bucksAccount.delete({ where: { id: seeded.id } });
+    await db.bucksAccount.update({
+      where: { id: house.id },
+      data: { balance: 0 },
+    });
+    await trackPlayer({
+      serverId: ENABLED_GUILD,
+      discordId: DiscordAccountIdSchema.parse("16050917270473111"),
+      alias: "retry-player",
+      puuid: plainWinner.puuid,
+    });
+
+    expect(await awardBucksForMatch(fixture, db)).toEqual([]);
+    const pending = await db.bucksMatchEarning.findUniqueOrThrow({
+      where: {
+        matchId_serverId: { matchId: MATCH_ID, serverId: ENABLED_GUILD },
+      },
+    });
+    expect(pending.state).toBe("pending");
+    expect(pending.entryCount).toBe(0);
+
+    await db.bucksAccount.update({
+      where: { id: house.id },
+      data: { balance: HOUSE_BANKROLL },
+    });
+    const awards = await awardBucksForMatch(fixture, db);
+    expect(awards[0]?.discordId).toBe("16050917270473111");
+
+    const completed = await db.bucksMatchEarning.findUniqueOrThrow({
+      where: {
+        matchId_serverId: { matchId: MATCH_ID, serverId: ENABLED_GUILD },
+      },
+    });
+    expect(completed.state).toBe("complete");
+    expect(completed.entryCount).toBe(2);
   });
 });

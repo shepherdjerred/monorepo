@@ -195,6 +195,46 @@ async function awardForGuild(input: {
 }): Promise<EarnedAward[]> {
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
 
+  // Leave a durable pending marker before wallet creation. The post-match
+  // cursor deliberately advances after the authoritative S3 write, so a
+  // process-local return here must not be the only record of an unawarded
+  // match/guild pair.
+  let marker = await input.prismaClient.bucksMatchEarning.findUnique({
+    where: {
+      matchId_serverId: { matchId: input.matchId, serverId },
+    },
+    select: { state: true },
+  });
+  if (marker?.state === "complete") {
+    return [];
+  }
+  if (marker === null) {
+    try {
+      marker = await input.prismaClient.bucksMatchEarning.create({
+        data: {
+          matchId: input.matchId,
+          serverId,
+          entryCount: 0,
+          state: "pending",
+        },
+        select: { state: true },
+      });
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) {
+        throw error;
+      }
+      marker = await input.prismaClient.bucksMatchEarning.findUniqueOrThrow({
+        where: {
+          matchId_serverId: { matchId: input.matchId, serverId },
+        },
+        select: { state: true },
+      });
+      if (marker.state === "complete") {
+        return [];
+      }
+    }
+  }
+
   // Wallets are created outside the transaction: creating one is idempotent and
   // a zero-risk row, and keeping it out keeps the write lock held briefly.
   const accountIds = new Map<string, number>();
@@ -213,8 +253,8 @@ async function awardForGuild(input: {
         logger.warn(
           `🏦 Skipping ${input.matchId} earnings for ${serverId}: the house cannot fund a welcome grant`,
         );
-        // Do not create the exactly-once marker. A later recovery pass can
-        // retry this guild after its house has been funded again.
+        // Keep the pending marker. A later recovery pass can retry this guild
+        // after its house has been funded again.
         return [];
       }
       throw error;
@@ -224,17 +264,20 @@ async function awardForGuild(input: {
 
   try {
     return await input.prismaClient.$transaction(async (tx) => {
-      // FIRST statement, and the exactly-once token. A composite-PK create is a
-      // write (so it takes the lock) whose P2002 means another pass already
-      // paid this match — which is precisely what makes gap-detection replays
-      // and recoverMissedMatches safe.
-      await tx.bucksMatchEarning.create({
-        data: {
+      // FIRST statement, and the exactly-once token. Only one retry can claim a
+      // pending marker; a failure rolls the transient processing state back to
+      // pending with the rest of the transaction.
+      const claim = await tx.bucksMatchEarning.updateMany({
+        where: {
           matchId: input.matchId,
           serverId,
-          entryCount: 0,
+          state: "pending",
         },
+        data: { state: "processing" },
       });
+      if (claim.count !== 1) {
+        return [];
+      }
 
       const awards: EarnedAward[] = [];
       let entryCount = 0;
@@ -308,7 +351,7 @@ async function awardForGuild(input: {
             serverId: input.serverId,
           },
         },
-        data: { entryCount },
+        data: { entryCount, state: "complete" },
       });
 
       logger.info(
