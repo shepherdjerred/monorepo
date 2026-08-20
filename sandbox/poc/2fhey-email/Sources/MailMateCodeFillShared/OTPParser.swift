@@ -17,9 +17,12 @@ public struct OTPParser {
         "(?<![\\p{L}\\p{N}])([A-Za-z0-9](?:[ -]?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}]|-[A-Za-z0-9])"
     )
     private static let datePattern = makeExpression(
-        "(?<![\\p{L}\\p{N}])(?:\\d{4}[-/](?:0?[1-9]|1[0-2])[-/](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4})(?![\\p{L}\\p{N}])"
+        "(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4})(?![\\p{L}\\p{N}])"
     )
     private static let urlPattern = makeExpression("(?i)https?://\\S+")
+    private static let bareURLPattern = makeExpression(
+        "(?i)(?<![\\p{L}\\p{N}@])(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+[A-Z]{2,}(?:/[^\\s]*)?"
+    )
     private static let emailPattern = makeExpression("(?i)[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}")
     private static let senderMailboxPattern = makeExpression("(?i)^[A-Z0-9._%+-]+@([A-Z0-9.-]+)$")
 
@@ -39,9 +42,14 @@ public struct OTPParser {
             return nil
         }
         let message = metadata.subject + "\n" + body
-        let sanitizedBody = Self.urlPattern.stringByReplacingMatches(
+        let withoutURLs = Self.urlPattern.stringByReplacingMatches(
             in: message,
             range: NSRange(message.startIndex..., in: message),
+            withTemplate: " "
+        )
+        let sanitizedBody = Self.bareURLPattern.stringByReplacingMatches(
+            in: withoutURLs,
+            range: NSRange(withoutURLs.startIndex..., in: withoutURLs),
             withTemplate: " "
         )
         let keywordRanges = Self.keywordPattern.matches(

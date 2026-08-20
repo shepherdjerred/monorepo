@@ -68,6 +68,8 @@ func rejectsFalsePositives() {
 
     #expect(OTPParser().parse(body: body, metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Your verification code expires on 2026-08-20.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "Your verification code expires on 20/08/2026.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "Open example.com/482913 to continue.", metadata: metadata) == nil)
 }
 
 @Test("keeps a long code when an unrelated address appears in the body")
