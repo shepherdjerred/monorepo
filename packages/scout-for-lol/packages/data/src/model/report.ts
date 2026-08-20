@@ -13,8 +13,6 @@ import type {
 import { DiscordChannelIdSchema } from "#src/model/discord.ts";
 
 export const REPORT_QUERY_MAX_LENGTH = 4000;
-export const REPORT_DEFAULT_LOOKBACK_DAYS = 30;
-export const REPORT_MAX_LOOKBACK_DAYS = 365;
 export const REPORT_DEFAULT_MAX_ROWS = 10;
 export const REPORT_MAX_ROWS_LIMIT = 25;
 export const REPORT_ACTIVE_LIMIT_PER_SERVER = 3;
@@ -263,13 +261,6 @@ export const ReportQueryTextSchema = z
   .trim()
   .min(1)
   .max(REPORT_QUERY_MAX_LENGTH);
-
-export const ReportLookbackDaysSchema = z
-  .number()
-  .int()
-  .positive()
-  .max(REPORT_MAX_LOOKBACK_DAYS)
-  .default(REPORT_DEFAULT_LOOKBACK_DAYS);
 
 export const ReportMaxRowsSchema = z
   .number()

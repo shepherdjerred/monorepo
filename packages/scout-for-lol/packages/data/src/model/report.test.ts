@@ -1,16 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import {
-  REPORT_DEFAULT_LOOKBACK_DAYS,
   REPORT_DEFAULT_MAX_ROWS,
   REPORT_ACTIVE_LIMIT_PER_OWNER_PER_SERVER,
   REPORT_ACTIVE_LIMIT_PER_SERVER,
-  REPORT_MAX_LOOKBACK_DAYS,
   REPORT_MAX_ROWS_LIMIT,
   REPORT_QUERY_MAX_LENGTH,
   DEFAULT_RENDER_SPEC,
   ReportCreateInputSchema,
   ReportIdSchema,
-  ReportLookbackDaysSchema,
   ReportMaxRowsSchema,
   ReportOutputFormatSchema,
   ReportRenderSpecSchema,
@@ -107,18 +104,6 @@ describe("Report limits", () => {
           .success,
       ).toBe(false);
     }
-  });
-
-  test("default and cap lookback days", () => {
-    expect(ReportLookbackDaysSchema.parse(missingValue)).toBe(
-      REPORT_DEFAULT_LOOKBACK_DAYS,
-    );
-    expect(
-      ReportLookbackDaysSchema.safeParse(REPORT_MAX_LOOKBACK_DAYS).success,
-    ).toBe(true);
-    expect(
-      ReportLookbackDaysSchema.safeParse(REPORT_MAX_LOOKBACK_DAYS + 1).success,
-    ).toBe(false);
   });
 
   test("default and cap max rows", () => {

@@ -102,7 +102,7 @@ const SAMPLES: {
     kind: "table",
     title: "Most games played",
     query:
-      "select games, win_rate, kda\nfrom match_participants\ngroup by player\norder by games desc\nlimit 6\nrender table",
+      "select games, win_rate, kda\nfrom match_participants\ngroup by player\nduring last 30 days\norder by games desc\nlimit 6\nrender table",
     rows: playerRows,
     columns: ["games", "win_rate", "kda"],
   },
@@ -110,7 +110,7 @@ const SAMPLES: {
     kind: "list",
     title: "Most games played",
     query:
-      "select games, win_rate\nfrom match_participants\ngroup by player\norder by games desc\nlimit 6\nrender list",
+      "select games, win_rate\nfrom match_participants\ngroup by player\nduring last 30 days\norder by games desc\nlimit 6\nrender list",
     rows: playerRows,
     columns: ["games", "win_rate"],
   },
@@ -118,7 +118,7 @@ const SAMPLES: {
     kind: "leaderboard",
     title: "Most games played",
     query:
-      "select games, win_rate\nfrom match_participants\ngroup by player\norder by games desc\nlimit 6\nrender leaderboard with (mentions = 0)",
+      "select games, win_rate\nfrom match_participants\ngroup by player\nduring last 30 days\norder by games desc\nlimit 6\nrender leaderboard with (mentions = 0)",
     rows: playerRows,
     columns: ["games", "win_rate"],
   },
@@ -126,7 +126,7 @@ const SAMPLES: {
     kind: "bar_chart",
     title: "Most games played",
     query:
-      "select games\nfrom match_participants\ngroup by player\norder by games desc\nlimit 6\nrender bar_chart with (y = games)",
+      "select games\nfrom match_participants\ngroup by player\nduring last 30 days\norder by games desc\nlimit 6\nrender bar_chart with (y = games)",
     rows: playerRows,
     columns: ["games"],
   },
@@ -134,7 +134,7 @@ const SAMPLES: {
     kind: "line_chart",
     title: "Weekly game volume",
     query:
-      'select games\nfrom match_participants\ngroup by week\norder by week asc\nrender line_chart with (y = games, x_axis = "Week", smooth = true)',
+      'select games\nfrom match_participants\ngroup by week\nduring last 30 days\norder by week asc\nrender line_chart with (y = games, x_axis = "Week", smooth = true)',
     rows: weekRows,
     columns: ["games"],
   },
@@ -142,7 +142,7 @@ const SAMPLES: {
     kind: "area_chart",
     title: "Weekly game volume",
     query:
-      'select games\nfrom match_participants\ngroup by week\norder by week asc\nrender area_chart with (y = games, x_axis = "Week", smooth = true)',
+      'select games\nfrom match_participants\ngroup by week\nduring last 30 days\norder by week asc\nrender area_chart with (y = games, x_axis = "Week", smooth = true)',
     rows: weekRows,
     columns: ["games"],
   },
@@ -150,7 +150,7 @@ const SAMPLES: {
     kind: "stacked_bar",
     title: "Weekly wins and losses",
     query:
-      "select wins, losses\nfrom match_participants\ngroup by week\norder by week asc\nrender stacked_bar with (y = (wins, losses))",
+      "select wins, losses\nfrom match_participants\ngroup by week\nduring last 30 days\norder by week asc\nrender stacked_bar with (y = (wins, losses))",
     rows: WEEKS.map(([week, games, winRate]) => {
       const wins = Math.round(games * winRate);
       return row(week, { wins, losses: games - wins });
@@ -161,7 +161,7 @@ const SAMPLES: {
     kind: "donut_chart",
     title: "Queue mix",
     query:
-      "select games\nfrom match_participants\ngroup by queue\norder by games desc\nrender donut_chart with (y = games)",
+      "select games\nfrom match_participants\ngroup by queue\nduring last 30 days\norder by games desc\nrender donut_chart with (y = games)",
     rows: QUEUES.map(([queue, games]) => row(queue, { games })),
     columns: ["games"],
   },
@@ -169,7 +169,7 @@ const SAMPLES: {
     kind: "scatter_chart",
     title: "Damage against KDA",
     query:
-      "select damage_to_champions, kda, games\nfrom match_participants\ngroup by player\nrender scatter_chart with (x = damage_to_champions, y = kda, size = games)",
+      "select damage_to_champions, kda, games\nfrom match_participants\ngroup by player\nduring last 30 days\nrender scatter_chart with (x = damage_to_champions, y = kda, size = games)",
     rows: PLAYERS.map(([name, games, , kda]) =>
       row(name, {
         damage_to_champions: Math.round(games * 720 + kda * 4200),
@@ -183,7 +183,7 @@ const SAMPLES: {
     kind: "heatmap",
     title: "Champion win rate by position",
     query:
-      "select win_rate\nfrom match_participants\ngroup by champion, team_position\nrender heatmap with (value = win_rate, series = team_position, palette = gold)",
+      "select win_rate\nfrom match_participants\ngroup by champion, team_position\nduring last 30 days\nrender heatmap with (value = win_rate, series = team_position, palette = gold)",
     rows: CHAMPIONS.flatMap((champion, championIndex) =>
       POSITIONS.map((position, positionIndex) =>
         row(
@@ -202,7 +202,7 @@ const SAMPLES: {
     kind: "radar_chart",
     title: "Combat profile",
     query:
-      "select win_rate, kda, cs_per_minute, vision_score, damage_to_champions\nfrom match_participants\ngroup by player\nlimit 3\nrender radar_chart with (y = (win_rate, kda, cs_per_minute, vision_score, damage_to_champions))",
+      "select win_rate, kda, cs_per_minute, vision_score, damage_to_champions\nfrom match_participants\ngroup by player\nduring last 30 days\nlimit 3\nrender radar_chart with (y = (win_rate, kda, cs_per_minute, vision_score, damage_to_champions))",
     rows: PLAYERS.slice(0, 3).map(([name, games, winRate, kda]) =>
       row(name, {
         win_rate: winRate,
@@ -224,7 +224,7 @@ const SAMPLES: {
     kind: "kpi_card",
     title: "Server snapshot",
     query:
-      "select games, win_rate, kda, avg_game_duration\nfrom match_participants\ngroup by all\nrender kpi_card with (y = (games, win_rate, kda, avg_game_duration))",
+      "select games, win_rate, kda, avg_game_duration\nfrom match_participants\ngroup by all\nduring last 30 days\nrender kpi_card with (y = (games, win_rate, kda, avg_game_duration))",
     rows: [
       row("All", {
         games: 1031,
