@@ -6,7 +6,6 @@ export function evaluateBrowser<T>(page: Page, callback: () => T): Promise<T> {
 
 export async function waitForStablePage(page: Page): Promise<void> {
   await page.waitForLoadState("load");
-  await page.waitForLoadState("networkidle");
   await page.waitForTimeout(250);
   await expect(
     page.locator("a, button, h1, h2").first(),
