@@ -10,7 +10,9 @@ import {
 } from "#src/betting/parlay-criteria.ts";
 import {
   generatedParlaySchemaFor,
+  parlayProposalSchemaFor,
   parseModelGeneratedParlay,
+  thresholdsMatchProposal,
 } from "#src/betting/parlay-model-schema.ts";
 import { evaluateParlay } from "#src/betting/parlay-evaluator.ts";
 import { bucksTestRoster } from "#src/testing/bucks-fixtures.ts";
@@ -33,7 +35,7 @@ describe("parlay model schema", () => {
 
     const modelParlay = ModelSchema.parse({
       version: 1,
-      yesProbabilityBps: 5000,
+      // No yesProbabilityBps: the model no longer authors the price at all.
       conditions: [
         {
           kind: "participant_numeric",
@@ -47,6 +49,7 @@ describe("parlay model schema", () => {
           threshold: 3,
           expected: null,
           matchNumericField: null,
+          opponentPingField: null,
         },
         {
           kind: "team_objective_first",
@@ -60,10 +63,11 @@ describe("parlay model schema", () => {
           threshold: null,
           expected: true,
           matchNumericField: null,
+          opponentPingField: null,
         },
       ],
     });
-    expect(parseModelGeneratedParlay(modelParlay)).toEqual({
+    expect(parseModelGeneratedParlay(modelParlay, 5000)).toEqual({
       version: 1,
       yesProbabilityBps: 5000,
       conditions: [
@@ -347,5 +351,300 @@ describe("parlay evaluator lifecycle", () => {
         criteria,
       }),
     ).toEqual({ kind: "void", reason: "missing_data" });
+  });
+});
+
+describe("opponent ping conditions", () => {
+  const selectedTeamId = 100;
+  const opponents = fixture.info.participants.filter(
+    (participant) => participant.teamId !== selectedTeamId,
+  );
+  const selected = fixture.info.participants.filter(
+    (participant) => participant.teamId === selectedTeamId,
+  );
+  const opponentTotal = opponents.reduce(
+    (total, participant) => total + participant.onMyWayPings,
+    0,
+  );
+  const selectedTotal = selected.reduce(
+    (total, participant) => total + participant.onMyWayPings,
+    0,
+  );
+
+  test("settle from the enemy team, never the subject's own", () => {
+    // The whole point of moving pings to the opponent side is that nobody in
+    // the market can move the number. Reading the selected team would hand the
+    // leg straight back to the people betting on it.
+    expect(opponentTotal).not.toBe(selectedTotal);
+
+    const subjects = ParlaySubjectsSchema.parse([
+      {
+        key: "P1",
+        puuid: selected[0]?.puuid,
+        alias: "one",
+      },
+    ]);
+    const criteria = GeneratedParlaySchema.parse({
+      version: 1,
+      yesProbabilityBps: 5000,
+      conditions: [
+        {
+          kind: "participant_numeric",
+          subject: "P1",
+          field: "kills",
+          operator: "gte",
+          threshold: 0,
+        },
+        {
+          kind: "opponent_team_pings",
+          field: "onMyWayPings",
+          operator: "gte",
+          threshold: opponentTotal,
+        },
+      ],
+    });
+    const evaluation = evaluateParlay({
+      matchData: fixture,
+      evaluatorVersion: "1",
+      selectedTeamId,
+      subjects,
+      criteria,
+    });
+    if (evaluation.kind !== "evaluated") {
+      throw new Error(`expected an evaluation, got ${evaluation.kind}`);
+    }
+    const leg = evaluation.legs[1];
+    expect(leg?.actualValue).toBe(opponentTotal);
+    expect(leg?.passed).toBe(true);
+    expect(leg?.rendered).toContain("enemy team");
+  });
+
+  test("a subject's own pings are no longer proposable at all", () => {
+    const subjects = ParlaySubjectsSchema.parse([
+      { key: "P1", puuid: selected[0]?.puuid, alias: "one" },
+    ]);
+    const result = parlayProposalSchemaFor(subjects).safeParse({
+      version: 1,
+      conditions: [
+        {
+          kind: "participant_numeric",
+          subject: "P1",
+          participantNumericField: "onMyWayPings",
+          participantBooleanField: null,
+          team: null,
+          teamBooleanField: null,
+          objective: null,
+          operator: "gte",
+          expected: null,
+          matchNumericField: null,
+          opponentPingField: null,
+        },
+        {
+          kind: "participant_numeric",
+          subject: "P1",
+          participantNumericField: "kills",
+          participantBooleanField: null,
+          team: null,
+          teamBooleanField: null,
+          objective: null,
+          operator: "gte",
+          expected: null,
+          matchNumericField: null,
+          opponentPingField: null,
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+    expect(subjects.length).toBe(1);
+  });
+});
+
+describe("two-pass generation", () => {
+  const proposalCondition = {
+    kind: "participant_numeric" as const,
+    subject: "P1",
+    participantNumericField: "kills" as const,
+    team: null,
+    teamBooleanField: null,
+    objective: null,
+    operator: "gte" as const,
+    expected: null,
+    matchNumericField: null,
+    opponentPingField: null,
+  };
+  const filledCondition = {
+    ...proposalCondition,
+    participantBooleanField: null,
+    threshold: 7,
+  };
+  const proposal = {
+    version: 1 as const,
+    conditions: [
+      proposalCondition,
+      {
+        ...proposalCondition,
+        subject: "P1",
+        participantNumericField: "assists" as const,
+      },
+    ],
+  };
+
+  test("accepts a threshold pass that only filled in numbers", () => {
+    expect(
+      thresholdsMatchProposal(proposal, {
+        version: 1,
+        conditions: [
+          filledCondition,
+          {
+            ...filledCondition,
+            participantNumericField: "assists",
+            threshold: 9,
+          },
+        ],
+      }),
+    ).toBe(true);
+  });
+
+  test("rejects a threshold pass that re-targeted a leg", () => {
+    // Pass two is shown statistics for the legs pass one proposed. A model that
+    // also swapped the field would be choosing a number against a distribution
+    // it was never given, which is the failure the split exists to remove.
+    expect(
+      thresholdsMatchProposal(proposal, {
+        version: 1,
+        conditions: [
+          filledCondition,
+          {
+            ...filledCondition,
+            participantNumericField: "deaths",
+            threshold: 9,
+          },
+        ],
+      }),
+    ).toBe(false);
+  });
+
+  test("rejects a threshold pass that changed the operator or leg count", () => {
+    expect(
+      thresholdsMatchProposal(proposal, {
+        version: 1,
+        conditions: [
+          { ...filledCondition, operator: "lte" },
+          {
+            ...filledCondition,
+            participantNumericField: "assists",
+            threshold: 9,
+          },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      thresholdsMatchProposal(proposal, {
+        version: 1,
+        conditions: [filledCondition],
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("proposal grounding", () => {
+  const subjects = ParlaySubjectsSchema.parse([
+    { key: "P1", puuid: fixture.info.participants[0]?.puuid, alias: "one" },
+  ]);
+  const ProposalSchema = parlayProposalSchemaFor(subjects);
+  const base = {
+    subject: null,
+    participantNumericField: null,
+    team: null,
+    teamBooleanField: null,
+    objective: null,
+    operator: null,
+    expected: null,
+    matchNumericField: null,
+    opponentPingField: null,
+  };
+  const killsLeg = {
+    ...base,
+    kind: "participant_numeric" as const,
+    subject: "P1",
+    participantNumericField: "kills" as const,
+    operator: "gte" as const,
+  };
+
+  // Caught live: the model proposed an objective with no lake column, both
+  // model calls were spent, and pricing then refused the finished parlay.
+  // Refusing at proposal time turns that into a retry the model can act on.
+  test("rejects riftHerald, the one objective with no recorded history", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [
+        killsLeg,
+        {
+          ...base,
+          kind: "team_objective_kills",
+          team: "selected",
+          objective: "riftHerald",
+          operator: "gte",
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("accepts an objective that does have recorded history", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [
+        killsLeg,
+        {
+          ...base,
+          kind: "team_objective_kills",
+          team: "selected",
+          objective: "dragon",
+          operator: "gte",
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects a participant field the lake does not carry", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [
+        killsLeg,
+        {
+          ...killsLeg,
+          participantNumericField: "spell1Casts",
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects slots unused by the proposed condition kind", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [
+        killsLeg,
+        {
+          ...base,
+          kind: "team_boolean" as const,
+          participantNumericField: "kills" as const,
+          team: "selected" as const,
+          teamBooleanField: "win" as const,
+          expected: true,
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects duplicate proposal targets", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [killsLeg, killsLeg],
+    });
+    expect(result.success).toBe(false);
   });
 });

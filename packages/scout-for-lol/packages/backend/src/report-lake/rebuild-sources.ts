@@ -34,19 +34,25 @@ const LEADERBOARD_PREFIX = "leaderboards/";
 
 // --- Rebuild source: S3 (canonical) ---
 
+type RebuildSourceOptions = {
+  client: S3Client;
+  bucket: string;
+  writer: NdjsonFileWriter;
+  foldedIds: Set<string>;
+  abortSignal?: AbortSignal;
+};
+
 export async function populateMatchesFromS3(
-  client: S3Client,
-  bucket: string,
-  writer: NdjsonFileWriter,
-  foldedIds: Set<string>,
+  options: RebuildSourceOptions,
 ): Promise<number> {
+  const { client, bucket, writer, foldedIds } = options;
   let skipped = 0;
   const batch: string[] = [];
   const flush = async (): Promise<void> => {
     const parsedMatches = await Promise.all(
       batch.map(async (key) => {
         const rawParsed: unknown = JSON.parse(
-          await readRawObjectText(client, bucket, key),
+          await readRawObjectText(client, bucket, key, options),
         );
         const parsed = RawMatchSchema.safeParse(rawParsed);
         if (!parsed.success) {
@@ -72,7 +78,12 @@ export async function populateMatchesFromS3(
     }
   };
 
-  for await (const ref of enumerateRawObjects(client, bucket, MATCH_PREFIX)) {
+  for await (const ref of enumerateRawObjects(
+    client,
+    bucket,
+    MATCH_PREFIX,
+    options,
+  )) {
     if (classifyRawObjectKey(ref.key) !== "match") {
       continue; // skip timeline.json etc. under games/
     }
@@ -88,11 +99,9 @@ export async function populateMatchesFromS3(
 }
 
 export async function populatePrematchFromS3(
-  client: S3Client,
-  bucket: string,
-  writer: NdjsonFileWriter,
-  foldedIds: Set<string>,
+  options: RebuildSourceOptions,
 ): Promise<number> {
+  const { client, bucket, writer, foldedIds } = options;
   let skipped = 0;
   // observedAt is no longer a stored column — derive it from the S3 object's
   // LastModified (≈ detection time; the object was PUT in the same request).
@@ -101,7 +110,7 @@ export async function populatePrematchFromS3(
     const parsedPrematches = await Promise.all(
       batch.map(async (item) => {
         const rawParsed: unknown = JSON.parse(
-          await readRawObjectText(client, bucket, item.key),
+          await readRawObjectText(client, bucket, item.key, options),
         );
         const parsed = RawCurrentGameInfoSchema.safeParse(rawParsed);
         if (!parsed.success) {
@@ -136,6 +145,7 @@ export async function populatePrematchFromS3(
     client,
     bucket,
     PREMATCH_PREFIX,
+    options,
   )) {
     if (classifyRawObjectKey(ref.key) !== "prematch") {
       continue;
@@ -156,12 +166,14 @@ export async function populatePrematchFromS3(
  * language-neutral lake table. Current leaderboard objects and chart images
  * are deliberately excluded; only versioned historical JSON is replayed.
  */
-export async function populateCompetitionRankHistoryFromS3(
-  client: S3Client,
-  bucket: string,
-  writer: NdjsonFileWriter,
-  foldedIds?: Set<string>,
-): Promise<number> {
+export async function populateCompetitionRankHistoryFromS3(options: {
+  client: S3Client;
+  bucket: string;
+  writer: NdjsonFileWriter;
+  foldedIds?: Set<string>;
+  abortSignal?: AbortSignal;
+}): Promise<number> {
+  const { client, bucket, writer, foldedIds, abortSignal } = options;
   let continuationToken: string | undefined;
   let skipped = 0;
 
@@ -174,6 +186,7 @@ export async function populateCompetitionRankHistoryFromS3(
           ? {}
           : { ContinuationToken: continuationToken }),
       }),
+      abortSignal === undefined ? {} : { abortSignal },
     );
     const keys = (response.Contents ?? [])
       .flatMap((object) => (object.Key === undefined ? [] : [object.Key]))
@@ -192,7 +205,12 @@ export async function populateCompetitionRankHistoryFromS3(
       const snapshots = await Promise.all(
         chunk.map(async (key) => {
           const rawParsed: unknown = JSON.parse(
-            await readRawObjectText(client, bucket, key),
+            await readRawObjectText(
+              client,
+              bucket,
+              key,
+              abortSignal === undefined ? {} : { abortSignal },
+            ),
           );
           const parsed = CachedLeaderboardSchema.safeParse(rawParsed);
           if (!parsed.success) {

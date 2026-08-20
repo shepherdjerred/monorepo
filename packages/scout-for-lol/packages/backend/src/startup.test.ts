@@ -23,6 +23,33 @@ describe("backend startup", () => {
     expect(runtime.shutdownHttpServer).toBe(shutdownHttpServer);
   });
 
+  test("reconciles the report lake before serving", async () => {
+    const calls: string[] = [];
+    const runtime = await runBackendStartup({
+      validateChampionAssets: async () => {
+        calls.push("champion-assets");
+      },
+      ensureReportLakeReady: async () => {
+        calls.push("report-lake");
+      },
+      startHttpServer: async () => {
+        calls.push("http-server");
+        return { shutdownHttpServer: () => Promise.resolve() };
+      },
+      startDiscord: async () => {
+        calls.push("discord");
+      },
+    });
+
+    expect(calls).toEqual([
+      "champion-assets",
+      "report-lake",
+      "http-server",
+      "discord",
+    ]);
+    await runtime.shutdownHttpServer();
+  });
+
   test("propagates asset-validation failure before health or Discord start", async () => {
     const assetFailure = new Error("champion asset missing");
     const startHttpServer = mock(async () => ({

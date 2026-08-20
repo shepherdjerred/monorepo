@@ -19,12 +19,32 @@ import {
 } from "#src/betting/parlay-criteria.ts";
 import {
   generatedParlaySchemaFor,
+  parlayProposalSchemaFor,
   parseModelGeneratedParlay,
+  thresholdsMatchProposal,
 } from "#src/betting/parlay-model-schema.ts";
+import {
+  buildPlayerFrame,
+  statLegsForProposal,
+} from "#src/betting/parlay-stats.ts";
+import {
+  OPPONENT_PING_HISTORY_COLUMNS,
+  PARLAY_HISTORY_COLUMNS,
+  TEAM_OBJECTIVE_HISTORY_COLUMNS,
+} from "#src/betting/parlay-stat-fields.ts";
+import {
+  numericThresholdsAreMeasured,
+  priceParlay,
+} from "#src/betting/parlay-pricing.ts";
+import type {
+  ParlayHistory,
+  ParlayHistoryMatch,
+} from "#src/betting/parlay-history.ts";
 import {
   PARLAY_SYSTEM_PROMPT,
   ParlayGenerationContextSchema,
-  buildParlayPrompt,
+  buildParlayProposalPrompt,
+  buildParlayThresholdPrompt,
 } from "#src/betting/parlay-prompt.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -180,28 +200,163 @@ const cases = [
   },
 ] as const;
 
+/**
+ * Synthetic history, so the acceptance run exercises the real stat and pricing
+ * code without a lake.
+ *
+ * Values are spread deterministically so every distribution is non-degenerate:
+ * the point is to check that the production prompts and schemas survive a real
+ * model round trip, not to assert any particular threshold.
+ */
+function syntheticHistory(
+  subjectList: readonly ParlaySubject[],
+): ParlayHistory {
+  // Derived from the same maps fetchParlayHistory selects, so the fixture
+  // covers every field the model is allowed to propose. Hand-listing columns
+  // here previously left 22 of 39 uncovered, and the run failed as
+  // "unpriceable" on a leg the production fetch would have answered fine.
+  const playerColumns = Object.values(PARLAY_HISTORY_COLUMNS).flatMap(
+    (column) => (column === null ? [] : [column]),
+  );
+  const teamColumns = Object.values(TEAM_OBJECTIVE_HISTORY_COLUMNS).flatMap(
+    (column) => (column === null ? [] : [column]),
+  );
+  const opponentColumns = Object.values(OPPONENT_PING_HISTORY_COLUMNS);
+
+  const history = new Map<string, ParlayHistoryMatch[]>();
+  for (const [subjectIndex, subject] of subjectList.entries()) {
+    const matches: ParlayHistoryMatch[] = Array.from(
+      { length: 60 },
+      (_unused, index) => {
+        const spread = (index * 7 + subjectIndex * 3) % 20;
+        return {
+          matchId: `LIVE_${subject.key}_${index.toString()}`,
+          createdAtMs: 1_700_000_000_000 + index,
+          durationSeconds: 1500 + ((index * 137) % 1500),
+          win: index % 2 === 0,
+          lane: "MIDDLE",
+          values: new Map(playerColumns.map((column) => [column, spread + 3])),
+          teamValues: new Map(
+            teamColumns.map((column) => [column, spread % 5]),
+          ),
+          opponentValues: new Map(
+            opponentColumns.map((column) => [column, spread * 2]),
+          ),
+        };
+      },
+    );
+    history.set(subject.puuid, matches);
+  }
+  return history;
+}
+
 for (const liveCase of cases) {
   const startedAt = Date.now();
-  const result = await generateValidatedObject(runtime, {
-    model,
-    schema: generatedParlaySchemaFor(liveCase.selected),
-    schemaName: "bryan_bucks_parlay",
-    schemaDescription:
-      "A fixed-odds AND parlay built only from the supplied closed catalog.",
-    system: PARLAY_SYSTEM_PROMPT,
-    prompt: buildParlayPrompt(liveCase.context),
-    workload: "scout.betting.parlay.live-acceptance",
-    sessionId: liveCase.name,
-    abortSignal: AbortSignal.timeout(PARLAY_GENERATION_DEADLINE_MS),
-    reasoningEffort: "medium",
-    maxOutputTokens: PARLAY_INITIAL_OUTPUT_TOKENS,
-    semanticRetryMaxOutputTokens: PARLAY_RETRY_OUTPUT_TOKENS,
-  });
+  const deadline = AbortSignal.timeout(PARLAY_GENERATION_DEADLINE_MS);
+  const call = async (
+    schema: Parameters<typeof generateValidatedObject>[1]["schema"],
+    prompt: string,
+    name: string,
+  ) =>
+    await generateValidatedObject(runtime, {
+      model,
+      schema,
+      schemaName: name,
+      schemaDescription:
+        "A fixed-odds AND parlay built only from the supplied closed catalog.",
+      system: PARLAY_SYSTEM_PROMPT,
+      prompt,
+      workload: "scout.betting.parlay.live-acceptance",
+      sessionId: liveCase.name,
+      abortSignal: deadline,
+      reasoningEffort: "medium",
+      maxOutputTokens: PARLAY_INITIAL_OUTPUT_TOKENS,
+      semanticRetryMaxOutputTokens: PARLAY_RETRY_OUTPUT_TOKENS,
+    });
+
+  // Pass one: legs only.
+  const proposalResult = await call(
+    parlayProposalSchemaFor(liveCase.selected),
+    buildParlayProposalPrompt(liveCase.context),
+    "bryan_bucks_parlay_proposal",
+  );
+  const proposal = parlayProposalSchemaFor(liveCase.selected).parse(
+    proposalResult.object,
+  );
+
+  const history = syntheticHistory(liveCase.selected);
+  const legs = statLegsForProposal(proposal, liveCase.selected);
+  if (legs.length === 0) {
+    throw new Error(`${liveCase.name} proposed no measurable leg`);
+  }
+  const statistics = legs.map((leg) => ({
+    condition: leg.index,
+    describes: leg.label,
+    subject: leg.subjectKey,
+    operator: leg.operator,
+    player: buildPlayerFrame({
+      matches:
+        leg.subjectPuuid === null ? [] : (history.get(leg.subjectPuuid) ?? []),
+      column: leg.column,
+      operator: leg.operator,
+      team: leg.scope === "team",
+      opponent: leg.scope === "opponent",
+    }),
+  }));
+
+  // Pass two: numbers only.
+  const filledResult = await call(
+    generatedParlaySchemaFor(liveCase.selected),
+    buildParlayThresholdPrompt({
+      context: liveCase.context,
+      proposal,
+      statistics,
+    }),
+    "bryan_bucks_parlay",
+  );
+  const filled = generatedParlaySchemaFor(liveCase.selected).parse(
+    filledResult.object,
+  );
+
   const durationMs = Date.now() - startedAt;
   if (durationMs > PARLAY_GENERATION_DEADLINE_MS) {
     throw new Error(`${liveCase.name} exceeded the 60-second deadline`);
   }
-  const serialized = JSON.stringify(parseModelGeneratedParlay(result.object));
+  if (!thresholdsMatchProposal(proposal, filled)) {
+    throw new Error(
+      `${liveCase.name} changed its proposed legs in the threshold pass`,
+    );
+  }
+
+  const candidate = parseModelGeneratedParlay(filled, 5000);
+  if (
+    !numericThresholdsAreMeasured(
+      candidate.conditions,
+      liveCase.selected,
+      history,
+    )
+  ) {
+    throw new Error(
+      `${liveCase.name} returned thresholds outside the measured 40-70% hit-rate range`,
+    );
+  }
+
+  const priced = priceParlay({
+    conditions: candidate.conditions,
+    subjects: liveCase.selected,
+    history,
+  });
+  if (priced === undefined) {
+    throw new Error(
+      `${liveCase.name} could not be priced from history; legs: ${legs
+        .map((leg) => `${leg.label}/${leg.scope}`)
+        .join(", ")}`,
+    );
+  }
+
+  const serialized = JSON.stringify(
+    parseModelGeneratedParlay(filled, priced.yesProbabilityBps),
+  );
   const roundTrip = GeneratedParlaySchema.parse(JSON.parse(serialized));
   if (roundTrip.conditions.length < 2 || roundTrip.conditions.length > 6) {
     throw new Error(`${liveCase.name} returned an invalid leg count`);
@@ -212,12 +367,6 @@ for (const liveCase of cases) {
       `${liveCase.name} failed semantic validation: ${issues.join("; ")}`,
     );
   }
-  if (
-    roundTrip.yesProbabilityBps < 1000 ||
-    roundTrip.yesProbabilityBps > 9000
-  ) {
-    throw new Error(`${liveCase.name} returned invalid odds`);
-  }
   const rendered = renderParlay(roundTrip, liveCase.selected);
   if (
     rendered.length !== roundTrip.conditions.length ||
@@ -226,6 +375,9 @@ for (const liveCase of cases) {
     throw new Error(`${liveCase.name} could not be deterministically rendered`);
   }
   logger.info(
-    `${liveCase.name}: ${durationMs.toString()}ms, ${roundTrip.conditions.length.toString()} legs, YES ${roundTrip.yesProbabilityBps.toString()} bps`,
+    `${liveCase.name}: ${durationMs.toString()}ms, ${roundTrip.conditions.length.toString()} legs, measured YES ${roundTrip.yesProbabilityBps.toString()} bps via ${priced.method}`,
   );
+  for (const leg of rendered) {
+    logger.info(`  - ${leg}`);
+  }
 }

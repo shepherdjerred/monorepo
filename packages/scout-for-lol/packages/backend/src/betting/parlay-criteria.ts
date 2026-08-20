@@ -6,11 +6,13 @@ import {
 } from "@scout-for-lol/data";
 import {
   MATCH_NUMERIC_CATALOG,
+  OPPONENT_PING_CATALOG,
+  OpponentPingFieldSchema,
   MatchNumericFieldSchema,
   PARTICIPANT_BOOLEAN_CATALOG,
-  PARTICIPANT_NUMERIC_CATALOG,
+  PARTICIPANT_NUMERIC_SETTLEMENT_CATALOG,
   ParticipantBooleanFieldSchema,
-  ParticipantNumericFieldSchema,
+  SettlementParticipantNumericFieldSchema,
   TEAM_BOOLEAN_CATALOG,
   TEAM_OBJECTIVE_CATALOG,
   TeamBooleanFieldSchema,
@@ -18,7 +20,13 @@ import {
 } from "#src/betting/parlay-catalog.ts";
 
 export const PARLAY_SCHEMA_VERSION = 1;
-export const PARLAY_CATALOG_VERSION = "2026-08-18";
+export const PARLAY_CATALOG_VERSION = "2026-08-19";
+// Deliberately NOT bumped for the opponent-ping condition. This version is a
+// settlement gate: evaluateParlay voids any stored definition whose recorded
+// version differs, which refunds it. Adding a condition kind leaves every
+// existing kind evaluating identically, so a bump here would refund live
+// parlays to advertise a change that cannot affect them. Bump it only when the
+// meaning of an existing condition changes.
 export const PARLAY_EVALUATOR_VERSION = "1";
 export const PARLAY_SUBJECT_ALIAS_MAX_LENGTH = 100;
 
@@ -28,7 +36,7 @@ const SelectedTeamSchema = z.literal("selected");
 const ParticipantNumericConditionSchema = z.strictObject({
   kind: z.literal("participant_numeric"),
   subject: z.string().regex(/^P[1-5]$/),
-  field: ParticipantNumericFieldSchema,
+  field: SettlementParticipantNumericFieldSchema,
   operator: NumericOperatorSchema,
   threshold: z.number().int().nonnegative(),
 });
@@ -69,7 +77,21 @@ const MatchNumericConditionSchema = z.strictObject({
   threshold: z.number().int().nonnegative(),
 });
 
+/**
+ * A ping total across the five opponents.
+ *
+ * Deliberately not addressable per opponent and deliberately not available for
+ * the selected team: the whole point is a number nobody in the market can move.
+ */
+const OpponentTeamPingsConditionSchema = z.strictObject({
+  kind: z.literal("opponent_team_pings"),
+  field: OpponentPingFieldSchema,
+  operator: NumericOperatorSchema,
+  threshold: z.number().int().nonnegative(),
+});
+
 export const ParlayConditionSchema = z.discriminatedUnion("kind", [
+  OpponentTeamPingsConditionSchema,
   ParticipantNumericConditionSchema,
   ParticipantBooleanConditionSchema,
   TeamBooleanConditionSchema,
@@ -148,12 +170,14 @@ function conditionTargetKey(condition: ParlayCondition): string {
       return `team:${condition.objective}:kills`;
     case "match_numeric":
       return `match:${condition.field}`;
+    case "opponent_team_pings":
+      return `opponent:${condition.field}`;
   }
 }
 
 function thresholdIssue(condition: ParlayCondition): string | undefined {
   if (condition.kind === "participant_numeric") {
-    const entry = PARTICIPANT_NUMERIC_CATALOG[condition.field];
+    const entry = PARTICIPANT_NUMERIC_SETTLEMENT_CATALOG[condition.field];
     return condition.threshold < entry.thresholdMin ||
       condition.threshold > entry.thresholdMax
       ? `${condition.field} threshold must be ${entry.thresholdMin.toString()}-${entry.thresholdMax.toString()}`
@@ -164,6 +188,13 @@ function thresholdIssue(condition: ParlayCondition): string | undefined {
     return condition.threshold < entry.thresholdMin ||
       condition.threshold > entry.thresholdMax
       ? `${condition.objective} threshold must be ${entry.thresholdMin.toString()}-${entry.thresholdMax.toString()}`
+      : undefined;
+  }
+  if (condition.kind === "opponent_team_pings") {
+    const pingEntry = OPPONENT_PING_CATALOG[condition.field];
+    return condition.threshold < pingEntry.thresholdMin ||
+      condition.threshold > pingEntry.thresholdMax
+      ? `${condition.field} threshold must be ${pingEntry.thresholdMin.toString()}-${pingEntry.thresholdMax.toString()}`
       : undefined;
   }
   if (condition.kind === "match_numeric") {
@@ -299,7 +330,7 @@ export function renderParlayCondition(
 ): string {
   switch (condition.kind) {
     case "participant_numeric":
-      return `${subjectAlias(subjects, condition.subject)} gets ${numericPhrase(condition.operator, condition.threshold)} ${PARTICIPANT_NUMERIC_CATALOG[condition.field].label}`;
+      return `${subjectAlias(subjects, condition.subject)} gets ${numericPhrase(condition.operator, condition.threshold)} ${PARTICIPANT_NUMERIC_SETTLEMENT_CATALOG[condition.field].label}`;
     case "participant_boolean": {
       const name = subjectAlias(subjects, condition.subject);
       const field = PARTICIPANT_BOOLEAN_CATALOG[condition.field].label;
@@ -319,6 +350,8 @@ export function renderParlayCondition(
       return `Their team gets ${numericPhrase(condition.operator, condition.threshold)} ${TEAM_OBJECTIVE_CATALOG[condition.objective].label}${condition.threshold === 1 ? "" : "s"}`;
     case "match_numeric":
       return `The ${MATCH_NUMERIC_CATALOG[condition.field].label} is ${numericPhrase(condition.operator, condition.threshold)}`;
+    case "opponent_team_pings":
+      return `The ${OPPONENT_PING_CATALOG[condition.field].label} is ${numericPhrase(condition.operator, condition.threshold)}`;
   }
 }
 

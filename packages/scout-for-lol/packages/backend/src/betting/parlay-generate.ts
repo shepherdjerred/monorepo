@@ -26,12 +26,25 @@ import {
 } from "#src/betting/parlay-criteria.ts";
 import {
   generatedParlaySchemaFor,
+  parlayProposalSchemaFor,
   parseModelGeneratedParlay,
+  thresholdsMatchProposal,
 } from "#src/betting/parlay-model-schema.ts";
+import { fetchParlayHistory } from "#src/betting/parlay-history.ts";
+import {
+  numericThresholdsAreMeasured,
+  priceParlay,
+  type ParlayPrice,
+} from "#src/betting/parlay-pricing.ts";
+import {
+  buildProposalStatistics,
+  statLegsForProposal,
+} from "#src/betting/parlay-stats.ts";
 import {
   PARLAY_PROMPT_VERSION,
   buildParlayGenerationContext,
-  buildParlayPrompt,
+  buildParlayProposalPrompt,
+  buildParlayThresholdPrompt,
   PARLAY_SYSTEM_PROMPT,
   type ParlayGenerationContext,
 } from "#src/betting/parlay-prompt.ts";
@@ -61,7 +74,8 @@ type GenerationStatus =
   | "timeout"
   | "invalid_output"
   | "provider_error"
-  | "persistence_error";
+  | "persistence_error"
+  | "unpriceable";
 
 class ParlayPersistenceError extends Error {
   constructor(cause: unknown) {
@@ -179,6 +193,13 @@ async function prepareGeneration(
   };
 }
 
+class ParlayUnpriceableError extends Error {
+  constructor(reason: string) {
+    super(`Parlay could not be priced from history: ${reason}`);
+    this.name = "ParlayUnpriceableError";
+  }
+}
+
 async function generateAndPersistDefinition(
   setup: GenerationReady,
   startedAt: number,
@@ -190,17 +211,22 @@ async function generateAndPersistDefinition(
     throw new Error("OPENROUTER_API_KEY is required for parlay generation");
   }
   const model = configuration.bettingParlayAiModel ?? DEFAULT_PARLAY_AI_MODEL;
-  assertWithinBudget();
-  const generated = await (async () => {
+
+  const call = async (
+    schema: Parameters<typeof generateValidatedObject>[1]["schema"],
+    prompt: string,
+    name: string,
+  ) => {
     try {
+      assertWithinBudget();
       const result = await generateValidatedObject(runtime, {
         model,
-        schema: generatedParlaySchemaFor(setup.subjects),
-        schemaName: "bryan_bucks_parlay",
+        schema,
+        schemaName: name,
         schemaDescription:
           "A fixed-odds AND parlay built only from the supplied closed catalog.",
         system: PARLAY_SYSTEM_PROMPT,
-        prompt: buildParlayPrompt(setup.context),
+        prompt,
         workload: "scout.betting.parlay.generate",
         sessionId: setup.matchId,
         abortSignal: deadline,
@@ -209,15 +235,90 @@ async function generateAndPersistDefinition(
         semanticRetryMaxOutputTokens: PARLAY_RETRY_OUTPUT_TOKENS,
       });
       chargeUsage(model, result.usage.tokens);
-      return { ...result, object: parseModelGeneratedParlay(result.object) };
+      return result;
     } catch (error) {
       if (error instanceof StructuredOutputUsageError) {
         chargeUsage(model, error.usage.tokens);
       }
       throw error;
     }
-  })();
+  };
+
+  // Pass one: which legs, no numbers.
+  const proposed = await call(
+    parlayProposalSchemaFor(setup.subjects),
+    buildParlayProposalPrompt(setup.context),
+    "bryan_bucks_parlay_proposal",
+  );
+  const proposal = parlayProposalSchemaFor(setup.subjects).parse(
+    proposed.object,
+  );
   deadline.throwIfAborted();
+
+  // The one history snapshot that both the thresholds and the price come from.
+  const history = await fetchParlayHistory({
+    puuids: setup.subjects.map((subject) => subject.puuid),
+    excludeMatchId: setup.matchId,
+    queueType: setup.queueType,
+    deadline,
+    deadlineAt: startedAt + PARLAY_GENERATION_DEADLINE_MS,
+  });
+  const legs = statLegsForProposal(proposal, setup.subjects);
+  if (legs.length === 0) {
+    throw new ParlayUnpriceableError("no proposed leg could be measured");
+  }
+  const statistics = await buildProposalStatistics({
+    legs,
+    history,
+    queueType: setup.queueType,
+    deadline,
+    deadlineAt: startedAt + PARLAY_GENERATION_DEADLINE_MS,
+  });
+  deadline.throwIfAborted();
+
+  // Pass two: the numbers, against those distributions.
+  const filled = await call(
+    generatedParlaySchemaFor(setup.subjects),
+    buildParlayThresholdPrompt({
+      context: setup.context,
+      proposal,
+      statistics,
+    }),
+    "bryan_bucks_parlay",
+  );
+  const filledParlay = generatedParlaySchemaFor(setup.subjects).parse(
+    filled.object,
+  );
+  if (!thresholdsMatchProposal(proposal, filledParlay)) {
+    throw new ParlayUnpriceableError(
+      "threshold pass changed the proposed legs",
+    );
+  }
+  deadline.throwIfAborted();
+
+  const candidate = parseModelGeneratedParlay(filledParlay, 5000);
+  if (
+    !numericThresholdsAreMeasured(candidate.conditions, setup.subjects, history)
+  ) {
+    throw new ParlayUnpriceableError(
+      "filled thresholds were outside the measured 40-70% hit-rate range",
+    );
+  }
+
+  // The price is measured, never authored.
+  const priced = priceParlay({
+    conditions: candidate.conditions,
+    subjects: setup.subjects,
+    history,
+  });
+  if (priced === undefined) {
+    throw new ParlayUnpriceableError("history could not answer every leg");
+  }
+  const generatedParlay = parseModelGeneratedParlay(
+    filledParlay,
+    priced.yesProbabilityBps,
+  );
+
   try {
     const definition = await prismaClient.bucksParlayDefinition.create({
       data: {
@@ -225,23 +326,20 @@ async function generateAndPersistDefinition(
         queueType: setup.queueType,
         selectedTeamId: setup.selectedTeamId,
         subjects: JSON.stringify(setup.subjects),
-        criteria: JSON.stringify(generated.object),
-        yesProbabilityBps: generated.object.yesProbabilityBps,
+        criteria: JSON.stringify(generatedParlay),
+        yesProbabilityBps: priced.yesProbabilityBps,
         promptVersion: PARLAY_PROMPT_VERSION,
         catalogVersion: PARLAY_CATALOG_VERSION,
         schemaVersion: PARLAY_SCHEMA_VERSION,
         evaluatorVersion: PARLAY_EVALUATOR_VERSION,
         generationContext: JSON.stringify(setup.context),
+        proposal: JSON.stringify(proposal),
+        pricing: JSON.stringify(pricingRecord(priced, legs.length)),
         requestedModel: model,
-        resolvedModel: generated.metadata.at(-1)?.resolvedModel ?? null,
+        resolvedModel: filled.metadata.at(-1)?.resolvedModel ?? null,
         usage: JSON.stringify({
-          aggregate: generated.usage,
-          attempts: generated.attempts.map((attempt) => ({
-            attempt: attempt.attempt,
-            outcome: attempt.outcome,
-            finishReason: attempt.finishReason,
-            usage: attempt.usage,
-          })),
+          proposal: proposed.usage,
+          thresholds: filled.usage,
         }),
         durationMs: Date.now() - startedAt,
       },
@@ -253,6 +351,17 @@ async function generateAndPersistDefinition(
   }
 }
 
+/** Frozen record of how a published price was reached. */
+function pricingRecord(price: ParlayPrice, measuredLegs: number) {
+  return {
+    yesProbabilityBps: price.yesProbabilityBps,
+    method: price.method,
+    samples: price.samples,
+    clamped: price.clamped,
+    measuredLegs,
+  };
+}
+
 function generationStatusForError(
   deadline: AbortSignal,
   error: unknown,
@@ -261,6 +370,7 @@ function generationStatusForError(
   if (timedOut(deadline, error)) return "timeout";
   if (error instanceof StructuredOutputExhaustionError) return "invalid_output";
   if (error instanceof ParlayPersistenceError) return "persistence_error";
+  if (error instanceof ParlayUnpriceableError) return "unpriceable";
   return "provider_error";
 }
 
@@ -307,7 +417,8 @@ export async function runParlayGeneration(
     const expected =
       status === "budget_refused" ||
       status === "timeout" ||
-      status === "invalid_output";
+      status === "invalid_output" ||
+      status === "unpriceable";
     if (expected) {
       logger.info(
         `Could not generate Bryan Bucks parlay for ${matchId}:`,

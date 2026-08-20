@@ -65,6 +65,10 @@ export type RawObjectRef = {
   lastModified: Date | undefined;
 };
 
+type S3ReadOptions = {
+  abortSignal?: AbortSignal;
+};
+
 /**
  * Fully enumerate a prefix via ContinuationToken (MaxKeys 1000), yielding every
  * object. Unlike the legacy importer's batched StartAfter loop this is
@@ -74,6 +78,7 @@ export async function* enumerateRawObjects(
   client: S3Client,
   bucket: string,
   prefix: string,
+  options: S3ReadOptions = {},
 ): AsyncGenerator<RawObjectRef> {
   let continuationToken: string | undefined;
   do {
@@ -84,6 +89,9 @@ export async function* enumerateRawObjects(
         MaxKeys: 1000,
         ContinuationToken: continuationToken,
       }),
+      options.abortSignal === undefined
+        ? {}
+        : { abortSignal: options.abortSignal },
     );
     for (const object of response.Contents ?? []) {
       if (object.Key === undefined) {
@@ -102,9 +110,13 @@ export async function readRawObjectText(
   client: S3Client,
   bucket: string,
   key: string,
+  options: S3ReadOptions = {},
 ): Promise<string> {
   const response = await client.send(
     new GetObjectCommand({ Bucket: bucket, Key: key }),
+    options.abortSignal === undefined
+      ? {}
+      : { abortSignal: options.abortSignal },
   );
   if (response.Body === undefined) {
     throw new Error(`S3 object has no body: ${key}`);

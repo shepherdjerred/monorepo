@@ -1,5 +1,6 @@
 import { copyFile, link, mkdir, readdir, unlink } from "node:fs/promises";
 import path from "node:path";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
 import { prisma as defaultPrisma } from "#src/database/index.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -35,6 +36,7 @@ import {
   PREMATCH_LAKE_COLUMNS,
   PrematchLakeRowSchema,
   duckDbColumnsSpec,
+  lakeSchemaFingerprint,
 } from "#src/report-lake/schema.ts";
 import {
   listStagingFiles,
@@ -154,7 +156,15 @@ async function writeManifest(
 ): Promise<void> {
   await Bun.write(
     path.join(buildDir, "manifest.json"),
-    JSON.stringify({ ...summary, builtAt: new Date().toISOString() }, null, 2),
+    JSON.stringify(
+      {
+        ...summary,
+        schemaFingerprint: lakeSchemaFingerprint(),
+        builtAt: new Date().toISOString(),
+      },
+      null,
+      2,
+    ),
   );
 }
 
@@ -310,6 +320,17 @@ export async function runReportLakeFold(
       return await rebuildLocked(prisma, lakeDir, startedAt);
     }
 
+    // A fold hardlinks the published build's parquet and appends fold files
+    // written at the CURRENT column set. If those disagree, the resulting build
+    // does not read at all (see lakeSchemaFingerprint), so rebuild instead.
+    const publishedFingerprint = await readBuildFingerprint(currentDir);
+    if (publishedFingerprint !== lakeSchemaFingerprint()) {
+      logger.info(
+        `Lake column set changed since the published build (${publishedFingerprint ?? "unrecorded"} -> ${lakeSchemaFingerprint()}); folding via full rebuild`,
+      );
+      return await rebuildLocked(prisma, lakeDir, startedAt);
+    }
+
     const buildId = newBuildId();
     const buildDir = buildDirPath(lakeDir, buildId);
     await mkdir(buildDir, { recursive: true });
@@ -392,6 +413,9 @@ async function rebuildLocked(
   lakeDir: string,
   startedAt: number,
 ): Promise<CompactionSummary> {
+  const deadlineAt = Date.now() + COMPACTION_TIMEOUT_MS;
+  const deadline = AbortSignal.timeout(COMPACTION_TIMEOUT_MS);
+  const remainingTimeoutMs = (): number => Math.max(1, deadlineAt - Date.now());
   const buildId = newBuildId();
   const buildDir = buildDirPath(lakeDir, buildId);
   await mkdir(buildDir, { recursive: true });
@@ -411,18 +435,21 @@ async function rebuildLocked(
     );
   }
   const client = createS3Client();
-  const skippedMatches = await populateMatchesFromS3(
+  const skippedMatches = await populateMatchesFromS3({
     client,
     bucket,
-    matchWriter,
-    foldedMatchIds,
-  );
-  const skippedPrematches = await populatePrematchFromS3(
+    writer: matchWriter,
+    foldedIds: foldedMatchIds,
+    abortSignal: deadline,
+  });
+  const skippedPrematches = await populatePrematchFromS3({
     client,
     bucket,
-    prematchWriter,
-    foldedPrematchIds,
-  );
+    writer: prematchWriter,
+    foldedIds: foldedPrematchIds,
+    abortSignal: deadline,
+  });
+  deadline.throwIfAborted();
   await matchWriter.close();
   await prematchWriter.close();
 
@@ -443,18 +470,23 @@ async function rebuildLocked(
           );
         }
       },
-      { timeoutMs: COMPACTION_TIMEOUT_MS },
+      { timeoutMs: remainingTimeoutMs() },
     );
   } finally {
     await unlink(matchesTmp);
     await unlink(prematchTmp);
   }
 
+  deadline.throwIfAborted();
   const accountRows = await writeAccountsParquet(prisma, buildDir);
-  const rankHistory = await writeCompetitionRankHistoryParquet(
+  deadline.throwIfAborted();
+  const rankHistory = await writeCompetitionRankHistoryParquet({
     buildDir,
-    foldedRankHistoryIds,
-  );
+    foldedIds: foldedRankHistoryIds,
+    abortSignal: deadline,
+    timeoutMs: remainingTimeoutMs(),
+  });
+  deadline.throwIfAborted();
 
   const summary = {
     buildId,

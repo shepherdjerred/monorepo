@@ -1,0 +1,14 @@
+diff --git a/package.json b/package.json
+index 2448576002ee1b82bd1faa8ee40a7cc200455c9b..f35e064bae071c4662b554bb7a12062fd44c17e8 100644
+--- a/package.json
++++ b/package.json
+@@ -20,7 +20,8 @@
+   ],
+   "homepage": "https://bun.com",
+   "dependencies": {
+-    "@types/node": "*"
++    "@types/node": "*",
++    "undici-types": "*"
+   },
+   "scripts": {
+     "prebuild": "echo $(pwd)",

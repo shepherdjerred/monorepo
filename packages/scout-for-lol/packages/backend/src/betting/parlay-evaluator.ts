@@ -8,6 +8,7 @@ import {
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import {
   matchNumericValue,
+  opponentTeamPingValue,
   participantBooleanValue,
   participantNumericValue,
   teamBooleanValue,
@@ -85,6 +86,7 @@ function evaluateCondition(input: {
     );
     if (participant === undefined) return;
     const actualValue = participantNumericValue(participant, condition.field);
+    if (actualValue === undefined) return;
     return {
       actualValue,
       passed: compare(actualValue, condition.operator, condition.threshold),
@@ -99,6 +101,17 @@ function evaluateCondition(input: {
     if (participant === undefined) return;
     const actualValue = participantBooleanValue(participant, condition.field);
     return { actualValue, passed: actualValue === condition.expected };
+  }
+  if (condition.kind === "opponent_team_pings") {
+    const actualValue = opponentTeamPingValue(
+      input.matchData.info.participants,
+      input.selectedTeamId,
+      condition.field,
+    );
+    return {
+      actualValue,
+      passed: compare(actualValue, condition.operator, condition.threshold),
+    };
   }
   const team = input.matchData.info.teams.find(
     (candidate) => candidate.teamId === input.selectedTeamId,

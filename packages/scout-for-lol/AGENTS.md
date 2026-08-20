@@ -875,17 +875,53 @@ Canada. There is no monetary component and nothing transfers to real goods.
 Each eligible Solo/Duo or Flex match may also publish one shared, fixed-odds
 parlay after the normal prematch message. Its guild-local market closes five
 minutes after publication, independently of the outcome market's ten-minute
-window. GPT-5.6 Sol generates a versioned 2–6 leg tree through OpenRouter at
-medium reasoning with 4,096 initial output tokens, 6,144 only on a truncated
-corrective attempt, and one 60-second deadline. The prompt contains anonymous
-lobby context, up to 30 same-queue history rows per selected player, and the
-complete reviewed field catalog. Settlement is deterministic against the final
-`RawMatch`; model-authored paths, code, SQL, expressions, and settlement prose
-are never accepted. `bun run test:parlay:live` is the opt-in four-scenario
-production-prompt check and fails fast without `OPENROUTER_API_KEY`.
-Discord publication persists a `publishing` market behind an inert preparation
-message; the prematch poll retries activation after restarts, and the market
-becomes bettable only after the guarded transition to `open`.
+window. Settlement is deterministic against the final `RawMatch`;
+model-authored paths, code, SQL, expressions, and settlement prose are never
+accepted. `bun run test:parlay:live` is the opt-in production-prompt check and
+fails fast without `OPENROUTER_API_KEY`. Discord publication persists a
+`publishing` market behind an inert preparation message; the prematch poll
+retries activation after restarts, and the market becomes bettable only after
+the guarded transition to `open`.
+
+**Generation is two passes, and the model never sets the price.** GPT-5.6 Sol
+first proposes 2–6 leg _shapes_ — subject, field, operator, no numbers. Only
+then does the harness know which distributions to measure, so it fetches one
+history snapshot and hands back, per leg, the player's own distribution plus the
+lane and overall population, sliced by game duration and expressed as "the
+threshold that lands N% of the time" already oriented to that leg's operator. A
+second call fills in thresholds, targeting legs that land 40–70% individually.
+Both calls share one 60-second deadline.
+
+- **`thresholdsMatchProposal` is the load-bearing guard.** Pass two may change
+  numbers and nothing else. A response that re-targets a field, flips an
+  operator, or drops a leg is rejected, because it would be choosing a threshold
+  against a distribution it was never shown — the exact failure the split
+  removes.
+- **The price is measured, not authored.** `parlay-pricing.ts` replays the
+  finished leg set over the same snapshot. A parlay whose legs all name one
+  subject is priced by direct replay, which carries the correlation between legs
+  exactly; a multi-subject parlay is priced per subject and recombined over
+  duration bucket and result, because the tracked five-stack has exactly one
+  game together in the whole lake. `yesProbabilityBps` is absent from both model
+  schemas.
+- **No history, no parlay.** A leg the lake cannot answer returns undefined
+  rather than a low number, and generation records `unpriceable` instead of
+  publishing a guess. Which fields the lake can answer is
+  `PARLAY_HISTORY_COLUMNS`, exhaustive over the catalog so adding a field is a
+  compile error until someone decides whether it is groundable.
+- **Pings are opponent-only.** Every ping type is excluded from subject
+  conditions and available as an enemy-team total. Pings cost nothing to send,
+  and subjects do bet on their own parlays mid-game, so a leg on a subject's own
+  pings is settled by whoever holds the ticket. Nobody in the market can move
+  the enemy team's count.
+- **`PARLAY_EVALUATOR_VERSION` gates settlement.** `evaluateParlay` voids any
+  stored definition whose recorded version differs, which refunds it. Bump it
+  only when the meaning of an existing condition changes — never merely because
+  a condition kind was added.
+- **Adding a lake column requires the fingerprint guard.** Lake reads select an
+  explicit column list across every parquet file, so a build whose files
+  disagree fails to bind at all. `lakeSchemaFingerprint` is recorded in each
+  build manifest and a mismatch makes the fold fall back to a full rebuild.
 
 Outcome and parlay positions have no product stake maximum. A positive whole-BB
 amount is limited only by the user's balance, parlay house liability, and the
