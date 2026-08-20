@@ -95,6 +95,10 @@ describe("Scout Discord visualizations", () => {
       expect(description).toBeString();
       expect(description?.length).toBeLessThanOrEqual(3900);
       expect(embed?.data.title?.length).toBeLessThanOrEqual(256);
+      if (kind === "TABLE") {
+        expect(description).toContain("```\n");
+        expect(description).toContain("\n```\n\n_Visualization truncated");
+      }
     }
   });
 

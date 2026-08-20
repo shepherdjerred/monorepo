@@ -86,7 +86,9 @@ function nativeDescription(snapshot: VisualizationSnapshot): string | null {
         : snapshot.kind === "LIST"
           ? formatList(snapshot)
           : formatTable(snapshot);
-  return truncateDescription(description);
+  return snapshot.kind === "TABLE"
+    ? truncateTableDescription(description)
+    : truncateDescription(description);
 }
 
 function truncateDescription(description: string): string {
@@ -95,6 +97,27 @@ function truncateDescription(description: string): string {
   }
   const available =
     MAX_EMBED_DESCRIPTION - DESCRIPTION_TRUNCATION_SUFFIX.length;
+  return `${truncateLines(description, available)}${DESCRIPTION_TRUNCATION_SUFFIX}`;
+}
+
+function truncateTableDescription(description: string): string {
+  const codeFence = "```";
+  const openingFence = `${codeFence}\n`;
+  const closingFence = `\n${codeFence}`;
+  const fullDescription = `${openingFence}${description}${closingFence}`;
+  if (fullDescription.length <= MAX_EMBED_DESCRIPTION) {
+    return fullDescription;
+  }
+  const available =
+    MAX_EMBED_DESCRIPTION -
+    openingFence.length -
+    closingFence.length -
+    DESCRIPTION_TRUNCATION_SUFFIX.length;
+  const truncated = truncateLines(description, available);
+  return `${openingFence}${truncated}${closingFence}${DESCRIPTION_TRUNCATION_SUFFIX}`;
+}
+
+function truncateLines(description: string, available: number): string {
   const lines: string[] = [];
   let length = 0;
   for (const line of description.split("\n")) {
@@ -107,9 +130,9 @@ function truncateDescription(description: string): string {
   }
   const prefix = lines.join("\n");
   if (prefix.length === 0) {
-    return `${description.slice(0, available)}${DESCRIPTION_TRUNCATION_SUFFIX}`;
+    return description.slice(0, available);
   }
-  return `${prefix}${DESCRIPTION_TRUNCATION_SUFFIX}`;
+  return prefix;
 }
 
 function formatKpi(snapshot: VisualizationSnapshot): string {
@@ -194,8 +217,7 @@ function formatTable(snapshot: VisualizationSnapshot): string {
   if (extra > 0) {
     lines.push(`_…and ${extra.toString()} more rows_`);
   }
-  const codeFence = "```";
-  return `${codeFence}\n${lines.join("\n")}\n${codeFence}`;
+  return lines.join("\n");
 }
 
 function alignedRows(snapshot: VisualizationSnapshot): {
@@ -250,5 +272,8 @@ function escapeMarkdown(value: string): string {
 }
 
 function escapeTableCell(value: string): string {
-  return value.replaceAll("|", String.raw`\|`).replaceAll("\n", " ");
+  return value
+    .replaceAll("`", "′")
+    .replaceAll("|", String.raw`\|`)
+    .replaceAll("\n", " ");
 }
