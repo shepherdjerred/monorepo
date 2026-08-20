@@ -5,14 +5,20 @@ import {
   escapeMarkdown as escapeDiscordMarkdown,
 } from "discord.js";
 import {
-  formatReportDisplayValue,
-  REPORT_METRICS,
   type ExploreMessage,
   type ReportAiPreviewSummary,
-  type TemporalSeries,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import { visualizationSnapshotToImage } from "@scout-for-lol/report";
+import {
+  formatAbsoluteDelta,
+  formatNativeSeriesValue,
+  formatPreviewValue,
+  formatSeriesValue,
+  requireRowValue,
+  type NativeRow,
+  type NativeRowValue,
+} from "#src/discord/scout/visualization-format.ts";
 
 const NATIVE_KINDS = new Set(["TABLE", "LIST", "LEADERBOARD", "KPI_CARD"]);
 const MAX_NATIVE_ROWS = 12;
@@ -266,13 +272,7 @@ function formatTable(
     escapeTableCell(row.label),
     ...(source.preview === null
       ? snapshot.series.map((series) =>
-          escapeTableCell(
-            formatSeriesValue(
-              snapshot,
-              series,
-              requireNumericRowValue(row, series.id),
-            ),
-          ),
+          escapeTableCell(formatNativeSeriesValue(snapshot, series, row)),
         )
       : previewMetricColumns(source.preview).map((column) =>
           escapeTableCell(
@@ -309,12 +309,6 @@ function formatTableRow(cells: string[], widths: number[]): string {
     .trimEnd();
 }
 
-type NativeRowValue = string | number | null;
-type NativeRow = {
-  label: string;
-  values: Map<string, NativeRowValue>;
-};
-
 function alignedRows(snapshot: VisualizationSnapshot): NativeRow[] {
   const order: string[] = [];
   const labels = new Map<string, string>();
@@ -342,7 +336,7 @@ function alignedRows(snapshot: VisualizationSnapshot): NativeRow[] {
     if (rowValues === undefined) {
       throw new Error(`Visualization values missing key ${key}.`);
     }
-    return { label, values: rowValues };
+    return { key, label, values: rowValues };
   });
 }
 
@@ -352,6 +346,7 @@ function previewRows(preview: ReportAiPreviewSummary): NativeRow[] {
       ? preview.visualizationRows
       : preview.rows;
   return rows.map((row) => ({
+    key: row.label,
     label: row.label,
     values: new Map(row.values.map((value) => [value.column, value.value])),
   }));
@@ -422,70 +417,8 @@ function formatRowValues(
   }
   return snapshot.series.map(
     (series) =>
-      `${escapeMarkdown(series.label)}: ${formatSeriesValue(
-        snapshot,
-        series,
-        requireNumericRowValue(row, series.id),
-      )}`,
+      `${escapeMarkdown(series.label)}: ${formatNativeSeriesValue(snapshot, series, row)}`,
   );
-}
-
-function requireRowValue(row: NativeRow, column: string): NativeRowValue {
-  const value = row.values.get(column);
-  if (value === undefined) {
-    throw new Error(`Visualization row missing value for ${column}.`);
-  }
-  return value;
-}
-function requireNumericRowValue(row: NativeRow, column: string): number | null {
-  const value = row.values.get(column) ?? null;
-  if (typeof value !== "number" && value !== null) {
-    throw new Error(`Visualization row value for ${column} is not numeric.`);
-  }
-  return value;
-}
-
-function formatPreviewValue(
-  column: ReportAiPreviewSummary["columns"][number],
-  value: NativeRowValue,
-): string {
-  return value === null ? "Unknown" : formatReportDisplayValue(column, value);
-}
-
-function formatSeriesValue(
-  snapshot: VisualizationSnapshot,
-  series: TemporalSeries,
-  value: number | null,
-): string {
-  if (value === null) {
-    return "Unknown";
-  }
-  const isRate =
-    snapshot.display.stack === "percent" ||
-    REPORT_METRICS.find((metric) => metric.id === series.metric)?.kind ===
-      "rate";
-  if (isRate) {
-    return `${(value * 100).toFixed(1)}%`;
-  }
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
-    value,
-  );
-}
-
-function formatAbsoluteDelta(
-  snapshot: VisualizationSnapshot,
-  series: TemporalSeries,
-  value: number | null,
-): string {
-  const isRate =
-    snapshot.display.stack === "percent" ||
-    REPORT_METRICS.find((metric) => metric.id === series.metric)?.kind ===
-      "rate";
-  return isRate
-    ? value === null
-      ? "Unknown"
-      : `${(value * 100).toFixed(1)} pp`
-    : formatSeriesValue(snapshot, series, value);
 }
 
 function escapeMarkdown(value: string): string {

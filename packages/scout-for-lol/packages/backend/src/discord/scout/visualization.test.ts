@@ -382,7 +382,13 @@ describe("Scout Discord visualization bounds", () => {
       series: scoutTestVisualization.series.map((series) => ({
         ...series,
         points: [
-          ...series.points,
+          ...series.points.map((point) => ({
+            ...point,
+            comparisonValue: point.value,
+            absoluteDelta: 1,
+            percentageDelta: 0.5,
+            comparisonEvidence: point.evidence,
+          })),
           {
             ...series.points[0],
             key: "2026-01-03",
@@ -411,8 +417,8 @@ describe("Scout Discord visualization bounds", () => {
     expect(description).toContain("Aurora");
     expect(description).not.toContain("wrong preview order");
     expect(description).toContain("2026-01-03");
-    const lines = description?.split("\n") ?? [];
-    expect(lines[1]?.length).toBe(lines[2]?.length);
+    expect(description).toContain("Baseline:");
+    expect(description).toContain("Δ");
   });
 
   test("keeps every native description within Discord's limit", () => {
