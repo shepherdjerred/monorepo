@@ -235,30 +235,13 @@ async function syncLatestCustomRecruitmentMessage(params: {
     update: (current) => current,
   });
   if (!pending.applied) return pending.snapshot;
-  let message;
-  try {
-    message = await channel.send({
-      embeds: [recruitmentEmbed(snapshot)],
-      nonce: deliveryId,
-    });
-  } catch (error) {
-    await params.prisma.customAuditEvent.updateMany({
-      where: {
-        nightId: snapshot.id,
-        action: "RECRUITMENT_MESSAGE_SEND_PENDING",
-        payload: { contains: deliveryId },
-      },
-      data: {
-        action: "RECRUITMENT_MESSAGE_SEND_FAILED",
-        payload: JSON.stringify({
-          deliveryId,
-          channelId: channel.id,
-          failedAt: new Date().toISOString(),
-        }),
-      },
-    });
-    throw error;
-  }
+  // Keep the intent pending if send throws: Discord may have accepted the
+  // message before the response was lost. The next sync resolves that
+  // ambiguity by nonce.
+  const message = await channel.send({
+    embeds: [recruitmentEmbed(snapshot)],
+    nonce: deliveryId,
+  });
   const mutation = await commitCustomMutation({
     prisma: params.prisma,
     nightId: snapshot.id,
