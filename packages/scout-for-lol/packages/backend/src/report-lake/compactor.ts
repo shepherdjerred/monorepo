@@ -1,5 +1,6 @@
 import { copyFile, link, mkdir, readdir, unlink } from "node:fs/promises";
 import path from "node:path";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
 import { prisma as defaultPrisma } from "#src/database/index.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -35,6 +36,7 @@ import {
   PREMATCH_LAKE_COLUMNS,
   PrematchLakeRowSchema,
   duckDbColumnsSpec,
+  lakeSchemaFingerprint,
 } from "#src/report-lake/schema.ts";
 import {
   listStagingFiles,
@@ -154,7 +156,15 @@ async function writeManifest(
 ): Promise<void> {
   await Bun.write(
     path.join(buildDir, "manifest.json"),
-    JSON.stringify({ ...summary, builtAt: new Date().toISOString() }, null, 2),
+    JSON.stringify(
+      {
+        ...summary,
+        schemaFingerprint: lakeSchemaFingerprint(),
+        builtAt: new Date().toISOString(),
+      },
+      null,
+      2,
+    ),
   );
 }
 
@@ -307,6 +317,17 @@ export async function runReportLakeFold(
     const currentDir = await readCurrentBuildDir(lakeDir);
     if (currentDir === undefined) {
       logger.info("No published build yet; folding via full rebuild");
+      return await rebuildLocked(prisma, lakeDir, startedAt);
+    }
+
+    // A fold hardlinks the published build's parquet and appends fold files
+    // written at the CURRENT column set. If those disagree, the resulting build
+    // does not read at all (see lakeSchemaFingerprint), so rebuild instead.
+    const publishedFingerprint = await readBuildFingerprint(currentDir);
+    if (publishedFingerprint !== lakeSchemaFingerprint()) {
+      logger.info(
+        `Lake column set changed since the published build (${publishedFingerprint ?? "unrecorded"} -> ${lakeSchemaFingerprint()}); folding via full rebuild`,
+      );
       return await rebuildLocked(prisma, lakeDir, startedAt);
     }
 
