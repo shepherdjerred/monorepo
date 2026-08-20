@@ -9,7 +9,6 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import {
   getLedgerPage,
-  getOpenMarketAggregates,
   getPersonalBucksView,
   type PersonalBucksView,
 } from "#src/betting/accounts.ts";
@@ -19,6 +18,7 @@ import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
 import { MIN_STAKE } from "#src/betting/constants.ts";
 import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { renderBucksHistory } from "#src/betting/navigation.ts";
+import { getOpenMarketAggregates } from "#src/betting/open-market.ts";
 import {
   BucksTeamChoiceSchema,
   subjectWinsForTeam,

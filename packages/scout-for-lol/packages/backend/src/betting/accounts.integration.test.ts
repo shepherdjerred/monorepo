@@ -8,7 +8,6 @@ import {
   HouseInsufficientError,
   getFullLeaderboard,
   getLedgerPage,
-  getOpenMarketAggregates,
   getPersonalBucksView,
 } from "#src/betting/accounts.ts";
 import {
@@ -16,6 +15,7 @@ import {
   HOUSE_BANKROLL,
   SEED_GRANT,
 } from "#src/betting/constants.ts";
+import { getOpenMarketAggregates } from "#src/betting/open-market.ts";
 import {
   bucksTestDiscordId,
   bucksTestPuuid,

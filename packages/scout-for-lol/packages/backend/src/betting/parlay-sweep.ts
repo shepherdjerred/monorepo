@@ -180,4 +180,3 @@ export async function voidStaleParlayMarkets(
   }
   return count;
 }
-

@@ -437,4 +437,3 @@ export async function closeBettingPoolById(
     requireExpired: false,
   });
 }
-

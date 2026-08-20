@@ -4,7 +4,7 @@ import {
   type LeaguePuuid,
   type RiotTeamId,
 } from "@scout-for-lol/data";
-import type { OpenMarketAggregate } from "#src/betting/accounts.ts";
+import type { OpenMarketAggregate } from "#src/betting/open-market.ts";
 import { BLUE_TEAM_ID, RED_TEAM_ID } from "#src/betting/constants.ts";
 import { teamName } from "#src/betting/team.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
