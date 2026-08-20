@@ -9,10 +9,7 @@ import {
 } from "#src/customs/riot-tournament.ts";
 import { recordRiotTournamentResult } from "#src/customs/riot-results.ts";
 import { returnCustomResultPlayersToLobby } from "#src/customs/result-voice.ts";
-import {
-  publishCustomSnapshot,
-  shouldPublishCustomSnapshot,
-} from "#src/customs/socket.ts";
+import { publishCustomSnapshotIfCurrent } from "#src/customs/socket.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("customs-riot-callback");
@@ -95,9 +92,7 @@ export async function handleCustomRiotCallback(
     if (mutation.applied) {
       const shouldReturnVoicePlayers =
         mutation.snapshot.currentGame?.id === game.id;
-      if (await shouldPublishCustomSnapshot(prisma, metadata.nightId)) {
-        publishCustomSnapshot(mutation.snapshot);
-      }
+      await publishCustomSnapshotIfCurrent(prisma, mutation.snapshot);
       if (shouldReturnVoicePlayers) {
         void returnCustomResultPlayersToLobby({
           prisma,

@@ -155,6 +155,25 @@ export function publishCustomSnapshot(snapshot: CustomNightSnapshot): void {
   }
 }
 
+export async function publishCustomSnapshotIfCurrent(
+  database: ExtendedPrismaClient,
+  snapshot: CustomNightSnapshot,
+): Promise<void> {
+  await Promise.all(
+    [...(socketsByGuild.get(snapshot.guildId) ?? [])].map((socket) => {
+      const previous = snapshotDeliveryQueues.get(socket) ?? Promise.resolve();
+      const delivery = deliverCurrentSnapshotAfter(
+        previous,
+        socket,
+        database,
+        snapshot,
+      );
+      snapshotDeliveryQueues.set(socket, delivery);
+      return delivery;
+    }),
+  );
+}
+
 export async function shouldPublishCustomSnapshot(
   database: ExtendedPrismaClient,
   nightId: string,
@@ -196,6 +215,24 @@ async function deliverInitialSnapshotAfter(
     removeCustomSocket(socket);
     logger.error("Customs socket initialization failed", { error, guildId });
     socket.close(1011, "Customs snapshot initialization failed");
+  }
+}
+
+async function deliverCurrentSnapshotAfter(
+  previous: Promise<void>,
+  socket: Bun.ServerWebSocket<CustomSocketData>,
+  database: ExtendedPrismaClient,
+  snapshot: CustomNightSnapshot,
+): Promise<void> {
+  try {
+    await previous;
+    if (!(await shouldPublishCustomSnapshot(database, snapshot.id))) return;
+    const envelope = JSON.stringify(
+      CustomSnapshotEnvelopeSchema.parse({ kind: "snapshot", snapshot }),
+    );
+    await sendSnapshotToAuthorizedSocket(socket, envelope);
+  } catch (error) {
+    logger.error("Customs socket snapshot delivery failed", { error });
   }
 }
 

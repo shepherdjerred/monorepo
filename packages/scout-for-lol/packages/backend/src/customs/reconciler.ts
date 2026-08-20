@@ -30,7 +30,7 @@ import {
 } from "#src/customs/snapshot.ts";
 import {
   publishCustomSnapshot,
-  shouldPublishCustomSnapshot,
+  publishCustomSnapshotIfCurrent,
 } from "#src/customs/socket.ts";
 import { createSingleFlightRunner } from "#src/customs/single-flight.ts";
 import {
@@ -230,9 +230,7 @@ async function pollResult(
       if (!mutation.applied) continue;
       const shouldReturnVoicePlayers =
         mutation.snapshot.currentGame?.id === game.id;
-      if (await shouldPublishCustomSnapshot(database, nightId)) {
-        publishCustomSnapshot(mutation.snapshot);
-      }
+      await publishCustomSnapshotIfCurrent(database, mutation.snapshot);
       if (shouldReturnVoicePlayers) {
         await returnCustomResultPlayersToLobby({
           prisma: database,
