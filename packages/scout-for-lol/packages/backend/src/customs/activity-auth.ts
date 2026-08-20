@@ -282,7 +282,12 @@ async function verifyActivityTokenWithTolerance(
 export async function verifyCustomActivityTokenWithExpiry(
   token: string,
 ): Promise<{ claims: CustomActivityClaims; expiresAtMs: number } | null> {
-  return await verifyActivityTokenWithTolerance(token, 0);
+  const session = await verifyActivityTokenWithTolerance(token, 0);
+  if (session === null) return null;
+  const config = configuration.customs;
+  if (config === undefined) return null;
+  if (!config.guildAllowlist.includes(session.claims.guildId)) return null;
+  return session;
 }
 
 export async function exchangeCustomActivityAuth(
