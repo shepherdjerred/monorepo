@@ -1,7 +1,9 @@
 import { AttachmentBuilder, Colors, EmbedBuilder } from "discord.js";
 import {
+  formatReportDisplayValue,
   REPORT_METRICS,
   type ExploreMessage,
+  type ReportAiPreviewSummary,
   type TemporalSeries,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
@@ -27,7 +29,7 @@ export function exploreVisualizationPayload(
     return {};
   }
   if (usesNativeDiscordVisualization(snapshot)) {
-    const embed = visualizationToEmbed(snapshot);
+    const embed = visualizationToEmbed(snapshot, message.preview);
     return embed === null ? {} : { embeds: [embed] };
   }
   return {
@@ -53,8 +55,9 @@ export function usesNativeDiscordVisualization(
 
 export function visualizationToEmbed(
   snapshot: VisualizationSnapshot,
+  preview: ReportAiPreviewSummary | null = null,
 ): EmbedBuilder | null {
-  const description = nativeDescription(snapshot);
+  const description = nativeDescription(snapshot, preview);
   if (description === null) {
     return null;
   }
@@ -74,7 +77,10 @@ function truncateTitle(title: string): string {
   return `${title.slice(0, MAX_EMBED_TITLE - 1)}…`;
 }
 
-function nativeDescription(snapshot: VisualizationSnapshot): string | null {
+function nativeDescription(
+  snapshot: VisualizationSnapshot,
+  preview: ReportAiPreviewSummary | null,
+): string | null {
   if (snapshot.series.length === 0) {
     return null;
   }
@@ -82,10 +88,10 @@ function nativeDescription(snapshot: VisualizationSnapshot): string | null {
     snapshot.kind === "KPI_CARD"
       ? formatKpi(snapshot)
       : snapshot.kind === "LEADERBOARD"
-        ? formatLeaderboard(snapshot)
+        ? formatLeaderboard(snapshot, preview)
         : snapshot.kind === "LIST"
-          ? formatList(snapshot)
-          : formatTable(snapshot);
+          ? formatList(snapshot, preview)
+          : formatTable(snapshot, preview);
   return snapshot.kind === "TABLE"
     ? truncateTableDescription(description)
     : truncateDescription(description);
@@ -139,27 +145,42 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
   return snapshot.series
     .map((series) => {
       const point = series.points.at(-1);
-      const value = formatSeriesValue(snapshot, series, point?.value ?? null);
-      return `**${escapeMarkdown(series.label)}**\n${value}`;
+      if (point === undefined) {
+        return `**${escapeMarkdown(series.label)}**\nUnknown n=0`;
+      }
+      const value = formatSeriesValue(snapshot, series, point.value);
+      const sampleSize = point.evidence.sampleSize;
+      const comparison =
+        point.comparisonEvidence !== undefined ||
+        point.comparisonValue !== undefined ||
+        point.absoluteDelta !== undefined ||
+        point.percentageDelta !== undefined;
+      const details = comparison
+        ? `n=${sampleSize.toString()} · Baseline: ${formatSeriesValue(
+            snapshot,
+            series,
+            point.comparisonValue ?? null,
+          )} · Δ ${formatAbsoluteDelta(
+            snapshot,
+            series,
+            point.absoluteDelta ?? null,
+          )} · ${formatPercent(point.percentageDelta ?? null)}`
+        : `n=${sampleSize.toString()}`;
+      return `**${escapeMarkdown(series.label)}**\n${value} ${details}`;
     })
     .join("\n\n");
 }
 
-function formatList(snapshot: VisualizationSnapshot): string {
-  const allRows = alignedRows(snapshot);
+function formatList(
+  snapshot: VisualizationSnapshot,
+  preview: ReportAiPreviewSummary | null,
+): string {
+  const allRows =
+    preview === null ? alignedRows(snapshot) : previewRows(preview);
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
   const lines = rows.map((row) => {
-    const values = snapshot.series
-      .map(
-        (series) =>
-          `${escapeMarkdown(series.label)}: ${formatSeriesValue(
-            snapshot,
-            series,
-            row.values.get(series.id) ?? null,
-          )}`,
-      )
-      .join(", ");
+    const values = formatRowValues(snapshot, row, preview).join(", ");
     return `- ${escapeMarkdown(row.label)}: ${values}`;
   });
   if (extra > 0) {
@@ -168,21 +189,16 @@ function formatList(snapshot: VisualizationSnapshot): string {
   return lines.join("\n");
 }
 
-function formatLeaderboard(snapshot: VisualizationSnapshot): string {
-  const allRows = alignedRows(snapshot);
+function formatLeaderboard(
+  snapshot: VisualizationSnapshot,
+  preview: ReportAiPreviewSummary | null,
+): string {
+  const allRows =
+    preview === null ? alignedRows(snapshot) : previewRows(preview);
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
   const lines = rows.map((row, index) => {
-    const values = snapshot.series
-      .map(
-        (series) =>
-          `${escapeMarkdown(series.label)}: ${formatSeriesValue(
-            snapshot,
-            series,
-            row.values.get(series.id) ?? null,
-          )}`,
-      )
-      .join(" · ");
+    const values = formatRowValues(snapshot, row, preview).join(" · ");
     return `**${(index + 1).toString()}.** ${escapeMarkdown(row.label)} — ${values}`;
   });
   if (extra > 0) {
@@ -191,26 +207,39 @@ function formatLeaderboard(snapshot: VisualizationSnapshot): string {
   return lines.join("\n");
 }
 
-function formatTable(snapshot: VisualizationSnapshot): string {
-  const allRows = alignedRows(snapshot);
+function formatTable(
+  snapshot: VisualizationSnapshot,
+  preview: ReportAiPreviewSummary | null,
+): string {
+  const allRows =
+    preview === null ? alignedRows(snapshot) : previewRows(preview);
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const headers = ["", ...snapshot.series.map((series) => series.label)];
+  const headers =
+    preview === null
+      ? ["", ...snapshot.series.map((series) => series.label)]
+      : preview.columns.map((column) => column.label);
   const lines = [
     headers.map((header) => escapeTableCell(header)).join("    "),
     headers.map(() => "----").join("    "),
     ...rows.map((row) =>
       [
         escapeTableCell(row.label),
-        ...snapshot.series.map((series) =>
-          escapeTableCell(
-            formatSeriesValue(
-              snapshot,
-              series,
-              row.values.get(series.id) ?? null,
-            ),
-          ),
-        ),
+        ...(preview === null
+          ? snapshot.series.map((series) =>
+              escapeTableCell(
+                formatSeriesValue(
+                  snapshot,
+                  series,
+                  requireNumericRowValue(row, series.id),
+                ),
+              ),
+            )
+          : previewMetricColumns(preview).map((column) =>
+              escapeTableCell(
+                formatPreviewValue(column, requireRowValue(row, column.key)),
+              ),
+            )),
       ].join("    "),
     ),
   ];
@@ -220,13 +249,16 @@ function formatTable(snapshot: VisualizationSnapshot): string {
   return lines.join("\n");
 }
 
-function alignedRows(snapshot: VisualizationSnapshot): {
+type NativeRowValue = string | number | null;
+type NativeRow = {
   label: string;
-  values: Map<string, number | null>;
-}[] {
+  values: Map<string, NativeRowValue>;
+};
+
+function alignedRows(snapshot: VisualizationSnapshot): NativeRow[] {
   const order: string[] = [];
   const labels = new Map<string, string>();
-  const values = new Map<string, Map<string, number | null>>();
+  const values = new Map<string, Map<string, NativeRowValue>>();
   for (const series of snapshot.series) {
     for (const point of series.points) {
       if (!labels.has(point.key)) {
@@ -241,10 +273,78 @@ function alignedRows(snapshot: VisualizationSnapshot): {
       rowValues.set(series.id, point.value);
     }
   }
-  return order.map((key) => ({
-    label: labels.get(key) ?? key,
-    values: values.get(key) ?? new Map(),
+  return order.map((key) => {
+    const label = labels.get(key);
+    if (label === undefined) {
+      throw new Error(`Visualization label missing key ${key}.`);
+    }
+    const rowValues = values.get(key);
+    if (rowValues === undefined) {
+      throw new Error(`Visualization values missing key ${key}.`);
+    }
+    return { label, values: rowValues };
+  });
+}
+
+function previewRows(preview: ReportAiPreviewSummary): NativeRow[] {
+  return preview.rows.map((row) => ({
+    label: row.label,
+    values: new Map(row.values.map((value) => [value.column, value.value])),
   }));
+}
+
+function previewMetricColumns(preview: ReportAiPreviewSummary) {
+  return preview.columns.filter((column) => column.key !== "label");
+}
+
+function formatRowValues(
+  snapshot: VisualizationSnapshot,
+  row: NativeRow,
+  preview: ReportAiPreviewSummary | null,
+): string[] {
+  if (preview !== null) {
+    return previewMetricColumns(preview).map(
+      (column) =>
+        `${escapeMarkdown(column.label)}: ${formatPreviewValue(
+          column,
+          requireRowValue(row, column.key),
+        )}`,
+    );
+  }
+  return snapshot.series.map(
+    (series) =>
+      `${escapeMarkdown(series.label)}: ${formatSeriesValue(
+        snapshot,
+        series,
+        requireNumericRowValue(row, series.id),
+      )}`,
+  );
+}
+
+function requireRowValue(row: NativeRow, column: string): NativeRowValue {
+  const value = row.values.get(column);
+  if (value === undefined) {
+    throw new Error(`Visualization row missing column ${column}.`);
+  }
+  return value;
+}
+
+function requireNumericRowValue(row: NativeRow, column: string): number | null {
+  const value = requireRowValue(row, column);
+  if (typeof value !== "number" && value !== null) {
+    throw new Error(`Visualization row value for ${column} is not numeric.`);
+  }
+  return value;
+}
+
+function formatPreviewValue(
+  column: ReportAiPreviewSummary["columns"][number],
+  value: NativeRowValue,
+): string {
+  if (value === null) {
+    return "Unknown";
+  }
+  return formatReportDisplayValue(column, value);
 }
 
 function formatSeriesValue(
@@ -265,6 +365,25 @@ function formatSeriesValue(
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 3 }).format(
     value,
   );
+}
+
+function formatAbsoluteDelta(
+  snapshot: VisualizationSnapshot,
+  series: TemporalSeries,
+  value: number | null,
+): string {
+  const isRate =
+    snapshot.display.stack === "percent" ||
+    REPORT_METRICS.find((metric) => metric.id === series.metric)?.kind ===
+      "rate";
+  if (isRate) {
+    return value === null ? "Unknown" : `${(value * 100).toFixed(1)} pp`;
+  }
+  return formatSeriesValue(snapshot, series, value);
+}
+
+function formatPercent(value: number | null): string {
+  return value === null ? "Unknown" : `${(value * 100).toFixed(1)}%`;
 }
 
 function escapeMarkdown(value: string): string {

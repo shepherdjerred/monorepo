@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   ExploreMessageSchema,
+  ReportAiPreviewSummarySchema,
   VisualizationSnapshotSchema,
 } from "@scout-for-lol/data";
 import {
@@ -25,11 +26,38 @@ const answer = ExploreMessageSchema.parse({
   createdAt: "2026-08-18T00:00:00.000Z",
 });
 
+const preview = ReportAiPreviewSummarySchema.parse({
+  columns: [
+    { key: "label", label: "Champion / queue", format: "text" },
+    { key: "games", label: "Games", format: "integer" },
+    { key: "win_rate", label: "Win rate", format: "percent" },
+  ],
+  rows: [
+    {
+      label: "Aurora • solo",
+      values: [
+        { column: "games", value: 8 },
+        { column: "win_rate", value: 1 },
+      ],
+    },
+    {
+      label: "Jhin • flex",
+      values: [
+        { column: "games", value: 7 },
+        { column: "win_rate", value: 0.286 },
+      ],
+    },
+  ],
+  rowsScanned: 2,
+  renderKind: "LEADERBOARD",
+});
+
 describe("Scout Discord visualizations", () => {
   test("renders tables, leaderboards, and KPI cards as embeds", () => {
     expect(usesNativeDiscordVisualization(scoutTestVisualization)).toBe(true);
     const table = exploreVisualizationPayload({
       ...answer,
+      preview,
       visualization: scoutTestVisualization,
     });
     const tableJson = JSON.stringify(table.embeds);
@@ -37,14 +65,15 @@ describe("Scout Discord visualizations", () => {
     expect(tableJson).toContain("Win rates");
     expect(tableJson).toContain("Games");
     expect(tableJson).not.toContain("| Games |");
-    expect(tableJson).toContain("Aurora");
+    expect(tableJson).toContain("Aurora • solo");
     expect(tableJson).toContain("100.0%");
 
     const board = exploreVisualizationPayload({
       ...answer,
+      preview,
       visualization: scoutTestLeaderboard,
     });
-    expect(JSON.stringify(board.embeds)).toContain("**1.** Aurora");
+    expect(JSON.stringify(board.embeds)).toContain("**1.** Aurora • solo");
 
     const list = exploreVisualizationPayload({
       ...answer,
@@ -68,6 +97,33 @@ describe("Scout Discord visualizations", () => {
     expect(kpiDescription).toContain("56");
     expect(kpiDescription).toContain("Games counted");
     expect(kpiDescription).not.toContain("42");
+
+    const comparisonKpi = VisualizationSnapshotSchema.parse({
+      ...scoutTestKpi,
+      series: [
+        {
+          ...scoutTestKpi.series[0],
+          points: [
+            {
+              ...scoutTestKpi.series[0]?.points[1],
+              comparisonValue: 42,
+              absoluteDelta: 14,
+              percentageDelta: 1 / 3,
+              comparisonEvidence: {
+                sampleSize: 42,
+                confidenceInterval: null,
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const comparisonDescription =
+      visualizationToEmbed(comparisonKpi)?.data.description;
+    expect(comparisonDescription).toContain("n=56");
+    expect(comparisonDescription).toContain("Baseline: 42");
+    expect(comparisonDescription).toContain("Δ 14");
+    expect(comparisonDescription).toContain("33.3%");
   });
 
   test("keeps every native description within Discord's limit", () => {
