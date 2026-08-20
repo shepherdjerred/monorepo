@@ -1,6 +1,7 @@
 import AppKit
 import AuthenticationServices
 import Foundation
+import os
 
 @MainActor
 final class CredentialProviderViewController: ASCredentialProviderViewController {
@@ -168,31 +169,31 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
                 logger.info("event=credential_completion outcome=expired_before_use message_id_hash=\(CodeFillObservability.fingerprint(record.messageID), privacy: .public)")
                 return
             }
-            Task.detached(priority: .userInitiated) { [logger] in
-                for attempt in 1...3 {
-                    do {
-                        let store = try CodeStore(applicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier)
-                        let remainingRecords = try store.consumeAndReadRemaining(messageID: record.messageID)
-                        logger.info("event=credential_completion outcome=consumed remaining_record_count=\(remainingRecords.count, privacy: .public) message_id_hash=\(CodeFillObservability.fingerprint(record.messageID), privacy: .public) attempt=\(attempt, privacy: .public)")
-                        Task { @MainActor [weak self] in
-                            self?.synchronizeIdentityStore(remainingRecords)
-                        }
-                        return
-                    } catch {
-                        guard attempt < 3 else {
-                            logger.error("event=credential_completion outcome=consume_error attempts=\(attempt, privacy: .public) error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
-                            return
-                        }
-                        do {
-                            try await Task.sleep(for: .milliseconds(100))
-                        } catch {
-                            logger.error("event=credential_completion outcome=consume_retry_cancelled attempt=\(attempt, privacy: .public)")
-                            return
-                        }
-                    }
+            let remainingRecords = Self.consumeRecordAfterCompletion(record, logger: logger)
+            if let remainingRecords {
+                Task { @MainActor [weak self] in
+                    self?.synchronizeIdentityStore(remainingRecords)
                 }
             }
         }
+    }
+
+    private nonisolated static func consumeRecordAfterCompletion(_ record: OTPRecord, logger: Logger) -> [OTPRecord]? {
+        for attempt in 1...3 {
+            do {
+                let store = try CodeStore(applicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier)
+                let remainingRecords = try store.consumeAndReadRemaining(messageID: record.messageID)
+                logger.info("event=credential_completion outcome=consumed remaining_record_count=\(remainingRecords.count, privacy: .public) message_id_hash=\(CodeFillObservability.fingerprint(record.messageID), privacy: .public) attempt=\(attempt, privacy: .public)")
+                return remainingRecords
+            } catch {
+                guard attempt < 3 else {
+                    logger.error("event=credential_completion outcome=consume_error attempts=\(attempt, privacy: .public) error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
+                    return nil
+                }
+                Thread.sleep(forTimeInterval: 0.1)
+            }
+        }
+        return nil
     }
 
     private func cancel(code: Int) {
