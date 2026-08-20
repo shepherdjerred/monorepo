@@ -30,7 +30,7 @@ export function OnboardingPickGuildStep(props: {
                 onClick={() => {
                   props.onSelect(g.id);
                 }}
-                className="flex w-full items-center gap-3 rounded-md border border-border bg-scout-surface p-3 text-left text-scout-accent-ink transition-colors hover:bg-scout-accent"
+                className="flex w-full items-center gap-3 rounded-md border border-border bg-scout-surface p-3 text-left text-scout-ink transition-colors hover:bg-scout-accent hover:text-scout-accent-ink"
               >
                 {g.icon === null ? (
                   <div className="h-8 w-8 shrink-0 rounded-md bg-scout-hover" />

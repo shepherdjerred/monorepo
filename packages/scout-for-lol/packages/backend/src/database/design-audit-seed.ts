@@ -16,6 +16,11 @@ const DEFAULT_DISCORD_ID = "000000000000000001";
 const DEFAULT_PLAYER_ALIAS = "Scout Classic";
 const DEFAULT_COMPETITION_ID = 1;
 const DEFAULT_REPORT_ID = 1;
+const DESIGN_AUDIT_EXPLORE_CONVERSATION_ID =
+  "1b4e28ba-2fa1-41d2-883f-0016d3cca427";
+const DESIGN_AUDIT_EXPLORE_QUESTION_ID = "2c5f39cb-3fb2-52e3-994f-1127e4ddb538";
+const DESIGN_AUDIT_EXPLORE_ANSWER_ID = "3d6a4adc-4ac3-63f4-aa5b-2238f5eec649";
+const DESIGN_AUDIT_EXPLORE_SHARE_TOKEN = "a".repeat(32);
 const STARTER_QUERY =
   "SELECT player, games, win_rate FROM match_participants GROUP BY player ORDER BY games DESC LIMIT 10 RENDER leaderboard";
 
@@ -88,6 +93,62 @@ export async function seedDesignAuditDatabase(
   });
 
   try {
+    await prisma.user.upsert({
+      where: { discordId },
+      update: { discordUsername: "Design Audit User" },
+      create: { discordId, discordUsername: "Design Audit User" },
+    });
+
+    await prisma.exploreConversation.upsert({
+      where: { id: DESIGN_AUDIT_EXPLORE_CONVERSATION_ID },
+      update: {
+        title: "Champion win rates",
+        shareToken: DESIGN_AUDIT_EXPLORE_SHARE_TOKEN,
+        sharedAt: now,
+        currentLeafId: DESIGN_AUDIT_EXPLORE_ANSWER_ID,
+        sharedLeafId: DESIGN_AUDIT_EXPLORE_ANSWER_ID,
+      },
+      create: {
+        id: DESIGN_AUDIT_EXPLORE_CONVERSATION_ID,
+        userId: discordId,
+        title: "Champion win rates",
+        shareToken: DESIGN_AUDIT_EXPLORE_SHARE_TOKEN,
+        sharedAt: now,
+        currentLeafId: DESIGN_AUDIT_EXPLORE_ANSWER_ID,
+        sharedLeafId: DESIGN_AUDIT_EXPLORE_ANSWER_ID,
+      },
+    });
+    await prisma.exploreMessage.upsert({
+      where: { id: DESIGN_AUDIT_EXPLORE_QUESTION_ID },
+      update: { content: "Which champion wins most?" },
+      create: {
+        id: DESIGN_AUDIT_EXPLORE_QUESTION_ID,
+        conversationId: DESIGN_AUDIT_EXPLORE_CONVERSATION_ID,
+        role: "user",
+        content: "Which champion wins most?",
+      },
+    });
+    await prisma.exploreMessage.upsert({
+      where: { id: DESIGN_AUDIT_EXPLORE_ANSWER_ID },
+      update: {
+        content: "Jinx, over 42 games.",
+        parentId: DESIGN_AUDIT_EXPLORE_QUESTION_ID,
+        queryText:
+          "SELECT champion, win_rate FROM match_participants GROUP BY champion",
+      },
+      create: {
+        id: DESIGN_AUDIT_EXPLORE_ANSWER_ID,
+        conversationId: DESIGN_AUDIT_EXPLORE_CONVERSATION_ID,
+        parentId: DESIGN_AUDIT_EXPLORE_QUESTION_ID,
+        role: "assistant",
+        content: "Jinx, over 42 games.",
+        queryText:
+          "SELECT champion, win_rate FROM match_participants GROUP BY champion",
+        caveats: JSON.stringify(["Small sample."]),
+        followUps: JSON.stringify(["How about by patch?"]),
+      },
+    });
+
     const player = await prisma.player.upsert({
       where: { serverId_alias: { serverId: guildId, alias: playerAlias } },
       update: { discordId, creatorDiscordId: discordId, updatedTime: now },

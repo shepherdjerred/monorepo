@@ -26,6 +26,7 @@ for (const theme of themes) {
         if (message.type() === "error") browserErrors.push(message.text());
       });
       page.on("requestfailed", (request) => {
+        if (request.failure()?.errorText === "net::ERR_ABORTED") return;
         if (request.url().startsWith(new URL(routeUrl(route)).origin)) {
           browserErrors.push(
             `${request.method()} ${request.url()}: ${request.failure()?.errorText ?? "failed"}`,

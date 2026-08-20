@@ -266,6 +266,14 @@ export function appRoutes(): AuditRoute[] {
   );
   const competitionId = envValue("SCOUT_DESIGN_AUDIT_COMPETITION_ID", "1");
   const reportId = envValue("SCOUT_DESIGN_AUDIT_REPORT_ID", "1");
+  const exploreConversationId = envValue(
+    "SCOUT_DESIGN_AUDIT_EXPLORE_CONVERSATION_ID",
+    "1b4e28ba-2fa1-41d2-883f-0016d3cca427",
+  );
+  const exploreShareToken = envValue(
+    "SCOUT_DESIGN_AUDIT_EXPLORE_SHARE_TOKEN",
+    "a".repeat(32),
+  );
   const prefix = `/app/g/${guildId}`;
 
   return [
@@ -289,6 +297,20 @@ export function appRoutes(): AuditRoute[] {
       path: "/app/explore",
       authenticated: true,
       golden: true,
+    },
+    {
+      name: "explore-conversation",
+      surface: "app",
+      path: `/app/explore/${exploreConversationId}`,
+      authenticated: true,
+      golden: false,
+    },
+    {
+      name: "explore-shared",
+      surface: "app",
+      path: `/app/explore/s/${exploreShareToken}`,
+      authenticated: false,
+      golden: false,
     },
     {
       name: "welcome",
