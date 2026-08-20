@@ -82,6 +82,23 @@ func consumesAndReadsRemainingRecords() throws {
     #expect(try store.read(now: Date(timeIntervalSince1970: 101)).map(\.messageID) == ["one"])
 }
 
+@Test("does not resurrect a consumed message during resync")
+func retainsConsumedMessageTombstone() throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = try CodeStore(directory: directory)
+    let record = makeRecord(code: "222222", messageID: "two", detectedAt: 101)
+
+    try store.append(record, now: Date(timeIntervalSince1970: 101))
+    try store.consume(messageID: "two", now: Date(timeIntervalSince1970: 101))
+    try store.append(record, now: Date(timeIntervalSince1970: 101))
+    #expect(try store.read(now: Date(timeIntervalSince1970: 101)).isEmpty)
+
+    let refreshedRecord = makeRecord(code: "333333", messageID: "two", detectedAt: 282)
+    try store.append(refreshedRecord, now: Date(timeIntervalSince1970: 282))
+    #expect(try store.read(now: Date(timeIntervalSince1970: 282)).map(\.messageID) == ["two"])
+}
+
 @Test("serializes concurrent writers without losing records")
 func serializesConcurrentWriters() throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
