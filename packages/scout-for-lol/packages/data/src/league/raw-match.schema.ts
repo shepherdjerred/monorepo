@@ -49,6 +49,8 @@ export const RawInfoSchema = z
   })
   .strict();
 
+export type RawInfo = z.infer<typeof RawInfoSchema>;
+
 /**
  * Main RawMatch schema - represents a complete match from Riot Games Match V5 API
  */

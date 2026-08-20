@@ -41,6 +41,7 @@ import {
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { announceSettlements } from "#src/betting/announce.ts";
+import { announceParlaySettlements } from "#src/betting/parlay-announce.ts";
 import { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
 import { uniqueBy } from "remeda";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
@@ -241,6 +242,7 @@ async function processMatchAndUpdatePlayers(
     // meant a render crash or a failed send discarded the settlement summary
     // outright, and the bettors were never told what happened to their stakes.
     await announceSettlements({ matchId, ...bucks });
+    await announceParlaySettlements(bucks.parlaySettlements);
   }
 
   // Mark as processed

@@ -1011,6 +1011,9 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
         events.push(`resolve:${image}`);
         return digest;
       },
+      ensurePublicVisibility: async (target) => {
+        events.push(`visibility:${target}`);
+      },
       verifyAnonymousPull: async (target, reference) => {
         events.push(`public:${target}:${reference}`);
       },
@@ -1054,6 +1057,11 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     `public:scout-for-lol:${digest}`,
     `public:starlight-karma-bot:${digest}`,
   ]);
+  expect(events.filter((event) => event.startsWith("visibility:"))).toEqual([
+    "visibility:birmel",
+    "visibility:scout-for-lol",
+    "visibility:starlight-karma-bot",
+  ]);
   expect(events.filter((event) => event.startsWith("source:"))).toEqual([
     `source:ghcr.io/shepherdjerred/birmel@${digest}`,
     `source:ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
@@ -1062,17 +1070,21 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
   expect(events[0]).toBe(
     "resolve:ghcr.io/shepherdjerred/birmel:candidate-commit",
   );
-  expect(events[1]).toBe(`public:birmel:${digest}`);
-  expect(events[2]).toBe(`source:ghcr.io/shepherdjerred/birmel@${digest}`);
-  expect(events[3]).toBe(
+  expect(events[1]).toBe("visibility:birmel");
+  expect(events[2]).toBe(`public:birmel:${digest}`);
+  expect(events[3]).toBe(`source:ghcr.io/shepherdjerred/birmel@${digest}`);
+  expect(events[4]).toBe(
     `smoke:birmel:ghcr.io/shepherdjerred/birmel@${digest}`,
   );
-  expect(events[4]).toBe(`fingerprint:ghcr.io/shepherdjerred/birmel@${digest}`);
+  expect(events[5]).toBe(`fingerprint:ghcr.io/shepherdjerred/birmel@${digest}`);
   expect(
     events.indexOf(
       "resolve:ghcr.io/shepherdjerred/scout-for-lol:candidate-commit",
     ),
-  ).toBeLessThan(events.indexOf(`public:scout-for-lol:${digest}`));
+  ).toBeLessThan(events.indexOf("visibility:scout-for-lol"));
+  expect(events.indexOf("visibility:scout-for-lol")).toBeLessThan(
+    events.indexOf(`public:scout-for-lol:${digest}`),
+  );
   expect(events.indexOf(`public:scout-for-lol:${digest}`)).toBeLessThan(
     events.indexOf(`source:ghcr.io/shepherdjerred/scout-for-lol@${digest}`),
   );
@@ -1087,7 +1099,10 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     events.indexOf(
       "resolve:ghcr.io/shepherdjerred/starlight-karma-bot:candidate-commit",
     ),
-  ).toBeLessThan(events.indexOf(`public:starlight-karma-bot:${digest}`));
+  ).toBeLessThan(events.indexOf("visibility:starlight-karma-bot"));
+  expect(events.indexOf("visibility:starlight-karma-bot")).toBeLessThan(
+    events.indexOf(`public:starlight-karma-bot:${digest}`),
+  );
   expect(events.indexOf(`public:starlight-karma-bot:${digest}`)).toBeLessThan(
     events.indexOf(
       `source:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
@@ -1152,6 +1167,9 @@ test("keeps an exact candidate fingerprint propagation miss transient", async ()
             },
           ]),
         getManifestDigest: async () => digest,
+        ensurePublicVisibility: async () => {
+          events.push("visibility");
+        },
         verifyAnonymousPull: async () => {
           events.push("public");
         },
@@ -1165,7 +1183,7 @@ test("keeps an exact candidate fingerprint propagation miss transient", async ()
       },
     ),
   ).rejects.toBeInstanceOf(TransientError);
-  expect(events).toEqual(["public", "source", "smoke"]);
+  expect(events).toEqual(["visibility", "public", "source", "smoke"]);
 });
 
 test("keeps upstream provenance for infrastructure images", async () => {

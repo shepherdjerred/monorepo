@@ -1,188 +1,471 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Evelynn": {
-      "id": "Jade_Evelynn",
-      "key": "60028",
+      "id": "Evelynn",
+      "key": "28",
       "name": "Evelynn",
-      "title": "The Widowmaker",
+      "title": "Agony's Embrace",
       "image": {
-        "full": "Jade_Evelynn.png",
-        "sprite": "champion2.png",
+        "full": "Evelynn.png",
+        "sprite": "champion1.png",
         "group": "champion",
-        "x": 0,
+        "x": 48,
         "y": 0,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60028000",
+          "id": "28000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60028003",
+          "id": "28001",
+          "num": 1,
+          "name": "Shadow Evelynn",
+          "chromas": false
+        },
+        {
+          "id": "28002",
+          "num": 2,
+          "name": "Masquerade Evelynn",
+          "chromas": false
+        },
+        {
+          "id": "28003",
           "num": 3,
           "name": "Tango Evelynn",
           "chromas": false
         },
         {
-          "id": "60028006",
+          "id": "28004",
+          "num": 4,
+          "name": "Safecracker Evelynn",
+          "chromas": false
+        },
+        {
+          "id": "28005",
+          "num": 5,
+          "name": "Blood Moon Evelynn",
+          "chromas": false
+        },
+        {
+          "id": "28006",
           "num": 6,
           "name": "K/DA Evelynn",
           "chromas": false
         },
         {
-          "id": "60028007",
+          "id": "28007",
           "num": 7,
           "name": "Prestige K/DA Evelynn",
           "chromas": false
         },
         {
-          "id": "60028024",
-          "num": 24,
-          "name": "Coven Evelynn",
-          "chromas": false
+          "id": "28008",
+          "num": 8,
+          "name": "Sugar Rush Evelynn",
+          "chromas": true
         },
         {
-          "id": "60028025",
+          "id": "28009",
+          "num": 9,
+          "name": "Sugar Rush Evelynn (Ruby)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "28010",
+          "num": 10,
+          "name": "Sugar Rush Evelynn (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "28011",
+          "num": 11,
+          "name": "Sugar Rush Evelynn (Amethyst)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "28012",
+          "num": 12,
+          "name": "Sugar Rush Evelynn (Sweet Tooth)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "28013",
+          "num": 13,
+          "name": "Sugar Rush Evelynn (Obsidian)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "28014",
+          "num": 14,
+          "name": "Sugar Rush Evelynn (Jasper)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "28015",
+          "num": 15,
+          "name": "K/DA ALL OUT Evelynn",
+          "chromas": true
+        },
+        {
+          "id": "28016",
+          "num": 16,
+          "name": "K/DA ALL OUT Evelynn (Ruby)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "28017",
+          "num": 17,
+          "name": "K/DA ALL OUT Evelynn (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "28018",
+          "num": 18,
+          "name": "K/DA ALL OUT Evelynn (Turquoise)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "28019",
+          "num": 19,
+          "name": "K/DA ALL OUT Evelynn (Sapphire)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "28020",
+          "num": 20,
+          "name": "K/DA ALL OUT Evelynn (Emerald)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "28021",
+          "num": 21,
+          "name": "K/DA ALL OUT Evelynn (Pearl)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "28022",
+          "num": 22,
+          "name": "K/DA ALL OUT Evelynn (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "28023",
+          "num": 23,
+          "name": "K/DA ALL OUT Evelynn (BADDEST)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "28024",
+          "num": 24,
+          "name": "Coven Evelynn",
+          "chromas": true
+        },
+        {
+          "id": "28025",
           "num": 25,
           "name": "Coven Evelynn (Ruby)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60028026",
+          "id": "28026",
           "num": 26,
           "name": "Coven Evelynn (Sapphire)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60028027",
+          "id": "28027",
           "num": 27,
           "name": "Coven Evelynn (Rose Quartz)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60028028",
+          "id": "28028",
           "num": 28,
           "name": "Coven Evelynn (Pearl)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60028029",
+          "id": "28029",
           "num": 29,
           "name": "Coven Evelynn (Obsidian)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60028030",
+          "id": "28030",
           "num": 30,
           "name": "Coven Evelynn (Dark Ritual)",
           "chromas": false,
           "parentSkin": 24
         },
         {
-          "id": "60028031",
+          "id": "28031",
           "num": 31,
           "name": "Prestige K/DA Evelynn (2022)",
           "chromas": false
         },
         {
-          "id": "60028032",
+          "id": "28032",
           "num": 32,
           "name": "Spirit Blossom Evelynn",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60028033",
+          "id": "28033",
           "num": 33,
           "name": "Spirit Blossom Evelynn (Ruby)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60028034",
+          "id": "28034",
           "num": 34,
           "name": "Spirit Blossom Evelynn (Catseye)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60028035",
+          "id": "28035",
           "num": 35,
           "name": "Spirit Blossom Evelynn (Rose Quartz)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60028036",
+          "id": "28036",
           "num": 36,
           "name": "Spirit Blossom Evelynn (Sapphire)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60028037",
+          "id": "28037",
           "num": 37,
           "name": "Spirit Blossom Evelynn (Turquoise)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60028038",
+          "id": "28038",
           "num": 38,
           "name": "Spirit Blossom Evelynn (Emerald)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60028039",
+          "id": "28039",
           "num": 39,
           "name": "Spirit Blossom Evelynn (Obsidian)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60028040",
+          "id": "28040",
           "num": 40,
           "name": "Spirit Blossom Evelynn (Pearl)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60028041",
+          "id": "28041",
           "num": 41,
           "name": "Spirit Blossom Evelynn (Night Blossom)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60028301",
-          "num": 301,
-          "name": "Classic Evelynn",
+          "id": "28042",
+          "num": 42,
+          "name": "Soul Fighter Evelynn",
+          "chromas": true
+        },
+        {
+          "id": "28043",
+          "num": 43,
+          "name": "Soul Fighter Evelynn (Ruby)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "28044",
+          "num": 44,
+          "name": "Soul Fighter Evelynn (Emerald)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "28045",
+          "num": 45,
+          "name": "Soul Fighter Evelynn (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "28046",
+          "num": 46,
+          "name": "Soul Fighter Evelynn (Turquoise)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "28047",
+          "num": 47,
+          "name": "Soul Fighter Evelynn (Sapphire)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "28048",
+          "num": 48,
+          "name": "Soul Fighter Evelynn (Citrine)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "28049",
+          "num": 49,
+          "name": "Soul Fighter Evelynn (Peridot)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "28050",
+          "num": 50,
+          "name": "Soul Fighter Evelynn (Obsidian)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "28051",
+          "num": 51,
+          "name": "Soul Fighter Evelynn (Limitless)",
+          "chromas": false,
+          "parentSkin": 42
+        },
+        {
+          "id": "28052",
+          "num": 52,
+          "name": "High Noon Evelynn",
+          "chromas": true
+        },
+        {
+          "id": "28053",
+          "num": 53,
+          "name": "Prestige High Noon Evelynn",
           "chromas": false
         },
         {
-          "id": "60028302",
-          "num": 302,
-          "name": "Classic Evelynn (Shadow)",
+          "id": "28054",
+          "num": 54,
+          "name": "High Noon Evelynn (Ruby)",
           "chromas": false,
-          "parentSkin": 301
+          "parentSkin": 52
+        },
+        {
+          "id": "28055",
+          "num": 55,
+          "name": "High Noon Evelynn (Emerald)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "28056",
+          "num": 56,
+          "name": "High Noon Evelynn (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "28057",
+          "num": 57,
+          "name": "High Noon Evelynn (Turquoise)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "28058",
+          "num": 58,
+          "name": "High Noon Evelynn (Sapphire)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "28059",
+          "num": 59,
+          "name": "High Noon Evelynn (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "28060",
+          "num": 60,
+          "name": "High Noon Evelynn (Catseye)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "28061",
+          "num": 61,
+          "name": "High Noon Evelynn (Obsidian)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "28062",
+          "num": 62,
+          "name": "High Noon Evelynn (Noonday)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "28063",
+          "num": 63,
+          "name": "High Noon Evelynn (Vendetta)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "28064",
+          "num": 64,
+          "name": "Nightbringer Evelynn",
+          "chromas": false
         }
       ],
-      "lore": "- The Abilities are completely different. Read the descriptions<br>- Fighter not an Assassin",
-      "blurb": "- The Abilities are completely different. Read the descriptions<br>- Fighter not an Assassin",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Within the dark seams of Runeterra, the demon Evelynn searches for her next victim. She lures in prey with the voluptuous façade of a human female, but once a person succumbs to her charms, Evelynn's true form is unleashed. She then subjects her victim to unspeakable torment, gratifying herself with their pain. To the demon, these liaisons are innocent flings. To the rest of Runeterra, they are ghoulish tales of lust gone awry and horrific reminders of the cost of wanton desire.",
+      "blurb": "Within the dark seams of Runeterra, the demon Evelynn searches for her next victim. She lures in prey with the voluptuous façade of a human female, but once a person succumbs to her charms, Evelynn's true form is unleashed. She then subjects her victim...",
+      "allytips": [
+        "Allure's arm time might seem long, but the Charm and magic resist shred put Evelynn at an exteme advantage so are worth the wait.",
+        "While stealthed, pay attention to when you are (near) being detected by enemy champions. This is identified by the glowing yellow and red eyes over nearby enemy champions.",
+        "If at low health, you can take advantage of Demon Shade's healing and Camouflage to return to the fight and surprise opponents."
+      ],
+      "enemytips": [
+        "Purchasing Vision Wards can help you detect Evelynn's location in order to prepare for her ambushes.",
+        "A large share of Evelynn's threat is in her charm, 'Allure.' Protect allies marked with 'Allure' or, if you are marked, make sure allies are between you and where Evelynn may attack from.",
+        "If you suspect Evelynn is about to ambush one of your teammates, let them know by pinging the minimap and typing in chat."
+      ],
       "tags": [
         "Assassin",
         "Mage"
@@ -195,60 +478,62 @@
         "difficulty": 10
       },
       "stats": {
-        "hp": 470,
-        "hpperlevel": 90,
-        "mp": 235,
-        "mpperlevel": 45,
-        "movespeed": 340,
-        "armor": 20,
-        "armorperlevel": 4,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
+        "hp": 642,
+        "hpperlevel": 98,
+        "mp": 315,
+        "mpperlevel": 42,
+        "movespeed": 335,
+        "armor": 37,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
         "attackrange": 125,
-        "hpregen": 9.45,
-        "hpregenperlevel": 0.55,
-        "mpregen": 7.7,
+        "hpregen": 8.5,
+        "hpregenperlevel": 0.75,
+        "mpregen": 8.11,
         "mpregenperlevel": 0.6,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 51.5,
+        "attackdamage": 61,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 3.6,
-        "attackspeed": 0.625
+        "attackspeedperlevel": 2.1,
+        "attackspeed": 0.667
       },
       "spells": [
         {
-          "id": "Jade_EvelynnQ",
+          "id": "EvelynnQ",
           "name": "Hate Spike",
-          "description": "Evelynn fires a line of spikes through an enemy, dealing damage to all enemies in its path.",
-          "tooltip": "Evelynn fires a line of spikes through a nearby enemy dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to all enemies in its path.<br /><br /><spellName>Hate Spike</spellName> prioritizes targets Evelynn has recently attacked.{{ spellmodifierdescriptionappend }}",
+          "description": "Evelynn strikes out with her Lasher, dealing damage to the first unit hit. Then, Evelynn can shoot a line of spikes at nearby foes a few times.",
+          "tooltip": "Evelynn strikes with her Lasher, dealing <magicDamage>{{ missiledamage }} magic damage</magicDamage> to the first enemy hit and causing Evelynn's next 3 Attacks or Abilities on that unit to deal an additional <magicDamage>{{ totalbonusdamage }} magic damage</magicDamage>. Evelynn can <recast>Recast</recast> this Ability up to {{ qstackcount }} times.<br /><br /><recast>Recast:</recast> Evelynn fires spikes through the nearest enemy, dealing <magicDamage>{{ missiledamage }} magic damage</magicDamage> to all enemies hit.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
+              "Lasher and Spike Damage",
+              "Bonus Damage",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ basecost }} -> {{ basecostNL }}"
+              "{{ hatespikebasedamage }} -> {{ hatespikebasedamageNL }}",
+              "{{ bonusdamagebase }} -> {{ bonusdamagebaseNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            1.5,
-            1.5,
-            1.5,
-            1.5,
-            1.5
+            4,
+            4,
+            4,
+            4,
+            4
           ],
-          "cooldownBurn": "1.5",
+          "cooldownBurn": "4",
           "cost": [
-            16,
-            22,
-            28,
-            34,
-            40
+            40,
+            45,
+            50,
+            55,
+            60
           ],
-          "costBurn": "16/22/28/34/40",
+          "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
@@ -340,18 +625,18 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            525,
-            525,
-            525,
-            525,
-            525
+            800,
+            800,
+            800,
+            800,
+            800
           ],
-          "rangeBurn": "525",
+          "rangeBurn": "800",
           "image": {
-            "full": "Jade_EvelynnQ.png",
-            "sprite": "spell6.png",
+            "full": "EvelynnQ.png",
+            "sprite": "spell3.png",
             "group": "spell",
-            "x": 192,
+            "x": 384,
             "y": 144,
             "w": 48,
             "h": 48
@@ -359,37 +644,45 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_EvelynnW",
-          "name": "Dark Frenzy",
-          "description": "Evelynn passively increases her Movement Speed when hitting enemy champions with her spells. Upon activation, Evelynn breaks free from slows affecting her and gains a massive Movement Speed boost for a short duration.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Evelynn's spell hits on enemy champions grant her <speed>{{ passivems }} Movement Speed</speed> for {{ passiveduration }} seconds (effect stacks up to {{ maxpassivestacks }} times).<br /><br /><spellActive>Active:</spellActive> Evelynn removes all slows affecting her and gains <speed>{{ activems*100 }}% Movement Speed</speed> for {{ activeduration }} seconds.<br /><br />Champion takedowns refresh <spellName>Dark Frenzy's</spellName> cooldown.{{ spellmodifierdescriptionappend }}",
+          "id": "EvelynnW",
+          "name": "Allure",
+          "description": "Evelynn curses her target, causing her next attack or spell after a delay to charm her target and reduce their magic resist.",
+          "tooltip": "Evelynn marks a champion or monster for 5 seconds. If Evelynn hits the target with an Attack or Ability, she will expunge the mark, refund its cost, and <status>Slow</status> the target by {{ slowamount*100 }}% for {{ slowduration }} seconds.<br /><br />If the mark lasts at least 2.5 seconds, expunging it has extra effects:<li>Against champions: <status>Charms</status> them for {{ charmduration }} second(s) and removes <scaleMR>{{ mrshred*100 }}% Magic Resist</scaleMR> for {{ shredduration }} seconds.<li>Against monsters: <status>Charms</status> them for {{ monstercharm }} seconds and deals <magicDamage>{{ monsterdamagetotaltooltip }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Passive Movement Speed",
-              "Active Movement Speed"
+              "Charm Duration",
+              "Monster Charm Duration",
+              "Magic Resist Shred",
+              "Monster Damage",
+              "Cooldown",
+              "Range"
             ],
             "effect": [
-              "{{ passivems }} -> {{ passivemsNL }}",
-              "{{ activems*100.000000 }}% -> {{ activemsnl*100.000000 }}%"
+              "{{ charmduration }} -> {{ charmdurationNL }}",
+              "{{ monstercharm }} -> {{ monstercharmNL }}",
+              "{{ mrshred*100.000000 }}% -> {{ mrshrednl*100.000000 }}%",
+              "{{ monsterdamage }} -> {{ monsterdamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ castrange }} -> {{ castrangeNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
             15,
-            15,
-            15,
-            15,
-            15
+            14,
+            13,
+            12,
+            11
           ],
-          "cooldownBurn": "15",
+          "cooldownBurn": "15/14/13/12/11",
           "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
+            60,
+            70,
+            80,
+            90,
+            100
           ],
-          "costBurn": "0",
+          "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
@@ -478,61 +771,63 @@
             "4"
           ],
           "vars": [],
-          "costType": "No Cost",
+          "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            0,
-            0,
-            0,
-            0,
-            0
+            1200,
+            1300,
+            1400,
+            1500,
+            1600
           ],
-          "rangeBurn": "0",
+          "rangeBurn": "1200/1300/1400/1500/1600",
           "image": {
-            "full": "Jade_EvelynnW.png",
-            "sprite": "spell6.png",
+            "full": "EvelynnW.png",
+            "sprite": "spell3.png",
             "group": "spell",
-            "x": 240,
+            "x": 432,
             "y": 144,
             "w": 48,
             "h": 48
           },
-          "resource": "No Cost"
+          "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_EvelynnE",
-          "name": "Ravage",
-          "description": "Evelynn slashes her target twice, dealing damage with each hit. She then gains increased Attack Speed for a short duration.",
-          "tooltip": "Evelynn slashes a target {{ numberofstrikes }} times, dealing a total of <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>. Evelynn then gains <attackSpeed>{{ attackspeed*100 }}% Attack Speed</attackSpeed> for {{ attackspeedduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "id": "EvelynnE",
+          "name": "Whiplash",
+          "description": "Evelynn whips her target with her Lasher, dealing damage. She then gains Move Speed for a short duration.",
+          "tooltip": "Evelynn whips an enemy, dealing <magicDamage>{{ basedamage }} plus {{ percenthealthbasetooltip }} max Health magic damage</magicDamage>. Evelynn gains <speed>{{ speedamount*100 }}% Move Speed</speed> for {{ speedduration }} seconds.<br /><br />Entering <keywordMajor>Demon Shade</keywordMajor> refreshes this Ability's cooldown and empowers it. When this Ability is empowered, Evelynn dashes to the target and deals <magicDamage>{{ empowereddamage }} plus {{ percenthealthempoweredtooltip }} max Health magic damage</magicDamage> to her target and everyone she passes through instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage Per Strike",
-              "Attack Speed",
+              "Damage",
+              "Empowered Damage",
+              "Move Speed",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ damageperstrike }} -> {{ damageperstrikeNL }}",
-              "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ empowereddamage }} -> {{ empowereddamageNL }}",
+              "{{ speedamount*100.000000 }}% -> {{ speedamountnl*100.000000 }}%",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            9,
-            9,
-            9,
-            9,
-            9
+            8,
+            8,
+            8,
+            8,
+            8
           ],
-          "cooldownBurn": "9",
+          "cooldownBurn": "8",
           "cost": [
+            40,
+            45,
             50,
             55,
-            60,
-            65,
-            70
+            60
           ],
-          "costBurn": "50/55/60/65/70",
+          "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
@@ -624,50 +919,48 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            225,
-            225,
-            225,
-            225,
-            225
+            210,
+            210,
+            210,
+            210,
+            210
           ],
-          "rangeBurn": "225",
+          "rangeBurn": "210",
           "image": {
-            "full": "Jade_EvelynnE.png",
-            "sprite": "spell6.png",
+            "full": "EvelynnE.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_EvelynnR",
-          "name": "Agony's Embrace",
-          "description": "Evelynn summons spikes from the ground to deal damage and slow enemies in the area. She then gains a shield based on how many enemy champions were hit.",
-          "tooltip": "Evelynn impales all enemies in the targeted area, dealing <magicDamage>{{ totaldamage }}% current Health magic damage</magicDamage> and <status>Slowing</status> them by {{ slow*100 }}% for {{ slowduration }} seconds.<br /><br />Evelynn siphons their pain, gaining a <shield>{{ shieldamount }} Health Shield</shield> for each enemy champion hit which lasts up to 6 seconds.{{ spellmodifierdescriptionappend }}",
+          "id": "EvelynnR",
+          "name": "Last Caress",
+          "description": "Evelynn briefly goes untargetable and decimates the area in front of her before warping backwards a long distance.",
+          "tooltip": "Evelynn unleashes her demonic energy, dealing heavy damage, becoming Untargetable and teleporting backwards. She deals <magicDamage>{{ damage }} magic damage</magicDamage>, increased to <magicDamage>{{ critdamage }}</magicDamage> against enemies below <healing>30% Health</healing>. Upon cast, set Demon Shade to a 1.25 second cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Current Health %",
-              "Slow",
-              "Shield Amount",
+              "Damage",
+              "Empowered Damage",
               "Cooldown"
             ],
             "effect": [
-              "{{ basedamage }}% -> {{ basedamageNL }}%",
-              "{{ slow*100.000000 }}% -> {{ slownl*100.000000 }}%",
-              "{{ shieldamount }} -> {{ shieldamountNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basedamage*2.400000 }} -> {{ basedamagenl*2.400000 }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            150,
             120,
-            90
+            100,
+            80
           ],
-          "cooldownBurn": "150/120/90",
+          "cooldownBurn": "120/100/80",
           "cost": [
             100,
             100,
@@ -745,17 +1038,17 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            650,
-            650,
-            650
+            25000,
+            25000,
+            25000
           ],
-          "rangeBurn": "650",
+          "rangeBurn": "25000",
           "image": {
-            "full": "Jade_EvelynnR.png",
-            "sprite": "spell6.png",
+            "full": "EvelynnR.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -763,13 +1056,13 @@
         }
       ],
       "passive": {
-        "name": "Shadow Walk",
-        "description": "When out of combat, Evelynn enters Camoflauge only being able to be seen by nearby enemy champions or true sight. While stealthed, she rapidly regenerates Mana.",
+        "name": "Demon Shade",
+        "description": "When out of combat, Evelynn enters Demon Shade. Demon Shade heals Evelynn when she is low on health and grants Camouflage after level 6.",
         "image": {
-          "full": "Jade_Evelynn_Passive.png",
-          "sprite": "passive2.png",
+          "full": "Evelynn_Passive.png",
+          "sprite": "passive1.png",
           "group": "passive",
-          "x": 0,
+          "x": 48,
           "y": 0,
           "w": 48,
           "h": 48

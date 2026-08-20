@@ -1,161 +1,313 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Gangplank": {
-      "id": "Jade_Gangplank",
-      "key": "60041",
+      "id": "Gangplank",
+      "key": "41",
       "name": "Gangplank",
-      "title": "The Saltwater Scourge",
+      "title": "the Saltwater Scourge",
       "image": {
-        "full": "Jade_Gangplank.png",
-        "sprite": "champion2.png",
+        "full": "Gangplank.png",
+        "sprite": "champion1.png",
         "group": "champion",
-        "x": 144,
+        "x": 336,
         "y": 0,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60041000",
+          "id": "41000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60041001",
+          "id": "41001",
           "num": 1,
           "name": "Spooky Gangplank",
           "chromas": false
         },
         {
-          "id": "60041005",
+          "id": "41002",
+          "num": 2,
+          "name": "Minuteman Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "41003",
+          "num": 3,
+          "name": "Sailor Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "41004",
+          "num": 4,
+          "name": "Toy Soldier Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "41005",
           "num": 5,
           "name": "Special Forces Gangplank",
           "chromas": false
         },
         {
-          "id": "60041007",
+          "id": "41006",
+          "num": 6,
+          "name": "Sultan Gangplank",
+          "chromas": false
+        },
+        {
+          "id": "41007",
           "num": 7,
           "name": "Captain Gangplank",
           "chromas": false
         },
         {
-          "id": "60041008",
+          "id": "41008",
           "num": 8,
           "name": "Dreadnova Gangplank",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60041009",
+          "id": "41009",
           "num": 9,
           "name": "Dreadnova Gangplank (Ruby)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60041010",
+          "id": "41010",
           "num": 10,
           "name": "Dreadnova Gangplank (Pearl)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60041011",
+          "id": "41011",
           "num": 11,
           "name": "Dreadnova Gangplank (Sapphire)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60041012",
+          "id": "41012",
           "num": 12,
           "name": "Dreadnova Gangplank (Tanzanite)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60041013",
+          "id": "41013",
           "num": 13,
           "name": "Dreadnova Gangplank (Obsidian)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60041014",
+          "id": "41014",
           "num": 14,
           "name": "Pool Party Gangplank",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60041015",
+          "id": "41015",
           "num": 15,
           "name": "Pool Party Gangplank (Obsidian)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60041016",
+          "id": "41016",
           "num": 16,
           "name": "Pool Party Gangplank (Amethyst)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60041017",
+          "id": "41017",
           "num": 17,
           "name": "Pool Party Gangplank (Ruby)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60041018",
+          "id": "41018",
           "num": 18,
           "name": "Pool Party Gangplank (Citrine)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60041019",
+          "id": "41019",
           "num": 19,
           "name": "Pool Party Gangplank (Rose Quartz)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60041020",
+          "id": "41020",
           "num": 20,
           "name": "Pool Party Gangplank (Pearl)",
           "chromas": false,
           "parentSkin": 14
         },
         {
-          "id": "60041032",
+          "id": "41021",
+          "num": 21,
+          "name": "FPX Gangplank",
+          "chromas": true
+        },
+        {
+          "id": "41022",
+          "num": 22,
+          "name": "FPX Gangplank (Elite)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "41023",
+          "num": 23,
+          "name": "Gangplank the Betrayer",
+          "chromas": true
+        },
+        {
+          "id": "41024",
+          "num": 24,
+          "name": "Gangplank the Betrayer (Ruby)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41025",
+          "num": 25,
+          "name": "Gangplank the Betrayer (Catseye)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41026",
+          "num": 26,
+          "name": "Gangplank the Betrayer (Emerald)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41027",
+          "num": 27,
+          "name": "Gangplank the Betrayer (Turquoise)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41028",
+          "num": 28,
+          "name": "Gangplank the Betrayer (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41029",
+          "num": 29,
+          "name": "Gangplank the Betrayer (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41030",
+          "num": 30,
+          "name": "Gangplank the Betrayer (Pearl)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41031",
+          "num": 31,
+          "name": "Gangplank the Betrayer (Obsidian)",
+          "chromas": false,
+          "parentSkin": 23
+        },
+        {
+          "id": "41032",
           "num": 32,
           "name": "Dreadnova Gangplank (Rogue)",
           "chromas": false,
           "parentSkin": 8
         },
         {
-          "id": "60041301",
-          "num": 301,
-          "name": "Classic 2009 Gangplank",
-          "chromas": false
+          "id": "41033",
+          "num": 33,
+          "name": "PROJECT: Gangplank",
+          "chromas": true
         },
         {
-          "id": "60041303",
-          "num": 303,
-          "name": "Classic 2009 Gangplank (Minuteman)",
+          "id": "41034",
+          "num": 34,
+          "name": "PROJECT: Gangplank (Ruby)",
           "chromas": false,
-          "parentSkin": 301
+          "parentSkin": 33
+        },
+        {
+          "id": "41035",
+          "num": 35,
+          "name": "PROJECT: Gangplank (Citrine)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41036",
+          "num": 36,
+          "name": "PROJECT: Gangplank (Peridot)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41037",
+          "num": 37,
+          "name": "PROJECT: Gangplank (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41038",
+          "num": 38,
+          "name": "PROJECT: Gangplank (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41039",
+          "num": 39,
+          "name": "PROJECT: Gangplank (Turquoise)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41040",
+          "num": 40,
+          "name": "PROJECT: Gangplank (Amethyst)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "41041",
+          "num": 41,
+          "name": "PROJECT: Gangplank (Pearl)",
+          "chromas": false,
+          "parentSkin": 33
         }
       ],
-      "lore": "- Cannon Barrage (R) has random cannonballs instead of consistent AOE damage<br>- Raise Morale (E) grants move speed and Attack damage both passively and upon activation<br>- Parrrley (Q) grants gold (no more silver serpents)",
-      "blurb": "- Cannon Barrage (R) has random cannonballs instead of consistent AOE damage<br>- Raise Morale (E) grants move speed and Attack damage both passively and upon activation<br>- Parrrley (Q) grants gold (no more silver serpents)",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "As unpredictable as he is brutal, the dethroned reaver king Gangplank is feared far and wide. Once, he ruled the port city of Bilgewater, and while his reign is over, there are those who believe this has only made him more dangerous. Gangplank would see Bilgewater bathed in blood once more before letting someone else take it—and now with pistol, cutlass, and barrels of gunpowder, he is determined to reclaim what he has lost.",
+      "blurb": "As unpredictable as he is brutal, the dethroned reaver king Gangplank is feared far and wide. Once, he ruled the port city of Bilgewater, and while his reign is over, there are those who believe this has only made him more dangerous. Gangplank would see...",
+      "allytips": [
+        "Parrrley applies On Hit effects like Frozen Mallet or Black Cleaver.",
+        "Paying attention to low-health enemies on the map can land you a surprise kill with Cannon Barrage.",
+        "Try placing Cannon Barrage on the path of escape to cut off fleeing enemies."
+      ],
+      "enemytips": [
+        "Parrrley deals a high amount of physical damage. Items that grant Armor can help if an enemy Gangplank is doing well.",
+        "Once Gangplank reaches level 6, watch out for his global-range ultimate, Cannon Barrage!"
+      ],
       "tags": [
         "Fighter"
       ],
@@ -167,62 +319,64 @@
         "difficulty": 9
       },
       "stats": {
-        "hp": 576,
-        "hpperlevel": 81,
-        "mp": 255,
-        "mpperlevel": 40,
+        "hp": 630,
+        "hpperlevel": 114,
+        "mp": 280,
+        "mpperlevel": 60,
         "movespeed": 345,
-        "armor": 23.8,
-        "armorperlevel": 3.3,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
+        "armor": 31,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
         "attackrange": 125,
-        "hpregen": 5,
-        "hpregenperlevel": 0.75,
-        "mpregen": 7.2,
+        "hpregen": 6,
+        "hpregenperlevel": 0.6,
+        "mpregen": 8,
         "mpregenperlevel": 0.7,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 57,
+        "attackdamage": 64,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 2.75,
-        "attackspeed": 0.651
+        "attackspeedperlevel": 3.2,
+        "attackspeed": 0.658
       },
       "spells": [
         {
-          "id": "Jade_GangplankQ",
+          "id": "GangplankQWrapper",
           "name": "Parrrley",
-          "description": "Gangplank takes aim and shoots an enemy unit with his pistol. If Parrrley deals a killing blow, he gains extra gold and half the mana cost is refunded.",
-          "tooltip": "Gangplank shoots a target unit for <physicalDamage>{{ shotdamage }} physical damage</physicalDamage>. If <spellName>Parrrley</spellName> deals a killing blow, Gangplank gains {{ goldgain }} extra gold and half the mana cost is refunded.<br /><br /><spellName>Parrrley</spellName> can crit and applies on hit effects as if a melee basic attack.<br /><br /><gold>Total Gold Plundered: {{ f2 }} gold</gold>{{ spellmodifierdescriptionappend }}",
+          "description": "Shoots target, plundering Gold for each enemy unit killed.",
+          "tooltip": "{{Spell_GangplankQWrapper_Tooltip_{{ gamemodeinteger }}}}{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
-              "Extra Gold",
+              "Plunder Gold",
+              "Plunder Silver Serpents",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ spelldamage }} -> {{ spelldamageNL }}",
-              "{{ goldgain }} -> {{ goldgainNL }}",
+              "{{ goldproc }} -> {{ goldprocNL }}",
+              "{{ ssproc }} -> {{ ssprocNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            5,
-            5,
-            5,
-            5,
-            5
+            4.5,
+            4.5,
+            4.5,
+            4.5,
+            4.5
           ],
-          "cooldownBurn": "5",
+          "cooldownBurn": "4.5",
           "cost": [
             50,
-            55,
-            60,
-            65,
-            70
+            45,
+            40,
+            35,
+            30
           ],
-          "costBurn": "50/55/60/65/70",
+          "costBurn": "50/45/40/35/30",
           "datavalues": {},
           "effect": [
             null,
@@ -322,48 +476,50 @@
           ],
           "rangeBurn": "625",
           "image": {
-            "full": "Jade_GangplankQ.png",
-            "sprite": "spell7.png",
+            "full": "GangplankQWrapper.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 288,
-            "y": 0,
+            "x": 96,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_GangplankW",
+          "id": "GangplankW",
           "name": "Remove Scurvy",
-          "description": "Consumes a large quantity of citrus fruit which clears any crowd control effects on him and heals him.",
-          "tooltip": "Consumes a large quantity of citrus fruit which clears any crowd control effects on him and <healing>heals</healing> him for {{ totalheal }} health.{{ spellmodifierdescriptionappend }}",
+          "description": "Eats citrus to cure crowd control effects and restore Health.",
+          "tooltip": "Gangplank consumes a large amount of citrus fruit, removing all <status>Disabling</status> effects and restoring <healing>{{ basehealth }} plus {{ percentheal }}% missing Health</healing>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Healing",
-              "Cooldown"
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ baseheal }} -> {{ basehealNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
             22,
-            21,
             20,
-            19,
-            18
+            18,
+            16,
+            14
           ],
-          "cooldownBurn": "22/21/20/19/18",
+          "cooldownBurn": "22/20/18/16/14",
           "cost": [
-            65,
-            65,
-            65,
-            65,
-            65
+            60,
+            70,
+            80,
+            90,
+            100
           ],
-          "costBurn": "65",
+          "costBurn": "60/70/80/90/100",
           "datavalues": {},
           "effect": [
             null,
@@ -455,62 +611,60 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            20,
-            20,
-            20,
-            20,
-            20
+            400,
+            400,
+            400,
+            400,
+            400
           ],
-          "rangeBurn": "20",
+          "rangeBurn": "400",
           "image": {
-            "full": "Jade_GangplankW.png",
-            "sprite": "spell7.png",
+            "full": "GangplankW.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 336,
-            "y": 0,
+            "x": 144,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_GangplankE",
-          "name": "Raise Morale",
-          "description": "Gangplank fires a shot into the air, increasing nearby allied champions' attack damage and movement speed.",
-          "tooltip": "<spellPassive>Passive: </spellPassive>Gangplank gains <physicalDamage>{{ passivead }} Attack Damage</physicalDamage> and <speed>{{ passivems*100 }}% Movement Speed</speed>.<br /><br /><spellActive>Active: </spellActive>Gangplank fires his pistol into the air, disabling his passive boost and gaining <physicalDamage>{{ activead }} Attack Damage</physicalDamage> and <speed>{{ activems*100 }}% Movement Speed</speed> for {{ duration }} seconds. Nearby allied champions' gain (half of the bonuses) <physicalDamage>{{ allyactivead }} Attack Damage</physicalDamage> and <speed>{{ allyactivems*100 }}% Movement Speed</speed> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "id": "GangplankE",
+          "name": "Powder Keg",
+          "description": "Gangplank uncovers a powder keg at target location. If he attacks it, it explodes, spreading the attack's damage to enemies in the area, slowing them.",
+          "tooltip": "Gangplank places a powder keg that can be attacked by Gangplank and enemy champions for {{ barrelduration }} seconds. When an enemy destroys it, the keg is defused. When Gangplank destroys it, it explodes, <status>Slowing</status> by {{ finalslowamount }}% for {{ debuffduration }} seconds and dealing the <physicalDamage>Attack's damage</physicalDamage>, ignoring {{ barrelarmorpenetration }}% Armor. Champions take an additional <physicalDamage>{{ bonusdamagetochampions }} physical damage</physicalDamage>.<br /><br />Keg health decays every {{ barreldecaytime }} seconds. Keg explosions detonate other kegs with overlapping blast zones, but don't deal damage to the same target more than once. Keg explosions triggered by <spellName>Parrrley</spellName> will grant the bonus gold for targets killed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Active Attack Damage",
-              "Active Movement Speed",
-              "Passive Attack Damage",
-              "Passive Movement Speed",
-              "@AbilityResourceName@ Cost"
+              "Bonus Damage Against Champions",
+              "Max Charges",
+              "Slow",
+              "Recharge Time"
             ],
             "effect": [
-              "{{ activead }} -> {{ activeadNL }}",
-              "{{ activems*100.000000 }}% -> {{ activemsnl*100.000000 }}%",
-              "{{ passivead }} -> {{ passiveadNL }}",
-              "{{ passivems*100.000000 }}% -> {{ passivemsnl*100.000000 }}%",
-              "{{ basecost }} -> {{ basecostNL }}"
+              "{{ bonusdamagetochampions }} -> {{ bonusdamagetochampionsNL }}",
+              "{{ maxbarrels }} -> {{ maxbarrelsNL }}",
+              "{{ barrelslow }}% -> {{ barrelslowNL }}%",
+              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            20,
-            20,
-            20,
-            20,
-            20
+            0,
+            0,
+            0,
+            0,
+            0
           ],
-          "cooldownBurn": "20",
+          "cooldownBurn": "0",
           "cost": [
-            50,
-            55,
-            60,
-            65,
-            70
+            0,
+            0,
+            0,
+            0,
+            0
           ],
-          "costBurn": "50/55/60/65/70",
+          "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
@@ -530,10 +684,10 @@
             ],
             [
               75,
-              105,
+              95,
+              115,
               135,
-              165,
-              195
+              155
             ],
             [
               40,
@@ -589,7 +743,7 @@
             null,
             "3/3/4/4/5",
             "2",
-            "75/105/135/165/195",
+            "75/95/115/135/155",
             "40/50/60/70/80",
             "25",
             "2",
@@ -599,49 +753,49 @@
             "40"
           ],
           "vars": [],
-          "costType": " {{ abilityresourcename }}",
-          "maxammo": "-1",
+          "costType": "No Cost",
+          "maxammo": "3",
           "range": [
-            1200,
-            1200,
-            1200,
-            1200,
-            1200
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
           ],
-          "rangeBurn": "1200",
+          "rangeBurn": "1000",
           "image": {
-            "full": "Jade_GangplankE.png",
-            "sprite": "spell7.png",
+            "full": "GangplankE.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 384,
-            "y": 0,
+            "x": 192,
+            "y": 96,
             "w": 48,
             "h": 48
           },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
+          "resource": "No Cost"
         },
         {
-          "id": "Jade_GangplankR",
+          "id": "GangplankR",
           "name": "Cannon Barrage",
-          "description": "Gangplank signals his ship to fire upon an area for 7 seconds, slowing enemies and dealing damage in random locations within the area.",
-          "tooltip": "Signals Gangplank's ship to fire upon an area for {{ duration }} seconds, <status>Slowing</status> enemies in the area by {{ slow*100 }}% for the duration. Cannonballs rain upon the area, each causing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "description": "Gangplank signals his ship to bombard an area, slowing and damaging enemies.",
+          "tooltip": "Gangplank signals his ship to fire {{ totalwavestooltip }} waves of cannonballs anywhere on the map over {{ zoneduration }} seconds. Each wave <status>Slows</status> by {{ slowpercent }}% for {{ slowduration }} seconds and deals <magicDamage>{{ onewavedamage }} magic damage</magicDamage>. Maximum damage: {{ totaldamagetooltip }}<br /><br />This Ability can be upgraded in the shop via <spellName>Parrrley</spellName>.<br /><br /><spellName>Fire at Will</spellName>: Fires 6 additional waves of cannonballs.<br /><spellName>Death's Daughter</spellName>: Fires a Mega-Cannonball that deals <trueDamage>{{ deathsdaughterdamage }} true damage</trueDamage> and <status>Slows</status> by {{ deathsdaughterslow }}% for {{ deathsdaughterslowduration }} second.<br /><spellName>Raise Morale</spellName>: Allies inside Cannon Barrage gain <speed>{{ raisemoralehaste }}% Move Speed</speed> for {{ raisemoralehasteduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
+              "Damage Per Wave",
               "Cooldown"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ damageperwave }} -> {{ damageperwaveNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            120,
-            115,
-            110
+            160,
+            140,
+            120
           ],
-          "cooldownBurn": "120/115/110",
+          "cooldownBurn": "160/140/120",
           "cost": [
             100,
             100,
@@ -719,17 +873,17 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            20000,
-            20000,
-            20000
+            30000,
+            30000,
+            30000
           ],
-          "rangeBurn": "20000",
+          "rangeBurn": "30000",
           "image": {
-            "full": "Jade_GangplankR.png",
-            "sprite": "spell7.png",
+            "full": "GangplankR.png",
+            "sprite": "spell4.png",
             "group": "spell",
-            "x": 432,
-            "y": 0,
+            "x": 240,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -737,13 +891,13 @@
         }
       ],
       "passive": {
-        "name": "Grog-Soaked Blade",
-        "description": "Gangplank's attacks apply a poison that deals magic damage per second, increasing with level.",
+        "name": "Trial by Fire",
+        "description": "Every few seconds, Gangplank's melee strike will set his opponent on fire.",
         "image": {
-          "full": "Jade_Gangplank_Passive.png",
-          "sprite": "passive2.png",
+          "full": "Gangplank_Passive.png",
+          "sprite": "passive1.png",
           "group": "passive",
-          "x": 144,
+          "x": 336,
           "y": 0,
           "w": 48,
           "h": 48

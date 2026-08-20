@@ -35,7 +35,12 @@ export type GameAssetManifestEntry = z.infer<
 const ChampionDataSchema = z.object({
   data: z.record(
     z.string(),
-    z.object({ id: z.string(), key: z.string(), name: z.string() }),
+    z.object({
+      id: z.string(),
+      key: z.string(),
+      name: z.string(),
+      modernKey: z.string().optional(),
+    }),
   ),
 });
 

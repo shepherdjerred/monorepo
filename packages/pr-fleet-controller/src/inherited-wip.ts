@@ -18,6 +18,13 @@ export type InheritedWipEvidence = {
   fingerprint: string;
 };
 
+export class WorktreeHeadChangedError extends Error {
+  constructor(message = "Worktree HEAD changed during worker inspection") {
+    super(message);
+    this.name = "WorktreeHeadChangedError";
+  }
+}
+
 const MAX_INHERITED_COMMAND_OUTPUT_BYTES = 100_000;
 const MAX_UNTRACKED_HASH_BYTES = 10_000_000;
 
@@ -200,22 +207,20 @@ export function requireMatchingInheritedWipInspection(
     return;
   }
   const inspection = store.inheritedWipInspections.get(pr.identity.number);
-  const activeRestack = store.activeRestacks.get(pr.identity.number);
-  const expectedLocalHead =
-    activeRestack === undefined
-      ? context.localHeadSha
-      : activeRestack.remoteHeadSha === context.remoteHeadSha
-        ? activeRestack.localHeadSha
-        : undefined;
+  const expectedLocalHead = store.expectedWorktreeHead(pr);
   if (
     expectedLocalHead === undefined ||
     live.localHeadSha !== expectedLocalHead
   ) {
-    throw new Error(
+    throw new WorktreeHeadChangedError(
       "Operator worktree HEAD changed after assignment; inspect again or ask the operator",
     );
   }
-  if (activeRestack === undefined && !live.hasWip && !context.dirty) {
+  if (
+    !store.activeRestacks.has(pr.identity.number) &&
+    !live.hasWip &&
+    !context.dirty
+  ) {
     return;
   }
   if (

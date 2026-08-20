@@ -3,9 +3,11 @@ import path from "node:path";
 import type { ReviewProvider } from "@shepherdjerred/code-review";
 import { buildReviewRequestMarker } from "@shepherdjerred/code-review/request-review";
 import { z } from "zod";
+import { validateCommitMessage } from "@shepherdjerred/root-scripts/lib/commit-message.ts";
 import { isTelemetryCaptureError } from "./controller-telemetry.ts";
 import { parseHeadSha, splitRepo } from "./evidence-parsers.ts";
-import type { CommandRequest, CommandResult } from "./ports.ts";
+import type { CommandRequest, CommandResult, FleetTelemetry } from "./ports.ts";
+import { recordProgressEvent } from "./progress-events.ts";
 import type { PrState } from "./schemas.ts";
 
 type GitOperationsDependencies = {
@@ -18,6 +20,8 @@ type GitOperationsDependencies = {
     cwd?: string,
     options?: { timeoutMs?: number; signal?: AbortSignal | undefined },
   ) => Promise<string>;
+  telemetry?: FleetTelemetry | undefined;
+  validateCommitMessage?: (message: string, worktree: string) => Promise<void>;
 };
 
 const SystemErrorSchema = z.object({ code: z.string() });
@@ -53,12 +57,49 @@ export class GitOperations {
   readonly #provider: ReviewProvider;
   readonly #run: GitOperationsDependencies["run"];
   readonly #mustRun: GitOperationsDependencies["mustRun"];
+  readonly #telemetry: FleetTelemetry | undefined;
+  readonly #validateCommitMessage: (
+    message: string,
+    worktree: string,
+  ) => Promise<void>;
 
   constructor(dependencies: GitOperationsDependencies) {
     this.#repo = dependencies.repo;
     this.#provider = dependencies.provider;
     this.#run = dependencies.run;
     this.#mustRun = dependencies.mustRun;
+    this.#telemetry = dependencies.telemetry;
+    this.#validateCommitMessage =
+      dependencies.validateCommitMessage ??
+      (async (message, worktree) => {
+        const validation = await validateCommitMessage(message, worktree);
+        if (!validation.valid) {
+          throw new Error(validation.error);
+        }
+      });
+  }
+
+  #recordPublicationStage(
+    pr: PrState,
+    intent: PublicationIntent,
+    stage:
+      | "validation"
+      | "hooks"
+      | "commit"
+      | "submission"
+      | "remote-head"
+      | "review",
+    state: "started" | "completed",
+  ): void {
+    recordProgressEvent({
+      telemetry: this.#telemetry,
+      kind: "publication.stage",
+      payload: { intent, stage, state },
+      correlation: {
+        prNumber: pr.identity.number,
+        headSha: pr.identity.headSha,
+      },
+    });
   }
 
   #assertPublicationContext(pr: PrState, intent: PublicationIntent): void {
@@ -230,10 +271,13 @@ export class GitOperations {
   ): Promise<{ headSha: string }> {
     this.#assertPublicationContext(pr, "fix");
     const worktree = this.#worktree(pr);
+    this.#recordPublicationStage(pr, "fix", "validation", "started");
+    await this.#validateCommitMessage(message, worktree);
     const validated = await this.#validatePaths(worktree, paths);
     if (validated.length === 0) {
       throw new Error("publishFix requires at least one explicit path");
     }
+    this.#recordPublicationStage(pr, "fix", "validation", "completed");
     // A reused worktree may already carry staged changes (e.g. a prior
     // continueRestack staged conflict resolutions before a failed continuation).
     // A plain `git commit` would sweep those into this commit despite the
@@ -255,14 +299,18 @@ export class GitOperations {
       signal,
     });
     try {
+      this.#recordPublicationStage(pr, "fix", "hooks", "started");
       await this.#mustRun("bunx", ["lefthook", "run", "pre-commit"], worktree, {
         timeoutMs: 600_000,
         signal,
       });
+      this.#recordPublicationStage(pr, "fix", "hooks", "completed");
+      this.#recordPublicationStage(pr, "fix", "commit", "started");
       await this.#mustRun("git", ["commit", "-m", message], worktree, {
         timeoutMs: 600_000,
         signal,
       });
+      this.#recordPublicationStage(pr, "fix", "commit", "completed");
     } catch (error) {
       if (isTelemetryCaptureError(error)) {
         throw error;
@@ -277,7 +325,7 @@ export class GitOperations {
       await this.#mustRun("git", ["reset", "--", ...validated], worktree);
       throw error;
     }
-    return this.#submitBranch(pr, signal);
+    return this.#submitBranch(pr, signal, "fix");
   }
 
   async publishRestack(
@@ -286,12 +334,13 @@ export class GitOperations {
     intent: "restack" | "inherited-commits" = "restack",
   ): Promise<{ headSha: string }> {
     this.#assertPublicationContext(pr, intent);
-    return this.#submitBranch(pr, signal);
+    return this.#submitBranch(pr, signal, intent);
   }
 
   async #submitBranch(
     pr: PrState,
     signal?: AbortSignal,
+    intent: PublicationIntent = "restack",
   ): Promise<{ headSha: string }> {
     const worktree = this.#worktree(pr);
     if (pr.identity.crossRepository) {
@@ -305,6 +354,7 @@ export class GitOperations {
       );
     }
     const owner = await this.#stackOwner(pr, worktree, signal);
+    this.#recordPublicationStage(pr, intent, "submission", "started");
     if (owner === "git-spice") {
       await this.#mustRun(
         "git-spice",
@@ -331,6 +381,8 @@ export class GitOperations {
         { timeoutMs: 600_000, signal },
       );
     }
+    this.#recordPublicationStage(pr, intent, "submission", "completed");
+    this.#recordPublicationStage(pr, intent, "remote-head", "started");
     const head = parseHeadSha(
       await this.#mustRun(
         "gh",
@@ -347,7 +399,10 @@ export class GitOperations {
         { signal },
       ),
     );
+    this.#recordPublicationStage(pr, intent, "remote-head", "completed");
+    this.#recordPublicationStage(pr, intent, "review", "started");
     await this.#requestReview(pr.identity.number, head, signal);
+    this.#recordPublicationStage(pr, intent, "review", "completed");
     return { headSha: head };
   }
 

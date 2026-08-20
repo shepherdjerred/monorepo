@@ -77,11 +77,13 @@ describe("resolveLatestRunDirectory", () => {
     ).toBeNull();
   });
 
-  test("returns the newest run directory, ignoring files", async () => {
+  test("returns the newest run directory, ignoring files and managed checkouts", async () => {
     const root = await mkdtemp(path.join(tmpdir(), "pr-fleet-watch-"));
     try {
       await mkdir(path.join(root, "2026-08-03T19-47-22.874Z-aaaa"));
       await mkdir(path.join(root, "2026-08-03T23-23-53.638Z-bbbb"));
+      await mkdir(path.join(root, "checkouts"));
+      await mkdir(path.join(root, "worktrees"));
       await Bun.write(path.join(root, "not-a-run.txt"), "x");
       expect(await resolveLatestRunDirectory(root)).toBe(
         path.join(root, "2026-08-03T23-23-53.638Z-bbbb"),

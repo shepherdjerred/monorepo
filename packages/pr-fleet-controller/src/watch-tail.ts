@@ -2,6 +2,7 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 
 const NEWLINE = 0x0a;
+const RUN_ID_PREFIX = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.\d{3}Z-/;
 
 /**
  * Split a growing append-only byte stream into complete UTF-8 lines, carrying
@@ -53,7 +54,7 @@ export async function resolveLatestRunDirectory(
   try {
     const dirents = await readdir(stateRoot, { withFileTypes: true });
     entries = dirents
-      .filter((entry) => entry.isDirectory())
+      .filter((entry) => entry.isDirectory() && RUN_ID_PREFIX.test(entry.name))
       .map((entry) => entry.name);
   } catch (error) {
     if (error instanceof Error && "code" in error && error.code === "ENOENT") {

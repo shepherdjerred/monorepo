@@ -59,9 +59,9 @@ export function describeResult(
     case "unknown_subject":
       return `🤔 That player isn't in this game. Try: ${result.validAliases.join(", ")}.`;
     case "invalid_stake":
-      return `💱 Stakes must be between ${result.min.toString()} and ${result.max.toString()} BB.`;
-    case "stake_cap":
-      return `💱 You already have **${result.existingStake.toString()} BB** on this game, and a single position tops out at **${result.max.toString()} BB**.`;
+      return "💱 Stakes must be a positive whole number of BB.";
+    case "storage_limit":
+      return "💱 That position is too large for the current Bryan Bucks storage format.";
     case "insufficient":
       return `💸 You have **${result.balance.toString()} BB** but need **${result.needed.toString()} BB**.`;
     case "side_conflict":

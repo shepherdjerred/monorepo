@@ -7,8 +7,9 @@ with resvg. The package can also be consumed as a set of React components
 
 ## Renderers
 
-- **Classic**: the legacy 4760×3500 report used for non-ranked queues (and,
-  where the ranked designs are gated off, ranked queues too).
+- **Classic**: the 4760×3500 report for non-ranked queues, including League
+  Classic (`JADE`) matches. Classic match data is normalized through the
+  dedicated Classic champion-ID and asset catalog before rendering.
 - **Ranked banner** (`src/html/ranked-banner/`, 4760×1500) and **ranked
   square** (`src/html/ranked-square/`, 4760×4760): two deterministic designs
   for ranked solo/duo and flex matches with a tracked player.

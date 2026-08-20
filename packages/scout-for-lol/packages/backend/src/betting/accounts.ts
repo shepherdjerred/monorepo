@@ -1,5 +1,7 @@
 import {
   BucksLedgerKindSchema,
+  BucksParlayMarketStateSchema,
+  BucksParlaySideSchema,
   BucksPoolRosterSchema,
   BucksPoolStateSchema,
   RiotTeamIdSchema,
@@ -10,6 +12,7 @@ import {
 } from "@scout-for-lol/data";
 import { SEED_GRANT } from "#src/betting/constants.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
+import { ParlaySubjectsSchema } from "#src/betting/parlay-criteria.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import { createLogger } from "#src/logger.ts";
@@ -259,14 +262,18 @@ export async function getLedgerPage(
   };
 }
 
-export type PendingPosition = {
+type PendingPositionBase = {
   matchId: string;
-  gameAlias: string;
-  teamId: RiotTeamId;
   stake: number;
   closesAt: Date;
   poolState: string;
 };
+
+export type PendingPosition = PendingPositionBase &
+  (
+    | { marketType: "outcome"; gameAlias: string; teamId: RiotTeamId }
+    | { marketType: "parlay"; subjectAlias: string; side: "YES" | "NO" }
+  );
 
 export type PersonalBucksView = {
   balance: number;
@@ -294,57 +301,113 @@ export async function getPersonalBucksView(
       return;
     }
 
-    const [aggregate, bets] = await Promise.all([
-      tx.bucksBet.aggregate({
-        where: { bucksAccountId: account.id, betOutcome: "pending" },
-        _sum: { stake: true },
-        _count: true,
-      }),
-      tx.bucksBet.findMany({
-        where: { bucksAccountId: account.id, betOutcome: "pending" },
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        take: 10,
-        select: {
-          stake: true,
-          predictedTeamId: true,
-          subjectPuuid: true,
-          pool: {
-            select: {
-              matchId: true,
-              roster: true,
-              closesAt: true,
-              poolState: true,
+    const [outcomeAggregate, outcomeBets, parlayAggregate, parlayBets] =
+      await Promise.all([
+        tx.bucksBet.aggregate({
+          where: { bucksAccountId: account.id, betOutcome: "pending" },
+          _sum: { stake: true },
+          _count: true,
+        }),
+        tx.bucksBet.findMany({
+          where: { bucksAccountId: account.id, betOutcome: "pending" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          take: 10,
+          select: {
+            id: true,
+            createdAt: true,
+            stake: true,
+            predictedTeamId: true,
+            subjectPuuid: true,
+            pool: {
+              select: {
+                matchId: true,
+                roster: true,
+                closesAt: true,
+                poolState: true,
+              },
             },
           },
-        },
-      }),
-    ]);
+        }),
+        tx.bucksParlayBet.aggregate({
+          where: { bucksAccountId: account.id, betOutcome: "pending" },
+          _sum: { stake: true },
+          _count: true,
+        }),
+        tx.bucksParlayBet.findMany({
+          where: { bucksAccountId: account.id, betOutcome: "pending" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          take: 10,
+          select: {
+            id: true,
+            createdAt: true,
+            stake: true,
+            side: true,
+            market: {
+              select: {
+                matchId: true,
+                closesAt: true,
+                marketState: true,
+                definition: { select: { subjects: true } },
+              },
+            },
+          },
+        }),
+      ]);
+
+    const outcomePositions = outcomeBets.map((bet) => {
+      const roster = BucksPoolRosterSchema.parse(
+        JSON.parse(bet.pool.roster),
+      ).participants;
+      const subject = roster.find(
+        (participant) => participant.puuid === bet.subjectPuuid,
+      );
+      if (subject?.trackedAlias === undefined) {
+        throw new Error(
+          `Pending Bryan Bucks position ${bet.pool.matchId} has no tracked subject`,
+        );
+      }
+      return {
+        id: bet.id,
+        createdAt: bet.createdAt,
+        marketType: "outcome" as const,
+        matchId: bet.pool.matchId,
+        gameAlias: subject.trackedAlias,
+        teamId: RiotTeamIdSchema.parse(bet.predictedTeamId),
+        stake: bet.stake,
+        closesAt: bet.pool.closesAt,
+        poolState: BucksPoolStateSchema.parse(bet.pool.poolState),
+      };
+    });
+    const parlayPositions = parlayBets.map((bet) => ({
+      id: bet.id,
+      createdAt: bet.createdAt,
+      marketType: "parlay" as const,
+      matchId: bet.market.matchId,
+      subjectAlias: `Parlay (${ParlaySubjectsSchema.parse(
+        JSON.parse(bet.market.definition.subjects),
+      )
+        .map((subject) => subject.alias)
+        .join(", ")})`,
+      side: BucksParlaySideSchema.parse(bet.side),
+      stake: bet.stake,
+      closesAt: bet.market.closesAt,
+      poolState: BucksParlayMarketStateSchema.parse(bet.market.marketState),
+    }));
+    const pendingPositions = [...outcomePositions, ...parlayPositions]
+      .toSorted(
+        (left, right) =>
+          right.createdAt.getTime() - left.createdAt.getTime() ||
+          right.id - left.id,
+      )
+      .slice(0, 10)
+      .map(({ id: _id, createdAt: _createdAt, ...position }) => position);
 
     return {
       balance: account.balance,
-      totalStaked: aggregate._sum.stake ?? 0,
-      pendingPositionCount: aggregate._count,
-      pendingPositions: bets.map((bet) => {
-        const roster = BucksPoolRosterSchema.parse(
-          JSON.parse(bet.pool.roster),
-        ).participants;
-        const subject = roster.find(
-          (participant) => participant.puuid === bet.subjectPuuid,
-        );
-        if (subject?.trackedAlias === undefined) {
-          throw new Error(
-            `Pending Bryan Bucks position ${bet.pool.matchId} has no tracked subject`,
-          );
-        }
-        return {
-          matchId: bet.pool.matchId,
-          gameAlias: subject.trackedAlias,
-          teamId: RiotTeamIdSchema.parse(bet.predictedTeamId),
-          stake: bet.stake,
-          closesAt: bet.pool.closesAt,
-          poolState: BucksPoolStateSchema.parse(bet.pool.poolState),
-        };
-      }),
+      totalStaked:
+        (outcomeAggregate._sum.stake ?? 0) + (parlayAggregate._sum.stake ?? 0),
+      pendingPositionCount: outcomeAggregate._count + parlayAggregate._count,
+      pendingPositions,
     };
   });
 }

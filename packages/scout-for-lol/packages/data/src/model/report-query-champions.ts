@@ -20,6 +20,7 @@ export type ReportChampion = {
 const champions: ReportChampion[] = Object.values(
   ChampionCatalogSchema.parse(championData).data,
 )
+  .filter((champion) => !champion.id.startsWith("Jade_"))
   .map((champion) => ({ id: champion.key, name: champion.name }))
   .toSorted((left, right) => left.name.localeCompare(right.name));
 

@@ -1,106 +1,540 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_MissFortune": {
-      "id": "Jade_MissFortune",
-      "key": "60021",
+      "id": "MissFortune",
+      "key": "21",
       "name": "Miss Fortune",
-      "title": "The Bounty Hunter",
+      "title": "the Bounty Hunter",
       "image": {
-        "full": "Jade_MissFortune.png",
+        "full": "MissFortune.png",
         "sprite": "champion2.png",
         "group": "champion",
-        "x": 96,
+        "x": 192,
         "y": 96,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60021000",
+          "id": "21000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60021006",
+          "id": "21001",
+          "num": 1,
+          "name": "Cowgirl Miss Fortune",
+          "chromas": false
+        },
+        {
+          "id": "21002",
+          "num": 2,
+          "name": "Waterloo Miss Fortune",
+          "chromas": false
+        },
+        {
+          "id": "21003",
+          "num": 3,
+          "name": "Secret Agent Miss Fortune",
+          "chromas": false
+        },
+        {
+          "id": "21004",
+          "num": 4,
+          "name": "Candy Cane Miss Fortune",
+          "chromas": false
+        },
+        {
+          "id": "21005",
+          "num": 5,
+          "name": "Road Warrior Miss Fortune",
+          "chromas": false
+        },
+        {
+          "id": "21006",
           "num": 6,
           "name": "Crime City Miss Fortune",
           "chromas": false
         },
         {
-          "id": "60021008",
+          "id": "21007",
+          "num": 7,
+          "name": "Arcade Miss Fortune",
+          "chromas": true
+        },
+        {
+          "id": "21008",
           "num": 8,
           "name": "Captain Fortune",
           "chromas": false
         },
         {
-          "id": "60021015",
+          "id": "21009",
+          "num": 9,
+          "name": "Pool Party Miss Fortune",
+          "chromas": false
+        },
+        {
+          "id": "21010",
+          "num": 10,
+          "name": "Arcade Miss Fortune (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "21011",
+          "num": 11,
+          "name": "Arcade Miss Fortune (Amethyst)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "21012",
+          "num": 12,
+          "name": "Arcade Miss Fortune (Citrine)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "21013",
+          "num": 13,
+          "name": "Arcade Miss Fortune (Peridot)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "21014",
+          "num": 14,
+          "name": "Arcade Miss Fortune (Ruby)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "21015",
           "num": 15,
           "name": "Star Guardian Miss Fortune",
           "chromas": false
         },
         {
-          "id": "60021031",
-          "num": 31,
-          "name": "Battle Bunny Miss Fortune",
+          "id": "21016",
+          "num": 16,
+          "name": "Gun Goddess Miss Fortune",
           "chromas": false
         },
         {
-          "id": "60021032",
+          "id": "21017",
+          "num": 17,
+          "name": "Pajama Guardian Miss Fortune",
+          "chromas": false
+        },
+        {
+          "id": "21018",
+          "num": 18,
+          "name": "Bewitching Miss Fortune",
+          "chromas": false
+        },
+        {
+          "id": "21019",
+          "num": 19,
+          "name": "Arcade Miss Fortune (K.O.)",
+          "chromas": false,
+          "parentSkin": 7
+        },
+        {
+          "id": "21020",
+          "num": 20,
+          "name": "Prestige Bewitching Miss Fortune",
+          "chromas": false
+        },
+        {
+          "id": "21021",
+          "num": 21,
+          "name": "Ruined Miss Fortune",
+          "chromas": true
+        },
+        {
+          "id": "21022",
+          "num": 22,
+          "name": "Ruined Miss Fortune (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "21023",
+          "num": 23,
+          "name": "Ruined Miss Fortune (Sapphire)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "21024",
+          "num": 24,
+          "name": "Ruined Miss Fortune (Catseye)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "21025",
+          "num": 25,
+          "name": "Ruined Miss Fortune (Amethyst)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "21026",
+          "num": 26,
+          "name": "Ruined Miss Fortune (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "21027",
+          "num": 27,
+          "name": "Ruined Miss Fortune (Emerald)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "21028",
+          "num": 28,
+          "name": "Ruined Miss Fortune (Pearl)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "21029",
+          "num": 29,
+          "name": "Ruined Miss Fortune (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "21030",
+          "num": 30,
+          "name": "Ruined Miss Fortune (Cursed)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "21031",
+          "num": 31,
+          "name": "Battle Bunny Miss Fortune",
+          "chromas": true
+        },
+        {
+          "id": "21032",
           "num": 32,
           "name": "Admiral Battle Bunny Miss Fortune",
           "chromas": false
         },
         {
-          "id": "60021034",
+          "id": "21033",
+          "num": 33,
+          "name": "Prestige Bewitching Miss Fortune (2022)",
+          "chromas": false
+        },
+        {
+          "id": "21034",
           "num": 34,
           "name": "Battle Bunny Miss Fortune (Ruby)",
           "chromas": false,
           "parentSkin": 31
         },
         {
-          "id": "60021035",
+          "id": "21035",
           "num": 35,
           "name": "Battle Bunny Miss Fortune (Peridot)",
           "chromas": false,
           "parentSkin": 31
         },
         {
-          "id": "60021036",
+          "id": "21036",
           "num": 36,
           "name": "Battle Bunny Miss Fortune (Rose Quartz)",
           "chromas": false,
           "parentSkin": 31
         },
         {
-          "id": "60021037",
+          "id": "21037",
           "num": 37,
           "name": "Battle Bunny Miss Fortune (Catseye)",
           "chromas": false,
           "parentSkin": 31
         },
         {
-          "id": "60021038",
+          "id": "21038",
           "num": 38,
           "name": "Battle Bunny Miss Fortune (Obsidian)",
           "chromas": false,
           "parentSkin": 31
         },
         {
-          "id": "60021039",
+          "id": "21039",
           "num": 39,
           "name": "Battle Bunny Miss Fortune (Nightwire)",
           "chromas": false,
           "parentSkin": 31
+        },
+        {
+          "id": "21040",
+          "num": 40,
+          "name": "Broken Covenant Miss Fortune",
+          "chromas": true
+        },
+        {
+          "id": "21041",
+          "num": 41,
+          "name": "Prestige Broken Covenant Miss Fortune",
+          "chromas": false
+        },
+        {
+          "id": "21042",
+          "num": 42,
+          "name": "Broken Covenant Miss Fortune (Ruby)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "21043",
+          "num": 43,
+          "name": "Broken Covenant Miss Fortune (Catseye)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "21044",
+          "num": 44,
+          "name": "Broken Covenant Miss Fortune (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "21045",
+          "num": 45,
+          "name": "Broken Covenant Miss Fortune (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "21046",
+          "num": 46,
+          "name": "Broken Covenant Miss Fortune (Sapphire)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "21047",
+          "num": 47,
+          "name": "Broken Covenant Miss Fortune (Emerald)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "21048",
+          "num": 48,
+          "name": "Broken Covenant Miss Fortune (Turquoise)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "21049",
+          "num": 49,
+          "name": "Broken Covenant Miss Fortune (Pearl)",
+          "chromas": false,
+          "parentSkin": 40
+        },
+        {
+          "id": "21050",
+          "num": 50,
+          "name": "Porcelain Miss Fortune",
+          "chromas": true
+        },
+        {
+          "id": "21051",
+          "num": 51,
+          "name": "Porcelain Miss Fortune (Ruby)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "21052",
+          "num": 52,
+          "name": "Porcelain Miss Fortune (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "21053",
+          "num": 53,
+          "name": "Porcelain Miss Fortune (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "21054",
+          "num": 54,
+          "name": "Porcelain Miss Fortune (Obsidian)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "21055",
+          "num": 55,
+          "name": "Porcelain Miss Fortune (Peridot)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "21056",
+          "num": 56,
+          "name": "Porcelain Miss Fortune (Turquoise)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "21057",
+          "num": 57,
+          "name": "Porcelain Miss Fortune (Pearl)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "21058",
+          "num": 58,
+          "name": "Porcelain Miss Fortune (Catseye)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "21059",
+          "num": 59,
+          "name": "Porcelain Miss Fortune (Opulent)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "21060",
+          "num": 60,
+          "name": "Battle Queen Miss Fortune",
+          "chromas": true
+        },
+        {
+          "id": "21061",
+          "num": 61,
+          "name": "Battle Queen Miss Fortune (Ruby)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "21062",
+          "num": 62,
+          "name": "Battle Queen Miss Fortune (Catseye)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "21063",
+          "num": 63,
+          "name": "Battle Queen Miss Fortune (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "21064",
+          "num": 64,
+          "name": "Battle Queen Miss Fortune (Emerald)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "21065",
+          "num": 65,
+          "name": "Battle Queen Miss Fortune (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "21066",
+          "num": 66,
+          "name": "Battle Queen Miss Fortune (Sapphire)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "21067",
+          "num": 67,
+          "name": "Battle Queen Miss Fortune (Pearl)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "21068",
+          "num": 68,
+          "name": "Battle Queen Miss Fortune (Obsidian)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "21069",
+          "num": 69,
+          "name": "MVP T1 Miss Fortune",
+          "chromas": true
+        },
+        {
+          "id": "21070",
+          "num": 70,
+          "name": "MVP T1 Miss Fortune (Elite)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "21071",
+          "num": 71,
+          "name": "MVP T1 Miss Fortune (Pearl)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "21072",
+          "num": 72,
+          "name": "MVP T1 Miss Fortune (Ruby)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "21073",
+          "num": 73,
+          "name": "MVP T1 Miss Fortune (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "21074",
+          "num": 74,
+          "name": "MVP T1 Miss Fortune (Catseye)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "21075",
+          "num": 75,
+          "name": "MVP T1 Miss Fortune (Sapphire)",
+          "chromas": false,
+          "parentSkin": 69
         }
       ],
-      "lore": "- Strut (P) moved from W<br>- Impure Shots (W) passive deals magic damage on each hit with active increasing attack speed and applying grievous wounds",
-      "blurb": "- Strut (P) moved from W<br>- Impure Shots (W) passive deals magic damage on each hit with active increasing attack speed and applying grievous wounds",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "A Bilgewater captain famed for her looks but feared for her ruthlessness, Sarah Fortune paints a stark figure among the hardened criminals of the port city. As a child, she witnessed the reaver king Gangplank murder her family—an act she brutally avenged years later, blowing up his flagship while he was still aboard. Those who underestimate her will face a beguiling and unpredictable opponent… and, likely, a bullet or two in their guts.",
+      "blurb": "A Bilgewater captain famed for her looks but feared for her ruthlessness, Sarah Fortune paints a stark figure among the hardened criminals of the port city. As a child, she witnessed the reaver king Gangplank murder her family—an act she brutally...",
+      "allytips": [
+        "Miss Fortune ramps up speed if she hasn't recently taken damage. Avoid getting hit to move very fast.",
+        "Use Double Up on the furthest enemy minion if enemy champions are hiding in back; it will bounce to them for lots of damage.",
+        "Make sure to utilize Love Tap while Strut is on cooldown to maximize the active's availability."
+      ],
+      "enemytips": [
+        "Miss Fortune's speed boost is removed if she is damaged by an enemy.",
+        "Miss Fortune is easy to kill if you can reach her; target her first in team fights."
+      ],
       "tags": [
         "Marksman",
         "Mage"
@@ -113,62 +547,60 @@
         "difficulty": 1
       },
       "stats": {
-        "hp": 520,
-        "hpperlevel": 85,
-        "mp": 250,
-        "mpperlevel": 38,
+        "hp": 625,
+        "hpperlevel": 100,
+        "mp": 300,
+        "mpperlevel": 40,
         "movespeed": 325,
-        "armor": 22,
-        "armorperlevel": 3,
-        "spellblock": 30,
-        "spellblockperlevel": 0,
+        "armor": 25,
+        "armorperlevel": 4,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 550,
-        "hpregen": 5.75,
+        "hpregen": 3.75,
         "hpregenperlevel": 0.65,
-        "mpregen": 7.6,
-        "mpregenperlevel": 0.65,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 49.5,
+        "attackdamage": 55,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 3.01,
+        "attackspeedperlevel": 3,
         "attackspeed": 0.656
       },
       "spells": [
         {
-          "id": "Jade_MissFortuneRicochetShot",
+          "id": "MissFortuneRicochetShot",
           "name": "Double Up",
-          "description": "Miss Fortune fires a bullet at an enemy, damaging them and a target behind them.",
-          "tooltip": "Miss Fortune fires a shot at an enemy target, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <physicalDamage>{{ totalricochetdamage }} physical damage</physicalDamage> to another enemy target behind the first. Applies on-hit effects.{{ spellmodifierdescriptionappend }}",
+          "description": "Miss Fortune fires a bullet at an enemy, damaging them and a target behind them. Both strikes can also apply Love Tap.",
+          "tooltip": "Miss Fortune fires a bouncing shot, dealing <physicalDamage>{{ totaldamagetooltip }} physical damage</physicalDamage> to an enemy and to another one behind them. <br /><br />The second shot can critically strike for <physicalDamage>{{ totaldamagecrit }} physical damage</physicalDamage>. It always critically strikes if the first shot kills its target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
-              "Damage",
-              "@AbilityResourceName@ Cost"
+              "Damage"
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            9,
-            8,
             7,
             6,
-            5
+            5,
+            4,
+            3
           ],
-          "cooldownBurn": "9/8/7/6/5",
+          "cooldownBurn": "7/6/5/4/3",
           "cost": [
-            70,
-            75,
-            80,
-            85,
-            90
+            40,
+            40,
+            40,
+            40,
+            40
           ],
-          "costBurn": "70/75/80/85/90",
+          "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
@@ -201,25 +633,11 @@
               0
             ],
             [
-              20,
-              20,
-              20,
-              20,
-              20
-            ],
-            [
-              5,
-              5,
-              5,
-              5,
-              5
-            ],
-            [
-              10,
-              10,
-              10,
-              10,
-              10
+              40,
+              40,
+              40,
+              40,
+              40
             ],
             [
               20,
@@ -229,11 +647,25 @@
               20
             ],
             [
-              45,
-              45,
-              45,
-              45,
-              45
+              40,
+              40,
+              40,
+              40,
+              40
+            ],
+            [
+              110,
+              110,
+              110,
+              110,
+              110
+            ],
+            [
+              160,
+              160,
+              160,
+              160,
+              160
             ],
             [
               0,
@@ -249,11 +681,11 @@
             "20/45/70/95/120",
             "0",
             "0",
+            "40",
             "20",
-            "5",
-            "10",
-            "20",
-            "45",
+            "40",
+            "110",
+            "160",
             "0"
           ],
           "vars": [],
@@ -268,50 +700,50 @@
           ],
           "rangeBurn": "650",
           "image": {
-            "full": "Jade_MissFortuneRicochetShot.png",
+            "full": "MissFortuneRicochetShot.png",
             "sprite": "spell9.png",
             "group": "spell",
-            "x": 96,
-            "y": 0,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_MissFortuneViciousStrikes",
-          "name": "Impure Shots",
-          "description": "Miss Fortune passively increases damage dealt to a target with each strike.  This ability can be activated to increase Miss Fortune's Attack Speed and cause her attacks to lower healing received by the target.",
-          "tooltip": "<span class=\"colorFF9900\">Passive:</span> Miss Fortune deals <magicDamage>{{ totaldamageonhit }} magic damage</magicDamage> to her target with each attack, cumulatively stacking up to {{ maxstacks }} times on the same target.<br /><magicDamage>Maximum bonus damage: {{ maximumtotaldamageonhit }}</magicDamage><br /><br /><span class=\"colorFF9900\">Active:</span> Miss Fortune's <attackSpeed>Attack Speed</attackSpeed> is increased by <attackSpeed>{{ asmod }}%</attackSpeed> for 6 seconds and causes her attacks to apply <keyword>50% Grievous Wounds</keyword> for 3 seconds.{{ spellmodifierdescriptionappend }}",
+          "id": "MissFortuneViciousStrikes",
+          "name": "Strut",
+          "description": "Miss Fortune passively gains Move Speed when not attacked. This ability can be activated to grant bonus Attack Speed for a short duration. While it's on cooldown, Love Taps reduce the remaining cooldown of Strut.",
+          "tooltip": "<passive>Passive:</passive> After {{ passivebasemsooc }} seconds of not taking damage, Miss Fortune gains <speed>{{ passivebasems }} Move Speed</speed>. After another {{ passivemaxmsextraooc }} seconds, this increases to <speed>{{ passivemaxms }}</speed>.<br /><br /><active>Active:</active> Gain the passive effect's full <speed>Move Speed</speed> bonus and <attackSpeed>{{ activeas*100 }}% Attack Speed</attackSpeed> for {{ activeduration }} seconds.<br /><br /><spellName>Love Taps</spellName> reduce the Cooldown of this Ability by {{ lovetaprefund }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage per Stack",
-              "Maximum Bonus Damage",
-              "Attack Speed %"
+              "Attack Speed",
+              "Move Speed",
+              "Max Move Speed"
             ],
             "effect": [
-              "{{ damageonhitperstack }} -> {{ damageonhitperstackNL }}",
-              "{{ maximumdamageonhitperstack }} -> {{ maximumdamageonhitperstackNL }}",
-              "{{ asmod }}% -> {{ asmodNL }}%"
+              "{{ activeas*100.000000 }}% -> {{ activeasnl*100.000000 }}%",
+              "{{ passivebasems }} -> {{ passivebasemsNL }}",
+              "{{ passivemaxms }} -> {{ passivemaxmsNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            16,
-            16,
-            16,
-            16,
-            16
+            12,
+            12,
+            12,
+            12,
+            12
           ],
-          "cooldownBurn": "16",
+          "cooldownBurn": "12",
           "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
+            45,
+            45,
+            45,
+            45,
+            45
           ],
-          "costBurn": "50",
+          "costBurn": "45",
           "datavalues": {},
           "effect": [
             null,
@@ -411,40 +843,40 @@
           ],
           "rangeBurn": "600",
           "image": {
-            "full": "Jade_MissFortuneViciousStrikes.png",
+            "full": "MissFortuneViciousStrikes.png",
             "sprite": "spell9.png",
             "group": "spell",
-            "x": 144,
-            "y": 0,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_MissFortuneScattershot",
+          "id": "MissFortuneScattershot",
           "name": "Make It Rain",
-          "description": "Miss Fortune unleashes a flurry of bullets at a location, dealing waves of damage to opponents and slowing them.",
-          "tooltip": "Miss Fortune fires hundreds of bullets into the air that rain down at a location after 0.5 seconds, dealing <magicDamage>{{ totaldamagepersecond }} magic damage</magicDamage> over 2 seconds and <status>Slowing</status> enemies hit by {{ totalslowamount }} for 1 second.{{ spellmodifierdescriptionappend }}",
+          "description": "Miss Fortune reveals an area with a flurry of bullets, dealing waves of damage to opponents and slowing them.",
+          "tooltip": "Miss Fortune rains bullets, revealing an area, <status>Slowing</status> by {{ totalslowamount }} and dealing <magicDamage>{{ totaldamagepersecond }} magic damage</magicDamage> per second for {{ baseduration }} seconds (total <magicDamage>{{ totaldamage }} magic damage</magicDamage>).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage Per Second",
-              "Slow"
+              "Cooldown"
             ],
             "effect": [
               "{{ basedamagepersecond }} -> {{ basedamagepersecondNL }}",
-              "{{ baseslowamount*100.000000 }}% -> {{ baseslowamountnl*100.000000 }}%"
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
+            18,
+            17,
+            16,
             15,
-            15,
-            15,
-            15,
-            15
+            14
           ],
-          "cooldownBurn": "15",
+          "cooldownBurn": "18/17/16/15/14",
           "cost": [
             80,
             80,
@@ -544,36 +976,36 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            800,
-            800,
-            800,
-            800,
-            800
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
           ],
-          "rangeBurn": "800",
+          "rangeBurn": "1000",
           "image": {
-            "full": "Jade_MissFortuneScattershot.png",
+            "full": "MissFortuneScattershot.png",
             "sprite": "spell9.png",
             "group": "spell",
-            "x": 192,
-            "y": 0,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_MissFortuneBulletTime",
+          "id": "MissFortuneBulletTime",
           "name": "Bullet Time",
-          "description": "Miss Fortune channels a flurry of bullets into a cone in front of her, dealing large amounts of damage to enemies.",
-          "tooltip": "Miss Fortune channels a barrage of bullets into a cone in front of her for 2 seconds, dealing <physicalDamage>{{ physicaldamageperwave }} physical damage</physicalDamage> per bullet (<physicalDamage>Total Damage: {{ totaldamage }}</physicalDamage>).{{ spellmodifierdescriptionappend }}",
+          "description": "Miss Fortune channels a barrage of bullets into a cone in front of her, dealing large amounts of damage to enemies. Each wave of Bullet Time can critically strike",
+          "tooltip": "Miss Fortune channels a barrage of bullets, firing {{ basewaves }} waves over {{ basechannelduration }} seconds, dealing <physicalDamage>{{ physicaldamageperwave }} physical damage</physicalDamage> per wave (total <physicalDamage>{{ totalphysicaldamage }} physical damage</physicalDamage>).<br /><br />Each wave can critically strike for %i:scaleCrit% <physicalDamage>{{ critdamageperwave }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
+              "Bullet Barrages",
               "Cooldown"
             ],
             "effect": [
-              "{{ basedamageperwave }} -> {{ basedamageperwaveNL }}",
+              "{{ basewaves }} -> {{ basewavesNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -667,11 +1099,11 @@
           ],
           "rangeBurn": "25000",
           "image": {
-            "full": "Jade_MissFortuneBulletTime.png",
+            "full": "MissFortuneBulletTime.png",
             "sprite": "spell9.png",
             "group": "spell",
-            "x": 240,
-            "y": 0,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -679,13 +1111,13 @@
         }
       ],
       "passive": {
-        "name": "Strut",
-        "description": "After 5 seconds of not being attacked, Miss Fortune gains an additional <speed>25 Movement Speed</speed>. This bonus increases by 9 each second up to a maximum bonus of 70.",
+        "name": "Love Tap",
+        "description": "Miss Fortune deals bonus physical damage whenever she basic attacks a new target.",
         "image": {
-          "full": "Jade_MissFortune_W.png",
+          "full": "MissFortune_W.png",
           "sprite": "passive2.png",
           "group": "passive",
-          "x": 96,
+          "x": 192,
           "y": 96,
           "w": 48,
           "h": 48

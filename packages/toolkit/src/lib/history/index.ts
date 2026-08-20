@@ -3,12 +3,25 @@ import { chmod, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { HistoryRuntimePaths } from "./paths.ts";
+import { ftsQuery } from "./query.ts";
 import type {
-  HistoryRecord,
   HistorySourceName,
+  HistoryRuntimeRef,
   HistorySourceResult,
   HistorySourceStatus,
+  IndexedHistoryRecord,
 } from "./types.ts";
+
+const INDEX_SCHEMA_VERSION = 2;
+
+type HistoryQueryOptions = {
+  readonly since: string | null;
+  readonly source: HistorySourceName | null;
+  readonly limit?: number;
+  readonly offset?: number;
+  readonly openingPromptHash?: string;
+  readonly excludedRuntimes?: readonly HistoryRuntimeRef[];
+};
 
 const DocumentRowSchema = z.object({
   id: z.number(),
@@ -20,6 +33,8 @@ const DocumentRowSchema = z.object({
   agent: z.string().nullable(),
   created_at: z.string(),
   updated_at: z.string(),
+  runtime_id: z.string().nullable(),
+  opening_prompt_hash: z.string().nullable(),
 });
 
 const StatusRowSchema = z.object({
@@ -29,6 +44,38 @@ const StatusRowSchema = z.object({
   available: z.number(),
   error: z.string().nullable(),
 });
+
+const SourceStateRowSchema = z.object({
+  fingerprint: z.string(),
+  available: z.number(),
+  error: z.string().nullable(),
+});
+
+function sourceNeedsIngest(
+  force: boolean,
+  fingerprint: string,
+  previousState: z.infer<typeof SourceStateRowSchema> | null,
+): boolean {
+  return (
+    force ||
+    previousState?.available !== 1 ||
+    previousState.error !== null ||
+    previousState.fingerprint !== fingerprint
+  );
+}
+
+function addRuntimeExclusions(
+  clauses: string[],
+  values: (string | number)[],
+  exclusions: readonly HistoryRuntimeRef[],
+): void {
+  for (const exclusion of exclusions) {
+    clauses.push(
+      "(d.source != ? OR d.runtime_id IS NULL OR d.runtime_id != ?)",
+    );
+    values.push(exclusion.source, exclusion.runtimeId);
+  }
+}
 
 function parseSourceName(value: string): HistorySourceName {
   if (
@@ -44,13 +91,18 @@ function parseSourceName(value: string): HistorySourceName {
   throw new Error(`Unknown history source in index: ${value}`);
 }
 
-function hashText(text: string): string {
+function hashDocument(
+  title: string,
+  dialogue: string,
+  toolOutput: string,
+): string {
   const hasher = new Bun.CryptoHasher("sha256");
-  hasher.update(text);
+  hasher.update(JSON.stringify([title, dialogue, toolOutput]));
   return hasher.digest("hex");
 }
 
 async function secureIndexFiles(indexPath: string): Promise<void> {
+  await chmod(path.dirname(indexPath), 0o700);
   for (const candidate of [indexPath, `${indexPath}-wal`, `${indexPath}-shm`]) {
     if (await Bun.file(candidate).exists()) {
       await chmod(candidate, 0o600);
@@ -58,19 +110,9 @@ async function secureIndexFiles(indexPath: string): Promise<void> {
   }
 }
 
-function ftsQuery(query: string): string {
-  const terms = query
-    .split(/[^\p{L}\p{N}_-]+/u)
-    .map((term) => term.trim())
-    .filter((term) => term.length > 0)
-    .map((term) => `"${term.replaceAll('"', '""')}"*`);
-  if (terms.length === 0) {
-    throw new Error("Search query must contain at least one letter or number");
-  }
-  return terms.join(" AND ");
-}
-
-function toRecord(row: z.infer<typeof DocumentRowSchema>): HistoryRecord {
+function toRecord(
+  row: z.infer<typeof DocumentRowSchema>,
+): IndexedHistoryRecord {
   return {
     id: row.id,
     source: parseSourceName(row.source),
@@ -82,7 +124,63 @@ function toRecord(row: z.infer<typeof DocumentRowSchema>): HistoryRecord {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     excerpt: null,
+    runtimeId: row.runtime_id,
+    openingPromptHash: row.opening_prompt_hash,
   };
+}
+
+function schemaVersion(database: Database): number {
+  return z
+    .object({ user_version: z.number() })
+    .parse(database.query("PRAGMA user_version").get()).user_version;
+}
+
+function createSchema(database: Database): void {
+  database.run(`
+    CREATE TABLE documents (
+      id INTEGER PRIMARY KEY,
+      source TEXT NOT NULL,
+      source_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      path TEXT NOT NULL,
+      workspace TEXT,
+      agent TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      runtime_id TEXT,
+      opening_prompt_hash TEXT,
+      content_hash TEXT NOT NULL,
+      UNIQUE(source, source_id)
+    );
+    CREATE VIRTUAL TABLE history_fts USING fts5(
+      title,
+      dialogue,
+      tool_output,
+      content = '',
+      contentless_delete = 1,
+      tokenize = 'unicode61 remove_diacritics 2'
+    );
+    CREATE TABLE source_state (
+      source TEXT PRIMARY KEY,
+      available INTEGER NOT NULL,
+      indexed_documents INTEGER NOT NULL,
+      fingerprint TEXT NOT NULL,
+      last_scan_at TEXT,
+      error TEXT
+    );
+    PRAGMA user_version = ${String(INDEX_SCHEMA_VERSION)};
+  `);
+}
+
+function rebuildSchema(database: Database): void {
+  database.transaction(() => {
+    database.run(`
+      DROP TABLE IF EXISTS history_fts;
+      DROP TABLE IF EXISTS documents;
+      DROP TABLE IF EXISTS source_state;
+    `);
+    createSchema(database);
+  })();
 }
 
 export class HistoryIndex {
@@ -99,48 +197,37 @@ export class HistoryIndex {
     readonly = false,
   ): Promise<HistoryIndex> {
     if (!readonly) {
-      await mkdir(path.dirname(runtimePaths.indexDb), { recursive: true });
+      await mkdir(path.dirname(runtimePaths.indexDb), {
+        recursive: true,
+        mode: 0o700,
+      });
     }
     const database = new Database(runtimePaths.indexDb, {
       readonly,
       create: !readonly,
       strict: true,
     });
+    const version = schemaVersion(database);
+    if (readonly && version !== INDEX_SCHEMA_VERSION) {
+      database.close();
+      throw new Error(
+        `History index schema is v${String(version)}; restart the daemon to rebuild v${String(INDEX_SCHEMA_VERSION)}.`,
+      );
+    }
     const index = new HistoryIndex(database, runtimePaths.indexDb);
     if (!readonly) {
-      index.#database.run(`
-        PRAGMA journal_mode = WAL;
-        PRAGMA busy_timeout = 5000;
-        CREATE TABLE IF NOT EXISTS documents (
-          id INTEGER PRIMARY KEY,
-          source TEXT NOT NULL,
-          source_id TEXT NOT NULL,
-          title TEXT NOT NULL,
-          path TEXT NOT NULL,
-          workspace TEXT,
-          agent TEXT,
-          created_at TEXT NOT NULL,
-          updated_at TEXT NOT NULL,
-          content_hash TEXT NOT NULL,
-          UNIQUE(source, source_id)
+      try {
+        index.#database.run(
+          "PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;",
         );
-        CREATE VIRTUAL TABLE IF NOT EXISTS history_fts USING fts5(
-          title,
-          body,
-          content = '',
-          contentless_delete = 1,
-          tokenize = 'unicode61 remove_diacritics 2'
-        );
-        CREATE TABLE IF NOT EXISTS source_state (
-          source TEXT PRIMARY KEY,
-          available INTEGER NOT NULL,
-          indexed_documents INTEGER NOT NULL,
-          fingerprint TEXT NOT NULL,
-          last_scan_at TEXT,
-          error TEXT
-        );
-      `);
-      await secureIndexFiles(runtimePaths.indexDb);
+        if (version !== INDEX_SCHEMA_VERSION) {
+          rebuildSchema(index.#database);
+        }
+        await secureIndexFiles(runtimePaths.indexDb);
+      } catch (error) {
+        index.close();
+        throw error;
+      }
     }
     return index;
   }
@@ -149,14 +236,22 @@ export class HistoryIndex {
     this.#database.close();
   }
 
+  readSnapshot<T>(callback: () => T): T {
+    return this.#database.transaction(callback)();
+  }
+
   async ingest(
     results: readonly HistorySourceResult[],
     force = false,
   ): Promise<void> {
+    if (force) {
+      rebuildSchema(this.#database);
+    }
     const upsert = this.#database.prepare(`
       INSERT INTO documents
-        (source, source_id, title, path, workspace, agent, created_at, updated_at, content_hash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (source, source_id, title, path, workspace, agent, created_at, updated_at,
+         runtime_id, opening_prompt_hash, content_hash)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(source, source_id) DO UPDATE SET
         title = excluded.title,
         path = excluded.path,
@@ -164,13 +259,15 @@ export class HistoryIndex {
         agent = excluded.agent,
         created_at = excluded.created_at,
         updated_at = excluded.updated_at,
+        runtime_id = excluded.runtime_id,
+        opening_prompt_hash = excluded.opening_prompt_hash,
         content_hash = excluded.content_hash
     `);
     const findExisting = this.#database.prepare(
       "SELECT id, content_hash FROM documents WHERE source = ? AND source_id = ?",
     );
     const insertFts = this.#database.prepare(
-      "INSERT INTO history_fts(rowid, title, body) VALUES (?, ?, ?)",
+      "INSERT INTO history_fts(rowid, title, dialogue, tool_output) VALUES (?, ?, ?, ?)",
     );
     const deleteFts = this.#database.prepare(
       "DELETE FROM history_fts WHERE rowid = ?",
@@ -192,31 +289,34 @@ export class HistoryIndex {
 
     const transaction = this.#database.transaction(() => {
       for (const result of results) {
-        const existingIds = new Set(
-          this.#database
-            .prepare("SELECT id, source_id FROM documents WHERE source = ?")
-            .all(result.source)
-            .map((row: unknown) => {
-              const parsed = z
-                .object({ id: z.number(), source_id: z.string() })
-                .parse(row);
-              return parsed;
-            }),
-        );
+        const existingIds = this.#database
+          .prepare("SELECT id, source_id FROM documents WHERE source = ?")
+          .all(result.source)
+          .map((row: unknown) =>
+            z.object({ id: z.number(), source_id: z.string() }).parse(row),
+          );
         const seenIds = new Set<string>();
         const stateRow = this.#database
-          .prepare("SELECT fingerprint FROM source_state WHERE source = ?")
+          .prepare(
+            "SELECT fingerprint, available, error FROM source_state WHERE source = ?",
+          )
           .get(result.source);
-        const previousFingerprint =
-          stateRow == null
-            ? null
-            : z.object({ fingerprint: z.string() }).parse(stateRow).fingerprint;
-        const changed = force || previousFingerprint !== result.fingerprint;
+        const previousState =
+          stateRow == null ? null : SourceStateRowSchema.parse(stateRow);
+        const changed = sourceNeedsIngest(
+          force,
+          result.fingerprint,
+          previousState,
+        );
 
         if (changed && result.available && result.error === null) {
           for (const document of result.documents) {
             seenIds.add(document.sourceId);
-            const contentHash = hashText(document.searchText);
+            const contentHash = hashDocument(
+              document.title,
+              document.dialogueText,
+              document.toolOutputText,
+            );
             const existing = findExisting.get(
               document.source,
               document.sourceId,
@@ -229,61 +329,32 @@ export class HistoryIndex {
                     .parse(existing);
             if (
               existingRow !== null &&
-              existingRow.content_hash === contentHash
+              existingRow.content_hash !== contentHash
             ) {
-              upsert.run(
-                document.source,
-                document.sourceId,
-                document.title,
-                document.path,
-                document.workspace,
-                document.agent,
-                document.createdAt,
-                document.updatedAt,
-                contentHash,
-              );
-              continue;
-            }
-            if (existingRow === null) {
-              upsert.run(
-                document.source,
-                document.sourceId,
-                document.title,
-                document.path,
-                document.workspace,
-                document.agent,
-                document.createdAt,
-                document.updatedAt,
-                contentHash,
-              );
-              const replacement = z
-                .object({ id: z.number() })
-                .parse(findExisting.get(document.source, document.sourceId));
-              insertFts.run(
-                replacement.id,
-                document.title,
-                document.searchText,
-              );
-            } else {
               deleteFts.run(existingRow.id);
-              upsert.run(
-                document.source,
-                document.sourceId,
-                document.title,
-                document.path,
-                document.workspace,
-                document.agent,
-                document.createdAt,
-                document.updatedAt,
-                contentHash,
-              );
+            }
+            upsert.run(
+              document.source,
+              document.sourceId,
+              document.title,
+              document.path,
+              document.workspace,
+              document.agent,
+              document.createdAt,
+              document.updatedAt,
+              document.runtimeId,
+              document.openingPromptHash,
+              contentHash,
+            );
+            if (existingRow?.content_hash !== contentHash) {
               const replacement = z
                 .object({ id: z.number() })
                 .parse(findExisting.get(document.source, document.sourceId));
               insertFts.run(
                 replacement.id,
                 document.title,
-                document.searchText,
+                document.dialogueText,
+                document.toolOutputText,
               );
             }
           }
@@ -315,24 +386,16 @@ export class HistoryIndex {
   }
 
   private count(source: HistorySourceName): number {
-    const row = z
+    return z
       .object({ count: z.number() })
       .parse(
         this.#database
           .prepare("SELECT count(*) AS count FROM documents WHERE source = ?")
           .get(source),
-      );
-    return row.count;
+      ).count;
   }
 
-  search(
-    query: string,
-    options: {
-      since: string | null;
-      source: HistorySourceName | null;
-      limit: number;
-    },
-  ): HistoryRecord[] {
+  search(query: string, options: HistoryQueryOptions): IndexedHistoryRecord[] {
     const clauses = ["history_fts MATCH ?"];
     const values: (string | number)[] = [ftsQuery(query)];
     if (options.since !== null) {
@@ -343,110 +406,92 @@ export class HistoryIndex {
       clauses.push("d.source = ?");
       values.push(options.source);
     }
-    values.push(options.limit);
+    if (options.openingPromptHash !== undefined) {
+      clauses.push("d.opening_prompt_hash = ?");
+      values.push(options.openingPromptHash);
+    }
+    addRuntimeExclusions(clauses, values, options.excludedRuntimes ?? []);
+    const pagination = options.limit === undefined ? "" : " LIMIT ? OFFSET ?";
+    if (options.limit !== undefined) {
+      values.push(options.limit, options.offset ?? 0);
+    }
     return this.#database
       .prepare(
         `SELECT d.id, d.source, d.source_id, d.title, d.path, d.workspace,
-                d.agent, d.created_at, d.updated_at
+                d.agent, d.created_at, d.updated_at, d.runtime_id,
+                d.opening_prompt_hash
            FROM history_fts
-           JOIN documents d ON d.id = history_fts.rowid
+          JOIN documents d ON d.id = history_fts.rowid
           WHERE ${clauses.join(" AND ")}
-          ORDER BY d.updated_at DESC
-          LIMIT ?`,
+          ORDER BY bm25(history_fts, 8.0, 3.0, 0.25), d.updated_at DESC,
+                   d.id ASC${pagination}`,
       )
       .all(...values)
       .map((row: unknown) => toRecord(DocumentRowSchema.parse(row)));
   }
 
-  recent(options: {
-    since: string | null;
-    source: HistorySourceName | null;
-    limit: number;
-  }): HistoryRecord[] {
+  recent(options: HistoryQueryOptions): IndexedHistoryRecord[] {
     const clauses: string[] = [];
     const values: (string | number)[] = [];
     if (options.since !== null) {
-      clauses.push("updated_at >= ?");
+      clauses.push("d.updated_at >= ?");
       values.push(options.since);
     }
     if (options.source !== null) {
-      clauses.push("source = ?");
+      clauses.push("d.source = ?");
       values.push(options.source);
     }
-    values.push(options.limit);
+    if (options.openingPromptHash !== undefined) {
+      clauses.push("d.opening_prompt_hash = ?");
+      values.push(options.openingPromptHash);
+    }
+    addRuntimeExclusions(clauses, values, options.excludedRuntimes ?? []);
+    const pagination = options.limit === undefined ? "" : " LIMIT ? OFFSET ?";
+    if (options.limit !== undefined) {
+      values.push(options.limit, options.offset ?? 0);
+    }
     return this.#database
       .prepare(
-        `SELECT id, source, source_id, title, path, workspace, agent, created_at, updated_at
-           FROM documents
+        `SELECT id, source, source_id, title, path, workspace, agent,
+                created_at, updated_at, runtime_id, opening_prompt_hash
+           FROM documents d
           ${clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : ""}
-          ORDER BY updated_at DESC
-          LIMIT ?`,
+          ORDER BY updated_at DESC, id ASC${pagination}`,
       )
       .all(...values)
       .map((row: unknown) => toRecord(DocumentRowSchema.parse(row)));
+  }
+
+  record(id: number): IndexedHistoryRecord | null {
+    const row = this.#database
+      .prepare(
+        `SELECT id, source, source_id, title, path, workspace, agent,
+                created_at, updated_at, runtime_id, opening_prompt_hash
+           FROM documents WHERE id = ?`,
+      )
+      .get(id);
+    return row == null ? null : toRecord(DocumentRowSchema.parse(row));
   }
 
   statuses(
     labels: ReadonlyMap<HistorySourceName, string>,
   ): HistorySourceStatus[] {
-    const rows = this.#database
+    return this.#database
       .prepare(
         "SELECT source, indexed_documents, last_scan_at, available, error FROM source_state ORDER BY source",
       )
       .all()
-      .map((row: unknown) => StatusRowSchema.parse(row));
-    return rows.map((row) => ({
-      source: parseSourceName(row.source),
-      label: labels.get(parseSourceName(row.source)) ?? row.source,
-      available: row.available === 1,
-      indexedDocuments: row.indexed_documents,
-      lastScanAt: row.last_scan_at,
-      error: row.error,
-    }));
+      .map((row: unknown) => StatusRowSchema.parse(row))
+      .map((row) => {
+        const source = parseSourceName(row.source);
+        return {
+          source,
+          label: labels.get(source) ?? row.source,
+          available: row.available === 1,
+          indexedDocuments: row.indexed_documents,
+          lastScanAt: row.last_scan_at,
+          error: row.error,
+        };
+      });
   }
-
-  allSourceRecords(source: HistorySourceName): HistoryRecord[] {
-    return this.#database
-      .prepare(
-        "SELECT id, source, source_id, title, path, workspace, agent, created_at, updated_at FROM documents WHERE source = ?",
-      )
-      .all(source)
-      .map((row: unknown) => toRecord(DocumentRowSchema.parse(row)));
-  }
-}
-
-export function parseLimit(value: string | undefined): number {
-  if (value === undefined) {
-    return 20;
-  }
-  const limit = Number.parseInt(value, 10);
-  if (!Number.isInteger(limit) || limit < 1 || limit > 200) {
-    throw new Error("Limit must be an integer from 1 to 200");
-  }
-  return limit;
-}
-
-export function parseSince(
-  value: string | undefined,
-  now = new Date(),
-): string | null {
-  if (value === undefined) {
-    return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  }
-  const duration = /^(\d+)([hdw])$/u.exec(value.trim());
-  if (duration !== null) {
-    const amount = Number.parseInt(duration[1] ?? "", 10);
-    const unit = duration[2];
-    const multiplier = unit === "w" ? 7 : unit === "d" ? 1 : 1 / 24;
-    return new Date(
-      now.getTime() - amount * multiplier * 24 * 60 * 60 * 1000,
-    ).toISOString();
-  }
-  const timestamp = Date.parse(value);
-  if (Number.isNaN(timestamp)) {
-    throw new TypeError(
-      `Invalid --since value "${value}"; use 7d, 24h, 1w, or an ISO date`,
-    );
-  }
-  return new Date(timestamp).toISOString();
 }

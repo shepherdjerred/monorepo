@@ -36,6 +36,13 @@ Full support for League's Arena mode with detailed reports for current 18-player
 - Final placements and performance metrics
 - Optimized report layout for better readability
 
+### League Classic Support
+
+Scout treats League Classic as a first-class mode. Classic Rift games use
+Riot's `JADE` champion IDs, pinned Classic portraits/loading art/splashes, and
+the dedicated Classic loading-screen and report renderers. Normal League
+matches continue to use the ordinary champion catalog and assets.
+
 ### Multi-Region Support
 
 Track players across all League of Legends regions: NA, EUW, EUNE, KR, BR, LAN, LAS, TR, RU, OCE, JP, PH, SG, TH, TW, VN, ME.

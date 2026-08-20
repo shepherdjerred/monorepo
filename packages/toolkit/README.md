@@ -103,6 +103,55 @@ is already occupied rather than capturing an unrelated process.
 - `toolkit history ...` searches the private, rebuildable local agent-history
   index. It never treats prior conversation as current deployment truth.
 
+#### History search
+
+`history` maintains a private local index of Conductor, Claude Code, Codex,
+Cursor, bundled OpenCode, and standalone OpenCode conversations. Install the
+macOS LaunchAgent once; search itself only reads the index and never performs
+live service checks.
+
+| Command                                                                      | Description                                   |
+| ---------------------------------------------------------------------------- | --------------------------------------------- |
+| `history search <QUERY> [--since 7d] [--source NAME] [--limit N]`            | Rank indexed work with BM25                   |
+| `history search <QUERY> --include-excerpts`                                  | Add targeted 360-character source excerpts    |
+| `history recent [--since 7d] [--limit N]`                                    | List recent indexed sessions                  |
+| `history show <ID> [--query TEXT] [--messages 8] [--include-tools] [--json]` | Read bounded, role-aware conversation context |
+| `history sources [--json]`                                                   | Show source availability and scan errors      |
+| `history daemon install`                                                     | Install and start the macOS LaunchAgent       |
+| `history daemon status\|reindex`                                             | Inspect or refresh ingestion                  |
+| `history daemon stop\|start\|uninstall`                                      | Manage the LaunchAgent lifecycle              |
+
+```bash
+toolkit history daemon install
+toolkit history recent --since 7d
+toolkit history search "argocd prune" --since 90d
+toolkit history show <ID_FROM_SEARCH> --query "argocd prune"
+toolkit history sources
+```
+
+Search ranks title, dialogue, and tool text separately and uses recency only to
+break relevance ties. Unquoted terms keep AND-prefix behavior; pass literal
+quotes inside the query for an exact phrase, for example
+`toolkit history search '"Bryan Bucks"'`. The current Conductor/Codex run and
+30-minute parallel duplicates are hidden/grouped by default; use
+`--include-current` or `--include-duplicates` when needed. Source failures are
+warnings on stderr, or in the JSON `warnings` array.
+
+JSON search and recent output are envelopes (`{ query, results, warnings }` and
+`{ results, warnings }`). `show --json` returns
+`{ record, messages, truncated }`. Local index IDs can change after a rebuild;
+rerun search when an ID is missing.
+
+The rebuildable index is `~/.toolkit/history/index.sqlite`; daemon state,
+socket, and logs are in that private directory. The LaunchAgent is
+`~/Library/LaunchAgents/com.jerred.toolkit-history.plist`. Transcript bodies
+are not copied into ordinary index tables. `show` returns at most eight
+messages and 6,000 characters by default, excluding system, reasoning, and
+compaction records. Standalone OpenCode's
+`~/.local/share/opencode/auth.json` is never read or indexed. Use `deployed`,
+`pr health`, or the relevant live client to verify current status after using
+history for context.
+
 Run `toolkit --help` or a workflow’s `--help` for the complete command surface.
 
 ## Environment variables

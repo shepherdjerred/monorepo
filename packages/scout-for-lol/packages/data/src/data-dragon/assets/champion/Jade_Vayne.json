@@ -1,134 +1,530 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Vayne": {
-      "id": "Jade_Vayne",
-      "key": "60067",
+      "id": "Vayne",
+      "key": "67",
       "name": "Vayne",
-      "title": "The Night Hunter",
+      "title": "the Night Hunter",
       "image": {
-        "full": "Jade_Vayne.png",
-        "sprite": "champion3.png",
+        "full": "Vayne.png",
+        "sprite": "champion4.png",
         "group": "champion",
-        "x": 192,
-        "y": 48,
+        "x": 336,
+        "y": 96,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60067000",
+          "id": "67000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60067004",
+          "id": "67001",
+          "num": 1,
+          "name": "Vindicator Vayne",
+          "chromas": false
+        },
+        {
+          "id": "67002",
+          "num": 2,
+          "name": "Aristocrat Vayne",
+          "chromas": false
+        },
+        {
+          "id": "67003",
+          "num": 3,
+          "name": "Dragonslayer Vayne",
+          "chromas": true
+        },
+        {
+          "id": "67004",
           "num": 4,
           "name": "Heartseeker Vayne",
           "chromas": false
         },
         {
-          "id": "60067006",
+          "id": "67005",
+          "num": 5,
+          "name": "SKT T1 Vayne",
+          "chromas": false
+        },
+        {
+          "id": "67006",
           "num": 6,
           "name": "Arclight Vayne",
           "chromas": false
         },
         {
-          "id": "60067010",
-          "num": 10,
-          "name": "Soulstealer Vayne",
-          "chromas": false
+          "id": "67007",
+          "num": 7,
+          "name": "Dragonslayer Vayne Chaos Green",
+          "chromas": false,
+          "parentSkin": 3
         },
         {
-          "id": "60067011",
+          "id": "67008",
+          "num": 8,
+          "name": "Dragonslayer Vayne Chaos Red",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "67009",
+          "num": 9,
+          "name": "Dragonslayer Vayne Chaos Silver",
+          "chromas": false,
+          "parentSkin": 3
+        },
+        {
+          "id": "67010",
+          "num": 10,
+          "name": "Soulstealer Vayne",
+          "chromas": true
+        },
+        {
+          "id": "67011",
           "num": 11,
           "name": "PROJECT: Vayne",
           "chromas": false
         },
         {
-          "id": "60067044",
-          "num": 44,
-          "name": "Dawnbringer Vayne",
+          "id": "67012",
+          "num": 12,
+          "name": "Firecracker Vayne",
+          "chromas": true
+        },
+        {
+          "id": "67013",
+          "num": 13,
+          "name": "Prestige Firecracker Vayne",
           "chromas": false
         },
         {
-          "id": "60067045",
+          "id": "67014",
+          "num": 14,
+          "name": "Spirit Blossom Vayne",
+          "chromas": true
+        },
+        {
+          "id": "67015",
+          "num": 15,
+          "name": "FPX Vayne",
+          "chromas": true
+        },
+        {
+          "id": "67016",
+          "num": 16,
+          "name": "FPX Vayne (Elite)",
+          "chromas": false,
+          "parentSkin": 15
+        },
+        {
+          "id": "67017",
+          "num": 17,
+          "name": "Spirit Blossom Vayne (Ruby)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67018",
+          "num": 18,
+          "name": "Spirit Blossom Vayne (Citrine)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67019",
+          "num": 19,
+          "name": "Spirit Blossom Vayne (Emerald)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67020",
+          "num": 20,
+          "name": "Spirit Blossom Vayne (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67021",
+          "num": 21,
+          "name": "Spirit Blossom Vayne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67022",
+          "num": 22,
+          "name": "Spirit Blossom Vayne (Obsidian)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67023",
+          "num": 23,
+          "name": "Spirit Blossom Vayne (Pearl)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67024",
+          "num": 24,
+          "name": "Spirit Blossom Vayne (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 14
+        },
+        {
+          "id": "67025",
+          "num": 25,
+          "name": "Sentinel Vayne",
+          "chromas": true
+        },
+        {
+          "id": "67026",
+          "num": 26,
+          "name": "Sentinel Vayne (Ruby)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "67027",
+          "num": 27,
+          "name": "Sentinel Vayne (Emerald)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "67028",
+          "num": 28,
+          "name": "Sentinel Vayne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "67029",
+          "num": 29,
+          "name": "Sentinel Vayne (Amethyst)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "67030",
+          "num": 30,
+          "name": "Sentinel Vayne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "67031",
+          "num": 31,
+          "name": "Sentinel Vayne (Resolute)",
+          "chromas": false,
+          "parentSkin": 25
+        },
+        {
+          "id": "67032",
+          "num": 32,
+          "name": "Battle Bat Vayne",
+          "chromas": true
+        },
+        {
+          "id": "67033",
+          "num": 33,
+          "name": "Prestige Firecracker Vayne (2022)",
+          "chromas": false
+        },
+        {
+          "id": "67034",
+          "num": 34,
+          "name": "Firecracker Vayne (Golden Tiger)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "67035",
+          "num": 35,
+          "name": "Battle Bat Vayne (Ruby)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67036",
+          "num": 36,
+          "name": "Battle Bat Vayne (Citrine)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67037",
+          "num": 37,
+          "name": "Battle Bat Vayne (Emerald)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67038",
+          "num": 38,
+          "name": "Battle Bat Vayne (Turquoise)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67039",
+          "num": 39,
+          "name": "Battle Bat Vayne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67040",
+          "num": 40,
+          "name": "Battle Bat Vayne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67041",
+          "num": 41,
+          "name": "Battle Bat Vayne (Sandstone)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67042",
+          "num": 42,
+          "name": "Battle Bat Vayne (Obsidian)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67043",
+          "num": 43,
+          "name": "Battle Bat Vayne (Nightwire)",
+          "chromas": false,
+          "parentSkin": 32
+        },
+        {
+          "id": "67044",
+          "num": 44,
+          "name": "Dawnbringer Vayne",
+          "chromas": true
+        },
+        {
+          "id": "67045",
           "num": 45,
           "name": "Dawnbringer Vayne (Ruby)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60067046",
+          "id": "67046",
           "num": 46,
           "name": "Dawnbringer Vayne (Tanzanite)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60067047",
+          "id": "67047",
           "num": 47,
           "name": "Dawnbringer Vayne (Rose Quartz)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60067048",
+          "id": "67048",
           "num": 48,
           "name": "Dawnbringer Vayne (Sapphire)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60067049",
+          "id": "67049",
           "num": 49,
           "name": "Dawnbringer Vayne (Emerald)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60067050",
+          "id": "67050",
           "num": 50,
           "name": "Dawnbringer Vayne (Citrine)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60067051",
+          "id": "67051",
           "num": 51,
           "name": "Dawnbringer Vayne (Obsidian)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60067052",
+          "id": "67052",
           "num": 52,
           "name": "Dawnbringer Vayne (Rainbow)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60067053",
+          "id": "67053",
           "num": 53,
           "name": "Soulstealer Vayne (First Decennial)",
           "chromas": false,
           "parentSkin": 10
         },
         {
-          "id": "60067054",
+          "id": "67054",
           "num": 54,
           "name": "Soulstealer Vayne (Tenfold Triumph)",
           "chromas": false,
           "parentSkin": 10
+        },
+        {
+          "id": "67055",
+          "num": 55,
+          "name": "Dragonmancer Vayne",
+          "chromas": true
+        },
+        {
+          "id": "67056",
+          "num": 56,
+          "name": "Dragonmancer Vayne (Ruby)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67057",
+          "num": 57,
+          "name": "Dragonmancer Vayne (Citrine)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67058",
+          "num": 58,
+          "name": "Dragonmancer Vayne (Turquoise)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67059",
+          "num": 59,
+          "name": "Dragonmancer Vayne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67060",
+          "num": 60,
+          "name": "Dragonmancer Vayne (Amethyst)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67061",
+          "num": 61,
+          "name": "Dragonmancer Vayne (Emerald)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67062",
+          "num": 62,
+          "name": "Dragonmancer Vayne (Obsidian)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67063",
+          "num": 63,
+          "name": "Dragonmancer Vayne (Pearl)",
+          "chromas": false,
+          "parentSkin": 55
+        },
+        {
+          "id": "67064",
+          "num": 64,
+          "name": "Risen Legend Vayne",
+          "chromas": true
+        },
+        {
+          "id": "67065",
+          "num": 65,
+          "name": "Risen Legend Vayne (Paragon)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "67066",
+          "num": 66,
+          "name": "Risen Legend Vayne (Mythclimber)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "67067",
+          "num": 67,
+          "name": "Demoncursed Vayne",
+          "chromas": true
+        },
+        {
+          "id": "67068",
+          "num": 68,
+          "name": "Demoncursed Vayne (Ruby)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "67069",
+          "num": 69,
+          "name": "Demoncursed Vayne (Catseye)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "67070",
+          "num": 70,
+          "name": "Demoncursed Vayne (Emerald)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "67071",
+          "num": 71,
+          "name": "Demoncursed Vayne (Sapphire)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "67072",
+          "num": 72,
+          "name": "Demoncursed Vayne (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 67
+        },
+        {
+          "id": "67073",
+          "num": 73,
+          "name": "Demoncursed Vayne (Pearl)",
+          "chromas": false,
+          "parentSkin": 67
         }
       ],
-      "lore": "- Final Hour (R) can not be extended",
-      "blurb": "- Final Hour (R) can not be extended",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Shauna Vayne is a deadly, remorseless Demacian monster hunter, who has dedicated her life to finding and destroying the demon that murdered her family. Armed with a wrist-mounted crossbow and a heart full of vengeance, she is only truly happy when slaying practitioners or creations of the dark arts, striking from the shadows with a flurry of silver bolts.",
+      "blurb": "Shauna Vayne is a deadly, remorseless Demacian monster hunter, who has dedicated her life to finding and destroying the demon that murdered her family. Armed with a wrist-mounted crossbow and a heart full of vengeance, she is only truly happy when...",
+      "allytips": [
+        "Tumble has many uses, but it cannot pass over walls.",
+        "Condemn can be used to both pin targets to walls to ensure a kill, or to escape a pursuer.",
+        "Don't go in first to a large teamfight. Wait for your teammates to initiate."
+      ],
+      "enemytips": [
+        "Vayne is fragile - turn the pressure up on her and she will be forced to play cautiously.",
+        "Deny Vayne the opportunity to pin you against walls."
+      ],
       "tags": [
         "Marksman",
         "Assassin"
@@ -141,41 +537,41 @@
         "difficulty": 8
       },
       "stats": {
-        "hp": 442,
-        "hpperlevel": 83,
-        "mp": 208,
+        "hp": 550,
+        "hpperlevel": 103,
+        "mp": 232,
         "mpperlevel": 35,
         "movespeed": 330,
-        "armor": 16.7,
-        "armorperlevel": 3.4,
-        "spellblock": 30,
-        "spellblockperlevel": 0,
+        "armor": 23,
+        "armorperlevel": 4.6,
+        "spellblock": 33,
+        "spellblockperlevel": 1.1,
         "attackrange": 550,
-        "hpregen": 5.05,
+        "hpregen": 3.5,
         "hpregenperlevel": 0.55,
-        "mpregen": 6.7,
+        "mpregen": 7,
         "mpregenperlevel": 0.4,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 53.25,
+        "attackdamage": 60,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 3.1,
+        "attackspeedperlevel": 3.3,
         "attackspeed": 0.658
       },
       "spells": [
         {
-          "id": "Jade_VayneQ",
+          "id": "VayneTumble",
           "name": "Tumble",
-          "description": "Vayne tumbles, maneuvering to carefully place her next shot.  Her next attack deals bonus damage.",
-          "tooltip": "Rolls a short distance. The next basic attack within {{ buffduration }} seconds deals <physicalDamage>{{ scalingdamagetotal }} bonus physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
+          "description": "Vayne tumbles, maneuvering to carefully place her next shot. Her next attack deals bonus damage.",
+          "tooltip": "Vayne rolls a short distance, and deals an additional <physicalDamage>{{ adratiobonus }} physical damage</physicalDamage> on her next Attack.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
-              "Attack Damage Ratio"
+              "AD Ratio %"
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ scalingdamage*100.000000 }}% -> {{ scalingdamagenl*100.000000 }}%"
+              "{{ totaladratio*100.000000 }}% -> {{ totaladrationl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
@@ -294,29 +690,31 @@
           ],
           "rangeBurn": "300",
           "image": {
-            "full": "Jade_VayneQ.png",
-            "sprite": "spell11.png",
+            "full": "VayneTumble.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 0,
-            "y": 48,
+            "x": 96,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_VayneW",
+          "id": "VayneSilveredBolts",
           "name": "Silver Bolts",
-          "description": "Vayne tips her bolts with a rare metal, toxic to evil things.  The third consecutive attack or ability against the same target deals a percentage of the target's maximum Health as bonus true damage. (Max: 200 damage vs. Monsters)",
-          "tooltip": "Every third consecutive attack or ability against an enemy deals an additional {{ basedamage }} plus {{ maxhealthratio*100 }}% of the enemy's maximum Health <trueDamage>true damage</trueDamage>. (Max: 200 damage vs. Monsters){{ spellmodifierdescriptionappend }}",
+          "description": "Vayne tips her bolts with a rare metal, toxic to evil things. The third consecutive attack or ability against the same target deals a percentage of the target's max health as bonus true damage.",
+          "tooltip": "<spellPassive>Passive</spellPassive>: Every third consecutive Attack or Ability against an enemy deals an additional <trueDamage>{{ totaldamage }} max Health true damage</trueDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Base Damage",
-              "Maximum Health Damage"
+              "True Damage %",
+              "Minimum Damage",
+              "Monster Damage"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ maxhealthratio*100.000000 }}% -> {{ maxhealthrationl*100.000000 }}%"
+              "{{ maxhealthratio*100.000000 }}% -> {{ maxhealthrationl*100.000000 }}%",
+              "{{ damagefloor }} -> {{ damagefloorNL }}",
+              "{{ damagevsmonsters }} -> {{ damagevsmonstersNL }}"
             ]
           },
           "maxrank": 5,
@@ -435,29 +833,29 @@
           ],
           "rangeBurn": "750",
           "image": {
-            "full": "Jade_VayneW.png",
-            "sprite": "spell11.png",
+            "full": "VayneSilveredBolts.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 48,
-            "y": 48,
+            "x": 144,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "Passive"
         },
         {
-          "id": "Jade_VayneE",
+          "id": "VayneCondemn",
           "name": "Condemn",
-          "description": "Vayne draws a heavy crossbow from her back, and fires a huge bolt at her target, dealing damage and knocking them back.  If they collide with terrain, they are impaled, dealing bonus damage and stunning them.",
-          "tooltip": "Fires a bolt that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and knocks the enemy back. Enemies that collide with terrain take <physicalDamage>{{ totaldamagewithspell }} additional physical damage</physicalDamage> and are <status>Stunned</status> for 1.5 seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Vayne draws a heavy crossbow from her back, and fires a huge bolt at her target, knocking them back and dealing damage. If they collide with terrain, they are impaled, dealing bonus damage and stunning them.",
+          "tooltip": "Vayne fires a bolt that <status>Knocks Back</status> and deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>. If the target collides with terrain, they take <physicalDamage>{{ empowereddamagett }} bonus physical damage</physicalDamage> and become <status>Stunned</status> for {{ stunduration }} seconds. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
-              "Base Damage"
+              "Damage"
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ firsthitdamage }} -> {{ firsthitdamageNL }}"
+              "{{ damage }} -> {{ damageNL }}"
             ]
           },
           "maxrank": 5,
@@ -576,31 +974,33 @@
           ],
           "rangeBurn": "550",
           "image": {
-            "full": "Jade_VayneE.png",
-            "sprite": "spell11.png",
+            "full": "VayneCondemn.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 96,
-            "y": 48,
+            "x": 192,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_VayneR",
+          "id": "VayneInquisition",
           "name": "Final Hour",
-          "description": "Readying herself for an epic confrontation, Vayne gains increased Attack Damage, invisibility during Tumble, and triple the bonus Movement Speed from Night Hunter.",
-          "tooltip": "Gains <physicalDamage>{{ admod }} Bonus Attack Damage</physicalDamage> for {{ duration }} seconds. While active, Tumble grants <keywordStealth>Invisibility</keywordStealth> for 1 second, and <spellName>Night Hunter's</spellName> bonus <speed>Movement Speed</speed> is increased to 90.{{ spellmodifierdescriptionappend }}",
+          "description": "Readying herself for an epic confrontation, Vayne gains increased Attack Damage, Invisibility during Tumble, reduced Tumble cooldown, and more bonus Move Speed from Night Hunter",
+          "tooltip": "Vayne gains <physicalDamage>{{ bonusattackdamage }} Attack Damage</physicalDamage> for {{ baseduration }} seconds, extended by {{ durationtoadd }} seconds whenever a champion damaged by Vayne dies within {{ damagedmarkerduration }} seconds. Additionally, during the duration:<li><spellName>Night Hunter</spellName> instead grants <speed>{{ movementspeed }} Move Speed</speed>.<li>The Cooldown of <spellName>Tumble</spellName> is reduced by {{ tumblecdreduction }}%, and grants <keywordStealth>Invisibility</keywordStealth> for {{ tumblestealthduration }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",
               "Duration",
-              "Attack Damage"
+              "Bonus AD",
+              "Tumble Cooldown Reduction"
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ duration }} -> {{ durationNL }}",
-              "{{ admod }} -> {{ admodNL }}"
+              "{{ baseduration }} -> {{ basedurationNL }}",
+              "{{ bonusattackdamage }} -> {{ bonusattackdamageNL }}",
+              "{{ tumblecdreduction }}% -> {{ tumblecdreductionNL }}%"
             ]
           },
           "maxrank": 3,
@@ -693,11 +1093,11 @@
           ],
           "rangeBurn": "1",
           "image": {
-            "full": "Jade_VayneR.png",
-            "sprite": "spell11.png",
+            "full": "VayneInquisition.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 144,
-            "y": 48,
+            "x": 240,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -706,13 +1106,13 @@
       ],
       "passive": {
         "name": "Night Hunter",
-        "description": "Vayne ruthlessly hunts evil-doers. She gains 30 Movement Speed when moving toward nearby enemy champions.",
+        "description": "Vayne ruthlessly hunts evil-doers, gaining Move Speed when moving toward nearby enemy champions.",
         "image": {
-          "full": "Jade_Vayne_NightHunter.png",
-          "sprite": "passive3.png",
+          "full": "Vayne_NightHunter.png",
+          "sprite": "passive4.png",
           "group": "passive",
-          "x": 192,
-          "y": 48,
+          "x": 336,
+          "y": 96,
           "w": 48,
           "h": 48
         }

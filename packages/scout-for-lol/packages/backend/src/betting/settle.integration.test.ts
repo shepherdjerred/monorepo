@@ -1,5 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import {
+  BUCKS_INT32_MAX,
   DiscordGuildIdSchema,
   RawMatchSchema,
   type DiscordAccountId,
@@ -339,6 +340,45 @@ describe("settleBettingForMatch", () => {
       inTransaction.indexOf("BucksBet.findMany"),
     );
   });
+
+  test("batches refundable-headroom reads independently of bettor count", async () => {
+    const pool = await makePool(SERVER_A);
+    const bettorCount = 24;
+    for (let index = 0; index < bettorCount; index += 1) {
+      await makeBettor({
+        poolId: pool.id,
+        serverId: SERVER_A,
+        discordId: bucksTestDiscordId(index + 100),
+        teamId: index % 2 === 0 ? WINNING_TEAM : LOSING_TEAM,
+        stake: 10,
+      });
+    }
+
+    const operations: string[] = [];
+    const recording = db.$extends({
+      query: {
+        $allModels: {
+          async $allOperations({ model, operation, args, query }) {
+            operations.push(`${model}.${operation}`);
+            return await query(args);
+          },
+        },
+      },
+    });
+
+    expect(await settleBettingForMatch(fixture, recording)).toHaveLength(1);
+    const holdingsQueries = operations.filter((operation) =>
+      [
+        "BucksBet.aggregate",
+        "BucksBet.groupBy",
+        "BucksParlayBet.aggregate",
+        "BucksParlayBet.groupBy",
+        "BucksParlayBet.findMany",
+      ].includes(operation),
+    );
+    // Query volume is fixed by market types, not multiplied by 24 positions.
+    expect(holdingsQueries.length).toBeLessThanOrEqual(8);
+  });
 });
 
 describe("settleBettingForMatch refunds and conservation", () => {
@@ -371,6 +411,55 @@ describe("settleBettingForMatch refunds and conservation", () => {
     expect(
       await db.bucksLedgerEntry.count({ where: { kind: "house_rake" } }),
     ).toBe(0);
+  });
+
+  test("voids when a gross payout cannot fit before its house-cut debit", async () => {
+    const pool = await makePool(SERVER_A);
+    const winner = await makeBettor({
+      poolId: pool.id,
+      serverId: SERVER_A,
+      discordId: bucksTestDiscordId(1),
+      teamId: WINNING_TEAM,
+      stake: 10,
+      startingBalance: BUCKS_INT32_MAX - 16,
+    });
+    await makeBettor({
+      poolId: pool.id,
+      serverId: SERVER_A,
+      discordId: bucksTestDiscordId(2),
+      teamId: LOSING_TEAM,
+      stake: 10,
+    });
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+
+    expect(summary?.voidReason).toBe("storage_overflow");
+    expect(summary?.houseCut).toBe(0);
+    expect(
+      await db.bucksAccount.findUniqueOrThrow({
+        where: { id: winner.account.id },
+      }),
+    ).toMatchObject({ balance: BUCKS_INT32_MAX - 6 });
+  });
+
+  test("voids when the house cannot store the aggregate settlement cut", async () => {
+    await makeTwoSidedPool(10);
+    const house = await db.bucksAccount.create({
+      data: {
+        serverId: SERVER_A,
+        discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        isHouse: true,
+        balance: BUCKS_INT32_MAX - 3,
+      },
+    });
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+
+    expect(summary?.voidReason).toBe("storage_overflow");
+    expect(summary?.houseCut).toBe(0);
+    expect(
+      await db.bucksAccount.findUniqueOrThrow({ where: { id: house.id } }),
+    ).toMatchObject({ balance: BUCKS_INT32_MAX - 3 });
   });
 
   test("settles each guild's pool independently", async () => {

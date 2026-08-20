@@ -35,6 +35,25 @@ describe("/bb prizes", () => {
     );
   });
 
+  test("registers uncapped outcome and parlay stake options", () => {
+    const command = bbCommand.toJSON();
+    for (const name of ["bet", "parlay"]) {
+      const subcommand = command.options?.find(
+        (option) => option.name === name,
+      );
+      if (subcommand === undefined || !("options" in subcommand)) {
+        throw new Error(`${name} subcommand is missing its options`);
+      }
+      const amount = subcommand.options?.find(
+        (option) => option.name === "amount",
+      );
+      expect(amount).toEqual(
+        expect.objectContaining({ type: 4, required: true, min_value: 1 }),
+      );
+      expect(JSON.stringify(amount)).not.toContain("max_value");
+    }
+  });
+
   test("renders the approved catalog at the joke exchange rate", () => {
     const embed = buildBbPrizesEmbed().toJSON();
     const rendered = JSON.stringify(embed);
@@ -116,6 +135,7 @@ describe("/bb command contract", () => {
       totalStaked: 10,
       pendingPositionCount: 10,
       pendingPositions: Array.from({ length: 10 }, (_, index) => ({
+        marketType: "outcome" as const,
         matchId: `NA1_${index.toString()}`,
         gameAlias: `player-${index.toString()}-${"x".repeat(500)}`,
         teamId: 100,
@@ -140,6 +160,7 @@ describe("/bb command contract", () => {
       pendingPositionCount: 1,
       pendingPositions: [
         {
+          marketType: "outcome",
           matchId: "NA1_1",
           gameAlias: "bryan",
           teamId: 200,
@@ -157,14 +178,40 @@ describe("/bb command contract", () => {
     expect(rendered).not.toContain("LOSE");
   });
 
+  test("renders pending parlays independently from direct team picks", () => {
+    const view: PersonalBucksView = {
+      balance: 20,
+      totalStaked: 5,
+      pendingPositionCount: 1,
+      pendingPositions: [
+        {
+          marketType: "parlay",
+          matchId: "NA1_1",
+          subjectAlias: "Parlay (bryan)",
+          side: "YES",
+          stake: 5,
+          closesAt: new Date(60_000),
+          poolState: "open",
+        },
+      ],
+    };
+
+    const rendered = JSON.stringify(buildPersonalBucksEmbed(view, 0).toJSON());
+    expect(rendered).toContain("Parlay (bryan) YES");
+    expect(rendered).not.toContain("Blue Team");
+    expect(rendered).not.toContain("Red Team");
+  });
+
   test("rules explain the complete economy", () => {
     const rendered = JSON.stringify(buildBbRulesEmbed().toJSON());
     for (const phrase of [
       "tracked League players",
       "25 BB",
       "+1 BB",
-      "1-1000 BB",
+      "any positive whole-BB amount",
       "10 minutes",
+      "5 minutes",
+      "YES/NO parlay",
       "cancel",
       "split the losing side's pool",
       "house matches",
@@ -173,7 +220,10 @@ describe("/bb command contract", () => {
       expect(rendered).toContain(phrase);
     }
     expect(rendered).toContain(
-      "cancel it before the window closes for a 20% house cut, rounded to the nearest BB",
+      "Cancelling an outcome position has a 20% house cut",
+    );
+    expect(rendered).toContain(
+      "cancelling a parlay returns its full stake and releases the house reserve",
     );
   });
 });

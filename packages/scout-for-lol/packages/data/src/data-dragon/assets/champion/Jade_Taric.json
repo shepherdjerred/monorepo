@@ -1,217 +1,276 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Taric": {
-      "id": "Jade_Taric",
-      "key": "60044",
+      "id": "Taric",
+      "key": "44",
       "name": "Taric",
-      "title": "The Gem Knight",
+      "title": "the Shield of Valoran",
       "image": {
-        "full": "Jade_Taric.png",
-        "sprite": "champion3.png",
+        "full": "Taric.png",
+        "sprite": "champion4.png",
         "group": "champion",
-        "x": 384,
-        "y": 0,
+        "x": 288,
+        "y": 48,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60044000",
+          "id": "44000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60044002",
+          "id": "44001",
+          "num": 1,
+          "name": "Emerald Taric",
+          "chromas": false
+        },
+        {
+          "id": "44002",
           "num": 2,
           "name": "Armor of the Fifth Age Taric",
           "chromas": false
         },
         {
-          "id": "60044003",
+          "id": "44003",
           "num": 3,
           "name": "Bloodstone Taric",
           "chromas": false
         },
         {
-          "id": "60044004",
+          "id": "44004",
           "num": 4,
           "name": "Pool Party Taric",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60044005",
+          "id": "44005",
           "num": 5,
           "name": "Pool Party Taric (Rose Quartz)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 4
         },
         {
-          "id": "60044006",
+          "id": "44006",
           "num": 6,
           "name": "Pool Party Taric (Catseye)",
           "chromas": false,
           "parentSkin": 4
         },
         {
-          "id": "60044007",
+          "id": "44007",
           "num": 7,
           "name": "Pool Party Taric (Obsidian)",
           "chromas": false,
           "parentSkin": 4
         },
         {
-          "id": "60044008",
+          "id": "44008",
           "num": 8,
           "name": "Pool Party Taric (Pearl)",
           "chromas": false,
           "parentSkin": 4
         },
         {
-          "id": "60044009",
+          "id": "44009",
           "num": 9,
           "name": "Taric Luminshield",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60044010",
+          "id": "44010",
           "num": 10,
           "name": "Taric Luminshield (Pearl)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 9
         },
         {
-          "id": "60044011",
+          "id": "44011",
           "num": 11,
           "name": "Taric Luminshield (Aquamarine)",
           "chromas": false,
           "parentSkin": 9
         },
         {
-          "id": "60044012",
+          "id": "44012",
           "num": 12,
           "name": "Taric Luminshield (Obsidian)",
           "chromas": false,
           "parentSkin": 9
         },
         {
-          "id": "60044013",
+          "id": "44013",
           "num": 13,
           "name": "Taric Luminshield (Ruby)",
           "chromas": false,
           "parentSkin": 9
         },
         {
-          "id": "60044014",
+          "id": "44014",
           "num": 14,
           "name": "Taric Luminshield (Amethyst)",
           "chromas": false,
           "parentSkin": 9
         },
         {
-          "id": "60044015",
+          "id": "44015",
           "num": 15,
           "name": "Taric Luminshield (Rose Quartz)",
           "chromas": false,
           "parentSkin": 9
         },
         {
-          "id": "60044016",
+          "id": "44016",
           "num": 16,
           "name": "Taric Luminshield (Rainbow)",
           "chromas": false,
           "parentSkin": 9
         },
         {
-          "id": "60044017",
+          "id": "44017",
           "num": 17,
           "name": "Taric Luminshield (Peridot)",
           "chromas": false,
           "parentSkin": 9
         },
         {
-          "id": "60044018",
+          "id": "44018",
           "num": 18,
           "name": "Space Groove Taric",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60044019",
+          "id": "44019",
           "num": 19,
           "name": "Space Groove Taric (Ruby)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60044020",
+          "id": "44020",
           "num": 20,
           "name": "Space Groove Taric (Catseye)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60044021",
+          "id": "44021",
           "num": 21,
           "name": "Space Groove Taric (Rose Quartz)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60044022",
+          "id": "44022",
           "num": 22,
           "name": "Space Groove Taric (Turquoise)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60044023",
+          "id": "44023",
           "num": 23,
           "name": "Space Groove Taric (Sapphire)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60044024",
+          "id": "44024",
           "num": 24,
           "name": "Space Groove Taric (Emerald)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60044025",
+          "id": "44025",
           "num": 25,
           "name": "Space Groove Taric (Obsidian)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60044026",
+          "id": "44026",
           "num": 26,
           "name": "Space Groove Taric (Rainbow)",
           "chromas": false,
           "parentSkin": 18
         },
         {
-          "id": "60044301",
-          "num": 301,
-          "name": "Classic Taric",
-          "chromas": false
+          "id": "44027",
+          "num": 27,
+          "name": "Fatebreaker Taric",
+          "chromas": true
         },
         {
-          "id": "60044302",
-          "num": 302,
-          "name": "Classic Taric (Fifth Age)",
+          "id": "44028",
+          "num": 28,
+          "name": "Fatebreaker Taric (Ruby)",
           "chromas": false,
-          "parentSkin": 301
+          "parentSkin": 27
+        },
+        {
+          "id": "44029",
+          "num": 29,
+          "name": "Fatebreaker Taric (Citrine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44030",
+          "num": 30,
+          "name": "Fatebreaker Taric (Sapphire)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44031",
+          "num": 31,
+          "name": "Fatebreaker Taric (Emerald)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44032",
+          "num": 32,
+          "name": "Fatebreaker Taric (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44033",
+          "num": 33,
+          "name": "Fatebreaker Taric (Amethyst)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44034",
+          "num": 34,
+          "name": "Fatebreaker Taric (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "44035",
+          "num": 35,
+          "name": "Fatebreaker Taric (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
         }
       ],
-      "lore": "- The Abilities are completely different. Read the descriptions<br>- Can solo lane and maybe jungle",
-      "blurb": "- The Abilities are completely different. Read the descriptions<br>- Can solo lane and maybe jungle",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Taric is the Aspect of the Protector, wielding incredible power as Runeterra's guardian of life, love, and beauty. Shamed by a dereliction of duty and exiled from his homeland Demacia, Taric ascended Mount Targon to find redemption, only to discover a higher calling among the stars. Imbued with the might of ancient Targon, the Shield of Valoran now stands ever vigilant against the insidious corruption of the Void.",
+      "blurb": "Taric is the Aspect of the Protector, wielding incredible power as Runeterra's guardian of life, love, and beauty. Shamed by a dereliction of duty and exiled from his homeland Demacia, Taric ascended Mount Targon to find redemption, only to discover a...",
+      "allytips": [
+        "The cooldown reducing component of Bravado makes Cooldown Reduction items like Frozen Heart, Iceborn Gauntlet, and Spirit Visage exceptionally powerful on Taric.",
+        "Using Starlight's Touch at lower charges makes its healing less Mana efficient, but can greatly increase Taric's sustained damage via Bravado.",
+        "Rather than saving Cosmic Radiance for the last moment and risking someone dying during the delay, it can be more beneficial to cast it as soon as you know a teamfight is guaranteed to start."
+      ],
+      "enemytips": [
+        "Taric's ultimate, Cosmic Radiance, has a long delay before its effect. Try to quickly assess whether to disengage the fight or attempt to kill his allies before it goes off.",
+        "Taric reduces his spell cooldowns by basic attacking enemies with Bravado. Try to kite him in teamfights and punish him for approaching the minion wave in lane."
+      ],
       "tags": [
         "Support",
         "Tank"
@@ -224,62 +283,60 @@
         "difficulty": 3
       },
       "stats": {
-        "hp": 558,
-        "hpperlevel": 90,
-        "mp": 311,
-        "mpperlevel": 56,
+        "hp": 645,
+        "hpperlevel": 99,
+        "mp": 300,
+        "mpperlevel": 60,
         "movespeed": 340,
-        "armor": 23.7,
-        "armorperlevel": 3.2,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
-        "attackrange": 125,
-        "hpregen": 7.6,
+        "armor": 40,
+        "armorperlevel": 4.3,
+        "spellblock": 28,
+        "spellblockperlevel": 2.05,
+        "attackrange": 150,
+        "hpregen": 6,
         "hpregenperlevel": 0.5,
-        "mpregen": 4.5,
-        "mpregenperlevel": 0.4,
+        "mpregen": 8.5,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 55.5,
+        "attackdamage": 55,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 2.02,
+        "attackspeedperlevel": 2,
         "attackspeed": 0.625
       },
       "spells": [
         {
-          "id": "Jade_TaricQ",
-          "name": "Imbue",
-          "description": "Taric brings forth earthen energy to heal an ally and himself. This heal is more potent when Taric heals only himself. Additionally,Taric's basic attacks reduce Imbue's cooldown.",
-          "tooltip": "Taric brings forth earthen energy, restoring <healing>{{ healamount }} health</healing> to an ally and himself. If he targets himself, the heal increases by 40% restoring <healing>{{ healamountselftt }} health</healing>.<br /><br />Taric's basic attacks reduce <spellName>Imbue's</spellName> cooldown by 1 second (3 seconds if attacking an enemy champion).</mainText>{{ spellmodifierdescriptionappend }}",
+          "id": "TaricQ",
+          "name": "Starlight's Touch",
+          "description": "Heals nearby allied champions based on charges stored. Bravado-empowered attacks grant a charge of Starlight's Touch.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Gain a stack (max {{ maxcharges }}) every {{ stackcooldown }} seconds and when hitting a <spellName>Bravado</spellName> Attack.<br /><br /><spellActive>Active:</spellActive> Consume all stacks to restore <healing>{{ healingperstack }} Health</healing> per stack to nearby ally champions (<healing>{{ maxstackhealing }}</healing> at {{ maxcharges }} stacks).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Heal",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
+              "Max Charges",
+              "Max Healing"
             ],
             "effect": [
-              "{{ baseheal }} -> {{ basehealNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ basecost }} -> {{ basecostNL }}"
+              "{{ maxcharges }} -> {{ maxchargesNL }}",
+              "{{ basehealmax }} -> {{ basehealmaxNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            20,
-            19,
-            18,
-            17,
-            16
+            3,
+            3,
+            3,
+            3,
+            3
           ],
-          "cooldownBurn": "20/19/18/17/16",
+          "cooldownBurn": "3",
           "cost": [
-            80,
-            95,
-            110,
-            125,
-            140
+            60,
+            60,
+            60,
+            60,
+            60
           ],
-          "costBurn": "80/95/110/125/140",
+          "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
@@ -368,61 +425,59 @@
             "0"
           ],
           "vars": [],
-          "costType": " {{ abilityresourcename }}",
+          "costType": " Mana, all Charges",
           "maxammo": "-1",
           "range": [
-            750,
-            750,
-            750,
-            750,
-            750
+            325,
+            325,
+            325,
+            325,
+            325
           ],
-          "rangeBurn": "750",
+          "rangeBurn": "325",
           "image": {
-            "full": "Jade_TaricQ.png",
-            "sprite": "spell10.png",
+            "full": "TaricQ.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 288,
-            "y": 96,
+            "x": 384,
+            "y": 48,
             "w": 48,
             "h": 48
           },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
+          "resource": "{{ cost }} Mana, all Charges"
         },
         {
-          "id": "Jade_TaricW",
-          "name": "Shatter",
-          "description": "Taric is protected by a hardening aura, increasing the Armor of himself and nearby allied champions. He may choose to splinter the enchanted rocks surrounding him to deal damage and decrease the Armor of nearby enemies at the cost of some Armor for a short time.",
-          "tooltip": "<spellPassive>Passive: </spellPassive>Taric's gemstones increase his <scaleArmor>Armor by {{ armorbonus }}</scaleArmor>. Additionally, nearby allied champions gain <scaleArmor>{{ bonustoallies }} Armor</scaleArmor> ({{ armorbonuscoefficient*100 }}% of Taric's Armor).<br /><br /><spellActive>Active: </spellActive>Taric shatters his armor, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies and reducing their <scaleArmor>Armor by {{ armorshred*-1 }}</scaleArmor> for 4 seconds. Taric loses <scaleArmor>{{ armorbonus }} Armor</scaleArmor> while <spellName>Shatter</spellName> is on cooldown.{{ spellmodifierdescriptionappend }}",
+          "id": "TaricW",
+          "name": "Bastion",
+          "description": "Passively increase the Armor of Taric and any allied champion with Bastion.<br><br>Actively shields an ally and grants them Bastion for as long as they remain near Taric. Taric's spells also cast off the ally with Bastion.",
+          "tooltip": "<spellPassive>Passive: </spellPassive>Taric gains <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and forms a tether between him and the ally bound by this Ability. As long as they are near each other, the ally gains <scaleArmor>{{ bonusarmor }} Armor</scaleArmor> and Taric casts all his Abilities from both himself and his linked ally.<br /><br /><spellPassive>Active: </spellPassive>Taric binds to an ally champion, granting a <shield>{{ shieldhpratio }}% max Health Shield</shield> for {{ shieldduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
-              "Armor Bonus",
-              "Armor Reduction"
+              "Passive Armor",
+              "Shield Ratio"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ armorbonus }} -> {{ armorbonusNL }}",
-              "{{ armorshred*-1.000000 }} -> {{ armorshrednl*-1.000000 }}"
+              "{{ armorbonuspercentage*100.000000 }}% -> {{ armorbonuspercentagenl*100.000000 }}%",
+              "{{ shieldhpratio }}% -> {{ shieldhpratioNL }}%"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            10,
-            10,
-            10,
-            10,
-            10
+            15,
+            15,
+            15,
+            15,
+            15
           ],
-          "cooldownBurn": "10",
+          "cooldownBurn": "15",
           "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
+            60,
+            60,
+            60,
+            60,
+            60
           ],
-          "costBurn": "50",
+          "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
@@ -514,58 +569,56 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            400,
-            400,
-            400,
-            400,
-            400
+            800,
+            800,
+            800,
+            800,
+            800
           ],
-          "rangeBurn": "400",
+          "rangeBurn": "800",
           "image": {
-            "full": "Jade_TaricW.png",
-            "sprite": "spell10.png",
+            "full": "TaricW.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 336,
-            "y": 96,
+            "x": 432,
+            "y": 48,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_TaricE",
+          "id": "TaricE",
           "name": "Dazzle",
-          "description": "Taric emits a brilliant ball of prismatic light from his gemmed shield, stunning his target and damaging them based on how close he is to them.",
-          "tooltip": "Taric fires a prismatic sphere at a target enemy, dealing between <magicDamage>{{ totaldamage }}</magicDamage> and <magicDamage>{{ totalmaxdamagett }} magic damage</magicDamage> and <status>Stunning</status> for between {{ minstunlength }} and {{ maxstunlength }} seconds. Dazzle's damage increases the closer Taric is to the target, and the stun length increases the further from the target.</mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "Taric readies a beam of starlight that, after a brief delay, deals magic damage and stuns enemies.",
+          "tooltip": "Taric projects a beam of starlight, bursting after {{ chargeduration }} second to deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Stun</status> enemies for {{ stunduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Cooldown",
-              "Minimum Damage",
-              "Maximum Damage"
+              "Damage",
+              "Cooldown"
             ],
             "effect": [
-              "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ mindamage }} -> {{ mindamageNL }}",
-              "{{ maxdmagett }} -> {{ maxdmagettNL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
+            16,
+            15,
             14,
             13,
-            12,
-            11,
-            10
+            12
           ],
-          "cooldownBurn": "14/13/12/11/10",
+          "cooldownBurn": "16/15/14/13/12",
           "cost": [
-            75,
-            75,
-            75,
-            75,
-            75
+            40,
+            40,
+            40,
+            40,
+            40
           ],
-          "costBurn": "75",
+          "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
@@ -657,18 +710,18 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            650,
-            650,
-            650,
-            650,
-            650
+            610,
+            610,
+            610,
+            610,
+            610
           ],
-          "rangeBurn": "650",
+          "rangeBurn": "610",
           "image": {
-            "full": "Jade_TaricE.png",
-            "sprite": "spell10.png",
+            "full": "TaricE.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 384,
+            "x": 0,
             "y": 96,
             "w": 48,
             "h": 48
@@ -676,29 +729,25 @@
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_TaricR",
-          "name": "Radiance",
-          "description": "Taric slams his hammer into the ground to deal damage to nearby enemies. For a time after, Taric's gems radiate energy empowering Taric and his allies with bonus Attack Damage and Ability Power",
-          "tooltip": "Taric slams his hammer into the ground, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies.<br /><br />For the next 10 seconds, Taric's gems radiate energy, granting him <physicalDamage>{{ damageincrease }} Attack Damage</physicalDamage> and <magicDamage>Ability Power</magicDamage>. His nearby allies gain <physicalDamage>{{ allybonus }} Attack Damage</physicalDamage> and <magicDamage>Ability Power</magicDamage>.</mainText>{{ spellmodifierdescriptionappend }}",
+          "id": "TaricR",
+          "name": "Cosmic Radiance",
+          "description": "Pulses cosmic energy onto nearby allied champions after a delay, making them invulnerable for a short duration.",
+          "tooltip": "Taric calls down protection from the heavens. After {{ initialdelay }} seconds, nearby ally champions become invulnerable for {{ invulnduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
-              "Attack Damage",
-              "Ability Power"
+              "Cooldown"
             ],
             "effect": [
-              "{{ damage }} -> {{ damageNL }}",
-              "{{ damageincrease }} -> {{ damageincreaseNL }}",
-              "{{ damageincrease }} -> {{ damageincreaseNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            60,
-            60,
-            60
+            180,
+            150,
+            120
           ],
-          "cooldownBurn": "60",
+          "cooldownBurn": "180/150/120",
           "cost": [
             100,
             100,
@@ -782,10 +831,10 @@
           ],
           "rangeBurn": "400",
           "image": {
-            "full": "Jade_TaricR.png",
-            "sprite": "spell10.png",
+            "full": "TaricR.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 432,
+            "x": 48,
             "y": 96,
             "w": 48,
             "h": 48
@@ -794,14 +843,14 @@
         }
       ],
       "passive": {
-        "name": "Gemcraft",
-        "description": "Taric loves to socket magical gems into all of his weapons, resulting in his basic attacks dealing bonus magic damage based on his maximum Mana.",
+        "name": "Bravado",
+        "description": "Spellcasts empower Taric's next 2 basic attacks to deal bonus magic damage, reduce his spell cooldowns, and attack in quick succession.",
         "image": {
-          "full": "Jade_Taric_Passive.png",
-          "sprite": "passive3.png",
+          "full": "Taric_Passive.png",
+          "sprite": "passive4.png",
           "group": "passive",
-          "x": 384,
-          "y": 0,
+          "x": 288,
+          "y": 48,
           "w": 48,
           "h": 48
         }

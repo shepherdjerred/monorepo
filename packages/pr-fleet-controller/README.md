@@ -50,6 +50,12 @@ tool calls, command output, evidence, state changes, and the model's reasoning
 spans. Its only control is answering an active operator question inside that
 PR's detail view. It cannot pause, prioritize, steer, merge, or publish.
 
+The header projects causal run progress from the recorded event stream:
+completed setups, confirmed publications, lease contention, and repeated blocker
+classes. Each PR shows its latest meaningful transition plus its current
+normalized blocker and repeat count. This stays in the local run bundle rather
+than adding an external collector, so live and historical dashboards agree.
+
 - `--no-ui` does not spawn the dashboard.
 - `--ui-port <port>` binds a fixed port (default: an ephemeral loopback port).
 - `--no-open` starts the dashboard without opening a browser.
@@ -116,38 +122,47 @@ Each worker receives:
   repairing a formatting-hook failure without exposing a general command;
 - serial worktree setup;
 - setup, heavy-command, and stack-write lease requests;
-- an allowlisted validation command surface;
+- unrestricted shell access in the assigned worktree with a sanitized operator
+  environment;
 - git-spice restack start/continue/publication for stacks, and bounded native
   rebase start/continue plus force-with-lease publication for ordinary branches;
 - explicit-path staging, hooks, commit, git-spice publication, and one
   SHA-marked hosted review request.
 
-Validation commands run through `sandbox-exec` with network denied, writes
-restricted to the assigned worktree and macOS temporary directories, reads of
-well-known host credential stores (`~/.aws`, `~/.ssh`, `~/.config/gh`, …)
-denied, and a credential-scrubbed environment so tool output cannot exfiltrate
-host secrets. Only read-only script and task forms are accepted. Publication,
+Workers set up a newly assigned or changed-head worktree before validation
+commands. Lease denials and setup requirements have bounded reasons instead of
+only raw tool errors. A controller commit or restack may move an operator
+worktree's local HEAD only when that exact SHA is recorded against the current
+remote PR head; any other transition remains operator-owned and requires fresh
+inspection. Commit subjects are checked against the same package/root scope
+rules as the commit-msg hook before paths are staged.
+
+Shell commands run through the operator's configured shell with network,
+filesystem, and installed tools available. Environment variables whose names
+identify credentials or other secrets are removed, command output is bounded,
+and command output is redacted from telemetry before it reaches the run bundle.
+Publication,
 worktree creation, current-head verification, review-request deduplication, and
 timers remain deterministic controller operations.
 
-Worktree setup never runs `mise trust`: the controller does not persist trust
-for configuration supplied by a pull request. Setup enables Mise paranoid mode
-and grants invocation-scoped trust to only the assigned worktree's exact
-`.mise.toml` while it runs inside the credential-scrubbed setup sandbox. Mise
-cache, state, and shim directories are invocation-scoped as well, including
-`XDG_CACHE_HOME`, so generators cannot write to the operator's home cache.
+Worktree setup marks only the assigned worktree's `.mise.toml` as trusted for
+the setup command processes via `MISE_TRUSTED_CONFIG_PATHS`; trust is not
+persisted in the operator's Mise data. It then installs the pinned toolchain,
+dependencies, and generated artifacts using the same sanitized worker
+environment.
 Command timeouts, cancellation, and shutdown terminate the command's complete
 POSIX
 process group so descendant processes cannot outlive the worker that spawned
 them.
 
-Each stack gets one worktree. A fleet-owned worktree is always preferred, but
-when a branch is already checked out in an operator's own worktree — git forbids
-the same branch in two worktrees, so the fleet cannot provision its own — the
-fleet reuses that exact-branch worktree in place. Matching-branch worktrees are
-never reset: staged and unstaged edits plus local commits are inventoried for the
-worker. It proceeds only when the inherited work is explainable by the PR and
-can be isolated safely; ambiguity moves only that PR to `waiting-for-answer`.
+Each stack gets one worktree in a controller-owned clone. By default, that clone
+is under the private state directory at `checkouts/repo-<owner--name>`, with
+worktrees alongside it at `worktrees/repo-<owner--name>`. The checkout from
+which the CLI was launched supplies only its `origin` URL and local git-spice
+metadata; it is never assigned to a worker. Existing managed clones must be
+clean, and the controller refuses to reset or reuse a dirty one. `--checkout`
+is an explicit override for another controller-owned clone, never an operator
+checkout.
 Unrelated unstaged files remain untouched, and publication still names explicit
 paths or a captured local commit head.
 
@@ -161,7 +176,8 @@ Collection is mandatory and local-only. Each run writes:
   state and content fingerprint (independent of the managed checkout), model,
   repository, optional author scope, and capture contract;
 - `events.jsonl` with sequenced, hash-chained controller, worker, command,
-  evidence, model-turn, and shutdown events;
+  evidence, model-turn, shutdown, lease, setup, publication, and worktree-head
+  transition events;
 - `summary.json` with final status, duration, event counts, last hash, and final
   fleet snapshot;
 - `spans.jsonl` with completed, secret-redacted OpenTelemetry spans, including

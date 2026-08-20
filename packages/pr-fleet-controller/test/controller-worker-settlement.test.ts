@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { ControllerTelemetry } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
 import { settleWorkerFailure } from "@shepherdjerred/pr-fleet-controller/src/controller-worker-settlement.ts";
+import { WorktreeHeadChangedError } from "@shepherdjerred/pr-fleet-controller/src/inherited-wip.ts";
 import type {
   FleetObserver,
   FleetTelemetry,
@@ -182,5 +183,59 @@ test("a persisted question survives worker failure while other PRs continue", ()
   expect(fleetTelemetry.kinds).toContain("worker.cancelled");
   expect(observer.changes).toContain(
     "worker for PR #73 stopped after requesting operator input",
+  );
+});
+
+test("a changed worktree HEAD refreshes instead of pausing the PR", () => {
+  const pr = identity(74);
+  const state = PrStateSchema.parse({
+    identity: pr,
+    logicalOwner: "pr-74",
+    runtimeAgent: "pr-74-g1",
+    agentGeneration: 1,
+    model: "openai/gpt-5.6-terra",
+    status: "diagnosing",
+    classification: "actionable-red",
+    stackId: "pr-74",
+    worktree: "/tmp/worktrees/pr-74",
+    setupComplete: true,
+    evidence: evidence(pr),
+    lastAgentReportAt: null,
+    lastProgressAt: "2026-08-08T20:00:00.000Z",
+    noProgressTicks: 0,
+    prodSentAt: null,
+    escalation: null,
+    priority: 0,
+  });
+  const store = new FleetStore(1);
+  store.prs.set(pr.number, state);
+  store.activeWorkers.set(
+    pr.number,
+    Promise.withResolvers<WorkerResult>().promise,
+  );
+  store.workerControllers.set(pr.number, new AbortController());
+  store.requestLease(state, "heavy");
+  const observer = new TestObserver();
+
+  expect(
+    settleWorkerFailure({
+      store,
+      telemetry: new ControllerTelemetry(new TestTelemetry()),
+      observer,
+      dispatched: state,
+      prNumber: pr.number,
+      error: new WorktreeHeadChangedError(),
+      tickId: "tick-1",
+      pause: () => {
+        throw new Error("changed worktrees must be refreshed, not paused");
+      },
+    }),
+  ).toBe(true);
+
+  expect(store.prs.get(pr.number)?.classification).toBe("pending");
+  expect(store.prs.get(pr.number)?.status).toBe("waiting-ci");
+  expect(store.activeWorkers.has(pr.number)).toBe(false);
+  expect(observer.changes).toContain(
+    "worker for PR #74 observed a changed worktree HEAD; refreshing before retry",
   );
 });

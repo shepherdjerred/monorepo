@@ -209,7 +209,182 @@ describe("fold", () => {
     expect(view.prs.get(1389)?.timeline).toHaveLength(1);
     expect(view.fleetTimeline).toHaveLength(1);
   });
+});
 
+describe("causal progress", () => {
+  test("projects causal setup, publication, and repeated blocker progress", () => {
+    const view = createRunView();
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 1,
+        timestamp: "2026-08-09T20:00:00.000Z",
+        kind: "setup.required",
+        correlation: { prNumber: 42, toolCallId: "tool-setup" },
+        payload: { reason: "current-head-unprepared" },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 2,
+        timestamp: "2026-08-09T20:00:01.000Z",
+        kind: "tool.failed",
+        correlation: { prNumber: 42, toolCallId: "tool-setup" },
+        payload: {
+          tool: "run_local_command",
+          error: "Worktree setup must complete",
+          failureClass: "setup-required",
+        },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 3,
+        timestamp: "2026-08-09T20:00:02.000Z",
+        kind: "setup.completed",
+        correlation: { prNumber: 42 },
+        payload: { headSha: "a".repeat(40), commandCount: 4 },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 4,
+        timestamp: "2026-08-09T20:00:03.000Z",
+        kind: "publication.stage",
+        correlation: { prNumber: 42 },
+        payload: {
+          intent: "fix",
+          stage: "remote-head",
+          state: "completed",
+        },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 5,
+        timestamp: "2026-08-09T20:00:04.000Z",
+        kind: "publication.stage",
+        correlation: { prNumber: 42 },
+        payload: { intent: "fix", stage: "review", state: "completed" },
+      }),
+    );
+
+    expect(view.progress.setupsCompleted).toBe(1);
+    expect(view.progress.publicationsConfirmed).toBe(1);
+    expect(view.progress.prs.get(42)?.latest?.label).toBe(
+      "fix review completed",
+    );
+    expect(view.progress.prs.get(42)?.blocker).toBeNull();
+    expect(view.progress.prs.get(42)?.failures.get("setup-required")).toBe(1);
+  });
+
+  test("counts a publication after remote-head confirmation even if review fails", () => {
+    const view = createRunView();
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 1,
+        timestamp: "2026-08-09T20:00:00.000Z",
+        kind: "publication.stage",
+        correlation: { prNumber: 42 },
+        payload: {
+          intent: "fix",
+          stage: "remote-head",
+          state: "completed",
+        },
+      }),
+    );
+
+    expect(view.progress.publicationsConfirmed).toBe(1);
+  });
+
+  test("deduplicates an unexpected HEAD transition and its tool failure", () => {
+    const view = createRunView();
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 1,
+        timestamp: "2026-08-09T20:00:00.000Z",
+        kind: "worktree.head.transition",
+        correlation: { prNumber: 42, toolCallId: "tool-head" },
+        payload: {
+          cause: "unexpected",
+          localHeadSha: "a".repeat(40),
+        },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 2,
+        timestamp: "2026-08-09T20:00:01.000Z",
+        kind: "tool.failed",
+        correlation: { prNumber: 42, toolCallId: "tool-head" },
+        payload: {
+          tool: "inspect_worktree_wip",
+          error: "Local HEAD changed",
+          failureClass: "worktree-head-changed",
+        },
+      }),
+    );
+
+    expect(
+      view.progress.prs.get(42)?.failures.get("worktree-head-changed"),
+    ).toBe(1);
+  });
+
+  test("clears a lease blocker when the same PR obtains the lease", () => {
+    const view = createRunView();
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 1,
+        timestamp: "2026-08-09T20:00:00.000Z",
+        kind: "lease.denied",
+        correlation: { prNumber: 42, toolCallId: "tool-lease" },
+        payload: { kind: "heavy", reason: "heavy-capacity" },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 2,
+        timestamp: "2026-08-09T20:00:01.000Z",
+        kind: "tool.failed",
+        correlation: { prNumber: 42, toolCallId: "tool-lease" },
+        payload: {
+          tool: "run_local_command",
+          error: "Heavy lease is not available",
+          failureClass: "lease-unavailable",
+        },
+      }),
+    );
+    applyEventLine(
+      view,
+      eventLine({
+        sequence: 3,
+        timestamp: "2026-08-09T20:00:02.000Z",
+        kind: "lease.granted",
+        correlation: { prNumber: 42, toolCallId: "tool-next" },
+        payload: { kind: "heavy" },
+      }),
+    );
+
+    expect(view.progress.prs.get(42)?.blocker).toBeNull();
+    expect(view.progress.prs.get(42)?.latest?.label).toBe(
+      "heavy lease granted",
+    );
+    expect(view.progress.prs.get(42)?.failures.get("lease-unavailable")).toBe(
+      1,
+    );
+  });
+});
+
+describe("fold", () => {
   test("folds waiting state and operator-question events into the affected PR", () => {
     const view = createRunView();
     applyEventLine(

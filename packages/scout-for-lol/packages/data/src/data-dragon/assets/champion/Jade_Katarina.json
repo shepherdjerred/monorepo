@@ -1,189 +1,558 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Katarina": {
-      "id": "Jade_Katarina",
-      "key": "60055",
+      "id": "Katarina",
+      "key": "55",
       "name": "Katarina",
-      "title": "The Sinister Blade",
+      "title": "the Sinister Blade",
       "image": {
-        "full": "Jade_Katarina.png",
+        "full": "Katarina.png",
         "sprite": "champion2.png",
         "group": "champion",
-        "x": 96,
-        "y": 48,
+        "x": 0,
+        "y": 0,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60055000",
+          "id": "55000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60055001",
+          "id": "55001",
           "num": 1,
           "name": "Mercenary Katarina",
           "chromas": false
         },
         {
-          "id": "60055009",
+          "id": "55002",
+          "num": 2,
+          "name": "Red Card Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55003",
+          "num": 3,
+          "name": "Bilgewater Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55004",
+          "num": 4,
+          "name": "Kitty Cat Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55005",
+          "num": 5,
+          "name": "High Command Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55006",
+          "num": 6,
+          "name": "Sandstorm Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55007",
+          "num": 7,
+          "name": "Slay Belle Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55008",
+          "num": 8,
+          "name": "Warring Kingdoms Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55009",
           "num": 9,
           "name": "PROJECT: Katarina",
           "chromas": false
         },
         {
-          "id": "60055029",
-          "num": 29,
-          "name": "Battle Queen Katarina",
+          "id": "55010",
+          "num": 10,
+          "name": "Death Sworn Katarina",
           "chromas": false
         },
         {
-          "id": "60055030",
+          "id": "55011",
+          "num": 11,
+          "name": "Warring Kingdoms Katarina (Golden)",
+          "chromas": false,
+          "parentSkin": 8
+        },
+        {
+          "id": "55012",
+          "num": 12,
+          "name": "Battle Academia Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55013",
+          "num": 13,
+          "name": "Battle Academia Katarina (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55014",
+          "num": 14,
+          "name": "Battle Academia Katarina (Formal)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55015",
+          "num": 15,
+          "name": "Battle Academia Katarina (Sapphire)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55016",
+          "num": 16,
+          "name": "Battle Academia Katarina (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55017",
+          "num": 17,
+          "name": "Battle Academia Katarina (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55018",
+          "num": 18,
+          "name": "Battle Academia Katarina (Citrine)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55019",
+          "num": 19,
+          "name": "Battle Academia Katarina (Pearl)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55020",
+          "num": 20,
+          "name": "Battle Academia Katarina (Turquoise)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "55021",
+          "num": 21,
+          "name": "Blood Moon Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55022",
+          "num": 22,
+          "name": "Blood Moon Katarina (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55023",
+          "num": 23,
+          "name": "Blood Moon Katarina (Sapphire)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55024",
+          "num": 24,
+          "name": "Blood Moon Katarina (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55025",
+          "num": 25,
+          "name": "Blood Moon Katarina (Emerald)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55026",
+          "num": 26,
+          "name": "Blood Moon Katarina (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55027",
+          "num": 27,
+          "name": "Blood Moon Katarina (Citrine)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55028",
+          "num": 28,
+          "name": "Blood Moon Katarina (Pearl)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "55029",
+          "num": 29,
+          "name": "Battle Queen Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55030",
           "num": 30,
           "name": "Battle Queen Katarina (Ruby)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60055031",
+          "id": "55031",
           "num": 31,
           "name": "Battle Queen Katarina (Sapphire)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60055032",
+          "id": "55032",
           "num": 32,
           "name": "Battle Queen Katarina (Emerald)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60055033",
+          "id": "55033",
           "num": 33,
           "name": "Battle Queen Katarina (Tanzanite)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60055034",
+          "id": "55034",
           "num": 34,
           "name": "Battle Queen Katarina (Pearl)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60055035",
+          "id": "55035",
           "num": 35,
           "name": "Battle Queen Katarina (Obsidian)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60055036",
+          "id": "55036",
           "num": 36,
           "name": "Battle Queen Katarina (Coronation)",
           "chromas": false,
           "parentSkin": 29
         },
         {
-          "id": "60055047",
-          "num": 47,
-          "name": "Faerie Court Katarina",
-          "chromas": false
+          "id": "55037",
+          "num": 37,
+          "name": "High Noon Katarina",
+          "chromas": true
         },
         {
-          "id": "60055048",
+          "id": "55038",
+          "num": 38,
+          "name": "High Noon Katarina (Ruby)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55039",
+          "num": 39,
+          "name": "High Noon Katarina (Catseye)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55040",
+          "num": 40,
+          "name": "High Noon Katarina (Emerald)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55041",
+          "num": 41,
+          "name": "High Noon Katarina (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55042",
+          "num": 42,
+          "name": "High Noon Katarina (Sapphire)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55043",
+          "num": 43,
+          "name": "High Noon Katarina (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55044",
+          "num": 44,
+          "name": "High Noon Katarina (Pearl)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55045",
+          "num": 45,
+          "name": "High Noon Katarina (Obsidian)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55046",
+          "num": 46,
+          "name": "High Noon Katarina (Nomad)",
+          "chromas": false,
+          "parentSkin": 37
+        },
+        {
+          "id": "55047",
+          "num": 47,
+          "name": "Faerie Court Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55048",
           "num": 48,
           "name": "Prestige Faerie Court Katarina",
           "chromas": false
         },
         {
-          "id": "60055049",
+          "id": "55049",
           "num": 49,
           "name": "Faerie Court Katarina (Ruby)",
           "chromas": false,
           "parentSkin": 47
         },
         {
-          "id": "60055050",
+          "id": "55050",
           "num": 50,
           "name": "Faerie Court Katarina (Citrine)",
           "chromas": false,
           "parentSkin": 47
         },
         {
-          "id": "60055051",
+          "id": "55051",
           "num": 51,
           "name": "Faerie Court Katarina (Aquamarine)",
           "chromas": false,
           "parentSkin": 47
         },
         {
-          "id": "60055052",
+          "id": "55052",
           "num": 52,
           "name": "Faerie Court Katarina (Emerald)",
           "chromas": false,
           "parentSkin": 47
         },
         {
-          "id": "60055053",
+          "id": "55053",
           "num": 53,
           "name": "Faerie Court Katarina (Turquoise)",
           "chromas": false,
           "parentSkin": 47
         },
         {
-          "id": "60055054",
+          "id": "55054",
           "num": 54,
           "name": "Faerie Court Katarina (Obsidian)",
           "chromas": false,
           "parentSkin": 47
         },
         {
-          "id": "60055055",
+          "id": "55055",
           "num": 55,
           "name": "Faerie Court Katarina (Rose Quartz)",
           "chromas": false,
           "parentSkin": 47
         },
         {
-          "id": "60055056",
+          "id": "55056",
           "num": 56,
           "name": "Faerie Court Katarina (Tanzanite)",
           "chromas": false,
           "parentSkin": 47
         },
         {
-          "id": "60055057",
+          "id": "55057",
           "num": 57,
           "name": "Faerie Court Katarina (Winsome)",
           "chromas": false,
           "parentSkin": 47
         },
         {
-          "id": "60055301",
-          "num": 301,
-          "name": "Classic Katarina",
+          "id": "55059",
+          "num": 59,
+          "name": "Chosen of the Wolf Katarina",
           "chromas": false
         },
         {
-          "id": "60055302",
-          "num": 302,
-          "name": "Classic Katarina (Mercenary)",
+          "id": "55060",
+          "num": 60,
+          "name": "Prestige Masque of the Black Rose Katarina",
+          "chromas": true
+        },
+        {
+          "id": "55061",
+          "num": 61,
+          "name": "Chosen of the Wolf Katarina (Ruby)",
+          "chromas": true,
+          "parentSkin": 59
+        },
+        {
+          "id": "55062",
+          "num": 62,
+          "name": "Chosen of the Wolf Katarina (Emerald)",
           "chromas": false,
-          "parentSkin": 301
+          "parentSkin": 59
+        },
+        {
+          "id": "55063",
+          "num": 63,
+          "name": "Chosen of the Wolf Katarina (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55064",
+          "num": 64,
+          "name": "Chosen of the Wolf Katarina (Sapphire)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55065",
+          "num": 65,
+          "name": "Chosen of the Wolf Katarina (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55066",
+          "num": 66,
+          "name": "Chosen of the Wolf Katarina (Turquoise)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55067",
+          "num": 67,
+          "name": "Chosen of the Wolf Katarina (Obsidian)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55068",
+          "num": 68,
+          "name": "Chosen of the Wolf Katarina (Pearl)",
+          "chromas": false,
+          "parentSkin": 59
+        },
+        {
+          "id": "55069",
+          "num": 69,
+          "name": "Prestige Masque of the Black Rose Katarina (Enigma)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "55070",
+          "num": 70,
+          "name": "Petals of Spring Katarina",
+          "chromas": false
+        },
+        {
+          "id": "55071",
+          "num": 71,
+          "name": "Petals of Spring Katarina (Ruby)",
+          "chromas": true,
+          "parentSkin": 70
+        },
+        {
+          "id": "55072",
+          "num": 72,
+          "name": "Petals of Spring Katarina (Catseye)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "55073",
+          "num": 73,
+          "name": "Petals of Spring Katarina (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "55074",
+          "num": 74,
+          "name": "Petals of Spring Katarina (Sapphire)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "55075",
+          "num": 75,
+          "name": "Petals of Spring Katarina (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "55076",
+          "num": 76,
+          "name": "Petals of Spring Katarina (Pearl)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "55077",
+          "num": 77,
+          "name": "Petals of Spring Katarina (Peridot)",
+          "chromas": false,
+          "parentSkin": 70
+        },
+        {
+          "id": "55078",
+          "num": 78,
+          "name": "Petals of Spring Katarina (Emerald)",
+          "chromas": false,
+          "parentSkin": 70
         }
       ],
-      "lore": "- Bouncing Blades (Q) deals damage and marks enemies, Katarina can consume the mark with spells or attacks to deal extra magic damage.<br>- Sinister Steel (W) does damage around Katarina and increases her movement speed if the ability hits a champion.<br>- Shunpo (E) deals damage and blinks to target; afterwards the ability provides damage reduction to Katarina.",
-      "blurb": "- Bouncing Blades (Q) deals damage and marks enemies, Katarina can consume the mark with spells or attacks to deal extra magic damage.<br>- Sinister Steel (W) does damage around Katarina and increases her movement speed if the ability hits a champion...",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Decisive in judgment and lethal in combat, Katarina is a Noxian assassin of the highest caliber. Eldest daughter to the legendary General Du Couteau, she made her talents known with swift kills against unsuspecting enemies. Her fiery ambition has driven her to pursue heavily-guarded targets, even at the risk of endangering her allies—but no matter the mission, Katarina will not hesitate to execute her duty amid a whirlwind of serrated daggers.",
+      "blurb": "Decisive in judgment and lethal in combat, Katarina is a Noxian assassin of the highest caliber. Eldest daughter to the legendary General Du Couteau, she made her talents known with swift kills against unsuspecting enemies. Her fiery ambition has driven...",
+      "allytips": [
+        "Picking up Daggers will significantly reduce Shunpo's cooldown.",
+        "Try waiting until the other team is distracted with fighting your team, and use Shunpo to teleport into the fray and unleash a devastating Death Lotus.",
+        "Using Shunpo on an allied Champion, Dagger, or minion can be a great escape tactic."
+      ],
+      "enemytips": [
+        "Katarina's abilities deal magic damage, so even if she's building Attack Damage items, get magic resistance to counter her.",
+        "Try to save a disable for when Katarina uses her Death Lotus."
+      ],
       "tags": [
         "Assassin",
         "Mage"
@@ -196,54 +565,52 @@
         "difficulty": 8
       },
       "stats": {
-        "hp": 505,
-        "hpperlevel": 80,
+        "hp": 672,
+        "hpperlevel": 108,
         "mp": 0,
         "mpperlevel": 0,
-        "movespeed": 345,
-        "armor": 24.5,
-        "armorperlevel": 3.5,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
+        "movespeed": 335,
+        "armor": 32,
+        "armorperlevel": 4.7,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
         "attackrange": 125,
         "hpregen": 7.5,
-        "hpregenperlevel": 0.55,
+        "hpregenperlevel": 0.7,
         "mpregen": 0,
         "mpregenperlevel": 0,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 56.2,
+        "attackdamage": 58,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.74,
         "attackspeed": 0.658
       },
       "spells": [
         {
-          "id": "Jade_KatarinaQ",
+          "id": "KatarinaQ",
           "name": "Bouncing Blade",
-          "description": "Katarina throws a dagger that bounces from enemy to enemy, dealing magic damage.",
-          "tooltip": "Throws a dagger dealing <magicDamage>{{ totaldamage }}</magicDamage> magic damage. The dagger bounces to the {{ maxbounces }} closest enemies dealing 10% less damage with each bounce.<br /><br />Enemies hit are marked for {{ markduration }} seconds. Katarina's basic attacks or spells will consume the mark dealing <magicDamage>{{ totaldamagemark }}</magicDamage> additional magic damage.{{ spellmodifierdescriptionappend }}",
+          "description": "Katarina throws a <font color='#FFF673'>Dagger</font> at the target that then bounces to nearby enemies before ricocheting onto the ground.",
+          "tooltip": "Katarina throws a <keywordMajor>Dagger</keywordMajor>, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the target and {{ maxbounces }} nearby enemies. The <keywordMajor>Dagger</keywordMajor> then ricochets onto the ground behind the primary target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Base Damage",
-              "Mark Damage",
               "Cooldown"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ procdamage }} -> {{ procdamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
+            11,
             10,
-            9.5,
             9,
-            8.5,
-            8
+            8,
+            7
           ],
-          "cooldownBurn": "10/9.5/9/8.5/8",
+          "cooldownBurn": "11/10/9/8/7",
           "cost": [
             0,
             0,
@@ -343,48 +710,48 @@
           "costType": "No Cost",
           "maxammo": "-1",
           "range": [
-            675,
-            675,
-            675,
-            675,
-            675
+            625,
+            625,
+            625,
+            625,
+            625
           ],
-          "rangeBurn": "675",
+          "rangeBurn": "625",
           "image": {
-            "full": "Jade_KatarinaQ.png",
-            "sprite": "spell8.png",
+            "full": "KatarinaQ.png",
+            "sprite": "spell6.png",
             "group": "spell",
-            "x": 96,
-            "y": 0,
+            "x": 192,
+            "y": 144,
             "w": 48,
             "h": 48
           },
           "resource": "No Cost"
         },
         {
-          "id": "Jade_KatarinaW",
-          "name": "Sinister Steel",
-          "description": "Katarina whirls her daggers around her, dealing magic damage to all enemies in the area. If she hits an enemy Champion, Katarina gains a burst of speed for a short duration.",
-          "tooltip": "Whirls daggers in a circle dealing {{ totaldamage }} magic damage. If she hits an enemy Champion, Katarina gains {{ haste*100 }}%  <speed>Movement Speed</speed> for {{ buffduration }} second.{{ spellmodifierdescriptionappend }}",
+          "id": "KatarinaW",
+          "name": "Preparation",
+          "description": "Katarina gains a burst of Move Speed, tossing a <font color='#FFF673'>Dagger</font> into the air directly above herself.",
+          "tooltip": "Katarina tosses a <keywordMajor>Dagger</keywordMajor> into the air and gains <speed>{{ movespeedamount }}% Move Speed</speed> decaying over {{ movespeedduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
-              "Move Speed"
+              "Move Speed",
+              "Cooldown"
             ],
             "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ haste*100.000000 }}% -> {{ hastenl*100.000000 }}%"
+              "{{ movespeedamount }}% -> {{ movespeedamountNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            4,
-            4,
-            4,
-            4,
-            4
+            15,
+            14,
+            13,
+            12,
+            11
           ],
-          "cooldownBurn": "4",
+          "cooldownBurn": "15/14/13/12/11",
           "cost": [
             0,
             0,
@@ -484,29 +851,29 @@
           "costType": "No Cost",
           "maxammo": "-1",
           "range": [
-            400,
-            400,
-            400,
-            400,
-            400
+            25000,
+            25000,
+            25000,
+            25000,
+            25000
           ],
-          "rangeBurn": "400",
+          "rangeBurn": "25000",
           "image": {
-            "full": "Jade_KatarinaW.png",
-            "sprite": "spell8.png",
+            "full": "KatarinaW.png",
+            "sprite": "spell6.png",
             "group": "spell",
-            "x": 144,
-            "y": 0,
+            "x": 240,
+            "y": 144,
             "w": 48,
             "h": 48
           },
           "resource": "No Cost"
         },
         {
-          "id": "Jade_KatarinaE",
+          "id": "KatarinaEWrapper",
           "name": "Shunpo",
-          "description": "Katarina instantly moves to her target's location and takes reduced damage from enemies for a few seconds. If the target is an enemy, she deals damage.",
-          "tooltip": "Moves to a target's location. Deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> if the target is an enemy.<br /><br />After using Shunpo, Katarina takes {{ damagereduction }}% reduced damage for {{ damagereductionduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Katarina blinks to the target, striking it if its an enemy, or striking the nearest enemy otherwise.",
+          "tooltip": "Katarina blinks in the wink of an eye to the target ally, enemy, or <keywordMajor>Dagger</keywordMajor>. If it is an enemy, Katarina strikes for <magicDamage>{{ totaldamage }} magic damage</magicDamage> - otherwise she strikes the nearest enemy in range.<br /><br />Picking up a <keywordMajor>Dagger</keywordMajor> will reduce this Ability's Cooldown by <scaleLevel>{{ daggercooldownreduction }}</scaleLevel> seconds (<scaleLevel>{{ tooltipdaggerreduction }}</scaleLevel>). Katarina can blink to any location near the target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -520,12 +887,12 @@
           "maxrank": 5,
           "cooldown": [
             12,
-            10.5,
+            11,
+            10,
             9,
-            7.5,
-            6
+            8
           ],
-          "cooldownBurn": "12/10.5/9/7.5/6",
+          "cooldownBurn": "12/11/10/9/8",
           "cost": [
             0,
             0,
@@ -633,38 +1000,40 @@
           ],
           "rangeBurn": "725",
           "image": {
-            "full": "Jade_KatarinaE.png",
-            "sprite": "spell8.png",
+            "full": "KatarinaEWrapper.png",
+            "sprite": "spell6.png",
             "group": "spell",
-            "x": 192,
-            "y": 0,
+            "x": 288,
+            "y": 144,
             "w": 48,
             "h": 48
           },
           "resource": "No Cost"
         },
         {
-          "id": "Jade_KatarinaR",
+          "id": "KatarinaR",
           "name": "Death Lotus",
-          "description": "Katarina becomes a flurry of blades, throwing daggers with unrivaled speed at up to three nearby Champions.",
-          "tooltip": "Becomes a flurry of blades, throwing daggers at the closest 3 enemy Champions dealing <magicDamage>{{ damagecalctooltiponly }} magic damage</magicDamage> over 2.5 seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Katarina becomes a flurry of blades, dealing massive magic damage while she channels to the 3 nearest enemy champions.",
+          "tooltip": "Katarina becomes a flurry of blades, rapidly attacking the three nearest enemy champions with a flurry of knives. Each knife deals <magicDamage>{{ damagecalc }} magic damage</magicDamage> and <physicalDamage>{{ addamagecalc }} physical damage</physicalDamage>, and applies {{ grievousamount*100 }}% Grievous Wounds for {{ grievousduration }} seconds.<br /><br />Total over {{ duration }} seconds to each enemy: <magicDamage>{{ totaldamagecalc }} magic damage</magicDamage> and <physicalDamage>{{ totaladdamagecalc }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
-              "Damage",
-              "Cooldown"
+              "Damage Per Knife",
+              "Cooldown",
+              "On Hit Damage Modifier"
             ],
             "effect": [
-              "{{ ttdamage }} -> {{ ttdamageNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ damagepertick }} -> {{ damagepertickNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ onhitratio*100.000000 }}% -> {{ onhitrationl*100.000000 }}%"
             ]
           },
           "maxrank": 3,
           "cooldown": [
+            75,
             60,
-            52.5,
             45
           ],
-          "cooldownBurn": "60/52.5/45",
+          "cooldownBurn": "75/60/45",
           "cost": [
             0,
             0,
@@ -748,11 +1117,11 @@
           ],
           "rangeBurn": "550",
           "image": {
-            "full": "Jade_KatarinaR.png",
-            "sprite": "spell8.png",
+            "full": "KatarinaR.png",
+            "sprite": "spell6.png",
             "group": "spell",
-            "x": 240,
-            "y": 0,
+            "x": 336,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -761,13 +1130,13 @@
       ],
       "passive": {
         "name": "Voracity",
-        "description": "Champion kills or assists reduce Katarina's cooldowns by 15 seconds.",
+        "description": "Whenever an enemy champion dies that Katarina has damaged recently, her remaining ability cooldowns are dramatically reduced.<br><br>If Katarina picks up a <font color='#FFF673'>Dagger</font>, she uses it to slash through all nearby enemies, dealing magic damage.",
         "image": {
-          "full": "Jade_Katarina_Passive.png",
+          "full": "Katarina_Passive.png",
           "sprite": "passive2.png",
           "group": "passive",
-          "x": 96,
-          "y": 48,
+          "x": 0,
+          "y": 0,
           "w": 48,
           "h": 48
         }

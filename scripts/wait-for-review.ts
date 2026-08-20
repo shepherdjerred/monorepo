@@ -3,8 +3,8 @@
  * finished reviewing the PR head commit AND every provider review comment that
  * still applies to the latest revision has been resolved.
  *
- * The gate logic is provider-neutral, but the required CI boundary is pinned
- * to Qodo. All provider-specific knowledge — how completion is detected, how
+ * The gate logic is provider-neutral, but the required CI boundary runs once
+ * for Qodo and once for Codex. All provider-specific knowledge — how completion is detected, how
  * severity badges are parsed, and how a deliberate skip is signalled — lives
  * in `@shepherdjerred/code-review`. This script only drives the poll loop and
  * emits structured `review-signal` observability events.
@@ -22,7 +22,7 @@ import {
   isBlocking,
   isProviderAuthor,
   REVIEW_SIGNAL_SCHEMA,
-  REQUIRED_REVIEW_PROVIDER_ID,
+  resolveProvider,
   reviewGateSkipReasonForAuthor,
   resolveRequiredReviewProvider,
   tallyFindings,
@@ -75,16 +75,20 @@ export function resolveReviewGateProvider(
   configuredProvider: string | undefined,
 ): ReviewProvider {
   const normalized = configuredProvider?.trim().toLowerCase();
+  const ciProviders = new Set(["qodo", "codex"]);
   if (
     normalized !== undefined &&
     normalized !== "" &&
-    normalized !== REQUIRED_REVIEW_PROVIDER_ID
+    !ciProviders.has(normalized)
   ) {
     throw new Error(
-      `CI review gate requires Qodo; REVIEW_PROVIDER was ${String(configuredProvider)}.`,
+      `CI review gate requires Qodo or Codex; REVIEW_PROVIDER was ${String(configuredProvider)}.`,
     );
   }
-  return resolveRequiredReviewProvider();
+  if (normalized === undefined || normalized === "") {
+    return resolveRequiredReviewProvider();
+  }
+  return resolveProvider(normalized);
 }
 
 function parsePositiveIntegerEnv(name: string, fallback: number): number {
@@ -97,16 +101,17 @@ function parsePositiveIntegerEnv(name: string, fallback: number): number {
   return parsed;
 }
 
-function parseMaxBlockingPriority(): number {
-  const raw = Bun.env["REVIEW_MAX_BLOCKING_PRIORITY"];
-  if (raw === undefined || raw.trim() === "") return 3;
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isInteger(parsed) || parsed < 0 || parsed > 3) {
+export function parseMaxBlockingPriority(
+  raw = Bun.env["REVIEW_MAX_BLOCKING_PRIORITY"],
+): number {
+  const value = raw?.trim();
+  if (value === undefined || value === "") return 3;
+  if (!/^[0-3]$/.test(value)) {
     throw new Error(
-      `REVIEW_MAX_BLOCKING_PRIORITY must be an integer in [0,3], got ${raw}`,
+      `REVIEW_MAX_BLOCKING_PRIORITY must be an integer in [0,3], got ${raw ?? ""}`,
     );
   }
-  return parsed;
+  return Number.parseInt(value, 10);
 }
 
 function repoFromEnvironment(): string {

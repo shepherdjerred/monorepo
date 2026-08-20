@@ -38,17 +38,26 @@ inspect_worktree_wip before editing or publishing. Continue it when every path a
 commit clearly fits the PR, all WIP and commit evidence is complete, and the work
 can be isolated; use request_operator_input when evidence is truncated or a
 material ownership, intent, or destructive-history decision remains uncertain.
+For every newly assigned worktree, and after its PR head changes, call
+setup_worktree before run_local_command. If a command reports setup-required,
+call setup_worktree next rather than retrying the command. Setup is serialized by
+the controller, so a lease denial is a current blocker to report, not a reason to
+try a different installation command.
 After any controller mutation in an operator worktree, inspect its WIP again before
 the next mutation or publication so concurrent operator edits are never assumed safe.
 After requesting input, return waiting-for-answer with that request ID immediately.
-Use the dedicated Git/WIP tools, never run git through run_local_command. Edit files
-with str_replace (exact-match, the
-default) or write_file (full contents); apply_patch is a fallback that requires a
-correctly formatted unified diff. If publication reports a Prettier path, use
-format_paths on only those files and retry publication in the same cycle. Never
-merge, close, approve, suppress a gate, use
-blanket staging, or bypass hooks. Return the required structured result after one
-cycle; do not poll or sleep.`;
+Use run_local_command for any shell command needed in the assigned worktree; it
+has the operator's full environment and is not restricted to a command allowlist.
+Use the dedicated Git/WIP tools for inherited-work inspection and publication so
+the controller can track branch state. Edit files with str_replace (exact-match,
+the default) or write_file (full contents); after an exact-match miss, re-read the
+file before retrying. If publication reports a Prettier path, use format_paths on
+only those files and retry publication in the same cycle. If git-spice reports a
+stale stack, use the restack tools before retrying publication. Never merge,
+close, approve, suppress a gate, use blanket staging, or bypass hooks. Commit
+scopes are package directory names or root, practice, archive, dagger, deps, ci,
+or cooklang; never invent a tool or provider name as a scope. Return the required
+structured result after one cycle; do not poll or sleep.`;
 
 // Turn the tool-free finalizer result into a validated WorkerResult. Keep the
 // explicit missing-object branch for fixture compatibility and legible errors.
@@ -67,9 +76,7 @@ export function coerceWorkerResult(result: {
     );
   }
   const parsed = WorkerResultSchema.parse(result.object);
-  return parsed.operatorRequestId === undefined
-    ? { ...parsed, operatorRequestId: null }
-    : parsed;
+  return parsed;
 }
 
 const NOOP_TELEMETRY: FleetTelemetry = {
@@ -82,7 +89,6 @@ const NOOP_TELEMETRY: FleetTelemetry = {
 };
 
 type WorkerRunnerOptions = {
-  extraSecretNames?: readonly string[];
   telemetry?: FleetTelemetry;
 };
 
@@ -100,7 +106,6 @@ export class NativeWorkerRunner implements WorkerRunner {
   readonly #model: FleetModel;
   readonly #store: FleetStore;
   readonly #environment: FleetEnvironment;
-  readonly #extraSecretNames: readonly string[];
   readonly #telemetry: FleetTelemetry;
 
   constructor(
@@ -113,7 +118,6 @@ export class NativeWorkerRunner implements WorkerRunner {
     this.#store = store;
     this.#environment = environment;
     this.#telemetry = options.telemetry ?? NOOP_TELEMETRY;
-    this.#extraSecretNames = options.extraSecretNames ?? [];
   }
 
   async run(
@@ -157,7 +161,6 @@ Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")
       model: this.#model.languageModel,
       tools: createWorkerTools(pr, this.#store, this.#environment, {
         signal,
-        extraSecretNames: this.#extraSecretNames,
         telemetry: this.#telemetry,
         parentCorrelation: () => correlation,
       }),

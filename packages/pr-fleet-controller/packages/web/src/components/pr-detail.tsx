@@ -1,6 +1,6 @@
 import { type ReactElement } from "react";
 import type { PrState } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import type { TimelineItem } from "#lib/fold";
+import type { PrProgress, TimelineItem } from "#lib/fold";
 import { EvidencePanel } from "./evidence-panel.tsx";
 import { OperatorRequest } from "./operator-request.tsx";
 import { Transcript } from "./transcript.tsx";
@@ -27,11 +27,13 @@ export function PrDetail({
   prNumber,
   state,
   items,
+  progress,
   interactive,
 }: {
   prNumber: number;
   state: PrState | null;
   items: readonly TimelineItem[];
+  progress: PrProgress | null;
   interactive: boolean;
 }): ReactElement {
   return (
@@ -55,6 +57,30 @@ export function PrDetail({
         )}
       </header>
       {state === null ? null : <EvidencePanel pr={state} />}
+      {progress?.latest === null || progress?.latest === undefined ? null : (
+        <section className="progress-panel">
+          <h3>Progress</h3>
+          <div className="progress-grid">
+            <span className="k">latest</span>
+            <span className="v">{progress.latest.label}</span>
+            <span className="k">at</span>
+            <time className="v mono" dateTime={progress.latest.timestamp}>
+              {progress.latest.timestamp}
+            </time>
+            {progress.blocker === null ? null : (
+              <>
+                <span className="k">blocker</span>
+                <span className="v">
+                  {progress.blocker.label}
+                  {progress.blocker.repeatCount > 1
+                    ? ` (${String(progress.blocker.repeatCount)} times)`
+                    : ""}
+                </span>
+              </>
+            )}
+          </div>
+        </section>
+      )}
       {state?.operatorRequest === null ||
       state?.operatorRequest === undefined ? null : (
         <OperatorRequest

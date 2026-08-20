@@ -143,7 +143,7 @@ describe("handleBetButton", () => {
       );
       expect(replies[0]).toContain("Winning principal is protected");
       expect(replies[0]).toContain(
-        "Cancelling costs **20%**, also rounded to the nearest BB",
+        "Cancelling an outcome position costs **20%**, also rounded to the nearest BB",
       );
       expect(await db.bucksBet.count()).toBe(1);
       const bet = await db.bucksBet.findFirstOrThrow();

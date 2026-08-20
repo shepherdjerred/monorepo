@@ -29,6 +29,7 @@ import {
 } from "@scout-for-lol/report";
 import { savePrematchImageToS3, savePrematchSvgToS3 } from "#src/storage/s3.ts";
 import {
+  classicAssetResolutionFailuresTotal,
   prematchLoadingScreenGeneratedTotal,
   prematchLoadingScreenDurationSeconds,
 } from "#src/metrics/index.ts";
@@ -39,6 +40,7 @@ import {
   prepareBucksPrematch,
   type BucksPrematchAttachment,
 } from "#src/betting/prematch-hook.ts";
+import { startParlayGeneration } from "#src/betting/parlay-generate.ts";
 import type { MessageCreateOptions } from "discord.js";
 import type { LoadingScreenData } from "@scout-for-lol/data/index.ts";
 
@@ -302,6 +304,21 @@ export async function sendPrematchNotification(
       }
     })();
   } catch (error) {
+    if (loadingScreenData?.layout === "classic") {
+      classicAssetResolutionFailuresTotal.inc({
+        phase: "prematch",
+        reason: "asset",
+      });
+      logger.error(
+        "Classic prematch loading-screen asset rendering failed",
+        error,
+        {
+          championIds: loadingScreenData.participants.map(
+            (participant) => participant.championId,
+          ),
+        },
+      );
+    }
     const isRecoverable = error instanceof RecoverableLoadingScreenDataError;
     prematchLoadingScreenGeneratedTotal.inc({
       queue_type: queueType ?? "unknown",
@@ -408,6 +425,19 @@ export async function sendPrematchNotification(
   }
 
   await recordCoreOutputsDelivered(deliveredGuildIds, "prematch");
+
+  // The parlay is deliberately generated only after the ordinary prematch
+  // message and outcome-pool references are durable. This starts a caught
+  // background task, so the 30-second spectator polling lock is not held for
+  // the model's up-to-60-second deadline.
+  if (bucks.bettingGuildIds.size > 0) {
+    startParlayGeneration({
+      gameInfo,
+      trackedPlayers,
+      queueType,
+      loadingScreenData,
+    });
+  }
 
   logger.info(
     `[sendPrematchNotification] ✅ Notifications sent for game ${gameId}`,

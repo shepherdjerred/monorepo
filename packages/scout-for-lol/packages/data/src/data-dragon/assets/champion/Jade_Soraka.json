@@ -1,175 +1,456 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Soraka": {
-      "id": "Jade_Soraka",
-      "key": "60016",
+      "id": "Soraka",
+      "key": "16",
       "name": "Soraka",
-      "title": "The Starchild",
+      "title": "the Starchild",
       "image": {
-        "full": "Jade_Soraka.png",
-        "sprite": "champion3.png",
+        "full": "Soraka.png",
+        "sprite": "champion4.png",
         "group": "champion",
-        "x": 336,
+        "x": 432,
         "y": 0,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60016000",
+          "id": "16000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60016005",
+          "id": "16001",
+          "num": 1,
+          "name": "Dryad Soraka",
+          "chromas": false
+        },
+        {
+          "id": "16002",
+          "num": 2,
+          "name": "Divine Soraka",
+          "chromas": false
+        },
+        {
+          "id": "16003",
+          "num": 3,
+          "name": "Celestine Soraka",
+          "chromas": false
+        },
+        {
+          "id": "16004",
+          "num": 4,
+          "name": "Reaper Soraka",
+          "chromas": true
+        },
+        {
+          "id": "16005",
           "num": 5,
           "name": "Order of the Banana Soraka",
           "chromas": false
         },
         {
-          "id": "60016007",
+          "id": "16006",
+          "num": 6,
+          "name": "Program Soraka",
+          "chromas": false
+        },
+        {
+          "id": "16007",
           "num": 7,
           "name": "Star Guardian Soraka",
           "chromas": false
         },
         {
-          "id": "60016017",
+          "id": "16008",
+          "num": 8,
+          "name": "Pajama Guardian Soraka",
+          "chromas": false
+        },
+        {
+          "id": "16009",
+          "num": 9,
+          "name": "Winter Wonder Soraka",
+          "chromas": true
+        },
+        {
+          "id": "16010",
+          "num": 10,
+          "name": "Winter Wonder Soraka (Ruby)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "16011",
+          "num": 11,
+          "name": "Winter Wonder Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "16012",
+          "num": 12,
+          "name": "Winter Wonder Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "16013",
+          "num": 13,
+          "name": "Winter Wonder Soraka (Amethyst)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "16014",
+          "num": 14,
+          "name": "Winter Wonder Soraka (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "16015",
+          "num": 15,
+          "name": "Dawnbringer Soraka",
+          "chromas": false
+        },
+        {
+          "id": "16016",
+          "num": 16,
+          "name": "Nightbringer Soraka",
+          "chromas": false
+        },
+        {
+          "id": "16017",
           "num": 17,
           "name": "Prestige Star Guardian Soraka",
           "chromas": false
         },
         {
-          "id": "60016037",
-          "num": 37,
-          "name": "Immortal Journey Soraka",
-          "chromas": false
+          "id": "16018",
+          "num": 18,
+          "name": "Cafe Cuties Soraka",
+          "chromas": true
         },
         {
-          "id": "60016038",
+          "id": "16019",
+          "num": 19,
+          "name": "Cafe Cuties Soraka (Ruby)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16020",
+          "num": 20,
+          "name": "Cafe Cuties Soraka (Catseye)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16021",
+          "num": 21,
+          "name": "Cafe Cuties Soraka (Peridot)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16022",
+          "num": 22,
+          "name": "Cafe Cuties Soraka (Sapphire)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16023",
+          "num": 23,
+          "name": "Cafe Cuties Soraka (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16024",
+          "num": 24,
+          "name": "Cafe Cuties Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16025",
+          "num": 25,
+          "name": "Cafe Cuties Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16026",
+          "num": 26,
+          "name": "Cafe Cuties Soraka (Turquoise)",
+          "chromas": false,
+          "parentSkin": 18
+        },
+        {
+          "id": "16027",
+          "num": 27,
+          "name": "Spirit Blossom Soraka",
+          "chromas": true
+        },
+        {
+          "id": "16028",
+          "num": 28,
+          "name": "Spirit Blossom Soraka (Ruby)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16029",
+          "num": 29,
+          "name": "Spirit Blossom Soraka (Turquoise)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16030",
+          "num": 30,
+          "name": "Spirit Blossom Soraka (Citrine)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16031",
+          "num": 31,
+          "name": "Spirit Blossom Soraka (Sapphire)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16032",
+          "num": 32,
+          "name": "Spirit Blossom Soraka (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16033",
+          "num": 33,
+          "name": "Spirit Blossom Soraka (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16034",
+          "num": 34,
+          "name": "Spirit Blossom Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16035",
+          "num": 35,
+          "name": "Spirit Blossom Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16036",
+          "num": 36,
+          "name": "Spirit Blossom Soraka (Night Blossom)",
+          "chromas": false,
+          "parentSkin": 27
+        },
+        {
+          "id": "16037",
+          "num": 37,
+          "name": "Immortal Journey Soraka",
+          "chromas": true
+        },
+        {
+          "id": "16038",
           "num": 38,
           "name": "Immortal Journey Soraka (Ruby)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60016039",
+          "id": "16039",
           "num": 39,
           "name": "Immortal Journey Soraka (Rose Quartz)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60016040",
+          "id": "16040",
           "num": 40,
           "name": "Immortal Journey Soraka (Turquoise)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60016041",
+          "id": "16041",
           "num": 41,
           "name": "Immortal Journey Soraka (Pearl)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60016042",
+          "id": "16042",
           "num": 42,
           "name": "Immortal Journey Soraka (Obsidian)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60016043",
+          "id": "16043",
           "num": 43,
           "name": "Immortal Journey Soraka (Tanzanite)",
           "chromas": false,
           "parentSkin": 37
         },
         {
-          "id": "60016044",
+          "id": "16044",
           "num": 44,
           "name": "Faerie Court Soraka",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60016045",
+          "id": "16045",
           "num": 45,
           "name": "Faerie Court Soraka (Ruby)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60016046",
+          "id": "16046",
           "num": 46,
           "name": "Faerie Court Soraka (Catseye)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60016047",
+          "id": "16047",
           "num": 47,
           "name": "Faerie Court Soraka (Pearl)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60016048",
+          "id": "16048",
           "num": 48,
           "name": "Faerie Court Soraka (Emerald)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60016049",
+          "id": "16049",
           "num": 49,
           "name": "Faerie Court Soraka (Turquoise)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60016050",
+          "id": "16050",
           "num": 50,
           "name": "Faerie Court Soraka (Obsidian)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60016051",
+          "id": "16051",
           "num": 51,
           "name": "Faerie Court Soraka (Rose Quartz)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60016052",
+          "id": "16052",
           "num": 52,
           "name": "Faerie Court Soraka (Tanzanite)",
           "chromas": false,
           "parentSkin": 44
         },
         {
-          "id": "60016301",
-          "num": 301,
-          "name": "Classic Soraka",
-          "chromas": false
+          "id": "16053",
+          "num": 53,
+          "name": "Flora Fatalis Soraka",
+          "chromas": true
         },
         {
-          "id": "60016302",
-          "num": 302,
-          "name": "Classic Soraka (Dryad)",
+          "id": "16054",
+          "num": 54,
+          "name": "Flora Fatalis Soraka (Ruby)",
           "chromas": false,
-          "parentSkin": 301
+          "parentSkin": 53
+        },
+        {
+          "id": "16055",
+          "num": 55,
+          "name": "Flora Fatalis Soraka (Sapphire)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16056",
+          "num": 56,
+          "name": "Flora Fatalis Soraka (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16057",
+          "num": 57,
+          "name": "Flora Fatalis Soraka (Catseye)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16058",
+          "num": 58,
+          "name": "Flora Fatalis Soraka (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16059",
+          "num": 59,
+          "name": "Flora Fatalis Soraka (Emerald)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16060",
+          "num": 60,
+          "name": "Flora Fatalis Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16061",
+          "num": 61,
+          "name": "Flora Fatalis Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 53
+        },
+        {
+          "id": "16062",
+          "num": 62,
+          "name": "Reaper Soraka (Doom)",
+          "chromas": false,
+          "parentSkin": 4
         }
       ],
-      "lore": "- The Abilities are completely different, except for the ultimate Wish (R)<br>- Can solo lane<br>- Has a point and click silence",
-      "blurb": "- The Abilities are completely different, except for the ultimate Wish (R)<br>- Can solo lane<br>- Has a point and click silence",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "A wanderer from the celestial dimensions beyond Mount Targon, Soraka gave up her immortality to protect the mortal races from their own more violent instincts. She endeavors to spread the virtues of compassion and mercy to everyone she meets—even healing those who would wish harm upon her. And, for all Soraka has seen of this world's struggles, she still believes the people of Runeterra have yet to reach their full potential.",
+      "blurb": "A wanderer from the celestial dimensions beyond Mount Targon, Soraka gave up her immortality to protect the mortal races from their own more violent instincts. She endeavors to spread the virtues of compassion and mercy to everyone she meets—even...",
+      "allytips": [
+        "Soraka is a powerful ally in battle, using her strong healing to keep the party moving forward.",
+        "You can use Wish on your allies from across the map to save them from otherwise fatal events.",
+        "Equinox can be used as a powerful zoning tool to keep enemies at bay."
+      ],
+      "enemytips": [
+        "Focus on attacking Soraka when she ever ventures to the frontline to heal her allies.",
+        "Take advantage of Soraka's long cooldown on Equinox if she uses it to harass.",
+        "It's easier to focus Soraka than the ally she is healing."
+      ],
       "tags": [
         "Support",
         "Mage"
@@ -182,487 +463,493 @@
         "difficulty": 3
       },
       "stats": {
-        "hp": 446,
-        "hpperlevel": 71,
-        "mp": 300,
-        "mpperlevel": 60,
-        "movespeed": 335,
-        "armor": 15.2,
-        "armorperlevel": 3.8,
+        "hp": 605,
+        "hpperlevel": 88,
+        "mp": 425,
+        "mpperlevel": 40,
+        "movespeed": 325,
+        "armor": 32,
+        "armorperlevel": 5,
         "spellblock": 30,
-        "spellblockperlevel": 0,
+        "spellblockperlevel": 1.3,
         "attackrange": 550,
-        "hpregen": 5.05,
-        "hpregenperlevel": 0.55,
-        "mpregen": 7.45,
-        "mpregenperlevel": 0.65,
+        "hpregen": 2.5,
+        "hpregenperlevel": 0.5,
+        "mpregen": 11.5,
+        "mpregenperlevel": 0.4,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 51.8,
+        "attackdamage": 50,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.14,
         "attackspeed": 0.625
       },
       "spells": [
         {
-          "id": "Jade_SorakaQ",
+          "id": "SorakaQ",
           "name": "Starcall",
-          "description": "A shower of stars falls from the sky, striking all nearby enemies for magic damage and reducing their Magic Resist for a short duration.",
-          "tooltip": "Soraka calls upon the stars to strike all nearby enemies for <magicDamage>{{ totaldamage }} magic damage</magicDamage> and reduce their <scaleMR>Magic Resist</scaleMR> by {{ shred*-1 }} for {{ debuffduration }} seconds, stacking up to {{ maxstacks }} times.{{ spellmodifierdescriptionappend }}",
+          "description": "A star falls from the sky at the target location dealing magic damage and slowing enemies. If an enemy champion is hit by Starcall, Soraka recovers Health.",
+          "tooltip": "Soraka calls down a star, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ movespeedslow*100 }}% for {{ slowduration }} seconds. <br /><br />Hitting an enemy champion grants Soraka <keywordMajor>Rejuvenation</keywordMajor>, which restores <healing>{{ totalhot }} Health</healing> over {{ hotduration }} seconds and grants <speed>{{ movespeedhaste*100 }}% Move Speed</speed> decaying over the same duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
-              "Magic Resist Shred",
-              "@AbilityResourceName@ Cost"
-            ],
-            "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ shred*-1.000000 }} -> {{ shrednl*-1.000000 }}",
-              "{{ cost }} -> {{ costNL }}"
-            ]
-          },
-          "maxrank": 5,
-          "cooldown": [
-            2.5,
-            2.5,
-            2.5,
-            2.5,
-            2.5
-          ],
-          "cooldownBurn": "2.5",
-          "cost": [
-            20,
-            35,
-            50,
-            65,
-            80
-          ],
-          "costBurn": "20/35/50/65/80",
-          "datavalues": {},
-          "effect": [
-            null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
-          "vars": [],
-          "costType": " {{ abilityresourcename }}",
-          "maxammo": "-1",
-          "range": [
-            625,
-            625,
-            625,
-            625,
-            625
-          ],
-          "rangeBurn": "625",
-          "image": {
-            "full": "Jade_SorakaQ.png",
-            "sprite": "spell10.png",
-            "group": "spell",
-            "x": 96,
-            "y": 96,
-            "w": 48,
-            "h": 48
-          },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
-        },
-        {
-          "id": "Jade_SorakaW",
-          "name": "Astral Blessing",
-          "description": "Soraka blesses a friendly unit, restoring health and increasing Armor for a short time.",
-          "tooltip": "Restores <healing>{{ totalheal }} Health</healing>, and temporarily grants <scaleArmor>{{ armour }} Armor</scaleArmor> to an ally for 3 seconds.</mainText>{{ spellmodifierdescriptionappend }}",
-          "leveltip": {
-            "label": [
-              "Healing",
-              "Armor",
-              "@AbilityResourceName@ Cost"
-            ],
-            "effect": [
-              "{{ baseheal }} -> {{ basehealNL }}",
-              "{{ armour }} -> {{ armourNL }}",
-              "{{ cost }} -> {{ costNL }}"
-            ]
-          },
-          "maxrank": 5,
-          "cooldown": [
-            20,
-            20,
-            20,
-            20,
-            20
-          ],
-          "cooldownBurn": "20",
-          "cost": [
-            80,
-            110,
-            140,
-            170,
-            200
-          ],
-          "costBurn": "80/110/140/170/200",
-          "datavalues": {},
-          "effect": [
-            null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
-          "vars": [],
-          "costType": " {{ abilityresourcename }}",
-          "maxammo": "-1",
-          "range": [
-            750,
-            750,
-            750,
-            750,
-            750
-          ],
-          "rangeBurn": "750",
-          "image": {
-            "full": "Jade_SorakaW.png",
-            "sprite": "spell10.png",
-            "group": "spell",
-            "x": 144,
-            "y": 96,
-            "w": 48,
-            "h": 48
-          },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
-        },
-        {
-          "id": "Jade_SorakaE",
-          "name": "Infuse",
-          "description": "Restores Mana to an ally, or deals damage to an enemy and silences them for a short duration.",
-          "tooltip": "Target an allied champion to restore <scaleMana>{{ mana }} Mana</scaleMana> (cannot be cast on self).<br /><br />Target an enemy to deal <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Silence</status> them for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
-          "leveltip": {
-            "label": [
-              "Mana Restore",
-              "Damage",
-              "Silence Duration"
-            ],
-            "effect": [
-              "{{ mana }} -> {{ manaNL }}",
-              "{{ damage }} -> {{ damageNL }}",
-              "{{ duration }} -> {{ durationNL }}"
-            ]
-          },
-          "maxrank": 5,
-          "cooldown": [
-            10,
-            10,
-            10,
-            10,
-            10
-          ],
-          "cooldownBurn": "10",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
-          "costBurn": "0",
-          "datavalues": {},
-          "effect": [
-            null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
-          ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
-          "vars": [],
-          "costType": " {{ abilityresourcename }}",
-          "maxammo": "-1",
-          "range": [
-            725,
-            725,
-            725,
-            725,
-            725
-          ],
-          "rangeBurn": "725",
-          "image": {
-            "full": "Jade_SorakaE.png",
-            "sprite": "spell10.png",
-            "group": "spell",
-            "x": 192,
-            "y": 96,
-            "w": 48,
-            "h": 48
-          },
-          "resource": "{{ cost }} {{ abilityresourcename }}"
-        },
-        {
-          "id": "Jade_SorakaR",
-          "name": "Wish",
-          "description": "Soraka fills her allies with hope, instantly restoring health to herself and all friendly champions.",
-          "tooltip": "Calls upon divine powers to instantly restore <healing>{{ healingcalc }} Health</healing> to all allied Champions.</mainText>{{ spellmodifierdescriptionappend }}",
-          "leveltip": {
-            "label": [
-              "Healing",
+              "Health Restore (Rejuvenation)",
+              "Move Speed",
               "Cooldown",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basehot }} -> {{ basehotNL }}",
+              "{{ movespeedhaste*100.000000 }}% -> {{ movespeedhastenl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
+          "maxrank": 5,
+          "cooldown": [
+            8,
+            7,
+            6,
+            5,
+            4
+          ],
+          "cooldownBurn": "8/7/6/5/4",
+          "cost": [
+            45,
+            50,
+            55,
+            60,
+            65
+          ],
+          "costBurn": "45/50/55/60/65",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            810,
+            810,
+            810,
+            810,
+            810
+          ],
+          "rangeBurn": "810",
+          "image": {
+            "full": "SorakaQ.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 0,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SorakaW",
+          "name": "Astral Infusion",
+          "description": "Soraka sacrifices a portion of her own health to heal another friendly champion.",
+          "tooltip": "Soraka restores <healing>{{ totalheal }} Health</healing> to another allied champion.<br /><br />If Soraka is affected by <keywordMajor>Rejuvenation</keywordMajor>, the Health cost will be reduced by {{ percenthealthcostrefund*100 }}%, and the target will gain <keywordMajor>Rejuvenation</keywordMajor> for {{ spell.sorakaq:hotduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Healing",
+              "Cooldown",
+              "@AbilityResourceName@ Cost",
+              "Health Cost Reduction"
+            ],
+            "effect": [
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}",
+              "{{ percenthealthcostrefund*100.000000 }}% -> {{ percenthealthcostrefundnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "cooldownBurn": "6/5/4/3/2",
+          "cost": [
+            40,
+            45,
+            50,
+            55,
+            60
+          ],
+          "costBurn": "40/45/50/55/60",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": "% Max Health, {{ cost }} Mana",
+          "maxammo": "-1",
+          "range": [
+            550,
+            550,
+            550,
+            550,
+            550
+          ],
+          "rangeBurn": "550",
+          "image": {
+            "full": "SorakaW.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 48,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ percenthealthcost*100 }}% Max Health, {{ cost }} Mana"
+        },
+        {
+          "id": "SorakaE",
+          "name": "Equinox",
+          "description": "Creates a zone at a location that silences all enemies inside. When the zone expires, all enemies still inside are rooted.",
+          "tooltip": "Soraka creates a starfield that deals <magicDamage>{{ totaldamage }} magic damage</magicDamage> to champions. The field lingers for {{ rootdelay }} seconds, <status>Silencing</status> enemies inside. When the zone disappears, champions inside the zone are <status>Rooted</status> for {{ rootduration }} second(s) and take <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Root Duration",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ rootduration }} -> {{ rootdurationNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            20,
+            19,
+            18,
+            17,
+            16
+          ],
+          "cooldownBurn": "20/19/18/17/16",
+          "cost": [
+            70,
+            75,
+            80,
+            85,
+            90
+          ],
+          "costBurn": "70/75/80/85/90",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            925,
+            925,
+            925,
+            925,
+            925
+          ],
+          "rangeBurn": "925",
+          "image": {
+            "full": "SorakaE.png",
+            "sprite": "spell13.png",
+            "group": "spell",
+            "x": 96,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "SorakaR",
+          "name": "Wish",
+          "description": "Soraka fills her allies with hope, instantly restoring health to herself and all allied champions.",
+          "tooltip": "Soraka calls upon divine powers, restoring <healing>{{ healingcalc }} Health</healing> to all allied champions, regardless of distance. Healing is increased to <healing>{{ ampedhealing }}</healing> on targets below 40% Health.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Healing",
+              "Cooldown"
+            ],
+            "effect": [
+              "{{ baseheal }} -> {{ basehealNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
+          },
           "maxrank": 3,
           "cooldown": [
-            160,
-            145,
-            130
+            150,
+            135,
+            120
           ],
-          "cooldownBurn": "160/145/130",
+          "cooldownBurn": "150/135/120",
           "cost": [
             100,
-            175,
-            250
+            100,
+            100
           ],
-          "costBurn": "100/175/250",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -740,11 +1027,11 @@
           ],
           "rangeBurn": "25000",
           "image": {
-            "full": "Jade_SorakaR.png",
-            "sprite": "spell10.png",
+            "full": "SorakaR.png",
+            "sprite": "spell13.png",
             "group": "spell",
-            "x": 240,
-            "y": 96,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -752,13 +1039,13 @@
         }
       ],
       "passive": {
-        "name": "Consecration",
-        "description": "Increases surrounding allies' Magic Resist by 16.",
+        "name": "Salvation",
+        "description": "Soraka runs faster towards nearby low health allies.",
         "image": {
-          "full": "Jade_Soraka_Passive.png",
-          "sprite": "passive3.png",
+          "full": "Soraka_Passive.png",
+          "sprite": "passive4.png",
           "group": "passive",
-          "x": 336,
+          "x": 432,
           "y": 0,
           "w": 48,
           "h": 48

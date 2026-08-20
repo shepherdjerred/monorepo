@@ -1,177 +1,499 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Veigar": {
-      "id": "Jade_Veigar",
-      "key": "60045",
+      "id": "Veigar",
+      "key": "45",
       "name": "Veigar",
-      "title": "The Tiny Maser of Evil",
+      "title": "the Tiny Master of Evil",
       "image": {
-        "full": "Jade_Veigar.png",
-        "sprite": "champion3.png",
+        "full": "Veigar.png",
+        "sprite": "champion4.png",
         "group": "champion",
-        "x": 240,
-        "y": 48,
+        "x": 384,
+        "y": 96,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60045000",
+          "id": "45000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60045004",
+          "id": "45001",
+          "num": 1,
+          "name": "White Mage Veigar",
+          "chromas": false
+        },
+        {
+          "id": "45002",
+          "num": 2,
+          "name": "Curling Veigar",
+          "chromas": false
+        },
+        {
+          "id": "45003",
+          "num": 3,
+          "name": "Veigar Greybeard",
+          "chromas": false
+        },
+        {
+          "id": "45004",
           "num": 4,
           "name": "Leprechaun Veigar",
           "chromas": false
         },
         {
-          "id": "60045008",
+          "id": "45005",
+          "num": 5,
+          "name": "Baron Von Veigar",
+          "chromas": false
+        },
+        {
+          "id": "45006",
+          "num": 6,
+          "name": "Superb Villain Veigar",
+          "chromas": false
+        },
+        {
+          "id": "45007",
+          "num": 7,
+          "name": "Bad Santa Veigar",
+          "chromas": false
+        },
+        {
+          "id": "45008",
           "num": 8,
           "name": "Final Boss Veigar",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60045023",
+          "id": "45009",
+          "num": 9,
+          "name": "Omega Squad Veigar",
+          "chromas": true
+        },
+        {
+          "id": "45010",
+          "num": 10,
+          "name": "Omega Squad Veigar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "45011",
+          "num": 11,
+          "name": "Omega Squad Veigar (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "45012",
+          "num": 12,
+          "name": "Omega Squad Veigar (Catseye)",
+          "chromas": false,
+          "parentSkin": 9
+        },
+        {
+          "id": "45013",
+          "num": 13,
+          "name": "Elderwood Veigar",
+          "chromas": true
+        },
+        {
+          "id": "45014",
+          "num": 14,
+          "name": "Elderwood Veigar (Emerald)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "45015",
+          "num": 15,
+          "name": "Elderwood Veigar (Pearl)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "45016",
+          "num": 16,
+          "name": "Elderwood Veigar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "45017",
+          "num": 17,
+          "name": "Elderwood Veigar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "45018",
+          "num": 18,
+          "name": "Elderwood Veigar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "45019",
+          "num": 19,
+          "name": "Elderwood Veigar (Ruby)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "45020",
+          "num": 20,
+          "name": "Elderwood Veigar (Catseye)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "45021",
+          "num": 21,
+          "name": "Elderwood Veigar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "45022",
+          "num": 22,
+          "name": "Elderwood Veigar (Rainbow)",
+          "chromas": false,
+          "parentSkin": 13
+        },
+        {
+          "id": "45023",
           "num": 23,
           "name": "Furyhorn Cosplay Veigar",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60045024",
+          "id": "45024",
           "num": 24,
           "name": "Furyhorn Cosplay Veigar (Ruby)",
           "chromas": false,
           "parentSkin": 23
         },
         {
-          "id": "60045025",
+          "id": "45025",
           "num": 25,
           "name": "Furyhorn Cosplay Veigar (Aquamarine)",
           "chromas": false,
           "parentSkin": 23
         },
         {
-          "id": "60045026",
+          "id": "45026",
           "num": 26,
           "name": "Furyhorn Cosplay Veigar (Rose Quartz)",
           "chromas": false,
           "parentSkin": 23
         },
         {
-          "id": "60045027",
+          "id": "45027",
           "num": 27,
           "name": "Furyhorn Cosplay Veigar (Emerald)",
           "chromas": false,
           "parentSkin": 23
         },
         {
-          "id": "60045028",
+          "id": "45028",
           "num": 28,
           "name": "Furyhorn Cosplay Veigar (Citrine)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 23
         },
         {
-          "id": "60045029",
+          "id": "45029",
           "num": 29,
           "name": "Furyhorn Cosplay Veigar (Pearl)",
           "chromas": false,
           "parentSkin": 23
         },
         {
-          "id": "60045030",
+          "id": "45030",
           "num": 30,
           "name": "Furyhorn Cosplay Veigar (Tanzanite)",
           "chromas": false,
           "parentSkin": 23
         },
         {
-          "id": "60045031",
+          "id": "45031",
           "num": 31,
           "name": "Furyhorn Cosplay Veigar (Obsidian)",
           "chromas": false,
           "parentSkin": 23
         },
         {
-          "id": "60045032",
+          "id": "45032",
           "num": 32,
           "name": "Astronaut Veigar",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60045033",
+          "id": "45033",
           "num": 33,
           "name": "Astronaut Veigar (Ruby)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60045034",
+          "id": "45034",
           "num": 34,
           "name": "Astronaut Veigar (Sapphire)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60045035",
+          "id": "45035",
           "num": 35,
           "name": "Astronaut Veigar (Catseye)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60045036",
+          "id": "45036",
           "num": 36,
           "name": "Astronaut Veigar (Rose Quartz)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60045037",
+          "id": "45037",
           "num": 37,
           "name": "Astronaut Veigar (Emerald)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60045038",
+          "id": "45038",
           "num": 38,
           "name": "Astronaut Veigar (Tanzanite)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60045039",
+          "id": "45039",
           "num": 39,
           "name": "Astronaut Veigar (Rainbow)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60045040",
+          "id": "45040",
           "num": 40,
           "name": "Astronaut Veigar (Citrine)",
           "chromas": false,
           "parentSkin": 32
         },
         {
-          "id": "60045042",
+          "id": "45041",
+          "num": 41,
+          "name": "Monster Tamer Veigar",
+          "chromas": true
+        },
+        {
+          "id": "45042",
           "num": 42,
           "name": "Final Boss Veigar (Mythic)",
           "chromas": false,
           "parentSkin": 8
+        },
+        {
+          "id": "45043",
+          "num": 43,
+          "name": "Monster Tamer Veigar (Ruby)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "45044",
+          "num": 44,
+          "name": "Monster Tamer Veigar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "45045",
+          "num": 45,
+          "name": "Monster Tamer Veigar (Catseye)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "45046",
+          "num": 46,
+          "name": "Monster Tamer Veigar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "45047",
+          "num": 47,
+          "name": "Monster Tamer Veigar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "45048",
+          "num": 48,
+          "name": "Monster Tamer Veigar (Jasper)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "45049",
+          "num": 49,
+          "name": "Monster Tamer Veigar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "45050",
+          "num": 50,
+          "name": "Monster Tamer Veigar (Rainbow)",
+          "chromas": false,
+          "parentSkin": 41
+        },
+        {
+          "id": "45051",
+          "num": 51,
+          "name": "King Beegar",
+          "chromas": true
+        },
+        {
+          "id": "45052",
+          "num": 52,
+          "name": "King Beegar (Ruby)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "45053",
+          "num": 53,
+          "name": "King Beegar (Emerald)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "45054",
+          "num": 54,
+          "name": "King Beegar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "45055",
+          "num": 55,
+          "name": "King Beegar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "45056",
+          "num": 56,
+          "name": "King Beegar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "45057",
+          "num": 57,
+          "name": "King Beegar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "45058",
+          "num": 58,
+          "name": "King Beegar (Obsidian)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "45059",
+          "num": 59,
+          "name": "King Beegar (Pearl)",
+          "chromas": false,
+          "parentSkin": 51
+        },
+        {
+          "id": "45060",
+          "num": 60,
+          "name": "Fright Night Veigar",
+          "chromas": true
+        },
+        {
+          "id": "45061",
+          "num": 61,
+          "name": "Fright Night Veigar (Ruby)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "45062",
+          "num": 62,
+          "name": "Fright Night Veigar (Amethyst)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "45063",
+          "num": 63,
+          "name": "Fright Night Veigar (Turquoise)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "45064",
+          "num": 64,
+          "name": "Fright Night Veigar (Sapphire)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "45065",
+          "num": 65,
+          "name": "Fright Night Veigar (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "45066",
+          "num": 66,
+          "name": "Fright Night Veigar (Ghoulish)",
+          "chromas": false,
+          "parentSkin": 60
+        },
+        {
+          "id": "45067",
+          "num": 67,
+          "name": "Prestige Magma Chamber Veigar",
+          "chromas": true
+        },
+        {
+          "id": "45068",
+          "num": 68,
+          "name": "Prestige Magma Chamber Veigar (Vivid)",
+          "chromas": false,
+          "parentSkin": 67
         }
       ],
-      "lore": "- Baleful Strike (Q) is point and click<br>- Event Horizon (E) is instant<br>- Equilibrium (P) gains increased mana regeneration based on missing mana",
-      "blurb": "- Baleful Strike (Q) is point and click<br>- Event Horizon (E) is instant<br>- Equilibrium (P) gains increased mana regeneration based on missing mana",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "An enthusiastic master of dark sorcery, Veigar has embraced powers that few mortals dare approach. As a free-spirited inhabitant of Bandle City, he longed to push beyond the limitations of yordle magic, and turned instead to arcane texts that had been hidden away for thousands of years. Now a stubborn creature with an endless fascination for the mysteries of the universe, Veigar is often underestimated by others—but even though he believes himself truly evil, he possesses an inner morality that leads some to question his deeper motivations.",
+      "blurb": "An enthusiastic master of dark sorcery, Veigar has embraced powers that few mortals dare approach. As a free-spirited inhabitant of Bandle City, he longed to push beyond the limitations of yordle magic, and turned instead to arcane texts that had been...",
+      "allytips": [
+        "Use Event Horizon to increase your chances of landing Dark Matter.",
+        "Veigar is extremely Mana and Cooldown Reduction dependent. Try buying items with these stats in order to increase the effectiveness of your passive and Baleful Strike.",
+        "Veigar is very fragile. It is valuable to select at least one summoner spell that can be used defensively."
+      ],
+      "enemytips": [
+        "Dark Matter deals very high damage, but it can be avoided. Pay attention to the sound and visual indicator to be aware of when and where the spell will land.",
+        "Event Horizon only stuns units on the edge. If you're inside the spell, you can still move and attack.",
+        "Veigar's ultimate deals increased damage based on your missing health."
+      ],
       "tags": [
         "Mage"
       ],
@@ -183,64 +505,64 @@
         "difficulty": 7
       },
       "stats": {
-        "hp": 437,
-        "hpperlevel": 82,
-        "mp": 305,
-        "mpperlevel": 55,
+        "hp": 580,
+        "hpperlevel": 108,
+        "mp": 490,
+        "mpperlevel": 26,
         "movespeed": 340,
-        "armor": 19.75,
-        "armorperlevel": 3.75,
-        "spellblock": 30,
-        "spellblockperlevel": 0,
-        "attackrange": 525,
-        "hpregen": 5.15,
-        "hpregenperlevel": 0.5,
-        "mpregen": 7.5,
-        "mpregenperlevel": 0.6,
+        "armor": 18,
+        "armorperlevel": 5.2,
+        "spellblock": 32,
+        "spellblockperlevel": 1.3,
+        "attackrange": 550,
+        "hpregen": 6.5,
+        "hpregenperlevel": 0.6,
+        "mpregen": 8,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 50.65,
+        "attackdamage": 52,
         "attackdamageperlevel": 0,
-        "attackspeedperlevel": 2,
+        "attackspeedperlevel": 2.24,
         "attackspeed": 0.625
       },
       "spells": [
         {
-          "id": "Jade_VeigarBalefulStrike",
+          "id": "VeigarBalefulStrike",
           "name": "Baleful Strike",
-          "description": "Unleashes dark energy at target enemy, dealing magic damage. If a unit is killed, Veigar gains some Ability Power permanently.",
-          "tooltip": "<spellActive>Active: </spellActive>Veigar unleashes dark energy at target enemy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. If the target is killed, Veigar gains <magicDamage>{{ apperstack }} Ability Power</magicDamage>. This bonus is doubled against Champions, large minions and large monsters.<br /><br /><spellPassive>Passive: </spellPassive>Veigar gains <magicDamage>{{ apperkill }} Ability Power</magicDamage> when he kills a champion from any source of damage.<br /><br />Bonus <magicDamage>Ability Power: +{{ f1 }}</magicDamage>{{ spellmodifierdescriptionappend }}",
+          "description": "Veigar unleashes a bolt of dark energy that deals magic damage to the first two enemies hit. Units killed by this bolt grant Veigar some ability power permanently.",
+          "tooltip": "Veigar unleashes a bolt of dark energy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first two enemies hit.<br /><br />If Veigar kills an enemy with this Ability, he gains {{ spell.veigarpassive:dqkillstacks }} stack of <keywordMajor>Phenomenal Evil</keywordMajor>. Large minions and large monsters grant {{ spell.veigarpassive:dqkillstackslarge }} stacks instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
+              "Total AP Ratio",
               "Cooldown",
-              "@AbilityResourceName@ Cost",
-              "Ability Power per Kill"
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ apratio*100.000000 }}% -> {{ aprationl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ cost }} -> {{ costNL }}",
-              "{{ apperkill }} -> {{ apperkillNL }}"
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            8,
-            7,
             6,
+            5.5,
             5,
+            4.5,
             4
           ],
-          "cooldownBurn": "8/7/6/5/4",
+          "cooldownBurn": "6/5.5/5/4.5/4",
           "cost": [
-            60,
-            65,
-            70,
-            75,
-            80
+            30,
+            35,
+            40,
+            45,
+            50
           ],
-          "costBurn": "60/65/70/75/80",
+          "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
@@ -332,56 +654,58 @@
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
           "range": [
-            650,
-            650,
-            650,
-            650,
-            650
+            1000,
+            1000,
+            1000,
+            1000,
+            1000
           ],
-          "rangeBurn": "650",
+          "rangeBurn": "1000",
           "image": {
-            "full": "Jade_VeigarBalefulStrike.png",
-            "sprite": "spell11.png",
+            "full": "VeigarBalefulStrike.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 192,
-            "y": 48,
+            "x": 288,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_VeigarDarkMatter",
+          "id": "VeigarDarkMatter",
           "name": "Dark Matter",
-          "description": "Veigar calls a great mass of dark matter to fall from the sky to the target location, dealing magic damage when it lands.",
-          "tooltip": "After 1.2 seconds, dark matter falls from the sky to the target location, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.</mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "Veigar calls a great mass of dark matter to fall from the sky to the target location, dealing magic damage when it lands. Stacks of Phenomenal Evil reduce Dark Matter's cooldown.",
+          "tooltip": "Veigar summons dark matter from the sky, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br />Every {{ spell.veigarpassive:pstacksperdarkmattercdr }} stacks of <keywordMajor>Phenomenal Evil</keywordMajor> reduce this Ability's Cooldown by {{ spell.veigarpassive:darkmattercdrincrement*100 }}%.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
+              "Total AP Ratio",
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ apratio*100.000000 }}% -> {{ aprationl*100.000000 }}%",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            10,
-            10,
-            10,
-            10,
-            10
+            0,
+            0,
+            0,
+            0,
+            0
           ],
-          "cooldownBurn": "10",
+          "cooldownBurn": "0",
           "cost": [
+            60,
+            65,
             70,
-            80,
-            90,
-            100,
-            110
+            75,
+            80
           ],
-          "costBurn": "70/80/90/100/110",
+          "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
@@ -481,21 +805,21 @@
           ],
           "rangeBurn": "950",
           "image": {
-            "full": "Jade_VeigarDarkMatter.png",
-            "sprite": "spell11.png",
+            "full": "VeigarDarkMatter.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 240,
-            "y": 48,
+            "x": 336,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_VeigarEventHorizon",
+          "id": "VeigarEventHorizon",
           "name": "Event Horizon",
-          "description": "Veigar twists the edges of space around the target location for 3 seconds, stunning enemies who pass through the perimeter for a short duration.",
-          "tooltip": "Veigar twists the edges of space around the target location for 3 seconds, <status>Stunning</status> enemies who pass through the perimeter for {{ stunduration }} seconds.</mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "Veigar twists the edges of space, creating a cage that Stuns enemies that pass through.",
+          "tooltip": "Veigar twists the edges of space, creating a cage that <status>Stuns</status> enemies that pass through for {{ stunduration }} seconds. The cage lasts for 3 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Stun Duration:",
@@ -503,7 +827,7 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ stunduration }} -> {{ stundurationNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
@@ -511,20 +835,20 @@
           "maxrank": 5,
           "cooldown": [
             20,
-            19,
-            18,
+            18.5,
             17,
-            16
+            15.5,
+            14
           ],
-          "cooldownBurn": "20/19/18/17/16",
+          "cooldownBurn": "20/18.5/17/15.5/14",
           "cost": [
+            70,
+            75,
             80,
-            90,
-            100,
-            110,
-            120
+            85,
+            90
           ],
-          "costBurn": "80/90/100/110/120",
+          "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
@@ -624,46 +948,46 @@
           ],
           "rangeBurn": "725",
           "image": {
-            "full": "Jade_VeigarEventHorizon.png",
-            "sprite": "spell11.png",
+            "full": "VeigarEventHorizon.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 384,
+            "y": 96,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_VeigarR",
+          "id": "VeigarR",
           "name": "Primordial Burst",
-          "description": "Blasts target enemy champion, dealing a large base amount of magic damage plus 80% of his target's AP.",
-          "tooltip": "Blasts an enemy champion, dealing <magicDamage>{{ mindamage }} plus 80% of his target's Ability Power in magic damage</magicDamage>.</mainText>{{ spellmodifierdescriptionappend }}",
+          "description": "Blasts target enemy champion, dealing a large amount of magic damage, increasing based on the target's missing health.",
+          "tooltip": "Veigar blasts an enemy champion with primal magic to deal between <magicDamage>{{ mindamage }} and {{ maxdamage }} magic damage</magicDamage>, increasing with the target's missing Health. Damage is maximized against enemies below 33% Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
+              "Total AP Ratio",
+              "Cooldown"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ apratio*100.000000 }}% -> {{ aprationl*100.000000 }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
           "cooldown": [
-            130,
-            110,
-            90
+            120,
+            90,
+            60
           ],
-          "cooldownBurn": "130/110/90",
+          "cooldownBurn": "120/90/60",
           "cost": [
-            125,
-            175,
-            225
+            100,
+            100,
+            100
           ],
-          "costBurn": "125/175/225",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -741,11 +1065,11 @@
           ],
           "rangeBurn": "650",
           "image": {
-            "full": "Jade_VeigarR.png",
-            "sprite": "spell11.png",
+            "full": "VeigarR.png",
+            "sprite": "spell15.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 432,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -753,14 +1077,14 @@
         }
       ],
       "passive": {
-        "name": "Equilibrium",
-        "description": "Veigar's mana regeneration increases by 1% for each 1% of mana missing.",
+        "name": "Phenomenal Evil Power",
+        "description": "Veigar is the greatest Evil to ever strike at the hearts of Runeterra - and he's only getting bigger! Striking an enemy Champion with a spell or scoring a takedown grants Veigar permanently increased Ability Power.",
         "image": {
-          "full": "Jade_VeigarEntropy.png",
-          "sprite": "passive3.png",
+          "full": "VeigarEntropy.png",
+          "sprite": "passive4.png",
           "group": "passive",
-          "x": 240,
-          "y": 48,
+          "x": 384,
+          "y": 96,
           "w": 48,
           "h": 48
         }

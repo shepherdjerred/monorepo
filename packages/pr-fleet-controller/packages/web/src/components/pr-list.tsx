@@ -1,7 +1,12 @@
 import { type ReactElement } from "react";
 import type { PrState } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import type { PrProgress } from "#lib/fold";
 
-export type PrEntry = { number: number; state: PrState | null };
+export type PrEntry = {
+  number: number;
+  state: PrState | null;
+  progress: PrProgress | null;
+};
 
 function checkSummary(pr: PrState): string {
   const checks = pr.evidence.checks;
@@ -55,6 +60,22 @@ function Card({
           ) : null}
           {state.operatorRequest === null ? null : (
             <span className="answer-needed">answer needed</span>
+          )}
+        </div>
+      )}
+      {entry.progress?.latest === null ||
+      entry.progress?.latest === undefined ? null : (
+        <div
+          className="pr-card-progress"
+          title={entry.progress.latest.timestamp}
+        >
+          <span>{entry.progress.latest.label}</span>
+          {entry.progress.blocker === null ? null : (
+            <span className="progress-blocker">
+              {entry.progress.blocker.repeatCount > 1
+                ? `${String(entry.progress.blocker.repeatCount)}×`
+                : "blocked"}
+            </span>
           )}
         </div>
       )}

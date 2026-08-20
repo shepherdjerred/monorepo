@@ -1,22 +1,45 @@
 import { describe, expect, test } from "bun:test";
 import {
   DEFAULT_TIMEOUT_SECONDS,
+  parseMaxBlockingPriority,
   resolveReviewGateProvider,
 } from "./wait-for-review.ts";
 
 describe("resolveReviewGateProvider", () => {
-  test("pins the required CI gate to Qodo", () => {
+  test("defaults direct invocations to Qodo", () => {
     expect(resolveReviewGateProvider(undefined).id).toBe("qodo");
     expect(resolveReviewGateProvider("").id).toBe("qodo");
     expect(resolveReviewGateProvider("  QODO ").id).toBe("qodo");
   });
 
-  test("rejects registered non-CI providers", () => {
-    expect(() => resolveReviewGateProvider("codex")).toThrow(
-      "CI review gate requires Qodo",
-    );
+  test("accepts both required CI providers", () => {
+    expect(resolveReviewGateProvider("codex").id).toBe("codex");
+    expect(resolveReviewGateProvider("  CODEX ").id).toBe("codex");
+  });
+
+  test("rejects registered non-CI providers and unknown providers", () => {
     expect(() => resolveReviewGateProvider("greptile")).toThrow(
-      "CI review gate requires Qodo",
+      "CI review gate requires Qodo or Codex",
+    );
+    expect(() => resolveReviewGateProvider("unknown")).toThrow(
+      "CI review gate requires Qodo or Codex",
+    );
+  });
+});
+
+describe("parseMaxBlockingPriority", () => {
+  test("accepts the configured severity range and defaults to P3", () => {
+    expect(parseMaxBlockingPriority(undefined)).toBe(3);
+    expect(parseMaxBlockingPriority(" 2 ")).toBe(2);
+    expect(parseMaxBlockingPriority("0")).toBe(0);
+  });
+
+  test("rejects malformed priorities instead of accepting a prefix", () => {
+    expect(() => parseMaxBlockingPriority("2foo")).toThrow(
+      "REVIEW_MAX_BLOCKING_PRIORITY must be an integer in [0,3]",
+    );
+    expect(() => parseMaxBlockingPriority("4")).toThrow(
+      "REVIEW_MAX_BLOCKING_PRIORITY must be an integer in [0,3]",
     );
   });
 });
@@ -29,49 +52,56 @@ describe("resolveReviewGateProvider", () => {
  * regression this budget test exists to catch — the assertion would keep
  * passing against an unrelated number.
  */
-export function reviewGateStepTimeoutSeconds(pipeline: string): number {
+function reviewGateStepBlock(pipeline: string, stepKey: string): string[] {
   const lines = pipeline.split("\n");
   const starts = lines.flatMap((line, index) =>
     line.startsWith("  - label:") ? [index] : [],
   );
   for (const [position, start] of starts.entries()) {
     const block = lines.slice(start, starts[position + 1] ?? lines.length);
-    if (!block.some((line) => line.trim() === "key: review-gate")) {
-      continue;
-    }
-    const declared = block.flatMap((line) => {
-      const match = /^\s+timeout_in_minutes:\s*(\d+)\s*$/.exec(line);
-      return match?.[1] === undefined ? [] : [Number.parseInt(match[1], 10)];
-    });
-    if (declared.length !== 1) {
-      throw new Error(
-        `review-gate declares ${declared.length.toString()} timeout_in_minutes, expected exactly 1`,
-      );
-    }
-    return (declared[0] ?? 0) * 60;
+    if (block.some((line) => line.trim() === `key: ${stepKey}`)) return block;
   }
-  throw new Error("pipeline.yml has no review-gate step");
+  throw new Error(`pipeline.yml has no ${stepKey} step`);
 }
 
-/** The `review-gate` step's command block, as its lines. */
-export function reviewGateStepCommand(pipeline: string): string[] {
-  const lines = pipeline.split("\n");
-  const starts = lines.flatMap((line, index) =>
-    line.startsWith("  - label:") ? [index] : [],
-  );
-  for (const [position, start] of starts.entries()) {
-    const block = lines.slice(start, starts[position + 1] ?? lines.length);
-    if (!block.some((line) => line.trim() === "key: review-gate")) continue;
-    const commandAt = block.findIndex((line) => line.trim() === "command: |");
-    if (commandAt === -1) throw new Error("review-gate declares no command");
-    const body: string[] = [];
-    for (const line of block.slice(commandAt + 1)) {
-      if (line.trim() !== "" && !line.startsWith("      ")) break;
-      body.push(line.trim());
-    }
-    return body.filter((line) => line !== "");
+export function reviewGateStepTimeoutSeconds(
+  pipeline: string,
+  stepKey = "review-gate",
+): number {
+  const block = reviewGateStepBlock(pipeline, stepKey);
+  const declared = block.flatMap((line) => {
+    const match = /^\s+timeout_in_minutes:\s*(\d+)\s*$/.exec(line);
+    return match?.[1] === undefined ? [] : [Number.parseInt(match[1], 10)];
+  });
+  if (declared.length !== 1) {
+    throw new Error(
+      `${stepKey} declares ${declared.length.toString()} timeout_in_minutes, expected exactly 1`,
+    );
   }
-  throw new Error("pipeline.yml has no review-gate step");
+  return (declared[0] ?? 0) * 60;
+}
+
+/** A review-gate step's command block, as its lines. */
+export function reviewGateStepCommand(
+  pipeline: string,
+  stepKey = "review-gate",
+): string[] {
+  const block = reviewGateStepBlock(pipeline, stepKey);
+  const commandAt = block.findIndex((line) => line.trim() === "command: |");
+  if (commandAt === -1) throw new Error(`${stepKey} declares no command`);
+  const body: string[] = [];
+  for (const line of block.slice(commandAt + 1)) {
+    if (line.trim() !== "" && !line.startsWith("      ")) break;
+    body.push(line.trim());
+  }
+  return body.filter((line) => line !== "");
+}
+
+export function reviewGateStepBlockText(
+  pipeline: string,
+  stepKey: string,
+): string {
+  return reviewGateStepBlock(pipeline, stepKey).join("\n");
 }
 
 /**
@@ -93,9 +123,13 @@ describe("review gate timeout budget", () => {
     const pipeline = await Bun.file(
       `${import.meta.dir}/../.buildkite/pipeline.yml`,
     ).text();
-    expect(reviewGateStepTimeoutSeconds(pipeline)).toBeGreaterThanOrEqual(
-      DEFAULT_TIMEOUT_SECONDS + PREAMBLE_MARGIN_SECONDS,
-    );
+    for (const stepKey of ["review-gate", "codex-review-gate"]) {
+      expect(
+        reviewGateStepTimeoutSeconds(pipeline, stepKey),
+      ).toBeGreaterThanOrEqual(
+        DEFAULT_TIMEOUT_SECONDS + PREAMBLE_MARGIN_SECONDS,
+      );
+    }
   });
 
   test("reads review-gate's own timeout, not a later step's", () => {
@@ -139,15 +173,36 @@ describe("review gate timeout budget", () => {
 // blocking findings against current main and 3 against its own 22-commit-stale
 // parser, and no change to that PR could have cleared it.
 describe("review gate source", () => {
-  test("does not run the pull request's own copy of the gate", async () => {
+  test("both provider gates use the main-sourced wrapper", async () => {
     const pipeline = await Bun.file(
       `${import.meta.dir}/../.buildkite/pipeline.yml`,
     ).text();
-    const command = reviewGateStepCommand(pipeline);
-    expect(command).not.toContain(
-      "bun --no-install scripts/wait-for-review.ts",
-    );
-    expect(command.some((line) => line.includes("review-gate.sh"))).toBe(true);
+    for (const [stepKey, provider] of [
+      ["review-gate", "qodo"],
+      ["codex-review-gate", "codex"],
+    ] as const) {
+      const command = reviewGateStepCommand(pipeline, stepKey);
+      expect(command).not.toContain(
+        "bun --no-install scripts/wait-for-review.ts",
+      );
+      expect(command.some((line) => line.includes("review-gate.sh"))).toBe(
+        true,
+      );
+      expect(reviewGateStepBlockText(pipeline, stepKey)).toContain(
+        `REVIEW_PROVIDER: ${provider}`,
+      );
+    }
+  });
+
+  test("both required gates remain independently retryable", async () => {
+    const pipeline = await Bun.file(
+      `${import.meta.dir}/../.buildkite/pipeline.yml`,
+    ).text();
+    for (const stepKey of ["review-gate", "codex-review-gate"]) {
+      expect(reviewGateStepBlockText(pipeline, stepKey)).not.toContain(
+        "cancel_on_build_failing",
+      );
+    }
   });
 
   test("the gate script checks out a ref and runs the gate from it", async () => {

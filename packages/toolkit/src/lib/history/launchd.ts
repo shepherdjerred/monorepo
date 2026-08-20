@@ -91,6 +91,22 @@ async function jobLoaded(domain: string): Promise<boolean> {
   return exitCode === 0;
 }
 
+async function bootoutIfLoaded(domain: string): Promise<void> {
+  if (!(await jobLoaded(domain))) {
+    return;
+  }
+  await launchctl(["bootout", `${domain}/${LABEL}`]);
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    if (!(await jobLoaded(domain))) {
+      return;
+    }
+    await Bun.sleep(50);
+  }
+  throw new Error(
+    `LaunchAgent ${LABEL} remained loaded after launchctl bootout`,
+  );
+}
+
 async function bootstrap(
   runtimePaths: HistoryRuntimePaths,
   domain: string,
@@ -129,9 +145,7 @@ export async function installLaunchAgent(
     await chmod(logPath, 0o600);
   }
   const domain = guiDomain();
-  if (await jobLoaded(domain)) {
-    await launchctl(["bootout", `${domain}/${LABEL}`]);
-  }
+  await bootoutIfLoaded(domain);
   await launchctl(["bootstrap", domain, runtimePaths.launchAgent]);
   console.log(`History LaunchAgent installed: ${runtimePaths.launchAgent}`);
 }
@@ -163,9 +177,7 @@ export async function stopLaunchAgent(
   }
   const installed = await Bun.file(runtimePaths.launchAgent).exists();
   const domain = guiDomain();
-  if (await jobLoaded(domain)) {
-    await launchctl(["bootout", `${domain}/${LABEL}`]);
-  }
+  await bootoutIfLoaded(domain);
   console.log(
     installed ? "History daemon stopped." : "History daemon was not installed.",
   );

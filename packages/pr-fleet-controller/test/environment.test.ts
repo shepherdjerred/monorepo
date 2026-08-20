@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { codexProvider } from "@shepherdjerred/code-review";
@@ -26,6 +26,7 @@ import {
   type PrState,
 } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
 import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
+import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/process-runner.ts";
 import { createWorkerRestackTools } from "@shepherdjerred/pr-fleet-controller/src/worker-restack-tools.ts";
 import { evidence, identity } from "./fixtures.ts";
 
@@ -294,6 +295,26 @@ test("author scope is passed to GitHub without excluding drafts", async () => {
 });
 
 describe("command process-group termination", () => {
+  test("runs an unrestricted shell with the requested cwd and environment", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "shell-command-"));
+    try {
+      const result = await runCommand({
+        executable: "/bin/sh",
+        args: ["-lc", 'printf \'%s:%s\' "$PR_FLEET_TEST" "$PWD"'],
+        cwd: directory,
+        timeoutMs: 30_000,
+        env: { ...Bun.env, PR_FLEET_TEST: "full-environment" },
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toBe(
+        `full-environment:${await realpath(directory)}`,
+      );
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   let directory: string;
 
   beforeAll(async () => {

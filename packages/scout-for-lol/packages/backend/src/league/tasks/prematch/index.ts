@@ -1,5 +1,7 @@
 import { checkActiveGames } from "#src/league/tasks/prematch/active-game-detection.ts";
 import { closeExpiredBettingWindows } from "#src/betting/sweep.ts";
+import { closeExpiredParlayWindows } from "#src/betting/parlay-sweep.ts";
+import { activatePendingParlayMarkets } from "#src/betting/parlay-publish.ts";
 import { disableClosedBettingMessages } from "#src/betting/announce.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -12,11 +14,18 @@ export async function checkPreMatch() {
   try {
     await checkActiveGames();
 
+    // Durable publishing rows are a small outbox: retry Discord activation
+    // before processing clocks, including after a restart between persistence
+    // and the message edit that exposes buttons.
+    await activatePendingParlayMarkets();
+
     // Grey out the buttons on windows that have just expired. Purely cosmetic:
     // a click on a live-looking button is still refused by placeBet, which
     // re-checks closesAt inside its transaction.
     const closed = await closeExpiredBettingWindows();
     await disableClosedBettingMessages(closed);
+    const closedParlays = await closeExpiredParlayWindows();
+    await disableClosedBettingMessages(closedParlays);
 
     const executionTime = Date.now() - startTime;
     logger.info(

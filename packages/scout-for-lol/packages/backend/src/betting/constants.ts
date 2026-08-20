@@ -6,8 +6,8 @@ import { DiscordAccountIdSchema, type QueueType } from "@scout-for-lol/data";
  * Kept in one file because several of them are load-bearing across module
  * boundaries: the betting window is stored on each pool at creation, the void
  * grace period is chosen relative to two unrelated timeouts elsewhere in the
- * codebase, and the stake bounds are what keep the parimutuel arithmetic
- * inside the safe integer range.
+ * codebase, and persisted stakes remain within the existing Int32 domain while
+ * calculations use bigint intermediates.
  */
 
 /**
@@ -18,6 +18,14 @@ import { DiscordAccountIdSchema, type QueueType } from "@scout-for-lol/data";
  * so a late detection cannot silently extend the window.
  */
 export const BETTING_WINDOW_MS = 10 * 60 * 1000;
+
+/** The parlay is a separate live/in-play market published after prematch. */
+export const PARLAY_BETTING_WINDOW_MS = 5 * 60 * 1000;
+
+export const PARLAY_GENERATION_DEADLINE_MS = 60_000;
+export const PARLAY_INITIAL_OUTPUT_TOKENS = 4096;
+export const PARLAY_RETRY_OUTPUT_TOKENS = 6144;
+export const DEFAULT_PARLAY_AI_MODEL = "gpt-5.6-sol";
 
 /**
  * How long past its close a pool may sit unsettled before it is voided and
@@ -64,14 +72,6 @@ export const HOUSE_ACCOUNT_DISCORD_ID =
 export const BUTTON_STAKES = [1, 5] as const;
 
 export const MIN_STAKE = 1;
-
-/**
- * Upper bound on a single position. Also the guard that keeps
- * `stake * losersPool` inside `Number.MAX_SAFE_INTEGER` in the parimutuel
- * allocation, which multiplies before it divides to avoid compounding
- * rounding error.
- */
-export const MAX_STAKE = 1000;
 
 /**
  * Below this, a game is a remake: no Bucks are earned and every stake is

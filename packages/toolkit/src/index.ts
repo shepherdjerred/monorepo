@@ -56,6 +56,8 @@ Examples:
   toolkit pr health
   toolkit deployed scout/prod
   toolkit history recent --since 7d
+  toolkit history search "kubernetes" --since 30d
+  toolkit history show <ID> --query "kubernetes"
 `);
 }
 

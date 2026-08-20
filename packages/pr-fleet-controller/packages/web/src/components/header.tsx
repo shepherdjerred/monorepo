@@ -4,7 +4,7 @@ import type {
   RunSummary,
 } from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
 import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
-import type { RunStatus } from "#lib/fold";
+import type { FleetProgress, RunStatus } from "#lib/fold";
 
 function statusLabel(runStatus: RunStatus, summary: RunSummary | null): string {
   if (runStatus === "completed") {
@@ -35,6 +35,7 @@ export function Header({
   manifest,
   summary,
   fleet,
+  progress,
   runStatus,
   connected,
   error,
@@ -42,11 +43,15 @@ export function Header({
   manifest: RunManifest | null;
   summary: RunSummary | null;
   fleet: FleetSnapshot | null;
+  progress: FleetProgress;
   runStatus: RunStatus;
   connected: boolean;
   error: string | null;
 }): ReactElement {
   const label = statusLabel(runStatus, summary);
+  const repeatedFailures = [...progress.failures.values()].filter(
+    (count) => count > 1,
+  ).length;
   return (
     <header className="app-header">
       <div className="app-title">
@@ -88,6 +93,10 @@ export function Header({
           <Count label="pending" value={fleet.pending} />
           <Count label="waiting" value={fleet.waiting} />
           <Count label="paused" value={fleet.paused} />
+          <Count label="setups" value={progress.setupsCompleted} />
+          <Count label="published" value={progress.publicationsConfirmed} />
+          <Count label="lease denials" value={progress.leaseDenials} />
+          <Count label="repeated" value={repeatedFailures} />
         </div>
       )}
     </header>

@@ -7,6 +7,7 @@ import {
   test,
 } from "bun:test";
 import {
+  BUCKS_INT32_MAX,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
@@ -20,7 +21,6 @@ import { cancelBet } from "#src/betting/cancel-bet.ts";
 import {
   HOUSE_ACCOUNT_DISCORD_ID,
   HOUSE_BANKROLL,
-  MAX_STAKE,
   SEED_GRANT,
 } from "#src/betting/constants.ts";
 import { reconcileBucksBalances } from "#src/betting/reconcile.ts";
@@ -408,43 +408,28 @@ describe("placeBet — refusing a position", () => {
   });
 
   test("refuses a stake outside the allowed range", async () => {
-    for (const stake of [0, -5, 1_000_000, 1.5]) {
+    for (const stake of [0, -5, BUCKS_INT32_MAX + 1, 1.5]) {
       expect(await betKind({ stake })).toBe("invalid_stake");
     }
     expect(await db.bucksBet.count()).toBe(0);
   });
 
-  test("refuses a top-up that would take the position past MAX_STAKE", async () => {
+  test("allows a position above the former product cap", async () => {
     await bet({ stake: 1 });
-    // Fund the wallet well past the cap so the refusal below can only be the
-    // cap: a per-position bound that only holds while you are too poor to
-    // exceed it is not a bound.
-    await db.bucksAccount.updateMany({ data: { balance: 10 * MAX_STAKE } });
-
-    const result = await bet({ stake: MAX_STAKE });
-    if (result.kind !== "stake_cap") {
-      throw new Error(`expected the cap to refuse it, got ${result.kind}`);
-    }
-    expect(result.existingStake).toBe(1);
-    expect(result.max).toBe(MAX_STAKE);
-
-    // Nothing charged, and the position is exactly as it was.
-    const account = await db.bucksAccount.findFirstOrThrow();
-    expect(account.balance).toBe(10 * MAX_STAKE);
-    const position = await db.bucksBet.findFirstOrThrow();
-    expect(position.stake).toBe(1);
-    expect(await countLedger("bet_stake")).toBe(1);
-  });
-
-  test("allows a top-up that lands exactly on MAX_STAKE", async () => {
-    await bet({ stake: 1 });
-    await db.bucksAccount.updateMany({ data: { balance: 10 * MAX_STAKE } });
-
-    const result = await bet({ stake: MAX_STAKE - 1 });
+    await db.bucksAccount.updateMany({ data: { balance: 100_000 } });
+    const result = await bet({ stake: 25_000 });
     if (result.kind !== "placed") {
       throw new Error(`expected the bet to be placed, got ${result.kind}`);
     }
-    expect(result.totalStake).toBe(MAX_STAKE);
+    expect(result.totalStake).toBe(25_001);
+  });
+
+  test("refuses a top-up beyond Int32 storage", async () => {
+    const placed = await bet({ stake: 1 });
+    expect(placed.kind).toBe("placed");
+    await db.bucksBet.updateMany({ data: { stake: BUCKS_INT32_MAX } });
+    await db.bucksAccount.updateMany({ data: { balance: 1 } });
+    expect(await betKind({ stake: 1 })).toBe("storage_limit");
   });
 
   test("refuses a bet in a guild with no pool", async () => {

@@ -1,3 +1,4 @@
+import { BUCKS_INT32_MAX } from "@scout-for-lol/data";
 import { z } from "zod";
 
 /**
@@ -40,7 +41,7 @@ export const BucksCustomIdSchema = z.strictObject({
   /** Whether the selected team matches the anchor's team. */
   side: BucksSideSchema,
   /** Stake in Bucks. Zero for a cancel, where it carries no meaning. */
-  amount: z.number().int().min(0).max(1000),
+  amount: z.number().int().min(0).max(BUCKS_INT32_MAX),
 });
 
 export function formatBucksCustomId(input: BucksCustomId): string {

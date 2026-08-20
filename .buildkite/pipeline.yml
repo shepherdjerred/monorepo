@@ -1022,11 +1022,10 @@ steps:
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
 
-  # Blocking required gate: Qodo must finish reviewing the exact PR head, and
-  # every unresolved Qodo finding at the configured severity must be addressed.
-  # Qodo is the only active provider in the registry; its persistent issue
-  # comment is bound to the head timestamp and its Action required/Remediation
-  # recommended findings are included in the same gate.
+  # Blocking required gates: Qodo and Codex must each finish reviewing the
+  # exact PR head, and every unresolved finding from either provider at the
+  # configured severity must be addressed. Each provider runs independently so
+  # its completion signal and findings are evaluated with its own adapter.
   # This budget stays above wait-for-review.ts's own deadline plus its install,
   # so the script always reports which provider and head it gave up on rather
   # than Buildkite killing the pod first.
@@ -1034,7 +1033,8 @@ steps:
     key: review-gate
     timeout_in_minutes: 60
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
-    cancel_on_build_failing: true
+    env:
+      REVIEW_PROVIDER: qodo
     command: |
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/review-gate.sh
@@ -1045,6 +1045,23 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: review-gate
+
+  - label: ":robot_face: Codex review gate (required)"
+    key: codex-review-gate
+    timeout_in_minutes: 60
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    env:
+      REVIEW_PROVIDER: codex
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/review-gate.sh
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: codex-review-gate
 
   # ── PR-only dry-run lane: ONE pod validates every deploy path, no side
   # effects (the old pipeline's --dryrun plumbing). Replaces five micro-steps
@@ -1072,6 +1089,7 @@ steps:
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
         - ".buildkite/scripts/read-buildkite-handoff.ts"
         - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/select-image-targets.ts"
         - ".buildkite/scripts/select-image-targets-lockfile.ts"
         - ".buildkite/scripts/select-image-targets-workspaces.ts"
@@ -1202,6 +1220,7 @@ steps:
         - ".buildkite/scripts/buildkit-env.ts"
         - ".buildkite/scripts/buildkite-handoff.ts"
         - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/ghcr-package-visibility.ts"
         - ".buildkite/scripts/image-targets.ts"
         - ".buildkite/scripts/migration-core.ts"
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
@@ -1473,17 +1492,47 @@ steps:
               ci.sjer.red/step-key: publish
 
   # ── Main-only: homelab release track ─────────────────────────────────────
+  # Admit only the commit that is main when this release starts. A later main
+  # commit does not invalidate an admitted release: its root operation is
+  # already bound to this build's exact request and revision.
+  - label: ":passport_control: homelab release admission"
+    key: homelab-release-admission
+    timeout_in_minutes: 10
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    command: |
+      bun --no-install .buildkite/scripts/homelab-release-admission.ts admit
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: homelab-release-admission
+
   - label: ":helm: helm push"
     key: helm-push
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     # Wait for this build's remote solves before suspending the currently
     # floating repository Applications and publishing their immutable charts.
-    depends_on: [verify, images, ci-base-refresh, ci-playwright-refresh]
+    depends_on:
+      [
+        homelab-release-admission,
+        images,
+        ci-base-refresh,
+        ci-playwright-refresh,
+      ]
     concurrency: 1
     concurrency_group: monorepo/homelab-release
     concurrency_method: ordered
     command: |
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
       image_digests=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests)
       release_requested=false
       if bun --no-install .buildkite/scripts/ci-changed.ts helm; then release_requested=true; fi
@@ -1513,9 +1562,15 @@ steps:
     key: tofu-apply
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
-    depends_on: [verify, helm-push]
+    depends_on: [homelab-release-admission, helm-push]
     cancel_on_build_failing: true
     command: |
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
@@ -1539,13 +1594,19 @@ steps:
     key: tofu-github
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
-    depends_on: verify
+    depends_on: homelab-release-admission
     cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-github
     # No automatic retry: GitHub API mutations are not idempotent on partial
     # failure (same policy as the old pipeline).
     command: |
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
@@ -1598,11 +1659,18 @@ steps:
     if: build.branch == pipeline.default_branch
     # tofu-platform is in the chain so a deploy never lands before the platform
     # credentials and 1Password handoffs from the same merge have been applied.
-    depends_on: [images, helm-push, tofu-apply, tofu-platform]
+    depends_on:
+      [homelab-release-admission, images, helm-push, tofu-apply, tofu-platform]
     concurrency: 1
     concurrency_group: monorepo/homelab-release
     concurrency_method: ordered
     command: |
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
       image_digests=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests)
       release_requested=false
       if bun --no-install .buildkite/scripts/ci-changed.ts helm; then release_requested=true; fi
@@ -1619,6 +1687,8 @@ steps:
       # One identity-bound process stages root prerequisites, reconciles exact
       # child revisions, restores/prunes the root, and owns scoped health.
       bun --no-install packages/homelab/scripts/argocd.ts release-root apps argocd-release-expected.json --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --timeout 300
+      buildkite-agent artifact upload "homelab-release-result.json"
+      buildkite-agent annotate --context homelab-release-result --style success < homelab-release-result.json
     retry: *retry
     plugins:
       - kubernetes:
@@ -1740,13 +1810,19 @@ steps:
     key: tofu-cloudflare
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
-    depends_on: argocd-sync
+    depends_on: [homelab-release-admission, argocd-sync]
     cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-cloudflare
     # Fail-closed: the SeaweedFS TunnelBinding finalizer must complete before
     # the Cloudflare DNS tunnel route is removed (same gate as the old CI).
     command: |
+      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
+      if [ "$$release_admission" != "admitted" ]; then
+        echo "invalid homelab release admission outcome: $$release_admission"
+        exit 1
+      fi
       if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then
         if ! bun --no-install .buildkite/scripts/ci-changed.ts argocd; then exit 0; fi
       fi
@@ -1882,6 +1958,7 @@ steps:
       - docker-e2e-main
       - images
       - sites
+      - homelab-release-admission
       - helm-push
       - tofu-apply
       - tofu-github

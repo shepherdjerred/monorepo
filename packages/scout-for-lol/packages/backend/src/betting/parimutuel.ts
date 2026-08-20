@@ -1,3 +1,5 @@
+import { BUCKS_INT32_MAX } from "@scout-for-lol/data";
+
 /**
  * Parimutuel payout allocation.
  *
@@ -27,6 +29,7 @@ export type ParimutuelAllocation = {
 
 export type ParimutuelResult =
   | { kind: "refund_all"; totalStake: number }
+  | { kind: "storage_overflow" }
   | {
       kind: "paid";
       winnersPool: number;
@@ -34,8 +37,14 @@ export type ParimutuelResult =
       allocations: readonly ParimutuelAllocation[];
     };
 
-function sumStakes(bets: readonly ParimutuelBet[]): number {
-  return bets.reduce((total, bet) => total + bet.stake, 0);
+function sumStakes(bets: readonly ParimutuelBet[]): bigint {
+  return bets.reduce((total, bet) => total + BigInt(bet.stake), 0n);
+}
+
+function persistedNumber(value: bigint): number | undefined {
+  return value >= 0n && value <= BigInt(BUCKS_INT32_MAX)
+    ? Number(value)
+    : undefined;
 }
 
 /**
@@ -50,31 +59,39 @@ function sumStakes(bets: readonly ParimutuelBet[]): number {
  */
 function allocateWinnings(
   winners: readonly ParimutuelBet[],
-  winnersPool: number,
-  losersPool: number,
-): ParimutuelAllocation[] {
+  winnersPool: bigint,
+  losersPool: bigint,
+): ParimutuelAllocation[] | undefined {
   const ordered = [...winners].sort(
     (a, b) => b.stake - a.stake || a.betId - b.betId,
   );
 
   const floored = ordered.map((bet) => ({
     bet,
-    winnings: Math.floor((bet.stake * losersPool) / winnersPool),
+    winnings: (BigInt(bet.stake) * losersPool) / winnersPool,
   }));
 
-  const distributed = floored.reduce((total, row) => total + row.winnings, 0);
+  const distributed = floored.reduce((total, row) => total + row.winnings, 0n);
   let remainder = losersPool - distributed;
 
-  return floored.map((row) => {
-    const bonus = remainder > 0 ? 1 : 0;
+  const allocations: ParimutuelAllocation[] = [];
+  for (const row of floored) {
+    const bonus = remainder > 0n ? 1n : 0n;
     remainder -= bonus;
     const winnings = row.winnings + bonus;
-    return {
+    const payout = BigInt(row.bet.stake) + winnings;
+    const persistedWinnings = persistedNumber(winnings);
+    const persistedPayout = persistedNumber(payout);
+    if (persistedWinnings === undefined || persistedPayout === undefined) {
+      return;
+    }
+    allocations.push({
       betId: row.bet.betId,
-      winnings,
-      payout: row.bet.stake + winnings,
-    };
-  });
+      winnings: persistedWinnings,
+      payout: persistedPayout,
+    });
+  }
+  return allocations;
 }
 
 export function computeParimutuelPayouts(
@@ -92,15 +109,27 @@ export function computeParimutuelPayouts(
   // numerically the same as paying each winner their stake back, but it is
   // recorded as a refund so the ledger states the reason instead of leaving a
   // reader to notice that payout happened to equal stake.
-  if (winnersPool === 0 || losersPool === 0) {
-    return { kind: "refund_all", totalStake: winnersPool + losersPool };
+  if (winnersPool === 0n || losersPool === 0n) {
+    const totalStake = persistedNumber(winnersPool + losersPool);
+    return totalStake === undefined
+      ? { kind: "storage_overflow" }
+      : { kind: "refund_all", totalStake };
   }
 
   const allocations = allocateWinnings(winners, winnersPool, losersPool);
+  const persistedWinnersPool = persistedNumber(winnersPool);
+  const persistedLosersPool = persistedNumber(losersPool);
+  if (
+    allocations === undefined ||
+    persistedWinnersPool === undefined ||
+    persistedLosersPool === undefined
+  ) {
+    return { kind: "storage_overflow" };
+  }
 
   const paidOut = allocations.reduce(
-    (total, allocation) => total + allocation.payout,
-    0,
+    (total, allocation) => total + BigInt(allocation.payout),
+    0n,
   );
   const expected = winnersPool + losersPool;
   if (paidOut !== expected) {
@@ -109,5 +138,10 @@ export function computeParimutuelPayouts(
     );
   }
 
-  return { kind: "paid", winnersPool, losersPool, allocations };
+  return {
+    kind: "paid",
+    winnersPool: persistedWinnersPool,
+    losersPool: persistedLosersPool,
+    allocations,
+  };
 }

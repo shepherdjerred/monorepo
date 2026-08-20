@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 
-import { run, runAllowExit } from "./run.ts";
+import { optionalEnv, requireEnv, run, runAllowExit, tmpBase } from "./run.ts";
 import { isTransientError } from "./transient.ts";
 
 /**
@@ -16,10 +16,13 @@ function stderrEmitter(payload: string, code: number): string[] {
   ];
 }
 
+const testEnvironmentName = "CODEX_RUN_HELPER_TEST_VALUE";
+
 describe("run stderr capture", () => {
   const originalWrite = process.stderr.write.bind(process.stderr);
   afterEach(() => {
     process.stderr.write = originalWrite;
+    Bun.env[testEnvironmentName] = undefined;
   });
 
   test("runAllowExit returns a stderr tail and never throws on non-zero exit", async () => {
@@ -139,4 +142,46 @@ describe("run stderr capture", () => {
     // Tail is bounded well under the full 200KB payload.
     expect(message.length).toBeLessThan(20_000);
   });
+});
+
+test("requires and optionally reads environment variables", () => {
+  Bun.env[testEnvironmentName] = undefined;
+  expect(() => requireEnv(testEnvironmentName)).toThrow(
+    `Missing required environment variable ${testEnvironmentName}`,
+  );
+  expect(optionalEnv(testEnvironmentName)).toBeNull();
+
+  Bun.env[testEnvironmentName] = "value";
+  expect(requireEnv(testEnvironmentName)).toBe("value");
+  expect(optionalEnv(testEnvironmentName)).toBe("value");
+  Bun.env[testEnvironmentName] = "";
+  expect(optionalEnv(testEnvironmentName)).toBeNull();
+  Bun.env[testEnvironmentName] = undefined;
+});
+
+test("returns the temporary base without a trailing slash", () => {
+  expect(tmpBase()).toBe((Bun.env["TMPDIR"] ?? "/tmp").replace(/\/+$/u, ""));
+});
+
+test("covers command environment, cwd, success, and empty command paths", async () => {
+  Bun.env[testEnvironmentName] = "secret-value";
+  const result = await runAllowExit(
+    [
+      process.execPath,
+      "-e",
+      `process.stdout.write(process.env[${JSON.stringify(testEnvironmentName)}] ?? "missing"); process.stderr.write("diagnostic")`,
+    ],
+    {
+      capture: true,
+      cwd: "/tmp",
+      env: { [testEnvironmentName]: "override-value" },
+      unsetEnv: [testEnvironmentName],
+    },
+  );
+  expect(result.stdout).toBe("missing");
+  expect(result.stderr).toBe("diagnostic");
+  await expect(runAllowExit([])).rejects.toThrow("run: empty command");
+  await expect(
+    run([process.execPath, "-e", "process.exit(0)"]),
+  ).resolves.toMatchObject({ exitCode: 0 });
 });

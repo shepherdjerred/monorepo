@@ -74,6 +74,7 @@ export const QUEUE_AVAILABILITY: Record<QueueType, QueueAvailability> = {
   "classic aram mayhem": limitedFromJson("classic aram mayhem"),
   brawl: limitedFromJson("brawl"),
   "aram mayhem": limitedFromJson("aram mayhem"),
+  normal: PERMANENT,
   "draft pick": PERMANENT,
   "easy doom bots": limitedFromJson("easy doom bots"),
   "normal doom bots": limitedFromJson("normal doom bots"),

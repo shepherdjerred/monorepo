@@ -1,5 +1,6 @@
 import { rm } from "node:fs/promises";
 import { asRecord } from "../../scripts/lib/json.ts";
+import { requireEnv } from "../../scripts/lib/run.ts";
 import { writeJsonHandoff } from "./buildkite-handoff.ts";
 import {
   classifyRuntimeChange,
@@ -21,11 +22,15 @@ import {
   parseImageSelection,
 } from "./migration-core.ts";
 import { resolveManagedImagePins } from "../../scripts/lib/image-pin-catalog.ts";
-import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
+import {
+  APPLICATION_IMAGE_TARGETS,
+  requiresPublicGhcrVisibility,
+} from "./image-targets.ts";
 import {
   anonymousPullVerifier,
   type AnonymousPullVerifier,
 } from "./ghcr-public-access.ts";
+import { ensureDeclaredGhcrPackageVisibility } from "./ghcr-package-visibility.ts";
 import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../scripts/lib/transient.ts";
@@ -283,6 +288,7 @@ export async function pushImages(
     readonly readVersionCatalog?: () => Promise<string>;
     readonly getManifestDigest?: (image: string) => Promise<string>;
     readonly verifyAnonymousPull?: AnonymousPullVerifier;
+    readonly ensurePublicVisibility?: (packageName: string) => Promise<void>;
     readonly verifySourceLabel?: (image: string) => Promise<void>;
     readonly getRuntimeFingerprint?: (
       image: string,
@@ -312,6 +318,15 @@ export async function pushImages(
   const verifyAnonymousPull = anonymousPullVerifier(
     dependencies.verifyAnonymousPull,
   );
+  const ensurePublicVisibility =
+    dependencies.ensurePublicVisibility ??
+    (async (packageName) =>
+      ensureDeclaredGhcrPackageVisibility(
+        packageName,
+        requiresPublicGhcrVisibility(packageName)
+          ? requireEnv("GH_TOKEN")
+          : undefined,
+      ));
   const verifySourceLabel = sourceLabelVerifier(
     dependencies.verifySourceLabel,
     executor,
@@ -370,6 +385,7 @@ export async function pushImages(
     const candidateTag = `${image}:candidate-${commit}`;
     const digest = await getManifestDigest(candidateTag);
     const candidate = `${image}@${digest}`;
+    await ensurePublicVisibility(name);
     await verifyAnonymousPull(name, digest);
     if (applicationImageTargets.has(name)) {
       await verifySourceLabel(candidate);

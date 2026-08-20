@@ -821,7 +821,7 @@ SJ-147.
 
 A per-guild betting economy over the existing match lifecycle, in
 `backend/src/betting/` (no barrel), gated by the `betting_enabled` flag. Design
-notes: `packages/docs/plans/2026-08-15_scout-bryan-bucks-betting.md`.
+notes: `packages/docs/archive/completed/2026-08-15_scout-bryan-bucks-betting.md`.
 
 **Scope: one server, effectively beta-only.** This is a private single-server
 experiment, not a Scout-wide feature, and is not intended to become one.
@@ -860,6 +860,32 @@ America/Los_Angeles in the shared Common Denominator channel. Both deployments
 run the cron, but only the Discord application in the one enabled guild posts;
 more than one enabled guild is a hard failure until an explicit channel mapping
 exists.
+
+Bucks exchange at 1:10 Bucks:CAD, in person only, from Bryan, who lives in rural
+Canada. There is no monetary component and nothing transfers to real goods.
+
+Each eligible Solo/Duo or Flex match may also publish one shared, fixed-odds
+parlay after the normal prematch message. Its guild-local market closes five
+minutes after publication, independently of the outcome market's ten-minute
+window. GPT-5.6 Sol generates a versioned 2–6 leg tree through OpenRouter at
+medium reasoning with 4,096 initial output tokens, 6,144 only on a truncated
+corrective attempt, and one 60-second deadline. The prompt contains anonymous
+lobby context, up to 30 same-queue history rows per selected player, and the
+complete reviewed field catalog. Settlement is deterministic against the final
+`RawMatch`; model-authored paths, code, SQL, expressions, and settlement prose
+are never accepted. `bun run test:parlay:live` is the opt-in four-scenario
+production-prompt check and fails fast without `OPENROUTER_API_KEY`.
+Discord publication persists a `publishing` market behind an inert preparation
+message; the prematch poll retries activation after restarts, and the market
+becomes bettable only after the guarded transition to `open`.
+
+Outcome and parlay positions have no product stake maximum. A positive whole-BB
+amount is limited only by the user's balance, parlay house liability, and the
+existing Int32 persistence domain. Fixed-odds house liability is reserved at
+placement and released or paid from the stored quote; every top-up reprices the
+whole position with integer ceiling so button-sized increments cannot exploit
+rounding. Every credit preserves enough Int32 headroom to return all pending
+stakes and house reserves, including cancellation and void paths.
 
 One-sided markets are matched by a synthetic per-guild house account with a
 bounded opening bankroll. The house is a real `BucksAccount` and `BucksBet`, so

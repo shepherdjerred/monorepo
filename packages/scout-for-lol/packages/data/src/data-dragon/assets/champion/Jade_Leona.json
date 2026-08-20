@@ -1,190 +1,510 @@
 {
-  "type": "champion",
-  "format": "standAloneComplex",
-  "version": "16.15.1",
   "data": {
     "Jade_Leona": {
-      "id": "Jade_Leona",
-      "key": "60089",
+      "id": "Leona",
+      "key": "89",
       "name": "Leona",
-      "title": "The Radiant Dawn",
+      "title": "the Radiant Dawn",
       "image": {
-        "full": "Jade_Leona.png",
+        "full": "Leona.png",
         "sprite": "champion2.png",
         "group": "champion",
-        "x": 288,
+        "x": 48,
         "y": 48,
         "w": 48,
         "h": 48
       },
       "skins": [
         {
-          "id": "60089000",
+          "id": "89000",
           "num": 0,
           "name": "default",
           "chromas": false
         },
         {
-          "id": "60089004",
-          "num": 4,
-          "name": "Pool Party Leona",
+          "id": "89001",
+          "num": 1,
+          "name": "Valkyrie Leona",
           "chromas": false
         },
         {
-          "id": "60089005",
+          "id": "89002",
+          "num": 2,
+          "name": "Defender Leona",
+          "chromas": false
+        },
+        {
+          "id": "89003",
+          "num": 3,
+          "name": "Iron Solari Leona",
+          "chromas": false
+        },
+        {
+          "id": "89004",
+          "num": 4,
+          "name": "Pool Party Leona",
+          "chromas": true
+        },
+        {
+          "id": "89005",
           "num": 5,
           "name": "Pool Party Leona Dawn Pink",
           "chromas": false,
           "parentSkin": 4
         },
         {
-          "id": "60089006",
+          "id": "89006",
           "num": 6,
           "name": "Pool Party Leona Dawn Azure",
           "chromas": false,
           "parentSkin": 4
         },
         {
-          "id": "60089007",
+          "id": "89007",
           "num": 7,
           "name": "Pool Party Leona Dawn Lemon",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 4
         },
         {
-          "id": "60089009",
+          "id": "89008",
+          "num": 8,
+          "name": "PROJECT: Leona",
+          "chromas": false
+        },
+        {
+          "id": "89009",
           "num": 9,
           "name": "Barbecue Leona",
           "chromas": false
         },
         {
-          "id": "60089012",
-          "num": 12,
-          "name": "Mecha Kingdoms Leona",
+          "id": "89010",
+          "num": 10,
+          "name": "Solar Eclipse Leona",
           "chromas": false
         },
         {
-          "id": "60089013",
+          "id": "89011",
+          "num": 11,
+          "name": "Lunar Eclipse Leona",
+          "chromas": false
+        },
+        {
+          "id": "89012",
+          "num": 12,
+          "name": "Mecha Kingdoms Leona",
+          "chromas": true
+        },
+        {
+          "id": "89013",
           "num": 13,
           "name": "Mecha Kingdoms Leona (Peacekeeper)",
           "chromas": false,
           "parentSkin": 12
         },
         {
-          "id": "60089014",
+          "id": "89014",
           "num": 14,
           "name": "Mecha Kingdoms Leona (Obsidian)",
           "chromas": false,
           "parentSkin": 12
         },
         {
-          "id": "60089015",
+          "id": "89015",
           "num": 15,
           "name": "Mecha Kingdoms Leona (Pearl)",
           "chromas": false,
           "parentSkin": 12
         },
         {
-          "id": "60089016",
+          "id": "89016",
           "num": 16,
           "name": "Mecha Kingdoms Leona (Ruby)",
           "chromas": false,
           "parentSkin": 12
         },
         {
-          "id": "60089017",
+          "id": "89017",
           "num": 17,
           "name": "Mecha Kingdoms Leona (Turquoise)",
           "chromas": false,
           "parentSkin": 12
         },
         {
-          "id": "60089018",
+          "id": "89018",
           "num": 18,
           "name": "Mecha Kingdoms Leona (Sapphire)",
-          "chromas": true,
+          "chromas": false,
           "parentSkin": 12
         },
         {
-          "id": "60089019",
+          "id": "89019",
           "num": 19,
           "name": "Mecha Kingdoms Leona (Rose Quartz)",
           "chromas": false,
           "parentSkin": 12
         },
         {
-          "id": "60089020",
+          "id": "89020",
           "num": 20,
           "name": "Mecha Kingdoms Leona (Tanzanite)",
           "chromas": false,
           "parentSkin": 12
         },
         {
-          "id": "60089034",
-          "num": 34,
-          "name": "High Noon Leona",
+          "id": "89021",
+          "num": 21,
+          "name": "Battle Academia Leona",
+          "chromas": true
+        },
+        {
+          "id": "89022",
+          "num": 22,
+          "name": "DWG Leona",
+          "chromas": true
+        },
+        {
+          "id": "89023",
+          "num": 23,
+          "name": "Prestige Battle Academia Leona",
           "chromas": false
         },
         {
-          "id": "60089044",
+          "id": "89024",
+          "num": 24,
+          "name": "Battle Academia Leona (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89025",
+          "num": 25,
+          "name": "Battle Academia Leona (Citrine)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89026",
+          "num": 26,
+          "name": "Battle Academia Leona (Sapphire)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89027",
+          "num": 27,
+          "name": "Battle Academia Leona (Turquoise)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89028",
+          "num": 28,
+          "name": "Battle Academia Leona (Emerald)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89029",
+          "num": 29,
+          "name": "Battle Academia Leona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89030",
+          "num": 30,
+          "name": "Battle Academia Leona (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89031",
+          "num": 31,
+          "name": "Battle Academia Leona (Pearl)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "89032",
+          "num": 32,
+          "name": "DWG Leona (Elite)",
+          "chromas": false,
+          "parentSkin": 22
+        },
+        {
+          "id": "89033",
+          "num": 33,
+          "name": "Debonair Leona",
+          "chromas": true
+        },
+        {
+          "id": "89034",
+          "num": 34,
+          "name": "High Noon Leona",
+          "chromas": true
+        },
+        {
+          "id": "89035",
+          "num": 35,
+          "name": "Debonair Leona (Ruby)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89036",
+          "num": 36,
+          "name": "Debonair Leona (Catseye)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89037",
+          "num": 37,
+          "name": "Debonair Leona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89038",
+          "num": 38,
+          "name": "Debonair Leona (Sapphire)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89039",
+          "num": 39,
+          "name": "Debonair Leona (Turquoise)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89040",
+          "num": 40,
+          "name": "Debonair Leona (Emerald)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89041",
+          "num": 41,
+          "name": "Debonair Leona (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89042",
+          "num": 42,
+          "name": "Debonair Leona (Obsidian)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89043",
+          "num": 43,
+          "name": "Debonair Leona (Cerulean Club)",
+          "chromas": false,
+          "parentSkin": 33
+        },
+        {
+          "id": "89044",
           "num": 44,
           "name": "High Noon Leona (Ruby)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60089045",
+          "id": "89045",
           "num": 45,
           "name": "High Noon Leona (Tanzanite)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60089046",
+          "id": "89046",
           "num": 46,
           "name": "High Noon Leona (Rose Quartz)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60089047",
+          "id": "89047",
           "num": 47,
           "name": "High Noon Leona (Catseye)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60089048",
+          "id": "89048",
           "num": 48,
           "name": "High Noon Leona (Nomad)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60089049",
+          "id": "89049",
           "num": 49,
           "name": "High Noon Leona (Sapphire)",
           "chromas": false,
           "parentSkin": 34
         },
         {
-          "id": "60089050",
+          "id": "89050",
           "num": 50,
           "name": "Crystalis Motus Leona",
-          "chromas": false
+          "chromas": true
         },
         {
-          "id": "60089051",
+          "id": "89051",
           "num": 51,
           "name": "Crystalis Motus Leona (Reclaimed)",
           "chromas": false,
           "parentSkin": 50
+        },
+        {
+          "id": "89052",
+          "num": 52,
+          "name": "Battle Lion Leona",
+          "chromas": true
+        },
+        {
+          "id": "89053",
+          "num": 53,
+          "name": "Prestige Battle Lion Leona",
+          "chromas": false
+        },
+        {
+          "id": "89054",
+          "num": 54,
+          "name": "Battle Lion Leona (Ruby)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89055",
+          "num": 55,
+          "name": "Battle Lion Leona (Emerald)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89056",
+          "num": 56,
+          "name": "Battle Lion Leona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89057",
+          "num": 57,
+          "name": "Battle Lion Leona (Catseye)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89058",
+          "num": 58,
+          "name": "Battle Lion Leona (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89059",
+          "num": 59,
+          "name": "Battle Lion Leona (Turquoise)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89060",
+          "num": 60,
+          "name": "Battle Lion Leona (Meteorite)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89061",
+          "num": 61,
+          "name": "Battle Lion Leona (Pearl)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89062",
+          "num": 62,
+          "name": "Battle Lion Leona (Nightwire)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89063",
+          "num": 63,
+          "name": "Battle Lion Leona (Override)",
+          "chromas": false,
+          "parentSkin": 52
+        },
+        {
+          "id": "89064",
+          "num": 64,
+          "name": "Eternal Aspect Leona",
+          "chromas": true
+        },
+        {
+          "id": "89065",
+          "num": 65,
+          "name": "Eternal Aspect Leona (Ruby)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "89066",
+          "num": 66,
+          "name": "Eternal Aspect Leona (Turquoise)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "89067",
+          "num": 67,
+          "name": "Eternal Aspect Leona (Sapphire)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "89068",
+          "num": 68,
+          "name": "Eternal Aspect Leona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "89069",
+          "num": 69,
+          "name": "Eternal Aspect Leona (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "89070",
+          "num": 70,
+          "name": "Eternal Aspect Leona (Pearl)",
+          "chromas": false,
+          "parentSkin": 64
         }
       ],
-      "lore": "- In a human life, the sun never changes, neither does she",
-      "blurb": "- In a human life, the sun never changes, neither does she",
-      "allytips": [],
-      "enemytips": [],
+      "lore": "Imbued with the fire of the sun, Leona is a holy warrior of the Solari who defends Mount Targon with her Zenith Blade and the Shield of Daybreak. Her skin shimmers with starfire while her eyes burn with the power of the celestial Aspect within her. Armored in gold and bearing a terrible burden of ancient knowledge, Leona brings enlightenment to some, death to others.",
+      "blurb": "Imbued with the fire of the sun, Leona is a holy warrior of the Solari who defends Mount Targon with her Zenith Blade and the Shield of Daybreak. Her skin shimmers with starfire while her eyes burn with the power of the celestial Aspect within her...",
+      "allytips": [
+        "Lead the charge and mark your foes with Sunlight before your allies deal damage.",
+        "Shield of Daybreak and Zenith Blade form a powerful offensive combo.",
+        "You can absorb a huge amount of damage using Eclipse, but you must stay near enemies to gain the bonus duration."
+      ],
+      "enemytips": [
+        "When Leona activates Eclipse, you have three seconds to get away from her before she deals damage.",
+        "Only foes in the center of Solar Flare get stunned, so you can often avoid this if you're quick."
+      ],
       "tags": [
         "Tank",
         "Support"
@@ -197,62 +517,60 @@
         "difficulty": 4
       },
       "stats": {
-        "hp": 517,
-        "hpperlevel": 87,
-        "mp": 275,
+        "hp": 646,
+        "hpperlevel": 101,
+        "mp": 302,
         "mpperlevel": 40,
         "movespeed": 335,
-        "armor": 25.1,
-        "armorperlevel": 3.1,
-        "spellblock": 31.25,
-        "spellblockperlevel": 1.25,
+        "armor": 43,
+        "armorperlevel": 4.8,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
         "attackrange": 125,
-        "hpregen": 9.85,
+        "hpregen": 8.5,
         "hpregenperlevel": 0.85,
-        "mpregen": 7.7,
-        "mpregenperlevel": 0.7,
+        "mpregen": 6,
+        "mpregenperlevel": 0.8,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 58,
+        "attackdamage": 60,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.9,
         "attackspeed": 0.625
       },
       "spells": [
         {
-          "id": "Jade_LeonaShieldOfDaybreak",
+          "id": "LeonaShieldOfDaybreak",
           "name": "Shield of Daybreak",
           "description": "Leona uses her shield to perform her next basic attack, dealing bonus magic damage and stunning the target.",
-          "tooltip": "The next basic attack deals an additional <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and <status>Stuns</status> an enemy for 1.25 seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Leona's next Attack <status>Stuns</status> for {{ stunduration }} seconds and deals an additional <magicDamage>{{ totaldamagetooltip }}</magicDamage> magic damage.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
-              "@AbilityResourceName@ Cost",
-              "Cooldown"
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ damage }} -> {{ damageNL }}",
-              "{{ cost }} -> {{ costNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            11,
-            10,
-            9,
-            8,
-            7
+            5,
+            5,
+            5,
+            5,
+            5
           ],
-          "cooldownBurn": "11/10/9/8/7",
+          "cooldownBurn": "5",
           "cost": [
+            30,
+            35,
+            40,
             45,
-            50,
-            55,
-            60,
-            65
+            50
           ],
-          "costBurn": "45/50/55/60/65",
+          "costBurn": "30/35/40/45/50",
           "datavalues": {},
           "effect": [
             null,
@@ -352,40 +670,44 @@
           ],
           "rangeBurn": "100",
           "image": {
-            "full": "Jade_LeonaShieldOfDaybreak.png",
-            "sprite": "spell8.png",
+            "full": "LeonaShieldOfDaybreak.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 384,
-            "y": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_LeonaSolarBarrier",
+          "id": "LeonaSolarBarrier",
           "name": "Eclipse",
-          "description": "Leona raises her shield to gain Armor and Magic Resistance.  When the duration first ends, if there are nearby enemies she will deal magic damage to them and prolong the duration of the effect.",
-          "tooltip": "Gains {{ bonusarmr }} bonus <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 3 seconds. When the effect ends, nearby enemies struck take <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> and Leona retains her bonus <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 3 seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Leona raises her shield to gain Damage Reduction, Armor, and Magic Resist. When the duration first ends, if there are nearby enemies, she will deal magic damage to them and prolong the duration of the effect.",
+          "tooltip": "Leona raises her shield, reducing incoming damage by {{ flatdamagereduction }} and gaining <scaleArmor>{{ bonusarmortooltip }} Armor</scaleArmor> and <scaleMR>{{ bonusmrtooltip }} Magic Resist</scaleMR> for {{ armormrduration }} seconds. Afterwards, her shield detonates, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage> to nearby enemies. If she hits at least one, she retains the <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> bonuses for an additional {{ armormrduration }} seconds.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
-              "Armor and Magic Resist"
+              "Armor and Magic Resist",
+              "Damage Reduction",
+              "Cooldown"
             ],
             "effect": [
-              "{{ damage }} -> {{ damageNL }}",
-              "{{ bonusarmr }} -> {{ bonusarmrNL }}"
+              "{{ explosionbasedamage }} -> {{ explosionbasedamageNL }}",
+              "{{ armorbasebonus }} -> {{ armorbasebonusNL }}",
+              "{{ flatdamagereduction }} -> {{ flatdamagereductionNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
             14,
-            14,
-            14,
-            14,
-            14
+            13,
+            12,
+            11,
+            10
           ],
-          "cooldownBurn": "14",
+          "cooldownBurn": "14/13/12/11/10",
           "cost": [
             60,
             60,
@@ -398,18 +720,18 @@
           "effect": [
             null,
             [
-              60,
-              110,
-              160,
-              210,
-              260
+              55,
+              85,
+              115,
+              145,
+              175
             ],
             [
-              30,
-              40,
-              50,
-              60,
-              70
+              20,
+              27.5,
+              35,
+              42.5,
+              50
             ],
             [
               3,
@@ -419,11 +741,11 @@
               3
             ],
             [
-              30,
-              40,
-              50,
-              60,
-              70
+              20,
+              27.5,
+              35,
+              42.5,
+              50
             ],
             [
               0,
@@ -470,10 +792,10 @@
           ],
           "effectBurn": [
             null,
-            "60/110/160/210/260",
-            "30/40/50/60/70",
+            "55/85/115/145/175",
+            "20/27.5/35/42.5/50",
             "3",
-            "30/40/50/60/70",
+            "20/27.5/35/42.5/50",
             "0",
             "0",
             "0",
@@ -493,57 +815,59 @@
           ],
           "rangeBurn": "450",
           "image": {
-            "full": "Jade_LeonaSolarBarrier.png",
-            "sprite": "spell8.png",
+            "full": "LeonaSolarBarrier.png",
+            "sprite": "spell7.png",
             "group": "spell",
             "x": 432,
-            "y": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_LeonaZenithBlade",
+          "id": "LeonaZenithBlade",
           "name": "Zenith Blade",
           "description": "Leona projects a solar image of her sword, dealing magic damage to all enemies in a line. When the image fades, the last enemy champion struck will be briefly immobilized and Leona will dash to them.",
-          "tooltip": "Strikes all enemies in a line dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>. The last enemy Champion struck will be briefly <status>Rooted</status> and Leona will dash to them.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Leona thrusts with a sword of light, dealing <magicDamage>{{ totaldamagetooltip }} magic damage</magicDamage>. The last champion struck will be <status>Rooted</status> for {{ rootduration }} seconds and Leona will dash to them.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
-              "Cooldown"
+              "Cooldown",
+              "@AbilityResourceName@ Cost"
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [
-            13,
             12,
-            11,
-            10,
-            9
+            10.5,
+            9,
+            7.5,
+            6
           ],
-          "cooldownBurn": "13/12/11/10/9",
+          "cooldownBurn": "12/10.5/9/7.5/6",
           "cost": [
-            60,
-            60,
-            60,
-            60,
+            40,
+            45,
+            50,
+            55,
             60
           ],
-          "costBurn": "60",
+          "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
             [
-              60,
-              100,
-              140,
-              180,
-              220
+              50,
+              90,
+              130,
+              170,
+              210
             ],
             [
               0.5,
@@ -611,7 +935,7 @@
           ],
           "effectBurn": [
             null,
-            "60/100/140/180/220",
+            "50/90/130/170/210",
             "0.5",
             "0",
             "0",
@@ -634,31 +958,29 @@
           ],
           "rangeBurn": "875",
           "image": {
-            "full": "Jade_LeonaZenithBlade.png",
+            "full": "LeonaZenithBlade.png",
             "sprite": "spell8.png",
             "group": "spell",
             "x": 0,
-            "y": 96,
+            "y": 0,
             "w": 48,
             "h": 48
           },
           "resource": "{{ cost }} {{ abilityresourcename }}"
         },
         {
-          "id": "Jade_LeonaSolarFlare",
+          "id": "LeonaSolarFlare",
           "name": "Solar Flare",
-          "description": "Leona calls down a beam of solar energy, dealing damage to enemies in an area.  Enemies in the center of the area are stunned, while enemies on the outside are slowed.",
-          "tooltip": "Calls down a radiant beam of solar energy dealing <magicDamage>{{ explosioncalculateddamage }} magic damage</magicDamage> and <status>Slowing</status> enemies by {{ slowpercent }}% for {{ ccduration }} seconds. Enemies in the center of the flare are <status>Stunned</status>.{{ spellmodifierdescriptionappend }}",
+          "description": "Leona calls down a beam of solar energy, dealing damage to enemies in an area. Enemies in the center of the area are stunned, while enemies on the outside are slowed.",
+          "tooltip": "Leona calls down a radiant beam of solar energy dealing <magicDamage>{{ explosioncalculateddamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowpercent }}% for {{ ccduration }} seconds. Enemies in the center of the flare are <status>Stunned</status> instead of <status>Slowed</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
+              "Cooldown"
             ],
             "effect": [
               "{{ explosionbasedamage }} -> {{ explosionbasedamageNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
@@ -670,10 +992,10 @@
           "cooldownBurn": "90/75/60",
           "cost": [
             100,
-            150,
-            200
+            100,
+            100
           ],
-          "costBurn": "100/150/200",
+          "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
@@ -751,11 +1073,11 @@
           ],
           "rangeBurn": "1200",
           "image": {
-            "full": "Jade_LeonaSolarFlare.png",
+            "full": "LeonaSolarFlare.png",
             "sprite": "spell8.png",
             "group": "spell",
             "x": 48,
-            "y": 96,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -764,12 +1086,12 @@
       ],
       "passive": {
         "name": "Sunlight",
-        "description": "Damaging spells afflict enemies with Sunlight for 3.5 seconds. When allied Champions deal damage to those targets, they consume the Sunlight debuff to deal additional magic damage.",
+        "description": "Damaging spells afflict enemies with Sunlight for 1.5 seconds. When allied Champions deal damage to those targets, they consume the Sunlight to deal additional magic damage.",
         "image": {
-          "full": "Jade_LeonaSunlight.png",
+          "full": "LeonaSunlight.png",
           "sprite": "passive2.png",
           "group": "passive",
-          "x": 288,
+          "x": 48,
           "y": 48,
           "w": 48,
           "h": 48

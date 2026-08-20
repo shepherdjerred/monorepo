@@ -48,8 +48,6 @@ const MAX_LOADING_SCREEN_IMAGE_BYTES = 1 * BYTES_PER_MIB;
 // Splash art is higher-resolution than loading art (centered CDragon ~85 KB,
 // Data Dragon splash ~180 KB), so it gets a slightly larger ceiling.
 const MAX_SPLASH_IMAGE_BYTES = 2 * BYTES_PER_MIB;
-const CLASSIC_BACKGROUND_URL =
-  "https://raw.communitydragon.org/latest/game/assets/ux/loadingscreen/jade.png";
 const CLASSIC_BACKGROUND_PATH = `${IMG_DIR}/background/classic-jade.png`;
 
 /**
@@ -58,14 +56,15 @@ const CLASSIC_BACKGROUND_PATH = `${IMG_DIR}/background/classic-jade.png`;
  * designs crop the wide splash to their banner / square canvases. Verified 200
  * for id 62 (Wukong) skin 0/1 on 2026-07-25.
  */
-function getCDragonCenteredSplashUrl(
+export function getCDragonCenteredSplashUrl(
+  dataDragonVersion: string,
   championId: number,
   skinNum: number,
 ): string {
-  return `https://cdn.communitydragon.org/latest/champion/${championId.toString()}/splash-art/centered/skin/${skinNum.toString()}`;
+  return `https://cdn.communitydragon.org/${dataDragonVersion}/champion/${championId.toString()}/splash-art/centered/skin/${skinNum.toString()}`;
 }
 
-function getCommunityDragonVersion(dataDragonVersion: string): string {
+export function getCommunityDragonVersion(dataDragonVersion: string): string {
   const parts = dataDragonVersion.split(".");
   return `${parts[0]}.${parts[1]}`;
 }
@@ -82,10 +81,15 @@ function getArenaAugmentsUrl(cdVersion: string): string {
   return `https://raw.communitydragon.org/${cdVersion}/cdragon/arena/en_us.json`;
 }
 
-const CDRAGON_LOL_GAME_DATA_BASE = `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default`;
+function getCDragonLolGameDataBase(cdVersion: string): string {
+  return `https://raw.communitydragon.org/${cdVersion}/plugins/rcp-be-lol-game-data/global/default`;
+}
 
-function getCDragonChampionJsonUrl(championId: number): string {
-  return `${CDRAGON_LOL_GAME_DATA_BASE}/v1/champions/${championId.toString()}.json`;
+export function getCDragonChampionJsonUrl(
+  cdVersion: string,
+  championId: number,
+): string {
+  return `${getCDragonLolGameDataBase(cdVersion)}/v1/champions/${championId.toString()}.json`;
 }
 
 /**
@@ -98,12 +102,15 @@ function getCDragonChampionJsonUrl(championId: number): string {
  * prepend the rcp-be-lol-game-data plugin path. Verified against the live
  * CDN (e.g. Fiddlesticks_27 = HTTP 200, ~49 KB) on 2026-04-25.
  */
-export function resolveCDragonAssetUrl(loadScreenPath: string): string {
+export function resolveCDragonAssetUrl(
+  cdVersion: string,
+  loadScreenPath: string,
+): string {
   const lowered = loadScreenPath.toLowerCase();
   const stripped = lowered.startsWith("/lol-game-data/assets")
     ? lowered.slice("/lol-game-data/assets".length)
     : lowered;
-  return `${CDRAGON_LOL_GAME_DATA_BASE}${stripped}`;
+  return `${getCDragonLolGameDataBase(cdVersion)}${stripped}`;
 }
 
 /**
@@ -145,30 +152,32 @@ async function fetchWithRetry(
     : new Error(`fetch failed for ${url}: ${String(lastError)}`);
 }
 
-const cdragonChampionCache = new Map<number, CDragonChampion | undefined>();
+const cdragonChampionCache = new Map<string, CDragonChampion | undefined>();
 
 /**
  * Fetch (and cache) the CommunityDragon per-champion JSON. Returns `undefined`
  * if the lookup fails — callers must treat that as "no fallback available".
  */
 async function fetchCDragonChampion(
+  cdVersion: string,
   championId: number,
 ): Promise<CDragonChampion | undefined> {
-  if (cdragonChampionCache.has(championId)) {
-    return cdragonChampionCache.get(championId);
+  const cacheKey = `${cdVersion}:${championId.toString()}`;
+  if (cdragonChampionCache.has(cacheKey)) {
+    return cdragonChampionCache.get(cacheKey);
   }
   try {
     const response = await fetchWithRetry(
-      getCDragonChampionJsonUrl(championId),
+      getCDragonChampionJsonUrl(cdVersion, championId),
     );
     if (!response.ok) {
       // Definitive miss (e.g. 404) — safe to cache so we don't re-request it.
-      cdragonChampionCache.set(championId, undefined);
+      cdragonChampionCache.set(cacheKey, undefined);
       return undefined;
     }
     const data: unknown = await response.json();
     const parsed = CDragonChampionSchema.parse(data);
-    cdragonChampionCache.set(championId, parsed);
+    cdragonChampionCache.set(cacheKey, parsed);
     return parsed;
   } catch {
     // Transient (network error after retries, or a parse blip during fresh-patch
@@ -286,11 +295,12 @@ async function createDirectories(): Promise<void> {
   await ensureDir(`${ASSETS_DIR}/champion`);
 }
 
-async function downloadClassicBackground(): Promise<void> {
+async function downloadClassicBackground(cdVersion: string): Promise<void> {
+  const classicBackgroundUrl = `https://raw.communitydragon.org/${cdVersion}/game/assets/ux/loadingscreen/jade.png`;
   console.log(
-    `\nDownloading League Classic loading-screen background from ${CLASSIC_BACKGROUND_URL}...`,
+    `\nDownloading League Classic loading-screen background from ${classicBackgroundUrl}...`,
   );
-  await downloadImage(CLASSIC_BACKGROUND_URL, CLASSIC_BACKGROUND_PATH);
+  await downloadImage(classicBackgroundUrl, CLASSIC_BACKGROUND_PATH);
   assertFileSizeAtMost(
     CLASSIC_BACKGROUND_PATH,
     MAX_SPLASH_IMAGE_BYTES,
@@ -329,30 +339,155 @@ async function writeJsonAssets(
   console.log("✓ Written version.json");
 }
 
-async function fetchChampionList(version: string): Promise<ChampionListData> {
+type ClassicDiscovery = {
+  entry: ChampionListData["data"][string];
+  cdragon: CDragonChampion;
+  isNew: boolean;
+};
+
+export function validateClassicMetadata(
+  modernEntry: ChampionListData["data"][string],
+  cdragon: CDragonChampion,
+): void {
+  const modernId = Number(modernEntry.key);
+  const classicId = 60000 + modernId;
+  if (
+    cdragon.id !== classicId ||
+    !cdragon.alias.startsWith("Jade_") ||
+    cdragon.relatedPrimeItemId !== modernId ||
+    cdragon.name !== modernEntry.name
+  ) {
+    throw new Error(
+      `Classic metadata mismatch for ${modernEntry.id}: expected id=${String(classicId)}, Jade_ alias, relatedPrimeItemId=${modernEntry.key}, name=${modernEntry.name}; received id=${String(cdragon.id)}, alias=${cdragon.alias}, relatedPrimeItemId=${String(cdragon.relatedPrimeItemId)}, name=${cdragon.name}`,
+    );
+  }
+}
+
+export function classicCatalogEntryFromCDragon(
+  modernEntry: ChampionListData["data"][string],
+  cdragon: CDragonChampion,
+): ChampionListData["data"][string] {
+  validateClassicMetadata(modernEntry, cdragon);
+  return {
+    id: cdragon.alias,
+    key: String(cdragon.id),
+    name: cdragon.name,
+    modernKey: modernEntry.key,
+  };
+}
+
+export function mergeClassicChampionEntries(
+  normalChampionList: ChampionListData,
+  previousChampionList: ChampionListData | undefined,
+  discoveredEntries: readonly ChampionListData["data"][string][],
+): ChampionListData {
+  const normalByKey = new Map(
+    Object.values(normalChampionList.data).map((entry) => [entry.key, entry]),
+  );
+  const data = { ...normalChampionList.data };
+  if (previousChampionList !== undefined) {
+    for (const [id, entry] of Object.entries(previousChampionList.data)) {
+      if (!entry.id.startsWith("Jade_") || id in data) {
+        continue;
+      }
+      const classicKey = Number(entry.key);
+      if (!Number.isInteger(classicKey) || classicKey < 60_000) {
+        throw new Error(
+          `Historical Classic entry ${entry.id} has invalid Classic key ${entry.key}`,
+        );
+      }
+      const modernKey = String(classicKey - 60_000);
+      const modern = normalByKey.get(modernKey);
+      if (modern === undefined) {
+        throw new Error(
+          `Historical Classic entry ${entry.id} has no normal champion counterpart`,
+        );
+      }
+      data[id] = { ...entry, modernKey: modern.key };
+    }
+  }
+  for (const entry of discoveredEntries) {
+    data[entry.id] = entry;
+  }
+  return ChampionListSchema.parse({ data });
+}
+
+async function discoverClassicChampions(
+  cdVersion: string,
+  normalChampionList: ChampionListData,
+  previousClassicIds: ReadonlySet<string>,
+): Promise<ClassicDiscovery[]> {
+  const candidates = Object.values(normalChampionList.data);
+  const discoveries: ClassicDiscovery[] = [];
+  for (let index = 0; index < candidates.length; index += 10) {
+    const batch = candidates.slice(index, index + 10);
+    const results = await Promise.all(
+      batch.map(async (modernEntry): Promise<ClassicDiscovery | undefined> => {
+        const modernId = Number(modernEntry.key);
+        const classicId = 60000 + modernId;
+        const response = await fetchWithRetry(
+          getCDragonChampionJsonUrl(cdVersion, classicId),
+        );
+        if (response.status === 404) {
+          return undefined;
+        }
+        if (!response.ok) {
+          throw new Error(
+            `Classic probe for ${modernEntry.id} failed: HTTP ${String(response.status)} ${response.statusText}`,
+          );
+        }
+        const data: unknown = await response.json();
+        const cdragon = CDragonChampionSchema.parse(data);
+        validateClassicMetadata(modernEntry, cdragon);
+        return {
+          entry: classicCatalogEntryFromCDragon(modernEntry, cdragon),
+          cdragon,
+          isNew: !previousClassicIds.has(cdragon.alias),
+        };
+      }),
+    );
+    discoveries.push(...results.filter((result) => result !== undefined));
+  }
+  return discoveries;
+}
+
+async function fetchChampionList(
+  version: string,
+  cdVersion: string,
+): Promise<{
+  championList: ChampionListData;
+  discoveries: ClassicDiscovery[];
+}> {
   console.log("\nFetching champion list...");
   const championListUrl = `${BASE_URL}/cdn/${version}/data/en_US/champion.json`;
   const championListResponse = await fetchWithRetry(championListUrl);
   const data: unknown = await championListResponse.json();
-  const championListData = ChampionListSchema.parse(data);
-
-  // Riot only populates the `Jade_`-prefixed League Classic entries in
-  // champion.json while the mode is featured; patch 16.16.1 dropped all 60 of
-  // them (233 champions -> 173) even though the mode's committed art and past
-  // match data still need to render. There is no live endpoint left to
-  // re-fetch them from, so carry the previously committed `Jade_` entries
-  // forward whenever a fresh fetch is missing one. `classic.ts` pairs each by
-  // `name` against its modern counterpart, which is stable across patches.
-  const previousChampionListFile = Bun.file(`${ASSETS_DIR}/champion.json`);
-  if (await previousChampionListFile.exists()) {
-    const previousData: unknown = await previousChampionListFile.json();
-    const previousChampionListData = ChampionListSchema.parse(previousData);
-    for (const [id, entry] of Object.entries(previousChampionListData.data)) {
-      if (entry.id.startsWith("Jade_") && !(id in championListData.data)) {
-        championListData.data[id] = entry;
-      }
+  const normalChampionList = ChampionListSchema.parse(data);
+  const previousChampionListData = await (async () => {
+    const previousChampionListFile = Bun.file(`${ASSETS_DIR}/champion.json`);
+    if (!(await previousChampionListFile.exists())) {
+      return undefined;
     }
-  }
+    const previousData: unknown = await previousChampionListFile.json();
+    return ChampionListSchema.parse(previousData);
+  })();
+  const previousClassicIds = new Set(
+    previousChampionListData === undefined
+      ? []
+      : Object.values(previousChampionListData.data)
+          .filter((entry) => entry.id.startsWith("Jade_"))
+          .map((entry) => entry.id),
+  );
+  const discoveries = await discoverClassicChampions(
+    cdVersion,
+    normalChampionList,
+    previousClassicIds,
+  );
+  const championListData = mergeClassicChampionEntries(
+    normalChampionList,
+    previousChampionListData,
+    discoveries.map((discovery) => discovery.entry),
+  );
 
   const championNames = Object.keys(championListData.data);
   console.log(`Found ${String(championNames.length)} champions`);
@@ -363,7 +498,7 @@ async function fetchChampionList(version: string): Promise<ChampionListData> {
   );
   console.log("✓ Written champion.json");
 
-  return championListData;
+  return { championList: championListData, discoveries };
 }
 
 // PascalCase a Twisted SCREAMING_SNAKE_CASE name: "LEE_SIN" → "LeeSin",
@@ -524,6 +659,105 @@ async function downloadChampionData(
   return championDataCount;
 }
 
+async function downloadClassicChampionAssets(
+  version: string,
+  cdVersion: string,
+  championList: ChampionListData,
+  discoveries: ClassicDiscovery[],
+): Promise<number> {
+  if (discoveries.length === 0) {
+    return 0;
+  }
+  console.log("\nDownloading League Classic champion assets...");
+  const normalByKey = new Map(
+    Object.values(championList.data)
+      .filter((entry) => !entry.id.startsWith("Jade_"))
+      .map((entry) => [entry.key, entry]),
+  );
+  let dataCount = 0;
+  for (const discovery of discoveries) {
+    const { entry, cdragon } = discovery;
+    const modern = normalByKey.get(entry.modernKey ?? "");
+    if (modern === undefined) {
+      throw new Error(
+        `Classic champion ${entry.id} has no catalog data for modernKey ${entry.modernKey ?? "missing"}`,
+      );
+    }
+    const portraitPath = `${IMG_DIR}/champion/${entry.id}.png`;
+    await downloadImage(
+      `https://cdn.communitydragon.org/${version}/champion/${entry.key}/square`,
+      portraitPath,
+    );
+    assertFileSizeAtMost(
+      portraitPath,
+      MAX_LOADING_SCREEN_IMAGE_BYTES,
+      `${entry.id} portrait`,
+    );
+
+    const baseSkin = cdragon.skins.find(
+      (skin) => skin.id === Number(entry.key) * 1000,
+    );
+    if (
+      baseSkin?.loadScreenPath === null ||
+      baseSkin?.loadScreenPath === undefined
+    ) {
+      throw new Error(
+        `Classic champion ${entry.id} has no base loading asset metadata`,
+      );
+    }
+    const loadingPath = `${IMG_DIR}/champion-loading/${entry.id}_0.jpg`;
+    await downloadImage(
+      resolveCDragonAssetUrl(cdVersion, baseSkin.loadScreenPath),
+      loadingPath,
+    );
+    assertFileSizeAtMost(
+      loadingPath,
+      MAX_LOADING_SCREEN_IMAGE_BYTES,
+      `${entry.id} loading art`,
+    );
+
+    const splashPath = `${IMG_DIR}/champion-splash/${entry.id}_0.jpg`;
+    await downloadImage(
+      getCDragonCenteredSplashUrl(version, Number(entry.key), 0),
+      splashPath,
+    );
+    assertFileSizeAtMost(
+      splashPath,
+      MAX_SPLASH_IMAGE_BYTES,
+      `${entry.id} splash art`,
+    );
+
+    const response = await fetchWithRetry(
+      `${BASE_URL}/cdn/${version}/data/en_US/champion/${modern.id}.json`,
+    );
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch modern data for new Classic champion ${entry.id}: HTTP ${String(response.status)}`,
+      );
+    }
+    const modernData: unknown = await response.json();
+    const wrapper = z
+      .object({ data: z.record(z.string(), z.unknown()) })
+      .parse(modernData);
+    const modernChampion = wrapper.data[modern.id];
+    if (modernChampion === undefined) {
+      throw new Error(
+        `Modern catalog data for ${modern.id} is missing its champion record`,
+      );
+    }
+    await Bun.write(
+      `${ASSETS_DIR}/champion/${entry.id}.json`,
+      JSON.stringify({ data: { [entry.id]: modernChampion } }, null, 2),
+    );
+    dataCount++;
+  }
+  console.log(
+    `✓ Downloaded ${String(discoveries.length)} Classic champion asset sets`,
+  );
+  console.log(`✓ Generated ${String(dataCount)} Classic champion data files`);
+  return discoveries.length;
+}
+
 type LoadingScreenSource = "ddragon" | "cdragon";
 
 type LoadingScreenDownloadResult =
@@ -544,6 +778,7 @@ type LoadingScreenDownloadResult =
  * loud warning + non-zero exit.
  */
 async function downloadLoadingScreenSkin(
+  cdVersion: string,
   championName: string,
   championId: number,
   skinNum: number,
@@ -569,7 +804,7 @@ async function downloadLoadingScreenSkin(
   }
 
   // Tier 2: CommunityDragon (resolve loadScreenPath for this skin)
-  const cdragonChampion = await fetchCDragonChampion(championId);
+  const cdragonChampion = await fetchCDragonChampion(cdVersion, championId);
   if (cdragonChampion === undefined) {
     return { status: "failed" };
   }
@@ -581,7 +816,10 @@ async function downloadLoadingScreenSkin(
   if (skinEntry?.loadScreenPath == null) {
     return { status: "failed" };
   }
-  const cdragonUrl = resolveCDragonAssetUrl(skinEntry.loadScreenPath);
+  const cdragonUrl = resolveCDragonAssetUrl(
+    cdVersion,
+    skinEntry.loadScreenPath,
+  );
   try {
     const response = await fetchWithRetry(cdragonUrl);
     if (!response.ok) {
@@ -619,6 +857,7 @@ type LoadingScreenFailure = {
  * fail after every round, preserving the loud hard-fail downstream.
  */
 async function retryFailedLoadingScreens(
+  cdVersion: string,
   failures: LoadingScreenFailure[],
   onSuccess: (
     failure: LoadingScreenFailure,
@@ -635,11 +874,14 @@ async function retryFailedLoadingScreens(
     await Bun.sleep(DELAY_MS);
     // Force Tier 2 to re-resolve: the champion JSON itself may have been absent.
     for (const failure of pending) {
-      cdragonChampionCache.delete(failure.championId);
+      cdragonChampionCache.delete(
+        `${cdVersion}:${failure.championId.toString()}`,
+      );
     }
     const stillFailing: LoadingScreenFailure[] = [];
     for (const failure of pending) {
       const result = await downloadLoadingScreenSkin(
+        cdVersion,
         failure.championName,
         failure.championId,
         failure.skinNum,
@@ -669,6 +911,7 @@ async function retryFailedLoadingScreens(
  * what caused the original "no picture" bug.
  */
 async function downloadChampionLoadingImages(
+  cdVersion: string,
   championList: ChampionListData,
 ): Promise<{ imageCount: number }> {
   console.log("\nDownloading champion loading screen images (skin 0 only)...");
@@ -692,7 +935,12 @@ async function downloadChampionLoadingImages(
       );
     }
 
-    const result = await downloadLoadingScreenSkin(championName, championId, 0);
+    const result = await downloadLoadingScreenSkin(
+      cdVersion,
+      championName,
+      championId,
+      0,
+    );
     if (result.status === "success") {
       if (result.source === "ddragon") {
         ddragonCount++;
@@ -709,6 +957,7 @@ async function downloadChampionLoadingImages(
   // on both CDNs before declaring them permanently missing. Whatever is still
   // missing afterward is a real failure that hard-throws below.
   const stillMissing = await retryFailedLoadingScreens(
+    cdVersion,
     failedSkins,
     (failure, source) => {
       if (source === "ddragon") {
@@ -784,6 +1033,7 @@ type SplashDownloadResult =
  * coverage; `failed` only when both sources fail.
  */
 async function downloadSplashSkin(
+  dataDragonVersion: string,
   championName: string,
   championId: number,
   skinNum: number,
@@ -791,7 +1041,11 @@ async function downloadSplashSkin(
   const outputPath = `${IMG_DIR}/champion-splash/${championName}_${String(skinNum)}.jpg`;
 
   // Tier 1: CommunityDragon centered splash (by numeric champion id)
-  const cdragonUrl = getCDragonCenteredSplashUrl(championId, skinNum);
+  const cdragonUrl = getCDragonCenteredSplashUrl(
+    dataDragonVersion,
+    championId,
+    skinNum,
+  );
   try {
     const response = await fetchWithRetry(cdragonUrl);
     if (response.ok) {
@@ -839,6 +1093,7 @@ type SplashFailure = {
  * fresh-patch CDN propagation-lag guard as `retryFailedLoadingScreens`.
  */
 async function retryFailedSplashes(
+  dataDragonVersion: string,
   failures: SplashFailure[],
   onSuccess: (failure: SplashFailure, source: SplashSource) => void,
 ): Promise<SplashFailure[]> {
@@ -853,6 +1108,7 @@ async function retryFailedSplashes(
     const stillFailing: SplashFailure[] = [];
     for (const failure of pending) {
       const result = await downloadSplashSkin(
+        dataDragonVersion,
         failure.championName,
         failure.championId,
         failure.skinNum,
@@ -881,6 +1137,7 @@ async function retryFailedSplashes(
  * caused the original loading-screen "no picture" bug.
  */
 async function downloadChampionSplashImages(
+  dataDragonVersion: string,
   championList: ChampionListData,
 ): Promise<{ imageCount: number }> {
   console.log("\nDownloading champion splash-art images (base skin 0)...");
@@ -900,7 +1157,12 @@ async function downloadChampionSplashImages(
       );
     }
 
-    const result = await downloadSplashSkin(championName, championId, 0);
+    const result = await downloadSplashSkin(
+      dataDragonVersion,
+      championName,
+      championId,
+      0,
+    );
     if (result.status === "success") {
       if (result.source === "cdragon") {
         cdragonCount++;
@@ -914,6 +1176,7 @@ async function downloadChampionSplashImages(
   }
 
   const stillMissing = await retryFailedSplashes(
+    dataDragonVersion,
     failedSkins,
     (failure, source) => {
       if (source === "cdragon") {
@@ -1242,9 +1505,37 @@ async function maybeAppendChangelogEntry(
 
 async function main(): Promise<void> {
   try {
+    const requestedVersion = process.argv.find((argument) =>
+      /^\d+\.\d+\.\d+$/.test(argument),
+    );
     if (process.argv.includes("--classic-assets-only")) {
+      const previousVersion = await readPreviousVersion();
+      if (previousVersion === undefined) {
+        throw new Error("--classic-assets-only requires a Data Dragon version");
+      }
+      if (
+        requestedVersion !== undefined &&
+        requestedVersion !== previousVersion
+      ) {
+        throw new Error(
+          `--classic-assets-only must use the committed Data Dragon version ${previousVersion}; received ${requestedVersion}`,
+        );
+      }
+      const version = previousVersion;
+      const cdVersion = getCommunityDragonVersion(version);
       await createDirectories();
-      await downloadClassicBackground();
+      await downloadClassicBackground(cdVersion);
+      const { championList, discoveries } = await fetchChampionList(
+        version,
+        cdVersion,
+      );
+      await downloadClassicChampionAssets(
+        version,
+        cdVersion,
+        championList,
+        discoveries,
+      );
+      await $`cd ${MONOREPO_ROOT} && bun run --cwd packages/scout-for-lol/packages/data generate:asset-manifest --write`;
       return;
     }
     // --snapshots-only skips version resolution + asset download and jumps
@@ -1261,7 +1552,7 @@ async function main(): Promise<void> {
     }
 
     // Get version from command line or fetch latest
-    const version = process.argv[2] ?? (await getLatestVersion());
+    const version = requestedVersion ?? (await getLatestVersion());
     // Capture the on-disk version BEFORE writeJsonAssets overwrites it so the
     // changelog step can detect a minor-version bump.
     const previousVersion = await readPreviousVersion();
@@ -1276,7 +1567,7 @@ async function main(): Promise<void> {
 
     // Ensure directories exist
     await createDirectories();
-    await downloadClassicBackground();
+    await downloadClassicBackground(cdVersion);
 
     // Download and validate each asset
     const summoner = await downloadAsset(
@@ -1295,8 +1586,13 @@ async function main(): Promise<void> {
     await writeJsonAssets(summoner, items, runes, version);
 
     // Download champion list (also writes champion.json)
-    const championList = await fetchChampionList(version);
-    const championNames = Object.keys(championList.data);
+    const { championList, discoveries } = await fetchChampionList(
+      version,
+      cdVersion,
+    );
+    const championNames = Object.values(championList.data)
+      .filter((entry) => !entry.id.startsWith("Jade_"))
+      .map((entry) => entry.id);
 
     // Regenerate championNameOverrides.generated.ts to catch drift between
     // Twisted's PascalCased output and Data Dragon's on-disk filenames.
@@ -1327,12 +1623,31 @@ async function main(): Promise<void> {
 
     // Download champion loading screen images (skin 0 only) — must run after champion data
     const { imageCount: loadingImagesCount } =
-      await downloadChampionLoadingImages(championList);
+      await downloadChampionLoadingImages(cdVersion, {
+        data: Object.fromEntries(
+          Object.entries(championList.data).filter(
+            ([, entry]) => !entry.id.startsWith("Jade_"),
+          ),
+        ),
+      });
 
     // Download high-res champion splash art (base skin 0) for the ranked
     // report designs — keyed by champion id/name, no champion-data dependency.
     const { imageCount: splashImagesCount } =
-      await downloadChampionSplashImages(championList);
+      await downloadChampionSplashImages(version, {
+        data: Object.fromEntries(
+          Object.entries(championList.data).filter(
+            ([, entry]) => !entry.id.startsWith("Jade_"),
+          ),
+        ),
+      });
+    const classicImagesCount = await downloadClassicChampionAssets(
+      version,
+      cdVersion,
+      championList,
+      discoveries,
+    );
+    await $`cd ${MONOREPO_ROOT} && bun run --cwd packages/scout-for-lol/packages/data generate:asset-manifest --write`;
 
     const totalImages =
       spellImagesCount +
@@ -1342,7 +1657,8 @@ async function main(): Promise<void> {
       augmentImagesCount +
       laneImagesCount +
       loadingImagesCount +
-      splashImagesCount;
+      splashImagesCount +
+      classicImagesCount;
     console.log(
       `\n✅ Successfully updated Data Dragon assets to version ${version}`,
     );
@@ -1356,6 +1672,9 @@ async function main(): Promise<void> {
     );
     console.log(
       `  - ${String(splashImagesCount)} champion splash-art images (skin 0)`,
+    );
+    console.log(
+      `  - ${String(classicImagesCount)} League Classic champion asset sets`,
     );
     console.log(`  - ${String(runeImagesCount)} rune images`);
     console.log(`  - ${String(augmentImagesCount)} augment images`);

@@ -114,6 +114,7 @@ export type {
 
 export * from "./league/raw-match.schema.ts";
 export * from "./league/raw-participant.schema.ts";
+export * from "./league/raw-team.schema.ts";
 export * from "./league/raw-perks.schema.ts";
 export * from "./league/raw-challenges.schema.ts";
 export * from "./league/raw-timeline.schema.ts";

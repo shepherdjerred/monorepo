@@ -6,6 +6,7 @@ import {
 } from "#src/discord/interactions.ts";
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
 import { formatBucksNavigationId } from "#src/betting/navigation.ts";
+import { formatParlayCustomId } from "#src/betting/parlay-custom-id.ts";
 
 const USER_ID = DiscordAccountIdSchema.parse("160509172704739328");
 
@@ -115,5 +116,22 @@ describe("routeButton", () => {
     const { interaction, calls } = fakeInteraction("scout:1:publish:broken");
     await routeButton(interaction);
     expect(calls).toEqual(["deferUpdate", "followUp"]);
+  });
+
+  test("acknowledges malformed parlay IDs and routes valid ones", async () => {
+    const malformed = fakeInteraction("bbp:2:b:NA1_1:Y:5");
+    await routeButton(malformed.interaction);
+    expect(malformed.calls).toEqual(["deferUpdate"]);
+
+    const valid = fakeInteraction(
+      formatParlayCustomId({
+        action: "b",
+        matchId: "NA1_5000000042",
+        side: "YES",
+        amount: 5,
+      }),
+    );
+    await routeButton(valid.interaction);
+    expect(valid.calls).toEqual(["deferReply", "editReply"]);
   });
 });

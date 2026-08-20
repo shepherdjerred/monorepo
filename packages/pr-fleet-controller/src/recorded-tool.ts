@@ -4,6 +4,7 @@ import {
   isTelemetryCaptureError,
 } from "./controller-telemetry.ts";
 import type { FleetTelemetry } from "./ports.ts";
+import { classifyFleetFailure } from "./progress-events.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
 
 export async function runRecordedToolOperation<T>(options: {
@@ -27,7 +28,11 @@ export async function runRecordedToolOperation<T>(options: {
     captureTelemetryOperation("tool.failed", () => {
       telemetry.record(
         "tool.failed",
-        { tool, error: error instanceof Error ? error.message : String(error) },
+        {
+          tool,
+          error: error instanceof Error ? error.message : String(error),
+          failureClass: classifyFleetFailure(error),
+        },
         correlation,
       );
     });

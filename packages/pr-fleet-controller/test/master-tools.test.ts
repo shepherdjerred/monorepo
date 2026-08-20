@@ -100,6 +100,7 @@ describe("master tool telemetry", () => {
     expect(events[1]?.payload).toEqual({
       tool: "run_fleet_tick",
       error: "tick failed",
+      failureClass: "unknown",
     });
   });
 

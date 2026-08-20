@@ -160,13 +160,14 @@ prerequisites applied and child auto-sync suspended.
 
 ## Code Review Rules
 
-These rules steer automated PR code review. Qodo is the repository-required CI
-provider, and consumers that decide against the gate — PR fleet — default to it
-too, so their findings cannot disagree with the check that blocks the PR.
+These rules steer automated PR code review. Qodo and Codex are the
+repository-required CI providers; Buildkite runs both provider gates, while
+consumers that decide against the gate — PR fleet — default to Qodo so their
+findings cannot disagree with the check they are reproducing.
 `resolveProvider()` keeps a separate neutral default for callers that are not
 reproducing a gate decision.
 The gate implementation remains provider-neutral — see
-`@shepherdjerred/code-review` and the `review-gate` Buildkite step. These rules
+`@shepherdjerred/code-review` and the review-gate Buildkite steps. These rules
 apply repo-wide; per-package `AGENTS.md` files add more.
 
 - **Review against the `AGENTS.md` hierarchy** (root + `packages/*/AGENTS.md`) — it
@@ -351,28 +352,37 @@ Treat this as a production-mutating build, not a read-only benchmark.
 
 ### The review gate
 
-The `review-gate` step runs `.buildkite/scripts/review-gate.sh`, which checks
-out `main` into a worktree and runs the gate from there. The gate reads only
-GitHub state and never the PR's diff, so running the PR's own copy bought
-nothing and cost correctness: `@shepherdjerred/code-review` is a `workspace:*`
-dependency, so each branch graded itself with whatever version of the parser it
-happened to contain. A branch old enough to predate a parser fix counted
-findings that had already been fixed, and no change to that PR could clear it.
+The `review-gate` and `codex-review-gate` steps run
+`.buildkite/scripts/review-gate.sh`, which checks out `main` into a worktree and
+runs the provider-selected gate from there. Each gate reads only GitHub state
+and never the PR's diff, so running it from the PR's own copy bought nothing and
+cost correctness: `@shepherdjerred/code-review` is a `workspace:*` dependency,
+so each branch graded itself with whatever version of the parser it happened to
+contain. A branch old enough to predate a parser fix counted findings that had
+already been fixed, and no change to that PR could clear it.
 
-The gate asks the provider to review the head before waiting on it. Qodo
-reviews a PR once, when it is opened, and never again on its own, so polling
-alone burned the whole budget on every push after the first. The request is
-idempotent per head through `buildReviewRequestMarker()`, shared with the PR
-fleet controller so the two recognise each other's request.
+While the Codex boundary is landing, the wrapper has a narrow compatibility
+path: if fetched `main` predates Codex acceptance, a reviewed
+provider-selection-only patch is applied to the `main` worktree. The parser
+and provider adapters remain from `main`; once `main` accepts Codex, the path
+is automatically unreachable. This is a one-time rollout bridge, not a
+permanent PR-self-sourced gate.
+
+Each gate asks its provider to review the head before waiting on it. Qodo
+reviews a PR once, when it is opened, and Codex needs an explicit `@codex
+review` trigger for a fresh head; polling alone can therefore burn the whole
+budget. The request is idempotent per provider and head through
+`buildReviewRequestMarker()`, shared with the PR-fleet controller so consumers
+recognise each other's request.
 
 Each `review-signal` event carries `parser_commit`, the commit of the parser
 that produced the counts. A finding count is only comparable against the parser
 that arrived at it — a local `probe-review-signal.ts` run from a stale checkout
 legitimately disagrees with CI.
 
-`REVIEW_GATE_REF` overrides the ref the gate runs from. It exists only so a
-change to the gate itself can be exercised before it lands, since the gate no
-longer runs a PR's own version of it. Set it when creating the build, as with
+`REVIEW_GATE_REF` overrides the ref the gate runs from. It exists so a change
+to the gate itself can be exercised before it lands, and for the one-time
+Codex rollout bridge described above. Set it when creating the build, as with
 `CI_IO_FIXED_CORPUS`; never in committed configuration.
 
 ### Release refinement providers
@@ -481,8 +491,9 @@ toolkit history daemon install
 # “What did I work on last week?” (rolling seven-day window).
 toolkit history recent --since 7d
 
-# “Didn't I solve this before?”
-toolkit history search "argocd prune" --since 90d --include-excerpts
+# “Didn't I solve this before?” — narrow first, then read one bounded record.
+toolkit history search "argocd prune" --since 90d
+toolkit history show <ID_FROM_SEARCH> --query "argocd prune"
 
 # Inspect source coverage and ingestion errors.
 toolkit history sources
@@ -495,10 +506,21 @@ toolkit pr health <PR_NUMBER>
 ```
 
 Use `--source conductor|claude|codex|cursor|opencode-conductor|opencode-standalone`
-to narrow a search and `--json` for agent-readable output. `--include-excerpts`
-reopens source stores read-only for bounded excerpts; complete transcript bodies
-are not copied into the index. The LaunchAgent, index, socket, state, and logs
-are user-private. Never index or print standalone OpenCode's `auth.json`.
+to narrow a search and `--json` for agent-readable output. BM25 ranks substantive
+dialogue ahead of low-value tool mentions, while recency breaks ties. Unquoted
+terms are AND-prefix matches; literal quotes inside the query request an exact
+phrase. The current Conductor/Codex run is hidden and parallel sessions with the
+same opening prompt are grouped by default; use `--include-current` or
+`--include-duplicates` to override that behavior.
+
+`--include-excerpts` reopens only returned source records for bounded excerpts.
+Use `show` for the fast second stage: it returns at most eight messages and 6,000
+characters by default, omits system/reasoning/compaction records, and includes
+tool output only when it matches `--query` unless `--include-tools` is set.
+Complete transcript bodies are not copied into the index. JSON search/recent
+responses include a `warnings` array; human warnings go to stderr. The
+LaunchAgent, index, socket, state, and logs are user-private. Never index or
+print standalone OpenCode's `auth.json`.
 
 The commands below remain useful as a read-only fallback when the index has not
 been installed or a client has changed its internal schema. The seven-day
@@ -639,11 +661,14 @@ script, each with its reason.
 
 ```bash
 GH_TOKEN=$(toolkit gh auth token) bun scripts/review-findings.ts list <pr>
+toolkit pr review harvest <pr>
 ```
 
-Lists every finding blocking the required Qodo gate with its title, severity
-and location. Run it **before** pushing a fix: a fix pushed without resolving
-its thread only surfaces at the end of a ~7-minute gate cycle.
+The first command lists Qodo findings with title, severity and location. The
+harvest command independently evaluates both providers' Buildkite status and
+review state, so a stale Codex job is not hidden by a healthy Qodo gate. Run
+these **before** pushing a fix: a fix pushed without resolving its thread only
+surfaces at the end of a ~7-minute gate cycle.
 
 Qodo re-lists a finding it no longer stands behind rather than striking it, so
 a PR whose findings are all fixed or all wrong can stay blocked indefinitely.
@@ -675,6 +700,13 @@ writes a private local bundle; use
 body-masked view and `bun run pr:fleet:replay --run <run-id-or-directory>` for
 deterministic offline integrity and lifecycle verification. These commands
 collect and inspect evidence; they do not run evals.
+
+The controller clones the repository into its private state directory before it
+allocates any worktrees. The checkout used to start the command supplies only
+the remote URL and local git-spice metadata; workers never reuse it. The default
+managed clone and its worktrees are sibling `checkouts/` and `worktrees/`
+directories under the state root. An explicit `--checkout` must likewise name a
+clean controller-owned clone, never a developer worktree.
 
 By default `pr:fleet` also builds and spawns a **narrowly controlled live web dashboard**
 (the `@shepherdjerred/pr-fleet-web` package) that streams the run bundle over SSE

@@ -17,6 +17,7 @@ import {
   resolveQueueTypeFromGame,
   isArenaQueueOrMode,
   isClassicQueueType,
+  isClassicAssetMode,
 } from "@scout-for-lol/data/index.ts";
 import configuration from "#src/configuration.ts";
 import { getPlayer } from "#src/league/model/player.ts";
@@ -40,6 +41,7 @@ import {
   getLatestRankBefore,
 } from "#src/league/model/rank-history.ts";
 import {
+  classicAssetResolutionFailuresTotal,
   reportsGeneratedTotal,
   reportsFailedTotal,
   scoutItemCacheMissTotal,
@@ -162,7 +164,23 @@ async function processClassicMatch(
     );
     return undefined;
   }
-  const [attachment, embed] = await createMatchImage(classicMatch, matchId);
+  let attachment: AttachmentBuilder;
+  let embed: EmbedBuilder;
+  try {
+    [attachment, embed] = await createMatchImage(classicMatch, matchId);
+  } catch (error) {
+    classicAssetResolutionFailuresTotal.inc({
+      phase: "postmatch",
+      reason: "asset",
+    });
+    logger.error("Classic postmatch report asset rendering failed", error, {
+      championIds: [...classicMatch.teams.blue, ...classicMatch.teams.red].map(
+        (champion) => champion.championId,
+      ),
+      matchId,
+    });
+    throw error;
+  }
   return {
     content: formatGameCompletionMessage(
       classicMatch.players.map((player) => player.playerConfig.alias),
@@ -418,7 +436,10 @@ export async function generateMatchReport(
       matchData.info.gameMode,
       matchData.info.gameType,
     );
-    if (isClassicQueueType(queueType)) {
+    if (
+      isClassicQueueType(queueType) &&
+      isClassicAssetMode(matchData.info.queueId, matchData.info.gameMode)
+    ) {
       const result = await dependencies.processClassicMatch(
         matchData,
         matchId,

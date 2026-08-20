@@ -18,6 +18,7 @@ export const QueueTypeSchema = z.enum([
   "classic aram mayhem",
   "brawl",
   "aram mayhem",
+  "normal",
   "draft pick",
   "easy doom bots",
   "normal doom bots",
@@ -136,6 +137,9 @@ export function resolveQueueTypeFromGame(
   }
   const mapped = parseQueueType(queueId);
   if (mapped !== undefined) {
+    if (mapped === "classic" && !isClassicAssetMode(queueId, gameMode)) {
+      return "normal";
+    }
     return mapped;
   }
   // Unknown queue ID: only treat as "custom" when the payload says so. A
@@ -145,6 +149,22 @@ export function resolveQueueTypeFromGame(
     return "custom";
   }
   return undefined;
+}
+
+/**
+ * Riot reuses the `classic` queue type for ordinary Summoner's Rift queues.
+ * Only the JADE family uses the dedicated Classic champion/art catalog;
+ * ordinary CLASSIC payloads must stay on normal League assets.
+ */
+export function isClassicAssetMode(queueId: number, gameMode: string): boolean {
+  return (
+    gameMode === "JADE" ||
+    gameMode === "KIWI_JADE" ||
+    gameMode === "CLASSIC ARAM MAYHEM" ||
+    queueId === 4310 ||
+    queueId === 2450 ||
+    queueId === 3280
+  );
 }
 
 export function queueTypeToDisplayString(queueType: QueueType): string {
@@ -163,6 +183,7 @@ export function queueTypeToDisplayString(queueType: QueueType): string {
     .with("classic aram mayhem", () => "ARAM: Mayhem Classic-ish")
     .with("brawl", () => "brawl")
     .with("aram mayhem", () => "ARAM: Mayhem")
+    .with("normal", () => "normal")
     .with("easy doom bots", () => "Easy Doom Bots")
     .with("normal doom bots", () => "Normal Doom Bots")
     .with("hard doom bots", () => "Hard Doom Bots")
