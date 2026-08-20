@@ -313,6 +313,7 @@ async function reconcilePendingRecruitmentSync(
       action: {
         in: [
           "RECRUITMENT_MESSAGE_CLEANUP_PENDING",
+          "RECRUITMENT_MESSAGE_SEND_PENDING",
           "RECRUITMENT_MESSAGE_SYNC_PENDING",
         ],
       },

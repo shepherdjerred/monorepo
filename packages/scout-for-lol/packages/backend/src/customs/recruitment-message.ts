@@ -172,12 +172,14 @@ async function recoverPendingRecruitmentMessage(params: {
         channelId: payload.channelId,
         deliveryId: payload.deliveryId,
       },
+      allowEnded: true,
       update: (current) => ({
         ...current,
         recruitmentMessageId: message.id,
       }),
     });
     if (!mutation.applied) return mutation.snapshot;
+    await message.edit({ embeds: [recruitmentEmbed(mutation.snapshot)] });
     await params.prisma.customAuditEvent.update({
       where: { id: event.id },
       data: {

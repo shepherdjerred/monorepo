@@ -20,6 +20,7 @@ export type CustomTransactionClient = Pick<
   | "customGameParticipant"
   | "customConsent"
   | "customAuditEvent"
+  | "customActiveNight"
 >;
 import { parseCustomNightSnapshot } from "#src/customs/snapshot.ts";
 
@@ -27,6 +28,18 @@ export type CustomMutationResult = {
   applied: boolean;
   snapshot: CustomNightSnapshot;
 };
+
+async function deleteActiveNightWhenEnded(
+  transaction: CustomTransactionClient,
+  current: CustomNightSnapshot,
+  updated: CustomNightSnapshot,
+): Promise<void> {
+  if (updated.state === "ENDED" && current.state !== "ENDED") {
+    await transaction.customActiveNight.delete({
+      where: { guildId: DiscordGuildIdSchema.parse(updated.guildId) },
+    });
+  }
+}
 
 function nightParticipantData(participant: CustomNightParticipant) {
   return {
@@ -287,11 +300,17 @@ export async function commitCustomMutation(params: {
         payload: JSON.stringify(params.payload),
       },
     });
-    if (updated.state === "ENDED" && current.state !== "ENDED") {
-      await transaction.customActiveNight.delete({
-        where: { guildId: DiscordGuildIdSchema.parse(updated.guildId) },
-      });
-    }
+    await transaction.customAuditEvent.create({
+      data: {
+        nightId: updated.id,
+        gameId: updated.currentGame?.id ?? null,
+        revision: updated.revision,
+        actorId: params.actorDiscordId,
+        action: "RECRUITMENT_MESSAGE_SYNC_PENDING",
+        payload: JSON.stringify({}),
+      },
+    });
+    await deleteActiveNightWhenEnded(transaction, current, updated);
     return { applied: true, snapshot: updated };
   });
 }
