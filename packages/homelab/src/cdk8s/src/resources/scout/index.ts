@@ -233,8 +233,9 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       startup: Probe.fromHttpGet("/ping", {
         port: 3000,
         periodSeconds: Duration.seconds(10),
-        // Initial schema rebuilds can use the compactor's 30-minute timeout.
-        failureThreshold: 180,
+        // Initial schema rebuilds can use the compactor's 30-minute timeout;
+        // leave ten minutes for probe and process-startup overhead.
+        failureThreshold: 240,
       }),
       liveness: Probe.fromHttpGet("/livez", {
         port: 3000,
