@@ -1609,7 +1609,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: [homelab-release-admission, verify]
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-platform
     # Platform APIs can return a newly-created secret only once. There is no
