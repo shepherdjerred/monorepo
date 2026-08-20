@@ -33,6 +33,9 @@ public struct OTPParser {
     private static let numericProsePattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}])\\d{1,4}[ \\x{00A0}\\x{2007}\\x{202F}]+(?:sec(?:ond)?s?|min(?:ute)?s?|h(?:our)?s?|day?s?|week?s?|month?s?|year?s?|am|pm|utc|gmt|cet|cest|est|edt|pst|pdt|bst|jst|aest|aedt)(?![\\p{L}\\p{N}])"
     )
+    private static let timePattern = makeExpression(
+        "(?i)(?<![\\p{L}\\p{N}])(?:[01]?\\d|2[0-3]):[0-5]\\d(?:\\s?(?:am|pm))?(?:\\s+(?:utc|gmt|cet|cest|est|edt|pst|pdt|bst|jst|aest|aedt))?(?![\\p{L}\\p{N}])"
+    )
     private static let datePattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,\\s*|\\s+)\\d{4}|\\d{1,2}(?:st|nd|rd|th)?\\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{4})(?![\\p{L}\\p{N}])"
     )
@@ -66,9 +69,14 @@ public struct OTPParser {
             range: NSRange(message.startIndex..., in: message),
             withTemplate: " "
         )
-        let sanitizedBody = Self.bareURLPattern.stringByReplacingMatches(
+        let withoutTimes = Self.timePattern.stringByReplacingMatches(
             in: withoutURLs,
             range: NSRange(withoutURLs.startIndex..., in: withoutURLs),
+            withTemplate: " "
+        )
+        let sanitizedBody = Self.bareURLPattern.stringByReplacingMatches(
+            in: withoutTimes,
+            range: NSRange(withoutTimes.startIndex..., in: withoutTimes),
             withTemplate: " "
         )
         let keywordRanges = Self.keywordPattern.matches(

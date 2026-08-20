@@ -100,6 +100,8 @@ func rejectsFalsePositives() {
     #expect(OTPParser().parse(body: "Open myapp:verify?code=482913 to continue.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Open otpauth:totp/acme?secret=482913 to continue.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Expires in 30 mins. Use 482913 to sign in.", metadata: metadata)?.code == "482913")
+    #expect(OTPParser().parse(body: "Valid until 12:30 UTC. Use 482913 to sign in.", metadata: metadata)?.code == "482913")
+    #expect(OTPParser().parse(body: "Expires at 10:30AM. Use 482913 to sign in.", metadata: metadata)?.code == "482913")
     #expect(OTPParser().parse(body: "Your code was texted to 555-1234.", metadata: metadata) == nil)
     let subjectLabelMetadata = MessageMetadata(sender: "Billing <billing@example.test>", subject: "Your verification code", date: nil, messageID: "message-subject-phone")
     #expect(OTPParser().parse(body: "Phone: 4155550", metadata: subjectLabelMetadata) == nil)

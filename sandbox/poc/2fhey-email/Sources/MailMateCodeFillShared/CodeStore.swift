@@ -19,6 +19,11 @@ public struct CodeStore {
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
 
+    private struct StoreState: Codable {
+        var records: [OTPRecord]
+        var consumedMessageExpiries: [String: Date]
+    }
+
     public init(
         directory: URL,
         fileManager: FileManager = .default,
@@ -49,9 +54,14 @@ public struct CodeStore {
         let startedAt = Date()
         do {
             let count = try withLock {
-                let records = try readUnlocked(now: now).filter { $0.messageID != record.messageID }
-                try writeUnlocked(records + [record])
-                return records.count + 1
+                var state = try readStateUnlocked(now: now)
+                guard state.consumedMessageExpiries[record.messageID] == nil else {
+                    return state.records.count
+                }
+                state.records.removeAll { $0.messageID == record.messageID }
+                state.records.append(record)
+                try writeStateUnlocked(state)
+                return state.records.count
             }
             CodeFillObservability.storeLogger.info("event=store_append outcome=success record_count=\(count, privacy: .public) \(CodeFillObservability.recordSummary(record), privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
         } catch {
@@ -64,7 +74,7 @@ public struct CodeStore {
         let startedAt = Date()
         do {
             let records = try withLock {
-            try readUnlocked(now: now)
+            try readStateUnlocked(now: now).records
             }
             CodeFillObservability.storeLogger.info("event=store_read outcome=success record_count=\(records.count, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
             return records
@@ -82,10 +92,14 @@ public struct CodeStore {
         let startedAt = Date()
         do {
             let result = try withLock {
-                let records = try readUnlocked(now: now)
-                let remaining = records.filter { $0.messageID != messageID }
-                try writeUnlocked(remaining)
-                return (records.count != remaining.count, remaining)
+                var state = try readStateUnlocked(now: now)
+                let consumedRecord = state.records.first { $0.messageID == messageID }
+                state.records.removeAll { $0.messageID == messageID }
+                if let consumedRecord {
+                    state.consumedMessageExpiries[messageID] = consumedRecord.expiresAt
+                }
+                try writeStateUnlocked(state)
+                return (consumedRecord != nil, state.records)
             }
             CodeFillObservability.storeLogger.info("event=store_consume outcome=success record_found=\(result.0, privacy: .public) record_count=\(result.1.count, privacy: .public) message_id_hash=\(CodeFillObservability.fingerprint(messageID), privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
             return result.1
@@ -99,7 +113,7 @@ public struct CodeStore {
         let startedAt = Date()
         do {
             try withLock {
-                _ = try readUnlocked(now: now)
+                _ = try readStateUnlocked(now: now)
             }
             CodeFillObservability.storeLogger.info("event=store_remove_expired outcome=success duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
         } catch {
@@ -108,31 +122,41 @@ public struct CodeStore {
         }
     }
 
-    private func readUnlocked(now: Date) throws -> [OTPRecord] {
+    private func readStateUnlocked(now: Date) throws -> StoreState {
         try removeExpiredCorruptFiles(now: now)
         let url = directory.appendingPathComponent(Self.fileName)
-        guard fileManager.fileExists(atPath: url.path) else { return [] }
+        guard fileManager.fileExists(atPath: url.path) else {
+            return StoreState(records: [], consumedMessageExpiries: [:])
+        }
         let data = try Data(contentsOf: url)
-        let records: [OTPRecord]
+        let state: StoreState
         do {
-            records = try decoder.decode([OTPRecord].self, from: data)
+            state = try decoder.decode(StoreState.self, from: data)
         } catch {
-            let quarantineURL = directory.appendingPathComponent(".\(Self.fileName).corrupt-\(UUID().uuidString)")
             do {
-                try fileManager.moveItem(at: url, to: quarantineURL)
+                state = StoreState(
+                    records: try decoder.decode([OTPRecord].self, from: data),
+                    consumedMessageExpiries: [:]
+                )
             } catch {
-                CodeFillObservability.storeLogger.error("event=store_corrupt_quarantine_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
+                let quarantineURL = directory.appendingPathComponent(".\(Self.fileName).corrupt-\(UUID().uuidString)")
+                do {
+                    try fileManager.moveItem(at: url, to: quarantineURL)
+                } catch {
+                    CodeFillObservability.storeLogger.error("event=store_corrupt_quarantine_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
+                    throw error
+                }
+                CodeFillObservability.storeLogger.error("event=store_corrupt_quarantined quarantine_name=\(quarantineURL.lastPathComponent, privacy: .public)")
                 throw error
             }
-            CodeFillObservability.storeLogger.error("event=store_corrupt_quarantined quarantine_name=\(quarantineURL.lastPathComponent, privacy: .public)")
-            throw error
         }
-        let valid = records.filter { !$0.isExpired(at: now) }
-        if valid.count != records.count {
-            try writeUnlocked(valid)
-            CodeFillObservability.storeLogger.info("event=store_expired_removed record_count=\(records.count - valid.count, privacy: .public)")
+        let validRecords = state.records.filter { !$0.isExpired(at: now) }
+        let validConsumedMessageExpiries = state.consumedMessageExpiries.filter { $0.value > now }
+        if validRecords.count != state.records.count || validConsumedMessageExpiries.count != state.consumedMessageExpiries.count {
+            try writeStateUnlocked(StoreState(records: validRecords, consumedMessageExpiries: validConsumedMessageExpiries))
+            CodeFillObservability.storeLogger.info("event=store_expired_removed record_count=\(state.records.count - validRecords.count, privacy: .public)")
         }
-        return valid.sorted { $0.detectedAt > $1.detectedAt }
+        return StoreState(records: validRecords.sorted { $0.detectedAt > $1.detectedAt }, consumedMessageExpiries: validConsumedMessageExpiries)
     }
 
     private func removeExpiredCorruptFiles(now: Date) throws {
@@ -156,7 +180,7 @@ public struct CodeStore {
         }
     }
 
-    private func writeUnlocked(_ records: [OTPRecord]) throws {
+    private func writeStateUnlocked(_ state: StoreState) throws {
         let url = directory.appendingPathComponent(Self.fileName)
         let temporaryURL = directory.appendingPathComponent(".\(Self.fileName).\(UUID().uuidString).tmp")
         defer {
@@ -168,14 +192,14 @@ public struct CodeStore {
                 }
             }
         }
-        let data = try encoder.encode(records)
+        let data = try encoder.encode(state)
         try data.write(to: temporaryURL, options: .atomic)
         if fileManager.fileExists(atPath: url.path) {
             _ = try fileManager.replaceItemAt(url, withItemAt: temporaryURL)
         } else {
             try fileManager.moveItem(at: temporaryURL, to: url)
         }
-        CodeFillObservability.storeLogger.debug("event=store_write outcome=success record_count=\(records.count, privacy: .public) atomic=true")
+        CodeFillObservability.storeLogger.debug("event=store_write outcome=success record_count=\(state.records.count, privacy: .public) atomic=true")
     }
 
     // The helper, setup app, and provider extension are separate processes sharing one App Group
