@@ -191,19 +191,25 @@ struct WindowRow: View {
   }
 
   private var quotaRow: some View {
-    HStack(spacing: 7) {
-      Text(window.compactDisplayLabel)
-        .lineLimit(1)
-        .help(window.label)
-        .frame(width: 96, alignment: .leading)
-      progress
-        .frame(width: 82)
-      Text(remainingText)
-        .monospacedDigit()
-        .frame(width: 40, alignment: .trailing)
-      resetText
-        .monospacedDigit()
-        .frame(maxWidth: .infinity, alignment: .trailing)
+    VStack(alignment: .leading, spacing: 2) {
+      HStack(spacing: 7) {
+        Text(window.compactDisplayLabel)
+          .lineLimit(1)
+          .help(window.label)
+          .frame(width: 96, alignment: .leading)
+        progress
+          .frame(width: 82)
+        Text(remainingText)
+          .monospacedDigit()
+          .frame(width: 40, alignment: .trailing)
+        resetText
+          .monospacedDigit()
+          .frame(maxWidth: .infinity, alignment: .trailing)
+      }
+      if let pacing = WindowPacing.compute(window: window, at: date) {
+        pacingCaption(pacing)
+          .padding(.leading, 103)
+      }
     }
     .font(.caption)
     .foregroundStyle(stale ? .secondary : .primary)
@@ -211,6 +217,32 @@ struct WindowRow: View {
     .accessibilityElement(children: .ignore)
     .accessibilityLabel("\(window.compactDisplayLabel), raw label \(window.label)")
     .accessibilityValue(accessibilityValue)
+  }
+
+  private func pacingCaption(_ pacing: WindowPacing) -> some View {
+    Text(
+      "pace \(WindowPacing.format(pacing.actualPacePerDay)) · even \(WindowPacing.format(pacing.evenPacePerDay))"
+    )
+    .font(.caption2)
+    .monospacedDigit()
+    .foregroundStyle(stale ? .secondary : pacingColor(for: pacing.status))
+    .help(pacingHelp(pacing))
+    .accessibilityHidden(true)
+  }
+
+  private func pacingHelp(_ pacing: WindowPacing) -> String {
+    let days = String(format: "%.1f", pacing.daysRemaining)
+    return "You have \(remainingText) left with \(days) days to go: "
+      + "\(WindowPacing.format(pacing.actualPacePerDay)) available per day vs "
+      + "\(WindowPacing.format(pacing.evenPacePerDay)) at an even split."
+  }
+
+  private func pacingColor(for status: WindowPacing.Status) -> Color {
+    switch status {
+    case .ahead: return Color(red: 0.24, green: 0.55, blue: 0.36)
+    case .onPace: return .secondary
+    case .behind: return .orange
+    }
   }
 
   private var entitlementRow: some View {
@@ -271,6 +303,11 @@ struct WindowRow: View {
     if stale { values.append("stale") }
     if let resetAt = window.resetAt {
       values.append("resets \(resetAt.formatted(date: .abbreviated, time: .shortened))")
+    }
+    if let pacing = WindowPacing.compute(window: window, at: date) {
+      values.append(
+        "pace \(WindowPacing.format(pacing.actualPacePerDay)), even split \(WindowPacing.format(pacing.evenPacePerDay))"
+      )
     }
     return values.joined(separator: ", ")
   }
