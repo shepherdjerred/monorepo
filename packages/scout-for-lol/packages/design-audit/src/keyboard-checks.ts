@@ -30,12 +30,16 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
   });
   const checks = Math.min(count, 100);
   const visited = new Set<number>();
+  let skipNextTab = false;
   for (
     let attempts = 0;
     visited.size < checks && attempts < checks * 10;
     attempts += 1
   ) {
-    await page.keyboard.press("Tab");
+    if (!skipNextTab) {
+      await page.keyboard.press("Tab");
+    }
+    skipNextTab = false;
     const focusState = await evaluateBrowser(page, () => {
       const baseSelector =
         ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *):not(.report-data-explorer input):not(.report-data-explorer button[aria-label^="Copy "]):not(.report-data-explorer button[aria-label^="Insert "])';
@@ -84,40 +88,60 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
     ).toBe(true);
     visited.add(focusState.expectedIndex);
     if (focusState.isMonaco) {
-      const nextFocus = await evaluateBrowser(page, () => {
+      const bypassedMonaco = await evaluateBrowser(page, () => {
+        const active = document.activeElement;
+        if (!(active instanceof HTMLElement)) return false;
+        const editor = active.closest(".monaco-editor");
+        if (editor === null) return false;
         const baseSelector =
           ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *):not(.report-data-explorer input):not(.report-data-explorer button[aria-label^="Copy "]):not(.report-data-explorer button[aria-label^="Insert "])';
         const selector =
           window.innerWidth < 800
             ? `${baseSelector}:not(.sidebar-pane):not(.sidebar-pane *):not(.right-sidebar):not(.right-sidebar *)`
             : baseSelector;
-        const active = document.activeElement;
-        if (!(active instanceof HTMLElement)) return null;
-        const controls = [
+        const expectedControls = [
           ...document.querySelectorAll<HTMLElement>(selector),
         ].filter(
           (candidate) =>
             candidate.checkVisibility() &&
             candidate.closest(".sidebar-pane, .right-sidebar") === null,
         );
-        const expectedIndex = controls.indexOf(active);
-        const next = controls[expectedIndex + 1];
-        if (next === undefined) return null;
-        next.focus();
-        const style = getComputedStyle(next);
-        return {
-          index: expectedIndex + 1,
-          hasIndicator:
-            (style.outlineStyle !== "none" &&
-              Number.parseFloat(style.outlineWidth) > 0) ||
-            style.boxShadow !== "none" ||
-            next.matches('input[type="date"]'),
-        };
+        const expectedIndex = expectedControls.indexOf(active);
+        for (const control of editor.querySelectorAll<HTMLElement>(
+          "textarea, input, [tabindex]",
+        )) {
+          if (control.tabIndex < 0) continue;
+          control.dataset["designAuditPreviousTabIndex"] =
+            control.getAttribute("tabindex") ?? "";
+          control.tabIndex = -1;
+        }
+        const previous = expectedControls[expectedIndex - 1];
+        if (previous instanceof HTMLElement) {
+          previous.focus();
+        } else {
+          active.blur();
+          document.body.focus();
+        }
+        return true;
       });
-      if (nextFocus !== null && nextFocus.index < checks) {
-        // Programmatic focus does not activate :focus-visible; the next Tab
-        // stop is checked with keyboard modality on the following iteration.
-        visited.add(nextFocus.index);
+      if (bypassedMonaco) {
+        await page.keyboard.press("Tab");
+        await evaluateBrowser(page, () => {
+          for (const control of document.querySelectorAll<HTMLElement>(
+            "[data-design-audit-previous-tab-index]",
+          )) {
+            const previous = control.dataset["designAuditPreviousTabIndex"];
+            if (previous === "") {
+              control.removeAttribute("tabindex");
+            } else if (previous !== undefined) {
+              control.setAttribute("tabindex", previous);
+            }
+            delete control.dataset["designAuditPreviousTabIndex"];
+          }
+        });
+        // Keep the real Tab stop active so the next iteration checks its
+        // keyboard-modality focus indicator before moving on.
+        skipNextTab = true;
       }
     }
   }
