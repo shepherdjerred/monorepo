@@ -14,9 +14,11 @@ import {
   assertExploreAccess,
   isExploreConfigured,
 } from "#src/explore/access.ts";
-import { getExploreQuotaStatus } from "#src/explore/rate-limit.ts";
 import {
   ExploreConversationBusyError,
+  getExploreQuotaStatus,
+} from "#src/explore/rate-limit.ts";
+import {
   ExploreRunRateLimitedError,
   ExploreRunUnavailableError,
   exploreRunManager,
@@ -24,7 +26,6 @@ import {
 import {
   ExploreInvalidTurnError,
   ExploreNotFoundError,
-  deleteExploreConversation,
   listExploreConversations,
   loadExploreTranscript,
   renameExploreConversation,
@@ -209,15 +210,18 @@ export const exploreRouter = router({
     .input(conversationInput)
     .mutation(async ({ ctx, input }) => {
       const userId = await requireExploreUser(ctx.user);
-      await exploreRunManager.stopConversationAndWait(
-        input.conversationId,
-        userId,
-      );
-      const deleted = await deleteExploreConversation(
-        prisma,
-        input.conversationId,
-        userId,
-      );
+      let deleted: boolean;
+      try {
+        deleted = await exploreRunManager.deleteConversationAndWait(
+          input.conversationId,
+          userId,
+        );
+      } catch (error) {
+        if (error instanceof ExploreConversationBusyError) {
+          throw new TRPCError({ code: "CONFLICT", message: error.message });
+        }
+        throw error;
+      }
       if (!deleted) {
         throw new TRPCError({
           code: "NOT_FOUND",

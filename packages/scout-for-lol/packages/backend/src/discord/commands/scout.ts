@@ -94,6 +94,10 @@ export async function executeScout(
 
   let runnerOwnsMetrics = false;
   try {
+    const conversationId = globalThis.crypto.randomUUID();
+    if (!ticket.claimConversation(conversationId)) {
+      throw new Error("New Explore conversation id is already active.");
+    }
     await dependencies.client.user.upsert({
       where: { discordId: identity.userId },
       create: {
@@ -110,6 +114,7 @@ export async function executeScout(
     });
     const created = await startExploreTurn(dependencies.client, {
       conversationId: null,
+      newId: conversationId,
       userId: identity.userId,
       question: question.data,
       attach: { kind: "leaf" },

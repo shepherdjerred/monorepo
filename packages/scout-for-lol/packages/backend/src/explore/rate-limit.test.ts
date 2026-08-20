@@ -5,6 +5,7 @@ import {
   getExploreQuotaStatus,
   resetExploreRateLimitStateForTests,
   tryStartExploreTurn,
+  waitForExploreConversation,
 } from "#src/explore/rate-limit.ts";
 
 const userId = testAccountId("1");
@@ -54,6 +55,22 @@ describe("explore rate limit", () => {
     expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(true);
     second.finish();
     expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(false);
+  });
+
+  test("conversation claims serialize turns across adapters", async () => {
+    const first = tryStartExploreTurn({ userId }, now);
+    const second = tryStartExploreTurn({ userId }, now);
+    if (!first.allowed || !second.allowed) {
+      throw new Error("expected both turn slots to be allowed");
+    }
+
+    expect(first.claimConversation("conversation-a")).toBe(true);
+    expect(second.claimConversation("conversation-a")).toBe(false);
+    const released = waitForExploreConversation("conversation-a");
+    first.finish();
+    await released;
+    expect(second.claimConversation("conversation-a")).toBe(true);
+    second.finish();
   });
 
   test("the sixth concurrent turn is rejected by the global cap", () => {

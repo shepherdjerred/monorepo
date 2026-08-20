@@ -13,14 +13,15 @@ import {
 } from "@scout-for-lol/data";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import {
-  ExploreConversationBusyError,
   ExploreRunManager,
   ExploreRunUnavailableError,
   type ExploreAgentRunner,
 } from "#src/explore/run-manager.ts";
 import {
+  ExploreConversationBusyError,
   resetExploreRateLimitStateForTests,
   getExploreQuotaStatus,
+  tryStartExploreTurn,
 } from "#src/explore/rate-limit.ts";
 import type {
   ExploreAgentParams,
@@ -229,6 +230,42 @@ describe("ExploreRunManager", () => {
     expect(minute?.used).toBe(2);
   });
 
+  test("a Discord-owned conversation blocks a web follow-up", async () => {
+    const agent = controlledAgent();
+    const manager = createManager(agent);
+    const conversation = await trpc.prisma.exploreConversation.create({
+      data: {
+        userId: owner,
+        title: "Discord question",
+        messages: { create: { role: "user", content: "Who wins?" } },
+      },
+    });
+    const discordTicket = tryStartExploreTurn({ userId: owner });
+    if (!discordTicket.allowed) {
+      throw new Error("Expected a Discord turn ticket.");
+    }
+    expect(discordTicket.claimConversation(conversation.id)).toBe(true);
+
+    await expect(
+      manager.start(
+        { userId: owner },
+        {
+          conversationId: conversation.id,
+          question: "What about this patch?",
+          attach: { kind: "leaf" },
+        },
+      ),
+    ).rejects.toBeInstanceOf(ExploreConversationBusyError);
+    expect(
+      await trpc.prisma.exploreMessage.count({
+        where: { conversationId: conversation.id },
+      }),
+    ).toBe(1);
+    discordTicket.finish();
+  });
+});
+
+describe("ExploreRunManager lifecycle", () => {
   test("owner checks hide listing, observation, and stopping", async () => {
     const agent = controlledAgent();
     const manager = createManager(agent);
@@ -272,12 +309,50 @@ describe("ExploreRunManager", () => {
     const firstFinished = observeUntilDone(manager, first);
     const secondFinished = observeUntilDone(manager, second);
 
-    await manager.stopConversationAndWait(first.conversationId, owner);
+    expect(
+      await manager.deleteConversationAndWait(first.conversationId, owner),
+    ).toBe(true);
     expect(await firstFinished).toBe("stopped");
     expect(manager.list(owner).map((run) => run.runId)).toEqual([second.runId]);
+    expect(
+      await trpc.prisma.exploreConversation.findUnique({
+        where: { id: first.conversationId },
+      }),
+    ).toBeNull();
 
     requiredRun(agent, 1).resolve(successfulResult("Answer B"));
     expect(await secondFinished).toBe("succeeded");
+  });
+
+  test("deletion waits for a turn still in its reservation phase", async () => {
+    const agent = controlledAgent();
+    const manager = createManager(agent);
+    const conversation = await trpc.prisma.exploreConversation.create({
+      data: {
+        userId: owner,
+        title: "Delete race",
+        messages: { create: { role: "user", content: "First question" } },
+      },
+    });
+
+    const started = manager.start(
+      { userId: owner },
+      {
+        conversationId: conversation.id,
+        question: "Question racing deletion",
+        attach: { kind: "leaf" },
+      },
+    );
+    const deleted = manager.deleteConversationAndWait(conversation.id, owner);
+
+    await started;
+    expect(await deleted).toBe(true);
+    expect(manager.list(owner)).toEqual([]);
+    expect(
+      await trpc.prisma.exploreConversation.findUnique({
+        where: { id: conversation.id },
+      }),
+    ).toBeNull();
   });
 
   test("provider failure persists interruption semantics and releases capacity", async () => {

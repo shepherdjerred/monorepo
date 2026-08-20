@@ -258,9 +258,7 @@ export async function loadSharedExploreTranscript(
 
 /**
  * Create the conversation if needed and append the user's question.
- *
- * Written before the model runs so the question survives a failed or abandoned
- * turn — a conversation that loses what was asked is not resumable.
+ * Saved before the model runs so a failed turn never loses its question.
  *
  * `attach` decides where the question lands: `leaf` continues the branch on
  * screen, `message` forks a sibling under a named parent (how editing works),
@@ -271,6 +269,7 @@ export async function startExploreTurn(
   prisma: ExtendedPrismaClient,
   input: {
     conversationId: string | null;
+    newId?: string;
     userId: DiscordAccountId;
     question: string;
     attach: ExploreAttachPoint;
@@ -282,11 +281,11 @@ export async function startExploreTurn(
   expectedCurrentLeafId: string | null;
 }> {
   if (input.conversationId === null) {
-    const title = titleFromQuestion(input.question);
     const created = await prisma.exploreConversation.create({
       data: {
+        ...(input.newId === undefined ? {} : { id: input.newId }),
         userId: input.userId,
-        title,
+        title: titleFromQuestion(input.question),
         messages: { create: { role: "user", content: input.question } },
       },
       include: { messages: true },
@@ -297,12 +296,11 @@ export async function startExploreTurn(
     }
     return {
       conversationId: created.id,
-      title,
+      title: created.title,
       messageId,
       expectedCurrentLeafId: null,
     };
   }
-
   const existing = await prisma.exploreConversation.findFirst({
     where: { id: input.conversationId, userId: input.userId },
     include: { messages: true },

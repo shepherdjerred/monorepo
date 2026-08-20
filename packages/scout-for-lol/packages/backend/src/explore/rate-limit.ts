@@ -44,6 +44,8 @@ export type ExploreRateLimitRejection = {
   reason: string;
 };
 
+export class ExploreConversationBusyError extends Error {}
+
 /**
  * A granted turn, in two phases.
  *
@@ -61,6 +63,7 @@ export type ExploreRateLimitRejection = {
 export type ExploreRateLimitTicket = {
   allowed: true;
   runId: string;
+  claimConversation: (conversationId: string) => boolean;
   commit: () => void;
   finish: () => void;
 };
@@ -85,6 +88,14 @@ const engine = createQuotaEngine<ExploreQuotaScope, ExploreRateLimitIdentity>({
 
 const activeUserRuns = new Map<string, number>();
 let activeGlobalRuns = 0;
+const activeConversationRuns = new Map<
+  string,
+  {
+    runId: string;
+    released: Promise<null>;
+    release: () => void;
+  }
+>();
 
 export function getExploreQuotaStatus(
   identity: ExploreRateLimitIdentity,
@@ -126,12 +137,35 @@ export function tryStartExploreTurn(
     (activeUserRuns.get(identity.userId) ?? 0) + 1,
   );
   activeGlobalRuns++;
+  const runId = globalThis.crypto.randomUUID();
   let finished = false;
   let committed = false;
+  let claimedConversationId: string | null = null;
 
   return {
     allowed: true,
-    runId: globalThis.crypto.randomUUID(),
+    runId,
+    claimConversation: (conversationId) => {
+      if (finished) {
+        throw new Error("A finished Explore turn cannot claim a conversation.");
+      }
+      if (claimedConversationId !== null) {
+        return claimedConversationId === conversationId;
+      }
+      if (activeConversationRuns.has(conversationId)) {
+        return false;
+      }
+      const deferred = Promise.withResolvers<null>();
+      activeConversationRuns.set(conversationId, {
+        runId,
+        released: deferred.promise,
+        release: () => {
+          deferred.resolve(null);
+        },
+      });
+      claimedConversationId = conversationId;
+      return true;
+    },
     // Charged against `now` rather than commit time: the window a request
     // belongs to is when it arrived, and the two are milliseconds apart.
     commit: () => {
@@ -152,15 +186,36 @@ export function tryStartExploreTurn(
       } else {
         activeUserRuns.set(identity.userId, activeForUser - 1);
       }
+      if (claimedConversationId !== null) {
+        const active = activeConversationRuns.get(claimedConversationId);
+        if (active?.runId === runId) {
+          activeConversationRuns.delete(claimedConversationId);
+          active.release();
+        }
+      }
       activeGlobalRuns = Math.max(0, activeGlobalRuns - 1);
     },
   };
+}
+
+/** Wait until the adapter currently owning a conversation has finished. */
+export async function waitForExploreConversation(
+  conversationId: string,
+): Promise<void> {
+  const active = activeConversationRuns.get(conversationId);
+  if (active !== undefined) {
+    await active.released;
+  }
 }
 
 export function resetExploreRateLimitStateForTests(): void {
   engine.reset();
   activeUserRuns.clear();
   activeGlobalRuns = 0;
+  for (const active of activeConversationRuns.values()) {
+    active.release();
+  }
+  activeConversationRuns.clear();
 }
 
 function quotaReason(snapshot: ExploreQuotaSnapshot): string {

@@ -17,7 +17,9 @@ import {
   type ExploreAgentResult,
 } from "#src/explore/agent.ts";
 import {
+  ExploreConversationBusyError,
   tryStartExploreTurn,
+  waitForExploreConversation,
   type ExploreRateLimitIdentity,
   type ExploreRateLimitRejection,
   type ExploreRateLimitTicket,
@@ -25,6 +27,7 @@ import {
 import {
   ExploreInvalidTurnError,
   ExploreNotFoundError,
+  deleteExploreConversation,
   loadExploreTranscript,
   resolveRegenerateTarget,
   startExploreTurn,
@@ -67,7 +70,6 @@ type ActiveRun = {
   resolveSettled: (value: null) => void;
 };
 
-export class ExploreConversationBusyError extends Error {}
 export class ExploreRunUnavailableError extends Error {}
 
 export class ExploreRunRateLimitedError extends Error {
@@ -100,7 +102,8 @@ export class ExploreRunManager {
   readonly #timeoutMs: number;
   readonly #runs = new Map<string, ActiveRun>();
   readonly #conversationRuns = new Map<string, string>();
-  readonly #reservedConversations = new Set<string>();
+  readonly #startingConversations = new Map<string, Promise<null>>();
+  readonly #deletingConversations = new Set<string>();
   #acceptingRuns = true;
 
   constructor(
@@ -120,11 +123,12 @@ export class ExploreRunManager {
     request: ExploreTurnRequest,
   ): Promise<ExploreActiveRun> {
     this.#assertAcceptingRuns();
-    const requestedConversationId = request.conversationId;
+    const conversationId =
+      request.conversationId ?? globalThis.crypto.randomUUID();
     if (
-      requestedConversationId !== null &&
-      (this.#conversationRuns.has(requestedConversationId) ||
-        this.#reservedConversations.has(requestedConversationId))
+      this.#conversationRuns.has(conversationId) ||
+      this.#startingConversations.has(conversationId) ||
+      this.#deletingConversations.has(conversationId)
     ) {
       throw new ExploreConversationBusyError(
         "This conversation already has an answer running.",
@@ -136,12 +140,22 @@ export class ExploreRunManager {
       scoutExploreTurnsTotal.inc({ status: "rate_limited" });
       throw new ExploreRunRateLimitedError(ticket);
     }
-    if (requestedConversationId !== null) {
-      this.#reservedConversations.add(requestedConversationId);
+    if (!ticket.claimConversation(conversationId)) {
+      ticket.finish();
+      throw new ExploreConversationBusyError(
+        "This conversation already has an answer running.",
+      );
     }
+    const starting = createDeferred();
+    this.#startingConversations.set(conversationId, starting.promise);
 
     try {
-      const started = await resolveTurnTarget(this.#client, request, identity);
+      const started = await resolveTurnTarget(
+        this.#client,
+        request,
+        identity,
+        conversationId,
+      );
       const transcript = await loadExploreTranscript(
         this.#client,
         started.conversationId,
@@ -184,9 +198,8 @@ export class ExploreRunManager {
       ticket.finish();
       throw error;
     } finally {
-      if (requestedConversationId !== null) {
-        this.#reservedConversations.delete(requestedConversationId);
-      }
+      this.#startingConversations.delete(conversationId);
+      starting.resolve(null);
     }
   }
 
@@ -230,24 +243,52 @@ export class ExploreRunManager {
     return true;
   }
 
-  async stopConversationAndWait(
+  async deleteConversationAndWait(
     conversationId: string,
     userId: DiscordAccountId,
-  ): Promise<void> {
-    const runId = this.#conversationRuns.get(conversationId);
-    if (runId === undefined) {
-      return;
+  ): Promise<boolean> {
+    if (this.#deletingConversations.has(conversationId)) {
+      throw new ExploreConversationBusyError(
+        "This conversation is already being deleted.",
+      );
     }
-    const run = this.#runs.get(runId);
-    if (run?.identity.userId !== userId) {
-      return;
+    this.#deletingConversations.add(conversationId);
+    try {
+      const owned = await this.#client.exploreConversation.findFirst({
+        where: { id: conversationId, userId },
+        select: { id: true },
+      });
+      if (owned === null) return false;
+
+      await this.#startingConversations.get(conversationId);
+      const runId = this.#conversationRuns.get(conversationId);
+      const run = runId === undefined ? undefined : this.#runs.get(runId);
+      if (run?.identity.userId === userId) {
+        this.#abort(
+          run,
+          "delete",
+          "Explore conversation deleted by the asker.",
+        );
+        await run.settled;
+      } else {
+        // Discord one-shot runs are outside the web observer registry, but
+        // they share the process-wide conversation lease. Let one finish
+        // before removing the rows it is about to persist into.
+        await waitForExploreConversation(conversationId);
+      }
+      return await deleteExploreConversation(
+        this.#client,
+        conversationId,
+        userId,
+      );
+    } finally {
+      this.#deletingConversations.delete(conversationId);
     }
-    this.#abort(run, "delete", "Explore conversation deleted by the asker.");
-    await run.settled;
   }
 
   async shutdown(): Promise<void> {
     this.#acceptingRuns = false;
+    await Promise.all(this.#startingConversations.values());
     const runs = [...this.#runs.values()];
     for (const run of runs) {
       this.#abort(run, "shutdown", "Explore backend is shutting down.");
@@ -260,13 +301,16 @@ export class ExploreRunManager {
   }
 
   resetForTests(): void {
-    if (this.#runs.size > 0) {
+    if (
+      this.#runs.size > 0 ||
+      this.#startingConversations.size > 0 ||
+      this.#deletingConversations.size > 0
+    ) {
       throw new Error(
         "Cannot reset Explore run manager while runs are active.",
       );
     }
     this.#conversationRuns.clear();
-    this.#reservedConversations.clear();
     this.#acceptingRuns = true;
   }
 
@@ -369,6 +413,7 @@ async function resolveTurnTarget(
   client: ExtendedPrismaClient,
   input: ExploreTurnRequest,
   identity: ExploreRateLimitIdentity,
+  newId: string,
 ): Promise<StartedTurn> {
   if (input.question === null) {
     if (input.conversationId === null || input.attach.kind !== "message") {
@@ -385,6 +430,7 @@ async function resolveTurnTarget(
 
   const started = await startExploreTurn(client, {
     conversationId: input.conversationId,
+    newId,
     userId: identity.userId,
     question: input.question,
     attach: input.attach,

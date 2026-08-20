@@ -8,6 +8,7 @@ import {
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import {
+  ExploreConversationBusyError,
   getExploreQuotaStatus,
   type ExploreRateLimitIdentity,
   type ExploreRateLimitTicket,
@@ -84,6 +85,12 @@ export async function runPersistedExploreTurn(
   },
   dependencies: ExploreTurnDependencies = defaultDependencies,
 ): Promise<ExplorePersistedTurnResult> {
+  if (!input.ticket.claimConversation(input.started.conversationId)) {
+    input.ticket.finish();
+    throw new ExploreConversationBusyError(
+      "This conversation already has an answer running.",
+    );
+  }
   const abortController = new AbortController();
   let cancellationOutcome: Extract<
     ExploreTurnOutcome,
