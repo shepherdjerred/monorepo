@@ -74,14 +74,12 @@ export function visualizationToEmbed(
   }
   return embed;
 }
-
 function truncateTitle(title: string): string {
   if (title.length <= MAX_EMBED_TITLE) {
     return title;
   }
   return `${title.slice(0, MAX_EMBED_TITLE - 1)}…`;
 }
-
 function nativeDescription(
   snapshot: VisualizationSnapshot,
   preview: ReportAiPreviewSummary | null,
@@ -112,7 +110,6 @@ function nativeDescription(
     ? truncateTableDescription(description)
     : truncateDescription(description);
 }
-
 function truncateDescription(description: string): string {
   if (description.length <= MAX_EMBED_DESCRIPTION) {
     return description;
@@ -369,7 +366,11 @@ function nativeRowSource(
   snapshotRows: NativeRow[];
 } {
   const snapshotRows = alignedRows(snapshot);
-  if (preview === null || snapshot.temporal !== null) {
+  const hasTransformedValues =
+    snapshot.display.rollingWindow !== null ||
+    snapshot.display.cumulative ||
+    snapshot.display.stack === "percent";
+  if (hasTransformedValues || preview === null || snapshot.temporal !== null) {
     return { rows: snapshotRows, preview: null, snapshotRows };
   }
   return { rows: previewRows(preview), preview, snapshotRows };
@@ -405,7 +406,6 @@ function previewOverflowNotice(
 function previewMetricColumns(preview: ReportAiPreviewSummary) {
   return preview.columns.filter((column) => column.key !== "label");
 }
-
 function formatRowValues(
   snapshot: VisualizationSnapshot,
   row: NativeRow,
@@ -437,7 +437,6 @@ function requireRowValue(row: NativeRow, column: string): NativeRowValue {
   }
   return value;
 }
-
 function requireNumericRowValue(row: NativeRow, column: string): number | null {
   const value = row.values.get(column) ?? null;
   if (typeof value !== "number" && value !== null) {

@@ -458,3 +458,17 @@ describe("Scout Discord visualization bounds", () => {
     expect(payload.files?.[0]?.attachment).toBeInstanceOf(Buffer);
   });
 });
+
+test("renders transformed snapshot values instead of raw preview values", () => {
+  const snapshot = structuredClone(scoutTestVisualization);
+  snapshot.display.cumulative = true;
+  snapshot.series.forEach((series) => {
+    series.points = series.points.map((point, index) => ({
+      ...point,
+      value: index === 0 ? 8 : 9,
+    }));
+  });
+  const description = visualizationToEmbed(snapshot, preview)?.data.description;
+  expect(description).toContain("9");
+  expect(description).not.toContain("7");
+});
