@@ -47,6 +47,7 @@
     "tunnel-dns-coverage": "bun scripts/check-tunnel-dns-coverage.ts",
     "check-suppressions": "bun scripts/check-suppressions.ts",
     "check-ai-architecture": "bun scripts/check-ai-architecture.ts",
+    "check-floating-deps": "bun scripts/check-floating-deps.ts",
     "check-patched-deps": "bun scripts/check-patched-deps.ts",
     "check-ci-env": "bun scripts/check-ci-env.ts",
     "check-script-migrations": "bun scripts/check-script-migrations.ts",

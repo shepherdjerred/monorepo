@@ -97,6 +97,18 @@
         "!packages/dotfiles/dot_agents/skills/**"
       ]
     },
+    // Dependency specs must be lockfile-pinnable: a dist-tag re-resolves on
+    // every install, so the registry moving `latest` breaks --frozen-lockfile
+    // on main with no commit to blame.
+    "//#check-floating-deps": {
+      "inputs": [
+        "package.json",
+        "packages/**/package.json",
+        "scripts/package.json",
+        "!**/node_modules/**",
+        "scripts/check-floating-deps.ts"
+      ]
+    },
     "//#check-patched-deps": {
       "inputs": [
         "package.json",
