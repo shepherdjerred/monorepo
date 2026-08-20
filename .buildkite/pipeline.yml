@@ -665,7 +665,7 @@ steps:
   - label: ":apple: QuotaBar macOS (PR)"
     key: quotabar-macos-pr
     timeout_in_minutes: 45
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && !build.pull_request.repository.fork && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
@@ -720,7 +720,7 @@ steps:
   - label: ":apple: TaskNotes native (PR)"
     key: tasknotes-native-pr
     timeout_in_minutes: 90
-    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && !build.pull_request.repository.fork && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
