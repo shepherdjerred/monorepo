@@ -2,7 +2,7 @@ import { expect, type Page } from "@playwright/test";
 import { evaluateBrowser } from "#src/page-checks.ts";
 
 const baseFocusSelector =
-  ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *):not(.report-data-explorer input):not(.report-data-explorer button[aria-label^="Copy "]):not(.report-data-explorer button[aria-label^="Insert "])';
+  ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
 
 export async function assertKeyboardFocus(page: Page): Promise<void> {
   const viewport = page.viewportSize();
@@ -17,15 +17,13 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
   ).toBeVisible();
   const count = await evaluateBrowser(page, () => {
     const baseSelector =
-      ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *):not(.report-data-explorer input):not(.report-data-explorer button[aria-label^="Copy "]):not(.report-data-explorer button[aria-label^="Insert "])';
+      ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
     const selector =
       window.innerWidth < 800
         ? `${baseSelector}:not(.sidebar-pane):not(.sidebar-pane *):not(.right-sidebar):not(.right-sidebar *)`
         : baseSelector;
     return [...document.querySelectorAll<HTMLElement>(selector)].filter(
-      (element) =>
-        element.checkVisibility() &&
-        element.closest(".sidebar-pane, .right-sidebar") === null,
+      (element) => element.checkVisibility(),
     ).length;
   });
   const checks = Math.min(count, 100);
@@ -42,7 +40,7 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
     skipNextTab = false;
     const focusState = await evaluateBrowser(page, () => {
       const baseSelector =
-        ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *):not(.report-data-explorer input):not(.report-data-explorer button[aria-label^="Copy "]):not(.report-data-explorer button[aria-label^="Insert "])';
+        ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
       const selector =
         window.innerWidth < 800
           ? `${baseSelector}:not(.sidebar-pane):not(.sidebar-pane *):not(.right-sidebar):not(.right-sidebar *)`
@@ -59,11 +57,7 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
       }
       const expectedControls = [
         ...document.querySelectorAll<HTMLElement>(selector),
-      ].filter(
-        (candidate) =>
-          candidate.checkVisibility() &&
-          candidate.closest(".sidebar-pane, .right-sidebar") === null,
-      );
+      ].filter((candidate) => candidate.checkVisibility());
       const expectedIndex = expectedControls.indexOf(element);
       if (expectedIndex === -1) return { kind: "skip" as const };
       const style = getComputedStyle(element);
@@ -94,18 +88,14 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
         const editor = active.closest(".monaco-editor");
         if (editor === null) return false;
         const baseSelector =
-          ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *):not(.report-data-explorer input):not(.report-data-explorer button[aria-label^="Copy "]):not(.report-data-explorer button[aria-label^="Insert "])';
+          ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
         const selector =
           window.innerWidth < 800
             ? `${baseSelector}:not(.sidebar-pane):not(.sidebar-pane *):not(.right-sidebar):not(.right-sidebar *)`
             : baseSelector;
         const expectedControls = [
           ...document.querySelectorAll<HTMLElement>(selector),
-        ].filter(
-          (candidate) =>
-            candidate.checkVisibility() &&
-            candidate.closest(".sidebar-pane, .right-sidebar") === null,
-        );
+        ].filter((candidate) => candidate.checkVisibility());
         const expectedIndex = expectedControls.indexOf(active);
         for (const control of editor.querySelectorAll<HTMLElement>(
           "textarea, input, [tabindex]",
