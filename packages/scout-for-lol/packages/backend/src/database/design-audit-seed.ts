@@ -10,6 +10,7 @@ import {
   RegionSchema,
   ReportIdSchema,
 } from "@scout-for-lol/data";
+import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 
 const DEFAULT_GUILD_ID = "1337623164146155593";
 const DEFAULT_DISCORD_ID = "000000000000000001";
@@ -97,6 +98,10 @@ export async function seedDesignAuditDatabase(
       { timestampFormat: "unixepoch-ms" },
     ),
   });
+  const lakeDir = path.resolve(
+    backendCwd,
+    environment["REPORT_LAKE_DIR"] ?? "./report-lake",
+  );
 
   try {
     await prisma.user.upsert({
@@ -160,10 +165,28 @@ export async function seedDesignAuditDatabase(
       },
     });
 
-    const player = await prisma.player.upsert({
-      where: { serverId_alias: { serverId: guildId, alias: playerAlias } },
-      update: { discordId, creatorDiscordId: discordId, updatedTime: now },
-      create: {
+    await prisma.competitionParticipant.deleteMany({
+      where: {
+        competition: { serverId: guildId, creatorDiscordId: discordId },
+      },
+    });
+    await prisma.competitionSnapshot.deleteMany({
+      where: {
+        competition: { serverId: guildId, creatorDiscordId: discordId },
+      },
+    });
+    await prisma.subscription.deleteMany({
+      where: { serverId: guildId, creatorDiscordId: discordId },
+    });
+    await prisma.account.deleteMany({
+      where: { serverId: guildId, creatorDiscordId: discordId },
+    });
+    await prisma.player.deleteMany({
+      where: { serverId: guildId, creatorDiscordId: discordId },
+    });
+
+    const player = await prisma.player.create({
+      data: {
         serverId: guildId,
         alias: playerAlias,
         discordId,
@@ -206,7 +229,7 @@ export async function seedDesignAuditDatabase(
       maxParticipants: 50,
       analysisTimezone: "UTC",
       startDate: now,
-      endDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+      endDate: new Date("2099-01-01T00:00:00.000Z"),
       creatorDiscordId: discordId,
       updatedTime: now,
     };
@@ -245,6 +268,29 @@ export async function seedDesignAuditDatabase(
       where: { id: reportId },
       update: reportData,
       create: { ...reportData, id: reportId, createdTime: now },
+    });
+
+    await resetTestLake(lakeDir);
+    await writeTestLake(lakeDir, {
+      serverId: guildId,
+      matchFacts: [
+        {
+          playerId: player.id,
+          playerAlias,
+          discordId,
+          matchId: "design-audit-match-1",
+          puuid,
+          queue: "RANKED_SOLO_5x5",
+          win: true,
+          surrendered: false,
+          kills: 8,
+          deaths: 2,
+          assists: 10,
+          championId: 222,
+          championName: "Jinx",
+          gameCreationAt: new Date("2026-01-01T12:00:00.000Z"),
+        },
+      ],
     });
   } finally {
     await prisma.$disconnect();

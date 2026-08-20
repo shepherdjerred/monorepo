@@ -239,6 +239,7 @@ if (import.meta.main) {
       REPORT_LAKE_DIR: lakeDir,
       ...(isDesignAuditBoot
         ? {
+            NODE_ENV: "test",
             JWT_SIGNING_SECRET:
               Bun.env["JWT_SIGNING_SECRET"] ??
               "design-audit-local-jwt-signing-secret-32-bytes",
