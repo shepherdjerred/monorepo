@@ -38,9 +38,15 @@ function singleMatchGrouping(options: GroupingOptions): Grouping {
       // player_alias. player_id/discord_id stay NULL, which is what keeps
       // leaderboard @mentions from resolving (mention-format falls back to the
       // label) — correct, since a global row is not a tracked player.
+      //
+      // The label is the player's MOST RECENT Riot ID, not an arbitrary one.
+      // A Riot ID is a display name that changes, and grouping is by puuid, so
+      // `any_value` picked whichever historical name a row happened to carry —
+      // a renamed player could be labelled with a name they no longer use, and
+      // two runs of the same query could disagree.
       scope.kind === "global"
         ? {
-            labelExpr: "any_value(player_alias)",
+            labelExpr: `arg_max(player_alias, ${timeColumn})`,
             discordExpr: "NULL::VARCHAR",
             groupExprs: ["puuid"],
           }

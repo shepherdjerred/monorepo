@@ -10,6 +10,7 @@ import {
 import { executeReportQuery } from "#src/reports/query-engine.ts";
 import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
+import { formatReportQuery } from "@scout-for-lol/data";
 
 /**
  * Identity: one person, several accounts, several names.
@@ -180,6 +181,52 @@ async function games(queryText: string): Promise<number> {
     0,
   );
 }
+
+describe("PUUIDs stay in the data layer", () => {
+  // The owner's constraint, as a test. Stored query text is rendered in the
+  // transcript, served unauthenticated to anyone holding a share link, baked
+  // into markdown exports, and replayed into the model's context on every
+  // follow-up — so a PUUID reaching it escapes in four directions at once.
+  // `player('…')` keeps the human name in the text and resolves behind it.
+  test("a resolved query still reads as the name the author wrote", async () => {
+    const queryText =
+      "SELECT games FROM match_participants WHERE player = player('Aaron') GROUP BY player DURING ALL TIME";
+
+    const result = await executeReportQuery({
+      prisma,
+      scope: GLOBAL_SCOPE,
+      askerGuildIds: [serverId],
+      queryText,
+      now,
+    });
+
+    const formatted = formatReportQuery(queryText);
+    expect(formatted).toContain("player = player('Aaron')");
+    for (const puuid of [AARON_MAIN, AARON_SMURF, EDWARD]) {
+      expect(formatted).not.toContain(puuid);
+      expect(JSON.stringify(result.plan)).not.toContain(puuid);
+    }
+  });
+
+  // The label a reader sees is the most recent Riot ID, not an arbitrary one:
+  // grouping is by puuid, so `any_value` could surface a name the player has
+  // not used in months, and two runs could disagree.
+  test("a renamed player is labelled with their current Riot ID", async () => {
+    const result = await executeReportQuery({
+      prisma,
+      scope: GLOBAL_SCOPE,
+      askerGuildIds: [serverId],
+      queryText:
+        "SELECT games FROM match_participants WHERE player = player('Aaron') GROUP BY player DURING ALL TIME",
+      now,
+    });
+
+    const labels = result.rows.map((row) => row.label).toSorted();
+    // AARON_MAIN's latest game is under GexIsAngry, not the older
+    // DarkinBunnygirl; AARON_SMURF has only ever been EddieChavez.
+    expect(labels).toEqual(["EddieChavez#NA1", "GexIsAngry#NA1"]);
+  });
+});
 
 describe("player('…') in a query", () => {
   test("counts every account and every past name", async () => {
