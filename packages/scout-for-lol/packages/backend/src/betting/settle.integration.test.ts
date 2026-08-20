@@ -546,6 +546,35 @@ describe("settlement storage bounds", () => {
     ).toEqual({ balance: BUCKS_INT32_MAX - 1 });
   });
 
+  test("voids when gross payout cannot be persisted even if net payout fits", async () => {
+    const stake = Math.floor(BUCKS_INT32_MAX / 2) + 1;
+    const pool = await makePool();
+    const winner = await makeBettor({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(1),
+      teamId: WINNING_TEAM,
+      stake,
+      startingBalance: stake,
+    });
+    await makeBettor({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(2),
+      teamId: LOSING_TEAM,
+      stake,
+      startingBalance: stake,
+    });
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary?.voidReason).toBe("storage_overflow");
+    expect(summary?.houseCut).toBe(0);
+    expect(
+      await db.bucksAccount.findUniqueOrThrow({
+        where: { id: winner.account.id },
+        select: { balance: true },
+      }),
+    ).toEqual({ balance: stake });
+  });
+
   test("voids when an even-money net payout exceeds wallet storage", async () => {
     const pool = await makePool();
     const winner = await makeBettor({

@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/bun";
 import {
+  BUCKS_INT32_MAX,
   BucksPoolRosterSchema,
   RiotTeamIdSchema,
   type BucksPoolParticipant,
@@ -119,6 +120,12 @@ function settleMatchedBets(input: {
 
     const won = row.predictedTeamId === input.winningTeamId;
     const grossPayout = won ? row.matchedStake * 2 : 0;
+    if (grossPayout > BUCKS_INT32_MAX) {
+      // Gross payout, fee, and net payout are persisted as Prisma Int fields.
+      // Raise the typed error before any terminal state is written so the
+      // transaction can retry through the storage-overflow refund path.
+      throw new BucksStorageOverflowError(row.bucksAccountId);
+    }
     const grossProfit = won ? row.matchedStake : 0;
     const houseCut = settlementHouseCut({
       matchedProfit: grossProfit,
