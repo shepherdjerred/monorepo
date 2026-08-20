@@ -352,9 +352,13 @@ export async function reconcileCustomNights(
   const pointers = await database.customActiveNight.findMany({
     select: { nightId: true },
   });
+  const activeNightIds = new Set(pointers.map((pointer) => pointer.nightId));
   for (const pointer of pointers) {
     try {
-      if (await expireNight(database, pointer.nightId, now)) continue;
+      if (await expireNight(database, pointer.nightId, now)) {
+        activeNightIds.delete(pointer.nightId);
+        continue;
+      }
       await reconcileAway(database, pointer.nightId, now);
       await recoverTournamentCode(database, pointer.nightId);
       await markResultPending(database, pointer.nightId, now);
@@ -375,6 +379,7 @@ export async function reconcileCustomNights(
     distinct: ["nightId"],
   });
   for (const { nightId } of unresolvedNights) {
+    if (activeNightIds.has(nightId)) continue;
     try {
       await pollResult(database, nightId);
     } catch (error) {
