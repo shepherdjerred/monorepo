@@ -450,7 +450,7 @@ describe("Scout Discord visualization bounds", () => {
       expect(embed?.data.title?.length).toBeLessThanOrEqual(256);
       if (kind === "TABLE") {
         expect(description).toContain("```\n");
-        expect(description).toContain("\n```\n\n_Visualization truncated");
+        expect(description).not.toContain("Visualization truncated");
       }
     }
   });
@@ -521,6 +521,27 @@ test("preserves confidence intervals in native temporal rows", () => {
       preview,
     )?.data.description,
   ).toContain("95% CI 75.0%–100.0%");
+});
+
+test("keeps native values visible when labels exceed the description budget", () => {
+  const snapshot = VisualizationSnapshotSchema.parse({
+    ...scoutTestVisualization,
+    series: scoutTestVisualization.series.map((series) => ({
+      ...series,
+      label: "Series label ".repeat(500),
+      points: series.points.map((point) => ({
+        ...point,
+        label: "Point label ".repeat(500),
+      })),
+    })),
+  });
+
+  for (const kind of ["TABLE", "LIST", "LEADERBOARD"] as const) {
+    const description = visualizationToEmbed(
+      VisualizationSnapshotSchema.parse({ ...snapshot, kind }),
+    )?.data.description;
+    expect(description).toContain("100.0%");
+  }
 });
 
 test("renders percent-stack snapshot values instead of raw preview values", () => {

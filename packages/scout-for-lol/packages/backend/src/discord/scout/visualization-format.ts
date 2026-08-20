@@ -27,21 +27,48 @@ export function formatPreviewValueWithEvidence(
 ): string {
   const value = formatPreviewValue(column, requireRowValue(row, column.key));
   const rowDimensions = new Set(row.key.split(" • "));
-  const pointMatchesRow = (item: TemporalSeries["points"][number]) =>
-    item.key === row.key ||
-    item.label === row.label ||
-    rowDimensions.has(item.key) ||
-    rowDimensions.has(item.label);
-  const series = snapshot.series.find(
-    (item) =>
-      item.metric === column.key &&
-      item.points.some((point) => pointMatchesRow(point)),
-  );
+  const series = snapshot.series.find((item) => {
+    if (item.metric !== column.key) {
+      return false;
+    }
+    const separator = item.id.lastIndexOf(":");
+    const seriesDimension =
+      separator === -1 ? "All" : item.id.slice(0, separator);
+    const pointDimensions = new Set(rowDimensions);
+    if (seriesDimension !== "All") {
+      pointDimensions.delete(seriesDimension);
+    }
+    return item.points.some((point) =>
+      pointMatchesRow(point, row, pointDimensions),
+    );
+  });
   if (series === undefined) {
     return value;
   }
-  const point = series.points.find((candidate) => pointMatchesRow(candidate));
+  const separator = series.id.lastIndexOf(":");
+  const seriesDimension =
+    separator === -1 ? "All" : series.id.slice(0, separator);
+  const pointDimensions = new Set(rowDimensions);
+  if (seriesDimension !== "All") {
+    pointDimensions.delete(seriesDimension);
+  }
+  const point = series.points.find((candidate) =>
+    pointMatchesRow(candidate, row, pointDimensions),
+  );
   return `${value}${formatConfidenceInterval(snapshot, series, point)}`;
+}
+
+function pointMatchesRow(
+  point: TemporalSeries["points"][number],
+  row: NativeRow,
+  pointDimensions: Set<string>,
+): boolean {
+  return (
+    point.key === row.key ||
+    point.label === row.label ||
+    pointDimensions.has(point.key) ||
+    pointDimensions.has(point.label)
+  );
 }
 
 export function requireRowValue(

@@ -21,6 +21,7 @@ import {
 
 const NATIVE_KINDS = new Set(["TABLE", "LIST", "LEADERBOARD", "KPI_CARD"]);
 const MAX_NATIVE_ROWS = 12;
+const MAX_NATIVE_CELL_LENGTH = 160;
 const MAX_EMBED_DESCRIPTION = 3900;
 const MAX_EMBED_TITLE = 256;
 const DESCRIPTION_TRUNCATION_SUFFIX =
@@ -164,7 +165,7 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
     .map((series) => {
       const point = series.points.at(-1);
       if (point === undefined) {
-        return `**${escapeMarkdown(series.label)}**\nUnknown n=0`;
+        return `**${escapeMarkdown(truncateNativeCell(series.label))}**\nUnknown n=0`;
       }
       const value = formatSeriesValue(snapshot, series, point.value);
       const sampleSize = point.evidence.sampleSize;
@@ -187,13 +188,13 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
               : `${(point.percentageDelta * 100).toFixed(1)}%`
           }`
         : `n=${sampleSize.toString()}`;
-      return `**${escapeMarkdown(series.label)}**\n${value} ${details}`;
+      return `**${escapeMarkdown(truncateNativeCell(series.label))}**\n${value} ${details}`;
     })
     .join("\n\n");
   const subtitle = snapshot.display.options?.subtitle;
   return subtitle === undefined
     ? description
-    : `${description}\n\n${escapeMarkdown(subtitle)}`;
+    : `${description}\n\n${escapeMarkdown(truncateNativeCell(subtitle))}`;
 }
 
 function formatList(
@@ -212,7 +213,7 @@ function formatList(
   );
   const lines = rows.map((row) => {
     const values = formatRowValues(snapshot, row, source.preview).join(", ");
-    return `- ${escapeMarkdown(row.label)}: ${values}`;
+    return `- ${escapeMarkdown(truncateNativeCell(row.label))}: ${values}`;
   });
   if (extra > 0) {
     lines.push(`_…and ${extra.toString()} more_`);
@@ -238,7 +239,9 @@ function formatLeaderboard(
   );
   const lines = rows.map((row, index) => {
     const values = formatRowValues(snapshot, row, source.preview).join(" · ");
-    return `**${(index + 1).toString()}.** ${escapeMarkdown(row.label)} — ${values}`;
+    return `**${(index + 1).toString()}.** ${escapeMarkdown(
+      truncateNativeCell(row.label),
+    )} — ${values}`;
   });
   if (extra > 0) {
     lines.push(`_…and ${extra.toString()} more_`);
@@ -266,16 +269,22 @@ function formatTable(
     source.preview === null
       ? ["", ...snapshot.series.map((series) => series.label)]
       : source.preview.columns.map((column) => column.label);
-  const escapedHeaders = headers.map((header) => escapeTableCell(header));
+  const escapedHeaders = headers.map((header) =>
+    escapeTableCell(truncateNativeCell(header)),
+  );
   const bodyRows = rows.map((row) => [
-    escapeTableCell(row.label),
+    escapeTableCell(truncateNativeCell(row.label)),
     ...(source.preview === null
       ? snapshot.series.map((series) =>
-          escapeTableCell(formatNativeSeriesValue(snapshot, series, row)),
+          escapeTableCell(
+            truncateNativeCell(formatNativeSeriesValue(snapshot, series, row)),
+          ),
         )
       : previewMetricColumns(source.preview).map((column) =>
           escapeTableCell(
-            formatPreviewValueWithEvidence(snapshot, column, row),
+            truncateNativeCell(
+              formatPreviewValueWithEvidence(snapshot, column, row),
+            ),
           ),
         )),
   ]);
@@ -454,14 +463,22 @@ function formatRowValues(
 ): string[] {
   if (preview !== null) {
     return previewMetricColumns(preview).map((column) => {
-      const value = formatPreviewValueWithEvidence(snapshot, column, row);
-      return `${escapeMarkdown(column.label)}: ${escapeMarkdown(value)}`;
+      const value = truncateNativeCell(
+        formatPreviewValueWithEvidence(snapshot, column, row),
+      );
+      return `${escapeMarkdown(truncateNativeCell(column.label))}: ${escapeMarkdown(value)}`;
     });
   }
   return snapshot.series.map(
     (series) =>
-      `${escapeMarkdown(series.label)}: ${formatNativeSeriesValue(snapshot, series, row)}`,
+      `${escapeMarkdown(truncateNativeCell(series.label))}: ${truncateNativeCell(formatNativeSeriesValue(snapshot, series, row))}`,
   );
+}
+
+function truncateNativeCell(value: string): string {
+  return value.length <= MAX_NATIVE_CELL_LENGTH
+    ? value
+    : `${value.slice(0, MAX_NATIVE_CELL_LENGTH - 1)}…`;
 }
 
 function escapeMarkdown(value: string): string {
