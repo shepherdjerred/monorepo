@@ -80,7 +80,7 @@ select score
 from competition_rank
 where competition_id = 42
 group by player
-during last 30 days
+during all time
 order by score desc
 render leaderboard
 ```
