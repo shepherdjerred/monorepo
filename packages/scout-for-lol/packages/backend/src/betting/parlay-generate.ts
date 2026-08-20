@@ -207,7 +207,6 @@ async function generateAndPersistDefinition(
     throw new Error("OPENROUTER_API_KEY is required for parlay generation");
   }
   const model = configuration.bettingParlayAiModel ?? DEFAULT_PARLAY_AI_MODEL;
-  assertWithinBudget();
 
   const call = async (
     schema: Parameters<typeof generateValidatedObject>[1]["schema"],
@@ -215,6 +214,7 @@ async function generateAndPersistDefinition(
     name: string,
   ) => {
     try {
+      assertWithinBudget();
       const result = await generateValidatedObject(runtime, {
         model,
         schema,

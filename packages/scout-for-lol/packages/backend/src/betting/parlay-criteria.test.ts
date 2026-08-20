@@ -621,4 +621,30 @@ describe("proposal grounding", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  test("rejects slots unused by the proposed condition kind", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [
+        killsLeg,
+        {
+          ...base,
+          kind: "team_boolean" as const,
+          participantNumericField: "kills" as const,
+          team: "selected" as const,
+          teamBooleanField: "win" as const,
+          expected: true,
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects duplicate proposal targets", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [killsLeg, killsLeg],
+    });
+    expect(result.success).toBe(false);
+  });
 });

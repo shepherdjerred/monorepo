@@ -358,7 +358,11 @@ function hasMissingRequiredProposalSlot(
         condition.expected === null
       );
     case "team_objective_kills":
-      return condition.objective === null || condition.operator === null;
+      return (
+        condition.team === null ||
+        condition.objective === null ||
+        condition.operator === null
+      );
     case "match_numeric":
       return (
         condition.matchNumericField === null || condition.operator === null
@@ -370,6 +374,80 @@ function hasMissingRequiredProposalSlot(
   }
 }
 
+function unusedProposalSlots(
+  condition: ModelParlayProposal["conditions"][number],
+): readonly unknown[] {
+  switch (condition.kind) {
+    case "participant_numeric":
+      return [
+        condition.team,
+        condition.teamBooleanField,
+        condition.objective,
+        condition.expected,
+        condition.matchNumericField,
+        condition.opponentPingField,
+      ];
+    case "team_boolean":
+      return [
+        condition.subject,
+        condition.participantNumericField,
+        condition.objective,
+        condition.operator,
+        condition.matchNumericField,
+        condition.opponentPingField,
+      ];
+    case "team_objective_kills":
+      return [
+        condition.subject,
+        condition.participantNumericField,
+        condition.teamBooleanField,
+        condition.expected,
+        condition.matchNumericField,
+        condition.opponentPingField,
+      ];
+    case "match_numeric":
+      return [
+        condition.subject,
+        condition.participantNumericField,
+        condition.team,
+        condition.teamBooleanField,
+        condition.objective,
+        condition.expected,
+        condition.opponentPingField,
+      ];
+    case "opponent_team_pings":
+      return [
+        condition.subject,
+        condition.participantNumericField,
+        condition.team,
+        condition.teamBooleanField,
+        condition.objective,
+        condition.expected,
+        condition.matchNumericField,
+      ];
+  }
+}
+
+function proposalTargetKey(
+  condition: ModelParlayProposal["conditions"][number],
+): string | undefined {
+  if (hasMissingRequiredProposalSlot(condition)) {
+    return;
+  }
+  switch (condition.kind) {
+    case "participant_numeric":
+      return `${condition.kind}:${condition.subject}:${condition.participantNumericField}`;
+    case "team_boolean":
+      return `${condition.kind}:${condition.team}:${condition.teamBooleanField}`;
+    case "team_objective_kills":
+      return `${condition.kind}:${condition.team}:${condition.objective}`;
+    case "match_numeric":
+      return `${condition.kind}:${condition.matchNumericField}`;
+    case "opponent_team_pings":
+      return `${condition.kind}:${condition.opponentPingField}`;
+  }
+}
+
 /** Pass-one schema: legs only, restricted to subjects actually in this game. */
 export function parlayProposalSchemaFor(
   subjects: readonly ParlaySubject[],
@@ -377,6 +455,7 @@ export function parlayProposalSchemaFor(
   const selected = new Set(subjects.map((subject) => subject.key));
   return ModelParlayProposalSchema.superRefine((proposal, context) => {
     const covered = new Set<string>();
+    const targets = new Set<string>();
     for (const [index, condition] of proposal.conditions.entries()) {
       if (hasMissingRequiredProposalSlot(condition)) {
         context.addIssue({
@@ -384,6 +463,24 @@ export function parlayProposalSchemaFor(
           path: ["conditions", index],
           message: `${condition.kind} is missing a required field`,
         });
+      }
+      if (unusedProposalSlots(condition).some((value) => value !== null)) {
+        context.addIssue({
+          code: "custom",
+          path: ["conditions", index],
+          message: `Slots unused by ${condition.kind} must be null`,
+        });
+      }
+      const target = proposalTargetKey(condition);
+      if (target !== undefined) {
+        if (targets.has(target)) {
+          context.addIssue({
+            code: "custom",
+            path: ["conditions", index],
+            message: `Duplicate parlay target ${target}`,
+          });
+        }
+        targets.add(target);
       }
       if (condition.kind === "participant_numeric") {
         if (condition.subject === null || !selected.has(condition.subject)) {
