@@ -123,6 +123,7 @@ private func requestIdentityReconciliation() {
     configuration.activates = false
     configuration.hides = true
     configuration.promptsUserIfNeeded = false
+    let completion = DispatchSemaphore(value: 0)
     NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { _, error in
         if let error {
             removeBrokerRequestMarker(matching: requestToken)
@@ -130,6 +131,10 @@ private func requestIdentityReconciliation() {
         } else {
             CodeFillObservability.helperLogger.info("event=identity_reconciliation outcome=launched")
         }
+        completion.signal()
+    }
+    if completion.wait(timeout: .now() + 10) == .timedOut {
+        CodeFillObservability.helperLogger.error("event=identity_reconciliation outcome=timeout")
     }
 }
 
