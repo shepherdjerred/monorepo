@@ -22,7 +22,7 @@ public struct OTPParser {
         "(?<![\\p{L}\\p{N}\(candidateDashCharacters)])([A-Za-z0-9](?:\(candidateSeparatorPattern)?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}]|\(candidateDashPattern)[A-Za-z0-9]|\(candidateSpacePattern)[A-Za-z0-9]*[0-9])"
     )
     private static let falsePositiveWordPattern = makeExpression(
-        "(?i)(?<![\\p{L}\\p{N}])(phone|tel|date|order|invoice|amount|price|year|http|www|reference|ticket)(?![\\p{L}\\p{N}])"
+        "(?i)(?<![\\p{L}\\p{N}])(phone|tel|date|order|invoice|amount|price|year|copyright|build|version|http|www|reference|ticket)(?![\\p{L}\\p{N}])"
     )
     private static let phoneDeliveryPattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}])(phone|tel|mobile|texted|sent|called|call)(?![\\p{L}\\p{N}])"
