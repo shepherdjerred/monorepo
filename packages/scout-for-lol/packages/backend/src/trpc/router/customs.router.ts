@@ -18,6 +18,7 @@ import { prisma } from "#src/database/index.ts";
 import { router, activityProcedure } from "#src/trpc/trpc.ts";
 import {
   customActorForSession,
+  assertCustomGuildMember,
   assertCustomVoiceChannelAccess,
   customMemberIdentity,
   customVoiceChannels,
@@ -79,6 +80,7 @@ export const customsRouter = router({
   ),
 
   active: activityProcedure.query(async ({ ctx }) => {
+    await assertCustomGuildMember(ctx.activitySession);
     return await getActiveCustomNight(prisma, ctx.activitySession.guildId);
   }),
 

@@ -99,6 +99,15 @@ export async function customActorForSession(
   });
 }
 
+export async function assertCustomGuildMember(
+  claims: CustomActivityClaims,
+): Promise<void> {
+  await withCustomDiscordAccess(claims, async () => {
+    const guild = await customsDiscordClient.guilds.fetch(claims.guildId);
+    await guild.members.fetch(claims.sub);
+  });
+}
+
 export async function customMemberIdentity(
   claims: CustomActivityClaims,
 ): Promise<{

@@ -4,6 +4,7 @@ import type {
 } from "@scout-for-lol/data";
 import { CustomSnapshotEnvelopeSchema } from "@scout-for-lol/data";
 import { verifyCustomActivityTokenWithExpiry } from "#src/customs/activity-auth.ts";
+import { assertCustomGuildMember } from "#src/customs/discord-client.ts";
 import { getActiveCustomNight } from "#src/customs/repository.ts";
 import configuration from "#src/configuration.ts";
 import { prisma } from "#src/database/index.ts";
@@ -95,6 +96,16 @@ export const customSocketHandlers: Bun.WebSocketHandler<CustomSocketData> = {
       socket.close(1008, "Activity session expired");
       return;
     }
+    try {
+      await assertCustomGuildMember(socket.data.claims);
+    } catch (error) {
+      logger.info("Customs socket rejected for missing guild membership", {
+        error,
+        guildId,
+      });
+      socket.close(1008, "Activity guild membership required");
+      return;
+    }
     expiryTimers.set(
       socket,
       globalThis.setTimeout(() => {
@@ -134,6 +145,23 @@ export function publishCustomSnapshot(snapshot: CustomNightSnapshot): void {
     CustomSnapshotEnvelopeSchema.parse({ kind: "snapshot", snapshot }),
   );
   for (const socket of socketsByGuild.get(snapshot.guildId) ?? []) {
+    void sendSnapshotToAuthorizedSocket(socket, envelope);
+  }
+}
+
+async function sendSnapshotToAuthorizedSocket(
+  socket: Bun.ServerWebSocket<CustomSocketData>,
+  envelope: string,
+): Promise<void> {
+  try {
+    await assertCustomGuildMember(socket.data.claims);
     socket.send(envelope);
+  } catch (error) {
+    logger.info("Closing Customs socket after guild membership loss", {
+      error,
+      guildId: socket.data.claims.guildId,
+    });
+    removeCustomSocket(socket);
+    socket.close(1008, "Activity guild membership required");
   }
 }
