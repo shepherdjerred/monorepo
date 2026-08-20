@@ -39,6 +39,17 @@ export type ExplorePendingTurn = {
   phase: "streaming" | "stopping";
 };
 
+/**
+ * Treat run discovery as active work so a reconnecting conversation cannot
+ * submit another turn before the server-owned run has been restored.
+ */
+export function exploreTurnIsActive(
+  turn: ExplorePendingTurn | null,
+  discoverySettled: boolean,
+): boolean {
+  return turn !== null || !discoverySettled;
+}
+
 export function createPendingTurn(input: {
   conversationId: string | null;
   question: string | null;

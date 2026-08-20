@@ -3,6 +3,7 @@ import { ExploreMessageSchema, type ExploreMessage } from "@scout-for-lol/data";
 import {
   applyStreamEvent,
   createPendingTurn,
+  exploreTurnIsActive,
   markStopping,
   turnHasLanded,
   visiblePending,
@@ -45,6 +46,14 @@ function startedTurn(question: string | null = "Who wins?") {
     },
   );
 }
+
+describe("exploreTurnIsActive", () => {
+  test("treats discovery as active before a run is restored", () => {
+    expect(exploreTurnIsActive(null, false)).toBe(true);
+    expect(exploreTurnIsActive(null, true)).toBe(false);
+    expect(exploreTurnIsActive(startedTurn(), true)).toBe(true);
+  });
+});
 
 describe("applyStreamEvent", () => {
   test("started fills the conversation and question ids", () => {

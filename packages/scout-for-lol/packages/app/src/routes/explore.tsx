@@ -21,7 +21,10 @@ import {
   exportFilename,
 } from "#src/lib/explore-export.ts";
 import { shouldOpenStartedExploreConversation } from "#src/lib/explore-navigation.ts";
-import { visiblePending } from "#src/lib/explore-turn-state.ts";
+import {
+  exploreTurnIsActive,
+  visiblePending,
+} from "#src/lib/explore-turn-state.ts";
 import { useExploreParams } from "#src/lib/route-params.ts";
 import { useExploreShare } from "#src/hooks/use-explore-share.ts";
 import { useExploreRuns } from "#src/components/explore-runs-context.ts";
@@ -66,6 +69,7 @@ export function Explore() {
   } = useExploreConversation(conversationId);
 
   const pendingTurn = runs.pendingTurn(conversationId);
+  const turnActive = exploreTurnIsActive(pendingTurn, runs.discoverySettled);
 
   useEffect(() => {
     if (conversationId === null) return;
@@ -406,7 +410,7 @@ export function Explore() {
             pendingAnswer={pendingAnswer}
             activity={activity}
             pendingTrace={pendingTrace}
-            turnActive={pendingTurn !== null || !runs.discoverySettled}
+            turnActive={turnActive}
             showRawTrace
             actions={transcriptActions}
           />
@@ -429,6 +433,7 @@ export function Explore() {
         <div className="sticky bottom-0 max-w-3xl bg-background pt-2 pb-4">
           <ExploreComposer
             active={pendingTurn !== null}
+            disabled={!runs.discoverySettled}
             restoredDraft={restoredDraft}
             onAsk={ask}
             onStop={() => {
