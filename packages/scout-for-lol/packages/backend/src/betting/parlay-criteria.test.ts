@@ -423,23 +423,34 @@ describe("opponent ping conditions", () => {
     const subjects = ParlaySubjectsSchema.parse([
       { key: "P1", puuid: selected[0]?.puuid, alias: "one" },
     ]);
-    const result = GeneratedParlaySchema.safeParse({
+    const result = parlayProposalSchemaFor(subjects).safeParse({
       version: 1,
-      yesProbabilityBps: 5000,
       conditions: [
         {
           kind: "participant_numeric",
           subject: "P1",
-          field: "onMyWayPings",
+          participantNumericField: "onMyWayPings",
+          participantBooleanField: null,
+          team: null,
+          teamBooleanField: null,
+          objective: null,
           operator: "gte",
-          threshold: 5,
+          expected: null,
+          matchNumericField: null,
+          opponentPingField: null,
         },
         {
           kind: "participant_numeric",
           subject: "P1",
-          field: "kills",
+          participantNumericField: "kills",
+          participantBooleanField: null,
+          team: null,
+          teamBooleanField: null,
+          objective: null,
           operator: "gte",
-          threshold: 1,
+          expected: null,
+          matchNumericField: null,
+          opponentPingField: null,
         },
       ],
     });

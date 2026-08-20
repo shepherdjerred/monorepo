@@ -341,6 +341,35 @@ export function generatedParlaySchemaFor(
   });
 }
 
+function hasMissingRequiredProposalSlot(
+  condition: ModelParlayProposal["conditions"][number],
+): boolean {
+  switch (condition.kind) {
+    case "participant_numeric":
+      return (
+        condition.subject === null ||
+        condition.participantNumericField === null ||
+        condition.operator === null
+      );
+    case "team_boolean":
+      return (
+        condition.team === null ||
+        condition.teamBooleanField === null ||
+        condition.expected === null
+      );
+    case "team_objective_kills":
+      return condition.objective === null || condition.operator === null;
+    case "match_numeric":
+      return (
+        condition.matchNumericField === null || condition.operator === null
+      );
+    case "opponent_team_pings":
+      return (
+        condition.opponentPingField === null || condition.operator === null
+      );
+  }
+}
+
 /** Pass-one schema: legs only, restricted to subjects actually in this game. */
 export function parlayProposalSchemaFor(
   subjects: readonly ParlaySubject[],
@@ -349,6 +378,13 @@ export function parlayProposalSchemaFor(
   return ModelParlayProposalSchema.superRefine((proposal, context) => {
     const covered = new Set<string>();
     for (const [index, condition] of proposal.conditions.entries()) {
+      if (hasMissingRequiredProposalSlot(condition)) {
+        context.addIssue({
+          code: "custom",
+          path: ["conditions", index],
+          message: `${condition.kind} is missing a required field`,
+        });
+      }
       if (condition.kind === "participant_numeric") {
         if (condition.subject === null || !selected.has(condition.subject)) {
           context.addIssue({

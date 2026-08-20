@@ -86,6 +86,7 @@ function evaluateCondition(input: {
     );
     if (participant === undefined) return;
     const actualValue = participantNumericValue(participant, condition.field);
+    if (actualValue === undefined) return;
     return {
       actualValue,
       passed: compare(actualValue, condition.operator, condition.threshold),

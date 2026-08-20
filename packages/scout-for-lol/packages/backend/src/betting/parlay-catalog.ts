@@ -11,21 +11,33 @@ import type { RawInfo, RawParticipant, RawTeam } from "@scout-for-lol/data";
  */
 
 export const ParticipantNumericFieldSchema = z.enum([
+  // Retained for settlement compatibility with version-1 definitions created
+  // before participant pings were removed from new proposals.
+  "allInPings",
   "assists",
+  "assistMePings",
+  "basicPings",
+  "baitPings",
   "baronKills",
   "champExperience",
   "champLevel",
+  "commandPings",
   "consumablesPurchased",
   "damageDealtToBuildings",
   "damageDealtToObjectives",
   "damageDealtToTurrets",
   "damageSelfMitigated",
   "deaths",
+  "dangerPings",
   "detectorWardsPlaced",
   "doubleKills",
   "dragonKills",
+  "enemyMissingPings",
+  "enemyVisionPings",
   "goldEarned",
   "goldSpent",
+  "getBackPings",
+  "holdPings",
   "inhibitorKills",
   "inhibitorTakedowns",
   "inhibitorsLost",
@@ -40,11 +52,13 @@ export const ParticipantNumericFieldSchema = z.enum([
   "magicDamageDealtToChampions",
   "magicDamageTaken",
   "neutralMinionsKilled",
+  "needVisionPings",
   "nexusKills",
   "nexusLost",
   "nexusTakedowns",
   "objectivesStolen",
   "objectivesStolenAssists",
+  "onMyWayPings",
   "pentaKills",
   "physicalDamageDealt",
   "physicalDamageDealtToChampions",
@@ -80,7 +94,9 @@ export const ParticipantNumericFieldSchema = z.enum([
   "turretsLost",
   "unrealKills",
   "visionScore",
+  "pushPings",
   "visionWardsBoughtInGame",
+  "visionClearedPings",
   "wardsKilled",
   "wardsPlaced",
 ]);
@@ -237,7 +253,7 @@ export const TEAM_OBJECTIVE_CATALOG = z
 export function participantNumericValue(
   participant: RawParticipant,
   field: ParticipantNumericField,
-): number {
+): number | undefined {
   return participant[field];
 }
 

@@ -115,13 +115,72 @@ function bindParams(
 
 const LooseRowSchema = z.record(z.string(), z.unknown());
 
-function numeric(row: unknown, column: string): number {
+function numeric(row: unknown, column: string): number | undefined {
   const parsed = LooseRowSchema.safeParse(row);
   if (!parsed.success) {
-    return 0;
+    return undefined;
   }
   const value = LakeNumberSchema.safeParse(parsed.data[column]);
-  return value.success ? value.data : 0;
+  return value.success ? value.data : undefined;
+}
+
+function sumNumeric(
+  participants: readonly unknown[],
+  subjectTeamId: number,
+  sameTeam: boolean,
+  column: string,
+): number | undefined {
+  let total = 0;
+  for (const participant of participants) {
+    const parsed = HistoryParticipantSchema.safeParse(participant);
+    if (!parsed.success) {
+      return undefined;
+    }
+    if ((parsed.data.team_id === subjectTeamId) !== sameTeam) {
+      continue;
+    }
+    const value = numeric(participant, column);
+    if (value === undefined) {
+      return undefined;
+    }
+    total += value;
+  }
+  return total;
+}
+
+function historyValues(
+  subjectRow: unknown,
+  subjectTeamId: number,
+  participants: readonly unknown[],
+  columns: readonly (keyof MatchLakeRow)[],
+): {
+  values: Map<string, number>;
+  teamValues: Map<string, number>;
+  opponentValues: Map<string, number>;
+} {
+  const values = new Map<string, number>();
+  const teamValues = new Map<string, number>();
+  const opponentValues = new Map<string, number>();
+  for (const column of columns) {
+    const subjectValue = numeric(subjectRow, column);
+    if (subjectValue !== undefined) {
+      values.set(column, subjectValue);
+    }
+    const teamValue = sumNumeric(participants, subjectTeamId, true, column);
+    if (teamValue !== undefined) {
+      teamValues.set(column, teamValue);
+    }
+    const opponentValue = sumNumeric(
+      participants,
+      subjectTeamId,
+      false,
+      column,
+    );
+    if (opponentValue !== undefined) {
+      opponentValues.set(column, opponentValue);
+    }
+  }
+  return { values, teamValues, opponentValues };
 }
 
 function historyQueueFilter(
@@ -315,25 +374,12 @@ export async function fetchParlayHistory(options: {
         continue;
       }
       const subject = HistoryParticipantSchema.parse(subjectRow);
-      const values = new Map<string, number>();
-      const teamValues = new Map<string, number>();
-      const opponentValues = new Map<string, number>();
-      for (const column of columns) {
-        values.set(column, numeric(subjectRow, column));
-        const sumWhere = (sameTeam: boolean): number =>
-          participants.reduce<number>((total, participant) => {
-            const parsed = HistoryParticipantSchema.safeParse(participant);
-            if (!parsed.success) {
-              return total;
-            }
-            const onSubjectTeam = parsed.data.team_id === subject.team_id;
-            return onSubjectTeam === sameTeam
-              ? total + numeric(participant, column)
-              : total;
-          }, 0);
-        teamValues.set(column, sumWhere(true));
-        opponentValues.set(column, sumWhere(false));
-      }
+      const { values, teamValues, opponentValues } = historyValues(
+        subjectRow,
+        subject.team_id,
+        participants,
+        columns,
+      );
       matches.push({
         matchId,
         createdAtMs: subject.game_creation_ms,
