@@ -206,7 +206,7 @@ struct WindowRow: View {
           .monospacedDigit()
           .frame(maxWidth: .infinity, alignment: .trailing)
       }
-      if let pacing = WindowPacing.compute(window: window, at: date) {
+      if let pacing = WindowPacing.compute(window: window, at: pacingDate) {
         pacingCaption(pacing)
           .padding(.leading, 103)
       }
@@ -303,6 +303,10 @@ struct WindowRow: View {
     return "\(Int(remaining.rounded()))%"
   }
 
+  private var pacingDate: Date {
+    stale ? window.sourceTimestamp : date
+  }
+
   private var accessibilityValue: String {
     var values: [String] = []
     if let remaining = window.remainingPercent {
@@ -314,7 +318,7 @@ struct WindowRow: View {
     if let resetAt = window.resetAt {
       values.append("resets \(resetAt.formatted(date: .abbreviated, time: .shortened))")
     }
-    if let pacing = WindowPacing.compute(window: window, at: date) {
+    if let pacing = WindowPacing.compute(window: window, at: pacingDate) {
       let label = pacingStatusLabel(pacing.status)
       let actual = WindowPacing.format(pacing.actualPacePerDay)
       let even = WindowPacing.format(pacing.evenPacePerDay)
