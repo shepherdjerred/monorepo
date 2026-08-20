@@ -21,6 +21,9 @@ public struct OTPParser {
     private static let candidatePattern = makeExpression(
         "(?<![\\p{L}\\p{N}\(candidateDashCharacters)])([A-Za-z0-9](?:\(candidateSeparatorPattern)?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}]|\(candidateDashPattern)[A-Za-z0-9]|\(candidateSpacePattern)[A-Za-z0-9]*[0-9])"
     )
+    private static let falsePositiveWordPattern = makeExpression(
+        "(?i)(?<![\\p{L}\\p{N}])(phone|tel|date|order|invoice|amount|price|year|http|www|reference|ticket)(?![\\p{L}\\p{N}])"
+    )
     private static let datePattern = makeExpression(
         "(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4})(?![\\p{L}\\p{N}])"
     )
@@ -73,6 +76,9 @@ public struct OTPParser {
                 return nil
             }
             let rawCode = String(sanitizedBody[codeRange])
+            guard !Self.isInsideGroupedToken(body: sanitizedBody, range: match.range, rawCode: rawCode) else {
+                return nil
+            }
             let explicitLabel = explicitLabelRanges.contains { labelRange in
                 NSMaxRange(labelRange.range) <= match.range.location &&
                     match.range.location - NSMaxRange(labelRange.range) <= 28
@@ -121,8 +127,10 @@ public struct OTPParser {
         let bodyNSString = NSString(string: body)
         let context = (bodyNSString.substring(with: beforeRange) + bodyNSString.substring(with: NSRange(location: afterStart, length: afterLength))).lowercased()
         guard !Self.overlapsEmailAddress(body: body, range: range) else { return true }
-        let falsePositiveWords = ["phone", "tel", "date", "order", "invoice", "amount", "price", "year", "http", "www", "reference", "ticket"]
-        if !hasExplicitLabel, falsePositiveWords.contains(where: context.contains) { return true }
+        if !hasExplicitLabel,
+           Self.falsePositiveWordPattern.firstMatch(in: context, range: NSRange(context.startIndex..., in: context)) != nil {
+            return true
+        }
         if Self.datePattern.matches(in: body, range: NSRange(body.startIndex..., in: body)).contains(where: { NSIntersectionRange($0.range, range).length > 0 }) {
             return true
         }
@@ -137,6 +145,42 @@ public struct OTPParser {
                 match.range.location == NSMaxRange(range) ||
                 NSMaxRange(match.range) == range.location
         }
+    }
+
+    private static func isInsideGroupedToken(body: String, range: NSRange, rawCode: String) -> Bool {
+        let start = String.Index(utf16Offset: range.location, in: body)
+        if start > body.startIndex {
+            let separatorIndex = body.index(before: start)
+            if isSpaceSeparator(body[separatorIndex]), separatorIndex > body.startIndex {
+                let preceding = body.index(before: separatorIndex)
+                if body[preceding].isNumber { return true }
+            }
+        }
+
+        guard rawCode.contains(where: isCandidateSeparator) else { return false }
+        let endOffset = NSMaxRange(range)
+        let end = String.Index(utf16Offset: endOffset, in: body)
+        guard end < body.endIndex, isSpaceSeparator(body[end]) else { return false }
+        let afterSeparator = body.index(after: end)
+        guard afterSeparator < body.endIndex,
+              body[afterSeparator].isLetter || body[afterSeparator].isNumber else { return false }
+        if let separatorIndex = rawCode.firstIndex(where: isCandidateSeparator) {
+            let prefix = rawCode[..<separatorIndex].filter { !isCandidateSeparator($0) }
+            let suffix = rawCode[rawCode.index(after: separatorIndex)...].filter { !isCandidateSeparator($0) }
+            if prefix.allSatisfy(\.isLetter), suffix.count >= 4, suffix.count <= 8,
+               suffix.contains(where: \.isNumber) {
+                return false
+            }
+            if prefix.count >= 4, prefix.count <= 8,
+               prefix.contains(where: \.isNumber), suffix.allSatisfy(\.isLetter) {
+                return false
+            }
+        }
+        let compact = rawCode.filter { !isCandidateSeparator($0) }
+        guard let firstLetter = compact.firstIndex(where: \.isLetter), firstLetter > compact.startIndex else { return true }
+        let numericPrefix = compact[..<firstLetter]
+        let alphaSuffix = compact[firstLetter...]
+        return !(numericPrefix.allSatisfy(\.isNumber) && alphaSuffix.allSatisfy(\.isLetter))
     }
 
     private static func normalizeCandidate(rawCode: String, range: NSRange, hasExplicitLabel: Bool) -> (code: String, range: NSRange)? {
