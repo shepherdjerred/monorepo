@@ -68,6 +68,9 @@ export async function checkPostMatch() {
     for (const matchId of staleMatchIds) {
       await announceSettlements({
         matchId,
+        closures: staleBucks.closures.filter(
+          (closure) => closure.matchId === matchId,
+        ),
         settlements: staleBucks.settlements.filter(
           (settlement) => settlement.matchId === matchId,
         ),

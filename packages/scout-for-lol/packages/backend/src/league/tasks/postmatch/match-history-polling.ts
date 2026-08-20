@@ -267,6 +267,7 @@ async function processMatchAndUpdatePlayers(
     // outright, and the bettors were never told what happened to their stakes.
     await announceSettlements({
       matchId,
+      closures: bucks.closures,
       settlements: bucks.settlements,
       earnings: bucks.earnings,
       postmatchMessageIds,

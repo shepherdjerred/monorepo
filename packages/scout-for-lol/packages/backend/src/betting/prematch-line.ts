@@ -32,6 +32,59 @@ export type BucksPrematchHouseMatch = {
   matchedStake: number;
 };
 
+function positionLines(
+  positions: readonly BucksPrematchPosition[],
+  isOpen: boolean,
+): string[] {
+  const lines: string[] = [];
+  for (const teamId of [100, 200] satisfies readonly RiotTeamId[]) {
+    const teamPositions = positions.filter(
+      (position) => position.teamId === teamId,
+    );
+    if (teamPositions.length === 0) {
+      continue;
+    }
+    lines.push(`**${teamName(teamId)}**`);
+    for (const position of teamPositions) {
+      if (isOpen) {
+        lines.push(
+          `• <@${position.discordId}> — offered **${position.offeredStake.toString()} BB**`,
+        );
+      } else {
+        const allocation = finalAllocation(position);
+        lines.push(
+          `• <@${position.discordId}> — offered **${position.offeredStake.toString()} BB** · matched **${allocation.matchedStake.toString()} BB** · refunded **${allocation.unmatchedStake.toString()} BB**`,
+        );
+      }
+    }
+  }
+  return lines;
+}
+
+function boundedPositionDigest(input: {
+  lines: readonly string[];
+  positions: readonly BucksPrematchPosition[];
+  isOpen: boolean;
+}): string {
+  let visibleCount = Math.min(input.positions.length, MAX_VISIBLE_POSITIONS);
+  while (visibleCount >= 0) {
+    const candidateLines = [
+      ...input.lines,
+      ...positionLines(input.positions.slice(0, visibleCount), input.isOpen),
+    ];
+    const hiddenCount = input.positions.length - visibleCount;
+    if (hiddenCount > 0) {
+      candidateLines.push(`…and ${hiddenCount.toString()} more position(s).`);
+    }
+    const candidate = candidateLines.join("\n");
+    if (candidate.length <= MAX_CONTENT_LENGTH) {
+      return candidate;
+    }
+    visibleCount -= 1;
+  }
+  throw new Error("Bryan Bucks prematch footer exceeds Discord's limit");
+}
+
 function finalAllocation(position: BucksPrematchPosition): {
   matchedStake: number;
   unmatchedStake: number;
@@ -81,7 +134,6 @@ export function bucksPrematchSummary(input: {
   houseMatches?: readonly BucksPrematchHouseMatch[];
 }): string {
   const lines = [bucksPrematchLine({ prediction: input.prediction })];
-  const humanPositions = input.positions.slice(0, MAX_VISIBLE_POSITIONS);
   const houseMatches = input.houseMatches ?? [];
   const isOpen = input.poolState === "open";
 
@@ -132,34 +184,11 @@ export function bucksPrematchSummary(input: {
     }
   }
 
-  for (const teamId of [100, 200] satisfies readonly RiotTeamId[]) {
-    const teamPositions = humanPositions.filter(
-      (position) => position.teamId === teamId,
-    );
-    if (teamPositions.length === 0) {
-      continue;
-    }
-    lines.push(`**${teamName(teamId)}**`);
-    for (const position of teamPositions) {
-      if (isOpen) {
-        lines.push(
-          `• <@${position.discordId}> — offered **${position.offeredStake.toString()} BB**`,
-        );
-      } else {
-        const allocation = finalAllocation(position);
-        lines.push(
-          `• <@${position.discordId}> — offered **${position.offeredStake.toString()} BB** · matched **${allocation.matchedStake.toString()} BB** · refunded **${allocation.unmatchedStake.toString()} BB**`,
-        );
-      }
-    }
-  }
-
-  if (input.positions.length > MAX_VISIBLE_POSITIONS) {
-    lines.push(
-      `…and ${(input.positions.length - MAX_VISIBLE_POSITIONS).toString()} more position(s).`,
-    );
-  }
-  return lines.join("\n");
+  return boundedPositionDigest({
+    lines,
+    positions: input.positions,
+    isOpen,
+  });
 }
 
 /**

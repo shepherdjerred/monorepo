@@ -4,12 +4,12 @@ import {
   BucksPredictionSchema,
   type BucksPrediction,
 } from "@scout-for-lol/data/index.ts";
+import { sendSettlementMessage } from "#src/betting/announce.ts";
 import {
   buildSettlementMessage,
   formatSettlementBody,
   predictionVerdict,
-  sendSettlementMessage,
-} from "#src/betting/announce.ts";
+} from "#src/betting/outcome-message.ts";
 import { HOUSE_ACCOUNT_DISCORD_ID } from "#src/betting/constants.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";

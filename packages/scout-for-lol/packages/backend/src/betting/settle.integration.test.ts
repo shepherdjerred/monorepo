@@ -984,4 +984,25 @@ describe("reconcileBucksBalances", () => {
       expect.objectContaining({ kind: "fee", betId: winner.bet.id }),
     );
   });
+
+  test("reports a conserved payout assigned to the wrong side", async () => {
+    const { winner, loser } = await makeBalancedPool();
+    await settleBettingForMatch(fixture, db);
+    await db.bucksBet.update({
+      where: { id: winner.bet.id },
+      data: { betOutcome: "lost", grossPayout: 0, fee: 0, payout: 0 },
+    });
+    await db.bucksBet.update({
+      where: { id: loser.bet.id },
+      data: { betOutcome: "won", grossPayout: 20, fee: 2, payout: 18 },
+    });
+
+    expect(await reconcileBucksBalances(db)).toContainEqual(
+      expect.objectContaining({
+        kind: "settlement",
+        betId: winner.bet.id,
+        message: expect.stringContaining("does not match the pool result"),
+      }),
+    );
+  });
 });

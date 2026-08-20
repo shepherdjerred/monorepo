@@ -122,6 +122,32 @@ describe("bucksPrematchSummary", () => {
     expect(content).toHaveLength(2000);
   });
 
+  test("trims maximum-length final allocations to Discord's limit", () => {
+    const maximumStake = 2_147_483_647;
+    const matchedStake = 1_073_741_824;
+    const unmatchedStake = maximumStake - matchedStake;
+    const positions = Array.from({ length: 15 }, (_, index) => ({
+      discordId: `133762316414615${(1000 + index).toString()}`,
+      teamId: index % 2 === 0 ? (100 as const) : (200 as const),
+      offeredStake: maximumStake,
+      matchedStake,
+      unmatchedStake,
+    }));
+    const summary = bucksPrematchSummary({
+      prediction: undefined,
+      poolState: "closed",
+      positions,
+    });
+    const content = appendBucksLine("x".repeat(2000), summary);
+
+    expect(summary.length).toBeLessThanOrEqual(2000);
+    expect(summary).toContain("offered **2147483647 BB**");
+    expect(summary).toContain("matched **1073741824 BB**");
+    expect(summary).toContain("refunded **1073741823 BB**");
+    expect(summary).toContain("more position(s)");
+    expect(content).toHaveLength(2000);
+  });
+
   test("shows offered, matched, refunded, and aggregate house matching", () => {
     const summary = bucksPrematchSummary({
       prediction: undefined,

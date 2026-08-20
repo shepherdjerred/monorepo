@@ -358,6 +358,7 @@ describe("announceSettlements", () => {
     await announceSettlements(
       {
         matchId: MATCH_ID,
+        closures: [],
         settlements: [remakeSettlement()],
         earnings: [],
         postmatchMessageIds: new Map([[CHANNEL_ONE, "postmatch-one"]]),
@@ -389,6 +390,7 @@ describe("announceSettlements", () => {
     await announceSettlements(
       {
         matchId: MATCH_ID,
+        closures: [],
         settlements: [remakeSettlement()],
         earnings: [],
         postmatchMessageIds: new Map(),
@@ -411,5 +413,52 @@ describe("announceSettlements", () => {
     expect(
       attempts.filter((channelId) => channelId === CHANNEL_TWO),
     ).toHaveLength(1);
+  });
+
+  test("announces a fully unmatched offer without a settlement", async () => {
+    await createPool({ prematchContentBase: null });
+    const sends: MessageCreateOptions[] = [];
+
+    await announceSettlements(
+      {
+        matchId: MATCH_ID,
+        closures: [
+          {
+            matchId: MATCH_ID,
+            serverId: SERVER_ID,
+            messageRefs: [],
+            humanMatchedPerSide: 0,
+            houseFill: 0,
+            totalMatchedPerSide: 0,
+            positions: [
+              {
+                betId: 1,
+                discordId: bucksTestDiscordId(1),
+                teamId: 100,
+                submittedStake: 9,
+                matchedStake: 0,
+                unmatchedStake: 9,
+              },
+            ],
+          },
+        ],
+        settlements: [],
+        earnings: [],
+        postmatchMessageIds: new Map(),
+      },
+      db,
+      {
+        sendMessage: (options) => {
+          sends.push(options);
+          return Promise.resolve();
+        },
+        sleep: () => Promise.resolve(),
+      },
+    );
+
+    expect(sends).toHaveLength(2);
+    expect(JSON.stringify(sends[0])).toContain(
+      `offered 9 BB · matched 0 BB · refunded 9 BB → no stake was matched`,
+    );
   });
 });

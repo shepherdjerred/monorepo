@@ -3,6 +3,7 @@ import {
   type BucksMatchingSummary,
 } from "@scout-for-lol/data";
 import { HOUSE_MATCH_LIMIT } from "#src/betting/constants.ts";
+import { settlementHouseCut } from "#src/betting/house-cut.ts";
 import {
   auditFinding,
   type BucksAuditSink,
@@ -19,6 +20,8 @@ async function loadMatchedPools(prismaClient: Db, afterPoolId: number) {
     select: {
       id: true,
       poolState: true,
+      winningTeamId: true,
+      voidReason: true,
       matchingJson: true,
       bets: {
         select: {
@@ -253,6 +256,90 @@ function auditPoolPayoutConservation(
   }
 }
 
+type TerminalExpectation = {
+  outcome: "won" | "lost" | "refunded";
+  gross: number;
+  fee: number;
+  payout: number;
+};
+
+function expectedTerminalSettlement(
+  pool: MatchedPool,
+  bet: ReturnType<typeof activeMatchedBets>[number],
+): TerminalExpectation | undefined {
+  const matchedStake = bet.matchedStake;
+  if (matchedStake === null) {
+    return;
+  }
+  const fullyUnmatched = matchedStake === 0;
+  const voided = pool.poolState === "voided";
+  const won =
+    !fullyUnmatched && !voided && bet.predictedTeamId === pool.winningTeamId;
+  const gross = fullyUnmatched
+    ? 0
+    : voided
+      ? matchedStake
+      : won
+        ? matchedStake * 2
+        : 0;
+  const fee = settlementHouseCut({
+    matchedProfit: won ? matchedStake : 0,
+    isHouse: bet.bucksAccount.isHouse,
+  });
+  return {
+    outcome: fullyUnmatched || voided ? "refunded" : won ? "won" : "lost",
+    gross,
+    fee,
+    payout: gross - fee,
+  };
+}
+
+function auditTerminalBetOutcomes(
+  pool: MatchedPool,
+  findings: BucksAuditSink,
+): void {
+  if (pool.poolState !== "settled" && pool.poolState !== "voided") {
+    return;
+  }
+  const invalidPoolResult =
+    (pool.poolState === "settled" &&
+      ((pool.winningTeamId !== 100 && pool.winningTeamId !== 200) ||
+        pool.voidReason !== null)) ||
+    (pool.poolState === "voided" &&
+      (pool.winningTeamId !== null || pool.voidReason === null));
+  if (invalidPoolResult) {
+    findings.push(
+      auditFinding(
+        "settlement",
+        "Terminal pool has an invalid winning-team or void result",
+        { poolId: pool.id },
+      ),
+    );
+    return;
+  }
+
+  for (const bet of activeMatchedBets(pool)) {
+    const expected = expectedTerminalSettlement(pool, bet);
+    if (expected === undefined) {
+      continue;
+    }
+    if (
+      bet.betOutcome !== expected.outcome ||
+      bet.grossPayout !== expected.gross ||
+      bet.fee !== expected.fee ||
+      bet.payout !== expected.payout
+    ) {
+      findings.push(
+        auditFinding(
+          "settlement",
+          `Bet outcome does not match the pool result: expected ${expected.outcome}, gross ${expected.gross.toString()}, fee ${expected.fee.toString()}, payout ${expected.payout.toString()}`,
+          { poolId: pool.id, betId: bet.id },
+        ),
+      );
+    }
+  }
+}
+
 function auditMatchedPool(pool: MatchedPool, findings: BucksAuditSink): void {
   const summary = parseMatchingSummary(pool.matchingJson);
   if (summary === undefined) {
@@ -269,6 +356,7 @@ function auditMatchedPool(pool: MatchedPool, findings: BucksAuditSink): void {
   auditSummaryAllocations(pool, summary, findings);
   auditHouseExposure(pool, summary, findings);
   auditPoolPayoutConservation(pool, summary, findings);
+  auditTerminalBetOutcomes(pool, findings);
 }
 
 export async function auditBucksMatchedPools(
