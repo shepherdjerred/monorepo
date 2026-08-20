@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CustomNightSnapshot } from "@scout-for-lol/data";
-import { Skeleton } from "@scout-for-lol/design-system/components/skeleton";
 import { Toaster } from "@scout-for-lol/design-system/components/toaster";
 import { useEffect } from "react";
 import { CustomsDashboard } from "@/components/customs-dashboard";
@@ -42,7 +41,6 @@ function ActivityContent() {
   useCustomSocket();
 
   useEffect(() => {
-    if (active.data === undefined) return;
     const ready =
       active.data?.state === "ENDED"
         ? 0
@@ -53,14 +51,6 @@ function ActivityContent() {
     );
   }, [active.data, session.sdk]);
 
-  if (active.isPending) {
-    return (
-      <main className="mx-auto max-w-4xl space-y-4 p-5">
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-80 w-full" />
-      </main>
-    );
-  }
   if (active.isError) {
     return (
       <main className="grid min-h-dvh place-items-center p-6 text-center">
@@ -69,6 +59,7 @@ function ActivityContent() {
     );
   }
   const snapshot = active.data;
+  if (snapshot === undefined) return null;
   if (snapshot === null || snapshot.state === "ENDED") return <StartNight />;
   const joined = snapshot.participants.some(
     (participant) => participant.discordId === session.identity.id,
