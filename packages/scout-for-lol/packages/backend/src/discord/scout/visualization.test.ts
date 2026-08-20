@@ -195,8 +195,8 @@ describe("Scout Discord visualization bounds", () => {
     });
     const sparseDescription =
       visualizationToEmbed(sparseSnapshot)?.data.description;
-    expect(sparseDescription).toContain("Aurora    8    Unknown");
-    expect(sparseDescription).toContain("Jhin    Unknown    28.6%");
+    expect(sparseDescription).toContain("Aurora    8          Unknown");
+    expect(sparseDescription).toContain("Jhin      Unknown    28.6%");
 
     const incompletePreview = ReportAiPreviewSummarySchema.parse({
       ...preview,
@@ -213,7 +213,9 @@ describe("Scout Discord visualization bounds", () => {
       scoutTestVisualization,
       incompletePreview,
     )?.data.description;
-    expect(incompleteDescription).toContain("Aurora    8    Unknown");
+    expect(incompleteDescription).toContain(
+      "Aurora              8        Unknown",
+    );
   });
 
   test("keeps row labels on one Markdown line", () => {
@@ -240,6 +242,55 @@ describe("Scout Discord visualization bounds", () => {
     )?.data.description;
     expect(description).toContain("Aurora Jhin");
     expect(description).not.toContain("Aurora\nJhin");
+  });
+
+  test("uses normalized temporal rows and aligned table columns", () => {
+    const temporalSnapshot = VisualizationSnapshotSchema.parse({
+      ...scoutTestVisualization,
+      kind: "TABLE",
+      temporal: {
+        window: {
+          kind: "calendar",
+          startDate: "2026-01-01",
+          endDate: "2026-01-03",
+        },
+        bucket: "day",
+        timezone: "UTC",
+      },
+      series: scoutTestVisualization.series.map((series) => ({
+        ...series,
+        points: [
+          ...series.points,
+          {
+            ...series.points[0],
+            key: "2026-01-03",
+            label: "2026-01-03",
+          },
+        ],
+      })),
+    });
+    const temporalPreview = ReportAiPreviewSummarySchema.parse({
+      ...preview,
+      rows: [
+        {
+          label: "wrong preview order",
+          values: [
+            { column: "games", value: 1 },
+            { column: "win_rate", value: 1 },
+          ],
+        },
+      ],
+      visualizationRows: [],
+      rowsReturned: 1,
+    });
+    const description = visualizationToEmbed(temporalSnapshot, temporalPreview)
+      ?.data.description;
+    expect(description).toContain("Games");
+    expect(description).toContain("Aurora");
+    expect(description).not.toContain("wrong preview order");
+    expect(description).toContain("2026-01-03");
+    const lines = description?.split("\n") ?? [];
+    expect(lines[1]?.length).toBe(lines[2]?.length);
   });
 
   test("keeps every native description within Discord's limit", () => {

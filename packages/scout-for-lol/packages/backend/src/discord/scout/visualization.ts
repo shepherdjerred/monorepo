@@ -176,13 +176,13 @@ function formatList(
   snapshot: VisualizationSnapshot,
   preview: ReportAiPreviewSummary | null,
 ): string {
-  const allRows =
-    preview === null ? alignedRows(snapshot) : previewRows(preview);
+  const source = nativeRowSource(snapshot, preview);
+  const allRows = source.rows;
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const previewExtra = hasPreviewRowsBeyondStoredRows(preview, allRows);
+  const previewExtra = hasPreviewRowsBeyondStoredRows(source.preview, allRows);
   const lines = rows.map((row) => {
-    const values = formatRowValues(snapshot, row, preview).join(", ");
+    const values = formatRowValues(snapshot, row, source.preview).join(", ");
     return `- ${escapeMarkdown(row.label)}: ${values}`;
   });
   if (extra > 0) {
@@ -197,13 +197,13 @@ function formatLeaderboard(
   snapshot: VisualizationSnapshot,
   preview: ReportAiPreviewSummary | null,
 ): string {
-  const allRows =
-    preview === null ? alignedRows(snapshot) : previewRows(preview);
+  const source = nativeRowSource(snapshot, preview);
+  const allRows = source.rows;
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const previewExtra = hasPreviewRowsBeyondStoredRows(preview, allRows);
+  const previewExtra = hasPreviewRowsBeyondStoredRows(source.preview, allRows);
   const lines = rows.map((row, index) => {
-    const values = formatRowValues(snapshot, row, preview).join(" · ");
+    const values = formatRowValues(snapshot, row, source.preview).join(" · ");
     return `**${(index + 1).toString()}.** ${escapeMarkdown(row.label)} — ${values}`;
   });
   if (extra > 0) {
@@ -218,38 +218,46 @@ function formatTable(
   snapshot: VisualizationSnapshot,
   preview: ReportAiPreviewSummary | null,
 ): string {
-  const allRows =
-    preview === null ? alignedRows(snapshot) : previewRows(preview);
+  const source = nativeRowSource(snapshot, preview);
+  const allRows = source.rows;
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const previewExtra = hasPreviewRowsBeyondStoredRows(preview, allRows);
+  const previewExtra = hasPreviewRowsBeyondStoredRows(source.preview, allRows);
   const headers =
-    preview === null
+    source.preview === null
       ? ["", ...snapshot.series.map((series) => series.label)]
-      : preview.columns.map((column) => column.label);
-  const lines = [
-    headers.map((header) => escapeTableCell(header)).join("    "),
-    headers.map(() => "----").join("    "),
-    ...rows.map((row) =>
-      [
-        escapeTableCell(row.label),
-        ...(preview === null
-          ? snapshot.series.map((series) =>
-              escapeTableCell(
-                formatSeriesValue(
-                  snapshot,
-                  series,
-                  requireNumericRowValue(row, series.id),
-                ),
-              ),
-            )
-          : previewMetricColumns(preview).map((column) =>
-              escapeTableCell(
-                formatPreviewValue(column, requireRowValue(row, column.key)),
-              ),
-            )),
-      ].join("    "),
+      : source.preview.columns.map((column) => column.label);
+  const bodyRows = rows.map((row) => [
+    escapeTableCell(row.label),
+    ...(source.preview === null
+      ? snapshot.series.map((series) =>
+          escapeTableCell(
+            formatSeriesValue(
+              snapshot,
+              series,
+              requireNumericRowValue(row, series.id),
+            ),
+          ),
+        )
+      : previewMetricColumns(source.preview).map((column) =>
+          escapeTableCell(
+            formatPreviewValue(column, requireRowValue(row, column.key)),
+          ),
+        )),
+  ]);
+  const widths = headers.map((_, index) =>
+    Math.max(
+      headers[index]?.length ?? 0,
+      ...bodyRows.map((row) => row[index]?.length ?? 0),
     ),
+  );
+  const lines = [
+    formatTableRow(headers, widths),
+    formatTableRow(
+      widths.map((width) => "-".repeat(width)),
+      widths,
+    ),
+    ...bodyRows.map((row) => formatTableRow(row, widths)),
   ];
   if (extra > 0) {
     lines.push(`_…and ${extra.toString()} more rows_`);
@@ -257,6 +265,13 @@ function formatTable(
     lines.push("_…additional rows omitted from the stored preview_");
   }
   return lines.join("\n");
+}
+
+function formatTableRow(cells: string[], widths: number[]): string {
+  return cells
+    .map((cell, index) => cell.padEnd(widths[index] ?? cell.length))
+    .join("    ")
+    .trimEnd();
 }
 
 type NativeRowValue = string | number | null;
@@ -305,6 +320,19 @@ function previewRows(preview: ReportAiPreviewSummary): NativeRow[] {
     label: row.label,
     values: new Map(row.values.map((value) => [value.column, value.value])),
   }));
+}
+
+function nativeRowSource(
+  snapshot: VisualizationSnapshot,
+  preview: ReportAiPreviewSummary | null,
+): { rows: NativeRow[]; preview: ReportAiPreviewSummary | null } {
+  if (snapshot.temporal !== null) {
+    return { rows: alignedRows(snapshot), preview: null };
+  }
+  if (preview === null) {
+    return { rows: alignedRows(snapshot), preview: null };
+  }
+  return { rows: previewRows(preview), preview };
 }
 
 function hasPreviewRowsBeyondStoredRows(
