@@ -26,6 +26,7 @@ import {
   publishBuild,
   readCurrentBuildDir,
   removeLegacyLakeNamespace,
+  removeObsoleteLakeNamespaces,
   resolveLakeDir,
 } from "#src/report-lake/paths.ts";
 import {
@@ -492,6 +493,7 @@ async function rebuildLocked(
   await writeManifest(buildDir, summary);
   await publishBuild(lakeDir, buildId);
   await removeLegacyLakeNamespace(lakeDir);
+  await removeObsoleteLakeNamespaces(lakeDir);
   publishMetrics(summary);
   await removeFoldedStagingFiles(lakeDir, "matches", foldedMatchIds);
   await removeFoldedStagingFiles(lakeDir, "prematch", foldedPrematchIds);

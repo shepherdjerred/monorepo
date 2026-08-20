@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
@@ -26,7 +26,10 @@ import {
 } from "#src/report-lake/compactor.ts";
 import { flattenMatch, flattenPrematch } from "#src/report-lake/flatten.ts";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
-import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
+import {
+  readCurrentBuildDir,
+  removeObsoleteLakeNamespaces,
+} from "#src/report-lake/paths.ts";
 import { matchObjectKey } from "#src/report-store/s3-raw-source.ts";
 import {
   listStagingFiles,
@@ -360,6 +363,53 @@ describe("rank-history compaction", () => {
       ]);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("schema namespace cleanup", () => {
+  test("removes obsolete schema namespaces but preserves the active one", async () => {
+    const baseDir = await makeLakeDir();
+    const oldNamespace = path.join(baseDir, "schema-old");
+    const activeNamespace = path.join(
+      baseDir,
+      `schema-${lakeSchemaFingerprint()}`,
+    );
+    const unrelatedEntry = path.join(baseDir, "keep-me");
+    const previousReportLakeDir = Bun.env["REPORT_LAKE_DIR"];
+    try {
+      await mkdir(oldNamespace, { recursive: true });
+      await Bun.write(path.join(oldNamespace, "marker"), "old");
+      await mkdir(activeNamespace, { recursive: true });
+      await Bun.write(path.join(activeNamespace, "marker"), "active");
+      await mkdir(unrelatedEntry, { recursive: true });
+      await Bun.write(path.join(unrelatedEntry, "marker"), "unrelated");
+      Bun.env["REPORT_LAKE_DIR"] = baseDir;
+      resetConfigurationForTests();
+
+      await removeObsoleteLakeNamespaces(activeNamespace);
+
+      const remainingEntries = await readdir(baseDir);
+      expect(remainingEntries.toSorted()).toEqual(
+        [
+          path.basename(activeNamespace),
+          path.basename(unrelatedEntry),
+        ].toSorted(),
+      );
+      expect(await Bun.file(path.join(activeNamespace, "marker")).text()).toBe(
+        "active",
+      );
+      expect(await Bun.file(path.join(unrelatedEntry, "marker")).text()).toBe(
+        "unrelated",
+      );
+    } finally {
+      if (previousReportLakeDir === undefined) {
+        delete Bun.env["REPORT_LAKE_DIR"];
+      } else {
+        Bun.env["REPORT_LAKE_DIR"] = previousReportLakeDir;
+      }
+      resetConfigurationForTests();
+      await rm(baseDir, { recursive: true, force: true });
     }
   });
 });

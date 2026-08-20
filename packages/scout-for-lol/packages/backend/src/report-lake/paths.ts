@@ -29,6 +29,7 @@ import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 
 const CURRENT_POINTER = "CURRENT";
 const BUILDS_DIR = "builds";
+const SCHEMA_NAMESPACE_PREFIX = "schema-";
 export const MATCHES_STAGING_DIR = "matches-recent";
 export const PREMATCH_STAGING_DIR = "prematch-recent";
 export const COMPETITION_RANK_HISTORY_STAGING_DIR =
@@ -82,6 +83,44 @@ export async function removeLegacyLakeNamespace(
         force: true,
       });
     }
+  }
+}
+
+/**
+ * Remove schema namespaces made obsolete by a successfully published rebuild.
+ *
+ * Only sibling directories with the schema namespace prefix are candidates;
+ * the active namespace and unrelated entries are retained. `force` makes this
+ * safe when another process removes a namespace between the directory scan
+ * and the removal.
+ */
+export async function removeObsoleteLakeNamespaces(
+  lakeDir: string,
+): Promise<void> {
+  const baseDir = path.resolve(resolveLakeBaseDir());
+  const resolvedLakeDir = path.resolve(lakeDir);
+  if (
+    path.dirname(resolvedLakeDir) !== baseDir ||
+    !path.basename(resolvedLakeDir).startsWith(SCHEMA_NAMESPACE_PREFIX)
+  ) {
+    return;
+  }
+
+  const entries = await readdir(baseDir, { withFileTypes: true }).catch(
+    () => [],
+  );
+  for (const entry of entries) {
+    if (
+      !entry.isDirectory() ||
+      !entry.name.startsWith(SCHEMA_NAMESPACE_PREFIX) ||
+      path.join(baseDir, entry.name) === resolvedLakeDir
+    ) {
+      continue;
+    }
+    await rm(path.join(baseDir, entry.name), {
+      recursive: true,
+      force: true,
+    });
   }
 }
 
