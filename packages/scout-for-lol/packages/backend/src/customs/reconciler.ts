@@ -31,6 +31,7 @@ import {
 import { publishCustomSnapshot } from "#src/customs/socket.ts";
 import { createSingleFlightRunner } from "#src/customs/single-flight.ts";
 import {
+  recordPendingVoiceReturn,
   retryPendingCustomResultVoice,
   returnCustomResultPlayersToLobby,
 } from "#src/customs/result-voice.ts";
@@ -216,17 +217,20 @@ async function pollResult(
         result,
       });
       if (!mutation.applied) continue;
-      const voiceReturn =
-        mutation.snapshot.currentGame?.id === game.id
-          ? returnCustomResultPlayersToLobby({
-              prisma: database,
-              snapshot: mutation.snapshot,
-              nightId,
-              source: "riot",
-            })
-          : null;
+      const shouldReturnVoicePlayers =
+        mutation.snapshot.currentGame?.id === game.id;
+      if (shouldReturnVoicePlayers) {
+        await recordPendingVoiceReturn(database, mutation.snapshot);
+      }
       publishCustomSnapshot(mutation.snapshot);
-      if (voiceReturn !== null) await voiceReturn;
+      if (shouldReturnVoicePlayers) {
+        await returnCustomResultPlayersToLobby({
+          prisma: database,
+          snapshot: mutation.snapshot,
+          nightId,
+          source: "riot",
+        });
+      }
       return;
     } catch (error) {
       logger.error("Custom Tournament result polling failed", {

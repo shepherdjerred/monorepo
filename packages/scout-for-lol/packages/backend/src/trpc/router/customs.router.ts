@@ -51,7 +51,7 @@ import { createLogger } from "#src/logger.ts";
 import { arrangeCustomVoice } from "#src/customs/voice.ts";
 import { cleanupCustomVoice } from "#src/customs/voice-cleanup.ts";
 import { provisionCustomTournamentCode } from "#src/customs/riot-results.ts";
-import { returnCustomResultPlayersToLobby } from "#src/customs/result-voice.ts";
+import * as resultVoice from "#src/customs/result-voice.ts";
 import {
   continueCustomNight,
   overrideCustomVoice,
@@ -325,16 +325,16 @@ export const customsRouter = router({
         actor: await customActorForNight(ctx.activitySession, input.nightId),
         ...input,
       });
-      const voiceReturn = result.applied
-        ? returnCustomResultPlayersToLobby({
-            prisma,
-            snapshot: result.snapshot,
-            nightId: input.nightId,
-            source: "manual",
-          })
-        : null;
+      if (result.applied)
+        await resultVoice.recordPendingVoiceReturn(prisma, result.snapshot);
       const response = await broadcast(result);
-      if (voiceReturn !== null) void voiceReturn;
+      if (result.applied)
+        void resultVoice.returnCustomResultPlayersToLobby({
+          prisma,
+          snapshot: result.snapshot,
+          nightId: input.nightId,
+          source: "manual",
+        });
       return response;
     }),
 

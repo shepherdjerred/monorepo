@@ -8,7 +8,10 @@ import {
   TournamentMetadataSchema,
 } from "#src/customs/riot-tournament.ts";
 import { recordRiotTournamentResult } from "#src/customs/riot-results.ts";
-import { returnCustomResultPlayersToLobby } from "#src/customs/result-voice.ts";
+import {
+  recordPendingVoiceReturn,
+  returnCustomResultPlayersToLobby,
+} from "#src/customs/result-voice.ts";
 import { publishCustomSnapshot } from "#src/customs/socket.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -90,17 +93,20 @@ export async function handleCustomRiotCallback(
       result,
     });
     if (mutation.applied) {
-      const voiceReturn =
-        mutation.snapshot.currentGame?.id === game.id
-          ? returnCustomResultPlayersToLobby({
-              prisma,
-              snapshot: mutation.snapshot,
-              nightId: metadata.nightId,
-              source: "riot",
-            })
-          : null;
+      const shouldReturnVoicePlayers =
+        mutation.snapshot.currentGame?.id === game.id;
+      if (shouldReturnVoicePlayers) {
+        await recordPendingVoiceReturn(prisma, mutation.snapshot);
+      }
       publishCustomSnapshot(mutation.snapshot);
-      if (voiceReturn !== null) void voiceReturn;
+      if (shouldReturnVoicePlayers) {
+        void returnCustomResultPlayersToLobby({
+          prisma,
+          snapshot: mutation.snapshot,
+          nightId: metadata.nightId,
+          source: "riot",
+        });
+      }
     }
     return new Response(null, { status: 200 });
   } catch (error) {

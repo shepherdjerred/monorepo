@@ -51,27 +51,27 @@ function resultGameId(snapshot: CustomNightSnapshot): string | null {
   return snapshot.currentGame?.id ?? null;
 }
 
-async function recordPendingResultVoiceReturn(params: {
-  prisma: ExtendedPrismaClient;
-  snapshot: CustomNightSnapshot;
-}): Promise<void> {
-  const gameId = resultGameId(params.snapshot);
-  const existing = await params.prisma.customAuditEvent.findFirst({
+export async function recordPendingVoiceReturn(
+  prisma: ExtendedPrismaClient,
+  snapshot: CustomNightSnapshot,
+): Promise<void> {
+  const gameId = resultGameId(snapshot);
+  const existing = await prisma.customAuditEvent.findFirst({
     where: {
-      nightId: params.snapshot.id,
+      nightId: snapshot.id,
       gameId,
       action: "VOICE_RESULT_RETURN_PENDING",
     },
   });
   if (existing !== null) return;
-  await params.prisma.customAuditEvent.create({
+  await prisma.customAuditEvent.create({
     data: {
-      nightId: params.snapshot.id,
+      nightId: snapshot.id,
       gameId,
-      revision: params.snapshot.revision,
+      revision: snapshot.revision,
       actorId: "SCOUT",
       action: "VOICE_RESULT_RETURN_PENDING",
-      payload: JSON.stringify({ target: resultVoiceTarget(params.snapshot) }),
+      payload: JSON.stringify({ target: resultVoiceTarget(snapshot) }),
       source: "DISCORD",
     },
   });
@@ -108,7 +108,6 @@ export async function returnCustomResultPlayersToLobby(params: {
   source: "manual" | "riot";
 }): Promise<void> {
   try {
-    await recordPendingResultVoiceReturn(params);
     const failures = await attemptResultVoiceReturn(
       resultVoiceTarget(params.snapshot),
       params.nightId,
