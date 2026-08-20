@@ -134,6 +134,7 @@ private func requestIdentityReconciliation() {
         completion.signal()
     }
     if completion.wait(timeout: .now() + 10) == .timedOut {
+        removeBrokerRequestMarker(matching: requestToken)
         CodeFillObservability.helperLogger.error("event=identity_reconciliation outcome=timeout")
     }
 }
