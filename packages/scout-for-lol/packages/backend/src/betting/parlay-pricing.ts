@@ -244,7 +244,7 @@ function replayConditionalGroup(input: {
       hits += 1;
     }
   }
-  return total === 0 ? 0.5 : smoothed(hits, total);
+  return total === 0 ? undefined : smoothed(hits, total);
 }
 
 /**

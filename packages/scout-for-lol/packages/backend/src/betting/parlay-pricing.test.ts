@@ -230,6 +230,36 @@ describe("multi-subject combination", () => {
     expect(price?.yesProbabilityBps).toBeLessThan(MAX_PRICE_BPS);
   });
 
+  test("refuses when a conditional cell has no observations", () => {
+    const a = Array.from({ length: 30 }, (_, index) =>
+      historyMatch({ index, kills: 10, win: true }),
+    );
+    const b = Array.from({ length: 30 }, (_, index) =>
+      historyMatch({ index: index + 100, kills: 10, win: false }),
+    );
+    const history: ParlayHistory = new Map([
+      [PUUID_A, a],
+      [PUUID_B, b],
+    ]);
+
+    expect(
+      priceParlay({
+        conditions: [
+          killsAtLeast(1),
+          {
+            kind: "participant_numeric",
+            subject: "P2",
+            field: "kills",
+            operator: "gte",
+            threshold: 1,
+          },
+        ],
+        subjects: [subject("P1", PUUID_A), subject("P2", PUUID_B)],
+        history,
+      }),
+    ).toBeUndefined();
+  });
+
   test("replays correlated legs jointly for one subject before combining", () => {
     const a = Array.from({ length: 30 }, (_, index) =>
       historyMatch({
