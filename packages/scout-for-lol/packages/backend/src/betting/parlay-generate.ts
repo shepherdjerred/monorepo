@@ -122,6 +122,7 @@ type GenerationReady = {
   queueType: "solo" | "flex";
   selectedTeamId: number;
   subjects: readonly ParlaySubject[];
+  opponentPuuids: readonly string[];
   opponentTrackedAliases: readonly string[];
   opponentTrackedPuuids: readonly string[];
   opponentPingsAvailable: boolean;
@@ -192,6 +193,15 @@ async function prepareGeneration(
     queueType: input.queueType,
     selectedTeamId: selected.teamId,
     subjects: selected.subjects,
+    opponentPuuids: input.gameInfo.participants.flatMap((participant) => {
+      if (
+        participant.teamId === selected.teamId ||
+        participant.puuid === null
+      ) {
+        return [];
+      }
+      return [participant.puuid];
+    }),
     opponentTrackedAliases: input.gameInfo.participants.flatMap(
       (participant) => {
         if (
@@ -373,6 +383,7 @@ async function generateAndPersistDefinition(
         evaluatorVersion: PARLAY_EVALUATOR_VERSION,
         generationContext: JSON.stringify({
           ...setup.context,
+          opponentPuuids: setup.opponentPuuids,
           opponentTrackedAliases: setup.opponentTrackedAliases,
           opponentTrackedPuuids: setup.opponentTrackedPuuids,
         }),

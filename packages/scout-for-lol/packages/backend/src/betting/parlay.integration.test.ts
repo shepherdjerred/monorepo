@@ -273,6 +273,39 @@ describe("Bryan Bucks parlays", () => {
     expect(await place("YES", 5)).toEqual({ kind: "not_eligible" });
   });
 
+  test("rejects an opponent linked after parlay generation", async () => {
+    const opponent = fixture.info.participants.find(
+      (participant) =>
+        participant.teamId !== PARTICIPANT.teamId && participant.puuid !== null,
+    );
+    const opponentPuuid = opponent?.puuid;
+    if (opponentPuuid === undefined || opponentPuuid === null) {
+      throw new Error("fixture needs an opposing participant with a PUUID");
+    }
+    const stableOpponentPuuid = LeaguePuuidSchema.parse(opponentPuuid);
+    const now = new Date();
+    const player = await db.player.findFirstOrThrow({
+      where: { serverId: SERVER_ID, discordId: BETTOR },
+    });
+    await makeMarket({
+      generationContext: { opponentPuuids: [stableOpponentPuuid] },
+    });
+    await db.account.create({
+      data: {
+        alias: "bryan",
+        puuid: stableOpponentPuuid,
+        region: "AMERICA_NORTH",
+        playerId: player.id,
+        serverId: SERVER_ID,
+        creatorDiscordId: BETTOR,
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+
+    expect(await place("YES", 5)).toEqual({ kind: "not_eligible" });
+  });
+
   test("accepts more than 20 BB, reserves the house, and reprices top-ups", async () => {
     await makeMarket({ yesProbabilityBps: 3333 });
     await db.bucksAccount.create({

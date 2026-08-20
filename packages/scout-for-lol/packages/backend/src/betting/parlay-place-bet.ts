@@ -56,6 +56,7 @@ class HouseInsufficientError extends Error {
 
 const ParlayGenerationContextSchema = z
   .object({
+    opponentPuuids: z.array(z.string()).optional(),
     opponentTrackedAliases: z.array(z.string()).optional(),
     opponentTrackedPuuids: z.array(z.string()).optional(),
   })
@@ -71,12 +72,14 @@ function isTrackedOpponent(
   if (!parsed.success) {
     return false;
   }
-  const { opponentTrackedAliases, opponentTrackedPuuids } = parsed.data;
-  if (opponentTrackedPuuids === undefined) {
+  const { opponentPuuids, opponentTrackedAliases, opponentTrackedPuuids } =
+    parsed.data;
+  const blockedPuuids = opponentPuuids ?? opponentTrackedPuuids;
+  if (blockedPuuids === undefined) {
     return (opponentTrackedAliases?.length ?? 0) > 0;
   }
   return players.some((player) =>
-    player.puuids.some((puuid) => opponentTrackedPuuids.includes(puuid)),
+    player.puuids.some((puuid) => blockedPuuids.includes(puuid)),
   );
 }
 
