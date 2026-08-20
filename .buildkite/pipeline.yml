@@ -1176,6 +1176,10 @@ steps:
       # invoking them here would require importing production credentials into
       # a PR-controlled pod.
       bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
+      pin_candidates=$$(jq -cn --arg build "$BUILDKITE_BUILD_NUMBER" \
+        '{schema:"pin-candidates/v1",buildNumber:($$build|tonumber),candidates:{}}')
+      bun --no-install scripts/update-versions.ts --commit-back --candidates "$$pin_candidates" --dry-run
+      bun --no-install scripts/release.ts --dry-run
       apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
       bun --no-install packages/homelab/scripts/argocd.ts release-root apps argocd-release-expected.json --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --dry-run
     retry: *retry
