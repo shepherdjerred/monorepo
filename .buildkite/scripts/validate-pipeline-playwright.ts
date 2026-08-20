@@ -54,8 +54,8 @@ export function validatePlaywrightLanes(
     if (key === "playwright-e2e-main") {
       requireIncludes(
         block,
-        "SCOUT_DESIGN_AUDIT_MODE=nightly SCOUT_DESIGN_AUDIT_BASE_URL=https://scout-for-lol.com",
-        "Playwright main lane must configure the Scout audit origin before nightly mode",
+        "SCOUT_DESIGN_AUDIT_MODE=nightly SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true",
+        "Playwright main lane must boot the deterministic Scout audit server before nightly mode",
       );
     }
     for (const forbidden of [

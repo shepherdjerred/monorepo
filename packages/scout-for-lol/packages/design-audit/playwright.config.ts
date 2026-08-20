@@ -32,7 +32,7 @@ const browsers = isNightly
 // requirement entirely (see scripts/dev-web.ts) rather than needing either
 // real CI secrets or a local 1Password session just to smoke-test the UI.
 const devDesignAuditCommand =
-  "SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true bun --no-install run dev:design-audit";
+  "SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true bun --no-install run dev:design-audit -- --no-discord-gateway";
 
 const projects: Project[] = [];
 for (const browser of browsers) {
@@ -45,7 +45,7 @@ for (const browser of browsers) {
       use: {
         ...device,
         browserName: browser,
-        isMobile: viewport.isMobile,
+        isMobile: browser === "firefox" ? false : viewport.isMobile,
         viewport: { width: viewport.width, height: viewport.height },
       },
     });

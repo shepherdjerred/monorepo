@@ -232,8 +232,10 @@ if (import.meta.main) {
       SCOUT_DEV_WEB_ORIGIN: webOrigin,
       VITE_MARKETING_ORIGIN: options.marketingOrigin,
       VITE_DOCS_ORIGIN: options.docsOrigin,
-      ENABLE_BACKGROUND_JOBS: options.discordGatewayEnabled ? "true" : "false",
-      ENABLE_DISCORD_GATEWAY: options.discordGatewayEnabled ? "true" : "false",
+      ENABLE_BACKGROUND_JOBS:
+        isDesignAuditBoot || !options.discordGatewayEnabled ? "false" : "true",
+      ENABLE_DISCORD_GATEWAY:
+        isDesignAuditBoot || !options.discordGatewayEnabled ? "false" : "true",
       WEB_APP_ORIGIN: webOrigin,
       REPORT_LAKE_DIR: lakeDir,
       ...(isDesignAuditBoot

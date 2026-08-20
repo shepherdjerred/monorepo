@@ -50,6 +50,13 @@ export async function signInForAudit(page: Page): Promise<void> {
           .click();
       }
     }
+    const authorize = page.getByRole("button", { name: /authorize|allow/i });
+    if (
+      (await authorize.count()) > 0 &&
+      (await authorize.first().isVisible())
+    ) {
+      await authorize.first().click();
+    }
     await page.waitForURL(
       (candidate) =>
         candidate.origin === url.origin &&

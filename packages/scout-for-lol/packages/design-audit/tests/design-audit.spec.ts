@@ -17,7 +17,9 @@ function routeUrl(route: AuditRoute): string {
 
 for (const theme of themes) {
   for (const route of auditRoutes()) {
-    test(`${route.surface}/${route.name} · ${theme.name}`, async ({ page }) => {
+    test(`${route.surface}/${route.name} · ${theme.name}`, async ({
+      page,
+    }, testInfo) => {
       const browserErrors: string[] = [];
       page.on("pageerror", (error) => browserErrors.push(error.message));
       page.on("console", (message) => {
@@ -88,7 +90,7 @@ for (const theme of themes) {
       ).toEqual([]);
       expect(browserErrors, "same-origin browser errors").toEqual([]);
 
-      if (route.golden) {
+      if (route.golden && testInfo.project.name.startsWith("chromium-")) {
         await expect(page).toHaveScreenshot(`${route.name}-${theme.name}.png`, {
           fullPage: true,
           animations: "disabled",

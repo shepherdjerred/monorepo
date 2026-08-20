@@ -426,11 +426,13 @@ steps:
         - "packages/scout-for-lol/tsconfig.base.json"
         - "packages/scout-for-lol/packages/data/**"
         - "packages/scout-for-lol/packages/app/**"
+        - "packages/scout-for-lol/packages/backend/**"
         - "packages/scout-for-lol/packages/frontend/**"
         - "packages/scout-for-lol/packages/docs-site/**"
         - "packages/scout-for-lol/packages/design-audit/**"
         - "packages/scout-for-lol/packages/design-system/**"
         - "packages/scout-for-lol/packages/evals/**"
+        - "packages/scout-for-lol/scripts/dev-web.ts"
         # Main's playwright lane also gates on the deploy consumers of its
         # artifact — mirror them (lane↔if_changed coverage test).
         - "scripts/deploy-site.ts"
@@ -501,7 +503,7 @@ steps:
       bun x --no-install turbo run build lint test --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/app' --filter='@scout-for-lol/frontend' --filter='@scout-for-lol/docs-site' --filter='@scout-for-lol/design-audit' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
       bun x --no-install turbo run test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/design-system' --filter='@scout-for-lol/evals' --concurrency=2
       bun --no-install run --cwd packages/scout-for-lol/packages/design-audit check:tokens
-      SCOUT_DESIGN_AUDIT_MODE=nightly SCOUT_DESIGN_AUDIT_BASE_URL=https://scout-for-lol.com bun --no-install run --cwd packages/scout-for-lol/packages/design-audit test:e2e
+      SCOUT_DESIGN_AUDIT_MODE=nightly SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true bun --no-install run --cwd packages/scout-for-lol/packages/design-audit test:e2e
       echo "Browser E2E scope: sites, Scout public/docs/app design audit, design-system, and eval suites."
       if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then
         echo "playwright-e2e-main completed without a non-empty JUnit report" >&2
