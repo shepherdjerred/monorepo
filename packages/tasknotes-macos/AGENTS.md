@@ -152,9 +152,10 @@ Three rules hold it in place:
 a static Linux binary — the CI image already installs it for the iOS app — so
 the semantic gate runs on every PR. Everything else needs a Swift toolchain or
 Xcode, which the Linux image does not have and should not grow. This follows the
-existing iOS precedent: Buildkite owns what runs on Linux, Xcode Cloud owns
-release builds, and anything needing a Mac is a local pre-merge gate, exactly
-like `bun run e2e` in `packages/tasks-for-obsidian`.
+existing iOS precedent: Buildkite owns what runs on Linux, the macOS queue owns
+the hard native verification gates, Xcode Cloud owns release builds, and local
+macOS verification remains a useful pre-push check, exactly like `bun run e2e`
+in `packages/tasks-for-obsidian`.
 
 Consequence to design around: **push correctness below the SwiftUI line.** The
 `TaskNotesKit`-has-no-UI-imports rule is load-bearing rather than tidy, and
