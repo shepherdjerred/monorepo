@@ -28,6 +28,8 @@ func normalizesCodeVariants() {
     let nonBreakingSpace = OTPParser().parse(body: "Code 12\u{00A0}34\u{00A0}56", metadata: metadata)
     let enDash = OTPParser().parse(body: "Code 1234\u{2013}56", metadata: metadata)
     let alphaNumeric = OTPParser().parse(body: "Your OTP is A7B9C2", metadata: metadata)
+    let overlengthNumeric = OTPParser().parse(body: "Code 1234-5678-9", metadata: metadata)
+    let overlengthAlphaNumeric = OTPParser().parse(body: "Code ABCD-1234-X", metadata: metadata)
 
     #expect(spaced?.code == "123456")
     #expect(dashed?.code == "987654")
@@ -41,6 +43,8 @@ func normalizesCodeVariants() {
     #expect(nonBreakingSpace?.code == "123456")
     #expect(enDash?.code == "123456")
     #expect(alphaNumeric?.code == "A7B9C2")
+    #expect(overlengthNumeric == nil)
+    #expect(overlengthAlphaNumeric == nil)
     #expect(OTPParser().parse(body: "Your OTP is A7B9C2 to finish.", metadata: metadata)?.code == "A7B9C2")
     #expect(OTPParser().parse(body: "2-factor authentication has been enabled.", metadata: metadata) == nil)
 }
