@@ -99,6 +99,7 @@ func rejectsFalsePositives() {
     #expect(OTPParser().parse(body: "Open myapp://verify?code=482913 to continue.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Open myapp:verify?code=482913 to continue.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Open otpauth:totp/acme?secret=482913 to continue.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "Open code:verify?value=482913 to continue.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Expires in 30 mins. Use 482913 to sign in.", metadata: metadata)?.code == "482913")
     #expect(OTPParser().parse(body: "Valid until 12:30 UTC. Use 482913 to sign in.", metadata: metadata)?.code == "482913")
     #expect(OTPParser().parse(body: "Expires at 10:30AM. Use 482913 to sign in.", metadata: metadata)?.code == "482913")
@@ -112,6 +113,7 @@ func rejectsFalsePositives() {
     #expect(OTPParser().parse(body: "Use 482913 for build 2", metadata: subjectLabelMetadata)?.code == "482913")
     #expect(OTPParser().parse(body: "Device 1234 registered. 482913 is your verification code.", metadata: subjectLabelMetadata)?.code == "482913")
     #expect(OTPParser().parse(body: "Device 123456 registered. Code 482913.", metadata: subjectLabelMetadata)?.code == "482913")
+    #expect(OTPParser().parse(body: "Device 1234; 482913 is code.", metadata: subjectLabelMetadata)?.code == "482913")
 }
 
 @Test("keeps a long code when an unrelated address appears in the body")
