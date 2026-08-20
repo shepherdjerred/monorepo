@@ -10,6 +10,7 @@ import {
 } from "#src/betting/parlay-criteria.ts";
 import {
   generatedParlaySchemaFor,
+  parlayProposalSchemaFor,
   parseModelGeneratedParlay,
   thresholdsMatchProposal,
 } from "#src/betting/parlay-model-schema.ts";
@@ -532,5 +533,81 @@ describe("two-pass generation", () => {
         conditions: [filledCondition],
       }),
     ).toBe(false);
+  });
+});
+
+describe("proposal grounding", () => {
+  const subjects = ParlaySubjectsSchema.parse([
+    { key: "P1", puuid: fixture.info.participants[0]?.puuid, alias: "one" },
+  ]);
+  const ProposalSchema = parlayProposalSchemaFor(subjects);
+  const base = {
+    subject: null,
+    participantNumericField: null,
+    team: null,
+    teamBooleanField: null,
+    objective: null,
+    operator: null,
+    expected: null,
+    matchNumericField: null,
+    opponentPingField: null,
+  };
+  const killsLeg = {
+    ...base,
+    kind: "participant_numeric" as const,
+    subject: "P1",
+    participantNumericField: "kills" as const,
+    operator: "gte" as const,
+  };
+
+  // Caught live: the model proposed an objective with no lake column, both
+  // model calls were spent, and pricing then refused the finished parlay.
+  // Refusing at proposal time turns that into a retry the model can act on.
+  test("rejects riftHerald, the one objective with no recorded history", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [
+        killsLeg,
+        {
+          ...base,
+          kind: "team_objective_kills",
+          team: "selected",
+          objective: "riftHerald",
+          operator: "gte",
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("accepts an objective that does have recorded history", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [
+        killsLeg,
+        {
+          ...base,
+          kind: "team_objective_kills",
+          team: "selected",
+          objective: "dragon",
+          operator: "gte",
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects a participant field the lake does not carry", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [
+        killsLeg,
+        {
+          ...killsLeg,
+          participantNumericField: "spell1Casts",
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
   });
 });
