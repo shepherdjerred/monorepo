@@ -7,6 +7,7 @@ import {
   REPORT_METRICS,
 } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
+import { ClipboardError } from "#src/components/clipboard-error.tsx";
 import { Input } from "@scout-for-lol/design-system/components/input";
 import {
   Select,
@@ -25,6 +26,7 @@ import {
 } from "@scout-for-lol/design-system/components/table";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
+import { copyToClipboard } from "#src/lib/clipboard.ts";
 
 // Explorer columns are raw lake column names; only some coincide with valid
 // ScoutQL identifiers (metrics / group-by dimensions / filter fields). Inserting
@@ -37,13 +39,13 @@ const SCOUTQL_INSERTABLE_IDS: ReadonlySet<string> = new Set<string>([
   ...REPORT_FILTERS.map((filter) => filter.id),
 ]);
 
-async function copyToClipboard(value: string): Promise<void> {
-  if (navigator.clipboard === undefined) return;
-  try {
-    await navigator.clipboard.writeText(value);
-  } catch {
-    // Clipboard access is optional in embedded and insecure browser contexts.
-  }
+async function copyColumnId(
+  value: string,
+  setCopyError: (value: boolean) => void,
+): Promise<void> {
+  const copied = await copyToClipboard(value);
+  setCopyError(!copied);
+  if (copied) track("data_explorer_action", { action: "copy_column_id" });
 }
 
 type ExplorerTableId = "match_participants" | "prematch_participants";
@@ -66,6 +68,7 @@ export function ReportDataExplorer(props: {
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [cursor, setCursor] = useState(0);
+  const [copyError, setCopyError] = useState(false);
   const pageSize = 25;
 
   const schemaQuery = useQuery(
@@ -185,10 +188,7 @@ export function ReportDataExplorer(props: {
                       aria-label={`Copy ${column.id}`}
                       title={`Copy ${column.id}`}
                       onClick={() => {
-                        void copyToClipboard(column.id);
-                        track("data_explorer_action", {
-                          action: "copy_column_id",
-                        });
+                        void copyColumnId(column.id, setCopyError);
                       }}
                     >
                       <Copy className="size-3" />
@@ -216,6 +216,8 @@ export function ReportDataExplorer(props: {
           ))}
         </div>
       </div>
+
+      <ClipboardError visible={copyError} />
 
       <div className="space-y-2">
         {filters.map((filter) => (
