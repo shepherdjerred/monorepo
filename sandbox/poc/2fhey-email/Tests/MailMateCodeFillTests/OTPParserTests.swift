@@ -85,6 +85,14 @@ func rejectsCodeInsideAddress() {
     #expect(OTPParser().parse(body: body, metadata: metadata) == nil)
 }
 
+@Test("rejects a short numeric email local part as an otp")
+func rejectsShortCodeInsideAddress() {
+    let metadata = MessageMetadata(sender: "Acme <security@acme.example>", subject: "Sign in", date: nil, messageID: "message-short-email")
+    let body = "Your verification code was sent to 123456@acme.example."
+
+    #expect(OTPParser().parse(body: body, metadata: metadata) == nil)
+}
+
 @Test("accepts real domains and rejects subject fallbacks as service identifiers")
 func validatesDomainServiceIdentifiers() {
     #expect(ServiceIdentity.isDomain("acme.example"))

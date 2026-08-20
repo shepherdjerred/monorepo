@@ -106,7 +106,6 @@ public struct OTPParser {
         let falsePositiveWords = ["phone", "tel", "date", "order", "invoice", "amount", "price", "year", "http", "www", "reference", "ticket"]
         guard !falsePositiveWords.contains(where: context.contains) else { return true }
         if rawCode.contains(" ") || rawCode.contains("-") { return false }
-        guard code.count >= 7 else { return false }
         return Self.overlapsEmailAddress(body: body, range: range)
     }
 
