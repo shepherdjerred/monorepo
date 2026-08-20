@@ -138,16 +138,16 @@ function formatWhereClause(clause: ReportWhereClause): string {
 }
 
 export function formatReportStringLiteral(value: string): string {
-  if (!value.includes("'")) return `'${value}'`;
-  if (!value.includes('"')) return `"${value}"`;
-  throw new Error(
-    "ScoutQL string literals cannot contain both single and double quotes.",
-  );
+  const backslash = String.fromCodePoint(92);
+  const escapedBackslashes = value.replaceAll(backslash, backslash.repeat(2));
+  if (!value.includes("'")) return `'${escapedBackslashes}'`;
+  if (!value.includes('"')) return `"${escapedBackslashes}"`;
+  return `'${escapedBackslashes.replaceAll("'", `${backslash}'`)}'`;
 }
 
 function formatFilterValue(value: string | number | boolean): string {
   return typeof value === "string"
-    ? `'${value.replaceAll("'", "''")}'`
+    ? formatReportStringLiteral(value)
     : String(value);
 }
 

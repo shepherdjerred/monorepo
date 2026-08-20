@@ -158,6 +158,8 @@ describe("player identity resolution", () => {
       "SharedName#ONE",
       "SharedName#TWO",
     ]);
+    expect(found[0]?.riotIds[0]).toBe("EddieChavez#NA1");
+    expect(found[0]?.lastSeen).toContain("2026-05-02");
     expect(found[0]?.games).toBe(5);
   });
 
@@ -197,6 +199,24 @@ describe("player identity resolution", () => {
 
     expect(found).toHaveLength(1);
     expect(found[0]?.puuids).not.toContain(OTHER_PLAYER);
+    expect(found[0]?.games).toBe(5);
+  });
+
+  test("the same unlinked PUUID tracked by two servers resolves once", async () => {
+    await resetTestLake(lakeDir);
+    await writeTestLake(lakeDir, {
+      serverId,
+      alsoTrackedBy: [otherServerId],
+      matchFacts: matchFacts.filter((row) => row.puuid !== OTHER_PLAYER),
+    });
+
+    const found = await resolvePlayerIdentities({
+      query: "Aaron",
+      guildIds: [serverId, otherServerId],
+      lakeDir,
+    });
+
+    expect(found).toHaveLength(1);
     expect(found[0]?.games).toBe(5);
   });
 

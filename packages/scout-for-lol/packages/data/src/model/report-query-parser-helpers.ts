@@ -11,6 +11,7 @@ import {
   RParen,
   tokenSpan,
 } from "#src/model/report-query-lexer.ts";
+import { parseReportStringLiteral } from "#src/model/report-query-string-literal.ts";
 
 // ── token helpers ────────────────────────────────────────────────────────────
 
@@ -133,14 +134,14 @@ export function normalize(value: string): string {
 }
 
 export function normalizeQueueValue(value: string): string {
-  const normalized = normalize(value);
-  const first = normalized.at(0);
-  const last = normalized.at(-1);
+  const trimmed = value.trim();
+  const first = trimmed.at(0);
+  const last = trimmed.at(-1);
   if (
-    normalized.length >= 2 &&
+    trimmed.length >= 2 &&
     ((first === "'" && last === "'") || (first === '"' && last === '"'))
   ) {
-    return normalized.slice(1, -1);
+    return parseReportStringLiteral(trimmed).toLowerCase();
   }
-  return normalized;
+  return normalize(trimmed);
 }

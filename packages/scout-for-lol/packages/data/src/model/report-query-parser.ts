@@ -54,6 +54,7 @@ import {
   tokenItem,
   wholeSpan,
 } from "#src/model/report-query-parser-helpers.ts";
+import { parseReportStringLiteral } from "#src/model/report-query-string-literal.ts";
 
 const INVALID_QUERY_MESSAGE =
   "Invalid report query. Expected: SELECT <metrics> FROM <source> [WHERE queue IN (...)] GROUP BY <field> [ORDER BY <metric> DESC] [LIMIT n]";
@@ -470,17 +471,15 @@ function matchLookbackClause(
   ) {
     return undefined;
   }
-  const interval = unquote(slice[5].image).trim().toLowerCase();
+  const interval = parseReportStringLiteral(slice[5].image)
+    .trim()
+    .toLowerCase();
   const intervalMatch = /^(?<days>\d+)\s+days?$/u.exec(interval);
   const days = Number(intervalMatch?.groups?.["days"] ?? Number.NaN);
   if (!Number.isInteger(days)) {
     return undefined;
   }
   return { kind: "lookback", field, days, span };
-}
-
-function unquote(value: string): string {
-  return value.slice(1, -1);
 }
 
 function parseFilterValue(token: IToken): ReportFilterValue {

@@ -10,6 +10,7 @@ import {
   StringLiteral,
 } from "#src/model/report-query-lexer.ts";
 import { normalize } from "#src/model/report-query-parser-helpers.ts";
+import { parseReportStringLiteral } from "#src/model/report-query-string-literal.ts";
 
 /**
  * The two `field = name('…')` call forms.
@@ -25,10 +26,6 @@ import { normalize } from "#src/model/report-query-parser-helpers.ts";
  * Each matcher is a rigid six-token shape and returns undefined on any
  * mismatch, so the caller falls through to the generic comparison path.
  */
-
-function unquote(value: string): string {
-  return value.slice(1, -1);
-}
 
 function matchCallForm(
   slice: IToken[],
@@ -46,7 +43,7 @@ function matchCallForm(
   ) {
     return undefined;
   }
-  return unquote(slice[4].image);
+  return parseReportStringLiteral(slice[4].image);
 }
 
 export function matchChampionClause(

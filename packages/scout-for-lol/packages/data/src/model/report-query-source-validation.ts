@@ -32,7 +32,7 @@ export function validateSourcePlayerRefs(
   playerRefs: string[],
 ): void {
   if (playerRefs.length === 0) return;
-  if (source === "match_participants" || source === "player_groups") return;
+  if (source === "match_participants") return;
   throw new Error(`player('…') is not available for ${source}.`);
 }
 

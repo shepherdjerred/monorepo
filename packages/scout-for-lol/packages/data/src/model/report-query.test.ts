@@ -2,7 +2,10 @@ import { describe, expect, test } from "bun:test";
 import { parseAndCompile } from "#src/model/report-query-compile.ts";
 import { parseReportQuery } from "#src/model/report-query-parser.ts";
 import { lintReportQuery } from "#src/model/report-query-lint.ts";
-import { formatReportQuery } from "#src/model/report-query-format.ts";
+import {
+  formatReportQuery,
+  formatReportStringLiteral,
+} from "#src/model/report-query-format.ts";
 import { completeReportQuery } from "#src/model/report-query-complete.ts";
 import { reportChampionLiteral } from "#src/model/report-query-champions.ts";
 import { REPORT_WINDOW_REQUIRED_MESSAGE } from "#src/model/report-query-window.ts";
@@ -315,6 +318,15 @@ describe("player('…') identity references", () => {
     expect(formatReportQuery(query)).toContain(`player = player("O'Brien")`);
   });
 
+  test("escapes aliases containing both quote characters and backslashes", () => {
+    const name = String.raw`O'Brien "Ace" \ Main`;
+    const literal = formatReportStringLiteral(name);
+    const query = `SELECT games FROM match_participants WHERE player = player(${literal}) GROUP BY player DURING ALL TIME`;
+
+    expect(parseAndCompile(query).playerRefs).toEqual([name]);
+    expect(formatReportQuery(query)).toContain(`player = player(${literal})`);
+  });
+
   test("a plain Riot ID on the left keeps working", () => {
     const plan = parseAndCompile(
       "SELECT games FROM match_participants WHERE player = 'Faker#NA1' GROUP BY player DURING ALL TIME",
@@ -327,15 +339,24 @@ describe("player('…') identity references", () => {
 
   test("rejects sources that cannot apply resolved PUUIDs", () => {
     const cases = [
-      { source: "prematch_participants", metric: "prematches" },
-      { source: "competition_match_participants", metric: "games" },
-      { source: "rank_current", metric: "score" },
-      { source: "competition_rank", metric: "score" },
+      { source: "player_groups", metric: "games", groupBy: "group(2)" },
+      {
+        source: "prematch_participants",
+        metric: "prematches",
+        groupBy: "player",
+      },
+      {
+        source: "competition_match_participants",
+        metric: "games",
+        groupBy: "player",
+      },
+      { source: "rank_current", metric: "score", groupBy: "player" },
+      { source: "competition_rank", metric: "score", groupBy: "player" },
     ];
-    for (const { source, metric } of cases) {
+    for (const { source, metric, groupBy } of cases) {
       expect(() =>
         parseAndCompile(
-          `SELECT ${metric} FROM ${source} WHERE player = player('Long') GROUP BY player DURING ALL TIME`,
+          `SELECT ${metric} FROM ${source} WHERE player = player('Long') GROUP BY ${groupBy} DURING ALL TIME`,
         ),
       ).toThrow(`player('…') is not available for ${source}`);
     }

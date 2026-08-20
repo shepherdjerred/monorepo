@@ -45,7 +45,7 @@ export const Star = createToken({ name: "Star", pattern: /\*/u });
 export const Slash = createToken({ name: "Slash", pattern: /\//u });
 export const StringLiteral = createToken({
   name: "StringLiteral",
-  pattern: /'[^']*'|"[^"]*"/u,
+  pattern: /'(?:[^'\\]|\\["'\\])*'|"(?:[^"\\]|\\["'\\])*"/u,
 });
 export const HexColor = createToken({
   name: "HexColor",

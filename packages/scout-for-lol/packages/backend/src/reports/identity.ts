@@ -195,15 +195,23 @@ async function lookupByRiotId(
 
 function groupAccountsByPerson(
   accounts: z.infer<typeof AccountRowSchema>[],
-): Map<string, z.infer<typeof AccountRowSchema>[]> {
-  const groups = new Map<string, z.infer<typeof AccountRowSchema>[]>();
+): z.infer<typeof AccountRowSchema>[][] {
+  let groups: z.infer<typeof AccountRowSchema>[][] = [];
   for (const account of accounts) {
-    // player_id is server-local; discord_id is the cross-server identity when
-    // linked. The fallback keeps unlinked people distinct.
-    const key =
-      account.discord_id ??
-      `server:${account.server_id}:player:${account.player_id.toString()}`;
-    groups.set(key, [...(groups.get(key) ?? []), account]);
+    const connected = groups.filter((group) =>
+      group.some(
+        (existing) =>
+          existing.puuid === account.puuid ||
+          (existing.discord_id !== null &&
+            existing.discord_id === account.discord_id) ||
+          (existing.server_id === account.server_id &&
+            existing.player_id === account.player_id),
+      ),
+    );
+    groups = [
+      ...groups.filter((group) => !connected.includes(group)),
+      [...connected.flat(), account],
+    ];
   }
   return groups;
 }
@@ -230,18 +238,21 @@ function summarise(
   trackedAlias: string | undefined,
 ): ResolvedIdentity | undefined {
   if (rows.length === 0) return undefined;
-  // Ordered by last_seen DESC, so the first row is the most recent Riot ID —
-  // the right thing to show for an untracked account, and far better than the
-  // arbitrary pick a plain aggregate would give.
-  const mostRecent = rows[0];
+  // Each PUUID's history is ordered by the lake query, but a tracked person can
+  // span several PUUID partitions. Re-sort the combined rows so the display
+  // name, Riot-ID order, and lastSeen all describe the newest account event.
+  const ordered = [...rows].sort((left, right) =>
+    right.last_seen.localeCompare(left.last_seen),
+  );
+  const mostRecent = ordered[0];
   if (mostRecent === undefined) return undefined;
   return {
     displayName: trackedAlias ?? mostRecent.riot_id,
-    puuids: [...new Set(rows.map((row) => row.puuid))],
-    riotIds: [...new Set(rows.map((row) => row.riot_id))],
-    games: rows.reduce((total, row) => total + row.games, 0),
+    puuids: [...new Set(ordered.map((row) => row.puuid))],
+    riotIds: [...new Set(ordered.map((row) => row.riot_id))],
+    games: ordered.reduce((total, row) => total + row.games, 0),
     firstSeen:
-      [...rows]
+      ordered
         .map((row) => row.first_seen)
         .sort((left, right) => left.localeCompare(right))[0] ??
       mostRecent.first_seen,
@@ -280,11 +291,10 @@ export async function resolvePlayerIdentities(input: {
     input.guildIds,
     needle,
   );
-  // `player_id` is per-server, so the same human tracked in two servers gets
-  // two of them. `discord_id` is the cross-server key when it is linked; fall
-  // back to the per-server id when it is not, which keeps two genuinely
-  // different people apart at the cost of possibly splitting one person.
-  for (const group of groupAccountsByPerson(accounts).values()) {
+  // A PUUID joins duplicate tracking rows across servers; Discord identity
+  // joins separate accounts across servers; and (server, player) joins the
+  // accounts of one unlinked tracked player inside a server.
+  for (const group of groupAccountsByPerson(accounts)) {
     candidates.push({
       puuids: [...new Set(group.map((account) => account.puuid))],
       matchedBy: "alias",
@@ -303,7 +313,7 @@ export async function resolvePlayerIdentities(input: {
     riotIdMatches.filter((puuid) => !claimed.has(puuid)),
   );
   const ownerByPuuid = new Map<string, z.infer<typeof AccountRowSchema>[]>();
-  for (const group of groupAccountsByPerson(expandedAccounts).values()) {
+  for (const group of groupAccountsByPerson(expandedAccounts)) {
     for (const account of group) ownerByPuuid.set(account.puuid, group);
   }
 
