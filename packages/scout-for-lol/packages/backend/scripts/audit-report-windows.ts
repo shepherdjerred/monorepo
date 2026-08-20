@@ -100,6 +100,25 @@ function addPeriod(queryText: string): string {
   );
 }
 
+/**
+ * The same period expressed as a DURING clause after GROUP BY.
+ *
+ * Deliberately a different splice point and a different clause from
+ * {@link addPeriod}, so comparing the two plans actually tests something.
+ */
+function withDuringClause(queryText: string): string {
+  const { ast } = parseReportQuery(queryText);
+  const anchor = ast.having ?? ast.groupBy;
+  if (anchor === undefined) {
+    throw new Error("query has no GROUP BY to splice against");
+  }
+  return (
+    queryText.slice(0, anchor.span.end) +
+    " DURING LAST 30 DAYS" +
+    queryText.slice(anchor.span.end)
+  );
+}
+
 const args = parseArgs(Bun.argv.slice(2));
 // bun:sqlite rejects `{ readonly: false }` outright — the write mode has to be
 // asked for by name, so a plain negation silently made --fix unusable.
@@ -158,10 +177,17 @@ if (missing.length > 0) {
   logger.info("\nRows missing a period:");
   for (const row of missing) {
     const rewritten = addPeriod(row.queryText);
-    // The original no longer compiles (no period), so compare against it with
-    // the same period applied a different way: parse both and drop the window.
-    const baseline = addPeriod(row.queryText);
-    const before = withoutWindow(parseAndCompile(baseline));
+    // The original no longer compiles — a missing period IS a compile error
+    // now — so there is no "before" plan to compare against directly.
+    //
+    // Compare two INDEPENDENTLY derived variants instead: the WHERE predicate
+    // spliced at the parser's clause boundary, and a DURING clause appended
+    // after GROUP BY. They travel different code paths to the same window, so
+    // if either splice landed in the wrong clause or truncated the text, their
+    // plans diverge. Comparing the rewrite against itself, as an earlier
+    // version of this did, proves nothing.
+    const viaDuring = withDuringClause(row.queryText);
+    const before = withoutWindow(parseAndCompile(viaDuring));
     const after = withoutWindow(parseAndCompile(rewritten));
     const equivalent = Bun.deepEquals(before, after);
     logger.info(
