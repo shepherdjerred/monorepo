@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { ExploreMessageSchema } from "@scout-for-lol/data";
+import {
+  ExploreMessageSchema,
+  VisualizationSnapshotSchema,
+} from "@scout-for-lol/data";
 import {
   scoutTestBarChart,
   scoutTestKpi,
@@ -9,6 +12,7 @@ import {
 import {
   exploreVisualizationPayload,
   usesNativeDiscordVisualization,
+  visualizationToEmbed,
 } from "#src/discord/scout/visualization.ts";
 
 const answer = ExploreMessageSchema.parse({
@@ -41,12 +45,48 @@ describe("Scout Discord visualizations", () => {
     });
     expect(JSON.stringify(board.embeds)).toContain("**1.** Aurora");
 
+    const list = exploreVisualizationPayload({
+      ...answer,
+      visualization: VisualizationSnapshotSchema.parse({
+        ...scoutTestVisualization,
+        kind: "LIST",
+      }),
+    });
+    const listJson = JSON.stringify(list.embeds);
+    expect(listJson).toContain("- Aurora:");
+    expect(listJson).not.toContain("| Games |");
+
     const kpi = exploreVisualizationPayload({
       ...answer,
       visualization: scoutTestKpi,
     });
-    expect(JSON.stringify(kpi.embeds)).toContain("56");
-    expect(JSON.stringify(kpi.embeds)).toContain("Games counted");
+    const kpiDescription = kpi.embeds?.[0]?.data.description;
+    expect(kpiDescription).toContain("56");
+    expect(kpiDescription).toContain("Games counted");
+    expect(kpiDescription).not.toContain("42");
+  });
+
+  test("keeps every native description within Discord's limit", () => {
+    const longSnapshot = VisualizationSnapshotSchema.parse({
+      ...scoutTestVisualization,
+      series: scoutTestVisualization.series.map((series) => ({
+        ...series,
+        label: "Series label ".repeat(200),
+        points: series.points.map((point) => ({
+          ...point,
+          label: "Point label ".repeat(200),
+        })),
+      })),
+    });
+
+    for (const kind of ["TABLE", "LIST", "LEADERBOARD", "KPI_CARD"] as const) {
+      const embed = visualizationToEmbed(
+        VisualizationSnapshotSchema.parse({ ...longSnapshot, kind }),
+      );
+      const description = embed?.data.description;
+      expect(description).toBeString();
+      expect(description?.length).toBeLessThanOrEqual(3900);
+    }
   });
 
   test("still attaches a PNG for chart kinds", () => {

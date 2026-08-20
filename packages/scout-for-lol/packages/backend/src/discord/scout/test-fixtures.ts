@@ -69,7 +69,7 @@ export const scoutTestKpi = VisualizationSnapshotSchema.parse({
       label: "Games counted",
       metric: "games",
       additive: true,
-      points: [point("total", 56, 56)],
+      points: [point("earlier", 42), point("total", 56, 56)],
     },
   ],
   annotations: [],

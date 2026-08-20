@@ -10,6 +10,8 @@ import { visualizationSnapshotToImage } from "@scout-for-lol/report";
 const NATIVE_KINDS = new Set(["TABLE", "LIST", "LEADERBOARD", "KPI_CARD"]);
 const MAX_NATIVE_ROWS = 12;
 const MAX_EMBED_DESCRIPTION = 3900;
+const DESCRIPTION_TRUNCATION_SUFFIX =
+  "\n\n_Visualization truncated to fit Discord._";
 
 export type ExploreVisualizationPayload = {
   files?: AttachmentBuilder[];
@@ -68,23 +70,66 @@ function nativeDescription(snapshot: VisualizationSnapshot): string | null {
   if (snapshot.series.length === 0) {
     return null;
   }
-  if (snapshot.kind === "KPI_CARD") {
-    return formatKpi(snapshot);
+  const description =
+    snapshot.kind === "KPI_CARD"
+      ? formatKpi(snapshot)
+      : snapshot.kind === "LEADERBOARD"
+        ? formatLeaderboard(snapshot)
+        : snapshot.kind === "LIST"
+          ? formatList(snapshot)
+          : formatTable(snapshot);
+  return truncateDescription(description);
+}
+
+function truncateDescription(description: string): string {
+  if (description.length <= MAX_EMBED_DESCRIPTION) {
+    return description;
   }
-  if (snapshot.kind === "LEADERBOARD") {
-    return formatLeaderboard(snapshot);
+  const available =
+    MAX_EMBED_DESCRIPTION - DESCRIPTION_TRUNCATION_SUFFIX.length;
+  const lines: string[] = [];
+  let length = 0;
+  for (const line of description.split("\n")) {
+    const nextLength = length + (lines.length === 0 ? 0 : 1) + line.length;
+    if (nextLength > available) {
+      break;
+    }
+    lines.push(line);
+    length = nextLength;
   }
-  return formatTable(snapshot);
+  const prefix = lines.join("\n");
+  if (prefix.length === 0) {
+    return `${description.slice(0, available)}${DESCRIPTION_TRUNCATION_SUFFIX}`;
+  }
+  return `${prefix}${DESCRIPTION_TRUNCATION_SUFFIX}`;
 }
 
 function formatKpi(snapshot: VisualizationSnapshot): string {
   return snapshot.series
     .map((series) => {
-      const point = series.points[0];
+      const point = series.points.at(-1);
       const value = formatSeriesValue(snapshot, series, point?.value ?? null);
       return `**${escapeMarkdown(series.label)}**\n${value}`;
     })
     .join("\n\n");
+}
+
+function formatList(snapshot: VisualizationSnapshot): string {
+  const allRows = alignedRows(snapshot);
+  const rows = allRows.slice(0, MAX_NATIVE_ROWS);
+  const extra = allRows.length - rows.length;
+  const lines = rows.map((row) => {
+    const values = snapshot.series
+      .map((series) =>
+        formatSeriesValue(snapshot, series, row.values.get(series.id) ?? null),
+      )
+      .join(", ");
+    return `- ${escapeMarkdown(row.label)}: ${values}`;
+  });
+  if (extra > 0) {
+    lines.push(`_…and ${extra.toString()} more_`);
+  }
+  return lines.join("\n");
 }
 
 function formatLeaderboard(snapshot: VisualizationSnapshot): string {
@@ -132,11 +177,7 @@ function formatTable(snapshot: VisualizationSnapshot): string {
   if (extra > 0) {
     lines.push(`_…and ${extra.toString()} more rows_`);
   }
-  const text = lines.join("\n");
-  if (text.length <= MAX_EMBED_DESCRIPTION) {
-    return text;
-  }
-  return `${lines.slice(0, 4).join("\n")}\n_Table truncated to fit Discord._`;
+  return lines.join("\n");
 }
 
 function alignedRows(snapshot: VisualizationSnapshot): {
