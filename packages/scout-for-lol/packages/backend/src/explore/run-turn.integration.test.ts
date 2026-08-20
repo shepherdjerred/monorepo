@@ -159,6 +159,51 @@ describe("shared persisted Explore turn", () => {
     expect(getExploreQuotaStatus({ userId }).activeRun).toBe(false);
   });
 
+  test("a zero-prose cancellation rolls back its generated title", async () => {
+    const prepared = await preparedTurn();
+    const caller = new AbortController();
+    const cancelAfterTitle = prisma.$extends({
+      query: {
+        exploreConversation: {
+          async updateMany({ args, query }) {
+            const result = await query(args);
+            if (result.count > 0 && !caller.signal.aborted) {
+              caller.abort("Stopped while applying the generated title.");
+            }
+            return result;
+          },
+        },
+      },
+    });
+
+    const terminal = await runPersistedExploreTurn(
+      {
+        ...prepared,
+        identity: { userId },
+        abortSignal: caller.signal,
+        abortOutcome: () => "stopped",
+        emit: () => Promise.resolve(),
+      },
+      {
+        client: cancelAfterTitle,
+        executeAgent: successfulAgent,
+        now: Date.now,
+        timeoutMs: 10_000,
+      },
+    );
+
+    expect(terminal.type).toBe("error");
+    expect(terminal.outcome).toBe("stopped");
+    const transcript = await loadExploreTranscript(
+      prisma,
+      prepared.started.conversationId,
+      userId,
+    );
+    expect(transcript?.conversation.title).toBe("Who wins most often?");
+    expect(transcript?.messages).toHaveLength(1);
+    expect(transcript?.messages[0]?.role).toBe("user");
+  });
+
   test("the first cancellation source determines the outcome", async () => {
     const prepared = await preparedTurn();
     const caller = new AbortController();

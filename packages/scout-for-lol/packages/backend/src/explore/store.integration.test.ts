@@ -20,9 +20,12 @@ import {
   setExploreLeaf,
   shareExploreConversation,
   startExploreTurn,
-  applyGeneratedTitle,
   titleFromQuestion,
 } from "#src/explore/store.ts";
+import {
+  applyGeneratedTitle,
+  rollbackGeneratedTitle,
+} from "#src/explore/generated-title.ts";
 
 const { prisma } = createTestDatabase("explore-store-test");
 const userId = testAccountId("1");
@@ -621,7 +624,11 @@ describe("explore store — titles", () => {
       title: "Top win rates by champion",
     });
 
-    expect(applied).toBe("Top win rates by champion");
+    expect(applied.title).toBe("Top win rates by champion");
+    expect(applied.rollback).toEqual({
+      generatedTitle: "Top win rates by champion",
+      placeholderTitle: "Which champions have the highest win rate?",
+    });
     const row = await prisma.exploreConversation.findUniqueOrThrow({
       where: { id: started.conversationId },
     });
@@ -649,7 +656,39 @@ describe("explore store — titles", () => {
 
     // Reports the title that is actually on the row, not the placeholder the
     // conversation has already moved off.
-    expect(applied).toBe("Mine");
+    expect(applied).toEqual({ title: "Mine", rollback: null });
+    const row = await prisma.exploreConversation.findUniqueOrThrow({
+      where: { id: started.conversationId },
+    });
+    expect(row.title).toBe("Mine");
+  });
+
+  test("generated-title rollback does not clobber a later rename", async () => {
+    const started = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "Which champions have the highest win rate?",
+      attach: { kind: "leaf" },
+    });
+    const applied = await applyGeneratedTitle(prisma, {
+      conversationId: started.conversationId,
+      title: "Top win rates by champion",
+    });
+    if (applied.rollback === null) {
+      throw new Error("Expected the generated title to be applied.");
+    }
+    await renameExploreConversation(
+      prisma,
+      started.conversationId,
+      userId,
+      "Mine",
+    );
+
+    await rollbackGeneratedTitle(prisma, {
+      conversationId: started.conversationId,
+      ...applied.rollback,
+    });
+
     const row = await prisma.exploreConversation.findUniqueOrThrow({
       where: { id: started.conversationId },
     });
@@ -675,7 +714,10 @@ describe("explore store — titles", () => {
       title: "Something else entirely",
     });
 
-    expect(applied).toBe("Top win rates by champion");
+    expect(applied).toEqual({
+      title: "Top win rates by champion",
+      rollback: null,
+    });
     const row = await prisma.exploreConversation.findUniqueOrThrow({
       where: { id: started.conversationId },
     });
@@ -712,7 +754,10 @@ describe("explore store — titles", () => {
       title: "Win rates by position",
     });
 
-    expect(applied).toBe("Top win rates by champion");
+    expect(applied).toEqual({
+      title: "Top win rates by champion",
+      rollback: null,
+    });
     const row = await prisma.exploreConversation.findUniqueOrThrow({
       where: { id: first.conversationId },
     });
@@ -744,7 +789,7 @@ describe("explore store — titles", () => {
       title: "Win rates by position",
     });
 
-    expect(applied).toBe("Mine");
+    expect(applied).toEqual({ title: "Mine", rollback: null });
     const row = await prisma.exploreConversation.findUniqueOrThrow({
       where: { id: first.conversationId },
     });

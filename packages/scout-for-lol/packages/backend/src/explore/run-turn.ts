@@ -14,10 +14,12 @@ import {
   type ExploreRateLimitIdentity,
   type ExploreRateLimitTicket,
 } from "#src/explore/rate-limit.ts";
+import { appendExploreAnswer } from "#src/explore/store.ts";
 import {
-  appendExploreAnswer,
   applyGeneratedTitle,
-} from "#src/explore/store.ts";
+  rollbackGeneratedTitle,
+  type GeneratedTitleRollback,
+} from "#src/explore/generated-title.ts";
 import { persistPartialAnswer } from "#src/explore/partial-answer.ts";
 import {
   finalizeExploreTrace,
@@ -130,6 +132,7 @@ export async function runPersistedExploreTurn(
   const trace: ExploreTraceEntry[] = [];
   let streamedAnswer = "";
   let persistedMessage: ExploreMessage | null = null;
+  let generatedTitleRollback: GeneratedTitleRollback | null = null;
   const record = async (event: ExploreStreamEvent): Promise<void> => {
     if (event.type === "answer_delta") {
       const available = EXPLORE_ANSWER_MAX_LENGTH - streamedAnswer.length;
@@ -169,13 +172,15 @@ export async function runPersistedExploreTurn(
       expectedCurrentLeafId: input.started.expectedCurrentLeafId,
     });
     throwIfAborted(abortController.signal);
-    const title =
-      result.answer.title === null
-        ? input.started.title
-        : await applyGeneratedTitle(dependencies.client, {
-            conversationId: input.started.conversationId,
-            title: result.answer.title,
-          });
+    let title = input.started.title;
+    if (result.answer.title !== null) {
+      const titleUpdate = await applyGeneratedTitle(dependencies.client, {
+        conversationId: input.started.conversationId,
+        title: result.answer.title,
+      });
+      title = titleUpdate.title;
+      generatedTitleRollback = titleUpdate.rollback;
+    }
     throwIfAborted(abortController.signal);
     finishTicket();
     runStatus = "success";
@@ -210,6 +215,12 @@ export async function runPersistedExploreTurn(
         trace,
         existingMessageId: persistedMessage?.id ?? null,
       });
+      if (salvaged === null && generatedTitleRollback !== null) {
+        await rollbackGeneratedTitle(dependencies.client, {
+          conversationId: input.started.conversationId,
+          ...generatedTitleRollback,
+        });
+      }
     } catch (salvageError) {
       logger.error(
         "Failed to salvage a stopped explore turn",
