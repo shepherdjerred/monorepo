@@ -20,6 +20,8 @@ trust boundary.
 Native steps therefore have a deliberately narrow Buildkite surface:
 
 - `agents.queue` is exactly `macos`.
+- Native PR steps require `build.pull_request.repository.fork` to be false, so
+  code from third-party forks never executes on the persistent GUI user.
 - No Kubernetes plugin, pod metadata, or cluster-secret environment is
   attached.
 - All native jobs share `concurrency_group: monorepo/macos-native` with
