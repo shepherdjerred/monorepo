@@ -478,3 +478,17 @@ test("renders transformed snapshot values instead of raw preview values", () => 
   expect(description).toContain("9");
   expect(description).not.toContain("7");
 });
+
+test("renders percent-stack snapshot values instead of raw preview values", () => {
+  const snapshot = structuredClone(scoutTestVisualization);
+  snapshot.display.stack = "percent";
+  snapshot.series.forEach((series) => {
+    series.points = series.points.map((point, index) => ({
+      ...point,
+      value: index === 0 ? 0.5 : 0.25,
+    }));
+  });
+  const description = visualizationToEmbed(snapshot, preview)?.data.description;
+  expect(description).toContain("25.0%");
+  expect(description).not.toContain("7");
+});
