@@ -3,8 +3,17 @@ resource "aws_s3_bucket" "better_skill_capped" {
   bucket = "better-skill-capped"
 }
 
+# The archived Clauderon site is retired (see cloudflare/clauderon-com.tf), but
+# the bucket still holds its objects. Removing this resource in the same PR
+# that first sets force_destroy would plan a destroy against state that has
+# never actually had force_destroy applied — the removal and the force_destroy
+# change can only land together, and a squash-merged PR is a single tofu apply,
+# so the destroy would still fail on a non-empty bucket. Land force_destroy
+# here, let it apply to prod, THEN remove this resource in a follow-up PR once
+# that apply has completed.
 resource "aws_s3_bucket" "clauderon" {
-  bucket = "clauderon"
+  bucket        = "clauderon"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket" "resume" {

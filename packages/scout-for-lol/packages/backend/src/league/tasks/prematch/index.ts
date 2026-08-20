@@ -2,7 +2,8 @@ import { checkActiveGames } from "#src/league/tasks/prematch/active-game-detecti
 import { closeExpiredBettingWindows } from "#src/betting/sweep.ts";
 import { closeExpiredParlayWindows } from "#src/betting/parlay-sweep.ts";
 import { activatePendingParlayMarkets } from "#src/betting/parlay-publish.ts";
-import { disableClosedBettingMessages } from "#src/betting/announce.ts";
+import { disableClosedBettingMessages } from "#src/betting/message-controls.ts";
+import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("tasks-prematch");
@@ -23,7 +24,7 @@ export async function checkPreMatch() {
     // a click on a live-looking button is still refused by placeBet, which
     // re-checks closesAt inside its transaction.
     const closed = await closeExpiredBettingWindows();
-    await disableClosedBettingMessages(closed);
+    await refreshClosedBucksMessages(closed);
     const closedParlays = await closeExpiredParlayWindows();
     await disableClosedBettingMessages(closedParlays);
 

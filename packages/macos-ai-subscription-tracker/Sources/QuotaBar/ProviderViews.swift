@@ -191,19 +191,25 @@ struct WindowRow: View {
   }
 
   private var quotaRow: some View {
-    HStack(spacing: 7) {
-      Text(window.compactDisplayLabel)
-        .lineLimit(1)
-        .help(window.label)
-        .frame(width: 96, alignment: .leading)
-      progress
-        .frame(width: 82)
-      Text(remainingText)
-        .monospacedDigit()
-        .frame(width: 40, alignment: .trailing)
-      resetText
-        .monospacedDigit()
-        .frame(maxWidth: .infinity, alignment: .trailing)
+    VStack(alignment: .leading, spacing: 2) {
+      HStack(spacing: 7) {
+        Text(window.compactDisplayLabel)
+          .lineLimit(1)
+          .help(window.label)
+          .frame(width: 96, alignment: .leading)
+        progress
+          .frame(width: 82)
+        Text(remainingText)
+          .monospacedDigit()
+          .frame(width: 40, alignment: .trailing)
+        resetText
+          .monospacedDigit()
+          .frame(maxWidth: .infinity, alignment: .trailing)
+      }
+      if let pacing = WindowPacing.compute(window: window, at: pacingDate) {
+        pacingCaption(pacing)
+          .padding(.leading, 103)
+      }
     }
     .font(.caption)
     .foregroundStyle(stale ? .secondary : .primary)
@@ -211,6 +217,42 @@ struct WindowRow: View {
     .accessibilityElement(children: .ignore)
     .accessibilityLabel("\(window.compactDisplayLabel), raw label \(window.label)")
     .accessibilityValue(accessibilityValue)
+  }
+
+  private func pacingCaption(_ pacing: WindowPacing) -> some View {
+    let label = pacingStatusLabel(pacing.status)
+    let actual = WindowPacing.format(pacing.actualPacePerDay)
+    let even = WindowPacing.format(pacing.evenPacePerDay)
+    return Text("\(label) · pace \(actual) · even \(even)")
+      .font(.caption2)
+      .monospacedDigit()
+      .foregroundStyle(stale ? .secondary : pacingColor(for: pacing.status))
+      .help(pacingHelp(pacing))
+      .accessibilityHidden(true)
+  }
+
+  private func pacingStatusLabel(_ status: WindowPacing.Status) -> String {
+    switch status {
+    case .ahead: return "ahead"
+    case .onPace: return "on pace"
+    case .behind: return "behind"
+    }
+  }
+
+  private func pacingHelp(_ pacing: WindowPacing) -> String {
+    let days = String(format: "%.1f", pacing.daysRemaining)
+    return "You are \(pacingStatusLabel(pacing.status)) of an even split: "
+      + "you have \(remainingText) left with \(days) days to go, or "
+      + "\(WindowPacing.format(pacing.actualPacePerDay)) available per day vs "
+      + "\(WindowPacing.format(pacing.evenPacePerDay)) at an even split."
+  }
+
+  private func pacingColor(for status: WindowPacing.Status) -> Color {
+    switch status {
+    case .ahead: return Color(red: 0.24, green: 0.55, blue: 0.36)
+    case .onPace: return .secondary
+    case .behind: return .orange
+    }
   }
 
   private var entitlementRow: some View {
@@ -261,6 +303,10 @@ struct WindowRow: View {
     return "\(Int(remaining.rounded()))%"
   }
 
+  private var pacingDate: Date {
+    stale ? window.sourceTimestamp : date
+  }
+
   private var accessibilityValue: String {
     var values: [String] = []
     if let remaining = window.remainingPercent {
@@ -271,6 +317,12 @@ struct WindowRow: View {
     if stale { values.append("stale") }
     if let resetAt = window.resetAt {
       values.append("resets \(resetAt.formatted(date: .abbreviated, time: .shortened))")
+    }
+    if let pacing = WindowPacing.compute(window: window, at: pacingDate) {
+      let label = pacingStatusLabel(pacing.status)
+      let actual = WindowPacing.format(pacing.actualPacePerDay)
+      let even = WindowPacing.format(pacing.evenPacePerDay)
+      values.append("\(label), pace \(actual), even split \(even)")
     }
     return values.joined(separator: ", ")
   }

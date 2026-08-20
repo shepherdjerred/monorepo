@@ -3,6 +3,7 @@ import type {
   PlayerConfigEntry,
   LeaguePuuid,
   MatchId,
+  DiscordChannelId,
   DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
 import {
@@ -103,7 +104,7 @@ function shouldSkipPollingRun(): boolean {
 async function processMatch(
   matchData: RawMatch,
   trackedPlayers: PlayerConfigEntry[],
-): Promise<void> {
+): Promise<Map<DiscordChannelId, string>> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
 
   const playersInMatch = trackedPlayers.filter((player) =>
@@ -128,7 +129,7 @@ async function processMatch(
     logger.info(
       `[processMatch] 🔕 No delivery channels for match ${matchId} (queue ${queueType ?? "unknown"}, ${channels.length.toString()} subscribed)`,
     );
-    return;
+    return new Map();
   }
 
   const targetGuildIds: DiscordGuildId[] = uniqueBy(
@@ -142,7 +143,7 @@ async function processMatch(
     logger.info(
       `[processMatch] ⏰ Skipping match ${matchId} — ${ageHours}h old (cutoff ${(MAX_DISCORD_ALERT_AGE_MS / (60 * 60 * 1000)).toString()}h)`,
     );
-    return;
+    return new Map();
   }
 
   const message = await generateMatchReport(matchData, trackedPlayers, {
@@ -151,17 +152,18 @@ async function processMatch(
 
   if (!message) {
     logger.info(`[processMatch] ⚠️  No message generated for match ${matchId}`);
-    return;
+    return new Map();
   }
 
-  const deliveredGuildIds = await deliverToChannels({
+  const delivery = await deliverToChannels({
     message,
     channels: deliverChannels,
     logPrefix: "[processMatch]",
     sentryTags: { matchId },
     replyToMessageIds: await getPrematchMessageIdsForMatchIdOrEmpty(matchId),
   });
-  await recordCoreOutputsDelivered(deliveredGuildIds, "postmatch");
+  await recordCoreOutputsDelivered(delivery.deliveredGuildIds, "postmatch");
+  return delivery.messageIdsByChannel;
 }
 
 /**
@@ -220,8 +222,9 @@ async function processMatchAndUpdatePlayers(
     // failure) still swallows + advances: the authoritative S3 write already
     // succeeded, and these failures are deterministic — retrying every poll
     // would re-run the whole AI pipeline and burn tokens for nothing.
+    let postmatchMessageIds = new Map<DiscordChannelId, string>();
     try {
-      await processMatch(matchData, allTrackedPlayers);
+      postmatchMessageIds = await processMatch(matchData, allTrackedPlayers);
     } catch (error) {
       logger.error(
         `[processMatch] ❌ processMatch threw for ${matchId} — cursor will still advance (durable S3 copy already saved)`,
@@ -241,7 +244,7 @@ async function processMatchAndUpdatePlayers(
     // one-shot. Sharing a `try` with report generation and Discord delivery
     // meant a render crash or a failed send discarded the settlement summary
     // outright, and the bettors were never told what happened to their stakes.
-    await announceSettlements({ matchId, ...bucks });
+    await announceSettlements({ matchId, ...bucks, postmatchMessageIds });
     await announceParlaySettlements(bucks.parlaySettlements);
   }
 

@@ -55,7 +55,15 @@ export function markReplyPermissionError(
 }
 
 export function isReplyPermissionError(error: ChannelSendError): boolean {
-  return replyPermissionErrors.has(error);
+  // Preflight failures are marked explicitly. Discord can still reject the
+  // actual reply after preflight (for example when permissions change between
+  // the check and send), so also recognize the original API permission error.
+  // Callers use this only after a reply attempt and may safely retry once as a
+  // standalone message; a concurrent Send Messages revocation simply makes
+  // that bounded fallback fail too.
+  return (
+    replyPermissionErrors.has(error) || isPermissionError(error.originalError)
+  );
 }
 
 const MessageWithReplySchema = z.object({

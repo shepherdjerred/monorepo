@@ -14,7 +14,10 @@ import {
   bucksTestPuuid,
   bucksTestRoster,
 } from "#src/testing/bucks-fixtures.ts";
-import { openBettingPoolsForPrematch } from "#src/betting/pool-open.ts";
+import {
+  openBettingPoolsForPrematch,
+  recordPoolMessageRefs,
+} from "#src/betting/pool-open.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   addFlagOverride,
@@ -114,5 +117,42 @@ describe("openBettingPoolsForPrematch", () => {
 
     expect(opened).toEqual(new Set());
     expect(await db.bucksMatchPool.count()).toBe(0);
+  });
+
+  test("records message references and their reconstructable content together", async () => {
+    await openBettingPoolsForPrematch(
+      {
+        matchId: "NA1_5000000003",
+        gameInfo: gameInfo(),
+        queueType: "classic",
+        guildIds: [SERVER_ID],
+        detectedAt: new Date(),
+        trackedAliasByPuuid: new Map(),
+      },
+      db,
+    );
+
+    await recordPoolMessageRefs(
+      {
+        matchId: "NA1_5000000003",
+        serverId: SERVER_ID,
+        refs: [{ channelId: "1337623164146155594", messageId: "prematch" }],
+        prematchContentBase: "Aaron started a game",
+      },
+      db,
+    );
+
+    const pool = await db.bucksMatchPool.findUniqueOrThrow({
+      where: {
+        matchId_serverId: {
+          matchId: "NA1_5000000003",
+          serverId: SERVER_ID,
+        },
+      },
+    });
+    expect(pool.prematchContentBase).toBe("Aaron started a game");
+    expect(JSON.parse(pool.messageRefs)).toEqual([
+      { channelId: "1337623164146155594", messageId: "prematch" },
+    ]);
   });
 });

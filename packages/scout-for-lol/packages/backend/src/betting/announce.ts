@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/bun";
-import type { MessageCreateOptions } from "discord.js";
+import { EmbedBuilder, type MessageCreateOptions } from "discord.js";
 import {
   BucksMessageRefsSchema,
   BucksPredictionSchema,
@@ -8,32 +8,27 @@ import {
   type BucksPrediction,
   type DiscordChannelId,
   type DiscordGuildId,
-  type RiotTeamId,
 } from "@scout-for-lol/data";
 import type { EarnedAward } from "#src/betting/earnings.ts";
-import { HOUSE_CUT_PLACEMENT_NOTE } from "#src/betting/house-cut.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
-import type { ClosedPool } from "#src/betting/sweep.ts";
 import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
-import { teamName } from "#src/betting/team.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { client } from "#src/discord/client.ts";
-import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import {
   ChannelSendError,
+  isReplyPermissionError,
   send as sendChannelMessage,
 } from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 
 const logger = createLogger("betting-announce");
-const MAX_SETTLEMENT_CHUNK_SEND_ATTEMPTS = 3;
-const SETTLEMENT_CHUNK_RETRY_BASE_DELAY_MS = 500;
+const MAX_SETTLEMENT_MESSAGE_SEND_ATTEMPTS = 3;
+const SETTLEMENT_MESSAGE_RETRY_BASE_DELAY_MS = 500;
 
 /**
  * Telling the channel what happened.
  *
- * Sent as its **own message**, not appended to the match report, for three
+ * Sent as one reply to the match report, not appended to it, for three
  * reasons: the report's `content` is already the AI review's surface and two
  * variable-length appendages competing for 2000 characters is a latent
  * truncation bug; the report is built once and delivered to every guild, while
@@ -44,6 +39,14 @@ const SETTLEMENT_CHUNK_RETRY_BASE_DELAY_MS = 500;
 
 /** Beyond this the message stops being readable, so the tail is summarised. */
 const MAX_BET_ROWS = 15;
+const MAX_EARNING_ALIAS_LENGTH = 100;
+
+function formatEarningAlias(alias: string): string {
+  if (alias.length <= MAX_EARNING_ALIAS_LENGTH) {
+    return alias;
+  }
+  return `${alias.slice(0, MAX_EARNING_ALIAS_LENGTH - 1)}…`;
+}
 
 function formatPrediction(raw: string | null): string | undefined {
   if (raw === null) {
@@ -81,90 +84,27 @@ export function predictionVerdict(
   return predictedWin === subjectWon ? "Scout called it." : "Scout was wrong.";
 }
 
-export function formatBetPlacementAnnouncement(input: {
-  discordId: string;
-  teamId: RiotTeamId;
-  stake: number;
-  totalStake: number;
-}): string {
-  return `🎲 <@${input.discordId}> staked **${input.stake.toString()} BB** on **${teamName(input.teamId)} to win** (position: **${input.totalStake.toString()} BB**). ${HOUSE_CUT_PLACEMENT_NOTE}`;
-}
+type SettlementDisplay = {
+  summaryLines: string[];
+  betLines: string[];
+  earningLines: string[];
+};
 
-/**
- * Announce a successful placement in the channels carrying this pool's
- * prematch message. This is deliberately best-effort: the stake is already
- * committed, and a missing public receipt must not turn a successful bet into
- * an interaction error.
- */
-export async function announceBetPlacement(
-  input: {
-    matchId: string;
-    serverId: ReturnType<typeof DiscordGuildIdSchema.parse>;
-    discordId: string;
-    teamId: RiotTeamId;
-    stake: number;
-    totalStake: number;
-  },
-  prismaClient: ExtendedPrismaClient = prisma,
-): Promise<void> {
-  try {
-    const pool = await prismaClient.bucksMatchPool.findUnique({
-      where: {
-        matchId_serverId: {
-          matchId: input.matchId,
-          serverId: input.serverId,
-        },
-      },
-      select: { messageRefs: true },
-    });
-    if (pool === null) {
-      return;
-    }
-
-    const refs = BucksMessageRefsSchema.parse(JSON.parse(pool.messageRefs));
-    const content = formatBetPlacementAnnouncement(input);
-    for (const ref of refs) {
-      try {
-        await sendChannelMessage(
-          {
-            content,
-            allowedMentions: { users: [input.discordId] },
-          },
-          DiscordChannelIdSchema.parse(ref.channelId),
-          input.serverId,
-        );
-      } catch (error) {
-        logger.warn(
-          `⚠️ Could not announce Bryan Bucks placement for ${input.matchId} in channel ${ref.channelId}:`,
-          error,
-        );
-      }
-    }
-  } catch (error) {
-    logger.error(
-      `❌ Could not prepare Bryan Bucks placement announcement for ${input.matchId}:`,
-      error,
-    );
-    Sentry.captureException(error, {
-      tags: { source: "betting-placement-announce", matchId: input.matchId },
-      extra: { serverId: input.serverId },
-    });
-  }
-}
-
-export function formatSettlementBody(input: {
+function formatSettlementDisplay(input: {
   summary: SettlementSummary;
   earnings: readonly EarnedAward[];
   predictionSentence: string | undefined;
   predictionVerdictLine: string | undefined;
-}): string {
+}): SettlementDisplay {
   const { summary } = input;
-  const lines: string[] = [];
+  const summaryLines: string[] = [];
+  const betLines: string[] = [];
+  const earningLines: string[] = [];
   const pool = summary.bets.reduce((total, bet) => total + bet.stake, 0);
 
   if (summary.voidReason === undefined) {
-    lines.push(
-      `💰 **Bryan Bucks** — Pool **${pool.toString()} BB** · house cut **${summary.houseCut.toString()} BB** (winners ${summary.winnersPool.toString()} / losers ${summary.losersPool.toString()})`,
+    summaryLines.push(
+      `Pool **${pool.toString()} BB** · house cut **${summary.houseCut.toString()} BB** (winners ${summary.winnersPool.toString()} / losers ${summary.losersPool.toString()})`,
     );
   } else {
     const reason =
@@ -179,8 +119,8 @@ export function formatSettlementBody(input: {
               : summary.voidReason === "storage_overflow"
                 ? "The result exceeded Bryan Bucks storage limits — every bet refunded."
                 : "Unsupported game mode — every bet refunded.";
-    lines.push(
-      `💰 **Bryan Bucks** — Pool **${pool.toString()} BB** · house cut **0 BB**. ${reason}`,
+    summaryLines.push(
+      `Pool **${pool.toString()} BB** · house cut **0 BB**. ${reason}`,
     );
   }
 
@@ -189,7 +129,7 @@ export function formatSettlementBody(input: {
       input.predictionVerdictLine === undefined
         ? ""
         : ` ${input.predictionVerdictLine}`;
-    lines.push(`${input.predictionSentence}${verdict}`);
+    summaryLines.push(`${input.predictionSentence}${verdict}`);
   }
 
   const humanBets = summary.bets.filter((bet) => !bet.isHouse);
@@ -197,8 +137,7 @@ export function formatSettlementBody(input: {
 
   if (houseBets.length > 0) {
     const houseStake = houseBets.reduce((total, bet) => total + bet.stake, 0);
-    lines.push("");
-    lines.push(
+    summaryLines.push(
       "🏦 Bryan Bucks house matched " +
         houseStake.toString() +
         " BB on the other side.",
@@ -206,20 +145,18 @@ export function formatSettlementBody(input: {
   }
 
   if (humanBets.length > 0) {
-    lines.push("");
-    lines.push("**Bets**");
     for (const bet of humanBets.slice(0, MAX_BET_ROWS)) {
       const result = bet.refunded
         ? `refunded ${bet.payout.toString()} BB (no house cut)`
         : bet.won
           ? `gross ${bet.grossPayout.toString()} BB − ${bet.houseCut.toString()} BB house cut = ${bet.payout.toString()} BB received (+${bet.winnings.toString()} BB net winnings)`
           : "received 0 BB";
-      lines.push(
+      betLines.push(
         `• <@${bet.discordId}> staked ${bet.stake.toString()} BB → ${result}`,
       );
     }
     if (humanBets.length > MAX_BET_ROWS) {
-      lines.push(
+      betLines.push(
         `…and ${(humanBets.length - MAX_BET_ROWS).toString()} more — see \`/bb history\``,
       );
     }
@@ -229,24 +166,106 @@ export function formatSettlementBody(input: {
     (award) => award.serverId === summary.serverId,
   );
   if (guildEarnings.length > 0) {
-    lines.push("");
     for (const award of guildEarnings) {
-      lines.push(
-        `🪙 **${award.alias}** +${award.total.toString()} BB (${award.reasons.join(", ")})`,
+      earningLines.push(
+        `🪙 **${formatEarningAlias(award.alias)}** +${award.total.toString()} BB (${award.reasons.join(", ")})`,
       );
     }
   }
 
-  return lines.join("\n");
+  return { summaryLines, betLines, earningLines };
 }
 
-/** Split a complete settlement without dropping any gross-cut-net detail. */
-export function splitSettlementBody(body: string): string[] {
-  const chunks = splitMessageIntoChunks(body);
-  if (chunks.length === 0) {
-    throw new Error("A Bryan Bucks settlement produced no Discord content");
+export function formatSettlementBody(input: {
+  summary: SettlementSummary;
+  earnings: readonly EarnedAward[];
+  predictionSentence: string | undefined;
+  predictionVerdictLine: string | undefined;
+}): string {
+  const display = formatSettlementDisplay(input);
+  const blocks = [display.summaryLines.join("\n")];
+  if (display.betLines.length > 0) {
+    blocks.push(["**Bets**", ...display.betLines].join("\n"));
   }
-  return chunks;
+  if (display.earningLines.length > 0) {
+    blocks.push(display.earningLines.join("\n"));
+  }
+  return blocks.join("\n\n");
+}
+
+const EMBED_FIELD_VALUE_LIMIT = 1024;
+const EMBED_TOTAL_TEXT_LIMIT = 6000;
+
+function splitEmbedFieldValues(lines: readonly string[]): string[] {
+  const values: string[] = [];
+  let current = "";
+  for (const line of lines) {
+    if (line.length > EMBED_FIELD_VALUE_LIMIT) {
+      throw new Error(
+        "A Bryan Bucks outcome row exceeds Discord's field limit",
+      );
+    }
+    const candidate = current.length === 0 ? line : `${current}\n${line}`;
+    if (candidate.length <= EMBED_FIELD_VALUE_LIMIT) {
+      current = candidate;
+      continue;
+    }
+    values.push(current);
+    current = line;
+  }
+  if (current.length > 0) {
+    values.push(current);
+  }
+  return values;
+}
+
+function addEmbedSection(
+  embed: EmbedBuilder,
+  title: string,
+  lines: readonly string[],
+): void {
+  for (const [index, value] of splitEmbedFieldValues(lines).entries()) {
+    embed.addFields({
+      name: index === 0 ? title : `${title} (continued)`,
+      value,
+    });
+  }
+}
+
+function embedTextLength(embed: EmbedBuilder): number {
+  const json = embed.toJSON();
+  return (
+    (json.title?.length ?? 0) +
+    (json.description?.length ?? 0) +
+    (json.footer?.text.length ?? 0) +
+    (json.author?.name.length ?? 0) +
+    (json.fields ?? []).reduce(
+      (total, field) => total + field.name.length + field.value.length,
+      0,
+    )
+  );
+}
+
+/** Build the one Discord message that carries a complete bounded outcome. */
+export function buildSettlementMessage(input: {
+  summary: SettlementSummary;
+  earnings: readonly EarnedAward[];
+  predictionSentence: string | undefined;
+  predictionVerdictLine: string | undefined;
+}): MessageCreateOptions {
+  const display = formatSettlementDisplay(input);
+  const embed = new EmbedBuilder()
+    .setTitle("💰 Bryan Bucks outcomes")
+    .setDescription(display.summaryLines.join("\n"));
+  addEmbedSection(embed, "Bets", display.betLines);
+  addEmbedSection(embed, "Bucks earned", display.earningLines);
+  if (embedTextLength(embed) > EMBED_TOTAL_TEXT_LIMIT) {
+    throw new Error("A Bryan Bucks outcome exceeds Discord's embed limit");
+  }
+  return {
+    embeds: [embed],
+    allowedMentions: { parse: [] },
+  };
 }
 
 export type SettlementDeliveryDependencies = {
@@ -266,27 +285,22 @@ const defaultSettlementDeliveryDependencies: SettlementDeliveryDependencies = {
   },
 };
 
-function settlementChunkNonce(
-  matchId: string,
-  channelId: DiscordChannelId,
-  chunkIndex: number,
-): string {
-  const deliveryKey = `${matchId}:${channelId}:${chunkIndex.toString()}`;
+function settlementNonce(matchId: string, channelId: DiscordChannelId): string {
+  const deliveryKey = `${matchId}:${channelId}`;
   return `bbs:${Bun.hash(deliveryKey).toString(36)}`;
 }
 
-async function sendSettlementChunk(
+async function sendSettlementWithRetries(
   dependencies: SettlementDeliveryDependencies,
   input: {
     options: MessageCreateOptions;
     channelId: DiscordChannelId;
     guildId: DiscordGuildId;
-    chunkIndex: number;
   },
 ): Promise<void> {
   for (
     let attempt = 1;
-    attempt <= MAX_SETTLEMENT_CHUNK_SEND_ATTEMPTS;
+    attempt <= MAX_SETTLEMENT_MESSAGE_SEND_ATTEMPTS;
     attempt++
   ) {
     try {
@@ -300,59 +314,76 @@ async function sendSettlementChunk(
       const deterministicFailure =
         error instanceof ChannelSendError && error.permissionError;
       if (
-        attempt === MAX_SETTLEMENT_CHUNK_SEND_ATTEMPTS ||
+        attempt === MAX_SETTLEMENT_MESSAGE_SEND_ATTEMPTS ||
         deterministicFailure
       ) {
         throw error;
       }
-      const delayMs = SETTLEMENT_CHUNK_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1);
+      const delayMs =
+        SETTLEMENT_MESSAGE_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1);
       logger.warn(
-        `🎲 Bryan Bucks settlement chunk ${(input.chunkIndex + 1).toString()} attempt ${attempt.toString()}/${MAX_SETTLEMENT_CHUNK_SEND_ATTEMPTS.toString()} failed; retrying in ${delayMs.toString()}ms: ${getErrorMessage(error)}`,
+        `🎲 Bryan Bucks outcome attempt ${attempt.toString()}/${MAX_SETTLEMENT_MESSAGE_SEND_ATTEMPTS.toString()} failed; retrying in ${delayMs.toString()}ms: ${getErrorMessage(error)}`,
       );
       await dependencies.sleep(delayMs);
     }
   }
 }
 
-export async function sendSettlementMessages(
+export async function sendSettlementMessage(
   input: {
-    messages: readonly string[];
+    message: MessageCreateOptions;
     matchId: string;
     channelId: string;
     guildId: string;
+    postmatchMessageId?: string;
   },
   dependencies: SettlementDeliveryDependencies = defaultSettlementDeliveryDependencies,
 ): Promise<void> {
   const channelId = DiscordChannelIdSchema.parse(input.channelId);
   const guildId = DiscordGuildIdSchema.parse(input.guildId);
-  const failures: unknown[] = [];
-  for (const [chunkIndex, content] of input.messages.entries()) {
-    try {
-      await sendSettlementChunk(dependencies, {
-        options: {
-          content,
-          // Stable nonces make a transient retry idempotent at Discord.
-          nonce: settlementChunkNonce(input.matchId, channelId, chunkIndex),
-          enforceNonce: true,
-          // A fifteen-person settlement must not ping fifteen people.
-          allowedMentions: { parse: [] },
-        },
-        channelId,
-        guildId,
-        chunkIndex,
-      });
-    } catch (error) {
-      failures.push(error);
-      logger.error(
-        `🎲 Bryan Bucks settlement chunk ${(chunkIndex + 1).toString()}/${input.messages.length.toString()} failed after retries: ${getErrorMessage(error)}`,
-      );
-    }
+  const options: MessageCreateOptions = {
+    ...input.message,
+    // Stable nonces make a transient retry idempotent at Discord.
+    nonce: settlementNonce(input.matchId, channelId),
+    enforceNonce: true,
+    // A fifteen-person settlement must not ping fifteen people.
+    allowedMentions: { parse: [] },
+  };
+
+  if (input.postmatchMessageId === undefined) {
+    await sendSettlementWithRetries(dependencies, {
+      options,
+      channelId,
+      guildId,
+    });
+    return;
   }
-  if (failures.length > 0) {
-    throw new AggregateError(
-      failures,
-      `Bryan Bucks settlement failed to deliver ${failures.length.toString()}/${input.messages.length.toString()} chunk(s)`,
-    );
+
+  try {
+    await sendSettlementWithRetries(dependencies, {
+      options: {
+        ...options,
+        reply: {
+          messageReference: input.postmatchMessageId,
+          // Discord sends this as a normal message if the report disappeared.
+          failIfNotExists: false,
+        },
+      },
+      channelId,
+      guildId,
+    });
+  } catch (error) {
+    if (
+      !(error instanceof ChannelSendError) ||
+      !isReplyPermissionError(error)
+    ) {
+      throw error;
+    }
+    await sendSettlementWithRetries(dependencies, {
+      options,
+      channelId,
+      guildId,
+    });
   }
 }
 
@@ -367,8 +398,10 @@ export async function announceSettlements(
     matchId: string;
     settlements: readonly SettlementSummary[];
     earnings: readonly EarnedAward[];
+    postmatchMessageIds: ReadonlyMap<string, string>;
   },
   prismaClient: ExtendedPrismaClient = prisma,
+  deliveryDependencies: SettlementDeliveryDependencies = defaultSettlementDeliveryDependencies,
 ): Promise<void> {
   if (input.settlements.length === 0) {
     return;
@@ -396,7 +429,7 @@ export async function announceSettlements(
           : BucksPredictionSchema.safeParse(JSON.parse(pool.predictionJson))
               .data;
 
-      const body = formatSettlementBody({
+      const message = buildSettlementMessage({
         summary,
         earnings: input.earnings,
         predictionSentence,
@@ -405,8 +438,6 @@ export async function announceSettlements(
           summary.winningTeamId,
         ),
       });
-      const messages = splitSettlementBody(body);
-
       const refs = BucksMessageRefsSchema.parse(JSON.parse(pool.messageRefs));
       if (refs.length === 0) {
         // No recorded message means no destination, and there is no second
@@ -445,12 +476,21 @@ export async function announceSettlements(
         // a stale or no-longer-writable first ref throw would silently discard
         // the settlement for every healthy channel behind it.
         try {
-          await sendSettlementMessages({
-            messages,
-            matchId: summary.matchId,
-            channelId: ref.channelId,
-            guildId: summary.serverId,
-          });
+          const postmatchMessageId = input.postmatchMessageIds.get(
+            ref.channelId,
+          );
+          await sendSettlementMessage(
+            {
+              message,
+              matchId: summary.matchId,
+              channelId: ref.channelId,
+              guildId: summary.serverId,
+              ...(postmatchMessageId === undefined
+                ? {}
+                : { postmatchMessageId }),
+            },
+            deliveryDependencies,
+          );
         } catch (error) {
           logger.error(
             `❌ Could not deliver the Bryan Bucks settlement for ${summary.matchId} to channel ${ref.channelId}:`,
@@ -473,44 +513,6 @@ export async function announceSettlements(
       Sentry.captureException(error, {
         tags: { source: "betting-announce", matchId: summary.matchId },
       });
-    }
-  }
-}
-
-/**
- * Grey out the buttons on windows that just closed.
- *
- * Editing a message Scout authored is a PATCH and needs no permission beyond
- * View Channel. The trap would be `channel.messages.fetch(id)` first — a GET,
- * which does require Read Message History, a permission Scout's install URL
- * does not request. `MessageManager#edit(id, options)` issues the PATCH
- * directly, with no preceding fetch.
- *
- * Entirely cosmetic, so every failure is swallowed at warn level.
- */
-export async function disableClosedBettingMessages(
-  closed: readonly ClosedPool[],
-): Promise<void> {
-  if (closed.length === 0) {
-    return;
-  }
-
-  for (const pool of closed) {
-    for (const ref of pool.messageRefs) {
-      try {
-        const channel = await client.channels.fetch(ref.channelId);
-        if (channel?.isTextBased() !== true) {
-          continue;
-        }
-        // Only `components` is passed, so the loading-screen attachment and
-        // embed are left untouched — Discord leaves omitted fields alone.
-        await channel.messages.edit(ref.messageId, { components: [] });
-      } catch (error) {
-        logger.warn(
-          `⚠️ Could not disable Bryan Bucks buttons on ${ref.messageId}:`,
-          error,
-        );
-      }
     }
   }
 }

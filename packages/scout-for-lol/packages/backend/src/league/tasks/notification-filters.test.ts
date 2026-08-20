@@ -37,7 +37,9 @@ await mock.module("#src/league/discord/channel.ts", () => ({
       throw new MockChannelSendError("missing Read Message History", true);
     }
     sentMessages.push(message);
-    return Promise.resolve({ id: "sent-message" });
+    return Promise.resolve({
+      id: `sent-message-${sentMessages.length.toString()}`,
+    });
   },
 }));
 
@@ -128,7 +130,7 @@ describe("deliverToChannels", () => {
     const firstChannel = DiscordChannelIdSchema.parse("123456789012345678");
     const secondChannel = DiscordChannelIdSchema.parse("123456789012345679");
 
-    const deliveredGuildIds = await deliverToChannels({
+    const delivery = await deliverToChannels({
       message: { content: "Game finished" },
       channels: [
         { channel: firstChannel, serverId: "123456789012345680" },
@@ -149,8 +151,14 @@ describe("deliverToChannels", () => {
       },
       { content: "Game finished" },
     ]);
-    expect(deliveredGuildIds).toEqual(
+    expect(delivery.deliveredGuildIds).toEqual(
       new Set([DiscordGuildIdSchema.parse("123456789012345680")]),
+    );
+    expect(delivery.messageIdsByChannel).toEqual(
+      new Map([
+        [firstChannel, "sent-message-1"],
+        [secondChannel, "sent-message-2"],
+      ]),
     );
   });
 
@@ -173,13 +181,14 @@ describe("deliverToChannels", () => {
     failAll = true;
     const channelId = DiscordChannelIdSchema.parse("123456789012345678");
 
-    const deliveredGuildIds = await deliverToChannels({
+    const delivery = await deliverToChannels({
       message: { content: "Game finished" },
       channels: [{ channel: channelId, serverId: "123456789012345680" }],
       logPrefix: "[test]",
       sentryTags: {},
     });
 
-    expect(deliveredGuildIds).toEqual(new Set());
+    expect(delivery.deliveredGuildIds).toEqual(new Set());
+    expect(delivery.messageIdsByChannel).toEqual(new Map());
   });
 });

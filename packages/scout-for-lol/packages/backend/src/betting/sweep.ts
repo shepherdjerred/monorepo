@@ -1,5 +1,4 @@
 import * as Sentry from "@sentry/bun";
-import { BucksMessageRefsSchema } from "@scout-for-lol/data";
 import { VOID_GRACE_MS } from "#src/betting/constants.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -23,7 +22,6 @@ const logger = createLogger("betting-sweep");
 export type ClosedPool = {
   matchId: string;
   serverId: string;
-  messageRefs: { channelId: string; messageId: string }[];
 };
 
 /**
@@ -42,7 +40,7 @@ export async function closeExpiredBettingWindows(
   try {
     const expired = await prismaClient.bucksMatchPool.findMany({
       where: { poolState: "open", closesAt: { lt: now } },
-      select: { id: true, matchId: true, serverId: true, messageRefs: true },
+      select: { id: true, matchId: true, serverId: true },
     });
     if (expired.length === 0) {
       return [];
@@ -62,9 +60,6 @@ export async function closeExpiredBettingWindows(
       closed.push({
         matchId: pool.matchId,
         serverId: pool.serverId,
-        messageRefs: BucksMessageRefsSchema.parse(
-          JSON.parse(pool.messageRefs),
-        ).map((ref) => ({ ...ref })),
       });
     }
 

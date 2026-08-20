@@ -13,7 +13,7 @@ import {
   openBettingPoolsForPrematch,
 } from "#src/betting/pool-open.ts";
 import { buildPrediction } from "#src/betting/prediction-inputs.ts";
-import { bucksPrematchLine } from "#src/betting/prematch-line.ts";
+import { bucksPrematchSummary } from "#src/betting/prematch-line.ts";
 import {
   buildRosterForButtons,
   resolveSubjectChampion,
@@ -136,7 +136,11 @@ export async function prepareBucksPrematch(
           roster: buildRosterForButtons(input.gameInfo, trackedAliasByPuuid),
         });
 
-  const footer = bucksPrematchLine({ prediction });
+  const footer = bucksPrematchSummary({
+    prediction,
+    poolState: "open",
+    positions: [],
+  });
 
   return { bettingGuildIds, rows, footer, matchId };
 }

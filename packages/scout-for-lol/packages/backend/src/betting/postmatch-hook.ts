@@ -8,7 +8,18 @@ import {
   settleParlaysForMatch,
   type ParlaySettlementSummary,
 } from "#src/betting/parlay-settle.ts";
-import { disableClosedBettingMessages } from "#src/betting/announce.ts";
+import { disableClosedBettingMessages } from "#src/betting/message-controls.ts";
+import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
+
+export async function refreshSettledPoolMessages(
+  settlements: readonly SettlementSummary[],
+  parlaySettlements: readonly ParlaySettlementSummary[],
+  refreshStraightPools: typeof refreshClosedBucksMessages = refreshClosedBucksMessages,
+  disableParlayPools: typeof disableClosedBettingMessages = disableClosedBettingMessages,
+): Promise<void> {
+  await refreshStraightPools(settlements);
+  await disableParlayPools(parlaySettlements);
+}
 
 /**
  * The one call the post-match poller makes into Bryan Bucks.
@@ -29,9 +40,10 @@ export async function settleAndAwardBucks(matchData: RawMatch): Promise<{
   const settlements = await settleBettingForMatch(matchData);
   const parlaySettlements = await settleParlaysForMatch(matchData);
   const earnings = await awardBucksForMatch(matchData);
-  // Discord cleanup runs only after all three independent local operations.
-  // This covers a remake or very short game that settles an `open` parlay
+  // Discord cleanup runs after the committed local operations and regardless
+  // of whether the caller suppresses an old match's post-match notification.
+  // This also covers a remake or very short game that settles an `open` market
   // before the ordinary five-minute close sweep can remove its controls.
-  await disableClosedBettingMessages(parlaySettlements);
+  await refreshSettledPoolMessages(settlements, parlaySettlements);
   return { settlements, parlaySettlements, earnings };
 }

@@ -980,17 +980,24 @@ remain full refunds with no cut.
   boundary.** Because a later pass returns nothing for an already-settled pool,
   anything that discards the summary discards it permanently. Two places this
   bites, both fixed and both easy to reintroduce: `announceSettlements` must not
-  share a `try` with report generation in `processMatchAndUpdatePlayers` — a
-  satori crash or a failed report send would take the settlement message with it
-  — and inside it each `messageRefs` entry is sent under its own `catch`, so one
-  dead channel cannot swallow the guilds behind it in the loop.
-- **Successful placements get a public receipt.** The button and `/bb bet`
-  paths both announce the increment and current position in the pool's stored
-  prematch message channels. The receipt is best-effort after the ledger
-  transaction commits, so a Discord delivery failure never changes the bet.
-  Prematch markets, `/bb open`, placement confirmations and receipts,
-  settlement/refund messages, cancellation replies, and `/bb history` disclose
-  the house-cut policy or the exact gross-cut-net arithmetic relevant there.
+  share a `try` with report generation in `processMatchAndUpdatePlayers`, and
+  inside it each `messageRefs` entry is sent under its own `catch`, so one dead
+  channel cannot swallow the healthy channels behind it. Post-match delivery
+  returns the exact message ID per channel. The outcome is one bounded embed
+  replying to that message; a missing report or unavailable reply falls back to
+  the same one-message outcome standalone. Stable nonces keep transient retries
+  idempotent.
+- **Successful mutations refresh the prematch message instead of posting a
+  receipt.** Button and `/bb` placement or cancellation confirmations remain
+  ephemeral. After the ledger transaction commits, a per-pool queue re-reads
+  current bets and best-effort edits every stored prematch message with Blue and
+  Red totals plus each named human position. House positions stay hidden,
+  cancellations disappear, and mention notifications are suppressed. The pool
+  records `prematchContentBase` atomically with its message refs so refreshes do
+  not require Read Message History; legacy pools without that base remain
+  settlement-safe and are not edited. Close and settlement run the same refresh
+  with controls removed. `/bb history` remains the transaction-level audit
+  trail, while public outcome copy retains the exact gross-cut-net arithmetic.
 - **Settle and award outside the Discord path.** `settleAndAwardBucks` is called
   from `processMatchAndUpdatePlayers`, after the S3 ingest gate and outside
   `if (!silent)`. `processMatch` returns early with no subscribed channel and
