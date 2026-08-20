@@ -52,8 +52,10 @@ const IdentityRowSchema = z.object({
   puuid: z.string(),
   riot_id: z.string(),
   games: z.union([z.bigint(), z.number()]).transform(Number),
-  first_seen: z.union([z.string(), z.date()]).transform(String),
-  last_seen: z.union([z.string(), z.date()]).transform(String),
+  // Cast to VARCHAR in SQL: DuckDB hands back a DuckDBTimestampValue object,
+  // not a string or a Date, and an ISO string is what callers render anyway.
+  first_seen: z.string(),
+  last_seen: z.string(),
 });
 
 async function runQuery<T>(
@@ -135,12 +137,12 @@ async function riotIdHistory(
     `SELECT puuid,
             concat_ws('#', riot_id_game_name, riot_id_tagline) AS riot_id,
             count(*) AS games,
-            min(game_creation_at) AS first_seen,
-            max(game_creation_at) AS last_seen
+            CAST(min(game_creation_at) AS VARCHAR) AS first_seen,
+            CAST(max(game_creation_at) AS VARCHAR) AS last_seen
        FROM (${source.sql})
       WHERE puuid IN (SELECT unnest(?))
       GROUP BY 1, 2
-      ORDER BY last_seen DESC`,
+      ORDER BY max(game_creation_at) DESC`,
     [...source.params, listParam(puuids)],
     IdentityRowSchema,
   );

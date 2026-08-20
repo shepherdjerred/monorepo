@@ -51,6 +51,16 @@ export type TestLakeMatchFact = {
   playerSubteamId?: number;
   championId?: number;
   championName?: string;
+  /**
+   * The Riot ID recorded on this match row.
+   *
+   * Defaults to the player alias so existing fixtures are unchanged. Set it
+   * per-match to express a rename — one PUUID under several Riot IDs — which
+   * is the shape identity resolution exists to handle and which was otherwise
+   * inexpressible here.
+   */
+  riotIdGameName?: string;
+  riotIdTagline?: string;
   gameCreationAt: Date;
 };
 
@@ -91,8 +101,8 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     puuid: fact.puuid,
     participant_id: fact.playerId,
     team_id: fact.teamId ?? 100,
-    riot_id_game_name: fact.playerAlias,
-    riot_id_tagline: "NA1",
+    riot_id_game_name: fact.riotIdGameName ?? fact.playerAlias,
+    riot_id_tagline: fact.riotIdTagline ?? "NA1",
     summoner_name: fact.playerAlias,
     champion_id: fact.championId ?? 22,
     champion_name: fact.championName ?? "Ashe",

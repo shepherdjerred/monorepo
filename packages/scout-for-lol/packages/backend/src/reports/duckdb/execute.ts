@@ -51,6 +51,7 @@ export async function runLakeAggregation(input: {
   startDate: Date;
   endDate: Date;
   playerIds?: number[];
+  playerPuuids?: string[] | undefined;
   lakeDir?: string;
 }): Promise<LakeAggregationResult> {
   const lakeDir = input.lakeDir ?? resolveLakeDir();
@@ -58,6 +59,7 @@ export async function runLakeAggregation(input: {
 
   const queryInput: LakeQueryInput = {
     plan: input.plan,
+    playerPuuids: input.playerPuuids,
     scope: input.scope,
     startMs: input.startDate.getTime(),
     endMs: input.endDate.getTime(),

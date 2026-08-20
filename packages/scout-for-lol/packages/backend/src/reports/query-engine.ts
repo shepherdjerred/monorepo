@@ -16,6 +16,7 @@ import {
   scoutReportQueryRunsTotal,
 } from "#src/metrics/report-query.ts";
 import { runLakeAggregation } from "#src/reports/duckdb/execute.ts";
+import { resolvePlayerRefsToPuuids } from "#src/reports/identity.ts";
 import {
   requireGuildScope,
   type LakeQueryScope,
@@ -117,11 +118,35 @@ export type ExecuteReportQueryParams = {
   now?: Date;
   onPlan?: ((plan: ReportQueryPlan) => void) | undefined;
   rangeOverride?: TemporalRange;
+  /**
+   * The Discord servers the asker belongs to, used only to resolve a
+   * `player('…')` alias. Absent means Riot-ID resolution only, which is the
+   * right default for scheduled reports: they have no asker.
+   */
+  askerGuildIds?: string[] | undefined;
 };
 type ReportExecutionParams = Omit<
   ExecuteReportQueryParams,
   "queryText" | "onPlan"
 >;
+
+/**
+ * Turn any `player('…')` names on the plan into PUUIDs.
+ *
+ * Undefined when the query has no player reference, so the ordinary path pays
+ * for no lake reads. A query that does carry one and cannot be resolved throws
+ * from `resolvePlayerRefsToPuuids` rather than matching nothing.
+ */
+async function resolvePlanPlayerRefs(
+  params: Pick<ExecuteReportQueryParams, "askerGuildIds">,
+  plan: ReportQueryPlan,
+): Promise<string[] | undefined> {
+  if (plan.playerRefs.length === 0) return undefined;
+  return await resolvePlayerRefsToPuuids({
+    playerRefs: plan.playerRefs,
+    guildIds: params.askerGuildIds ?? [],
+  });
+}
 
 /**
  * Execute a ScoutQL report query.
@@ -186,9 +211,11 @@ async function runReportQueryPlan(
   }
 
   const ranges = queryRanges(plan, params.now, params.rangeOverride);
+  const playerPuuids = await resolvePlanPlayerRefs(params, plan);
   const result = await runLakeAggregation({
     plan,
     scope: params.scope,
+    playerPuuids,
     startDate: ranges.current.startDate,
     endDate: ranges.current.endDate,
   });
@@ -202,6 +229,7 @@ async function runReportQueryPlan(
   const comparison = await runLakeAggregation({
     plan,
     scope: params.scope,
+    playerPuuids,
     startDate: ranges.comparison.startDate,
     endDate: ranges.comparison.endDate,
   });

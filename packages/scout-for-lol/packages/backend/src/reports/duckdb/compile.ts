@@ -59,8 +59,43 @@ export type LakeQueryInput = {
   endMs: number;
   /** Competition scoping: restrict to these player ids (query-time). */
   playerIds?: number[];
+  /**
+   * PUUIDs a `player('…')` reference resolved to, supplied by the executor.
+   *
+   * Required whenever `plan.playerRefs` is non-empty: the plan carries only
+   * the author's names, because resolving them needs the lake and a
+   * guild-scoped permission check that the pure compiler cannot perform.
+   */
+  playerPuuids?: string[] | undefined;
   files: LakeFiles;
 };
+
+/**
+ * `puuid IN (…)` for a resolved `player('…')` reference.
+ *
+ * Compared exactly, with no `lower()` on either side — unlike every other
+ * string filter. PUUIDs are case-sensitive base64url, so folding them would be
+ * a semantic lie even where it happens to still match.
+ *
+ * Throws rather than returning an empty predicate when a reference went
+ * unresolved: silently dropping the filter answers the question for every
+ * player at once, which reads as a plausible result.
+ */
+function playerRefPredicate(input: LakeQueryInput): SqlFragment {
+  if (input.plan.playerRefs.length === 0) return { sql: "", params: [] };
+  const puuids = input.playerPuuids;
+  if (puuids === undefined) {
+    throw new Error(
+      "player('…') requires resolved PUUIDs; execute through executeReportQuery.",
+    );
+  }
+  if (puuids.length === 0) {
+    throw new Error(
+      `No account matches ${input.plan.playerRefs.map((ref) => `player('${ref}')`).join(", ")}.`,
+    );
+  }
+  return { sql: "puuid IN (SELECT unnest(?))", params: [listParam(puuids)] };
+}
 
 function timePredicate(
   column: "game_creation_at" | "observed_at",
@@ -215,7 +250,10 @@ function buildMatchFactsCte(
   input: LakeQueryInput,
   matchesSource: SqlFragment,
 ): FactsCte {
-  const playerFilter = genericPredicate(input.plan.filters, true);
+  const playerFilter = combinePredicates([
+    genericPredicate(input.plan.filters, true),
+    playerRefPredicate(input),
+  ]);
 
   if (input.scope.kind === "global") {
     if (input.playerIds !== undefined) {
