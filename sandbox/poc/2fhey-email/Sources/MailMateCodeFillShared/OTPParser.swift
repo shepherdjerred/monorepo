@@ -5,6 +5,7 @@ public struct OTPParser {
         let code: String
         let range: NSRange
         let score: Int
+        let hasCodeLabel: Bool
     }
 
     private static let keywordPattern = makeExpression(
@@ -129,16 +130,29 @@ public struct OTPParser {
                 return nil
             }
 
+            let hasFollowingExplicitLabel = Self.hasFollowingExplicitLabel(
+                body: sanitizedBody,
+                labelRanges: explicitLabelRanges,
+                candidateRange: normalized.range,
+                maximumGap: 28
+            )
+
             let hasNearbyKeyword = keywordRanges.contains { keywordRange in
                 NSMaxRange(keywordRange.range) >= match.range.location - 48 &&
                     keywordRange.range.location <= NSMaxRange(match.range) + 48
             }
-            let score = (explicitLabel ? 4 : 0) + (hasNearbyKeyword ? 2 : 0)
-            return Candidate(code: code, range: normalized.range, score: score)
+            let score = (explicitLabel ? 4 : 0) + (hasFollowingExplicitLabel ? 4 : 0) + (hasNearbyKeyword ? 2 : 0)
+            return Candidate(
+                code: code,
+                range: normalized.range,
+                score: score,
+                hasCodeLabel: explicitLabel || hasFollowingExplicitLabel
+            )
         }
 
         guard let candidate = candidates.sorted(by: { lhs, rhs in
             if lhs.score != rhs.score { return lhs.score > rhs.score }
+            if lhs.hasCodeLabel != rhs.hasCodeLabel { return lhs.hasCodeLabel }
             let lhsIsNumeric = lhs.code.allSatisfy(\.isNumber)
             let rhsIsNumeric = rhs.code.allSatisfy(\.isNumber)
             if lhsIsNumeric != rhsIsNumeric { return lhsIsNumeric }
@@ -206,6 +220,22 @@ public struct OTPParser {
             let gapLength = candidateRange.location - labelEnd
             guard gapLength >= 0, gapLength <= maximumGap,
                   let gapRange = Range(NSRange(location: labelEnd, length: gapLength), in: body) else {
+                return false
+            }
+            return !body[gapRange].contains(where: \.isNewline)
+        }
+    }
+
+    private static func hasFollowingExplicitLabel(
+        body: String,
+        labelRanges: [NSTextCheckingResult],
+        candidateRange: NSRange,
+        maximumGap: Int
+    ) -> Bool {
+        labelRanges.contains { labelRange in
+            let gapLength = labelRange.range.location - NSMaxRange(candidateRange)
+            guard gapLength >= 0, gapLength <= maximumGap,
+                  let gapRange = Range(NSRange(location: NSMaxRange(candidateRange), length: gapLength), in: body) else {
                 return false
             }
             return !body[gapRange].contains(where: \.isNewline)
