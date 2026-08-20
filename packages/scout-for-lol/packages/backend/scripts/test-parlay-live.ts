@@ -32,7 +32,10 @@ import {
   PARLAY_HISTORY_COLUMNS,
   TEAM_OBJECTIVE_HISTORY_COLUMNS,
 } from "#src/betting/parlay-stat-fields.ts";
-import { priceParlay } from "#src/betting/parlay-pricing.ts";
+import {
+  numericThresholdsAreMeasured,
+  priceParlay,
+} from "#src/betting/parlay-pricing.ts";
 import type {
   ParlayHistory,
   ParlayHistoryMatch,
@@ -325,8 +328,21 @@ for (const liveCase of cases) {
     );
   }
 
+  const candidate = parseModelGeneratedParlay(filled, 5000);
+  if (
+    !numericThresholdsAreMeasured(
+      candidate.conditions,
+      liveCase.selected,
+      history,
+    )
+  ) {
+    throw new Error(
+      `${liveCase.name} returned thresholds outside the measured 40-70% hit-rate range`,
+    );
+  }
+
   const priced = priceParlay({
-    conditions: parseModelGeneratedParlay(filled, 5000).conditions,
+    conditions: candidate.conditions,
     subjects: liveCase.selected,
     history,
   });
