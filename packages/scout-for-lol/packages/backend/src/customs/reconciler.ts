@@ -176,33 +176,41 @@ async function pollResult(
   const games = await database.customGame.findMany({
     where: {
       nightId,
-      state: { in: ["RESULT_PENDING", "MANUAL"] },
+      state: { in: ["LOBBY_READY", "RESULT_PENDING", "MANUAL"] },
       tournamentCode: { not: null },
     },
     orderBy: { sequence: "asc" },
   });
   for (const game of games) {
     if (game.tournamentCode === null) continue;
-    const results = await getTournamentGames(game.tournamentCode);
-    const result = results.at(-1);
-    if (result === undefined) continue;
-    const mutation = await recordRiotTournamentResult({
-      prisma: database,
-      nightId,
-      result,
-    });
-    if (!mutation.applied) continue;
-    const voiceReturn =
-      mutation.snapshot.currentGame?.id === game.id
-        ? returnCustomResultPlayersToLobby({
-            snapshot: mutation.snapshot,
-            nightId,
-            source: "riot",
-          })
-        : null;
-    publishCustomSnapshot(mutation.snapshot);
-    if (voiceReturn !== null) await voiceReturn;
-    return;
+    try {
+      const results = await getTournamentGames(game.tournamentCode);
+      const result = results.at(-1);
+      if (result === undefined) continue;
+      const mutation = await recordRiotTournamentResult({
+        prisma: database,
+        nightId,
+        result,
+      });
+      if (!mutation.applied) continue;
+      const voiceReturn =
+        mutation.snapshot.currentGame?.id === game.id
+          ? returnCustomResultPlayersToLobby({
+              snapshot: mutation.snapshot,
+              nightId,
+              source: "riot",
+            })
+          : null;
+      publishCustomSnapshot(mutation.snapshot);
+      if (voiceReturn !== null) await voiceReturn;
+      return;
+    } catch (error) {
+      logger.error("Custom Tournament result polling failed", {
+        error,
+        gameId: game.id,
+        nightId,
+      });
+    }
   }
 }
 

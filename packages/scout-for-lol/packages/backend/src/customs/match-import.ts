@@ -79,7 +79,7 @@ async function importHistoricalGame(params: {
 }): Promise<void> {
   await params.prisma.$transaction(async (transaction) => {
     const claimed = await transaction.customGame.updateMany({
-      where: { id: params.gameId, importedAt: null },
+      where: { id: params.gameId, importedAt: null, importError: null },
       data: {
         importedAt: new Date(),
         importError: null,
@@ -208,7 +208,7 @@ export async function importCustomMatchDetails(params: {
     },
     sideEffect: async (transaction) => {
       const claimed = await transaction.customGame.updateMany({
-        where: { id: params.gameId, importedAt: null },
+        where: { id: params.gameId, importedAt: null, importError: null },
         data: {
           importedAt: new Date(),
           matchSnapshot: JSON.stringify(match),

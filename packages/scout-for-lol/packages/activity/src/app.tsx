@@ -34,7 +34,10 @@ function ActivityContent() {
 
   useEffect(() => {
     if (active.data === undefined) return;
-    const ready = active.data?.recruitmentCounts.ready ?? 0;
+    const ready =
+      active.data?.state === "ENDED"
+        ? 0
+        : (active.data?.recruitmentCounts.ready ?? 0);
     fireAndForget(
       () => session.sdk.setReadyPresence(ready),
       "ready-presence update",

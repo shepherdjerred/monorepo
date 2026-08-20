@@ -9,6 +9,8 @@ import configuration from "#src/configuration.ts";
 const TOURNAMENT_API_BASE =
   "https://americas.api.riotgames.com/lol/tournament/v5";
 const TOURNAMENT_REQUEST_TIMEOUT_MILLISECONDS = 30_000;
+const TOURNAMENT_RETRY_ATTEMPTS = 3;
+const TOURNAMENT_RETRY_DELAY_MILLISECONDS = 250;
 
 export type TournamentFetch = (
   input: string | URL | Request,
@@ -69,43 +71,60 @@ async function riotRequest(
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
   headers.set("X-Riot-Token", configuration.riotApiToken);
-  let response: Response;
-  try {
-    response = await fetcher(`${TOURNAMENT_API_BASE}${path}`, {
-      ...init,
-      headers,
-      signal:
-        init.signal ??
-        AbortSignal.timeout(TOURNAMENT_REQUEST_TIMEOUT_MILLISECONDS),
-    });
-  } catch (error) {
-    throw new RiotTournamentApiError(
-      "Riot Tournament-V5 request could not be completed",
-      { cause: error },
-    );
+  for (let attempt = 0; attempt <= TOURNAMENT_RETRY_ATTEMPTS; attempt += 1) {
+    let response: Response;
+    try {
+      response = await fetcher(`${TOURNAMENT_API_BASE}${path}`, {
+        ...init,
+        headers,
+        signal:
+          init.signal ??
+          AbortSignal.timeout(TOURNAMENT_REQUEST_TIMEOUT_MILLISECONDS),
+      });
+    } catch (error) {
+      throw new RiotTournamentApiError(
+        "Riot Tournament-V5 request could not be completed",
+        { cause: error },
+      );
+    }
+    let body: string;
+    try {
+      body = await response.text();
+    } catch (error) {
+      throw new RiotTournamentApiError(
+        "Riot Tournament-V5 response could not be read",
+        { cause: error },
+      );
+    }
+    const retryable =
+      response.status === 429 ||
+      (response.status >= 500 && response.status <= 599);
+    if (retryable && !response.ok && attempt < TOURNAMENT_RETRY_ATTEMPTS) {
+      const retryAfter = Number.parseInt(
+        response.headers.get("retry-after") ?? "",
+        10,
+      );
+      const delay = Number.isFinite(retryAfter)
+        ? Math.min(retryAfter * 1000, 30_000)
+        : TOURNAMENT_RETRY_DELAY_MILLISECONDS * 2 ** attempt;
+      await Bun.sleep(delay);
+      continue;
+    }
+    if (!response.ok) {
+      throw new RiotTournamentApiError(
+        `Riot Tournament-V5 request failed (${response.status.toString()}): ${body.slice(0, 300)}`,
+      );
+    }
+    try {
+      return JSON.parse(body);
+    } catch (error) {
+      throw new RiotTournamentApiError(
+        "Riot Tournament-V5 returned invalid JSON",
+        { cause: error },
+      );
+    }
   }
-  let body: string;
-  try {
-    body = await response.text();
-  } catch (error) {
-    throw new RiotTournamentApiError(
-      "Riot Tournament-V5 response could not be read",
-      { cause: error },
-    );
-  }
-  if (!response.ok) {
-    throw new RiotTournamentApiError(
-      `Riot Tournament-V5 request failed (${response.status.toString()}): ${body.slice(0, 300)}`,
-    );
-  }
-  try {
-    return JSON.parse(body);
-  } catch (error) {
-    throw new RiotTournamentApiError(
-      "Riot Tournament-V5 returned invalid JSON",
-      { cause: error },
-    );
-  }
+  throw new Error("Riot Tournament-V5 retry loop completed without a result");
 }
 
 function providerId(): number {

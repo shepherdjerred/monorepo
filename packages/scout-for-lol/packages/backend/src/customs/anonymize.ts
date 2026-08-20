@@ -327,8 +327,14 @@ export async function anonymizeCustomParticipant(params: {
       const nextRevision = night.revision + 1;
       const updatedSnapshot = { ...snapshot, revision: nextRevision };
       for (const game of night.games) {
+        const parsedGameSnapshot = CustomGameSnapshotSchema.parse(
+          JSON.parse(game.snapshot),
+        );
+        const gameIncludesTarget = parsedGameSnapshot.participants.some(
+          (participant) => participant.discordId === discordId,
+        );
         const gameSnapshot = anonymizeGameSnapshot(
-          CustomGameSnapshotSchema.parse(JSON.parse(game.snapshot)),
+          parsedGameSnapshot,
           discordId,
           sensitive,
         );
@@ -336,7 +342,7 @@ export async function anonymizeCustomParticipant(params: {
           where: { id: game.id },
           data: {
             snapshot: JSON.stringify(gameSnapshot),
-            matchSnapshot: null,
+            matchSnapshot: gameIncludesTarget ? null : game.matchSnapshot,
           },
         });
         await transaction.customGameParticipant.deleteMany({
