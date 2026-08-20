@@ -10,6 +10,7 @@ struct SetupView: View {
     @State private var refreshGeneration = 0
     @State private var expiryRefreshTask: Task<Void, Never>?
     @State private var refreshRetryTask: Task<Void, Never>?
+    @State private var identityReplacementTask: Task<Void, Never>?
     @State private var brokerMode = false
 
     private let maximumRefreshRetries = 3
@@ -200,30 +201,13 @@ struct SetupView: View {
                                 scheduleBrokerShutdownIfNeeded(records: records)
                                 return
                             }
-                            ASCredentialIdentityStore.shared.replaceCredentialIdentities(identities) { success, error in
-                                Task { @MainActor in
-                                    guard generation == refreshGeneration else {
-                                        CodeFillObservability.appLogger.info("event=identity_refresh outcome=stale_completion")
-                                        return
-                                    }
-                                if success {
-                                    CodeFillObservability.appLogger.info("event=identity_refresh outcome=success identity_count=\(identities.count, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
-                                    refreshRetryTask = nil
-                                    identityStatus = identities.isEmpty
-                                        ? "No unexpired MailMate codes are available yet."
-                                        : "Registered \(identities.count) native AutoFill identity entries."
-                                    scheduleBrokerShutdownIfNeeded(records: records)
-                                } else {
-                                    let detail = error.map { ": \($0.localizedDescription)" } ?? "."
-                                    CodeFillObservability.appLogger.error("event=identity_refresh outcome=error identity_count=\(identities.count, privacy: .public) detail=\(detail, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
-                                    identityStatus = "Could not register AutoFill identities\(detail)"
-                                    scheduleRefreshRetry(after: retryAttempt, reason: "identity_replace")
-                                    if retryAttempt >= maximumRefreshRetries {
-                                        scheduleBrokerShutdownIfNeeded(records: records)
-                                    }
-                                }
-                                }
-                            }
+                            enqueueIdentityReplacement(
+                                generation: generation,
+                                identities: identities,
+                                records: records,
+                                retryAttempt: retryAttempt,
+                                startedAt: startedAt
+                            )
                         }
                     }
                 }
@@ -237,6 +221,57 @@ struct SetupView: View {
                     CodeFillObservability.appLogger.error("event=identity_refresh outcome=store_error error=\(CodeFillObservability.errorSummary(error), privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
                     scheduleRefreshRetry(after: retryAttempt, reason: "store_read")
                     scheduleBrokerShutdownCheck()
+                }
+            }
+        }
+    }
+
+    private struct IdentityReplacementResult: Sendable {
+        let success: Bool
+        let detail: String?
+    }
+
+    private func enqueueIdentityReplacement(
+        generation: Int,
+        identities: [ASCredentialIdentity],
+        records: [OTPRecord],
+        retryAttempt: Int,
+        startedAt: Date
+    ) {
+        let previousReplacementTask = identityReplacementTask
+        identityReplacementTask = Task { @MainActor in
+            await previousReplacementTask?.value
+            guard generation == refreshGeneration else {
+                CodeFillObservability.appLogger.info("event=identity_refresh outcome=stale_queued_replacement")
+                return
+            }
+
+            let result: IdentityReplacementResult = await withCheckedContinuation { continuation in
+                ASCredentialIdentityStore.shared.replaceCredentialIdentities(identities) { success, error in
+                    continuation.resume(returning: IdentityReplacementResult(
+                        success: success,
+                        detail: error.map { ": \($0.localizedDescription)" }
+                    ))
+                }
+            }
+            guard generation == refreshGeneration else {
+                CodeFillObservability.appLogger.info("event=identity_refresh outcome=stale_completion")
+                return
+            }
+            if result.success {
+                CodeFillObservability.appLogger.info("event=identity_refresh outcome=success identity_count=\(identities.count, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
+                refreshRetryTask = nil
+                identityStatus = identities.isEmpty
+                    ? "No unexpired MailMate codes are available yet."
+                    : "Registered \(identities.count) native AutoFill identity entries."
+                scheduleBrokerShutdownIfNeeded(records: records)
+            } else {
+                let detail = result.detail ?? "."
+                CodeFillObservability.appLogger.error("event=identity_refresh outcome=error identity_count=\(identities.count, privacy: .public) detail=\(detail, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
+                identityStatus = "Could not register AutoFill identities\(detail)"
+                scheduleRefreshRetry(after: retryAttempt, reason: "identity_replace")
+                if retryAttempt >= maximumRefreshRetries {
+                    scheduleBrokerShutdownIfNeeded(records: records)
                 }
             }
         }
