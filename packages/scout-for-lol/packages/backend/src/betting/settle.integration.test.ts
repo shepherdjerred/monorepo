@@ -15,6 +15,7 @@ import {
 } from "#src/testing/bucks-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { settleBettingForMatch } from "#src/betting/settle.ts";
+import { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/sweep.ts";
 import { voidStaleBettingPools } from "#src/betting/void-stale.ts";
 import { reconcileBucksBalances } from "#src/betting/reconcile.ts";
@@ -148,6 +149,34 @@ afterAll(async () => {
 });
 
 describe("settleBettingForMatch", () => {
+  test("returns closures produced by an immediate postmatch retry", async () => {
+    await makeBalancedPool(10);
+    let poolQueries = 0;
+    const transientLookupFailure = db.$extends({
+      query: {
+        bucksMatchPool: {
+          async findMany({ args, query }) {
+            poolQueries += 1;
+            if (poolQueries === 1) {
+              throw new Error("simulated first force-close lookup failure");
+            }
+            return await query(args);
+          },
+        },
+      },
+    });
+
+    const result = await settleAndAwardBucks(fixture, transientLookupFailure);
+
+    expect(result.closures).toHaveLength(1);
+    expect(result.closures[0]).toMatchObject({
+      matchId: MATCH_ID,
+      serverId: SERVER_A,
+      totalMatchedPerSide: 10,
+    });
+    expect(result.settlements).toHaveLength(1);
+  });
+
   test("settles matched stake at even money and charges matched profit", async () => {
     const { winner, loser } = await makeBalancedPool(10);
 

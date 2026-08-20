@@ -18,7 +18,10 @@ import {
   BucksStorageOverflowError,
 } from "#src/betting/ledger.ts";
 import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
-import { closeBettingWindowsForMatch } from "#src/betting/sweep.ts";
+import {
+  closeBettingWindowsForMatch,
+  type ClosedPool,
+} from "#src/betting/sweep.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -263,25 +266,38 @@ async function creditBet(
   }
 }
 
-/** Settle every guild pool for a finished match at fixed even money. */
-export async function settleBettingForMatch(
+export type BettingSettlementResult = {
+  closures: ClosedPool[];
+  settlements: SettlementSummary[];
+};
+
+/**
+ * Match any still-open pools, then settle every guild pool at fixed even
+ * money. Returning the close summaries matters when this call is retrying a
+ * transiently failed post-match close: those users still need their final
+ * matched and refunded receipt.
+ */
+export async function closeAndSettleBettingForMatch(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
-): Promise<SettlementSummary[]> {
+): Promise<BettingSettlementResult> {
   const matchId = matchData.metadata.matchId;
+  const closures: ClosedPool[] = [];
   const summaries: SettlementSummary[] = [];
 
   try {
     // A very short game can resolve before the 30-second close sweep. Matching
     // must still happen before any outcome is read into settlement arithmetic.
-    await closeBettingWindowsForMatch(matchId, prismaClient);
+    closures.push(
+      ...(await closeBettingWindowsForMatch(matchId, prismaClient)),
+    );
 
     const pools = await prismaClient.bucksMatchPool.findMany({
       where: { matchId, poolState: "closed", matchedAt: { not: null } },
       select: { id: true, serverId: true, roster: true },
     });
     if (pools.length === 0) {
-      return summaries;
+      return { closures, settlements: summaries };
     }
 
     const outcome = classifyMatchForBetting(matchData);
@@ -332,7 +348,16 @@ export async function settleBettingForMatch(
     });
   }
 
-  return summaries;
+  return { closures, settlements: summaries };
+}
+
+/** Settle every guild pool for a finished match at fixed even money. */
+export async function settleBettingForMatch(
+  matchData: RawMatch,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<SettlementSummary[]> {
+  const result = await closeAndSettleBettingForMatch(matchData, prismaClient);
+  return result.settlements;
 }
 
 async function settleOnePool(input: {
