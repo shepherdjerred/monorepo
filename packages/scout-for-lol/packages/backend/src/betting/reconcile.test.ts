@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { BUCKS_RECONCILIATION_CRON } from "#src/betting/reconcile.ts";
+import {
+  BUCKS_RECONCILIATION_CRON,
+  BUCKS_RECONCILIATION_TRANSACTION_TIMEOUT_MS,
+} from "#src/betting/reconcile.ts";
 
 describe("Bryan Bucks reconciliation schedule", () => {
   test("runs at startup and every day at 05:00 UTC", () => {
@@ -10,5 +13,9 @@ describe("Bryan Bucks reconciliation schedule", () => {
       timezone: "UTC",
       runOnInit: true,
     });
+  });
+
+  test("allows the full-history snapshot to outlive Prisma's default", () => {
+    expect(BUCKS_RECONCILIATION_TRANSACTION_TIMEOUT_MS).toBe(300_000);
   });
 });

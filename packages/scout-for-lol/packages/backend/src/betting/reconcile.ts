@@ -22,6 +22,10 @@ export const BUCKS_RECONCILIATION_CRON = {
   runOnInit: true,
 } as const;
 
+/** Full-history audits intentionally share one read snapshot. Give that
+ * bounded, paged scan enough time to outlive Prisma's five-second default. */
+export const BUCKS_RECONCILIATION_TRANSACTION_TIMEOUT_MS = 5 * 60 * 1000;
+
 async function auditAccountBalances(
   prismaClient: Db,
   findings: BucksAuditSink,
@@ -133,16 +137,19 @@ export async function reconcileBucksBalances(
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<BucksAuditFinding[]> {
   try {
-    const audit = await prismaClient.$transaction(async (tx) => {
-      // Every invariant is derived from one SQLite read snapshot. Without the
-      // shared transaction, a valid placement or settlement could commit
-      // between related-table queries and create a false discrepancy alert.
-      const findings = new BucksAuditCollector();
-      const accountCount = await auditAccountBalances(tx, findings);
-      await auditBucksPositions(tx, findings);
-      await auditBucksMatchedPools(tx, findings);
-      return { findings, accountCount };
-    });
+    const audit = await prismaClient.$transaction(
+      async (tx) => {
+        // Every invariant is derived from one SQLite read snapshot. Without the
+        // shared transaction, a valid placement or settlement could commit
+        // between related-table queries and create a false discrepancy alert.
+        const findings = new BucksAuditCollector();
+        const accountCount = await auditAccountBalances(tx, findings);
+        await auditBucksPositions(tx, findings);
+        await auditBucksMatchedPools(tx, findings);
+        return { findings, accountCount };
+      },
+      { timeout: BUCKS_RECONCILIATION_TRANSACTION_TIMEOUT_MS },
+    );
     reportAuditResult(audit.findings, audit.accountCount);
     return [...audit.findings.retained];
   } catch (error) {
