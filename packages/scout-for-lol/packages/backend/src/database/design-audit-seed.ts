@@ -84,6 +84,12 @@ export async function seedDesignAuditDatabase(
       DEFAULT_REPORT_ID,
     ),
   );
+  const exploreConversationId =
+    environment["SCOUT_DESIGN_AUDIT_EXPLORE_CONVERSATION_ID"] ??
+    DESIGN_AUDIT_EXPLORE_CONVERSATION_ID;
+  const exploreShareToken =
+    environment["SCOUT_DESIGN_AUDIT_EXPLORE_SHARE_TOKEN"] ??
+    DESIGN_AUDIT_EXPLORE_SHARE_TOKEN;
   const now = new Date("2026-01-01T00:00:00.000Z");
   const prisma = new PrismaClient({
     adapter: new PrismaLibSql(
@@ -100,19 +106,20 @@ export async function seedDesignAuditDatabase(
     });
 
     await prisma.exploreConversation.upsert({
-      where: { id: DESIGN_AUDIT_EXPLORE_CONVERSATION_ID },
+      where: { id: exploreConversationId },
       update: {
+        userId: discordId,
         title: "Champion win rates",
-        shareToken: DESIGN_AUDIT_EXPLORE_SHARE_TOKEN,
+        shareToken: exploreShareToken,
         sharedAt: now,
         currentLeafId: DESIGN_AUDIT_EXPLORE_ANSWER_ID,
         sharedLeafId: DESIGN_AUDIT_EXPLORE_ANSWER_ID,
       },
       create: {
-        id: DESIGN_AUDIT_EXPLORE_CONVERSATION_ID,
+        id: exploreConversationId,
         userId: discordId,
         title: "Champion win rates",
-        shareToken: DESIGN_AUDIT_EXPLORE_SHARE_TOKEN,
+        shareToken: exploreShareToken,
         sharedAt: now,
         currentLeafId: DESIGN_AUDIT_EXPLORE_ANSWER_ID,
         sharedLeafId: DESIGN_AUDIT_EXPLORE_ANSWER_ID,
@@ -120,10 +127,13 @@ export async function seedDesignAuditDatabase(
     });
     await prisma.exploreMessage.upsert({
       where: { id: DESIGN_AUDIT_EXPLORE_QUESTION_ID },
-      update: { content: "Which champion wins most?" },
+      update: {
+        conversationId: exploreConversationId,
+        content: "Which champion wins most?",
+      },
       create: {
         id: DESIGN_AUDIT_EXPLORE_QUESTION_ID,
-        conversationId: DESIGN_AUDIT_EXPLORE_CONVERSATION_ID,
+        conversationId: exploreConversationId,
         role: "user",
         content: "Which champion wins most?",
       },
@@ -131,6 +141,7 @@ export async function seedDesignAuditDatabase(
     await prisma.exploreMessage.upsert({
       where: { id: DESIGN_AUDIT_EXPLORE_ANSWER_ID },
       update: {
+        conversationId: exploreConversationId,
         content: "Jinx, over 42 games.",
         parentId: DESIGN_AUDIT_EXPLORE_QUESTION_ID,
         queryText:
@@ -138,7 +149,7 @@ export async function seedDesignAuditDatabase(
       },
       create: {
         id: DESIGN_AUDIT_EXPLORE_ANSWER_ID,
-        conversationId: DESIGN_AUDIT_EXPLORE_CONVERSATION_ID,
+        conversationId: exploreConversationId,
         parentId: DESIGN_AUDIT_EXPLORE_QUESTION_ID,
         role: "assistant",
         content: "Jinx, over 42 games.",

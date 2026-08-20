@@ -41,9 +41,13 @@ for (const browser of browsers) {
     const device =
       browser === "firefox"
         ? devices["Desktop Firefox"]
-        : viewport.isMobile
-          ? devices["iPhone 13"]
-          : devices["Desktop Chrome"];
+        : browser === "webkit"
+          ? viewport.isMobile
+            ? devices["iPhone 13"]
+            : devices["Desktop Safari"]
+          : viewport.isMobile
+            ? devices["iPhone 13"]
+            : devices["Desktop Chrome"];
     projects.push({
       name: `${browser}-${viewport.name}`,
       use: {

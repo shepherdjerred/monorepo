@@ -151,12 +151,12 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
           (node.textContent ?? "").trim() !== "",
       );
     const isClipped = (element: HTMLElement, rectangle: DOMRect): boolean =>
-      rectangle.right > window.innerWidth + 1 &&
-      rectangle.width < window.innerWidth &&
       !allowed(element, "data-design-audit-allow-overflow") &&
       element.closest(".right-sidebar") === null &&
       !hasScrollableAncestor(element) &&
-      !hasClippingAncestor(element, rectangle);
+      (hasClippingAncestor(element, rectangle) ||
+        (rectangle.right > window.innerWidth + 1 &&
+          rectangle.width < window.innerWidth));
     const isTruncated = (
       element: HTMLElement,
       style: CSSStyleDeclaration,

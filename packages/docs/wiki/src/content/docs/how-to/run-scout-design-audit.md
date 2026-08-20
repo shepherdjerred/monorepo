@@ -8,6 +8,9 @@ sidebar:
 Run the Scout design audit with local servers and its deterministic database
 fixture; CI uses the same boot path for repeatable browser checks.
 
+The complete flag, port, and path reference is in [Scout design-audit
+reference](/reference/scout-design-audit/).
+
 ## 1. Run the pull-request audit
 
 From the repository root, run the Chromium audit used by pull-request CI:
@@ -41,14 +44,8 @@ are only needed when that flag is omitted.
 
 ## 3. Know what local boot does
 
-The Playwright configuration starts these processes:
-
-| Service   | Local URL                     | Role                  |
-| --------- | ----------------------------- | --------------------- |
-| Marketing | `http://127.0.0.1:4321/`      | Public Scout routes   |
-| Docs      | `http://127.0.0.1:4322/docs/` | Scout documentation   |
-| Backend   | `http://127.0.0.1:3000/trpc/` | Dev-login API         |
-| App       | `http://localhost:5180/app/`  | Scout web application |
+The Playwright configuration starts the services and uses the endpoints listed
+in the [Scout design-audit reference](/reference/scout-design-audit/).
 
 The local boot path runs Prisma migrations and generation, then seeds the
 stable design-audit fixture through
