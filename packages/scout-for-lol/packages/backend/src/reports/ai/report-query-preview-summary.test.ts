@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { parseAndCompile } from "@scout-for-lol/data";
+import {
+  parseAndCompile,
+  ReportAiModelPreviewSummarySchema,
+} from "@scout-for-lol/data";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
 import type { ReportQueryResult } from "#src/reports/query-engine.ts";
 
@@ -65,5 +68,8 @@ describe("reportQueryPreviewSummary", () => {
     expect(preview.visualizationRows).toHaveLength(12);
     expect(preview.rowsReturned).toBe(13);
     expect(preview.visualizationRows.at(-1)?.label).toBe("Champion 11");
+    expect(ReportAiModelPreviewSummarySchema.parse(preview)).not.toHaveProperty(
+      "visualizationRows",
+    );
   });
 });

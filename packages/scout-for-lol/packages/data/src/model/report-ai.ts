@@ -168,6 +168,13 @@ export type ReportAiPreviewSummary = z.infer<
   typeof ReportAiPreviewSummarySchema
 >;
 
+export const ReportAiModelPreviewSummarySchema =
+  ReportAiPreviewSummarySchema.omit({ visualizationRows: true }).strip();
+
+export type ReportAiModelPreviewSummary = z.infer<
+  typeof ReportAiModelPreviewSummarySchema
+>;
+
 export const ReportAiStreamEventSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("started"), runId: z.uuid() }).strict(),
   z

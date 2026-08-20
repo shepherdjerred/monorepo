@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import {
-  ReportAiPreviewSummarySchema,
+  ReportAiModelPreviewSummarySchema,
   formatReportQuery,
   lintReportQuery,
   parseAndCompile,
@@ -63,7 +63,7 @@ export const QueryResultToolOutputSchema = z
     ok: z.boolean(),
     message: z.string(),
     formattedQueryText: z.string().nullable(),
-    preview: ReportAiPreviewSummarySchema.nullable(),
+    preview: ReportAiModelPreviewSummarySchema.nullable(),
   })
   .strict();
 
