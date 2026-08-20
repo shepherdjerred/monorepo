@@ -137,6 +137,7 @@ async function startNew(manager: ExploreRunManager, question: string) {
   return await manager.start(
     { userId: owner },
     { conversationId: null, question, attach: { kind: "leaf" } },
+    [],
   );
 }
 
@@ -242,6 +243,7 @@ describe("ExploreRunManager", () => {
           question: "Another turn",
           attach: { kind: "leaf" },
         },
+        [],
       ),
     ).rejects.toBeInstanceOf(ExploreConversationBusyError);
 
@@ -283,6 +285,7 @@ describe("ExploreRunManager", () => {
           question: "What about this patch?",
           attach: { kind: "leaf" },
         },
+        [],
       ),
     ).rejects.toBeInstanceOf(ExploreConversationBusyError);
     expect(
@@ -330,6 +333,7 @@ describe("ExploreRunManager", () => {
         question: null,
         attach: { kind: "message", messageId: question.id },
       },
+      [],
     );
     expect(summary.versionCountAtStart).toBe(2);
 
@@ -421,6 +425,7 @@ describe("ExploreRunManager lifecycle", () => {
         question: "Owner's next question",
         attach: { kind: "leaf" },
       },
+      [],
     );
 
     expect(await unauthorizedDeletion).toBe(false);
@@ -447,6 +452,7 @@ describe("ExploreRunManager lifecycle", () => {
         question: "Question racing deletion",
         attach: { kind: "leaf" },
       },
+      [],
     );
     const deleted = manager.deleteConversationAndWait(conversation.id, owner);
 
