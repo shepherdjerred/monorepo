@@ -40,6 +40,10 @@ export const MatchLakeRowSchema = z.object({
   game_mode: z.string(),
   game_type: z.string(),
   game_version: z.string(),
+  // Settlement voids a match whose result is not GameComplete. History has to
+  // apply the same predicate, or prices are conditioned on games that could
+  // never have settled either way.
+  end_of_game_result: z.string(),
   map_id: z.number(),
   // Participant identity (global — attribution happens at query time)
   puuid: z.string(),
@@ -213,6 +217,7 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     game_mode: "VARCHAR",
     game_type: "VARCHAR",
     game_version: "VARCHAR",
+    end_of_game_result: "VARCHAR",
     map_id: "INTEGER",
     puuid: "VARCHAR",
     participant_id: "INTEGER",

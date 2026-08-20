@@ -74,6 +74,7 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
     game_mode: match.info.gameMode,
     game_type: match.info.gameType,
     game_version: match.info.gameVersion,
+    end_of_game_result: match.info.endOfGameResult,
     map_id: match.info.mapId,
     puuid: participant.puuid,
     participant_id: participant.participantId,
