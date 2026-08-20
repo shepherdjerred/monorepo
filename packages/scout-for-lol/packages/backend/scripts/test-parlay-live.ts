@@ -24,7 +24,7 @@ import {
 import {
   PARLAY_SYSTEM_PROMPT,
   ParlayGenerationContextSchema,
-  buildParlayPrompt,
+  buildParlayProposalPrompt,
 } from "#src/betting/parlay-prompt.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -189,7 +189,7 @@ for (const liveCase of cases) {
     schemaDescription:
       "A fixed-odds AND parlay built only from the supplied closed catalog.",
     system: PARLAY_SYSTEM_PROMPT,
-    prompt: buildParlayPrompt(liveCase.context),
+    prompt: buildParlayProposalPrompt(liveCase.context),
     workload: "scout.betting.parlay.live-acceptance",
     sessionId: liveCase.name,
     abortSignal: AbortSignal.timeout(PARLAY_GENERATION_DEADLINE_MS),
@@ -201,7 +201,9 @@ for (const liveCase of cases) {
   if (durationMs > PARLAY_GENERATION_DEADLINE_MS) {
     throw new Error(`${liveCase.name} exceeded the 60-second deadline`);
   }
-  const serialized = JSON.stringify(parseModelGeneratedParlay(result.object));
+  const serialized = JSON.stringify(
+    parseModelGeneratedParlay(result.object, 5000),
+  );
   const roundTrip = GeneratedParlaySchema.parse(JSON.parse(serialized));
   if (roundTrip.conditions.length < 2 || roundTrip.conditions.length > 6) {
     throw new Error(`${liveCase.name} returned an invalid leg count`);

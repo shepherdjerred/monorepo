@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   ParlayGenerationContextSchema,
-  buildParlayPrompt,
+  buildParlayProposalPrompt,
 } from "#src/betting/parlay-prompt.ts";
 
 const context = ParlayGenerationContextSchema.parse({
@@ -47,8 +47,8 @@ const context = ParlayGenerationContextSchema.parse({
 
 describe("parlay prompt", () => {
   test("renders deterministically with the complete closed catalog", () => {
-    const first = buildParlayPrompt(context);
-    expect(buildParlayPrompt(context)).toBe(first);
+    const first = buildParlayProposalPrompt(context);
+    expect(buildParlayProposalPrompt(context)).toBe(first);
     expect(first).toContain('"participantNumeric"');
     expect(first).toContain('"gameEndedInEarlySurrender"');
     expect(first).toContain("Every selected tracked subject");

@@ -159,9 +159,17 @@ export function buildPlayerFrame(input: {
   column: keyof MatchLakeRow;
   operator: ParlayOperator;
   team: boolean;
+  opponent?: boolean;
 }): PlayerFrame {
-  const read = (match: ParlayHistoryMatch): number =>
-    (input.team ? match.teamValues : match.values).get(input.column) ?? 0;
+  const read = (match: ParlayHistoryMatch): number => {
+    const source =
+      input.opponent === true
+        ? match.opponentValues
+        : input.team
+          ? match.teamValues
+          : match.values;
+    return source.get(input.column) ?? 0;
+  };
 
   const byBucket: Partial<Record<DurationBucket, StatCell>> = {};
   for (const bucket of DURATION_BUCKETS) {
@@ -302,4 +310,75 @@ export async function fetchPopulationFrame(options: {
     return undefined;
   }
   return { overall, byBucket, byLaneAndBucket };
+}
+
+/**
+ * The statistics pass two chooses thresholds against, for exactly the legs pass
+ * one proposed.
+ *
+ * Only legs that take a number appear: a team-win leg has nothing to choose.
+ * Population frames are fetched only for participant fields, because the
+ * population frame aggregates participant rows — a team or opponent total is a
+ * different quantity and reporting the participant distribution beside it would
+ * invite a threshold off the wrong scale.
+ */
+export async function buildProposalStatistics(input: {
+  legs: readonly {
+    index: number;
+    subjectKey: string | null;
+    subjectPuuid: string | null;
+    column: keyof MatchLakeRow;
+    operator: ParlayOperator;
+    scope: "player" | "team" | "opponent";
+    label: string;
+  }[];
+  history: ReadonlyMap<string, readonly ParlayHistoryMatch[]>;
+  lakeDir?: string;
+  timeoutMs?: number;
+}): Promise<unknown[]> {
+  const populationCache = new Map<string, PopulationFrame | undefined>();
+  const out: unknown[] = [];
+
+  for (const leg of input.legs) {
+    const matches =
+      leg.subjectPuuid === null
+        ? []
+        : (input.history.get(leg.subjectPuuid) ?? []);
+    const player = buildPlayerFrame({
+      matches,
+      column: leg.column,
+      operator: leg.operator,
+      team: leg.scope === "team",
+      opponent: leg.scope === "opponent",
+    });
+
+    let population: PopulationFrame | undefined;
+    if (leg.scope === "player") {
+      const cacheKey = [leg.column, leg.operator].join("|");
+      if (!populationCache.has(cacheKey)) {
+        populationCache.set(
+          cacheKey,
+          await fetchPopulationFrame({
+            column: leg.column,
+            operator: leg.operator,
+            ...(input.lakeDir === undefined ? {} : { lakeDir: input.lakeDir }),
+            ...(input.timeoutMs === undefined
+              ? {}
+              : { timeoutMs: input.timeoutMs }),
+          }),
+        );
+      }
+      population = populationCache.get(cacheKey);
+    }
+
+    out.push({
+      condition: leg.index,
+      describes: leg.label,
+      subject: leg.subjectKey,
+      operator: leg.operator,
+      player,
+      ...(population === undefined ? {} : { population }),
+    });
+  }
+  return out;
 }

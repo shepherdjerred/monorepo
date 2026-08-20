@@ -11,6 +11,7 @@ import {
 import {
   generatedParlaySchemaFor,
   parseModelGeneratedParlay,
+  thresholdsMatchProposal,
 } from "#src/betting/parlay-model-schema.ts";
 import { evaluateParlay } from "#src/betting/parlay-evaluator.ts";
 import { bucksTestRoster } from "#src/testing/bucks-fixtures.ts";
@@ -33,7 +34,7 @@ describe("parlay model schema", () => {
 
     const modelParlay = ModelSchema.parse({
       version: 1,
-      yesProbabilityBps: 5000,
+      // No yesProbabilityBps: the model no longer authors the price at all.
       conditions: [
         {
           kind: "participant_numeric",
@@ -65,7 +66,7 @@ describe("parlay model schema", () => {
         },
       ],
     });
-    expect(parseModelGeneratedParlay(modelParlay)).toEqual({
+    expect(parseModelGeneratedParlay(modelParlay, 5000)).toEqual({
       version: 1,
       yesProbabilityBps: 5000,
       conditions: [
@@ -443,5 +444,93 @@ describe("opponent ping conditions", () => {
     });
     expect(result.success).toBe(false);
     expect(subjects.length).toBe(1);
+  });
+});
+
+describe("two-pass generation", () => {
+  const proposalCondition = {
+    kind: "participant_numeric" as const,
+    subject: "P1",
+    participantNumericField: "kills" as const,
+    team: null,
+    teamBooleanField: null,
+    objective: null,
+    operator: "gte" as const,
+    expected: null,
+    matchNumericField: null,
+    opponentPingField: null,
+  };
+  const filledCondition = {
+    ...proposalCondition,
+    participantBooleanField: null,
+    threshold: 7,
+  };
+  const proposal = {
+    version: 1 as const,
+    conditions: [
+      proposalCondition,
+      {
+        ...proposalCondition,
+        subject: "P1",
+        participantNumericField: "assists" as const,
+      },
+    ],
+  };
+
+  test("accepts a threshold pass that only filled in numbers", () => {
+    expect(
+      thresholdsMatchProposal(proposal, {
+        version: 1,
+        conditions: [
+          filledCondition,
+          {
+            ...filledCondition,
+            participantNumericField: "assists",
+            threshold: 9,
+          },
+        ],
+      }),
+    ).toBe(true);
+  });
+
+  test("rejects a threshold pass that re-targeted a leg", () => {
+    // Pass two is shown statistics for the legs pass one proposed. A model that
+    // also swapped the field would be choosing a number against a distribution
+    // it was never given, which is the failure the split exists to remove.
+    expect(
+      thresholdsMatchProposal(proposal, {
+        version: 1,
+        conditions: [
+          filledCondition,
+          {
+            ...filledCondition,
+            participantNumericField: "deaths",
+            threshold: 9,
+          },
+        ],
+      }),
+    ).toBe(false);
+  });
+
+  test("rejects a threshold pass that changed the operator or leg count", () => {
+    expect(
+      thresholdsMatchProposal(proposal, {
+        version: 1,
+        conditions: [
+          { ...filledCondition, operator: "lte" },
+          {
+            ...filledCondition,
+            participantNumericField: "assists",
+            threshold: 9,
+          },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      thresholdsMatchProposal(proposal, {
+        version: 1,
+        conditions: [filledCondition],
+      }),
+    ).toBe(false);
   });
 });

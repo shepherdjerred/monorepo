@@ -12,7 +12,7 @@ import { ReportQueryTimeoutError } from "#src/reports/duckdb/instance.ts";
 
 const logger = createLogger("betting-parlay-prompt");
 
-export const PARLAY_PROMPT_VERSION = "1";
+export const PARLAY_PROMPT_VERSION = "2";
 const HISTORY_TIMEOUT_MS = 1500;
 const HISTORY_LIMIT = 30;
 
@@ -193,19 +193,54 @@ export async function buildParlayGenerationContext(input: {
   });
 }
 
-export const PARLAY_SYSTEM_PROMPT = `You create one entertaining but plausible League of Legends live parlay. Return only the requested structured object. The parlay is an AND: YES wins only when every leg is true. Use only the supplied subjects and closed field catalog. Never emit paths, code, SQL, expressions, IDs, or settlement prose.`;
+export const PARLAY_SYSTEM_PROMPT = `You create one entertaining but plausible League of Legends live parlay. Return only the requested structured object. The parlay is an AND: YES wins only when every leg is true. Use only the supplied subjects and closed field catalog. Never emit paths, code, SQL, expressions, IDs, or settlement prose. You never set odds: the harness measures the price from recorded history after you choose the legs.`;
 
-export function buildParlayPrompt(context: ParlayGenerationContext): string {
+/**
+ * Pass one: choose the legs, with no numbers.
+ *
+ * Deliberately no thresholds here. Every threshold the model used to invent was
+ * a guess about a distribution it had not been shown, and the ones on fields the
+ * prompt never carried backtested as near-certainties. Choosing the shape first
+ * lets the harness fetch exactly the statistics these legs need.
+ */
+export function buildParlayProposalPrompt(
+  context: ParlayGenerationContext,
+): string {
   return [
-    "Create one fixed-odds parlay with 2-6 distinct conditions.",
+    "Choose 2-6 distinct conditions for one fixed-odds parlay. Do NOT choose any numbers yet.",
     "Every selected tracked subject must appear in at least one participant condition.",
     "Do not repeat a subject/field or team/objective target, even with another operator.",
-    "Do not combine incompatible win booleans, multiple players getting the same first kill, or first-objective true with zero objective kills.",
-    "Use only the selected team for team conditions. Keep thresholds plausible for this lobby and recent form.",
+    "Pick the operator for each condition: gte for an over, lte for an under.",
+    "Aim for a mix: some ordinary lines, some genuinely surprising ones.",
+    "Opponent ping conditions are about the ENEMY team and are a good source of the surprising kind.",
     "Every condition must include every structured slot. Fill the slots used by its kind and set every irrelevant slot to null.",
-    "Set yesProbabilityBps from 1000 through 9000. NO is the complement. Do not try to calculate bookmaker-grade odds.",
-    "A remake refunds the market even if an early-surrender or lifecycle condition would otherwise be true.",
+    "Do not combine incompatible win booleans or first-objective true with zero objective kills.",
     `Anonymous lobby and recent form:\n${JSON.stringify(context)}`,
     `Complete allowed field catalog:\n${JSON.stringify(promptFieldCatalog())}`,
+  ].join("\n\n");
+}
+
+/**
+ * Pass two: choose the numbers, against measured distributions.
+ *
+ * The statistics are expressed as "the threshold that lands N% of the time",
+ * already resolved for each leg's own operator, so the model reads the number it
+ * wants rather than inverting a percentile.
+ */
+export function buildParlayThresholdPrompt(input: {
+  context: ParlayGenerationContext;
+  proposal: unknown;
+  statistics: unknown;
+}): string {
+  return [
+    "Set a threshold for each condition below. Return the same conditions in the same order, changing only the numbers.",
+    "Do not add, remove, reorder, or re-target a condition. Do not change any field, subject, or operator.",
+    "Aim for legs that land roughly 40-70% of the time individually, so the parlay is a real bet rather than a formality.",
+    "The statistics give, for each condition, the threshold that lands a given percentage of the time, already oriented to that condition's operator.",
+    "player rows are that player's own games; population rows are every tracked player's, sliced by lane and game length. n is how many games each row rests on - prefer a row with more games when they disagree.",
+    "Conditions with no threshold slot (a team win) keep their expected value.",
+    `Conditions to fill:\n${JSON.stringify(input.proposal)}`,
+    `Measured statistics:\n${JSON.stringify(input.statistics)}`,
+    `Anonymous lobby and recent form:\n${JSON.stringify(input.context)}`,
   ].join("\n\n");
 }
