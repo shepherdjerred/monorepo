@@ -489,5 +489,5 @@ function escapeMarkdown(value: string): string {
 }
 
 function escapeTableCell(value: string): string {
-  return value.replaceAll("`", "′").replaceAll("\n", " ");
+  return value.replaceAll("`", "′").replaceAll(/[\r\n]+/g, " ");
 }

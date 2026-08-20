@@ -181,7 +181,7 @@ describe("Scout Discord visualization edge cases", () => {
       kind: "TABLE",
       series: scoutTestVisualization.series.map((series) => ({
         ...series,
-        label: "Games `\n| unsafe",
+        label: "Games `\r\n| unsafe",
       })),
     });
 
