@@ -18,10 +18,12 @@ func normalizesCodeVariants() {
     let metadata = MessageMetadata(sender: "seguridad@example.test", subject: "Código de verificación", date: nil, messageID: "message-2")
     let spaced = OTPParser().parse(body: "Código de verificación: 12 34 56", metadata: metadata)
     let dashed = OTPParser().parse(body: "Your Sicherheitscode is 98-76-54", metadata: metadata)
+    let dashedAlphaNumeric = OTPParser().parse(body: "Your verification code is ABCD-1234", metadata: metadata)
     let alphaNumeric = OTPParser().parse(body: "Your OTP is A7B9C2", metadata: metadata)
 
     #expect(spaced?.code == "123456")
     #expect(dashed?.code == "987654")
+    #expect(dashedAlphaNumeric?.code == "ABCD1234")
     #expect(alphaNumeric?.code == "A7B9C2")
     #expect(OTPParser().parse(body: "Your OTP is A7B9C2 to finish.", metadata: metadata)?.code == "A7B9C2")
 }

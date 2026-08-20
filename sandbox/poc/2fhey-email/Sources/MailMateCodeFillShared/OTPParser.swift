@@ -170,6 +170,9 @@ public struct OTPParser {
         }
         let remainder = String(rawCode[rawCode.index(after: separatorIndex)...])
         let suffix = remainder.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "-", with: "")
+        if rawCode.contains("-"), word.count == 4, word.allSatisfy(\.isUppercase), compact.count >= 4, compact.count <= 8, suffix.count >= 4, suffix.count <= 8, suffix.contains(where: \.isNumber) {
+            return (compact, range)
+        }
         guard suffix.count >= 4, suffix.count <= 8, suffix.contains(where: \.isNumber) else {
             return nil
         }
