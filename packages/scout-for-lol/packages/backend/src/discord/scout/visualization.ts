@@ -1,6 +1,7 @@
 import { AttachmentBuilder, Colors, EmbedBuilder } from "discord.js";
 import {
   formatReportDisplayValue,
+  REPORT_AI_PREVIEW_MAX_ROWS,
   REPORT_METRICS,
   type ExploreMessage,
   type ReportAiPreviewSummary,
@@ -82,7 +83,10 @@ function nativeDescription(
   preview: ReportAiPreviewSummary | null,
 ): string | null {
   if (snapshot.series.length === 0) {
-    return null;
+    const hasPreviewRows = preview !== null && preview.rows.length > 0;
+    if (!hasPreviewRows || snapshot.kind === "KPI_CARD") {
+      return "No results found.";
+    }
   }
   const description =
     snapshot.kind === "KPI_CARD"
@@ -151,10 +155,8 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
       const value = formatSeriesValue(snapshot, series, point.value);
       const sampleSize = point.evidence.sampleSize;
       const comparison =
-        point.comparisonEvidence !== undefined ||
-        point.comparisonValue !== undefined ||
-        point.absoluteDelta !== undefined ||
-        point.percentageDelta !== undefined;
+        snapshot.temporal?.comparison !== undefined ||
+        point.comparisonEvidence !== undefined;
       const details = comparison
         ? `n=${sampleSize.toString()} · Baseline: ${formatSeriesValue(
             snapshot,
@@ -179,12 +181,16 @@ function formatList(
     preview === null ? alignedRows(snapshot) : previewRows(preview);
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
+  const previewExtra =
+    preview !== null && preview.rows.length >= REPORT_AI_PREVIEW_MAX_ROWS;
   const lines = rows.map((row) => {
     const values = formatRowValues(snapshot, row, preview).join(", ");
     return `- ${escapeMarkdown(row.label)}: ${values}`;
   });
   if (extra > 0) {
     lines.push(`_…and ${extra.toString()} more_`);
+  } else if (previewExtra) {
+    lines.push("_…additional rows omitted from the stored preview_");
   }
   return lines.join("\n");
 }
@@ -197,12 +203,16 @@ function formatLeaderboard(
     preview === null ? alignedRows(snapshot) : previewRows(preview);
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
+  const previewExtra =
+    preview !== null && preview.rows.length >= REPORT_AI_PREVIEW_MAX_ROWS;
   const lines = rows.map((row, index) => {
     const values = formatRowValues(snapshot, row, preview).join(" · ");
     return `**${(index + 1).toString()}.** ${escapeMarkdown(row.label)} — ${values}`;
   });
   if (extra > 0) {
     lines.push(`_…and ${extra.toString()} more_`);
+  } else if (previewExtra) {
+    lines.push("_…additional rows omitted from the stored preview_");
   }
   return lines.join("\n");
 }
@@ -215,6 +225,8 @@ function formatTable(
     preview === null ? alignedRows(snapshot) : previewRows(preview);
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
+  const previewExtra =
+    preview !== null && preview.rows.length >= REPORT_AI_PREVIEW_MAX_ROWS;
   const headers =
     preview === null
       ? ["", ...snapshot.series.map((series) => series.label)]
@@ -245,6 +257,8 @@ function formatTable(
   ];
   if (extra > 0) {
     lines.push(`_…and ${extra.toString()} more rows_`);
+  } else if (previewExtra) {
+    lines.push("_…additional rows omitted from the stored preview_");
   }
   return lines.join("\n");
 }

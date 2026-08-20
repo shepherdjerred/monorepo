@@ -124,6 +124,19 @@ describe("Scout Discord visualizations", () => {
     expect(comparisonDescription).toContain("Baseline: 42");
     expect(comparisonDescription).toContain("Δ 14");
     expect(comparisonDescription).toContain("33.3%");
+    expect(kpiDescription).not.toContain("Baseline:");
+  });
+
+  test("renders an explicit empty state for empty native results", () => {
+    const empty = VisualizationSnapshotSchema.parse({
+      ...scoutTestVisualization,
+      series: [],
+    });
+    const payload = exploreVisualizationPayload({
+      ...answer,
+      visualization: empty,
+    });
+    expect(payload.embeds?.[0]?.data.description).toBe("No results found.");
   });
 
   test("keeps every native description within Discord's limit", () => {
