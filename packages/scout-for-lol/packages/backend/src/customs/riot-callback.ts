@@ -72,7 +72,10 @@ export async function handleCustomRiotCallback(
     const game = await prisma.customGame.findUnique({
       where: { tournamentCode: callback.shortCode },
     });
-    if (game?.nightId !== metadata.nightId || game.id !== metadata.gameId) {
+    if (game === null) {
+      return new Response("Tournament game not found", { status: 404 });
+    }
+    if (game.nightId !== metadata.nightId || game.id !== metadata.gameId) {
       return new Response("Tournament game not found", { status: 404 });
     }
     const results = await getTournamentGames(callback.shortCode);

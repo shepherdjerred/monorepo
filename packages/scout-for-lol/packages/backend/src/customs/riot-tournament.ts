@@ -82,10 +82,18 @@ async function riotRequest(
           AbortSignal.timeout(TOURNAMENT_REQUEST_TIMEOUT_MILLISECONDS),
       });
     } catch (error) {
-      throw new RiotTournamentApiError(
-        "Riot Tournament-V5 request could not be completed",
-        { cause: error },
-      );
+      if (
+        init.signal?.aborted === true ||
+        attempt >= TOURNAMENT_RETRY_ATTEMPTS
+      ) {
+        throw new RiotTournamentApiError(
+          "Riot Tournament-V5 request could not be completed",
+          { cause: error },
+        );
+      }
+      const delay = TOURNAMENT_RETRY_DELAY_MILLISECONDS * 2 ** attempt;
+      await Bun.sleep(delay);
+      continue;
     }
     let body: string;
     try {

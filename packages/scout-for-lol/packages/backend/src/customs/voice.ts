@@ -11,10 +11,7 @@ import {
   getCustomNight,
   type CustomMutationResult,
 } from "#src/customs/repository.ts";
-import {
-  hasActiveVoiceArrangementProvisioning,
-  refreshSnapshot,
-} from "#src/customs/snapshot.ts";
+import { refreshSnapshot } from "#src/customs/snapshot.ts";
 import {
   errorMessage,
   runCustomVoiceOperation,
@@ -23,6 +20,13 @@ import {
   cleanupCustomVoice as cleanupCustomVoiceOperation,
   returnCustomPlayersToLobby as returnCustomPlayersToLobbyOperation,
 } from "#src/customs/voice-cleanup.ts";
+import {
+  deleteCreatedTeamChannels,
+  deleteRecordedTeamChannels,
+  moveDraftedPlayers,
+  PartialTeamChannelsError,
+} from "#src/customs/voice-arrangement-utils.ts";
+import { claimVoiceArrangement } from "#src/customs/voice-claim.ts";
 
 type TeamChannels = {
   teamA: VoiceChannel;
@@ -33,16 +37,6 @@ type CreatedTeamChannels = {
   teamA: VoiceChannel;
   teamB?: VoiceChannel;
 };
-
-class PartialTeamChannelsError extends Error {
-  constructor(
-    readonly teamA: VoiceChannel,
-    message: string,
-  ) {
-    super(message);
-    this.name = "PartialTeamChannelsError";
-  }
-}
 
 function currentGame(snapshot: CustomNightSnapshot): CustomGameSnapshot {
   if (snapshot.currentGame === null)
@@ -63,10 +57,7 @@ async function requireVoiceChannel(
   return channel;
 }
 
-async function createTeamChannels(
-  guild: Guild,
-  lobby: VoiceChannel,
-): Promise<TeamChannels> {
+function teamChannelOptions(lobby: VoiceChannel, name: string) {
   const permissionOverwrites = lobby.permissionOverwrites.cache.map(
     (overwrite) => ({
       id: overwrite.id,
@@ -74,21 +65,30 @@ async function createTeamChannels(
       deny: overwrite.deny.bitfield,
     }),
   );
-  const teamA = await guild.channels.create({
-    name: "Customs • Team A",
+  return {
+    name,
     type: ChannelType.GuildVoice,
     parent: lobby.parentId,
     permissionOverwrites,
     reason: "Scout Customs team voice",
-  });
+  } as const;
+}
+
+async function createTeamChannel(
+  guild: Guild,
+  lobby: VoiceChannel,
+  name: string,
+): Promise<VoiceChannel> {
+  return await guild.channels.create(teamChannelOptions(lobby, name));
+}
+
+async function createTeamChannels(
+  guild: Guild,
+  lobby: VoiceChannel,
+): Promise<TeamChannels> {
+  const teamA = await createTeamChannel(guild, lobby, "Customs • Team A");
   try {
-    const teamB = await guild.channels.create({
-      name: "Customs • Team B",
-      type: ChannelType.GuildVoice,
-      parent: lobby.parentId,
-      permissionOverwrites,
-      reason: "Scout Customs team voice",
-    });
+    const teamB = await createTeamChannel(guild, lobby, "Customs • Team B");
     return { teamA, teamB };
   } catch (error) {
     throw new PartialTeamChannelsError(
@@ -96,22 +96,6 @@ async function createTeamChannels(
       `Team B voice channel creation failed: ${errorMessage(error)}`,
     );
   }
-}
-
-async function deleteCreatedTeamChannels(
-  channels: CreatedTeamChannels,
-): Promise<string[]> {
-  const failures: string[] = [];
-  for (const channel of [channels.teamA, channels.teamB].flatMap((candidate) =>
-    candidate === undefined ? [] : [candidate],
-  )) {
-    try {
-      await channel.delete("Scout Customs voice arrangement did not commit");
-    } catch (error) {
-      failures.push(`channel ${channel.id}: ${errorMessage(error)}`);
-    }
-  }
-  return failures;
 }
 
 async function createAndRecordTeamChannels(params: {
@@ -154,6 +138,17 @@ async function recordCreatedTeamChannels(params: {
   actorDiscordId: string;
   channels: TeamChannels;
 }): Promise<CustomMutationResult> {
+  return await recordTeamChannels(params);
+}
+
+async function recordTeamChannels(params: {
+  prisma: ExtendedPrismaClient;
+  snapshot: CustomNightSnapshot;
+  gameId: string;
+  claimId: string;
+  actorDiscordId: string;
+  channels: TeamChannels;
+}): Promise<CustomMutationResult> {
   return await commitClaimedVoiceArrangement({
     prisma: params.prisma,
     snapshot: params.snapshot,
@@ -172,44 +167,6 @@ async function recordCreatedTeamChannels(params: {
         teamBVoiceChannelId: params.channels.teamB.id,
       }),
   });
-}
-
-async function claimVoiceArrangement(params: {
-  prisma: ExtendedPrismaClient;
-  snapshot: CustomNightSnapshot;
-  actorDiscordId: string;
-  now: Date;
-}): Promise<CustomMutationResult & { claimId?: string }> {
-  const game = currentGame(params.snapshot);
-  if (hasActiveVoiceArrangementProvisioning(game, params.now)) {
-    return { applied: false, snapshot: params.snapshot };
-  }
-  const claimId = globalThis.crypto.randomUUID();
-  const previousClaimId = game.voiceArrangementProvisioning?.id ?? null;
-  const result = await commitCustomMutation({
-    prisma: params.prisma,
-    nightId: params.snapshot.id,
-    expectedRevision: params.snapshot.revision,
-    actorDiscordId: params.actorDiscordId,
-    action: "VOICE_ARRANGEMENT_STARTED",
-    payload: { claimId, previousClaimId },
-    update: (current) => {
-      const currentCustomGame = currentGame(current);
-      if (currentCustomGame.id !== game.id)
-        throw new Error("Custom game changed during voice arrangement");
-      return CustomNightSnapshotSchema.parse({
-        ...current,
-        currentGame: {
-          ...currentCustomGame,
-          voiceArrangementProvisioning: {
-            id: claimId,
-            startedAt: params.now.toISOString(),
-          },
-        },
-      });
-    },
-  });
-  return result.applied ? { ...result, claimId } : result;
 }
 
 async function commitClaimedVoiceArrangement(params: {
@@ -257,39 +214,140 @@ async function commitClaimedVoiceArrangement(params: {
   }
 }
 
-async function moveDraftedPlayers(params: {
-  guild: Guild;
+async function recoverPartialTeamChannels(params: {
+  prisma: ExtendedPrismaClient;
   snapshot: CustomNightSnapshot;
-  teamA: VoiceChannel;
-  teamB: VoiceChannel;
-}): Promise<string[]> {
-  const game = params.snapshot.currentGame;
-  if (game === null) throw new Error("There is no current custom game");
-  const allowedSourceIds = new Set([
-    params.snapshot.voiceLobbyChannelId,
-    params.teamA.id,
-    params.teamB.id,
-  ]);
-  const failures: string[] = [];
-  for (const participant of game.participants) {
-    if (participant.team === null)
-      throw new Error("Cannot arrange voice before teams are complete");
+  gameId: string;
+  claimId: string;
+  actorDiscordId: string;
+  guild: Guild;
+  lobby: VoiceChannel;
+  teamAChannelId: string;
+}): Promise<
+  | CustomMutationResult
+  | { snapshot: CustomNightSnapshot; channels: TeamChannels }
+> {
+  const teamA = await requireVoiceChannel(params.guild, params.teamAChannelId);
+  const teamB = await createTeamChannel(
+    params.guild,
+    params.lobby,
+    "Customs • Team B",
+  );
+  const recorded = await recordTeamChannels({
+    prisma: params.prisma,
+    snapshot: params.snapshot,
+    gameId: params.gameId,
+    claimId: params.claimId,
+    actorDiscordId: params.actorDiscordId,
+    channels: { teamA, teamB },
+  });
+  if (recorded.applied)
+    return { snapshot: recorded.snapshot, channels: { teamA, teamB } };
+  const cleanupFailures = await deleteCreatedTeamChannels({ teamA: teamB });
+  if (cleanupFailures.length > 0) {
+    throw new Error(
+      `Voice channel cleanup failed: ${cleanupFailures.join("; ")}`,
+    );
+  }
+  return recorded;
+}
+
+async function prepareTeamChannels(params: {
+  prisma: ExtendedPrismaClient;
+  snapshot: CustomNightSnapshot;
+  gameId: string;
+  claimId: string;
+  actorDiscordId: string;
+  guild: Guild;
+  lobby: VoiceChannel;
+}): Promise<
+  | CustomMutationResult
+  | {
+      snapshot: CustomNightSnapshot;
+      channels: TeamChannels;
+      createdChannels: CreatedTeamChannels | null;
+    }
+> {
+  const teamAChannelId = params.snapshot.teamAVoiceChannelId;
+  const teamBChannelId = params.snapshot.teamBVoiceChannelId;
+  if (teamAChannelId !== null && teamBChannelId === null) {
+    const recovered = await recoverPartialTeamChannels({
+      ...params,
+      teamAChannelId,
+    });
+    if (!("channels" in recovered)) return recovered;
+    return {
+      snapshot: recovered.snapshot,
+      channels: recovered.channels,
+      createdChannels: recovered.channels,
+    };
+  }
+  if (teamAChannelId !== null && teamBChannelId !== null) {
     try {
-      const member = await params.guild.members.fetch(participant.discordId);
-      if (
-        member.voice.channelId !== null &&
-        allowedSourceIds.has(member.voice.channelId)
-      ) {
-        await member.voice.setChannel(
-          participant.team === "A" ? params.teamA : params.teamB,
-          "Scout Customs team assignment",
-        );
-      }
-    } catch (error) {
-      failures.push(`${participant.displayName}: ${errorMessage(error)}`);
+      return {
+        snapshot: params.snapshot,
+        channels: {
+          teamA: await requireVoiceChannel(params.guild, teamAChannelId),
+          teamB: await requireVoiceChannel(params.guild, teamBChannelId),
+        },
+        createdChannels: null,
+      };
+    } catch {
+      await deleteRecordedTeamChannels(params.guild, [
+        teamAChannelId,
+        teamBChannelId,
+      ]);
+      const cleared = await commitClaimedVoiceArrangement({
+        prisma: params.prisma,
+        snapshot: params.snapshot,
+        gameId: params.gameId,
+        claimId: params.claimId,
+        actorDiscordId: params.actorDiscordId,
+        action: "VOICE_CHANNELS_MISSING",
+        payload: {
+          teamAVoiceChannelId: teamAChannelId,
+          teamBVoiceChannelId: teamBChannelId,
+        },
+        update: (current) =>
+          CustomNightSnapshotSchema.parse({
+            ...current,
+            teamAVoiceChannelId: null,
+            teamBVoiceChannelId: null,
+          }),
+      });
+      if (!cleared.applied) return cleared;
+      const replacement = await createAndRecordTeamChannels({
+        prisma: params.prisma,
+        snapshot: cleared.snapshot,
+        gameId: params.gameId,
+        claimId: params.claimId,
+        actorDiscordId: params.actorDiscordId,
+        guild: params.guild,
+        lobby: params.lobby,
+      });
+      if (!("channels" in replacement)) return replacement;
+      return {
+        snapshot: replacement.snapshot,
+        channels: replacement.channels,
+        createdChannels: replacement.channels,
+      };
     }
   }
-  return failures;
+  const created = await createAndRecordTeamChannels({
+    prisma: params.prisma,
+    snapshot: params.snapshot,
+    gameId: params.gameId,
+    claimId: params.claimId,
+    actorDiscordId: params.actorDiscordId,
+    guild: params.guild,
+    lobby: params.lobby,
+  });
+  if (!("channels" in created)) return created;
+  return {
+    snapshot: created.snapshot,
+    channels: created.channels,
+    createdChannels: created.channels,
+  };
 }
 
 async function arrangeCustomVoiceOperation(params: {
@@ -316,71 +374,20 @@ async function arrangeCustomVoiceOperation(params: {
   try {
     const guild = await customsDiscordClient.guilds.fetch(latest.guildId);
     const lobby = await requireVoiceChannel(guild, latest.voiceLobbyChannelId);
-    const teamAChannelId = latest.teamAVoiceChannelId;
-    const teamBChannelId = latest.teamBVoiceChannelId;
-    if ((teamAChannelId === null) !== (teamBChannelId === null)) {
-      throw new Error("Custom night has only one recorded team voice channel");
-    }
-    let channels: TeamChannels;
-    if (teamAChannelId !== null && teamBChannelId !== null) {
-      try {
-        channels = {
-          teamA: await requireVoiceChannel(guild, teamAChannelId),
-          teamB: await requireVoiceChannel(guild, teamBChannelId),
-        };
-        channelsRecorded = true;
-      } catch {
-        const cleared = await commitClaimedVoiceArrangement({
-          prisma: params.prisma,
-          snapshot: latest,
-          gameId: game.id,
-          claimId: claim.claimId,
-          actorDiscordId: params.actorDiscordId,
-          action: "VOICE_CHANNELS_MISSING",
-          payload: {
-            teamAVoiceChannelId: teamAChannelId,
-            teamBVoiceChannelId: teamBChannelId,
-          },
-          update: (current) =>
-            CustomNightSnapshotSchema.parse({
-              ...current,
-              teamAVoiceChannelId: null,
-              teamBVoiceChannelId: null,
-            }),
-        });
-        if (!cleared.applied) return cleared;
-        latest = cleared.snapshot;
-        const replacement = await createAndRecordTeamChannels({
-          prisma: params.prisma,
-          snapshot: latest,
-          gameId: game.id,
-          claimId: claim.claimId,
-          actorDiscordId: params.actorDiscordId,
-          guild,
-          lobby,
-        });
-        if (!("channels" in replacement)) return replacement;
-        channels = replacement.channels;
-        createdChannels = channels;
-        latest = replacement.snapshot;
-        channelsRecorded = true;
-      }
-    } else {
-      const created = await createAndRecordTeamChannels({
-        prisma: params.prisma,
-        snapshot: latest,
-        gameId: game.id,
-        claimId: claim.claimId,
-        actorDiscordId: params.actorDiscordId,
-        guild,
-        lobby,
-      });
-      if (!("channels" in created)) return created;
-      channels = created.channels;
-      createdChannels = channels;
-      latest = created.snapshot;
-      channelsRecorded = true;
-    }
+    const prepared = await prepareTeamChannels({
+      prisma: params.prisma,
+      snapshot: latest,
+      gameId: game.id,
+      claimId: claim.claimId,
+      actorDiscordId: params.actorDiscordId,
+      guild,
+      lobby,
+    });
+    if (!("channels" in prepared)) return prepared;
+    const channels = prepared.channels;
+    createdChannels = prepared.createdChannels;
+    latest = prepared.snapshot;
+    channelsRecorded = true;
     const failures = await moveDraftedPlayers({
       guild,
       snapshot: latest,
