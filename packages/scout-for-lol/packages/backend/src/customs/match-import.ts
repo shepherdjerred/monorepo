@@ -2,6 +2,7 @@ import {
   CustomGameSnapshotSchema,
   CustomNightSnapshotSchema,
   MatchIdSchema,
+  type MatchId,
   type RawMatch,
   type CustomGameParticipant,
   type CustomNightSnapshot,
@@ -74,6 +75,15 @@ function hasPendingPredecessor(
 ): boolean {
   if (row === null) return false;
   return row.importedAt === null && row.importError === null;
+}
+
+async function fetchMatchIfPredecessorSettled(params: {
+  fetcher: typeof fetchMatchData;
+  matchId: MatchId;
+  previousRow: { importedAt: Date | null; importError: string | null } | null;
+}): Promise<RawMatch | undefined> {
+  if (hasPendingPredecessor(params.previousRow)) return undefined;
+  return await params.fetcher(params.matchId, "AMERICA_NORTH");
 }
 
 async function importHistoricalGame(params: {
@@ -149,12 +159,12 @@ export async function importCustomMatchDetails(params: {
     },
   });
   const gameSnapshot = CustomGameSnapshotSchema.parse(JSON.parse(row.snapshot));
-  const match = await (params.fetcher ?? fetchMatchData)(
-    MatchIdSchema.parse(row.riotMatchId),
-    "AMERICA_NORTH",
-  );
-  const previousPending = hasPendingPredecessor(previousRow);
-  if (match === undefined || previousPending) return null;
+  const match = await fetchMatchIfPredecessorSettled({
+    fetcher: params.fetcher ?? fetchMatchData,
+    matchId: MatchIdSchema.parse(row.riotMatchId),
+    previousRow,
+  });
+  if (match === undefined) return null;
   if (
     gameSnapshot.tournamentCode !== null &&
     match.info.tournamentCode !== gameSnapshot.tournamentCode

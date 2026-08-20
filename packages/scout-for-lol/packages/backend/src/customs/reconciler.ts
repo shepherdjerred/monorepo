@@ -31,6 +31,7 @@ import {
 import { publishCustomSnapshot } from "#src/customs/socket.ts";
 import { createSingleFlightRunner } from "#src/customs/single-flight.ts";
 import {
+  getPendingCustomResultVoiceTargets,
   retryPendingCustomResultVoice,
   returnCustomResultPlayersToLobby,
 } from "#src/customs/result-voice.ts";
@@ -117,7 +118,15 @@ async function expireNight(
       });
     }
     try {
-      const cleanupFailures = await cleanupCustomVoice(mutation.snapshot);
+      const pendingResultVoiceTargets =
+        await getPendingCustomResultVoiceTargets(
+          database,
+          mutation.snapshot.id,
+        );
+      const cleanupFailures = await cleanupCustomVoice(
+        mutation.snapshot,
+        pendingResultVoiceTargets,
+      );
       if (cleanupFailures.length > 0)
         logger.error("Expired custom night voice cleanup failed", {
           cleanupFailures,
@@ -254,7 +263,12 @@ async function reconcileEndedVoiceCleanup(
   for (const row of endedNights) {
     const snapshot = parseCustomNightSnapshot(row.snapshot);
     try {
-      const failures = await cleanupCustomVoice(snapshot);
+      const pendingResultVoiceTargets =
+        await getPendingCustomResultVoiceTargets(database, snapshot.id);
+      const failures = await cleanupCustomVoice(
+        snapshot,
+        pendingResultVoiceTargets,
+      );
       if (failures.length > 0) {
         logger.error("Ended custom night voice cleanup failed", {
           failures,

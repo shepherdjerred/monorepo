@@ -25,6 +25,7 @@ export type CustomVoiceReturnTarget = {
 
 async function cleanupCustomVoiceOperation(
   snapshot: CustomNightSnapshot,
+  pendingResultVoiceTargets: readonly CustomVoiceReturnTarget[],
 ): Promise<string[]> {
   const guild = await customsDiscordClient.guilds.fetch(snapshot.guildId);
   const lobby = await guild.channels
@@ -41,18 +42,34 @@ async function cleanupCustomVoiceOperation(
       if (isMissingChannelError(error)) return null;
       throw error;
     });
-  const ownedIds = [
-    snapshot.teamAVoiceChannelId,
-    snapshot.teamBVoiceChannelId,
-  ].filter((channelId) => channelId !== null);
+  const ownedIds = new Set(
+    [
+      snapshot.teamAVoiceChannelId,
+      snapshot.teamBVoiceChannelId,
+      ...pendingResultVoiceTargets.flatMap((target) => [
+        target.teamAVoiceChannelId,
+        target.teamBVoiceChannelId,
+      ]),
+    ].filter((channelId) => channelId !== null),
+  );
+  const participants = new Map<
+    string,
+    { discordId: string; displayName: string }
+  >();
+  for (const participant of snapshot.currentGame?.participants ?? [])
+    participants.set(participant.discordId, participant);
+  for (const target of pendingResultVoiceTargets) {
+    for (const participant of target.currentGame?.participants ?? [])
+      participants.set(participant.discordId, participant);
+  }
   const failures: string[] = [];
-  for (const participant of snapshot.currentGame?.participants ?? []) {
+  for (const participant of participants.values()) {
     try {
       const member = await guild.members.fetch(participant.discordId);
       if (
         lobby !== null &&
         member.voice.channelId !== null &&
-        ownedIds.includes(member.voice.channelId)
+        ownedIds.has(member.voice.channelId)
       ) {
         await member.voice.setChannel(lobby, "Scout Customs night ended");
       }
@@ -76,10 +93,12 @@ async function cleanupCustomVoiceOperation(
 
 export async function cleanupCustomVoice(
   snapshot: CustomNightSnapshot,
+  pendingResultVoiceTargets: readonly CustomVoiceReturnTarget[] = [],
 ): Promise<string[]> {
   return await runCustomVoiceOperation(
     snapshot.id,
-    async () => await cleanupCustomVoiceOperation(snapshot),
+    async () =>
+      await cleanupCustomVoiceOperation(snapshot, pendingResultVoiceTargets),
   );
 }
 

@@ -77,6 +77,20 @@ export async function recordPendingVoiceReturn(
   });
 }
 
+export async function getPendingCustomResultVoiceTargets(
+  prisma: ExtendedPrismaClient,
+  nightId: string,
+): Promise<CustomVoiceReturnTarget[]> {
+  const events = await prisma.customAuditEvent.findMany({
+    where: { nightId, action: "VOICE_RESULT_RETURN_PENDING" },
+    select: { payload: true },
+  });
+  return events.map(
+    (event) =>
+      PendingResultVoicePayloadSchema.parse(JSON.parse(event.payload)).target,
+  );
+}
+
 async function markResultVoiceReturnCompleted(params: {
   prisma: ExtendedPrismaClient;
   snapshot: CustomNightSnapshot;
