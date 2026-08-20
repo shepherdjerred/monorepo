@@ -1,5 +1,8 @@
 import { ChannelType } from "discord.js";
-import type { CustomNightSnapshot } from "@scout-for-lol/data";
+import type {
+  CustomGameParticipant,
+  CustomNightSnapshot,
+} from "@scout-for-lol/data";
 import { customsDiscordClient } from "#src/customs/discord-client.ts";
 import {
   runCustomVoiceOperation,
@@ -9,6 +12,16 @@ import {
   isMissingChannelError,
   isMissingMemberError,
 } from "#src/discord/utils/permissions.ts";
+
+export type CustomVoiceReturnTarget = {
+  guildId: string;
+  voiceLobbyChannelId: string;
+  teamAVoiceChannelId: string | null;
+  teamBVoiceChannelId: string | null;
+  currentGame: {
+    participants: Pick<CustomGameParticipant, "discordId" | "displayName">[];
+  } | null;
+};
 
 async function cleanupCustomVoiceOperation(
   snapshot: CustomNightSnapshot,
@@ -71,7 +84,7 @@ export async function cleanupCustomVoice(
 }
 
 async function returnCustomPlayersToLobbyOperation(
-  snapshot: CustomNightSnapshot,
+  snapshot: CustomVoiceReturnTarget,
 ): Promise<string[]> {
   const guild = await customsDiscordClient.guilds.fetch(snapshot.guildId);
   const lobby = await guild.channels.fetch(snapshot.voiceLobbyChannelId);
@@ -95,6 +108,7 @@ async function returnCustomPlayersToLobbyOperation(
         await member.voice.setChannel(lobby, "Scout Customs intermission");
       }
     } catch (error) {
+      if (isMissingMemberError(error)) continue;
       failures.push(`${participant.displayName}: ${errorMessage(error)}`);
     }
   }
@@ -102,10 +116,11 @@ async function returnCustomPlayersToLobbyOperation(
 }
 
 export async function returnCustomPlayersToLobby(
-  snapshot: CustomNightSnapshot,
+  snapshot: CustomVoiceReturnTarget,
+  nightId: string,
 ): Promise<string[]> {
   return await runCustomVoiceOperation(
-    snapshot.id,
+    nightId,
     async () => await returnCustomPlayersToLobbyOperation(snapshot),
   );
 }
