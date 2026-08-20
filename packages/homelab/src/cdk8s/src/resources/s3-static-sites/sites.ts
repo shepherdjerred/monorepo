@@ -39,7 +39,7 @@ const customsCsp = [
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' https://cdn.discordapp.com data:",
-  "connect-src 'self' https://discord.com",
+  "connect-src 'self' https://discord.com wss://customs.scout-for-lol.com wss://customs-beta.scout-for-lol.com",
   "font-src 'self' data:",
   "object-src 'none'",
   "base-uri 'self'",
