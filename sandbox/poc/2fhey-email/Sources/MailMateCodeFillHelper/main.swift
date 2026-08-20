@@ -8,7 +8,6 @@ import MailMateCodeFillShared
 private enum HelperError: Error, CustomStringConvertible {
     case usage
     case invalidBodyEncoding
-    case invalidMessageDate
     case missingMessageID
     case inputTooLarge(Int)
 
@@ -18,8 +17,6 @@ private enum HelperError: Error, CustomStringConvertible {
             return "usage: MailMateCodeFillHelper --mailmate"
         case .invalidBodyEncoding:
             return "MailMate supplied a body that is not valid UTF-8"
-        case .invalidMessageDate:
-            return "MailMate supplied an invalid message date"
         case .missingMessageID:
             return "MailMate did not provide MM_MESSAGE_ID"
         case let .inputTooLarge(limit):
@@ -60,7 +57,7 @@ private func run() throws {
         throw HelperError.invalidBodyEncoding
     }
 
-    let messageDate = try parseDate(environment["MM_DATE"])
+    let messageDate = parseDate(environment["MM_DATE"])
     let metadata = MessageMetadata(
         sender: environment["MM_FROM"] ?? "",
         subject: environment["MM_SUBJECT"] ?? "",
@@ -139,7 +136,7 @@ private func elapsedMilliseconds(since start: Date) -> Int {
     Int(Date().timeIntervalSince(start) * 1_000)
 }
 
-private func parseDate(_ value: String?) throws -> Date? {
+private func parseDate(_ value: String?) -> Date? {
     guard let value else { return nil }
     let normalizedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !normalizedValue.isEmpty else { return nil }
@@ -159,7 +156,8 @@ private func parseDate(_ value: String?) throws -> Date? {
         }
     }
 
-    throw HelperError.invalidMessageDate
+    CodeFillObservability.helperLogger.info("event=helper_metadata outcome=invalid_date action=ignored")
+    return nil
 }
 
 do {
