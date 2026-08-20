@@ -33,6 +33,8 @@ export function describeParlayResult(result: PlaceParlayBetResult): string {
       return "💱 That position is too large for the current Bryan Bucks storage format.";
     case "insufficient":
       return `💸 You have **${result.balance.toString()} BB** but need **${result.needed.toString()} BB**.`;
+    case "wallet_house_insufficient":
+      return "🏦 The Bryan Bucks house cannot fund a new wallet right now. No Bucks moved.";
     case "house_insufficient":
       return "🏦 The Bryan Bucks house cannot fully reserve that payout. No Bucks moved.";
     case "side_conflict":

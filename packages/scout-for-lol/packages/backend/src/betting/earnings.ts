@@ -21,6 +21,7 @@ import { getFlag } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import { createLogger } from "#src/logger.ts";
+import { queryMatchById } from "#src/storage/s3-query.ts";
 
 const logger = createLogger("betting-earnings");
 
@@ -124,6 +125,11 @@ export type EarnedAward = {
   total: number;
 };
 
+type PendingEarningMatchLoader = (
+  matchId: string,
+  markerCreatedAt: Date,
+) => Promise<RawMatch | undefined>;
+
 /**
  * Award Bucks for a finished match, exactly once per (match, guild).
  *
@@ -182,6 +188,45 @@ export async function awardBucksForMatch(
   }
 
   return awards;
+}
+
+/**
+ * Retry pending match-and-guild awards after the post-match cursor has moved
+ * on. The raw match remains in the authoritative S3 store, so this pass does
+ * not depend on Riot history rediscovering an already-processed match.
+ */
+export async function retryPendingBucksEarnings(
+  prismaClient: ExtendedPrismaClient = prisma,
+  loadMatch: PendingEarningMatchLoader = queryMatchById,
+): Promise<void> {
+  const pending = await prismaClient.bucksMatchEarning.findMany({
+    where: { state: "pending" },
+    orderBy: { awardedAt: "asc" },
+    take: 50,
+    select: { matchId: true, awardedAt: true },
+  });
+  const markersByMatch = new Map<string, Date>();
+  for (const marker of pending) {
+    markersByMatch.set(marker.matchId, marker.awardedAt);
+  }
+
+  for (const [matchId, markerCreatedAt] of markersByMatch) {
+    try {
+      const match = await loadMatch(matchId, markerCreatedAt);
+      if (match === undefined) {
+        logger.warn(
+          `↩️ Could not reload pending Bryan Bucks match ${matchId} from the raw store`,
+        );
+        continue;
+      }
+      await awardBucksForMatch(match, prismaClient);
+    } catch (error) {
+      logger.error(`❌ Could not retry Bryan Bucks for ${matchId}:`, error);
+      Sentry.captureException(error, {
+        tags: { source: "betting-earnings-retry", matchId },
+      });
+    }
+  }
 }
 
 async function awardForGuild(input: {
@@ -351,7 +396,11 @@ async function awardForGuild(input: {
             serverId: input.serverId,
           },
         },
-        data: { entryCount, state: "complete" },
+        data: {
+          entryCount,
+          state: "complete",
+          awardedAt: new Date(),
+        },
       });
 
       logger.info(

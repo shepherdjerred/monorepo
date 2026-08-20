@@ -987,6 +987,8 @@ model BucksParlayBet {
 // transaction claims it as processing with its FIRST write, then completes it
 // with the earn ledger rows. A failed transaction rolls the claim back to
 // pending; the composite primary key still guards concurrent replays.
+// `awardedAt` is refreshed when the pending row completes, so it is the actual
+// award time for completed rows; while pending it is the marker creation time.
 //
 // Earnings need their own marker because, unlike settlement, they have no
 // natural per-(match, guild) row to carry the state.

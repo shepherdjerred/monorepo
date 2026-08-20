@@ -1,3 +1,4 @@
+import { retryPendingBucksEarnings } from "#src/betting/earnings.ts";
 import { checkMatchHistory } from "#src/league/tasks/postmatch/match-history-polling.ts";
 import { voidStaleBettingPools } from "#src/betting/sweep.ts";
 import { voidStaleParlayMarkets } from "#src/betting/parlay-sweep.ts";
@@ -11,6 +12,7 @@ export async function checkPostMatch() {
 
   try {
     await checkMatchHistory();
+    await retryPendingBucksEarnings();
 
     // Refund any pool whose match never produced a result. Without this,
     // staked Bucks from a lost match would be silently destroyed.

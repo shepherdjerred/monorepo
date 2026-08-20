@@ -18,6 +18,7 @@ import {
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   awardBucksForMatch,
+  retryPendingBucksEarnings,
   type EarnedAwardReason,
 } from "#src/betting/earnings.ts";
 import { computeMvp } from "#src/betting/mvp.ts";
@@ -482,8 +483,16 @@ describe("earning retry", () => {
       where: { id: house.id },
       data: { balance: HOUSE_BANKROLL },
     });
-    const awards = await awardBucksForMatch(fixture, db);
-    expect(awards[0]?.discordId).toBe("16050917270473111");
+    let loadedMatchId: string | undefined;
+    await retryPendingBucksEarnings(db, async (matchId) => {
+      loadedMatchId = matchId;
+      return fixture;
+    });
+    expect(loadedMatchId).toBe(MATCH_ID);
+    const awards = await db.bucksLedgerEntry.findMany({
+      where: { kind: { startsWith: "earn_" } },
+    });
+    expect(awards).toHaveLength(2);
 
     const completed = await db.bucksMatchEarning.findUniqueOrThrow({
       where: {

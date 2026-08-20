@@ -273,6 +273,44 @@ async function listMatchJsonKeysForPrefix(
 }
 
 /**
+ * Find one raw match by ID near the time its durable retry marker was created.
+ * Match objects are partitioned by game date, so a small surrounding window
+ * handles a midnight boundary without scanning the entire raw store.
+ */
+export async function queryMatchById(
+  matchId: string,
+  markerCreatedAt: Date,
+): Promise<RawMatch | undefined> {
+  const bucket = configuration.s3BucketName;
+  if (bucket === undefined) {
+    logger.warn(
+      "[S3Query] S3_BUCKET_NAME not configured, cannot recover a pending earning",
+    );
+    return undefined;
+  }
+
+  const day = 24 * 60 * 60 * 1000;
+  const startDate = new Date(markerCreatedAt.getTime() - day);
+  const endDate = new Date(markerCreatedAt.getTime() + day);
+  const client = createS3Client();
+
+  for (const prefix of generateDatePrefixes(startDate, endDate)) {
+    const keys = await listMatchJsonKeysForPrefix(client, bucket, prefix);
+    const matchingKeys = keys.filter((key) =>
+      key.endsWith(`/${matchId}/match.json`),
+    );
+    for (const key of matchingKeys) {
+      const match = await getMatchFromS3(client, bucket, key);
+      if (match?.metadata.matchId === matchId) {
+        return match;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+/**
  * Query matches from S3 within a date range, filtered by participant PUUIDs
  *
  * @param startDate Start of date range (inclusive)
