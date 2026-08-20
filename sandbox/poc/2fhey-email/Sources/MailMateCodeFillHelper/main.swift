@@ -57,7 +57,14 @@ private func run() throws {
         throw HelperError.invalidBodyEncoding
     }
 
-    let messageDate = parseDate(environment["MM_DATE"])
+    let rawMessageDate = environment["MM_DATE"]
+    let messageDate = parseDate(rawMessageDate)
+    if let rawMessageDate,
+       !rawMessageDate.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+       messageDate == nil {
+        CodeFillObservability.helperLogger.info("event=helper_metadata outcome=invalid_date action=rejected")
+        return
+    }
     let metadata = MessageMetadata(
         sender: environment["MM_FROM"] ?? "",
         subject: environment["MM_SUBJECT"] ?? "",
@@ -102,12 +109,10 @@ private func requestIdentityReconciliation() {
     if let bundleIdentifier = Bundle(url: appURL)?.bundleIdentifier,
        let runningApplication = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).first(where: { !$0.isTerminated }) {
         if runningApplication.isFinishedLaunching {
-            removeBrokerRequestMarker()
-            CodeFillObservability.helperLogger.info("event=identity_reconciliation outcome=already_running")
+            CodeFillObservability.helperLogger.info("event=identity_reconciliation outcome=reopen_running_app")
         } else {
             CodeFillObservability.helperLogger.info("event=identity_reconciliation outcome=launch_in_progress")
         }
-        return
     }
 
     let configuration = NSWorkspace.OpenConfiguration()
@@ -171,7 +176,13 @@ private func parseDate(_ value: String?) -> Date? {
     let formatter = DateFormatter()
     formatter.locale = Locale(identifier: "en_US_POSIX")
     formatter.timeZone = TimeZone(secondsFromGMT: 0)
-    for format in ["EEE, dd MMM yyyy HH:mm:ss Z", "yyyy-MM-dd HH:mm:ss Z"] {
+    for format in [
+        "EEE, dd MMM yyyy HH:mm:ss Z",
+        "EEE, dd MMM yyyy HH:mm Z",
+        "dd MMM yyyy HH:mm:ss Z",
+        "dd MMM yyyy HH:mm Z",
+        "yyyy-MM-dd HH:mm:ss Z"
+    ] {
         formatter.dateFormat = format
         if let date = formatter.date(from: normalizedValue) {
             return date

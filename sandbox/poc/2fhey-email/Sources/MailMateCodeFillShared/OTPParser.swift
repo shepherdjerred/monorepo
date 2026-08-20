@@ -13,9 +13,13 @@ public struct OTPParser {
     private static let explicitLabelPattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}])(code|otp|pin|passcode)(?![\\p{L}\\p{N}])"
     )
-    private static let candidateSeparatorPattern = "[ \\x{00A0}\\x{2007}\\x{202F}\\x{002D}\\x{2010}-\\x{2015}]"
+    private static let candidateDashCharacters = "\\x{002D}\\x{2010}-\\x{2015}"
+    private static let candidateSeparatorCharacters = " \\x{00A0}\\x{2007}\\x{202F}\(candidateDashCharacters)"
+    private static let candidateSpacePattern = "[ \\x{00A0}\\x{2007}\\x{202F}]"
+    private static let candidateDashPattern = "[\(candidateDashCharacters)]"
+    private static let candidateSeparatorPattern = "[\(candidateSeparatorCharacters)]"
     private static let candidatePattern = makeExpression(
-        "(?<![\\p{L}\\p{N}])([A-Za-z0-9](?:\(candidateSeparatorPattern)?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}]|\(candidateSeparatorPattern)[A-Za-z0-9]*[0-9])"
+        "(?<![\\p{L}\\p{N}\(candidateDashCharacters)])([A-Za-z0-9](?:\(candidateSeparatorPattern)?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}]|\(candidateDashPattern)[A-Za-z0-9]|\(candidateSpacePattern)[A-Za-z0-9]*[0-9])"
     )
     private static let datePattern = makeExpression(
         "(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4})(?![\\p{L}\\p{N}])"
