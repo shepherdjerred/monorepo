@@ -115,6 +115,7 @@ func rejectsKeywordSubstrings() {
     #expect(OTPParser().parse(body: "Your postcode is 4829.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "The author reference is 482913.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Your verification code is é482913.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "OTP expires in 10 minutes.", metadata: metadata) == nil)
 }
 
 @Test("derives service only from the actual mailbox")
