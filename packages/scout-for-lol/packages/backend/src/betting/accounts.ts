@@ -46,15 +46,30 @@ export async function findEligiblePlayer(
   input: { serverId: DiscordGuildId; discordId: DiscordAccountId },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<EligiblePlayer | undefined> {
-  const player = await prismaClient.player.findFirst({
+  const players = await findEligiblePlayers(input, prismaClient);
+  return players[0];
+}
+
+/**
+ * Every tracked player linked to a Discord user in one guild.
+ *
+ * The schema permits multiple links, so callers that make an eligibility
+ * decision about a particular player must inspect the complete set rather
+ * than relying on the stable lowest-id convenience result above.
+ */
+export async function findEligiblePlayers(
+  input: { serverId: DiscordGuildId; discordId: DiscordAccountId },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<EligiblePlayer[]> {
+  const players = await prismaClient.player.findMany({
     where: { serverId: input.serverId, discordId: input.discordId },
     select: { id: true, alias: true },
     orderBy: { id: "asc" },
   });
-  if (player === null) {
-    return undefined;
-  }
-  return { playerId: player.id, alias: player.alias };
+  return players.map((player) => ({
+    playerId: player.id,
+    alias: player.alias,
+  }));
 }
 
 export type BucksAccountRef = {

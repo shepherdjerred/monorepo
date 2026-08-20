@@ -8,7 +8,7 @@ import {
 } from "@scout-for-lol/data";
 import {
   ensureBucksAccount,
-  findEligiblePlayer,
+  findEligiblePlayers,
 } from "#src/betting/accounts.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
@@ -83,11 +83,11 @@ export async function placeParlayBet(
     },
   });
   if (market === null) return { kind: "no_market" };
-  const player = await findEligiblePlayer(
+  const players = await findEligiblePlayers(
     { serverId: input.serverId, discordId: input.discordId },
     prismaClient,
   );
-  if (player === undefined) return { kind: "not_eligible" };
+  if (players.length === 0) return { kind: "not_eligible" };
   const generationContext = z
     .object({ opponentTrackedAliases: z.array(z.string()).optional() })
     .catchall(z.unknown())
@@ -95,7 +95,11 @@ export async function placeParlayBet(
   const opponentTrackedAliases = generationContext.success
     ? generationContext.data.opponentTrackedAliases
     : undefined;
-  if (opponentTrackedAliases?.includes(player.alias) === true) {
+  if (
+    players.some(
+      (player) => opponentTrackedAliases?.includes(player.alias) === true,
+    )
+  ) {
     return { kind: "not_eligible" };
   }
   const account = await ensureBucksAccount(

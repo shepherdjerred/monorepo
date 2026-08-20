@@ -103,19 +103,34 @@ function cellFromValues(
   operator: ParlayOperator,
 ): StatCell {
   const sorted = [...values].sort((left, right) => left - right);
-  const candidates = [...new Set(sorted)];
+  const candidates: {
+    threshold: number;
+    gteCount: number;
+    lteCount: number;
+  }[] = [];
+  let start = 0;
+  for (let end = 1; end <= sorted.length; end += 1) {
+    if (end < sorted.length && sorted[end] === sorted[start]) {
+      continue;
+    }
+    candidates.push({
+      threshold: sorted[start] ?? 0,
+      gteCount: sorted.length - start,
+      lteCount: end,
+    });
+    start = end;
+  }
   const thresholdAndRate = (rate: HitRate): readonly [number, number] => {
     const target = rate / 100;
-    let best: readonly [number, number] = [candidates[0] ?? 0, 0];
-    for (const threshold of candidates) {
-      const realized =
-        sorted.filter((value) =>
-          operator === "gte" ? value >= threshold : value <= threshold,
-        ).length / sorted.length;
+    let best: readonly [number, number] = [candidates[0]?.threshold ?? 0, 0];
+    for (const candidate of candidates) {
+      const count =
+        operator === "gte" ? candidate.gteCount : candidate.lteCount;
+      const realized = sorted.length === 0 ? 0 : count / sorted.length;
       const bestDistance = Math.abs(best[1] - target);
       const distance = Math.abs(realized - target);
       if (distance < bestDistance) {
-        best = [threshold, realized];
+        best = [candidate.threshold, realized];
       }
     }
     return best;

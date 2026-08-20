@@ -1,6 +1,7 @@
 import { mkdir, readdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import configuration from "#src/configuration.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 
 /**
  * Report-lake directory layout and the atomic CURRENT-pointer publish
@@ -39,10 +40,16 @@ export function resolveLakeDir(): string {
   // write-up in trpc/auth-web.test.ts); in real runs env-var's .default()
   // guarantees a string.
   const configured: unknown = configuration.reportLakeDir;
-  if (typeof configured === "string") {
-    return configured;
-  }
-  return Bun.env["REPORT_LAKE_DIR"] ?? "./report-lake";
+  const baseDir =
+    typeof configured === "string"
+      ? configured
+      : (Bun.env["REPORT_LAKE_DIR"] ?? "./report-lake");
+  // The schema is part of the storage namespace, not only a manifest check.
+  // During a rolling deployment, an old worker can still publish after a new
+  // worker rebuilds. Old code writes to the unnamespaced base directory while
+  // this binary reads and writes only its fingerprinted directory, so those
+  // workers cannot mix parquet files into the live lake.
+  return path.join(baseDir, `schema-${lakeSchemaFingerprint()}`);
 }
 
 let buildCounter = 0;

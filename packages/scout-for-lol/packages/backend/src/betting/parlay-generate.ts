@@ -31,7 +31,11 @@ import {
   thresholdsMatchProposal,
 } from "#src/betting/parlay-model-schema.ts";
 import { fetchParlayHistory } from "#src/betting/parlay-history.ts";
-import { priceParlay, type ParlayPrice } from "#src/betting/parlay-pricing.ts";
+import {
+  MIN_PRICING_GAMES,
+  priceParlay,
+  type ParlayPrice,
+} from "#src/betting/parlay-pricing.ts";
 import {
   buildProposalStatistics,
   statLegsForProposal,
@@ -271,6 +275,16 @@ async function generateAndPersistDefinition(
     excludeMatchId: setup.matchId,
     queue: setup.queueType,
   });
+  if (
+    setup.subjects.some(
+      (subject) =>
+        (history.get(subject.puuid) ?? []).length < MIN_PRICING_GAMES,
+    )
+  ) {
+    throw new ParlayUnpriceableError(
+      "history does not contain enough settled games for every subject",
+    );
+  }
   const legs = statLegsForProposal(proposal, setup.subjects);
   if (legs.length === 0) {
     throw new ParlayUnpriceableError("no proposed leg could be measured");
@@ -417,7 +431,8 @@ export async function runParlayGeneration(
     const expected =
       status === "budget_refused" ||
       status === "timeout" ||
-      status === "invalid_output";
+      status === "invalid_output" ||
+      status === "unpriceable";
     if (expected) {
       logger.info(
         `Could not generate Bryan Bucks parlay for ${matchId}:`,
