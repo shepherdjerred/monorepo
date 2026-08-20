@@ -60,6 +60,23 @@ import SwiftUI
   )
 }
 
+#Preview("Weekly pacing") {
+  OverviewPreview(
+    states: PreviewData.states([
+      .claudeCode: .available(
+        PreviewData.snapshot(.claudeCode, remaining: 20, resetsInDays: 3)
+      ),
+      .codex: .available(
+        PreviewData.snapshot(.codex, remaining: 60, resetsInDays: 3)
+      ),
+      .kimi: .available(
+        PreviewData.snapshot(.kimi, remaining: 49, resetsInDays: 3)
+      ),
+      .grok: .disabled,
+    ])
+  )
+}
+
 #Preview("Dark appearance") {
   OverviewPreview(
     states: PreviewData.states([
@@ -109,6 +126,16 @@ private enum PreviewData {
     UsageSnapshot(
       provider: provider,
       windows: [window(label: "Weekly", remaining: remaining)],
+      sourceTimestamp: now
+    )
+  }
+
+  static func snapshot(_ provider: ProviderID, remaining: Double, resetsInDays: Double)
+    -> UsageSnapshot
+  {
+    UsageSnapshot(
+      provider: provider,
+      windows: [window(label: "Weekly", remaining: remaining, resetsInDays: resetsInDays)],
       sourceTimestamp: now
     )
   }
@@ -232,7 +259,8 @@ private enum PreviewData {
   private static func window(
     label: String,
     remaining: Double?,
-    kind: WindowKind = .weekly
+    kind: WindowKind = .weekly,
+    resetsInDays: Double = 1
   ) -> UsageWindow {
     do {
       return try UsageWindow.validated(
@@ -240,7 +268,7 @@ private enum PreviewData {
         label: label,
         kind: kind,
         usedPercent: remaining.map { 100 - $0 },
-        resetAt: kind == .entitlement ? nil : now.addingTimeInterval(86_400),
+        resetAt: kind == .entitlement ? nil : now.addingTimeInterval(resetsInDays * 86_400),
         sourceTimestamp: now
       )
     } catch {
