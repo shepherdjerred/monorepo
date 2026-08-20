@@ -30,6 +30,16 @@ for (const theme of themes) {
           );
         }
       });
+      page.on("response", (response) => {
+        if (
+          response.status() >= 400 &&
+          response.url().startsWith(new URL(routeUrl(route)).origin)
+        ) {
+          browserErrors.push(
+            `${response.status().toString()} ${response.url()}`,
+          );
+        }
+      });
 
       await page.addInitScript((preference) => {
         localStorage.setItem(
