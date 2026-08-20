@@ -171,6 +171,15 @@
       ],
       "project": ["src/**/*.{ts,tsx,astro}", "*.ts"]
     },
+    "packages/scout-for-lol/packages/docs-site": {
+      "entry": [
+        "astro.config.ts",
+        "src/**/*.astro",
+        "src/**/*.tsx",
+        "public/**/*.js"
+      ],
+      "project": ["src/**/*.{ts,tsx,astro}", "*.ts", "public/**/*.js"]
+    },
     "packages/scout-for-lol/packages/app": {
       "entry": [
         "src/main.tsx",

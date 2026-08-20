@@ -1,6 +1,5 @@
 import path from "node:path";
 import { adoptSeedIfUnseeded, resolveBackendLakeDir } from "./dev-lake-seed.ts";
-import { seedDesignAuditDatabase } from "../packages/backend/src/database/design-audit-seed.ts";
 import { requireCliValue, unresolvedSecrets } from "./migration-core.ts";
 
 const DEFAULT_BACKEND_PORT = 3000;
@@ -275,7 +274,37 @@ if (import.meta.main) {
       );
     }
     if (isDesignAuditBoot) {
-      await seedDesignAuditDatabase(backendCwd);
+      const generate = Bun.spawn(
+        ["bun", "x", "--no-install", "prisma", "generate"],
+        {
+          cwd: backendCwd,
+          env: environment,
+          stdin: "inherit",
+          stdout: "inherit",
+          stderr: "inherit",
+        },
+      );
+      const generateExitCode = await generate.exited;
+      if (generateExitCode !== 0) {
+        throw new Error(
+          `Prisma client generation failed with exit code ${generateExitCode.toString()}`,
+        );
+      }
+    }
+    if (isDesignAuditBoot) {
+      const seed = Bun.spawn(["bun", "scripts/seed-design-audit.ts"], {
+        cwd: backendCwd,
+        env: environment,
+        stdin: "inherit",
+        stdout: "inherit",
+        stderr: "inherit",
+      });
+      const seedExitCode = await seed.exited;
+      if (seedExitCode !== 0) {
+        throw new Error(
+          `Design-audit database seeding failed with exit code ${seedExitCode.toString()}`,
+        );
+      }
     }
 
     const backendCommand = options.backendWatchEnabled
