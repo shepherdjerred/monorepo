@@ -343,6 +343,9 @@ export async function anonymizeCustomParticipant(params: {
           data: {
             snapshot: JSON.stringify(gameSnapshot),
             matchSnapshot: gameIncludesTarget ? null : game.matchSnapshot,
+            importError: gameIncludesTarget
+              ? "Match import disabled after participant anonymization"
+              : game.importError,
           },
         });
         await transaction.customGameParticipant.deleteMany({
