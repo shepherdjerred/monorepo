@@ -15,14 +15,34 @@ import {
   hasActiveVoiceArrangementProvisioning,
   refreshSnapshot,
 } from "#src/customs/snapshot.ts";
-import { createKeyedSerialExecutor } from "#src/customs/keyed-serial.ts";
+import {
+  errorMessage,
+  runCustomVoiceOperation,
+} from "#src/customs/voice-utils.ts";
+import {
+  cleanupCustomVoice as cleanupCustomVoiceOperation,
+  returnCustomPlayersToLobby as returnCustomPlayersToLobbyOperation,
+} from "#src/customs/voice-cleanup.ts";
 
 type TeamChannels = {
   teamA: VoiceChannel;
   teamB: VoiceChannel;
 };
 
-const runCustomVoiceOperation = createKeyedSerialExecutor();
+type CreatedTeamChannels = {
+  teamA: VoiceChannel;
+  teamB?: VoiceChannel;
+};
+
+class PartialTeamChannelsError extends Error {
+  constructor(
+    readonly teamA: VoiceChannel,
+    message: string,
+  ) {
+    super(message);
+    this.name = "PartialTeamChannelsError";
+  }
+}
 
 function currentGame(snapshot: CustomNightSnapshot): CustomGameSnapshot {
   if (snapshot.currentGame === null)
@@ -71,21 +91,20 @@ async function createTeamChannels(
     });
     return { teamA, teamB };
   } catch (error) {
-    await teamA.delete("Scout Customs team channel creation did not complete");
-    throw error;
+    throw new PartialTeamChannelsError(
+      teamA,
+      `Team B voice channel creation failed: ${errorMessage(error)}`,
+    );
   }
 }
 
-function errorMessage(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
-  return message.length === 0 ? "Unknown Discord voice error" : message;
-}
-
 async function deleteCreatedTeamChannels(
-  channels: TeamChannels,
+  channels: CreatedTeamChannels,
 ): Promise<string[]> {
   const failures: string[] = [];
-  for (const channel of [channels.teamA, channels.teamB]) {
+  for (const channel of [channels.teamA, channels.teamB].flatMap((candidate) =>
+    candidate === undefined ? [] : [candidate],
+  )) {
     try {
       await channel.delete("Scout Customs voice arrangement did not commit");
     } catch (error) {
@@ -93,6 +112,66 @@ async function deleteCreatedTeamChannels(
     }
   }
   return failures;
+}
+
+async function createAndRecordTeamChannels(params: {
+  prisma: ExtendedPrismaClient;
+  snapshot: CustomNightSnapshot;
+  gameId: string;
+  claimId: string;
+  actorDiscordId: string;
+  guild: Guild;
+  lobby: VoiceChannel;
+}): Promise<
+  | CustomMutationResult
+  | { snapshot: CustomNightSnapshot; channels: TeamChannels }
+> {
+  const channels = await createTeamChannels(params.guild, params.lobby);
+  const recorded = await recordCreatedTeamChannels({
+    prisma: params.prisma,
+    snapshot: params.snapshot,
+    gameId: params.gameId,
+    claimId: params.claimId,
+    actorDiscordId: params.actorDiscordId,
+    channels,
+  });
+  if (!recorded.applied) {
+    const cleanupFailures = await deleteCreatedTeamChannels(channels);
+    if (cleanupFailures.length > 0)
+      throw new Error(
+        `Voice channel cleanup failed: ${cleanupFailures.join("; ")}`,
+      );
+    return recorded;
+  }
+  return { snapshot: recorded.snapshot, channels };
+}
+
+async function recordCreatedTeamChannels(params: {
+  prisma: ExtendedPrismaClient;
+  snapshot: CustomNightSnapshot;
+  gameId: string;
+  claimId: string;
+  actorDiscordId: string;
+  channels: TeamChannels;
+}): Promise<CustomMutationResult> {
+  return await commitClaimedVoiceArrangement({
+    prisma: params.prisma,
+    snapshot: params.snapshot,
+    gameId: params.gameId,
+    claimId: params.claimId,
+    actorDiscordId: params.actorDiscordId,
+    action: "VOICE_CHANNELS_CREATED",
+    payload: {
+      teamAVoiceChannelId: params.channels.teamA.id,
+      teamBVoiceChannelId: params.channels.teamB.id,
+    },
+    update: (current) =>
+      CustomNightSnapshotSchema.parse({
+        ...current,
+        teamAVoiceChannelId: params.channels.teamA.id,
+        teamBVoiceChannelId: params.channels.teamB.id,
+      }),
+  });
 }
 
 async function claimVoiceArrangement(params: {
@@ -232,7 +311,7 @@ async function arrangeCustomVoiceOperation(params: {
   if (!claim.applied || claim.claimId === undefined) return claim;
   const game = currentGame(claim.snapshot);
   let latest = claim.snapshot;
-  let createdChannels: TeamChannels | null = null;
+  let createdChannels: CreatedTeamChannels | null = null;
   let channelsRecorded = false;
   try {
     const guild = await customsDiscordClient.guilds.fetch(latest.guildId);
@@ -244,42 +323,62 @@ async function arrangeCustomVoiceOperation(params: {
     }
     let channels: TeamChannels;
     if (teamAChannelId !== null && teamBChannelId !== null) {
-      channels = {
-        teamA: await requireVoiceChannel(guild, teamAChannelId),
-        teamB: await requireVoiceChannel(guild, teamBChannelId),
-      };
-      channelsRecorded = true;
+      try {
+        channels = {
+          teamA: await requireVoiceChannel(guild, teamAChannelId),
+          teamB: await requireVoiceChannel(guild, teamBChannelId),
+        };
+        channelsRecorded = true;
+      } catch {
+        const cleared = await commitClaimedVoiceArrangement({
+          prisma: params.prisma,
+          snapshot: latest,
+          gameId: game.id,
+          claimId: claim.claimId,
+          actorDiscordId: params.actorDiscordId,
+          action: "VOICE_CHANNELS_MISSING",
+          payload: {
+            teamAVoiceChannelId: teamAChannelId,
+            teamBVoiceChannelId: teamBChannelId,
+          },
+          update: (current) =>
+            CustomNightSnapshotSchema.parse({
+              ...current,
+              teamAVoiceChannelId: null,
+              teamBVoiceChannelId: null,
+            }),
+        });
+        if (!cleared.applied) return cleared;
+        latest = cleared.snapshot;
+        const replacement = await createAndRecordTeamChannels({
+          prisma: params.prisma,
+          snapshot: latest,
+          gameId: game.id,
+          claimId: claim.claimId,
+          actorDiscordId: params.actorDiscordId,
+          guild,
+          lobby,
+        });
+        if (!("channels" in replacement)) return replacement;
+        channels = replacement.channels;
+        createdChannels = channels;
+        latest = replacement.snapshot;
+        channelsRecorded = true;
+      }
     } else {
-      channels = await createTeamChannels(guild, lobby);
-      createdChannels = channels;
-      const recorded = await commitClaimedVoiceArrangement({
+      const created = await createAndRecordTeamChannels({
         prisma: params.prisma,
         snapshot: latest,
         gameId: game.id,
         claimId: claim.claimId,
         actorDiscordId: params.actorDiscordId,
-        action: "VOICE_CHANNELS_CREATED",
-        payload: {
-          teamAVoiceChannelId: channels.teamA.id,
-          teamBVoiceChannelId: channels.teamB.id,
-        },
-        update: (current) =>
-          CustomNightSnapshotSchema.parse({
-            ...current,
-            teamAVoiceChannelId: channels.teamA.id,
-            teamBVoiceChannelId: channels.teamB.id,
-          }),
+        guild,
+        lobby,
       });
-      if (!recorded.applied) {
-        const cleanupFailures = await deleteCreatedTeamChannels(channels);
-        if (cleanupFailures.length > 0) {
-          throw new Error(
-            `Voice arrangement claim was lost; cleanup failed: ${cleanupFailures.join("; ")}`,
-          );
-        }
-        return recorded;
-      }
-      latest = recorded.snapshot;
+      if (!("channels" in created)) return created;
+      channels = created.channels;
+      createdChannels = channels;
+      latest = created.snapshot;
       channelsRecorded = true;
     }
     const failures = await moveDraftedPlayers({
@@ -315,6 +414,30 @@ async function arrangeCustomVoiceOperation(params: {
         ),
     });
   } catch (error) {
+    if (error instanceof PartialTeamChannelsError) {
+      const recorded = await commitClaimedVoiceArrangement({
+        prisma: params.prisma,
+        snapshot: latest,
+        gameId: game.id,
+        claimId: claim.claimId,
+        actorDiscordId: params.actorDiscordId,
+        action: "VOICE_CHANNEL_CREATED",
+        payload: {
+          teamAVoiceChannelId: error.teamA.id,
+          teamBVoiceChannelId: null,
+        },
+        update: (current) =>
+          CustomNightSnapshotSchema.parse({
+            ...current,
+            teamAVoiceChannelId: error.teamA.id,
+            teamBVoiceChannelId: null,
+          }),
+      });
+      if (recorded.applied) {
+        latest = recorded.snapshot;
+        channelsRecorded = true;
+      }
+    }
     const cleanupFailures =
       createdChannels === null || channelsRecorded
         ? []
@@ -356,89 +479,14 @@ export async function arrangeCustomVoice(
   );
 }
 
-async function cleanupCustomVoiceOperation(
-  snapshot: CustomNightSnapshot,
-): Promise<string[]> {
-  const guild = await customsDiscordClient.guilds.fetch(snapshot.guildId);
-  let lobby: VoiceChannel | null = null;
-  const failures: string[] = [];
-  try {
-    lobby = await requireVoiceChannel(guild, snapshot.voiceLobbyChannelId);
-  } catch (error) {
-    failures.push(
-      `lobby ${snapshot.voiceLobbyChannelId}: ${errorMessage(error)}`,
-    );
-  }
-  const ownedIds = [
-    snapshot.teamAVoiceChannelId,
-    snapshot.teamBVoiceChannelId,
-  ].filter((channelId) => channelId !== null);
-  for (const participant of snapshot.currentGame?.participants ?? []) {
-    try {
-      const member = await guild.members.fetch(participant.discordId);
-      if (
-        lobby !== null &&
-        member.voice.channelId !== null &&
-        ownedIds.includes(member.voice.channelId)
-      ) {
-        await member.voice.setChannel(lobby, "Scout Customs night ended");
-      }
-    } catch (error) {
-      failures.push(`${participant.displayName}: ${errorMessage(error)}`);
-    }
-  }
-  for (const channelId of ownedIds) {
-    try {
-      const channel = await guild.channels.fetch(channelId);
-      if (channel !== null) await channel.delete("Scout Customs night ended");
-    } catch (error) {
-      failures.push(`channel ${channelId}: ${errorMessage(error)}`);
-    }
-  }
-  return failures;
-}
-
 export async function cleanupCustomVoice(
   snapshot: CustomNightSnapshot,
 ): Promise<string[]> {
-  return await runCustomVoiceOperation(
-    snapshot.id,
-    async () => await cleanupCustomVoiceOperation(snapshot),
-  );
-}
-
-async function returnCustomPlayersToLobbyOperation(
-  snapshot: CustomNightSnapshot,
-): Promise<string[]> {
-  const guild = await customsDiscordClient.guilds.fetch(snapshot.guildId);
-  const lobby = await requireVoiceChannel(guild, snapshot.voiceLobbyChannelId);
-  const ownedIds = new Set(
-    [snapshot.teamAVoiceChannelId, snapshot.teamBVoiceChannelId].filter(
-      (channelId) => channelId !== null,
-    ),
-  );
-  const failures: string[] = [];
-  for (const participant of snapshot.currentGame?.participants ?? []) {
-    try {
-      const member = await guild.members.fetch(participant.discordId);
-      if (
-        member.voice.channelId !== null &&
-        ownedIds.has(member.voice.channelId)
-      ) {
-        await member.voice.setChannel(lobby, "Scout Customs intermission");
-      }
-    } catch (error) {
-      failures.push(`${participant.displayName}: ${errorMessage(error)}`);
-    }
-  }
-  return failures;
+  return await cleanupCustomVoiceOperation(snapshot);
 }
 
 export async function returnCustomPlayersToLobby(
   snapshot: CustomNightSnapshot,
 ): Promise<string[]> {
-  return await runCustomVoiceOperation(
-    snapshot.id,
-    async () => await returnCustomPlayersToLobbyOperation(snapshot),
-  );
+  return await returnCustomPlayersToLobbyOperation(snapshot);
 }

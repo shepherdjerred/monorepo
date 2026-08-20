@@ -22,6 +22,7 @@ import {
   hasActiveTournamentCodeProvisioning,
   hasActiveVoiceArrangementProvisioning,
   markOverdueAway,
+  parseCustomNightSnapshot,
   shouldExpireCustomNight,
 } from "#src/customs/snapshot.ts";
 import { publishCustomSnapshot } from "#src/customs/socket.ts";
@@ -226,6 +227,55 @@ async function pollResult(
   }
 }
 
+async function reconcileEndedVoiceCleanup(
+  database: ExtendedPrismaClient,
+): Promise<void> {
+  const endedNights = await database.customNight.findMany({
+    where: {
+      state: "ENDED",
+      OR: [
+        { teamAVoiceChannelId: { not: null } },
+        { teamBVoiceChannelId: { not: null } },
+      ],
+    },
+    select: { snapshot: true },
+  });
+  for (const row of endedNights) {
+    const snapshot = parseCustomNightSnapshot(row.snapshot);
+    try {
+      const failures = await cleanupCustomVoice(snapshot);
+      if (failures.length > 0) {
+        logger.error("Ended custom night voice cleanup failed", {
+          failures,
+          nightId: snapshot.id,
+        });
+        continue;
+      }
+      const mutation = await commitCustomMutation({
+        prisma: database,
+        nightId: snapshot.id,
+        expectedRevision: snapshot.revision,
+        actorDiscordId: "SCOUT",
+        action: "VOICE_CLEANUP_COMPLETED",
+        payload: {},
+        allowEnded: true,
+        update: (current) =>
+          CustomNightSnapshotSchema.parse({
+            ...current,
+            teamAVoiceChannelId: null,
+            teamBVoiceChannelId: null,
+          }),
+      });
+      if (mutation.applied) publishCustomSnapshot(mutation.snapshot);
+    } catch (error) {
+      logger.error("Ended custom night voice cleanup failed", {
+        error,
+        nightId: snapshot.id,
+      });
+    }
+  }
+}
+
 export async function retryPendingCustomImports(
   database: ExtendedPrismaClient,
   importGame: typeof importCustomMatchDetails = importCustomMatchDetails,
@@ -294,6 +344,25 @@ export async function reconcileCustomNights(
       });
     }
   }
+  const unresolvedNights = await database.customGame.findMany({
+    where: {
+      state: { in: ["LOBBY_READY", "RESULT_PENDING", "MANUAL"] },
+      tournamentCode: { not: null },
+    },
+    select: { nightId: true },
+    distinct: ["nightId"],
+  });
+  for (const { nightId } of unresolvedNights) {
+    try {
+      await pollResult(database, nightId);
+    } catch (error) {
+      logger.error("Ended custom night result polling failed", {
+        error,
+        nightId,
+      });
+    }
+  }
+  await reconcileEndedVoiceCleanup(database);
   await retryPendingCustomImports(database);
 }
 

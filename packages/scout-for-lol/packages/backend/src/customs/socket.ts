@@ -25,6 +25,23 @@ const expiryTimers = new WeakMap<
   ReturnType<typeof globalThis.setTimeout>
 >();
 
+function isAllowedActivityOrigin(
+  origin: string | null,
+  configuredOrigin: string,
+): boolean {
+  if (origin === configuredOrigin) return true;
+  if (origin === null) return false;
+  try {
+    const parsed = new URL(origin);
+    return (
+      parsed.protocol === "https:" &&
+      parsed.hostname.endsWith(".discordsays.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
 function removeCustomSocket(
   socket: Bun.ServerWebSocket<CustomSocketData>,
 ): void {
@@ -53,7 +70,7 @@ export async function upgradeCustomSocket(
   const activityOrigin = configuration.customs?.activityOrigin;
   if (activityOrigin === undefined)
     return new Response("Scout Customs is unavailable", { status: 503 });
-  if (request.headers.get("Origin") !== activityOrigin)
+  if (!isAllowedActivityOrigin(request.headers.get("Origin"), activityOrigin))
     return new Response("Forbidden Activity origin", { status: 403 });
   const token = activityTokenFromProtocols(request);
   if (token === null)

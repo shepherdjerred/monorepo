@@ -79,6 +79,12 @@ export function StartNight() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <p className="text-sm leading-relaxed">
+            Starting this night records your consent to store your selected
+            League account, teams, captain status, champion, and result for this
+            server&apos;s private Customs history. Scout does not produce MMR,
+            Elo, rankings, or skill-based balancing.
+          </p>
           {voiceChannels.isPending ? (
             <Skeleton className="h-8 w-full" />
           ) : (

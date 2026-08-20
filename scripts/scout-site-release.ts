@@ -28,6 +28,7 @@ import {
   readScoutStateByInput,
   SCOUT_RELEASE_WORK_DIR,
 } from "./lib/scout-site-storage.ts";
+import { activityClientId } from "./lib/scout-activity-client.ts";
 
 const SITE_PACKAGE_DIR = "packages/scout-for-lol";
 const DIST_DIR = "packages/scout-for-lol/packages/frontend/dist";
@@ -38,10 +39,6 @@ const BETA_PIXEL_PLACEHOLDERS: Readonly<Record<string, string>> = {
   PUBLIC_PINTEREST_TAG_ID: "beta-placeholder-pinterest-tag-id",
   PUBLIC_REDDIT_PIXEL_ID: "beta-placeholder-reddit-pixel-id",
 };
-// Customs rolls out independently of the shared Scout site. Until each
-// dedicated Discord application is provisioned, the Activity treats this
-// sentinel as disabled while ordinary Scout releases continue unchanged.
-const DISABLED_ACTIVITY_CLIENT_ID = "000000000000000000";
 const ANALYTICS_REGISTRY_PATH = "config/analytics-sites.json";
 const AnalyticsRegistrySchema = z
   .object({
@@ -257,12 +254,7 @@ async function buildSite(
     VITE_GIT_SHA: sourceCommit,
     PUBLIC_GIT_SHA: sourceCommit,
     VITE_CONTRACT_HASH: await contractHash(),
-    VITE_DISCORD_CLIENT_ID:
-      optionalEnv(
-        flavor === "prod"
-          ? "SCOUT_CUSTOMS_PROD_DISCORD_CLIENT_ID"
-          : "SCOUT_CUSTOMS_BETA_DISCORD_CLIENT_ID",
-      ) ?? DISABLED_ACTIVITY_CLIENT_ID,
+    VITE_DISCORD_CLIENT_ID: activityClientId(flavor, dryRun),
     VITE_POSTHOG_PROJECT_TOKEN: posthogSite.projectToken,
     VITE_POSTHOG_API_HOST: posthogSite.apiHost,
     VITE_POSTHOG_ASSET_HOST: posthogSite.assetHost,
@@ -330,12 +322,8 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
     contractHash: await contractHash(),
     pinterestTagId: requireEnv("PUBLIC_PINTEREST_TAG_ID"),
     redditPixelId: requireEnv("PUBLIC_REDDIT_PIXEL_ID"),
-    customsProdClientId:
-      optionalEnv("SCOUT_CUSTOMS_PROD_DISCORD_CLIENT_ID") ??
-      DISABLED_ACTIVITY_CLIENT_ID,
-    customsBetaClientId:
-      optionalEnv("SCOUT_CUSTOMS_BETA_DISCORD_CLIENT_ID") ??
-      DISABLED_ACTIVITY_CLIENT_ID,
+    customsProdClientId: activityClientId("prod", dryRun),
+    customsBetaClientId: activityClientId("beta", dryRun),
   });
   const provisional = ScoutReleaseStateSchema.parse({
     schema: "scout-release-state/v1",

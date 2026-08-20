@@ -155,7 +155,9 @@ Discord or Tournament setup cannot accept a game night:
 The stage-specific Scout 1Password items are the source for these values.
 Kubernetes projection remains deliberately unwired until an operator provisions
 the complete beta or production field set; the deployment must then add all
-references as required secrets in one change, never optional references.
+references as required secrets in one change, never optional references. Real
+site builds fail when the stage-specific Activity client ID is missing; only
+explicit dry runs use the disabled sentinel.
 Buildkite reads `SCOUT_CUSTOMS_BETA_DISCORD_CLIENT_ID` and
 `SCOUT_CUSTOMS_PROD_DISCORD_CLIENT_ID` from its 1Password-backed environment and
 bakes the public application id into each lockstep Activity artifact. The fixed

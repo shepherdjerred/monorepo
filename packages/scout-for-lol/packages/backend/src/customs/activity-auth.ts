@@ -50,7 +50,7 @@ const RawDiscordActivityInstanceSchema = z.object({
     guild_id: z.string().min(1),
     channel_id: z.string().min(1),
   }),
-  users: z.array(z.string().min(1)),
+  users: z.array(z.object({ id: z.string().min(1) })),
 });
 
 function customsConfiguration(): CustomsConfiguration {
@@ -181,7 +181,7 @@ async function validateLiveInstance(params: {
     instance.instance_id !== params.instanceId ||
     instance.location.guild_id !== params.guildId ||
     instance.location.channel_id !== params.channelId ||
-    !instance.users.includes(params.discordId)
+    !instance.users.some((user) => user.id === params.discordId)
   ) {
     throw new CustomAuthHttpError(
       401,
