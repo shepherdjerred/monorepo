@@ -467,6 +467,7 @@ export const OPPONENT_PING_CATALOG = z
 
 export function promptFieldCatalog(
   participantNumericFields: readonly ParticipantNumericField[] = ParticipantNumericFieldSchema.options,
+  teamObjectives: readonly TeamObjective[] = TeamObjectiveSchema.options,
 ): object {
   return {
     participantNumeric: Object.fromEntries(
@@ -477,7 +478,12 @@ export function promptFieldCatalog(
     ),
     participantBoolean: PARTICIPANT_BOOLEAN_CATALOG,
     teamBoolean: TEAM_BOOLEAN_CATALOG,
-    teamObjectives: TEAM_OBJECTIVE_CATALOG,
+    teamObjectives: Object.fromEntries(
+      teamObjectives.map((objective) => [
+        objective,
+        TEAM_OBJECTIVE_CATALOG[objective],
+      ]),
+    ),
     matchNumeric: MATCH_NUMERIC_CATALOG,
     opponentPings: OPPONENT_PING_CATALOG,
   };
