@@ -151,7 +151,7 @@ public struct OTPParser {
         let remainder = String(rawCode[rawCode.index(after: separatorIndex)...])
         let suffix = remainder.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "-", with: "")
         guard suffix.count >= 4, suffix.count <= 8, suffix.contains(where: \.isNumber) else {
-            return (compact, range)
+            return nil
         }
         let offset = String(rawCode[rawCode.startIndex...separatorIndex]).utf16.count
         return (suffix, NSRange(location: range.location + offset, length: remainder.utf16.count))
