@@ -245,7 +245,6 @@ const server = Bun.serve({
     return response;
   },
   websocket: customSocketHandlers,
-  websocket: customSocketHandlers,
   error(error) {
     logger.error("❌ HTTP server error:", error);
     Sentry.captureException(error, { tags: { source: "http-server" } });
