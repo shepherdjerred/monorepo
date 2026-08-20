@@ -50,8 +50,8 @@ export function RosterCorrections({
       return;
     }
     try {
-      applySnapshot(
-        await substitute.mutateAsync({
+      await applySnapshot(() =>
+        substitute.mutateAsync({
           nightId: snapshot.id,
           expectedRevision: snapshot.revision,
           outgoingDiscordId,

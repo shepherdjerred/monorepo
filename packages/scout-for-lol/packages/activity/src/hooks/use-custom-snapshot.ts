@@ -10,17 +10,29 @@ export type SnapshotResult = {
   applied?: boolean;
 };
 
+type SnapshotMutation = () => Promise<SnapshotResult>;
+
 export function useApplyCustomSnapshot() {
   const queryClient = useQueryClient();
   const trpc = useTRPC();
   return useCallback(
-    (result: SnapshotResult) => {
+    async (mutation: SnapshotMutation): Promise<void> => {
+      const queryKey = trpc.customs.active.queryKey();
+      const currentAtRequest =
+        queryClient.getQueryData<CustomNightSnapshot | null>(queryKey);
+      const result = await mutation();
       if (result.applied === false) {
         toast.error("The night changed before that action was applied.");
       }
       queryClient.setQueryData<CustomNightSnapshot | null>(
-        trpc.customs.active.queryKey(),
-        (current) => newestCustomSnapshot(current, result.snapshot),
+        queryKey,
+        (current) =>
+          newestCustomSnapshot(
+            current,
+            result.snapshot,
+            currentAtRequest,
+            currentAtRequest === undefined,
+          ),
       );
     },
     [queryClient, trpc.customs.active],

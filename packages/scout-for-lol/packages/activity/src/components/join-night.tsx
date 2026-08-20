@@ -26,8 +26,8 @@ export function JoinNight({ snapshot }: { snapshot: CustomNightSnapshot }) {
   const join = useMutation(trpc.customs.join.mutationOptions());
   const submit = async () => {
     try {
-      applySnapshot(
-        await join.mutateAsync({
+      await applySnapshot(() =>
+        join.mutateAsync({
           nightId: snapshot.id,
           expectedRevision: snapshot.revision,
         }),

@@ -23,9 +23,11 @@ export function ManagePlayers({
   const applySnapshot = useApplyCustomSnapshot();
   const held = useMutation(trpc.customs.setHeld.mutationOptions());
   const cohost = useMutation(trpc.customs.setCohost.mutationOptions());
-  const run = async (operation: Promise<{ snapshot: CustomNightSnapshot }>) => {
+  const run = async (
+    operation: () => Promise<{ snapshot: CustomNightSnapshot }>,
+  ) => {
     try {
-      applySnapshot(await operation);
+      await applySnapshot(operation);
     } catch (error) {
       toast.error(mutationErrorText(error));
     }
@@ -57,7 +59,7 @@ export function ManagePlayers({
                     size="sm"
                     variant="outline"
                     onClick={() =>
-                      void run(
+                      void run(() =>
                         held.mutateAsync({
                           ...revision,
                           discordId: participant.discordId,
@@ -74,7 +76,7 @@ export function ManagePlayers({
                         size="sm"
                         variant="outline"
                         onClick={() =>
-                          void run(
+                          void run(() =>
                             cohost.mutateAsync({
                               ...revision,
                               discordId: participant.discordId,

@@ -86,9 +86,11 @@ function IntermissionPanel({
   const continueNight = useMutation(
     trpc.customs.continueNight.mutationOptions(),
   );
-  const run = async (operation: Promise<{ snapshot: CustomNightSnapshot }>) => {
+  const run = async (
+    operation: () => Promise<{ snapshot: CustomNightSnapshot }>,
+  ) => {
     try {
-      applySnapshot(await operation);
+      await applySnapshot(operation);
     } catch (error) {
       toast.error(mutationErrorText(error));
     }
@@ -116,7 +118,7 @@ function IntermissionPanel({
             variant="outline"
             disabled={!hostControl || continueNight.isPending}
             onClick={() =>
-              void run(
+              void run(() =>
                 continueNight.mutateAsync({
                   nightId: snapshot.id,
                   expectedRevision: snapshot.revision,
@@ -154,9 +156,11 @@ function ActiveGamePanel({
   );
   const start = useMutation(trpc.customs.startGame.mutationOptions());
   const result = useMutation(trpc.customs.manualResult.mutationOptions());
-  const run = async (operation: Promise<{ snapshot: CustomNightSnapshot }>) => {
+  const run = async (
+    operation: () => Promise<{ snapshot: CustomNightSnapshot }>,
+  ) => {
     try {
-      applySnapshot(await operation);
+      await applySnapshot(operation);
     } catch (error) {
       toast.error(mutationErrorText(error));
     }
@@ -188,7 +192,7 @@ function ActiveGamePanel({
           <Button
             className="w-full"
             disabled={!hostControl || captains.isPending}
-            onClick={() => void run(captains.mutateAsync(revision))}
+            onClick={() => void run(() => captains.mutateAsync(revision))}
           >
             Select random captains and sides
           </Button>
@@ -207,7 +211,7 @@ function ActiveGamePanel({
               className="mt-3"
               variant="outline"
               disabled={!hostControl}
-              onClick={() => void run(retryCode.mutateAsync(revision))}
+              onClick={() => void run(() => retryCode.mutateAsync(revision))}
             >
               Retry Tournament code
             </Button>
@@ -246,14 +250,18 @@ function ActiveGamePanel({
                 <Button
                   variant="outline"
                   disabled={!hostControl}
-                  onClick={() => void run(retryVoice.mutateAsync(revision))}
+                  onClick={() =>
+                    void run(() => retryVoice.mutateAsync(revision))
+                  }
                 >
                   <Volume2Icon /> Retry voice
                 </Button>
                 <Button
                   variant="outline"
                   disabled={!hostControl}
-                  onClick={() => void run(overrideVoice.mutateAsync(revision))}
+                  onClick={() =>
+                    void run(() => overrideVoice.mutateAsync(revision))
+                  }
                 >
                   Continue after arranging manually
                 </Button>
@@ -265,7 +273,7 @@ function ActiveGamePanel({
           <Button
             className="w-full"
             disabled={!hostControl || (!game.voiceReady && !game.voiceOverride)}
-            onClick={() => void run(start.mutateAsync(revision))}
+            onClick={() => void run(() => start.mutateAsync(revision))}
           >
             Mark game started
           </Button>
@@ -277,7 +285,9 @@ function ActiveGamePanel({
               <Button
                 variant="outline"
                 onClick={() =>
-                  void run(result.mutateAsync({ ...revision, winner: "A" }))
+                  void run(() =>
+                    result.mutateAsync({ ...revision, winner: "A" }),
+                  )
                 }
               >
                 Team A won
@@ -285,7 +295,9 @@ function ActiveGamePanel({
               <Button
                 variant="outline"
                 onClick={() =>
-                  void run(result.mutateAsync({ ...revision, winner: "B" }))
+                  void run(() =>
+                    result.mutateAsync({ ...revision, winner: "B" }),
+                  )
                 }
               >
                 Team B won
@@ -315,9 +327,11 @@ function DraftSection({
   const pick = useMutation(trpc.customs.pick.mutationOptions());
   const undo = useMutation(trpc.customs.undoPick.mutationOptions());
   const lock = useMutation(trpc.customs.lockTeams.mutationOptions());
-  const run = async (operation: Promise<{ snapshot: CustomNightSnapshot }>) => {
+  const run = async (
+    operation: () => Promise<{ snapshot: CustomNightSnapshot }>,
+  ) => {
     try {
-      applySnapshot(await operation);
+      await applySnapshot(operation);
     } catch (error) {
       toast.error(mutationErrorText(error));
     }
@@ -368,7 +382,7 @@ function DraftSection({
                 participant={participant}
                 canPick={canPick && !pick.isPending}
                 onPick={() =>
-                  void run(
+                  void run(() =>
                     pick.mutateAsync({
                       ...revision,
                       discordId: participant.discordId,
@@ -384,9 +398,9 @@ function DraftSection({
         snapshot={snapshot}
         hostControl={hostControl}
         teamsComplete={teamsComplete}
-        onUndo={() => void run(undo.mutateAsync(revision))}
-        onReroll={() => void run(rerollCaptains.mutateAsync(revision))}
-        onLock={() => void run(lock.mutateAsync(revision))}
+        onUndo={() => void run(() => undo.mutateAsync(revision))}
+        onReroll={() => void run(() => rerollCaptains.mutateAsync(revision))}
+        onLock={() => void run(() => lock.mutateAsync(revision))}
       />
     </>
   );

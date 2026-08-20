@@ -63,10 +63,10 @@ export function AvailabilityPanel({
   const away = useMutation(trpc.customs.setAway.mutationOptions());
   const account = useMutation(trpc.customs.selectAccount.mutationOptions());
   const mutate = async (
-    operation: Promise<{ snapshot: CustomNightSnapshot }>,
+    operation: () => Promise<{ snapshot: CustomNightSnapshot }>,
   ) => {
     try {
-      applySnapshot(await operation);
+      await applySnapshot(operation);
     } catch (error) {
       toast.error(mutationErrorText(error));
     }
@@ -74,7 +74,7 @@ export function AvailabilityPanel({
   const setAvailability = (next: string) => {
     const parsed = CustomAvailabilitySchema.safeParse(next);
     if (!parsed.success || parsed.data === participant.availability) return;
-    void mutate(
+    void mutate(() =>
       availability.mutateAsync({
         nightId: snapshot.id,
         expectedRevision: snapshot.revision,
@@ -83,7 +83,7 @@ export function AvailabilityPanel({
     );
   };
   const setAway = (minutes: number | null) => {
-    void mutate(
+    void mutate(() =>
       away.mutateAsync({
         nightId: snapshot.id,
         expectedRevision: snapshot.revision,
@@ -157,7 +157,7 @@ export function AvailabilityPanel({
             <Select
               value={participant.selectedAccountId?.toString() ?? ""}
               onValueChange={(accountId) => {
-                void mutate(
+                void mutate(() =>
                   account.mutateAsync({
                     nightId: snapshot.id,
                     expectedRevision: snapshot.revision,

@@ -58,8 +58,7 @@ export function StartNight() {
       return;
     }
     try {
-      const result = await create.mutateAsync(parsed.data);
-      applySnapshot(result);
+      await applySnapshot(() => create.mutateAsync(parsed.data));
     } catch (error) {
       toast.error(mutationErrorText(error));
     }

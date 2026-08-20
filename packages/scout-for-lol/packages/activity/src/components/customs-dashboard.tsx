@@ -69,8 +69,8 @@ export function CustomsDashboard({
     capabilities.data?.discordAdministrator === true;
   const endNight = async () => {
     try {
-      applySnapshot(
-        await end.mutateAsync({
+      await applySnapshot(() =>
+        end.mutateAsync({
           nightId: snapshot.id,
           expectedRevision: snapshot.revision,
         }),

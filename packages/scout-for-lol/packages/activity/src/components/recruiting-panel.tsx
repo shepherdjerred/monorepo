@@ -83,8 +83,8 @@ export function RecruitingPanel({
   };
   const submit = async () => {
     try {
-      applySnapshot(
-        await prepare.mutateAsync({
+      await applySnapshot(() =>
+        prepare.mutateAsync({
           nightId: snapshot.id,
           expectedRevision: snapshot.revision,
           rosterMode,
