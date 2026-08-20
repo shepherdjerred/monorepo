@@ -19,11 +19,15 @@ func normalizesCodeVariants() {
     let spaced = OTPParser().parse(body: "Código de verificación: 12 34 56", metadata: metadata)
     let dashed = OTPParser().parse(body: "Your Sicherheitscode is 98-76-54", metadata: metadata)
     let dashedAlphaNumeric = OTPParser().parse(body: "Your verification code is ABCD-1234", metadata: metadata)
+    let shortDashedAlphaNumeric = OTPParser().parse(body: "Code AB-1234", metadata: metadata)
+    let lowercaseDashedAlphaNumeric = OTPParser().parse(body: "Code abc-1234", metadata: metadata)
     let alphaNumeric = OTPParser().parse(body: "Your OTP is A7B9C2", metadata: metadata)
 
     #expect(spaced?.code == "123456")
     #expect(dashed?.code == "987654")
     #expect(dashedAlphaNumeric?.code == "ABCD1234")
+    #expect(shortDashedAlphaNumeric?.code == "AB1234")
+    #expect(lowercaseDashedAlphaNumeric?.code == "abc1234")
     #expect(alphaNumeric?.code == "A7B9C2")
     #expect(OTPParser().parse(body: "Your OTP is A7B9C2 to finish.", metadata: metadata)?.code == "A7B9C2")
 }
@@ -40,6 +44,21 @@ func keepsExplicitCodeNearDeviceWord() {
     let metadata = MessageMetadata(sender: "Acme <security@acme.example>", subject: "Sign in", date: nil, messageID: "message-device-word")
 
     #expect(OTPParser().parse(body: "Code 482913 on phone", metadata: metadata)?.code == "482913")
+    #expect(OTPParser().parse(body: "Code 482913 for your order", metadata: metadata)?.code == "482913")
+}
+
+@Test("uses subject context and code")
+func parsesSubjectOnlyCode() {
+    let metadata = MessageMetadata(sender: "security@example.test", subject: "Your verification code is 482913", date: nil, messageID: "message-subject-code")
+
+    #expect(OTPParser().parse(body: "", metadata: metadata)?.code == "482913")
+}
+
+@Test("does not persist a bare sender mailbox as a label")
+func omitsBareSenderMailboxLabel() {
+    let metadata = MessageMetadata(sender: "security@example.test", subject: "Sign in", date: nil, messageID: "message-bare-sender")
+
+    #expect(OTPParser().parse(body: "Your verification code is 482913.", metadata: metadata)?.sender == "")
 }
 
 @Test("rejects ordinary dates, phone numbers, URLs, and unrelated IDs")

@@ -14,7 +14,7 @@ public struct OTPParser {
         "(?i)(?<![\\p{L}\\p{N}])(code|otp|pin|passcode)(?![\\p{L}\\p{N}])"
     )
     private static let candidatePattern = makeExpression(
-        "(?<![\\p{L}\\p{N}])([A-Za-z0-9](?:[ -]?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}])"
+        "(?<![\\p{L}\\p{N}])([A-Za-z0-9](?:[ -]?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}]|-[A-Za-z0-9])"
     )
     private static let datePattern = makeExpression(
         "(?<![\\p{L}\\p{N}])(?:\\d{4}[-/](?:0?[1-9]|1[0-2])[-/](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4})(?![\\p{L}\\p{N}])"
@@ -38,9 +38,10 @@ public struct OTPParser {
         guard recordDetectedAt.addingTimeInterval(lifetime) > detectedAt else {
             return nil
         }
+        let message = metadata.subject + "\n" + body
         let sanitizedBody = Self.urlPattern.stringByReplacingMatches(
-            in: body,
-            range: NSRange(body.startIndex..., in: body),
+            in: message,
+            range: NSRange(message.startIndex..., in: message),
             withTemplate: " "
         )
         let keywordRanges = Self.keywordPattern.matches(
@@ -59,16 +60,16 @@ public struct OTPParser {
                 return nil
             }
             let rawCode = String(sanitizedBody[codeRange])
+            let explicitLabel = explicitLabelRanges.contains { labelRange in
+                NSMaxRange(labelRange.range) <= match.range.location &&
+                    match.range.location - NSMaxRange(labelRange.range) <= 28
+            }
             guard let normalized = Self.normalizeCandidate(rawCode: rawCode, range: match.range) else {
                 return nil
             }
             let code = normalized.code
             guard code.count >= 4, code.count <= 8, code.rangeOfCharacter(from: .decimalDigits) != nil else {
                 return nil
-            }
-            let explicitLabel = explicitLabelRanges.contains { labelRange in
-                NSMaxRange(labelRange.range) <= match.range.location &&
-                    match.range.location - NSMaxRange(labelRange.range) <= 28
             }
             guard !Self.isFalsePositive(body: sanitizedBody, range: normalized.range, hasExplicitLabel: explicitLabel) else {
                 return nil
@@ -108,12 +109,7 @@ public struct OTPParser {
         let context = (bodyNSString.substring(with: beforeRange) + bodyNSString.substring(with: NSRange(location: afterStart, length: afterLength))).lowercased()
         guard !Self.overlapsEmailAddress(body: body, range: range) else { return true }
         let falsePositiveWords = ["phone", "tel", "date", "order", "invoice", "amount", "price", "year", "http", "www", "reference", "ticket"]
-        let deviceWords = ["phone", "tel"]
-        let hasDeviceWord = deviceWords.contains(where: context.contains)
-        guard !(hasDeviceWord && !hasExplicitLabel) else { return true }
-        guard !falsePositiveWords.contains(where: { word in
-            word != "phone" && word != "tel" && context.contains(word)
-        }) else { return true }
+        if !hasExplicitLabel, falsePositiveWords.contains(where: context.contains) { return true }
         if Self.datePattern.matches(in: body, range: NSRange(body.startIndex..., in: body)).contains(where: { NSIntersectionRange($0.range, range).length > 0 }) {
             return true
         }
@@ -134,6 +130,11 @@ public struct OTPParser {
         let compact = rawCode.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "-", with: "")
         guard compact.count >= 4 else { return nil }
         if compact.allSatisfy(\.isNumber) {
+            return (compact, range)
+        }
+        let firstSeparator = rawCode.firstIndex(where: { $0 == " " || $0 == "-" })
+        if rawCode.contains("-"), let firstSeparator, rawCode[firstSeparator] == "-", compact.count <= 8,
+           compact.contains(where: \.isLetter), compact.contains(where: \.isNumber) {
             return (compact, range)
         }
 
@@ -170,9 +171,6 @@ public struct OTPParser {
         }
         let remainder = String(rawCode[rawCode.index(after: separatorIndex)...])
         let suffix = remainder.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "-", with: "")
-        if rawCode.contains("-"), word.count == 4, word.allSatisfy(\.isUppercase), compact.count >= 4, compact.count <= 8, suffix.count >= 4, suffix.count <= 8, suffix.contains(where: \.isNumber) {
-            return (compact, range)
-        }
         guard suffix.count >= 4, suffix.count <= 8, suffix.contains(where: \.isNumber) else {
             return nil
         }
@@ -207,6 +205,9 @@ public struct OTPParser {
         let trimmed = sender.trimmingCharacters(in: .whitespacesAndNewlines)
         if let bracket = trimmed.firstIndex(of: "<") {
             return String(trimmed[..<bracket]).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if Self.senderMailboxPattern.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)) != nil {
+            return ""
         }
         return trimmed
     }
