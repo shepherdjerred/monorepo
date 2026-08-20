@@ -7,7 +7,6 @@ import {
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { customsDiscordClient } from "#src/customs/discord-client.ts";
 import {
-  commitCustomMutation,
   getCustomNight,
   type CustomMutationResult,
 } from "#src/customs/repository.ts";
@@ -17,16 +16,16 @@ import {
   runCustomVoiceOperation,
 } from "#src/customs/voice-utils.ts";
 import {
-  cleanupCustomVoice as cleanupCustomVoiceOperation,
-  returnCustomPlayersToLobby as returnCustomPlayersToLobbyOperation,
-} from "#src/customs/voice-cleanup.ts";
-import {
   deleteCreatedTeamChannels,
   deleteRecordedTeamChannels,
   moveDraftedPlayers,
   PartialTeamChannelsError,
 } from "#src/customs/voice-arrangement-utils.ts";
-import { claimVoiceArrangement } from "#src/customs/voice-claim.ts";
+import {
+  claimVoiceArrangement,
+  clearClaimedTeamChannels,
+  commitClaimedVoiceArrangement,
+} from "#src/customs/voice-claim.ts";
 import { isMissingChannelError } from "#src/discord/utils/permissions.ts";
 type TeamChannels = {
   teamA: VoiceChannel;
@@ -111,7 +110,7 @@ async function createAndRecordTeamChannels(params: {
   | { snapshot: CustomNightSnapshot; channels: TeamChannels }
 > {
   const channels = await createTeamChannels(params.guild, params.lobby);
-  const recorded = await recordCreatedTeamChannels({
+  const recorded = await recordTeamChannels({
     prisma: params.prisma,
     snapshot: params.snapshot,
     gameId: params.gameId,
@@ -128,17 +127,6 @@ async function createAndRecordTeamChannels(params: {
     return recorded;
   }
   return { snapshot: recorded.snapshot, channels };
-}
-
-async function recordCreatedTeamChannels(params: {
-  prisma: ExtendedPrismaClient;
-  snapshot: CustomNightSnapshot;
-  gameId: string;
-  claimId: string;
-  actorDiscordId: string;
-  channels: TeamChannels;
-}): Promise<CustomMutationResult> {
-  return await recordTeamChannels(params);
 }
 
 async function recordTeamChannels(params: {
@@ -169,51 +157,6 @@ async function recordTeamChannels(params: {
   });
 }
 
-async function commitClaimedVoiceArrangement(params: {
-  prisma: ExtendedPrismaClient;
-  snapshot: CustomNightSnapshot;
-  gameId: string;
-  claimId: string;
-  actorDiscordId: string;
-  action: string;
-  payload: unknown;
-  update: (
-    snapshot: CustomNightSnapshot,
-    game: CustomGameSnapshot,
-  ) => CustomNightSnapshot;
-}): Promise<CustomMutationResult> {
-  let latest = params.snapshot;
-  for (;;) {
-    const game = currentGame(latest);
-    if (
-      game.id !== params.gameId ||
-      game.voiceArrangementProvisioning?.id !== params.claimId
-    ) {
-      return { applied: false, snapshot: latest };
-    }
-    const result = await commitCustomMutation({
-      prisma: params.prisma,
-      nightId: latest.id,
-      expectedRevision: latest.revision,
-      actorDiscordId: params.actorDiscordId,
-      action: params.action,
-      payload: params.payload,
-      update: (current) => {
-        const currentCustomGame = currentGame(current);
-        if (
-          currentCustomGame.id !== params.gameId ||
-          currentCustomGame.voiceArrangementProvisioning?.id !== params.claimId
-        ) {
-          throw new Error("Voice arrangement claim changed");
-        }
-        return params.update(current, currentCustomGame);
-      },
-    });
-    if (result.applied) return result;
-    latest = result.snapshot;
-  }
-}
-
 async function recoverPartialTeamChannels(params: {
   prisma: ExtendedPrismaClient;
   snapshot: CustomNightSnapshot;
@@ -227,7 +170,29 @@ async function recoverPartialTeamChannels(params: {
   | CustomMutationResult
   | { snapshot: CustomNightSnapshot; channels: TeamChannels }
 > {
-  const teamA = await requireVoiceChannel(params.guild, params.teamAChannelId);
+  let teamA: VoiceChannel;
+  try {
+    teamA = await requireVoiceChannel(params.guild, params.teamAChannelId);
+  } catch (error) {
+    if (!isMissingChannelError(error)) throw error;
+    const cleared = await clearClaimedTeamChannels({
+      ...params,
+      teamAVoiceChannelId: params.teamAChannelId,
+      teamBVoiceChannelId: null,
+    });
+    if (!cleared.applied) return cleared;
+    const replacement = await createAndRecordTeamChannels({
+      prisma: params.prisma,
+      snapshot: cleared.snapshot,
+      gameId: params.gameId,
+      claimId: params.claimId,
+      actorDiscordId: params.actorDiscordId,
+      guild: params.guild,
+      lobby: params.lobby,
+    });
+    if (!("channels" in replacement)) return replacement;
+    return replacement;
+  }
   const teamB = await createTeamChannel(
     params.guild,
     params.lobby,
@@ -298,23 +263,10 @@ async function prepareTeamChannels(params: {
         teamAChannelId,
         teamBChannelId,
       ]);
-      const cleared = await commitClaimedVoiceArrangement({
-        prisma: params.prisma,
-        snapshot: params.snapshot,
-        gameId: params.gameId,
-        claimId: params.claimId,
-        actorDiscordId: params.actorDiscordId,
-        action: "VOICE_CHANNELS_MISSING",
-        payload: {
-          teamAVoiceChannelId: teamAChannelId,
-          teamBVoiceChannelId: teamBChannelId,
-        },
-        update: (current) =>
-          CustomNightSnapshotSchema.parse({
-            ...current,
-            teamAVoiceChannelId: null,
-            teamBVoiceChannelId: null,
-          }),
+      const cleared = await clearClaimedTeamChannels({
+        ...params,
+        teamAVoiceChannelId: teamAChannelId,
+        teamBVoiceChannelId: teamBChannelId,
       });
       if (!cleared.applied) return cleared;
       const replacement = await createAndRecordTeamChannels({
@@ -485,16 +437,4 @@ export async function arrangeCustomVoice(
     params.nightId,
     async () => await arrangeCustomVoiceOperation(params),
   );
-}
-
-export async function cleanupCustomVoice(
-  snapshot: CustomNightSnapshot,
-): Promise<string[]> {
-  return await cleanupCustomVoiceOperation(snapshot);
-}
-
-export async function returnCustomPlayersToLobby(
-  snapshot: CustomNightSnapshot,
-): Promise<string[]> {
-  return await returnCustomPlayersToLobbyOperation(snapshot);
 }

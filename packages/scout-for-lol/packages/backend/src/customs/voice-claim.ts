@@ -1,5 +1,6 @@
 import {
   CustomNightSnapshotSchema,
+  type CustomGameSnapshot,
   type CustomNightSnapshot,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
@@ -13,6 +14,76 @@ function currentGame(snapshot: CustomNightSnapshot) {
   if (snapshot.currentGame === null)
     throw new Error("There is no current custom game");
   return snapshot.currentGame;
+}
+
+export async function commitClaimedVoiceArrangement(params: {
+  prisma: ExtendedPrismaClient;
+  snapshot: CustomNightSnapshot;
+  gameId: string;
+  claimId: string;
+  actorDiscordId: string;
+  action: string;
+  payload: unknown;
+  update: (
+    snapshot: CustomNightSnapshot,
+    game: CustomGameSnapshot,
+  ) => CustomNightSnapshot;
+}): Promise<CustomMutationResult> {
+  let latest = params.snapshot;
+  for (;;) {
+    const game = currentGame(latest);
+    if (
+      game.id !== params.gameId ||
+      game.voiceArrangementProvisioning?.id !== params.claimId
+    ) {
+      return { applied: false, snapshot: latest };
+    }
+    const result = await commitCustomMutation({
+      prisma: params.prisma,
+      nightId: latest.id,
+      expectedRevision: latest.revision,
+      actorDiscordId: params.actorDiscordId,
+      action: params.action,
+      payload: params.payload,
+      update: (current) => {
+        const currentCustomGame = currentGame(current);
+        if (
+          currentCustomGame.id !== params.gameId ||
+          currentCustomGame.voiceArrangementProvisioning?.id !== params.claimId
+        ) {
+          throw new Error("Voice arrangement claim changed");
+        }
+        return params.update(current, currentCustomGame);
+      },
+    });
+    if (result.applied) return result;
+    latest = result.snapshot;
+  }
+}
+
+export async function clearClaimedTeamChannels(params: {
+  prisma: ExtendedPrismaClient;
+  snapshot: CustomNightSnapshot;
+  gameId: string;
+  claimId: string;
+  actorDiscordId: string;
+  teamAVoiceChannelId: string;
+  teamBVoiceChannelId: string | null;
+}): Promise<CustomMutationResult> {
+  return await commitClaimedVoiceArrangement({
+    ...params,
+    action: "VOICE_CHANNELS_MISSING",
+    payload: {
+      teamAVoiceChannelId: params.teamAVoiceChannelId,
+      teamBVoiceChannelId: params.teamBVoiceChannelId,
+    },
+    update: (current) =>
+      CustomNightSnapshotSchema.parse({
+        ...current,
+        teamAVoiceChannelId: null,
+        teamBVoiceChannelId: null,
+      }),
+  });
 }
 
 export async function claimVoiceArrangement(params: {

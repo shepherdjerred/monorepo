@@ -48,7 +48,8 @@ import {
 } from "#src/customs/repository.ts";
 import { publishCustomSnapshot } from "#src/customs/socket.ts";
 import { createLogger } from "#src/logger.ts";
-import { arrangeCustomVoice, cleanupCustomVoice } from "#src/customs/voice.ts";
+import { arrangeCustomVoice } from "#src/customs/voice.ts";
+import { cleanupCustomVoice } from "#src/customs/voice-cleanup.ts";
 import { provisionCustomTournamentCode } from "#src/customs/riot-results.ts";
 import { returnCustomResultPlayersToLobby } from "#src/customs/result-voice.ts";
 import {

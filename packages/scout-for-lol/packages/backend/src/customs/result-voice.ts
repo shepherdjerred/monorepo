@@ -1,5 +1,5 @@
 import type { CustomNightSnapshot } from "@scout-for-lol/data";
-import { returnCustomPlayersToLobby } from "#src/customs/voice.ts";
+import { returnCustomPlayersToLobby } from "#src/customs/voice-cleanup.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("customs-result-voice");

@@ -159,16 +159,11 @@ export async function importCustomMatchDetails(params: {
       },
     },
   });
-  if (
-    previousRow !== null &&
-    previousRow.importedAt === null &&
-    previousRow.importError === null
-  )
-    return null;
+  const previousSnapshot = previousRow?.snapshot;
   const previousParticipants =
-    previousRow === null
+    previousSnapshot === undefined || previousRow?.importedAt === null
       ? []
-      : CustomGameSnapshotSchema.parse(JSON.parse(previousRow.snapshot))
+      : CustomGameSnapshotSchema.parse(JSON.parse(previousSnapshot))
           .participants;
   const warnings = repeatWarnings(participants, previousParticipants);
   const night = await getCustomNight(params.prisma, row.nightId);
