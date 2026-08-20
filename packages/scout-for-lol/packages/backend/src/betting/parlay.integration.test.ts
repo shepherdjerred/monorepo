@@ -58,7 +58,7 @@ function firstParticipant() {
 }
 const PARTICIPANT = firstParticipant();
 
-function criteria(yes: boolean) {
+function criteria(yes: boolean, opponentPings = false) {
   return {
     version: 1,
     yesProbabilityBps: 5000,
@@ -76,6 +76,16 @@ function criteria(yes: boolean) {
         field: "win",
         expected: yes ? PARTICIPANT.win : !PARTICIPANT.win,
       },
+      ...(opponentPings
+        ? [
+            {
+              kind: "opponent_team_pings",
+              field: "allInPings",
+              operator: "gte",
+              threshold: 1,
+            },
+          ]
+        : []),
     ],
   };
 }
@@ -88,6 +98,7 @@ async function clearAll(): Promise<void> {
   await db.bucksBet.deleteMany();
   await db.bucksMatchPool.deleteMany();
   await db.bucksAccount.deleteMany();
+  await db.account.deleteMany();
   await db.player.deleteMany();
 }
 
@@ -95,6 +106,7 @@ async function makeMarket(input?: {
   yes?: boolean;
   yesProbabilityBps?: number;
   closesAt?: Date;
+  opponentPings?: boolean;
 }) {
   const outcome = await db.bucksMatchPool.create({
     data: {
@@ -116,7 +128,7 @@ async function makeMarket(input?: {
         { key: "P1", puuid: PARTICIPANT.puuid, alias: "bryan" },
       ]),
       criteria: JSON.stringify({
-        ...criteria(input?.yes ?? true),
+        ...criteria(input?.yes ?? true, input?.opponentPings ?? false),
         yesProbabilityBps,
       }),
       yesProbabilityBps,
@@ -308,6 +320,51 @@ describe("Bryan Bucks parlays", () => {
 });
 
 describe("Bryan Bucks parlay funding and settlement", () => {
+  test("rejects a tracked opponent from a parlay on opponent pings", async () => {
+    await makeMarket({ opponentPings: true });
+    const now = new Date();
+    const opponentPuuid = bucksTestRoster()[5]?.puuid;
+    if (opponentPuuid === undefined || opponentPuuid === null) {
+      throw new Error("opponent fixture participant missing");
+    }
+    const opponent = await db.player.create({
+      data: {
+        alias: "opponent",
+        discordId: SECOND_BETTOR,
+        serverId: SERVER_ID,
+        creatorDiscordId: SECOND_BETTOR,
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+    await db.account.create({
+      data: {
+        alias: "opponent",
+        puuid: opponentPuuid,
+        region: "AMERICA_NORTH",
+        playerId: opponent.id,
+        serverId: SERVER_ID,
+        creatorDiscordId: SECOND_BETTOR,
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+
+    expect(
+      await placeParlayBet(
+        {
+          matchId: MATCH_ID,
+          serverId: SERVER_ID,
+          discordId: SECOND_BETTOR,
+          side: "YES",
+          stake: 5,
+        },
+        db,
+      ),
+    ).toEqual({ kind: "not_eligible" });
+    expect(await db.bucksParlayBet.count()).toBe(0);
+  });
+
   test("preserves refund headroom when a void reaches the Int32 boundary", async () => {
     await makeMarket();
     const placed = await place("YES", 5);

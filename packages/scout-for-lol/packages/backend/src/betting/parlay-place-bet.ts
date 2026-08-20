@@ -1,6 +1,7 @@
 import {
   BucksParlaySideSchema,
   BucksStakeSchema,
+  BucksPoolRosterSchema,
   type BucksParlaySide,
   type DiscordAccountId,
   type DiscordGuildId,
@@ -12,6 +13,7 @@ import {
 } from "#src/betting/accounts.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
+import { GeneratedParlaySchema } from "#src/betting/parlay-criteria.ts";
 import {
   applyBucksDelta,
   BucksStorageOverflowError,
@@ -54,6 +56,34 @@ class HouseInsufficientError extends Error {
   }
 }
 
+async function isOpponentPinger(
+  input: {
+    discordId: DiscordAccountId;
+    serverId: DiscordGuildId;
+    selectedTeamId: number;
+    roster: ReturnType<typeof BucksPoolRosterSchema.parse>;
+  },
+  prismaClient: ExtendedPrismaClient,
+): Promise<boolean> {
+  const opponentPuuids = new Set(
+    input.roster.participants
+      .filter((participant) => participant.teamId !== input.selectedTeamId)
+      .flatMap((participant) =>
+        participant.puuid === null ? [] : [participant.puuid],
+      ),
+  );
+  if (opponentPuuids.size === 0) return false;
+  const accounts = await prismaClient.account.findMany({
+    where: {
+      player: {
+        is: { discordId: input.discordId, serverId: input.serverId },
+      },
+    },
+    select: { puuid: true },
+  });
+  return accounts.some((account) => opponentPuuids.has(account.puuid));
+}
+
 export async function placeParlayBet(
   input: {
     matchId: string;
@@ -78,7 +108,14 @@ export async function placeParlayBet(
     },
     select: {
       id: true,
-      definition: { select: { yesProbabilityBps: true } },
+      definition: {
+        select: {
+          criteria: true,
+          selectedTeamId: true,
+          yesProbabilityBps: true,
+        },
+      },
+      outcomePool: { select: { roster: true } },
     },
   });
   if (market === null) return { kind: "no_market" };
@@ -87,6 +124,27 @@ export async function placeParlayBet(
     prismaClient,
   );
   if (player === undefined) return { kind: "not_eligible" };
+  const criteria = GeneratedParlaySchema.parse(
+    JSON.parse(market.definition.criteria),
+  );
+  if (
+    criteria.conditions.some(
+      (condition) => condition.kind === "opponent_team_pings",
+    ) &&
+    (await isOpponentPinger(
+      {
+        discordId: input.discordId,
+        serverId: input.serverId,
+        selectedTeamId: market.definition.selectedTeamId,
+        roster: BucksPoolRosterSchema.parse(
+          JSON.parse(market.outcomePool.roster),
+        ),
+      },
+      prismaClient,
+    ))
+  ) {
+    return { kind: "not_eligible" };
+  }
   let account: Awaited<ReturnType<typeof ensureBucksAccount>>;
   try {
     account = await ensureBucksAccount(
