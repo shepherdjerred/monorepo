@@ -9,10 +9,7 @@ import {
   recordPendingCustomRecruitmentSync,
   syncCustomRecruitmentMessage,
 } from "#src/customs/recruitment-message.ts";
-import {
-  publishCustomSnapshot,
-  publishCustomSnapshotIfCurrent,
-} from "#src/customs/socket.ts";
+import { publishCustomSnapshotIfCurrent } from "#src/customs/socket.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -60,7 +57,7 @@ export async function broadcast<
       snapshot: result.snapshot,
     });
     if (snapshot.revision > result.snapshot.revision)
-      publishCustomSnapshot(snapshot);
+      publishCustomSnapshotIfCurrent(prisma, snapshot);
     return { ...result, snapshot };
   } catch (error) {
     logger.error(
