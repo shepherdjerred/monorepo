@@ -3,6 +3,7 @@ import {
   EXPLORE_RUN_MARKERS_KEY,
   clearSettledExploreRunMarker,
   createExploreRunMarker,
+  hasRunningExploreRunMarker,
   loadExploreRunMarkers,
   saveExploreRunMarkers,
   setExploreRunMarker,
@@ -103,6 +104,12 @@ describe("Explore run markers", () => {
     expect(
       clearSettledExploreRunMarker([marker("running")], CONVERSATION_ID),
     ).toEqual([marker("running")]);
+  });
+
+  test("only running markers require active-run discovery", () => {
+    expect(hasRunningExploreRunMarker([marker("running")])).toBe(true);
+    expect(hasRunningExploreRunMarker([marker("completed")])).toBe(false);
+    expect(hasRunningExploreRunMarker([marker("failed")])).toBe(false);
   });
 
   test("prunes the oldest settled markers before live markers", () => {

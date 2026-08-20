@@ -18,6 +18,7 @@ export type ExploreToolCallInspection = {
 };
 
 export type ExploreToolResultInspection = {
+  succeeded: boolean;
   details: ExploreTraceDetails | null;
   rawOutput: JsonValue | null;
 };
@@ -85,6 +86,7 @@ export function inspectExploreToolResult(
     EmptyToolInputSchema.parse(input);
     const parsed = LanguageToolOutputSchema.parse(output);
     return {
+      succeeded: true,
       rawOutput: JsonValueSchema.parse(parsed),
       details: referenceDetails(parsed),
     };
@@ -93,6 +95,7 @@ export function inspectExploreToolResult(
     const parsedInput = ScoutQlQueryToolInputSchema.parse(input);
     const parsedOutput = ValidationToolOutputSchema.parse(output);
     return {
+      succeeded: parsedOutput.ok,
       rawOutput: JsonValueSchema.parse(parsedOutput),
       details: {
         kind: "validation",
@@ -107,6 +110,7 @@ export function inspectExploreToolResult(
     const parsedInput = ScoutQlQueryToolInputSchema.parse(input);
     const parsedOutput = FormatToolOutputSchema.parse(output);
     return {
+      succeeded: true,
       rawOutput: JsonValueSchema.parse(parsedOutput),
       details: {
         kind: "format",
@@ -119,6 +123,7 @@ export function inspectExploreToolResult(
     const parsedInput = ScoutQlQueryToolInputSchema.parse(input);
     const parsedOutput = QueryResultToolOutputSchema.parse(output);
     return {
+      succeeded: parsedOutput.ok,
       rawOutput: JsonValueSchema.parse(parsedOutput),
       details: {
         kind: "execution",
@@ -130,7 +135,7 @@ export function inspectExploreToolResult(
       },
     };
   }
-  return { details: null, rawOutput: null };
+  return { succeeded: true, details: null, rawOutput: null };
 }
 
 function boundedDiagnostics(diagnostics: string[]): string[] {

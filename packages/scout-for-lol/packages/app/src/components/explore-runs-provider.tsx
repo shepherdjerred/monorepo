@@ -34,6 +34,7 @@ import {
 } from "#src/lib/explore-run-completion.ts";
 import {
   createExploreRunMarker,
+  hasRunningExploreRunMarker,
   setExploreRunMarker,
 } from "#src/lib/explore-run-markers.ts";
 import { useExploreRunMarkers } from "#src/hooks/use-explore-run-markers.ts";
@@ -101,6 +102,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
     ...trpc.explore.activeRuns.queryOptions(),
     enabled: activated,
   });
+  const refetchActiveRuns = activeRuns.refetch;
 
   const updateRuns = useCallback(
     (
@@ -277,10 +279,12 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (markers.some((marker) => marker.state === "running")) {
-      setActivated(true);
+    if (!hasRunningExploreRunMarker(markers)) return;
+    setActivated(true);
+    if (activated) {
+      void refetchActiveRuns();
     }
-  }, [markers]);
+  }, [activated, markers, refetchActiveRuns]);
 
   useEffect(() => {
     if (!activeRuns.isSuccess) return;

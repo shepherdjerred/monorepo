@@ -99,6 +99,12 @@ export function setExploreRunMarker(
   ]);
 }
 
+export function hasRunningExploreRunMarker(
+  markers: ExploreRunMarker[],
+): boolean {
+  return markers.some((marker) => marker.state === "running");
+}
+
 /** Drop the oldest settled markers before any marker still believed active. */
 function retainExploreRunMarkers(
   markers: ExploreRunMarker[],

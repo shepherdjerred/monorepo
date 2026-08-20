@@ -229,6 +229,38 @@ describe("explore tool stream inspection", () => {
     expect(result?.durationMs).toBe(275);
   });
 
+  test("a rejected query is reported as a failed tool result", async () => {
+    const { events } = await collect([
+      {
+        type: "tool-call",
+        toolCallId: "rejected-call",
+        toolName: "run_report_query",
+        input: { queryText: "FROM matches SELECT nope" },
+      },
+      {
+        type: "tool-result",
+        toolCallId: "rejected-call",
+        toolName: "run_report_query",
+        input: { queryText: "FROM matches SELECT nope" },
+        output: {
+          ok: false,
+          message: "Invalid query.",
+          formattedQueryText: null,
+          preview: null,
+        },
+      },
+    ]);
+
+    const result = events.find((event) => event.type === "tool_result");
+    expect(result?.status).toBe("failed");
+    expect(result?.details).toMatchObject({
+      kind: "execution",
+      ok: false,
+    });
+  });
+});
+
+describe("explore raw tool payload inspection", () => {
   test("omits one raw payload above the per-payload inspection limit", async () => {
     const { events } = await collect([
       {
@@ -251,6 +283,7 @@ describe("explore tool stream inspection", () => {
       },
     ]);
     const result = events.find((event) => event.type === "tool_result");
+    expect(result?.status).toBe("failed");
     expect(result?.rawOutput).toMatchObject({
       kind: "omitted",
       reason: "payload_limit",
