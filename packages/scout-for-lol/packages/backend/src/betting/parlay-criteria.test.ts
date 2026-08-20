@@ -47,6 +47,7 @@ describe("parlay model schema", () => {
           threshold: 3,
           expected: null,
           matchNumericField: null,
+          opponentPingField: null,
         },
         {
           kind: "team_objective_first",
@@ -60,6 +61,7 @@ describe("parlay model schema", () => {
           threshold: null,
           expected: true,
           matchNumericField: null,
+          opponentPingField: null,
         },
       ],
     });
@@ -347,5 +349,99 @@ describe("parlay evaluator lifecycle", () => {
         criteria,
       }),
     ).toEqual({ kind: "void", reason: "missing_data" });
+  });
+});
+
+describe("opponent ping conditions", () => {
+  const selectedTeamId = 100;
+  const opponents = fixture.info.participants.filter(
+    (participant) => participant.teamId !== selectedTeamId,
+  );
+  const selected = fixture.info.participants.filter(
+    (participant) => participant.teamId === selectedTeamId,
+  );
+  const opponentTotal = opponents.reduce(
+    (total, participant) => total + participant.onMyWayPings,
+    0,
+  );
+  const selectedTotal = selected.reduce(
+    (total, participant) => total + participant.onMyWayPings,
+    0,
+  );
+
+  test("settle from the enemy team, never the subject's own", () => {
+    // The whole point of moving pings to the opponent side is that nobody in
+    // the market can move the number. Reading the selected team would hand the
+    // leg straight back to the people betting on it.
+    expect(opponentTotal).not.toBe(selectedTotal);
+
+    const subjects = ParlaySubjectsSchema.parse([
+      {
+        key: "P1",
+        puuid: selected[0]?.puuid,
+        alias: "one",
+      },
+    ]);
+    const criteria = GeneratedParlaySchema.parse({
+      version: 1,
+      yesProbabilityBps: 5000,
+      conditions: [
+        {
+          kind: "participant_numeric",
+          subject: "P1",
+          field: "kills",
+          operator: "gte",
+          threshold: 0,
+        },
+        {
+          kind: "opponent_team_pings",
+          field: "onMyWayPings",
+          operator: "gte",
+          threshold: opponentTotal,
+        },
+      ],
+    });
+    const evaluation = evaluateParlay({
+      matchData: fixture,
+      evaluatorVersion: "1",
+      selectedTeamId,
+      subjects,
+      criteria,
+    });
+    if (evaluation.kind !== "evaluated") {
+      throw new Error(`expected an evaluation, got ${evaluation.kind}`);
+    }
+    const leg = evaluation.legs[1];
+    expect(leg?.actualValue).toBe(opponentTotal);
+    expect(leg?.passed).toBe(true);
+    expect(leg?.rendered).toContain("enemy team");
+  });
+
+  test("a subject's own pings are no longer proposable at all", () => {
+    const subjects = ParlaySubjectsSchema.parse([
+      { key: "P1", puuid: selected[0]?.puuid, alias: "one" },
+    ]);
+    const result = GeneratedParlaySchema.safeParse({
+      version: 1,
+      yesProbabilityBps: 5000,
+      conditions: [
+        {
+          kind: "participant_numeric",
+          subject: "P1",
+          field: "onMyWayPings",
+          operator: "gte",
+          threshold: 5,
+        },
+        {
+          kind: "participant_numeric",
+          subject: "P1",
+          field: "kills",
+          operator: "gte",
+          threshold: 1,
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+    expect(subjects.length).toBe(1);
   });
 });

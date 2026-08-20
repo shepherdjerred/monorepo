@@ -22,6 +22,7 @@ function match(input: {
     lane: input.lane ?? "MIDDLE",
     values: new Map([["kills", input.value]]),
     teamValues: new Map([["dragon_kills", input.value]]),
+    opponentValues: new Map([["enemy_missing_pings", 20]]),
   };
 }
 

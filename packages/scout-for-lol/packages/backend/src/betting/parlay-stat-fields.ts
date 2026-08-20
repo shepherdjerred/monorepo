@@ -1,6 +1,8 @@
 import {
+  OpponentPingFieldSchema,
   ParticipantNumericFieldSchema,
   TeamObjectiveSchema,
+  type OpponentPingField,
   type ParticipantNumericField,
   type TeamObjective,
 } from "#src/betting/parlay-catalog.ts";
@@ -30,30 +32,21 @@ export const PARLAY_HISTORY_COLUMNS: Record<
   ParticipantNumericField,
   keyof MatchLakeRow | null
 > = {
-  allInPings: "all_in_pings",
-  assistMePings: "assist_me_pings",
   assists: "assists",
   baronKills: "baron_kills",
-  basicPings: "basic_pings",
   champExperience: "champ_experience",
   champLevel: "champ_level",
-  commandPings: "command_pings",
   consumablesPurchased: null,
   damageDealtToBuildings: null,
   damageDealtToObjectives: "damage_dealt_to_objectives",
   damageDealtToTurrets: "damage_dealt_to_turrets",
   damageSelfMitigated: "damage_self_mitigated",
-  dangerPings: "danger_pings",
   deaths: "deaths",
   detectorWardsPlaced: "detector_wards_placed",
   doubleKills: "double_kills",
   dragonKills: "dragon_kills",
-  enemyMissingPings: "enemy_missing_pings",
-  enemyVisionPings: "enemy_vision_pings",
-  getBackPings: "get_back_pings",
   goldEarned: "gold_earned",
   goldSpent: "gold_spent",
-  holdPings: "hold_pings",
   inhibitorKills: "inhibitor_kills",
   inhibitorTakedowns: null,
   inhibitorsLost: null,
@@ -67,19 +60,16 @@ export const PARLAY_HISTORY_COLUMNS: Record<
   magicDamageDealt: null,
   magicDamageDealtToChampions: "magic_damage_dealt_to_champions",
   magicDamageTaken: null,
-  needVisionPings: "need_vision_pings",
   neutralMinionsKilled: "neutral_minions_killed",
   nexusKills: null,
   nexusLost: null,
   nexusTakedowns: null,
   objectivesStolen: null,
   objectivesStolenAssists: null,
-  onMyWayPings: "on_my_way_pings",
   pentaKills: "penta_kills",
   physicalDamageDealt: null,
   physicalDamageDealtToChampions: "physical_damage_dealt_to_champions",
   physicalDamageTaken: null,
-  pushPings: "push_pings",
   quadraKills: "quadra_kills",
   sightWardsBoughtInGame: null,
   spell1Casts: null,
@@ -110,7 +100,6 @@ export const PARLAY_HISTORY_COLUMNS: Record<
   turretTakedowns: null,
   turretsLost: null,
   unrealKills: null,
-  visionClearedPings: "vision_cleared_pings",
   visionScore: "vision_score",
   visionWardsBoughtInGame: "vision_wards_bought_in_game",
   wardsKilled: "wards_killed",
@@ -154,4 +143,33 @@ export function groundedTeamObjectives(): TeamObjective[] {
   return TeamObjectiveSchema.options.filter(
     (objective) => TEAM_OBJECTIVE_HISTORY_COLUMNS[objective] !== null,
   );
+}
+
+/**
+ * Opponent ping columns. Every ping type is carried by the lake, so unlike the
+ * participant map there is nothing here that cannot be priced — the reason a
+ * ping leg is restricted at all is incentive, not data.
+ */
+export const OPPONENT_PING_HISTORY_COLUMNS: Record<
+  OpponentPingField,
+  keyof MatchLakeRow
+> = {
+  allInPings: "all_in_pings",
+  assistMePings: "assist_me_pings",
+  basicPings: "basic_pings",
+  commandPings: "command_pings",
+  dangerPings: "danger_pings",
+  enemyMissingPings: "enemy_missing_pings",
+  enemyVisionPings: "enemy_vision_pings",
+  getBackPings: "get_back_pings",
+  holdPings: "hold_pings",
+  needVisionPings: "need_vision_pings",
+  onMyWayPings: "on_my_way_pings",
+  pushPings: "push_pings",
+  visionClearedPings: "vision_cleared_pings",
+};
+
+/** Opponent ping fields a generated parlay may propose. */
+export function groundedOpponentPingFields(): OpponentPingField[] {
+  return [...OpponentPingFieldSchema.options];
 }

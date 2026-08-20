@@ -37,6 +37,7 @@ function historyMatch(input: {
     lane: "MIDDLE",
     values: new Map([["kills", input.kills]]),
     teamValues: new Map([["dragon_kills", input.dragons ?? 0]]),
+    opponentValues: new Map([["enemy_missing_pings", 20]]),
   };
 }
 

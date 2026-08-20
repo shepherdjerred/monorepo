@@ -1,4 +1,5 @@
 import {
+  OPPONENT_PING_HISTORY_COLUMNS,
   PARLAY_HISTORY_COLUMNS,
   TEAM_OBJECTIVE_HISTORY_COLUMNS,
 } from "#src/betting/parlay-stat-fields.ts";
@@ -96,6 +97,14 @@ export function conditionHeldInMatch(
         condition.operator,
         condition.threshold,
       );
+    case "opponent_team_pings": {
+      const value = match.opponentValues.get(
+        OPPONENT_PING_HISTORY_COLUMNS[condition.field],
+      );
+      return value === undefined
+        ? undefined
+        : compare(value, condition.operator, condition.threshold);
+    }
     // Participant booleans and first-objective flags are not reconstructable
     // from lake columns, so they cannot be priced.
     case "participant_boolean":
