@@ -23,6 +23,7 @@ func normalizesCodeVariants() {
     #expect(spaced?.code == "123456")
     #expect(dashed?.code == "987654")
     #expect(alphaNumeric?.code == "A7B9C2")
+    #expect(OTPParser().parse(body: "Your OTP is A7B9C2 to finish.", metadata: metadata)?.code == "A7B9C2")
 }
 
 @Test("rejects ordinary dates, phone numbers, URLs, and unrelated IDs")
