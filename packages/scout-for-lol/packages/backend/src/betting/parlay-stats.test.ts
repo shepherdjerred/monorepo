@@ -115,6 +115,18 @@ describe("hit-rate thresholds", () => {
       frame.overall.thresholds[10],
     );
   });
+
+  test("reports the realized rate for constant distributions", () => {
+    const frame = buildPlayerFrame({
+      matches: Array.from({ length: 20 }, () => match({ value: 0 })),
+      column: "kills",
+      operator: "gte",
+      team: false,
+    });
+    for (const rate of HIT_RATES) {
+      expect(frame.overall.realizedRates[rate]).toBe(1);
+    }
+  });
 });
 
 describe("player frame slicing", () => {

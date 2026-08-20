@@ -122,7 +122,14 @@ function cellFromValues(
   }
   const thresholdAndRate = (rate: HitRate): readonly [number, number] => {
     const target = rate / 100;
-    let best: readonly [number, number] = [candidates[0]?.threshold ?? 0, 0];
+    const first = candidates[0];
+    let best: readonly [number, number];
+    if (first === undefined || sorted.length === 0) {
+      best = [0, 0];
+    } else {
+      const count = operator === "gte" ? first.gteCount : first.lteCount;
+      best = [first.threshold, count / sorted.length];
+    }
     for (const candidate of candidates) {
       const count =
         operator === "gte" ? candidate.gteCount : candidate.lteCount;
