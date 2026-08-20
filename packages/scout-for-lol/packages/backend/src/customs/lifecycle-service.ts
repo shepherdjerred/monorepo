@@ -195,6 +195,7 @@ export async function recordCustomVoiceFailure(params: {
             ...game,
             voiceReady: false,
             voiceError: params.message,
+            voiceArrangementProvisioning: null,
           },
         },
         new Date(),
