@@ -11,6 +11,7 @@ public struct CodeStore {
     public static let fileName = "pending-one-time-codes.json"
     public static let lockFileName = ".pending-one-time-codes.lock"
     public static let defaultLockTimeout: TimeInterval = 5
+    public static let corruptFileRetention: TimeInterval = 180
 
     private let directory: URL
     private let fileManager: FileManager
@@ -108,6 +109,7 @@ public struct CodeStore {
     }
 
     private func readUnlocked(now: Date) throws -> [OTPRecord] {
+        try removeExpiredCorruptFiles(now: now)
         let url = directory.appendingPathComponent(Self.fileName)
         guard fileManager.fileExists(atPath: url.path) else { return [] }
         let data = try Data(contentsOf: url)
@@ -131,6 +133,27 @@ public struct CodeStore {
             CodeFillObservability.storeLogger.info("event=store_expired_removed record_count=\(records.count - valid.count, privacy: .public)")
         }
         return valid.sorted { $0.detectedAt > $1.detectedAt }
+    }
+
+    private func removeExpiredCorruptFiles(now: Date) throws {
+        let prefix = ".\(Self.fileName).corrupt-"
+        let urls = try fileManager.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: []
+        ).filter { $0.lastPathComponent.hasPrefix(prefix) }
+
+        for url in urls {
+            let values = try url.resourceValues(forKeys: [.contentModificationDateKey])
+            guard let modifiedAt = values.contentModificationDate else {
+                try fileManager.removeItem(at: url)
+                CodeFillObservability.storeLogger.info("event=store_corrupt_cleanup outcome=removed_missing_date")
+                continue
+            }
+            guard modifiedAt.addingTimeInterval(Self.corruptFileRetention) <= now else { continue }
+            try fileManager.removeItem(at: url)
+            CodeFillObservability.storeLogger.info("event=store_corrupt_cleanup outcome=removed_expired")
+        }
     }
 
     private func writeUnlocked(_ records: [OTPRecord]) throws {
