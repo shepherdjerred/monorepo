@@ -29,6 +29,7 @@ export default defineConfig({
     format: "directory",
     inlineStylesheets: "never",
   },
+  devToolbar: { enabled: env.CI !== "true" },
   image: {
     layout: "constrained",
     responsiveStyles: true,
