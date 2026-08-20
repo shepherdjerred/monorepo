@@ -85,7 +85,7 @@ export function estimateStyleGenerationCost(
   });
   const synthesisInputUpperBound =
     inputTokenUpperBound(synthesisBase) +
-    chunks.length * EXTRACTION_MAX_OUTPUT_TOKENS;
+    chunks.length * EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS;
   // A truncated synthesis retries at the higher ceiling, so every semantic
   // attempt after the first is priced against that ceiling.
   const synthesisInitialCall = worstCaseGenerationCostUsd({

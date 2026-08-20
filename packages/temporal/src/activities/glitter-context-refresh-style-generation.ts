@@ -125,6 +125,7 @@ async function runChunkExtraction(input: {
   repair: {
     previous: StyleChunkSummary;
     error: string;
+    rawContent: string | null;
   } | null;
 }) {
   const basePrompt = chunkPrompt(input);
@@ -205,30 +206,44 @@ async function summarizeChunk(input: {
 }): Promise<StyleChunkSummary> {
   const attempts: StyleChunkSummary[] = [];
   let lastError: Error | undefined;
-  let previous = EMPTY_CHUNK_SUMMARY;
+  let repair: {
+    previous: StyleChunkSummary;
+    error: string;
+    rawContent: string | null;
+  } | null = null;
   for (let attempt = 0; attempt <= MAX_EXTRACTION_REPAIR_ATTEMPTS; attempt++) {
     const extracted = await runChunkExtraction({
       ...input,
       attempt,
-      repair:
-        attempt === 0 || lastError === undefined
-          ? null
-          : {
-              previous,
-              error: lastError.message,
-            },
+      repair: attempt === 0 ? null : repair,
     });
     if (extracted.outcome === "failure") {
       lastError = new Error(extracted.error);
+      if (repair === null) {
+        repair = {
+          previous: EMPTY_CHUNK_SUMMARY,
+          error: extracted.error,
+          rawContent: extracted.rawContent,
+        };
+      } else {
+        repair = {
+          ...repair,
+          rawContent: extracted.rawContent ?? repair.rawContent,
+        };
+      }
       continue;
     }
     attempts.push(extracted.value);
-    previous = extracted.value;
     try {
       validateChunkSummary(input.chunk, extracted.value);
       return extracted.value;
     } catch (error: unknown) {
       lastError = z.instanceof(Error).parse(error);
+      repair = {
+        previous: extracted.value,
+        error: lastError.message,
+        rawContent: null,
+      };
     }
   }
   if (lastError === undefined) {
