@@ -15,7 +15,10 @@ import {
   usesNativeDiscordVisualization,
   visualizationToEmbed,
 } from "#src/discord/scout/visualization.ts";
-import { displayWidth } from "#src/discord/scout/visualization-format.ts";
+import {
+  displayWidth,
+  formatPreviewValueWithEvidence,
+} from "#src/discord/scout/visualization-format.ts";
 
 const answer = ExploreMessageSchema.parse({
   id: "10000000-0000-4000-8000-000000000002",
@@ -568,6 +571,74 @@ test("counts emoji-presentation graphemes at their rendered width", () => {
   expect(displayWidth("🇺🇸")).toBe(2);
   expect(displayWidth("#️⃣")).toBe(2);
   expect(displayWidth("é")).toBe(1);
+});
+
+test("chooses the most specific matching series for preview evidence", () => {
+  const winRateSeries = scoutTestVisualization.series.find(
+    (series) => series.metric === "win_rate",
+  );
+  if (winRateSeries === undefined) {
+    throw new Error("Win rate test series is missing.");
+  }
+  const point = winRateSeries.points[0];
+  if (point === undefined) {
+    throw new Error("Win rate test point is missing.");
+  }
+  const snapshot = VisualizationSnapshotSchema.parse({
+    ...scoutTestVisualization,
+    series: [
+      {
+        ...winRateSeries,
+        id: "Foo:win_rate",
+        points: [
+          {
+            ...point,
+            key: "Bar",
+            label: "Bar",
+            evidence: {
+              ...point.evidence,
+              confidenceInterval: {
+                level: 0.95,
+                lower: 0.1,
+                upper: 0.2,
+              },
+            },
+          },
+        ],
+      },
+      {
+        ...winRateSeries,
+        id: "Foo • Bar:win_rate",
+        points: [
+          {
+            ...point,
+            key: "Queue",
+            label: "Queue",
+            evidence: {
+              ...point.evidence,
+              confidenceInterval: {
+                level: 0.95,
+                lower: 0.9,
+                upper: 1,
+              },
+            },
+          },
+        ],
+      },
+    ],
+  });
+  const column = preview.columns.find((item) => item.key === "win_rate");
+  if (column === undefined) {
+    throw new Error("Win rate preview column is missing.");
+  }
+
+  expect(
+    formatPreviewValueWithEvidence(snapshot, column, {
+      key: "Foo • Bar • Queue",
+      label: "Foo • Bar • Queue",
+      values: new Map([["win_rate", 1]]),
+    }),
+  ).toContain("95% CI 90.0%–100.0%");
 });
 
 test("keeps native values visible when labels exceed the description budget", () => {

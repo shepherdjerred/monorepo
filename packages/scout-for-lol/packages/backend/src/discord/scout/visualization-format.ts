@@ -120,38 +120,41 @@ export function formatPreviewValueWithEvidence(
   row: NativeRow,
 ): string {
   const value = formatPreviewValue(column, requireRowValue(row, column.key));
-  const series = snapshot.series.find((item) => {
+  const seriesMatches = snapshot.series.flatMap((item) => {
     if (item.metric !== column.key) {
-      return false;
+      return [];
     }
     const separator = item.id.lastIndexOf(":");
     const seriesDimension =
       separator === -1 ? "All" : item.id.slice(0, separator);
     if (seriesDimension === "All") {
-      return item.points.some((point) => pointMatchesRow(point, row, null));
+      const point = item.points.find((candidate) =>
+        pointMatchesRow(candidate, row, null),
+      );
+      return point === undefined ? [] : [{ item, point, specificity: 0 }];
     }
     if (!row.key.startsWith(`${seriesDimension} • `)) {
-      return false;
+      return [];
     }
     const pointDimension = row.key.slice(seriesDimension.length + 3);
-    return item.points.some((point) =>
-      pointMatchesRow(point, row, pointDimension),
+    const point = item.points.find((candidate) =>
+      pointMatchesRow(candidate, row, pointDimension),
     );
+    return point === undefined
+      ? []
+      : [{ item, point, specificity: seriesDimension.length }];
   });
-  if (series === undefined) {
+  const seriesMatch = seriesMatches.sort(
+    (left, right) => right.specificity - left.specificity,
+  )[0];
+  if (seriesMatch === undefined) {
     return value;
   }
-  const separator = series.id.lastIndexOf(":");
-  const seriesDimension =
-    separator === -1 ? "All" : series.id.slice(0, separator);
-  const pointDimension =
-    seriesDimension === "All"
-      ? null
-      : row.key.slice(seriesDimension.length + 3);
-  const point = series.points.find((candidate) =>
-    pointMatchesRow(candidate, row, pointDimension),
-  );
-  return `${value}${formatConfidenceInterval(snapshot, series, point)}`;
+  return `${value}${formatConfidenceInterval(
+    snapshot,
+    seriesMatch.item,
+    seriesMatch.point,
+  )}`;
 }
 
 function pointMatchesRow(
