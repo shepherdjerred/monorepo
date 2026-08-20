@@ -66,6 +66,33 @@ export async function prepareCustomGame(params: {
     selectedDiscordIds: params.selectedDiscordIds,
   });
   const now = params.now ?? new Date();
+  if (
+    roster.some(
+      (participant) =>
+        participant.playerId === null ||
+        participant.playerAlias === null ||
+        participant.selectedAccountId === null,
+    )
+  ) {
+    return await commitCustomMutation({
+      ...params,
+      actorDiscordId: params.actor.discordId,
+      action: "PARTICIPANT_MAPPINGS_REFRESHED",
+      payload: {
+        participantDiscordIds: participants.map(
+          (participant) => participant.discordId,
+        ),
+      },
+      update: (snapshot) => {
+        assertCustomHostControl(
+          snapshot,
+          params.actor.discordId,
+          params.actor.discordAdministrator,
+        );
+        return refreshSnapshot({ ...snapshot, participants }, now);
+      },
+    });
+  }
   return await commitCustomMutation({
     ...params,
     actorDiscordId: params.actor.discordId,
