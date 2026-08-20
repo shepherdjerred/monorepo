@@ -23,6 +23,7 @@ func normalizesCodeVariants() {
     let lowercaseDashedAlphaNumeric = OTPParser().parse(body: "Code abc-1234", metadata: metadata)
     let spacedAlphaNumeric = OTPParser().parse(body: "Code AB 1234", metadata: metadata)
     let groupedAlphaNumeric = OTPParser().parse(body: "Code A7 B9 C2", metadata: metadata)
+    let germanProse = OTPParser().parse(body: "Code ist 1234", metadata: metadata)
     let alphaNumeric = OTPParser().parse(body: "Your OTP is A7B9C2", metadata: metadata)
 
     #expect(spaced?.code == "123456")
@@ -32,6 +33,7 @@ func normalizesCodeVariants() {
     #expect(lowercaseDashedAlphaNumeric?.code == "abc1234")
     #expect(spacedAlphaNumeric?.code == "AB1234")
     #expect(groupedAlphaNumeric?.code == "A7B9C2")
+    #expect(germanProse?.code == "1234")
     #expect(alphaNumeric?.code == "A7B9C2")
     #expect(OTPParser().parse(body: "Your OTP is A7B9C2 to finish.", metadata: metadata)?.code == "A7B9C2")
 }
