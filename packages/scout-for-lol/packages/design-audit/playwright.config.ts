@@ -8,6 +8,7 @@ const startLocalServers =
 if (
   isNightly &&
   env["CI"] === "true" &&
+  !startLocalServers &&
   (env["SCOUT_DESIGN_AUDIT_BASE_URL"] === undefined ||
     env["SCOUT_DESIGN_AUDIT_BASE_URL"].length === 0) &&
   [
@@ -37,9 +38,12 @@ const devDesignAuditCommand =
 const projects: Project[] = [];
 for (const browser of browsers) {
   for (const viewport of viewports) {
-    const device = viewport.isMobile
-      ? devices["iPhone 13"]
-      : devices["Desktop Chrome"];
+    const device =
+      browser === "firefox"
+        ? devices["Desktop Firefox"]
+        : viewport.isMobile
+          ? devices["iPhone 13"]
+          : devices["Desktop Chrome"];
     projects.push({
       name: `${browser}-${viewport.name}`,
       use: {
