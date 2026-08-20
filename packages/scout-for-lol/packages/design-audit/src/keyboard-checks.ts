@@ -2,7 +2,7 @@ import { expect, type Page } from "@playwright/test";
 import { evaluateBrowser } from "#src/page-checks.ts";
 
 const baseFocusSelector =
-  ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
+  ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"], [tabindex]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
 
 export async function assertKeyboardFocus(page: Page): Promise<void> {
   const viewport = page.viewportSize();
@@ -17,7 +17,7 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
   ).toBeVisible();
   const count = await evaluateBrowser(page, () => {
     const baseSelector =
-      ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
+      ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"], [tabindex]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
     const selector =
       window.innerWidth < 800
         ? `${baseSelector}:not(.sidebar-pane):not(.sidebar-pane *):not(.right-sidebar):not(.right-sidebar *)`
@@ -88,7 +88,7 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
         const editor = active.closest(".monaco-editor");
         if (editor === null) return false;
         const baseSelector =
-          ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
+          ':is(a[href], button, input, select, textarea, [role="button"], [role="link"], [role="textbox"], [tabindex]):not([tabindex="-1"]):not(:disabled):not([aria-disabled="true"]):not(astro-dev-toolbar):not(.iPadShowKeyboard):not([aria-hidden="true"] *):not([inert] *)';
         const selector =
           window.innerWidth < 800
             ? `${baseSelector}:not(.sidebar-pane):not(.sidebar-pane *):not(.right-sidebar):not(.right-sidebar *)`

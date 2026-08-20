@@ -110,9 +110,7 @@ export async function seedDesignAuditDatabase(
       create: { discordId, discordUsername: "Design Audit User" },
     });
 
-    await prisma.exploreConversation.deleteMany({
-      where: { userId: discordId },
-    });
+    await prisma.exploreConversation.deleteMany();
     await prisma.exploreConversation.upsert({
       where: { id: exploreConversationId },
       update: {
@@ -169,29 +167,25 @@ export async function seedDesignAuditDatabase(
     });
 
     await prisma.competitionParticipant.deleteMany({
-      where: {
-        competition: { serverId: guildId, creatorDiscordId: discordId },
-      },
+      where: { competition: { serverId: guildId } },
     });
     await prisma.competitionSnapshot.deleteMany({
-      where: {
-        competition: { serverId: guildId, creatorDiscordId: discordId },
-      },
+      where: { competition: { serverId: guildId } },
     });
     await prisma.competition.deleteMany({
-      where: { serverId: guildId, creatorDiscordId: discordId },
+      where: { serverId: guildId },
     });
     await prisma.report.deleteMany({
-      where: { serverId: guildId, ownerId: discordId },
+      where: { serverId: guildId },
     });
     await prisma.subscription.deleteMany({
-      where: { serverId: guildId, creatorDiscordId: discordId },
+      where: { serverId: guildId },
     });
     await prisma.account.deleteMany({
-      where: { serverId: guildId, creatorDiscordId: discordId },
+      where: { serverId: guildId },
     });
     await prisma.player.deleteMany({
-      where: { serverId: guildId, creatorDiscordId: discordId },
+      where: { serverId: guildId },
     });
 
     const player = await prisma.player.create({
