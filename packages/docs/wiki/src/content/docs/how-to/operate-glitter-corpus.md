@@ -86,9 +86,11 @@ daily capture; you do not trigger it.
 action. It distills the corpus into per-person context and opens a PR that is
 always human-reviewed.
 
-It carries a hard cost cap (default $40) enforced by a preflight estimate, a
-per-call authorization check, and a post-call ceiling check. A completion that
-returns without usage data fails non-retryably rather than risk re-charging.
+The weekly schedule passes a $40 uncached-cost kill switch. Operator
+invocations that omit `maxEstimatedCostUsd` still default to $10. A
+preflight estimate, per-call authorization, and post-call ceiling enforce
+the cap. A completion that returns without usage data fails non-retryably
+rather than risk re-charging.
 
 ## Related
 
