@@ -133,6 +133,7 @@ async function syncLatestCustomRecruitmentMessage(params: {
       if (!isUnknownDiscordMessage(error)) throw error;
     }
   }
+  if (snapshot.state === "ENDED") return snapshot;
   const replacedMessageId = snapshot.recruitmentMessageId;
   const message = await channel.send({
     embeds: [recruitmentEmbed(snapshot)],
