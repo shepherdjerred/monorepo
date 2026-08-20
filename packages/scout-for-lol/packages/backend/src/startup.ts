@@ -54,6 +54,12 @@ export async function startBackendRuntime(): Promise<HttpServerRuntime> {
       await import("@scout-for-lol/backend/discord/index.ts");
     },
     startCustomsDiscord: async () => {
+      if (!configuration.enableDiscordGateway) {
+        logger.warn(
+          "⏭️  Customs Discord client disabled with the Discord gateway",
+        );
+        return;
+      }
       const { startCustomsDiscord } =
         await import("#src/customs/discord-client.ts");
       await startCustomsDiscord();

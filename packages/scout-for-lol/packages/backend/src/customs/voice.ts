@@ -360,16 +360,24 @@ async function cleanupCustomVoiceOperation(
   snapshot: CustomNightSnapshot,
 ): Promise<string[]> {
   const guild = await customsDiscordClient.guilds.fetch(snapshot.guildId);
-  const lobby = await requireVoiceChannel(guild, snapshot.voiceLobbyChannelId);
+  let lobby: VoiceChannel | null = null;
+  const failures: string[] = [];
+  try {
+    lobby = await requireVoiceChannel(guild, snapshot.voiceLobbyChannelId);
+  } catch (error) {
+    failures.push(
+      `lobby ${snapshot.voiceLobbyChannelId}: ${errorMessage(error)}`,
+    );
+  }
   const ownedIds = [
     snapshot.teamAVoiceChannelId,
     snapshot.teamBVoiceChannelId,
   ].filter((channelId) => channelId !== null);
-  const failures: string[] = [];
   for (const participant of snapshot.currentGame?.participants ?? []) {
     try {
       const member = await guild.members.fetch(participant.discordId);
       if (
+        lobby !== null &&
         member.voice.channelId !== null &&
         ownedIds.includes(member.voice.channelId)
       ) {

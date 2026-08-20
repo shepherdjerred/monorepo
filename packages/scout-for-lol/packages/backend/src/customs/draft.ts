@@ -18,6 +18,7 @@ export const CUSTOM_DRAFT_ORDER: readonly CustomTeam[] = [
 ] as const;
 
 function readyTime(participant: CustomNightParticipant): number {
+  if (participant.held) return Number.MIN_SAFE_INTEGER;
   if (participant.readyAt === null) return Number.MAX_SAFE_INTEGER;
   return new Date(participant.readyAt).getTime();
 }

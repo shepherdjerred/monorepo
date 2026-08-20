@@ -12,6 +12,7 @@ import {
   commitCustomMutation,
   getCustomNight,
 } from "#src/customs/repository.ts";
+import { syncCustomRecruitmentMessage } from "#src/customs/recruitment-message.ts";
 import {
   provisionCustomTournamentCode,
   recordRiotTournamentResult,
@@ -93,6 +94,17 @@ async function expireNight(
   });
   if (mutation.applied) {
     publishCustomSnapshot(mutation.snapshot);
+    try {
+      await syncCustomRecruitmentMessage({
+        prisma: database,
+        snapshot: mutation.snapshot,
+      });
+    } catch (error) {
+      logger.error("Expired custom night recruitment sync failed", {
+        error,
+        nightId,
+      });
+    }
     try {
       const cleanupFailures = await cleanupCustomVoice(mutation.snapshot);
       if (cleanupFailures.length > 0)

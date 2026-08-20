@@ -42,6 +42,19 @@ const intermissionOptions: readonly {
   { choice: "REDRAFT_NEW_CAPTAINS", label: "Redraft, new captains" },
 ];
 
+async function copyTournamentCode(code: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(code);
+    toast.success("Tournament code copied");
+  } catch (error) {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : "Could not copy the Tournament code",
+    );
+  }
+}
+
 export function GamePanel({
   snapshot,
   hostControl,
@@ -212,8 +225,7 @@ function ActiveGamePanel({
             <Button
               variant="outline"
               onClick={() => {
-                void navigator.clipboard.writeText(game.tournamentCode ?? "");
-                toast.success("Tournament code copied");
+                void copyTournamentCode(game.tournamentCode ?? "");
               }}
             >
               <ClipboardIcon /> Copy code
@@ -421,9 +433,7 @@ function DraftHostControls({
           </div>
         )}
       {teamsComplete &&
-        game.state !== "CODE_PENDING" &&
-        game.state !== "LOBBY_READY" &&
-        game.state !== "PLAYING" && (
+        (game.state === "DRAFTING" || game.state === "CAPTAINS_SET") && (
           <Button className="w-full" onClick={onLock}>
             <CheckIcon /> Lock teams
           </Button>

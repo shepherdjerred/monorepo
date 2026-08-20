@@ -103,7 +103,7 @@ describe("parseCustomsConfiguration", () => {
     botToken: "bot-token",
     jwtSigningSecret: "j".repeat(32),
     guildAllowlist: ["987654321"],
-    tournamentProviderId: "provider-1",
+    tournamentProviderId: "12345",
     tournamentApprovalReference: "approval-1",
     callbackSecret: "c".repeat(32),
     activityOrigin: "https://customs-beta.scout-for-lol.com",

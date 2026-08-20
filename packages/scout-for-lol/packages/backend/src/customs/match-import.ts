@@ -1,5 +1,6 @@
 import {
   CustomGameSnapshotSchema,
+  CustomNightSnapshotSchema,
   MatchIdSchema,
   type RawMatch,
   type CustomGameParticipant,
@@ -11,7 +12,7 @@ import {
   getCustomNight,
   type CustomMutationResult,
 } from "#src/customs/repository.ts";
-import { refreshSnapshot } from "#src/customs/snapshot.ts";
+import { recruitmentCounts } from "#src/customs/snapshot.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { getChampionDisplayName } from "#src/utils/champion.ts";
 
@@ -194,17 +195,15 @@ export async function importCustomMatchDetails(params: {
     update: (snapshot) => {
       if (snapshot.currentGame?.id !== params.gameId)
         throw new Error("Current custom game changed during Match-V5 import");
-      return refreshSnapshot(
-        {
-          ...snapshot,
-          currentGame: {
-            ...snapshot.currentGame,
-            participants,
-            repeatChampionWarnings: warnings,
-          },
+      return CustomNightSnapshotSchema.parse({
+        ...snapshot,
+        recruitmentCounts: recruitmentCounts(snapshot.participants),
+        currentGame: {
+          ...snapshot.currentGame,
+          participants,
+          repeatChampionWarnings: warnings,
         },
-        new Date(),
-      );
+      });
     },
     sideEffect: async (transaction) => {
       const claimed = await transaction.customGame.updateMany({

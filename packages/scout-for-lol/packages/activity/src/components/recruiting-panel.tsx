@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@scout-for-lol/design-system/components/select";
 import { toast } from "@scout-for-lol/design-system/components/toaster";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DicesIcon } from "lucide-react";
 import {
   CustomMapSchema,
@@ -63,6 +63,15 @@ export function RecruitingPanel({
       ),
     [snapshot.participants],
   );
+  useEffect(() => {
+    const eligibleIds = new Set(
+      eligible.map((participant) => participant.discordId),
+    );
+    setSelected((current) => {
+      const next = current.filter((discordId) => eligibleIds.has(discordId));
+      return next.length === current.length ? current : next;
+    });
+  }, [eligible]);
   const toggleSelected = (discordId: string) => {
     setSelected((current) =>
       current.includes(discordId)

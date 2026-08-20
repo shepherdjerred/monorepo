@@ -54,7 +54,10 @@ const CustomsConfigurationSchema = z.object({
   botToken: z.string().min(1),
   jwtSigningSecret: z.string().min(32),
   guildAllowlist: z.array(z.string().min(1)).min(1),
-  tournamentProviderId: z.string().min(1),
+  tournamentProviderId: z
+    .string()
+    .regex(/^\d+$/, "must contain only digits")
+    .refine((value) => Number(value) > 0, "must be positive"),
   tournamentApprovalReference: z.string().min(1),
   callbackSecret: z.string().min(32),
   activityOrigin: z
