@@ -1,4 +1,9 @@
-import { AttachmentBuilder, Colors, EmbedBuilder } from "discord.js";
+import {
+  AttachmentBuilder,
+  Colors,
+  EmbedBuilder,
+  escapeMarkdown as escapeDiscordMarkdown,
+} from "discord.js";
 import {
   formatReportDisplayValue,
   REPORT_METRICS,
@@ -88,7 +93,11 @@ function nativeDescription(
     snapshot.temporal === null &&
     preview !== null &&
     previewRows(preview).length > 0;
-  if (!hasSnapshotPoints && !hasPreviewRows && snapshot.kind !== "KPI_CARD") {
+  if (
+    !hasSnapshotPoints &&
+    !hasPreviewRows &&
+    (snapshot.kind !== "KPI_CARD" || snapshot.series.length === 0)
+  ) {
     return "No results found.";
   }
   const description =
@@ -149,7 +158,7 @@ function truncateLines(description: string, available: number): string {
 }
 
 function formatKpi(snapshot: VisualizationSnapshot): string {
-  return snapshot.series
+  const description = snapshot.series
     .map((series) => {
       const point = series.points.at(-1);
       if (point === undefined) {
@@ -174,6 +183,10 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
       return `**${escapeMarkdown(series.label)}**\n${value} ${details}`;
     })
     .join("\n\n");
+  const subtitle = snapshot.display.options?.subtitle;
+  return subtitle === undefined
+    ? description
+    : `${escapeMarkdown(subtitle)}\n\n${description}`;
 }
 
 function formatList(
@@ -385,13 +398,13 @@ function formatRowValues(
   preview: ReportAiPreviewSummary | null,
 ): string[] {
   if (preview !== null) {
-    return previewMetricColumns(preview).map(
-      (column) =>
-        `${escapeMarkdown(column.label)}: ${formatPreviewValue(
-          column,
-          requireRowValue(row, column.key),
-        )}`,
-    );
+    return previewMetricColumns(preview).map((column) => {
+      const value = formatPreviewValue(
+        column,
+        requireRowValue(row, column.key),
+      );
+      return `${escapeMarkdown(column.label)}: ${escapeMarkdown(value)}`;
+    });
   }
   return snapshot.series.map(
     (series) =>
@@ -404,11 +417,15 @@ function formatRowValues(
 }
 
 function requireRowValue(row: NativeRow, column: string): NativeRowValue {
-  return row.values.get(column) ?? null;
+  const value = row.values.get(column);
+  if (value === undefined) {
+    throw new Error(`Visualization row missing value for ${column}.`);
+  }
+  return value;
 }
 
 function requireNumericRowValue(row: NativeRow, column: string): number | null {
-  const value = requireRowValue(row, column);
+  const value = row.values.get(column) ?? null;
   if (typeof value !== "number" && value !== null) {
     throw new Error(`Visualization row value for ${column} is not numeric.`);
   }
@@ -465,14 +482,12 @@ function formatPercent(value: number | null): string {
 }
 
 function escapeMarkdown(value: string): string {
-  return value
-    .replaceAll(/[\r\n]+/g, " ")
-    .replaceAll(/[\\_*`|]/g, (char) => `\\${char}`);
+  return escapeDiscordMarkdown(value.replaceAll(/[\r\n]+/g, " ")).replaceAll(
+    /[()[\]<>]/g,
+    (char) => `\\${char}`,
+  );
 }
 
 function escapeTableCell(value: string): string {
-  return value
-    .replaceAll("`", "′")
-    .replaceAll("|", String.raw`\|`)
-    .replaceAll("\n", " ");
+  return value.replaceAll("`", "′").replaceAll("\n", " ");
 }

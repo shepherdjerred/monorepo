@@ -98,6 +98,17 @@ describe("Scout Discord visualizations", () => {
     expect(kpiDescription).toContain("Games counted");
     expect(kpiDescription).not.toContain("42");
 
+    const subtitleKpi = VisualizationSnapshotSchema.parse({
+      ...scoutTestKpi,
+      display: {
+        ...scoutTestKpi.display,
+        options: { subtitle: "By player" },
+      },
+    });
+    expect(visualizationToEmbed(subtitleKpi)?.data.description).toContain(
+      "By player",
+    );
+
     const comparisonKpi = VisualizationSnapshotSchema.parse({
       ...scoutTestKpi,
       series: [
@@ -154,6 +165,14 @@ describe("Scout Discord visualization edge cases", () => {
     expect(visualizationToEmbed(emptySeriesSnapshot)?.data.description).toBe(
       "No results found.",
     );
+
+    const emptyKpiSnapshot = VisualizationSnapshotSchema.parse({
+      ...scoutTestKpi,
+      series: [],
+    });
+    expect(visualizationToEmbed(emptyKpiSnapshot)?.data.description).toBe(
+      "No results found.",
+    );
   });
 
   test("sanitizes table headers before rendering", () => {
@@ -168,7 +187,7 @@ describe("Scout Discord visualization edge cases", () => {
 
     const description = visualizationToEmbed(headerSnapshot)?.data.description;
     expect(description).toContain("Games ′");
-    expect(description).toContain(String.raw`\| unsafe`);
+    expect(description).toContain("| unsafe");
     expect(description).not.toContain("Games `\n");
   });
 
@@ -186,6 +205,33 @@ describe("Scout Discord visualization edge cases", () => {
     expect(description).toContain(
       "additional rows omitted from the stored preview",
     );
+  });
+
+  test("escapes Markdown in native labels and preview values", () => {
+    const textPreview = ReportAiPreviewSummarySchema.parse({
+      columns: [
+        { key: "label", label: "Player", format: "text" },
+        { key: "note", label: "Note", format: "text" },
+      ],
+      rows: [
+        {
+          label: "[name](https://example.com) ~~strike~~",
+          values: [{ column: "note", value: "[unsafe]\n~~value~~" }],
+        },
+      ],
+      rowsScanned: 1,
+      renderKind: "LIST",
+    });
+    const description = visualizationToEmbed(
+      VisualizationSnapshotSchema.parse({
+        ...scoutTestVisualization,
+        kind: "LIST",
+      }),
+      textPreview,
+    )?.data.description;
+    expect(description).not.toContain("[name](https://example.com)");
+    expect(description).not.toContain("~~strike~~");
+    expect(description).not.toContain("[unsafe]\n~~value~~");
   });
 });
 
@@ -257,13 +303,9 @@ describe("Scout Discord visualization bounds", () => {
       visualizationRows: [],
       rowsReturned: 1,
     });
-    const incompleteDescription = visualizationToEmbed(
-      scoutTestVisualization,
-      incompletePreview,
-    )?.data.description;
-    expect(incompleteDescription).toContain(
-      "Aurora              8        Unknown",
-    );
+    expect(() =>
+      visualizationToEmbed(scoutTestVisualization, incompletePreview),
+    ).toThrow("Visualization row missing value for win_rate.");
   });
 
   test("keeps row labels on one Markdown line", () => {
