@@ -88,6 +88,7 @@ describe("custom participant anonymization", () => {
           revision: 42,
           note: "SpaceMan queued with Ace and Sensitive Name",
           mapLabel: "Ace",
+          participantDiscordIds: ["12345678901234567"],
           rosterDiscordIds: ["12345678901234567"],
         },
         {
@@ -101,6 +102,7 @@ describe("custom participant anonymization", () => {
       revision: 42,
       note: "SpaceMan queued with Anonymous player and Anonymous player",
       mapLabel: "Ace",
+      participantDiscordIds: ["Anonymous player"],
       rosterDiscordIds: ["Anonymous player"],
     });
   });

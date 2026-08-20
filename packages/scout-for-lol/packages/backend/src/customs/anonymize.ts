@@ -30,6 +30,7 @@ const STRING_IDENTITY_KEYS = new Set([
 const STRING_IDENTITY_ARRAY_KEYS = new Set([
   "cohostDiscordIds",
   "overdueDiscordIds",
+  "participantDiscordIds",
   "rosterDiscordIds",
   "selectedDiscordIds",
 ]);
