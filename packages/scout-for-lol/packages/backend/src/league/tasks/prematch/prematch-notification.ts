@@ -176,6 +176,72 @@ function buildPrematchPayload(input: {
   };
 }
 
+/**
+ * Record a failed loading-screen render, then let the caller fall back to the
+ * text-only notification.
+ *
+ * Lifted out of `sendPrematchNotification` verbatim: that function sits right
+ * on the complexity ceiling, and this branch-heavy reporting is the part with
+ * no bearing on what actually gets delivered. Behaviour is unchanged.
+ */
+function reportLoadingScreenFailure(input: {
+  error: unknown;
+  loadingScreenData: LoadingScreenData | undefined;
+  queueType: QueueType | undefined;
+  gameId: string;
+  gameInfo: RawCurrentGameInfo;
+}): void {
+  const { error, loadingScreenData, queueType, gameId, gameInfo } = input;
+  if (loadingScreenData?.layout === "classic") {
+    classicAssetResolutionFailuresTotal.inc({
+      phase: "prematch",
+      reason: "asset",
+    });
+    logger.error(
+      "Classic prematch loading-screen asset rendering failed",
+      error,
+      {
+        championIds: loadingScreenData.participants.map(
+          (participant) => participant.championId,
+        ),
+      },
+    );
+  }
+  const isRecoverable = error instanceof RecoverableLoadingScreenDataError;
+  prematchLoadingScreenGeneratedTotal.inc({
+    queue_type: queueType ?? "unknown",
+    status: isRecoverable ? "fallback" : "error",
+  });
+  logger.error(
+    `[sendPrematchNotification] ❌ Failed to generate loading screen for game ${gameId}:`,
+    error,
+  );
+  if (isRecoverable) {
+    return;
+  }
+  const tags = {
+    source: "prematch-loading-screen",
+    gameId,
+    gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
+    mapId: gameInfo.mapId.toString(),
+    gameMode: gameInfo.gameMode,
+  };
+  Sentry.captureException(
+    error,
+    error instanceof UnsupportedLoadingScreenQueueError
+      ? {
+          fingerprint: [
+            "prematch-unsupported-queue",
+            gameInfo.gameQueueConfigId.toString(),
+            gameInfo.gameMode,
+            gameInfo.mapId.toString(),
+          ],
+          tags,
+        }
+      : { tags },
+  );
+}
+
 export async function sendPrematchNotification(
   gameInfo: RawCurrentGameInfo,
   trackedPlayers: PlayerConfigEntry[],
@@ -304,59 +370,13 @@ export async function sendPrematchNotification(
       }
     })();
   } catch (error) {
-    if (loadingScreenData?.layout === "classic") {
-      classicAssetResolutionFailuresTotal.inc({
-        phase: "prematch",
-        reason: "asset",
-      });
-      logger.error(
-        "Classic prematch loading-screen asset rendering failed",
-        error,
-        {
-          championIds: loadingScreenData.participants.map(
-            (participant) => participant.championId,
-          ),
-        },
-      );
-    }
-    const isRecoverable = error instanceof RecoverableLoadingScreenDataError;
-    prematchLoadingScreenGeneratedTotal.inc({
-      queue_type: queueType ?? "unknown",
-      status: isRecoverable ? "fallback" : "error",
-    });
-    logger.error(
-      `[sendPrematchNotification] ❌ Failed to generate loading screen for game ${gameId}:`,
+    reportLoadingScreenFailure({
       error,
-    );
-    if (!isRecoverable) {
-      const context =
-        error instanceof UnsupportedLoadingScreenQueueError
-          ? {
-              fingerprint: [
-                "prematch-unsupported-queue",
-                gameInfo.gameQueueConfigId.toString(),
-                gameInfo.gameMode,
-                gameInfo.mapId.toString(),
-              ],
-              tags: {
-                source: "prematch-loading-screen",
-                gameId,
-                gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
-                mapId: gameInfo.mapId.toString(),
-                gameMode: gameInfo.gameMode,
-              },
-            }
-          : {
-              tags: {
-                source: "prematch-loading-screen",
-                gameId,
-                gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
-                mapId: gameInfo.mapId.toString(),
-                gameMode: gameInfo.gameMode,
-              },
-            };
-      Sentry.captureException(error, context);
-    }
+      loadingScreenData,
+      queueType,
+      gameId,
+      gameInfo,
+    });
     // Continue with text-only notification
   }
 
