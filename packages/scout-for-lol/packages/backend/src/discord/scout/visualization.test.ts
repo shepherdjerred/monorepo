@@ -441,13 +441,14 @@ describe("Scout Discord visualization bounds", () => {
         VisualizationSnapshotSchema.parse({
           ...longSnapshot,
           kind,
-          title: "A title that is too long ".repeat(20),
+          title: `${"A title that is too long ".repeat(10)}😀x`,
         }),
       );
       const description = embed?.data.description;
       expect(description).toBeString();
       expect(description?.length).toBeLessThanOrEqual(3900);
       expect(embed?.data.title?.length).toBeLessThanOrEqual(256);
+      expect(embed?.data.title).not.toContain("�");
       if (kind === "TABLE") {
         expect(description).toContain("```\n");
         expect(description).not.toContain("Visualization truncated");

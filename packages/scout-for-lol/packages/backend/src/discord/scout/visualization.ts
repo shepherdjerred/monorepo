@@ -81,10 +81,7 @@ export function visualizationToEmbed(
   return embed;
 }
 function truncateTitle(title: string): string {
-  if (title.length <= MAX_EMBED_TITLE) {
-    return title;
-  }
-  return `${title.slice(0, MAX_EMBED_TITLE - 1)}…`;
+  return truncateNativeCell(title, MAX_EMBED_TITLE);
 }
 function nativeDescription(
   snapshot: VisualizationSnapshot,

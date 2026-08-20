@@ -18,13 +18,16 @@ export type NativeRow = {
   values: Map<string, NativeRowValue>;
 };
 
-export function truncateNativeCell(value: string): string {
-  if (value.length <= MAX_NATIVE_CELL_LENGTH) {
+export function truncateNativeCell(
+  value: string,
+  maxLength = MAX_NATIVE_CELL_LENGTH,
+): string {
+  if (value.length <= maxLength) {
     return value;
   }
   let truncated = "";
   for (const { segment } of nativeCellGraphemeSegmenter.segment(value)) {
-    if (truncated.length + segment.length > MAX_NATIVE_CELL_LENGTH - 1) {
+    if (truncated.length + segment.length > maxLength - 1) {
       break;
     }
     truncated += segment;
@@ -54,8 +57,8 @@ export function formatPreviewValueWithEvidence(
     const seriesDimension =
       separator === -1 ? "All" : item.id.slice(0, separator);
     const pointDimensions = new Set(rowDimensions);
-    if (seriesDimension !== "All") {
-      pointDimensions.delete(seriesDimension);
+    if (seriesDimension !== "All" && !pointDimensions.delete(seriesDimension)) {
+      return false;
     }
     return item.points.some((point) =>
       pointMatchesRow(point, row, pointDimensions),
