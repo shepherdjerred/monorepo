@@ -10,7 +10,7 @@ import {
 import type { Prisma } from "#generated/prisma/client/index.js";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { recruitmentCounts } from "#src/customs/snapshot.ts";
-import { removeParticipantFromPendingCustomResultVoicePayload } from "#src/customs/result-voice.ts";
+import { pendingCustomResultVoiceIncludesParticipant } from "#src/customs/result-voice.ts";
 
 const ANONYMIZED_DISCORD_ID = DiscordAccountIdSchema.parse("00000000000000000");
 const ANONYMIZED_TEXT = "Anonymous player";
@@ -203,6 +203,27 @@ function addString(values: Set<string>, value: string | null): void {
   if (value !== null && value.length > 0) values.add(value);
 }
 
+function assertNoPendingVoiceReturn(
+  nights: {
+    id: string;
+    auditEvents: { action: string; payload: string }[];
+  }[],
+  discordId: string,
+): void {
+  const pendingVoiceEvent = nights
+    .flatMap((night) => night.auditEvents)
+    .find(
+      (audit) =>
+        audit.action === "VOICE_RESULT_RETURN_PENDING" &&
+        pendingCustomResultVoiceIncludesParticipant(audit.payload, discordId),
+    );
+  if (pendingVoiceEvent !== undefined) {
+    throw new Error(
+      `Cannot anonymize ${discordId}; pending Customs voice return must complete first`,
+    );
+  }
+}
+
 export type CustomAnonymizationReport = {
   guildId: string;
   discordId: string;
@@ -223,7 +244,20 @@ export async function anonymizeCustomParticipant(params: {
   const guildId = DiscordGuildIdSchema.parse(params.guildId);
   const discordId = DiscordAccountIdSchema.parse(params.discordId);
   const nights = await params.prisma.customNight.findMany({
-    where: identityNightWhere(guildId, discordId),
+    where: {
+      OR: [
+        identityNightWhere(guildId, discordId),
+        {
+          guildId,
+          auditEvents: {
+            some: {
+              action: "VOICE_RESULT_RETURN_PENDING",
+              payload: { contains: discordId },
+            },
+          },
+        },
+      ],
+    },
     include: {
       activePointer: true,
       participants: true,
@@ -239,6 +273,7 @@ export async function anonymizeCustomParticipant(params: {
       `Cannot anonymize an active custom night (${activeNight.id}); end it first`,
     );
   }
+  assertNoPendingVoiceReturn(nights, discordId);
   const consents = await params.prisma.customConsent.count({
     where: { guildId, discordId },
   });
@@ -276,7 +311,20 @@ export async function anonymizeCustomParticipant(params: {
     // preview; using it for the write would allow a concurrent anonymization to
     // be overwritten by a stale snapshot.
     const currentNights = await transaction.customNight.findMany({
-      where: identityNightWhere(guildId, discordId),
+      where: {
+        OR: [
+          identityNightWhere(guildId, discordId),
+          {
+            guildId,
+            auditEvents: {
+              some: {
+                action: "VOICE_RESULT_RETURN_PENDING",
+                payload: { contains: discordId },
+              },
+            },
+          },
+        ],
+      },
       include: {
         activePointer: true,
         participants: true,
@@ -292,6 +340,7 @@ export async function anonymizeCustomParticipant(params: {
         `Cannot anonymize an active custom night (${currentActiveNight.id}); end it first`,
       );
     }
+    assertNoPendingVoiceReturn(currentNights, discordId);
 
     for (const night of currentNights) {
       const strings = new Set<string>([discordId]);
@@ -360,17 +409,6 @@ export async function anonymizeCustomParticipant(params: {
         });
       }
       for (const audit of night.auditEvents) {
-        let action = audit.action;
-        let payload = JSON.parse(audit.payload);
-        if (audit.action === "VOICE_RESULT_RETURN_PENDING") {
-          const voicePayload =
-            removeParticipantFromPendingCustomResultVoicePayload(
-              audit.payload,
-              discordId,
-            );
-          action = voicePayload.action;
-          payload = JSON.parse(voicePayload.payload);
-        }
         await transaction.customAuditEvent.update({
           where: { id: audit.id },
           data: {
@@ -378,8 +416,9 @@ export async function anonymizeCustomParticipant(params: {
               audit.actorId === discordId
                 ? ANONYMIZED_DISCORD_ID
                 : audit.actorId,
-            action,
-            payload: JSON.stringify(redactCustomValue(payload, sensitive)),
+            payload: JSON.stringify(
+              redactCustomValue(JSON.parse(audit.payload), sensitive),
+            ),
           },
         });
       }

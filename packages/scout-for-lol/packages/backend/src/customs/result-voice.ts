@@ -26,43 +26,16 @@ const PendingResultVoicePayloadSchema = z.object({
   }),
 });
 
-export function removeParticipantFromPendingCustomResultVoicePayload(
+export function pendingCustomResultVoiceIncludesParticipant(
   payload: string,
   discordId: string,
-): {
-  action: "VOICE_RESULT_RETURN_PENDING" | "VOICE_RESULT_RETURN_SUPERSEDED";
-  payload: string;
-} {
+): boolean {
   const parsed = PendingResultVoicePayloadSchema.parse(JSON.parse(payload));
-  const currentGame = parsed.target.currentGame;
-  if (
-    currentGame?.participants.some(
+  return (
+    parsed.target.currentGame?.participants.some(
       (participant) => participant.discordId === discordId,
-    ) !== true
-  ) {
-    return { action: "VOICE_RESULT_RETURN_PENDING", payload };
-  }
-  const participants = currentGame.participants.filter(
-    (participant) => participant.discordId !== discordId,
+    ) ?? false
   );
-  if (participants.length === 0) {
-    return {
-      action: "VOICE_RESULT_RETURN_SUPERSEDED",
-      payload: JSON.stringify({
-        supersededAt: new Date().toISOString(),
-        reason: "Participant anonymized before voice return completed",
-      }),
-    };
-  }
-  return {
-    action: "VOICE_RESULT_RETURN_PENDING",
-    payload: JSON.stringify({
-      target: {
-        ...parsed.target,
-        currentGame: { participants },
-      },
-    }),
-  };
 }
 
 function resultVoiceTarget(

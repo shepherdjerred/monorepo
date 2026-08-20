@@ -93,6 +93,11 @@ export async function claimVoiceArrangement(params: {
   now: Date;
 }): Promise<CustomMutationResult & { claimId?: string }> {
   const game = currentGame(params.snapshot);
+  if (game.state !== "CODE_PENDING" && game.state !== "LOBBY_READY") {
+    throw new Error(
+      "Voice arrangement is only available before the custom game starts",
+    );
+  }
   if (hasActiveVoiceArrangementProvisioning(game, params.now)) {
     return { applied: false, snapshot: params.snapshot };
   }
