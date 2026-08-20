@@ -12,6 +12,7 @@ import { matchPath, useLocation } from "react-router";
 import {
   ExploreActiveRunSchema,
   type ExploreActiveRun,
+  type ExploreRunOutcome,
   type ExploreTranscript,
 } from "@scout-for-lol/data";
 import {
@@ -19,18 +20,18 @@ import {
   createPendingTurn,
   markStopping,
 } from "#src/lib/explore-turn-state.ts";
-import { observeExploreRun } from "#src/lib/explore-stream.ts";
 import {
   clearExploreClientError,
   moveExploreClientRun,
   removeExploreClientRun,
   setExploreClientRun,
+  shouldReconcileMissingExploreRun,
   type ExploreClientRun,
 } from "#src/lib/explore-client-runs.ts";
 import {
   resolveExploreRunCompletion,
   shouldClearExploreRunMarker,
-  type ExploreRunOutcome,
+  type ExploreRunIdentity,
 } from "#src/lib/explore-run-completion.ts";
 import {
   createExploreRunMarker,
@@ -39,6 +40,7 @@ import {
 import { useExploreRunMarkers } from "#src/hooks/use-explore-run-markers.ts";
 import { useMarkerDiscovery } from "#src/hooks/use-explore-marker-discovery.ts";
 import { useExploreStartMutation } from "#src/hooks/use-explore-start-mutation.ts";
+import { useExploreRunObserver } from "#src/hooks/use-explore-run-observer.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import {
   ExploreRunsContext,
@@ -47,10 +49,6 @@ import {
 } from "#src/components/explore-runs-context.ts";
 
 const NEW_CONVERSATION_KEY = "new";
-const RECONNECT_DELAYS_MS = [250, 750, 1500, 3000];
-
-type RunIdentity = Omit<ExploreActiveRun, "startedAt">;
-
 function conversationKey(conversationId: string | null): string {
   return conversationId ?? NEW_CONVERSATION_KEY;
 }
@@ -89,7 +87,6 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
   const [runs, setRuns] = useState<Map<string, ExploreClientRun>>(new Map());
   const runsRef = useRef(runs);
   const [errors, setErrors] = useState<Map<string, string>>(new Map());
-  const controllersRef = useRef(new Map<string, AbortController>());
   const finishingRef = useRef(new Set<string>());
   const stopRequestedRef = useRef(new Set<string>());
 
@@ -144,7 +141,10 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
   );
 
   const finishRun = useCallback(
-    async (summary: RunIdentity, outcome: ExploreRunOutcome): Promise<void> => {
+    async (
+      summary: ExploreRunIdentity,
+      outcome: ExploreRunOutcome,
+    ): Promise<void> => {
       if (finishingRef.current.has(summary.runId)) return;
       finishingRef.current.add(summary.runId);
       let transcript: ExploreTranscript | undefined;
@@ -166,7 +166,6 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
       updateRuns((current) => {
         return removeExploreClientRun(current, summary.conversationId);
       });
-      controllersRef.current.delete(summary.runId);
       finishingRef.current.delete(summary.runId);
 
       if (
@@ -197,78 +196,8 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
     [refreshConversation, updateMarkers, updateRuns],
   );
 
-  const observe = useCallback(
-    (summary: ExploreActiveRun): void => {
-      if (controllersRef.current.has(summary.runId)) return;
-      const controller = new AbortController();
-      controllersRef.current.set(summary.runId, controller);
-
-      void (async () => {
-        let attempt = 0;
-        while (!observerWasAborted(controller.signal)) {
-          const terminal: { outcome: ExploreRunOutcome | null } = {
-            outcome: null,
-          };
-          try {
-            await observeExploreRun({
-              runId: summary.runId,
-              signal: controller.signal,
-              onEvent: (event) => {
-                const key = summary.conversationId;
-                if (event.type === "error") {
-                  setErrors((current) => {
-                    const next = new Map(current);
-                    next.set(key, event.message);
-                    return next;
-                  });
-                } else if (event.type === "done") {
-                  terminal.outcome = event.outcome;
-                } else {
-                  updateRuns((current) => {
-                    const existing = current.get(key);
-                    if (existing === undefined) return current;
-                    return setExploreClientRun(current, key, {
-                      ...existing,
-                      turn: applyStreamEvent(existing.turn, event),
-                    });
-                  });
-                }
-              },
-            });
-            if (terminal.outcome !== null) {
-              await finishRun(summary, terminal.outcome);
-              return;
-            }
-          } catch {
-            if (observerWasAborted(controller.signal)) return;
-          }
-
-          const delay =
-            RECONNECT_DELAYS_MS[
-              Math.min(attempt, RECONNECT_DELAYS_MS.length - 1)
-            ] ?? 3000;
-          attempt += 1;
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          if (observerWasAborted(controller.signal)) return;
-
-          let discovered: ExploreActiveRun[];
-          try {
-            discovered = await queryClient.fetchQuery({
-              ...trpc.explore.activeRuns.queryOptions(),
-              staleTime: 0,
-            });
-          } catch {
-            continue;
-          }
-          if (!discovered.some((run) => run.runId === summary.runId)) {
-            await finishRun(summary, "interrupted");
-            return;
-          }
-        }
-      })();
-    },
-    [finishRun, queryClient, trpc.explore.activeRuns, updateRuns],
-  );
+  const { observe, observedRunIds, reconcileMissingRun } =
+    useExploreRunObserver({ finishRun, setErrors, updateRuns });
 
   useEffect(() => {
     if (pathname.startsWith("/explore")) setActivated(true);
@@ -315,9 +244,17 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
       observe(summary);
     }
 
+    const observedIds = observedRunIds();
     for (const marker of markersRef.current) {
-      if (marker.state === "running" && !discoveredIds.has(marker.runId)) {
-        void finishRun(marker, "interrupted");
+      if (
+        marker.state === "running" &&
+        shouldReconcileMissingExploreRun({
+          runId: marker.runId,
+          discoveredRunIds: discoveredIds,
+          observedRunIds: observedIds,
+        })
+      ) {
+        void reconcileMissingRun(marker);
       }
     }
   }, [
@@ -325,19 +262,11 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
     activeRuns.isSuccess,
     finishRun,
     observe,
+    observedRunIds,
+    reconcileMissingRun,
     updateMarkers,
     updateRuns,
   ]);
-
-  useEffect(
-    () => () => {
-      for (const controller of controllersRef.current.values()) {
-        controller.abort();
-      }
-      controllersRef.current.clear();
-    },
-    [],
-  );
 
   const startTurn = useCallback(
     async (input: StartExploreTurnInput): Promise<ExploreActiveRun | null> => {
@@ -496,8 +425,4 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
-}
-
-function observerWasAborted(signal: AbortSignal): boolean {
-  return signal.aborted;
 }

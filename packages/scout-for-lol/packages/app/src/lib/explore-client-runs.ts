@@ -46,3 +46,14 @@ export function clearExploreClientError(
   next.delete(conversationId);
   return next;
 }
+
+export function shouldReconcileMissingExploreRun(input: {
+  runId: string;
+  discoveredRunIds: ReadonlySet<string>;
+  observedRunIds: ReadonlySet<string>;
+}): boolean {
+  return (
+    !input.discoveredRunIds.has(input.runId) &&
+    !input.observedRunIds.has(input.runId)
+  );
+}

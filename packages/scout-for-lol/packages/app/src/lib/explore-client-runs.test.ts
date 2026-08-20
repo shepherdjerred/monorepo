@@ -4,6 +4,7 @@ import {
   moveExploreClientRun,
   removeExploreClientRun,
   setExploreClientRun,
+  shouldReconcileMissingExploreRun,
   type ExploreClientRun,
 } from "#src/lib/explore-client-runs.ts";
 import { createPendingTurn } from "#src/lib/explore-turn-state.ts";
@@ -56,5 +57,22 @@ describe("Explore provider run map", () => {
     expect(cleared.has("conversation-a")).toBe(false);
     expect(cleared.get("conversation-b")).toBe("Different failure");
     expect(errors.get("conversation-a")).toBe("Old failure");
+  });
+
+  test("a stale discovery response cannot retire a locally observed run", () => {
+    expect(
+      shouldReconcileMissingExploreRun({
+        runId: "new-run",
+        discoveredRunIds: new Set(),
+        observedRunIds: new Set(["new-run"]),
+      }),
+    ).toBe(false);
+    expect(
+      shouldReconcileMissingExploreRun({
+        runId: "lost-run",
+        discoveredRunIds: new Set(),
+        observedRunIds: new Set(),
+      }),
+    ).toBe(true);
   });
 });

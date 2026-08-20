@@ -75,6 +75,20 @@ describe("resolveExploreRunCompletion", () => {
     ).toEqual({ markerState: "failed", answerVisible: true });
   });
 
+  test("a stopped run without a persisted answer is not a failure", () => {
+    expect(
+      resolveExploreRunCompletion({
+        run: {
+          questionMessageId: QUESTION_ID,
+          versionCountAtStart: 0,
+        },
+        outcome: "stopped",
+        finalMessageId: null,
+        messages: [],
+      }),
+    ).toEqual({ markerState: null, answerVisible: false });
+  });
+
   test("keeps a completion marker when another branch is visible", () => {
     const completion = resolveExploreRunCompletion({
       run: {

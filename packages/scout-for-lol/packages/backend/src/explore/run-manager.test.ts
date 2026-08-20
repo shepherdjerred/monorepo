@@ -197,6 +197,8 @@ describe("ExploreRunManager", () => {
     expect(await finished).toBe("succeeded");
     expect(firstEvents.some((event) => event.type === "done")).toBe(false);
     expect(manager.list(owner)).toEqual([]);
+    expect(manager.outcome(summary.runId, owner)).toBe("succeeded");
+    expect(manager.outcome(summary.runId, stranger)).toBeNull();
   });
 
   test("reconnect snapshots remain valid after overlong partial output", async () => {
@@ -367,6 +369,7 @@ describe("ExploreRunManager lifecycle", () => {
 
     expect(manager.stop(first.runId, owner)).toBe(true);
     expect(await firstFinished).toBe("stopped");
+    expect(manager.outcome(first.runId, owner)).toBe("stopped");
     expect(manager.list(owner).map((run) => run.runId)).toEqual([second.runId]);
 
     requiredRun(agent, 1).resolve(successfulResult("Answer B"));

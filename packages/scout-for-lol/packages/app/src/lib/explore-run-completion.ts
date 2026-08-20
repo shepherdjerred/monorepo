@@ -3,16 +3,20 @@ import {
   EXPLORE_STOPPED_CAVEAT,
   type ExploreActiveRun,
   type ExploreMessage,
+  type ExploreRunOutcome,
 } from "@scout-for-lol/data";
 
-export type ExploreRunOutcome =
-  | "succeeded"
-  | "failed"
-  | "stopped"
-  | "interrupted";
+export type ExploreRunIdentity = Pick<
+  ExploreActiveRun,
+  | "runId"
+  | "conversationId"
+  | "questionMessageId"
+  | "leafIdAtStart"
+  | "versionCountAtStart"
+>;
 
 export function findVisibleExploreRunAnswer(input: {
-  run: Pick<ExploreActiveRun, "questionMessageId" | "versionCountAtStart">;
+  run: Pick<ExploreRunIdentity, "questionMessageId" | "versionCountAtStart">;
   finalMessageId: string | null;
   messages: ExploreMessage[] | undefined;
 }): ExploreMessage | undefined {
@@ -28,7 +32,7 @@ export function findVisibleExploreRunAnswer(input: {
 }
 
 export function resolveExploreRunCompletion(input: {
-  run: Pick<ExploreActiveRun, "questionMessageId" | "versionCountAtStart">;
+  run: Pick<ExploreRunIdentity, "questionMessageId" | "versionCountAtStart">;
   outcome: ExploreRunOutcome;
   finalMessageId: string | null;
   messages: ExploreMessage[] | undefined;

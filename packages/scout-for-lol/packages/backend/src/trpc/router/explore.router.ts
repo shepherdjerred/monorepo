@@ -7,6 +7,8 @@ import {
   EXPLORE_TITLE_MAX_LENGTH,
   ExploreConversationIdSchema,
   ExploreRunIdSchema,
+  ExploreRunObserveRequestSchema,
+  ExploreRunOutcomeResultSchema,
   ExploreTurnRequestSchema,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
@@ -96,6 +98,15 @@ export const exploreRouter = router({
     const userId = await requireExploreUser(ctx.user);
     return exploreRunManager.list(userId);
   }),
+
+  runOutcome: exploreProcedure
+    .input(ExploreRunObserveRequestSchema)
+    .query(async ({ ctx, input }) => {
+      const userId = await requireExploreUser(ctx.user);
+      return ExploreRunOutcomeResultSchema.parse({
+        outcome: exploreRunManager.outcome(input.runId, userId),
+      });
+    }),
 
   start: webMutationProcedure
     .input(ExploreTurnRequestSchema)

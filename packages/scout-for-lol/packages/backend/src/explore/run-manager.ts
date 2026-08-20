@@ -7,6 +7,7 @@ import {
   type DiscordAccountId,
   type ExploreActiveRun,
   type ExploreMessage,
+  type ExploreRunOutcome,
   type ExploreStreamEvent,
   type ExploreTraceEntry,
   type ExploreTurnRequest,
@@ -39,9 +40,9 @@ import { createLogger } from "#src/logger.ts";
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
 
 const logger = createLogger("explore-run-manager");
+const TERMINAL_OUTCOME_TTL_MS = 5 * 60 * 1000;
 
 type RunTermination = "stop" | "delete" | "shutdown" | null;
-type RunOutcome = Extract<ExploreStreamEvent, { type: "done" }>["outcome"];
 type Subscriber = (event: ExploreStreamEvent) => void;
 export type ExploreAgentRunner = (
   params: ExploreAgentParams,
@@ -69,6 +70,12 @@ type ActiveRun = {
   termination: RunTermination;
   settled: Promise<null>;
   resolveSettled: (value: null) => void;
+};
+
+type TerminalRun = {
+  userId: DiscordAccountId;
+  outcome: ExploreRunOutcome;
+  completedAt: number;
 };
 
 export class ExploreRunUnavailableError extends Error {}
@@ -105,6 +112,7 @@ export class ExploreRunManager {
   readonly #conversationRuns = new Map<string, string>();
   readonly #startingConversations = new Map<string, Promise<null>>();
   readonly #deletingConversations = new Set<string>();
+  readonly #terminalRuns = new Map<string, TerminalRun>();
   #acceptingRuns = true;
 
   constructor(
@@ -252,6 +260,16 @@ export class ExploreRunManager {
     return true;
   }
 
+  outcome(runId: string, userId: DiscordAccountId): ExploreRunOutcome | null {
+    const terminal = this.#terminalRuns.get(runId);
+    if (terminal?.userId !== userId) return null;
+    if (Date.now() - terminal.completedAt > TERMINAL_OUTCOME_TTL_MS) {
+      this.#terminalRuns.delete(runId);
+      return null;
+    }
+    return terminal.outcome;
+  }
+
   async deleteConversationAndWait(
     conversationId: string,
     userId: DiscordAccountId,
@@ -320,6 +338,7 @@ export class ExploreRunManager {
       );
     }
     this.#conversationRuns.clear();
+    this.#terminalRuns.clear();
     this.#acceptingRuns = true;
   }
 
@@ -381,7 +400,7 @@ export class ExploreRunManager {
   }
 
   async #execute(run: ActiveRun): Promise<void> {
-    let outcome: RunOutcome = "failed";
+    let outcome: ExploreRunOutcome = "failed";
 
     try {
       const result = await runPersistedExploreTurn(
@@ -416,12 +435,27 @@ export class ExploreRunManager {
         tags: { source: "explore-background-run-manager" },
       });
     } finally {
+      this.#recordTerminalOutcome(run, outcome);
       this.#broadcast(run, { type: "done", outcome });
       run.subscribers.clear();
       this.#runs.delete(run.summary.runId);
       this.#conversationRuns.delete(run.summary.conversationId);
       run.resolveSettled(null);
     }
+  }
+
+  #recordTerminalOutcome(run: ActiveRun, outcome: ExploreRunOutcome): void {
+    const completedAt = Date.now();
+    for (const [runId, terminal] of this.#terminalRuns) {
+      if (completedAt - terminal.completedAt > TERMINAL_OUTCOME_TTL_MS) {
+        this.#terminalRuns.delete(runId);
+      }
+    }
+    this.#terminalRuns.set(run.summary.runId, {
+      userId: run.identity.userId,
+      outcome,
+      completedAt,
+    });
   }
 }
 

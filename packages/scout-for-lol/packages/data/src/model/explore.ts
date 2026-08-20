@@ -396,6 +396,14 @@ export const ExploreActiveRunSchema = z
 
 export type ExploreActiveRun = z.infer<typeof ExploreActiveRunSchema>;
 
+export const ExploreRunOutcomeSchema = z.enum([
+  "succeeded",
+  "failed",
+  "stopped",
+  "interrupted",
+]);
+export type ExploreRunOutcome = z.infer<typeof ExploreRunOutcomeSchema>;
+
 /** Attach an authenticated observer to a server-owned run. */
 export const ExploreRunObserveRequestSchema = z
   .object({ runId: ExploreRunIdSchema })
@@ -403,6 +411,13 @@ export const ExploreRunObserveRequestSchema = z
 
 export type ExploreRunObserveRequest = z.infer<
   typeof ExploreRunObserveRequestSchema
+>;
+
+export const ExploreRunOutcomeResultSchema = z
+  .object({ outcome: ExploreRunOutcomeSchema.nullable() })
+  .strict();
+export type ExploreRunOutcomeResult = z.infer<
+  typeof ExploreRunOutcomeResultSchema
 >;
 
 /**
@@ -497,7 +512,7 @@ export const ExploreStreamEventSchema = z.discriminatedUnion("type", [
   z
     .object({
       type: z.literal("done"),
-      outcome: z.enum(["succeeded", "failed", "stopped", "interrupted"]),
+      outcome: ExploreRunOutcomeSchema,
     })
     .strict(),
 ]);
