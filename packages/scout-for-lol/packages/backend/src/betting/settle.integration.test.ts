@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import {
   BUCKS_INT32_MAX,
+  BucksLedgerContextSchema,
   BucksMatchingSummarySchema,
   DiscordGuildIdSchema,
   RawMatchSchema,
@@ -229,10 +230,31 @@ describe("settleBettingForMatch", () => {
       }),
     ).toEqual([
       { kind: "bet_stake", delta: -10 },
-      { kind: "bet_payout", delta: 20 },
+      { kind: "bet_payout", delta: 10 },
       { kind: "winner_fee", delta: -2 },
       { kind: "winner_fee", delta: 2 },
+      { kind: "bet_payout", delta: 10 },
     ]);
+    const payoutContexts = await db.bucksLedgerEntry.findMany({
+      where: {
+        betId: winner.bet.id,
+        bucksAccountId: winner.account.id,
+        kind: "bet_payout",
+      },
+      orderBy: { id: "asc" },
+      select: { context: true },
+    });
+    expect(
+      payoutContexts.map((entry) => {
+        const context = BucksLedgerContextSchema.parse(
+          JSON.parse(entry.context),
+        );
+        if (context.type !== "settlement") {
+          throw new Error("expected a settlement payout context");
+        }
+        return context.payoutComponent;
+      }),
+    ).toEqual(["principal", "profit"]);
   });
 
   test("keeps a one-Buck winning match profitable", async () => {
@@ -252,7 +274,9 @@ describe("settleBettingForMatch", () => {
       }),
     ).toEqual({ balance: 101 });
   });
+});
 
+describe("settlement claims and idempotency", () => {
   test("settling twice is a no-op the second time", async () => {
     await makeBalancedPool();
     const first = await settleBettingForMatch(fixture, db);
@@ -277,7 +301,7 @@ describe("settleBettingForMatch", () => {
     expect(first.length + second.length).toBe(1);
     expect(
       await db.bucksLedgerEntry.count({ where: { kind: "bet_payout" } }),
-    ).toBe(1);
+    ).toBe(2);
     expect(
       await db.bucksLedgerEntry.count({ where: { kind: "winner_fee" } }),
     ).toBe(2);
@@ -492,8 +516,37 @@ describe("refunds and house settlement", () => {
       }),
     ).toEqual({ balance: 102 });
   });
+});
 
-  test("voids when an even-money gross payout exceeds wallet storage", async () => {
+describe("settlement storage bounds", () => {
+  test("settles when gross payout overflows temporarily but net payout fits", async () => {
+    const pool = await makePool();
+    const winner = await makeBettor({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(1),
+      teamId: WINNING_TEAM,
+      stake: 10,
+      startingBalance: BUCKS_INT32_MAX - 9,
+    });
+    await makeBettor({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(2),
+      teamId: LOSING_TEAM,
+      stake: 10,
+    });
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary?.voidReason).toBeUndefined();
+    expect(summary?.houseCut).toBe(2);
+    expect(
+      await db.bucksAccount.findUniqueOrThrow({
+        where: { id: winner.account.id },
+        select: { balance: true },
+      }),
+    ).toEqual({ balance: BUCKS_INT32_MAX - 1 });
+  });
+
+  test("voids when an even-money net payout exceeds wallet storage", async () => {
     const pool = await makePool();
     const winner = await makeBettor({
       poolId: pool.id,

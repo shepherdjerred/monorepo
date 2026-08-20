@@ -1,23 +1,16 @@
 import * as Sentry from "@sentry/bun";
 import {
   BucksPoolRosterSchema,
-  DiscordGuildIdSchema,
   RiotTeamIdSchema,
   type BucksPoolParticipant,
   type BucksVoidReason,
   type RawMatch,
 } from "@scout-for-lol/data";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
-import {
-  HOUSE_CUT_PERCENT,
-  settlementHouseCut,
-} from "#src/betting/house-cut.ts";
-import { transferHouseCut } from "#src/betting/house.ts";
-import {
-  applyBucksDelta,
-  BucksStorageOverflowError,
-} from "#src/betting/ledger.ts";
+import { settlementHouseCut } from "#src/betting/house-cut.ts";
+import { BucksStorageOverflowError } from "#src/betting/ledger.ts";
 import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
+import { creditBet } from "#src/betting/settlement-ledger.ts";
 import {
   closeBettingWindowsForMatch,
   type ClosedPool,
@@ -89,24 +82,6 @@ async function settleWithOverflowFallback(input: {
     // remains representable.
     return await input.settle("storage_overflow");
   }
-}
-
-function aliasesForTeam(
-  roster: readonly BucksPoolParticipant[],
-  teamId: number,
-): string[] {
-  return roster
-    .filter((participant) => participant.teamId === teamId)
-    .map((participant) => participant.trackedAlias)
-    .filter((alias) => alias !== undefined);
-}
-
-function subjectAlias(
-  roster: readonly BucksPoolParticipant[],
-  puuid: string,
-): string {
-  const found = roster.find((participant) => participant.puuid === puuid);
-  return found?.trackedAlias ?? "a tracked player";
 }
 
 function settleMatchedBets(input: {
@@ -186,72 +161,6 @@ function settleMatchedBets(input: {
     losersPool,
     houseCut: bets.reduce((sum, bet) => sum + bet.houseCut, 0),
   };
-}
-
-async function creditBet(
-  tx: Db,
-  input: {
-    bet: SettlementBet;
-    matchId: string;
-    serverId: string;
-    roster: readonly BucksPoolParticipant[];
-    winningTeamId: number | undefined;
-    voidReason: BucksVoidReason | undefined;
-    winnersPool: number;
-    losersPool: number;
-  },
-): Promise<void> {
-  const { bet } = input;
-  if (bet.grossPayout > 0) {
-    await applyBucksDelta(tx, {
-      bucksAccountId: bet.bucksAccountId,
-      delta: bet.grossPayout,
-      kind: bet.refunded ? "bet_void_refund" : "bet_payout",
-      matchId: input.matchId,
-      betId: bet.betId,
-      predictedTeamId: bet.predictedTeamId,
-      actualWinningTeamId: input.winningTeamId,
-      context: {
-        type: "settlement",
-        subjectAlias: subjectAlias(input.roster, bet.subjectPuuid),
-        backedAliases: aliasesForTeam(input.roster, bet.predictedTeamId),
-        opposingAliases: aliasesForTeam(
-          input.roster,
-          bet.predictedTeamId === 100 ? 200 : 100,
-        ),
-        winnersPool: input.winnersPool,
-        losersPool: input.losersPool,
-        stakeReturned: bet.matchedStake,
-        winnings: bet.winnings,
-        grossPayout: bet.grossPayout,
-        houseCut: bet.houseCut,
-        netPayout: bet.payout,
-        submittedStake: bet.submittedStake,
-        matchedStake: bet.matchedStake,
-        unmatchedStake: bet.unmatchedStake,
-        voidReason: input.voidReason,
-      },
-    });
-  }
-
-  if (bet.houseCut > 0) {
-    await transferHouseCut(tx, {
-      serverId: DiscordGuildIdSchema.parse(input.serverId),
-      bucksAccountId: bet.bucksAccountId,
-      amount: bet.houseCut,
-      kind: "winner_fee",
-      matchId: input.matchId,
-      betId: bet.betId,
-      context: {
-        type: "house_fee",
-        source: "settlement",
-        ratePercent: HOUSE_CUT_PERCENT,
-        grossAmount: bet.matchedStake,
-        fee: bet.houseCut,
-        basis: "matched_profit",
-      },
-    });
-  }
 }
 
 async function markBetSettled(

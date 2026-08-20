@@ -261,6 +261,11 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     submittedStake: z.number().int().nonnegative().optional(),
     matchedStake: z.number().int().nonnegative().optional(),
     unmatchedStake: z.number().int().nonnegative().optional(),
+    /** Gross payouts may be split around the fee transfer so every
+     * intermediate wallet balance remains representable. */
+    payoutComponent: z
+      .enum(["gross", "principal", "profit", "refund"])
+      .optional(),
     voidReason: BucksVoidReasonSchema.optional(),
   }),
   z.strictObject({
