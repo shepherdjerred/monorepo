@@ -5,6 +5,7 @@ import { requireCliValue, unresolvedSecrets } from "./migration-core.ts";
 const DEFAULT_BACKEND_PORT = 3000;
 const DEFAULT_WEB_PORT = 5180;
 const DEFAULT_DATABASE_URL = "file:./local-web-dev.db";
+const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "./.design-audit-report-lake";
 
 type DevWebOptions = {
   readonly backendPort: number;
@@ -216,9 +217,13 @@ if (import.meta.main) {
     const { options } = parsed;
     const { backendOrigin, webOrigin } = origins(options);
     const backendCwd = path.join(root, "packages", "backend");
+    const configuredLakeDir = Bun.env["REPORT_LAKE_DIR"];
     const lakeDir = resolveBackendLakeDir(
       backendCwd,
-      Bun.env["REPORT_LAKE_DIR"],
+      isDesignAuditBoot &&
+        (configuredLakeDir === undefined || configuredLakeDir.length === 0)
+        ? DEFAULT_DESIGN_AUDIT_LAKE_DIR
+        : configuredLakeDir,
     );
     console.log(await adoptSeedIfUnseeded(lakeDir));
 

@@ -23,7 +23,9 @@ Local origins use Scout's loopback-only `/api/dev/login` route, so
 `SCOUT_DESIGN_AUDIT_START_LOCAL_SERVERS=true` boots the backend with
 `SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true` (scripts/dev-web.ts) and needs no real
 Discord bot token, Riot API key, or 1Password session — the audit never makes
-a live Discord or Riot call. Beta runs use a fresh Discord OAuth flow with
+a live Discord or Riot call. Local audit boots use the dedicated
+`packages/backend/.design-audit-report-lake` directory, so seeding the fixture
+never resets the normal developer report lake. Beta runs use a fresh Discord OAuth flow with
 `SCOUT_DESIGN_AUDIT_DISCORD_EMAIL`, `SCOUT_DESIGN_AUDIT_DISCORD_PASSWORD`, and
 optionally `SCOUT_DESIGN_AUDIT_DISCORD_TOTP`. These values are runtime CI
 secrets and must never be committed.

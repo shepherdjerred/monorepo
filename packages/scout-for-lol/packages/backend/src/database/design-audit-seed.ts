@@ -17,6 +17,7 @@ const DEFAULT_DISCORD_ID = "000000000000000001";
 const DEFAULT_PLAYER_ALIAS = "Scout Classic";
 const DEFAULT_COMPETITION_ID = 1;
 const DEFAULT_REPORT_ID = 1;
+const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "./.design-audit-report-lake";
 const DESIGN_AUDIT_EXPLORE_CONVERSATION_ID =
   "1b4e28ba-2fa1-41d2-883f-0016d3cca427";
 const DESIGN_AUDIT_EXPLORE_QUESTION_ID = "2c5f39cb-3fb2-52e3-994f-1127e4ddb538";
@@ -98,9 +99,12 @@ export async function seedDesignAuditDatabase(
       { timestampFormat: "unixepoch-ms" },
     ),
   });
+  const configuredLakeDir = environment["REPORT_LAKE_DIR"];
   const lakeDir = path.resolve(
     backendCwd,
-    environment["REPORT_LAKE_DIR"] ?? "./report-lake",
+    configuredLakeDir !== undefined && configuredLakeDir.length > 0
+      ? configuredLakeDir
+      : DEFAULT_DESIGN_AUDIT_LAKE_DIR,
   );
 
   try {
