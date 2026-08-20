@@ -192,12 +192,12 @@ describe("Scout Discord visualization edge cases", () => {
       kind: "TABLE",
       series: scoutTestVisualization.series.map((series) => ({
         ...series,
-        label: "Games `\r\n| unsafe",
+        label: "Games ` and ```\r\n| unsafe",
       })),
     });
 
     const description = visualizationToEmbed(headerSnapshot)?.data.description;
-    expect(description).toContain("Games ′");
+    expect(description).toContain("Games ` and ′′′");
     expect(description).toContain("| unsafe");
     expect(description).not.toContain("Games `\n");
   });
@@ -479,6 +479,41 @@ test("renders transformed snapshot values instead of raw preview values", () => 
   const description = visualizationToEmbed(snapshot, preview)?.data.description;
   expect(description).toContain("9");
   expect(description).not.toContain("7");
+});
+
+test("preserves confidence intervals in native temporal rows", () => {
+  const snapshot = VisualizationSnapshotSchema.parse({
+    ...scoutTestVisualization,
+    temporal: {
+      window: {
+        kind: "relative",
+        days: 30,
+      },
+      bucket: "day",
+      timezone: "UTC",
+    },
+    series: scoutTestVisualization.series.map((series) => ({
+      ...series,
+      points: series.points.map((point) => ({
+        ...point,
+        evidence:
+          series.id === "win_rate" && point.key === "Aurora"
+            ? {
+                ...point.evidence,
+                confidenceInterval: {
+                  level: 0.95,
+                  lower: 0.75,
+                  upper: 1,
+                },
+              }
+            : point.evidence,
+      })),
+    })),
+  });
+
+  expect(visualizationToEmbed(snapshot)?.data.description).toContain(
+    "95% CI 75.0%–100.0%",
+  );
 });
 
 test("renders percent-stack snapshot values instead of raw preview values", () => {

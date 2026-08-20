@@ -282,8 +282,8 @@ function formatTable(
   ]);
   const widths = headers.map((_, index) =>
     Math.max(
-      escapedHeaders[index]?.length ?? 0,
-      ...bodyRows.map((row) => row[index]?.length ?? 0),
+      displayWidth(escapedHeaders[index] ?? ""),
+      ...bodyRows.map((row) => displayWidth(row[index] ?? "")),
     ),
   );
   const lines = [
@@ -304,8 +304,56 @@ function formatTable(
 
 function formatTableRow(cells: string[], widths: number[]): string {
   return cells
-    .map((cell, index) => cell.padEnd(widths[index] ?? cell.length))
+    .map((cell, index) =>
+      padDisplayWidth(cell, widths[index] ?? displayWidth(cell)),
+    )
     .join("    ");
+}
+
+const graphemeSegmenter = new Intl.Segmenter(undefined, {
+  granularity: "grapheme",
+});
+
+function displayWidth(value: string): number {
+  let width = 0;
+  for (const { segment } of graphemeSegmenter.segment(value)) {
+    for (const character of segment) {
+      const codePoint = character.codePointAt(0);
+      if (codePoint === undefined) {
+        continue;
+      }
+      if (
+        codePoint === 0x20_0d ||
+        /\p{Mark}/u.test(character) ||
+        (codePoint >= 0xfe_00 && codePoint <= 0xfe_0f)
+      ) {
+        continue;
+      }
+      width += isWideCodePoint(codePoint) ? 2 : 1;
+      break;
+    }
+  }
+  return width;
+}
+
+function isWideCodePoint(codePoint: number): boolean {
+  return (
+    (codePoint >= 0x11_00 && codePoint <= 0x11_5f) ||
+    codePoint === 0x23_29 ||
+    codePoint === 0x23_2a ||
+    (codePoint >= 0x2e_80 && codePoint <= 0xa4_cf) ||
+    (codePoint >= 0xac_00 && codePoint <= 0xd7_a3) ||
+    (codePoint >= 0xf9_00 && codePoint <= 0xfa_ff) ||
+    (codePoint >= 0xfe_10 && codePoint <= 0xfe_19) ||
+    (codePoint >= 0xfe_30 && codePoint <= 0xfe_6f) ||
+    (codePoint >= 0xff_00 && codePoint <= 0xff_60) ||
+    (codePoint >= 0xff_e0 && codePoint <= 0xff_e6) ||
+    (codePoint >= 0x1_f3_00 && codePoint <= 0x1_fa_ff)
+  );
+}
+
+function padDisplayWidth(value: string, width: number): string {
+  return value + " ".repeat(Math.max(0, width - displayWidth(value)));
 }
 
 function alignedRows(snapshot: VisualizationSnapshot): NativeRow[] {
@@ -428,5 +476,7 @@ function escapeMarkdown(value: string): string {
 }
 
 function escapeTableCell(value: string): string {
-  return value.replaceAll("`", "′").replaceAll(/[\r\n]+/g, " ");
+  return value
+    .replaceAll(/`{3,}/g, (ticks) => "′".repeat(ticks.length))
+    .replaceAll(/[\r\n]+/g, " ");
 }

@@ -42,15 +42,24 @@ export function formatNativeSeriesValue(
     requireNumericRowValue(row, series.id),
   );
   const point = series.points.find((item) => item.key === row.key);
+  const confidenceInterval = point?.evidence.confidenceInterval;
+  const confidenceIntervalText =
+    confidenceInterval === null || confidenceInterval === undefined
+      ? ""
+      : ` · 95% CI ${formatSeriesValue(
+          snapshot,
+          series,
+          confidenceInterval.lower,
+        )}–${formatSeriesValue(snapshot, series, confidenceInterval.upper)}`;
   if (
     point === undefined ||
     (snapshot.temporal?.comparison === undefined &&
       point.comparisonEvidence === undefined)
   ) {
-    return value;
+    return `${value}${confidenceIntervalText}`;
   }
   const percentage = point.percentageDelta;
-  return `${value} · Baseline: ${formatSeriesValue(
+  return `${value}${confidenceIntervalText} · Baseline: ${formatSeriesValue(
     snapshot,
     series,
     point.comparisonValue ?? null,
