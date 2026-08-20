@@ -31,7 +31,12 @@ function ActivityContent() {
       const current = queryClient.getQueryData<CustomNightSnapshot | null>(
         trpc.customs.active.queryKey(),
       );
-      return newestCustomSnapshot(current, candidate, currentAtRequest);
+      return newestCustomSnapshot(
+        current,
+        candidate,
+        currentAtRequest ?? null,
+        currentAtRequest === undefined,
+      );
     },
   });
   useCustomSocket();

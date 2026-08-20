@@ -177,6 +177,22 @@ async function syncLatestCustomRecruitmentMessage(params: {
   return mutation.snapshot;
 }
 
+async function markPendingRecruitmentSyncsCompleted(
+  prisma: ExtendedPrismaClient,
+  nightId: string,
+): Promise<void> {
+  await prisma.customAuditEvent.updateMany({
+    where: {
+      nightId,
+      action: "RECRUITMENT_MESSAGE_SYNC_PENDING",
+    },
+    data: {
+      action: "RECRUITMENT_MESSAGE_SYNCED",
+      payload: JSON.stringify({ syncedAt: new Date().toISOString() }),
+    },
+  });
+}
+
 export async function syncCustomRecruitmentMessage(params: {
   prisma: ExtendedPrismaClient;
   snapshot: CustomNightSnapshot;
@@ -186,10 +202,12 @@ export async function syncCustomRecruitmentMessage(params: {
   recruitmentSyncQueue.set(params.snapshot.id, gate.promise);
   if (previous !== undefined) await previous;
   try {
-    return await syncLatestCustomRecruitmentMessage({
+    const snapshot = await syncLatestCustomRecruitmentMessage({
       prisma: params.prisma,
       nightId: params.snapshot.id,
     });
+    await markPendingRecruitmentSyncsCompleted(params.prisma, snapshot.id);
+    return snapshot;
   } finally {
     gate.resolve(undefined);
     if (recruitmentSyncQueue.get(params.snapshot.id) === gate.promise)

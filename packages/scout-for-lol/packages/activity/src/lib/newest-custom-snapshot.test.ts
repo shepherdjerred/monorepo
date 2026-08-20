@@ -61,6 +61,12 @@ describe("newestCustomSnapshot", () => {
     expect(newestCustomSnapshot(current, candidate, requested)).toBe(current);
   });
 
+  test("rejects an initial response after the socket installs a night", () => {
+    const current = snapshot(0, "5df1fd22-770f-4f9b-a247-bd97a73c603d");
+    const candidate = snapshot(0);
+    expect(newestCustomSnapshot(current, candidate, null, true)).toBe(current);
+  });
+
   test("accepts a newer same-night response after an intervening update", () => {
     const requested = snapshot(7);
     const current = snapshot(8);

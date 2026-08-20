@@ -4,8 +4,15 @@ export function newestCustomSnapshot(
   current: CustomNightSnapshot | null | undefined,
   candidate: CustomNightSnapshot | null,
   currentAtRequest?: CustomNightSnapshot | null,
+  requestStartedWithEmptyCache = false,
 ): CustomNightSnapshot | null {
-  if (currentAtRequest !== undefined && current !== currentAtRequest) {
+  if (requestStartedWithEmptyCache && current !== undefined)
+    return current ?? null;
+  if (
+    !requestStartedWithEmptyCache &&
+    currentAtRequest !== undefined &&
+    current !== currentAtRequest
+  ) {
     if (
       current !== null &&
       current !== undefined &&

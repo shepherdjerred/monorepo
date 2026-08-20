@@ -276,11 +276,18 @@ async function reconcileEndedVoiceCleanup(
   }
 }
 
-async function reconcilePendingRecruitmentCleanup(
+async function reconcilePendingRecruitmentSync(
   database: ExtendedPrismaClient,
 ): Promise<void> {
   const pending = await database.customAuditEvent.findMany({
-    where: { action: "RECRUITMENT_MESSAGE_CLEANUP_PENDING" },
+    where: {
+      action: {
+        in: [
+          "RECRUITMENT_MESSAGE_CLEANUP_PENDING",
+          "RECRUITMENT_MESSAGE_SYNC_PENDING",
+        ],
+      },
+    },
     select: { nightId: true },
     distinct: ["nightId"],
   });
@@ -290,7 +297,7 @@ async function reconcilePendingRecruitmentCleanup(
     try {
       await syncCustomRecruitmentMessage({ prisma: database, snapshot });
     } catch (error) {
-      logger.error("Pending custom recruitment cleanup failed", {
+      logger.error("Pending custom recruitment sync failed", {
         error,
         nightId,
       });
@@ -390,7 +397,7 @@ export async function reconcileCustomNights(
     }
   }
   await reconcileEndedVoiceCleanup(database);
-  await reconcilePendingRecruitmentCleanup(database);
+  await reconcilePendingRecruitmentSync(database);
   await retryPendingCustomImports(database);
 }
 

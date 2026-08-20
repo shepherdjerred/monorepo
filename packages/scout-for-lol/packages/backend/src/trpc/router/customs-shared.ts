@@ -60,6 +60,16 @@ export async function broadcast<
       "Custom night state committed but recruitment message sync failed",
       { error },
     );
+    await prisma.customAuditEvent.create({
+      data: {
+        nightId: result.snapshot.id,
+        revision: result.snapshot.revision,
+        actorId: "SCOUT",
+        action: "RECRUITMENT_MESSAGE_SYNC_PENDING",
+        payload: JSON.stringify({}),
+        source: "DISCORD",
+      },
+    });
     return result;
   }
 }

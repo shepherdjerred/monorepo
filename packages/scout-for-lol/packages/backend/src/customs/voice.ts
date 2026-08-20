@@ -208,14 +208,25 @@ async function recoverPartialTeamChannels(params: {
     params.lobby,
     "Customs • Team B",
   );
-  const recorded = await recordTeamChannels({
-    prisma: params.prisma,
-    snapshot: params.snapshot,
-    gameId: params.gameId,
-    claimId: params.claimId,
-    actorDiscordId: params.actorDiscordId,
-    channels: { teamA, teamB },
-  });
+  let recorded: CustomMutationResult;
+  try {
+    recorded = await recordTeamChannels({
+      prisma: params.prisma,
+      snapshot: params.snapshot,
+      gameId: params.gameId,
+      claimId: params.claimId,
+      actorDiscordId: params.actorDiscordId,
+      channels: { teamA, teamB },
+    });
+  } catch (recordingError) {
+    const cleanupFailures = await deleteCreatedTeamChannels({ teamA: teamB });
+    if (cleanupFailures.length > 0)
+      throw new Error(
+        `${errorMessage(recordingError)}; Voice channel cleanup failed: ${cleanupFailures.join("; ")}`,
+        { cause: recordingError },
+      );
+    throw recordingError;
+  }
   if (recorded.applied)
     return { snapshot: recorded.snapshot, channels: { teamA, teamB } };
   const cleanupFailures = await deleteCreatedTeamChannels({ teamA: teamB });

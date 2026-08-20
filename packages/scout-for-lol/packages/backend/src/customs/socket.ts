@@ -3,6 +3,7 @@ import type {
   CustomNightSnapshot,
 } from "@scout-for-lol/data";
 import { CustomSnapshotEnvelopeSchema } from "@scout-for-lol/data";
+import { TRPCError } from "@trpc/server";
 import { verifyCustomActivityTokenWithExpiry } from "#src/customs/activity-auth.ts";
 import { assertCustomGuildMember } from "#src/customs/discord-client.ts";
 import { getActiveCustomNight } from "#src/customs/repository.ts";
@@ -69,6 +70,10 @@ function activityTokenFromProtocols(request: Request): string | null {
   return protocols[1] ?? null;
 }
 
+function isDefinitiveMembershipFailure(error: unknown): boolean {
+  return error instanceof TRPCError && error.code === "FORBIDDEN";
+}
+
 export async function upgradeCustomSocket(
   request: Request,
   server: Bun.Server<CustomSocketData>,
@@ -104,6 +109,14 @@ export const customSocketHandlers: Bun.WebSocketHandler<CustomSocketData> = {
     try {
       await assertCustomGuildMember(socket.data.claims);
     } catch (error) {
+      if (!isDefinitiveMembershipFailure(error)) {
+        logger.error("Customs socket membership check failed", {
+          error,
+          guildId,
+        });
+        socket.close(1011, "Customs membership check failed");
+        return;
+      }
       logger.info("Customs socket rejected for missing guild membership", {
         error,
         guildId,
@@ -190,11 +203,20 @@ async function sendSnapshotToAuthorizedSocket(
     if (socket.readyState !== WebSocket.OPEN) return;
     socket.send(envelope);
   } catch (error) {
-    logger.info("Closing Customs socket after guild membership loss", {
+    if (isDefinitiveMembershipFailure(error)) {
+      logger.info("Closing Customs socket after guild membership loss", {
+        error,
+        guildId: socket.data.claims.guildId,
+      });
+      removeCustomSocket(socket);
+      socket.close(1008, "Activity guild membership required");
+      return;
+    }
+    logger.error("Customs socket membership check failed", {
       error,
       guildId: socket.data.claims.guildId,
     });
     removeCustomSocket(socket);
-    socket.close(1008, "Activity guild membership required");
+    socket.close(1011, "Customs membership check failed");
   }
 }
