@@ -3,9 +3,9 @@ import {
   DEFAULT_RENDER_SPEC,
   REPORT_DEFAULT_LOOKBACK_DAYS,
   REPORT_DEFAULT_MAX_ROWS,
-  ReportLookbackDaysSchema,
   ReportRenderSpecSchema,
 } from "#src/model/report.ts";
+import { ReportQueryWindowSchema } from "#src/model/report-query-window.ts";
 import { TemporalAnalysisSpecSchema } from "#src/model/temporal-analysis.ts";
 
 // ── Report query language: schema enums + query plan ─────────────────────────
@@ -225,9 +225,13 @@ export const ReportQueryPlanSchema = z
     championId: z.number().int().positive().optional(),
     minGames: z.number().int().positive().optional(),
     competitionId: z.number().int().positive().optional(),
-    lookbackDays: ReportLookbackDaysSchema.default(
-      REPORT_DEFAULT_LOOKBACK_DAYS,
-    ),
+    // The time period the query covers. Still defaulted here so this commit is
+    // behaviour-preserving; the default is removed once every author states a
+    // window explicitly, which is the point of the DURING clause.
+    window: ReportQueryWindowSchema.default({
+      kind: "relative",
+      days: REPORT_DEFAULT_LOOKBACK_DAYS,
+    }),
     analysis: TemporalAnalysisSpecSchema.optional(),
     filters: z.array(z.custom<ReportFilter>()).default([]),
     orderBy: z.string().min(1).default("games"),
@@ -347,6 +351,9 @@ export type ReportQueryAst = {
   where: ReportWhereClause[];
   groupBy?: ReportQueryItem | undefined;
   having?: ReportQueryItem | undefined;
+  // Raw text after DURING, ending before ANALYZE / ORDER BY / LIMIT / RENDER.
+  // The strict compiler produces a ReportQueryWindow.
+  during?: ReportQueryItem | undefined;
   // Raw canonical temporal clauses, starting after ANALYZE and ending before
   // ORDER BY / LIMIT / RENDER. The strict compiler produces TemporalAnalysisSpec.
   analysis?: ReportQueryItem | undefined;

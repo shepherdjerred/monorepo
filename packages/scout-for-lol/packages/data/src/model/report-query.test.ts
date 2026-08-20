@@ -26,7 +26,7 @@ describe("parseAndCompile", () => {
       "surrender_rate",
     ]);
     expect(plan.queueFilter).toEqual(["solo", "flex"]);
-    expect(plan.lookbackDays).toBe(30);
+    expect(plan.window).toEqual({ kind: "relative", days: 30 });
     expect(plan.orderBy).toBe("surrender_rate");
     expect(plan.orderDirection).toBe("desc");
     expect(plan.limit).toBe(10);
@@ -184,7 +184,7 @@ describe("parseAndCompile", () => {
       "SELECT games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '14 days' GROUP BY player LIMIT 5",
     );
 
-    expect(plan.lookbackDays).toBe(14);
+    expect(plan.window).toEqual({ kind: "relative", days: 14 });
     expect(plan.limit).toBe(5);
   });
 
@@ -235,6 +235,93 @@ describe("parseAndCompile", () => {
     expect(() => parseAndCompile("SELECT games")).toThrow(
       "Invalid report query",
     );
+  });
+});
+
+describe("DURING clause", () => {
+  test("compiles every DURING form", () => {
+    expect(
+      parseAndCompile(
+        "SELECT games FROM match_participants GROUP BY player DURING LAST 90 DAYS",
+      ).window,
+    ).toEqual({ kind: "relative", days: 90 });
+
+    expect(
+      parseAndCompile(
+        "SELECT games FROM match_participants GROUP BY player DURING ALL TIME",
+      ).window,
+    ).toEqual({ kind: "all_time" });
+
+    expect(
+      parseAndCompile(
+        "SELECT games FROM match_participants GROUP BY player DURING BETWEEN '2025-01-01' AND '2026-08-19'",
+      ).window,
+    ).toEqual({
+      kind: "calendar",
+      startDate: "2025-01-01",
+      endDate: "2026-08-19",
+      timezone: "UTC",
+    });
+
+    expect(
+      parseAndCompile(
+        "SELECT games FROM match_participants GROUP BY player DURING BETWEEN '2026-01-01' AND '2026-01-31' IN TIME ZONE 'America/Los_Angeles'",
+      ).window,
+    ).toEqual({
+      kind: "calendar",
+      startDate: "2026-01-01",
+      endDate: "2026-01-31",
+      timezone: "America/Los_Angeles",
+    });
+  });
+
+  test("DURING sits between HAVING and ANALYZE without swallowing clauses", () => {
+    const plan = parseAndCompile(
+      "SELECT games, win_rate FROM match_participants GROUP BY player HAVING games >= 5 DURING LAST 45 DAYS ORDER BY win_rate DESC LIMIT 3 RENDER leaderboard",
+    );
+
+    expect(plan.window).toEqual({ kind: "relative", days: 45 });
+    expect(plan.groupBy).toBe("player");
+    expect(plan.having).toEqual([{ key: "games", operator: ">=", value: 5 }]);
+    expect(plan.orderBy).toBe("win_rate");
+    expect(plan.limit).toBe(3);
+    expect(plan.render).toEqual({ kind: "LEADERBOARD", options: {} });
+  });
+
+  test("an ANALYZE window becomes the plan window", () => {
+    expect(
+      parseAndCompile(
+        "SELECT games FROM match_participants GROUP BY player ANALYZE LAST 60 DAYS BUCKET BY WEEK RENDER line_chart",
+      ).window,
+    ).toEqual({ kind: "relative", days: 60 });
+  });
+
+  test("rejects two time periods in one query", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT games FROM match_participants GROUP BY player DURING LAST 30 DAYS ANALYZE LAST 60 DAYS BUCKET BY WEEK RENDER line_chart",
+      ),
+    ).toThrow("Do not combine ANALYZE with DURING");
+
+    expect(() =>
+      parseAndCompile(
+        "SELECT games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '14 days' GROUP BY player DURING LAST 30 DAYS",
+      ),
+    ).toThrow("State the time period once");
+  });
+
+  test("rejects a malformed DURING clause", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT games FROM match_participants GROUP BY player DURING LAST FORTNIGHT",
+      ),
+    ).toThrow("Invalid DURING clause");
+
+    expect(() =>
+      parseAndCompile(
+        "SELECT games FROM match_participants GROUP BY player DURING BETWEEN '2026-08-19' AND '2026-01-01'",
+      ),
+    ).toThrow("The end date must be on or after the start date.");
   });
 });
 

@@ -92,7 +92,12 @@ function resolveComparison(
   };
 }
 
-function calendarRange(
+/**
+ * A whole-day-inclusive range for two calendar dates in one timezone. Shared
+ * with the plain `DURING BETWEEN` window so both temporal paths agree on where
+ * a local day begins and ends.
+ */
+export function calendarRange(
   startDate: string,
   endDate: string,
   timezone: string,

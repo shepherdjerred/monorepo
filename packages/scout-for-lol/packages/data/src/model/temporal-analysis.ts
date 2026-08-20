@@ -30,13 +30,20 @@ export type ResolvedTemporalBucket = z.infer<
   typeof ResolvedTemporalBucketSchema
 >;
 
+/**
+ * A rolling window of N whole days. Shared with `DURING LAST <n> DAYS`
+ * (report-query-window.ts) because it is the same concept in both clauses —
+ * the calendar variants differ, but this one must not drift.
+ */
+export const RelativeTemporalWindowSchema = z
+  .object({
+    kind: z.literal("relative"),
+    days: z.number().int().positive(),
+  })
+  .strict();
+
 export const TemporalWindowSchema = z.discriminatedUnion("kind", [
-  z
-    .object({
-      kind: z.literal("relative"),
-      days: z.number().int().positive(),
-    })
-    .strict(),
+  RelativeTemporalWindowSchema,
   z
     .object({
       kind: z.literal("calendar"),

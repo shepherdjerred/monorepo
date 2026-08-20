@@ -27,6 +27,7 @@ import {
   parseReportQuery,
 } from "#src/model/report-query-parser.ts";
 import { compileReportWhere } from "#src/model/report-query-where.ts";
+import { resolveReportQueryWindow } from "#src/model/report-query-window.ts";
 import {
   parseTemporalAnalysisClause,
   resolveTemporalBucket,
@@ -166,7 +167,11 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
     championId: filters.championId,
     minGames: filters.minGames,
     competitionId: filters.competitionId,
-    lookbackDays: filters.lookbackDays,
+    window: resolveReportQueryWindow({
+      duringClause: ast.during?.value,
+      lookbackDays: filters.lookbackDays,
+      analysis,
+    }),
     analysis,
     filters: filters.filters,
     orderBy,
@@ -308,9 +313,16 @@ function validateTemporalCompatibility(
   analysis: ReportQueryPlan["analysis"],
 ): void {
   if (analysis === undefined) return;
+  // ANALYZE carries its own window, so any second window is ambiguous rather
+  // than redundant — there is no rule saying which one wins.
+  if (ast.during !== undefined) {
+    throw new Error(
+      "Do not combine ANALYZE with DURING; an ANALYZE clause already states its own time period.",
+    );
+  }
   if (ast.where.some((clause) => clause.kind === "lookback")) {
     throw new Error(
-      "Do not combine ANALYZE with a legacy timestamp lookback predicate.",
+      "Do not combine ANALYZE with a timestamp lookback predicate; an ANALYZE clause already states its own time period.",
     );
   }
   if (groupBys.some((groupBy) => LEGACY_TEMPORAL_GROUPS.has(groupBy))) {

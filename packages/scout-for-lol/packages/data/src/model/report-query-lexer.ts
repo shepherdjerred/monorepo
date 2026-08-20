@@ -76,6 +76,10 @@ export const CurrentTimestamp = keyword(
 export const Interval = keyword("Interval", "interval");
 export const Having = keyword("Having", "having");
 export const Analyze = keyword("Analyze", "analyze");
+// `last`, `days`, `between`, `all`, and `time` stay Identifiers: the DURING tail
+// is captured as raw text and regex-parsed, so promoting them to keywords would
+// buy nothing and would change how `GROUP BY all` lexes.
+export const During = keyword("During", "during");
 
 // Order matters: multi-char operators before single, keywords before Identifier.
 export const reportQueryTokenTypes: TokenType[] = [
@@ -113,6 +117,7 @@ export const reportQueryTokenTypes: TokenType[] = [
   With,
   Having,
   Analyze,
+  During,
   Identifier,
 ];
 

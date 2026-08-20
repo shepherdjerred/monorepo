@@ -6,6 +6,10 @@ import type {
   ReportWhereClause,
 } from "#src/model/report-query-spec.ts";
 import {
+  formatReportQueryWindow,
+  parseReportQueryWindowClause,
+} from "#src/model/report-query-window.ts";
+import {
   formatTemporalAnalysis,
   parseTemporalAnalysisClause,
 } from "#src/model/temporal-analysis.ts";
@@ -35,6 +39,7 @@ function formatAst(ast: ReportQueryAst): string | null {
     formatWhere(ast.where),
     `GROUP BY ${ast.groupBy.value}`,
     formatHaving(ast.having),
+    formatDuring(ast.during),
     formatAnalysis(ast.analysis),
     formatOrderBy(ast.orderBy),
     formatLimit(ast.limit),
@@ -42,6 +47,23 @@ function formatAst(ast: ReportQueryAst): string | null {
   ];
 
   return clauses.filter((clause) => clause !== null).join("\n");
+}
+
+/**
+ * Renders `DURING` canonically.
+ *
+ * Note the deliberate asymmetry with {@link formatWhereClause}: a WHERE
+ * lookback predicate is left as written and is NOT rewritten into `DURING`.
+ * Canonicalizing it would rewrite stored report text into syntax that an
+ * older image cannot parse, which is what keeps a rollback safe.
+ */
+function formatDuring(during: ReportQueryItem | undefined): string | null {
+  if (during === undefined) return null;
+  try {
+    return formatReportQueryWindow(parseReportQueryWindowClause(during.value));
+  } catch {
+    return `DURING ${during.value}`;
+  }
 }
 
 function formatAnalysis(analysis: ReportQueryItem | undefined): string | null {
