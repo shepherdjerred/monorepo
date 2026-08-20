@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TRACE_PAYLOAD_MAX_BYTES,
   EXPLORE_TRACE_TOTAL_MAX_BYTES,
   type ExploreStreamEvent,
@@ -90,7 +91,7 @@ export async function emitExploreAnswerSnapshot(
   if (!parsed.success) {
     return;
   }
-  const answer = parsed.data.answer ?? "";
+  const answer = (parsed.data.answer ?? "").slice(0, EXPLORE_ANSWER_MAX_LENGTH);
   if (answer.length > state.sentAnswerLength) {
     await emit({
       type: "answer_delta",

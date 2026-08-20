@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/bun";
 import {
+  EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TIMEOUT_MS,
   type ExploreMessage,
   type ExploreStreamEvent,
@@ -131,7 +132,10 @@ export async function runPersistedExploreTurn(
   let persistedMessage: ExploreMessage | null = null;
   const record = async (event: ExploreStreamEvent): Promise<void> => {
     if (event.type === "answer_delta") {
-      streamedAnswer += event.text;
+      const available = EXPLORE_ANSWER_MAX_LENGTH - streamedAnswer.length;
+      if (available > 0) {
+        streamedAnswer += event.text.slice(0, available);
+      }
     }
     recordExploreTraceEvent(trace, event);
     await input.emit(event);

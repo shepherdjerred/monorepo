@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/bun";
 import {
+  EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TIMEOUT_MS,
   ExploreActiveRunSchema,
   ExploreRunSnapshotEventSchema,
@@ -363,7 +364,14 @@ export class ExploreRunManager {
       return;
     }
     if (event.type === "answer_delta") {
-      run.answer += event.text;
+      const available = EXPLORE_ANSWER_MAX_LENGTH - run.answer.length;
+      if (available <= 0) {
+        return;
+      }
+      const text = event.text.slice(0, available);
+      run.answer += text;
+      this.#broadcast(run, { type: "answer_delta", text });
+      return;
     }
     if (event.type === "tool_call" || event.type === "tool_result") {
       run.activity = event.message;

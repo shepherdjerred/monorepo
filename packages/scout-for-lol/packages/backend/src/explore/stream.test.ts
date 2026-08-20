@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
+  EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TITLE_MAX_LENGTH,
   ExploreAnswerSchema,
   ExploreAnswerWireSchema,
@@ -125,6 +126,21 @@ describe("explore stream mapping", () => {
     expect(
       events.filter((event) => event.type === "answer_delta"),
     ).toHaveLength(1);
+  });
+
+  test("partial snapshots stop at the persisted answer limit", async () => {
+    const prefix = "x".repeat(EXPLORE_ANSWER_MAX_LENGTH - 1);
+    const { events, text } = await collect([
+      objectChunk(prefix),
+      objectChunk(`${prefix}y${"z".repeat(100)}`),
+      objectChunk(`${prefix}y${"z".repeat(200)}`),
+    ]);
+
+    expect(text).toBe(`${prefix}y`);
+    expect(text).toHaveLength(EXPLORE_ANSWER_MAX_LENGTH);
+    expect(
+      events.filter((event) => event.type === "answer_delta"),
+    ).toHaveLength(2);
   });
 
   test("a snapshot without `answer` yet emits nothing", async () => {

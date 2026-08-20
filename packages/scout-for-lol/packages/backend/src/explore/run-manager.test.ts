@@ -8,6 +8,7 @@ import {
 } from "bun:test";
 import {
   DiscordAccountIdSchema,
+  EXPLORE_ANSWER_MAX_LENGTH,
   type ExploreActiveRun,
   type ExploreStreamEvent,
 } from "@scout-for-lol/data";
@@ -196,6 +197,32 @@ describe("ExploreRunManager", () => {
     expect(await finished).toBe("succeeded");
     expect(firstEvents.some((event) => event.type === "done")).toBe(false);
     expect(manager.list(owner)).toEqual([]);
+  });
+
+  test("reconnect snapshots remain valid after overlong partial output", async () => {
+    const agent = controlledAgent();
+    const manager = createManager(agent);
+    const summary = await startNew(manager, "Who wins most?");
+    const answer = "x".repeat(EXPLORE_ANSWER_MAX_LENGTH);
+
+    await requiredRun(agent, 0).params.emit({
+      type: "answer_delta",
+      text: answer,
+    });
+    await requiredRun(agent, 0).params.emit({
+      type: "answer_delta",
+      text: "overflow",
+    });
+
+    const reconnected: ExploreStreamEvent[] = [];
+    const finished = observeUntilDone(manager, summary, reconnected);
+    expect(reconnected[0]).toMatchObject({
+      type: "snapshot",
+      answer,
+    });
+
+    requiredRun(agent, 0).resolve(successfulResult(answer));
+    expect(await finished).toBe("succeeded");
   });
 
   test("one user can run distinct conversations but not two turns in one conversation", async () => {
