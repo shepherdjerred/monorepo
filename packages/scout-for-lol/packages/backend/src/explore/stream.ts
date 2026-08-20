@@ -20,6 +20,35 @@ export function createExploreStreamState(): ExploreStreamState {
   return { sentAnswerLength: 0 };
 }
 
+export type ExploreAgentStreams = {
+  stream: AsyncIterable<unknown>;
+  partialOutputStream: AsyncIterable<unknown>;
+};
+
+/**
+ * Drain both views of one AI SDK agent run concurrently and to completion.
+ * They share the underlying producer, so consuming only one can stall both.
+ */
+export async function drainExploreStreams(
+  streams: ExploreAgentStreams,
+  emit: (event: ExploreStreamEvent) => void | Promise<void>,
+): Promise<ExploreStreamState> {
+  const streamState = createExploreStreamState();
+  await Promise.all([
+    (async () => {
+      for await (const chunk of streams.stream) {
+        await emitExploreStreamChunk(chunk, emit);
+      }
+    })(),
+    (async () => {
+      for await (const snapshot of streams.partialOutputStream) {
+        await emitExploreAnswerSnapshot(snapshot, emit, streamState);
+      }
+    })(),
+  ]);
+  return streamState;
+}
+
 /** Only the field being streamed; the rest of the snapshot is ignored here. */
 const PartialAnswerSchema = z.looseObject({ answer: z.string().optional() });
 

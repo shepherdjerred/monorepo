@@ -21,11 +21,7 @@ import { prisma } from "#src/database/index.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import { createLogger } from "#src/logger.ts";
-import {
-  createExploreStreamState,
-  emitExploreAnswerSnapshot,
-  emitExploreStreamChunk,
-} from "#src/explore/stream.ts";
+import { drainExploreStreams } from "#src/explore/stream.ts";
 import {
   assertWithinBudget,
   recordTokenUsage,
@@ -117,29 +113,12 @@ export async function streamExploreAgent(
     abortSignal: params.abortSignal,
   });
 
-  // Two readers, drained concurrently and to completion on purpose.
-  //
   // The AI SDK splits what Mastra multiplexed: tool and step parts arrive on
   // `stream`, while progressively-parsed structured output arrives on
   // `partialOutputStream`. The prose the page renders comes from the latter —
-  // a `text-delta` part is raw JSON here.
-  //
-  // Neither loop may exit early and both must be consumed: they are views over
-  // one underlying run, so abandoning either stalls the other once its buffer
-  // fills, and the turn would hang rather than fail.
-  const streamState = createExploreStreamState();
-  await Promise.all([
-    (async () => {
-      for await (const chunk of stream.stream) {
-        await emitExploreStreamChunk(chunk, params.emit);
-      }
-    })(),
-    (async () => {
-      for await (const snapshot of stream.partialOutputStream) {
-        await emitExploreAnswerSnapshot(snapshot, params.emit, streamState);
-      }
-    })(),
-  ]);
+  // a `text-delta` part is raw JSON here. Both views must be drained together;
+  // drainExploreStreams owns that invariant and its regression test.
+  const streamState = await drainExploreStreams(stream, params.emit);
 
   const answer = ExploreAnswerSchema.parse(await stream.output);
 
