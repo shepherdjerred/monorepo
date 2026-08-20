@@ -335,7 +335,7 @@ describe("Glitter context refresh schedule", () => {
     const schedule = findScheduleById("glitter-context-refresh-weekly");
     expect(schedule.taskQueue).toBe("glitter-context");
     expect(schedule.cronExpression).toBe("0 11 * * 1");
-    expect(schedule.args).toEqual([{ maxEstimatedCostUsd: 100 }]);
+    expect(schedule.args).toEqual([{ maxEstimatedCostUsd: 40 }]);
     expect(schedule.workflowExecutionTimeout).toBe("15 hours");
     expect(buildScheduleState(schedule, {}).paused).toBe(true);
     expect(
