@@ -41,6 +41,7 @@ import {
   undoCustomDraftPick,
 } from "#src/customs/game-service.ts";
 import {
+  commitCustomMutation,
   getActiveCustomNight,
   getCustomNight,
 } from "#src/customs/repository.ts";
@@ -454,20 +455,40 @@ export const customsRouter = router({
       const ended = await endCustomNight({ prisma, actor, ...input });
       if (!ended.applied) return ended;
       const broadcastResult = await broadcast(ended);
+      let voiceCleanupSucceeded = false;
       try {
         const failures = await cleanupCustomVoice(broadcastResult.snapshot);
-        if (failures.length > 0)
+        if (failures.length > 0) {
           logger.error("Custom night ended with voice cleanup failures", {
             failures,
             nightId: input.nightId,
           });
+        } else {
+          voiceCleanupSucceeded = true;
+        }
       } catch (error) {
         logger.error("Custom night ended but voice cleanup failed", {
           error,
           nightId: input.nightId,
         });
       }
-      return broadcastResult;
+      if (!voiceCleanupSucceeded) return broadcastResult;
+      const cleanup = await commitCustomMutation({
+        prisma,
+        nightId: broadcastResult.snapshot.id,
+        expectedRevision: broadcastResult.snapshot.revision,
+        actorDiscordId: "SCOUT",
+        action: "VOICE_CLEANUP_COMPLETED",
+        payload: {},
+        allowEnded: true,
+        update: (current) => ({
+          ...current,
+          teamAVoiceChannelId: null,
+          teamBVoiceChannelId: null,
+        }),
+      });
+      if (cleanup.applied) publishCustomSnapshot(cleanup.snapshot);
+      return { ...broadcastResult, snapshot: cleanup.snapshot };
     }),
 
   historyBootstrap: customsHistoryBootstrapProcedure,

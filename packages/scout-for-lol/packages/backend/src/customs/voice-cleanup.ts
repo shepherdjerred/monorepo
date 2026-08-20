@@ -5,6 +5,7 @@ import {
   runCustomVoiceOperation,
   errorMessage,
 } from "#src/customs/voice-utils.ts";
+import { isMissingChannelError } from "#src/discord/utils/permissions.ts";
 
 async function cleanupCustomVoiceOperation(
   snapshot: CustomNightSnapshot,
@@ -40,6 +41,7 @@ async function cleanupCustomVoiceOperation(
       const channel = await guild.channels.fetch(channelId);
       if (channel !== null) await channel.delete("Scout Customs night ended");
     } catch (error) {
+      if (isMissingChannelError(error)) continue;
       failures.push(`channel ${channelId}: ${errorMessage(error)}`);
     }
   }
