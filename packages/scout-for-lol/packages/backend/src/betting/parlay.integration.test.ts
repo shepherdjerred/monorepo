@@ -10,6 +10,7 @@ import {
   BUCKS_INT32_MAX,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  LeaguePuuidSchema,
   RawMatchSchema,
 } from "@scout-for-lol/data";
 import { cancelParlayBet } from "#src/betting/parlay-cancel-bet.ts";
@@ -88,6 +89,7 @@ async function clearAll(): Promise<void> {
   await db.bucksBet.deleteMany();
   await db.bucksMatchPool.deleteMany();
   await db.bucksAccount.deleteMany();
+  await db.account.deleteMany();
   await db.player.deleteMany();
 }
 
@@ -95,6 +97,7 @@ async function makeMarket(input?: {
   yes?: boolean;
   yesProbabilityBps?: number;
   closesAt?: Date;
+  generationContext?: Record<string, unknown>;
 }) {
   const outcome = await db.bucksMatchPool.create({
     data: {
@@ -124,7 +127,7 @@ async function makeMarket(input?: {
       catalogVersion: "test",
       schemaVersion: 1,
       evaluatorVersion: "1",
-      generationContext: "{}",
+      generationContext: JSON.stringify(input?.generationContext ?? {}),
       requestedModel: "test",
       usage: "{}",
       durationMs: 1,
@@ -233,6 +236,43 @@ afterAll(async () => {
 });
 
 describe("Bryan Bucks parlays", () => {
+  test("rejects a linked opponent after the player's alias changes", async () => {
+    const opponent = fixture.info.participants.find(
+      (participant) =>
+        participant.teamId !== PARTICIPANT.teamId && participant.puuid !== null,
+    );
+    const opponentPuuid = opponent?.puuid;
+    if (opponentPuuid === undefined || opponentPuuid === null) {
+      throw new Error("fixture needs an opposing participant with a PUUID");
+    }
+    const stableOpponentPuuid = LeaguePuuidSchema.parse(opponentPuuid);
+    const now = new Date();
+    const player = await db.player.findFirstOrThrow({
+      where: { serverId: SERVER_ID, discordId: BETTOR },
+    });
+    await db.account.create({
+      data: {
+        alias: "bryan",
+        puuid: stableOpponentPuuid,
+        region: "AMERICA_NORTH",
+        playerId: player.id,
+        serverId: SERVER_ID,
+        creatorDiscordId: BETTOR,
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+    await makeMarket({
+      generationContext: { opponentTrackedPuuids: [stableOpponentPuuid] },
+    });
+    await db.player.update({
+      where: { id: player.id },
+      data: { alias: "renamed" },
+    });
+
+    expect(await place("YES", 5)).toEqual({ kind: "not_eligible" });
+  });
+
   test("accepts more than 20 BB, reserves the house, and reprices top-ups", async () => {
     await makeMarket({ yesProbabilityBps: 3333 });
     await db.bucksAccount.create({

@@ -9,6 +9,7 @@ import {
 import {
   ensureBucksAccount,
   findEligiblePlayers,
+  type EligiblePlayer,
 } from "#src/betting/accounts.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
@@ -53,6 +54,32 @@ class HouseInsufficientError extends Error {
   }
 }
 
+const ParlayGenerationContextSchema = z
+  .object({
+    opponentTrackedAliases: z.array(z.string()).optional(),
+    opponentTrackedPuuids: z.array(z.string()).optional(),
+  })
+  .catchall(z.unknown());
+
+function isTrackedOpponent(
+  generationContext: string,
+  players: readonly EligiblePlayer[],
+): boolean {
+  const parsed = ParlayGenerationContextSchema.safeParse(
+    JSON.parse(generationContext),
+  );
+  if (!parsed.success) {
+    return false;
+  }
+  const { opponentTrackedAliases, opponentTrackedPuuids } = parsed.data;
+  if (opponentTrackedPuuids === undefined) {
+    return (opponentTrackedAliases?.length ?? 0) > 0;
+  }
+  return players.some((player) =>
+    player.puuids.some((puuid) => opponentTrackedPuuids.includes(puuid)),
+  );
+}
+
 export async function placeParlayBet(
   input: {
     matchId: string;
@@ -88,18 +115,7 @@ export async function placeParlayBet(
     prismaClient,
   );
   if (players.length === 0) return { kind: "not_eligible" };
-  const generationContext = z
-    .object({ opponentTrackedAliases: z.array(z.string()).optional() })
-    .catchall(z.unknown())
-    .safeParse(JSON.parse(market.definition.generationContext));
-  const opponentTrackedAliases = generationContext.success
-    ? generationContext.data.opponentTrackedAliases
-    : undefined;
-  if (
-    players.some(
-      (player) => opponentTrackedAliases?.includes(player.alias) === true,
-    )
-  ) {
+  if (isTrackedOpponent(market.definition.generationContext, players)) {
     return { kind: "not_eligible" };
   }
   const account = await ensureBucksAccount(

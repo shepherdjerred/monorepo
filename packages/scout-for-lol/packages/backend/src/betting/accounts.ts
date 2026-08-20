@@ -31,6 +31,7 @@ const logger = createLogger("betting-accounts");
 export type EligiblePlayer = {
   playerId: number;
   alias: string;
+  puuids: readonly string[];
 };
 
 /**
@@ -63,12 +64,13 @@ export async function findEligiblePlayers(
 ): Promise<EligiblePlayer[]> {
   const players = await prismaClient.player.findMany({
     where: { serverId: input.serverId, discordId: input.discordId },
-    select: { id: true, alias: true },
+    select: { id: true, alias: true, accounts: { select: { puuid: true } } },
     orderBy: { id: "asc" },
   });
   return players.map((player) => ({
     playerId: player.id,
     alias: player.alias,
+    puuids: player.accounts.map((account) => account.puuid),
   }));
 }
 

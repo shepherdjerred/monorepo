@@ -123,6 +123,7 @@ type GenerationReady = {
   selectedTeamId: number;
   subjects: readonly ParlaySubject[];
   opponentTrackedAliases: readonly string[];
+  opponentTrackedPuuids: readonly string[];
   opponentPingsAvailable: boolean;
   context: ParlayGenerationContext;
 };
@@ -201,6 +202,17 @@ async function prepareGeneration(
         }
         const alias = aliasByPuuid.get(participant.puuid);
         return alias === undefined ? [] : [alias];
+      },
+    ),
+    opponentTrackedPuuids: input.gameInfo.participants.flatMap(
+      (participant) => {
+        if (
+          participant.teamId === selected.teamId ||
+          participant.puuid === null
+        ) {
+          return [];
+        }
+        return aliasByPuuid.has(participant.puuid) ? [participant.puuid] : [];
       },
     ),
     opponentPingsAvailable: input.gameInfo.participants
@@ -362,6 +374,7 @@ async function generateAndPersistDefinition(
         generationContext: JSON.stringify({
           ...setup.context,
           opponentTrackedAliases: setup.opponentTrackedAliases,
+          opponentTrackedPuuids: setup.opponentTrackedPuuids,
         }),
         proposal: JSON.stringify(proposal),
         pricing: JSON.stringify(pricingRecord(priced, legs.length)),

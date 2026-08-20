@@ -75,13 +75,14 @@ export async function removeLegacyLakeNamespace(
   const entries = await readdir(baseDir, { withFileTypes: true }).catch(
     () => [],
   );
-  if (
-    entries.length === 0 ||
-    entries.some((entry) => !LEGACY_LAKE_ENTRIES.has(entry.name))
-  ) {
-    return;
+  for (const entry of entries) {
+    if (LEGACY_LAKE_ENTRIES.has(entry.name)) {
+      await rm(path.join(baseDir, entry.name), {
+        recursive: true,
+        force: true,
+      });
+    }
   }
-  await rm(baseDir, { recursive: true, force: true });
 }
 
 let buildCounter = 0;
