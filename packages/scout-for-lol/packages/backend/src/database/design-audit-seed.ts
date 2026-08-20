@@ -219,6 +219,18 @@ export async function seedDesignAuditDatabase(
       },
     });
 
+    await prisma.subscription.create({
+      data: {
+        playerId: player.id,
+        channelId,
+        serverId: guildId,
+        creatorDiscordId: discordId,
+        isMuted: false,
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+
     const competitionData = {
       serverId: guildId,
       ownerId: discordId,

@@ -433,6 +433,7 @@ steps:
         - "packages/scout-for-lol/packages/design-audit/**"
         - "packages/scout-for-lol/packages/design-system/**"
         - "packages/scout-for-lol/packages/evals/**"
+        - "packages/scout-for-lol/package.json"
         - "packages/scout-for-lol/scripts/dev-web.ts"
         # Main's playwright lane also gates on the deploy consumers of its
         # artifact — mirror them (lane↔if_changed coverage test).

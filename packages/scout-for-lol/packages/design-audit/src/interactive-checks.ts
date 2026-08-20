@@ -38,11 +38,13 @@ export async function assertInteractiveStates(page: Page): Promise<void> {
   const menuTrigger = page.locator(
     'button[aria-haspopup="menu"]:visible, [role="button"][aria-haspopup="menu"]:visible',
   );
-  if ((await menuTrigger.count()) > 0) {
-    await menuTrigger.first().evaluate((element) => {
+  const menuTriggerCount = await menuTrigger.count();
+  for (let index = 0; index < menuTriggerCount; index += 1) {
+    const trigger = menuTrigger.nth(index);
+    await trigger.evaluate((element) => {
       element.scrollIntoView({ block: "center", inline: "nearest" });
     });
-    await menuTrigger.first().click({ force: true });
+    await trigger.click({ force: true });
     await expect(
       page.locator('[role="menu"]:visible'),
       "menu triggers open a keyboard-addressable menu",
