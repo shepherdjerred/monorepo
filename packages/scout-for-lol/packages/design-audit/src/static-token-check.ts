@@ -59,7 +59,7 @@ export function findInvalidTokenPairs(
     }
 
     const fieldPair = new RegExp(
-      String.raw`\bbg: "bg-scout-${token}"[\s\S]{0,180}?(?:title|titleText|text): "text-scout-${token}(?!-ink)`,
+      String.raw`\bbg: "bg-scout-${token}[ \t]*"[\s\S]{0,180}?(?:title|titleText|text): "text-scout-${token}(?!-ink)`,
     );
     const fieldMatch = fieldPair.exec(source);
     if (fieldMatch !== null) {

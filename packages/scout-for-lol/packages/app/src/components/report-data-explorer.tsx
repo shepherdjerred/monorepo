@@ -120,7 +120,7 @@ export function ReportDataExplorer(props: {
   );
 
   return (
-    <section className="space-y-4 border-t border-border pt-6">
+    <section className="report-data-explorer space-y-4 border-t border-border pt-6">
       <div>
         <h3 className="text-base font-semibold">Data explorer</h3>
         <p className="text-sm text-scout-subtle">

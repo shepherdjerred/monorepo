@@ -85,6 +85,7 @@ export default defineConfig({
     "{snapshotDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}",
   use: {
     baseURL: env["SCOUT_DESIGN_AUDIT_BASE_URL"] ?? "http://127.0.0.1:4321",
+    permissions: ["clipboard-read", "clipboard-write"],
     screenshot: "only-on-failure",
     trace: "off",
   },

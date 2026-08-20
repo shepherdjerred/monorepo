@@ -26,7 +26,9 @@
     capture_heatmaps: true,
     capture_dead_clicks: true,
     capture_performance: { web_vitals: true, network_timing: true },
-    session_recording: { maskAllInputs: true },
+    session_recording: { maskAllInputs: true, maskTextSelector: "*" },
+    mask_all_text: true,
+    mask_all_element_attributes: true,
     disable_session_recording: sessionReplay !== "true",
   };
 
@@ -126,7 +128,9 @@
     capture_performance: false,
     respect_dnt: true,
     person_profiles: "always",
-    session_recording: { maskAllInputs: true },
+    session_recording: { maskAllInputs: true, maskTextSelector: "*" },
+    mask_all_text: true,
+    mask_all_element_attributes: true,
     disable_session_recording: true,
     opt_out_capturing_by_default: true,
     opt_out_persistence_by_default: false,

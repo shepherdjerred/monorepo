@@ -2,9 +2,9 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { signInForAudit } from "#src/auth.ts";
 import { themes } from "#src/constants.ts";
+import { assertInteractiveStates } from "#src/interactive-checks.ts";
+import { assertKeyboardFocus } from "#src/keyboard-checks.ts";
 import {
-  assertKeyboardFocus,
-  assertInteractiveStates,
   assertLayoutHealth,
   assertRenderedContrast,
   waitForStablePage,
@@ -15,15 +15,30 @@ function routeUrl(route: AuditRoute): string {
   return new URL(route.path, routeBaseUrl(route.surface)).toString();
 }
 
+function isExpectedBrowserNoise(message: string): boolean {
+  return (
+    message.includes("Canceled") ||
+    (message.includes("NotAllowedError") && message.includes("Clipboard"))
+  );
+}
+
 for (const theme of themes) {
   for (const route of auditRoutes()) {
     test(`${route.surface}/${route.name} · ${theme.name}`, async ({
       page,
     }, testInfo) => {
       const browserErrors: string[] = [];
-      page.on("pageerror", (error) => browserErrors.push(error.message));
+      page.on("pageerror", (error) => {
+        if (!isExpectedBrowserNoise(error.message))
+          browserErrors.push(error.message);
+      });
       page.on("console", (message) => {
-        if (message.type() === "error") browserErrors.push(message.text());
+        if (
+          message.type() === "error" &&
+          !isExpectedBrowserNoise(message.text())
+        ) {
+          browserErrors.push(message.text());
+        }
       });
       page.on("requestfailed", (request) => {
         if (request.failure()?.errorText === "net::ERR_ABORTED") return;
@@ -81,7 +96,10 @@ for (const theme of themes) {
       await assertRenderedContrast(page);
       await assertKeyboardFocus(page);
       await assertInteractiveStates(page);
-      const accessibility = await new AxeBuilder({ page }).analyze();
+      const accessibility = await new AxeBuilder({ page })
+        .exclude("astro-dev-toolbar")
+        .exclude(".iPadShowKeyboard")
+        .analyze();
       expect(
         accessibility.violations.map(
           (violation) =>

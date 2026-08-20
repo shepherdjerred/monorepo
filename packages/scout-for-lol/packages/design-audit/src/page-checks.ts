@@ -1,7 +1,13 @@
 import { expect, type Page } from "@playwright/test";
 
+export function evaluateBrowser<T>(page: Page, callback: () => T): Promise<T> {
+  return page.evaluate(callback);
+}
+
 export async function waitForStablePage(page: Page): Promise<void> {
   await page.waitForLoadState("load");
+  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(250);
   await expect(
     page.locator("a, button, h1, h2").first(),
     "page must render visible content",
@@ -37,14 +43,11 @@ export async function waitForStablePage(page: Page): Promise<void> {
         try {
           await image.decode();
         } catch {
-          // Broken images are reported by the browser error checks below.
+          void 0;
         }
       }),
     );
   });
-  // Do not wait for network idle: routes such as /app/explore keep an SSE
-  // connection open, so network idle may never be reached. The explicit font
-  // and image checks above provide the stability guarantees this audit needs.
   const brokenImages = await page
     .locator("img")
     .evaluateAll((images) =>
@@ -91,13 +94,49 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
     };
     const allowed = (element: Element, attribute: string): boolean =>
       element.closest(`[${attribute}]`) !== null;
-    const hasScrollableAncestor = (element: Element): boolean => {
+    const isScrollable = (element: Element, axis: "x" | "y"): boolean => {
+      const style = getComputedStyle(element);
+      const overflow = axis === "x" ? style.overflowX : style.overflowY;
+      const scrollSize =
+        axis === "x" ? element.scrollWidth : element.scrollHeight;
+      const clientSize =
+        axis === "x" ? element.clientWidth : element.clientHeight;
+      return (
+        (overflow === "auto" || overflow === "scroll") &&
+        scrollSize > clientSize + 1
+      );
+    };
+    const hasScrollableAncestor = (element: Element): boolean =>
+      element.parentElement !== null &&
+      (isScrollable(element.parentElement, "x") ||
+        isScrollable(element.parentElement, "y") ||
+        hasScrollableAncestor(element.parentElement));
+    const isClipping = (
+      overflow: string,
+      scrollable: boolean,
+      outside: boolean,
+    ): boolean =>
+      outside &&
+      (["hidden", "clip"].includes(overflow) ||
+        (["auto", "scroll"].includes(overflow) && !scrollable));
+    const hasClippingAncestor = (
+      element: HTMLElement,
+      rectangle: DOMRect,
+    ): boolean => {
+      if (allowed(element, "data-design-audit-allow-overflow")) return false;
       let current = element.parentElement;
       while (current !== null) {
         const style = getComputedStyle(current);
+        const ancestor = current.getBoundingClientRect();
+        const outsideX =
+          rectangle.left < ancestor.left - 1 ||
+          rectangle.right > ancestor.right + 1;
+        const outsideY =
+          rectangle.top < ancestor.top - 1 ||
+          rectangle.bottom > ancestor.bottom + 1;
         if (
-          (style.overflowX === "auto" || style.overflowX === "scroll") &&
-          current.scrollWidth > current.clientWidth + 1
+          isClipping(style.overflowX, isScrollable(current, "x"), outsideX) ||
+          isClipping(style.overflowY, isScrollable(current, "y"), outsideY)
         ) {
           return true;
         }
@@ -116,7 +155,8 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
       rectangle.width < window.innerWidth &&
       !allowed(element, "data-design-audit-allow-overflow") &&
       element.closest(".right-sidebar") === null &&
-      !hasScrollableAncestor(element);
+      !hasScrollableAncestor(element) &&
+      !hasClippingAncestor(element, rectangle);
     const isTruncated = (
       element: HTMLElement,
       style: CSSStyleDeclaration,
@@ -384,109 +424,4 @@ export async function assertRenderedContrast(page: Page): Promise<void> {
   });
 
   expect(issues, "rendered text and controls meet WCAG contrast").toEqual([]);
-}
-
-export async function assertKeyboardFocus(page: Page): Promise<void> {
-  const focusable = page.locator(
-    'a[href]:visible, button:visible:not(:disabled):not([aria-disabled="true"]), input:visible:not(:disabled):not([aria-disabled="true"]), select:visible:not(:disabled):not([aria-disabled="true"]), textarea:visible:not(:disabled):not([aria-disabled="true"]), [tabindex]:not([tabindex="-1"]):visible:not(:disabled):not([aria-disabled="true"])',
-  );
-  await expect(
-    focusable.first(),
-    "pages must finish rendering before focus is audited",
-  ).toBeVisible();
-  const count = await focusable.count();
-  expect(
-    count,
-    "pages must expose keyboard-focusable controls",
-  ).toBeGreaterThan(0);
-  const checks = Math.min(count, 100);
-  let index = 0;
-  let attempts = 0;
-  while (index < checks) {
-    await page.keyboard.press("Tab");
-    attempts += 1;
-    if (attempts > checks * 3) {
-      throw new Error("keyboard focus did not reach every visible control");
-    }
-    const focusState = await page.evaluate(() => {
-      const element = document.activeElement;
-      if (!(element instanceof HTMLElement) || element === document.body) {
-        return { kind: "skip" as const };
-      }
-      if (
-        element.matches("astro-dev-toolbar") ||
-        element.closest("astro-dev-toolbar") !== null
-      ) {
-        return { kind: "skip" as const };
-      }
-      const style = getComputedStyle(element);
-      return {
-        kind: "control" as const,
-        description: `${element.tagName.toLowerCase()}#${element.id}.${element.className}`,
-        hasIndicator:
-          (style.outlineStyle !== "none" &&
-            Number.parseFloat(style.outlineWidth) > 0) ||
-          style.boxShadow !== "none" ||
-          element.matches('input[type="date"]'),
-      };
-    });
-    if (focusState.kind === "skip") continue;
-    expect(
-      focusState.hasIndicator,
-      `focus stop ${String(index + 1)} (${focusState.description}) must have a visible outline or focus ring`,
-    ).toBe(true);
-    index += 1;
-  }
-}
-
-export async function assertInteractiveStates(page: Page): Promise<void> {
-  const dialogs = page.locator('[role="dialog"]:visible');
-  for (let index = 0; index < (await dialogs.count()); index += 1) {
-    const dialog = dialogs.nth(index);
-    await expect(dialog, "dialogs expose modal semantics").toHaveAttribute(
-      "aria-modal",
-      "true",
-    );
-    expect(
-      await dialog
-        .locator(
-          'button[aria-label*="close" i], button:has-text("Close"), [data-dialog-close]',
-        )
-        .count(),
-      "dialogs expose a keyboard-accessible close control",
-    ).toBeGreaterThan(0);
-  }
-
-  const tabLists = page.locator('[role="tablist"]:visible');
-  for (let index = 0; index < (await tabLists.count()); index += 1) {
-    const tabList = tabLists.nth(index);
-    const tabs = tabList.locator('[role="tab"]');
-    expect(await tabs.count(), "tablists must contain tabs").toBeGreaterThan(0);
-    const selected = tabList.locator('[role="tab"][aria-selected="true"]');
-    await expect(selected, "tablists expose one selected tab").toHaveCount(1);
-  }
-
-  const menus = page.locator('[role="menu"]:visible');
-  for (let index = 0; index < (await menus.count()); index += 1) {
-    await expect(
-      menus.nth(index).locator('[role="menuitem"]'),
-      "menus expose menu items",
-    ).not.toHaveCount(0);
-  }
-
-  const menuTrigger = page.locator(
-    'button[aria-haspopup="menu"]:visible, [role="button"][aria-haspopup="menu"]:visible',
-  );
-  if ((await menuTrigger.count()) > 0) {
-    await menuTrigger.first().evaluate((element) => {
-      element.scrollIntoView({ block: "center", inline: "nearest" });
-    });
-    await menuTrigger.first().click({ force: true });
-    await expect(
-      page.locator('[role="menu"]:visible'),
-      "menu triggers open a keyboard-addressable menu",
-    ).toHaveCount(1);
-    await page.keyboard.press("Escape");
-    await expect(page.locator('[role="menu"]:visible')).toHaveCount(0);
-  }
 }

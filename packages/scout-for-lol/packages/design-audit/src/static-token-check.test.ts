@@ -37,4 +37,13 @@ describe("Scout semantic token pairs", () => {
       ),
     ).toEqual([]);
   });
+
+  test("rejects same-token fields with whitespace after the background", () => {
+    expect(
+      findInvalidTokenPairs(
+        'const entry = { bg: "bg-scout-warning ", title: "text-scout-warning" };',
+        "fixture.tsx",
+      ),
+    ).toHaveLength(1);
+  });
 });
