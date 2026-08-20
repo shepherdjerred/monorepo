@@ -26,6 +26,20 @@ func normalizesCodeVariants() {
     #expect(OTPParser().parse(body: "Your OTP is A7B9C2 to finish.", metadata: metadata)?.code == "A7B9C2")
 }
 
+@Test("rejects grouped numeric fragments inside email addresses")
+func rejectsGroupedCodeInsideAddress() {
+    let metadata = MessageMetadata(sender: "Acme <security@acme.example>", subject: "Sign in", date: nil, messageID: "message-grouped-email")
+
+    #expect(OTPParser().parse(body: "Your verification code was sent to 1234-56@acme.example.", metadata: metadata) == nil)
+}
+
+@Test("explicit code labels survive nearby device wording")
+func keepsExplicitCodeNearDeviceWord() {
+    let metadata = MessageMetadata(sender: "Acme <security@acme.example>", subject: "Sign in", date: nil, messageID: "message-device-word")
+
+    #expect(OTPParser().parse(body: "Code 482913 on phone", metadata: metadata)?.code == "482913")
+}
+
 @Test("rejects ordinary dates, phone numbers, URLs, and unrelated IDs")
 func rejectsFalsePositives() {
     let metadata = MessageMetadata(sender: "Billing <billing@example.test>", subject: "Receipt", date: nil, messageID: "message-3")

@@ -120,12 +120,12 @@ public struct CodeStore {
             let quarantineURL = directory.appendingPathComponent(".\(Self.fileName).corrupt-\(UUID().uuidString)")
             do {
                 try fileManager.moveItem(at: url, to: quarantineURL)
-                CodeFillObservability.storeLogger.error("event=store_corrupt_quarantined quarantine_name=\(quarantineURL.lastPathComponent, privacy: .public)")
-                return []
             } catch {
                 CodeFillObservability.storeLogger.error("event=store_corrupt_quarantine_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
                 throw error
             }
+            CodeFillObservability.storeLogger.error("event=store_corrupt_quarantined quarantine_name=\(quarantineURL.lastPathComponent, privacy: .public)")
+            throw error
         }
         let valid = records.filter { !$0.isExpired(at: now) }
         if valid.count != records.count {

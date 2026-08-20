@@ -66,17 +66,17 @@ public struct OTPParser {
             guard code.count >= 4, code.count <= 8, code.rangeOfCharacter(from: .decimalDigits) != nil else {
                 return nil
             }
-            guard !Self.isFalsePositive(code: code, rawCode: rawCode, body: sanitizedBody, range: normalized.range) else {
+            let explicitLabel = explicitLabelRanges.contains { labelRange in
+                NSMaxRange(labelRange.range) <= match.range.location &&
+                    match.range.location - NSMaxRange(labelRange.range) <= 28
+            }
+            guard !Self.isFalsePositive(body: sanitizedBody, range: normalized.range, hasExplicitLabel: explicitLabel) else {
                 return nil
             }
 
             let hasNearbyKeyword = keywordRanges.contains { keywordRange in
                 NSMaxRange(keywordRange.range) >= match.range.location - 48 &&
                     keywordRange.range.location <= NSMaxRange(match.range) + 48
-            }
-            let explicitLabel = explicitLabelRanges.contains { labelRange in
-                NSMaxRange(labelRange.range) <= match.range.location &&
-                    match.range.location - NSMaxRange(labelRange.range) <= 28
             }
             let score = (explicitLabel ? 4 : 0) + (hasNearbyKeyword ? 2 : 0) + (code.allSatisfy(\.isNumber) ? 1 : 0)
             return Candidate(code: code, range: normalized.range, score: score)
@@ -99,20 +99,25 @@ public struct OTPParser {
         )
     }
 
-    private static func isFalsePositive(code: String, rawCode: String, body: String, range: NSRange) -> Bool {
+    private static func isFalsePositive(body: String, range: NSRange, hasExplicitLabel: Bool) -> Bool {
         let beforeStart = max(0, range.location - 18)
         let beforeRange = NSRange(location: beforeStart, length: range.location - beforeStart)
         let afterStart = NSMaxRange(range)
         let afterLength = min(18, body.utf16.count - afterStart)
         let bodyNSString = NSString(string: body)
         let context = (bodyNSString.substring(with: beforeRange) + bodyNSString.substring(with: NSRange(location: afterStart, length: afterLength))).lowercased()
+        guard !Self.overlapsEmailAddress(body: body, range: range) else { return true }
         let falsePositiveWords = ["phone", "tel", "date", "order", "invoice", "amount", "price", "year", "http", "www", "reference", "ticket"]
-        guard !falsePositiveWords.contains(where: context.contains) else { return true }
+        let deviceWords = ["phone", "tel"]
+        let hasDeviceWord = deviceWords.contains(where: context.contains)
+        guard !(hasDeviceWord && !hasExplicitLabel) else { return true }
+        guard !falsePositiveWords.contains(where: { word in
+            word != "phone" && word != "tel" && context.contains(word)
+        }) else { return true }
         if Self.datePattern.matches(in: body, range: NSRange(body.startIndex..., in: body)).contains(where: { NSIntersectionRange($0.range, range).length > 0 }) {
             return true
         }
-        if rawCode.contains(" ") || rawCode.contains("-") { return false }
-        return Self.overlapsEmailAddress(body: body, range: range)
+        return false
     }
 
     // Only a candidate that is part of an address is a false positive; an unrelated support address
