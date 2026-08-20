@@ -199,21 +199,9 @@ async function creditBet(
     voidReason: BucksVoidReason | undefined;
     winnersPool: number;
     losersPool: number;
-    settledAt: Date;
   },
 ): Promise<void> {
   const { bet } = input;
-  await tx.bucksBet.update({
-    where: { id: bet.betId },
-    data: {
-      betOutcome: bet.refunded ? "refunded" : bet.won ? "won" : "lost",
-      grossPayout: bet.grossPayout,
-      fee: bet.houseCut,
-      payout: bet.payout,
-      settledAt: input.settledAt,
-    },
-  });
-
   if (bet.grossPayout > 0) {
     await applyBucksDelta(tx, {
       bucksAccountId: bet.bucksAccountId,
@@ -264,6 +252,23 @@ async function creditBet(
       },
     });
   }
+}
+
+async function markBetSettled(
+  tx: Db,
+  bet: SettlementBet,
+  settledAt: Date,
+): Promise<void> {
+  await tx.bucksBet.update({
+    where: { id: bet.betId },
+    data: {
+      betOutcome: bet.refunded ? "refunded" : bet.won ? "won" : "lost",
+      grossPayout: bet.grossPayout,
+      fee: bet.houseCut,
+      payout: bet.payout,
+      settledAt,
+    },
+  });
 }
 
 export type BettingSettlementResult = {
@@ -445,6 +450,13 @@ async function settleOnePool(input: {
       },
     });
 
+    // Release every now-impossible refund reservation before any account is
+    // credited. In particular, a losing synthetic house stake must not consume
+    // Int32 headroom needed for a winner fee credited later in this transaction.
+    for (const bet of settled.bets) {
+      await markBetSettled(tx, bet, settledAt);
+    }
+
     for (const bet of settled.bets) {
       await creditBet(tx, {
         bet,
@@ -455,7 +467,6 @@ async function settleOnePool(input: {
         voidReason: input.voidReason,
         winnersPool: settled.winnersPool,
         losersPool: settled.losersPool,
-        settledAt,
       });
     }
 

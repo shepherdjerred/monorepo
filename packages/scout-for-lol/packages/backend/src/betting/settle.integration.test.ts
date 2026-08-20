@@ -408,6 +408,48 @@ describe("refunds and house settlement", () => {
     expect(house.balance).toBe(HOUSE_BANKROLL - 4);
   });
 
+  test("releases a losing house stake before crediting the winner fee", async () => {
+    const pool = await makePool();
+    const house = await db.bucksAccount.create({
+      data: {
+        serverId: SERVER_A,
+        discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        isHouse: true,
+        balance: 0,
+      },
+    });
+    await db.$transaction(async (tx) => {
+      await applyBucksDelta(tx, {
+        bucksAccountId: house.id,
+        delta: BUCKS_INT32_MAX,
+        kind: "seed",
+        context: { type: "seed", note: "full house wallet" },
+      });
+    });
+    await makeBettor({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(1),
+      teamId: WINNING_TEAM,
+      stake: 5,
+    });
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+
+    expect(summary).toMatchObject({ voidReason: undefined, houseCut: 1 });
+    expect(
+      await db.bucksAccount.findUniqueOrThrow({
+        where: { id: house.id },
+        select: { balance: true },
+      }),
+    ).toEqual({ balance: BUCKS_INT32_MAX - 4 });
+    expect(
+      await db.bucksBet.findFirstOrThrow({
+        where: { poolId: pool.id, bucksAccountId: house.id },
+        select: { betOutcome: true },
+      }),
+    ).toEqual({ betOutcome: "lost" });
+  });
+
   test("uses a partial house reserve instead of voiding the market", async () => {
     const pool = await makePool();
     const house = await db.bucksAccount.create({
