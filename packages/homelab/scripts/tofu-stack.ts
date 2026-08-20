@@ -245,32 +245,45 @@ async function configureLocalOpenRouterProvider(
     );
   }
   const tempRoot = `${Bun.env["TMPDIR"] ?? "/tmp"}/monorepo-openrouter-byok-${process.pid.toString()}`;
-  const goosResult = await run(["go", "env", "GOOS"], {
-    ...isolatedRunOptions({}),
-    capture: true,
-  });
-  const goarchResult = await run(["go", "env", "GOARCH"], {
-    ...isolatedRunOptions({}),
-    capture: true,
-  });
-  const goos = goosResult.stdout.trim();
-  const goarch = goarchResult.stdout.trim();
-  const mirrorRoot =
-    `${tempRoot}/mirror/registry.opentofu.org/shepherdjerred/openrouter-byok/` +
-    `${version}/${goos}_${goarch}`;
-  await run(["mkdir", "-p", mirrorRoot], isolatedRunOptions({}));
-  const binaryPath = `${mirrorRoot}/terraform-provider-openrouter-byok_v${version}`;
-  await run(
-    ["go", "build", "-trimpath", "-buildvcs=false", "-o", binaryPath, "."],
-    isolatedRunOptions({}, providerRoot),
-  );
-  const cliConfigPath = `${tempRoot}/tofu.tfrc`;
-  await Bun.write(
-    cliConfigPath,
-    `provider_installation {\n  filesystem_mirror {\n    path = "${tempRoot}/mirror"\n    include = ["registry.opentofu.org/shepherdjerred/openrouter-byok"]\n  }\n  direct {}\n}\n`,
-  );
-  env["TF_CLI_CONFIG_FILE"] = cliConfigPath;
-  return tempRoot;
+  try {
+    const goosResult = await run(["go", "env", "GOOS"], {
+      ...isolatedRunOptions({}),
+      capture: true,
+    });
+    const goarchResult = await run(["go", "env", "GOARCH"], {
+      ...isolatedRunOptions({}),
+      capture: true,
+    });
+    const goos = goosResult.stdout.trim();
+    const goarch = goarchResult.stdout.trim();
+    const mirrorRoot =
+      `${tempRoot}/mirror/registry.opentofu.org/shepherdjerred/openrouter-byok/` +
+      `${version}/${goos}_${goarch}`;
+    await run(["mkdir", "-p", mirrorRoot], isolatedRunOptions({}));
+    const binaryPath = `${mirrorRoot}/terraform-provider-openrouter-byok_v${version}`;
+    await run(
+      ["go", "build", "-trimpath", "-buildvcs=false", "-o", binaryPath, "."],
+      isolatedRunOptions({}, providerRoot),
+    );
+    const cliConfigPath = `${tempRoot}/tofu.tfrc`;
+    await Bun.write(
+      cliConfigPath,
+      `provider_installation {\n  filesystem_mirror {\n    path = "${tempRoot}/mirror"\n    include = ["registry.opentofu.org/shepherdjerred/openrouter-byok"]\n  }\n  direct {}\n}\n`,
+    );
+    env["TF_CLI_CONFIG_FILE"] = cliConfigPath;
+    return tempRoot;
+  } catch (error) {
+    try {
+      await run(["rm", "-rf", tempRoot], isolatedRunOptions({}));
+    } catch (cleanupError) {
+      throw new AggregateError(
+        [error, cleanupError],
+        `Failed to clean up OpenRouter provider mirror at ${tempRoot}`,
+        { cause: cleanupError },
+      );
+    }
+    throw error;
+  }
 }
 
 /**
