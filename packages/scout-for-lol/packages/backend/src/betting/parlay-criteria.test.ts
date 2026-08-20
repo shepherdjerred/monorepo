@@ -534,6 +534,48 @@ describe("two-pass generation", () => {
       }),
     ).toBe(false);
   });
+
+  test("rejects a threshold pass that flips a team expectation", () => {
+    const teamProposal: Parameters<typeof thresholdsMatchProposal>[0] = {
+      version: 1 as const,
+      conditions: [
+        proposalCondition,
+        {
+          kind: "team_boolean" as const,
+          subject: null,
+          participantNumericField: null,
+          team: "selected" as const,
+          teamBooleanField: "win" as const,
+          objective: null,
+          operator: null,
+          expected: true,
+          matchNumericField: null,
+          opponentPingField: null,
+        },
+      ],
+    };
+    const flippedTeamCondition = {
+      kind: "team_boolean" as const,
+      subject: null,
+      participantNumericField: null,
+      participantBooleanField: null,
+      team: "selected" as const,
+      teamBooleanField: "win" as const,
+      objective: null,
+      operator: null,
+      threshold: null,
+      expected: false,
+      matchNumericField: null,
+      opponentPingField: null,
+    };
+    const filledTeamProposal: Parameters<typeof thresholdsMatchProposal>[1] = {
+      version: 1,
+      conditions: [filledCondition, flippedTeamCondition],
+    };
+    expect(thresholdsMatchProposal(teamProposal, filledTeamProposal)).toBe(
+      false,
+    );
+  });
 });
 
 describe("proposal grounding", () => {
@@ -607,6 +649,28 @@ describe("proposal grounding", () => {
           participantNumericField: "spell1Casts",
         },
       ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects equality because no equality distribution is measured", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [
+        { ...killsLeg, operator: "eq" },
+        {
+          ...killsLeg,
+          participantNumericField: "assists",
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects duplicate targets before the threshold pass", () => {
+    const result = ProposalSchema.safeParse({
+      version: 1,
+      conditions: [killsLeg, killsLeg],
     });
     expect(result.success).toBe(false);
   });

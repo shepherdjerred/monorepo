@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { REMAKE_MAX_DURATION_SECONDS } from "#src/betting/constants.ts";
 import {
   PARLAY_HISTORY_QUEUES,
   type ParlayHistoryMatch,
@@ -168,41 +169,46 @@ export function buildPlayerFrame(input: {
   team: boolean;
   opponent?: boolean;
 }): PlayerFrame {
-  const read = (match: ParlayHistoryMatch): number => {
+  const read = (match: ParlayHistoryMatch): number | undefined => {
     const source =
       input.opponent === true
         ? match.opponentValues
         : input.team
           ? match.teamValues
           : match.values;
-    return source.get(input.column) ?? 0;
+    if (input.column === "game_duration_seconds") {
+      return match.durationSeconds;
+    }
+    return source.get(input.column);
   };
+
+  const values = (matches: readonly ParlayHistoryMatch[]): number[] =>
+    matches.map(read).filter((value): value is number => value !== undefined);
 
   const byBucket: Partial<Record<DurationBucket, StatCell>> = {};
   for (const bucket of DURATION_BUCKETS) {
-    const values = input.matches
-      .filter((match) => durationBucket(match.durationSeconds) === bucket)
-      .map((match) => read(match));
-    if (values.length >= MIN_PLAYER_CELL_GAMES) {
-      byBucket[bucket] = cellFromValues(values, input.operator);
+    const bucketValues = values(
+      input.matches.filter(
+        (match) => durationBucket(match.durationSeconds) === bucket,
+      ),
+    );
+    if (bucketValues.length >= MIN_PLAYER_CELL_GAMES) {
+      byBucket[bucket] = cellFromValues(bucketValues, input.operator);
     }
   }
 
   const byLane: Partial<Record<ParlayLane, StatCell>> = {};
   for (const lane of PARLAY_LANES) {
-    const values = input.matches
-      .filter((match) => match.lane === lane)
-      .map((match) => read(match));
-    if (values.length >= MIN_PLAYER_CELL_GAMES) {
-      byLane[lane] = cellFromValues(values, input.operator);
+    const laneValues = values(
+      input.matches.filter((match) => match.lane === lane),
+    );
+    if (laneValues.length >= MIN_PLAYER_CELL_GAMES) {
+      byLane[lane] = cellFromValues(laneValues, input.operator);
     }
   }
 
   return {
-    overall: cellFromValues(
-      input.matches.map((match) => read(match)),
-      input.operator,
-    ),
+    overall: cellFromValues(values(input.matches), input.operator),
     byBucket,
     byLane,
   };
@@ -251,7 +257,10 @@ export async function fetchPopulationFrame(options: {
   const lakeDir = options.lakeDir ?? resolveLakeDir();
   const files = await resolveLakeFiles(lakeDir);
   const source = buildMatchesSource(files, {
-    sql: "queue IN (SELECT unnest(?)) AND team_position <> '' AND end_of_game_result = 'GameComplete' AND game_duration_seconds >= 300",
+    sql:
+      "queue IN (SELECT unnest(?)) AND team_position <> '' AND end_of_game_result = 'GameComplete' AND game_duration_seconds >= " +
+      REMAKE_MAX_DURATION_SECONDS.toString() +
+      " AND early_surrendered = false AND team_early_surrendered = false",
     params: [listParam([...PARLAY_HISTORY_QUEUES])],
   });
   if (source === undefined) {
@@ -266,12 +275,18 @@ export async function fetchPopulationFrame(options: {
   const rows = await withDuckDBConnection(
     async (session) => {
       const sql =
-        `WITH base AS (SELECT team_position AS lane, ` +
+        `WITH raw AS (SELECT * FROM (${source.sql})), valid_matches AS (` +
+        `SELECT match_id FROM raw GROUP BY match_id ` +
+        `HAVING count(*) = 10 AND count(DISTINCT team_id) = 2 ` +
+        `AND count(*) FILTER (WHERE team_id = 100) = 5 ` +
+        `AND count(*) FILTER (WHERE team_id = 200) = 5), ` +
+        `base AS (SELECT team_position AS lane, ` +
         `CASE WHEN game_duration_seconds < 900 THEN 10 ` +
         `WHEN game_duration_seconds < 1500 THEN 20 ` +
         `WHEN game_duration_seconds < 2100 THEN 30 ` +
         `WHEN game_duration_seconds < 2700 THEN 40 ELSE 50 END AS bucket, ` +
-        `${options.column} FROM (${source.sql})) ` +
+        `${options.column} FROM raw ` +
+        `WHERE match_id IN (SELECT match_id FROM valid_matches)) ` +
         `SELECT lane, bucket, count(*)::BIGINT AS n, ${quantileSelect} ` +
         `FROM base GROUP BY GROUPING SETS ((lane, bucket), (bucket), ())`;
       return await session.run(sql, bindParams(session, source.params));
@@ -395,7 +410,7 @@ export type StatLeg = {
   subjectKey: string | null;
   subjectPuuid: string | null;
   column: keyof MatchLakeRow;
-  operator: "gte" | "lte";
+  operator: ParlayOperator;
   scope: "player" | "team" | "opponent";
   label: string;
 };
@@ -416,7 +431,10 @@ export function statLegsForProposal(
   const anchor = subjects[0]?.puuid ?? null;
 
   return proposal.conditions.flatMap((condition, index): StatLeg[] => {
-    const operator = condition.operator === "lte" ? "lte" : "gte";
+    const operator = condition.operator;
+    if (operator === null) {
+      return [];
+    }
     if (condition.kind === "participant_numeric") {
       const field = condition.participantNumericField;
       const column = field === null ? null : PARLAY_HISTORY_COLUMNS[field];
@@ -467,6 +485,21 @@ export function statLegsForProposal(
               label: `enemy team ${field}`,
             },
           ];
+    }
+    if (condition.kind === "match_numeric") {
+      return condition.matchNumericField === "gameDuration"
+        ? [
+            {
+              index,
+              subjectKey: null,
+              subjectPuuid: anchor,
+              column: "game_duration_seconds",
+              operator,
+              scope: "player" as const,
+              label: "game duration in seconds",
+            },
+          ]
+        : [];
     }
     return [];
   });

@@ -413,12 +413,28 @@ export const OPPONENT_PING_CATALOG = z
     ),
   );
 
-export function promptFieldCatalog(): object {
+export function promptFieldCatalog(input?: {
+  participantNumericFields?: readonly ParticipantNumericField[];
+  teamObjectives?: readonly TeamObjective[];
+}): object {
+  const participantNumericFields =
+    input?.participantNumericFields ?? ParticipantNumericFieldSchema.options;
+  const teamObjectives = input?.teamObjectives ?? TeamObjectiveSchema.options;
   return {
-    participantNumeric: PARTICIPANT_NUMERIC_CATALOG,
+    participantNumeric: Object.fromEntries(
+      participantNumericFields.map((field) => [
+        field,
+        PARTICIPANT_NUMERIC_CATALOG[field],
+      ]),
+    ),
     participantBoolean: PARTICIPANT_BOOLEAN_CATALOG,
     teamBoolean: TEAM_BOOLEAN_CATALOG,
-    teamObjectives: TEAM_OBJECTIVE_CATALOG,
+    teamObjectives: Object.fromEntries(
+      teamObjectives.map((objective) => [
+        objective,
+        TEAM_OBJECTIVE_CATALOG[objective],
+      ]),
+    ),
     matchNumeric: MATCH_NUMERIC_CATALOG,
     opponentPings: OPPONENT_PING_CATALOG,
   };

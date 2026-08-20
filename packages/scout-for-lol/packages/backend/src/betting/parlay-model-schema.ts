@@ -3,13 +3,13 @@ import {
   MatchNumericFieldSchema,
   OpponentPingFieldSchema,
   ParticipantBooleanFieldSchema,
-  ParticipantNumericFieldSchema,
   TeamBooleanFieldSchema,
-  TeamObjectiveSchema,
 } from "#src/betting/parlay-catalog.ts";
 import {
   PARLAY_HISTORY_COLUMNS,
   TEAM_OBJECTIVE_HISTORY_COLUMNS,
+  groundedParticipantFields,
+  groundedTeamObjectives,
 } from "#src/betting/parlay-stat-fields.ts";
 import {
   GeneratedParlaySchema,
@@ -19,7 +19,29 @@ import {
   type ParlaySubject,
 } from "#src/betting/parlay-criteria.ts";
 
-const NumericOperatorSchema = z.enum(["gte", "lte", "eq"]);
+// Equality remains valid for stored definitions, but generation has no
+// equality-specific measured distribution from which to choose a threshold.
+const NumericOperatorSchema = z.enum(["gte", "lte"]);
+
+const groundedParticipantFieldOptions = groundedParticipantFields();
+const firstGroundedParticipantField = groundedParticipantFieldOptions[0];
+if (firstGroundedParticipantField === undefined) {
+  throw new Error("At least one participant field must be groundable");
+}
+const GroundedParticipantNumericFieldSchema = z.enum([
+  firstGroundedParticipantField,
+  ...groundedParticipantFieldOptions.slice(1),
+]);
+
+const groundedTeamObjectiveOptions = groundedTeamObjectives();
+const firstGroundedTeamObjective = groundedTeamObjectiveOptions[0];
+if (firstGroundedTeamObjective === undefined) {
+  throw new Error("At least one team objective must be groundable");
+}
+const GroundedTeamObjectiveSchema = z.enum([
+  firstGroundedTeamObjective,
+  ...groundedTeamObjectiveOptions.slice(1),
+]);
 
 // OpenAI strict structured outputs reject `oneOf`, which Zod emits for the
 // canonical discriminated union. Present the model with one closed shape and
@@ -38,11 +60,11 @@ const ModelParlayConditionSchema = z.strictObject({
     .string()
     .regex(/^P[1-5]$/)
     .nullable(),
-  participantNumericField: ParticipantNumericFieldSchema.nullable(),
+  participantNumericField: GroundedParticipantNumericFieldSchema.nullable(),
   participantBooleanField: ParticipantBooleanFieldSchema.nullable(),
   team: z.literal("selected").nullable(),
   teamBooleanField: TeamBooleanFieldSchema.nullable(),
-  objective: TeamObjectiveSchema.nullable(),
+  objective: GroundedTeamObjectiveSchema.nullable(),
   operator: NumericOperatorSchema.nullable(),
   threshold: z.number().int().nonnegative().nullable(),
   expected: z.boolean().nullable(),
@@ -82,10 +104,10 @@ const ModelParlayProposalConditionSchema = z.strictObject({
     .string()
     .regex(/^P[1-5]$/)
     .nullable(),
-  participantNumericField: ParticipantNumericFieldSchema.nullable(),
+  participantNumericField: GroundedParticipantNumericFieldSchema.nullable(),
   team: z.literal("selected").nullable(),
   teamBooleanField: TeamBooleanFieldSchema.nullable(),
-  objective: TeamObjectiveSchema.nullable(),
+  objective: GroundedTeamObjectiveSchema.nullable(),
   operator: NumericOperatorSchema.nullable(),
   expected: z.boolean().nullable(),
   matchNumericField: MatchNumericFieldSchema.nullable(),
@@ -101,6 +123,24 @@ export type ModelParlayProposal = z.infer<typeof ModelParlayProposalSchema>;
 
 type ModelParlayCondition = z.infer<typeof ModelParlayConditionSchema>;
 type ModelGeneratedParlay = z.infer<typeof ModelGeneratedParlaySchema>;
+type ModelProposalCondition = z.infer<
+  typeof ModelParlayProposalConditionSchema
+>;
+
+function proposalTargetKey(condition: ModelProposalCondition): string {
+  switch (condition.kind) {
+    case "participant_numeric":
+      return `${condition.subject ?? "null"}:${condition.participantNumericField ?? "null"}`;
+    case "team_boolean":
+      return `team:${condition.teamBooleanField ?? "null"}`;
+    case "team_objective_kills":
+      return `team:${condition.objective ?? "null"}:kills`;
+    case "match_numeric":
+      return `match:${condition.matchNumericField ?? "null"}`;
+    case "opponent_team_pings":
+      return `opponent:${condition.opponentPingField ?? "null"}`;
+  }
+}
 
 function canonicalConditionCandidate(condition: ModelParlayCondition): unknown {
   switch (condition.kind) {
@@ -251,9 +291,12 @@ function proposalShape(condition: {
   kind: string;
   subject: string | null;
   participantNumericField: string | null;
+  participantBooleanField?: string | null;
+  team?: string | null;
   teamBooleanField: string | null;
   objective: string | null;
   operator: string | null;
+  expected?: boolean | null;
   matchNumericField: string | null;
   opponentPingField: string | null;
 }): string {
@@ -261,9 +304,12 @@ function proposalShape(condition: {
     condition.kind,
     condition.subject,
     condition.participantNumericField,
+    condition.participantBooleanField ?? null,
+    condition.team ?? null,
     condition.teamBooleanField,
     condition.objective,
     condition.operator,
+    condition.expected ?? null,
     condition.matchNumericField,
     condition.opponentPingField,
   ].join("|");
@@ -282,6 +328,9 @@ export function thresholdsMatchProposal(
   filled: ModelGeneratedParlay,
 ): boolean {
   if (proposal.conditions.length !== filled.conditions.length) {
+    return false;
+  }
+  if (proposal.version !== filled.version) {
     return false;
   }
   return proposal.conditions.every((condition, index) => {
@@ -343,7 +392,17 @@ export function parlayProposalSchemaFor(
   const selected = new Set(subjects.map((subject) => subject.key));
   return ModelParlayProposalSchema.superRefine((proposal, context) => {
     const covered = new Set<string>();
+    const targets = new Set<string>();
     for (const [index, condition] of proposal.conditions.entries()) {
+      const target = proposalTargetKey(condition);
+      if (targets.has(target)) {
+        context.addIssue({
+          code: "custom",
+          path: ["conditions", index],
+          message: `Duplicate or contradictory target ${target}`,
+        });
+      }
+      targets.add(target);
       if (condition.kind === "participant_numeric") {
         if (condition.subject === null || !selected.has(condition.subject)) {
           context.addIssue({

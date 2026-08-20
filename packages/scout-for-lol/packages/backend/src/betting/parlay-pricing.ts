@@ -239,27 +239,63 @@ function priceByConditionalCombination(input: {
   let probability = 0;
   for (const [state, count] of stateWeights) {
     let joint = count / weighted;
+    const conditionsBySubject = new Map<string, ParlayCondition[]>();
     for (const condition of input.conditions) {
       const key = conditionSubject(condition) ?? anchor.key;
+      const group = conditionsBySubject.get(key) ?? [];
+      group.push(condition);
+      conditionsBySubject.set(key, group);
+    }
+
+    for (const [key, conditions] of conditionsBySubject) {
       const matches = perSubject.get(key);
       if (matches === undefined) {
         return undefined;
       }
       const inState = matches.filter((match) => matchState(match) === state);
+
+      // The result is already part of the conditioning state. It is therefore
+      // deterministic, not another sampled event to smooth. This also keeps a
+      // win leg from inventing probability in the loss half of the state space.
+      const stateIsWin = state.endsWith(":win");
+      const resultConditions = conditions.filter(
+        (condition) =>
+          condition.kind === "team_boolean" && condition.field === "win",
+      );
+      if (
+        resultConditions.some((condition) => condition.expected !== stateIsWin)
+      ) {
+        joint = 0;
+        break;
+      }
+
+      const replayConditions = conditions.filter(
+        (condition) =>
+          condition.kind !== "team_boolean" || condition.field !== "win",
+      );
+      if (replayConditions.length === 0) {
+        continue;
+      }
+
       let hits = 0;
       let total = 0;
       for (const match of inState) {
-        const held = conditionHeldInMatch(condition, match, key);
-        if (held === undefined) {
-          return undefined;
+        let all = true;
+        for (const condition of replayConditions) {
+          const held = conditionHeldInMatch(condition, match, key);
+          if (held === undefined) {
+            return undefined;
+          }
+          if (!held) {
+            all = false;
+            break;
+          }
         }
         total += 1;
-        if (held) {
+        if (all) {
           hits += 1;
         }
       }
-      // A team/match leg is decided by the state itself where the state says
-      // so; smoothing an empty cell would otherwise invent a coin flip.
       joint *= total === 0 ? 0.5 : smoothed(hits, total);
     }
     probability += joint;

@@ -215,6 +215,7 @@ async function generateAndPersistDefinition(
     name: string,
   ) => {
     try {
+      assertWithinBudget();
       const result = await generateValidatedObject(runtime, {
         model,
         schema,

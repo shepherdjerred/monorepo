@@ -230,6 +230,53 @@ describe("multi-subject combination", () => {
     expect(price?.yesProbabilityBps).toBeLessThan(MAX_PRICE_BPS);
   });
 
+  test("replays correlated legs jointly for one subject before combining", () => {
+    const a = Array.from({ length: 30 }, (_, index) =>
+      historyMatch({
+        index,
+        kills: index < 15 ? 10 : 1,
+        dragons: index < 15 ? 1 : 0,
+      }),
+    );
+    const b = Array.from({ length: 30 }, (_, index) =>
+      historyMatch({ index: index + 100, kills: 1 }),
+    );
+    const history: ParlayHistory = new Map([
+      [PUUID_A, a],
+      [PUUID_B, b],
+    ]);
+    const price = priceParlay({
+      conditions: [
+        {
+          kind: "participant_numeric",
+          subject: "P1",
+          field: "kills",
+          operator: "gte",
+          threshold: 10,
+        },
+        {
+          kind: "team_objective_kills",
+          team: "selected",
+          objective: "dragon",
+          operator: "gte",
+          threshold: 1,
+        },
+        {
+          kind: "participant_numeric",
+          subject: "P2",
+          field: "kills",
+          operator: "gte",
+          threshold: 1,
+        },
+      ],
+      subjects: [subject("P1", PUUID_A), subject("P2", PUUID_B)],
+      history,
+    });
+    // P1's two conditions land together in 15/30 games. The P2 condition is
+    // always true; independent marginals would incorrectly halve the result.
+    expect(price?.yesProbabilityBps).toBe(4844);
+  });
+
   test("refuses when any subject is short of history", () => {
     const a = Array.from({ length: 30 }, (_, index) =>
       historyMatch({ index, kills: index + 1 }),

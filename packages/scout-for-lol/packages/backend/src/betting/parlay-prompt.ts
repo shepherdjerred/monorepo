@@ -6,6 +6,10 @@ import {
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import { promptFieldCatalog } from "#src/betting/parlay-catalog.ts";
+import {
+  groundedParticipantFields,
+  groundedTeamObjectives,
+} from "#src/betting/parlay-stat-fields.ts";
 import type { ParlaySubject } from "#src/betting/parlay-criteria.ts";
 import { fetchRecentQueueGamesForPuuids } from "#src/reports/duckdb/lake-reads.ts";
 import { ReportQueryTimeoutError } from "#src/reports/duckdb/instance.ts";
@@ -216,7 +220,12 @@ export function buildParlayProposalPrompt(
     "Every condition must include every structured slot. Fill the slots used by its kind and set every irrelevant slot to null.",
     "Do not combine incompatible win booleans or first-objective true with zero objective kills.",
     `Anonymous lobby and recent form:\n${JSON.stringify(context)}`,
-    `Complete allowed field catalog:\n${JSON.stringify(promptFieldCatalog())}`,
+    `Complete allowed field catalog:\n${JSON.stringify(
+      promptFieldCatalog({
+        participantNumericFields: groundedParticipantFields(),
+        teamObjectives: groundedTeamObjectives(),
+      }),
+    )}`,
   ].join("\n\n");
 }
 

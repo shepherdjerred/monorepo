@@ -64,6 +64,7 @@ const HistoryParticipantSchema = z.looseObject({
   game_creation_ms: LakeNumberSchema,
   end_of_game_result: z.string(),
   early_surrendered: z.boolean(),
+  team_early_surrendered: z.boolean(),
 });
 
 export type ParlayHistoryMatch = {
@@ -108,13 +109,13 @@ function bindParams(
 
 const LooseRowSchema = z.record(z.string(), z.unknown());
 
-function numeric(row: unknown, column: string): number {
+function numeric(row: unknown, column: string): number | undefined {
   const parsed = LooseRowSchema.safeParse(row);
   if (!parsed.success) {
-    return 0;
+    return undefined;
   }
   const value = LakeNumberSchema.safeParse(parsed.data[column]);
-  return value.success ? value.data : 0;
+  return value.success ? value.data : undefined;
 }
 
 /**
@@ -142,7 +143,10 @@ function isVoidMatch(participants: readonly unknown[]): boolean {
   }
   return participants.some((participant) => {
     const row = HistoryParticipantSchema.safeParse(participant);
-    return row.success && row.data.early_surrendered;
+    return (
+      row.success &&
+      (row.data.early_surrendered || row.data.team_early_surrendered)
+    );
   });
 }
 
@@ -222,6 +226,7 @@ export async function fetchParlayHistory(options: {
     const sql =
       `SELECT match_id, puuid, team_id, win, team_position, ` +
       `game_duration_seconds, end_of_game_result, early_surrendered, ` +
+      `team_early_surrendered, ` +
       `epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ${columnList} ` +
       `FROM (${rosterSource.sql})`;
     return await session.run(sql, bindParams(session, rosterSource.params));
@@ -265,20 +270,39 @@ export async function fetchParlayHistory(options: {
       const teamValues = new Map<string, number>();
       const opponentValues = new Map<string, number>();
       for (const column of columns) {
-        values.set(column, numeric(subjectRow, column));
-        const sumWhere = (sameTeam: boolean): number =>
-          participants.reduce<number>((total, participant) => {
+        const subjectValue = numeric(subjectRow, column);
+        if (subjectValue === undefined) {
+          continue;
+        }
+        const sumWhere = (sameTeam: boolean): number | undefined => {
+          let total = 0;
+          for (const participant of participants) {
             const parsed = HistoryParticipantSchema.safeParse(participant);
             if (!parsed.success) {
-              return total;
+              return undefined;
+            }
+            const value = numeric(participant, column);
+            if (value === undefined) {
+              return undefined;
             }
             const onSubjectTeam = parsed.data.team_id === subject.team_id;
-            return onSubjectTeam === sameTeam
-              ? total + numeric(participant, column)
-              : total;
-          }, 0);
-        teamValues.set(column, sumWhere(true));
-        opponentValues.set(column, sumWhere(false));
+            if (onSubjectTeam === sameTeam) {
+              total += value;
+            }
+          }
+          return total;
+        };
+        const teamValue = sumWhere(true);
+        const opponentValue = sumWhere(false);
+        if (teamValue === undefined || opponentValue === undefined) {
+          continue;
+        }
+        values.set(column, subjectValue);
+        teamValues.set(column, teamValue);
+        opponentValues.set(column, opponentValue);
+      }
+      if (values.size !== columns.length) {
+        continue;
       }
       matches.push({
         matchId,
