@@ -1,5 +1,6 @@
 import { retryPendingBucksEarnings } from "#src/betting/earnings-retry.ts";
 import { checkMatchHistory } from "#src/league/tasks/postmatch/match-history-polling.ts";
+import { announceSettlements } from "#src/betting/announce.ts";
 import { voidStaleBettingPools } from "#src/betting/void-stale.ts";
 import { voidStaleParlayMarkets } from "#src/betting/parlay-sweep.ts";
 import { createLogger } from "#src/logger.ts";
@@ -54,7 +55,23 @@ export async function checkPostMatch() {
 
     // Refund any pool whose match never produced a result. Without this,
     // staked Bucks from a lost match would be silently destroyed.
-    await voidStaleBettingPools();
+    const staleBucks = await voidStaleBettingPools();
+    const staleMatchIds = new Set([
+      ...staleBucks.closures.map((closure) => closure.matchId),
+      ...staleBucks.settlements.map((settlement) => settlement.matchId),
+    ]);
+    for (const matchId of staleMatchIds) {
+      await announceSettlements({
+        matchId,
+        closures: staleBucks.closures.filter(
+          (closure) => closure.matchId === matchId,
+        ),
+        settlements: staleBucks.settlements.filter(
+          (settlement) => settlement.matchId === matchId,
+        ),
+        earnings: [],
+      });
+    }
     await voidStaleParlayMarkets();
 
     const executionTime = Date.now() - startTime;

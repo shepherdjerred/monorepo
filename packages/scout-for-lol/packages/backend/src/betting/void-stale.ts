@@ -6,7 +6,8 @@ import {
 import { VOID_GRACE_MS } from "#src/betting/constants.ts";
 import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
-import { closeBettingPoolById } from "#src/betting/sweep.ts";
+import type { SettlementBet, SettlementSummary } from "#src/betting/settle.ts";
+import { closeBettingPoolById, type ClosedPool } from "#src/betting/sweep.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -40,6 +41,7 @@ async function pendingMatchedBets(tx: Db, poolId: number) {
     select: {
       id: true,
       bucksAccountId: true,
+      bucksAccount: { select: { discordId: true, isHouse: true } },
       stake: true,
       humanMatchedStake: true,
       houseMatchedStake: true,
@@ -76,7 +78,7 @@ async function refundMatchedPool(
   poolId: number,
   matchId: string,
   now: Date,
-): Promise<boolean> {
+): Promise<SettlementSummary | undefined> {
   return await prismaClient.$transaction(async (tx) => {
     const claim = await tx.bucksMatchPool.updateMany({
       where: { id: poolId, poolState: "closed", matchedAt: { not: null } },
@@ -87,17 +89,18 @@ async function refundMatchedPool(
       },
     });
     if (claim.count !== 1) {
-      return false;
+      return;
     }
 
     const pool = await tx.bucksMatchPool.findUniqueOrThrow({
       where: { id: poolId },
-      select: { roster: true },
+      select: { roster: true, serverId: true },
     });
     const roster = BucksPoolRosterSchema.parse(
       JSON.parse(pool.roster),
     ).participants;
     const bets = await pendingMatchedBets(tx, poolId);
+    const settledBets: SettlementBet[] = [];
     for (const bet of bets) {
       await tx.bucksBet.update({
         where: { id: bet.id },
@@ -137,8 +140,65 @@ async function refundMatchedPool(
           voidReason: "expired",
         },
       });
+      settledBets.push({
+        betId: bet.id,
+        bucksAccountId: bet.bucksAccountId,
+        discordId: bet.bucksAccount.discordId,
+        isHouse: bet.bucksAccount.isHouse,
+        predictedTeamId: bet.predictedTeamId,
+        submittedStake: bet.stake,
+        matchedStake: bet.matchedStake,
+        unmatchedStake: bet.unmatchedStake,
+        grossPayout: bet.matchedStake,
+        houseCut: 0,
+        payout: bet.matchedStake,
+        winnings: 0,
+        won: false,
+        refunded: true,
+        subjectPuuid: bet.subjectPuuid,
+      });
     }
-    return true;
+    return {
+      matchId,
+      serverId: pool.serverId,
+      winningTeamId: undefined,
+      voidReason: "expired",
+      winnersPool: 0,
+      losersPool: 0,
+      houseCut: 0,
+      bets: settledBets,
+    };
+  });
+}
+
+export type StaleBettingResult = {
+  voidedCount: number;
+  closures: ClosedPool[];
+  settlements: SettlementSummary[];
+};
+
+async function closeStalePool(input: {
+  prismaClient: ExtendedPrismaClient;
+  pool: { id: number; matchId: string; matchedAt: Date | null };
+  now: Date;
+}): Promise<ClosedPool | undefined> {
+  return input.pool.matchedAt === null
+    ? await closeBettingPoolById(input.pool.id, input.prismaClient, input.now)
+    : undefined;
+}
+
+function reportStalePoolError(
+  pool: { id: number; matchId: string },
+  stage: "close" | "refund",
+  error: unknown,
+): void {
+  logger.error(
+    `❌ Could not ${stage} stale Bryan Bucks pool ${pool.id.toString()} for match ${pool.matchId}:`,
+    error,
+  );
+  Sentry.captureException(error, {
+    tags: { source: "betting-sweep-void", matchId: pool.matchId, stage },
+    extra: { poolId: pool.id },
   });
 }
 
@@ -146,9 +206,11 @@ async function refundMatchedPool(
 export async function voidStaleBettingPools(
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
-): Promise<number> {
+): Promise<StaleBettingResult> {
   const cutoff = new Date(now.getTime() - VOID_GRACE_MS);
   let voided = 0;
+  const closures: ClosedPool[] = [];
+  const settlements: SettlementSummary[] = [];
 
   try {
     const stale = await prismaClient.bucksMatchPool.findMany({
@@ -161,24 +223,32 @@ export async function voidStaleBettingPools(
     });
 
     for (const pool of stale) {
+      let closure: ClosedPool | undefined;
       try {
-        if (pool.matchedAt === null) {
-          await closeBettingPoolById(pool.id, prismaClient, now);
-        }
-        if (await refundMatchedPool(prismaClient, pool.id, pool.matchId, now)) {
+        closure = await closeStalePool({ prismaClient, pool, now });
+      } catch (error) {
+        reportStalePoolError(pool, "close", error);
+        continue;
+      }
+      if (closure !== undefined) {
+        closures.push(closure);
+      }
+
+      try {
+        const settlement = await refundMatchedPool(
+          prismaClient,
+          pool.id,
+          pool.matchId,
+          now,
+        );
+        if (settlement !== undefined) {
+          settlements.push(settlement);
           voided += 1;
         }
       } catch (error) {
         // A malformed pool remains retryable after its transaction rolls back,
-        // while later guild pools can still return their players' reserved BB.
-        logger.error(
-          `❌ Could not void stale Bryan Bucks pool ${pool.id.toString()} for match ${pool.matchId}:`,
-          error,
-        );
-        Sentry.captureException(error, {
-          tags: { source: "betting-sweep-void", matchId: pool.matchId },
-          extra: { poolId: pool.id },
-        });
+        // while its committed close summary and later guild pools are retained.
+        reportStalePoolError(pool, "refund", error);
       }
     }
 
@@ -192,5 +262,5 @@ export async function voidStaleBettingPools(
     Sentry.captureException(error, { tags: { source: "betting-sweep-void" } });
   }
 
-  return voided;
+  return { voidedCount: voided, closures, settlements };
 }

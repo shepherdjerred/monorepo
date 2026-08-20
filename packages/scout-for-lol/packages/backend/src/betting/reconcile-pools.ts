@@ -122,6 +122,7 @@ function auditSummaryAllocations(
     const bet = humanBets.get(allocation.betId);
     if (
       bet?.bucksAccountId !== allocation.bucksAccountId ||
+      bet.predictedTeamId !== allocation.predictedTeamId ||
       bet.stake !== allocation.submittedStake ||
       bet.humanMatchedStake !== allocation.humanMatchedStake ||
       bet.houseMatchedStake !== allocation.houseMatchedStake ||

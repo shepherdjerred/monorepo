@@ -294,6 +294,8 @@ describe("handleBetButton", () => {
     // "You don't have a bet" would be a lie to someone whose stake is sitting
     // in the pool, and would read as if it had never been recorded.
     expect(replies[0]).toContain("Betting has closed");
+    expect(replies[0]).toContain("check the close announcement");
+    expect(replies[0]).not.toContain("were returned");
     expect(replies[0]).not.toContain("don't have a bet");
 
     // The stake stays staked: no refund sneaks out after close.

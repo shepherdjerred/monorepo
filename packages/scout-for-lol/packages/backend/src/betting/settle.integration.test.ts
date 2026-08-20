@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import {
   BUCKS_INT32_MAX,
+  BucksMatchingSummarySchema,
   DiscordGuildIdSchema,
   RawMatchSchema,
   type DiscordAccountId,
@@ -491,8 +492,30 @@ describe("voidStaleBettingPools", () => {
       stake: 10,
     });
 
-    expect(await voidStaleBettingPools(db)).toBe(1);
-    expect(await voidStaleBettingPools(db)).toBe(0);
+    const firstPass = await voidStaleBettingPools(db);
+    expect(firstPass.voidedCount).toBe(1);
+    expect(firstPass.closures).toHaveLength(1);
+    expect(firstPass.settlements).toHaveLength(1);
+    expect(firstPass.settlements[0]).toMatchObject({
+      matchId: MATCH_ID,
+      serverId: SERVER_A,
+      voidReason: "expired",
+      bets: expect.arrayContaining([
+        expect.objectContaining({
+          discordId: bucksTestDiscordId(1),
+          submittedStake: 10,
+          matchedStake: 5,
+          unmatchedStake: 5,
+          payout: 5,
+          refunded: true,
+        }),
+      ]),
+    });
+    expect(await voidStaleBettingPools(db)).toEqual({
+      voidedCount: 0,
+      closures: [],
+      settlements: [],
+    });
     expect(
       await db.bucksAccount.findUniqueOrThrow({
         where: { id: human.account.id },
@@ -534,7 +557,8 @@ describe("voidStaleBettingPools", () => {
       stake: 10,
     });
 
-    expect(await voidStaleBettingPools(db)).toBe(1);
+    const result = await voidStaleBettingPools(db);
+    expect(result.voidedCount).toBe(1);
     expect(
       await db.bucksMatchPool.findUniqueOrThrow({
         where: { id: malformedPool.id },
@@ -547,6 +571,53 @@ describe("voidStaleBettingPools", () => {
         select: { balance: true },
       }),
     ).toEqual({ balance: 100 });
+  });
+
+  test("returns a committed close summary when the refund must retry", async () => {
+    const closesAt = new Date(Date.now() - VOID_GRACE_MS - 60_000);
+    const pool = await makePool(SERVER_A, closesAt);
+    await makeBettor({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(1),
+      teamId: WINNING_TEAM,
+      stake: 10,
+    });
+    let poolClaims = 0;
+    const failingRefund = db.$extends({
+      query: {
+        bucksMatchPool: {
+          async updateMany({ args, query }) {
+            poolClaims += 1;
+            if (poolClaims === 2) {
+              throw new Error("simulated stale refund failure");
+            }
+            return await query(args);
+          },
+        },
+      },
+    });
+
+    const firstPass = await voidStaleBettingPools(failingRefund);
+    expect(firstPass).toMatchObject({
+      voidedCount: 0,
+      closures: [{ matchId: MATCH_ID, serverId: SERVER_A }],
+      settlements: [],
+    });
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true, matchedAt: true, settledAt: true },
+      }),
+    ).toEqual({
+      poolState: "closed",
+      matchedAt: expect.any(Date),
+      settledAt: null,
+    });
+
+    const retry = await voidStaleBettingPools(db);
+    expect(retry.voidedCount).toBe(1);
+    expect(retry.closures).toEqual([]);
+    expect(retry.settlements).toHaveLength(1);
   });
 
   test("rolls back a stale refund with a non-conserving allocation", async () => {
@@ -580,7 +651,8 @@ describe("voidStaleBettingPools", () => {
       select: { id: true, balance: true },
     });
 
-    expect(await voidStaleBettingPools(db)).toBe(0);
+    const result = await voidStaleBettingPools(db);
+    expect(result.voidedCount).toBe(0);
     expect(
       await db.bucksMatchPool.findUniqueOrThrow({
         where: { id: pool.id },
@@ -660,6 +732,46 @@ describe("reconcileBucksBalances", () => {
     expect(findings).not.toContainEqual(
       expect.objectContaining({
         message: "Reconciliation query failed before completion",
+      }),
+    );
+  });
+
+  test("reports an allocation whose recorded team differs from its bet", async () => {
+    const { pool } = await makeBalancedPool();
+    await settleBettingForMatch(fixture, db);
+    const stored = await db.bucksMatchPool.findUniqueOrThrow({
+      where: { id: pool.id },
+      select: { matchingJson: true },
+    });
+    const summary = BucksMatchingSummarySchema.parse(
+      JSON.parse(stored.matchingJson ?? "null"),
+    );
+    const firstAllocation = summary.allocations[0];
+    if (firstAllocation === undefined) {
+      throw new Error("expected a matching allocation");
+    }
+    await db.bucksMatchPool.update({
+      where: { id: pool.id },
+      data: {
+        matchingJson: JSON.stringify({
+          ...summary,
+          allocations: [
+            {
+              ...firstAllocation,
+              predictedTeamId:
+                firstAllocation.predictedTeamId === 100 ? 200 : 100,
+            },
+            ...summary.allocations.slice(1),
+          ],
+        }),
+      },
+    });
+
+    expect(await reconcileBucksBalances(db)).toContainEqual(
+      expect.objectContaining({
+        kind: "matching_summary",
+        poolId: pool.id,
+        betId: firstAllocation.betId,
       }),
     );
   });

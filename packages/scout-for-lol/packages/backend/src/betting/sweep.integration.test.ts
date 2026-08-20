@@ -302,7 +302,63 @@ describe("closeExpiredBettingWindows", () => {
   });
 });
 
+describe("close delivery metadata", () => {
+  test("commits matching when Discord message refs are malformed", async () => {
+    const pool = await makePool();
+    await makeOffer({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(1),
+      teamId: 100,
+      stake: 5,
+    });
+    await makeOffer({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(2),
+      teamId: 200,
+      stake: 5,
+    });
+    await db.bucksMatchPool.update({
+      where: { id: pool.id },
+      data: { messageRefs: "{not valid JSON" },
+    });
+
+    const [closed] = await closeExpiredBettingWindows(db, NOW);
+
+    expect(closed).toMatchObject({
+      messageRefs: [],
+      humanMatchedPerSide: 5,
+      totalMatchedPerSide: 5,
+    });
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true, matchedAt: true, matchingJson: true },
+      }),
+    ).toEqual({
+      poolState: "closed",
+      matchedAt: NOW,
+      matchingJson: expect.any(String),
+    });
+  });
+});
+
 describe("closeBettingWindowsForMatch", () => {
+  test("isolates an initial pool lookup failure", async () => {
+    const failing = db.$extends({
+      query: {
+        bucksMatchPool: {
+          async findMany() {
+            throw new Error("simulated pool lookup failure");
+          },
+        },
+      },
+    });
+
+    expect(await closeBettingWindowsForMatch(MATCH_ID, failing, NOW)).toEqual(
+      [],
+    );
+  });
+
   test("isolates a malformed guild pool and closes healthy pools", async () => {
     const healthyPool = await makePool();
     await makeOffer({
