@@ -1,6 +1,7 @@
 import { ChannelType, type Guild, type VoiceChannel } from "discord.js";
 import type { CustomNightSnapshot } from "@scout-for-lol/data";
 import { errorMessage } from "#src/customs/voice-utils.ts";
+import { isMissingChannelError } from "#src/discord/utils/permissions.ts";
 
 export class PartialTeamChannelsError extends Error {
   constructor(
@@ -43,6 +44,7 @@ export async function deleteRecordedTeamChannels(
       }
       await channel.delete("Scout Customs voice channel recovery");
     } catch (error) {
+      if (isMissingChannelError(error)) continue;
       failures.push(`channel ${channelId}: ${errorMessage(error)}`);
     }
   }

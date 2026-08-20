@@ -372,7 +372,7 @@ export async function reconcileCustomNights(
   }
   const unresolvedNights = await database.customGame.findMany({
     where: {
-      state: { in: ["LOBBY_READY", "RESULT_PENDING", "MANUAL"] },
+      state: { in: ["RESULT_PENDING", "MANUAL"] },
       tournamentCode: { not: null },
     },
     select: { nightId: true },
