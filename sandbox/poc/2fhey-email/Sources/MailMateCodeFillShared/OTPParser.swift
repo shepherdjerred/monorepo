@@ -40,8 +40,9 @@ public struct OTPParser {
     private static let timePattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}])(?:[01]?\\d|2[0-3]):[0-5]\\d(?:\\s?(?:am|pm))?(?:\\s+(?:utc|gmt|cet|cest|est|edt|pst|pdt|bst|jst|aest|aedt))?(?![\\p{L}\\p{N}])"
     )
+    private static let monthNamePattern = "(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre|janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre|januar|februar|märz|maerz|april|mai|juni|juli|august|september|oktober|november|dezember)"
     private static let datePattern = makeExpression(
-        "(?i)(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,\\s*|\\s+)\\d{4}|\\d{1,2}(?:st|nd|rd|th)?\\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{4})(?![\\p{L}\\p{N}])"
+        "(?i)(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4}|\(monthNamePattern)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,\\s*|\\s+)\\d{4}|\\d{1,2}(?:st|nd|rd|th)?[.]?\\s+(?:de\\s+)?\(monthNamePattern)(?:\\s+de)?\\s+\\d{4})(?![\\p{L}\\p{N}])"
     )
     private static let uriPattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}])(?!(?:code|otp|pin|passcode):\\s*\\d{4,8}(?=[\\s.,!?;:]|$))[A-Z][A-Z0-9+.-]*:\\S+"
