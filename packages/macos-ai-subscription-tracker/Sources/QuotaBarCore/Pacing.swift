@@ -32,12 +32,12 @@ public struct WindowPacing: Equatable, Sendable {
     let evenPace = 100 / (weeklyDurationSeconds / 86_400)
     let actualPace = remaining / daysRemaining
     let status: Status
-    if actualPace <= evenPace {
+    if actualPace >= evenPace * (1 + onPaceTolerance) {
       status = .ahead
-    } else if actualPace <= evenPace * (1 + onPaceTolerance) {
-      status = .onPace
-    } else {
+    } else if actualPace <= evenPace * (1 - onPaceTolerance) {
       status = .behind
+    } else {
+      status = .onPace
     }
     return WindowPacing(
       evenPacePerDay: evenPace,

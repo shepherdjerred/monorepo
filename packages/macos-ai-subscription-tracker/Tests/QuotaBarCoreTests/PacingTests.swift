@@ -16,7 +16,7 @@ final class PacingTests: XCTestCase {
     XCTAssertEqual(pacing.daysRemaining, 3, accuracy: 0.001)
     XCTAssertEqual(pacing.evenPacePerDay, 100.0 / 7.0, accuracy: 0.0001)
     XCTAssertEqual(pacing.actualPacePerDay, 20.0 / 3.0, accuracy: 0.001)
-    XCTAssertEqual(pacing.status, .ahead)
+    XCTAssertEqual(pacing.status, .behind)
   }
 
   func testEvenSplitIsOnPace() throws {
@@ -27,10 +27,10 @@ final class PacingTests: XCTestCase {
       )
     )
     XCTAssertEqual(pacing.actualPacePerDay, pacing.evenPacePerDay, accuracy: 0.0001)
-    XCTAssertEqual(pacing.status, .ahead)
+    XCTAssertEqual(pacing.status, .onPace)
   }
 
-  func testSlightlyFasterThanEvenIsOnPace() throws {
+  func testSlightlySlowerThanEvenIsOnPace() throws {
     let pacing = try XCTUnwrap(
       WindowPacing.compute(
         window: window(remaining: 49, resetAt: now.addingTimeInterval(3 * 86_400)),
@@ -40,7 +40,7 @@ final class PacingTests: XCTestCase {
     XCTAssertEqual(pacing.status, .onPace)
   }
 
-  func testBurningTooFastIsBehind() throws {
+  func testBurningTooSlowIsAhead() throws {
     let pacing = try XCTUnwrap(
       WindowPacing.compute(
         window: window(remaining: 30, resetAt: now.addingTimeInterval(86_400)),
@@ -48,7 +48,7 @@ final class PacingTests: XCTestCase {
       )
     )
     XCTAssertEqual(pacing.actualPacePerDay, 30, accuracy: 0.001)
-    XCTAssertEqual(pacing.status, .behind)
+    XCTAssertEqual(pacing.status, .ahead)
   }
 
   func testNonWeeklyWindowIsSkipped() throws {
@@ -108,14 +108,14 @@ final class PacingTests: XCTestCase {
   }
 
   func testRealWeeklyFixtureWindowsProducePacing() throws {
+    let fixtureNow = date("2026-08-12T00:00:00Z")
     let data = fixture("claude-success")
-    let snapshot = try ClaudeCodeProvider.parse(data: data, now: now)
+    let snapshot = try ClaudeCodeProvider.parse(data: data, now: fixtureNow)
     let weekly = snapshot.windows.filter { $0.kind == .weekly }
     XCTAssertFalse(weekly.isEmpty)
     for window in weekly {
-      if let pacing = WindowPacing.compute(window: window, at: now) {
-        XCTAssertEqual(pacing.evenPacePerDay, 100.0 / 7.0, accuracy: 0.0001)
-      }
+      let pacing = try XCTUnwrap(WindowPacing.compute(window: window, at: fixtureNow))
+      XCTAssertEqual(pacing.evenPacePerDay, 100.0 / 7.0, accuracy: 0.0001)
     }
   }
 }
