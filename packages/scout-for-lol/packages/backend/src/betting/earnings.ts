@@ -12,7 +12,10 @@ import {
 import { BUCKS_EARNING_QUEUES } from "#src/betting/constants.ts";
 import { computeMvp } from "#src/betting/mvp.ts";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
-import { ensureBucksAccount } from "#src/betting/accounts.ts";
+import {
+  ensureBucksAccount,
+  HouseInsufficientError,
+} from "#src/betting/accounts.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -196,13 +199,26 @@ async function awardForGuild(input: {
   // a zero-risk row, and keeping it out keeps the write lock held briefly.
   const accountIds = new Map<string, number>();
   for (const target of input.targets) {
-    const account = await ensureBucksAccount(
-      {
-        serverId,
-        discordId: DiscordAccountIdSchema.parse(target.discordId),
-      },
-      input.prismaClient,
-    );
+    let account;
+    try {
+      account = await ensureBucksAccount(
+        {
+          serverId,
+          discordId: DiscordAccountIdSchema.parse(target.discordId),
+        },
+        input.prismaClient,
+      );
+    } catch (error) {
+      if (error instanceof HouseInsufficientError) {
+        logger.warn(
+          `🏦 Skipping ${input.matchId} earnings for ${serverId}: the house cannot fund a welcome grant`,
+        );
+        // Do not create the exactly-once marker. A later recovery pass can
+        // retry this guild after its house has been funded again.
+        return [];
+      }
+      throw error;
+    }
     accountIds.set(target.discordId, account.id);
   }
 

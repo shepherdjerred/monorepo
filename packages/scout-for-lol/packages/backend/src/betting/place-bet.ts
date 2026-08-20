@@ -11,6 +11,7 @@ import { teamIdForSubjectOutcome } from "#src/betting/team.ts";
 import { getFlag } from "#src/configuration/flags.ts";
 import {
   ensureBucksAccount,
+  HouseInsufficientError,
   findEligiblePlayer,
 } from "#src/betting/accounts.ts";
 import {
@@ -51,6 +52,7 @@ export type PlaceBetResult =
   | { kind: "invalid_stake" }
   | { kind: "storage_limit" }
   | { kind: "insufficient"; balance: number; needed: number }
+  | { kind: "house_insufficient" }
   | { kind: "side_conflict"; existingTeamId: number };
 
 export type PlaceBetInput = {
@@ -147,10 +149,18 @@ export async function placeBet(
   if (player === undefined) {
     return { kind: "not_eligible" };
   }
-  const account = await ensureBucksAccount(
-    { serverId: input.serverId, discordId: input.discordId },
-    prismaClient,
-  );
+  let account: Awaited<ReturnType<typeof ensureBucksAccount>>;
+  try {
+    account = await ensureBucksAccount(
+      { serverId: input.serverId, discordId: input.discordId },
+      prismaClient,
+    );
+  } catch (error) {
+    if (error instanceof HouseInsufficientError) {
+      return { kind: "house_insufficient" };
+    }
+    throw error;
+  }
 
   try {
     return await prismaClient.$transaction(async (tx) => {

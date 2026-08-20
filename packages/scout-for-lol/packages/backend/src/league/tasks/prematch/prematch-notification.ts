@@ -490,24 +490,23 @@ export async function sendPrematchNotification(
       ? prematchMessageContent
       : "";
 
-  const { sentMessageIds, deliveredGuildIds, messageRefsByGuild } =
-    await deliverPrematchMessages({
-      channels: deliverChannels,
-      gameInfo,
-      gameId,
-      trackedPlayers,
-      bucks,
-      prematchMessageContent,
-      loadingScreenAttachment,
-      loadingScreenEmbed,
-    });
+  const delivery = await deliverPrematchMessages({
+    channels: deliverChannels,
+    gameInfo,
+    gameId,
+    trackedPlayers,
+    bucks,
+    prematchMessageContent,
+    loadingScreenAttachment,
+    loadingScreenEmbed,
+  });
 
   await recordPrematchOutputs({
     bucks,
-    deliveredGuildIds,
+    deliveredGuildIds: delivery.deliveredGuildIds,
     gameInfo,
     loadingScreenData,
-    messageRefsByGuild,
+    messageRefsByGuild: delivery.messageRefsByGuild,
     prematchContentBase,
     queueType,
     trackedPlayers,
@@ -516,5 +515,5 @@ export async function sendPrematchNotification(
   logger.info(
     `[sendPrematchNotification] ✅ Notifications sent for game ${gameId}`,
   );
-  return sentMessageIds;
+  return delivery.sentMessageIds;
 }

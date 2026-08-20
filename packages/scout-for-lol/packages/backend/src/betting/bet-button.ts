@@ -72,6 +72,8 @@ export function describeResult(
       return "💱 That position is too large for the current Bryan Bucks storage format.";
     case "insufficient":
       return `💸 You have **${result.balance.toString()} BB** but need **${result.needed.toString()} BB**.`;
+    case "house_insufficient":
+      return "🏦 The Bryan Bucks house cannot fund a new wallet right now. No Bucks moved.";
     case "side_conflict":
       return "↔️ You already backed the other side of this game. Cancel your bet first.";
   }

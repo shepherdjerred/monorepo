@@ -12,7 +12,10 @@ import {
 } from "@scout-for-lol/data";
 import { SEED_GRANT } from "#src/betting/constants.ts";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
-import { applyBucksDelta } from "#src/betting/ledger.ts";
+import {
+  applyBucksDelta,
+  InsufficientBucksError,
+} from "#src/betting/ledger.ts";
 import { ParlaySubjectsSchema } from "#src/betting/parlay-criteria.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
@@ -62,6 +65,16 @@ export type BucksAccountRef = {
   id: number;
   balance: number;
 };
+
+/** A guild house cannot fund another welcome grant. */
+export class HouseInsufficientError extends Error {
+  constructor(readonly requested: number) {
+    super(
+      `The Bryan Bucks house cannot fund a ${requested.toString()} BB welcome grant`,
+    );
+    this.name = "HouseInsufficientError";
+  }
+}
 
 /** The wallet ID for one Discord user in one guild, when it exists. */
 export async function findBucksAccountId(
@@ -127,21 +140,36 @@ export async function ensureBucksAccount(
         select: { id: true },
       });
       const house = await ensureHouseAccountInTransaction(tx, input.serverId);
-      const seedContext = {
-        type: "seed" as const,
-        note: "Welcome grant on first Bryan Bucks wallet",
-      };
-      await applyBucksDelta(tx, {
-        bucksAccountId: house.id,
-        delta: -SEED_GRANT,
-        kind: "seed",
-        context: seedContext,
-      });
+      const transferId = crypto.randomUUID();
+      const seedNote = "Welcome grant on first Bryan Bucks wallet";
+      try {
+        await applyBucksDelta(tx, {
+          bucksAccountId: house.id,
+          delta: -SEED_GRANT,
+          kind: "seed",
+          context: {
+            type: "seed",
+            note: seedNote,
+            transferId,
+            counterpartyAccountId: created.id,
+          },
+        });
+      } catch (error) {
+        if (error instanceof InsufficientBucksError) {
+          throw new HouseInsufficientError(SEED_GRANT);
+        }
+        throw error;
+      }
       const balance = await applyBucksDelta(tx, {
         bucksAccountId: created.id,
         delta: SEED_GRANT,
         kind: "seed",
-        context: seedContext,
+        context: {
+          type: "seed",
+          note: seedNote,
+          transferId,
+          counterpartyAccountId: house.id,
+        },
       });
       logger.info(
         `💰 Seeded a Bryan Bucks wallet with ${SEED_GRANT.toString()} BB from the house`,
