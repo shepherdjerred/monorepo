@@ -109,6 +109,7 @@ func rejectsFalsePositives() {
     #expect(OTPParser().parse(body: "Code:482913", metadata: subjectLabelMetadata)?.code == "482913")
     #expect(OTPParser().parse(body: "Hi user123,\n482913", metadata: subjectLabelMetadata)?.code == "482913")
     #expect(OTPParser().parse(body: "Copyright 2026 Acme\n482913", metadata: subjectLabelMetadata)?.code == "482913")
+    #expect(OTPParser().parse(body: "Use 482913 for build 2", metadata: subjectLabelMetadata)?.code == "482913")
 }
 
 @Test("keeps a long code when an unrelated address appears in the body")
