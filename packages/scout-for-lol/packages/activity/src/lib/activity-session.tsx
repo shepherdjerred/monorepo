@@ -256,12 +256,14 @@ export function ActivitySessionProvider({ children }: { children: ReactNode }) {
     let retryDelay = ACTIVITY_REFRESH_RETRY_INITIAL_DELAY;
     let timer: ReturnType<typeof globalThis.setTimeout> | undefined;
     let disposed = false;
+    let authForRetry = refreshAuth;
     const refresh = async () => {
       try {
         const auth = await authRequest("/api/customs/auth/refresh", {
-          activityToken: refreshAuth.activityToken,
-          discordRefreshToken: refreshAuth.discordRefreshToken,
+          activityToken: authForRetry.activityToken,
+          discordRefreshToken: authForRetry.discordRefreshToken,
         });
+        authForRetry = auth;
         assertContractHash(auth);
         const identity = await refreshSdk.authenticate(auth.discordAccessToken);
         if (identity.id !== refreshIdentityId) {
