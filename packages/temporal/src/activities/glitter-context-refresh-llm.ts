@@ -174,9 +174,7 @@ export async function generateGlitterObject<SCHEMA extends z.ZodType>(input: {
     }
     if (!(error instanceof StructuredOutputExhaustionError)) throw error;
     const lastAttempt = error.attempts.at(-1);
-    const exhaustedByLength = error.attempts.some(
-      (attempt) => attempt.finishReason === "length",
-    );
+    const exhaustedByLength = lastAttempt?.finishReason === "length";
     return glitterObjectArtifact<z.output<SCHEMA>>({
       model: input.model,
       parsed: undefined,
