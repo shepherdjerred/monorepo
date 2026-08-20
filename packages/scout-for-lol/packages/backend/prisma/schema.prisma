@@ -980,13 +980,18 @@ model BucksParlayBet {
   @@index([marketId, side])
 }
 
-// Exactly-once marker for Bucks EARNINGS on a (match, guild).
+// Durable marker for Bucks EARNINGS on a (match, guild).
 //
-// Created inside the same transaction as the earn ledger rows, as its FIRST
-// statement: the create is a write (so it takes the SQLite write lock) and its
-// composite primary key is the race guard. A concurrent duplicate hits P2002
-// and rolls back rather than double-awarding. This is what makes
-// `recoverMissedMatches()` and gap-detection replays safe.
+// A pending row is created before wallet funding so house exhaustion leaves a
+// retryable record even though the post-match cursor advances. The awarding
+// transaction claims it as processing with its FIRST write, then completes it
+// with the earn ledger rows. A failed transaction rolls the claim back to
+// pending; the composite primary key still guards concurrent replays.
+// `awardedAt` is refreshed when the pending row completes, so it is the actual
+// award time for completed rows; while pending it is the marker creation time.
+// `retryAt` rotates failed rows out of the bounded recovery batch, and the
+// target snapshot preserves the original guild recipients across config drift;
+// matchCreatedAt points S3 recovery at the match's game-date partition.
 //
 // Earnings need their own marker because, unlike settlement, they have no
 // natural per-(match, guild) row to carry the state.
@@ -995,8 +1000,19 @@ model BucksMatchEarning {
   serverId  String
   awardedAt DateTime @default(now())
 
-  // Number of ledger rows written, so reconciliation is one comparison.
+  // pending means wallet funding was unavailable and the match must be retried;
+  // processing is held only inside the awarding transaction; complete is the
+  // durable exactly-once result.
+  state String @default("complete")
+
+  targetSnapshotJson String @default("[]")
+  retryAt           DateTime @default(now())
+  matchCreatedAt    DateTime @default(now())
+
+  // Number of ledger rows written, so reconciliation is one comparison once
+  // the marker is complete.
   entryCount Int
 
   @@id([matchId, serverId])
+  @@index([state, retryAt])
 }

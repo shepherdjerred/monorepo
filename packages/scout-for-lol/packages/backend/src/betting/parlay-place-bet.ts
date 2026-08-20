@@ -7,6 +7,7 @@ import {
 } from "@scout-for-lol/data";
 import {
   ensureBucksAccount,
+  HouseInsufficientError as WalletHouseInsufficientError,
   findEligiblePlayer,
 } from "#src/betting/accounts.ts";
 import { getFlag } from "#src/configuration/flags.ts";
@@ -42,6 +43,7 @@ export type PlaceParlayBetResult =
   | { kind: "invalid_stake" }
   | { kind: "storage_limit" }
   | { kind: "insufficient"; balance: number; needed: number }
+  | { kind: "wallet_house_insufficient" }
   | { kind: "house_insufficient" }
   | { kind: "side_conflict"; existingSide: BucksParlaySide };
 
@@ -85,10 +87,18 @@ export async function placeParlayBet(
     prismaClient,
   );
   if (player === undefined) return { kind: "not_eligible" };
-  const account = await ensureBucksAccount(
-    { serverId: input.serverId, discordId: input.discordId },
-    prismaClient,
-  );
+  let account: Awaited<ReturnType<typeof ensureBucksAccount>>;
+  try {
+    account = await ensureBucksAccount(
+      { serverId: input.serverId, discordId: input.discordId },
+      prismaClient,
+    );
+  } catch (error) {
+    if (error instanceof WalletHouseInsufficientError) {
+      return { kind: "wallet_house_insufficient" };
+    }
+    throw error;
+  }
 
   try {
     return await prismaClient.$transaction(async (tx) => {

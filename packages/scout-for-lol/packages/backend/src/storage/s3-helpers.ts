@@ -16,7 +16,7 @@ const logger = createLogger("storage-s3-helpers");
  * All assets for a game are grouped under games/{date}/{matchId}/
  * This makes it easy to find all assets related to a single game.
  */
-function generateS3Key(
+export function generateS3Key(
   matchId: MatchId,
   assetType: string,
   extension: string,

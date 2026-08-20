@@ -20,13 +20,19 @@ import {
   awardBucksForMatch,
   type EarnedAwardReason,
 } from "#src/betting/earnings.ts";
+import { retryPendingBucksEarnings } from "#src/betting/earnings-retry.ts";
 import { computeMvp } from "#src/betting/mvp.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
-import { SEED_GRANT } from "#src/betting/constants.ts";
+import {
+  HOUSE_ACCOUNT_DISCORD_ID,
+  HOUSE_BANKROLL,
+  SEED_GRANT,
+} from "#src/betting/constants.ts";
+import { ensureBucksAccount } from "#src/betting/accounts.ts";
 
 const { prisma: db } = createTestDatabase("bucks-earnings");
 
@@ -140,7 +146,9 @@ async function assertRanked5sParticipationBonus() {
   ]);
   expect(entries.map((entry) => entry.delta)).toEqual([1, 1]);
 
-  const account = await db.bucksAccount.findFirstOrThrow();
+  const account = await db.bucksAccount.findFirstOrThrow({
+    where: { isHouse: false },
+  });
   expect(account.balance).toBe(SEED_GRANT + 2);
 }
 
@@ -204,7 +212,9 @@ describe("awardBucksForMatch", () => {
       mvpParticipant.win ? ["mvp", "played", "win"] : ["mvp", "played"],
     );
     expect(awards[0]?.total).toBe(mvpParticipant.win ? 3 : 2);
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT + (mvpParticipant.win ? 3 : 2));
   });
 
@@ -220,7 +230,9 @@ describe("awardBucksForMatch", () => {
     expect(awards[0]?.reasons).toEqual(["played", "win"]);
     expect(awards[0]?.total).toBe(2);
 
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT + 2);
   });
 
@@ -235,7 +247,9 @@ describe("awardBucksForMatch", () => {
     const awards = await awardBucksForMatch(fixture, db);
     expect(awards[0]?.reasons).toEqual(["played"]);
 
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT + 1);
   });
 
@@ -279,7 +293,9 @@ describe("awardBucksForMatch additional cases", () => {
     expect(entries.map((entry) => entry.kind)).toEqual(expectedKinds);
     expect(entries.map((entry) => entry.delta)).toEqual(expectedDeltas);
 
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(
       SEED_GRANT + 12 + (mvpParticipant.win ? 1 : 0),
     );
@@ -299,7 +315,9 @@ describe("awardBucksForMatch additional cases", () => {
     const second = await awardBucksForMatch(clashMatch, db);
 
     expect(second).toEqual([]);
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT + 12);
     expect(
       await db.bucksLedgerEntry.count({
@@ -328,7 +346,10 @@ describe("awardBucksForMatch additional cases", () => {
 
     // Wallets are per guild, so this is two independent balances, not a
     // double payment into one.
-    const accounts = await db.bucksAccount.findMany({ orderBy: { id: "asc" } });
+    const accounts = await db.bucksAccount.findMany({
+      where: { isHouse: false },
+      orderBy: { id: "asc" },
+    });
     expect(accounts).toHaveLength(2);
     expect(accounts.map((a) => a.balance)).toEqual([
       SEED_GRANT + 2,
@@ -417,5 +438,140 @@ describe("awardBucksForMatch additional cases", () => {
         where: { kind: { startsWith: "earn_" } },
       }),
     ).toBe(marker.entryCount);
+  });
+});
+
+describe("earning retry", () => {
+  test("retains an exhausted-house earning for a later retry", async () => {
+    const seeded = await ensureBucksAccount(
+      {
+        serverId: ENABLED_GUILD,
+        discordId: DiscordAccountIdSchema.parse("16050917270473110"),
+      },
+      db,
+    );
+    const house = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: {
+          serverId: ENABLED_GUILD,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        },
+      },
+    });
+    await db.bucksAccount.delete({ where: { id: seeded.id } });
+    await db.bucksAccount.update({
+      where: { id: house.id },
+      data: { balance: 0 },
+    });
+    await trackPlayer({
+      serverId: ENABLED_GUILD,
+      discordId: DiscordAccountIdSchema.parse("16050917270473111"),
+      alias: "retry-player",
+      puuid: plainWinner.puuid,
+    });
+
+    expect(await awardBucksForMatch(fixture, db)).toEqual([]);
+    const pending = await db.bucksMatchEarning.findUniqueOrThrow({
+      where: {
+        matchId_serverId: { matchId: MATCH_ID, serverId: ENABLED_GUILD },
+      },
+    });
+    expect(pending.state).toBe("pending");
+    expect(pending.entryCount).toBe(0);
+
+    await db.bucksAccount.update({
+      where: { id: house.id },
+      data: { balance: HOUSE_BANKROLL },
+    });
+    await db.bucksMatchEarning.update({
+      where: {
+        matchId_serverId: { matchId: MATCH_ID, serverId: ENABLED_GUILD },
+      },
+      data: { retryAt: new Date(0) },
+    });
+    let loadedMatchId: string | undefined;
+    await retryPendingBucksEarnings(db, async (matchId) => {
+      loadedMatchId = matchId;
+      return fixture;
+    });
+    expect(loadedMatchId).toBe(MATCH_ID);
+    const awards = await db.bucksLedgerEntry.findMany({
+      where: { kind: { startsWith: "earn_" } },
+    });
+    expect(awards).toHaveLength(2);
+
+    const completed = await db.bucksMatchEarning.findUniqueOrThrow({
+      where: {
+        matchId_serverId: { matchId: MATCH_ID, serverId: ENABLED_GUILD },
+      },
+    });
+    expect(completed.state).toBe("complete");
+    expect(completed.entryCount).toBe(2);
+  });
+
+  test("normal replays keep the original recipient snapshot", async () => {
+    const originalDiscordId = DiscordAccountIdSchema.parse("16050917270473111");
+    const replacementDiscordId =
+      DiscordAccountIdSchema.parse("16050917270473112");
+    const seeded = await ensureBucksAccount(
+      { serverId: ENABLED_GUILD, discordId: originalDiscordId },
+      db,
+    );
+    const house = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: {
+          serverId: ENABLED_GUILD,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        },
+      },
+    });
+    await db.bucksAccount.delete({ where: { id: seeded.id } });
+    await db.bucksAccount.update({
+      where: { id: house.id },
+      data: { balance: 0 },
+    });
+    await trackPlayer({
+      serverId: ENABLED_GUILD,
+      discordId: originalDiscordId,
+      alias: "retry-player",
+      puuid: plainWinner.puuid,
+    });
+
+    expect(await awardBucksForMatch(fixture, db)).toEqual([]);
+    const player = await db.player.findFirstOrThrow({
+      where: { alias: "retry-player" },
+    });
+    await db.player.update({
+      where: { id: player.id },
+      data: { discordId: replacementDiscordId },
+    });
+    await db.bucksAccount.update({
+      where: { id: house.id },
+      data: { balance: HOUSE_BANKROLL },
+    });
+
+    const awards = await awardBucksForMatch(fixture, db);
+    expect(awards).toHaveLength(1);
+    expect(awards[0]?.discordId).toBe(originalDiscordId);
+    expect(
+      await db.bucksAccount.findUnique({
+        where: {
+          serverId_discordId: {
+            serverId: ENABLED_GUILD,
+            discordId: replacementDiscordId,
+          },
+        },
+      }),
+    ).toBeNull();
+    expect(
+      await db.bucksAccount.findUniqueOrThrow({
+        where: {
+          serverId_discordId: {
+            serverId: ENABLED_GUILD,
+            discordId: originalDiscordId,
+          },
+        },
+      }),
+    ).toMatchObject({ balance: SEED_GRANT + 2 });
   });
 });

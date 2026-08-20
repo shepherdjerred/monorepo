@@ -42,12 +42,14 @@ export const DEFAULT_PARLAY_AI_MODEL = "gpt-5.6-sol";
 export const VOID_GRACE_MS = 6 * 60 * 60 * 1000;
 
 /**
- * One-time grant written when a wallet is first created.
+ * One-time grant transferred from the guild house when a wallet is first
+ * created.
  *
  * Earning alone cannot bootstrap the economy: a player with no Bucks cannot
  * bet, and betting is the point. Sized at roughly eight games' worth of
  * earnings so a new member can take a position immediately without the number
- * meaning anything.
+ * meaning anything. The house debit keeps the grant inside the existing
+ * bankroll instead of minting new Bucks.
  */
 export const SEED_GRANT = 25;
 

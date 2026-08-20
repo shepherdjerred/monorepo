@@ -182,6 +182,10 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("seed"),
     note: z.string(),
+    /** Correlates the debit and credit for a house-funded welcome grant. */
+    transferId: z.string().min(1).optional(),
+    /** The account on the other side of this seed transfer. */
+    counterpartyAccountId: z.number().int().positive().optional(),
   }),
   z.strictObject({
     type: z.literal("earn"),

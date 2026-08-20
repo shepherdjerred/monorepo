@@ -6,9 +6,14 @@ import {
 import { createS3Client } from "#src/storage/s3-client.ts";
 import configuration from "#src/configuration.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
-import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data/index.ts";
+import {
+  MatchIdSchema,
+  RawMatchSchema,
+  type RawMatch,
+} from "@scout-for-lol/data/index.ts";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 import { createLogger } from "#src/logger.ts";
+import { generateS3Key } from "#src/storage/s3-helpers.ts";
 
 // Timeout for individual S3 operations (30 seconds)
 const S3_REQUEST_TIMEOUT_MS = 30_000;
@@ -74,6 +79,13 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
     const month = format(day, "MM");
     const dayStr = format(day, "dd");
     return `games/${year}/${month}/${dayStr}/`;
+  });
+}
+
+function generateMatchDates(startDate: Date, endDate: Date): Date[] {
+  return eachDayOfInterval({
+    start: startOfDay(startDate),
+    end: endOfDay(endDate),
   });
 }
 
@@ -270,6 +282,40 @@ async function listMatchJsonKeysForPrefix(
   } while (continuationToken !== undefined);
 
   return keys;
+}
+
+/**
+ * Find one raw match by ID near the match's game-creation date.
+ * Match objects are partitioned by game date, so a small surrounding window
+ * handles a midnight boundary without scanning the entire raw store.
+ */
+export async function queryMatchById(
+  matchId: string,
+  matchCreatedAt: Date,
+): Promise<RawMatch | undefined> {
+  const bucket = configuration.s3BucketName;
+  if (bucket === undefined) {
+    logger.warn(
+      "[S3Query] S3_BUCKET_NAME not configured, cannot recover a pending earning",
+    );
+    return undefined;
+  }
+
+  const day = 24 * 60 * 60 * 1000;
+  const startDate = new Date(matchCreatedAt.getTime() - day);
+  const endDate = new Date(matchCreatedAt.getTime() + day);
+  const client = createS3Client();
+  const parsedMatchId = MatchIdSchema.parse(matchId);
+
+  for (const date of generateMatchDates(startDate, endDate)) {
+    const key = generateS3Key(parsedMatchId, "match", "json", date);
+    const match = await getMatchFromS3(client, bucket, key);
+    if (match?.metadata.matchId === matchId) {
+      return match;
+    }
+  }
+
+  return undefined;
 }
 
 /**

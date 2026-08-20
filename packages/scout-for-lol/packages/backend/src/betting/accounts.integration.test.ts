@@ -1,12 +1,21 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
+  BucksLedgerContextSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
+import {
+  ensureBucksAccount,
+  HouseInsufficientError,
   getFullLeaderboard,
   getLedgerPage,
   getOpenMarketAggregates,
   getPersonalBucksView,
 } from "#src/betting/accounts.ts";
-import { HOUSE_ACCOUNT_DISCORD_ID } from "#src/betting/constants.ts";
+import {
+  HOUSE_ACCOUNT_DISCORD_ID,
+  HOUSE_BANKROLL,
+  SEED_GRANT,
+} from "#src/betting/constants.ts";
 import {
   bucksTestDiscordId,
   bucksTestPuuid,
@@ -116,6 +125,107 @@ async function createPendingParlayPosition(input: {
     },
   });
 }
+
+describe("ensureBucksAccount", () => {
+  test("transfers the welcome grant from the house instead of minting it", async () => {
+    const account = await ensureBucksAccount(
+      { serverId: SERVER_A, discordId: USER_A },
+      db,
+    );
+    expect(account.balance).toBe(SEED_GRANT);
+
+    const house = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: {
+          serverId: SERVER_A,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        },
+      },
+    });
+    expect(house.isHouse).toBe(true);
+    expect(house.balance).toBe(HOUSE_BANKROLL - SEED_GRANT);
+
+    const seeds = await db.bucksLedgerEntry.findMany({
+      where: { kind: "seed" },
+      orderBy: { id: "asc" },
+      select: {
+        bucksAccountId: true,
+        delta: true,
+        balanceAfter: true,
+        context: true,
+      },
+    });
+    expect(
+      seeds.map(({ bucksAccountId, delta, balanceAfter }) => ({
+        bucksAccountId,
+        delta,
+        balanceAfter,
+      })),
+    ).toEqual([
+      {
+        bucksAccountId: house.id,
+        delta: HOUSE_BANKROLL,
+        balanceAfter: HOUSE_BANKROLL,
+      },
+      {
+        bucksAccountId: house.id,
+        delta: -SEED_GRANT,
+        balanceAfter: HOUSE_BANKROLL - SEED_GRANT,
+      },
+      {
+        bucksAccountId: account.id,
+        delta: SEED_GRANT,
+        balanceAfter: SEED_GRANT,
+      },
+    ]);
+    const contexts = seeds.map(({ context }) =>
+      BucksLedgerContextSchema.parse(JSON.parse(context)),
+    );
+    const debit = contexts[1];
+    const credit = contexts[2];
+    if (debit?.type !== "seed" || credit?.type !== "seed") {
+      throw new Error("expected paired seed contexts");
+    }
+    expect(debit.transferId).toBeDefined();
+    expect(debit.transferId).toBe(credit.transferId);
+    expect(debit.counterpartyAccountId).toBe(account.id);
+    expect(credit.counterpartyAccountId).toBe(house.id);
+  });
+
+  test("refuses a welcome grant when the house is exhausted", async () => {
+    const first = await ensureBucksAccount(
+      { serverId: SERVER_A, discordId: USER_A },
+      db,
+    );
+    const house = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: {
+          serverId: SERVER_A,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        },
+      },
+    });
+    await db.bucksAccount.update({
+      where: { id: house.id },
+      data: { balance: 0 },
+    });
+
+    await expect(
+      ensureBucksAccount({ serverId: SERVER_A, discordId: USER_B }, db),
+    ).rejects.toBeInstanceOf(HouseInsufficientError);
+    expect(
+      await db.bucksAccount.findUnique({
+        where: {
+          serverId_discordId: {
+            serverId: SERVER_A,
+            discordId: USER_B,
+          },
+        },
+      }),
+    ).toBeNull();
+    expect(first.balance).toBe(SEED_GRANT);
+  });
+});
 
 describe("getLedgerPage", () => {
   test("returns stable first, middle, and last pages", async () => {

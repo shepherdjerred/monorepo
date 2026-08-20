@@ -129,8 +129,13 @@ describe("placeBet — accepting a position", () => {
     expect(bets).toHaveLength(1);
     expect(bets[0]?.predictedTeamId).toBe(100);
 
-    // One seed row plus one stake row, and nothing else.
+    const human = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: { serverId: SERVER_ID, discordId: BETTOR },
+      },
+    });
     const entries = await db.bucksLedgerEntry.findMany({
+      where: { bucksAccountId: human.id },
       orderBy: { id: "asc" },
     });
     expect(entries.map((e) => e.kind)).toEqual(["seed", "bet_stake"]);
@@ -233,7 +238,7 @@ describe("cancelBet — returning a position", () => {
         },
       },
     });
-    expect(house.balance).toBe(HOUSE_BANKROLL + 1);
+    expect(house.balance).toBe(HOUSE_BANKROLL - SEED_GRANT + 1);
     expect(
       await db.bucksLedgerEntry.findMany({
         where: { bucksAccountId: house.id },
@@ -242,6 +247,7 @@ describe("cancelBet — returning a position", () => {
       }),
     ).toEqual([
       { kind: "seed", delta: HOUSE_BANKROLL },
+      { kind: "seed", delta: -SEED_GRANT },
       { kind: "cancel_fee", delta: 1 },
     ]);
     const pairedCut = await db.bucksLedgerEntry.findMany({
@@ -284,11 +290,15 @@ describe("cancelBet — returning a position", () => {
     expect(
       await db.bucksLedgerEntry.count({ where: { kind: "cancel_fee" } }),
     ).toBe(0);
-    expect(
-      await db.bucksAccount.count({
-        where: { discordId: HOUSE_ACCOUNT_DISCORD_ID },
-      }),
-    ).toBe(0);
+    const house = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: {
+          serverId: SERVER_ID,
+          discordId: HOUSE_ACCOUNT_DISCORD_ID,
+        },
+      },
+    });
+    expect(house.balance).toBe(HOUSE_BANKROLL - SEED_GRANT);
   });
 });
 
@@ -300,7 +310,9 @@ describe("placeBet — refusing a position", () => {
     expect(conflict.kind).toBe("side_conflict");
 
     // The rollback is the point: a refused hedge must not have charged anything.
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT - 5);
     expect(await countLedger("bet_stake")).toBe(1);
   });
@@ -321,7 +333,9 @@ describe("placeBet — refusing a position", () => {
 
   test("tells a bettor their position is locked once the window closes", async () => {
     await bet({ stake: 5 });
-    const balanceBefore = await db.bucksAccount.findFirstOrThrow();
+    const balanceBefore = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     const ledgerRowsBefore = await db.bucksLedgerEntry.count();
     await db.bucksMatchPool.updateMany({
       data: { closesAt: new Date(Date.now() - 1000) },
@@ -332,7 +346,9 @@ describe("placeBet — refusing a position", () => {
       db,
     );
     expect(result.kind).toBe("window_closed");
-    expect(await db.bucksAccount.findFirstOrThrow()).toEqual(balanceBefore);
+    expect(
+      await db.bucksAccount.findFirstOrThrow({ where: { isHouse: false } }),
+    ).toEqual(balanceBefore);
     expect(await db.bucksLedgerEntry.count()).toBe(ledgerRowsBefore);
     expect(await db.bucksBet.count()).toBe(1);
   });
@@ -403,7 +419,9 @@ describe("placeBet — refusing a position", () => {
     expect(await betKind({ stake: SEED_GRANT + 1 })).toBe("insufficient");
     expect(await db.bucksBet.count()).toBe(0);
 
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT);
   });
 
@@ -416,7 +434,10 @@ describe("placeBet — refusing a position", () => {
 
   test("allows a position above the former product cap", async () => {
     await bet({ stake: 1 });
-    await db.bucksAccount.updateMany({ data: { balance: 100_000 } });
+    await db.bucksAccount.updateMany({
+      where: { isHouse: false },
+      data: { balance: 100_000 },
+    });
     const result = await bet({ stake: 25_000 });
     if (result.kind !== "placed") {
       throw new Error(`expected the bet to be placed, got ${result.kind}`);
@@ -428,7 +449,10 @@ describe("placeBet — refusing a position", () => {
     const placed = await bet({ stake: 1 });
     expect(placed.kind).toBe("placed");
     await db.bucksBet.updateMany({ data: { stake: BUCKS_INT32_MAX } });
-    await db.bucksAccount.updateMany({ data: { balance: 1 } });
+    await db.bucksAccount.updateMany({
+      where: { isHouse: false },
+      data: { balance: 1 },
+    });
     expect(await betKind({ stake: 1 })).toBe("storage_limit");
   });
 
@@ -461,7 +485,9 @@ describe("placeBet — concurrency", () => {
     expect(results.filter((r) => r.kind === "placed")).toHaveLength(1);
     expect(results.filter((r) => r.kind === "insufficient")).toHaveLength(1);
 
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT - stake);
     expect(account.balance).toBeGreaterThanOrEqual(0);
 
@@ -474,10 +500,12 @@ describe("placeBet — concurrency", () => {
     // must collapse that into a single seed grant rather than granting twice.
     await Promise.all([bet({ stake: 1 }), bet({ stake: 1 })]);
 
-    expect(await db.bucksAccount.count()).toBe(1);
-    expect(await countLedger("seed")).toBe(1);
+    expect(await db.bucksAccount.count({ where: { isHouse: false } })).toBe(1);
+    expect(await countLedger("seed")).toBe(3);
 
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT - 2);
   });
 });
