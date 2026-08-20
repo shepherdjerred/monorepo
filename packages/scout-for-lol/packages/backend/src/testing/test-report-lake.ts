@@ -86,6 +86,7 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     game_mode: "CLASSIC",
     game_type: "MATCHED_GAME",
     game_version: "16.1.1",
+    end_of_game_result: "GameComplete",
     map_id: 11,
     puuid: fact.puuid,
     participant_id: fact.playerId,
