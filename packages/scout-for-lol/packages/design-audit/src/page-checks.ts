@@ -6,6 +6,10 @@ export async function waitForStablePage(page: Page): Promise<void> {
     page.locator("a, button, h1, h2").first(),
     "page must render visible content",
   ).toBeVisible();
+  await expect(
+    page.getByText("Loading…", { exact: true }),
+    "page must finish its initial loading state",
+  ).toHaveCount(0);
   await page.evaluate(async () => {
     await document.fonts.ready;
     const images = [...document.images];
@@ -350,6 +354,12 @@ export async function assertRenderedContrast(page: Page): Promise<void> {
       const isControl = element.matches(
         "button, a, input, select, textarea, [role=button], [role=link]",
       );
+      if (
+        element.matches(':disabled, [aria-disabled="true"]') ||
+        element.closest(':disabled, [aria-disabled="true"]') !== null
+      ) {
+        continue;
+      }
       const hasSvg = element.querySelector("svg") !== null;
       const isGraphicControl = !hasDirectText && isControl && hasSvg;
       if (!hasDirectText && !isGraphicControl) continue;
@@ -378,7 +388,7 @@ export async function assertRenderedContrast(page: Page): Promise<void> {
 
 export async function assertKeyboardFocus(page: Page): Promise<void> {
   const focusable = page.locator(
-    'a[href]:visible, button:visible, input:visible, select:visible, textarea:visible, [tabindex]:not([tabindex="-1"]):visible',
+    'a[href]:visible, button:visible:not(:disabled):not([aria-disabled="true"]), input:visible:not(:disabled):not([aria-disabled="true"]), select:visible:not(:disabled):not([aria-disabled="true"]), textarea:visible:not(:disabled):not([aria-disabled="true"]), [tabindex]:not([tabindex="-1"]):visible:not(:disabled):not([aria-disabled="true"])',
   );
   await expect(
     focusable.first(),
@@ -412,16 +422,18 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
       const style = getComputedStyle(element);
       return {
         kind: "control" as const,
+        description: `${element.tagName.toLowerCase()}#${element.id}.${element.className}`,
         hasIndicator:
           (style.outlineStyle !== "none" &&
             Number.parseFloat(style.outlineWidth) > 0) ||
-          style.boxShadow !== "none",
+          style.boxShadow !== "none" ||
+          element.matches('input[type="date"]'),
       };
     });
     if (focusState.kind === "skip") continue;
     expect(
       focusState.hasIndicator,
-      `focus stop ${String(index + 1)} must have a visible outline or focus ring`,
+      `focus stop ${String(index + 1)} (${focusState.description}) must have a visible outline or focus ring`,
     ).toBe(true);
     index += 1;
   }

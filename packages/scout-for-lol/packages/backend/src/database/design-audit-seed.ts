@@ -133,6 +133,8 @@ export async function seedDesignAuditDatabase(
       criteriaConfig: JSON.stringify({ queue: "SOLO" }),
       maxParticipants: 50,
       analysisTimezone: "UTC",
+      startDate: now,
+      endDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
       creatorDiscordId: discordId,
       updatedTime: now,
     };

@@ -333,6 +333,13 @@ export function appRoutes(): AuditRoute[] {
       golden: false,
     },
     {
+      name: "player-manage",
+      surface: "app",
+      path: `${prefix}/players/${alias}/manage`,
+      authenticated: true,
+      golden: false,
+    },
+    {
       name: "competitions",
       surface: "app",
       path: `${prefix}/competitions`,

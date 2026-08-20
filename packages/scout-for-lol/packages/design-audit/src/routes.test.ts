@@ -26,7 +26,7 @@ describe("Scout design audit matrix", () => {
       6,
     );
     expect(routes.filter((route) => route.surface === "docs")).toHaveLength(28);
-    expect(routes.filter((route) => route.surface === "app")).toHaveLength(20);
+    expect(routes.filter((route) => route.surface === "app")).toHaveLength(21);
   });
 
   test("includes every authenticated app route as read-only", () => {
