@@ -204,7 +204,6 @@ struct SetupView: View {
                                 Task { @MainActor in
                                     guard generation == refreshGeneration else {
                                         CodeFillObservability.appLogger.info("event=identity_refresh outcome=stale_completion")
-                                        refreshCredentialIdentities()
                                         return
                                     }
                                 if success {

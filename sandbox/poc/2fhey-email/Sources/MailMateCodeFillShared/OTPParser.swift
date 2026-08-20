@@ -73,7 +73,7 @@ public struct OTPParser {
                 NSMaxRange(labelRange.range) <= match.range.location &&
                     match.range.location - NSMaxRange(labelRange.range) <= 28
             }
-            guard let normalized = Self.normalizeCandidate(rawCode: rawCode, range: match.range) else {
+            guard let normalized = Self.normalizeCandidate(rawCode: rawCode, range: match.range, hasExplicitLabel: explicitLabel) else {
                 return nil
             }
             let code = normalized.code
@@ -135,14 +135,20 @@ public struct OTPParser {
         }
     }
 
-    private static func normalizeCandidate(rawCode: String, range: NSRange) -> (code: String, range: NSRange)? {
+    private static func normalizeCandidate(rawCode: String, range: NSRange, hasExplicitLabel: Bool) -> (code: String, range: NSRange)? {
         let compact = rawCode.filter { !Self.isCandidateSeparator($0) }
         guard compact.count >= 4 else { return nil }
         if compact.allSatisfy(\.isNumber) {
             return (compact, range)
         }
         let firstSeparator = rawCode.firstIndex(where: Self.isCandidateSeparator)
+        if let firstSeparator, Self.isDashSeparator(rawCode[firstSeparator]),
+           compact.first?.isNumber == true, !hasExplicitLabel,
+           compact.contains(where: \.isLetter) {
+            return nil
+        }
         if let firstSeparator, Self.isDashSeparator(rawCode[firstSeparator]), compact.count <= 8,
+           (compact.first?.isNumber != true || hasExplicitLabel),
            compact.contains(where: \.isLetter), compact.contains(where: \.isNumber) {
             return (compact, range)
         }
@@ -153,6 +159,7 @@ public struct OTPParser {
             let suffix = rawCode[rawCode.index(after: firstSeparator)...]
             let originalPrefix = String(rawCode[..<firstSeparator])
             if (!prefix.isEmpty && originalPrefix.allSatisfy(\.isUppercase)) ||
+                (prefix.count >= 4 && originalPrefix.allSatisfy(\.isLetter)) ||
                 (prefix.contains(where: \.isNumber) && suffix.contains(where: \.isNumber)) {
                 return (compact, range)
             }

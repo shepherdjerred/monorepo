@@ -21,6 +21,7 @@ func normalizesCodeVariants() {
     let dashedAlphaNumeric = OTPParser().parse(body: "Your verification code is ABCD-1234", metadata: metadata)
     let shortDashedAlphaNumeric = OTPParser().parse(body: "Code AB-1234", metadata: metadata)
     let lowercaseDashedAlphaNumeric = OTPParser().parse(body: "Code abc-1234", metadata: metadata)
+    let lowercaseSpacedAlphaNumeric = OTPParser().parse(body: "Code abcd 1234", metadata: metadata)
     let spacedAlphaNumeric = OTPParser().parse(body: "Code AB 1234", metadata: metadata)
     let groupedAlphaNumeric = OTPParser().parse(body: "Code A7 B9 C2", metadata: metadata)
     let germanProse = OTPParser().parse(body: "Code ist 1234", metadata: metadata)
@@ -33,6 +34,7 @@ func normalizesCodeVariants() {
     #expect(dashedAlphaNumeric?.code == "ABCD1234")
     #expect(shortDashedAlphaNumeric?.code == "AB1234")
     #expect(lowercaseDashedAlphaNumeric?.code == "abc1234")
+    #expect(lowercaseSpacedAlphaNumeric?.code == "abcd1234")
     #expect(spacedAlphaNumeric?.code == "AB1234")
     #expect(groupedAlphaNumeric?.code == "A7B9C2")
     #expect(germanProse?.code == "1234")
@@ -40,6 +42,7 @@ func normalizesCodeVariants() {
     #expect(enDash?.code == "123456")
     #expect(alphaNumeric?.code == "A7B9C2")
     #expect(OTPParser().parse(body: "Your OTP is A7B9C2 to finish.", metadata: metadata)?.code == "A7B9C2")
+    #expect(OTPParser().parse(body: "2-factor authentication has been enabled.", metadata: metadata) == nil)
 }
 
 @Test("rejects grouped numeric fragments inside email addresses")
