@@ -154,15 +154,19 @@ function priceByJointReplay(input: {
   let hits = 0;
   for (const match of input.matches) {
     let all = true;
+    let unresolved = false;
     for (const condition of input.conditions) {
       const held = conditionHeldInMatch(condition, match, input.subjectKey);
       if (held === undefined) {
-        return undefined;
+        unresolved = true;
+        continue;
       }
       if (!held) {
         all = false;
-        break;
       }
+    }
+    if (unresolved) {
+      return undefined;
     }
     if (all) {
       hits += 1;
@@ -188,6 +192,52 @@ function matchState(match: ParlayHistoryMatch): MatchState {
 /** Laplace smoothing, so a thin conditional cell cannot assert 0 or 1. */
 function smoothed(hits: number, total: number): number {
   return (hits + 1) / (total + 2);
+}
+
+function replayConditionalGroup(input: {
+  conditions: readonly ParlayCondition[];
+  matches: readonly ParlayHistoryMatch[];
+  subjectKey: string;
+  stateIsWin: boolean;
+}): number | undefined {
+  const resultConditions = input.conditions.filter(
+    (condition) => condition.kind === "team_boolean",
+  );
+  if (
+    resultConditions.some(
+      (condition) => condition.expected !== input.stateIsWin,
+    )
+  ) {
+    return 0;
+  }
+  const replayConditions = input.conditions.filter(
+    (condition) => condition.kind !== "team_boolean",
+  );
+  if (replayConditions.length === 0) {
+    return 1;
+  }
+  let hits = 0;
+  let total = 0;
+  for (const match of input.matches) {
+    let all = true;
+    let unresolved = false;
+    for (const condition of replayConditions) {
+      const held = conditionHeldInMatch(condition, match, input.subjectKey);
+      if (held === undefined) {
+        unresolved = true;
+      } else if (!held) {
+        all = false;
+      }
+    }
+    if (unresolved) {
+      return undefined;
+    }
+    total += 1;
+    if (all) {
+      hits += 1;
+    }
+  }
+  return total === 0 ? 0.5 : smoothed(hits, total);
 }
 
 /**
@@ -254,49 +304,16 @@ function priceByConditionalCombination(input: {
       }
       const inState = matches.filter((match) => matchState(match) === state);
 
-      // The result is already part of the conditioning state. It is therefore
-      // deterministic, not another sampled event to smooth. This also keeps a
-      // win leg from inventing probability in the loss half of the state space.
-      const stateIsWin = state.endsWith(":win");
-      const resultConditions = conditions.filter(
-        (condition) =>
-          condition.kind === "team_boolean" && condition.field === "win",
-      );
-      if (
-        resultConditions.some((condition) => condition.expected !== stateIsWin)
-      ) {
-        joint = 0;
-        break;
+      const groupProbability = replayConditionalGroup({
+        conditions,
+        matches: inState,
+        subjectKey: key,
+        stateIsWin: state.endsWith(":win"),
+      });
+      if (groupProbability === undefined) {
+        return undefined;
       }
-
-      const replayConditions = conditions.filter(
-        (condition) =>
-          condition.kind !== "team_boolean" || condition.field !== "win",
-      );
-      if (replayConditions.length === 0) {
-        continue;
-      }
-
-      let hits = 0;
-      let total = 0;
-      for (const match of inState) {
-        let all = true;
-        for (const condition of replayConditions) {
-          const held = conditionHeldInMatch(condition, match, key);
-          if (held === undefined) {
-            return undefined;
-          }
-          if (!held) {
-            all = false;
-            break;
-          }
-        }
-        total += 1;
-        if (all) {
-          hits += 1;
-        }
-      }
-      joint *= total === 0 ? 0.5 : smoothed(hits, total);
+      joint *= groupProbability;
     }
     probability += joint;
   }

@@ -27,15 +27,13 @@ import {
  * leg set. Deriving them from one snapshot is what stops a parlay being priced
  * against a different history than it was written against.
  *
- * Solo and flex are pooled. Their per-lane population medians are effectively
- * identical (vision 18/18, 25/25, 20/20, 21/21, 68/69 across the five lanes),
- * and the queue split was starving the players who mostly queue flex — four of
- * the ten tracked subjects had fewer than 30 solo games against 116-405 pooled.
- * Win-dependent legs still price per queue; see parlay-pricing.
+ * History is kept in the queue being priced. A solo market must not inherit
+ * flex wins (or vice versa), especially when the parlay contains a result leg.
  */
 
 /** Queues a parlay may be generated for, and therefore priced against. */
 export const PARLAY_HISTORY_QUEUES = ["solo", "flex"] as const;
+export type ParlayHistoryQueue = (typeof PARLAY_HISTORY_QUEUES)[number];
 
 /**
  * How many settled matches back the window reaches.
@@ -150,6 +148,80 @@ function isVoidMatch(participants: readonly unknown[]): boolean {
   });
 }
 
+function sumColumn(input: {
+  participants: readonly unknown[];
+  subjectTeamId: number;
+  column: keyof MatchLakeRow;
+  sameTeam: boolean;
+}): number | undefined {
+  let total = 0;
+  for (const participant of input.participants) {
+    const parsed = HistoryParticipantSchema.safeParse(participant);
+    const value = numeric(participant, input.column);
+    if (value === undefined || !parsed.success) {
+      return undefined;
+    }
+    if ((parsed.data.team_id === input.subjectTeamId) === input.sameTeam) {
+      total += value;
+    }
+  }
+  return total;
+}
+
+function buildHistoryMatch(input: {
+  matchId: string;
+  puuid: string;
+  participants: readonly unknown[];
+  columns: readonly (keyof MatchLakeRow)[];
+}): ParlayHistoryMatch | undefined {
+  const subjectRow = input.participants.find((participant) => {
+    const parsed = HistoryParticipantSchema.safeParse(participant);
+    return parsed.success && parsed.data.puuid === input.puuid;
+  });
+  if (subjectRow === undefined) {
+    return undefined;
+  }
+  const subject = HistoryParticipantSchema.parse(subjectRow);
+  const values = new Map<string, number>();
+  const teamValues = new Map<string, number>();
+  const opponentValues = new Map<string, number>();
+  for (const column of input.columns) {
+    const subjectValue = numeric(subjectRow, column);
+    const teamValue = sumColumn({
+      participants: input.participants,
+      subjectTeamId: subject.team_id,
+      column,
+      sameTeam: true,
+    });
+    const opponentValue = sumColumn({
+      participants: input.participants,
+      subjectTeamId: subject.team_id,
+      column,
+      sameTeam: false,
+    });
+    if (
+      subjectValue === undefined ||
+      teamValue === undefined ||
+      opponentValue === undefined
+    ) {
+      return undefined;
+    }
+    values.set(column, subjectValue);
+    teamValues.set(column, teamValue);
+    opponentValues.set(column, opponentValue);
+  }
+  return {
+    matchId: input.matchId,
+    createdAtMs: subject.game_creation_ms,
+    durationSeconds: subject.game_duration_seconds,
+    win: subject.win,
+    lane: subject.team_position,
+    values,
+    teamValues,
+    opponentValues,
+  };
+}
+
 /**
  * Up to PARLAY_HISTORY_LIMIT settled matches per subject, each carrying the
  * subject's own values and their team's summed values.
@@ -161,6 +233,7 @@ function isVoidMatch(participants: readonly unknown[]): boolean {
 export async function fetchParlayHistory(options: {
   puuids: readonly string[];
   excludeMatchId: string;
+  queue: (typeof PARLAY_HISTORY_QUEUES)[number];
   lakeDir?: string;
   limit?: number;
   timeoutMs?: number;
@@ -176,11 +249,11 @@ export async function fetchParlayHistory(options: {
   const columnList = columns.join(", ");
 
   const subjectSource = buildMatchesSource(files, {
-    sql: "puuid IN (SELECT unnest(?)) AND match_id <> ? AND queue IN (SELECT unnest(?))",
+    sql: "puuid IN (SELECT unnest(?)) AND match_id <> ? AND queue = ?",
     params: [
       listParam(puuids),
       scalarParam(options.excludeMatchId),
-      listParam([...PARLAY_HISTORY_QUEUES]),
+      scalarParam(options.queue),
     ],
   });
   if (subjectSource === undefined) {
@@ -258,62 +331,13 @@ export async function fetchParlayHistory(options: {
       if (participants === undefined || isVoidMatch(participants)) {
         continue;
       }
-      const subjectRow = participants.find((participant) => {
-        const parsed = HistoryParticipantSchema.safeParse(participant);
-        return parsed.success && parsed.data.puuid === puuid;
-      });
-      if (subjectRow === undefined) {
-        continue;
-      }
-      const subject = HistoryParticipantSchema.parse(subjectRow);
-      const values = new Map<string, number>();
-      const teamValues = new Map<string, number>();
-      const opponentValues = new Map<string, number>();
-      for (const column of columns) {
-        const subjectValue = numeric(subjectRow, column);
-        if (subjectValue === undefined) {
-          continue;
-        }
-        const sumWhere = (sameTeam: boolean): number | undefined => {
-          let total = 0;
-          for (const participant of participants) {
-            const parsed = HistoryParticipantSchema.safeParse(participant);
-            if (!parsed.success) {
-              return undefined;
-            }
-            const value = numeric(participant, column);
-            if (value === undefined) {
-              return undefined;
-            }
-            const onSubjectTeam = parsed.data.team_id === subject.team_id;
-            if (onSubjectTeam === sameTeam) {
-              total += value;
-            }
-          }
-          return total;
-        };
-        const teamValue = sumWhere(true);
-        const opponentValue = sumWhere(false);
-        if (teamValue === undefined || opponentValue === undefined) {
-          continue;
-        }
-        values.set(column, subjectValue);
-        teamValues.set(column, teamValue);
-        opponentValues.set(column, opponentValue);
-      }
-      if (values.size !== columns.length) {
-        continue;
-      }
-      matches.push({
+      const match = buildHistoryMatch({
         matchId,
-        createdAtMs: subject.game_creation_ms,
-        durationSeconds: subject.game_duration_seconds,
-        win: subject.win,
-        lane: subject.team_position,
-        values,
-        teamValues,
-        opponentValues,
+        puuid,
+        participants,
+        columns,
       });
+      if (match !== undefined) matches.push(match);
     }
     matches.sort((left, right) => right.createdAtMs - left.createdAtMs);
     history.set(puuid, matches.slice(0, limit));

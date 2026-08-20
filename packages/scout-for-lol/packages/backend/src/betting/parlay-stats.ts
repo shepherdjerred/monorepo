@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { REMAKE_MAX_DURATION_SECONDS } from "#src/betting/constants.ts";
-import {
-  PARLAY_HISTORY_QUEUES,
-  type ParlayHistoryMatch,
+import type {
+  ParlayHistoryMatch,
+  ParlayHistoryQueue,
 } from "#src/betting/parlay-history.ts";
 import {
   OPPONENT_PING_HISTORY_COLUMNS,
@@ -19,8 +19,8 @@ import {
 } from "#src/reports/duckdb/instance.ts";
 import {
   buildMatchesSource,
-  listParam,
   resolveLakeFiles,
+  scalarParam,
   type BoundParam,
 } from "#src/reports/duckdb/lake.ts";
 
@@ -65,13 +65,12 @@ export const HIT_RATES = [90, 70, 50, 30, 10] as const;
 export type HitRate = (typeof HIT_RATES)[number];
 
 /** Probabilities queried once; the operator decides which maps to which rate. */
-const QUANTILE_PROBABILITIES = [0.1, 0.3, 0.5, 0.7, 0.9] as const;
-
 export type ParlayOperator = "gte" | "lte";
 
 export type StatCell = {
   n: number;
   thresholds: Record<HitRate, number>;
+  realizedRates: Record<HitRate, number>;
 };
 
 export type PlayerFrame = {
@@ -99,65 +98,41 @@ export function durationBucket(seconds: number): DurationBucket {
   return 50;
 }
 
-function quantile(sorted: readonly number[], probability: number): number {
-  const first = sorted[0];
-  if (first === undefined) {
-    return 0;
-  }
-  const position = (sorted.length - 1) * probability;
-  const lower = Math.floor(position);
-  const upper = Math.ceil(position);
-  const low = sorted[lower] ?? first;
-  const high = sorted[upper] ?? low;
-  return low + (high - low) * (position - lower);
-}
-
-/**
- * Which quantile produces a given hit rate for a given operator.
- *
- * For `gte`, "lands 70% of the time" is the 30th percentile — 70% of games sit
- * at or above it. For `lte` it is the 70th. Getting this backwards silently
- * inverts every threshold, which is exactly why it lives in one function.
- */
-function probabilityForHitRate(
-  rate: HitRate,
-  operator: ParlayOperator,
-): number {
-  const fraction = rate / 100;
-  return operator === "gte" ? 1 - fraction : fraction;
-}
-
 function cellFromValues(
   values: readonly number[],
   operator: ParlayOperator,
 ): StatCell {
   const sorted = [...values].sort((left, right) => left - right);
+  const candidates = [...new Set(sorted)];
+  const thresholdAndRate = (rate: HitRate): readonly [number, number] => {
+    const target = rate / 100;
+    let best: readonly [number, number] = [candidates[0] ?? 0, 0];
+    for (const threshold of candidates) {
+      const realized =
+        sorted.filter((value) =>
+          operator === "gte" ? value >= threshold : value <= threshold,
+        ).length / sorted.length;
+      const bestDistance = Math.abs(best[1] - target);
+      const distance = Math.abs(realized - target);
+      if (distance < bestDistance) {
+        best = [threshold, realized];
+      }
+    }
+    return best;
+  };
+  const thresholdRates = HIT_RATES.map(
+    (rate) => [rate, thresholdAndRate(rate)] as const,
+  );
   const thresholds = Object.fromEntries(
-    HIT_RATES.map((rate) => [
-      rate,
-      Math.round(quantile(sorted, probabilityForHitRate(rate, operator))),
-    ]),
+    thresholdRates.map(([rate, [threshold]]) => [rate, threshold]),
+  );
+  const realizedRates = Object.fromEntries(
+    thresholdRates.map(([rate, [, realized]]) => [rate, realized]),
   );
   return {
     n: sorted.length,
     thresholds: z.record(z.coerce.number(), z.number()).parse(thresholds),
-  };
-}
-
-function cellFromQuantiles(
-  n: number,
-  quantiles: Record<number, number>,
-  operator: ParlayOperator,
-): StatCell {
-  const thresholds = Object.fromEntries(
-    HIT_RATES.map((rate) => {
-      const probability = probabilityForHitRate(rate, operator);
-      return [rate, Math.round(quantiles[probability] ?? 0)];
-    }),
-  );
-  return {
-    n,
-    thresholds: z.record(z.coerce.number(), z.number()).parse(thresholds),
+    realizedRates: z.record(z.coerce.number(), z.number()).parse(realizedRates),
   };
 }
 
@@ -183,7 +158,10 @@ export function buildPlayerFrame(input: {
   };
 
   const values = (matches: readonly ParlayHistoryMatch[]): number[] =>
-    matches.map(read).filter((value): value is number => value !== undefined);
+    matches.flatMap((match) => {
+      const value = read(match);
+      return value === undefined ? [] : [value];
+    });
 
   const byBucket: Partial<Record<DurationBucket, StatCell>> = {};
   for (const bucket of DURATION_BUCKETS) {
@@ -229,10 +207,6 @@ function bindParams(
   );
 }
 
-function quantileAlias(index: number): string {
-  return `q${index.toString()}`;
-}
-
 function parseLane(value: string | null): ParlayLane | undefined {
   return PARLAY_LANES.find((lane) => lane === value);
 }
@@ -251,6 +225,7 @@ function parseBucket(value: number | null): DurationBucket | undefined {
 export async function fetchPopulationFrame(options: {
   column: keyof MatchLakeRow;
   operator: ParlayOperator;
+  queue: ParlayHistoryQueue;
   lakeDir?: string;
   timeoutMs?: number;
 }): Promise<PopulationFrame | undefined> {
@@ -258,19 +233,14 @@ export async function fetchPopulationFrame(options: {
   const files = await resolveLakeFiles(lakeDir);
   const source = buildMatchesSource(files, {
     sql:
-      "queue IN (SELECT unnest(?)) AND team_position <> '' AND end_of_game_result = 'GameComplete' AND game_duration_seconds >= " +
+      "queue = ? AND team_position <> '' AND end_of_game_result = 'GameComplete' AND game_duration_seconds >= " +
       REMAKE_MAX_DURATION_SECONDS.toString() +
       " AND early_surrendered = false AND team_early_surrendered = false",
-    params: [listParam([...PARLAY_HISTORY_QUEUES])],
+    params: [scalarParam(options.queue)],
   });
   if (source === undefined) {
     return undefined;
   }
-
-  const quantileSelect = QUANTILE_PROBABILITIES.map(
-    (probability, index) =>
-      `quantile_cont(${options.column}, ${probability.toString()}) AS ${quantileAlias(index)}`,
-  ).join(", ");
 
   const rows = await withDuckDBConnection(
     async (session) => {
@@ -287,7 +257,7 @@ export async function fetchPopulationFrame(options: {
         `WHEN game_duration_seconds < 2700 THEN 40 ELSE 50 END AS bucket, ` +
         `${options.column} FROM raw ` +
         `WHERE match_id IN (SELECT match_id FROM valid_matches)) ` +
-        `SELECT lane, bucket, count(*)::BIGINT AS n, ${quantileSelect} ` +
+        `SELECT lane, bucket, count(*)::BIGINT AS n, list(${options.column}) AS values ` +
         `FROM base GROUP BY GROUPING SETS ((lane, bucket), (bucket), ())`;
       return await session.run(sql, bindParams(session, source.params));
     },
@@ -305,15 +275,13 @@ export async function fetchPopulationFrame(options: {
     if (!parsed.success) {
       continue;
     }
-    const quantiles: Record<number, number> = {};
-    for (const [index, probability] of QUANTILE_PROBABILITIES.entries()) {
-      const value = z
-        .union([z.bigint(), z.number()])
-        .transform(Number)
-        .safeParse(parsed.data[quantileAlias(index)]);
-      quantiles[probability] = value.success ? value.data : 0;
+    const values = z
+      .array(z.union([z.bigint(), z.number()]).transform(Number))
+      .safeParse(parsed.data["values"]);
+    if (!values.success || values.data.length !== parsed.data.n) {
+      continue;
     }
-    const cell = cellFromQuantiles(parsed.data.n, quantiles, options.operator);
+    const cell = cellFromValues(values.data, options.operator);
     const lane = parseLane(parsed.data.lane);
     const bucket = parseBucket(parsed.data.bucket);
 
@@ -355,6 +323,7 @@ export async function buildProposalStatistics(input: {
     label: string;
   }[];
   history: ReadonlyMap<string, readonly ParlayHistoryMatch[]>;
+  queue: ParlayHistoryQueue;
   lakeDir?: string;
   timeoutMs?: number;
 }): Promise<unknown[]> {
@@ -383,6 +352,7 @@ export async function buildProposalStatistics(input: {
           await fetchPopulationFrame({
             column: leg.column,
             operator: leg.operator,
+            queue: input.queue,
             ...(input.lakeDir === undefined ? {} : { lakeDir: input.lakeDir }),
             ...(input.timeoutMs === undefined
               ? {}

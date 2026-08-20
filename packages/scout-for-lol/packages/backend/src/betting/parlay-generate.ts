@@ -118,6 +118,7 @@ type GenerationReady = {
   queueType: "solo" | "flex";
   selectedTeamId: number;
   subjects: readonly ParlaySubject[];
+  opponentTrackedAliases: readonly string[];
   context: ParlayGenerationContext;
 };
 
@@ -154,9 +155,9 @@ async function prepareGeneration(
     };
   }
 
-  const aliasByPuuid = new Map(
+  const aliasByPuuid = new Map<string, string>(
     input.trackedPlayers.map((player) => [
-      player.league.leagueAccount.puuid,
+      player.league.leagueAccount.puuid.toString(),
       player.alias,
     ]),
   );
@@ -185,6 +186,18 @@ async function prepareGeneration(
     queueType: input.queueType,
     selectedTeamId: selected.teamId,
     subjects: selected.subjects,
+    opponentTrackedAliases: input.gameInfo.participants.flatMap(
+      (participant) => {
+        if (
+          participant.teamId === selected.teamId ||
+          participant.puuid === null
+        ) {
+          return [];
+        }
+        const alias = aliasByPuuid.get(participant.puuid);
+        return alias === undefined ? [] : [alias];
+      },
+    ),
     context,
   };
 }
@@ -256,12 +269,17 @@ async function generateAndPersistDefinition(
   const history = await fetchParlayHistory({
     puuids: setup.subjects.map((subject) => subject.puuid),
     excludeMatchId: setup.matchId,
+    queue: setup.queueType,
   });
   const legs = statLegsForProposal(proposal, setup.subjects);
   if (legs.length === 0) {
     throw new ParlayUnpriceableError("no proposed leg could be measured");
   }
-  const statistics = await buildProposalStatistics({ legs, history });
+  const statistics = await buildProposalStatistics({
+    legs,
+    history,
+    queue: setup.queueType,
+  });
   deadline.throwIfAborted();
 
   // Pass two: the numbers, against those distributions.
@@ -311,7 +329,10 @@ async function generateAndPersistDefinition(
         catalogVersion: PARLAY_CATALOG_VERSION,
         schemaVersion: PARLAY_SCHEMA_VERSION,
         evaluatorVersion: PARLAY_EVALUATOR_VERSION,
-        generationContext: JSON.stringify(setup.context),
+        generationContext: JSON.stringify({
+          ...setup.context,
+          opponentTrackedAliases: setup.opponentTrackedAliases,
+        }),
         proposal: JSON.stringify(proposal),
         pricing: JSON.stringify(pricingRecord(priced, legs.length)),
         requestedModel: model,

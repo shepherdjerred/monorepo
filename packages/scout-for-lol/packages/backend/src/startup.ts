@@ -24,6 +24,14 @@ export async function runBackendStartup(
 }
 
 export async function startBackendRuntime(): Promise<HttpServerRuntime> {
+  if (
+    configuration.enableBackgroundJobs &&
+    configuration.environment !== "dev"
+  ) {
+    const { runReportLakeFold } = await import("#src/report-lake/compactor.ts");
+    logger.info("🗜️  Reconciling the report lake before accepting traffic");
+    await runReportLakeFold();
+  }
   return runBackendStartup({
     validateChampionAssets,
     startHttpServer: async () => await import("#src/http-server.ts"),

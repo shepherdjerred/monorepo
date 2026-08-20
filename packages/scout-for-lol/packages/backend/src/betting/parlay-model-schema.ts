@@ -6,42 +6,32 @@ import {
   TeamBooleanFieldSchema,
 } from "#src/betting/parlay-catalog.ts";
 import {
-  PARLAY_HISTORY_COLUMNS,
-  TEAM_OBJECTIVE_HISTORY_COLUMNS,
-  groundedParticipantFields,
-  groundedTeamObjectives,
-} from "#src/betting/parlay-stat-fields.ts";
-import {
   GeneratedParlaySchema,
   PARLAY_SCHEMA_VERSION,
   parlaySemanticIssues,
   type GeneratedParlay,
   type ParlaySubject,
 } from "#src/betting/parlay-criteria.ts";
+import {
+  GroundedObjectiveSchema,
+  GroundedParticipantFieldSchema,
+  parlayProposalSchemaFor as buildParlayProposalSchema,
+} from "#src/betting/parlay-proposal-schema.ts";
+export type ModelParlayProposal = ModelParlayProposalFromSchema;
+import type { ModelParlayProposal as ModelParlayProposalFromSchema } from "#src/betting/parlay-proposal-schema.ts";
 
 // Equality remains valid for stored definitions, but generation has no
 // equality-specific measured distribution from which to choose a threshold.
 const NumericOperatorSchema = z.enum(["gte", "lte"]);
 
-const groundedParticipantFieldOptions = groundedParticipantFields();
-const firstGroundedParticipantField = groundedParticipantFieldOptions[0];
-if (firstGroundedParticipantField === undefined) {
-  throw new Error("At least one participant field must be groundable");
-}
-const GroundedParticipantNumericFieldSchema = z.enum([
-  firstGroundedParticipantField,
-  ...groundedParticipantFieldOptions.slice(1),
-]);
+const GroundedParticipantNumericFieldSchema = GroundedParticipantFieldSchema;
+const GroundedTeamObjectiveSchema = GroundedObjectiveSchema;
 
-const groundedTeamObjectiveOptions = groundedTeamObjectives();
-const firstGroundedTeamObjective = groundedTeamObjectiveOptions[0];
-if (firstGroundedTeamObjective === undefined) {
-  throw new Error("At least one team objective must be groundable");
+export function parlayProposalSchemaFor(
+  subjects: readonly ParlaySubject[],
+): z.ZodType<ModelParlayProposal> {
+  return buildParlayProposalSchema(subjects);
 }
-const GroundedTeamObjectiveSchema = z.enum([
-  firstGroundedTeamObjective,
-  ...groundedTeamObjectiveOptions.slice(1),
-]);
 
 // OpenAI strict structured outputs reject `oneOf`, which Zod emits for the
 // canonical discriminated union. Present the model with one closed shape and
@@ -85,62 +75,8 @@ const ModelGeneratedParlaySchema = z.strictObject({
   conditions: z.array(ModelParlayConditionSchema).min(2).max(6),
 });
 
-/**
- * Pass one: which legs, with no numbers.
- *
- * Only kinds history can price are offered. Participant booleans and
- * first-objective flags are not reconstructable from lake columns, so proposing
- * one could only lead to a parlay thrown away after two model calls.
- */
-const ModelParlayProposalConditionSchema = z.strictObject({
-  kind: z.enum([
-    "participant_numeric",
-    "team_boolean",
-    "team_objective_kills",
-    "match_numeric",
-    "opponent_team_pings",
-  ]),
-  subject: z
-    .string()
-    .regex(/^P[1-5]$/)
-    .nullable(),
-  participantNumericField: GroundedParticipantNumericFieldSchema.nullable(),
-  team: z.literal("selected").nullable(),
-  teamBooleanField: TeamBooleanFieldSchema.nullable(),
-  objective: GroundedTeamObjectiveSchema.nullable(),
-  operator: NumericOperatorSchema.nullable(),
-  expected: z.boolean().nullable(),
-  matchNumericField: MatchNumericFieldSchema.nullable(),
-  opponentPingField: OpponentPingFieldSchema.nullable(),
-});
-
-const ModelParlayProposalSchema = z.strictObject({
-  version: z.literal(PARLAY_SCHEMA_VERSION),
-  conditions: z.array(ModelParlayProposalConditionSchema).min(2).max(6),
-});
-
-export type ModelParlayProposal = z.infer<typeof ModelParlayProposalSchema>;
-
 type ModelParlayCondition = z.infer<typeof ModelParlayConditionSchema>;
 type ModelGeneratedParlay = z.infer<typeof ModelGeneratedParlaySchema>;
-type ModelProposalCondition = z.infer<
-  typeof ModelParlayProposalConditionSchema
->;
-
-function proposalTargetKey(condition: ModelProposalCondition): string {
-  switch (condition.kind) {
-    case "participant_numeric":
-      return `${condition.subject ?? "null"}:${condition.participantNumericField ?? "null"}`;
-    case "team_boolean":
-      return `team:${condition.teamBooleanField ?? "null"}`;
-    case "team_objective_kills":
-      return `team:${condition.objective ?? "null"}:kills`;
-    case "match_numeric":
-      return `match:${condition.matchNumericField ?? "null"}`;
-    case "opponent_team_pings":
-      return `opponent:${condition.opponentPingField ?? "null"}`;
-  }
-}
 
 function canonicalConditionCandidate(condition: ModelParlayCondition): unknown {
   switch (condition.kind) {
@@ -330,9 +266,6 @@ export function thresholdsMatchProposal(
   if (proposal.conditions.length !== filled.conditions.length) {
     return false;
   }
-  if (proposal.version !== filled.version) {
-    return false;
-  }
   return proposal.conditions.every((condition, index) => {
     const other = filled.conditions[index];
     return (
@@ -381,91 +314,6 @@ export function generatedParlaySchemaFor(
     }
     for (const issue of parlaySemanticIssues(result.data, subjects)) {
       context.addIssue({ code: "custom", message: issue });
-    }
-  });
-}
-
-/** Pass-one schema: legs only, restricted to subjects actually in this game. */
-export function parlayProposalSchemaFor(
-  subjects: readonly ParlaySubject[],
-): z.ZodType<ModelParlayProposal> {
-  const selected = new Set(subjects.map((subject) => subject.key));
-  return ModelParlayProposalSchema.superRefine((proposal, context) => {
-    const covered = new Set<string>();
-    const targets = new Set<string>();
-    for (const [index, condition] of proposal.conditions.entries()) {
-      const target = proposalTargetKey(condition);
-      if (targets.has(target)) {
-        context.addIssue({
-          code: "custom",
-          path: ["conditions", index],
-          message: `Duplicate or contradictory target ${target}`,
-        });
-      }
-      targets.add(target);
-      if (condition.kind === "participant_numeric") {
-        if (condition.subject === null || !selected.has(condition.subject)) {
-          context.addIssue({
-            code: "custom",
-            path: ["conditions", index],
-            message: `Unknown or unselected subject ${condition.subject ?? "null"}`,
-          });
-        } else {
-          covered.add(condition.subject);
-        }
-        if (
-          condition.participantNumericField === null ||
-          condition.operator === null
-        ) {
-          context.addIssue({
-            code: "custom",
-            path: ["conditions", index],
-            message: "participant_numeric needs a field and an operator",
-          });
-        } else if (
-          PARLAY_HISTORY_COLUMNS[condition.participantNumericField] === null
-        ) {
-          // Refuse here rather than after the second call: an ungroundable
-          // target cannot be priced, so proposing one can only end in a parlay
-          // thrown away having spent both model calls.
-          context.addIssue({
-            code: "custom",
-            path: ["conditions", index],
-            message: `${condition.participantNumericField} has no recorded history and cannot be used`,
-          });
-        }
-      }
-      if (
-        condition.kind === "team_objective_kills" &&
-        (condition.objective === null ||
-          TEAM_OBJECTIVE_HISTORY_COLUMNS[condition.objective] === null ||
-          condition.operator === null)
-      ) {
-        context.addIssue({
-          code: "custom",
-          path: ["conditions", index],
-          message:
-            "team_objective_kills needs an operator and an objective with recorded history (riftHerald has none)",
-        });
-      }
-      if (
-        condition.kind === "opponent_team_pings" &&
-        (condition.opponentPingField === null || condition.operator === null)
-      ) {
-        context.addIssue({
-          code: "custom",
-          path: ["conditions", index],
-          message: "opponent_team_pings needs a field and an operator",
-        });
-      }
-    }
-    for (const subject of subjects) {
-      if (!covered.has(subject.key)) {
-        context.addIssue({
-          code: "custom",
-          message: `Selected subject ${subject.key} must appear in a participant condition`,
-        });
-      }
     }
   });
 }

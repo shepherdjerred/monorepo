@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   BucksParlaySideSchema,
   BucksStakeSchema,
@@ -76,7 +77,9 @@ export async function placeParlayBet(
     },
     select: {
       id: true,
-      definition: { select: { yesProbabilityBps: true } },
+      definition: {
+        select: { yesProbabilityBps: true, generationContext: true },
+      },
     },
   });
   if (market === null) return { kind: "no_market" };
@@ -85,6 +88,16 @@ export async function placeParlayBet(
     prismaClient,
   );
   if (player === undefined) return { kind: "not_eligible" };
+  const generationContext = z
+    .object({ opponentTrackedAliases: z.array(z.string()).optional() })
+    .catchall(z.unknown())
+    .safeParse(JSON.parse(market.definition.generationContext));
+  const opponentTrackedAliases = generationContext.success
+    ? generationContext.data.opponentTrackedAliases
+    : undefined;
+  if (opponentTrackedAliases?.includes(player.alias) === true) {
+    return { kind: "not_eligible" };
+  }
   const account = await ensureBucksAccount(
     { serverId: input.serverId, discordId: input.discordId },
     prismaClient,
