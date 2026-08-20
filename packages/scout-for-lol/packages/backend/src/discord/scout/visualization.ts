@@ -305,8 +305,7 @@ function formatTable(
 function formatTableRow(cells: string[], widths: number[]): string {
   return cells
     .map((cell, index) => cell.padEnd(widths[index] ?? cell.length))
-    .join("    ")
-    .trimEnd();
+    .join("    ");
 }
 
 function alignedRows(snapshot: VisualizationSnapshot): NativeRow[] {

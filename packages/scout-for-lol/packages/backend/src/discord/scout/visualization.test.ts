@@ -419,6 +419,8 @@ describe("Scout Discord visualization bounds", () => {
     expect(description).toContain("2026-01-03");
     expect(description).toContain("Baseline:");
     expect(description).toContain("Δ");
+    const lines = description?.split("\n") ?? [];
+    expect(lines[1]?.length).toBe(lines[2]?.length);
   });
 
   test("keeps every native description within Discord's limit", () => {
