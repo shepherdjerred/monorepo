@@ -45,6 +45,9 @@ public enum CodeFillObservability {
         if let stored = readSalt(at: saltURL) {
             return cacheSalt(stored, isFallback: false)
         }
+        if FileManager.default.fileExists(atPath: saltURL.path) {
+            quarantineInvalidSalt(at: saltURL)
+        }
 
         // A unique temporary file plus link(2) gives us create-if-absent semantics without a
         // process-wide blocking lock. Exactly one process wins; every other process reads that
@@ -81,6 +84,17 @@ public enum CodeFillObservability {
     private static func readSalt(at url: URL) -> Data? {
         guard let data = try? Data(contentsOf: url), data.count == 32 else { return nil }
         return data
+    }
+
+    private static func quarantineInvalidSalt(at url: URL) {
+        let quarantineURL = url.deletingLastPathComponent().appendingPathComponent(".\(saltFileName).corrupt-\(UUID().uuidString)")
+        do {
+            try FileManager.default.moveItem(at: url, to: quarantineURL)
+            storeLogger.error("event=observability_salt outcome=invalid_quarantined quarantine_name=\(quarantineURL.lastPathComponent, privacy: .public)")
+        } catch CocoaError.fileNoSuchFile { return }
+        catch {
+            storeLogger.error("event=observability_salt outcome=quarantine_error error=\(errorSummary(error), privacy: .public)")
+        }
     }
 
     private static func cacheSalt(_ salt: Data, isFallback: Bool) -> Data {
