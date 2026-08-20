@@ -178,7 +178,11 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
             snapshot,
             series,
             point.absoluteDelta ?? null,
-          )} · ${formatPercent(point.percentageDelta ?? null)}`
+          )} · ${
+            point.percentageDelta === null
+              ? "Unknown"
+              : `${(point.percentageDelta * 100).toFixed(1)}%`
+          }`
         : `n=${sampleSize.toString()}`;
       return `**${escapeMarkdown(series.label)}**\n${value} ${details}`;
     })
@@ -201,6 +205,7 @@ function formatList(
     source.preview,
     allRows,
     source.snapshotRows,
+    snapshot,
   );
   const lines = rows.map((row) => {
     const values = formatRowValues(snapshot, row, source.preview).join(", ");
@@ -226,6 +231,7 @@ function formatLeaderboard(
     source.preview,
     allRows,
     source.snapshotRows,
+    snapshot,
   );
   const lines = rows.map((row, index) => {
     const values = formatRowValues(snapshot, row, source.preview).join(" · ");
@@ -251,6 +257,7 @@ function formatTable(
     source.preview,
     allRows,
     source.snapshotRows,
+    snapshot,
   );
   const headers =
     source.preview === null
@@ -361,10 +368,7 @@ function nativeRowSource(
   snapshotRows: NativeRow[];
 } {
   const snapshotRows = alignedRows(snapshot);
-  if (snapshot.temporal !== null) {
-    return { rows: snapshotRows, preview: null, snapshotRows };
-  }
-  if (preview === null) {
+  if (preview === null || snapshot.temporal !== null) {
     return { rows: snapshotRows, preview: null, snapshotRows };
   }
   return { rows: previewRows(preview), preview, snapshotRows };
@@ -374,6 +378,7 @@ function hasPreviewRowsBeyondStoredRows(
   preview: ReportAiPreviewSummary | null,
   rows: NativeRow[],
   snapshotRows: NativeRow[],
+  snapshot: VisualizationSnapshot,
 ): boolean {
   if (preview === null) {
     return false;
@@ -381,10 +386,17 @@ function hasPreviewRowsBeyondStoredRows(
   if (preview.rowsReturned > rows.length) {
     return true;
   }
+  const hasCollapsedLegacyRows =
+    snapshot.series.some((series) => {
+      const separator = series.id.lastIndexOf(":");
+      return separator !== -1 && series.id.slice(0, separator) !== "All";
+    }) &&
+    snapshot.series.reduce((total, series) => total + series.points.length, 0) >
+      rows.length;
   return (
     preview.rowsReturned === 0 &&
     preview.visualizationRows.length === 0 &&
-    snapshotRows.length > rows.length
+    (snapshotRows.length > rows.length || hasCollapsedLegacyRows)
   );
 }
 
@@ -436,10 +448,7 @@ function formatPreviewValue(
   column: ReportAiPreviewSummary["columns"][number],
   value: NativeRowValue,
 ): string {
-  if (value === null) {
-    return "Unknown";
-  }
-  return formatReportDisplayValue(column, value);
+  return value === null ? "Unknown" : formatReportDisplayValue(column, value);
 }
 
 function formatSeriesValue(
@@ -471,14 +480,11 @@ function formatAbsoluteDelta(
     snapshot.display.stack === "percent" ||
     REPORT_METRICS.find((metric) => metric.id === series.metric)?.kind ===
       "rate";
-  if (isRate) {
-    return value === null ? "Unknown" : `${(value * 100).toFixed(1)} pp`;
-  }
-  return formatSeriesValue(snapshot, series, value);
-}
-
-function formatPercent(value: number | null): string {
-  return value === null ? "Unknown" : `${(value * 100).toFixed(1)}%`;
+  return isRate
+    ? value === null
+      ? "Unknown"
+      : `${(value * 100).toFixed(1)} pp`
+    : formatSeriesValue(snapshot, series, value);
 }
 
 function escapeMarkdown(value: string): string {

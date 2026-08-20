@@ -205,6 +205,22 @@ describe("Scout Discord visualization edge cases", () => {
     expect(description).toContain(
       "additional rows omitted from the stored preview",
     );
+
+    const collapsedSnapshot = VisualizationSnapshotSchema.parse({
+      ...scoutTestVisualization,
+      series: scoutTestVisualization.series.map((series, index) => ({
+        ...series,
+        id: `Champion ${index.toString()}:${series.metric}`,
+        label: `Champion ${index.toString()} — ${series.label}`,
+      })),
+    });
+    const collapsedDescription = visualizationToEmbed(
+      collapsedSnapshot,
+      legacyPreview,
+    )?.data.description;
+    expect(collapsedDescription).toContain(
+      "additional rows omitted from the stored preview",
+    );
   });
 
   test("escapes Markdown in native labels and preview values", () => {
