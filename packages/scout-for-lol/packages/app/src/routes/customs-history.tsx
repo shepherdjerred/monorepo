@@ -23,6 +23,17 @@ const dateTime = new Intl.DateTimeFormat(undefined, {
   timeStyle: "short",
 });
 
+type RequestedNight = { guildId: string; nightId: string };
+
+function requestedNightIdForGuild(
+  requestedNight: RequestedNight | null,
+  guildId: string | undefined,
+): string | null {
+  if (requestedNight === null || requestedNight.guildId !== guildId)
+    return null;
+  return requestedNight.nightId;
+}
+
 function label(value: string): string {
   return value
     .toLowerCase()
@@ -152,7 +163,9 @@ function HistoryDetailPanel({
 export function CustomsHistory() {
   const { guildId } = useParams();
   const trpc = useTRPC();
-  const [requestedNightId, setRequestedNightId] = useState<string | null>(null);
+  const [requestedNight, setRequestedNight] = useState<RequestedNight | null>(
+    null,
+  );
   const safeGuildId = guildId ?? "";
   const bootstrap = useInfiniteQuery(
     trpc.customs.historyBootstrap.infiniteQueryOptions(
@@ -165,6 +178,7 @@ export function CustomsHistory() {
   );
   const nights = bootstrap.data?.pages.flatMap((page) => page.nights);
   const initialNightId = nights?.[0]?.id;
+  const requestedNightId = requestedNightIdForGuild(requestedNight, guildId);
   const selectedNightId = requestedNightId ?? initialNightId;
   const detail = useQuery(
     trpc.customs.historyDetail.queryOptions(
@@ -239,7 +253,7 @@ export function CustomsHistory() {
                 disabled={night.id === selectedNightId}
                 key={night.id}
                 onClick={() => {
-                  setRequestedNightId(night.id);
+                  setRequestedNight({ guildId, nightId: night.id });
                 }}
                 type="button"
               >
