@@ -15,6 +15,7 @@ import {
   usesNativeDiscordVisualization,
   visualizationToEmbed,
 } from "#src/discord/scout/visualization.ts";
+import { displayWidth } from "#src/discord/scout/visualization-format.ts";
 
 const answer = ExploreMessageSchema.parse({
   id: "10000000-0000-4000-8000-000000000002",
@@ -559,6 +560,14 @@ test("preserves evidence when a series dimension contains the display separator"
   expect(
     visualizationToEmbed(snapshot, aliasedPreview)?.data.description,
   ).toContain("95% CI 75.0%–100.0%");
+});
+
+test("counts emoji-presentation graphemes at their rendered width", () => {
+  expect(displayWidth("♥️")).toBe(2);
+  expect(displayWidth("©️")).toBe(2);
+  expect(displayWidth("🇺🇸")).toBe(2);
+  expect(displayWidth("#️⃣")).toBe(2);
+  expect(displayWidth("é")).toBe(1);
 });
 
 test("keeps native values visible when labels exceed the description budget", () => {

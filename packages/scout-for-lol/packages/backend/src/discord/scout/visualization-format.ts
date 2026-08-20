@@ -35,6 +35,78 @@ export function truncateNativeCell(
   return `${truncated}…`;
 }
 
+const displayWidthGraphemeSegmenter = new Intl.Segmenter(undefined, {
+  granularity: "grapheme",
+});
+
+export function displayWidth(value: string): number {
+  let width = 0;
+  for (const { segment } of displayWidthGraphemeSegmenter.segment(value)) {
+    width += displayGraphemeWidth(segment);
+  }
+  return width;
+}
+
+function displayGraphemeWidth(segment: string): number {
+  let width = 0;
+  let regionalIndicatorCount = 0;
+  let hasKeycapMark = false;
+  let hasEmojiVariationSelector = false;
+  for (const character of segment) {
+    const codePoint = character.codePointAt(0);
+    if (codePoint === undefined) {
+      continue;
+    }
+    if (codePoint >= 0x1_f1_e6 && codePoint <= 0x1_f1_ff) {
+      regionalIndicatorCount += 1;
+      continue;
+    }
+    if (codePoint === 0x20_0d) {
+      continue;
+    }
+    if (codePoint === 0x20_e3) {
+      hasKeycapMark = true;
+      continue;
+    }
+    if (codePoint === 0xfe_0f) {
+      hasEmojiVariationSelector = true;
+      continue;
+    }
+    if (
+      /\p{Mark}/u.test(character) ||
+      (codePoint >= 0xfe_00 && codePoint <= 0xfe_0e)
+    ) {
+      continue;
+    }
+    width = Math.max(width, isWideCodePoint(codePoint) ? 2 : 1);
+  }
+  return hasKeycapMark ||
+    hasEmojiVariationSelector ||
+    regionalIndicatorCount === 2
+    ? 2
+    : width;
+}
+
+function isWideCodePoint(codePoint: number): boolean {
+  return (
+    (codePoint >= 0x11_00 && codePoint <= 0x11_5f) ||
+    codePoint === 0x23_29 ||
+    codePoint === 0x23_2a ||
+    (codePoint >= 0x2e_80 && codePoint <= 0xa4_cf) ||
+    (codePoint >= 0xac_00 && codePoint <= 0xd7_a3) ||
+    (codePoint >= 0xf9_00 && codePoint <= 0xfa_ff) ||
+    (codePoint >= 0xfe_10 && codePoint <= 0xfe_19) ||
+    (codePoint >= 0xfe_30 && codePoint <= 0xfe_6f) ||
+    (codePoint >= 0xff_00 && codePoint <= 0xff_60) ||
+    (codePoint >= 0xff_e0 && codePoint <= 0xff_e6) ||
+    (codePoint >= 0x1_f3_00 && codePoint <= 0x1_fa_ff)
+  );
+}
+
+export function padDisplayWidth(value: string, width: number): string {
+  return value + " ".repeat(Math.max(0, width - displayWidth(value)));
+}
+
 export function formatPreviewValue(
   column: ReportAiPreviewSummary["columns"][number],
   value: NativeRowValue,
