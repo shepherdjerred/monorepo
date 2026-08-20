@@ -48,7 +48,6 @@ export function formatPreviewValueWithEvidence(
   row: NativeRow,
 ): string {
   const value = formatPreviewValue(column, requireRowValue(row, column.key));
-  const rowDimensions = new Set(row.key.split(" • "));
   const series = snapshot.series.find((item) => {
     if (item.metric !== column.key) {
       return false;
@@ -56,12 +55,15 @@ export function formatPreviewValueWithEvidence(
     const separator = item.id.lastIndexOf(":");
     const seriesDimension =
       separator === -1 ? "All" : item.id.slice(0, separator);
-    const pointDimensions = new Set(rowDimensions);
-    if (seriesDimension !== "All" && !pointDimensions.delete(seriesDimension)) {
+    if (seriesDimension === "All") {
+      return item.points.some((point) => pointMatchesRow(point, row, null));
+    }
+    if (!row.key.startsWith(`${seriesDimension} • `)) {
       return false;
     }
+    const pointDimension = row.key.slice(seriesDimension.length + 3);
     return item.points.some((point) =>
-      pointMatchesRow(point, row, pointDimensions),
+      pointMatchesRow(point, row, pointDimension),
     );
   });
   if (series === undefined) {
@@ -70,12 +72,12 @@ export function formatPreviewValueWithEvidence(
   const separator = series.id.lastIndexOf(":");
   const seriesDimension =
     separator === -1 ? "All" : series.id.slice(0, separator);
-  const pointDimensions = new Set(rowDimensions);
-  if (seriesDimension !== "All") {
-    pointDimensions.delete(seriesDimension);
-  }
+  const pointDimension =
+    seriesDimension === "All"
+      ? null
+      : row.key.slice(seriesDimension.length + 3);
   const point = series.points.find((candidate) =>
-    pointMatchesRow(candidate, row, pointDimensions),
+    pointMatchesRow(candidate, row, pointDimension),
   );
   return `${value}${formatConfidenceInterval(snapshot, series, point)}`;
 }
@@ -83,13 +85,24 @@ export function formatPreviewValueWithEvidence(
 function pointMatchesRow(
   point: TemporalSeries["points"][number],
   row: NativeRow,
-  pointDimensions: Set<string>,
+  pointDimension: string | null,
 ): boolean {
+  if (point.key === row.key || point.label === row.label) {
+    return true;
+  }
+  const dimension = pointDimension ?? row.key;
   return (
-    point.key === row.key ||
-    point.label === row.label ||
-    pointDimensions.has(point.key) ||
-    pointDimensions.has(point.label)
+    displayDimensionMatches(dimension, point.key) ||
+    displayDimensionMatches(dimension, point.label)
+  );
+}
+
+function displayDimensionMatches(value: string, dimension: string): boolean {
+  return (
+    value === dimension ||
+    value.startsWith(`${dimension} • `) ||
+    value.endsWith(` • ${dimension}`) ||
+    value.includes(` • ${dimension} • `)
   );
 }
 

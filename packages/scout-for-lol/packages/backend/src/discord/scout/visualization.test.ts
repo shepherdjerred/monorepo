@@ -524,6 +524,43 @@ test("preserves confidence intervals in native temporal rows", () => {
   ).toContain("95% CI 75.0%–100.0%");
 });
 
+test("preserves evidence when a series dimension contains the display separator", () => {
+  const snapshot = VisualizationSnapshotSchema.parse({
+    ...scoutTestVisualization,
+    series: scoutTestVisualization.series.map((series) => ({
+      ...series,
+      id: `Queue • Ranked:${series.id}`,
+      points: series.points.map((point) => ({
+        ...point,
+        key: `${point.key} • solo`,
+        label: `${point.label} • solo`,
+        evidence:
+          series.id === "win_rate" && point.key === "Aurora"
+            ? {
+                ...point.evidence,
+                confidenceInterval: {
+                  level: 0.95,
+                  lower: 0.75,
+                  upper: 1,
+                },
+              }
+            : point.evidence,
+      })),
+    })),
+  });
+  const aliasedPreview = ReportAiPreviewSummarySchema.parse({
+    ...preview,
+    rows: preview.rows.map((row) => ({
+      ...row,
+      label: `Queue • Ranked • ${row.label}`,
+    })),
+  });
+
+  expect(
+    visualizationToEmbed(snapshot, aliasedPreview)?.data.description,
+  ).toContain("95% CI 75.0%–100.0%");
+});
+
 test("keeps native values visible when labels exceed the description budget", () => {
   const snapshot = VisualizationSnapshotSchema.parse({
     ...scoutTestVisualization,

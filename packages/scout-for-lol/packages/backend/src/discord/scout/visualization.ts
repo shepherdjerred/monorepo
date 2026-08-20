@@ -314,31 +314,45 @@ function formatTableRow(cells: string[], widths: number[]): string {
     )
     .join("    ");
 }
-
 const graphemeSegmenter = new Intl.Segmenter(undefined, {
   granularity: "grapheme",
 });
-
 function displayWidth(value: string): number {
   let width = 0;
   for (const { segment } of graphemeSegmenter.segment(value)) {
-    for (const character of segment) {
-      const codePoint = character.codePointAt(0);
-      if (codePoint === undefined) {
-        continue;
-      }
-      if (
-        codePoint === 0x20_0d ||
-        /\p{Mark}/u.test(character) ||
-        (codePoint >= 0xfe_00 && codePoint <= 0xfe_0f)
-      ) {
-        continue;
-      }
-      width += isWideCodePoint(codePoint) ? 2 : 1;
-      break;
-    }
+    width += displayGraphemeWidth(segment);
   }
   return width;
+}
+function displayGraphemeWidth(segment: string): number {
+  let width = 0;
+  let regionalIndicatorCount = 0;
+  let hasKeycapMark = false;
+  for (const character of segment) {
+    const codePoint = character.codePointAt(0);
+    if (codePoint === undefined) {
+      continue;
+    }
+    if (codePoint >= 0x1_f1_e6 && codePoint <= 0x1_f1_ff) {
+      regionalIndicatorCount += 1;
+      continue;
+    }
+    if (codePoint === 0x20_0d) {
+      continue;
+    }
+    if (codePoint === 0x20_e3) {
+      hasKeycapMark = true;
+      continue;
+    }
+    if (
+      /\p{Mark}/u.test(character) ||
+      (codePoint >= 0xfe_00 && codePoint <= 0xfe_0f)
+    ) {
+      continue;
+    }
+    width = Math.max(width, isWideCodePoint(codePoint) ? 2 : 1);
+  }
+  return hasKeycapMark || regionalIndicatorCount === 2 ? 2 : width;
 }
 
 function isWideCodePoint(codePoint: number): boolean {
