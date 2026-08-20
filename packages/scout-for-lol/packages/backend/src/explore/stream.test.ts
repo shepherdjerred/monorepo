@@ -192,16 +192,16 @@ describe("explore stream mapping", () => {
       streamStarted = true;
       resolveStreamStarted?.();
       await partialOutputStreamStartedPromise;
-      streamCompleted = true;
       yield { type: "not-a-real-stream-part" };
+      streamCompleted = true;
     }
 
     async function* partialOutputStream(): AsyncGenerator {
       partialOutputStreamStarted = true;
       resolvePartialOutputStreamStarted?.();
       await streamStartedPromise;
-      partialOutputStreamCompleted = true;
       yield { answer: "Jinx leads." };
+      partialOutputStreamCompleted = true;
     }
 
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
