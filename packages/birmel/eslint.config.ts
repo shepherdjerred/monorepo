@@ -14,7 +14,6 @@ const config: TSESLint.FlatConfig.ConfigArray = [
       "**/*.mjs",
       "**/*.js",
       "**/*.cjs",
-      ".mastra/",
       "data/",
     ],
   }),

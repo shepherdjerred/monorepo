@@ -75,7 +75,7 @@ One line per package. Each package's own README has the details; `AGENTS.md` fil
 | [homelab](homelab/)                                       | Kubernetes homelab: Talos, cdk8s, OpenTofu, ArgoCD                       |
 | [terraform-provider-asuswrt](terraform-provider-asuswrt/) | Terraform/OpenTofu provider for Asuswrt-Merlin routers                   |
 | [toolkit](toolkit/)                                       | CLI developer tools (`pr`, `alerts`, `bugsink`, `grafana`, `discord`, …) |
-| [pr-fleet-controller](pr-fleet-controller/)               | Mastra controller that drives the open-PR fleet with a live dashboard    |
+| [pr-fleet-controller](pr-fleet-controller/)               | AI SDK controller that drives the open-PR fleet with a live dashboard    |
 | [release-tools](release-tools/)                           | release-please wrapper for the release lane                              |
 | [dotfiles](dotfiles/)                                     | Dotfiles & shell config (chezmoi source)                                 |
 | [fonts](fonts/)                                           | Berkeley Mono Nerd Fonts patcher                                         |
