@@ -96,10 +96,11 @@ public struct OTPParser {
             guard code.count >= 4, code.count <= 8, code.rangeOfCharacter(from: .decimalDigits) != nil else {
                 return nil
             }
-            let hasDirectExplicitLabel = explicitLabelRanges.contains { labelRange in
-                NSMaxRange(labelRange.range) <= normalized.range.location &&
-                    normalized.range.location - NSMaxRange(labelRange.range) <= 8
-            }
+            let hasDirectExplicitLabel = Self.hasDirectExplicitLabel(
+                body: sanitizedBody,
+                labelRanges: explicitLabelRanges,
+                candidateRange: normalized.range
+            )
             guard !Self.isFalsePositive(
                 body: sanitizedBody,
                 range: normalized.range,
@@ -159,6 +160,22 @@ public struct OTPParser {
             return true
         }
         return false
+    }
+
+    private static func hasDirectExplicitLabel(
+        body: String,
+        labelRanges: [NSTextCheckingResult],
+        candidateRange: NSRange
+    ) -> Bool {
+        labelRanges.contains { labelRange in
+            let labelEnd = NSMaxRange(labelRange.range)
+            let gapLength = candidateRange.location - labelEnd
+            guard gapLength >= 0, gapLength <= 8,
+                  let gapRange = Range(NSRange(location: labelEnd, length: gapLength), in: body) else {
+                return false
+            }
+            return !body[gapRange].contains(where: \.isNewline)
+        }
     }
 
     // Only a candidate that is part of an address is a false positive; an unrelated support address
