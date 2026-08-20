@@ -71,6 +71,7 @@ async function riotRequest(
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
   headers.set("X-Riot-Token", configuration.riotApiToken);
+  const canRetry = init.method?.toUpperCase() !== "POST";
   for (let attempt = 0; attempt <= TOURNAMENT_RETRY_ATTEMPTS; attempt += 1) {
     let response: Response;
     try {
@@ -83,6 +84,7 @@ async function riotRequest(
       });
     } catch (error) {
       if (
+        !canRetry ||
         init.signal?.aborted === true ||
         attempt >= TOURNAMENT_RETRY_ATTEMPTS
       ) {
@@ -107,7 +109,12 @@ async function riotRequest(
     const retryable =
       response.status === 429 ||
       (response.status >= 500 && response.status <= 599);
-    if (retryable && !response.ok && attempt < TOURNAMENT_RETRY_ATTEMPTS) {
+    if (
+      canRetry &&
+      retryable &&
+      !response.ok &&
+      attempt < TOURNAMENT_RETRY_ATTEMPTS
+    ) {
       const retryAfter = Number.parseInt(
         response.headers.get("retry-after") ?? "",
         10,
