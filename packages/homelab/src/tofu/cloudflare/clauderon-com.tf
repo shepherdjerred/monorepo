@@ -20,6 +20,9 @@ resource "cloudflare_dns_record" "clauderon_com_apex" {
   type    = "AAAA"
   content = "100::"
   proxied = true
+
+  # Activate the edge redirect before replacing the working tunnel origin.
+  depends_on = [cloudflare_ruleset.clauderon_com_redirect]
 }
 
 resource "cloudflare_dns_record" "clauderon_com_www" {
@@ -29,6 +32,8 @@ resource "cloudflare_dns_record" "clauderon_com_www" {
   type    = "AAAA"
   content = "100::"
   proxied = true
+
+  depends_on = [cloudflare_ruleset.clauderon_com_redirect]
 }
 
 # Proxied IPv4 placeholders ensure IPv4-only clients can reach Cloudflare's
@@ -42,7 +47,10 @@ resource "cloudflare_dns_record" "clauderon_com_apex_ipv4" {
   proxied = true
 
   # Cloudflare rejects A/AAAA records while the old apex CNAME still exists.
-  depends_on = [cloudflare_dns_record.clauderon_com_apex]
+  depends_on = [
+    cloudflare_dns_record.clauderon_com_apex,
+    cloudflare_ruleset.clauderon_com_redirect,
+  ]
 }
 
 resource "cloudflare_dns_record" "clauderon_com_www_ipv4" {
@@ -52,6 +60,8 @@ resource "cloudflare_dns_record" "clauderon_com_www_ipv4" {
   type    = "A"
   content = "192.0.2.1"
   proxied = true
+
+  depends_on = [cloudflare_ruleset.clauderon_com_redirect]
 }
 
 resource "cloudflare_ruleset" "clauderon_com_redirect" {
