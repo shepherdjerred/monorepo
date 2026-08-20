@@ -13,10 +13,13 @@ import { createS3Client } from "#src/storage/s3-client.ts";
 
 const REBUILD_TIMEOUT_MS = 30 * 60 * 1000;
 
-export async function writeCompetitionRankHistoryParquet(
-  buildDir: string,
-  foldedIds?: Set<string>,
-): Promise<{ rows: number; skipped: number }> {
+export async function writeCompetitionRankHistoryParquet(options: {
+  buildDir: string;
+  foldedIds?: Set<string>;
+  abortSignal?: AbortSignal;
+  timeoutMs?: number;
+}): Promise<{ rows: number; skipped: number }> {
+  const { buildDir, foldedIds, abortSignal, timeoutMs } = options;
   const bucket = configuration.s3BucketName;
   if (bucket === undefined) {
     throw new Error(
@@ -25,12 +28,13 @@ export async function writeCompetitionRankHistoryParquet(
   }
   const tmpPath = path.join(buildDir, "competition-rank-history.ndjson.tmp");
   const writer = new NdjsonFileWriter(tmpPath);
-  const skipped = await populateCompetitionRankHistoryFromS3(
-    createS3Client(),
+  const skipped = await populateCompetitionRankHistoryFromS3({
+    client: createS3Client(),
     bucket,
     writer,
     foldedIds,
-  );
+    abortSignal,
+  });
   await writer.close();
 
   const outputDir = path.join(buildDir, "competition_rank_history");
@@ -55,7 +59,7 @@ export async function writeCompetitionRankHistoryParquet(
           [tmpPath],
         );
       },
-      { timeoutMs: REBUILD_TIMEOUT_MS },
+      { timeoutMs: timeoutMs ?? REBUILD_TIMEOUT_MS },
     );
   } finally {
     await unlink(tmpPath);

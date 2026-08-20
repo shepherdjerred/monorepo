@@ -166,12 +166,14 @@ export async function populatePrematchFromS3(
  * language-neutral lake table. Current leaderboard objects and chart images
  * are deliberately excluded; only versioned historical JSON is replayed.
  */
-export async function populateCompetitionRankHistoryFromS3(
-  client: S3Client,
-  bucket: string,
-  writer: NdjsonFileWriter,
-  foldedIds?: Set<string>,
-): Promise<number> {
+export async function populateCompetitionRankHistoryFromS3(options: {
+  client: S3Client;
+  bucket: string;
+  writer: NdjsonFileWriter;
+  foldedIds?: Set<string>;
+  abortSignal?: AbortSignal;
+}): Promise<number> {
+  const { client, bucket, writer, foldedIds, abortSignal } = options;
   let continuationToken: string | undefined;
   let skipped = 0;
 
@@ -184,6 +186,7 @@ export async function populateCompetitionRankHistoryFromS3(
           ? {}
           : { ContinuationToken: continuationToken }),
       }),
+      abortSignal === undefined ? {} : { abortSignal },
     );
     const keys = (response.Contents ?? [])
       .flatMap((object) => (object.Key === undefined ? [] : [object.Key]))
@@ -202,7 +205,7 @@ export async function populateCompetitionRankHistoryFromS3(
       const snapshots = await Promise.all(
         chunk.map(async (key) => {
           const rawParsed: unknown = JSON.parse(
-            await readRawObjectText(client, bucket, key),
+            await readRawObjectText(client, bucket, key, { abortSignal }),
           );
           const parsed = CachedLeaderboardSchema.safeParse(rawParsed);
           if (!parsed.success) {

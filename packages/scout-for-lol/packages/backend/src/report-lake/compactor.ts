@@ -480,10 +480,12 @@ async function rebuildLocked(
   deadline.throwIfAborted();
   const accountRows = await writeAccountsParquet(prisma, buildDir);
   deadline.throwIfAborted();
-  const rankHistory = await writeCompetitionRankHistoryParquet(
+  const rankHistory = await writeCompetitionRankHistoryParquet({
     buildDir,
-    foldedRankHistoryIds,
-  );
+    foldedIds: foldedRankHistoryIds,
+    abortSignal: deadline,
+    timeoutMs: remainingTimeoutMs(),
+  });
   deadline.throwIfAborted();
 
   const summary = {
