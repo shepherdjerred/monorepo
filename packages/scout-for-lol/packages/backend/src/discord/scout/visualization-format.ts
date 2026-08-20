@@ -174,8 +174,16 @@ function pointMatchesRow(
   row: NativeRow,
   pointDimension: string | null,
 ): boolean {
-  if (point.key === row.key || point.label === row.label) {
+  if (
+    point.key === row.key ||
+    point.key === row.label ||
+    point.label === row.key ||
+    point.label === row.label
+  ) {
     return true;
+  }
+  if (pointDimension === null) {
+    return false;
   }
   const dimension = pointDimension ?? row.key;
   return (

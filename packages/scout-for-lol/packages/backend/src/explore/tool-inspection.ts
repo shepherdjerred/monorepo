@@ -129,7 +129,7 @@ export function inspectExploreToolResult(
         kind: "execution",
         queryText: parsedInput.queryText,
         ok: parsedOutput.ok,
-        rowsReturned: parsedOutput.preview?.rows.length ?? null,
+        rowsReturned: parsedOutput.preview?.rowsReturned ?? null,
         rowsScanned: parsedOutput.preview?.rowsScanned ?? null,
         renderKind: parsedOutput.preview?.renderKind ?? null,
       },

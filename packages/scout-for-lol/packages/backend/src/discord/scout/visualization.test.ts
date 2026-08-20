@@ -502,6 +502,8 @@ test("preserves confidence intervals in native temporal rows", () => {
       id: `All:${series.id}`,
       points: series.points.map((point) => ({
         ...point,
+        key: `${point.key} • ${point.key === "Aurora" ? "solo" : "flex"}`,
+        label: `${point.label} • ${point.label === "Aurora" ? "solo" : "flex"}`,
         evidence:
           series.id === "win_rate" && point.key === "Aurora"
             ? {
@@ -647,6 +649,68 @@ test("chooses the most specific matching series for preview evidence", () => {
   expect(formatPreviewValueWithEvidence(cappedSnapshot, column, row)).toBe(
     "100.0%",
   );
+});
+
+test("matches All-series evidence by exact row identity", () => {
+  const winRateSeries = scoutTestVisualization.series.find(
+    (series) => series.metric === "win_rate",
+  );
+  if (winRateSeries === undefined) {
+    throw new Error("Win rate test series is missing.");
+  }
+  const sourcePoint = winRateSeries.points[0];
+  if (sourcePoint === undefined) {
+    throw new Error("Win rate test point is missing.");
+  }
+  const snapshot = VisualizationSnapshotSchema.parse({
+    ...scoutTestVisualization,
+    series: [
+      {
+        ...winRateSeries,
+        id: "All:win_rate",
+        points: [
+          {
+            ...sourcePoint,
+            key: "Foo",
+            label: "Foo",
+            evidence: {
+              ...sourcePoint.evidence,
+              confidenceInterval: {
+                level: 0.95,
+                lower: 0.1,
+                upper: 0.2,
+              },
+            },
+          },
+          {
+            ...sourcePoint,
+            key: "Foo • Bar",
+            label: "Foo • Bar",
+            evidence: {
+              ...sourcePoint.evidence,
+              confidenceInterval: {
+                level: 0.95,
+                lower: 0.9,
+                upper: 1,
+              },
+            },
+          },
+        ],
+      },
+    ],
+  });
+  const column = preview.columns.find((item) => item.key === "win_rate");
+  if (column === undefined) {
+    throw new Error("Win rate preview column is missing.");
+  }
+
+  expect(
+    formatPreviewValueWithEvidence(snapshot, column, {
+      key: "Foo • Bar",
+      label: "Foo • Bar",
+      values: new Map([["win_rate", 1]]),
+    }),
+  ).toContain("95% CI 90.0%–100.0%");
 });
 
 test("keeps native values visible when labels exceed the description budget", () => {
