@@ -413,6 +413,9 @@ async function rebuildLocked(
   lakeDir: string,
   startedAt: number,
 ): Promise<CompactionSummary> {
+  const deadlineAt = Date.now() + COMPACTION_TIMEOUT_MS;
+  const deadline = AbortSignal.timeout(COMPACTION_TIMEOUT_MS);
+  const remainingTimeoutMs = (): number => Math.max(1, deadlineAt - Date.now());
   const buildId = newBuildId();
   const buildDir = buildDirPath(lakeDir, buildId);
   await mkdir(buildDir, { recursive: true });
@@ -432,18 +435,21 @@ async function rebuildLocked(
     );
   }
   const client = createS3Client();
-  const skippedMatches = await populateMatchesFromS3(
+  const skippedMatches = await populateMatchesFromS3({
     client,
     bucket,
-    matchWriter,
-    foldedMatchIds,
-  );
-  const skippedPrematches = await populatePrematchFromS3(
+    writer: matchWriter,
+    foldedIds: foldedMatchIds,
+    abortSignal: deadline,
+  });
+  const skippedPrematches = await populatePrematchFromS3({
     client,
     bucket,
-    prematchWriter,
-    foldedPrematchIds,
-  );
+    writer: prematchWriter,
+    foldedIds: foldedPrematchIds,
+    abortSignal: deadline,
+  });
+  deadline.throwIfAborted();
   await matchWriter.close();
   await prematchWriter.close();
 
@@ -464,18 +470,21 @@ async function rebuildLocked(
           );
         }
       },
-      { timeoutMs: COMPACTION_TIMEOUT_MS },
+      { timeoutMs: remainingTimeoutMs() },
     );
   } finally {
     await unlink(matchesTmp);
     await unlink(prematchTmp);
   }
 
+  deadline.throwIfAborted();
   const accountRows = await writeAccountsParquet(prisma, buildDir);
+  deadline.throwIfAborted();
   const rankHistory = await writeCompetitionRankHistoryParquet(
     buildDir,
     foldedRankHistoryIds,
   );
+  deadline.throwIfAborted();
 
   const summary = {
     buildId,

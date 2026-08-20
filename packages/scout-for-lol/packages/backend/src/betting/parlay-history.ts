@@ -59,6 +59,31 @@ const HISTORY_FETCH_MULTIPLIER = 2;
 
 export const PARLAY_HISTORY_TIMEOUT_MS = 5000;
 
+type FetchParlayHistoryOptions = {
+  puuids: readonly string[];
+  excludeMatchId: string;
+  queueType?: Extract<QueueType, "solo" | "flex">;
+  lakeDir?: string;
+  limit?: number;
+  timeoutMs?: number;
+  deadline?: AbortSignal;
+  deadlineAt?: number;
+};
+
+function historyQueryTimeoutMs(options: FetchParlayHistoryOptions): number {
+  const remaining =
+    options.deadlineAt === undefined
+      ? Number.POSITIVE_INFINITY
+      : Math.max(1, options.deadlineAt - Date.now());
+  return Math.min(options.timeoutMs ?? PARLAY_HISTORY_TIMEOUT_MS, remaining);
+}
+
+function throwIfDeadlineAborted(deadline: AbortSignal | undefined): void {
+  if (deadline !== undefined) {
+    deadline.throwIfAborted();
+  }
+}
+
 const LakeNumberSchema = z.union([z.bigint(), z.number()]).transform(Number);
 
 const HistoryParticipantSchema = z.looseObject({
@@ -265,14 +290,9 @@ function isVoidMatch(participants: readonly unknown[]): boolean {
  * the participant column that recorded who landed the blow — the lake stores
  * participants, not info.teams[].objectives.
  */
-export async function fetchParlayHistory(options: {
-  puuids: readonly string[];
-  excludeMatchId: string;
-  queueType?: Extract<QueueType, "solo" | "flex">;
-  lakeDir?: string;
-  limit?: number;
-  timeoutMs?: number;
-}): Promise<ParlayHistory> {
+export async function fetchParlayHistory(
+  options: FetchParlayHistoryOptions,
+): Promise<ParlayHistory> {
   const puuids = [...new Set(options.puuids)];
   if (puuids.length === 0) {
     return new Map();
@@ -296,9 +316,10 @@ export async function fetchParlayHistory(options: {
     return new Map();
   }
 
-  const connectionOptions = {
-    timeoutMs: options.timeoutMs ?? PARLAY_HISTORY_TIMEOUT_MS,
-  };
+  const connectionOptions = () => ({
+    timeoutMs: historyQueryTimeoutMs(options),
+  });
+  throwIfDeadlineAborted(options.deadline);
 
   const selected = await withDuckDBConnection(async (session) => {
     const sql =
@@ -316,7 +337,8 @@ export async function fetchParlayHistory(options: {
     return rows.map((row) =>
       z.object({ puuid: z.string(), match_id: z.string() }).parse(row),
     );
-  }, connectionOptions);
+  }, connectionOptions());
+  throwIfDeadlineAborted(options.deadline);
 
   const matchIds = [...new Set(selected.map((row) => row.match_id))];
   if (matchIds.length === 0) {
@@ -338,7 +360,8 @@ export async function fetchParlayHistory(options: {
       `epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ${columnList} ` +
       `FROM (${rosterSource.sql})`;
     return await session.run(sql, bindParams(session, rosterSource.params));
-  }, connectionOptions);
+  }, connectionOptions());
+  throwIfDeadlineAborted(options.deadline);
 
   const byMatch = new Map<string, unknown[]>();
   for (const row of roster) {

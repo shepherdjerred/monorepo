@@ -260,6 +260,8 @@ async function generateAndPersistDefinition(
     puuids: setup.subjects.map((subject) => subject.puuid),
     excludeMatchId: setup.matchId,
     queueType: setup.queueType,
+    deadline,
+    deadlineAt: startedAt + PARLAY_GENERATION_DEADLINE_MS,
   });
   const legs = statLegsForProposal(proposal, setup.subjects);
   if (legs.length === 0) {
