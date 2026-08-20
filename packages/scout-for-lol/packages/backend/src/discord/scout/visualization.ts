@@ -15,13 +15,13 @@ import {
   formatNativeSeriesValue,
   formatPreviewValueWithEvidence,
   formatSeriesValue,
+  truncateNativeCell,
   type NativeRow,
   type NativeRowValue,
 } from "#src/discord/scout/visualization-format.ts";
 
 const NATIVE_KINDS = new Set(["TABLE", "LIST", "LEADERBOARD", "KPI_CARD"]);
 const MAX_NATIVE_ROWS = 12;
-const MAX_NATIVE_CELL_LENGTH = 160;
 const MAX_EMBED_DESCRIPTION = 3900;
 const MAX_EMBED_TITLE = 256;
 const DESCRIPTION_TRUNCATION_SUFFIX =
@@ -473,12 +473,6 @@ function formatRowValues(
     (series) =>
       `${escapeMarkdown(truncateNativeCell(series.label))}: ${truncateNativeCell(formatNativeSeriesValue(snapshot, series, row))}`,
   );
-}
-
-function truncateNativeCell(value: string): string {
-  return value.length <= MAX_NATIVE_CELL_LENGTH
-    ? value
-    : `${value.slice(0, MAX_NATIVE_CELL_LENGTH - 1)}…`;
 }
 
 function escapeMarkdown(value: string): string {

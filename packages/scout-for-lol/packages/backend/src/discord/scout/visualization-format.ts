@@ -6,12 +6,31 @@ import {
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 
+const MAX_NATIVE_CELL_LENGTH = 160;
+const nativeCellGraphemeSegmenter = new Intl.Segmenter(undefined, {
+  granularity: "grapheme",
+});
+
 export type NativeRowValue = string | number | null;
 export type NativeRow = {
   key: string;
   label: string;
   values: Map<string, NativeRowValue>;
 };
+
+export function truncateNativeCell(value: string): string {
+  if (value.length <= MAX_NATIVE_CELL_LENGTH) {
+    return value;
+  }
+  let truncated = "";
+  for (const { segment } of nativeCellGraphemeSegmenter.segment(value)) {
+    if (truncated.length + segment.length > MAX_NATIVE_CELL_LENGTH - 1) {
+      break;
+    }
+    truncated += segment;
+  }
+  return `${truncated}…`;
+}
 
 export function formatPreviewValue(
   column: ReportAiPreviewSummary["columns"][number],

@@ -531,7 +531,7 @@ test("keeps native values visible when labels exceed the description budget", ()
       label: "Series label ".repeat(500),
       points: series.points.map((point) => ({
         ...point,
-        label: "Point label ".repeat(500),
+        label: "Point label 😀".repeat(500),
       })),
     })),
   });
@@ -541,6 +541,7 @@ test("keeps native values visible when labels exceed the description budget", ()
       VisualizationSnapshotSchema.parse({ ...snapshot, kind }),
     )?.data.description;
     expect(description).toContain("100.0%");
+    expect(description).not.toContain("�");
   }
 });
 
