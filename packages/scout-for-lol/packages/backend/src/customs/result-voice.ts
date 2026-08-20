@@ -1,6 +1,7 @@
 import type { CustomNightSnapshot } from "@scout-for-lol/data";
 import { z } from "zod";
 import {
+  cleanupCustomVoice,
   returnCustomPlayersToLobby,
   type CustomVoiceReturnTarget,
 } from "#src/customs/voice-cleanup.ts";
@@ -88,6 +89,16 @@ export async function getPendingCustomResultVoiceTargets(
   return events.map(
     (event) =>
       PendingResultVoicePayloadSchema.parse(JSON.parse(event.payload)).target,
+  );
+}
+
+export async function cleanupCustomVoiceWithPendingResultTargets(
+  prisma: ExtendedPrismaClient,
+  snapshot: CustomNightSnapshot,
+): Promise<string[]> {
+  return await cleanupCustomVoice(
+    snapshot,
+    await getPendingCustomResultVoiceTargets(prisma, snapshot.id),
   );
 }
 

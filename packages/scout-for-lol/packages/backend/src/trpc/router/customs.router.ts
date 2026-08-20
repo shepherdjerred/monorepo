@@ -49,9 +49,8 @@ import {
 import { publishCustomSnapshot } from "#src/customs/socket.ts";
 import { createLogger } from "#src/logger.ts";
 import { arrangeCustomVoice } from "#src/customs/voice.ts";
-import { cleanupCustomVoice } from "#src/customs/voice-cleanup.ts";
 import { provisionCustomTournamentCode } from "#src/customs/riot-results.ts";
-import { returnCustomResultPlayersToLobby } from "#src/customs/result-voice.ts";
+import * as resultVoice from "#src/customs/result-voice.ts";
 import {
   continueCustomNight,
   overrideCustomVoice,
@@ -327,7 +326,7 @@ export const customsRouter = router({
       });
       const response = await broadcast(result);
       if (result.applied)
-        void returnCustomResultPlayersToLobby({
+        void resultVoice.returnCustomResultPlayersToLobby({
           prisma,
           snapshot: result.snapshot,
           nightId: input.nightId,
@@ -335,7 +334,6 @@ export const customsRouter = router({
         });
       return response;
     }),
-
   retryVoice: activityProcedure
     .input(CustomRevisionInputSchema)
     .mutation(async ({ ctx, input }) => {
@@ -364,7 +362,6 @@ export const customsRouter = router({
         }),
       );
     }),
-
   overrideVoice: activityProcedure.input(CustomRevisionInputSchema).mutation(
     async ({ ctx, input }) =>
       await broadcast(
@@ -460,7 +457,11 @@ export const customsRouter = router({
       const broadcastResult = await broadcast(ended);
       let voiceCleanupSucceeded = false;
       try {
-        const failures = await cleanupCustomVoice(broadcastResult.snapshot);
+        const failures =
+          await resultVoice.cleanupCustomVoiceWithPendingResultTargets(
+            prisma,
+            broadcastResult.snapshot,
+          );
         if (failures.length > 0) {
           logger.error("Custom night ended with voice cleanup failures", {
             failures,
