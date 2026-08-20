@@ -185,7 +185,7 @@ function pointMatchesRow(
   if (pointDimension === null) {
     return false;
   }
-  const dimension = pointDimension ?? row.key;
+  const dimension = pointDimension;
   return (
     displayDimensionMatches(dimension, point.key) ||
     displayDimensionMatches(dimension, point.label)
