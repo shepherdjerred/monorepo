@@ -21,24 +21,15 @@ import { getFlag } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import { createLogger } from "#src/logger.ts";
-import { queryMatchById } from "#src/storage/s3-query.ts";
 
 const logger = createLogger("betting-earnings");
 
-/**
- * Awarding Bucks for playing.
- *
- * the game's MVP. Ranked 5s adds +1 for participating and standard Clash adds
- * +10. Every reward stays in its own ledger row so "how did they get these
- * points" never depends on reconstructing a combined total.
- *
- * Gated on `betting_enabled` deliberately. An ungated economy would accrue
- * silently in every server Scout is in, and enabling the flag later would hand
- * that guild a surprise backlog. The accepted consequence is that enabling it
- * starts a guild at zero with no backfill.
+/** Award Bucks for playing, with each reward preserved as its own ledger row.
+ * The operation is gated so enabling the economy never creates a surprise
+ * backlog for a guild.
  */
 
-type EarnTarget = {
+export type EarnTarget = {
   serverId: string;
   discordId: string;
   alias: string;
@@ -49,13 +40,7 @@ function queueTypeOf(matchData: RawMatch): QueueType | undefined {
   return parseQueueType(matchData.info.queueId);
 }
 
-/**
- * Every (guild, Discord user) that should be paid for this match.
- *
- * A person tracked in two flag-enabled guilds earns in both — the wallets are
- * per guild and independent, so that is the correct behaviour rather than
- * double-paying one balance.
- */
+/** Every enabled (guild, Discord user) target that should be paid. */
 async function findEarnTargets(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient,
@@ -116,6 +101,8 @@ const EARNED_REWARDS = {
   mvp: { kind: "earn_mvp", amount: 1 },
 } satisfies Record<EarnedAwardReason, EarnedReward>;
 
+export const PENDING_EARNING_RETRY_DELAY_MS = 5 * 60 * 1000;
+
 export type EarnedAward = {
   serverId: string;
   discordId: string;
@@ -125,10 +112,15 @@ export type EarnedAward = {
   total: number;
 };
 
-type PendingEarningMatchLoader = (
-  matchId: string,
-  markerCreatedAt: Date,
-) => Promise<RawMatch | undefined>;
+function targetSnapshotJson(targets: readonly EarnTarget[]): string {
+  return JSON.stringify(
+    targets.map((target) => ({
+      discordId: target.discordId,
+      alias: target.alias,
+      puuid: target.participant.puuid,
+    })),
+  );
+}
 
 /**
  * Award Bucks for a finished match, exactly once per (match, guild).
@@ -190,46 +182,7 @@ export async function awardBucksForMatch(
   return awards;
 }
 
-/**
- * Retry pending match-and-guild awards after the post-match cursor has moved
- * on. The raw match remains in the authoritative S3 store, so this pass does
- * not depend on Riot history rediscovering an already-processed match.
- */
-export async function retryPendingBucksEarnings(
-  prismaClient: ExtendedPrismaClient = prisma,
-  loadMatch: PendingEarningMatchLoader = queryMatchById,
-): Promise<void> {
-  const pending = await prismaClient.bucksMatchEarning.findMany({
-    where: { state: "pending" },
-    orderBy: { awardedAt: "asc" },
-    take: 50,
-    select: { matchId: true, awardedAt: true },
-  });
-  const markersByMatch = new Map<string, Date>();
-  for (const marker of pending) {
-    markersByMatch.set(marker.matchId, marker.awardedAt);
-  }
-
-  for (const [matchId, markerCreatedAt] of markersByMatch) {
-    try {
-      const match = await loadMatch(matchId, markerCreatedAt);
-      if (match === undefined) {
-        logger.warn(
-          `↩️ Could not reload pending Bryan Bucks match ${matchId} from the raw store`,
-        );
-        continue;
-      }
-      await awardBucksForMatch(match, prismaClient);
-    } catch (error) {
-      logger.error(`❌ Could not retry Bryan Bucks for ${matchId}:`, error);
-      Sentry.captureException(error, {
-        tags: { source: "betting-earnings-retry", matchId },
-      });
-    }
-  }
-}
-
-async function awardForGuild(input: {
+export async function awardForGuild(input: {
   prismaClient: ExtendedPrismaClient;
   matchId: string;
   serverId: string;
@@ -240,15 +193,13 @@ async function awardForGuild(input: {
 }): Promise<EarnedAward[]> {
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
 
-  // Leave a durable pending marker before wallet creation. The post-match
-  // cursor deliberately advances after the authoritative S3 write, so a
-  // process-local return here must not be the only record of an unawarded
-  // match/guild pair.
+  // The cursor advances after S3 ingest, so this marker must exist before
+  // wallet creation can return an unfunded result.
   let marker = await input.prismaClient.bucksMatchEarning.findUnique({
     where: {
       matchId_serverId: { matchId: input.matchId, serverId },
     },
-    select: { state: true },
+    select: { state: true, targetSnapshotJson: true },
   });
   if (marker?.state === "complete") {
     return [];
@@ -261,8 +212,9 @@ async function awardForGuild(input: {
           serverId,
           entryCount: 0,
           state: "pending",
+          targetSnapshotJson: targetSnapshotJson(input.targets),
         },
-        select: { state: true },
+        select: { state: true, targetSnapshotJson: true },
       });
     } catch (error) {
       if (!isUniqueConstraintError(error)) {
@@ -272,7 +224,7 @@ async function awardForGuild(input: {
         where: {
           matchId_serverId: { matchId: input.matchId, serverId },
         },
-        select: { state: true },
+        select: { state: true, targetSnapshotJson: true },
       });
       if (marker.state === "complete") {
         return [];
@@ -300,6 +252,16 @@ async function awardForGuild(input: {
         );
         // Keep the pending marker. A later recovery pass can retry this guild
         // after its house has been funded again.
+        await input.prismaClient.bucksMatchEarning.updateMany({
+          where: {
+            matchId: input.matchId,
+            serverId,
+            state: "pending",
+          },
+          data: {
+            retryAt: new Date(Date.now() + PENDING_EARNING_RETRY_DELAY_MS),
+          },
+        });
         return [];
       }
       throw error;
@@ -400,6 +362,7 @@ async function awardForGuild(input: {
           entryCount,
           state: "complete",
           awardedAt: new Date(),
+          retryAt: new Date(),
         },
       });
 

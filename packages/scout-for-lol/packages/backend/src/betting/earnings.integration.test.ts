@@ -18,9 +18,9 @@ import {
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   awardBucksForMatch,
-  retryPendingBucksEarnings,
   type EarnedAwardReason,
 } from "#src/betting/earnings.ts";
+import { retryPendingBucksEarnings } from "#src/betting/earnings-retry.ts";
 import { computeMvp } from "#src/betting/mvp.ts";
 import {
   addFlagOverride,
@@ -482,6 +482,12 @@ describe("earning retry", () => {
     await db.bucksAccount.update({
       where: { id: house.id },
       data: { balance: HOUSE_BANKROLL },
+    });
+    await db.bucksMatchEarning.update({
+      where: {
+        matchId_serverId: { matchId: MATCH_ID, serverId: ENABLED_GUILD },
+      },
+      data: { retryAt: new Date(0) },
     });
     let loadedMatchId: string | undefined;
     await retryPendingBucksEarnings(db, async (matchId) => {

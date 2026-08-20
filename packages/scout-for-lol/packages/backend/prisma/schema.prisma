@@ -989,6 +989,8 @@ model BucksParlayBet {
 // pending; the composite primary key still guards concurrent replays.
 // `awardedAt` is refreshed when the pending row completes, so it is the actual
 // award time for completed rows; while pending it is the marker creation time.
+// `retryAt` rotates failed rows out of the bounded recovery batch, and the
+// target snapshot preserves the original guild recipients across config drift.
 //
 // Earnings need their own marker because, unlike settlement, they have no
 // natural per-(match, guild) row to carry the state.
@@ -1001,6 +1003,9 @@ model BucksMatchEarning {
   // processing is held only inside the awarding transaction; complete is the
   // durable exactly-once result.
   state String @default("complete")
+
+  targetSnapshotJson String @default("[]")
+  retryAt           DateTime @default(now())
 
   // Number of ledger rows written, so reconciliation is one comparison once
   // the marker is complete.
