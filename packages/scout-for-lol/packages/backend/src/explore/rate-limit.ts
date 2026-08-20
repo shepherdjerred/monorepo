@@ -49,13 +49,11 @@ export class ExploreConversationBusyError extends Error {}
 /**
  * A granted turn, in two phases.
  *
- * Reserving takes the concurrency slot immediately — that is what bounds how
- * much work can be in flight — but does **not** spend quota. `commit()` does,
- * and is only called once the request has been validated and the turn is
- * actually starting. Without that split, a request with a bogus conversation
- * id was charged before anyone checked whether it referred to anything, so a
- * caller could drain the shared global allowance with requests that never ran
- * a turn.
+ * Reserving takes concurrency and quota capacity immediately, so concurrent
+ * requests cannot all claim the same last question. It does not permanently
+ * spend quota: `commit()` converts the hold to usage only after the request is
+ * validated and the turn is actually starting. `finish()` releases an
+ * uncommitted hold, so bogus conversation ids cannot drain the allowance.
  *
  * Both calls are idempotent, and `finish()` alone is the correct cleanup for
  * an early exit: nothing was spent yet, so there is nothing to refund.
@@ -137,6 +135,7 @@ export function tryStartExploreTurn(
     (activeUserRuns.get(identity.userId) ?? 0) + 1,
   );
   activeGlobalRuns++;
+  const quotaReservation = engine.reserve(identity, now);
   const runId = globalThis.crypto.randomUUID();
   let finished = false;
   let committed = false;
@@ -173,13 +172,14 @@ export function tryStartExploreTurn(
         return;
       }
       committed = true;
-      engine.consume(identity, now);
+      quotaReservation.commit();
     },
     finish: () => {
       if (finished) {
         return;
       }
       finished = true;
+      quotaReservation.release();
       const activeForUser = activeUserRuns.get(identity.userId) ?? 0;
       if (activeForUser <= 1) {
         activeUserRuns.delete(identity.userId);

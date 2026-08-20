@@ -74,8 +74,11 @@ describe("explore rate limit", () => {
   });
 
   test("the sixth concurrent turn is rejected by the global cap", () => {
-    const tickets = Array.from({ length: 5 }, () =>
-      tryStartExploreTurn({ userId }, now),
+    const tickets = Array.from({ length: 5 }, (_, index) =>
+      tryStartExploreTurn(
+        { userId: testAccountId((index + 10).toString()) },
+        now,
+      ),
     );
     expect(tickets.every((ticket) => ticket.allowed)).toBe(true);
 
@@ -152,6 +155,26 @@ describe("explore rate limit", () => {
 
     expect(minuteRemaining(userId, now)).toBe(before);
     expect(getExploreQuotaStatus({ userId }, now).activeRun).toBe(false);
+  });
+
+  test("concurrent reservations cannot over-admit the final quota slot", () => {
+    for (let index = 0; index < 3; index++) {
+      completeTurn(userId, now);
+    }
+
+    const finalSlot = tryStartExploreTurn({ userId }, now);
+    if (!finalSlot.allowed) {
+      throw new Error("expected the final quota slot to be reserved");
+    }
+    const overLimit = tryStartExploreTurn({ userId }, now);
+    expect(overLimit.allowed).toBe(false);
+    expect(minuteRemaining(userId, now)).toBe(0);
+
+    finalSlot.finish();
+    expect(minuteRemaining(userId, now)).toBe(1);
+    const retry = tryStartExploreTurn({ userId }, now);
+    expect(retry.allowed).toBe(true);
+    if (retry.allowed) retry.finish();
   });
 
   test("a committed turn does spend its quota", () => {
