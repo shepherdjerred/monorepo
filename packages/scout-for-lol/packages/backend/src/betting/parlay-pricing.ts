@@ -120,6 +120,67 @@ export function conditionHeldInMatch(
   }
 }
 
+/** Realized hit rate for one condition over the history used to price it. */
+export function conditionRealizedRate(
+  condition: ParlayCondition,
+  matches: readonly ParlayHistoryMatch[],
+  subjectKey: string,
+): number | undefined {
+  if (matches.length === 0) {
+    return undefined;
+  }
+  let hits = 0;
+  for (const match of matches) {
+    const held = conditionHeldInMatch(condition, match, subjectKey);
+    if (held === undefined) {
+      return undefined;
+    }
+    if (held) {
+      hits += 1;
+    }
+  }
+  return hits / matches.length;
+}
+
+function isNumericCondition(condition: ParlayCondition): boolean {
+  return (
+    condition.kind === "participant_numeric" ||
+    condition.kind === "team_objective_kills" ||
+    condition.kind === "match_numeric" ||
+    condition.kind === "opponent_team_pings"
+  );
+}
+
+/** Require every filled numeric threshold to land in the intended target band. */
+export function numericThresholdsAreMeasured(
+  conditions: readonly ParlayCondition[],
+  subjects: readonly ParlaySubject[],
+  history: ParlayHistory,
+): boolean {
+  const anchor = subjects[0];
+  if (anchor === undefined) {
+    return false;
+  }
+  return conditions.every((condition) => {
+    if (!isNumericCondition(condition)) {
+      return true;
+    }
+    const subject =
+      condition.kind === "participant_numeric"
+        ? subjects.find((candidate) => candidate.key === condition.subject)
+        : anchor;
+    if (subject === undefined) {
+      return false;
+    }
+    const rate = conditionRealizedRate(
+      condition,
+      history.get(subject.puuid) ?? [],
+      subject.key,
+    );
+    return rate !== undefined && rate >= 0.4 && rate <= 0.7;
+  });
+}
+
 function conditionSubject(condition: ParlayCondition): string | undefined {
   return condition.kind === "participant_numeric" ||
     condition.kind === "participant_boolean"

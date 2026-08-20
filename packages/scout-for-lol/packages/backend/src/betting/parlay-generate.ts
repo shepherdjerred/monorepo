@@ -31,7 +31,11 @@ import {
   thresholdsMatchProposal,
 } from "#src/betting/parlay-model-schema.ts";
 import { fetchParlayHistory } from "#src/betting/parlay-history.ts";
-import { priceParlay, type ParlayPrice } from "#src/betting/parlay-pricing.ts";
+import {
+  numericThresholdsAreMeasured,
+  priceParlay,
+  type ParlayPrice,
+} from "#src/betting/parlay-pricing.ts";
 import {
   buildProposalStatistics,
   statLegsForProposal,
@@ -290,9 +294,18 @@ async function generateAndPersistDefinition(
   }
   deadline.throwIfAborted();
 
+  const candidate = parseModelGeneratedParlay(filledParlay, 5000);
+  if (
+    !numericThresholdsAreMeasured(candidate.conditions, setup.subjects, history)
+  ) {
+    throw new ParlayUnpriceableError(
+      "filled thresholds were outside the measured 40-70% hit-rate range",
+    );
+  }
+
   // The price is measured, never authored.
   const priced = priceParlay({
-    conditions: parseModelGeneratedParlay(filledParlay, 5000).conditions,
+    conditions: candidate.conditions,
     subjects: setup.subjects,
     history,
   });
