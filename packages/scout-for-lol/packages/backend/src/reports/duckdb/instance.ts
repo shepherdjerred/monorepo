@@ -89,6 +89,11 @@ export async function withDuckDBConnection<T>(
     connection.interrupt();
   }, timeoutMs);
 
+  if (timeoutMs <= 0) {
+    timedOut = true;
+    connection.interrupt();
+  }
+
   const session: DuckDBSession = {
     run: async (sql, params) => {
       try {

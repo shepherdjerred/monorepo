@@ -69,6 +69,40 @@ type BuildParticipantContext = {
 
 type BaseBuiltParticipant = Omit<NonStandardLoadingScreenParticipant, "ranks">;
 type RankedBuiltParticipant = BaseBuiltParticipant & { ranks?: Ranks };
+export type ParticipantRanks = ReadonlyMap<string, Ranks>;
+
+/** Fetch the lobby rank snapshot once so prediction and presentation share it. */
+export async function fetchParticipantRanks(
+  gameInfo: RawCurrentGameInfo,
+  region: Region,
+): Promise<ParticipantRanks> {
+  // Classic assets do not display modern ranked data and prediction treats
+  // rank/season as inapplicable there. Preserve the existing zero-request path.
+  if (isClassicAssetMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
+    return new Map();
+  }
+  logger.info(
+    `Fetching ranks for ${gameInfo.participants.length.toString()} participants`,
+  );
+  const results = await Promise.allSettled(
+    gameInfo.participants.map(async (participant) => {
+      if (participant.puuid === null) {
+        return;
+      }
+      const ranks = await getRankByPuuid(participant.puuid, region);
+      return ranks === undefined
+        ? undefined
+        : { puuid: participant.puuid, ranks };
+    }),
+  );
+  const ranksByPuuid = new Map<string, Ranks>();
+  for (const result of results) {
+    if (result.status === "fulfilled" && result.value !== undefined) {
+      ranksByPuuid.set(result.value.puuid, result.value.ranks);
+    }
+  }
+  return ranksByPuuid;
+}
 
 /**
  * Resolve team assignment for a participant.
@@ -382,6 +416,7 @@ export async function buildLoadingScreenData(
   gameInfo: RawCurrentGameInfo,
   trackedPuuids: ReadonlySet<string>,
   region: Region,
+  prefetchedRanks?: ParticipantRanks,
 ): Promise<LoadingScreenData> {
   const queueType = resolveQueueTypeFromGame(
     gameInfo.gameQueueConfigId,
@@ -465,25 +500,14 @@ export async function buildLoadingScreenData(
     }),
   );
 
-  // Fetch ranks for all participants in parallel
-  logger.info(
-    `Fetching ranks for ${gameInfo.participants.length.toString()} participants`,
-  );
-  const rankResults = await Promise.allSettled(
-    gameInfo.participants.map(async (p): Promise<Ranks | undefined> => {
-      if (p.puuid === null) {
-        return;
-      }
-      return getRankByPuuid(p.puuid, region);
-    }),
-  );
+  const ranksByPuuid =
+    prefetchedRanks ?? (await fetchParticipantRanks(gameInfo, region));
 
-  // Combine base participants with rank results
+  // Combine base participants with the shared rank snapshot.
   const rankedParticipants: RankedBuiltParticipant[] = baseParticipants.map(
-    (base, idx) => {
-      const rankResult = rankResults[idx];
-      const ranks: Ranks | undefined =
-        rankResult?.status === "fulfilled" ? rankResult.value : undefined;
+    (base) => {
+      const ranks =
+        base.puuid === null ? undefined : ranksByPuuid.get(base.puuid);
       return ranks === undefined ? base : { ...base, ranks };
     },
   );

@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
-import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import {
   routeButton,
   type RoutableButtonInteraction,
@@ -9,9 +12,11 @@ import { formatBucksAskPublishCustomId } from "#src/betting/ask-custom-id.ts";
 import { resetBucksAskPublishClaimsForTests } from "#src/betting/ask-publish.ts";
 import { formatBucksNavigationId } from "#src/betting/navigation.ts";
 import { formatParlayCustomId } from "#src/betting/parlay-custom-id.ts";
+import { formatPeekPassCustomId } from "#src/betting/peek-pass-custom-id.ts";
 import { discordComponentsTotal } from "#src/metrics/index.ts";
 
 const USER_ID = DiscordAccountIdSchema.parse("160509172704739328");
+const GUILD_ID = DiscordGuildIdSchema.parse("1337623164146155593");
 
 /**
  * A stand-in for discord.js's ButtonInteraction, built the same way
@@ -141,6 +146,31 @@ describe("routeButton", () => {
         ownerId: USER_ID,
         snapshotId: 42,
         page: 1,
+      }),
+    );
+    await routeButton(interaction);
+    expect(calls).toEqual(["deferReply", "editReply"]);
+  });
+
+  test.each([
+    "bbpass:",
+    "bbpass:2:b:160509172704739328:1337623164146155593:42:5",
+    "bbpass:1:x:160509172704739328:1337623164146155593:42:5",
+    "bbpass:1:b:not-a-user:1337623164146155593:42:5",
+  ])("acknowledges malformed peek-pass ID %s", async (customId) => {
+    const { interaction, calls } = fakeInteraction(customId);
+    await routeButton(interaction);
+    expect(calls).toEqual(["deferUpdate"]);
+  });
+
+  test("routes a caller-bound peek-pass confirmation separately", async () => {
+    const { interaction, calls } = fakeInteraction(
+      formatPeekPassCustomId({
+        action: "b",
+        ownerId: USER_ID,
+        serverId: GUILD_ID,
+        quotedAtMs: 42,
+        quotedPrice: 5,
       }),
     );
     await routeButton(interaction);

@@ -30,6 +30,14 @@ import {
   parseParlayCustomId,
 } from "#src/betting/parlay-custom-id.ts";
 import { handleParlayBetButton } from "#src/betting/parlay-bet-button.ts";
+import {
+  handlePeekPassButton,
+  type PeekPassButtonInteraction,
+} from "#src/betting/peek-pass-button.ts";
+import {
+  isPeekPassCustomId,
+  parsePeekPassCustomId,
+} from "#src/betting/peek-pass-custom-id.ts";
 import { createLogger } from "#src/logger.ts";
 import { discordComponentsTotal } from "#src/metrics/index.ts";
 import {
@@ -107,7 +115,8 @@ async function sendBucksAskPublicMessage(
 export type RoutableButtonInteraction = BetButtonInteraction &
   BucksNavigationInteraction &
   ScoutPublishButtonInteraction &
-  BucksAskPublishInteraction & {
+  BucksAskPublishInteraction &
+  PeekPassButtonInteraction & {
     deferUpdate: () => Promise<unknown>;
     deferred: boolean;
     replied: boolean;
@@ -116,6 +125,10 @@ export type RoutableButtonInteraction = BetButtonInteraction &
 export async function routeButton(
   interaction: RoutableButtonInteraction,
 ): Promise<void> {
+  if (isPeekPassCustomId(interaction.customId)) {
+    await routePeekPassButton(interaction);
+    return;
+  }
   if (isBucksAskCustomId(interaction.customId)) {
     await routeBucksAskButton(interaction);
     return;
@@ -211,6 +224,30 @@ export async function routeButton(
     if (interaction.deferred && !interaction.replied) {
       await interaction.editReply({
         content: "😵 Something went wrong placing that bet. Try again shortly.",
+      });
+    }
+  }
+}
+
+async function routePeekPassButton(
+  interaction: RoutableButtonInteraction,
+): Promise<void> {
+  try {
+    if (parsePeekPassCustomId(interaction.customId) === undefined) {
+      discordComponentsTotal.inc({ namespace: "bbpass", status: "malformed" });
+      await interaction.deferUpdate();
+      return;
+    }
+    await handlePeekPassButton(interaction);
+    discordComponentsTotal.inc({ namespace: "bbpass", status: "success" });
+  } catch (error) {
+    logger.error("❌ Error handling a Bryan Bucks peek pass:", error);
+    discordComponentsTotal.inc({ namespace: "bbpass", status: "error" });
+    if (interaction.deferred && !interaction.replied) {
+      await interaction.editReply({
+        content:
+          "😵 Something went wrong buying that pass. Request a fresh quote with `/bb pass`.",
+        components: [],
       });
     }
   }

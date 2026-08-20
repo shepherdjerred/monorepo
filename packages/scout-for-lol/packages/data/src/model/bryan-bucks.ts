@@ -66,6 +66,7 @@ export const BucksLedgerKindSchema = z.enum([
   "parlay_payout",
   "parlay_refund",
   "parlay_release",
+  "peek_pass",
   "adjustment",
 ]);
 
@@ -157,10 +158,8 @@ export const BucksPoolRosterSchema = z.strictObject({
   participants: z.array(BucksPoolParticipantSchema).length(10),
 });
 
-/** Scout's heuristic call, serialized onto the pool for the post-match recap
- * and for later calibration scoring. */
-export type BucksPrediction = z.infer<typeof BucksPredictionSchema>;
-export const BucksPredictionSchema = z.strictObject({
+/** Legacy unversioned prediction retained so old pool records still settle. */
+export const BucksPredictionV1Schema = z.strictObject({
   /** Probability that `subjectTeamId` wins. Clamped to [0.05, 0.95]. */
   winProbability: z.number().min(0).max(1),
   subjectTeamId: RiotTeamIdSchema,
@@ -169,6 +168,74 @@ export const BucksPredictionSchema = z.strictObject({
   /** The top contributing terms, so the sentence explains itself. */
   drivers: z.array(z.string()),
 });
+export type BucksPredictionV1 = z.infer<typeof BucksPredictionV1Schema>;
+
+export const BucksPredictionQualitySchema = z.enum(["low", "medium", "high"]);
+export type BucksPredictionQuality = z.infer<
+  typeof BucksPredictionQualitySchema
+>;
+
+export const BucksPredictionCoverageSchema = z.strictObject({
+  covered: z.number().int().nonnegative(),
+  applicable: z.number().int().positive(),
+});
+
+/** Canonical team-relative prediction. Storing Blue's probability once makes
+ * the same estimate reusable for every tracked player in the lobby. */
+export const BucksPredictionV2Schema = z.strictObject({
+  version: z.literal(2),
+  blueWinProbability: z.number().min(0).max(1),
+  dataQuality: BucksPredictionQualitySchema,
+  coverage: BucksPredictionCoverageSchema,
+  /** The top contributing terms, already phrased from Blue's perspective. */
+  drivers: z.array(z.string()).max(2),
+});
+export type BucksPredictionV2 = z.infer<typeof BucksPredictionV2Schema>;
+
+/** Scout's frozen heuristic call, serialized onto the pool. */
+export type BucksPrediction = z.infer<typeof BucksPredictionSchema>;
+export const BucksPredictionSchema = z.union([
+  BucksPredictionV1Schema,
+  BucksPredictionV2Schema,
+]);
+
+const PredictionFormSnapshotSchema = z.strictObject({
+  wins: z.number().int().nonnegative(),
+  games: z.number().int().nonnegative(),
+});
+
+export const BucksPredictionFeatureSchema = z.strictObject({
+  puuid: LeaguePuuidSchema.nullable(),
+  teamId: RiotTeamIdSchema,
+  championId: z.number().int().nonnegative(),
+  lane: z.string(),
+  rankLeaguePoints: z.number().nullable(),
+  seasonWins: z.number().int().nonnegative().nullable(),
+  seasonLosses: z.number().int().nonnegative().nullable(),
+  recentForm: PredictionFormSnapshotSchema,
+  laneForm: PredictionFormSnapshotSchema,
+  championForm: PredictionFormSnapshotSchema,
+});
+export type BucksPredictionFeature = z.infer<
+  typeof BucksPredictionFeatureSchema
+>;
+
+/** Durable, point-in-time input/output record used to score v2 after the
+ * corresponding Match-V5 result reaches the report lake. */
+export const BucksPredictionObservationSchema = z.strictObject({
+  version: z.literal(1),
+  matchId: z.string(),
+  platformId: z.string(),
+  gameId: z.string(),
+  queueType: QueueTypeSchema,
+  observedAt: z.iso.datetime(),
+  gameStartAt: z.iso.datetime(),
+  prediction: BucksPredictionV2Schema,
+  features: z.array(BucksPredictionFeatureSchema).length(10),
+});
+export type BucksPredictionObservation = z.infer<
+  typeof BucksPredictionObservationSchema
+>;
 
 export const BUCKS_MATCHING_VERSION = 1;
 
@@ -319,6 +386,14 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     grossPayout: BucksStakeSchema,
     credited: z.number().int().nonnegative().max(BUCKS_INT32_MAX),
     voidReason: BucksParlayVoidReasonSchema.optional(),
+  }),
+  z.strictObject({
+    type: z.literal("peek_pass"),
+    purchaserDiscordId: z.string(),
+    price: z.number().int().positive(),
+    balanceBefore: z.number().int().nonnegative(),
+    weightedAgeWeeks: z.number().int().nonnegative(),
+    expiresAt: z.iso.datetime(),
   }),
   z.strictObject({
     type: z.literal("adjustment"),

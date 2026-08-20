@@ -35,7 +35,13 @@ export function buildBbRulesEmbed(): EmbedBuilder {
           "A winner receives twice their matched stake before a fee of 20% of matched profit, rounded down.",
       },
       {
-        name: "Refunds",
+        name: "Peek passes",
+        value:
+          "Use `/bb pass` to buy unlimited private peeks for 24 hours. The price depends on your current balance and how long you have held it, with a 5 BB minimum. " +
+          "Use `/bb peek game:<tracked player>` after the game has been live for two minutes. Estimates are experimental, frozen before the game, and disappear when the market resolves.",
+      },
+      {
+        name: "Settlement",
         value:
           "Outcome BB that do not match are refunded automatically with no fee. Matched outcome stakes are returned with no fee when a game is voided, remade, unsupported, or cannot be settled. Parlay voids return the stake and release the reserved house liability.",
       },

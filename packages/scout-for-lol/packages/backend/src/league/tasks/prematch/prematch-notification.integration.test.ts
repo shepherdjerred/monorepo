@@ -219,7 +219,7 @@ describe.skipIf(!RUN_INTEGRATION_TEST)("sendPrematchNotification", () => {
     expect(sendCalls).toHaveLength(1);
   });
 
-  test("still saves raw payload when there are no subscribed channels", async () => {
+  test("still builds analysis when there are no subscribed channels", async () => {
     channelsResult = [];
 
     await sendPrematchNotification(makeGameInfo(), [makeTrackedPlayer()]);
@@ -227,6 +227,7 @@ describe.skipIf(!RUN_INTEGRATION_TEST)("sendPrematchNotification", () => {
     expect(callOrder).toEqual([
       "savePrematchDataToS3",
       "getChannelsSubscribedToPlayers",
+      "buildLoadingScreenData",
     ]);
     expect(sendCalls).toHaveLength(0);
   });

@@ -1,4 +1,5 @@
 import type {
+  BucksPredictionObservation,
   CachedLeaderboard,
   RawCurrentGameInfo,
   RawMatch,
@@ -14,6 +15,7 @@ import type {
   CompetitionRankHistoryLakeRow,
   MatchLakeRow,
   PrematchLakeRow,
+  PredictionObservationLakeRow,
 } from "#src/report-lake/schema.ts";
 import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
 
@@ -204,6 +206,30 @@ export function flattenPrematch(
       },
     ];
   });
+}
+
+export function flattenPredictionObservation(
+  observation: BucksPredictionObservation,
+): PredictionObservationLakeRow {
+  const observedMs = new Date(observation.observedAt).getTime();
+  return {
+    dedupe_key: observation.matchId,
+    match_id: observation.matchId,
+    game_id: observation.gameId,
+    platform_id: observation.platformId,
+    month: lakeMonth(observedMs),
+    observed_at: lakeTimestamp(observedMs),
+    game_start_at: lakeTimestamp(new Date(observation.gameStartAt).getTime()),
+    queue: observation.queueType,
+    observation_version: observation.version,
+    prediction_version: observation.prediction.version,
+    blue_win_probability: observation.prediction.blueWinProbability,
+    data_quality: observation.prediction.dataQuality,
+    coverage_covered: observation.prediction.coverage.covered,
+    coverage_applicable: observation.prediction.coverage.applicable,
+    drivers_json: JSON.stringify(observation.prediction.drivers),
+    features_json: JSON.stringify(observation.features),
+  };
 }
 
 export function accountToLakeRow(account: AccountWithPlayer): AccountLakeRow {

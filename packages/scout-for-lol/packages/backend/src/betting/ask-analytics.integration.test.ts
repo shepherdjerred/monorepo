@@ -691,6 +691,7 @@ async function makePool(input: {
       matchId: input.matchId,
       serverId: input.serverId,
       detectedAt: date(input.day),
+      peekAvailableAt: date(input.day),
       closesAt: date(input.day),
       roster: JSON.stringify({ participants: roster }),
       poolState: input.poolState,

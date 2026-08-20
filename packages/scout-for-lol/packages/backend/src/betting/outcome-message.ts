@@ -149,11 +149,20 @@ export function predictionVerdict(
   prediction: BucksPrediction | undefined,
   winningTeamId: number | undefined,
 ): string | undefined {
-  if (
-    winningTeamId === undefined ||
-    prediction === undefined ||
-    !shouldDisplayPrediction(prediction.winProbability)
-  ) {
+  if (winningTeamId === undefined || prediction === undefined) {
+    return undefined;
+  }
+  if ("version" in prediction) {
+    if (!shouldDisplayPrediction(prediction.blueWinProbability)) {
+      return undefined;
+    }
+    const predictedBlueWin = prediction.blueWinProbability > COIN_FLIP;
+    const blueWon = winningTeamId === 100;
+    return predictedBlueWin === blueWon
+      ? "Scout called it."
+      : "Scout was wrong.";
+  }
+  if (!shouldDisplayPrediction(prediction.winProbability)) {
     return undefined;
   }
   const predictedWin = prediction.winProbability > COIN_FLIP;

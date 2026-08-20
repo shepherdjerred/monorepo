@@ -4,7 +4,6 @@ import type {
   RiotTeamId,
 } from "@scout-for-lol/data";
 import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
-import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
 import { teamName } from "#src/betting/team.ts";
 
 /**
@@ -110,15 +109,10 @@ function finalAllocation(position: BucksPrematchPosition): {
  * A prediction close to even odds is deliberately omitted: the buttons are
  * useful, but a nearly arbitrary call is not useful to read.
  */
-export function bucksPrematchLine(input: {
+export function bucksPrematchLine(_input?: {
   prediction: BucksPrediction | undefined;
 }): string {
-  const prediction =
-    input.prediction !== undefined &&
-    shouldDisplayPrediction(input.prediction.winProbability)
-      ? `${input.prediction.sentence}\n`
-      : "";
-  return `${prediction}${HOUSE_CUT_TERMS}`;
+  return HOUSE_CUT_TERMS;
 }
 
 /**

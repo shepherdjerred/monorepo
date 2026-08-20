@@ -15,7 +15,10 @@ import {
   bucksTestRoster,
 } from "#src/testing/bucks-fixtures.ts";
 import {
+  computeGameStartAt,
+  computePeekAvailableAt,
   openBettingPoolsForPrematch,
+  PEEK_DELAY_MS,
   recordPoolMessageRefs,
 } from "#src/betting/pool-open.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
@@ -73,11 +76,38 @@ afterAll(async () => {
 });
 
 describe("openBettingPoolsForPrematch", () => {
+  test("uses Riot's start time and reconstructs it from elapsed game length when absent", () => {
+    const detectedAt = new Date("2026-08-19T00:01:00Z");
+    const riotStart = new Date("2026-08-19T00:00:00Z").getTime();
+    expect(
+      computePeekAvailableAt({
+        detectedAt,
+        gameStartTime: riotStart,
+        gameLength: 60,
+      }),
+    ).toEqual(new Date(riotStart + PEEK_DELAY_MS));
+    expect(
+      computeGameStartAt({
+        detectedAt,
+        gameStartTime: 0,
+        gameLength: 60,
+      }),
+    ).toEqual(new Date("2026-08-19T00:00:00Z"));
+    expect(
+      computePeekAvailableAt({
+        detectedAt,
+        gameStartTime: 0,
+        gameLength: -30,
+      }),
+    ).toEqual(new Date("2026-08-19T00:03:30Z"));
+  });
+
   test("opens a Classic pool and stores no prediction", async () => {
+    const currentGame = gameInfo();
     const opened = await openBettingPoolsForPrematch(
       {
         matchId: "NA1_5000000001",
-        gameInfo: gameInfo(),
+        gameInfo: currentGame,
         queueType: "classic",
         guildIds: [SERVER_ID],
         detectedAt: new Date(),
@@ -100,6 +130,9 @@ describe("openBettingPoolsForPrematch", () => {
     });
     expect(pool.queueType).toBe("classic");
     expect(pool.predictionJson).toBeNull();
+    expect(pool.peekAvailableAt.getTime()).toBe(
+      currentGame.gameStartTime + PEEK_DELAY_MS,
+    );
   });
 
   test("does not open a Classic ARAM Mayhem pool", async () => {

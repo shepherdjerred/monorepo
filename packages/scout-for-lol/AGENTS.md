@@ -693,10 +693,10 @@ rows, `WITH (mentions = all)` to mention every eligible row, or
 produce mentions, even when their labels match a player alias.
 
 - Lake layout & compaction: `backend/src/report-lake/` (two-tier: 15-min
-  staging fold + nightly full rebuild enumerating the canonical raw match /
-  prematch JSON from **S3** (SeaweedFS); atomic `CURRENT`-pointer publish; the
-  lake is disposable derived data). Manual run: `bun run compact:report-lake`
-  (`--fold` for fold-only).
+  staging fold + nightly full rebuild enumerating the canonical raw match,
+  prematch, and prediction-observation JSON from **S3** (SeaweedFS); atomic
+  `CURRENT`-pointer publish; the lake is disposable derived data). Manual run:
+  `bun run compact:report-lake` (`--fold` for fold-only).
 - Engine: `backend/src/reports/duckdb/` — the ScoutQL `ReportQueryPlan`
   compiles to parameterized SQL (never interpolate plan values); ordering,
   minGames, limits, and metric derivation stay in JS (`query-aggregates.ts`).
@@ -859,10 +859,15 @@ in-person-with-Bryan footer as joke copy only. There is no command or accounting
 path to redeem, donate, burn, or claim Bucks, and nothing transfers to real
 goods.
 
-`/bb balance` and `/bb history` expose only the caller's wallet and positions;
-history uses caller-bound `bbnav:` component IDs and a frozen maximum ledger ID
-so new entries cannot reshuffle pages. `/bb open` shows anonymous side totals,
-never bettor identities or inferred odds. There is no on-demand leaderboard:
+`/bb balance`, `/bb history`, `/bb pass`, and `/bb peek` are private to the
+caller. History uses caller-bound `bbnav:` component IDs and a frozen maximum
+ledger ID so new entries cannot reshuffle pages. `/bb open` shows anonymous
+side totals, never bettor identities or inferred odds. `/bb pass` quotes a
+per-guild 24-hour entitlement and binds its confirmation to the caller and
+guild with a ten-minute `bbpass:` component. `/bb peek game:<alias>` reveals
+the frozen pregame estimate from that tracked player's team perspective,
+starting exactly two minutes after game start and ending when the pool settles
+or is voided. There is no on-demand leaderboard:
 the complete non-house wallet list is posted Fridays at 5 PM
 America/Los_Angeles in the shared Common Denominator channel. Both deployments
 run the cron, but only the Discord application in the one enabled guild posts;
@@ -1001,6 +1006,14 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   The stored `BucksBet.payout` is net; settlement summaries retain gross
   payout, cut, net payout, and net winnings so Discord copy never has to
   reconstruct the arithmetic from ledger rows.
+- **A peek pass spends aged balance, not pending stakes.** Remaining balance is
+  reconstructed from the ledger as FIFO credit lots after every debit consumes
+  the oldest lot. The price is
+  `max(5, ceil(balance × min(25%, 10% + full weighted weeks)))`. Confirmation's
+  first statement conditionally claims an inactive pass for 24 hours. Under
+  that write lock it rebuilds the lots and price; an expired or changed quote
+  rolls the claim back and returns a fresh quote. Matching `peek_pass` ledger
+  rows debit the buyer and credit the guild house in the same transaction.
 - **One pool per `(matchId, serverId)`; a bet stores a `predictedTeamId`.**
   Every 5v5 outcome is one binary event, so the prematch UI offers Blue and Red
   exactly once each rather than repeating WIN/LOSE controls for every tracked
@@ -1045,11 +1058,30 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   produces a post-match result silently destroys every stake in its pool. Six
   hours is chosen against the `ActiveGame` TTL and `MAX_DISCORD_ALERT_AGE_MS`,
   both three.
-- **The prediction never calls Riot.** `buildLoadingScreenData` already fetches
-  ranks for all ten players; `prediction-inputs.ts` consumes that structure. The
-  prematch poll runs every 30s across up to 50 players, so re-fetching would be
-  thousands of requests a minute. The formula has **no intercept**, so a
-  symmetric lobby returns exactly 0.500 — pinned by a test.
+- **V2 is one frozen, symmetric Blue-team estimate per match.**
+  Prematch fetches one point-in-time rank snapshot for all ten players and
+  shares it with prediction and loading-screen presentation; prediction never
+  calls Riot again and presentation failures cannot remove an eligible
+  observation. An ineligible game with no delivery destination exits before
+  rank acquisition. One DuckDB query reads each
+  identifiable player's last 30 strictly earlier same-queue matches. The
+  estimator compares team rank, Beta-shrunk season record, recent form, lane
+  form, and champion form with no intercept; missing history is neutral 50%,
+  and swapping the teams produces the complementary probability. The canonical
+  v2 JSON stores Blue probability, coverage, data quality, and at most two
+  drivers. Legacy unversioned pool predictions remain parseable for old
+  settlement rows.
+- **Prediction capture is match-scoped, not guild-scoped.** Every detected
+  Bryan-Bucks-eligible standard game writes one versioned feature/output
+  observation to S3 and the report lake, even when presentation construction
+  fails or no destination guild has betting enabled. The best-effort write is
+  started after the estimate freezes but is not awaited by pool creation or
+  Discord delivery: losing an evaluation observation cannot suppress the
+  notification or the pool's in-memory estimate. Outcomes join later by
+  `match_id`; run
+  `bun run evaluate-predictions` in the backend to report Brier score, log loss,
+  ten-bin calibration error, and directional accuracy overall and by queue and
+  quality, with a computed 50/50 reference.
 - **MVP is role-aware and lives in the backend**, because `toMatch()` drops
   objective damage, heals/shields on teammates, CC, self-mitigated damage, and
   `teamPosition`. Scores normalize as per-team share, so they need no
@@ -1069,11 +1101,12 @@ current UTC timestamp for relative date filters, and uses `BB_ASK_MODEL`
   failed". An ID that is claimed by namespace and then fails to parse is closed
   out with a silent `deferUpdate()` and counted as `bb/malformed`, never as
   `bb/success`.
-- **Near-even predictions stay internal.** The formula has no intercept, so a
-  symmetric lobby returns exactly `0.500`; calls that display as 45–55% are
-  omitted from prematch and settlement copy while remaining available for
-  calibration. `predictionVerdict` returns nothing for them, because scoring
-  them makes the recap claim a direction the stored sentence never took.
+- **Pregame estimates are never public.** Prematch messages contain only market
+  controls and house terms. A pass holder sees the estimate ephemerally after
+  the two-minute delay. Settlement may reveal it after the result, except that
+  calls displaying as 45–55% remain suppressed. `predictionVerdict` also
+  returns nothing for those near-even rows because scoring them would claim a
+  direction the stored estimate did not take.
 
 ## Database (Prisma)
 

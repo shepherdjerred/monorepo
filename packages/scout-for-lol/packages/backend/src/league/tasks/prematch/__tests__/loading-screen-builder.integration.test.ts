@@ -6,7 +6,10 @@ import {
   SummonerSpellIdSchema,
   type Lane,
 } from "@scout-for-lol/data/index.ts";
-import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import {
+  buildLoadingScreenData,
+  fetchParticipantRanks,
+} from "#src/league/tasks/prematch/loading-screen-builder.ts";
 
 let rankFetchCount = 0;
 
@@ -124,6 +127,23 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     // Snapshot the full structure
     expect(parsed).toMatchSnapshot();
   });
+
+  test("reuses prefetched ranks without another Riot request", async () => {
+    const gameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+    const before = rankFetchCount;
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+      new Map(),
+    );
+
+    expect(result.layout).toBe("standard");
+    expect(rankFetchCount).toBe(before);
+  });
 });
 
 describe("buildLoadingScreenData layout variants", () => {
@@ -153,12 +173,15 @@ describe("buildLoadingScreenData layout variants", () => {
     });
 
     const rankFetchCountBeforeClassic = rankFetchCount;
+    const ranksByPuuid = await fetchParticipantRanks(gameInfo, "AMERICA_NORTH");
     const result = await buildLoadingScreenData(
       gameInfo,
       new Set([trackedPuuid]),
       "AMERICA_NORTH",
+      ranksByPuuid,
     );
 
+    expect(ranksByPuuid.size).toBe(0);
     expect(rankFetchCount).toBe(rankFetchCountBeforeClassic);
     expect(result.layout).toBe("classic");
     if (result.layout !== "classic") {

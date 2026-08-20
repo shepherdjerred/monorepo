@@ -125,8 +125,28 @@ describe("/bb command contract", () => {
     expect(isPublicBbSubcommand("history")).toBe(false);
     expect(isPublicBbSubcommand("open")).toBe(false);
     expect(isPublicBbSubcommand("bet")).toBe(false);
+    expect(isPublicBbSubcommand("pass")).toBe(false);
+    expect(isPublicBbSubcommand("peek")).toBe(false);
     expect(isPublicBbSubcommand("rules")).toBe(true);
     expect(isPublicBbSubcommand("prizes")).toBe(true);
+  });
+
+  test("registers a private pass quote and required tracked-game peek", () => {
+    const command = bbCommand.toJSON();
+    const pass = command.options?.find((option) => option.name === "pass");
+    const peek = command.options?.find((option) => option.name === "peek");
+    expect(pass).toEqual(
+      expect.objectContaining({ type: 1, name: "pass", options: [] }),
+    );
+    if (peek === undefined || !("options" in peek)) {
+      throw new Error("expected /bb peek");
+    }
+    expect(peek.options).toEqual([
+      expect.objectContaining({ name: "game", required: true }),
+    ]);
+    expect(JSON.stringify(buildBbRulesEmbed().toJSON())).toContain(
+      "two minutes",
+    );
   });
 
   test("keeps long pending-position aliases inside Discord's field limit", () => {

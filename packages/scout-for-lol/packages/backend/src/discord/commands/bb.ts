@@ -42,6 +42,7 @@ import {
   trackedGameAliases,
 } from "#src/discord/commands/bb-market.ts";
 import { buildBbRulesEmbed as createBbRulesEmbed } from "#src/discord/commands/bb-rules.ts";
+import { replyBbPeekCommand } from "#src/discord/commands/bb-peek.ts";
 import {
   splitMessageIntoChunks,
   truncateEmbedFieldValue,
@@ -398,6 +399,15 @@ export async function executeBb(
         break;
       case "parlay":
         await replyParlay(interaction, serverId, discordId);
+        break;
+      case "pass":
+      case "peek":
+        await replyBbPeekCommand({
+          subcommand,
+          interaction,
+          serverId,
+          discordId,
+        });
         break;
       default:
         await interaction.editReply({

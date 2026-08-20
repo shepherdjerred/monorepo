@@ -4,22 +4,17 @@ import {
   beforeEach,
   describe,
   expect,
-  mock,
   test,
 } from "bun:test";
 import {
   BucksPoolRosterSchema,
+  BucksPredictionSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
-  LoadingScreenDataSchema,
-  type LoadingScreenData,
   type PlayerConfigEntry,
   type RawCurrentGameInfo,
-} from "@scout-for-lol/data/index.ts";
-import {
-  prepareBucksPrematch,
-  type PrematchHookDependencies,
-} from "#src/betting/prematch-hook.ts";
+} from "@scout-for-lol/data";
+import { prepareBucksPrematch } from "#src/betting/prematch-hook.ts";
 import { openBettingPoolsForPrematch } from "#src/betting/pool-open.ts";
 import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import {
@@ -33,19 +28,8 @@ const ENABLED = DiscordGuildIdSchema.parse("1337623164146155593");
 const DISABLED = DiscordGuildIdSchema.parse("2337623164146155593");
 const { prisma: db } = createTestDatabase("bucks-prematch-hook");
 
-/**
- * A spy for the one step that costs a lake read.
- *
- * Injected rather than module-mocked: Bun's `mock.module` replaces a module for
- * the whole process, which would break every other test file that imports the
- * real one.
- */
-function spyDependencies(): {
-  dependencies: PrematchHookDependencies;
-  buildPrediction: ReturnType<typeof mock>;
-} {
-  const buildPrediction = mock(() => Promise.resolve(undefined));
-  return { dependencies: { buildPrediction }, buildPrediction };
+function puuidFor(index: number): string {
+  return `p${index.toString().padStart(2, "0")}`.padEnd(78, "x");
 }
 
 function gameInfo(overrides: Partial<RawCurrentGameInfo> = {}) {
@@ -60,7 +44,7 @@ function gameInfo(overrides: Partial<RawCurrentGameInfo> = {}) {
     platformId: "NA1",
     participants: Array.from({ length: 10 }, (_unused, index) => ({
       championId: index + 1,
-      puuid: `p${index.toString().padStart(2, "0")}`.padEnd(78, "x"),
+      puuid: puuidFor(index),
       teamId: index < 5 ? 100 : 200,
       riotId: `Player${index.toString()}#NA1`,
       spell1Id: 4,
@@ -72,10 +56,6 @@ function gameInfo(overrides: Partial<RawCurrentGameInfo> = {}) {
     bannedChampions: [],
     ...overrides,
   };
-}
-
-function puuidFor(index: number) {
-  return `p${index.toString().padStart(2, "0")}`.padEnd(78, "x");
 }
 
 function trackedPlayer(): PlayerConfigEntry {
@@ -90,34 +70,13 @@ function trackedPlayer(): PlayerConfigEntry {
   };
 }
 
-const LANES = ["top", "jungle", "middle", "adc", "support"] as const;
-
-/** A real standard loading screen, parsed through the strict schema so this
- * fixture cannot drift from what the production path actually produces. */
-function loadingScreen(): LoadingScreenData {
-  return LoadingScreenDataSchema.parse({
-    layout: "standard",
-    gameId: 5_000_000_001,
-    queueType: "solo",
-    queueDisplayName: "ranked solo",
-    isRanked: true,
-    mapName: "Summoner's Rift",
-    bans: [],
-    gameStartTime: Date.now(),
-    participants: Array.from({ length: 10 }, (_unused, index) => ({
-      puuid: puuidFor(index),
-      summonerName: `Player${index.toString()}#NA1`,
-      championId: index + 1,
-      championName: "Lux",
-      championDisplayName: "Lux",
-      team: index < 5 ? "blue" : "red",
-      lane: LANES[index % 5],
-      spell1Id: 4,
-      spell2Id: 14,
-      isTrackedPlayer: index === 0,
-    })),
-  });
-}
+const prediction = BucksPredictionSchema.parse({
+  version: 2,
+  blueWinProbability: 0.58,
+  dataQuality: "medium",
+  coverage: { covered: 25, applicable: 50 },
+  drivers: ["Blue rank edge"],
+});
 
 beforeEach(async () => {
   await db.bucksMatchPool.deleteMany();
@@ -134,119 +93,79 @@ afterAll(async () => {
 });
 
 describe("prepareBucksPrematch", () => {
-  test("skips the prediction for a guild that is not on the allowlist", async () => {
-    const { dependencies, buildPrediction } = spyDependencies();
-
+  test("does nothing for a guild that is not on the allowlist", async () => {
     const result = await prepareBucksPrematch(
       {
         gameInfo: gameInfo(),
         trackedPlayers: [trackedPlayer()],
         queueType: "solo",
         targetGuildIds: [DISABLED],
-        loadingScreenData: undefined,
         detectedAt: new Date(),
+        prediction,
       },
-      dependencies,
+      db,
     );
-
     expect(result.bettingGuildIds.size).toBe(0);
     expect(result.rows).toEqual([]);
-    // An empty footer means no prediction line was rendered either.
     expect(result.footer).toBe("");
-    // The expensive part: a lake read for a guild that will never see the
-    // result is pure waste on a poll that runs every 30 seconds.
-    expect(buildPrediction).not.toHaveBeenCalled();
   });
 
-  test("skips the prediction for a queue that cannot carry a market", async () => {
-    const { dependencies, buildPrediction } = spyDependencies();
-
-    const result = await prepareBucksPrematch(
+  test("does nothing for an ineligible queue or partial lobby", async () => {
+    const aram = await prepareBucksPrematch(
       {
         gameInfo: gameInfo(),
         trackedPlayers: [trackedPlayer()],
         queueType: "aram",
         targetGuildIds: [ENABLED],
-        loadingScreenData: undefined,
         detectedAt: new Date(),
+        prediction,
       },
-      dependencies,
+      db,
     );
-
-    expect(result.footer).toBe("");
-    expect(buildPrediction).not.toHaveBeenCalled();
-  });
-
-  test("skips the prediction for a lobby that is not a standard 5v5", async () => {
-    const { dependencies, buildPrediction } = spyDependencies();
-    const partial = gameInfo();
-
-    const result = await prepareBucksPrematch(
+    const partialInfo = gameInfo();
+    const partial = await prepareBucksPrematch(
       {
         gameInfo: {
-          ...partial,
-          participants: partial.participants.slice(0, 6),
+          ...partialInfo,
+          participants: partialInfo.participants.slice(0, 6),
         },
         trackedPlayers: [trackedPlayer()],
         queueType: "solo",
         targetGuildIds: [ENABLED],
-        loadingScreenData: undefined,
         detectedAt: new Date(),
+        prediction,
       },
-      dependencies,
+      db,
     );
-
-    expect(result.footer).toBe("");
-    expect(buildPrediction).not.toHaveBeenCalled();
+    expect(aram.footer).toBe("");
+    expect(partial.footer).toBe("");
   });
 
-  test("proceeds for an allowlisted guild on a bettable game", async () => {
-    const { dependencies, buildPrediction } = spyDependencies();
-
+  test("opens a market with the frozen v2 estimate but keeps it private", async () => {
     const result = await prepareBucksPrematch(
       {
         gameInfo: gameInfo(),
         trackedPlayers: [trackedPlayer()],
         queueType: "solo",
         targetGuildIds: [ENABLED, DISABLED],
-        loadingScreenData: loadingScreen(),
         detectedAt: new Date(),
+        prediction,
       },
-      dependencies,
+      db,
     );
-
-    // The complement of the three cases above: in scope, the work happens.
-    expect(buildPrediction).toHaveBeenCalled();
+    expect(result.bettingGuildIds).toEqual(new Set([ENABLED]));
     expect(result.footer).toContain(HOUSE_CUT_TERMS);
     expect(result.footer).toContain("**Live offers** — No offers yet.");
-
-    // Pool creation itself needs a database and is covered by the pool and
-    // place-bet integration suites; this file is only about what work is done
-    // before that point.
-  });
-
-  for (const queue of [
-    { type: "ranked 5s", id: 710 },
-    { type: "clash", id: 700 },
-  ] as const) {
-    test(`proceeds for ${queue.type}`, async () => {
-      const { dependencies, buildPrediction } = spyDependencies();
-
-      await prepareBucksPrematch(
-        {
-          gameInfo: gameInfo({ gameQueueConfigId: queue.id }),
-          trackedPlayers: [trackedPlayer()],
-          queueType: queue.type,
-          targetGuildIds: [ENABLED],
-          loadingScreenData: loadingScreen(),
-          detectedAt: new Date(),
-        },
-        dependencies,
-      );
-
-      expect(buildPrediction).toHaveBeenCalled();
+    expect(result.footer).not.toContain("58%");
+    const pool = await db.bucksMatchPool.findUniqueOrThrow({
+      where: {
+        matchId_serverId: { matchId: result.matchId, serverId: ENABLED },
+      },
     });
-  }
+    expect(
+      BucksPredictionSchema.parse(JSON.parse(pool.predictionJson ?? "")),
+    ).toEqual(prediction);
+  });
 
   for (const queue of [
     { type: "ranked 5s", id: 710 },
@@ -262,10 +181,10 @@ describe("prepareBucksPrematch", () => {
           guildIds: [ENABLED],
           detectedAt: new Date(),
           trackedAliasByPuuid: new Map([[puuidFor(0), "jerred"]]),
+          prediction,
         },
         db,
       );
-
       expect(opened).toEqual(new Set([ENABLED]));
       const pool = await db.bucksMatchPool.findUniqueOrThrow({
         where: { matchId_serverId: { matchId, serverId: ENABLED } },
