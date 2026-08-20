@@ -139,6 +139,13 @@ func rejectsSenderDisplayDomainInjection() {
     #expect(OTPParser().parse(body: "Your verification code is 482913.", metadata: metadata)?.service == "bank.example")
 }
 
+@Test("does not scope a code from a domain-shaped subject")
+func rejectsSubjectServiceFallback() {
+    let metadata = MessageMetadata(sender: "Support", subject: "login.example", date: nil, messageID: "message-subject-domain")
+
+    #expect(OTPParser().parse(body: "Your verification code is 482913.", metadata: metadata)?.service == nil)
+}
+
 @Test("parses a canonical MailMate body fixture")
 func parsesCanonicalFixture() throws {
     guard let url = Bundle.module.url(forResource: "verification-code", withExtension: "txt", subdirectory: "Fixtures") else {

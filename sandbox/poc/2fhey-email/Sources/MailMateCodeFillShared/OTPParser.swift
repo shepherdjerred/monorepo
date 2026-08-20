@@ -171,8 +171,7 @@ public struct OTPParser {
                 return domain
             }
         }
-        let subject = metadata.subject.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return ServiceIdentity.isUsableService(subject) ? subject : nil
+        return nil
     }
 
     private static func mailboxAddress(from sender: String) -> String? {
