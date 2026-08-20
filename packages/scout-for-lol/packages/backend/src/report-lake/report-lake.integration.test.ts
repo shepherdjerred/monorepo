@@ -246,6 +246,37 @@ describe("flatten", () => {
     }
   });
 
+  // Pings exist so parlays can price opponent-team ping props against real
+  // history. A silently-zeroed column would look like a valid distribution.
+  test("flattenMatch lifts every ping counter from the raw participant", async () => {
+    const match = await loadMatchFixture();
+    const rows = flattenMatch(match);
+
+    for (const [index, participant] of match.info.participants.entries()) {
+      const row = rows[index];
+      if (row === undefined) {
+        throw new Error("row missing");
+      }
+      expect(row.all_in_pings).toBe(participant.allInPings);
+      expect(row.assist_me_pings).toBe(participant.assistMePings);
+      expect(row.basic_pings).toBe(participant.basicPings);
+      expect(row.command_pings).toBe(participant.commandPings);
+      expect(row.danger_pings).toBe(participant.dangerPings);
+      expect(row.enemy_missing_pings).toBe(participant.enemyMissingPings);
+      expect(row.enemy_vision_pings).toBe(participant.enemyVisionPings);
+      expect(row.get_back_pings).toBe(participant.getBackPings);
+      expect(row.hold_pings).toBe(participant.holdPings);
+      expect(row.need_vision_pings).toBe(participant.needVisionPings);
+      expect(row.on_my_way_pings).toBe(participant.onMyWayPings);
+      expect(row.push_pings).toBe(participant.pushPings);
+      expect(row.vision_cleared_pings).toBe(participant.visionClearedPings);
+    }
+
+    // The fixture must actually exercise the mapping: an all-zero corpus would
+    // pass every assertion above while a swapped field pair went unnoticed.
+    expect(rows.some((row) => row.enemy_missing_pings > 0)).toBe(true);
+  });
+
   test("flattenPrematch skips privacy-scrubbed (null puuid) participants", () => {
     const observedAt = new Date("2026-07-01T12:00:00Z");
     const rows = flattenPrematch(
