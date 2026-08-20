@@ -92,6 +92,7 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
             ? `${baseSelector}:not(.sidebar-pane):not(.sidebar-pane *):not(.right-sidebar):not(.right-sidebar *)`
             : baseSelector;
         const active = document.activeElement;
+        if (!(active instanceof HTMLElement)) return null;
         const controls = [
           ...document.querySelectorAll<HTMLElement>(selector),
         ].filter(
