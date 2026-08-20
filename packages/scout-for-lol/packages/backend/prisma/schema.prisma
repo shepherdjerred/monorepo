@@ -901,6 +901,12 @@ model BucksParlayDefinition {
   evaluatorVersion  String
   generationContext String
 
+  // Pass-one legs, before any number was chosen, and the frozen record of how
+  // the published price was measured. Nullable because definitions written by
+  // the single-pass generator predate both.
+  proposal String?
+  pricing  String?
+
   requestedModel String
   resolvedModel  String?
   usage          String
