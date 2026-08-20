@@ -94,7 +94,13 @@ function playerRefPredicate(input: LakeQueryInput): SqlFragment {
       `No account matches ${input.plan.playerRefs.map((ref) => `player('${ref}')`).join(", ")}.`,
     );
   }
-  return { sql: "puuid IN (SELECT unnest(?))", params: [listParam(puuids)] };
+  // Qualified: the guild-scope facts CTE joins `accounts a`, which also has a
+  // puuid column, so a bare reference is ambiguous and the query fails to
+  // compile. `m` is the matches alias in both scopes.
+  return {
+    sql: "m.puuid IN (SELECT unnest(?))",
+    params: [listParam(puuids)],
+  };
 }
 
 function timePredicate(

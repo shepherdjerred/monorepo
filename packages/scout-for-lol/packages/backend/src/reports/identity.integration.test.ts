@@ -8,7 +8,7 @@ import {
   type TestLakeMatchFact,
 } from "#src/testing/test-report-lake.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
-import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
+import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 import { formatReportQuery } from "@scout-for-lol/data";
 
@@ -254,4 +254,24 @@ describe("player('…') in a query", () => {
       ),
     ).rejects.toThrow('No player matches "nobody"');
   });
+});
+
+// Guild scope joins `accounts a`, which also carries a puuid column, so an
+// unqualified predicate is ambiguous and the query fails to compile. Nothing
+// exercised player('…') outside global scope until this test.
+test("player('…') also works in guild scope", async () => {
+  const result = await executeReportQuery({
+    prisma,
+    scope: guildScope(serverId),
+    askerGuildIds: [serverId],
+    queryText:
+      "SELECT games FROM match_participants WHERE player = player('Aaron') GROUP BY player DURING ALL TIME",
+    now,
+  });
+
+  const total = result.rows.reduce(
+    (sum, row) => sum + Number(row.values[0]?.value ?? 0),
+    0,
+  );
+  expect(total).toBe(3);
 });
