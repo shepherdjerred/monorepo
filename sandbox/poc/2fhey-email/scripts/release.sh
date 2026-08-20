@@ -36,7 +36,7 @@ trap 'rm -rf "$temp_dir"' EXIT
 
 mkdir -p "$release_dir"
 if [[ "${REGENERATE_PROJECT:-0}" == "1" ]]; then
-    xcodegen generate --spec "$project_dir/project.yml"
+    xcodegen generate --spec "$project_dir/project.yml" --project "$project_dir"
     log_event project_generated
 else
     log_event project_generation_skipped using_xcode_project=1

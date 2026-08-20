@@ -249,7 +249,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         await withCheckedContinuation { continuation in
             ASCredentialIdentityStore.shared.replaceCredentialIdentities(identities) { success, error in
                 if let error {
-                    self.logger.error("event=identity_store_sync replacement_error detail=\(error.localizedDescription, privacy: .public)")
+                    self.logger.error("event=identity_store_sync replacement_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
                 }
                 continuation.resume(returning: success)
             }
