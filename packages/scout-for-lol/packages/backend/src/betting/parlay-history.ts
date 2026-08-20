@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { REMAKE_MAX_DURATION_SECONDS } from "#src/betting/constants.ts";
-import { PARLAY_HISTORY_COLUMNS } from "#src/betting/parlay-stat-fields.ts";
+import {
+  OPPONENT_PING_HISTORY_COLUMNS,
+  PARLAY_HISTORY_COLUMNS,
+} from "#src/betting/parlay-stat-fields.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import type { MatchLakeRow } from "#src/report-lake/schema.ts";
 import {
@@ -74,6 +77,8 @@ export type ParlayHistoryMatch = {
   values: ReadonlyMap<string, number>;
   /** Column name -> the sum across the subject's team, for objective legs. */
   teamValues: ReadonlyMap<string, number>;
+  /** Column name -> the sum across the five opponents, for opponent legs. */
+  opponentValues: ReadonlyMap<string, number>;
 };
 
 export type ParlayHistory = ReadonlyMap<string, readonly ParlayHistoryMatch[]>;
@@ -85,6 +90,9 @@ function historyColumns(): (keyof MatchLakeRow)[] {
     if (column !== null) {
       columns.add(column);
     }
+  }
+  for (const column of Object.values(OPPONENT_PING_HISTORY_COLUMNS)) {
+    columns.add(column);
   }
   return [...columns];
 }
@@ -255,17 +263,22 @@ export async function fetchParlayHistory(options: {
       const subject = HistoryParticipantSchema.parse(subjectRow);
       const values = new Map<string, number>();
       const teamValues = new Map<string, number>();
+      const opponentValues = new Map<string, number>();
       for (const column of columns) {
         values.set(column, numeric(subjectRow, column));
-        teamValues.set(
-          column,
+        const sumWhere = (sameTeam: boolean): number =>
           participants.reduce<number>((total, participant) => {
             const parsed = HistoryParticipantSchema.safeParse(participant);
-            return parsed.success && parsed.data.team_id === subject.team_id
+            if (!parsed.success) {
+              return total;
+            }
+            const onSubjectTeam = parsed.data.team_id === subject.team_id;
+            return onSubjectTeam === sameTeam
               ? total + numeric(participant, column)
               : total;
-          }, 0),
-        );
+          }, 0);
+        teamValues.set(column, sumWhere(true));
+        opponentValues.set(column, sumWhere(false));
       }
       matches.push({
         matchId,
@@ -275,6 +288,7 @@ export async function fetchParlayHistory(options: {
         lane: subject.team_position,
         values,
         teamValues,
+        opponentValues,
       });
     }
     matches.sort((left, right) => right.createdAtMs - left.createdAtMs);

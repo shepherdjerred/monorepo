@@ -13,29 +13,19 @@ import type { RawInfo, RawParticipant, RawTeam } from "@scout-for-lol/data";
 export const ParticipantNumericFieldSchema = z.enum([
   "assists",
   "baronKills",
-  "basicPings",
   "champExperience",
   "champLevel",
-  "allInPings",
-  "assistMePings",
-  "commandPings",
-  "visionClearedPings",
   "consumablesPurchased",
   "damageDealtToBuildings",
   "damageDealtToObjectives",
   "damageDealtToTurrets",
   "damageSelfMitigated",
-  "dangerPings",
   "deaths",
   "detectorWardsPlaced",
   "doubleKills",
   "dragonKills",
-  "enemyMissingPings",
-  "enemyVisionPings",
-  "getBackPings",
   "goldEarned",
   "goldSpent",
-  "holdPings",
   "inhibitorKills",
   "inhibitorTakedowns",
   "inhibitorsLost",
@@ -49,19 +39,16 @@ export const ParticipantNumericFieldSchema = z.enum([
   "magicDamageDealt",
   "magicDamageDealtToChampions",
   "magicDamageTaken",
-  "needVisionPings",
   "neutralMinionsKilled",
   "nexusKills",
   "nexusLost",
   "nexusTakedowns",
   "objectivesStolen",
   "objectivesStolenAssists",
-  "onMyWayPings",
   "pentaKills",
   "physicalDamageDealt",
   "physicalDamageDealtToChampions",
   "physicalDamageTaken",
-  "pushPings",
   "quadraKills",
   "sightWardsBoughtInGame",
   "spell1Casts",
@@ -133,6 +120,36 @@ export type TeamObjective = z.infer<typeof TeamObjectiveSchema>;
 
 export const MatchNumericFieldSchema = z.enum(["gameDuration"]);
 export type MatchNumericField = z.infer<typeof MatchNumericFieldSchema>;
+
+/**
+ * Ping counts, bettable only as an opponent-team total.
+ *
+ * Pings are free. A subject who can see the parlay can send fifty of them at
+ * the fountain, and five of the fourteen bets placed so far came from a player
+ * who was a subject in that same parlay, mid-game — so "free" and "settled by
+ * the bettor" are the same thing here. Summed across the five opponents, none
+ * of whom is in the market, the number is back to being a fact about the game.
+ *
+ * The enemy team is addressed as a whole rather than by player: opponents are
+ * anonymous in the generation prompt, so naming one would need a champion
+ * lookup to render, for no gain in what the leg means.
+ */
+export const OpponentPingFieldSchema = z.enum([
+  "allInPings",
+  "assistMePings",
+  "basicPings",
+  "commandPings",
+  "dangerPings",
+  "enemyMissingPings",
+  "enemyVisionPings",
+  "getBackPings",
+  "holdPings",
+  "needVisionPings",
+  "onMyWayPings",
+  "pushPings",
+  "visionClearedPings",
+]);
+export type OpponentPingField = z.infer<typeof OpponentPingFieldSchema>;
 
 const NumericCatalogEntrySchema = z.strictObject({
   label: z.string().min(1),
@@ -252,9 +269,42 @@ export function matchNumericValue(
   return info[field];
 }
 
+/**
+ * The five opponents' combined count for one ping type.
+ *
+ * Summed over every participant NOT on the selected team, so the value cannot
+ * be moved by anyone who could be holding a ticket on it.
+ */
+export function opponentTeamPingValue(
+  participants: readonly RawParticipant[],
+  selectedTeamId: number,
+  field: OpponentPingField,
+): number {
+  return participants
+    .filter((participant) => participant.teamId !== selectedTeamId)
+    .reduce((total, participant) => total + participant[field], 0);
+}
+
 /** Explicit exclusions reviewed alongside the allowed catalog. */
 export const EXCLUDED_PARTICIPANT_FIELDS = [
+  // Every ping type. A subject's own pings cost nothing to send, so a leg on
+  // them is settled by whoever is holding the ticket rather than by how the
+  // game went. They remain bettable as OPPONENT team totals, which no subject
+  // can influence — see OpponentPingFieldSchema below.
+  "allInPings",
+  "assistMePings",
+  "basicPings",
   "baitPings",
+  "commandPings",
+  "dangerPings",
+  "enemyMissingPings",
+  "enemyVisionPings",
+  "getBackPings",
+  "holdPings",
+  "needVisionPings",
+  "onMyWayPings",
+  "pushPings",
+  "visionClearedPings",
   "bountyLevel",
   "challenges",
   "championId",
@@ -345,6 +395,24 @@ export const EXCLUDED_MATCH_INFO_FIELDS = [
   "tournamentCode",
 ] as const;
 
+export const OPPONENT_PING_CATALOG = z
+  .record(OpponentPingFieldSchema, NumericCatalogEntrySchema)
+  .parse(
+    Object.fromEntries(
+      OpponentPingFieldSchema.options.map((field) => [
+        field,
+        // Wide rails only. A five-player total ran 0-37 across a 24-minute
+        // sample, but the threshold a leg actually uses comes from measured
+        // history, not from these bounds.
+        {
+          label: `enemy team ${label(field)}`,
+          thresholdMin: 0,
+          thresholdMax: 2000,
+        },
+      ]),
+    ),
+  );
+
 export function promptFieldCatalog(): object {
   return {
     participantNumeric: PARTICIPANT_NUMERIC_CATALOG,
@@ -352,5 +420,6 @@ export function promptFieldCatalog(): object {
     teamBoolean: TEAM_BOOLEAN_CATALOG,
     teamObjectives: TEAM_OBJECTIVE_CATALOG,
     matchNumeric: MATCH_NUMERIC_CATALOG,
+    opponentPings: OPPONENT_PING_CATALOG,
   };
 }

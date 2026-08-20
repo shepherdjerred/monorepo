@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   MatchNumericFieldSchema,
+  OpponentPingFieldSchema,
   ParticipantBooleanFieldSchema,
   ParticipantNumericFieldSchema,
   TeamBooleanFieldSchema,
@@ -27,6 +28,7 @@ const ModelParlayConditionSchema = z.strictObject({
     "team_objective_first",
     "team_objective_kills",
     "match_numeric",
+    "opponent_team_pings",
   ]),
   subject: z
     .string()
@@ -41,6 +43,7 @@ const ModelParlayConditionSchema = z.strictObject({
   threshold: z.number().int().nonnegative().nullable(),
   expected: z.boolean().nullable(),
   matchNumericField: MatchNumericFieldSchema.nullable(),
+  opponentPingField: OpponentPingFieldSchema.nullable(),
 });
 
 const ModelGeneratedParlaySchema = z.strictObject({
@@ -95,6 +98,13 @@ function canonicalConditionCandidate(condition: ModelParlayCondition): unknown {
       return {
         kind: condition.kind,
         field: condition.matchNumericField,
+        operator: condition.operator,
+        threshold: condition.threshold,
+      };
+    case "opponent_team_pings":
+      return {
+        kind: condition.kind,
+        field: condition.opponentPingField,
         operator: condition.operator,
         threshold: condition.threshold,
       };
@@ -160,6 +170,18 @@ function unusedSlots(condition: ModelParlayCondition): readonly unknown[] {
         condition.teamBooleanField,
         condition.objective,
         condition.expected,
+        condition.opponentPingField,
+      ];
+    case "opponent_team_pings":
+      return [
+        condition.subject,
+        condition.participantNumericField,
+        condition.participantBooleanField,
+        condition.team,
+        condition.teamBooleanField,
+        condition.objective,
+        condition.expected,
+        condition.matchNumericField,
       ];
   }
 }
