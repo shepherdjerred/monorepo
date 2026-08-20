@@ -185,9 +185,9 @@ function formatList(
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
   const previewExtra = hasPreviewRowsBeyondStoredRows(
-    snapshot,
     source.preview,
     allRows,
+    source.snapshotRows,
   );
   const lines = rows.map((row) => {
     const values = formatRowValues(snapshot, row, source.preview).join(", ");
@@ -210,9 +210,9 @@ function formatLeaderboard(
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
   const previewExtra = hasPreviewRowsBeyondStoredRows(
-    snapshot,
     source.preview,
     allRows,
+    source.snapshotRows,
   );
   const lines = rows.map((row, index) => {
     const values = formatRowValues(snapshot, row, source.preview).join(" · ");
@@ -235,9 +235,9 @@ function formatTable(
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
   const previewExtra = hasPreviewRowsBeyondStoredRows(
-    snapshot,
     source.preview,
     allRows,
+    source.snapshotRows,
   );
   const headers =
     source.preview === null
@@ -342,20 +342,25 @@ function previewRows(preview: ReportAiPreviewSummary): NativeRow[] {
 function nativeRowSource(
   snapshot: VisualizationSnapshot,
   preview: ReportAiPreviewSummary | null,
-): { rows: NativeRow[]; preview: ReportAiPreviewSummary | null } {
+): {
+  rows: NativeRow[];
+  preview: ReportAiPreviewSummary | null;
+  snapshotRows: NativeRow[];
+} {
+  const snapshotRows = alignedRows(snapshot);
   if (snapshot.temporal !== null) {
-    return { rows: alignedRows(snapshot), preview: null };
+    return { rows: snapshotRows, preview: null, snapshotRows };
   }
   if (preview === null) {
-    return { rows: alignedRows(snapshot), preview: null };
+    return { rows: snapshotRows, preview: null, snapshotRows };
   }
-  return { rows: previewRows(preview), preview };
+  return { rows: previewRows(preview), preview, snapshotRows };
 }
 
 function hasPreviewRowsBeyondStoredRows(
-  snapshot: VisualizationSnapshot,
   preview: ReportAiPreviewSummary | null,
   rows: NativeRow[],
+  snapshotRows: NativeRow[],
 ): boolean {
   if (preview === null) {
     return false;
@@ -366,8 +371,7 @@ function hasPreviewRowsBeyondStoredRows(
   return (
     preview.rowsReturned === 0 &&
     preview.visualizationRows.length === 0 &&
-    snapshot.temporal === null &&
-    alignedRows(snapshot).length > rows.length
+    snapshotRows.length > rows.length
   );
 }
 
