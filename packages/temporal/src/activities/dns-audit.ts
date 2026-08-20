@@ -10,6 +10,7 @@ const NO_EMAIL_DOMAINS = [
   "scout-for-lol.com",
   "better-skill-capped.com",
   "discord-plays-pokemon.com",
+  "clauderon.com",
 ];
 
 function ok(message: string): DnsRecordResult {

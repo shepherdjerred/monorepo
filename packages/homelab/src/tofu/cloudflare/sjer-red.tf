@@ -619,6 +619,14 @@ resource "cloudflare_dns_record" "sjer_red_dmarc_report_discord_plays_pokemon_co
   content = "v=DMARC1"
 }
 
+resource "cloudflare_dns_record" "sjer_red_dmarc_report_clauderon_com" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "clauderon.com._report._dmarc"
+  type    = "TXT"
+  content = "v=DMARC1"
+}
+
 resource "cloudflare_dns_record" "sjer_red_dmarc_report_jerred_is" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
@@ -639,14 +647,6 @@ resource "cloudflare_dns_record" "sjer_red_dmarc_report_glitter_boys_com" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
   name    = "glitter-boys.com._report._dmarc"
-  type    = "TXT"
-  content = "v=DMARC1"
-}
-
-resource "cloudflare_dns_record" "sjer_red_dmarc_report_clauderon_com" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "clauderon.com._report._dmarc"
   type    = "TXT"
   content = "v=DMARC1"
 }
