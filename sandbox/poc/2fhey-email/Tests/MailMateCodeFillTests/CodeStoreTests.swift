@@ -28,6 +28,22 @@ func removesExpiredRecords() throws {
     #expect(try store.read(now: Date(timeIntervalSince1970: 281)).isEmpty)
 }
 
+@Test("quarantines corrupt persisted records and recovers")
+func quarantinesCorruptRecords() throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = try CodeStore(directory: directory)
+    let recordsURL = directory.appendingPathComponent(CodeStore.fileName)
+    try Data("{not-json".utf8).write(to: recordsURL)
+
+    #expect(try store.read().isEmpty)
+    #expect(!FileManager.default.fileExists(atPath: recordsURL.path))
+    #expect(try FileManager.default.contentsOfDirectory(atPath: directory.path).contains { $0.hasPrefix(".\(CodeStore.fileName).corrupt-") })
+
+    try store.append(makeRecord(code: "111111", messageID: "recovered", detectedAt: 100), now: Date(timeIntervalSince1970: 100))
+    #expect(try store.read(now: Date(timeIntervalSince1970: 100)).map(\.messageID) == ["recovered"])
+}
+
 @Test("consumes only the successful message")
 func consumesRecord() throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

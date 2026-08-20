@@ -52,7 +52,7 @@ public enum ServiceIdentity {
         guard value.count <= 253 else { return false }
         let labels = value.split(separator: ".", omittingEmptySubsequences: false)
         guard labels.count >= 2 else { return false }
-        guard let topLevel = labels.last, topLevel.count >= 2, topLevel.allSatisfy({ $0.isASCII && $0.isLetter }) else {
+        guard let topLevel = labels.last, topLevel.count >= 2, isValidTopLevelLabel(String(topLevel)) else {
             return false
         }
         return labels.allSatisfy { label in
@@ -60,6 +60,13 @@ public enum ServiceIdentity {
                 !label.hasPrefix("-") && !label.hasSuffix("-") &&
                 label.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-") }
         }
+    }
+
+    private static func isValidTopLevelLabel(_ label: String) -> Bool {
+        let isAsciiTLD = label.allSatisfy { $0.isASCII && $0.isLetter }
+        let isPunycodeTLD = label.hasPrefix("xn--") && label.dropFirst(4).count >= 1 &&
+            label.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-") }
+        return isAsciiTLD || isPunycodeTLD
     }
 
     public static func isUsableService(_ value: String) -> Bool {
