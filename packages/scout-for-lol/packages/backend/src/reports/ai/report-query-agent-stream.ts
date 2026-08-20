@@ -1,7 +1,7 @@
 import type { ReportAiStreamEvent } from "@scout-for-lol/data";
 import { parseAgentStreamChunk } from "#src/utils/agent-stream-chunk.ts";
 
-/** Map Mastra agent stream chunks onto report AI editor stream events. */
+/** Map AI SDK agent stream chunks onto report AI editor stream events. */
 export async function emitReportAgentStreamChunk(
   rawChunk: unknown,
   emit: (event: ReportAiStreamEvent) => void | Promise<void>,

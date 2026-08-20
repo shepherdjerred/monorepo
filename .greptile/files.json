@@ -11,7 +11,7 @@
     },
     {
       "path": "packages/birmel/AGENTS.md",
-      "description": "Birmel Discord bot conventions: VoltAgent setup, Prisma + libSQL memory persistence, OpenAI provider options (store: false), Bun env, Prisma client teardown in tests, no .env.test commits.",
+      "description": "Birmel Discord bot conventions: explicit AI SDK 7 runtime, Prisma + libSQL memory persistence, OpenAI provider options (store: false), Bun env, Prisma client teardown in tests, no .env.test commits.",
       "scope": ["packages/birmel/**"]
     },
     {

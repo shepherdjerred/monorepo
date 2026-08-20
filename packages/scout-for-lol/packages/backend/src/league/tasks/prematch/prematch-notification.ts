@@ -176,6 +176,43 @@ function buildPrematchPayload(input: {
   };
 }
 
+/**
+ * Persist the outputs that depend on successful Discord delivery, then start
+ * the best-effort parlay generation after those records are durable.
+ */
+async function recordPrematchOutputs(input: {
+  bucks: BucksPrematchAttachment;
+  deliveredGuildIds: Set<DiscordGuildId>;
+  gameInfo: RawCurrentGameInfo;
+  loadingScreenData: LoadingScreenData | undefined;
+  messageRefsByGuild: Map<string, { channelId: string; messageId: string }[]>;
+  queueType: QueueType | undefined;
+  trackedPlayers: PlayerConfigEntry[];
+}): Promise<void> {
+  for (const [serverId, refs] of input.messageRefsByGuild) {
+    await recordPoolMessageRefs({
+      matchId: input.bucks.matchId,
+      serverId: DiscordGuildIdSchema.parse(serverId),
+      refs,
+    });
+  }
+
+  await recordCoreOutputsDelivered(input.deliveredGuildIds, "prematch");
+
+  // The parlay is deliberately generated only after the ordinary prematch
+  // message and outcome-pool references are durable. This starts a caught
+  // background task, so the 30-second spectator polling lock is not held for
+  // the model's up-to-60-second deadline.
+  if (input.bucks.bettingGuildIds.size > 0) {
+    startParlayGeneration({
+      gameInfo: input.gameInfo,
+      trackedPlayers: input.trackedPlayers,
+      queueType: input.queueType,
+      loadingScreenData: input.loadingScreenData,
+    });
+  }
+}
+
 export async function sendPrematchNotification(
   gameInfo: RawCurrentGameInfo,
   trackedPlayers: PlayerConfigEntry[],
@@ -416,28 +453,15 @@ export async function sendPrematchNotification(
     }
   }
 
-  for (const [serverId, refs] of messageRefsByGuild) {
-    await recordPoolMessageRefs({
-      matchId: bucks.matchId,
-      serverId: DiscordGuildIdSchema.parse(serverId),
-      refs,
-    });
-  }
-
-  await recordCoreOutputsDelivered(deliveredGuildIds, "prematch");
-
-  // The parlay is deliberately generated only after the ordinary prematch
-  // message and outcome-pool references are durable. This starts a caught
-  // background task, so the 30-second spectator polling lock is not held for
-  // the model's up-to-60-second deadline.
-  if (bucks.bettingGuildIds.size > 0) {
-    startParlayGeneration({
-      gameInfo,
-      trackedPlayers,
-      queueType,
-      loadingScreenData,
-    });
-  }
+  await recordPrematchOutputs({
+    bucks,
+    deliveredGuildIds,
+    gameInfo,
+    loadingScreenData,
+    messageRefsByGuild,
+    queueType,
+    trackedPlayers,
+  });
 
   logger.info(
     `[sendPrematchNotification] ✅ Notifications sent for game ${gameId}`,
