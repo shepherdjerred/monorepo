@@ -142,6 +142,16 @@ public struct OTPParser {
             return (numericPrefix, NSRange(location: range.location, length: numericPrefix.utf16.count))
         }
 
+        if let separatorIndex = rawCode.firstIndex(of: " ") {
+            let prefix = String(rawCode[..<separatorIndex])
+            let suffix = String(rawCode[rawCode.index(after: separatorIndex)...])
+            let compactPrefix = prefix.replacingOccurrences(of: "-", with: "")
+            if compactPrefix.count >= 4, compactPrefix.count <= 8,
+               compactPrefix.contains(where: \.isNumber), suffix.allSatisfy(\.isLetter) {
+                return (compactPrefix, NSRange(location: range.location, length: prefix.utf16.count))
+            }
+        }
+
         // The candidate pattern tolerates single separators, so a preceding word can be captured
         // together with the code ("is 482913"). Drop such a prefix only when a separator actually
         // divided it from the rest — scanning for the first digit would truncate a genuine
