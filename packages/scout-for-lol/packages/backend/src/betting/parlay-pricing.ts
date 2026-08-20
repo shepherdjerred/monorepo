@@ -261,8 +261,11 @@ function probabilityForSubjectState(input: {
   const measuredConditions = input.conditions.filter(
     (condition) => condition.kind !== "team_boolean",
   );
-  if (measuredConditions.length === 0 || inState.length === 0) {
+  if (measuredConditions.length === 0) {
     return 1;
+  }
+  if (inState.length === 0) {
+    return undefined;
   }
   let hits = 0;
   for (const match of inState) {

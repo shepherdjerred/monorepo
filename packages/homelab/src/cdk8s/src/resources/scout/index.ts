@@ -33,6 +33,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
   const deployment = new Deployment(chart, "scout-backend", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    progressDeadline: Duration.seconds(2100),
     securityContext: {},
     metadata: {
       annotations: {
@@ -43,7 +44,6 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       },
     },
   });
-
   const {
     path,
     image,
@@ -233,7 +233,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       startup: Probe.fromHttpGet("/ping", {
         port: 3000,
         periodSeconds: Duration.seconds(10),
-        failureThreshold: 12,
+        failureThreshold: 180,
       }),
       liveness: Probe.fromHttpGet("/livez", {
         port: 3000,

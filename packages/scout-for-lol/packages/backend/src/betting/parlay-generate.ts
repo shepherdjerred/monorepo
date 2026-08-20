@@ -265,6 +265,8 @@ async function generateAndPersistDefinition(
     legs,
     history,
     queueType: setup.queueType,
+    deadline,
+    deadlineAt: startedAt + PARLAY_GENERATION_DEADLINE_MS,
   });
   deadline.throwIfAborted();
 
@@ -400,7 +402,8 @@ export async function runParlayGeneration(
     const expected =
       status === "budget_refused" ||
       status === "timeout" ||
-      status === "invalid_output";
+      status === "invalid_output" ||
+      status === "unpriceable";
     if (expected) {
       logger.info(
         `Could not generate Bryan Bucks parlay for ${matchId}:`,

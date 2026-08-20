@@ -354,11 +354,14 @@ export async function buildProposalStatistics(input: {
   queueType?: Extract<QueueType, "solo" | "flex">;
   lakeDir?: string;
   timeoutMs?: number;
+  deadline?: AbortSignal;
+  deadlineAt?: number;
 }): Promise<unknown[]> {
   const populationCache = new Map<string, PopulationFrame | undefined>();
   const out: unknown[] = [];
 
   for (const leg of input.legs) {
+    input.deadline?.throwIfAborted();
     const matches =
       leg.subjectPuuid === null
         ? []
@@ -375,6 +378,10 @@ export async function buildProposalStatistics(input: {
     if (leg.scope === "player") {
       const cacheKey = [leg.column, leg.operator].join("|");
       if (!populationCache.has(cacheKey)) {
+        const remainingMs =
+          input.deadlineAt === undefined
+            ? undefined
+            : Math.max(1, input.deadlineAt - Date.now());
         populationCache.set(
           cacheKey,
           await fetchPopulationFrame({
@@ -384,9 +391,14 @@ export async function buildProposalStatistics(input: {
               ? {}
               : { queueType: input.queueType }),
             ...(input.lakeDir === undefined ? {} : { lakeDir: input.lakeDir }),
-            ...(input.timeoutMs === undefined
+            ...(remainingMs === undefined && input.timeoutMs === undefined
               ? {}
-              : { timeoutMs: input.timeoutMs }),
+              : {
+                  timeoutMs: Math.min(
+                    input.timeoutMs ?? 5000,
+                    remainingMs ?? Number.POSITIVE_INFINITY,
+                  ),
+                }),
           }),
         );
       }
