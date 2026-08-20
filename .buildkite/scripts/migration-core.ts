@@ -244,6 +244,7 @@ export const globalPaths = [
   ".buildkite/scripts/prepare-ci-changed-base.ts",
   ".buildkite/scripts/read-buildkite-handoff.ts",
   ".buildkite/scripts/select-main-pipeline.ts",
+  ".buildkite/scripts/select-main-pipeline-selection.ts",
   ".buildkite/scripts/upload-pipeline.sh",
 ] as const;
 
