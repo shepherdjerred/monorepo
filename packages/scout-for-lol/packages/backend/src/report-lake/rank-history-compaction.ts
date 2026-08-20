@@ -32,8 +32,8 @@ export async function writeCompetitionRankHistoryParquet(options: {
     client: createS3Client(),
     bucket,
     writer,
-    foldedIds,
-    abortSignal,
+    ...(foldedIds === undefined ? {} : { foldedIds }),
+    ...(abortSignal === undefined ? {} : { abortSignal }),
   });
   await writer.close();
 

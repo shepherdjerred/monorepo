@@ -205,7 +205,12 @@ export async function populateCompetitionRankHistoryFromS3(options: {
       const snapshots = await Promise.all(
         chunk.map(async (key) => {
           const rawParsed: unknown = JSON.parse(
-            await readRawObjectText(client, bucket, key, { abortSignal }),
+            await readRawObjectText(
+              client,
+              bucket,
+              key,
+              abortSignal === undefined ? {} : { abortSignal },
+            ),
           );
           const parsed = CachedLeaderboardSchema.safeParse(rawParsed);
           if (!parsed.success) {
