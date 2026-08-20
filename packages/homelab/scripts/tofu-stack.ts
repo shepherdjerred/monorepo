@@ -27,6 +27,7 @@ import {
   runAllowExit,
   requireEnv,
   optionalEnv,
+  type RunOptions,
 } from "@shepherdjerred/root-scripts/lib/run.ts";
 import { runMain } from "@shepherdjerred/root-scripts/lib/transient.ts";
 
@@ -39,93 +40,127 @@ const STACKS_REL = "src/tofu";
 const STATE_ENCRYPTION_MIGRATION_APPROVAL =
   "TOFU_STATE_ENCRYPTION_MIGRATION_APPROVED";
 
+type SecretEnv = readonly [source: string, target: string];
+
 /**
- * The optional secrets a stack may consume, mapped from a plain env var name to
- * the OpenTofu env var name the stack expects. Absent env vars are skipped —
- * stack-irrelevant secrets are simply not passed. Mirrors the old
- * `withTofuOptionalSecrets` mapping exactly (same target env var names); only
- * the source is now an env var instead of a Dagger Secret. The source var name
- * matches the target for TF_VAR_* / CLOUDFLARE_API_TOKEN / TAILSCALE_* since
- * those were already conventional env vars in the old operator flow.
+ * The optional secrets each stack may consume, mapped from a plain env var
+ * name to the OpenTofu env var name the stack expects. The explicit allowlist
+ * keeps platform credentials out of unrelated provider processes.
  */
-// Source names match the buildkite-ci-secrets keys (and the repo's env-var
-// naming convention) exactly; targets are what each stack's variables.tf
-// declares.
-const OPTIONAL_SECRET_ENV: readonly [source: string, target: string][] = [
-  ["GH_TOKEN", "TF_VAR_github_token"],
-  ["CLOUDFLARE_ACCOUNT_ID", "TF_VAR_cloudflare_account_id"],
-  ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_API_TOKEN"],
-  ["CLOUDFLARE_API_TOKENS_JSON", "TF_VAR_cloudflare_api_tokens"],
-  ["TAILSCALE_OAUTH_CLIENT_ID", "TAILSCALE_OAUTH_CLIENT_ID"],
-  ["TAILSCALE_OAUTH_CLIENT_SECRET", "TAILSCALE_OAUTH_CLIENT_SECRET"],
-  ["BUILDKITE_API_TOKEN", "TF_VAR_buildkite_api_token"],
-  ["RADARR_API_KEY", "TF_VAR_radarr_api_key"],
-  ["SONARR_API_KEY", "TF_VAR_sonarr_api_key"],
-  ["PROWLARR_API_KEY", "TF_VAR_prowlarr_api_key"],
-  ["QBITTORRENT_PASSWORD", "TF_VAR_qbittorrent_password"],
-  ["PRIVATEHD_PASSWORD", "TF_VAR_privatehd_password"],
-  ["PRIVATEHD_PID", "TF_VAR_privatehd_pid"],
-  ["AVISTAZ_PASSWORD", "TF_VAR_avistaz_password"],
-  ["AVISTAZ_PID", "TF_VAR_avistaz_pid"],
-  ["ANIMEZ_PASSWORD", "TF_VAR_animez_password"],
-  ["ANIMEZ_PID", "TF_VAR_animez_pid"],
-  [
+const STACK_SECRET_ENV: Readonly<Record<string, readonly SecretEnv[]>> = {
+  argocd: [
+    ["CLOUDFLARE_ACCOUNT_ID", "TF_VAR_cloudflare_account_id"],
+    ["OP_CONNECT_TOKEN", "OP_CONNECT_TOKEN"],
+    ["OP_CONNECT_URL", "TF_VAR_op_connect_url"],
+  ],
+  anthropic: [
+    ["OP_CONNECT_TOKEN", "OP_CONNECT_TOKEN"],
+    ["OP_CONNECT_URL", "TF_VAR_op_connect_url"],
+    ["ANTHROPIC_ADMIN_KEY", "ANTHROPIC_ADMIN_KEY"],
+    ["ANTHROPIC_WORKSPACES_JSON", "TF_VAR_anthropic_workspaces"],
+    ["ANTHROPIC_API_KEYS_JSON", "TF_VAR_anthropic_api_keys"],
+    ["ANTHROPIC_WORKSPACE_MEMBERS_JSON", "TF_VAR_anthropic_workspace_members"],
+    ["ANTHROPIC_INVITES_JSON", "TF_VAR_anthropic_invites"],
+  ],
+  arr: [
+    ["CLOUDFLARE_ACCOUNT_ID", "TF_VAR_cloudflare_account_id"],
+    ["RADARR_API_KEY", "TF_VAR_radarr_api_key"],
+    ["SONARR_API_KEY", "TF_VAR_sonarr_api_key"],
+    ["PROWLARR_API_KEY", "TF_VAR_prowlarr_api_key"],
+    ["QBITTORRENT_PASSWORD", "TF_VAR_qbittorrent_password"],
+    ["PRIVATEHD_PASSWORD", "TF_VAR_privatehd_password"],
+    ["PRIVATEHD_PID", "TF_VAR_privatehd_pid"],
+    ["AVISTAZ_PASSWORD", "TF_VAR_avistaz_password"],
+    ["AVISTAZ_PID", "TF_VAR_avistaz_pid"],
+    ["ANIMEZ_PASSWORD", "TF_VAR_animez_password"],
+    ["ANIMEZ_PID", "TF_VAR_animez_pid"],
+  ],
+  buildkite: [
+    ["CLOUDFLARE_ACCOUNT_ID", "TF_VAR_cloudflare_account_id"],
+    ["BUILDKITE_API_TOKEN", "TF_VAR_buildkite_api_token"],
+  ],
+  cloudflare: [
+    ["CLOUDFLARE_ACCOUNT_ID", "TF_VAR_cloudflare_account_id"],
+    ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_API_TOKEN"],
+    ["CLOUDFLARE_API_TOKENS_JSON", "TF_VAR_cloudflare_api_tokens"],
+    ["OP_CONNECT_TOKEN", "OP_CONNECT_TOKEN"],
+    ["OP_CONNECT_URL", "TF_VAR_op_connect_url"],
+  ],
+  discord: [
+    ["DISCORD_BOTS_JSON", "TF_VAR_discord_bots"],
+    ["DISCORD_BOT_TOKENS_JSON", "TF_VAR_discord_bot_tokens"],
+    ["DISCORD_PROVIDER_NAMES_JSON", "TF_VAR_discord_provider_names"],
+  ],
+  github: [
+    ["CLOUDFLARE_ACCOUNT_ID", "TF_VAR_cloudflare_account_id"],
+    ["GH_TOKEN", "TF_VAR_github_token"],
+  ],
+  openai: [
+    ["OP_CONNECT_TOKEN", "OP_CONNECT_TOKEN"],
+    ["OP_CONNECT_URL", "TF_VAR_op_connect_url"],
+    ["OPENAI_ADMIN_KEY", "OPENAI_ADMIN_KEY"],
+    ["OPENAI_PROJECTS_JSON", "TF_VAR_openai_projects"],
+    ["OPENAI_SERVICE_ACCOUNTS_JSON", "TF_VAR_openai_service_accounts"],
+    ["OPENAI_ORGANIZATION_USERS_JSON", "TF_VAR_openai_organization_users"],
+    ["OPENAI_PROJECT_USERS_JSON", "TF_VAR_openai_project_users"],
+    ["OPENAI_PROJECT_SPEND_ALERTS_JSON", "TF_VAR_openai_project_spend_alerts"],
+    ["OPENAI_GROUPS_JSON", "TF_VAR_openai_groups"],
+    ["OPENAI_GROUP_USERS_JSON", "TF_VAR_openai_group_users"],
+    ["OPENAI_GROUP_ROLES_JSON", "TF_VAR_openai_group_roles"],
+    ["OPENAI_USER_ROLES_JSON", "TF_VAR_openai_user_roles"],
+    ["OPENAI_ROLES_JSON", "TF_VAR_openai_roles"],
+    ["OPENAI_CERTIFICATES_JSON", "TF_VAR_openai_certificates"],
+    ["OPENAI_CERTIFICATE_VALUES_JSON", "TF_VAR_openai_certificate_values"],
+    [
+      "OPENAI_ORGANIZATION_SPEND_ALERTS_JSON",
+      "TF_VAR_openai_organization_spend_alerts",
+    ],
+    [
+      "OPENAI_ORGANIZATION_SPEND_LIMITS_JSON",
+      "TF_VAR_openai_organization_spend_limits",
+    ],
+    ["OPENAI_PROJECT_GROUPS_JSON", "TF_VAR_openai_project_groups"],
+    ["OPENAI_PROJECT_GROUP_ROLES_JSON", "TF_VAR_openai_project_group_roles"],
+    [
+      "OPENAI_PROJECT_DATA_RETENTION_JSON",
+      "TF_VAR_openai_project_data_retention",
+    ],
+    [
+      "OPENAI_PROJECT_MODEL_PERMISSIONS_JSON",
+      "TF_VAR_openai_project_model_permissions",
+    ],
+    [
+      "OPENAI_PROJECT_HOSTED_TOOL_PERMISSIONS_JSON",
+      "TF_VAR_openai_project_hosted_tool_permissions",
+    ],
+    ["OPENAI_PROJECT_SPEND_LIMITS_JSON", "TF_VAR_openai_project_spend_limits"],
+    ["OPENAI_PROJECT_RATE_LIMITS_JSON", "TF_VAR_openai_project_rate_limits"],
+  ],
+  openrouter: [
+    ["OP_CONNECT_TOKEN", "OP_CONNECT_TOKEN"],
+    ["OP_CONNECT_URL", "TF_VAR_op_connect_url"],
+    ["OPENROUTER_API_KEY", "OPENROUTER_API_KEY"],
+    ["OPENROUTER_WORKSPACES_JSON", "TF_VAR_openrouter_workspaces"],
+    ["OPENROUTER_GUARDRAILS_JSON", "TF_VAR_openrouter_guardrails"],
+    ["OPENROUTER_API_KEYS_JSON", "TF_VAR_openrouter_api_keys"],
+    ["OPENROUTER_BYOK_CREDENTIALS_JSON", "TF_VAR_openrouter_byok_credentials"],
+    ["OPENROUTER_BYOK_KEYS_JSON", "TF_VAR_openrouter_byok_keys"],
+  ],
+  seaweedfs: [["CLOUDFLARE_ACCOUNT_ID", "TF_VAR_cloudflare_account_id"]],
+  tailscale: [
+    ["TAILSCALE_OAUTH_CLIENT_ID", "TAILSCALE_OAUTH_CLIENT_ID"],
+    ["TAILSCALE_OAUTH_CLIENT_SECRET", "TAILSCALE_OAUTH_CLIENT_SECRET"],
+  ],
+};
+
+const ALL_SECRET_ENV_NAMES = [
+  ...new Set([
+    ...Object.values(STACK_SECRET_ENV)
+      .flat()
+      .flatMap(([source, target]) => [source, target]),
     "TOFU_STATE_ENCRYPTION_PASSPHRASE",
     "TF_VAR_tofu_state_encryption_passphrase",
-  ],
-  ["OP_CONNECT_TOKEN", "OP_CONNECT_TOKEN"],
-  ["OP_CONNECT_URL", "TF_VAR_op_connect_url"],
-  ["OPENAI_ADMIN_KEY", "OPENAI_ADMIN_KEY"],
-  ["ANTHROPIC_ADMIN_KEY", "ANTHROPIC_ADMIN_KEY"],
-  ["OPENROUTER_API_KEY", "OPENROUTER_API_KEY"],
-  ["DISCORD_BOTS_JSON", "TF_VAR_discord_bots"],
-  ["DISCORD_BOT_TOKENS_JSON", "TF_VAR_discord_bot_tokens"],
-  ["DISCORD_PROVIDER_NAMES_JSON", "TF_VAR_discord_provider_names"],
-  ["OPENAI_PROJECTS_JSON", "TF_VAR_openai_projects"],
-  ["OPENAI_SERVICE_ACCOUNTS_JSON", "TF_VAR_openai_service_accounts"],
-  ["OPENAI_ORGANIZATION_USERS_JSON", "TF_VAR_openai_organization_users"],
-  ["OPENAI_PROJECT_USERS_JSON", "TF_VAR_openai_project_users"],
-  ["OPENAI_PROJECT_SPEND_ALERTS_JSON", "TF_VAR_openai_project_spend_alerts"],
-  ["OPENAI_GROUPS_JSON", "TF_VAR_openai_groups"],
-  ["OPENAI_GROUP_USERS_JSON", "TF_VAR_openai_group_users"],
-  ["OPENAI_GROUP_ROLES_JSON", "TF_VAR_openai_group_roles"],
-  ["OPENAI_USER_ROLES_JSON", "TF_VAR_openai_user_roles"],
-  ["OPENAI_ROLES_JSON", "TF_VAR_openai_roles"],
-  ["OPENAI_CERTIFICATES_JSON", "TF_VAR_openai_certificates"],
-  ["OPENAI_CERTIFICATE_VALUES_JSON", "TF_VAR_openai_certificate_values"],
-  [
-    "OPENAI_ORGANIZATION_SPEND_ALERTS_JSON",
-    "TF_VAR_openai_organization_spend_alerts",
-  ],
-  [
-    "OPENAI_ORGANIZATION_SPEND_LIMITS_JSON",
-    "TF_VAR_openai_organization_spend_limits",
-  ],
-  ["OPENAI_PROJECT_GROUPS_JSON", "TF_VAR_openai_project_groups"],
-  ["OPENAI_PROJECT_GROUP_ROLES_JSON", "TF_VAR_openai_project_group_roles"],
-  [
-    "OPENAI_PROJECT_DATA_RETENTION_JSON",
-    "TF_VAR_openai_project_data_retention",
-  ],
-  [
-    "OPENAI_PROJECT_MODEL_PERMISSIONS_JSON",
-    "TF_VAR_openai_project_model_permissions",
-  ],
-  [
-    "OPENAI_PROJECT_HOSTED_TOOL_PERMISSIONS_JSON",
-    "TF_VAR_openai_project_hosted_tool_permissions",
-  ],
-  ["OPENAI_PROJECT_SPEND_LIMITS_JSON", "TF_VAR_openai_project_spend_limits"],
-  ["OPENAI_PROJECT_RATE_LIMITS_JSON", "TF_VAR_openai_project_rate_limits"],
-  ["ANTHROPIC_WORKSPACES_JSON", "TF_VAR_anthropic_workspaces"],
-  ["ANTHROPIC_API_KEYS_JSON", "TF_VAR_anthropic_api_keys"],
-  ["ANTHROPIC_WORKSPACE_MEMBERS_JSON", "TF_VAR_anthropic_workspace_members"],
-  ["ANTHROPIC_INVITES_JSON", "TF_VAR_anthropic_invites"],
-  ["OPENROUTER_WORKSPACES_JSON", "TF_VAR_openrouter_workspaces"],
-  ["OPENROUTER_GUARDRAILS_JSON", "TF_VAR_openrouter_guardrails"],
-  ["OPENROUTER_API_KEYS_JSON", "TF_VAR_openrouter_api_keys"],
-  ["OPENROUTER_BYOK_CREDENTIALS_JSON", "TF_VAR_openrouter_byok_credentials"],
-  ["OPENROUTER_BYOK_KEYS_JSON", "TF_VAR_openrouter_byok_keys"],
+  ]),
 ];
 
 /**
@@ -209,18 +244,24 @@ async function configureLocalOpenRouterProvider(
     );
   }
   const tempRoot = `${Bun.env["TMPDIR"] ?? "/tmp"}/monorepo-openrouter-byok-${process.pid.toString()}`;
-  const goosResult = await run(["go", "env", "GOOS"], { capture: true });
-  const goarchResult = await run(["go", "env", "GOARCH"], { capture: true });
+  const goosResult = await run(["go", "env", "GOOS"], {
+    ...isolatedRunOptions({}),
+    capture: true,
+  });
+  const goarchResult = await run(["go", "env", "GOARCH"], {
+    ...isolatedRunOptions({}),
+    capture: true,
+  });
   const goos = goosResult.stdout.trim();
   const goarch = goarchResult.stdout.trim();
   const mirrorRoot =
     `${tempRoot}/mirror/registry.opentofu.org/shepherdjerred/openrouter-byok/` +
     `${version}/${goos}_${goarch}`;
-  await run(["mkdir", "-p", mirrorRoot]);
+  await run(["mkdir", "-p", mirrorRoot], isolatedRunOptions({}));
   const binaryPath = `${mirrorRoot}/terraform-provider-openrouter-byok_v${version}`;
   await run(
     ["go", "build", "-trimpath", "-buildvcs=false", "-o", binaryPath, "."],
-    { cwd: providerRoot, env },
+    isolatedRunOptions({}, providerRoot),
   );
   const cliConfigPath = `${tempRoot}/tofu.tfrc`;
   await Bun.write(
@@ -256,10 +297,17 @@ function buildTofuEnv(
     env["AWS_RESPONSE_CHECKSUM_VALIDATION"] = "WHEN_REQUIRED";
   }
 
-  for (const [source, target] of OPTIONAL_SECRET_ENV) {
+  for (const [source, target] of STACK_SECRET_ENV[stack] ?? []) {
     const value = optionalEnv(source);
     if (value !== null) {
       env[target] = value;
+    }
+  }
+
+  if (encryptsState) {
+    const passphrase = optionalEnv("TOFU_STATE_ENCRYPTION_PASSPHRASE");
+    if (passphrase !== null) {
+      env["TF_VAR_tofu_state_encryption_passphrase"] = passphrase;
     }
   }
 
@@ -287,6 +335,17 @@ function buildTofuEnv(
     );
   }
   return env;
+}
+
+function isolatedRunOptions(
+  env: Record<string, string>,
+  cwd?: string,
+): RunOptions {
+  return {
+    env,
+    unsetEnv: ALL_SECRET_ENV_NAMES.filter((name) => !Object.hasOwn(env, name)),
+    ...(cwd === undefined ? {} : { cwd }),
+  };
 }
 
 function usage(): never {
@@ -365,7 +424,7 @@ async function main(): Promise<void> {
   // only this run uses, so it is removed after tofu exits.
   if (localProviderRoot !== null) {
     try {
-      await run(["rm", "-rf", localProviderRoot]);
+      await run(["rm", "-rf", localProviderRoot], isolatedRunOptions({}));
     } catch (error) {
       cleanupError = error;
       console.error(
@@ -397,10 +456,10 @@ async function runTofu(
   // blindly — a failed apply there can leave GitHub repo/ruleset state
   // half-written, and a naive retry could compound the drift; the operator
   // should inspect and re-run deliberately.
-  await run(["tofu", `-chdir=${STACKS_REL}/${stack}`, "init", "-input=false"], {
-    cwd: root,
-    env,
-  });
+  await run(
+    ["tofu", `-chdir=${STACKS_REL}/${stack}`, "init", "-input=false"],
+    isolatedRunOptions(env, root),
+  );
 
   if (action === "plan") {
     // -detailed-exitcode: 0 = no changes, 2 = changes detected (not an error),
@@ -413,7 +472,7 @@ async function runTofu(
         "-input=false",
         "-detailed-exitcode",
       ],
-      { cwd: root, env },
+      isolatedRunOptions(env, root),
     );
     if (result.exitCode === 0) {
       console.log("No changes.");
@@ -434,7 +493,7 @@ async function runTofu(
       "-auto-approve",
       "-input=false",
     ],
-    { cwd: root, env },
+    isolatedRunOptions(env, root),
   );
   console.log(`--- applied: ${stack}`);
 }
