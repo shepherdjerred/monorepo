@@ -110,6 +110,17 @@ for (const theme of themes) {
       expect(browserErrors, "same-origin browser errors").toEqual([]);
 
       if (route.golden && testInfo.project.name.startsWith("chromium-")) {
+        if (route.surface === "docs" && route.name === "first-report") {
+          // The tutorial contains an animated GIF. Preserve its layout while
+          // keeping screenshot goldens independent of the captured GIF frame.
+          await page.locator('img[src$=".gif"]').evaluateAll((images) => {
+            for (const image of images) {
+              if (image instanceof HTMLImageElement) {
+                image.style.visibility = "hidden";
+              }
+            }
+          });
+        }
         await expect(page).toHaveScreenshot(`${route.name}-${theme.name}.png`, {
           fullPage: true,
           animations: "disabled",
