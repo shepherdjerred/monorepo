@@ -344,6 +344,13 @@ export async function setCustomHeld(params: {
         params.actor.discordId,
         params.actor.discordAdministrator,
       );
+      if (
+        !snapshot.participants.some(
+          (participant) => participant.discordId === params.discordId,
+        )
+      ) {
+        throw new Error("Participant is not part of this custom night");
+      }
       return refreshSnapshot(
         {
           ...snapshot,

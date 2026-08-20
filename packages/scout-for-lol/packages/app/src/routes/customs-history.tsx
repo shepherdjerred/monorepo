@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Crown, ShieldCheck, Trophy } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { LoadMore } from "#src/components/load-more.tsx";
 
 const dateTime = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
@@ -153,13 +154,16 @@ export function CustomsHistory() {
   const trpc = useTRPC();
   const [requestedNightId, setRequestedNightId] = useState<string | null>(null);
   const safeGuildId = guildId ?? "";
-  const bootstrap = useQuery(
-    trpc.customs.historyBootstrap.queryOptions(
+  const bootstrap = useInfiniteQuery(
+    trpc.customs.historyBootstrap.infiniteQueryOptions(
       { guildId: safeGuildId },
-      { enabled: guildId !== undefined },
+      {
+        enabled: guildId !== undefined,
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
     ),
   );
-  const nights = bootstrap.data?.nights;
+  const nights = bootstrap.data?.pages.flatMap((page) => page.nights);
   const initialNightId = nights?.[0]?.id;
   const selectedNightId = requestedNightId ?? initialNightId;
   const detail = useQuery(
@@ -178,7 +182,7 @@ export function CustomsHistory() {
   );
   const selectedDetail =
     selectedNightId === initialNightId
-      ? bootstrap.data?.initialDetail
+      ? bootstrap.data?.pages[0]?.initialDetail
       : detail.data;
 
   if (guildId === undefined) {
@@ -248,6 +252,13 @@ export function CustomsHistory() {
                 </span>
               </button>
             ))}
+            <LoadMore
+              hasNextPage={bootstrap.hasNextPage}
+              isFetchingNextPage={bootstrap.isFetchingNextPage}
+              onLoadMore={() => {
+                void bootstrap.fetchNextPage();
+              }}
+            />
           </nav>
 
           <HistoryDetailPanel

@@ -44,11 +44,12 @@ const CustomNightSummarySchema = z.object({
   lastActivityAt: z.iso.datetime(),
 });
 
-async function loadCustomsHistory(guildId: string) {
+async function loadCustomsHistory(guildId: string, cursor: string | undefined) {
   const rows = await prisma.customNight.findMany({
     where: { guildId },
-    orderBy: { createdAt: "desc" },
-    take: CUSTOMS_HISTORY_LIMIT,
+    ...(cursor === undefined ? {} : { cursor: { id: cursor }, skip: 1 }),
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: CUSTOMS_HISTORY_LIMIT + 1,
     select: {
       id: true,
       state: true,
@@ -56,12 +57,17 @@ async function loadCustomsHistory(guildId: string) {
       lastActivityAt: true,
     },
   });
-  return rows.map((row) =>
-    CustomNightSummarySchema.parse({
-      ...row,
-      lastActivityAt: row.lastActivityAt.toISOString(),
-    }),
-  );
+  const page = rows.slice(0, CUSTOMS_HISTORY_LIMIT);
+  return {
+    nights: page.map((row) =>
+      CustomNightSummarySchema.parse({
+        ...row,
+        lastActivityAt: row.lastActivityAt.toISOString(),
+      }),
+    ),
+    nextCursor:
+      rows.length > CUSTOMS_HISTORY_LIMIT ? (page.at(-1)?.id ?? null) : null,
+  };
 }
 
 async function loadCustomsHistoryDetail(params: {
@@ -109,15 +115,20 @@ export const customsHistoryDetailProcedure = webProcedure
   });
 
 export const customsHistoryBootstrapProcedure = webProcedure
-  .input(z.object({ guildId: z.string().min(1) }))
+  .input(
+    z.object({
+      guildId: z.string().min(1),
+      cursor: z.uuid().optional(),
+    }),
+  )
   .query(async ({ ctx, input }) => {
     await assertWebCustomsMember({ guildId: input.guildId, user: ctx.user });
-    const nights = await loadCustomsHistory(input.guildId);
-    const initialNight = nights[0];
+    const history = await loadCustomsHistory(input.guildId, input.cursor);
+    const initialNight = history.nights[0];
     return {
-      nights,
+      ...history,
       initialDetail:
-        initialNight === undefined
+        initialNight === undefined || input.cursor !== undefined
           ? null
           : await loadCustomsHistoryDetail({
               guildId: input.guildId,
