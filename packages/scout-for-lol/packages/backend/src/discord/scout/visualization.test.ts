@@ -494,6 +494,7 @@ test("preserves confidence intervals in native temporal rows", () => {
     },
     series: scoutTestVisualization.series.map((series) => ({
       ...series,
+      id: `All:${series.id}`,
       points: series.points.map((point) => ({
         ...point,
         evidence:

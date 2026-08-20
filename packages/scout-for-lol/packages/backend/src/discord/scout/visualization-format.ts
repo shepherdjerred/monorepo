@@ -26,18 +26,21 @@ export function formatPreviewValueWithEvidence(
   row: NativeRow,
 ): string {
   const value = formatPreviewValue(column, requireRowValue(row, column.key));
-  const series = snapshot.series.find((item) => item.id === column.key);
+  const rowDimensions = new Set(row.key.split(" • "));
+  const pointMatchesRow = (item: TemporalSeries["points"][number]) =>
+    item.key === row.key ||
+    item.label === row.label ||
+    rowDimensions.has(item.key) ||
+    rowDimensions.has(item.label);
+  const series = snapshot.series.find(
+    (item) =>
+      item.metric === column.key &&
+      item.points.some((point) => pointMatchesRow(point)),
+  );
   if (series === undefined) {
     return value;
   }
-  const rowDimensions = new Set(row.key.split(" • "));
-  const point = series.points.find(
-    (item) =>
-      item.key === row.key ||
-      item.label === row.label ||
-      rowDimensions.has(item.key) ||
-      rowDimensions.has(item.label),
-  );
+  const point = series.points.find((candidate) => pointMatchesRow(candidate));
   return `${value}${formatConfidenceInterval(snapshot, series, point)}`;
 }
 
