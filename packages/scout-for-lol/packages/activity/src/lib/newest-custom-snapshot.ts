@@ -5,8 +5,17 @@ export function newestCustomSnapshot(
   candidate: CustomNightSnapshot | null,
   currentAtRequest?: CustomNightSnapshot | null,
 ): CustomNightSnapshot | null {
-  if (currentAtRequest !== undefined && current !== currentAtRequest)
+  if (currentAtRequest !== undefined && current !== currentAtRequest) {
+    if (
+      current !== null &&
+      current !== undefined &&
+      candidate !== null &&
+      candidate.id === current.id &&
+      candidate.revision > current.revision
+    )
+      return candidate;
     return current ?? null;
+  }
   if (candidate === null) {
     return null;
   }

@@ -61,6 +61,13 @@ describe("newestCustomSnapshot", () => {
     expect(newestCustomSnapshot(current, candidate, requested)).toBe(current);
   });
 
+  test("accepts a newer same-night response after an intervening update", () => {
+    const requested = snapshot(7);
+    const current = snapshot(8);
+    const candidate = snapshot(9);
+    expect(newestCustomSnapshot(current, candidate, requested)).toBe(candidate);
+  });
+
   test("clears an ended night when the active query returns null", () => {
     expect(
       newestCustomSnapshot(
