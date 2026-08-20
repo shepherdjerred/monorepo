@@ -66,11 +66,15 @@ function isTrackedOpponent(
   generationContext: string,
   players: readonly EligiblePlayer[],
 ): boolean {
-  const parsed = ParlayGenerationContextSchema.safeParse(
-    JSON.parse(generationContext),
-  );
+  let raw: unknown;
+  try {
+    raw = JSON.parse(generationContext);
+  } catch {
+    return true;
+  }
+  const parsed = ParlayGenerationContextSchema.safeParse(raw);
   if (!parsed.success) {
-    return false;
+    return true;
   }
   const { opponentPuuids, opponentTrackedAliases, opponentTrackedPuuids } =
     parsed.data;

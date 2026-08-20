@@ -306,6 +306,16 @@ describe("Bryan Bucks parlays", () => {
     expect(await place("YES", 5)).toEqual({ kind: "not_eligible" });
   });
 
+  test("fails closed when the generation context is malformed", async () => {
+    const market = await makeMarket();
+    await db.bucksParlayDefinition.update({
+      where: { id: market.definitionId },
+      data: { generationContext: "{" },
+    });
+
+    expect(await place("YES", 5)).toEqual({ kind: "not_eligible" });
+  });
+
   test("accepts more than 20 BB, reserves the house, and reprices top-ups", async () => {
     await makeMarket({ yesProbabilityBps: 3333 });
     await db.bucksAccount.create({
