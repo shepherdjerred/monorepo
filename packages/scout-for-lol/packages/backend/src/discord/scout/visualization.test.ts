@@ -235,7 +235,7 @@ describe("Scout Discord visualization edge cases", () => {
       preview,
     )?.data.description;
     expect(collapsedDescription).toContain(
-      "additional rows omitted from the stored preview",
+      "additional rows may be omitted from the stored visualization",
     );
   });
 

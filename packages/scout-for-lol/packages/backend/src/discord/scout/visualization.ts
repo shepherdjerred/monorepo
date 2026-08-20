@@ -201,7 +201,7 @@ function formatList(
   const allRows = source.rows;
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const previewExtra = hasPreviewRowsBeyondStoredRows(
+  const previewNotice = previewOverflowNotice(
     source.preview,
     allRows,
     source.snapshotRows,
@@ -213,8 +213,8 @@ function formatList(
   });
   if (extra > 0) {
     lines.push(`_…and ${extra.toString()} more_`);
-  } else if (previewExtra) {
-    lines.push("_…additional rows omitted from the stored preview_");
+  } else if (previewNotice !== null) {
+    lines.push(previewNotice);
   }
   return lines.join("\n");
 }
@@ -227,7 +227,7 @@ function formatLeaderboard(
   const allRows = source.rows;
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const previewExtra = hasPreviewRowsBeyondStoredRows(
+  const previewNotice = previewOverflowNotice(
     source.preview,
     allRows,
     source.snapshotRows,
@@ -239,8 +239,8 @@ function formatLeaderboard(
   });
   if (extra > 0) {
     lines.push(`_…and ${extra.toString()} more_`);
-  } else if (previewExtra) {
-    lines.push("_…additional rows omitted from the stored preview_");
+  } else if (previewNotice !== null) {
+    lines.push(previewNotice);
   }
   return lines.join("\n");
 }
@@ -253,7 +253,7 @@ function formatTable(
   const allRows = source.rows;
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const previewExtra = hasPreviewRowsBeyondStoredRows(
+  const previewNotice = previewOverflowNotice(
     source.preview,
     allRows,
     source.snapshotRows,
@@ -298,8 +298,8 @@ function formatTable(
   ];
   if (extra > 0) {
     lines.push(`_…and ${extra.toString()} more rows_`);
-  } else if (previewExtra) {
-    lines.push("_…additional rows omitted from the stored preview_");
+  } else if (previewNotice !== null) {
+    lines.push(previewNotice);
   }
   return lines.join("\n");
 }
@@ -374,28 +374,31 @@ function nativeRowSource(
   return { rows: previewRows(preview), preview, snapshotRows };
 }
 
-function hasPreviewRowsBeyondStoredRows(
+function previewOverflowNotice(
   preview: ReportAiPreviewSummary | null,
   rows: NativeRow[],
   snapshotRows: NativeRow[],
   snapshot: VisualizationSnapshot,
-): boolean {
+): string | null {
   if (preview === null) {
-    return false;
+    return null;
   }
   if (preview.rowsReturned > rows.length) {
-    return true;
+    return "_…additional rows omitted from the stored preview_";
   }
-  const hasCollapsedLegacyRows =
-    snapshot.series.some((series) => {
-      const separator = series.id.lastIndexOf(":");
-      return separator !== -1 && series.id.slice(0, separator) !== "All";
-    }) && snapshotRows.length < rows.length;
-  return (
-    preview.rowsReturned === 0 &&
-    preview.visualizationRows.length === 0 &&
-    (snapshotRows.length > rows.length || hasCollapsedLegacyRows)
-  );
+  if (preview.rowsReturned !== 0 || preview.visualizationRows.length > 0) {
+    return null;
+  }
+  if (snapshotRows.length > rows.length) {
+    return "_…additional rows omitted from the stored preview_";
+  }
+  const hasNamedSeries = snapshot.series.some((series) => {
+    const separator = series.id.lastIndexOf(":");
+    return separator !== -1 && series.id.slice(0, separator) !== "All";
+  });
+  return hasNamedSeries && snapshotRows.length < rows.length
+    ? "_…additional rows may be omitted from the stored visualization_"
+    : null;
 }
 
 function previewMetricColumns(preview: ReportAiPreviewSummary) {
