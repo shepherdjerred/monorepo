@@ -136,6 +136,9 @@ public struct OTPParser {
 
         guard let candidate = candidates.sorted(by: { lhs, rhs in
             if lhs.score != rhs.score { return lhs.score > rhs.score }
+            let lhsIsNumeric = lhs.code.allSatisfy(\.isNumber)
+            let rhsIsNumeric = rhs.code.allSatisfy(\.isNumber)
+            if lhsIsNumeric != rhsIsNumeric { return lhsIsNumeric }
             return lhs.range.location < rhs.range.location
         }).first, candidate.score >= 2 else {
             return nil
