@@ -69,6 +69,13 @@ function repeatWarnings(
   return warnings;
 }
 
+function hasPendingPredecessor(
+  row: { importedAt: Date | null; importError: string | null } | null,
+): boolean {
+  if (row === null) return false;
+  return row.importedAt === null && row.importError === null;
+}
+
 async function importHistoricalGame(params: {
   prisma: ExtendedPrismaClient;
   night: CustomNightSnapshot;
@@ -133,12 +140,21 @@ export async function importCustomMatchDetails(params: {
     row.importError !== null
   )
     return null;
+  const previousRow = await params.prisma.customGame.findUnique({
+    where: {
+      nightId_sequence: {
+        nightId: row.nightId,
+        sequence: row.sequence - 1,
+      },
+    },
+  });
   const gameSnapshot = CustomGameSnapshotSchema.parse(JSON.parse(row.snapshot));
   const match = await (params.fetcher ?? fetchMatchData)(
     MatchIdSchema.parse(row.riotMatchId),
     "AMERICA_NORTH",
   );
-  if (match === undefined) return null;
+  const previousPending = hasPendingPredecessor(previousRow);
+  if (match === undefined || previousPending) return null;
   if (
     gameSnapshot.tournamentCode !== null &&
     match.info.tournamentCode !== gameSnapshot.tournamentCode
@@ -151,14 +167,6 @@ export async function importCustomMatchDetails(params: {
     gameSnapshot.participants,
     match.info.participants,
   );
-  const previousRow = await params.prisma.customGame.findUnique({
-    where: {
-      nightId_sequence: {
-        nightId: row.nightId,
-        sequence: row.sequence - 1,
-      },
-    },
-  });
   const previousSnapshot = previousRow?.snapshot;
   const previousParticipants =
     previousSnapshot === undefined || previousRow?.importedAt === null

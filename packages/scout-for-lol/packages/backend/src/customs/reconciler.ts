@@ -31,7 +31,6 @@ import {
 import { publishCustomSnapshot } from "#src/customs/socket.ts";
 import { createSingleFlightRunner } from "#src/customs/single-flight.ts";
 import {
-  recordPendingVoiceReturn,
   retryPendingCustomResultVoice,
   returnCustomResultPlayersToLobby,
 } from "#src/customs/result-voice.ts";
@@ -219,9 +218,6 @@ async function pollResult(
       if (!mutation.applied) continue;
       const shouldReturnVoicePlayers =
         mutation.snapshot.currentGame?.id === game.id;
-      if (shouldReturnVoicePlayers) {
-        await recordPendingVoiceReturn(database, mutation.snapshot);
-      }
       publishCustomSnapshot(mutation.snapshot);
       if (shouldReturnVoicePlayers) {
         await returnCustomResultPlayersToLobby({

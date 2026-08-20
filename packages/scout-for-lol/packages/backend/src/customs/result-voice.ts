@@ -52,7 +52,7 @@ function resultGameId(snapshot: CustomNightSnapshot): string | null {
 }
 
 export async function recordPendingVoiceReturn(
-  prisma: ExtendedPrismaClient,
+  prisma: Pick<ExtendedPrismaClient, "customAuditEvent">,
   snapshot: CustomNightSnapshot,
 ): Promise<void> {
   const gameId = resultGameId(snapshot);

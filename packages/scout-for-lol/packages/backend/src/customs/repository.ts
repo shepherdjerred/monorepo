@@ -13,12 +13,13 @@ import {
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
-type CustomTransactionClient = Pick<
+export type CustomTransactionClient = Pick<
   ExtendedPrismaClient,
   | "customNightParticipant"
   | "customGame"
   | "customGameParticipant"
   | "customConsent"
+  | "customAuditEvent"
 >;
 import { parseCustomNightSnapshot } from "#src/customs/snapshot.ts";
 

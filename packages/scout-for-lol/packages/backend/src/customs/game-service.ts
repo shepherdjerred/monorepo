@@ -23,6 +23,7 @@ import {
 } from "#src/customs/draft.ts";
 import { transitionCustomGame } from "#src/customs/game-machine.ts";
 import { transitionCustomNight } from "#src/customs/night-machine.ts";
+import { recordPendingVoiceReturn } from "#src/customs/result-voice.ts";
 import {
   commitCustomMutation,
   getCustomNight,
@@ -387,6 +388,9 @@ export async function recordCustomManualResult(params: {
         },
         now,
       );
+    },
+    sideEffect: async (transaction, snapshot) => {
+      await recordPendingVoiceReturn(transaction, snapshot);
     },
   });
 }

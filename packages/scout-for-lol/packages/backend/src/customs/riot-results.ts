@@ -9,6 +9,7 @@ import {
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { transitionCustomGame } from "#src/customs/game-machine.ts";
 import { transitionCustomNight } from "#src/customs/night-machine.ts";
+import { recordPendingVoiceReturn } from "#src/customs/result-voice.ts";
 import {
   commitCustomMutation,
   getCustomNight,
@@ -359,6 +360,13 @@ export async function recordRiotTournamentResult(params: {
           ],
       auditGameId: game.id,
       allowEnded: true,
+      ...(isCurrentGame
+        ? {
+            sideEffect: async (transaction, updated) => {
+              await recordPendingVoiceReturn(transaction, updated);
+            },
+          }
+        : {}),
     });
     if (mutation.applied) return mutation;
     snapshot = mutation.snapshot;
