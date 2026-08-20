@@ -150,8 +150,8 @@ public struct OTPParser {
            compact.count <= 8, compact.contains(where: \.isLetter), compact.contains(where: \.isNumber) {
             let prefix = String(rawCode[..<firstSeparator]).lowercased()
             let suffix = rawCode[rawCode.index(after: firstSeparator)...]
-            let prosePrefixes = ["for", "in", "is", "on", "the", "to", "use", "your"]
-            if (!prefix.isEmpty && prefix.allSatisfy(\.isLetter) && !prosePrefixes.contains(prefix)) ||
+            let originalPrefix = String(rawCode[..<firstSeparator])
+            if (!prefix.isEmpty && originalPrefix.allSatisfy(\.isUppercase)) ||
                 (prefix.contains(where: \.isNumber) && suffix.contains(where: \.isNumber)) {
                 return (compact, range)
             }
