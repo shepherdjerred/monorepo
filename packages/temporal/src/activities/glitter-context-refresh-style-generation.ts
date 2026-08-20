@@ -67,6 +67,31 @@ const EMPTY_CHUNK_SUMMARY: StyleChunkSummary = {
   observations: [],
   representativeMessages: [],
 };
+
+type ChunkExtractionRepair = {
+  previous: StyleChunkSummary;
+  error: string;
+  rawContent: string | null;
+};
+
+function nextParseFailureRepair(
+  prior: ChunkExtractionRepair | null,
+  error: string,
+  rawContent: string | null,
+): ChunkExtractionRepair {
+  if (prior === null) {
+    return {
+      previous: EMPTY_CHUNK_SUMMARY,
+      error,
+      rawContent,
+    };
+  }
+  return {
+    previous: prior.previous,
+    error: prior.error,
+    rawContent: rawContent ?? prior.rawContent,
+  };
+}
 const DETERMINISTIC_SEED = 0;
 
 // Completions are cached before validation, so repairs use distinct seeds
@@ -122,11 +147,7 @@ async function runChunkExtraction(input: {
   artifactStore: GenerationArtifactStore;
   budget: GenerationBudget;
   attempt: number;
-  repair: {
-    previous: StyleChunkSummary;
-    error: string;
-    rawContent: string | null;
-  } | null;
+  repair: ChunkExtractionRepair | null;
 }) {
   const basePrompt = chunkPrompt(input);
   const prompt =
@@ -206,11 +227,7 @@ async function summarizeChunk(input: {
 }): Promise<StyleChunkSummary> {
   const attempts: StyleChunkSummary[] = [];
   let lastError: Error | undefined;
-  let repair: {
-    previous: StyleChunkSummary;
-    error: string;
-    rawContent: string | null;
-  } | null = null;
+  let repair: ChunkExtractionRepair | null = null;
   for (let attempt = 0; attempt <= MAX_EXTRACTION_REPAIR_ATTEMPTS; attempt++) {
     const extracted = await runChunkExtraction({
       ...input,
@@ -219,18 +236,11 @@ async function summarizeChunk(input: {
     });
     if (extracted.outcome === "failure") {
       lastError = new Error(extracted.error);
-      if (repair === null) {
-        repair = {
-          previous: EMPTY_CHUNK_SUMMARY,
-          error: extracted.error,
-          rawContent: extracted.rawContent,
-        };
-      } else {
-        repair = {
-          ...repair,
-          rawContent: extracted.rawContent ?? repair.rawContent,
-        };
-      }
+      repair = nextParseFailureRepair(
+        repair,
+        extracted.error,
+        extracted.rawContent,
+      );
       continue;
     }
     attempts.push(extracted.value);
