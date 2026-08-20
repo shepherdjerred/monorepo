@@ -110,6 +110,9 @@ export async function seedDesignAuditDatabase(
       create: { discordId, discordUsername: "Design Audit User" },
     });
 
+    await prisma.exploreConversation.deleteMany({
+      where: { userId: discordId },
+    });
     await prisma.exploreConversation.upsert({
       where: { id: exploreConversationId },
       update: {
@@ -174,6 +177,12 @@ export async function seedDesignAuditDatabase(
       where: {
         competition: { serverId: guildId, creatorDiscordId: discordId },
       },
+    });
+    await prisma.competition.deleteMany({
+      where: { serverId: guildId, creatorDiscordId: discordId },
+    });
+    await prisma.report.deleteMany({
+      where: { serverId: guildId, ownerId: discordId },
     });
     await prisma.subscription.deleteMany({
       where: { serverId: guildId, creatorDiscordId: discordId },
