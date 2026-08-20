@@ -54,7 +54,7 @@ describe("new lake metrics", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT games, round(per_game(kills + assists), 2) AS takedowns_per_game, round(kills / deaths, 3) AS kill_death_ratio, coalesce(kills / 0, 99) AS safe_fallback FROM match_participants GROUP BY player HAVING games >= 2 AND takedowns_per_game > 10 ORDER BY takedowns_per_game DESC",
+        "SELECT games, round(per_game(kills + assists), 2) AS takedowns_per_game, round(kills / deaths, 3) AS kill_death_ratio, coalesce(kills / 0, 99) AS safe_fallback FROM match_participants GROUP BY player HAVING games >= 2 AND takedowns_per_game > 10 DURING LAST 30 DAYS ORDER BY takedowns_per_game DESC",
       now,
     });
 
@@ -79,7 +79,7 @@ describe("new lake metrics", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT player, games, gold_earned, vision_score, damage_taken, total_damage_dealt, wards_placed, multikills, avg_game_duration, cs_per_minute FROM match_participants GROUP BY player ORDER BY games DESC",
+        "SELECT player, games, gold_earned, vision_score, damage_taken, total_damage_dealt, wards_placed, multikills, avg_game_duration, cs_per_minute FROM match_participants GROUP BY player DURING LAST 30 DAYS ORDER BY games DESC",
       now,
     });
 
@@ -138,7 +138,7 @@ describe("new lake metrics", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT pair, games, gold_earned, avg_game_duration, cs_per_minute FROM player_pairs GROUP BY pair",
+        "SELECT pair, games, gold_earned, avg_game_duration, cs_per_minute FROM player_pairs GROUP BY pair DURING LAST 30 DAYS",
       now,
     });
 
@@ -172,7 +172,7 @@ describe("new lake metrics", () => {
       prisma,
       scope: guildScope(serverId),
       queryText:
-        "SELECT player, prematches, gold_earned, cs_per_minute FROM prematch_participants GROUP BY player",
+        "SELECT player, prematches, gold_earned, cs_per_minute FROM prematch_participants GROUP BY player DURING LAST 30 DAYS",
       now,
     });
 

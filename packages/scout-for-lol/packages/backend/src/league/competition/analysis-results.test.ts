@@ -48,7 +48,7 @@ describe("competition analysis results", () => {
   test("rejects standings rows without player identities", () => {
     const result: ReportQueryResult = {
       plan: parseAndCompile(
-        "SELECT games FROM competition_match_participants GROUP BY player",
+        "SELECT games FROM competition_match_participants GROUP BY player DURING LAST 30 DAYS",
       ),
       columns: ["label", "games"],
       rows: [

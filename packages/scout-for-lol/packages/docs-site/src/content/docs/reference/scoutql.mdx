@@ -13,8 +13,6 @@ import {
 import { REPORT_COMMON_PRESETS } from "@scout-for-lol/data/model/report-query-presets.ts";
 import {
   REPORT_QUERY_MAX_LENGTH,
-  REPORT_DEFAULT_LOOKBACK_DAYS,
-  REPORT_MAX_LOOKBACK_DAYS,
   REPORT_DEFAULT_MAX_ROWS,
   REPORT_MAX_ROWS_LIMIT,
 } from "@scout-for-lol/data/model/report.ts";
@@ -33,13 +31,35 @@ FROM     <source>
 [WHERE   <clause> [AND <clause> …]]
 GROUP BY <dimension> [, <dimension>]    -- 1 or 2
 [HAVING  <clause> [AND <clause> …]]
+DURING   <period>                       -- required, unless ANALYZE states one
 [ORDER BY <output|label> [ASC|DESC]]
 [LIMIT   <n>]
 [RENDER  <kind> [WITH (<option> = <value>, …)]]
 ```
 
-`SELECT`, `FROM`, and `GROUP BY` are required. Omitting `RENDER` produces a
-table.
+`SELECT`, `FROM`, `GROUP BY`, and a time period are required. Omitting DURING LAST 30 DAYS
+`RENDER` produces a table.
+
+## Time period
+
+Every query states the period it covers. There is no default — a window nobody
+states is a window nobody checks, and an answer computed over a narrower period
+than the reader assumed looks exactly like a correct one.
+
+```sql
+DURING LAST 90 DAYS
+DURING BETWEEN '2026-01-01' AND '2026-01-31' IN TIME ZONE 'America/Los_Angeles'
+DURING ALL TIME
+```
+
+Calendar dates are inclusive, and are UTC days unless `IN TIME ZONE` names an
+IANA zone. An `ANALYZE` clause carries its own period, so a query that has one
+must not also have `DURING`.
+
+For compatibility, the older WHERE form —
+`game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'`, or `observed_at`
+for `prematch_participants` — still means the same thing as
+`DURING LAST 30 DAYS`. Prefer `DURING`.
 
 ## Keywords
 
@@ -80,6 +100,7 @@ select per_minute(damage_to_champions) as dpm, games
 from match_participants
 group by player
 having games >= 10
+during last 30 days
 order by dpm desc
 render bar_chart with (y = dpm)
 ```
@@ -99,8 +120,6 @@ game.
         "Query text length",
         "Outputs per SELECT",
         "Grouping dimensions",
-        "Default lookback",
-        "Maximum lookback",
         "Default row limit",
         "Maximum rows returned",
         "Chart series",
@@ -112,8 +131,6 @@ game.
         `${REPORT_QUERY_MAX_LENGTH.toString()} characters`,
         "1–20",
         "1–2",
-        `${REPORT_DEFAULT_LOOKBACK_DAYS.toString()} days`,
-        `${REPORT_MAX_LOOKBACK_DAYS.toString()} days`,
         REPORT_DEFAULT_MAX_ROWS.toString(),
         REPORT_MAX_ROWS_LIMIT.toString(),
         "1–8",
@@ -122,9 +139,9 @@ game.
   ]}
 />
 
-Lookback and maximum rows are **report settings**, not query syntax — set them
-on the report form alongside the schedule. A `LIMIT` larger than the maximum is
-capped at execution.
+The maximum row count is a **report setting**, not query syntax. A `LIMIT`
+larger than the maximum is capped at execution. The time period, by contrast,
+is query syntax: write it as a `DURING` clause.
 
 ## Vocabulary
 

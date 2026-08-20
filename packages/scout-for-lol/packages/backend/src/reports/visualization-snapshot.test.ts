@@ -34,7 +34,7 @@ describe("buildVisualizationSnapshot", () => {
 
   test("caps non-temporal snapshot series without failing a valid table", () => {
     const plan = parseAndCompile(
-      "SELECT champion, queue, games FROM match_participants GROUP BY champion, queue RENDER table",
+      "SELECT champion, queue, games FROM match_participants GROUP BY champion, queue DURING LAST 30 DAYS RENDER table",
     );
     const rows = Array.from(
       { length: 9 },

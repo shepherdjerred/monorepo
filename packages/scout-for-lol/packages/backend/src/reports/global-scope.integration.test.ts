@@ -244,7 +244,7 @@ describe("global scope", () => {
       prisma,
       scope: GLOBAL_SCOPE,
       queryText:
-        "SELECT player, games FROM match_participants WHERE player IN ('Faker#NA1') GROUP BY player",
+        "SELECT player, games FROM match_participants WHERE player IN ('Faker#NA1') GROUP BY player DURING LAST 30 DAYS",
       now,
     });
 
@@ -266,7 +266,7 @@ describe("global scope", () => {
         prisma,
         scope: GLOBAL_SCOPE,
         queryText:
-          "SELECT player, games FROM competition_match_participants WHERE competition_id = 1 GROUP BY player",
+          "SELECT player, games FROM competition_match_participants WHERE competition_id = 1 GROUP BY player DURING LAST 30 DAYS",
         now,
       }),
     ).rejects.toThrow(/not available in global scope/);

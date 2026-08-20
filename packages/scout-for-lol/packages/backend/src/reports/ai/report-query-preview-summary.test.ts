@@ -10,7 +10,7 @@ describe("reportQueryPreviewSummary", () => {
   test("projects result values onto the strict AI preview contract", () => {
     const result: ReportQueryResult = {
       plan: parseAndCompile(
-        "SELECT games FROM match_participants GROUP BY all LIMIT 10 RENDER table",
+        "SELECT games FROM match_participants GROUP BY all DURING LAST 30 DAYS LIMIT 10 RENDER table",
       ),
       columns: ["games"],
       rows: [

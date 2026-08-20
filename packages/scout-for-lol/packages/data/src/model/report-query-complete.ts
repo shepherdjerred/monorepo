@@ -3,6 +3,7 @@ import type { IToken, TokenType } from "chevrotain";
 import {
   Analyze,
   By,
+  During,
   From,
   Group,
   Having,
@@ -17,8 +18,8 @@ import {
   tokenSpan,
   Where,
 } from "#src/model/report-query-lexer.ts";
+import { REPORT_FILTERS } from "#src/model/report-query-filter-registry.ts";
 import {
-  REPORT_FILTERS,
   REPORT_FUNCTIONS,
   REPORT_GROUP_BYS,
   REPORT_KEYWORDS,
@@ -51,6 +52,7 @@ type Region =
   | "queueValues"
   | "groupBy"
   | "having"
+  | "during"
   | "analysis"
   | "orderBy"
   | "limit"
@@ -77,16 +79,19 @@ export function completeReportQuery(
     .with("groupBy", () => [
       ...fieldItems(),
       keywordItem("HAVING"),
+      ...duringStarterItems(),
       keywordItem("ANALYZE"),
       keywordItem("ORDER BY"),
       keywordItem("RENDER"),
     ])
     .with("having", () => [
       ...metricItems(),
+      ...duringStarterItems(),
       keywordItem("ANALYZE"),
       keywordItem("ORDER BY"),
       keywordItem("RENDER"),
     ])
+    .with("during", () => duringItems())
     .with("analysis", () => temporalItems())
     .with("orderBy", () => [
       ...metricItems(),
@@ -110,6 +115,7 @@ function currentRegion(tokens: IToken[], offset: number): Region {
     ["where", keywordEnd(tokens, Where)],
     ["groupBy", twoWordKeywordEnd(tokens, Group)],
     ["having", keywordEnd(tokens, Having)],
+    ["during", keywordEnd(tokens, During)],
     ["analysis", keywordEnd(tokens, Analyze)],
     ["orderBy", twoWordKeywordEnd(tokens, Order)],
     ["limit", keywordEnd(tokens, Limit)],
@@ -123,6 +129,66 @@ function currentRegion(tokens: IToken[], offset: number): Region {
   return markers.reduce((best, marker) =>
     marker[1] >= best[1] ? marker : best,
   )[0];
+}
+
+/**
+ * Whole-clause snippets, not the bare `DURING` keyword.
+ *
+ * Every other starter here inserts an identifier the author then completes,
+ * but a bare `DURING` is a parse error until its argument is typed — and this
+ * clause is required, so the suggestion has to leave behind something that
+ * compiles.
+ */
+function duringStarterItems(): ReportCompletionItem[] {
+  return [
+    {
+      label: "DURING ALL TIME",
+      insertText: "DURING ALL TIME",
+      detail: "Cover every match in the lake.",
+      kind: "keyword",
+    },
+    {
+      label: "DURING LAST 30 DAYS",
+      insertText: "DURING LAST 30 DAYS",
+      detail: "Cover a rolling window of days.",
+      kind: "keyword",
+    },
+    {
+      label: "DURING BETWEEN dates",
+      insertText: "DURING BETWEEN '2026-01-01' AND '2026-01-31'",
+      detail: "Cover two inclusive calendar dates.",
+      kind: "keyword",
+    },
+  ];
+}
+
+function duringItems(): ReportCompletionItem[] {
+  return [
+    {
+      label: "ALL TIME",
+      insertText: "ALL TIME",
+      detail: "Cover every match in the lake.",
+      kind: "keyword",
+    },
+    {
+      label: "LAST 30 DAYS",
+      insertText: "LAST 30 DAYS",
+      detail: "Cover a rolling window of days.",
+      kind: "keyword",
+    },
+    {
+      label: "BETWEEN dates",
+      insertText: "BETWEEN '2026-01-01' AND '2026-01-31'",
+      detail: "Cover two inclusive calendar dates.",
+      kind: "keyword",
+    },
+    {
+      label: "IN TIME ZONE",
+      insertText: "IN TIME ZONE 'UTC'",
+      detail: "Interpret calendar dates in an IANA timezone.",
+      kind: "keyword",
+    },
+  ];
 }
 
 function temporalItems(): ReportCompletionItem[] {

@@ -7,7 +7,7 @@ import {
 
 describe("report result formatting", () => {
   const plan = parseAndCompile(
-    "SELECT games, win_rate, kda FROM match_participants GROUP BY player LIMIT 10",
+    "SELECT games, win_rate, kda FROM match_participants GROUP BY player DURING LAST 30 DAYS LIMIT 10",
   );
   const columns = reportResultColumns(plan, [
     "label",

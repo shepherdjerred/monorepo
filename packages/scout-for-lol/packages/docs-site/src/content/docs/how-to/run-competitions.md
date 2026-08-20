@@ -109,6 +109,7 @@ from match_participants
 where queue in (solo)
 and games >= 10
 group by player
+during last 30 days
 order by kda desc
 render leaderboard
 ```

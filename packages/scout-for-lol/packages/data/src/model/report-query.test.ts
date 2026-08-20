@@ -11,7 +11,7 @@ describe("parseAndCompile", () => {
       SELECT player, games, surrenders, surrender_rate
       FROM match_participants
       WHERE queue IN ('solo', "flex")
-      GROUP BY player
+      GROUP BY player DURING LAST 30 DAYS
       ORDER BY surrender_rate DESC
       LIMIT 10
     `);
@@ -36,7 +36,7 @@ describe("parseAndCompile", () => {
 
   test("compiles group(N) queries to a structured group plan", () => {
     const plan = parseAndCompile(
-      "SELECT group, games, win_rate FROM player_groups WHERE games >= 10 GROUP BY group(3) ORDER BY win_rate DESC",
+      "SELECT group, games, win_rate FROM player_groups WHERE games >= 10 GROUP BY group(3) DURING LAST 30 DAYS ORDER BY win_rate DESC",
     );
 
     expect(plan.source).toBe("player_groups");
@@ -48,7 +48,7 @@ describe("parseAndCompile", () => {
 
   test("compiles group(all) queries", () => {
     const plan = parseAndCompile(
-      "SELECT group, games FROM player_groups GROUP BY group(all)",
+      "SELECT group, games FROM player_groups GROUP BY group(all) DURING LAST 30 DAYS",
     );
 
     expect(plan.groupBy).toBe("group");
@@ -57,7 +57,7 @@ describe("parseAndCompile", () => {
 
   test("normalizes the legacy pair aliases to group(2)", () => {
     const plan = parseAndCompile(
-      "SELECT pair, games, wins, losses, win_rate FROM player_pairs WHERE queue IN ('arena') AND games >= 10 GROUP BY pair ORDER BY win_rate DESC LIMIT 10 RENDER leaderboard",
+      "SELECT pair, games, wins, losses, win_rate FROM player_pairs WHERE queue IN ('arena') AND games >= 10 GROUP BY pair DURING LAST 30 DAYS ORDER BY win_rate DESC LIMIT 10 RENDER leaderboard",
     );
 
     expect(plan.source).toBe("player_groups");
@@ -70,7 +70,7 @@ describe("parseAndCompile", () => {
   test("canonicalizes ORDER BY on the group label column to label", () => {
     for (const orderTarget of ["group", "pair", "label"]) {
       const plan = parseAndCompile(
-        `SELECT group, games FROM player_groups GROUP BY group(2) ORDER BY ${orderTarget} ASC`,
+        `SELECT group, games FROM player_groups GROUP BY group(2) DURING LAST 30 DAYS ORDER BY ${orderTarget} ASC`,
       );
       expect(plan.orderBy).toBe("label");
       expect(plan.orderDirection).toBe("asc");
@@ -81,7 +81,7 @@ describe("parseAndCompile", () => {
     for (const bad of ["group(1)", "group(6)", "group()", "group(foo)"]) {
       expect(() =>
         parseAndCompile(
-          `SELECT group, games FROM player_groups GROUP BY ${bad}`,
+          `SELECT group, games FROM player_groups GROUP BY ${bad} DURING LAST 30 DAYS`,
         ),
       ).toThrow("Unknown GROUP BY field");
     }
@@ -89,7 +89,7 @@ describe("parseAndCompile", () => {
 
   test("defaults order and limit when omitted", () => {
     const plan = parseAndCompile(
-      "SELECT champion, games FROM match_participants GROUP BY champion",
+      "SELECT champion, games FROM match_participants GROUP BY champion DURING LAST 30 DAYS",
     );
 
     expect(plan.orderBy).toBe("games");
@@ -111,7 +111,7 @@ describe("parseAndCompile", () => {
 
   test("parses typed row filters", () => {
     const plan = parseAndCompile(
-      "SELECT player, games FROM match_participants WHERE kills > 5 AND role IN ('solo', 'support') GROUP BY player",
+      "SELECT player, games FROM match_participants WHERE kills > 5 AND role IN ('solo', 'support') GROUP BY player DURING LAST 30 DAYS",
     );
     expect(plan.filters).toEqual([
       { field: "kills", operator: ">", values: [5] },
@@ -122,7 +122,7 @@ describe("parseAndCompile", () => {
   test("rejects unknown filter fields", () => {
     expect(() =>
       parseAndCompile(
-        "SELECT player, games FROM match_participants WHERE secret_stat > 5 GROUP BY player",
+        "SELECT player, games FROM match_participants WHERE secret_stat > 5 GROUP BY player DURING LAST 30 DAYS",
       ),
     ).toThrow();
   });
@@ -132,7 +132,7 @@ describe("parseAndCompile", () => {
       SELECT player, games, wins
       FROM competition_match_participants
       WHERE competition_id = 12 AND queue IN ('arena') AND champion_id = 22 AND games >= 5
-      GROUP BY player
+      GROUP BY player DURING LAST 30 DAYS
       ORDER BY wins DESC
     `);
 
@@ -144,7 +144,7 @@ describe("parseAndCompile", () => {
 
   test("resolves a validated champion name to its numeric id", () => {
     const plan = parseAndCompile(
-      "SELECT games FROM match_participants WHERE champion_id = champion('Lux') GROUP BY player",
+      "SELECT games FROM match_participants WHERE champion_id = champion('Lux') GROUP BY player DURING LAST 30 DAYS",
     );
 
     expect(plan.championId).toBe(99);
@@ -152,7 +152,7 @@ describe("parseAndCompile", () => {
 
   test("supports champion display names containing apostrophes", () => {
     const plan = parseAndCompile(
-      `SELECT games FROM match_participants WHERE champion_id = champion("Kai'Sa") GROUP BY player`,
+      `SELECT games FROM match_participants WHERE champion_id = champion("Kai'Sa") GROUP BY player DURING LAST 30 DAYS`,
     );
 
     expect(plan.championId).toBe(145);
@@ -579,7 +579,7 @@ describe("lintReportQuery", () => {
 
   test("positions invalid HAVING diagnostics", () => {
     const text =
-      "select games from match_participants group by player having missing > 2";
+      "select games from match_participants group by player having missing > 2 during last 30 days";
     const diagnostic = lintReportQuery(text).find((entry) =>
       entry.message.includes("HAVING target"),
     );
@@ -608,7 +608,8 @@ describe("completeReportQuery", () => {
   });
 
   test("suggests aggregate outputs after HAVING", () => {
-    const text = "select games from match_participants group by player having ";
+    const text =
+      "select games from match_participants group by player during last 30 days having ";
     const items = completeReportQuery(text, text.length);
     expect(items.some((item) => item.label === "games")).toBe(true);
   });

@@ -25,11 +25,6 @@ export type ReportGroupByInfo = {
   description: string;
 };
 export type ReportKeywordInfo = { keyword: string; description: string };
-export type ReportFilterInfo = {
-  id: string;
-  syntax: string;
-  description: string;
-};
 export type ReportFunctionInfo = {
   id: string;
   syntax: string;
@@ -156,6 +151,11 @@ const KEYWORD_DATA: [string, string][] = [
   ["AS", "Name a calculated SELECT output."],
   ["GROUP BY", "Aggregate by one or two dimensions."],
   ["HAVING", "Filter aggregated rows by a SELECT output or alias."],
+  [
+    "DURING",
+    "State the time period: LAST <n> DAYS, BETWEEN two dates, or ALL TIME.",
+  ],
+  ["ALL TIME", "Cover every match in the lake, with no time bound."],
   ["ANALYZE", "Select a relative or inclusive calendar analysis window."],
   ["BUCKET BY", "Bucket temporal results by auto, day, week, month, or patch."],
   ["COMPARE TO", "Compare against a previous or custom equal-length period."],
@@ -348,79 +348,6 @@ export const REPORT_RENDER_KINDS: ReportRenderKindInfo[] = RENDER_KIND_DATA.map(
     description,
     isChart,
   }),
-);
-
-const FILTER_DATA: [string, string, string][] = [
-  ["player", 'player = "<name>"', "Restrict to a player alias."],
-  ["queue", "queue IN (solo, flex, …)", "Restrict to queue types."],
-  ["champion_id", "champion_id = <number>", "Restrict to a champion id."],
-  [
-    "team_position",
-    "team_position = <position>",
-    "Restrict to a team position.",
-  ],
-  [
-    "individual_position",
-    "individual_position = <position>",
-    "Restrict to an individual position.",
-  ],
-  ["lane", "lane = <lane>", "Restrict to a lane."],
-  ["role", "role = <role>", "Restrict to a role."],
-  ["game_mode", "game_mode = <mode>", "Restrict to a game mode."],
-  ["game_type", "game_type = <type>", "Restrict to a game type."],
-  [
-    "game_version",
-    'game_version = "<version>"',
-    "Restrict to an exact version.",
-  ],
-  ["map_id", "map_id = <number>", "Restrict to a map id."],
-  ["win", "win = true|false", "Restrict by match outcome."],
-  ["surrendered", "surrendered = true|false", "Restrict by surrender state."],
-  [
-    "early_surrendered",
-    "early_surrendered = true|false",
-    "Restrict by early surrender.",
-  ],
-  [
-    "first_blood_kill",
-    "first_blood_kill = true|false",
-    "Restrict by first-blood credit.",
-  ],
-  [
-    "game_duration_seconds",
-    "game_duration_seconds <operator> <number>",
-    "Filter by match length.",
-  ],
-  ["placement", "placement <operator> <number>", "Filter by Arena placement."],
-  ["kills", "kills <operator> <number>", "Filter raw participant kills."],
-  ["deaths", "deaths <operator> <number>", "Filter raw participant deaths."],
-  ["assists", "assists <operator> <number>", "Filter raw participant assists."],
-  [
-    "creep_score",
-    "creep_score <operator> <number>",
-    "Filter raw participant creep score.",
-  ],
-  ["gold_earned", "gold_earned <operator> <number>", "Filter raw gold earned."],
-  ["gold_spent", "gold_spent <operator> <number>", "Filter raw gold spent."],
-  [
-    "damage_to_champions",
-    "damage_to_champions <operator> <number>",
-    "Filter raw champion damage.",
-  ],
-  [
-    "vision_score",
-    "vision_score <operator> <number>",
-    "Filter raw vision score.",
-  ],
-  ["games", "games >= <number>", "Require at least N aggregate games."],
-  [
-    "competition_id",
-    "competition_id = <number>",
-    "Scope competition-backed sources.",
-  ],
-];
-export const REPORT_FILTERS: ReportFilterInfo[] = FILTER_DATA.map(
-  ([id, syntax, description]) => ({ id, syntax, description }),
 );
 
 export type ReportQueueValueInfo = { id: QueueType; label: string };
