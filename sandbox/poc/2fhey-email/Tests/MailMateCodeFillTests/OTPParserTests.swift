@@ -93,7 +93,11 @@ func rejectsFalsePositives() {
     #expect(OTPParser().parse(body: "Open example.xn--p1ai/482913 to continue.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Expires on Aug 20, 2026.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Expires on 20 August 2026.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "Expires on August 20th, 2026.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "Expires on 20th August 2026.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Open example.com?code=482913 to continue.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "Open myapp://verify?code=482913 to continue.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "Your code was texted to 555-1234.", metadata: metadata) == nil)
 }
 
 @Test("keeps a long code when an unrelated address appears in the body")
