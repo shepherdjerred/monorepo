@@ -1,4 +1,4 @@
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder, type Message } from "discord.js";
 import { z } from "zod";
 import type { CustomNightSnapshot } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
@@ -134,10 +134,20 @@ async function recoverPendingRecruitmentMessage(params: {
         "Recruitment recovery channel is not a guild text channel",
       );
     }
-    const messages = await channel.messages.fetch({ limit: 100 });
-    const message = messages.find(
-      (candidate) => candidate.nonce === payload.deliveryId,
-    );
+    let message: Message<true> | undefined;
+    let before: string | undefined;
+    for (;;) {
+      const messages = await channel.messages.fetch(
+        before === undefined ? { limit: 100 } : { limit: 100, before },
+      );
+      message = messages.find(
+        (candidate) => candidate.nonce === payload.deliveryId,
+      );
+      if (message !== undefined) break;
+      const oldest = messages.last();
+      if (oldest === undefined || messages.size < 100) break;
+      before = oldest.id;
+    }
     if (message === undefined) {
       await params.prisma.customAuditEvent.update({
         where: { id: event.id },
