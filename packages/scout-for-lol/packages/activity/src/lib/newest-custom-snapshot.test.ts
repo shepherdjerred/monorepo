@@ -62,4 +62,15 @@ describe("newestCustomSnapshot", () => {
       ),
     ).toBe(null);
   });
+
+  test("preserves a newer socket snapshot after an older query returns null", () => {
+    const requested = snapshot(7);
+    const current = snapshot(8);
+    expect(newestCustomSnapshot(current, null, requested)).toBe(current);
+  });
+
+  test("clears the cache when the current query returns null", () => {
+    const current = snapshot(7);
+    expect(newestCustomSnapshot(current, null, current)).toBe(null);
+  });
 });

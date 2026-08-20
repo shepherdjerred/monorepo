@@ -27,7 +27,7 @@ import {
   PartialTeamChannelsError,
 } from "#src/customs/voice-arrangement-utils.ts";
 import { claimVoiceArrangement } from "#src/customs/voice-claim.ts";
-
+import { isMissingChannelError } from "#src/discord/utils/permissions.ts";
 type TeamChannels = {
   teamA: VoiceChannel;
   teamB: VoiceChannel;
@@ -292,7 +292,8 @@ async function prepareTeamChannels(params: {
         },
         createdChannels: null,
       };
-    } catch {
+    } catch (error) {
+      if (!isMissingChannelError(error)) throw error;
       await deleteRecordedTeamChannels(params.guild, [
         teamAChannelId,
         teamBChannelId,

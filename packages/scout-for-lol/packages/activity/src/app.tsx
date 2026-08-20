@@ -23,11 +23,15 @@ function ActivityContent() {
       const queryFn = activeQuery.queryFn;
       if (queryFn === undefined)
         throw new Error("Customs active query is missing its query function");
+      const currentAtRequest =
+        queryClient.getQueryData<CustomNightSnapshot | null>(
+          trpc.customs.active.queryKey(),
+        );
       const candidate = await queryFn(context);
       const current = queryClient.getQueryData<CustomNightSnapshot | null>(
         trpc.customs.active.queryKey(),
       );
-      return newestCustomSnapshot(current, candidate);
+      return newestCustomSnapshot(current, candidate, currentAtRequest);
     },
   });
   useCustomSocket();
