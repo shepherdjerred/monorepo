@@ -110,23 +110,33 @@ async function createAndRecordTeamChannels(params: {
   | { snapshot: CustomNightSnapshot; channels: TeamChannels }
 > {
   const channels = await createTeamChannels(params.guild, params.lobby);
-  const recorded = await recordTeamChannels({
-    prisma: params.prisma,
-    snapshot: params.snapshot,
-    gameId: params.gameId,
-    claimId: params.claimId,
-    actorDiscordId: params.actorDiscordId,
-    channels,
-  });
-  if (!recorded.applied) {
+  try {
+    const recorded = await recordTeamChannels({
+      prisma: params.prisma,
+      snapshot: params.snapshot,
+      gameId: params.gameId,
+      claimId: params.claimId,
+      actorDiscordId: params.actorDiscordId,
+      channels,
+    });
+    if (!recorded.applied) {
+      const cleanupFailures = await deleteCreatedTeamChannels(channels);
+      if (cleanupFailures.length > 0)
+        throw new Error(
+          `Voice channel cleanup failed: ${cleanupFailures.join("; ")}`,
+        );
+      return recorded;
+    }
+    return { snapshot: recorded.snapshot, channels };
+  } catch (error) {
     const cleanupFailures = await deleteCreatedTeamChannels(channels);
     if (cleanupFailures.length > 0)
       throw new Error(
-        `Voice channel cleanup failed: ${cleanupFailures.join("; ")}`,
+        `${errorMessage(error)}; Voice channel cleanup failed: ${cleanupFailures.join("; ")}`,
+        { cause: error },
       );
-    return recorded;
+    throw error;
   }
-  return { snapshot: recorded.snapshot, channels };
 }
 
 async function recordTeamChannels(params: {

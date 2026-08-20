@@ -278,8 +278,8 @@ export const customsRouter = router({
         latest = await arrangeCustomVoice({
           prisma,
           nightId: input.nightId,
-          actorDiscordId: actor.discordId,
           expectedRevision: latest.snapshot.revision,
+          actorDiscordId: actor.discordId,
         });
         if (!latest.applied) {
           const current = await broadcast(latest);
@@ -294,6 +294,7 @@ export const customsRouter = router({
         latest = await recordCustomVoiceFailure({
           prisma,
           nightId: input.nightId,
+          expectedRevision: latest.snapshot.revision,
           actorDiscordId: actor.discordId,
           message: error instanceof Error ? error.message : String(error),
         });

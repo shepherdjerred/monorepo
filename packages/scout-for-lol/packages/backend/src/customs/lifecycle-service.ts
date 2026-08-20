@@ -174,15 +174,14 @@ export async function overrideCustomVoice(params: {
 export async function recordCustomVoiceFailure(params: {
   prisma: ExtendedPrismaClient;
   nightId: string;
+  expectedRevision: number;
   actorDiscordId: string;
   message: string;
 }): Promise<CustomMutationResult> {
-  const snapshot = await getCustomNight(params.prisma, params.nightId);
-  if (snapshot === null) throw new Error("Custom night not found");
   return await commitCustomMutation({
     prisma: params.prisma,
     nightId: params.nightId,
-    expectedRevision: snapshot.revision,
+    expectedRevision: params.expectedRevision,
     actorDiscordId: params.actorDiscordId,
     action: "VOICE_ARRANGEMENT_FAILED",
     payload: { failures: [params.message] },
