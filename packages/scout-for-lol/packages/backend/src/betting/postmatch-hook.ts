@@ -22,7 +22,14 @@ export async function refreshSettledPoolMessages(
   refreshStraightPools: typeof refreshClosedBucksMessages = refreshClosedBucksMessages,
   disableParlayPools: typeof disableClosedBettingMessages = disableClosedBettingMessages,
 ): Promise<void> {
-  await refreshStraightPools(straightPools);
+  const uniqueStraightPools = new Map<
+    string,
+    { matchId: string; serverId: string }
+  >();
+  for (const pool of straightPools) {
+    uniqueStraightPools.set(`${pool.serverId}:${pool.matchId}`, pool);
+  }
+  await refreshStraightPools([...uniqueStraightPools.values()]);
   await disableParlayPools(parlaySettlements);
 }
 
@@ -64,6 +71,9 @@ export async function settleAndAwardBucks(
   await refreshSettledPoolMessages(
     [...closures, ...retry.settlements],
     parlaySettlements,
+    async (pools) => {
+      await refreshClosedBucksMessages(pools, prismaClient);
+    },
   );
   return {
     closures,
@@ -72,4 +82,3 @@ export async function settleAndAwardBucks(
     earnings,
   };
 }
-

@@ -22,8 +22,34 @@ const MAX_VISIBLE_POSITIONS = 15;
 export type BucksPrematchPosition = {
   discordId: string;
   teamId: RiotTeamId;
-  stake: number;
+  offeredStake: number;
+  matchedStake: number | null;
+  unmatchedStake: number | null;
 };
+
+export type BucksPrematchHouseMatch = {
+  teamId: RiotTeamId;
+  matchedStake: number;
+};
+
+function finalAllocation(position: BucksPrematchPosition): {
+  matchedStake: number;
+  unmatchedStake: number;
+} {
+  if (
+    position.matchedStake === null ||
+    position.unmatchedStake === null ||
+    position.offeredStake !== position.matchedStake + position.unmatchedStake
+  ) {
+    throw new Error(
+      `Bryan Bucks position for ${position.discordId} has no valid final allocation`,
+    );
+  }
+  return {
+    matchedStake: position.matchedStake,
+    unmatchedStake: position.unmatchedStake,
+  };
+}
 
 /**
  * Build the optional betting line.
@@ -52,26 +78,60 @@ export function bucksPrematchSummary(input: {
   prediction: BucksPrediction | undefined;
   poolState: BucksPoolState;
   positions: readonly BucksPrematchPosition[];
+  houseMatches?: readonly BucksPrematchHouseMatch[];
 }): string {
   const lines = [bucksPrematchLine({ prediction: input.prediction })];
   const humanPositions = input.positions.slice(0, MAX_VISIBLE_POSITIONS);
-  const blueTotal = input.positions
-    .filter((position) => position.teamId === 100)
-    .reduce((total, position) => total + position.stake, 0);
-  const redTotal = input.positions
-    .filter((position) => position.teamId === 200)
-    .reduce((total, position) => total + position.stake, 0);
-  const heading = input.poolState === "open" ? "Live bets" : "Final bets";
+  const houseMatches = input.houseMatches ?? [];
+  const isOpen = input.poolState === "open";
+
+  if (isOpen && houseMatches.length > 0) {
+    throw new Error("An open Bryan Bucks pool cannot contain a house match");
+  }
 
   lines.push("");
   if (input.positions.length === 0) {
-    lines.push(`🎲 **${heading}** — No bets yet.`);
+    lines.push(
+      isOpen
+        ? "🎲 **Live offers** — No offers yet."
+        : "🎲 **Final matched stakes** — No active offers at close.",
+    );
     return lines.join("\n");
   }
 
-  lines.push(
-    `🎲 **${heading}** — Blue **${blueTotal.toString()} BB** · Red **${redTotal.toString()} BB**`,
-  );
+  if (isOpen) {
+    const blueOffered = input.positions
+      .filter((position) => position.teamId === 100)
+      .reduce((total, position) => total + position.offeredStake, 0);
+    const redOffered = input.positions
+      .filter((position) => position.teamId === 200)
+      .reduce((total, position) => total + position.offeredStake, 0);
+    lines.push(
+      `🎲 **Live offers** — Blue **${blueOffered.toString()} BB offered** · Red **${redOffered.toString()} BB offered**`,
+    );
+  } else {
+    const matchedForTeam = (teamId: RiotTeamId): number =>
+      input.positions
+        .filter((position) => position.teamId === teamId)
+        .reduce(
+          (total, position) => total + finalAllocation(position).matchedStake,
+          0,
+        ) +
+      houseMatches
+        .filter((position) => position.teamId === teamId)
+        .reduce((total, position) => total + position.matchedStake, 0);
+    const blueMatched = matchedForTeam(100);
+    const redMatched = matchedForTeam(200);
+    lines.push(
+      `🎲 **Final matched stakes** — Blue **${blueMatched.toString()} BB** · Red **${redMatched.toString()} BB**`,
+    );
+    for (const houseMatch of houseMatches) {
+      lines.push(
+        `🏦 House matched **${houseMatch.matchedStake.toString()} BB** on **${teamName(houseMatch.teamId)}**.`,
+      );
+    }
+  }
+
   for (const teamId of [100, 200] satisfies readonly RiotTeamId[]) {
     const teamPositions = humanPositions.filter(
       (position) => position.teamId === teamId,
@@ -81,9 +141,16 @@ export function bucksPrematchSummary(input: {
     }
     lines.push(`**${teamName(teamId)}**`);
     for (const position of teamPositions) {
-      lines.push(
-        `• <@${position.discordId}> — **${position.stake.toString()} BB**`,
-      );
+      if (isOpen) {
+        lines.push(
+          `• <@${position.discordId}> — offered **${position.offeredStake.toString()} BB**`,
+        );
+      } else {
+        const allocation = finalAllocation(position);
+        lines.push(
+          `• <@${position.discordId}> — offered **${position.offeredStake.toString()} BB** · matched **${allocation.matchedStake.toString()} BB** · refunded **${allocation.unmatchedStake.toString()} BB**`,
+        );
+      }
     }
   }
 

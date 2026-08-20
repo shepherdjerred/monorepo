@@ -232,6 +232,7 @@ async function processMatchAndUpdatePlayers(
   // After the S3 gate and OUTSIDE `!silent`: Bucks are owed for the game even
   // when the ordinary match report is suppressed. See settleAndAwardBucks.
   const bucks = await settleAndAwardBucks(matchData);
+  let postmatchMessageIds = new Map<DiscordChannelId, string>();
 
   if (!silent) {
     // Report generation runs only AFTER the durable copy succeeded. A
@@ -239,7 +240,6 @@ async function processMatchAndUpdatePlayers(
     // failure) still swallows + advances: the authoritative S3 write already
     // succeeded, and these failures are deterministic — retrying every poll
     // would re-run the whole AI pipeline and burn tokens for nothing.
-    let postmatchMessageIds = new Map<DiscordChannelId, string>();
     try {
       postmatchMessageIds = await processMatch(matchData, allTrackedPlayers);
     } catch (error) {
@@ -265,7 +265,12 @@ async function processMatchAndUpdatePlayers(
     // one-shot. Sharing a `try` with report generation and Discord delivery
     // meant a render crash or a failed send discarded the settlement summary
     // outright, and the bettors were never told what happened to their stakes.
-    await announceSettlements({ matchId, ...bucks, postmatchMessageIds });
+    await announceSettlements({
+      matchId,
+      settlements: bucks.settlements,
+      earnings: bucks.earnings,
+      postmatchMessageIds,
+    });
     await announceParlaySettlements(bucks.parlaySettlements);
   }
 

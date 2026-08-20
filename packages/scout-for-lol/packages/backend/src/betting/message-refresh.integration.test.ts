@@ -90,6 +90,8 @@ async function addPosition(input: {
   teamId: 100 | 200;
   stake: number;
   isHouse?: boolean;
+  matchedStake?: number;
+  unmatchedStake?: number;
 }): Promise<void> {
   const account = await db.bucksAccount.create({
     data: {
@@ -106,6 +108,12 @@ async function addPosition(input: {
       predictedTeamId: input.teamId,
       subjectPuuid: bucksTestPuuid(input.accountIndex),
       stake: input.stake,
+      ...(input.matchedStake === undefined
+        ? {}
+        : { matchedStake: input.matchedStake }),
+      ...(input.unmatchedStake === undefined
+        ? {}
+        : { unmatchedStake: input.unmatchedStake }),
     },
   });
 }
@@ -147,13 +155,6 @@ describe("refreshBucksMessages", () => {
       teamId: 200,
       stake: 5,
     });
-    await addPosition({
-      poolId: pool.id,
-      accountIndex: 99,
-      teamId: 200,
-      stake: 6,
-      isHouse: true,
-    });
     const edits: RecordedEdit[] = [];
 
     await refreshBucksMessages(
@@ -169,13 +170,16 @@ describe("refreshBucksMessages", () => {
     ]);
     expect(edits.every((edit) => edit.suppressedMentions)).toBe(true);
     expect(edits.every((edit) => !edit.removedComponents)).toBe(true);
-    expect(edits[0]?.content).toContain("Blue **6 BB** · Red **5 BB**");
+    expect(edits[0]?.content).toContain(
+      "Blue **6 BB offered** · Red **5 BB offered**",
+    );
     expect(edits[0]?.content).toContain(`<@${bucksTestDiscordId(1)}>`);
     expect(edits[0]?.content).toContain(`<@${bucksTestDiscordId(2)}>`);
     expect(edits[0]?.content).not.toContain(`<@${bucksTestDiscordId(99)}>`);
 
-    await db.bucksBet.deleteMany({
+    await db.bucksBet.updateMany({
       where: { poolId: pool.id, predictedTeamId: 200 },
+      data: { betOutcome: "cancelled" },
     });
     edits.length = 0;
     await refreshBucksMessages(
@@ -184,7 +188,10 @@ describe("refreshBucksMessages", () => {
       recordingEditor(edits),
     );
     expect(edits[0]?.content).not.toContain(`<@${bucksTestDiscordId(2)}>`);
-    expect(edits[0]?.content).toContain("Blue **6 BB** · Red **0 BB**");
+    expect(edits[0]?.content).toContain(
+      "Blue **6 BB offered** · Red **0 BB offered**",
+    );
+    expect(await db.bucksBet.count({ where: { poolId: pool.id } })).toBe(2);
   });
 
   test("does not edit a pre-deployment pool with no stored content base", async () => {
@@ -236,13 +243,32 @@ describe("refreshBucksMessages", () => {
     expect(edits[0]?.content).toContain(`<@${bucksTestDiscordId(1)}>`);
   });
 
-  test("removes controls and labels the final positions after close", async () => {
+  test("removes controls and shows exact final allocations after close", async () => {
     const pool = await createPool();
     await addPosition({
       poolId: pool.id,
       accountIndex: 1,
       teamId: 100,
       stake: 5,
+      matchedStake: 5,
+      unmatchedStake: 0,
+    });
+    await addPosition({
+      poolId: pool.id,
+      accountIndex: 2,
+      teamId: 200,
+      stake: 1,
+      matchedStake: 1,
+      unmatchedStake: 0,
+    });
+    await addPosition({
+      poolId: pool.id,
+      accountIndex: 99,
+      teamId: 200,
+      stake: 4,
+      isHouse: true,
+      matchedStake: 4,
+      unmatchedStake: 0,
     });
     await db.bucksMatchPool.update({
       where: { id: pool.id },
@@ -257,7 +283,16 @@ describe("refreshBucksMessages", () => {
     );
 
     expect(edits.every((edit) => edit.removedComponents)).toBe(true);
-    expect(edits[0]?.content).toContain("**Final bets**");
+    expect(edits[0]?.content).toContain(
+      "**Final matched stakes** — Blue **5 BB** · Red **5 BB**",
+    );
+    expect(edits[0]?.content).toContain(
+      "offered **5 BB** · matched **5 BB** · refunded **0 BB**",
+    );
+    expect(edits[0]?.content).toContain(
+      "🏦 House matched **4 BB** on **Red Team**.",
+    );
+    expect(edits[0]?.content).not.toContain(`<@${bucksTestDiscordId(99)}>`);
   });
 
   test("serializes refreshes so the final edit reads the newest positions", async () => {

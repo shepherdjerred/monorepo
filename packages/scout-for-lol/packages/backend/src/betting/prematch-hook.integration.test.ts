@@ -218,7 +218,7 @@ describe("prepareBucksPrematch", () => {
     // The complement of the three cases above: in scope, the work happens.
     expect(buildPrediction).toHaveBeenCalled();
     expect(result.footer).toContain(HOUSE_CUT_TERMS);
-    expect(result.footer).toContain("**Live bets** — No bets yet.");
+    expect(result.footer).toContain("**Live offers** — No offers yet.");
 
     // Pool creation itself needs a database and is covered by the pool and
     // place-bet integration suites; this file is only about what work is done

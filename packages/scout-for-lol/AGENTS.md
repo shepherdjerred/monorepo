@@ -955,9 +955,12 @@ remain full refunds with no cut.
 - **Successful mutations refresh the prematch message instead of posting a
   receipt.** Button and `/bb` placement or cancellation confirmations remain
   ephemeral. After the ledger transaction commits, a per-pool queue re-reads
-  current bets and best-effort edits every stored prematch message with Blue and
-  Red totals plus each named human position. House positions stay hidden,
-  cancellations disappear, and mention notifications are suppressed. The pool
+  current offers and best-effort edits every stored prematch message with Blue
+  and Red totals plus each named human position. At close the same message
+  becomes the receipt: it shows every human's offered, matched, and refunded BB,
+  equal final matched totals, and any aggregate house fill without exposing the
+  synthetic house account. Cancellations disappear from the public digest while
+  remaining in the audit tables, and mention notifications are suppressed. The pool
   records `prematchContentBase` atomically with its message refs so refreshes do
   not require Read Message History; legacy pools without that base remain
   settlement-safe and are not edited. Close and settlement run the same refresh
@@ -1407,4 +1410,3 @@ messaging real people.
 - Analytics is best effort. SDK and capture errors are logged and counted but
   must not fail product behavior; graceful shutdown must flush the SDK queue.
 - Slash-command analytics, Scout desktop, and Scout evals are out of scope.
-

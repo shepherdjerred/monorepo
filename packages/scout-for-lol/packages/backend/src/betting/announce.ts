@@ -100,27 +100,27 @@ function formatSettlementDisplay(input: {
   const summaryLines: string[] = [];
   const betLines: string[] = [];
   const earningLines: string[] = [];
-  const pool = summary.bets.reduce((total, bet) => total + bet.stake, 0);
+  const pool = summary.bets.reduce((total, bet) => total + bet.matchedStake, 0);
 
   if (summary.voidReason === undefined) {
     summaryLines.push(
-      `Pool **${pool.toString()} BB** · house cut **${summary.houseCut.toString()} BB** (winners ${summary.winnersPool.toString()} / losers ${summary.losersPool.toString()})`,
+      `Matched pool **${pool.toString()} BB** · winner fees **${summary.houseCut.toString()} BB** (winners matched ${summary.winnersPool.toString()} / losers matched ${summary.losersPool.toString()})`,
     );
   } else {
     const reason =
       summary.voidReason === "remake"
-        ? "Remake — every bet refunded."
+        ? "Remake — every matched stake refunded."
         : summary.voidReason === "no_counterparty"
-          ? "No takers on the other side — every bet refunded."
+          ? "No takers on the other side — every matched stake refunded."
           : summary.voidReason === "house_unavailable"
-            ? "The Bryan Bucks house reserve was unavailable — every bet refunded."
+            ? "The Bryan Bucks house reserve was unavailable — every matched stake refunded."
             : summary.voidReason === "expired"
-              ? "This game never resolved — every bet refunded."
+              ? "This game never resolved — every matched stake refunded."
               : summary.voidReason === "storage_overflow"
-                ? "The result exceeded Bryan Bucks storage limits — every bet refunded."
-                : "Unsupported game mode — every bet refunded.";
+                ? "The result exceeded Bryan Bucks storage limits — every matched stake refunded."
+                : "Unsupported game mode — every matched stake refunded.";
     summaryLines.push(
-      `Pool **${pool.toString()} BB** · house cut **0 BB**. ${reason}`,
+      `Matched pool **${pool.toString()} BB** · winner fees **0 BB**. ${reason}`,
     );
   }
 
@@ -136,7 +136,10 @@ function formatSettlementDisplay(input: {
   const houseBets = summary.bets.filter((bet) => bet.isHouse);
 
   if (houseBets.length > 0) {
-    const houseStake = houseBets.reduce((total, bet) => total + bet.stake, 0);
+    const houseStake = houseBets.reduce(
+      (total, bet) => total + bet.matchedStake,
+      0,
+    );
     summaryLines.push(
       "🏦 Bryan Bucks house matched " +
         houseStake.toString() +
@@ -147,12 +150,12 @@ function formatSettlementDisplay(input: {
   if (humanBets.length > 0) {
     for (const bet of humanBets.slice(0, MAX_BET_ROWS)) {
       const result = bet.refunded
-        ? `refunded ${bet.payout.toString()} BB (no house cut)`
+        ? `matched stake refunded ${bet.payout.toString()} BB (no winner fee)`
         : bet.won
-          ? `gross ${bet.grossPayout.toString()} BB − ${bet.houseCut.toString()} BB house cut = ${bet.payout.toString()} BB received (+${bet.winnings.toString()} BB net winnings)`
-          : "received 0 BB";
+          ? `gross ${bet.grossPayout.toString()} BB − ${bet.houseCut.toString()} BB winner fee = ${bet.payout.toString()} BB received (+${bet.winnings.toString()} BB net winnings)`
+          : `lost ${bet.matchedStake.toString()} BB`;
       betLines.push(
-        `• <@${bet.discordId}> staked ${bet.stake.toString()} BB → ${result}`,
+        `• <@${bet.discordId}> offered ${bet.submittedStake.toString()} BB · matched ${bet.matchedStake.toString()} BB · refunded ${bet.unmatchedStake.toString()} BB → ${result}`,
       );
     }
     if (humanBets.length > MAX_BET_ROWS) {
@@ -516,5 +519,3 @@ export async function announceSettlements(
     }
   }
 }
-
-
