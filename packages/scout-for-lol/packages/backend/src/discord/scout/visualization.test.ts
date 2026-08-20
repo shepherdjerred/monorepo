@@ -108,6 +108,17 @@ describe("Scout Discord visualizations", () => {
     expect(visualizationToEmbed(subtitleKpi)?.data.description).toContain(
       "By player",
     );
+    const longSubtitleKpi = VisualizationSnapshotSchema.parse({
+      ...subtitleKpi,
+      display: {
+        ...subtitleKpi.display,
+        options: { subtitle: "By player ".repeat(500) },
+      },
+    });
+    const longSubtitleDescription =
+      visualizationToEmbed(longSubtitleKpi)?.data.description;
+    expect(longSubtitleDescription).toContain("Games counted");
+    expect(longSubtitleDescription).toContain("56");
 
     const comparisonKpi = VisualizationSnapshotSchema.parse({
       ...scoutTestKpi,
@@ -212,11 +223,16 @@ describe("Scout Discord visualization edge cases", () => {
         ...series,
         id: `Champion ${index.toString()}:${series.metric}`,
         label: `Champion ${index.toString()} — ${series.label}`,
+        points: series.points.map((point) => ({
+          ...point,
+          key: "solo",
+          label: "solo",
+        })),
       })),
     });
     const collapsedDescription = visualizationToEmbed(
       collapsedSnapshot,
-      legacyPreview,
+      preview,
     )?.data.description;
     expect(collapsedDescription).toContain(
       "additional rows omitted from the stored preview",

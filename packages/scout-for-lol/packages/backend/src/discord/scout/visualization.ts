@@ -190,7 +190,7 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
   const subtitle = snapshot.display.options?.subtitle;
   return subtitle === undefined
     ? description
-    : `${escapeMarkdown(subtitle)}\n\n${description}`;
+    : `${description}\n\n${escapeMarkdown(subtitle)}`;
 }
 
 function formatList(
@@ -390,9 +390,7 @@ function hasPreviewRowsBeyondStoredRows(
     snapshot.series.some((series) => {
       const separator = series.id.lastIndexOf(":");
       return separator !== -1 && series.id.slice(0, separator) !== "All";
-    }) &&
-    snapshot.series.reduce((total, series) => total + series.points.length, 0) >
-      rows.length;
+    }) && snapshotRows.length < rows.length;
   return (
     preview.rowsReturned === 0 &&
     preview.visualizationRows.length === 0 &&
