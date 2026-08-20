@@ -385,24 +385,38 @@ async function arrangeCustomVoiceOperation(params: {
     });
   } catch (error) {
     if (error instanceof PartialTeamChannelsError) {
-      const recorded = await commitClaimedVoiceArrangement({
-        prisma: params.prisma,
-        snapshot: latest,
-        gameId: game.id,
-        claimId: claim.claimId,
-        actorDiscordId: params.actorDiscordId,
-        action: "VOICE_CHANNEL_CREATED",
-        payload: {
-          teamAVoiceChannelId: error.teamA.id,
-          teamBVoiceChannelId: null,
-        },
-        update: (current) =>
-          CustomNightSnapshotSchema.parse({
-            ...current,
+      createdChannels = { teamA: error.teamA };
+      let recorded: CustomMutationResult;
+      try {
+        recorded = await commitClaimedVoiceArrangement({
+          prisma: params.prisma,
+          snapshot: latest,
+          gameId: game.id,
+          claimId: claim.claimId,
+          actorDiscordId: params.actorDiscordId,
+          action: "VOICE_CHANNEL_CREATED",
+          payload: {
             teamAVoiceChannelId: error.teamA.id,
             teamBVoiceChannelId: null,
-          }),
-      });
+          },
+          update: (current) =>
+            CustomNightSnapshotSchema.parse({
+              ...current,
+              teamAVoiceChannelId: error.teamA.id,
+              teamBVoiceChannelId: null,
+            }),
+        });
+      } catch (recordingError) {
+        const cleanupFailures = await deleteCreatedTeamChannels({
+          teamA: error.teamA,
+        });
+        if (cleanupFailures.length > 0)
+          throw new Error(
+            `${errorMessage(recordingError)}; Voice channel cleanup failed: ${cleanupFailures.join("; ")}`,
+            { cause: recordingError },
+          );
+        throw recordingError;
+      }
       if (recorded.applied) {
         latest = recorded.snapshot;
         channelsRecorded = true;

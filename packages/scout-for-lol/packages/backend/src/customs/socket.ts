@@ -25,6 +25,10 @@ const expiryTimers = new WeakMap<
   Bun.ServerWebSocket<CustomSocketData>,
   ReturnType<typeof globalThis.setTimeout>
 >();
+const snapshotDeliveryQueues = new WeakMap<
+  Bun.ServerWebSocket<CustomSocketData>,
+  Promise<void>
+>();
 
 function isAllowedActivityOrigin(
   origin: string | null,
@@ -53,6 +57,7 @@ function removeCustomSocket(
   const guildSockets = socketsByGuild.get(guildId);
   guildSockets?.delete(socket);
   if (guildSockets?.size === 0) socketsByGuild.delete(guildId);
+  snapshotDeliveryQueues.delete(socket);
 }
 
 function activityTokenFromProtocols(request: Request): string | null {
@@ -118,7 +123,8 @@ export const customSocketHandlers: Bun.WebSocketHandler<CustomSocketData> = {
     try {
       const snapshot = await getActiveCustomNight(prisma, guildId);
       if (snapshot !== null) {
-        socket.send(
+        enqueueSnapshotDelivery(
+          socket,
           JSON.stringify(
             CustomSnapshotEnvelopeSchema.parse({ kind: "snapshot", snapshot }),
           ),
@@ -145,7 +151,33 @@ export function publishCustomSnapshot(snapshot: CustomNightSnapshot): void {
     CustomSnapshotEnvelopeSchema.parse({ kind: "snapshot", snapshot }),
   );
   for (const socket of socketsByGuild.get(snapshot.guildId) ?? []) {
-    void sendSnapshotToAuthorizedSocket(socket, envelope);
+    enqueueSnapshotDelivery(socket, envelope);
+  }
+}
+
+function enqueueSnapshotDelivery(
+  socket: Bun.ServerWebSocket<CustomSocketData>,
+  envelope: string,
+): void {
+  const previous = snapshotDeliveryQueues.get(socket) ?? Promise.resolve();
+  const delivery = deliverSnapshotAfter(previous, socket, envelope);
+  snapshotDeliveryQueues.set(socket, delivery);
+}
+
+async function deliverSnapshotAfter(
+  previous: Promise<void>,
+  socket: Bun.ServerWebSocket<CustomSocketData>,
+  envelope: string,
+): Promise<void> {
+  try {
+    await previous;
+  } catch (error) {
+    logger.error("Customs socket snapshot delivery failed", { error });
+  }
+  try {
+    await sendSnapshotToAuthorizedSocket(socket, envelope);
+  } catch (error) {
+    logger.error("Customs socket snapshot delivery failed", { error });
   }
 }
 
@@ -155,6 +187,7 @@ async function sendSnapshotToAuthorizedSocket(
 ): Promise<void> {
   try {
     await assertCustomGuildMember(socket.data.claims);
+    if (socket.readyState !== WebSocket.OPEN) return;
     socket.send(envelope);
   } catch (error) {
     logger.info("Closing Customs socket after guild membership loss", {
