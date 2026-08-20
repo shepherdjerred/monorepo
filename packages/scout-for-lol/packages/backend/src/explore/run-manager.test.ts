@@ -263,6 +263,51 @@ describe("ExploreRunManager", () => {
     ).toBe(1);
     discordTicket.finish();
   });
+
+  test("regeneration records every answer version that predates the run", async () => {
+    const agent = controlledAgent();
+    const manager = createManager(agent);
+    const conversation = await trpc.prisma.exploreConversation.create({
+      data: {
+        userId: owner,
+        title: "Regeneration",
+        messages: { create: { role: "user", content: "Who wins?" } },
+      },
+      include: { messages: true },
+    });
+    const question = conversation.messages[0];
+    if (question === undefined) throw new Error("Expected a question.");
+    await trpc.prisma.exploreMessage.createMany({
+      data: [
+        {
+          conversationId: conversation.id,
+          parentId: question.id,
+          role: "assistant",
+          content: "First answer",
+        },
+        {
+          conversationId: conversation.id,
+          parentId: question.id,
+          role: "assistant",
+          content: "Second answer",
+        },
+      ],
+    });
+
+    const summary = await manager.start(
+      { userId: owner },
+      {
+        conversationId: conversation.id,
+        question: null,
+        attach: { kind: "message", messageId: question.id },
+      },
+    );
+    expect(summary.versionCountAtStart).toBe(2);
+
+    const finished = observeUntilDone(manager, summary);
+    requiredRun(agent, 0).resolve(successfulResult("Third answer"));
+    expect(await finished).toBe("succeeded");
+  });
 });
 
 describe("ExploreRunManager lifecycle", () => {

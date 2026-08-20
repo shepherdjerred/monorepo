@@ -47,10 +47,7 @@ import {
 const NEW_CONVERSATION_KEY = "new";
 const RECONNECT_DELAYS_MS = [250, 750, 1500, 3000];
 
-type RunIdentity = Pick<
-  ExploreActiveRun,
-  "runId" | "conversationId" | "questionMessageId" | "leafIdAtStart"
->;
+type RunIdentity = Omit<ExploreActiveRun, "startedAt">;
 
 function conversationKey(conversationId: string | null): string {
   return conversationId ?? NEW_CONVERSATION_KEY;

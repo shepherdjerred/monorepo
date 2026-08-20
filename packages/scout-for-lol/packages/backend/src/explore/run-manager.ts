@@ -156,6 +156,13 @@ export class ExploreRunManager {
         identity,
         conversationId,
       );
+      const versionCountAtStart = await this.#client.exploreMessage.count({
+        where: {
+          conversationId: started.conversationId,
+          parentId: started.messageId,
+          role: "assistant",
+        },
+      });
       const transcript = await loadExploreTranscript(
         this.#client,
         started.conversationId,
@@ -173,6 +180,7 @@ export class ExploreRunManager {
         conversationId: started.conversationId,
         questionMessageId: started.messageId,
         leafIdAtStart: started.expectedCurrentLeafId,
+        versionCountAtStart,
         startedAt: new Date().toISOString(),
       });
       const run: ActiveRun = {

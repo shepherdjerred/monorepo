@@ -73,6 +73,7 @@ describe("applyStreamEvent", () => {
       conversationId: CONVERSATION,
       questionMessageId: QUESTION_ID,
       leafIdAtStart: OLD_ANSWER_ID,
+      versionCountAtStart: 1,
       startedAt: "2026-08-18T12:00:00.000Z",
       answer: "Jinx",
       activity: "Querying match data.",

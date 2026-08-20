@@ -12,7 +12,7 @@ export type ExploreRunOutcome =
   | "interrupted";
 
 export function resolveExploreRunCompletion(input: {
-  run: Pick<ExploreActiveRun, "questionMessageId" | "leafIdAtStart">;
+  run: Pick<ExploreActiveRun, "questionMessageId" | "versionCountAtStart">;
   outcome: ExploreRunOutcome;
   finalMessageId: string | null;
   messages: ExploreMessage[] | undefined;
@@ -26,7 +26,8 @@ export function resolveExploreRunCompletion(input: {
           (message) =>
             message.role === "assistant" &&
             message.parentId === input.run.questionMessageId &&
-            message.id !== input.run.leafIdAtStart,
+            message.siblingIds.length > input.run.versionCountAtStart &&
+            message.siblingIds.at(-1) === message.id,
         )
       : input.messages?.find((message) => message.id === input.finalMessageId);
   if (answer?.caveats.includes(EXPLORE_INTERRUPTED_CAVEAT) === true) {

@@ -14,6 +14,7 @@ const ExploreRunMarkerSchema = z
     conversationId: ExploreConversationIdSchema,
     questionMessageId: z.uuid(),
     leafIdAtStart: z.uuid().nullable(),
+    versionCountAtStart: z.number().int().nonnegative().default(0),
     state: z.enum(["running", "completed", "failed"]),
   })
   .strict();
@@ -23,7 +24,11 @@ export type ExploreRunMarker = z.infer<typeof ExploreRunMarkerSchema>;
 export function createExploreRunMarker(
   summary: Pick<
     ExploreActiveRun,
-    "runId" | "conversationId" | "questionMessageId" | "leafIdAtStart"
+    | "runId"
+    | "conversationId"
+    | "questionMessageId"
+    | "leafIdAtStart"
+    | "versionCountAtStart"
   >,
   state: ExploreRunMarker["state"],
 ): ExploreRunMarker {
@@ -32,6 +37,7 @@ export function createExploreRunMarker(
     conversationId: summary.conversationId,
     questionMessageId: summary.questionMessageId,
     leafIdAtStart: summary.leafIdAtStart,
+    versionCountAtStart: summary.versionCountAtStart,
     state,
   });
 }
@@ -80,6 +86,7 @@ export function setExploreRunMarker(
     existing?.runId === parsed.runId &&
     existing.questionMessageId === parsed.questionMessageId &&
     existing.leafIdAtStart === parsed.leafIdAtStart &&
+    existing.versionCountAtStart === parsed.versionCountAtStart &&
     existing.state === parsed.state
   ) {
     return markers;

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import type { ExploreConversation, ExploreMessage } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ExploreComposer } from "#src/components/explore-composer.tsx";
@@ -20,6 +20,7 @@ import {
   downloadMarkdown,
   exportFilename,
 } from "#src/lib/explore-export.ts";
+import { shouldOpenStartedExploreConversation } from "#src/lib/explore-navigation.ts";
 import { visiblePending } from "#src/lib/explore-turn-state.ts";
 import { useExploreParams } from "#src/lib/route-params.ts";
 import { useExploreShare } from "#src/hooks/use-explore-share.ts";
@@ -40,6 +41,9 @@ import { useTRPC } from "#src/lib/trpc.ts";
 export function Explore() {
   const { conversationId: routeConversationId } = useExploreParams();
   const conversationId = routeConversationId ?? null;
+  const location = useLocation();
+  const locationKeyRef = useRef(location.key);
+  locationKeyRef.current = location.key;
   const navigate = useNavigate();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -88,6 +92,7 @@ export function Explore() {
   const ask = useCallback(
     (text: string) => {
       setRestoredDraft(null);
+      const submittedLocationKey = locationKeyRef.current;
       void (async () => {
         const started = await runs.startTurn({
           conversationId,
@@ -98,7 +103,13 @@ export function Explore() {
         });
         if (started === null) {
           setRestoredDraft(text);
-        } else if (conversationId === null) {
+        } else if (
+          shouldOpenStartedExploreConversation({
+            submittedConversationId: conversationId,
+            submittedLocationKey,
+            currentLocationKey: locationKeyRef.current,
+          })
+        ) {
           // Replace, not push: the transient blank `/explore` should not be a
           // Back stop in the middle of a conversation.
           void navigate(`/explore/${started.conversationId}`, {

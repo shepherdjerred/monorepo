@@ -47,6 +47,7 @@ function marker(state: ExploreRunMarker["state"]): ExploreRunMarker {
     conversationId: CONVERSATION_ID,
     questionMessageId: QUESTION_ID,
     leafIdAtStart: null,
+    versionCountAtStart: 0,
     state,
   };
 }
@@ -70,6 +71,7 @@ describe("Explore run markers", () => {
       conversationId: CONVERSATION_ID,
       questionMessageId: QUESTION_ID,
       leafIdAtStart: null,
+      versionCountAtStart: 0,
       startedAt: "2026-08-20T00:00:00.000Z",
     };
     expect(createExploreRunMarker(summary, "running")).toEqual(
