@@ -96,6 +96,10 @@
   text-underline-offset: 0.2em;
 }
 
+.scout-button--link.scout-button--on-primary {
+  color: var(--scout-color-primary-text);
+}
+
 .scout-button--small {
   min-height: 2rem;
   padding: 0.4rem 0.75rem;

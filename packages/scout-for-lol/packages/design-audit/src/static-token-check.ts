@@ -50,14 +50,12 @@ export function findInvalidTokenPairs(
     const backgroundOnLine = new RegExp(
       String.raw`\bbg-scout-${token}(?![/\w-])`,
     );
-    for (const [line, value] of source.split("\n").entries()) {
+    const openingTags = /<[a-z][^<>]*>/gi;
+    for (const match of source.matchAll(openingTags)) {
+      const tag = match[0];
       foreground.lastIndex = 0;
-      if (!backgroundOnLine.test(value) || !foreground.test(value)) continue;
-      addFinding(
-        token,
-        source.split("\n").slice(0, line).join("\n").length +
-          (line === 0 ? 0 : 1),
-      );
+      if (!backgroundOnLine.test(tag) || !foreground.test(tag)) continue;
+      addFinding(token, match.index);
     }
 
     const fieldPair = new RegExp(

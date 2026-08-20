@@ -43,6 +43,17 @@ function databaseUrl(backendCwd: string): string {
 export async function seedDesignAuditDatabase(
   backendCwd: string,
 ): Promise<void> {
+  if (environment["SCOUT_DESIGN_AUDIT_LOCAL_BOOT"] !== "true") {
+    throw new Error(
+      "Design-audit fixtures require SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true",
+    );
+  }
+  const configuredDatabaseUrl = environment["DATABASE_URL"] ?? "";
+  if (!configuredDatabaseUrl.includes("design-audit")) {
+    throw new Error(
+      "Design-audit fixtures require a dedicated design-audit database",
+    );
+  }
   const guildId = DiscordGuildIdSchema.parse(
     Bun.env["SCOUT_DESIGN_AUDIT_GUILD_ID"] ?? DEFAULT_GUILD_ID,
   );

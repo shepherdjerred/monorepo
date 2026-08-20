@@ -28,4 +28,13 @@ describe("Scout semantic token pairs", () => {
       ),
     ).toEqual([]);
   });
+
+  test("does not conflate adjacent sibling elements", () => {
+    expect(
+      findInvalidTokenPairs(
+        '<div class="bg-scout-success"></div><span class="text-scout-success"></span>',
+        "fixture.tsx",
+      ),
+    ).toEqual([]);
+  });
 });

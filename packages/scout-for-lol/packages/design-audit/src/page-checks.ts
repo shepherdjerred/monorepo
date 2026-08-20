@@ -1,6 +1,11 @@
 import { expect, type Page } from "@playwright/test";
 
 export async function waitForStablePage(page: Page): Promise<void> {
+  await page.waitForLoadState("load");
+  await expect(
+    page.locator("a, button, h1, h2").first(),
+    "page must render visible content",
+  ).toBeVisible();
   await page.evaluate(async () => {
     await document.fonts.ready;
     const images = [...document.images];
@@ -36,7 +41,6 @@ export async function waitForStablePage(page: Page): Promise<void> {
   // Do not wait for network idle: routes such as /app/explore keep an SSE
   // connection open, so network idle may never be reached. The explicit font
   // and image checks above provide the stability guarantees this audit needs.
-  await page.waitForLoadState("load");
   const brokenImages = await page
     .locator("img")
     .evaluateAll((images) =>
@@ -179,19 +183,43 @@ export async function assertRenderedContrast(page: Page): Promise<void> {
   const issues = await page.evaluate(() => {
     type Color = [number, number, number, number];
     const color = (value: string): Color | null => {
-      const rgba = /^rgba?\(([^)]+)\)$/.exec(value.replaceAll(" ", ""));
-      if (rgba !== null) {
-        const values = rgba[1]?.split(",");
-        if (values === undefined || values.length < 3) return null;
-        const red = Number(values[0]);
-        const green = Number(values[1]);
-        const blue = Number(values[2]);
-        const alpha = values[3] === undefined ? 1 : Number(values[3]);
+      const parseComponents = (
+        componentSource: string,
+        normalized: boolean,
+      ): Color | null => {
+        const components = componentSource
+          .replaceAll("/", " ")
+          .split(/[\s,]+/)
+          .filter((component) => component.length > 0);
+        if (components.length < 3) return null;
+        const channel = (component: string): number => {
+          if (component.endsWith("%")) {
+            return (Number.parseFloat(component) / 100) * 255;
+          }
+          const parsed = Number.parseFloat(component);
+          return normalized ? parsed * 255 : parsed;
+        };
+        const red = channel(components[0] ?? "");
+        const green = channel(components[1] ?? "");
+        const blue = channel(components[2] ?? "");
+        const alphaValue = components[3] ?? "1";
+        const alpha = alphaValue.endsWith("%")
+          ? Number.parseFloat(alphaValue) / 100
+          : Number.parseFloat(alphaValue);
         if (
           [red, green, blue, alpha].some((component) => Number.isNaN(component))
-        )
+        ) {
           return null;
+        }
         return [red, green, blue, alpha];
+      };
+      const rgba = /^rgba?\(([^)]+)\)$/.exec(value);
+      if (rgba !== null) {
+        return parseComponents(rgba[1] ?? "", false);
+      }
+      const srgb = /^color\(srgb ([^)]*)\)$/.exec(value);
+      if (srgb !== null) {
+        return parseComponents(srgb[1] ?? "", true);
       }
       const hex = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(value);
       const digits = hex?.[1];
@@ -222,14 +250,75 @@ export async function assertRenderedContrast(page: Page): Promise<void> {
       const low = Math.min(foregroundLuminance, backgroundLuminance);
       return (high + 0.05) / (low + 0.05);
     };
-    const opaqueBackground = (element: HTMLElement): Color | null => {
-      let current: HTMLElement | null = element;
+    const blend = (
+      background: Color,
+      foreground: Color,
+      alpha: number,
+    ): Color => {
+      const clampedAlpha = Math.min(1, Math.max(0, alpha));
+      return [
+        foreground[0] * clampedAlpha + background[0] * (1 - clampedAlpha),
+        foreground[1] * clampedAlpha + background[1] * (1 - clampedAlpha),
+        foreground[2] * clampedAlpha + background[2] * (1 - clampedAlpha),
+        1,
+      ];
+    };
+    const elementOpacity = (element: HTMLElement): number => {
+      const opacity = Number.parseFloat(getComputedStyle(element).opacity);
+      return Number.isNaN(opacity) ? 1 : opacity;
+    };
+    const renderedBackground = (element: HTMLElement): Color => {
+      const ancestors: HTMLElement[] = [];
+      let current = element.parentElement;
       while (current !== null) {
-        const background = color(getComputedStyle(current).backgroundColor);
-        if (background !== null && background[3] >= 0.99) return background;
+        ancestors.push(current);
         current = current.parentElement;
       }
-      return color(getComputedStyle(document.documentElement).backgroundColor);
+
+      let background: Color = [255, 255, 255, 1];
+      for (const ancestor of ancestors.reverse()) {
+        const layer = color(getComputedStyle(ancestor).backgroundColor);
+        if (layer !== null) {
+          background = blend(
+            background,
+            layer,
+            layer[3] * elementOpacity(ancestor),
+          );
+        }
+      }
+
+      const layer = color(getComputedStyle(element).backgroundColor);
+      return layer === null
+        ? background
+        : blend(background, layer, layer[3] * elementOpacity(element));
+    };
+    const renderedForeground = (
+      element: HTMLElement,
+      foreground: Color,
+      background: Color,
+    ): Color => {
+      let alpha = foreground[3];
+      let current: HTMLElement | null = element;
+      while (current !== null) {
+        alpha *= elementOpacity(current);
+        current = current.parentElement;
+      }
+      return blend(background, foreground, alpha);
+    };
+    const hasHiddenAncestor = (element: HTMLElement): boolean => {
+      let current: HTMLElement | null = element;
+      while (current !== null) {
+        const style = getComputedStyle(current);
+        if (
+          style.display === "none" ||
+          style.visibility === "hidden" ||
+          style.opacity === "0"
+        ) {
+          return true;
+        }
+        current = current.parentElement;
+      }
+      return false;
     };
     const contrastIssues: string[] = [];
     for (const element of document.querySelectorAll<HTMLElement>("*")) {
@@ -240,7 +329,8 @@ export async function assertRenderedContrast(page: Page): Promise<void> {
         style.visibility === "hidden" ||
         style.opacity === "0" ||
         rectangle.width === 0 ||
-        rectangle.height === 0
+        rectangle.height === 0 ||
+        hasHiddenAncestor(element)
       )
         continue;
       const hasDirectText = [...element.childNodes].some(
@@ -254,14 +344,17 @@ export async function assertRenderedContrast(page: Page): Promise<void> {
       const hasSvg = element.querySelector("svg") !== null;
       if (!hasDirectText && !(isControl && hasSvg)) continue;
       const foreground = color(style.color);
-      const background = opaqueBackground(element);
-      if (foreground === null || background === null) continue;
+      if (foreground === null) continue;
+      const background = renderedBackground(element);
       const largeText =
         Number.parseFloat(style.fontSize) >= 18 ||
         (Number.parseFloat(style.fontSize) >= 14 &&
           Number.parseInt(style.fontWeight) >= 700);
       const minimum = largeText ? 3 : 4.5;
-      if (ratio(foreground, background) < minimum) {
+      if (
+        ratio(renderedForeground(element, foreground, background), background) <
+        minimum
+      ) {
         contrastIssues.push(
           `${element.tagName.toLowerCase()} ${foreground.join(",")} on ${background.join(",")}`,
         );
@@ -274,9 +367,54 @@ export async function assertRenderedContrast(page: Page): Promise<void> {
 }
 
 export async function assertKeyboardFocus(page: Page): Promise<void> {
-  await page.keyboard.press("Tab");
-  const focused = page.locator(":focus-visible");
-  await expect(focused, "keyboard focus must remain visible").toHaveCount(1);
+  const focusable = page.locator(
+    'a[href]:visible, button:visible, input:visible, select:visible, textarea:visible, [tabindex]:not([tabindex="-1"]):visible',
+  );
+  await expect(
+    focusable.first(),
+    "pages must finish rendering before focus is audited",
+  ).toBeVisible();
+  const count = await focusable.count();
+  expect(
+    count,
+    "pages must expose keyboard-focusable controls",
+  ).toBeGreaterThan(0);
+  const checks = Math.min(count, 100);
+  let index = 0;
+  let attempts = 0;
+  while (index < checks) {
+    await page.keyboard.press("Tab");
+    attempts += 1;
+    if (attempts > checks * 3) {
+      throw new Error("keyboard focus did not reach every visible control");
+    }
+    const focusState = await page.evaluate(() => {
+      const element = document.activeElement;
+      if (!(element instanceof HTMLElement) || element === document.body) {
+        return { kind: "skip" as const };
+      }
+      if (
+        element.matches("astro-dev-toolbar") ||
+        element.closest("astro-dev-toolbar") !== null
+      ) {
+        return { kind: "skip" as const };
+      }
+      const style = getComputedStyle(element);
+      return {
+        kind: "control" as const,
+        hasIndicator:
+          (style.outlineStyle !== "none" &&
+            Number.parseFloat(style.outlineWidth) > 0) ||
+          style.boxShadow !== "none",
+      };
+    });
+    if (focusState.kind === "skip") continue;
+    expect(
+      focusState.hasIndicator,
+      `focus stop ${String(index + 1)} must have a visible outline or focus ring`,
+    ).toBe(true);
+    index += 1;
+  }
 }
 
 export async function assertInteractiveStates(page: Page): Promise<void> {

@@ -14,14 +14,10 @@ function requiredSecret(name: string): string {
 
 export async function signInForAudit(page: Page): Promise<void> {
   const url = appUrl(page);
-  const discordId = process.env["SCOUT_DESIGN_AUDIT_DISCORD_ID"];
-  if (discordId === undefined || discordId.length === 0) {
-    throw new Error(
-      "SCOUT_DESIGN_AUDIT_DISCORD_ID is required for authenticated Scout design checks",
-    );
-  }
 
   if (url.hostname === "127.0.0.1" || url.hostname === "localhost") {
+    const discordId =
+      process.env["SCOUT_DESIGN_AUDIT_DISCORD_ID"] ?? "000000000000000001";
     const login = new URL("/api/dev/login", url.origin);
     login.searchParams.set("discordId", discordId);
     login.searchParams.set("returnTo", "/app/");
