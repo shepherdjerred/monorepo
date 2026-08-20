@@ -79,7 +79,7 @@ function nextParseFailureRepair(
   error: string,
   rawContent: string | null,
 ): ChunkExtractionRepair {
-  if (prior === null) {
+  if (prior === null || prior.previous === EMPTY_CHUNK_SUMMARY) {
     return {
       previous: EMPTY_CHUNK_SUMMARY,
       error,
@@ -89,7 +89,7 @@ function nextParseFailureRepair(
   return {
     previous: prior.previous,
     error: prior.error,
-    rawContent: rawContent ?? prior.rawContent,
+    rawContent: null,
   };
 }
 const DETERMINISTIC_SEED = 0;
