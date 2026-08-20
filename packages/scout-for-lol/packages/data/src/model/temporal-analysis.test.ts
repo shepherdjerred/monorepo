@@ -65,12 +65,6 @@ describe("canonical ScoutQL temporal analysis", () => {
     ).toThrow("Calendar heatmaps require exactly one y output");
   });
 
-  test("rejects report windows above 365 days", () => {
-    expect(() =>
-      parseAndCompile(`${BASE} ANALYZE LAST 366 DAYS IN TIME ZONE 'UTC'`),
-    ).toThrow("cannot exceed 365 days");
-  });
-
   test("rejects temporal clauses for current-rank sources", () => {
     for (const source of ["rank_current", "competition_rank"]) {
       expect(() =>

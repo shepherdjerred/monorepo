@@ -7,7 +7,6 @@ import {
   ReportChartThemeSchema,
 } from "#src/model/report.ts";
 
-export const REPORT_MAX_TEMPORAL_WINDOW_DAYS = 365;
 export const VISUALIZATION_MAX_SERIES = 8;
 export const VISUALIZATION_MAX_POINTS = 2000;
 
@@ -124,23 +123,20 @@ export function temporalWindowDays(
   );
 }
 
+/**
+ * No window length limit.
+ *
+ * The 365-day cap that used to live here was not a product decision — it was
+ * the only thing standing between `BUCKET BY DAY` and a bucket walk that
+ * allocates one entry per bucket. That is now bounded arithmetically by
+ * `projectedBucketCount` against VISUALIZATION_MAX_POINTS, before any label is
+ * built, so an over-large window is refused with a message about points rather
+ * than by an arbitrary day count.
+ */
 export function validateReportTemporalAnalysis(
   spec: TemporalAnalysisSpec,
 ): TemporalAnalysisSpec {
   const parsed = TemporalAnalysisSpecSchema.parse(spec);
-  if (temporalWindowDays(parsed.window) > REPORT_MAX_TEMPORAL_WINDOW_DAYS) {
-    throw new Error(
-      `Report analysis periods cannot exceed ${REPORT_MAX_TEMPORAL_WINDOW_DAYS.toString()} days.`,
-    );
-  }
-  if (
-    parsed.comparison?.kind === "calendar" &&
-    temporalWindowDays(parsed.comparison) > REPORT_MAX_TEMPORAL_WINDOW_DAYS
-  ) {
-    throw new Error(
-      `Report comparison periods cannot exceed ${REPORT_MAX_TEMPORAL_WINDOW_DAYS.toString()} days.`,
-    );
-  }
   return parsed;
 }
 

@@ -3,9 +3,55 @@ import {
   type ReportQueryPlan,
   type ResolvedTemporalBucket,
 } from "@scout-for-lol/data";
-import { addDays, addMonths, addWeeks, formatISO, parseISO } from "date-fns";
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  differenceInCalendarDays,
+  differenceInCalendarMonths,
+  differenceInCalendarWeeks,
+  formatISO,
+  parseISO,
+} from "date-fns";
 import { resolveTemporalRanges } from "#src/reports/temporal-range.ts";
 import { localCalendarDate } from "#src/reports/temporal-labels.ts";
+
+/**
+ * How many buckets a window covers, by arithmetic rather than by counting.
+ *
+ * This exists so the point budget can be checked BEFORE any labels are built.
+ * `visualizationBucketLabels` walks a cursor and pushes one string per bucket,
+ * so asking it for a length is only safe once the window is known to be small.
+ * With no cap on the analysis window, `BUCKET BY DAY` over a large enough
+ * period would allocate one string per day before anything compared it to the
+ * limit — a validation error turned into an out-of-memory crash that any user
+ * with report-edit rights could trigger.
+ */
+export function projectedBucketCount(
+  plan: ReportQueryPlan,
+  generatedAt: Date,
+  bucket: Exclude<ResolvedTemporalBucket, "patch">,
+): number {
+  if (plan.analysis === undefined) return 0;
+  const range = resolveTemporalRanges(plan.analysis, generatedAt).current;
+  // The same two cursors the walk starts and ends on, so the count is exact
+  // rather than an estimate — only the allocation is skipped.
+  const start = bucketCursor(
+    localCalendarDate(range.startDate, plan.analysis.timezone),
+    bucket,
+  );
+  const end = bucketCursor(
+    localCalendarDate(range.endDate, plan.analysis.timezone),
+    bucket,
+  );
+  const spans =
+    bucket === "day"
+      ? differenceInCalendarDays(end, start)
+      : bucket === "week"
+        ? differenceInCalendarWeeks(end, start)
+        : differenceInCalendarMonths(end, start);
+  return spans < 0 ? 0 : spans + 1;
+}
 
 export function assertProjectedPointCount(input: {
   rowCount: number;
@@ -19,8 +65,7 @@ export function assertProjectedPointCount(input: {
     input.bucket === null || input.bucket === "patch"
       ? input.rowCount
       : input.seriesGroupCount *
-        visualizationBucketLabels(input.plan, input.generatedAt, input.bucket)
-          .length;
+        projectedBucketCount(input.plan, input.generatedAt, input.bucket);
   const projectedPoints = pointsPerColumn * input.columnCount;
   if (projectedPoints > VISUALIZATION_MAX_POINTS) {
     throw new Error(

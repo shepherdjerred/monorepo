@@ -66,7 +66,9 @@ export function ReportQueryDocs() {
             filters aggregates and aliases. Arithmetic supports parentheses and
             <span className="font-mono"> + − × ÷</span>. Temporal grouping uses
             canonical temporal clauses use saved IANA timezones and ISO Monday
-            weeks. Report and comparison windows are limited to 365 days.
+            weeks. A comparison must match the length of the analysis period,
+            and a chart plots at most 2,000 points — a long window needs a
+            coarser bucket.
           </p>
         </CardContent>
       </Card>
