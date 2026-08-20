@@ -8,6 +8,21 @@ variable "discord_bots" {
     tags                              = optional(set(string), [])
   }))
   default = {}
+
+  validation {
+    condition = length(setsubtract(
+      toset(keys(var.discord_bots)),
+      toset([
+        "birmel",
+        "starlight-beta",
+        "starlight-prod",
+        "scout-beta",
+        "scout-prod",
+        "minecraft",
+      ]),
+    )) == 0
+    error_message = "Every discord_bots name needs a static provider and resource block in applications.tf."
+  }
 }
 
 variable "discord_bot_tokens" {
