@@ -138,7 +138,9 @@ describe("Scout Discord visualizations", () => {
     });
     expect(payload.embeds?.[0]?.data.description).toBe("No results found.");
   });
+});
 
+describe("Scout Discord visualization bounds", () => {
   test("renders the stored visualization rows and only claims real overflow", () => {
     const rows = Array.from({ length: 12 }, (_, index) => ({
       label: `Champion ${index.toString()}`,
@@ -175,6 +177,69 @@ describe("Scout Discord visualizations", () => {
     expect(completeDescription).not.toContain(
       "additional rows omitted from the stored preview",
     );
+  });
+
+  test("renders sparse and incomplete rows as unknown values", () => {
+    const sparseSnapshot = VisualizationSnapshotSchema.parse({
+      ...scoutTestVisualization,
+      series: [
+        {
+          ...scoutTestVisualization.series[0],
+          points: [scoutTestVisualization.series[0]?.points[0]],
+        },
+        {
+          ...scoutTestVisualization.series[1],
+          points: [scoutTestVisualization.series[1]?.points[1]],
+        },
+      ],
+    });
+    const sparseDescription =
+      visualizationToEmbed(sparseSnapshot)?.data.description;
+    expect(sparseDescription).toContain("Aurora    8    Unknown");
+    expect(sparseDescription).toContain("Jhin    Unknown    28.6%");
+
+    const incompletePreview = ReportAiPreviewSummarySchema.parse({
+      ...preview,
+      rows: [
+        {
+          label: "Aurora",
+          values: [{ column: "games", value: 8 }],
+        },
+      ],
+      visualizationRows: [],
+      rowsReturned: 1,
+    });
+    const incompleteDescription = visualizationToEmbed(
+      scoutTestVisualization,
+      incompletePreview,
+    )?.data.description;
+    expect(incompleteDescription).toContain("Aurora    8    Unknown");
+  });
+
+  test("keeps row labels on one Markdown line", () => {
+    const newlinePreview = ReportAiPreviewSummarySchema.parse({
+      ...preview,
+      rows: [
+        {
+          label: "Aurora\nJhin",
+          values: [
+            { column: "games", value: 8 },
+            { column: "win_rate", value: 1 },
+          ],
+        },
+      ],
+      visualizationRows: [],
+      rowsReturned: 1,
+    });
+    const description = visualizationToEmbed(
+      VisualizationSnapshotSchema.parse({
+        ...scoutTestVisualization,
+        kind: "LIST",
+      }),
+      newlinePreview,
+    )?.data.description;
+    expect(description).toContain("Aurora Jhin");
+    expect(description).not.toContain("Aurora\nJhin");
   });
 
   test("keeps every native description within Discord's limit", () => {

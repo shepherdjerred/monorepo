@@ -343,11 +343,7 @@ function formatRowValues(
 }
 
 function requireRowValue(row: NativeRow, column: string): NativeRowValue {
-  const value = row.values.get(column);
-  if (value === undefined) {
-    throw new Error(`Visualization row missing column ${column}.`);
-  }
-  return value;
+  return row.values.get(column) ?? null;
 }
 
 function requireNumericRowValue(row: NativeRow, column: string): number | null {
@@ -408,7 +404,9 @@ function formatPercent(value: number | null): string {
 }
 
 function escapeMarkdown(value: string): string {
-  return value.replaceAll(/[\\_*`|]/g, (char) => `\\${char}`);
+  return value
+    .replaceAll(/[\r\n]+/g, " ")
+    .replaceAll(/[\\_*`|]/g, (char) => `\\${char}`);
 }
 
 function escapeTableCell(value: string): string {
