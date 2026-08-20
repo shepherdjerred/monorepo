@@ -24,10 +24,16 @@ public struct OTPParser {
     private static let falsePositiveWordPattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}])(phone|tel|date|order|invoice|amount|price|year|http|www|reference|ticket)(?![\\p{L}\\p{N}])"
     )
-    private static let datePattern = makeExpression(
-        "(?i)(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:,\\s*|\\s+)\\d{4}|\\d{1,2}\\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{4})(?![\\p{L}\\p{N}])"
+    private static let phoneDeliveryPattern = makeExpression(
+        "(?i)(?<![\\p{L}\\p{N}])(phone|tel|mobile|texted|sent|called|call)(?![\\p{L}\\p{N}])"
     )
-    private static let urlPattern = makeExpression("(?i)https?://\\S+")
+    private static let phoneNumberPattern = makeExpression(
+        "(?<![\\p{L}\\p{N}])\\(?\\d{3}\\)?[ .-]\\d{4}(?![\\p{L}\\p{N}])"
+    )
+    private static let datePattern = makeExpression(
+        "(?i)(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:st|nd|rd|th)?(?:,\\s*|\\s+)\\d{4}|\\d{1,2}(?:st|nd|rd|th)?\\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{4})(?![\\p{L}\\p{N}])"
+    )
+    private static let uriPattern = makeExpression("(?i)(?<![\\p{L}\\p{N}])[A-Z][A-Z0-9+.-]*://\\S+")
     private static let bareURLPattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}@.])(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?::\\d{1,5})?(?:[/?#][^\\s]*)?"
     )
@@ -50,7 +56,7 @@ public struct OTPParser {
             return nil
         }
         let message = metadata.subject + "\n" + body
-        let withoutURLs = Self.urlPattern.stringByReplacingMatches(
+        let withoutURLs = Self.uriPattern.stringByReplacingMatches(
             in: message,
             range: NSRange(message.startIndex..., in: message),
             withTemplate: " "
@@ -90,7 +96,16 @@ public struct OTPParser {
             guard code.count >= 4, code.count <= 8, code.rangeOfCharacter(from: .decimalDigits) != nil else {
                 return nil
             }
-            guard !Self.isFalsePositive(body: sanitizedBody, range: normalized.range, hasExplicitLabel: explicitLabel) else {
+            let hasDirectExplicitLabel = explicitLabelRanges.contains { labelRange in
+                NSMaxRange(labelRange.range) <= normalized.range.location &&
+                    normalized.range.location - NSMaxRange(labelRange.range) <= 8
+            }
+            guard !Self.isFalsePositive(
+                body: sanitizedBody,
+                range: normalized.range,
+                code: code,
+                hasDirectExplicitLabel: hasDirectExplicitLabel
+            ) else {
                 return nil
             }
 
@@ -119,7 +134,7 @@ public struct OTPParser {
         )
     }
 
-    private static func isFalsePositive(body: String, range: NSRange, hasExplicitLabel: Bool) -> Bool {
+    private static func isFalsePositive(body: String, range: NSRange, code: String, hasDirectExplicitLabel: Bool) -> Bool {
         let beforeStart = max(0, range.location - 18)
         let beforeRange = NSRange(location: beforeStart, length: range.location - beforeStart)
         let afterStart = NSMaxRange(range)
@@ -127,8 +142,17 @@ public struct OTPParser {
         let bodyNSString = NSString(string: body)
         let context = (bodyNSString.substring(with: beforeRange) + bodyNSString.substring(with: NSRange(location: afterStart, length: afterLength))).lowercased()
         guard !Self.overlapsEmailAddress(body: body, range: range) else { return true }
-        if !hasExplicitLabel,
+        if !hasDirectExplicitLabel,
            Self.falsePositiveWordPattern.firstMatch(in: context, range: NSRange(context.startIndex..., in: context)) != nil {
+            return true
+        }
+        if Self.phoneNumberPattern.matches(in: body, range: NSRange(body.startIndex..., in: body)).contains(where: {
+            NSIntersectionRange($0.range, range).length > 0
+        }) {
+            return true
+        }
+        if code.allSatisfy(\.isNumber), code.count >= 7, !hasDirectExplicitLabel,
+           Self.phoneDeliveryPattern.firstMatch(in: context, range: NSRange(context.startIndex..., in: context)) != nil {
             return true
         }
         if Self.datePattern.matches(in: body, range: NSRange(body.startIndex..., in: body)).contains(where: { NSIntersectionRange($0.range, range).length > 0 }) {
