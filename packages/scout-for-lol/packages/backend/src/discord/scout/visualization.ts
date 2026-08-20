@@ -184,7 +184,11 @@ function formatList(
   const allRows = source.rows;
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const previewExtra = hasPreviewRowsBeyondStoredRows(source.preview, allRows);
+  const previewExtra = hasPreviewRowsBeyondStoredRows(
+    snapshot,
+    source.preview,
+    allRows,
+  );
   const lines = rows.map((row) => {
     const values = formatRowValues(snapshot, row, source.preview).join(", ");
     return `- ${escapeMarkdown(row.label)}: ${values}`;
@@ -205,7 +209,11 @@ function formatLeaderboard(
   const allRows = source.rows;
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const previewExtra = hasPreviewRowsBeyondStoredRows(source.preview, allRows);
+  const previewExtra = hasPreviewRowsBeyondStoredRows(
+    snapshot,
+    source.preview,
+    allRows,
+  );
   const lines = rows.map((row, index) => {
     const values = formatRowValues(snapshot, row, source.preview).join(" · ");
     return `**${(index + 1).toString()}.** ${escapeMarkdown(row.label)} — ${values}`;
@@ -226,7 +234,11 @@ function formatTable(
   const allRows = source.rows;
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const previewExtra = hasPreviewRowsBeyondStoredRows(source.preview, allRows);
+  const previewExtra = hasPreviewRowsBeyondStoredRows(
+    snapshot,
+    source.preview,
+    allRows,
+  );
   const headers =
     source.preview === null
       ? ["", ...snapshot.series.map((series) => series.label)]
@@ -341,10 +353,22 @@ function nativeRowSource(
 }
 
 function hasPreviewRowsBeyondStoredRows(
+  snapshot: VisualizationSnapshot,
   preview: ReportAiPreviewSummary | null,
   rows: NativeRow[],
 ): boolean {
-  return preview !== null && preview.rowsReturned > rows.length;
+  if (preview === null) {
+    return false;
+  }
+  if (preview.rowsReturned > rows.length) {
+    return true;
+  }
+  return (
+    preview.rowsReturned === 0 &&
+    preview.visualizationRows.length === 0 &&
+    snapshot.temporal === null &&
+    alignedRows(snapshot).length > rows.length
+  );
 }
 
 function previewMetricColumns(preview: ReportAiPreviewSummary) {

@@ -171,6 +171,22 @@ describe("Scout Discord visualization edge cases", () => {
     expect(description).toContain(String.raw`\| unsafe`);
     expect(description).not.toContain("Games `\n");
   });
+
+  test("preserves overflow state for legacy previews", () => {
+    const legacyPreview = ReportAiPreviewSummarySchema.parse({
+      columns: preview.columns,
+      rows: preview.rows.slice(0, 1),
+      rowsScanned: preview.rowsScanned,
+      renderKind: preview.renderKind,
+    });
+    const description = visualizationToEmbed(
+      scoutTestVisualization,
+      legacyPreview,
+    )?.data.description;
+    expect(description).toContain(
+      "additional rows omitted from the stored preview",
+    );
+  });
 });
 
 describe("Scout Discord visualization bounds", () => {
@@ -196,7 +212,6 @@ describe("Scout Discord visualization bounds", () => {
     expect(extendedDescription).toContain(
       "additional rows omitted from the stored preview",
     );
-
     const completePreview = ReportAiPreviewSummarySchema.parse({
       ...preview,
       rows: rows.slice(0, 10),
