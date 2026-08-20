@@ -304,7 +304,7 @@ function probabilityForSubjectState(input: {
   if (teamBooleanConditions.length > 0) {
     const representative = inState[0];
     if (representative === undefined) {
-      return 0.5;
+      return undefined;
     }
     const teamBooleanHeld = matchSatisfiesConditions(
       teamBooleanConditions,
@@ -379,21 +379,26 @@ function priceByConditionalCombination(input: {
   // State distribution, averaged across subjects: each plays different games,
   // but the mix of durations and results is a property of how they all play.
   const stateWeights = new Map<MatchState, number>();
-  let weighted = 0;
   for (const matches of perSubject.values()) {
+    const subjectStateWeights = new Map<MatchState, number>();
     for (const match of matches) {
       const state = matchState(match);
-      stateWeights.set(state, (stateWeights.get(state) ?? 0) + 1);
-      weighted += 1;
+      subjectStateWeights.set(state, (subjectStateWeights.get(state) ?? 0) + 1);
+    }
+    for (const [state, count] of subjectStateWeights) {
+      stateWeights.set(
+        state,
+        (stateWeights.get(state) ?? 0) + count / matches.length,
+      );
     }
   }
-  if (weighted === 0) {
+  if (stateWeights.size === 0) {
     return undefined;
   }
 
   let probability = 0;
   for (const [state, count] of stateWeights) {
-    let joint = count / weighted;
+    let joint = count / perSubject.size;
     for (const subject of input.subjects) {
       const conditions = conditionsForSubject(
         input.conditions,
