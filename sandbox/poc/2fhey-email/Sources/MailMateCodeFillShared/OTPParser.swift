@@ -22,7 +22,10 @@ public struct OTPParser {
         "(?<![\\p{L}\\p{N}\(candidateDashCharacters)])([A-Za-z0-9](?:\(candidateSeparatorPattern)?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}]|\(candidateDashPattern)[A-Za-z0-9]|\(candidateSpacePattern)[A-Za-z0-9]*[0-9])"
     )
     private static let falsePositiveWordPattern = makeExpression(
-        "(?i)(?<![\\p{L}\\p{N}])(phone|tel|date|order|invoice|amount|price|year|copyright|build|version|http|www|reference|ticket)(?![\\p{L}\\p{N}])"
+        "(?i)(?<![\\p{L}\\p{N}])(phone|tel|date|order|invoice|amount|price|year|copyright|http|www|reference|ticket)(?![\\p{L}\\p{N}])"
+    )
+    private static let buildVersionNumberPattern = makeExpression(
+        "(?i)(?<![\\p{L}\\p{N}])(build|version)[ \\x{00A0}\\x{2007}\\x{202F}]*\\d{1,4}(?![\\p{L}\\p{N}])"
     )
     private static let phoneDeliveryPattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}])(phone|tel|mobile|texted|sent|called|call)(?![\\p{L}\\p{N}])"
@@ -164,6 +167,12 @@ public struct OTPParser {
         guard !Self.overlapsEmailAddress(body: body, range: range) else { return true }
         if !hasDirectExplicitLabel,
            Self.falsePositiveWordPattern.firstMatch(in: context, range: NSRange(context.startIndex..., in: context)) != nil {
+            return true
+        }
+        if !hasDirectExplicitLabel,
+           Self.buildVersionNumberPattern.matches(in: body, range: NSRange(body.startIndex..., in: body)).contains(where: {
+               NSIntersectionRange($0.range, range).length > 0
+           }) {
             return true
         }
         if Self.phoneNumberPattern.matches(in: body, range: NSRange(body.startIndex..., in: body)).contains(where: {
