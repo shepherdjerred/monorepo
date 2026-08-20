@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   isPermissionError,
   isMissingChannelError,
+  isMissingMemberError,
   checkSendMessagePermission,
   getPermissionErrorMessage,
   formatPermissionErrorForLog,
@@ -58,6 +59,21 @@ describe("isMissingChannelError", () => {
     ).toBe(false);
     expect(isMissingChannelError(new Error("boom"))).toBe(false);
     expect(isMissingChannelError(null)).toBe(false);
+  });
+});
+
+describe("isMissingMemberError", () => {
+  test("returns true for Unknown Member (10007)", () => {
+    expect(
+      isMissingMemberError({ code: 10_007, message: "Unknown Member" }),
+    ).toBe(true);
+  });
+
+  test("returns false for other Discord and non-Discord errors", () => {
+    expect(
+      isMissingMemberError({ code: 10_003, message: "Unknown Channel" }),
+    ).toBe(false);
+    expect(isMissingMemberError(new Error("boom"))).toBe(false);
   });
 });
 

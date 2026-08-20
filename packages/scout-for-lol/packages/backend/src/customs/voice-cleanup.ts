@@ -5,7 +5,10 @@ import {
   runCustomVoiceOperation,
   errorMessage,
 } from "#src/customs/voice-utils.ts";
-import { isMissingChannelError } from "#src/discord/utils/permissions.ts";
+import {
+  isMissingChannelError,
+  isMissingMemberError,
+} from "#src/discord/utils/permissions.ts";
 
 async function cleanupCustomVoiceOperation(
   snapshot: CustomNightSnapshot,
@@ -41,9 +44,11 @@ async function cleanupCustomVoiceOperation(
         await member.voice.setChannel(lobby, "Scout Customs night ended");
       }
     } catch (error) {
+      if (isMissingMemberError(error)) continue;
       failures.push(`${participant.displayName}: ${errorMessage(error)}`);
     }
   }
+  if (failures.length > 0) return failures;
   for (const channelId of ownedIds) {
     try {
       const channel = await guild.channels.fetch(channelId);

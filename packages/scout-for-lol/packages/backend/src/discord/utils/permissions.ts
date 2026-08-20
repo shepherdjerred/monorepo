@@ -55,6 +55,18 @@ export function isMissingChannelError(error: unknown): boolean {
 }
 
 /**
+ * Check if Discord confirms that a guild member no longer exists.
+ */
+export function isMissingMemberError(error: unknown): boolean {
+  const result = DiscordAPIErrorSchema.safeParse(error);
+  if (!result.success) {
+    return false;
+  }
+  // 10007 = Unknown Member
+  return result.data.code === 10_007;
+}
+
+/**
  * Check if an error confirms the bot is definitively not a member of a guild
  * (as opposed to a transient fetch failure). Used to gate destructive
  * guild-data cleanup on a positive signal from Discord, not just a local
