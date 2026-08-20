@@ -178,6 +178,139 @@ function buildPrematchPayload(input: {
 }
 
 /**
+ * Render the loading-screen image, or fall back to text.
+ *
+ * The image path carries its own metrics, Sentry fingerprinting, and
+ * fire-and-forget S3 writes. Keeping it separate leaves notification delivery
+ * responsible only for sending and recording messages.
+ */
+async function renderPrematchLoadingScreen(input: {
+  gameInfo: RawCurrentGameInfo;
+  trackedPlayers: PlayerConfigEntry[];
+  queueType: QueueType | undefined;
+  gameId: string;
+  aliases: string[];
+}): Promise<{
+  attachment: AttachmentBuilder | undefined;
+  embed: EmbedBuilder | undefined;
+  data: LoadingScreenData | undefined;
+}> {
+  const { gameInfo, trackedPlayers, queueType, gameId, aliases } = input;
+  let loadingScreenAttachment: AttachmentBuilder | undefined;
+  let loadingScreenEmbed: EmbedBuilder | undefined;
+  let loadingScreenData: LoadingScreenData | undefined;
+  try {
+    const startTime = Date.now();
+    const firstPlayer = trackedPlayers[0];
+    if (firstPlayer === undefined) {
+      throw new Error(`No tracked players provided for game ${gameId}`);
+    }
+    const region = firstPlayer.league.leagueAccount.region;
+    const trackedPuuidSet = new Set(
+      trackedPlayers.map((p) => p.league.leagueAccount.puuid),
+    );
+
+    loadingScreenData = await buildLoadingScreenData(
+      gameInfo,
+      trackedPuuidSet,
+      region,
+    );
+    const [image, svg] = await Promise.all([
+      loadingScreenToImage(loadingScreenData),
+      loadingScreenToSvg(loadingScreenData),
+    ]);
+
+    const attachmentName = `loading-screen-${gameId}.png`;
+    loadingScreenAttachment = new AttachmentBuilder(Buffer.from(image)).setName(
+      attachmentName,
+    );
+    loadingScreenEmbed = new EmbedBuilder({
+      image: { url: `attachment://${attachmentName}` },
+    });
+
+    const duration = (Date.now() - startTime) / 1000;
+    prematchLoadingScreenDurationSeconds.observe(duration);
+    prematchLoadingScreenGeneratedTotal.inc({
+      queue_type: queueType ?? "unknown",
+      status: "success",
+    });
+    logger.info(
+      `[sendPrematchNotification] 🖼️ Loading screen generated in ${duration.toFixed(1)}s for game ${gameId}`,
+    );
+
+    void (async () => {
+      try {
+        await Promise.all([
+          savePrematchImageToS3(
+            gameInfo.gameId,
+            image,
+            queueType ?? "unknown",
+            aliases,
+          ),
+          savePrematchSvgToS3(
+            gameInfo.gameId,
+            svg,
+            queueType ?? "unknown",
+            aliases,
+          ),
+        ]);
+      } catch (s3Error) {
+        logger.error(
+          `[sendPrematchNotification] Failed to save prematch assets to S3:`,
+          s3Error,
+        );
+      }
+    })();
+  } catch (error) {
+    recordClassicLoadingScreenFailure(loadingScreenData, error);
+    const isRecoverable = error instanceof RecoverableLoadingScreenDataError;
+    prematchLoadingScreenGeneratedTotal.inc({
+      queue_type: queueType ?? "unknown",
+      status: isRecoverable ? "fallback" : "error",
+    });
+    logger.error(
+      `[sendPrematchNotification] ❌ Failed to generate loading screen for game ${gameId}:`,
+      error,
+    );
+    if (!isRecoverable) {
+      const context =
+        error instanceof UnsupportedLoadingScreenQueueError
+          ? {
+              fingerprint: [
+                "prematch-unsupported-queue",
+                gameInfo.gameQueueConfigId.toString(),
+                gameInfo.gameMode,
+                gameInfo.mapId.toString(),
+              ],
+              tags: {
+                source: "prematch-loading-screen",
+                gameId,
+                gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
+                mapId: gameInfo.mapId.toString(),
+                gameMode: gameInfo.gameMode,
+              },
+            }
+          : {
+              tags: {
+                source: "prematch-loading-screen",
+                gameId,
+                gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
+                mapId: gameInfo.mapId.toString(),
+                gameMode: gameInfo.gameMode,
+              },
+            };
+      Sentry.captureException(error, context);
+    }
+  }
+
+  return {
+    attachment: loadingScreenAttachment,
+    embed: loadingScreenEmbed,
+    data: loadingScreenData,
+  };
+}
+
+/**
  * Persist the outputs that depend on successful Discord delivery, then start
  * the best-effort parlay generation after those records are durable.
  */
@@ -346,119 +479,16 @@ export async function sendPrematchNotification(
     gameInfo.gameMode,
   );
 
-  // Generate loading screen image. Preferred delivery: image + short text.
-  // If generation fails, we fall back to a rich text embed (buildFallbackPrematchEmbed).
-  let loadingScreenAttachment: AttachmentBuilder | undefined;
-  let loadingScreenEmbed: EmbedBuilder | undefined;
-  // Hoisted so the Bryan Bucks prediction can reuse the ranks this already
-  // fetched for all ten players. Re-fetching them would be thousands of Riot
-  // calls a minute across the polling loop.
-  let loadingScreenData: LoadingScreenData | undefined;
-  try {
-    const startTime = Date.now();
-    const firstPlayer = trackedPlayers[0];
-    if (firstPlayer === undefined) {
-      throw new Error(`No tracked players provided for game ${gameId}`);
-    }
-    const region = firstPlayer.league.leagueAccount.region;
-    const trackedPuuidSet = new Set(
-      trackedPlayers.map((p) => p.league.leagueAccount.puuid),
-    );
-
-    loadingScreenData = await buildLoadingScreenData(
-      gameInfo,
-      trackedPuuidSet,
-      region,
-    );
-    const [image, svg] = await Promise.all([
-      loadingScreenToImage(loadingScreenData),
-      loadingScreenToSvg(loadingScreenData),
-    ]);
-
-    const attachmentName = `loading-screen-${gameId}.png`;
-    loadingScreenAttachment = new AttachmentBuilder(Buffer.from(image)).setName(
-      attachmentName,
-    );
-    loadingScreenEmbed = new EmbedBuilder({
-      image: { url: `attachment://${attachmentName}` },
-    });
-
-    const duration = (Date.now() - startTime) / 1000;
-    prematchLoadingScreenDurationSeconds.observe(duration);
-    prematchLoadingScreenGeneratedTotal.inc({
-      queue_type: queueType ?? "unknown",
-      status: "success",
-    });
-    logger.info(
-      `[sendPrematchNotification] 🖼️ Loading screen generated in ${duration.toFixed(1)}s for game ${gameId}`,
-    );
-
-    // Fire-and-forget S3 saves
-    void (async () => {
-      try {
-        await Promise.all([
-          savePrematchImageToS3(
-            gameInfo.gameId,
-            image,
-            queueType ?? "unknown",
-            aliases,
-          ),
-          savePrematchSvgToS3(
-            gameInfo.gameId,
-            svg,
-            queueType ?? "unknown",
-            aliases,
-          ),
-        ]);
-      } catch (s3Error) {
-        logger.error(
-          `[sendPrematchNotification] Failed to save prematch assets to S3:`,
-          s3Error,
-        );
-      }
-    })();
-  } catch (error) {
-    recordClassicLoadingScreenFailure(loadingScreenData, error);
-    const isRecoverable = error instanceof RecoverableLoadingScreenDataError;
-    prematchLoadingScreenGeneratedTotal.inc({
-      queue_type: queueType ?? "unknown",
-      status: isRecoverable ? "fallback" : "error",
-    });
-    logger.error(
-      `[sendPrematchNotification] ❌ Failed to generate loading screen for game ${gameId}:`,
-      error,
-    );
-    if (!isRecoverable) {
-      const context =
-        error instanceof UnsupportedLoadingScreenQueueError
-          ? {
-              fingerprint: [
-                "prematch-unsupported-queue",
-                gameInfo.gameQueueConfigId.toString(),
-                gameInfo.gameMode,
-                gameInfo.mapId.toString(),
-              ],
-              tags: {
-                source: "prematch-loading-screen",
-                gameId,
-                gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
-                mapId: gameInfo.mapId.toString(),
-                gameMode: gameInfo.gameMode,
-              },
-            }
-          : {
-              tags: {
-                source: "prematch-loading-screen",
-                gameId,
-                gameQueueConfigId: gameInfo.gameQueueConfigId.toString(),
-                mapId: gameInfo.mapId.toString(),
-                gameMode: gameInfo.gameMode,
-              },
-            };
-      Sentry.captureException(error, context);
-    }
-    // Continue with text-only notification
-  }
+  const loadingScreen = await renderPrematchLoadingScreen({
+    gameInfo,
+    trackedPlayers,
+    queueType,
+    gameId,
+    aliases,
+  });
+  const loadingScreenAttachment = loadingScreen.attachment;
+  const loadingScreenEmbed = loadingScreen.embed;
+  const loadingScreenData = loadingScreen.data;
 
   // Bryan Bucks: open the markets and build the buttons. Entirely
   // best-effort — on any failure this yields no guilds, no rows, and the
