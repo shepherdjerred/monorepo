@@ -135,14 +135,12 @@ export const customSocketHandlers: Bun.WebSocketHandler<CustomSocketData> = {
     socketsByGuild.set(guildId, guildSockets);
     try {
       const snapshot = await getActiveCustomNight(prisma, guildId);
-      if (snapshot !== null) {
-        enqueueSnapshotDelivery(
-          socket,
-          JSON.stringify(
-            CustomSnapshotEnvelopeSchema.parse({ kind: "snapshot", snapshot }),
-          ),
-        );
-      }
+      enqueueSnapshotDelivery(
+        socket,
+        JSON.stringify(
+          CustomSnapshotEnvelopeSchema.parse({ kind: "snapshot", snapshot }),
+        ),
+      );
     } catch (error) {
       removeCustomSocket(socket);
       logger.error("Customs socket initialization failed", { error, guildId });

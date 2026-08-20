@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { CustomNightSnapshotSchema } from "@scout-for-lol/data";
+import {
+  CustomNightSnapshotSchema,
+  CustomSnapshotEnvelopeSchema,
+} from "@scout-for-lol/data";
 import { newestCustomSnapshot } from "@/lib/newest-custom-snapshot";
 
 const NOW = "2026-08-15T20:00:00.000Z";
@@ -39,6 +42,12 @@ function snapshot(
 }
 
 describe("newestCustomSnapshot", () => {
+  test("accepts a socket clear envelope", () => {
+    expect(
+      CustomSnapshotEnvelopeSchema.parse({ kind: "snapshot", snapshot: null }),
+    ).toEqual({ kind: "snapshot", snapshot: null });
+  });
+
   test("rejects stale mutation responses after a newer socket snapshot", () => {
     const current = snapshot(7);
     expect(newestCustomSnapshot(current, snapshot(6))).toBe(current);

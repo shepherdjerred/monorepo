@@ -202,7 +202,7 @@ export type CustomNightSnapshot = z.infer<typeof CustomNightSnapshotSchema>;
 
 export const CustomSnapshotEnvelopeSchema = z.object({
   kind: z.literal("snapshot"),
-  snapshot: CustomNightSnapshotSchema,
+  snapshot: CustomNightSnapshotSchema.nullable(),
 });
 export type CustomSnapshotEnvelope = z.infer<
   typeof CustomSnapshotEnvelopeSchema
