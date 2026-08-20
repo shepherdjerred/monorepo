@@ -144,6 +144,7 @@ function unusedSlots(condition: ModelParlayCondition): readonly unknown[] {
         condition.objective,
         condition.expected,
         condition.matchNumericField,
+        condition.opponentPingField,
       ];
     case "participant_boolean":
       return [
@@ -154,6 +155,7 @@ function unusedSlots(condition: ModelParlayCondition): readonly unknown[] {
         condition.operator,
         condition.threshold,
         condition.matchNumericField,
+        condition.opponentPingField,
       ];
     case "team_boolean":
       return [
@@ -164,6 +166,7 @@ function unusedSlots(condition: ModelParlayCondition): readonly unknown[] {
         condition.operator,
         condition.threshold,
         condition.matchNumericField,
+        condition.opponentPingField,
       ];
     case "team_objective_first":
       return [
@@ -174,6 +177,7 @@ function unusedSlots(condition: ModelParlayCondition): readonly unknown[] {
         condition.operator,
         condition.threshold,
         condition.matchNumericField,
+        condition.opponentPingField,
       ];
     case "team_objective_kills":
       return [
@@ -183,6 +187,7 @@ function unusedSlots(condition: ModelParlayCondition): readonly unknown[] {
         condition.teamBooleanField,
         condition.expected,
         condition.matchNumericField,
+        condition.opponentPingField,
       ];
     case "match_numeric":
       return [

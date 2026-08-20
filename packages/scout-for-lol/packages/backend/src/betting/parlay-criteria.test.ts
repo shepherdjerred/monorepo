@@ -94,6 +94,16 @@ describe("parlay model schema", () => {
         ),
       }).success,
     ).toBe(false);
+    expect(
+      ModelSchema.safeParse({
+        ...modelParlay,
+        conditions: modelParlay.conditions.map((condition, index) =>
+          index === 0
+            ? { ...condition, opponentPingField: "onMyWayPings" }
+            : condition,
+        ),
+      }).success,
+    ).toBe(false);
   });
 });
 
