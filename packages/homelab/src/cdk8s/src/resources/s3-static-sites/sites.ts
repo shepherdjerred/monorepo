@@ -129,6 +129,9 @@ export const staticSites: StaticSiteConfig[] = [
     // hard refresh gets the trailing-slash redirect and then a 404 page.
     spaFallbacks: [{ pathPrefix: "/course/*", fallbackPath: "/index.html" }],
   },
+  // Keep the old route through this release. The Cloudflare redirect is
+  // applied after ArgoCD, so removing the binding here first would create a
+  // window where the old CNAME reaches a tunnel with no route.
   { hostname: "clauderon.com", bucket: "clauderon" },
   { hostname: "ts-mc.net", bucket: "ts-mc" },
   { hostname: "ppl.glitter-boys.com", bucket: "glitter-boys-ppl" },
