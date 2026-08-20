@@ -99,13 +99,9 @@ export async function seedDesignAuditDatabase(
       { timestampFormat: "unixepoch-ms" },
     ),
   });
-  const configuredLakeDir = environment["REPORT_LAKE_DIR"];
-  const lakeDir = path.resolve(
-    backendCwd,
-    configuredLakeDir !== undefined && configuredLakeDir.length > 0
-      ? configuredLakeDir
-      : DEFAULT_DESIGN_AUDIT_LAKE_DIR,
-  );
+  // The audit owns this disposable fixture lake. Never inherit REPORT_LAKE_DIR,
+  // which may point at a developer's normal working lake.
+  const lakeDir = path.resolve(backendCwd, DEFAULT_DESIGN_AUDIT_LAKE_DIR);
 
   try {
     await prisma.user.upsert({

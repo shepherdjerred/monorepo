@@ -217,13 +217,11 @@ if (import.meta.main) {
     const { options } = parsed;
     const { backendOrigin, webOrigin } = origins(options);
     const backendCwd = path.join(root, "packages", "backend");
-    const configuredLakeDir = Bun.env["REPORT_LAKE_DIR"];
     const lakeDir = resolveBackendLakeDir(
       backendCwd,
-      isDesignAuditBoot &&
-        (configuredLakeDir === undefined || configuredLakeDir.length === 0)
+      isDesignAuditBoot
         ? DEFAULT_DESIGN_AUDIT_LAKE_DIR
-        : configuredLakeDir,
+        : Bun.env["REPORT_LAKE_DIR"],
     );
     console.log(await adoptSeedIfUnseeded(lakeDir));
 
