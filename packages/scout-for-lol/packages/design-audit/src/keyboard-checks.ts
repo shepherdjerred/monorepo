@@ -26,7 +26,7 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
       (element) => element.checkVisibility(),
     ).length;
   });
-  const checks = Math.min(count, 100);
+  const checks = count;
   const visited = new Set<number>();
   let skipNextTab = false;
   for (

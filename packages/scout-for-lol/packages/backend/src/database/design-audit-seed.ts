@@ -216,10 +216,11 @@ export async function seedDesignAuditDatabase(
       create: { ...competitionData, id: competitionId, createdTime: now },
     });
 
-    await prisma.competitionParticipant.upsert({
-      where: { competitionId_playerId: { competitionId, playerId: player.id } },
-      update: { status: "JOINED", joinedAt: now },
-      create: {
+    await prisma.competitionParticipant.deleteMany({
+      where: { competitionId },
+    });
+    await prisma.competitionParticipant.create({
+      data: {
         competitionId,
         playerId: player.id,
         status: "JOINED",
