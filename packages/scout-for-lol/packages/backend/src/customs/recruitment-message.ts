@@ -193,6 +193,22 @@ async function markPendingRecruitmentSyncsCompleted(
   });
 }
 
+export async function recordPendingCustomRecruitmentSync(params: {
+  prisma: ExtendedPrismaClient;
+  snapshot: CustomNightSnapshot;
+}): Promise<void> {
+  await params.prisma.customAuditEvent.create({
+    data: {
+      nightId: params.snapshot.id,
+      revision: params.snapshot.revision,
+      actorId: "SCOUT",
+      action: "RECRUITMENT_MESSAGE_SYNC_PENDING",
+      payload: JSON.stringify({}),
+      source: "DISCORD",
+    },
+  });
+}
+
 export async function syncCustomRecruitmentMessage(params: {
   prisma: ExtendedPrismaClient;
   snapshot: CustomNightSnapshot;

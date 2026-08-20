@@ -12,7 +12,10 @@ import {
   commitCustomMutation,
   getCustomNight,
 } from "#src/customs/repository.ts";
-import { syncCustomRecruitmentMessage } from "#src/customs/recruitment-message.ts";
+import {
+  recordPendingCustomRecruitmentSync,
+  syncCustomRecruitmentMessage,
+} from "#src/customs/recruitment-message.ts";
 import {
   provisionCustomTournamentCode,
   recordRiotTournamentResult,
@@ -107,6 +110,10 @@ async function expireNight(
       logger.error("Expired custom night recruitment sync failed", {
         error,
         nightId,
+      });
+      await recordPendingCustomRecruitmentSync({
+        prisma: database,
+        snapshot: mutation.snapshot,
       });
     }
     try {

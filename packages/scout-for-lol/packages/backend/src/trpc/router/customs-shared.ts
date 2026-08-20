@@ -5,7 +5,10 @@ import type {
 import { TRPCError } from "@trpc/server";
 import { customActorForSession } from "#src/customs/discord-client.ts";
 import { getCustomNight } from "#src/customs/repository.ts";
-import { syncCustomRecruitmentMessage } from "#src/customs/recruitment-message.ts";
+import {
+  recordPendingCustomRecruitmentSync,
+  syncCustomRecruitmentMessage,
+} from "#src/customs/recruitment-message.ts";
 import { publishCustomSnapshot } from "#src/customs/socket.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -60,15 +63,9 @@ export async function broadcast<
       "Custom night state committed but recruitment message sync failed",
       { error },
     );
-    await prisma.customAuditEvent.create({
-      data: {
-        nightId: result.snapshot.id,
-        revision: result.snapshot.revision,
-        actorId: "SCOUT",
-        action: "RECRUITMENT_MESSAGE_SYNC_PENDING",
-        payload: JSON.stringify({}),
-        source: "DISCORD",
-      },
+    await recordPendingCustomRecruitmentSync({
+      prisma,
+      snapshot: result.snapshot,
     });
     return result;
   }

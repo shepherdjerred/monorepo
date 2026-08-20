@@ -108,6 +108,7 @@ export async function returnCustomResultPlayersToLobby(params: {
   source: "manual" | "riot";
 }): Promise<void> {
   try {
+    await recordPendingResultVoiceReturn(params);
     const failures = await attemptResultVoiceReturn(
       resultVoiceTarget(params.snapshot),
       params.nightId,
@@ -118,7 +119,6 @@ export async function returnCustomResultPlayersToLobby(params: {
         nightId: params.nightId,
         source: params.source,
       });
-      await recordPendingResultVoiceReturn(params);
       return;
     }
     await markResultVoiceReturnCompleted(params);
@@ -128,7 +128,6 @@ export async function returnCustomResultPlayersToLobby(params: {
       nightId: params.nightId,
       source: params.source,
     });
-    await recordPendingResultVoiceReturn(params);
   }
 }
 
