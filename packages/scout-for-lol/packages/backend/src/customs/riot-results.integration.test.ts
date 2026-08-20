@@ -12,7 +12,10 @@ import {
   provisionCustomTournamentCode,
   recordRiotTournamentResult,
 } from "#src/customs/riot-results.ts";
-import { retryPendingCustomImports } from "#src/customs/reconciler.ts";
+import {
+  retryPendingCustomImports,
+  shouldPublishCustomSnapshot,
+} from "#src/customs/reconciler.ts";
 import {
   commitCustomMutation,
   getCustomNight,
@@ -27,6 +30,7 @@ const RACE_GUILD_ID = "32345678901234567";
 const VOICE_GUILD_ID = "42345678901234567";
 const PRIVATE_MATCH_GUILD_ID = "52345678901234567";
 const RESULT_RACE_GUILD_ID = "62345678901234567";
+const LATE_RESULT_GUILD_ID = "72345678901234567";
 const NOW = new Date("2026-08-16T09:00:00.000Z");
 const PICK_ORDERS = [null, 1, 4, 5, 8, null, 2, 3, 6, 7] as const;
 const MATCH_FIXTURE_URL = new URL(
@@ -123,6 +127,43 @@ afterAll(async () => {
 });
 
 describe("Customs persistence recovery", () => {
+  test("does not publish an ended night over its replacement", async () => {
+    const ended = await createCustomNight({
+      prisma,
+      actor: { discordId: HOST_ID, discordAdministrator: false },
+      guildId: LATE_RESULT_GUILD_ID,
+      guildName: "Late result guild",
+      launchChannelId: LATE_RESULT_GUILD_ID,
+      voiceLobbyChannelId: LATE_RESULT_GUILD_ID,
+      now: NOW,
+    });
+    const endedResult = await endCustomNight({
+      prisma,
+      actor: { discordId: HOST_ID, discordAdministrator: false },
+      nightId: ended.snapshot.id,
+      expectedRevision: ended.snapshot.revision,
+      now: new Date(NOW.getTime() + 1000),
+    });
+    expect(endedResult.applied).toBe(true);
+
+    const replacement = await createCustomNight({
+      prisma,
+      actor: { discordId: HOST_ID, discordAdministrator: false },
+      guildId: LATE_RESULT_GUILD_ID,
+      guildName: "Late result guild",
+      launchChannelId: LATE_RESULT_GUILD_ID,
+      voiceLobbyChannelId: LATE_RESULT_GUILD_ID,
+      now: new Date(NOW.getTime() + 2000),
+    });
+
+    expect(await shouldPublishCustomSnapshot(prisma, ended.snapshot.id)).toBe(
+      false,
+    );
+    expect(
+      await shouldPublishCustomSnapshot(prisma, replacement.snapshot.id),
+    ).toBe(true);
+  });
+
   test("returns one active night across concurrent create requests", async () => {
     const create = async () =>
       await createCustomNight({

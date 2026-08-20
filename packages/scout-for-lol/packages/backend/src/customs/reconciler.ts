@@ -201,6 +201,22 @@ async function recoverTournamentCode(
   }
 }
 
+export async function shouldPublishCustomSnapshot(
+  database: ExtendedPrismaClient,
+  nightId: string,
+): Promise<boolean> {
+  const night = await database.customNight.findUnique({
+    where: { id: nightId },
+    select: { guildId: true },
+  });
+  if (night === null) throw new Error(`Custom night ${nightId} not found`);
+  const activeNight = await database.customActiveNight.findUnique({
+    where: { guildId: night.guildId },
+    select: { nightId: true },
+  });
+  return activeNight === null || activeNight.nightId === nightId;
+}
+
 async function pollResult(
   database: ExtendedPrismaClient,
   nightId: string,
@@ -227,7 +243,9 @@ async function pollResult(
       if (!mutation.applied) continue;
       const shouldReturnVoicePlayers =
         mutation.snapshot.currentGame?.id === game.id;
-      publishCustomSnapshot(mutation.snapshot);
+      if (await shouldPublishCustomSnapshot(database, nightId)) {
+        publishCustomSnapshot(mutation.snapshot);
+      }
       if (shouldReturnVoicePlayers) {
         await returnCustomResultPlayersToLobby({
           prisma: database,
