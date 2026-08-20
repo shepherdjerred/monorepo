@@ -29,17 +29,13 @@ import {
   parlayProposalSchemaFor,
   parseModelGeneratedParlay,
   thresholdsMatchProposal,
-  type ModelParlayProposal,
 } from "#src/betting/parlay-model-schema.ts";
 import { fetchParlayHistory } from "#src/betting/parlay-history.ts";
-import type { MatchLakeRow } from "#src/report-lake/schema.ts";
 import { priceParlay, type ParlayPrice } from "#src/betting/parlay-pricing.ts";
-import { buildProposalStatistics } from "#src/betting/parlay-stats.ts";
 import {
-  OPPONENT_PING_HISTORY_COLUMNS,
-  PARLAY_HISTORY_COLUMNS,
-  TEAM_OBJECTIVE_HISTORY_COLUMNS,
-} from "#src/betting/parlay-stat-fields.ts";
+  buildProposalStatistics,
+  statLegsForProposal,
+} from "#src/betting/parlay-stats.ts";
 import {
   PARLAY_PROMPT_VERSION,
   buildParlayGenerationContext,
@@ -198,88 +194,6 @@ class ParlayUnpriceableError extends Error {
     super(`Parlay could not be priced from history: ${reason}`);
     this.name = "ParlayUnpriceableError";
   }
-}
-
-type StatLeg = {
-  index: number;
-  subjectKey: string | null;
-  subjectPuuid: string | null;
-  column: keyof MatchLakeRow;
-  operator: "gte" | "lte";
-  scope: "player" | "team" | "opponent";
-  label: string;
-};
-
-/**
- * Which measured distribution each proposed leg needs.
- *
- * A leg whose column cannot be resolved is dropped from the statistics rather
- * than defaulted: pass two then has nothing to choose against for it, and
- * pricing refuses the parlay outright, which is the intended fail-closed path.
- */
-function statLegsForProposal(
-  proposal: ModelParlayProposal,
-  subjects: readonly ParlaySubject[],
-): StatLeg[] {
-  const puuidFor = (key: string | null): string | null =>
-    subjects.find((subject) => subject.key === key)?.puuid ?? null;
-  const anchor = subjects[0]?.puuid ?? null;
-
-  return proposal.conditions.flatMap((condition, index): StatLeg[] => {
-    const operator = condition.operator === "lte" ? "lte" : "gte";
-    if (condition.kind === "participant_numeric") {
-      const field = condition.participantNumericField;
-      const column = field === null ? null : PARLAY_HISTORY_COLUMNS[field];
-      return column === null || field === null
-        ? []
-        : [
-            {
-              index,
-              subjectKey: condition.subject,
-              subjectPuuid: puuidFor(condition.subject),
-              column,
-              operator,
-              scope: "player" as const,
-              label: field,
-            },
-          ];
-    }
-    if (condition.kind === "team_objective_kills") {
-      const objective = condition.objective;
-      const column =
-        objective === null ? null : TEAM_OBJECTIVE_HISTORY_COLUMNS[objective];
-      return column === null || objective === null
-        ? []
-        : [
-            {
-              index,
-              subjectKey: null,
-              subjectPuuid: anchor,
-              column,
-              operator,
-              scope: "team" as const,
-              label: `selected team ${objective}`,
-            },
-          ];
-    }
-    if (condition.kind === "opponent_team_pings") {
-      const field = condition.opponentPingField;
-      return field === null
-        ? []
-        : [
-            {
-              index,
-              subjectKey: null,
-              subjectPuuid: anchor,
-              column: OPPONENT_PING_HISTORY_COLUMNS[field],
-              operator,
-              scope: "opponent" as const,
-              label: `enemy team ${field}`,
-            },
-          ];
-    }
-    return [];
-  });
 }
 
 async function generateAndPersistDefinition(

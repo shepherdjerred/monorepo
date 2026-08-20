@@ -8,6 +8,10 @@ import {
   TeamObjectiveSchema,
 } from "#src/betting/parlay-catalog.ts";
 import {
+  PARLAY_HISTORY_COLUMNS,
+  TEAM_OBJECTIVE_HISTORY_COLUMNS,
+} from "#src/betting/parlay-stat-fields.ts";
+import {
   GeneratedParlaySchema,
   PARLAY_SCHEMA_VERSION,
   parlaySemanticIssues,
@@ -359,7 +363,31 @@ export function parlayProposalSchemaFor(
             path: ["conditions", index],
             message: "participant_numeric needs a field and an operator",
           });
+        } else if (
+          PARLAY_HISTORY_COLUMNS[condition.participantNumericField] === null
+        ) {
+          // Refuse here rather than after the second call: an ungroundable
+          // target cannot be priced, so proposing one can only end in a parlay
+          // thrown away having spent both model calls.
+          context.addIssue({
+            code: "custom",
+            path: ["conditions", index],
+            message: `${condition.participantNumericField} has no recorded history and cannot be used`,
+          });
         }
+      }
+      if (
+        condition.kind === "team_objective_kills" &&
+        (condition.objective === null ||
+          TEAM_OBJECTIVE_HISTORY_COLUMNS[condition.objective] === null ||
+          condition.operator === null)
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["conditions", index],
+          message:
+            "team_objective_kills needs an operator and an objective with recorded history (riftHerald has none)",
+        });
       }
       if (
         condition.kind === "opponent_team_pings" &&
