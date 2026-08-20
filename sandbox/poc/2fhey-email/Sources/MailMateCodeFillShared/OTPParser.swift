@@ -8,13 +8,13 @@ public struct OTPParser {
     }
 
     private static let keywordPattern = makeExpression(
-        "(?i)(?<![A-Za-z0-9])(verification|verificaci[oó]n|v[eé]rification|verifizierung|sicherheitscode|one[- ]?time|authentication|authentifizierung|auth|login|sign[- ]?in|passcode|otp|two[- ]?factor|2fa|c[oó]de|pin|验证码|認証コード)(?![A-Za-z0-9])"
+        "(?i)(?<![\\p{L}\\p{N}])(verification|verificaci[oó]n|v[eé]rification|verifizierung|sicherheitscode|one[- ]?time|authentication|authentifizierung|auth|login|sign[- ]?in|passcode|otp|two[- ]?factor|2fa|c[oó]de|pin|验证码|認証コード)(?![\\p{L}\\p{N}])"
     )
     private static let explicitLabelPattern = makeExpression(
-        "(?i)(?<![A-Za-z0-9])(code|otp|pin|passcode)(?![A-Za-z0-9])"
+        "(?i)(?<![\\p{L}\\p{N}])(code|otp|pin|passcode)(?![\\p{L}\\p{N}])"
     )
     private static let candidatePattern = makeExpression(
-        "(?<![A-Za-z0-9])([A-Za-z0-9](?:[ -]?[A-Za-z0-9]){3,7})(?![A-Za-z0-9])"
+        "(?<![\\p{L}\\p{N}])([A-Za-z0-9](?:[ -]?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}])"
     )
     private static let urlPattern = makeExpression("(?i)https?://\\S+")
     private static let emailPattern = makeExpression("(?i)[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}")

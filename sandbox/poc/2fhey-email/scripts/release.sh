@@ -24,6 +24,10 @@ if [[ -e "$release_dir/MailMateCodeFill.zip" ]]; then
     printf '%s\n' "Refusing to overwrite $release_dir/MailMateCodeFill.zip; choose a new RELEASE_DIR or remove the old artifact" >&2
     exit 1
 fi
+if [[ -e "$release_dir/MailMateCodeFill.app" ]]; then
+    printf '%s\n' "Refusing to overwrite $release_dir/MailMateCodeFill.app; choose a new RELEASE_DIR or remove the old artifact" >&2
+    exit 1
+fi
 
 log_event release_started release_dir="$release_dir"
 
