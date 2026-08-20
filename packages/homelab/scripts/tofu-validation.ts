@@ -10,6 +10,17 @@ export type TofuValidationContext = {
   localProviderRoot: string | null;
 };
 
+export function buildValidationEnv(
+  encryptsState: boolean,
+): Record<string, string> {
+  return encryptsState
+    ? {
+        TF_VAR_tofu_state_encryption_passphrase:
+          "ci-validation-state-passphrase",
+      }
+    : {};
+}
+
 function withCwd(options: RunOptions, cwd: string): RunOptions {
   return { ...options, cwd };
 }

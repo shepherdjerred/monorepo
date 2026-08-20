@@ -34,7 +34,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
   - `argocd` — ArgoCD admin credentials plus `OP_CONNECT_TOKEN` for the 1Password provider
   - `arr` — Radarr/Sonarr/Prowlarr API credentials (see `arr/providers.tf`)
   - `asuswrt` — `TF_VAR_asuswrt_username` / `TF_VAR_asuswrt_password`, the shared router/AP admin login
-  - `discord` — `DISCORD_BOTS_JSON`, `DISCORD_BOT_TOKENS_JSON`, and `DISCORD_PROVIDER_NAMES_JSON`
+  - `discord` — `DISCORD_BOTS_JSON` and `DISCORD_BOT_TOKENS_JSON`
   - `openai` — `OPENAI_ADMIN_KEY` plus the OpenAI JSON configuration variables
   - `anthropic` — `ANTHROPIC_ADMIN_KEY` plus the Anthropic JSON configuration variables
   - `openrouter` — management `OPENROUTER_API_KEY` plus the OpenRouter JSON configuration variables, including the separately injected `OPENROUTER_BYOK_KEYS_JSON`; set a new `rotation_version` in a BYOK registry entry when deliberately rotating its write-only key
@@ -98,7 +98,7 @@ Scoped `cloudflare_api_token` resources can be declared in `cloudflare_api_token
 
 ### Discord
 
-`discord/bot-registry.json` is the checked-in allowlist of true bot applications, expected application IDs, 1Password item references, and managed settings. `discord/applications.tf` is import-only. Each bot has its own provider configuration and manages descriptions, install URLs, interaction endpoints, role-connection URLs, and tags. Every application has `prevent_destroy`; applications are never created or deleted by this stack.
+`discord/bot-registry.json` is the checked-in allowlist of true bot applications, expected application IDs, 1Password item references, and managed settings. `discord/applications.tf` is import-only. OpenTofu requires provider configurations and provider selections to be static, so the stack declares one alias and one resource for each registry entry; add a registry entry and its static blocks before managing a new bot. Each bot manages descriptions, install URLs, interaction endpoints, role-connection URLs, and tags. Every application has `prevent_destroy`; applications are never created or deleted by this stack.
 
 Bot tokens remain Developer Portal/1Password-managed. Userbots/selfbots, guild layout, commands, and bot-token rotation are intentionally outside this stack.
 

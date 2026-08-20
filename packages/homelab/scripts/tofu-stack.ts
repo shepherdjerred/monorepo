@@ -30,7 +30,11 @@ import {
   type RunOptions,
 } from "@shepherdjerred/root-scripts/lib/run.ts";
 import { runMain } from "@shepherdjerred/root-scripts/lib/transient.ts";
-import { validateTofu, type TofuValidationContext } from "./tofu-validation.ts";
+import {
+  buildValidationEnv,
+  validateTofu,
+  type TofuValidationContext,
+} from "./tofu-validation.ts";
 
 /** homelab package root = two levels up from this script (packages/homelab). */
 function homelabRoot(): string {
@@ -90,7 +94,6 @@ const STACK_SECRET_ENV: Readonly<Record<string, readonly SecretEnv[]>> = {
   discord: [
     ["DISCORD_BOTS_JSON", "TF_VAR_discord_bots"],
     ["DISCORD_BOT_TOKENS_JSON", "TF_VAR_discord_bot_tokens"],
-    ["DISCORD_PROVIDER_NAMES_JSON", "TF_VAR_discord_provider_names"],
   ],
   github: [
     ["CLOUDFLARE_ACCOUNT_ID", "TF_VAR_cloudflare_account_id"],
@@ -202,11 +205,7 @@ const REQUIRED_STACK_ENV: Readonly<Record<string, readonly string[]>> = {
     "ANTHROPIC_WORKSPACE_MEMBERS_JSON",
     "ANTHROPIC_INVITES_JSON",
   ],
-  discord: [
-    "DISCORD_BOTS_JSON",
-    "DISCORD_BOT_TOKENS_JSON",
-    "DISCORD_PROVIDER_NAMES_JSON",
-  ],
+  discord: ["DISCORD_BOTS_JSON", "DISCORD_BOT_TOKENS_JSON"],
   openrouter: [
     "OPENROUTER_WORKSPACES_JSON",
     "OPENROUTER_GUARDRAILS_JSON",
@@ -429,7 +428,10 @@ async function main(): Promise<void> {
   const encryptsState = await Bun.file(
     `${stackDir}/state-encryption.tf`,
   ).exists();
-  const env = action === "validate" ? {} : buildTofuEnv(stack, encryptsState);
+  const env =
+    action === "validate"
+      ? buildValidationEnv(encryptsState)
+      : buildTofuEnv(stack, encryptsState);
   if (
     action === "apply" &&
     encryptsState &&

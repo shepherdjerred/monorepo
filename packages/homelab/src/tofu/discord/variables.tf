@@ -21,19 +21,13 @@ variable "discord_bot_tokens" {
   # opaque invalid-index error while evaluating the provider configuration.
   validation {
     condition = length(setsubtract(
-      setunion(toset(keys(var.discord_bots)), var.discord_provider_names),
+      toset(keys(var.discord_bots)),
       toset(keys(var.discord_bot_tokens)),
     )) == 0
     # The message stays static: the missing names derive from a sensitive map,
     # and OpenTofu rejects an error message built from sensitive values.
-    error_message = "Every name in discord_bots and discord_provider_names needs a matching discord_bot_tokens entry."
+    error_message = "Every name in discord_bots needs a matching discord_bot_tokens entry."
   }
-}
-
-variable "discord_provider_names" {
-  description = "Previously managed bot names; retain retired names until their state is destroyed"
-  type        = set(string)
-  default     = []
 }
 
 variable "tofu_state_encryption_passphrase" {
