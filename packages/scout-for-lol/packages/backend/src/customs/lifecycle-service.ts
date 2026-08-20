@@ -8,6 +8,7 @@ import {
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { assertCustomHostControl } from "#src/customs/authorization.ts";
 import {
+  assertRosterLockable,
   rerollCaptainsWithinTeams,
   selectCaptainsExcludingPrevious,
 } from "#src/customs/draft.ts";
@@ -228,6 +229,16 @@ export async function continueCustomNight(params: {
         params.actor.discordId,
         params.actor.discordAdministrator,
       );
+      const current = currentGame(snapshot);
+      const roster = current.participants.map((gameParticipant) => {
+        const participant = snapshot.participants.find(
+          (candidate) => candidate.discordId === gameParticipant.discordId,
+        );
+        if (participant === undefined)
+          throw new Error("Roster participant left the night");
+        return participant;
+      });
+      assertRosterLockable(roster);
       let state = transitionCustomNight(snapshot.state, {
         type: "PREPARE_NEXT_GAME",
       });
