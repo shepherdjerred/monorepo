@@ -1167,7 +1167,7 @@ steps:
         # env-contract check requires these names. Validate uses an empty env,
         # backend=false, and never contacts the state or cloud APIs.
         export AWS_ACCESS_KEY_ID=ci-validation AWS_SECRET_ACCESS_KEY=ci-validation
-        for stack in seaweedfs tailscale buildkite arr github cloudflare discord openai anthropic openrouter; do
+        for stack in seaweedfs tailscale buildkite arr github cloudflare discord openai anthropic openrouter argocd asuswrt; do
           bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" validate
         done
       fi
