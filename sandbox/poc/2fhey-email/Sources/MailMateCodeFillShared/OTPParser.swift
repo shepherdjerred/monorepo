@@ -25,11 +25,11 @@ public struct OTPParser {
         "(?i)(?<![\\p{L}\\p{N}])(phone|tel|date|order|invoice|amount|price|year|http|www|reference|ticket)(?![\\p{L}\\p{N}])"
     )
     private static let datePattern = makeExpression(
-        "(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4})(?![\\p{L}\\p{N}])"
+        "(?i)(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4}|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+\\d{1,2}(?:,\\s*|\\s+)\\d{4})(?![\\p{L}\\p{N}])"
     )
     private static let urlPattern = makeExpression("(?i)https?://\\S+")
     private static let bareURLPattern = makeExpression(
-        "(?i)(?<![\\p{L}\\p{N}@.])(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?::\\d{1,5})?(?:/[^\\s]*)?"
+        "(?i)(?<![\\p{L}\\p{N}@.])(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?::\\d{1,5})?(?:[/?#][^\\s]*)?"
     )
     private static let emailPattern = makeExpression("(?i)[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}")
     private static let senderMailboxPattern = makeExpression("(?i)^[A-Z0-9._%+-]+@([A-Z0-9.-]+)$")
