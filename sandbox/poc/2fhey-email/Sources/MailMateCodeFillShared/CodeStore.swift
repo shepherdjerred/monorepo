@@ -111,7 +111,20 @@ public struct CodeStore {
         let url = directory.appendingPathComponent(Self.fileName)
         guard fileManager.fileExists(atPath: url.path) else { return [] }
         let data = try Data(contentsOf: url)
-        let records = try decoder.decode([OTPRecord].self, from: data)
+        let records: [OTPRecord]
+        do {
+            records = try decoder.decode([OTPRecord].self, from: data)
+        } catch {
+            let quarantineURL = directory.appendingPathComponent(".\(Self.fileName).corrupt-\(UUID().uuidString)")
+            do {
+                try fileManager.moveItem(at: url, to: quarantineURL)
+                CodeFillObservability.storeLogger.error("event=store_corrupt_quarantined quarantine_name=\(quarantineURL.lastPathComponent, privacy: .public)")
+                return []
+            } catch {
+                CodeFillObservability.storeLogger.error("event=store_corrupt_quarantine_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
+                throw error
+            }
+        }
         let valid = records.filter { !$0.isExpired(at: now) }
         if valid.count != records.count {
             try writeUnlocked(valid)

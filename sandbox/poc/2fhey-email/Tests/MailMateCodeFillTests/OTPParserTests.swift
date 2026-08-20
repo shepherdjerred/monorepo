@@ -89,6 +89,7 @@ func rejectsCodeInsideAddress() {
 func validatesDomainServiceIdentifiers() {
     #expect(ServiceIdentity.isDomain("acme.example"))
     #expect(ServiceIdentity.isDomain("login.acme.co.uk"))
+    #expect(ServiceIdentity.isDomain("example.xn--p1ai"))
     #expect(!ServiceIdentity.isDomain("Your verification code"))
     #expect(!ServiceIdentity.isDomain("localhost"))
     #expect(!ServiceIdentity.isDomain("acme.example."))
@@ -96,6 +97,7 @@ func validatesDomainServiceIdentifiers() {
     #expect(!ServiceIdentity.isDomain("acme.123"))
     #expect(ServiceIdentity.matchingValues(for: "localhost").contains(ServiceIdentity.localURLIdentifier))
     #expect(ServiceIdentity.matchingValues(for: "http://127.0.0.1:8788").contains("localhost"))
+    #expect(ServiceIdentity.matchingValues(for: "example.xn--p1ai") == ["example.xn--p1ai"])
     #expect(ServiceIdentity.matchingValues(for: "Your verification code").isEmpty)
 }
 
