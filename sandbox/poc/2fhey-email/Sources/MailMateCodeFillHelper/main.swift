@@ -104,7 +104,10 @@ private func requestIdentityReconciliation() {
         return
     }
 
-    writeBrokerRequestMarker()
+    let requestToken = Data(UUID().uuidString.utf8)
+    guard writeBrokerRequestMarker(token: requestToken) else {
+        return
+    }
 
     if let bundleIdentifier = Bundle(url: appURL)?.bundleIdentifier,
        let runningApplication = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).first(where: { !$0.isTerminated }) {
@@ -122,6 +125,7 @@ private func requestIdentityReconciliation() {
     configuration.promptsUserIfNeeded = false
     NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { _, error in
         if let error {
+            removeBrokerRequestMarker(matching: requestToken)
             CodeFillObservability.helperLogger.error("event=identity_reconciliation outcome=error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
         } else {
             CodeFillObservability.helperLogger.info("event=identity_reconciliation outcome=launched")
@@ -129,22 +133,24 @@ private func requestIdentityReconciliation() {
     }
 }
 
-private func writeBrokerRequestMarker() {
+private func writeBrokerRequestMarker(token: Data) -> Bool {
     guard let containerURL = FileManager.default.containerURL(
         forSecurityApplicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier
     ) else {
         CodeFillObservability.helperLogger.error("event=identity_reconciliation outcome=app_group_unavailable")
-        return
+        return false
     }
     let markerURL = containerURL.appendingPathComponent(CodeFillConfiguration.brokerRequestFileName)
     do {
-        try Data().write(to: markerURL, options: .atomic)
+        try token.write(to: markerURL, options: .atomic)
+        return true
     } catch {
         CodeFillObservability.helperLogger.error("event=identity_reconciliation outcome=marker_write_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
+        return false
     }
 }
 
-private func removeBrokerRequestMarker() {
+private func removeBrokerRequestMarker(matching token: Data? = nil) {
     guard let containerURL = FileManager.default.containerURL(
         forSecurityApplicationGroupIdentifier: CodeFillConfiguration.applicationGroupIdentifier
     ) else {
@@ -152,6 +158,10 @@ private func removeBrokerRequestMarker() {
     }
     let markerURL = containerURL.appendingPathComponent(CodeFillConfiguration.brokerRequestFileName)
     do {
+        if let token,
+           try Data(contentsOf: markerURL) != token {
+            return
+        }
         try FileManager.default.removeItem(at: markerURL)
     } catch CocoaError.fileNoSuchFile {
         return
