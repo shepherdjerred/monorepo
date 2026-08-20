@@ -14,7 +14,7 @@ public struct OTPParser {
         "(?i)(?<![\\p{L}\\p{N}])(code|otp|pin|passcode)(?![\\p{L}\\p{N}])"
     )
     private static let candidatePattern = makeExpression(
-        "(?<![\\p{L}\\p{N}])([A-Za-z0-9](?:[ -]?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}]|-[A-Za-z0-9])"
+        "(?<![\\p{L}\\p{N}])([A-Za-z0-9](?:[ -]?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}]|-[A-Za-z0-9]| [A-Za-z0-9]*[0-9])"
     )
     private static let datePattern = makeExpression(
         "(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4})(?![\\p{L}\\p{N}])"
@@ -87,7 +87,7 @@ public struct OTPParser {
                 NSMaxRange(keywordRange.range) >= match.range.location - 48 &&
                     keywordRange.range.location <= NSMaxRange(match.range) + 48
             }
-            let score = (explicitLabel ? 4 : 0) + (hasNearbyKeyword ? 2 : 0) + (code.allSatisfy(\.isNumber) ? 1 : 0)
+            let score = (explicitLabel ? 4 : 0) + (hasNearbyKeyword ? 2 : 0)
             return Candidate(code: code, range: normalized.range, score: score)
         }
 
@@ -144,6 +144,17 @@ public struct OTPParser {
         if rawCode.contains("-"), let firstSeparator, rawCode[firstSeparator] == "-", compact.count <= 8,
            compact.contains(where: \.isLetter), compact.contains(where: \.isNumber) {
             return (compact, range)
+        }
+
+        if let firstSeparator, rawCode[firstSeparator] == " ",
+           compact.count <= 8, compact.contains(where: \.isLetter), compact.contains(where: \.isNumber) {
+            let prefix = String(rawCode[..<firstSeparator]).lowercased()
+            let suffix = rawCode[rawCode.index(after: firstSeparator)...]
+            let prosePrefixes = ["for", "in", "is", "on", "the", "to", "use", "your"]
+            if (!prefix.isEmpty && prefix.allSatisfy(\.isLetter) && !prosePrefixes.contains(prefix)) ||
+                (prefix.contains(where: \.isNumber) && suffix.contains(where: \.isNumber)) {
+                return (compact, range)
+            }
         }
 
         // A separator can cause a numeric code followed by a short word ("482913 to") to be
