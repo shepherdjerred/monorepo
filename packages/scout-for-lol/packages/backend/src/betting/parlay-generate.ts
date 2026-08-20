@@ -255,12 +255,17 @@ async function generateAndPersistDefinition(
   const history = await fetchParlayHistory({
     puuids: setup.subjects.map((subject) => subject.puuid),
     excludeMatchId: setup.matchId,
+    queueType: setup.queueType,
   });
   const legs = statLegsForProposal(proposal, setup.subjects);
   if (legs.length === 0) {
     throw new ParlayUnpriceableError("no proposed leg could be measured");
   }
-  const statistics = await buildProposalStatistics({ legs, history });
+  const statistics = await buildProposalStatistics({
+    legs,
+    history,
+    queueType: setup.queueType,
+  });
   deadline.throwIfAborted();
 
   // Pass two: the numbers, against those distributions.

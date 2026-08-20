@@ -20,6 +20,7 @@ import {
 } from "#src/betting/parlay-criteria.ts";
 
 const NumericOperatorSchema = z.enum(["gte", "lte", "eq"]);
+const ProposalNumericOperatorSchema = z.enum(["gte", "lte"]);
 
 // OpenAI strict structured outputs reject `oneOf`, which Zod emits for the
 // canonical discriminated union. Present the model with one closed shape and
@@ -86,7 +87,7 @@ const ModelParlayProposalConditionSchema = z.strictObject({
   team: z.literal("selected").nullable(),
   teamBooleanField: TeamBooleanFieldSchema.nullable(),
   objective: TeamObjectiveSchema.nullable(),
-  operator: NumericOperatorSchema.nullable(),
+  operator: ProposalNumericOperatorSchema.nullable(),
   expected: z.boolean().nullable(),
   matchNumericField: MatchNumericFieldSchema.nullable(),
   opponentPingField: OpponentPingFieldSchema.nullable(),
@@ -251,9 +252,11 @@ function proposalShape(condition: {
   kind: string;
   subject: string | null;
   participantNumericField: string | null;
+  team: "selected" | null;
   teamBooleanField: string | null;
   objective: string | null;
   operator: string | null;
+  expected: boolean | null;
   matchNumericField: string | null;
   opponentPingField: string | null;
 }): string {
@@ -261,9 +264,11 @@ function proposalShape(condition: {
     condition.kind,
     condition.subject,
     condition.participantNumericField,
+    condition.team,
     condition.teamBooleanField,
     condition.objective,
     condition.operator,
+    condition.expected,
     condition.matchNumericField,
     condition.opponentPingField,
   ].join("|");

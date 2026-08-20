@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { REMAKE_MAX_DURATION_SECONDS } from "#src/betting/constants.ts";
+import type { QueueType } from "@scout-for-lol/data";
+import {
+  BLUE_TEAM_ID,
+  PARTICIPANTS_PER_TEAM,
+  RED_TEAM_ID,
+  REMAKE_MAX_DURATION_SECONDS,
+  STANDARD_LOBBY_SIZE,
+} from "#src/betting/constants.ts";
 import {
   OPPONENT_PING_HISTORY_COLUMNS,
   PARLAY_HISTORY_COLUMNS,
@@ -117,6 +124,21 @@ function numeric(row: unknown, column: string): number {
   return value.success ? value.data : 0;
 }
 
+function historyQueueFilter(
+  queueType: Extract<QueueType, "solo" | "flex"> | undefined,
+): {
+  sql: string;
+  param: BoundParam;
+} {
+  if (queueType === undefined) {
+    return {
+      sql: "queue IN (SELECT unnest(?))",
+      param: listParam([...PARLAY_HISTORY_QUEUES]),
+    };
+  }
+  return { sql: "queue = ?", param: scalarParam(queueType) };
+}
+
 /**
  * Matches that could never have settled, and so must not sit in a price's
  * denominator.
@@ -126,24 +148,54 @@ function numeric(row: unknown, column: string): number {
  * leg's hit rate downward by counting games that would have been refunded.
  */
 function isVoidMatch(participants: readonly unknown[]): boolean {
-  const first = participants[0];
-  if (first === undefined) {
-    return true;
-  }
-  const parsed = HistoryParticipantSchema.safeParse(first);
-  if (!parsed.success) {
-    return true;
-  }
-  if (parsed.data.end_of_game_result !== "GameComplete") {
-    return true;
-  }
-  if (parsed.data.game_duration_seconds < REMAKE_MAX_DURATION_SECONDS) {
-    return true;
-  }
-  return participants.some((participant) => {
-    const row = HistoryParticipantSchema.safeParse(participant);
-    return row.success && row.data.early_surrendered;
+  const parsedParticipants = participants.flatMap((participant) => {
+    const parsed = HistoryParticipantSchema.safeParse(participant);
+    return parsed.success ? [parsed.data] : [];
   });
+  if (parsedParticipants.length !== STANDARD_LOBBY_SIZE) {
+    return true;
+  }
+  const blueCount = parsedParticipants.filter(
+    (participant) => participant.team_id === BLUE_TEAM_ID,
+  ).length;
+  const redCount = parsedParticipants.filter(
+    (participant) => participant.team_id === RED_TEAM_ID,
+  ).length;
+  if (
+    blueCount !== PARTICIPANTS_PER_TEAM ||
+    redCount !== PARTICIPANTS_PER_TEAM
+  ) {
+    return true;
+  }
+  if (
+    parsedParticipants.some(
+      (participant) => participant.end_of_game_result !== "GameComplete",
+    )
+  ) {
+    return true;
+  }
+  if (
+    parsedParticipants.some(
+      (participant) =>
+        participant.game_duration_seconds < REMAKE_MAX_DURATION_SECONDS,
+    )
+  ) {
+    return true;
+  }
+  if (parsedParticipants.some((participant) => participant.early_surrendered)) {
+    return true;
+  }
+  const winningTeamIds = new Set(
+    parsedParticipants
+      .filter((participant) => participant.win)
+      .map((participant) => participant.team_id),
+  );
+  return (
+    winningTeamIds.size !== 1 ||
+    (!winningTeamIds.has(BLUE_TEAM_ID) && !winningTeamIds.has(RED_TEAM_ID)) ||
+    parsedParticipants.filter((participant) => participant.win).length !==
+      PARTICIPANTS_PER_TEAM
+  );
 }
 
 /**
@@ -157,6 +209,7 @@ function isVoidMatch(participants: readonly unknown[]): boolean {
 export async function fetchParlayHistory(options: {
   puuids: readonly string[];
   excludeMatchId: string;
+  queueType?: Extract<QueueType, "solo" | "flex">;
   lakeDir?: string;
   limit?: number;
   timeoutMs?: number;
@@ -171,12 +224,13 @@ export async function fetchParlayHistory(options: {
   const columns = historyColumns();
   const columnList = columns.join(", ");
 
+  const queueFilter = historyQueueFilter(options.queueType);
   const subjectSource = buildMatchesSource(files, {
-    sql: "puuid IN (SELECT unnest(?)) AND match_id <> ? AND queue IN (SELECT unnest(?))",
+    sql: `puuid IN (SELECT unnest(?)) AND match_id <> ? AND ${queueFilter.sql}`,
     params: [
       listParam(puuids),
       scalarParam(options.excludeMatchId),
-      listParam([...PARLAY_HISTORY_QUEUES]),
+      queueFilter.param,
     ],
   });
   if (subjectSource === undefined) {

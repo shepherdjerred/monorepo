@@ -10,6 +10,7 @@ type HttpServerRuntime = {
 
 type BackendStartupDependencies = {
   readonly validateChampionAssets: () => Promise<void>;
+  readonly ensureReportLakeReady?: () => Promise<void>;
   readonly startHttpServer: () => Promise<HttpServerRuntime>;
   readonly startDiscord: () => Promise<void>;
 };
@@ -18,6 +19,9 @@ export async function runBackendStartup(
   dependencies: BackendStartupDependencies,
 ): Promise<HttpServerRuntime> {
   await dependencies.validateChampionAssets();
+  if (dependencies.ensureReportLakeReady !== undefined) {
+    await dependencies.ensureReportLakeReady();
+  }
   const httpServer = await dependencies.startHttpServer();
   await dependencies.startDiscord();
   return httpServer;
@@ -26,6 +30,14 @@ export async function runBackendStartup(
 export async function startBackendRuntime(): Promise<HttpServerRuntime> {
   return runBackendStartup({
     validateChampionAssets,
+    ensureReportLakeReady: async () => {
+      if (!configuration.enableBackgroundJobs) {
+        return;
+      }
+      const { runReportLakeFold } =
+        await import("#src/report-lake/compactor.ts");
+      await runReportLakeFold();
+    },
     startHttpServer: async () => await import("#src/http-server.ts"),
     startDiscord: async () => {
       if (!configuration.enableDiscordGateway) {

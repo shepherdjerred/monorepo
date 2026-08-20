@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { QueueType } from "@scout-for-lol/data";
 import {
   PARLAY_HISTORY_QUEUES,
   type ParlayHistoryMatch,
@@ -169,6 +170,9 @@ export function buildPlayerFrame(input: {
   opponent?: boolean;
 }): PlayerFrame {
   const read = (match: ParlayHistoryMatch): number => {
+    if (input.column === "game_duration_seconds") {
+      return match.durationSeconds;
+    }
     const source =
       input.opponent === true
         ? match.opponentValues
@@ -245,14 +249,21 @@ function parseBucket(value: number | null): DurationBucket | undefined {
 export async function fetchPopulationFrame(options: {
   column: keyof MatchLakeRow;
   operator: ParlayOperator;
+  queueType?: Extract<QueueType, "solo" | "flex">;
   lakeDir?: string;
   timeoutMs?: number;
 }): Promise<PopulationFrame | undefined> {
   const lakeDir = options.lakeDir ?? resolveLakeDir();
   const files = await resolveLakeFiles(lakeDir);
   const source = buildMatchesSource(files, {
-    sql: "queue IN (SELECT unnest(?)) AND team_position <> '' AND end_of_game_result = 'GameComplete' AND game_duration_seconds >= 300",
-    params: [listParam([...PARLAY_HISTORY_QUEUES])],
+    sql:
+      options.queueType === undefined
+        ? "queue IN (SELECT unnest(?)) AND team_position <> '' AND end_of_game_result = 'GameComplete' AND game_duration_seconds >= 300"
+        : "queue = ? AND team_position <> '' AND end_of_game_result = 'GameComplete' AND game_duration_seconds >= 300",
+    params:
+      options.queueType === undefined
+        ? [listParam([...PARLAY_HISTORY_QUEUES])]
+        : [{ kind: "scalar", value: options.queueType }],
   });
   if (source === undefined) {
     return undefined;
@@ -340,6 +351,7 @@ export async function buildProposalStatistics(input: {
     label: string;
   }[];
   history: ReadonlyMap<string, readonly ParlayHistoryMatch[]>;
+  queueType?: Extract<QueueType, "solo" | "flex">;
   lakeDir?: string;
   timeoutMs?: number;
 }): Promise<unknown[]> {
@@ -368,6 +380,9 @@ export async function buildProposalStatistics(input: {
           await fetchPopulationFrame({
             column: leg.column,
             operator: leg.operator,
+            ...(input.queueType === undefined
+              ? {}
+              : { queueType: input.queueType }),
             ...(input.lakeDir === undefined ? {} : { lakeDir: input.lakeDir }),
             ...(input.timeoutMs === undefined
               ? {}
@@ -467,6 +482,19 @@ export function statLegsForProposal(
               label: `enemy team ${field}`,
             },
           ];
+    }
+    if (condition.kind === "match_numeric") {
+      return [
+        {
+          index,
+          subjectKey: null,
+          subjectPuuid: anchor,
+          column: "game_duration_seconds",
+          operator,
+          scope: "player" as const,
+          label: "game duration",
+        },
+      ];
     }
     return [];
   });

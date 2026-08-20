@@ -120,6 +120,20 @@ function conditionSubject(condition: ParlayCondition): string | undefined {
     : undefined;
 }
 
+function conditionsForSubject(
+  conditions: readonly ParlayCondition[],
+  subjectKey: string,
+  anchorKey: string,
+): readonly ParlayCondition[] {
+  return conditions.filter((condition) => {
+    const subject = conditionSubject(condition);
+    return (
+      subject === subjectKey ||
+      (subject === undefined && subjectKey === anchorKey)
+    );
+  });
+}
+
 function clamp(
   probability: number,
   samples: number,
@@ -190,6 +204,76 @@ function smoothed(hits: number, total: number): number {
   return (hits + 1) / (total + 2);
 }
 
+function matchSatisfiesConditions(
+  conditions: readonly ParlayCondition[],
+  match: ParlayHistoryMatch,
+  subjectKey: string,
+): boolean | undefined {
+  for (const condition of conditions) {
+    const held = conditionHeldInMatch(condition, match, subjectKey);
+    if (held === undefined) {
+      return undefined;
+    }
+    if (!held) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function probabilityForSubjectState(input: {
+  conditions: readonly ParlayCondition[];
+  matches: readonly ParlayHistoryMatch[];
+  state: MatchState;
+  subjectKey: string;
+}): number | undefined {
+  const inState = input.matches.filter(
+    (match) => matchState(match) === input.state,
+  );
+  const teamBooleanConditions = input.conditions.filter(
+    (condition) => condition.kind === "team_boolean",
+  );
+  if (teamBooleanConditions.length > 0) {
+    const representative = inState[0];
+    if (representative === undefined) {
+      return 0.5;
+    }
+    const teamBooleanHeld = matchSatisfiesConditions(
+      teamBooleanConditions,
+      representative,
+      input.subjectKey,
+    );
+    if (teamBooleanHeld === undefined) {
+      return undefined;
+    }
+    if (!teamBooleanHeld) {
+      return 0;
+    }
+  }
+
+  const measuredConditions = input.conditions.filter(
+    (condition) => condition.kind !== "team_boolean",
+  );
+  if (measuredConditions.length === 0 || inState.length === 0) {
+    return 1;
+  }
+  let hits = 0;
+  for (const match of inState) {
+    const held = matchSatisfiesConditions(
+      measuredConditions,
+      match,
+      input.subjectKey,
+    );
+    if (held === undefined) {
+      return undefined;
+    }
+    if (held) {
+      hits += 1;
+    }
+  }
+  return smoothed(hits, inState.length);
+}
+
 /**
  * Price for a parlay spanning several subjects.
  *
@@ -239,28 +323,29 @@ function priceByConditionalCombination(input: {
   let probability = 0;
   for (const [state, count] of stateWeights) {
     let joint = count / weighted;
-    for (const condition of input.conditions) {
-      const key = conditionSubject(condition) ?? anchor.key;
-      const matches = perSubject.get(key);
+    for (const subject of input.subjects) {
+      const conditions = conditionsForSubject(
+        input.conditions,
+        subject.key,
+        anchor.key,
+      );
+      if (conditions.length === 0) {
+        continue;
+      }
+      const matches = perSubject.get(subject.key);
       if (matches === undefined) {
         return undefined;
       }
-      const inState = matches.filter((match) => matchState(match) === state);
-      let hits = 0;
-      let total = 0;
-      for (const match of inState) {
-        const held = conditionHeldInMatch(condition, match, key);
-        if (held === undefined) {
-          return undefined;
-        }
-        total += 1;
-        if (held) {
-          hits += 1;
-        }
+      const subjectProbability = probabilityForSubjectState({
+        conditions,
+        matches,
+        state,
+        subjectKey: subject.key,
+      });
+      if (subjectProbability === undefined) {
+        return undefined;
       }
-      // A team/match leg is decided by the state itself where the state says
-      // so; smoothing an empty cell would otherwise invent a coin flip.
-      joint *= total === 0 ? 0.5 : smoothed(hits, total);
+      joint *= subjectProbability;
     }
     probability += joint;
   }
