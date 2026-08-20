@@ -40,6 +40,17 @@ func quarantinesCorruptRecords() throws {
     #expect(!FileManager.default.fileExists(atPath: recordsURL.path))
     #expect(try FileManager.default.contentsOfDirectory(atPath: directory.path).contains { $0.hasPrefix(".\(CodeStore.fileName).corrupt-") })
 
+    let quarantineURL = try #require(
+        FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+            .first { $0.lastPathComponent.hasPrefix(".\(CodeStore.fileName).corrupt-") }
+    )
+    try FileManager.default.setAttributes(
+        [.modificationDate: Date(timeIntervalSinceNow: -(CodeStore.corruptFileRetention + 1))],
+        ofItemAtPath: quarantineURL.path
+    )
+    #expect(try store.read().isEmpty)
+    #expect(!FileManager.default.fileExists(atPath: quarantineURL.path))
+
     try store.append(makeRecord(code: "111111", messageID: "recovered", detectedAt: 100), now: Date(timeIntervalSince1970: 100))
     #expect(try store.read(now: Date(timeIntervalSince1970: 100)).map(\.messageID) == ["recovered"])
 }
