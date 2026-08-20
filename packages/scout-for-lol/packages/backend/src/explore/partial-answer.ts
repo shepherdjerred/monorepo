@@ -7,7 +7,10 @@ import {
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { appendExploreAnswer } from "#src/explore/store.ts";
-import { replaceExploreAnswer } from "#src/explore/replace-answer.ts";
+import {
+  discardExploreAnswer,
+  replaceExploreAnswer,
+} from "#src/explore/replace-answer.ts";
 import { finalizeExploreTrace } from "#src/explore/trace.ts";
 
 /** Save the useful prefix of an interrupted run, if it produced one. */
@@ -24,20 +27,18 @@ export async function persistPartialAnswer(
   },
 ): Promise<ExploreMessage | null> {
   const trimmed = input.text.trim();
-  if (
-    trimmed.length === 0 &&
-    !input.stopped &&
-    input.existingMessageId === null
-  ) {
+  if (trimmed.length === 0) {
+    if (input.existingMessageId !== null) {
+      await discardExploreAnswer(client, {
+        conversationId: input.conversationId,
+        messageId: input.existingMessageId,
+        expectedCurrentLeafId: input.expectedCurrentLeafId,
+      });
+    }
     return null;
   }
   const answer = {
-    answer:
-      trimmed.length === 0
-        ? input.stopped
-          ? "No answer was produced before this question was stopped."
-          : "No answer was produced before this question was interrupted."
-        : clampAnswer(trimmed),
+    answer: clampAnswer(trimmed),
     title: null,
     queryText: null,
     caveats: [

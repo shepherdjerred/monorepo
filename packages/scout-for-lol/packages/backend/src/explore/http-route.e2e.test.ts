@@ -294,7 +294,7 @@ async function seedQuestion(): Promise<{
 }
 
 describe("explore salvage", () => {
-  test("a stop before prose still persists the stopped caveat", async () => {
+  test("a stop before prose salvages nothing", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
       stopped: true,
@@ -306,8 +306,8 @@ describe("explore salvage", () => {
       existingMessageId: null,
     });
 
-    expect(salvaged?.content).toMatch(/stopped/i);
-    expect(salvaged?.caveats).toEqual([EXPLORE_STOPPED_CAVEAT]);
+    expect(salvaged).toBeNull();
+    expect(await trpc.prisma.exploreMessage.count()).toBe(1);
   });
 
   test("a stopped turn with text is saved with the stop caveat", async () => {
@@ -400,6 +400,44 @@ describe("explore salvage", () => {
     expect(salvaged?.content).toBe("Partial answer");
     expect(salvaged?.caveats).toEqual([EXPLORE_STOPPED_CAVEAT]);
     expect(await trpc.prisma.exploreMessage.count()).toBe(2);
+  });
+
+  test("cancellation during persistence removes an answer when no prose streamed", async () => {
+    const seeded = await seedQuestion();
+    const persisted = await appendExploreAnswer(trpc.prisma, {
+      conversationId: seeded.conversationId,
+      parentMessageId: seeded.questionId,
+      answer: {
+        answer: "A late complete answer",
+        title: null,
+        queryText: null,
+        caveats: [],
+        followUps: [],
+      },
+      preview: null,
+      visualization: null,
+      trace: [],
+      expectedCurrentLeafId: null,
+    });
+
+    const salvaged = await persistPartialAnswer(trpc.prisma, {
+      stopped: true,
+      conversationId: seeded.conversationId,
+      parentMessageId: seeded.questionId,
+      expectedCurrentLeafId: null,
+      text: "",
+      trace: [],
+      existingMessageId: persisted.id,
+    });
+
+    expect(salvaged).toBeNull();
+    expect(await trpc.prisma.exploreMessage.count()).toBe(1);
+    expect(
+      await trpc.prisma.exploreConversation.findUnique({
+        where: { id: seeded.conversationId },
+        select: { currentLeafId: true },
+      }),
+    ).toEqual({ currentLeafId: null });
   });
 });
 

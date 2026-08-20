@@ -107,6 +107,7 @@ describe("shared persisted Explore turn", () => {
     );
 
     expect(terminal.type).toBe("final");
+    expect(terminal.outcome).toBe("succeeded");
     const transcript = await loadExploreTranscript(
       prisma,
       prepared.started.conversationId,
@@ -148,6 +149,7 @@ describe("shared persisted Explore turn", () => {
     );
 
     expect(terminal.type).toBe("final");
+    expect(terminal.outcome).toBe("failed");
     if (terminal.type === "final") {
       expect(terminal.message.content).toBe("Partial evidence.");
       expect(terminal.message.caveats).toContain(
@@ -155,5 +157,40 @@ describe("shared persisted Explore turn", () => {
       );
     }
     expect(getExploreQuotaStatus({ userId }).activeRun).toBe(false);
+  });
+
+  test("the first cancellation source determines the outcome", async () => {
+    const prepared = await preparedTurn();
+    const caller = new AbortController();
+    const timeoutAgent = async (params: ExploreAgentParams) =>
+      await new Promise<never>((_resolve, reject) => {
+        params.abortSignal.addEventListener(
+          "abort",
+          () => {
+            caller.abort("Stop arrived after the timeout.");
+            reject(new Error("timed out"));
+          },
+          { once: true },
+        );
+      });
+
+    const terminal = await runPersistedExploreTurn(
+      {
+        ...prepared,
+        identity: { userId },
+        abortSignal: caller.signal,
+        abortOutcome: () => "stopped",
+        emit: () => Promise.resolve(),
+      },
+      {
+        client: prisma,
+        executeAgent: timeoutAgent,
+        now: Date.now,
+        timeoutMs: 5,
+      },
+    );
+
+    expect(terminal.type).toBe("error");
+    expect(terminal.outcome).toBe("interrupted");
   });
 });

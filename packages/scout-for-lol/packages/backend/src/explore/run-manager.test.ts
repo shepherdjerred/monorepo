@@ -7,7 +7,6 @@ import {
   test,
 } from "bun:test";
 import {
-  EXPLORE_STOPPED_CAVEAT,
   DiscordAccountIdSchema,
   type ExploreActiveRun,
   type ExploreStreamEvent,
@@ -323,10 +322,6 @@ describe("ExploreRunManager", () => {
 
     expect(manager.stop(summary.runId, owner)).toBe(true);
     expect(await finished).toBe("stopped");
-    const final = events.find((event) => event.type === "final");
-    expect(final?.type === "final" ? final.message.caveats : []).toContain(
-      EXPLORE_STOPPED_CAVEAT,
-    );
     expect(
       events.some(
         (event) =>
@@ -334,6 +329,16 @@ describe("ExploreRunManager", () => {
           event.message.content === "Late successful answer",
       ),
     ).toBe(false);
+    expect(events.some((event) => event.type === "final")).toBe(false);
+    expect(events.some((event) => event.type === "error")).toBe(false);
+    expect(
+      await trpc.prisma.exploreMessage.count({
+        where: {
+          conversationId: summary.conversationId,
+          role: "assistant",
+        },
+      }),
+    ).toBe(0);
   });
 
   test("graceful shutdown interrupts every active run", async () => {

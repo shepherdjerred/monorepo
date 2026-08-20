@@ -17,7 +17,6 @@ import {
   type ExploreAgentResult,
 } from "#src/explore/agent.ts";
 import {
-  getExploreQuotaStatus,
   tryStartExploreTurn,
   type ExploreRateLimitIdentity,
   type ExploreRateLimitRejection,
@@ -26,27 +25,18 @@ import {
 import {
   ExploreInvalidTurnError,
   ExploreNotFoundError,
-  appendExploreAnswer,
-  applyGeneratedTitle,
   loadExploreTranscript,
   resolveRegenerateTarget,
   startExploreTurn,
 } from "#src/explore/store.ts";
-import {
-  finalizeExploreTrace,
-  recordExploreTraceEvent,
-} from "#src/explore/trace.ts";
-import { persistPartialAnswer } from "#src/explore/partial-answer.ts";
+import { recordExploreTraceEvent } from "#src/explore/trace.ts";
+import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
 import { createLogger } from "#src/logger.ts";
-import {
-  scoutExploreActiveRuns,
-  scoutExploreTurnDurationSeconds,
-  scoutExploreTurnsTotal,
-} from "#src/metrics/explore.ts";
+import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
 
 const logger = createLogger("explore-run-manager");
 
-type RunTermination = "stop" | "delete" | "timeout" | "shutdown" | null;
+type RunTermination = "stop" | "delete" | "shutdown" | null;
 type RunOutcome = Extract<ExploreStreamEvent, { type: "done" }>["outcome"];
 type Subscriber = (event: ExploreStreamEvent) => void;
 export type ExploreAgentRunner = (
@@ -176,8 +166,7 @@ export class ExploreRunManager {
         identity,
         ticket,
         started,
-        // Drop the question itself. The agent receives it as the current turn.
-        history: transcript.messages.slice(0, -1),
+        history: transcript.messages,
         abortController: new AbortController(),
         subscribers: new Set(),
         answer: "",
@@ -189,7 +178,6 @@ export class ExploreRunManager {
       };
       this.#runs.set(summary.runId, run);
       this.#conversationRuns.set(summary.conversationId, summary.runId);
-      ticket.commit();
       void this.#execute(run);
       return summary;
     } catch (error) {
@@ -316,6 +304,12 @@ export class ExploreRunManager {
   }
 
   #record(run: ActiveRun, event: ExploreStreamEvent): void {
+    if (
+      event.type === "error" &&
+      (run.termination === "stop" || run.termination === "delete")
+    ) {
+      return;
+    }
     if (event.type === "answer_delta") {
       run.answer += event.text;
     }
@@ -327,129 +321,47 @@ export class ExploreRunManager {
   }
 
   async #execute(run: ActiveRun): Promise<void> {
-    const timeout = setTimeout(() => {
-      this.#abort(run, "timeout", "Explore turn timed out.");
-    }, this.#timeoutMs);
-    const startedAt = Date.now();
-    let metricStatus = "error";
     let outcome: RunOutcome = "failed";
-    let persistedMessage: ExploreMessage | null = null;
-    scoutExploreActiveRuns.inc();
 
     try {
-      const result = await this.#runAgent({
-        runId: run.summary.runId,
-        question: run.started.question,
-        history: run.history,
-        abortSignal: run.abortController.signal,
-        emit: (event) => {
-          this.#record(run, event);
+      const result = await runPersistedExploreTurn(
+        {
+          ticket: run.ticket,
+          identity: run.identity,
+          started: run.started,
+          history: run.history,
+          abortSignal: run.abortController.signal,
+          abortOutcome: () =>
+            run.termination === "stop" || run.termination === "delete"
+              ? "stopped"
+              : "interrupted",
+          emit: (event) => {
+            this.#record(run, event);
+          },
         },
-      });
-      throwIfTerminated(run);
-      persistedMessage = await appendExploreAnswer(this.#client, {
-        conversationId: run.started.conversationId,
-        parentMessageId: run.started.messageId,
-        answer: result.answer,
-        preview: result.preview,
-        visualization: result.visualization,
-        trace: finalizeExploreTrace(run.trace),
-        expectedCurrentLeafId: run.started.expectedCurrentLeafId,
-      });
-      throwIfTerminated(run);
-      const title =
-        result.answer.title === null
-          ? run.started.title
-          : await applyGeneratedTitle(this.#client, {
-              conversationId: run.started.conversationId,
-              title: result.answer.title,
-            });
-      throwIfTerminated(run);
-      metricStatus = "success";
-      outcome = "succeeded";
-      this.#broadcast(run, {
-        type: "final",
-        message: persistedMessage,
-        title,
-        quota: getExploreQuotaStatus(run.identity, Date.now()).quota,
-      });
+        {
+          client: this.#client,
+          executeAgent: this.#runAgent,
+          now: Date.now,
+          timeoutMs: this.#timeoutMs,
+        },
+      );
+      outcome = result.outcome;
     } catch (error) {
-      const termination = run.termination;
-      const deliberatelyStopped =
-        termination === "stop" || termination === "delete";
-      outcome = deliberatelyStopped
-        ? "stopped"
-        : termination === null
-          ? "failed"
-          : "interrupted";
-      metricStatus = termination === null ? "error" : "cancelled";
-
-      if (termination === null) {
-        logger.error(
-          "Explore turn failed in the background",
-          errorMessage(error),
-        );
-        Sentry.captureException(error, {
-          tags: { source: "explore-background-run" },
-        });
-      }
-
-      let salvaged: ExploreMessage | null = null;
-      try {
-        salvaged = await persistPartialAnswer(this.#client, {
-          stopped: deliberatelyStopped,
-          conversationId: run.started.conversationId,
-          parentMessageId: run.started.messageId,
-          expectedCurrentLeafId: run.started.expectedCurrentLeafId,
-          text: run.answer,
-          trace: finalizeExploreTrace(run.trace),
-          existingMessageId: persistedMessage?.id ?? null,
-        });
-      } catch (salvageError) {
-        logger.error(
-          "Failed to salvage a background Explore turn",
-          errorMessage(salvageError),
-        );
-        Sentry.captureException(salvageError, {
-          tags: { source: "explore-background-salvage" },
-        });
-      }
-
-      if (salvaged !== null) {
-        this.#broadcast(run, {
-          type: "final",
-          message: salvaged,
-          title: run.started.title,
-          quota: getExploreQuotaStatus(run.identity, Date.now()).quota,
-        });
-      } else if (!deliberatelyStopped) {
-        this.#broadcast(run, {
-          type: "error",
-          message: "This answer could not be completed.",
-          retryAfterSeconds: null,
-          quota: getExploreQuotaStatus(run.identity, Date.now()).quota,
-        });
-      }
+      logger.error(
+        "Shared Explore turn runner escaped unexpectedly",
+        errorMessage(error),
+      );
+      Sentry.captureException(error, {
+        tags: { source: "explore-background-run-manager" },
+      });
     } finally {
-      clearTimeout(timeout);
-      run.ticket.finish();
       this.#broadcast(run, { type: "done", outcome });
       run.subscribers.clear();
       this.#runs.delete(run.summary.runId);
       this.#conversationRuns.delete(run.summary.conversationId);
-      scoutExploreActiveRuns.dec();
-      scoutExploreTurnsTotal.inc({ status: metricStatus });
-      scoutExploreTurnDurationSeconds
-        .labels(metricStatus)
-        .observe((Date.now() - startedAt) / 1000);
       run.resolveSettled(null);
     }
-  }
-}
-
-function throwIfTerminated(run: ActiveRun): void {
-  if (run.termination !== null) {
-    throw new Error(`Explore run terminated: ${run.termination}`);
   }
 }
 

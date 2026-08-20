@@ -44,3 +44,26 @@ export async function replaceExploreAnswer(
   });
   return toMessage(row, versionsOf(siblings, row.id));
 }
+
+/** Remove a just-created answer when cancellation wins before any prose. */
+export async function discardExploreAnswer(
+  prisma: ExtendedPrismaClient,
+  input: {
+    conversationId: string;
+    messageId: string;
+    expectedCurrentLeafId: string | null;
+  },
+): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    await tx.exploreConversation.updateMany({
+      where: { id: input.conversationId, currentLeafId: input.messageId },
+      data: { currentLeafId: input.expectedCurrentLeafId },
+    });
+    const deleted = await tx.exploreMessage.deleteMany({
+      where: { id: input.messageId, conversationId: input.conversationId },
+    });
+    if (deleted.count !== 1) {
+      throw new ExploreNotFoundError("Explore answer not found.");
+    }
+  });
+}

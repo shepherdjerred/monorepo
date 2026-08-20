@@ -11,12 +11,15 @@ export type ExploreRunOutcome =
   | "stopped"
   | "interrupted";
 
-export function exploreRunMarkerState(input: {
+export function resolveExploreRunCompletion(input: {
   run: Pick<ExploreActiveRun, "questionMessageId" | "leafIdAtStart">;
   outcome: ExploreRunOutcome;
   finalMessageId: string | null;
   messages: ExploreMessage[] | undefined;
-}): "completed" | "failed" | null {
+}): {
+  markerState: "completed" | "failed" | null;
+  answerVisible: boolean;
+} {
   const answer =
     input.finalMessageId === null
       ? input.messages?.find(
@@ -27,15 +30,32 @@ export function exploreRunMarkerState(input: {
         )
       : input.messages?.find((message) => message.id === input.finalMessageId);
   if (answer?.caveats.includes(EXPLORE_INTERRUPTED_CAVEAT) === true) {
-    return "failed";
+    return { markerState: "failed", answerVisible: true };
   }
   if (
     input.outcome === "stopped" ||
     answer?.caveats.includes(EXPLORE_STOPPED_CAVEAT) === true
   ) {
-    return null;
+    return { markerState: null, answerVisible: answer !== undefined };
   }
-  return answer !== undefined || input.outcome === "succeeded"
-    ? "completed"
-    : "failed";
+  return {
+    markerState:
+      answer !== undefined || input.outcome === "succeeded"
+        ? "completed"
+        : "failed",
+    answerVisible: answer !== undefined,
+  };
+}
+
+export function shouldClearExploreRunMarker(input: {
+  markerState: "completed" | "failed" | null;
+  answerVisible: boolean;
+  displayedConversationId: string | null;
+  runConversationId: string;
+}): boolean {
+  return (
+    input.markerState === null ||
+    (input.displayedConversationId === input.runConversationId &&
+      (input.markerState === "failed" || input.answerVisible))
+  );
 }

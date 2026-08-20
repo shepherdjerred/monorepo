@@ -27,7 +27,8 @@ import {
   type ExploreClientRun,
 } from "#src/lib/explore-client-runs.ts";
 import {
-  exploreRunMarkerState,
+  resolveExploreRunCompletion,
+  shouldClearExploreRunMarker,
   type ExploreRunOutcome,
 } from "#src/lib/explore-run-completion.ts";
 import {
@@ -35,6 +36,7 @@ import {
   setExploreRunMarker,
 } from "#src/lib/explore-run-markers.ts";
 import { useExploreRunMarkers } from "#src/hooks/use-explore-run-markers.ts";
+import { useExploreStartMutation } from "#src/hooks/use-explore-start-mutation.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import {
   ExploreRunsContext,
@@ -95,7 +97,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
   const finishingRef = useRef(new Set<string>());
   const stopRequestedRef = useRef(new Set<string>());
 
-  const startMutation = useMutation(trpc.explore.start.mutationOptions());
+  const startMutation = useExploreStartMutation();
   const stopMutation = useMutation(trpc.explore.stop.mutationOptions());
   const activeRuns = useQuery({
     ...trpc.explore.activeRuns.queryOptions(),
@@ -158,7 +160,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
 
       const clientRun = runsRef.current.get(summary.conversationId);
       const finalMessageId = clientRun?.turn.finalMessageId ?? null;
-      const effectiveState = exploreRunMarkerState({
+      const completion = resolveExploreRunCompletion({
         run: summary,
         outcome,
         finalMessageId,
@@ -172,8 +174,11 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
       finishingRef.current.delete(summary.runId);
 
       if (
-        effectiveState === null ||
-        displayedConversationRef.current === summary.conversationId
+        shouldClearExploreRunMarker({
+          ...completion,
+          displayedConversationId: displayedConversationRef.current,
+          runConversationId: summary.conversationId,
+        })
       ) {
         updateMarkers((current) =>
           current.filter(
@@ -181,10 +186,14 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
           ),
         );
       } else {
+        const markerState = completion.markerState;
+        if (markerState === null) {
+          throw new Error("A cleared Explore run cannot retain a marker.");
+        }
         updateMarkers((current) =>
           setExploreRunMarker(
             current,
-            createExploreRunMarker(summary, effectiveState),
+            createExploreRunMarker(summary, markerState),
           ),
         );
       }
