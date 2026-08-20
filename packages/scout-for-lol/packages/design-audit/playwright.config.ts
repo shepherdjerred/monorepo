@@ -72,7 +72,10 @@ export default defineConfig({
           ],
         ]
       : "list",
-  outputDir: "./test-results",
+  outputDir:
+    env["CI"] === "true"
+      ? "../../../../.ci-reports/playwright/scout-for-lol__design-audit"
+      : "./test-results",
   snapshotDir: "./tests/__screenshots__",
   snapshotPathTemplate:
     "{snapshotDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}",

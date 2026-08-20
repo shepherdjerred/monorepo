@@ -130,7 +130,9 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
       element: HTMLElement,
       rectangle: DOMRect,
     ): boolean =>
-      element.matches("button, input, select, textarea, [role=button]") &&
+      element.matches(
+        "button, a.scout-button, input, select, textarea, [role=button]",
+      ) &&
       !element.matches('select[aria-hidden="true"]') &&
       (rectangle.width < 24 || rectangle.height < 24) &&
       !allowed(element, "data-design-audit-allow-small-target");
@@ -349,15 +351,16 @@ export async function assertRenderedContrast(page: Page): Promise<void> {
         "button, a, input, select, textarea, [role=button], [role=link]",
       );
       const hasSvg = element.querySelector("svg") !== null;
-      if (!hasDirectText && !(isControl && hasSvg)) continue;
+      const isGraphicControl = !hasDirectText && isControl && hasSvg;
+      if (!hasDirectText && !isGraphicControl) continue;
       const foreground = color(style.color);
       if (foreground === null) continue;
       const background = renderedBackground(element);
       const largeText =
-        Number.parseFloat(style.fontSize) >= 18 ||
-        (Number.parseFloat(style.fontSize) >= 14 &&
+        Number.parseFloat(style.fontSize) >= 24 ||
+        (Number.parseFloat(style.fontSize) >= 18.66 &&
           Number.parseInt(style.fontWeight) >= 700);
-      const minimum = largeText ? 3 : 4.5;
+      const minimum = isGraphicControl || largeText ? 3 : 4.5;
       if (
         ratio(renderedForeground(element, foreground, background), background) <
         minimum
