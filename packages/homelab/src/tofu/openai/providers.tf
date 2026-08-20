@@ -18,13 +18,11 @@ terraform {
 }
 
 provider "openai" {
-  # Authenticated through OPENAI_ADMIN_KEY.
+  admin_api_key = var.openai_admin_key
 }
 
 provider "openaikeys" {
-  # The companion provider is used only for the service-account API key
-  # returned by its service-account resource; organization controls remain on
-  # the official provider above.
+  admin_key = var.openai_admin_key
 }
 
 provider "onepassword" {

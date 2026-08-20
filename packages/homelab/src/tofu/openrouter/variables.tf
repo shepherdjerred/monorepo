@@ -54,6 +54,7 @@ variable "openrouter_byok_credentials" {
   description = "OpenRouter BYOK credential metadata; key values are injected separately from 1Password"
   type = map(object({
     provider         = string
+    rotation_version = optional(string)
     name             = optional(string)
     workspace_key    = optional(string)
     allowed_models   = optional(set(string))

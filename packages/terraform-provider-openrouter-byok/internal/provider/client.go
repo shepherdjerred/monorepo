@@ -79,6 +79,9 @@ func (c *client) request(ctx context.Context, method string, path string, body [
 	if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
 		return byokData{}, response.StatusCode, fmt.Errorf("decode OpenRouter BYOK response: %w", err)
 	}
+	if result.Data.ID == "" {
+		return byokData{}, response.StatusCode, fmt.Errorf("OpenRouter BYOK API %s %s returned a response without a credential ID", method, path)
+	}
 	return result.Data, response.StatusCode, nil
 }
 

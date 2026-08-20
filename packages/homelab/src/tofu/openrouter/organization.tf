@@ -50,6 +50,7 @@ resource "openrouter_byok_credential" "managed" {
 
   provider_name    = each.value.provider
   key              = var.openrouter_byok_keys[each.key]
+  rotation_version = try(each.value.rotation_version, null)
   name             = try(each.value.name, null)
   workspace_id     = each.value.workspace_key == null ? null : openrouter_workspace.managed[each.value.workspace_key].id
   allowed_models   = try(each.value.allowed_models, null)

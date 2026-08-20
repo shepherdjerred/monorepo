@@ -1,3 +1,9 @@
+variable "anthropic_admin_key" {
+  description = "Anthropic organization admin key"
+  type        = string
+  sensitive   = true
+}
+
 variable "anthropic_workspaces" {
   description = "Anthropic workspaces to create and manage"
   type        = map(object({ name = string }))

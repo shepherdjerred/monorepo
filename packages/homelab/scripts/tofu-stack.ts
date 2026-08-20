@@ -56,7 +56,7 @@ const STACK_SECRET_ENV: Readonly<Record<string, readonly SecretEnv[]>> = {
   anthropic: [
     ["OP_CONNECT_TOKEN", "OP_CONNECT_TOKEN"],
     ["OP_CONNECT_URL", "TF_VAR_op_connect_url"],
-    ["ANTHROPIC_ADMIN_KEY", "ANTHROPIC_ADMIN_KEY"],
+    ["ANTHROPIC_ADMIN_KEY", "TF_VAR_anthropic_admin_key"],
     ["ANTHROPIC_WORKSPACES_JSON", "TF_VAR_anthropic_workspaces"],
     ["ANTHROPIC_API_KEYS_JSON", "TF_VAR_anthropic_api_keys"],
     ["ANTHROPIC_WORKSPACE_MEMBERS_JSON", "TF_VAR_anthropic_workspace_members"],
@@ -98,7 +98,7 @@ const STACK_SECRET_ENV: Readonly<Record<string, readonly SecretEnv[]>> = {
   openai: [
     ["OP_CONNECT_TOKEN", "OP_CONNECT_TOKEN"],
     ["OP_CONNECT_URL", "TF_VAR_op_connect_url"],
-    ["OPENAI_ADMIN_KEY", "OPENAI_ADMIN_KEY"],
+    ["OPENAI_ADMIN_KEY", "TF_VAR_openai_admin_key"],
     ["OPENAI_PROJECTS_JSON", "TF_VAR_openai_projects"],
     ["OPENAI_SERVICE_ACCOUNTS_JSON", "TF_VAR_openai_service_accounts"],
     ["OPENAI_ORGANIZATION_USERS_JSON", "TF_VAR_openai_organization_users"],
@@ -298,14 +298,16 @@ function buildTofuEnv(
   }
 
   for (const [source, target] of STACK_SECRET_ENV[stack] ?? []) {
-    const value = optionalEnv(source);
+    const value = optionalEnv(source) ?? optionalEnv(target);
     if (value !== null) {
       env[target] = value;
     }
   }
 
   if (encryptsState) {
-    const passphrase = optionalEnv("TOFU_STATE_ENCRYPTION_PASSPHRASE");
+    const passphrase =
+      optionalEnv("TOFU_STATE_ENCRYPTION_PASSPHRASE") ??
+      optionalEnv("TF_VAR_tofu_state_encryption_passphrase");
     if (passphrase !== null) {
       env["TF_VAR_tofu_state_encryption_passphrase"] = passphrase;
     }
@@ -315,7 +317,7 @@ function buildTofuEnv(
   // script's import graph, so literal calls here would demand every platform
   // registry of every step that runs this script, including the infra stacks.
   const missingRegistries = (REQUIRED_STACK_ENV[stack] ?? []).filter(
-    (source) => optionalEnv(source) === null,
+    (source) => mappedSecretEnv(stack, source) === null,
   );
   if (missingRegistries.length > 0) {
     throw new Error(
@@ -326,7 +328,8 @@ function buildTofuEnv(
   }
   if (
     encryptsState &&
-    optionalEnv("TOFU_STATE_ENCRYPTION_PASSPHRASE") === null
+    optionalEnv("TOFU_STATE_ENCRYPTION_PASSPHRASE") === null &&
+    optionalEnv("TF_VAR_tofu_state_encryption_passphrase") === null
   ) {
     throw new Error(
       `Stack "${stack}" encrypts its state and plan, so it requires ` +
@@ -335,6 +338,19 @@ function buildTofuEnv(
     );
   }
   return env;
+}
+
+function mappedSecretEnv(stack: string, source: string): string | null {
+  const mapping = (STACK_SECRET_ENV[stack] ?? []).find(
+    ([candidate]) => candidate === source,
+  );
+  if (mapping === undefined) {
+    throw new Error(
+      `Stack "${stack}" requires an unmapped secret input "${source}"`,
+    );
+  }
+  const [mappedSource, target] = mapping;
+  return optionalEnv(mappedSource) ?? optionalEnv(target);
 }
 
 function isolatedRunOptions(

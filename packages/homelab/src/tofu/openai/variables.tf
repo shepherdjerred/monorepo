@@ -1,3 +1,9 @@
+variable "openai_admin_key" {
+  description = "OpenAI organization admin key for both OpenAI providers"
+  type        = string
+  sensitive   = true
+}
+
 variable "openai_projects" {
   description = "OpenAI projects to create and manage"
   type = map(object({

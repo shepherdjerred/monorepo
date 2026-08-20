@@ -118,3 +118,17 @@ func TestCreateAndUpdateRejectNotFound(t *testing.T) {
 		t.Fatalf("update on 404 = %#v, want error", updated)
 	}
 }
+
+func TestClientRejectsSuccessfulResponseWithoutCredentialID(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = writer.Write([]byte(`{"data":{"provider":"openai"}}`))
+	}))
+	defer server.Close()
+
+	client := newClient(server.URL, "management-key")
+	created, err := client.create(context.Background(), byokRequest{Provider: "openai", Key: "secret"})
+	if err == nil || !strings.Contains(err.Error(), "without a credential ID") {
+		t.Fatalf("create = %#v, %v; want missing-ID error", created, err)
+	}
+}

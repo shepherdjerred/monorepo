@@ -67,5 +67,5 @@ paths = [
 # token committed into the registry go undetected.
 [[allowlists]]
 description = "1Password item IDs are non-secret metadata references"
-regexTarget = "line"
+regexTarget = "secret"
 regexes = ['''"onepassword_item": "[a-z0-9]{26}"''']

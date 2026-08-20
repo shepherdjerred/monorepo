@@ -37,7 +37,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
   - `discord` — `DISCORD_BOTS_JSON`, `DISCORD_BOT_TOKENS_JSON`, and `DISCORD_PROVIDER_NAMES_JSON`
   - `openai` — `OPENAI_ADMIN_KEY` plus the OpenAI JSON configuration variables
   - `anthropic` — `ANTHROPIC_ADMIN_KEY` plus the Anthropic JSON configuration variables
-  - `openrouter` — management `OPENROUTER_API_KEY` plus the OpenRouter JSON configuration variables, including the separately injected `OPENROUTER_BYOK_KEYS_JSON`
+  - `openrouter` — management `OPENROUTER_API_KEY` plus the OpenRouter JSON configuration variables, including the separately injected `OPENROUTER_BYOK_KEYS_JSON`; set a new `rotation_version` in a BYOK registry entry when deliberately rotating its write-only key
   - all stacks — `TOFU_STATE_ENCRYPTION_PASSPHRASE`; platform stacks that write handoffs also need `OP_CONNECT_TOKEN` and `OP_CONNECT_URL`
 
 The JSON variables are injected by `packages/homelab/scripts/tofu-stack.ts`; they are not checked-in tfvars. Vendor bootstrap/admin credentials remain outside OpenTofu state and are populated from 1Password at the CI/operator boundary.
@@ -46,19 +46,27 @@ To validate `.tf` without state access: `tofu -chdir=<stack> init -backend=false
 
 ## Usage
 
+Run the wrapper from the repository root so it can translate the documented
+source environment names into the stack's `TF_VAR_*` inputs and enforce the
+required registry and migration gates. The checked-in env file contains only
+1Password references:
+
 ```bash
-tofu -chdir=cloudflare init
-tofu -chdir=cloudflare plan
-tofu -chdir=cloudflare apply
+op run --env-file=packages/homelab/src/tofu/.env -- \
+  bun packages/homelab/scripts/tofu-stack.ts cloudflare plan
+op run --env-file=packages/homelab/src/tofu/.env -- \
+  bun packages/homelab/scripts/tofu-stack.ts cloudflare apply
 ```
 
-Same pattern for every stack.
+Use the same wrapper command with another stack name. Direct `tofu -chdir`
+commands bypass the credential allowlist, registry checks, state passphrase
+mapping, and encrypted-state migration gate.
 
 ## CI/CD
 
 The static Buildkite pipeline ([`.buildkite/pipeline.yml`](../../../../.buildkite/pipeline.yml)) drives these stacks via `packages/homelab/scripts/tofu-stack.ts`:
 
-- **Every PR** (when tofu inputs change): `tofu plan` for all CI-managed infrastructure and platform stacks.
+- **Every PR** (when tofu inputs change): static formatting and validation for the Tofu modules. Live plans do not run in PR-controlled pods because they would require production state-backend and vendor-admin credentials.
 - **On merge to main**: applies `seaweedfs`, `tailscale`, `buildkite`, and `arr` (`tofu-apply` step); `github` in its own no-retry step (GitHub API mutations are not idempotent on partial failure); and `cloudflare` after the ArgoCD sync step's TunnelBinding deletion gate.
 - The `argocd` stack is operator-run only — it is not in the CI plan/apply loops.
 - `asuswrt` is not in the CI loops either, and cannot be: the CI pod has tailnet-only egress and cannot reach the LAN routers. It is run by hand from a machine on both the LAN and the tailnet — see [`asuswrt/README.md`](asuswrt/README.md).

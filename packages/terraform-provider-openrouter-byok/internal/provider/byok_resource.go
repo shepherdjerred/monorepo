@@ -27,6 +27,7 @@ type byokModel struct {
 	ID            types.String `tfsdk:"id"`
 	Provider      types.String `tfsdk:"provider_name"`
 	Key           types.String `tfsdk:"key"`
+	Rotation      types.String `tfsdk:"rotation_version"`
 	Name          types.String `tfsdk:"name"`
 	WorkspaceID   types.String `tfsdk:"workspace_id"`
 	AllowedModels types.Set    `tfsdk:"allowed_models"`
@@ -56,6 +57,10 @@ func (r *byokResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Required:      true,
 				Sensitive:     true,
 				WriteOnly:     true,
+				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+			},
+			"rotation_version": schema.StringAttribute{
+				Optional:      true,
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			// The API answers every field with a concrete value, so an omitted

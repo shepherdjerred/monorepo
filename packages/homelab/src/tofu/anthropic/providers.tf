@@ -14,7 +14,7 @@ terraform {
 }
 
 provider "anthropic" {
-  # Authenticated through ANTHROPIC_ADMIN_KEY.
+  admin_key = var.anthropic_admin_key
 }
 
 provider "onepassword" {
