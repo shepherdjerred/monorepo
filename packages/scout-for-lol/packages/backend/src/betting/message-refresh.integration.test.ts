@@ -414,9 +414,30 @@ describe("announceSettlements", () => {
       attempts.filter((channelId) => channelId === CHANNEL_TWO),
     ).toHaveLength(1);
   });
+});
 
+describe("announceSettlements unmatched receipts", () => {
   test("announces a fully unmatched offer without a settlement", async () => {
-    await createPool({ prematchContentBase: null });
+    const pool = await createPool({ prematchContentBase: null });
+    await addPosition({
+      poolId: pool.id,
+      accountIndex: 1,
+      teamId: 100,
+      stake: 9,
+      matchedStake: 0,
+      unmatchedStake: 9,
+    });
+    await db.bucksBet.updateMany({
+      where: { poolId: pool.id },
+      data: {
+        betOutcome: "refunded",
+        humanMatchedStake: 0,
+        houseMatchedStake: 0,
+        grossPayout: 0,
+        fee: 0,
+        payout: 0,
+      },
+    });
     const sends: MessageCreateOptions[] = [];
 
     await announceSettlements(
@@ -459,6 +480,104 @@ describe("announceSettlements", () => {
     expect(sends).toHaveLength(2);
     expect(JSON.stringify(sends[0])).toContain(
       `offered 9 BB · matched 0 BB · refunded 9 BB → no stake was matched`,
+    );
+  });
+
+  test("does not announce a partial close before matched refunds commit", async () => {
+    await createPool({ prematchContentBase: null });
+    const sends: MessageCreateOptions[] = [];
+
+    await announceSettlements(
+      {
+        matchId: MATCH_ID,
+        closures: [
+          {
+            matchId: MATCH_ID,
+            serverId: SERVER_ID,
+            messageRefs: [],
+            humanMatchedPerSide: 1,
+            houseFill: 0,
+            totalMatchedPerSide: 1,
+            positions: [
+              {
+                betId: 1,
+                discordId: bucksTestDiscordId(1),
+                teamId: 100,
+                submittedStake: 9,
+                matchedStake: 1,
+                unmatchedStake: 8,
+              },
+              {
+                betId: 2,
+                discordId: bucksTestDiscordId(2),
+                teamId: 100,
+                submittedStake: 1,
+                matchedStake: 0,
+                unmatchedStake: 1,
+              },
+            ],
+          },
+        ],
+        settlements: [],
+        earnings: [],
+        postmatchMessageIds: new Map(),
+      },
+      db,
+      {
+        sendMessage: (options) => {
+          sends.push(options);
+          return Promise.resolve();
+        },
+        sleep: () => Promise.resolve(),
+      },
+    );
+
+    expect(sends).toEqual([]);
+  });
+
+  test("recovers unmatched rows when a settlement retry has no closure", async () => {
+    const pool = await createPool({ prematchContentBase: null });
+    await addPosition({
+      poolId: pool.id,
+      accountIndex: 1,
+      teamId: 100,
+      stake: 9,
+      matchedStake: 0,
+      unmatchedStake: 9,
+    });
+    await db.bucksBet.updateMany({
+      where: { poolId: pool.id },
+      data: {
+        betOutcome: "refunded",
+        humanMatchedStake: 0,
+        houseMatchedStake: 0,
+        grossPayout: 0,
+        fee: 0,
+        payout: 0,
+      },
+    });
+    const sends: MessageCreateOptions[] = [];
+
+    await announceSettlements(
+      {
+        matchId: MATCH_ID,
+        closures: [],
+        settlements: [remakeSettlement()],
+        earnings: [],
+        postmatchMessageIds: new Map(),
+      },
+      db,
+      {
+        sendMessage: (options) => {
+          sends.push(options);
+          return Promise.resolve();
+        },
+        sleep: () => Promise.resolve(),
+      },
+    );
+
+    expect(JSON.stringify(sends[0])).toContain(
+      `offered 9 BB · matched 0 BB · refunded 9 BB`,
     );
   });
 });

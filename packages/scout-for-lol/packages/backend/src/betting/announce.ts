@@ -5,9 +5,11 @@ import {
   BucksPredictionSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
+  RiotTeamIdSchema,
   type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
+import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
 import type { EarnedAward } from "#src/betting/earnings.ts";
 import {
   buildSettlementMessage,
@@ -59,6 +61,43 @@ export type SettlementDeliveryDependencies = {
   ) => Promise<unknown>;
   sleep: (milliseconds: number) => Promise<void>;
 };
+
+type StoredUnmatchedPosition = {
+  id: number;
+  bucksAccount: { discordId: string };
+  predictedTeamId: number;
+  stake: number;
+  humanMatchedStake: number | null;
+  houseMatchedStake: number | null;
+  matchedStake: number | null;
+  unmatchedStake: number | null;
+};
+
+function storedUnmatchedPosition(
+  row: StoredUnmatchedPosition,
+): ClosedPool["positions"][number] {
+  const allocation = requireValidBucksAllocation({
+    betId: row.id,
+    submittedStake: row.stake,
+    humanMatchedStake: row.humanMatchedStake,
+    houseMatchedStake: row.houseMatchedStake,
+    matchedStake: row.matchedStake,
+    unmatchedStake: row.unmatchedStake,
+  });
+  if (allocation.matchedStake !== 0) {
+    throw new Error(
+      `Outcome receipt query returned matched bet ${row.id.toString()} as unmatched`,
+    );
+  }
+  return {
+    betId: row.id,
+    discordId: row.bucksAccount.discordId,
+    teamId: RiotTeamIdSchema.parse(row.predictedTeamId),
+    submittedStake: row.stake,
+    matchedStake: allocation.matchedStake,
+    unmatchedStake: allocation.unmatchedStake,
+  };
+}
 
 const defaultSettlementDeliveryDependencies: SettlementDeliveryDependencies = {
   sendMessage: async (options, channelId, guildId) =>
@@ -187,51 +226,36 @@ export async function announceSettlements(
   prismaClient: ExtendedPrismaClient = prisma,
   deliveryDependencies: SettlementDeliveryDependencies = defaultSettlementDeliveryDependencies,
 ): Promise<void> {
-  const closuresByServerId = new Map(
-    input.closures.map((closure) => [closure.serverId, closure]),
-  );
   const settlementServerIds = new Set(
     input.settlements.map((summary) => summary.serverId),
   );
-  const announcements = input.settlements.map((summary) => ({
-    summary,
-    unmatchedPositions: (
-      closuresByServerId.get(summary.serverId)?.positions ?? []
-    )
-      .filter((position) => position.matchedStake === 0)
-      .filter(
-        (position) => !summary.bets.some((bet) => bet.betId === position.betId),
-      ),
-  }));
+  const announcements = [...input.settlements];
   for (const closure of input.closures) {
     if (settlementServerIds.has(closure.serverId)) {
       continue;
     }
-    const unmatchedPositions = closure.positions.filter(
-      (position) => position.matchedStake === 0,
-    );
-    if (unmatchedPositions.length === 0) {
+    if (
+      closure.positions.length === 0 ||
+      closure.positions.some((position) => position.matchedStake !== 0)
+    ) {
       continue;
     }
     announcements.push({
-      summary: {
-        matchId: closure.matchId,
-        serverId: closure.serverId,
-        winningTeamId: undefined,
-        voidReason: undefined,
-        winnersPool: 0,
-        losersPool: 0,
-        houseCut: 0,
-        bets: [],
-      },
-      unmatchedPositions,
+      matchId: closure.matchId,
+      serverId: closure.serverId,
+      winningTeamId: undefined,
+      voidReason: undefined,
+      winnersPool: 0,
+      losersPool: 0,
+      houseCut: 0,
+      bets: [],
     });
   }
   if (announcements.length === 0) {
     return;
   }
 
-  for (const { summary, unmatchedPositions } of announcements) {
+  for (const summary of announcements) {
     try {
       const pool = await prismaClient.bucksMatchPool.findUnique({
         where: {
@@ -240,11 +264,36 @@ export async function announceSettlements(
             serverId: summary.serverId,
           },
         },
-        select: { messageRefs: true, predictionJson: true },
+        select: {
+          messageRefs: true,
+          predictionJson: true,
+          bets: {
+            where: {
+              betOutcome: "refunded",
+              matchedStake: 0,
+              bucksAccount: { isHouse: false },
+            },
+            orderBy: { id: "asc" },
+            select: {
+              id: true,
+              bucksAccount: { select: { discordId: true } },
+              predictedTeamId: true,
+              stake: true,
+              humanMatchedStake: true,
+              houseMatchedStake: true,
+              matchedStake: true,
+              unmatchedStake: true,
+            },
+          },
+        },
       });
       if (pool === null) {
         continue;
       }
+      const settledBetIds = new Set(summary.bets.map((bet) => bet.betId));
+      const unmatchedPositions = pool.bets
+        .filter((bet) => !settledBetIds.has(bet.id))
+        .map((bet) => storedUnmatchedPosition(bet));
 
       const predictionSentence = formatPrediction(pool.predictionJson);
       const prediction =
