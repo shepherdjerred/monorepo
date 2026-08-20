@@ -42,6 +42,7 @@ export function exploreAgentInstructions(): string {
     "It accepts what the user typed — an alias like 'Long', or a full Riot ID.",
     "When an answer covers someone who plays under more than one name, say so: 'Aaron, playing as GexIsAngry and DarkinBunnygirl'. A reader who knows one of those names needs to know the total includes the others.",
     "If a name matches more than one person, the query fails and names the candidates. Ask which one they meant rather than guessing.",
+    "Call resolve_player first when a name is ambiguous, when you want to report which accounts an answer covers, or when a query has already failed to resolve one. It costs no query budget.",
     "",
     "## Time period — every query must state one",
     "Write exactly one DURING clause on every query. It goes after GROUP BY (and after HAVING, if present).",

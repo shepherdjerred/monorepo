@@ -42,6 +42,7 @@ import {
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
 import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 
 const logger = createLogger("explore-agent");
 
@@ -207,6 +208,62 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
     }
   };
 
+  /**
+   * Who a name means, before a query is spent on it.
+   *
+   * `player('…')` resolves the same way at execution, so this is not required
+   * for correctness — it exists so the agent can disambiguate a name that
+   * matches two people, and can tell the reader which accounts an answer
+   * folded together. Its output deliberately carries PUUIDs for the model's
+   * own reasoning only; they never reach query text, which is what the
+   * `player('…')` call form is for.
+   */
+  const resolvePlayer = tool({
+    description:
+      "Find out who a name refers to before querying: accepts a Scout alias, a Riot ID, or a game name, and returns each matching person with every account and past Riot ID they have used. Use the returned displayName inside player('…').",
+    inputSchema: z.object({ query: z.string().min(1).max(100) }).strict(),
+    outputSchema: z
+      .object({
+        candidates: z.array(
+          z.object({
+            displayName: z.string(),
+            riotIds: z.array(z.string()),
+            accounts: z.number(),
+            games: z.number(),
+            firstSeen: z.string(),
+            lastSeen: z.string(),
+            matchedBy: z.enum(["alias", "riot_id"]),
+          }),
+        ),
+        message: z.string(),
+      })
+      .strict(),
+    execute: (inputData) =>
+      track("resolve_player", async () => {
+        const found = await resolvePlayerIdentities({
+          query: inputData.query,
+          guildIds: params.guildIds,
+        });
+        return {
+          candidates: found.map((identity) => ({
+            displayName: identity.displayName,
+            riotIds: identity.riotIds,
+            accounts: identity.puuids.length,
+            games: identity.games,
+            firstSeen: identity.firstSeen,
+            lastSeen: identity.lastSeen,
+            matchedBy: identity.matchedBy,
+          })),
+          message:
+            found.length === 0
+              ? `No player matches "${inputData.query}". Say the data does not cover them rather than guessing at a similar name.`
+              : found.length === 1
+                ? `One match. Use player('${found[0]?.displayName ?? inputData.query}') in the query.`
+                : `${found.length.toString()} people match. Ask which one they meant before querying.`,
+        };
+      }),
+  });
+
   const runReportQuery = tool({
     description:
       "Run a valid ScoutQL query against all ingested match data and return the resulting rows. Every statistic you state must come from a result of this tool.",
@@ -258,6 +315,7 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
 
   return {
     get_report_language: createLanguageTool(track),
+    resolve_player: resolvePlayer,
     validate_report_query: createValidateTool(track),
     run_report_query: runReportQuery,
     format_report_query: createFormatTool(track),

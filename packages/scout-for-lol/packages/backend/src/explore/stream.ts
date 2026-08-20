@@ -221,6 +221,9 @@ function toolCallMessage(toolName: string): string {
   if (toolName === "format_report_query") {
     return "Formatting the query.";
   }
+  if (toolName === "resolve_player") {
+    return "Looking up who that is.";
+  }
   return `Running ${toolName}.`;
 }
 
@@ -233,6 +236,12 @@ function toolResultMessage(toolName: string, ok: boolean): string {
   }
   if (toolName === "validate_report_query") {
     return "Query checked.";
+  }
+  // Deliberately says nothing about who was found. This string is persisted
+  // into the message trace and rendered verbatim, including to anonymous
+  // holders of a share link.
+  if (toolName === "resolve_player") {
+    return "Identified the player.";
   }
   return `${toolName} completed.`;
 }
