@@ -54,6 +54,13 @@ describe("newestCustomSnapshot", () => {
     expect(newestCustomSnapshot(snapshot(7), candidate)).toBe(candidate);
   });
 
+  test("rejects an old response after the active night is replaced", () => {
+    const requested = snapshot(7);
+    const current = snapshot(0, "5df1fd22-770f-4f9b-a247-bd97a73c603d");
+    const candidate = snapshot(8);
+    expect(newestCustomSnapshot(current, candidate, requested)).toBe(current);
+  });
+
   test("clears an ended night when the active query returns null", () => {
     expect(
       newestCustomSnapshot(
