@@ -631,14 +631,22 @@ test("chooses the most specific matching series for preview evidence", () => {
   if (column === undefined) {
     throw new Error("Win rate preview column is missing.");
   }
+  const row = {
+    key: "Foo • Bar • Queue",
+    label: "Foo • Bar • Queue",
+    values: new Map([["win_rate", 1]]),
+  };
 
-  expect(
-    formatPreviewValueWithEvidence(snapshot, column, {
-      key: "Foo • Bar • Queue",
-      label: "Foo • Bar • Queue",
-      values: new Map([["win_rate", 1]]),
-    }),
-  ).toContain("95% CI 90.0%–100.0%");
+  expect(formatPreviewValueWithEvidence(snapshot, column, row)).toContain(
+    "95% CI 90.0%–100.0%",
+  );
+  const cappedSnapshot = VisualizationSnapshotSchema.parse({
+    ...snapshot,
+    series: snapshot.series.slice(0, 1),
+  });
+  expect(formatPreviewValueWithEvidence(cappedSnapshot, column, row)).toBe(
+    "100.0%",
+  );
 });
 
 test("keeps native values visible when labels exceed the description budget", () => {

@@ -136,9 +136,8 @@ export function formatPreviewValueWithEvidence(
     if (!row.key.startsWith(`${seriesDimension} • `)) {
       return [];
     }
-    const pointDimension = row.key.slice(seriesDimension.length + 3);
     const point = item.points.find((candidate) =>
-      pointMatchesRow(candidate, row, pointDimension),
+      pointMatchesNamedSeries(candidate, row, seriesDimension),
     );
     return point === undefined
       ? []
@@ -155,6 +154,19 @@ export function formatPreviewValueWithEvidence(
     seriesMatch.item,
     seriesMatch.point,
   )}`;
+}
+
+function pointMatchesNamedSeries(
+  point: TemporalSeries["points"][number],
+  row: NativeRow,
+  seriesDimension: string,
+): boolean {
+  return (
+    row.key === `${seriesDimension} • ${point.key}` ||
+    row.key === `${seriesDimension} • ${point.label}` ||
+    row.label === `${seriesDimension} • ${point.key}` ||
+    row.label === `${seriesDimension} • ${point.label}`
+  );
 }
 
 function pointMatchesRow(
