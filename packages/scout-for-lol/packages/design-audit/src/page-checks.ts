@@ -88,6 +88,7 @@ export async function assertLayoutHealth(page: Page): Promise<void> {
         style.display !== "none" &&
         style.visibility !== "hidden" &&
         style.opacity !== "0" &&
+        element.closest('[aria-hidden="true"]') === null &&
         rectangle.width > 0 &&
         rectangle.height > 0
       );
