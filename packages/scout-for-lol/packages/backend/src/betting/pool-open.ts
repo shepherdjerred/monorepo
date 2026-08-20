@@ -206,6 +206,7 @@ export async function recordPoolMessageRefs(
     matchId: string;
     serverId: DiscordGuildId;
     refs: readonly { channelId: string; messageId: string }[];
+    prematchContentBase: string;
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
@@ -218,7 +219,10 @@ export async function recordPoolMessageRefs(
             serverId: input.serverId,
           },
         },
-        data: { messageRefs: JSON.stringify(input.refs) },
+        data: {
+          messageRefs: JSON.stringify(input.refs),
+          prematchContentBase: input.prematchContentBase,
+        },
       });
       return;
     } catch (error) {

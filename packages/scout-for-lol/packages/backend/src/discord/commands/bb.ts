@@ -15,7 +15,7 @@ import {
 } from "#src/betting/accounts.ts";
 import { placeBet } from "#src/betting/place-bet.ts";
 import { describeResult } from "#src/betting/bet-button.ts";
-import { announceBetPlacement } from "#src/betting/announce.ts";
+import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
 import { MIN_STAKE } from "#src/betting/constants.ts";
 import { HOUSE_CUT_TERMS } from "#src/betting/house-cut.ts";
 import { renderBucksHistory } from "#src/betting/navigation.ts";
@@ -389,14 +389,7 @@ async function replyBet(
       content: describeResult(result, selectedTeamId),
     });
     if (result.kind === "placed") {
-      await announceBetPlacement({
-        matchId: game.matchId,
-        serverId,
-        discordId,
-        teamId: selectedTeamId,
-        stake,
-        totalStake: result.totalStake,
-      });
+      await refreshBucksMessages({ matchId: game.matchId, serverId });
     }
     return;
   }

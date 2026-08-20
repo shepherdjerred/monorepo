@@ -35,6 +35,7 @@ import {
 } from "#src/metrics/index.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 import { recordPoolMessageRefs } from "#src/betting/pool-open.ts";
+import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
 import { appendBucksLine } from "#src/betting/prematch-line.ts";
 import {
   prepareBucksPrematch,
@@ -186,6 +187,7 @@ async function recordPrematchOutputs(input: {
   gameInfo: RawCurrentGameInfo;
   loadingScreenData: LoadingScreenData | undefined;
   messageRefsByGuild: Map<string, { channelId: string; messageId: string }[]>;
+  prematchContentBase: string;
   queueType: QueueType | undefined;
   trackedPlayers: PlayerConfigEntry[];
 }): Promise<void> {
@@ -194,6 +196,11 @@ async function recordPrematchOutputs(input: {
       matchId: input.bucks.matchId,
       serverId: DiscordGuildIdSchema.parse(serverId),
       refs,
+      prematchContentBase: input.prematchContentBase,
+    });
+    await refreshBucksMessages({
+      matchId: input.bucks.matchId,
+      serverId: DiscordGuildIdSchema.parse(serverId),
     });
   }
 
@@ -213,11 +220,81 @@ async function recordPrematchOutputs(input: {
   }
 }
 
+type PrematchDeliveryChannel = Awaited<
+  ReturnType<typeof getChannelsSubscribedToPlayers>
+>[number];
+
+async function deliverPrematchMessages(input: {
+  channels: PrematchDeliveryChannel[];
+  gameInfo: RawCurrentGameInfo;
+  gameId: string;
+  trackedPlayers: PlayerConfigEntry[];
+  bucks: BucksPrematchAttachment;
+  prematchMessageContent: string;
+  loadingScreenAttachment: AttachmentBuilder | undefined;
+  loadingScreenEmbed: EmbedBuilder | undefined;
+}): Promise<{
+  sentMessageIds: Map<string, string>;
+  deliveredGuildIds: Set<DiscordGuildId>;
+  messageRefsByGuild: Map<string, { channelId: string; messageId: string }[]>;
+}> {
+  const sentMessageIds = new Map<string, string>();
+  const deliveredGuildIds = new Set<DiscordGuildId>();
+  const messageRefsByGuild = new Map<
+    string,
+    { channelId: string; messageId: string }[]
+  >();
+
+  for (const { channel, serverId } of input.channels) {
+    try {
+      const guildId = DiscordGuildIdSchema.parse(serverId);
+      const betsOpen = input.bucks.bettingGuildIds.has(guildId);
+      const message = buildPrematchPayload({
+        betsOpen,
+        bucks: input.bucks,
+        baseContent: input.prematchMessageContent,
+        loadingScreenAttachment: input.loadingScreenAttachment,
+        loadingScreenEmbed: input.loadingScreenEmbed,
+        fallbackEmbed: () =>
+          buildFallbackPrematchEmbed(input.gameInfo, input.trackedPlayers),
+      });
+      const sentMessage = await send(message, channel, guildId);
+      sentMessageIds.set(channel, sentMessage.id);
+      deliveredGuildIds.add(guildId);
+      if (betsOpen) {
+        messageRefsByGuild.set(guildId, [
+          ...(messageRefsByGuild.get(guildId) ?? []),
+          { channelId: channel, messageId: sentMessage.id },
+        ]);
+      }
+    } catch (error) {
+      if (error instanceof ChannelSendError && error.permissionError) {
+        logger.warn(
+          `[sendPrematchNotification] ⚠️  Permission error for channel ${channel}: ${error.message}`,
+        );
+        continue;
+      }
+      logger.error(
+        `[sendPrematchNotification] ❌ Failed to send to channel ${channel}:`,
+        error,
+      );
+      Sentry.captureException(error, {
+        tags: {
+          source: "prematch-notification",
+          gameId: input.gameId,
+          channel,
+        },
+      });
+    }
+  }
+
+  return { sentMessageIds, deliveredGuildIds, messageRefsByGuild };
+}
+
 export async function sendPrematchNotification(
   gameInfo: RawCurrentGameInfo,
   trackedPlayers: PlayerConfigEntry[],
 ): Promise<Map<string, string>> {
-  const sentMessageIds = new Map<string, string>();
   const gameId = gameInfo.gameId.toString();
   const aliases = trackedPlayers.map((p) => p.alias);
   logger.info(
@@ -237,7 +314,7 @@ export async function sendPrematchNotification(
     logger.info(
       `[sendPrematchNotification] ⚠️  No channels subscribed for game ${gameId}`,
     );
-    return sentMessageIds;
+    return new Map();
   }
 
   // Apply per-subscription notification filters (queue type, etc.).
@@ -251,7 +328,7 @@ export async function sendPrematchNotification(
     logger.info(
       `[sendPrematchNotification] 🔕 Game ${gameId} filtered out for all channels (queue ${queueType ?? "unknown"})`,
     );
-    return sentMessageIds;
+    return new Map();
   }
 
   const targetGuildIds: DiscordGuildId[] = uniqueBy(
@@ -408,50 +485,22 @@ export async function sendPrematchNotification(
     loadingScreenData,
     detectedAt: new Date(),
   });
-  const messageRefsByGuild = new Map<
-    string,
-    { channelId: string; messageId: string }[]
-  >();
+  const prematchContentBase =
+    loadingScreenAttachment !== undefined && loadingScreenEmbed !== undefined
+      ? prematchMessageContent
+      : "";
 
-  const deliveredGuildIds = new Set<DiscordGuildId>();
-  for (const { channel, serverId } of deliverChannels) {
-    try {
-      const guildId = DiscordGuildIdSchema.parse(serverId);
-      const betsOpen = bucks.bettingGuildIds.has(guildId);
-      const message = buildPrematchPayload({
-        betsOpen,
-        bucks,
-        baseContent: prematchMessageContent,
-        loadingScreenAttachment,
-        loadingScreenEmbed,
-        fallbackEmbed: () =>
-          buildFallbackPrematchEmbed(gameInfo, trackedPlayers),
-      });
-      const sentMessage = await send(message, channel, guildId);
-      sentMessageIds.set(channel, sentMessage.id);
-      deliveredGuildIds.add(guildId);
-      if (betsOpen) {
-        messageRefsByGuild.set(guildId, [
-          ...(messageRefsByGuild.get(guildId) ?? []),
-          { channelId: channel, messageId: sentMessage.id },
-        ]);
-      }
-    } catch (error) {
-      if (error instanceof ChannelSendError && error.permissionError) {
-        logger.warn(
-          `[sendPrematchNotification] ⚠️  Permission error for channel ${channel}: ${error.message}`,
-        );
-        continue;
-      }
-      logger.error(
-        `[sendPrematchNotification] ❌ Failed to send to channel ${channel}:`,
-        error,
-      );
-      Sentry.captureException(error, {
-        tags: { source: "prematch-notification", gameId, channel },
-      });
-    }
-  }
+  const { sentMessageIds, deliveredGuildIds, messageRefsByGuild } =
+    await deliverPrematchMessages({
+      channels: deliverChannels,
+      gameInfo,
+      gameId,
+      trackedPlayers,
+      bucks,
+      prematchMessageContent,
+      loadingScreenAttachment,
+      loadingScreenEmbed,
+    });
 
   await recordPrematchOutputs({
     bucks,
@@ -459,6 +508,7 @@ export async function sendPrematchNotification(
     gameInfo,
     loadingScreenData,
     messageRefsByGuild,
+    prematchContentBase,
     queueType,
     trackedPlayers,
   });

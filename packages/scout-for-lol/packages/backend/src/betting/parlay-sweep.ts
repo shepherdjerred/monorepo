@@ -7,24 +7,29 @@ import { VOID_GRACE_MS } from "#src/betting/constants.ts";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { disableParlayPreparationReferences } from "#src/betting/parlay-publish.ts";
-import { disableClosedBettingMessages } from "#src/betting/announce.ts";
+import { disableClosedBettingMessages } from "#src/betting/message-controls.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { bettingParlayVoidsTotal } from "#src/metrics/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
-import type { ClosedPool } from "#src/betting/sweep.ts";
 
 const logger = createLogger("betting-parlay-sweep");
+
+type ClosedParlayMarket = {
+  matchId: string;
+  serverId: string;
+  messageRefs: { channelId: string; messageId: string }[];
+};
 
 export async function closeExpiredParlayWindows(
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
-): Promise<ClosedPool[]> {
+): Promise<ClosedParlayMarket[]> {
   try {
     const markets = await prismaClient.bucksParlayMarket.findMany({
       where: { marketState: "open", closesAt: { lt: now } },
       select: { id: true, matchId: true, serverId: true, messageRefs: true },
     });
-    const closed: ClosedPool[] = [];
+    const closed: ClosedParlayMarket[] = [];
     for (const market of markets) {
       const claim = await prismaClient.bucksParlayMarket.updateMany({
         where: { id: market.id, marketState: "open" },
