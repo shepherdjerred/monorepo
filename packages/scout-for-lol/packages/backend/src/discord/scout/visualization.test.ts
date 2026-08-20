@@ -140,6 +140,39 @@ describe("Scout Discord visualizations", () => {
   });
 });
 
+describe("Scout Discord visualization edge cases", () => {
+  test("renders an explicit empty state for generated empty series", () => {
+    const emptySeriesSnapshot = VisualizationSnapshotSchema.parse({
+      ...scoutTestVisualization,
+      kind: "LIST",
+      series: scoutTestVisualization.series.map((series) => ({
+        ...series,
+        points: [],
+      })),
+    });
+
+    expect(visualizationToEmbed(emptySeriesSnapshot)?.data.description).toBe(
+      "No results found.",
+    );
+  });
+
+  test("sanitizes table headers before rendering", () => {
+    const headerSnapshot = VisualizationSnapshotSchema.parse({
+      ...scoutTestVisualization,
+      kind: "TABLE",
+      series: scoutTestVisualization.series.map((series) => ({
+        ...series,
+        label: "Games `\n| unsafe",
+      })),
+    });
+
+    const description = visualizationToEmbed(headerSnapshot)?.data.description;
+    expect(description).toContain("Games ′");
+    expect(description).toContain(String.raw`\| unsafe`);
+    expect(description).not.toContain("Games `\n");
+  });
+});
+
 describe("Scout Discord visualization bounds", () => {
   test("renders the stored visualization rows and only claims real overflow", () => {
     const rows = Array.from({ length: 12 }, (_, index) => ({

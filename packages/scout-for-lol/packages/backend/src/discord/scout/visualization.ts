@@ -81,11 +81,15 @@ function nativeDescription(
   snapshot: VisualizationSnapshot,
   preview: ReportAiPreviewSummary | null,
 ): string | null {
-  if (snapshot.series.length === 0) {
-    const hasPreviewRows = preview !== null && previewRows(preview).length > 0;
-    if (!hasPreviewRows || snapshot.kind === "KPI_CARD") {
-      return "No results found.";
-    }
+  const hasSnapshotPoints = snapshot.series.some(
+    (series) => series.points.length > 0,
+  );
+  const hasPreviewRows =
+    snapshot.temporal === null &&
+    preview !== null &&
+    previewRows(preview).length > 0;
+  if (!hasSnapshotPoints && !hasPreviewRows && snapshot.kind !== "KPI_CARD") {
+    return "No results found.";
   }
   const description =
     snapshot.kind === "KPI_CARD"
@@ -227,6 +231,7 @@ function formatTable(
     source.preview === null
       ? ["", ...snapshot.series.map((series) => series.label)]
       : source.preview.columns.map((column) => column.label);
+  const escapedHeaders = headers.map((header) => escapeTableCell(header));
   const bodyRows = rows.map((row) => [
     escapeTableCell(row.label),
     ...(source.preview === null
@@ -247,12 +252,12 @@ function formatTable(
   ]);
   const widths = headers.map((_, index) =>
     Math.max(
-      headers[index]?.length ?? 0,
+      escapedHeaders[index]?.length ?? 0,
       ...bodyRows.map((row) => row[index]?.length ?? 0),
     ),
   );
   const lines = [
-    formatTableRow(headers, widths),
+    formatTableRow(escapedHeaders, widths),
     formatTableRow(
       widths.map((width) => "-".repeat(width)),
       widths,
