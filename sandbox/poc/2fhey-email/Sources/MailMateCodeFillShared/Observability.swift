@@ -167,6 +167,6 @@ public enum CodeFillObservability {
     }
 
     public static func errorSummary(_ error: Error) -> String {
-        String(describing: error)
+        "type=\(String(reflecting: type(of: error)))"
     }
 }
