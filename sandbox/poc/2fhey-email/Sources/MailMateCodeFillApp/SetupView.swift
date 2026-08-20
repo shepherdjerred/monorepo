@@ -186,6 +186,7 @@ struct SetupView: View {
                             guard isEnabled else {
                                 CodeFillObservability.appLogger.info("event=identity_refresh outcome=disabled duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
                                 identityStatus = "AutoFill identity store is disabled. Enable MailMate CodeFill in System Settings first."
+                                scheduleBrokerShutdownIfNeeded(records: records)
                                 return
                             }
                             ASCredentialIdentityStore.shared.replaceCredentialIdentities(identities) { success, error in
