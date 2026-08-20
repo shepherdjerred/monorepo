@@ -102,11 +102,20 @@ public enum CodeFillObservability {
             storeLogger.error("event=observability_salt outcome=lock_open_error errno=\(errno, privacy: .public)")
             return nil
         }
-        guard flock(descriptor, LOCK_EX) == 0 else {
+        let deadline = Date().addingTimeInterval(0.25)
+        while flock(descriptor, LOCK_EX | LOCK_NB) != 0 {
             let failure = errno
-            close(descriptor)
-            storeLogger.error("event=observability_salt outcome=lock_acquire_error errno=\(failure, privacy: .public)")
-            return nil
+            guard failure == EAGAIN || failure == EWOULDBLOCK else {
+                close(descriptor)
+                storeLogger.error("event=observability_salt outcome=lock_acquire_error errno=\(failure, privacy: .public)")
+                return nil
+            }
+            guard Date() < deadline else {
+                close(descriptor)
+                storeLogger.error("event=observability_salt outcome=lock_timeout")
+                return nil
+            }
+            usleep(10_000)
         }
         defer {
             _ = flock(descriptor, LOCK_UN)
