@@ -256,6 +256,12 @@ export class ExploreRunManager {
     conversationId: string,
     userId: DiscordAccountId,
   ): Promise<boolean> {
+    const owned = await this.#client.exploreConversation.findFirst({
+      where: { id: conversationId, userId },
+      select: { id: true },
+    });
+    if (owned === null) return false;
+
     if (this.#deletingConversations.has(conversationId)) {
       throw new ExploreConversationBusyError(
         "This conversation is already being deleted.",
@@ -263,12 +269,6 @@ export class ExploreRunManager {
     }
     this.#deletingConversations.add(conversationId);
     try {
-      const owned = await this.#client.exploreConversation.findFirst({
-        where: { id: conversationId, userId },
-        select: { id: true },
-      });
-      if (owned === null) return false;
-
       await this.#startingConversations.get(conversationId);
       const runId = this.#conversationRuns.get(conversationId);
       const run = runId === undefined ? undefined : this.#runs.get(runId);

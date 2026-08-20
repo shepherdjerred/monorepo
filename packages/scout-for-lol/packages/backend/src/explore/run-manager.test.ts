@@ -396,6 +396,36 @@ describe("ExploreRunManager lifecycle", () => {
     expect(await secondFinished).toBe("succeeded");
   });
 
+  test("a non-owner deletion cannot block the owner's next turn", async () => {
+    const agent = controlledAgent();
+    const manager = createManager(agent);
+    const conversation = await trpc.prisma.exploreConversation.create({
+      data: {
+        userId: owner,
+        title: "Private conversation",
+        messages: { create: { role: "user", content: "First question" } },
+      },
+    });
+
+    const unauthorizedDeletion = manager.deleteConversationAndWait(
+      conversation.id,
+      stranger,
+    );
+    const started = await manager.start(
+      { userId: owner },
+      {
+        conversationId: conversation.id,
+        question: "Owner's next question",
+        attach: { kind: "leaf" },
+      },
+    );
+
+    expect(await unauthorizedDeletion).toBe(false);
+    const finished = observeUntilDone(manager, started);
+    requiredRun(agent, 0).resolve(successfulResult("Owner's next answer"));
+    expect(await finished).toBe("succeeded");
+  });
+
   test("deletion waits for a turn still in its reservation phase", async () => {
     const agent = controlledAgent();
     const manager = createManager(agent);
