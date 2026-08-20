@@ -289,7 +289,7 @@ describe("Bryan Bucks parlays", () => {
         },
       },
     });
-    expect(house.balance).toBe(HOUSE_BANKROLL);
+    expect(house.balance).toBe(HOUSE_BANKROLL - 25);
   });
 
   test("cancellation remains available after the feature flag is removed", async () => {
@@ -510,7 +510,9 @@ describe("Bryan Bucks parlay settlement", () => {
       accounts
         .map((account) => account.balance)
         .toSorted((left, right) => left - right),
-    ).toEqual([25, HOUSE_BANKROLL].toSorted((left, right) => left - right));
+    ).toEqual(
+      [25, HOUSE_BANKROLL - 25].toSorted((left, right) => left - right),
+    );
   });
 
   test("settles an empty market and stale sweep refunds active positions", async () => {

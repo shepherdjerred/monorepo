@@ -891,10 +891,11 @@ whole position with integer ceiling so button-sized increments cannot exploit
 rounding. Every credit preserves enough Int32 headroom to return all pending
 stakes and house reserves, including cancellation and void paths.
 
-One-sided markets are matched by a synthetic per-guild house account with a
-bounded opening bankroll. The house is a real `BucksAccount` and `BucksBet`, so
-its seed, stake, payout, and balance are all ledger-audited; house accounts do
-not appear on the user leaderboard. If the reserve cannot cover the exposure,
+A new wallet's welcome grant is transferred from that house bankroll (paired
+`seed` ledger rows), not minted. One-sided markets are matched by a synthetic
+per-guild house account with a bounded opening bankroll. The house is a real
+`BucksAccount` and `BucksBet`, so its seed, stake, payout, and balance are all
+ledger-audited; house accounts do not appear on the user leaderboard. If the reserve cannot cover the exposure,
 the market is voided with `house_unavailable` and user stakes are refunded.
 The house also receives two audited 20% cuts, rounded to the nearest whole Buck:
 one from each human winner's gross payout and one from a voluntarily cancelled

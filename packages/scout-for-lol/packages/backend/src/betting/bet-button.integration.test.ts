@@ -162,7 +162,9 @@ describe("handleBetButton", () => {
       expect(bet.predictedTeamId).toBe(expectedTeamId);
       expect(bet.stake).toBe(expectedStake);
 
-      const account = await db.bucksAccount.findFirstOrThrow();
+      const account = await db.bucksAccount.findFirstOrThrow({
+        where: { isHouse: false },
+      });
       expect(account.balance).toBe(SEED_GRANT - expectedStake);
     },
   );
@@ -223,7 +225,7 @@ describe("handleBetButton", () => {
         },
       },
     });
-    expect(house.balance).toBe(HOUSE_BANKROLL + 1);
+    expect(house.balance).toBe(HOUSE_BANKROLL - SEED_GRANT + 1);
     expect(refreshes).toEqual([{ matchId: MATCH_ID, serverId: SERVER_ID }]);
   });
 
@@ -284,7 +286,9 @@ describe("handleBetButton", () => {
 
     // The stake stays staked: no refund sneaks out after close.
     expect(await db.bucksBet.count()).toBe(1);
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT - 5);
   });
 

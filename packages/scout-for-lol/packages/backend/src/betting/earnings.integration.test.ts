@@ -140,7 +140,9 @@ async function assertRanked5sParticipationBonus() {
   ]);
   expect(entries.map((entry) => entry.delta)).toEqual([1, 1]);
 
-  const account = await db.bucksAccount.findFirstOrThrow();
+  const account = await db.bucksAccount.findFirstOrThrow({
+    where: { isHouse: false },
+  });
   expect(account.balance).toBe(SEED_GRANT + 2);
 }
 
@@ -204,7 +206,9 @@ describe("awardBucksForMatch", () => {
       mvpParticipant.win ? ["mvp", "played", "win"] : ["mvp", "played"],
     );
     expect(awards[0]?.total).toBe(mvpParticipant.win ? 3 : 2);
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT + (mvpParticipant.win ? 3 : 2));
   });
 
@@ -220,7 +224,9 @@ describe("awardBucksForMatch", () => {
     expect(awards[0]?.reasons).toEqual(["played", "win"]);
     expect(awards[0]?.total).toBe(2);
 
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT + 2);
   });
 
@@ -235,7 +241,9 @@ describe("awardBucksForMatch", () => {
     const awards = await awardBucksForMatch(fixture, db);
     expect(awards[0]?.reasons).toEqual(["played"]);
 
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT + 1);
   });
 
@@ -279,7 +287,9 @@ describe("awardBucksForMatch additional cases", () => {
     expect(entries.map((entry) => entry.kind)).toEqual(expectedKinds);
     expect(entries.map((entry) => entry.delta)).toEqual(expectedDeltas);
 
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(
       SEED_GRANT + 12 + (mvpParticipant.win ? 1 : 0),
     );
@@ -299,7 +309,9 @@ describe("awardBucksForMatch additional cases", () => {
     const second = await awardBucksForMatch(clashMatch, db);
 
     expect(second).toEqual([]);
-    const account = await db.bucksAccount.findFirstOrThrow();
+    const account = await db.bucksAccount.findFirstOrThrow({
+      where: { isHouse: false },
+    });
     expect(account.balance).toBe(SEED_GRANT + 12);
     expect(
       await db.bucksLedgerEntry.count({
@@ -328,7 +340,10 @@ describe("awardBucksForMatch additional cases", () => {
 
     // Wallets are per guild, so this is two independent balances, not a
     // double payment into one.
-    const accounts = await db.bucksAccount.findMany({ orderBy: { id: "asc" } });
+    const accounts = await db.bucksAccount.findMany({
+      where: { isHouse: false },
+      orderBy: { id: "asc" },
+    });
     expect(accounts).toHaveLength(2);
     expect(accounts.map((a) => a.balance)).toEqual([
       SEED_GRANT + 2,
