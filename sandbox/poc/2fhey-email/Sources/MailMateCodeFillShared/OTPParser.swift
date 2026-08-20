@@ -91,7 +91,7 @@ public struct OTPParser {
             in: sanitizedBody,
             range: NSRange(sanitizedBody.startIndex..., in: sanitizedBody)
         )
-        let candidates = Self.candidatePattern.matches(
+        let rawCandidates = Self.candidatePattern.matches(
             in: sanitizedBody,
             range: NSRange(sanitizedBody.startIndex..., in: sanitizedBody)
         ).compactMap { match -> Candidate? in
@@ -130,23 +130,33 @@ public struct OTPParser {
                 return nil
             }
 
-            let hasFollowingExplicitLabel = Self.hasFollowingExplicitLabel(
-                body: sanitizedBody,
-                labelRanges: explicitLabelRanges,
-                candidateRange: normalized.range,
-                maximumGap: 28
-            )
-
             let hasNearbyKeyword = keywordRanges.contains { keywordRange in
                 NSMaxRange(keywordRange.range) >= match.range.location - 48 &&
                     keywordRange.range.location <= NSMaxRange(match.range) + 48
             }
-            let score = (explicitLabel ? 4 : 0) + (hasFollowingExplicitLabel ? 4 : 0) + (hasNearbyKeyword ? 2 : 0)
+            let score = (explicitLabel ? 4 : 0) + (hasNearbyKeyword ? 2 : 0)
             return Candidate(
                 code: code,
                 range: normalized.range,
                 score: score,
-                hasCodeLabel: explicitLabel || hasFollowingExplicitLabel
+                hasCodeLabel: explicitLabel
+            )
+        }
+
+        let candidates = rawCandidates.map { candidate -> Candidate in
+            let hasFollowingExplicitLabel = Self.hasFollowingExplicitLabel(
+                body: sanitizedBody,
+                labelRanges: explicitLabelRanges,
+                candidateRange: candidate.range,
+                candidateRanges: rawCandidates.map(\.range),
+                maximumGap: 28
+            )
+            guard hasFollowingExplicitLabel else { return candidate }
+            return Candidate(
+                code: candidate.code,
+                range: candidate.range,
+                score: candidate.score + 4,
+                hasCodeLabel: true
             )
         }
 
@@ -230,15 +240,29 @@ public struct OTPParser {
         body: String,
         labelRanges: [NSTextCheckingResult],
         candidateRange: NSRange,
+        candidateRanges: [NSRange],
         maximumGap: Int
     ) -> Bool {
         labelRanges.contains { labelRange in
+            let labelEnd = NSMaxRange(labelRange.range)
             let gapLength = labelRange.range.location - NSMaxRange(candidateRange)
             guard gapLength >= 0, gapLength <= maximumGap,
                   let gapRange = Range(NSRange(location: NSMaxRange(candidateRange), length: gapLength), in: body) else {
                 return false
             }
-            return !body[gapRange].contains(where: \.isNewline)
+            guard !body[gapRange].contains(where: \.isNewline) else { return false }
+            return !candidateRanges.contains { otherRange in
+                guard otherRange.location > candidateRange.location,
+                      otherRange.location >= labelEnd else {
+                    return false
+                }
+                let candidateGap = otherRange.location - labelEnd
+                guard candidateGap <= maximumGap,
+                      let candidateGapRange = Range(NSRange(location: labelEnd, length: candidateGap), in: body) else {
+                    return false
+                }
+                return !body[candidateGapRange].contains(where: \.isNewline)
+            }
         }
     }
 
