@@ -185,7 +185,7 @@ GUI session must satisfy the native preflight.
 
 - Darwin on `arm64`;
 - the exact Xcode from `.xcode-version` selected as a full Xcode installation;
-- Bun 1.3.14 and Rust 1.97.1 selected through `mise`;
+- the Bun and Rust versions pinned by the root `.mise.toml`, selected through `mise`;
 - XcodeGen and SwiftLint;
 - active FileVault and the Buildkite user as the console user;
 - at least 40 GiB free in the checkout filesystem;

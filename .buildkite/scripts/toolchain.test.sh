@@ -88,6 +88,12 @@ if ! rg -Fq 'shell="/bin/bash -e -c"' "$MAC_CI_BOOTSTRAP"; then
   echo "macOS agent config must pin bash for the native steps that source macos-native-env.sh" >&2
   exit 1
 fi
+if ! rg -Fq 'AGENT_BUILD_PATH="$HOME/.buildkite-agent/builds"' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'mise settings set trusted_config_paths "$AGENT_BUILD_PATH"' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'build-path="$AGENT_BUILD_PATH"' "$MAC_CI_BOOTSTRAP"; then
+  echo "macOS bootstrap must trust the same Buildkite checkout root it configures" >&2
+  exit 1
+fi
 
 TEST_ROOT=$(mktemp -d)
 trap 'rm -rf "$TEST_ROOT"' EXIT
