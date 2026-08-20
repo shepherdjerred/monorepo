@@ -306,8 +306,11 @@ describes source links, inherited repository access, and package visibility as
 separate controls in its
 [package access guidance](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
 That separation is why the release treats anonymous pullability as its own
-gate. The operator procedure for bootstrapping or recovering package visibility
-lives in [Cut a homelab release](/how-to/cut-a-homelab-release/#if-ghcr-rejects-a-workload-pull).
+gate. The gate can only observe, never repair: GitHub exposes no API for
+changing package visibility, so CI cannot publish a package on an operator's
+behalf and a probe failure is a human's one-time action. The operator procedure
+for bootstrapping or recovering package visibility lives in
+[Cut a homelab release](/how-to/cut-a-homelab-release/#if-ghcr-rejects-a-workload-pull).
 
 After the push, the
 [image publication flow](https://github.com/shepherdjerred/monorepo/blob/6891646ef4bfbe67a3b5bea615c0e100e99c6145/.buildkite/scripts/bake-images.ts)

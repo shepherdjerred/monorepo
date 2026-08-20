@@ -291,7 +291,6 @@ for (const selectorInput of [
   ".buildkite/scripts/bake-retry.ts",
   ".buildkite/scripts/buildkit-env.ts",
   ".buildkite/scripts/image-targets.ts",
-  ".buildkite/scripts/ghcr-package-visibility.ts",
   ".buildkite/scripts/migration-core.ts",
   ".buildkite/scripts/select-image-targets.ts",
   ".buildkite/scripts/select-image-targets-lockfile.ts",

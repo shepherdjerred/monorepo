@@ -1,4 +1,5 @@
 import { asRecord } from "../../scripts/lib/json.ts";
+import { requiresPublicGhcrVisibility } from "./image-targets.ts";
 import { TransientError } from "../../scripts/lib/transient-error.ts";
 
 const manifestAccept = [
@@ -8,8 +9,17 @@ const manifestAccept = [
   "application/vnd.docker.distribution.manifest.v2+json",
 ].join(", ");
 
+/**
+ * Only the call signature is used, so injected doubles do not have to carry
+ * Bun's extra `fetch` statics (`preconnect`) to satisfy the type.
+ */
+export type GhcrFetcher = (
+  input: string | URL,
+  init?: RequestInit,
+) => Promise<Response>;
+
 type AnonymousPullOptions = {
-  readonly fetcher?: typeof fetch;
+  readonly fetcher?: GhcrFetcher;
   readonly sleeper?: (milliseconds: number) => Promise<unknown>;
   readonly attempts?: number;
   readonly delayMilliseconds?: number;
@@ -39,7 +49,7 @@ function responseFailure(endpoint: GhcrEndpoint, status: number): Error {
 }
 
 async function ghcrRequest(
-  fetcher: typeof fetch,
+  fetcher: GhcrFetcher,
   input: string | URL,
   init: RequestInit,
   endpoint: GhcrEndpoint,
@@ -75,6 +85,19 @@ async function consumeManifest(response: Response): Promise<void> {
       cause: error,
     });
   }
+}
+
+/**
+ * GitHub exposes NO API for changing package visibility — the Packages REST
+ * API offers only get/list/delete/restore, and the web UI gates the change
+ * behind a typed confirmation. A newly published package is therefore private
+ * until a human flips it once, so this probe is the enforcement point and the
+ * message has to carry the manual step rather than pretend CI can repair it.
+ */
+function remediation(name: string): string {
+  return requiresPublicGhcrVisibility(name)
+    ? ` ${name} is declared public in IMAGE_TARGET_REGISTRY: open https://github.com/users/shepherdjerred/packages/container/${encodeURIComponent(name)}/settings and set "Change visibility" to Public (one time, per package).`
+    : "";
 }
 
 export async function ensureAnonymousGhcrPull(
@@ -138,7 +161,7 @@ export async function ensureAnonymousGhcrPull(
     }
   }
 
-  const message = `GHCR package shepherdjerred/${name} is not anonymously pullable at ${reference}: ${failure.message}. Application images must be public and carry the monorepo OCI source label.`;
+  const message = `GHCR package shepherdjerred/${name} is not anonymously pullable at ${reference}: ${failure.message}. Application images must be public and carry the monorepo OCI source label.${remediation(name)}`;
   if (failure instanceof TransientError) {
     throw new TransientError(message, { cause: failure });
   }

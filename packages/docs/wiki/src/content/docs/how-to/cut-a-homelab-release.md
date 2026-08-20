@@ -138,12 +138,14 @@ For a newly named application image:
 1. Confirm its runtime Dockerfile has the exact monorepo
    `org.opencontainers.image.source` label in the published stage or its
    ancestry.
-2. Publish the first candidate to create the GHCR package. CI sets the declared
-   first-party package to public before it performs the independent anonymous
-   digest probe.
-3. If that visibility update fails, grant the CI `GH_TOKEN` package
-   administration permission. Do not make the package public by hand as a
-   workaround.
+2. Publish the first candidate to create the GHCR package. GitHub creates it
+   private, and CI cannot change that: the Packages REST API exposes only
+   get, list, delete, and restore, and the web UI gates a visibility change
+   behind a typed confirmation.
+3. Open the package's **Package settings**, and under "Danger Zone" use
+   **Change visibility** to make it public. This is a one-time step per new
+   package, not a workaround — no token scope makes it automatable. The
+   anonymous probe names this step and the exact settings URL when it fails.
 4. Verify the anonymous token request and exact digest fetch before continuing
    the release.
 
