@@ -96,6 +96,7 @@ describe("shared persisted Explore turn", () => {
       {
         ...prepared,
         identity: { userId },
+        guildIds: [],
         emit: () => Promise.resolve(),
       },
       {
@@ -138,6 +139,7 @@ describe("shared persisted Explore turn", () => {
       {
         ...prepared,
         identity: { userId },
+        guildIds: [],
         emit: () => Promise.resolve(),
       },
       {

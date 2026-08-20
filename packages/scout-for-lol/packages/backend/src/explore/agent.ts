@@ -50,6 +50,12 @@ export type ExploreAgentParams = {
   question: string;
   /** Prior turns of this conversation, oldest first. */
   history: ExploreMessage[];
+  /**
+   * The asker's Discord servers, used only to resolve a `player('…')` alias.
+   * Explore is global otherwise; this is the one lookup that reads per-server
+   * data, so it stays bounded to servers this person belongs to.
+   */
+  guildIds: string[];
   abortSignal: AbortSignal;
   emit: (event: ExploreStreamEvent) => void | Promise<void>;
 };
@@ -225,6 +231,7 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
         const result = await executeReportQuery({
           prisma,
           scope: GLOBAL_SCOPE,
+          askerGuildIds: params.guildIds,
           queryText: validation.formattedQueryText,
         });
         const preview = reportQueryPreviewSummary(result);

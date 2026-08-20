@@ -56,7 +56,14 @@ export function isExploreAllowed(
  * someone's servers is not the same as knowing they lack access, and
  * answering FORBIDDEN would tell them something untrue.
  */
-export async function assertExploreAccess(user: User): Promise<void> {
+/**
+ * The asker's servers, which double as the scope for alias resolution.
+ *
+ * Returned rather than discarded: `player('…')` resolves a Scout alias from
+ * the accounts dimension, which is per-server data, so it must answer only for
+ * servers this person actually belongs to.
+ */
+export async function assertExploreAccess(user: User): Promise<string[]> {
   const allowlist = exploreAllowlist();
   if (allowlist.length === 0) {
     throw new TRPCError({
@@ -66,15 +73,12 @@ export async function assertExploreAccess(user: User): Promise<void> {
   }
 
   const guilds = await fetchUserGuildsForRequest(user);
-  if (
-    !isExploreAllowed(
-      allowlist,
-      guilds.map((guild) => guild.id),
-    )
-  ) {
+  const guildIds = guilds.map((guild) => guild.id);
+  if (!isExploreAllowed(allowlist, guildIds)) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Explore is currently limited to a few servers.",
     });
   }
+  return guildIds;
 }
