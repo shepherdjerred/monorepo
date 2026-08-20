@@ -69,6 +69,8 @@ func parsesSubjectOnlyCode() {
     let metadata = MessageMetadata(sender: "security@example.test", subject: "Your verification code is 482913", date: nil, messageID: "message-subject-code")
 
     #expect(OTPParser().parse(body: "", metadata: metadata)?.code == "482913")
+    let updateMetadata = MessageMetadata(sender: "security@example.test", subject: "Authentication update", date: nil, messageID: "message-authentication-update")
+    #expect(OTPParser().parse(body: "482913", metadata: updateMetadata)?.code == "482913")
 }
 
 @Test("does not persist a bare sender mailbox as a label")

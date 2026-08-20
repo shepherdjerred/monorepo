@@ -109,6 +109,7 @@ private func requestIdentityReconciliation() {
     if let bundleIdentifier = Bundle(url: appURL)?.bundleIdentifier,
        let runningApplication = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).first(where: { !$0.isTerminated }) {
         if runningApplication.isFinishedLaunching {
+            removeBrokerRequestMarker()
             CodeFillObservability.helperLogger.info("event=identity_reconciliation outcome=reopen_running_app")
         } else {
             CodeFillObservability.helperLogger.info("event=identity_reconciliation outcome=launch_in_progress")
