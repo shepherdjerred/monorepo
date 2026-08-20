@@ -145,7 +145,30 @@ export async function retryPendingCustomResultVoice(
         JSON.parse(event.payload),
       );
       const current = await getCustomNight(prisma, event.nightId);
-      if (current === null || current.currentGame?.id !== event.gameId) {
+      let target = payload.target;
+      if (current !== null && current.currentGame?.id !== event.gameId) {
+        const currentParticipantIds = new Set(
+          current.currentGame?.participants.map(
+            (participant) => participant.discordId,
+          ),
+        );
+        target = {
+          ...target,
+          currentGame:
+            target.currentGame === null
+              ? null
+              : {
+                  participants: target.currentGame.participants.filter(
+                    (participant) =>
+                      !currentParticipantIds.has(participant.discordId),
+                  ),
+                },
+        };
+      }
+      if (
+        target.currentGame === null ||
+        target.currentGame.participants.length === 0
+      ) {
         await prisma.customAuditEvent.update({
           where: { id: event.id },
           data: {
@@ -155,10 +178,7 @@ export async function retryPendingCustomResultVoice(
         });
         continue;
       }
-      const failures = await attemptResultVoiceReturn(
-        payload.target,
-        event.nightId,
-      );
+      const failures = await attemptResultVoiceReturn(target, event.nightId);
       if (failures.length > 0) {
         logger.error("Pending custom result voice return still has failures", {
           failures,
