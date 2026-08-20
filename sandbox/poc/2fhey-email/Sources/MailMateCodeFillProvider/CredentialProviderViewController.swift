@@ -14,7 +14,6 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     private var records: [OTPRecord] = []
     private var choiceViews: [NSView] = []
     private var stackView: NSStackView?
-    private var identityStoreSyncTask: Task<Void, Never>?
 
     override func loadView() {
         logger.debug("event=provider_view_loaded")
@@ -110,7 +109,6 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         switch outcome {
         case let .success(records):
             logger.info("event=provider_store_read outcome=success record_count=\(records.count, privacy: .public)")
-            synchronizeIdentityStore(records)
             return records
         case let .failure(error):
             logger.error("event=provider_store_read outcome=error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
@@ -164,16 +162,18 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         let credential = ASOneTimeCodeCredential(code: record.code)
         let context = extensionContext
         let providerLogger = logger
-        context.completeOneTimeCodeRequest(using: credential) { [weak self, logger = providerLogger] expired in
+        context.completeOneTimeCodeRequest(using: credential) { [logger = providerLogger] expired in
             guard !expired else {
                 logger.info("event=credential_completion outcome=expired_before_use message_id_hash=\(CodeFillObservability.fingerprint(record.messageID), privacy: .public)")
                 return
             }
             let remainingRecords = Self.consumeRecordAfterCompletion(record, logger: logger)
             if let remainingRecords {
-                Task { @MainActor [weak self] in
-                    self?.synchronizeIdentityStore(remainingRecords)
-                }
+                logger.info("event=credential_completion outcome=records_changed remaining_record_count=\(remainingRecords.count, privacy: .public)")
+                DistributedNotificationCenter.default().post(
+                    name: CodeFillConfiguration.recordsDidChangeNotification,
+                    object: nil
+                )
             }
         }
     }
@@ -213,47 +213,4 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         }
     }
 
-    private func synchronizeIdentityStore(_ records: [OTPRecord]) {
-        let previousTask = identityStoreSyncTask
-        identityStoreSyncTask = Task { @MainActor [weak self] in
-            await previousTask?.value
-            guard let self else { return }
-            await self.replaceIdentities(records)
-        }
-    }
-
-    private func replaceIdentities(_ records: [OTPRecord]) async {
-        let state = await credentialIdentityStoreState()
-        guard state else {
-            logger.info("event=identity_store_sync outcome=disabled record_count=\(records.count, privacy: .public)")
-            return
-        }
-        let identities = CredentialIdentityBuilder.identities(for: records)
-        logger.info("event=identity_store_sync outcome=attempt identity_count=\(identities.count, privacy: .public)")
-        let result = await replaceCredentialIdentities(identities)
-        if result {
-            logger.info("event=identity_store_sync outcome=success identity_count=\(identities.count, privacy: .public)")
-        } else {
-            logger.error("event=identity_store_sync outcome=error identity_count=\(identities.count, privacy: .public)")
-        }
-    }
-
-    private func credentialIdentityStoreState() async -> Bool {
-        await withCheckedContinuation { continuation in
-            ASCredentialIdentityStore.shared.getState { state in
-                continuation.resume(returning: state.isEnabled)
-            }
-        }
-    }
-
-    private func replaceCredentialIdentities(_ identities: [ASCredentialIdentity]) async -> Bool {
-        await withCheckedContinuation { continuation in
-            ASCredentialIdentityStore.shared.replaceCredentialIdentities(identities) { success, error in
-                if let error {
-                    self.logger.error("event=identity_store_sync replacement_error error=\(CodeFillObservability.errorSummary(error), privacy: .public)")
-                }
-                continuation.resume(returning: success)
-            }
-        }
-    }
 }
