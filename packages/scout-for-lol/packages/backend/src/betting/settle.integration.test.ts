@@ -18,6 +18,7 @@ import { settleBettingForMatch } from "#src/betting/settle.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/sweep.ts";
 import { voidStaleBettingPools } from "#src/betting/void-stale.ts";
 import { reconcileBucksBalances } from "#src/betting/reconcile.ts";
+import { BUCKS_RECONCILIATION_PAGE_SIZE } from "#src/betting/reconcile-shared.ts";
 import {
   HOUSE_ACCOUNT_DISCORD_ID,
   HOUSE_BANKROLL,
@@ -673,6 +674,45 @@ describe("voidStaleBettingPools", () => {
 });
 
 describe("reconcileBucksBalances", () => {
+  test("audits accounts and ledger rows beyond the first bounded pages", async () => {
+    await db.bucksAccount.createMany({
+      data: Array.from(
+        { length: BUCKS_RECONCILIATION_PAGE_SIZE },
+        (_, index) => ({
+          serverId: SERVER_A,
+          discordId: bucksTestDiscordId(index + 100),
+        }),
+      ),
+    });
+    const target = await db.bucksAccount.create({
+      data: {
+        serverId: SERVER_A,
+        discordId: bucksTestDiscordId(BUCKS_RECONCILIATION_PAGE_SIZE + 100),
+        balance: BUCKS_RECONCILIATION_PAGE_SIZE + 1,
+      },
+    });
+    await db.bucksLedgerEntry.createMany({
+      data: Array.from(
+        { length: BUCKS_RECONCILIATION_PAGE_SIZE + 1 },
+        (_, index) => ({
+          bucksAccountId: target.id,
+          delta: 1,
+          balanceAfter:
+            index === BUCKS_RECONCILIATION_PAGE_SIZE ? 999 : index + 1,
+          kind: "seed",
+          context: JSON.stringify({ type: "seed", note: "paging test" }),
+        }),
+      ),
+    });
+
+    expect(await reconcileBucksBalances(db)).toContainEqual(
+      expect.objectContaining({
+        kind: "running_balance",
+        bucksAccountId: target.id,
+      }),
+    );
+  });
+
   test("reports no findings after a real settlement", async () => {
     await makeBalancedPool();
     await settleBettingForMatch(fixture, db);

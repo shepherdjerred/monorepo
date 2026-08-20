@@ -5,13 +5,17 @@ import {
 import { HOUSE_MATCH_LIMIT } from "#src/betting/constants.ts";
 import {
   auditFinding,
-  type BucksAuditFinding,
+  type BucksAuditSink,
 } from "#src/betting/reconcile-shared.ts";
 import type { Db } from "#src/lib/audit/index.ts";
 
-async function loadMatchedPools(prismaClient: Db) {
-  return await prismaClient.bucksMatchPool.findMany({
-    where: { matchedAt: { not: null } },
+async function loadMatchedPools(prismaClient: Db, afterPoolId: number) {
+  const pools = await prismaClient.bucksMatchPool.findMany({
+    where: { id: { gt: afterPoolId }, matchedAt: { not: null } },
+    orderBy: { id: "asc" },
+    // A pool's matching summary and positions are one conservation unit. Load
+    // one such unit at a time so historical pool count cannot grow memory.
+    take: 1,
     select: {
       id: true,
       poolState: true,
@@ -31,13 +35,32 @@ async function loadMatchedPools(prismaClient: Db) {
           grossPayout: true,
           fee: true,
           payout: true,
-          ledgerEntries: {
-            select: { bucksAccountId: true, delta: true, kind: true },
-          },
         },
       },
     },
   });
+  const betIds = pools.flatMap((pool) => pool.bets.map((bet) => bet.id));
+  const houseDebits =
+    betIds.length === 0
+      ? []
+      : await prismaClient.bucksLedgerEntry.groupBy({
+          by: ["betId", "bucksAccountId"],
+          where: { betId: { in: betIds }, kind: "house_match" },
+          _sum: { delta: true },
+        });
+  return pools.map((pool) => ({
+    ...pool,
+    bets: pool.bets.map((bet) => ({
+      ...bet,
+      houseDebit: houseDebits
+        .filter(
+          (entry) =>
+            entry.betId === bet.id &&
+            entry.bucksAccountId === bet.bucksAccountId,
+        )
+        .reduce((sum, entry) => sum + (entry._sum.delta ?? 0), 0),
+    })),
+  }));
 }
 
 type MatchedPool = Awaited<ReturnType<typeof loadMatchedPools>>[number];
@@ -65,7 +88,7 @@ function activeMatchedBets(pool: MatchedPool) {
 function auditSideTotals(
   pool: MatchedPool,
   summary: BucksMatchingSummary,
-  findings: BucksAuditFinding[],
+  findings: BucksAuditSink,
 ): void {
   const bets = activeMatchedBets(pool);
   for (const teamId of [100, 200] as const) {
@@ -95,7 +118,7 @@ function auditSideTotals(
 function auditSummaryAllocations(
   pool: MatchedPool,
   summary: BucksMatchingSummary,
-  findings: BucksAuditFinding[],
+  findings: BucksAuditSink,
 ): void {
   const humanBets = new Map(
     activeMatchedBets(pool)
@@ -157,20 +180,13 @@ function auditSummaryAllocations(
 function auditHouseExposure(
   pool: MatchedPool,
   summary: BucksMatchingSummary,
-  findings: BucksAuditFinding[],
+  findings: BucksAuditSink,
 ): void {
   const houseBets = activeMatchedBets(pool).filter(
     (bet) => bet.bucksAccount.isHouse,
   );
   const houseBet = houseBets.find((bet) => bet.id === summary.houseBetId);
-  const houseDebit =
-    houseBet?.ledgerEntries
-      .filter(
-        (entry) =>
-          entry.bucksAccountId === houseBet.bucksAccountId &&
-          entry.kind === "house_match",
-      )
-      .reduce((sum, entry) => sum + entry.delta, 0) ?? 0;
+  const houseDebit = houseBet?.houseDebit ?? 0;
   const hasUnexpectedEmptyHouseState =
     summary.houseBetId !== null ||
     summary.houseTeamId !== null ||
@@ -206,7 +222,7 @@ function auditHouseExposure(
 function auditPoolPayoutConservation(
   pool: MatchedPool,
   summary: BucksMatchingSummary,
-  findings: BucksAuditFinding[],
+  findings: BucksAuditSink,
 ): void {
   if (pool.poolState !== "settled" && pool.poolState !== "voided") {
     return;
@@ -237,10 +253,7 @@ function auditPoolPayoutConservation(
   }
 }
 
-function auditMatchedPool(
-  pool: MatchedPool,
-  findings: BucksAuditFinding[],
-): void {
+function auditMatchedPool(pool: MatchedPool, findings: BucksAuditSink): void {
   const summary = parseMatchingSummary(pool.matchingJson);
   if (summary === undefined) {
     findings.push(
@@ -260,10 +273,18 @@ function auditMatchedPool(
 
 export async function auditBucksMatchedPools(
   prismaClient: Db,
-  findings: BucksAuditFinding[],
+  findings: BucksAuditSink,
 ): Promise<void> {
-  const pools = await loadMatchedPools(prismaClient);
-  for (const pool of pools) {
+  let afterPoolId = 0;
+  let hasMorePools = true;
+  while (hasMorePools) {
+    const pools = await loadMatchedPools(prismaClient, afterPoolId);
+    const pool = pools[0];
+    hasMorePools = pool !== undefined;
+    if (pool === undefined) {
+      continue;
+    }
     auditMatchedPool(pool, findings);
+    afterPoolId = pool.id;
   }
 }

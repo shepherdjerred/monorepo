@@ -1,18 +1,22 @@
 import type { Db } from "#src/lib/audit/index.ts";
 import {
+  BUCKS_RECONCILIATION_PAGE_SIZE,
   auditFinding,
-  type BucksAuditFinding,
+  type BucksAuditSink,
 } from "#src/betting/reconcile-shared.ts";
 
-async function loadBets(prismaClient: Db) {
-  return await prismaClient.bucksBet.findMany({
+async function loadBets(prismaClient: Db, afterBetId: number) {
+  const bets = await prismaClient.bucksBet.findMany({
+    where: { id: { gt: afterBetId } },
     orderBy: { id: "asc" },
+    take: BUCKS_RECONCILIATION_PAGE_SIZE,
     select: {
       id: true,
       poolId: true,
       bucksAccountId: true,
       bucksAccount: { select: { isHouse: true } },
       pool: { select: { poolState: true, matchedAt: true } },
+      openPosition: { select: { betId: true } },
       stake: true,
       betOutcome: true,
       humanMatchedStake: true,
@@ -22,11 +26,27 @@ async function loadBets(prismaClient: Db) {
       grossPayout: true,
       fee: true,
       payout: true,
-      ledgerEntries: {
-        select: { bucksAccountId: true, delta: true, kind: true },
-      },
     },
   });
+  const betIds = bets.map((bet) => bet.id);
+  if (betIds.length === 0) {
+    return [];
+  }
+  const ledgerTotals = await prismaClient.bucksLedgerEntry.groupBy({
+    by: ["betId", "bucksAccountId", "kind"],
+    where: { betId: { in: betIds } },
+    _sum: { delta: true },
+  });
+  return bets.map((bet) => ({
+    ...bet,
+    ledgerEntries: ledgerTotals
+      .filter((entry) => entry.betId === bet.id)
+      .map((entry) => ({
+        bucksAccountId: entry.bucksAccountId,
+        kind: entry.kind,
+        delta: entry._sum.delta ?? 0,
+      })),
+  }));
 }
 
 type ReconciliationBet = Awaited<ReturnType<typeof loadBets>>[number];
@@ -55,7 +75,7 @@ function linkedLedgerSum(bet: ReconciliationBet, kind: string): number {
 
 function auditReservedStake(
   bet: ReconciliationBet,
-  findings: BucksAuditFinding[],
+  findings: BucksAuditSink,
 ): void {
   const currentHouseBet =
     bet.bucksAccount.isHouse && bet.pool.matchedAt !== null;
@@ -81,7 +101,7 @@ function auditReservedStake(
 
 function readAllocation(
   bet: ReconciliationBet,
-  findings: BucksAuditFinding[],
+  findings: BucksAuditSink,
 ): CompleteAllocation | undefined {
   if (
     bet.humanMatchedStake === null &&
@@ -117,7 +137,7 @@ function readAllocation(
 function auditAllocation(
   bet: ReconciliationBet,
   allocation: CompleteAllocation,
-  findings: BucksAuditFinding[],
+  findings: BucksAuditSink,
 ): void {
   const amounts = [
     allocation.humanMatchedStake,
@@ -144,7 +164,7 @@ function auditAllocation(
 function auditUnmatchedRefund(
   bet: ReconciliationBet,
   allocation: CompleteAllocation,
-  findings: BucksAuditFinding[],
+  findings: BucksAuditSink,
 ): void {
   if (bet.betOutcome === "cancelled") {
     return;
@@ -164,7 +184,7 @@ function auditUnmatchedRefund(
 function auditCancellation(
   bet: ReconciliationBet,
   allocation: CompleteAllocation,
-  findings: BucksAuditFinding[],
+  findings: BucksAuditSink,
 ): void {
   const refund = ownLedgerSum(bet, "bet_cancel_refund");
   const ownFee = ownLedgerSum(bet, "cancel_fee");
@@ -202,7 +222,7 @@ function auditCancellation(
 
 function auditTerminalSettlement(
   bet: ReconciliationBet,
-  findings: BucksAuditFinding[],
+  findings: BucksAuditSink,
 ): void {
   if (bet.betOutcome === "pending") {
     return;
@@ -256,13 +276,9 @@ function auditTerminalSettlement(
   }
 }
 
-function auditBet(
-  bet: ReconciliationBet,
-  activeBetIds: ReadonlySet<number>,
-  findings: BucksAuditFinding[],
-): void {
+function auditBet(bet: ReconciliationBet, findings: BucksAuditSink): void {
   if (
-    !activeBetIds.has(bet.id) &&
+    bet.openPosition === null &&
     bet.pool.poolState === "open" &&
     bet.pool.matchedAt === null &&
     bet.betOutcome === "pending" &&
@@ -293,50 +309,70 @@ function auditBet(
 
 async function auditActiveSlots(
   prismaClient: Db,
-  findings: BucksAuditFinding[],
-): Promise<ReadonlySet<number>> {
-  const positions = await prismaClient.bucksOpenPosition.findMany({
-    select: {
-      poolId: true,
-      bucksAccountId: true,
-      betId: true,
-      pool: { select: { poolState: true, matchedAt: true } },
-      bet: {
-        select: { poolId: true, bucksAccountId: true, betOutcome: true },
+  findings: BucksAuditSink,
+): Promise<void> {
+  let afterBetId = 0;
+  let hasMorePositions = true;
+  while (hasMorePositions) {
+    const positions = await prismaClient.bucksOpenPosition.findMany({
+      where: { betId: { gt: afterBetId } },
+      orderBy: { betId: "asc" },
+      take: BUCKS_RECONCILIATION_PAGE_SIZE,
+      select: {
+        poolId: true,
+        bucksAccountId: true,
+        betId: true,
+        pool: { select: { poolState: true, matchedAt: true } },
+        bet: {
+          select: { poolId: true, bucksAccountId: true, betOutcome: true },
+        },
       },
-    },
-  });
-  for (const slot of positions) {
-    if (
-      slot.pool.poolState !== "open" ||
-      slot.pool.matchedAt !== null ||
-      slot.bet.poolId !== slot.poolId ||
-      slot.bet.bucksAccountId !== slot.bucksAccountId ||
-      slot.bet.betOutcome !== "pending"
-    ) {
-      findings.push(
-        auditFinding(
-          "active_position",
-          "Active-position slot does not point to one pending offer in an unmatched open pool",
-          {
-            poolId: slot.poolId,
-            betId: slot.betId,
-            bucksAccountId: slot.bucksAccountId,
-          },
-        ),
-      );
+    });
+    for (const slot of positions) {
+      if (
+        slot.pool.poolState !== "open" ||
+        slot.pool.matchedAt !== null ||
+        slot.bet.poolId !== slot.poolId ||
+        slot.bet.bucksAccountId !== slot.bucksAccountId ||
+        slot.bet.betOutcome !== "pending"
+      ) {
+        findings.push(
+          auditFinding(
+            "active_position",
+            "Active-position slot does not point to one pending offer in an unmatched open pool",
+            {
+              poolId: slot.poolId,
+              betId: slot.betId,
+              bucksAccountId: slot.bucksAccountId,
+            },
+          ),
+        );
+      }
+    }
+    const lastPosition = positions.at(-1);
+    hasMorePositions = lastPosition !== undefined;
+    if (lastPosition !== undefined) {
+      afterBetId = lastPosition.betId;
     }
   }
-  return new Set(positions.map((slot) => slot.betId));
 }
 
 export async function auditBucksPositions(
   prismaClient: Db,
-  findings: BucksAuditFinding[],
+  findings: BucksAuditSink,
 ): Promise<void> {
-  const activeBetIds = await auditActiveSlots(prismaClient, findings);
-  const bets = await loadBets(prismaClient);
-  for (const bet of bets) {
-    auditBet(bet, activeBetIds, findings);
+  await auditActiveSlots(prismaClient, findings);
+  let afterBetId = 0;
+  let hasMoreBets = true;
+  while (hasMoreBets) {
+    const bets = await loadBets(prismaClient, afterBetId);
+    for (const bet of bets) {
+      auditBet(bet, findings);
+    }
+    const lastBet = bets.at(-1);
+    hasMoreBets = lastBet !== undefined;
+    if (lastBet !== undefined) {
+      afterBetId = lastBet.id;
+    }
   }
 }
