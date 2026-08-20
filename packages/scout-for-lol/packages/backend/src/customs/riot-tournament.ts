@@ -16,6 +16,10 @@ function isPostRequest(init: RequestInit): boolean {
   return init.method?.toUpperCase() === "POST";
 }
 
+function isAmbiguousPostResponse(init: RequestInit, status: number): boolean {
+  return isPostRequest(init) && status >= 500 && status <= 599;
+}
+
 export type TournamentFetch = (
   input: string | URL | Request,
   init?: RequestInit,
@@ -139,6 +143,9 @@ async function riotRequest(
     if (!response.ok) {
       throw new RiotTournamentApiError(
         `Riot Tournament-V5 request failed (${response.status.toString()}): ${body.slice(0, 300)}`,
+        {
+          ambiguous: isAmbiguousPostResponse(init, response.status),
+        },
       );
     }
     try {
