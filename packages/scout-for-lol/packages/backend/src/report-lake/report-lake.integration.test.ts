@@ -26,6 +26,7 @@ import {
 } from "#src/report-lake/compactor.ts";
 import { flattenMatch, flattenPrematch } from "#src/report-lake/flatten.ts";
 import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 import { matchObjectKey } from "#src/report-store/s3-raw-source.ts";
 import {
   listStagingFiles,
@@ -39,6 +40,15 @@ import { fetchCompetitionRankHistory } from "#src/reports/duckdb/lake-reads.ts";
 const { prisma } = createTestDatabase("report-lake-test");
 const serverId = testGuildId("888");
 const creatorDiscordId = testAccountId("888");
+
+/**
+ * The manifest field the fold-vs-rebuild guard reads. Loose so a test that
+ * rewrites the fingerprint keeps the rest of the published build's summary
+ * rather than silently truncating the manifest it is standing in for.
+ */
+const ManifestFingerprintSchema = z.looseObject({
+  schemaFingerprint: z.string(),
+});
 
 // The full rebuild reads canonical raw JSON from S3 (SeaweedFS). Mock it
 // in-memory: ListObjectsV2 enumerates the seeded objects for the requested
@@ -438,6 +448,74 @@ describe("compactor", () => {
       await runReportLakeFold({ prisma, lakeDir });
       const builds = await readdir(path.join(lakeDir, "builds"));
       expect(builds.length).toBeLessThanOrEqual(2);
+    } finally {
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("fold records the column-set fingerprint in the published manifest", async () => {
+    const lakeDir = await makeLakeDir();
+    try {
+      await runReportLakeRebuild({ prisma, lakeDir });
+      const buildDir = await readCurrentBuildDir(lakeDir);
+      if (buildDir === undefined) {
+        throw new Error("no build dir");
+      }
+      const manifest = ManifestFingerprintSchema.parse(
+        await Bun.file(path.join(buildDir, "manifest.json")).json(),
+      );
+      expect(manifest.schemaFingerprint).toBe(lakeSchemaFingerprint());
+    } finally {
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
+  // A fold hardlinks the published parquet and appends fold files beside it.
+  // Those files must agree on columns: reads select an explicit column list, so
+  // a mixed build raises a DuckDB binder error rather than returning NULLs, and
+  // every report would fail until a rebuild replaced the last old file.
+  test("fold rebuilds instead when the published column set differs", async () => {
+    const match = await loadMatchFixture();
+    const lakeDir = await makeLakeDir();
+    try {
+      const first = await runReportLakeRebuild({ prisma, lakeDir });
+      expect(first?.tier).toBe("rebuild");
+
+      // Stand in for a binary whose lake columns changed since this build.
+      const buildDir = await readCurrentBuildDir(lakeDir);
+      if (buildDir === undefined) {
+        throw new Error("no build dir");
+      }
+      const manifestPath = path.join(buildDir, "manifest.json");
+      const published: unknown = await Bun.file(manifestPath).json();
+      await Bun.write(
+        manifestPath,
+        JSON.stringify({
+          ...ManifestFingerprintSchema.parse(published),
+          schemaFingerprint: "0000000000000000",
+        }),
+      );
+
+      await writeMatchStagingFile(lakeDir, match);
+      const second = await runReportLakeFold({ prisma, lakeDir });
+      expect(second?.tier).toBe("rebuild");
+    } finally {
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("fold rebuilds instead when the published build has no manifest", async () => {
+    const lakeDir = await makeLakeDir();
+    try {
+      await runReportLakeRebuild({ prisma, lakeDir });
+      const buildDir = await readCurrentBuildDir(lakeDir);
+      if (buildDir === undefined) {
+        throw new Error("no build dir");
+      }
+      await rm(path.join(buildDir, "manifest.json"));
+
+      const second = await runReportLakeFold({ prisma, lakeDir });
+      expect(second?.tier).toBe("rebuild");
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
     }

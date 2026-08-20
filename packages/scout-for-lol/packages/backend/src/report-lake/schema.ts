@@ -329,3 +329,43 @@ export function duckDbEmptySelect(
     .map(([name, type]) => `CAST(NULL AS ${type}) AS ${name}`)
     .join(", ")} WHERE FALSE`;
 }
+
+/** Sorted `name:TYPE` pairs — reads bind by name, so only the set matters. */
+function columnSetSignature(columns: Record<string, DuckDbColumnType>): string {
+  return Object.entries(columns)
+    .map(([name, type]) => `${name}:${type}`)
+    .sort()
+    .join(",");
+}
+
+/**
+ * Fingerprint of every lake table's column set, recorded in each build's
+ * manifest.
+ *
+ * Adding a column is NOT backward compatible with already-published parquet.
+ * `buildUnionSource` selects an explicit column list across the whole file
+ * list, so a build whose files disagree on columns does not degrade to NULLs —
+ * DuckDB refuses to bind at all ("Referenced column ... not found"). The fold
+ * tier hardlinks the previous build's parquet and appends new fold files, so
+ * changing this map would otherwise publish exactly that unreadable mixed
+ * build and break every report, Explore answer, and ScoutQL query until the
+ * next full rebuild replaced the last old file.
+ *
+ * So the compactor compares this against the published build and rebuilds from
+ * S3 instead of folding when it differs. Sorting means a pure reordering costs
+ * nothing, while any added, removed, or retyped column forces the rebuild.
+ */
+export function lakeSchemaFingerprint(): string {
+  const signature = [
+    `matches=${columnSetSignature(MATCH_LAKE_COLUMNS)}`,
+    `prematch=${columnSetSignature(PREMATCH_LAKE_COLUMNS)}`,
+    `accounts=${columnSetSignature(ACCOUNT_LAKE_COLUMNS)}`,
+    `competition_rank_history=${columnSetSignature(
+      COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
+    )}`,
+  ].join("|");
+  return new Bun.CryptoHasher("sha256")
+    .update(signature)
+    .digest("hex")
+    .slice(0, 16);
+}

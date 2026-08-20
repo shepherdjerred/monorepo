@@ -1,5 +1,6 @@
 import { copyFile, link, mkdir, readdir, unlink } from "node:fs/promises";
 import path from "node:path";
+import { z } from "zod";
 import { prisma as defaultPrisma } from "#src/database/index.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -35,6 +36,7 @@ import {
   PREMATCH_LAKE_COLUMNS,
   PrematchLakeRowSchema,
   duckDbColumnsSpec,
+  lakeSchemaFingerprint,
 } from "#src/report-lake/schema.ts";
 import {
   listStagingFiles,
@@ -154,8 +156,39 @@ async function writeManifest(
 ): Promise<void> {
   await Bun.write(
     path.join(buildDir, "manifest.json"),
-    JSON.stringify({ ...summary, builtAt: new Date().toISOString() }, null, 2),
+    JSON.stringify(
+      {
+        ...summary,
+        schemaFingerprint: lakeSchemaFingerprint(),
+        builtAt: new Date().toISOString(),
+      },
+      null,
+      2,
+    ),
   );
+}
+
+const PublishedManifestSchema = z.object({
+  schemaFingerprint: z.string().optional(),
+});
+
+/**
+ * The column-set fingerprint recorded by the published build, or undefined
+ * when it has no manifest or predates fingerprinting. Both mean the same thing
+ * to the caller: the published columns cannot be confirmed to match this
+ * binary's, so the build is not safe to hardlink and extend.
+ */
+async function readPublishedFingerprint(
+  buildDir: string,
+): Promise<string | undefined> {
+  const manifest = Bun.file(path.join(buildDir, "manifest.json"));
+  if (!(await manifest.exists())) {
+    return undefined;
+  }
+  const parsed = PublishedManifestSchema.safeParse(
+    JSON.parse(await manifest.text()),
+  );
+  return parsed.success ? parsed.data.schemaFingerprint : undefined;
 }
 
 function publishMetrics(summary: Omit<CompactionSummary, "durationMs">): void {
@@ -307,6 +340,17 @@ export async function runReportLakeFold(
     const currentDir = await readCurrentBuildDir(lakeDir);
     if (currentDir === undefined) {
       logger.info("No published build yet; folding via full rebuild");
+      return await rebuildLocked(prisma, lakeDir, startedAt);
+    }
+    // A fold hardlinks the published parquet and appends fold files beside it.
+    // If this binary's column set differs, that mix cannot be read at all, so
+    // rebuild from S3 rather than publishing an unreadable build.
+    const published = await readPublishedFingerprint(currentDir);
+    const expected = lakeSchemaFingerprint();
+    if (published !== expected) {
+      logger.info(
+        `Lake column set changed (published ${published ?? "unrecorded"}, expected ${expected}); folding via full rebuild`,
+      );
       return await rebuildLocked(prisma, lakeDir, startedAt);
     }
 
