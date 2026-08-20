@@ -13,8 +13,9 @@ public struct OTPParser {
     private static let explicitLabelPattern = makeExpression(
         "(?i)(?<![\\p{L}\\p{N}])(code|otp|pin|passcode)(?![\\p{L}\\p{N}])"
     )
+    private static let candidateSeparatorPattern = "[ \\x{00A0}\\x{2007}\\x{202F}\\x{002D}\\x{2010}-\\x{2015}]"
     private static let candidatePattern = makeExpression(
-        "(?<![\\p{L}\\p{N}])([A-Za-z0-9](?:[ -]?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}]|-[A-Za-z0-9]| [A-Za-z0-9]*[0-9])"
+        "(?<![\\p{L}\\p{N}])([A-Za-z0-9](?:\(candidateSeparatorPattern)?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}]|\(candidateSeparatorPattern)[A-Za-z0-9]*[0-9])"
     )
     private static let datePattern = makeExpression(
         "(?<![\\p{L}\\p{N}])(?:\\d{4}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4}|(?:0?[1-9]|[12]\\d|3[01])[-/.](?:0?[1-9]|1[0-2])[-/.]\\d{2,4})(?![\\p{L}\\p{N}])"
@@ -135,18 +136,18 @@ public struct OTPParser {
     }
 
     private static func normalizeCandidate(rawCode: String, range: NSRange) -> (code: String, range: NSRange)? {
-        let compact = rawCode.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "-", with: "")
+        let compact = rawCode.filter { !Self.isCandidateSeparator($0) }
         guard compact.count >= 4 else { return nil }
         if compact.allSatisfy(\.isNumber) {
             return (compact, range)
         }
-        let firstSeparator = rawCode.firstIndex(where: { $0 == " " || $0 == "-" })
-        if rawCode.contains("-"), let firstSeparator, rawCode[firstSeparator] == "-", compact.count <= 8,
+        let firstSeparator = rawCode.firstIndex(where: Self.isCandidateSeparator)
+        if let firstSeparator, Self.isDashSeparator(rawCode[firstSeparator]), compact.count <= 8,
            compact.contains(where: \.isLetter), compact.contains(where: \.isNumber) {
             return (compact, range)
         }
 
-        if let firstSeparator, rawCode[firstSeparator] == " ",
+        if let firstSeparator, Self.isSpaceSeparator(rawCode[firstSeparator]),
            compact.count <= 8, compact.contains(where: \.isLetter), compact.contains(where: \.isNumber) {
             let prefix = String(rawCode[..<firstSeparator]).lowercased()
             let suffix = rawCode[rawCode.index(after: firstSeparator)...]
@@ -160,17 +161,17 @@ public struct OTPParser {
         // A separator can cause a numeric code followed by a short word ("482913 to") to be
         // captured as one candidate. Keep the numeric code in that case, but preserve compact
         // digit-led alphanumeric codes such as "1234AB".
-        if rawCode.contains(where: { $0 == " " || $0 == "-" }),
+        if rawCode.contains(where: Self.isCandidateSeparator),
            let firstLetterIndex = compact.firstIndex(where: { !$0.isNumber }),
            compact[..<firstLetterIndex].count >= 4 {
             let numericPrefix = String(compact[..<firstLetterIndex])
             return (numericPrefix, NSRange(location: range.location, length: numericPrefix.utf16.count))
         }
 
-        if let separatorIndex = rawCode.firstIndex(of: " ") {
+        if let separatorIndex = rawCode.firstIndex(where: Self.isSpaceSeparator) {
             let prefix = String(rawCode[..<separatorIndex])
             let suffix = String(rawCode[rawCode.index(after: separatorIndex)...])
-            let compactPrefix = prefix.replacingOccurrences(of: "-", with: "")
+            let compactPrefix = prefix.filter { !Self.isCandidateSeparator($0) }
             if compactPrefix.count >= 4, compactPrefix.count <= 8,
                compactPrefix.contains(where: \.isNumber), suffix.allSatisfy(\.isLetter) {
                 return (compactPrefix, NSRange(location: range.location, length: prefix.utf16.count))
@@ -181,7 +182,7 @@ public struct OTPParser {
         // together with the code ("is 482913"). Drop such a prefix only when a separator actually
         // divided it from the rest — scanning for the first digit would truncate a genuine
         // alphanumeric code that starts with letters, such as "abcd1234".
-        guard let separatorIndex = rawCode.firstIndex(where: { $0 == " " || $0 == "-" }) else {
+        guard let separatorIndex = rawCode.firstIndex(where: Self.isCandidateSeparator) else {
             return (compact, range)
         }
         let word = rawCode[rawCode.startIndex..<separatorIndex]
@@ -189,12 +190,24 @@ public struct OTPParser {
             return (compact, range)
         }
         let remainder = String(rawCode[rawCode.index(after: separatorIndex)...])
-        let suffix = remainder.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "-", with: "")
+        let suffix = remainder.filter { !Self.isCandidateSeparator($0) }
         guard suffix.count >= 4, suffix.count <= 8, suffix.contains(where: \.isNumber) else {
             return nil
         }
         let offset = String(rawCode[rawCode.startIndex...separatorIndex]).utf16.count
         return (suffix, NSRange(location: range.location + offset, length: remainder.utf16.count))
+    }
+
+    private static func isSpaceSeparator(_ character: Character) -> Bool {
+        character == " " || character == "\u{00A0}" || character == "\u{2007}" || character == "\u{202F}"
+    }
+
+    private static func isDashSeparator(_ character: Character) -> Bool {
+        character == "-" || character == "\u{2010}" || character == "\u{2011}" || character == "\u{2012}" || character == "\u{2013}" || character == "\u{2014}" || character == "\u{2015}"
+    }
+
+    private static func isCandidateSeparator(_ character: Character) -> Bool {
+        isSpaceSeparator(character) || isDashSeparator(character)
     }
 
     private static func service(from metadata: MessageMetadata) -> String? {
