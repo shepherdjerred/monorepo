@@ -327,6 +327,7 @@ export const customsRouter = router({
       });
       const voiceReturn = result.applied
         ? returnCustomResultPlayersToLobby({
+            prisma,
             snapshot: result.snapshot,
             nightId: input.nightId,
             source: "manual",
@@ -494,7 +495,6 @@ export const customsRouter = router({
       if (cleanup.applied) publishCustomSnapshot(cleanup.snapshot);
       return { ...broadcastResult, snapshot: cleanup.snapshot };
     }),
-
   historyBootstrap: customsHistoryBootstrapProcedure,
   historyDetail: customsHistoryDetailProcedure,
 });

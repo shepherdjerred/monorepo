@@ -93,6 +93,7 @@ export async function handleCustomRiotCallback(
       const voiceReturn =
         mutation.snapshot.currentGame?.id === game.id
           ? returnCustomResultPlayersToLobby({
+              prisma,
               snapshot: mutation.snapshot,
               nightId: metadata.nightId,
               source: "riot",

@@ -27,7 +27,10 @@ import {
 } from "#src/customs/snapshot.ts";
 import { publishCustomSnapshot } from "#src/customs/socket.ts";
 import { createSingleFlightRunner } from "#src/customs/single-flight.ts";
-import { returnCustomResultPlayersToLobby } from "#src/customs/result-voice.ts";
+import {
+  retryPendingCustomResultVoice,
+  returnCustomResultPlayersToLobby,
+} from "#src/customs/result-voice.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -209,6 +212,7 @@ async function pollResult(
       const voiceReturn =
         mutation.snapshot.currentGame?.id === game.id
           ? returnCustomResultPlayersToLobby({
+              prisma: database,
               snapshot: mutation.snapshot,
               nightId,
               source: "riot",
@@ -398,6 +402,7 @@ export async function reconcileCustomNights(
   }
   await reconcileEndedVoiceCleanup(database);
   await reconcilePendingRecruitmentSync(database);
+  await retryPendingCustomResultVoice(database);
   await retryPendingCustomImports(database);
 }
 
