@@ -735,6 +735,42 @@ test("keeps native values visible when labels exceed the description budget", ()
   }
 });
 
+test("truncates oversized first rows at grapheme boundaries", () => {
+  const columns = [
+    { key: "label", label: "Label", format: "text" as const },
+    ...Array.from({ length: 19 }, (_, index) => ({
+      key: `metric-${index.toString()}`,
+      label: "m".repeat(155),
+      format: "text" as const,
+    })),
+  ];
+  const snapshot = VisualizationSnapshotSchema.parse({
+    ...scoutTestVisualization,
+    kind: "LIST",
+  });
+  const oversizedPreview = ReportAiPreviewSummarySchema.parse({
+    columns,
+    rows: [
+      {
+        label: "r".repeat(159),
+        values: Array.from({ length: 19 }, (_, index) => ({
+          column: `metric-${index.toString()}`,
+          value: "😀".repeat(80),
+        })),
+      },
+    ],
+    rowsReturned: 1,
+    rowsScanned: 1,
+    renderKind: "LIST",
+  });
+
+  const description = visualizationToEmbed(snapshot, oversizedPreview)?.data
+    .description;
+  expect(description).toBeDefined();
+  expect(description).not.toContain("�");
+  expect(description).toContain("Visualization truncated");
+});
+
 test("renders percent-stack snapshot values instead of raw preview values", () => {
   const snapshot = structuredClone(scoutTestVisualization);
   snapshot.display.stack = "percent";

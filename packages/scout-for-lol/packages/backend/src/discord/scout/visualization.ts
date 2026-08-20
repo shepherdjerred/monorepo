@@ -154,7 +154,7 @@ function truncateLines(description: string, available: number): string {
   }
   const prefix = lines.join("\n");
   if (prefix.length === 0) {
-    return description.slice(0, available);
+    return truncateNativeCell(description, available);
   }
   return prefix;
 }
