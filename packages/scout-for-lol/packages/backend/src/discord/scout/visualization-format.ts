@@ -20,6 +20,27 @@ export function formatPreviewValue(
   return value === null ? "Unknown" : formatReportDisplayValue(column, value);
 }
 
+export function formatPreviewValueWithEvidence(
+  snapshot: VisualizationSnapshot,
+  column: ReportAiPreviewSummary["columns"][number],
+  row: NativeRow,
+): string {
+  const value = formatPreviewValue(column, requireRowValue(row, column.key));
+  const series = snapshot.series.find((item) => item.id === column.key);
+  if (series === undefined) {
+    return value;
+  }
+  const rowDimensions = new Set(row.key.split(" • "));
+  const point = series.points.find(
+    (item) =>
+      item.key === row.key ||
+      item.label === row.label ||
+      rowDimensions.has(item.key) ||
+      rowDimensions.has(item.label),
+  );
+  return `${value}${formatConfidenceInterval(snapshot, series, point)}`;
+}
+
 export function requireRowValue(
   row: NativeRow,
   column: string,
@@ -42,15 +63,11 @@ export function formatNativeSeriesValue(
     requireNumericRowValue(row, series.id),
   );
   const point = series.points.find((item) => item.key === row.key);
-  const confidenceInterval = point?.evidence.confidenceInterval;
-  const confidenceIntervalText =
-    confidenceInterval === null || confidenceInterval === undefined
-      ? ""
-      : ` · 95% CI ${formatSeriesValue(
-          snapshot,
-          series,
-          confidenceInterval.lower,
-        )}–${formatSeriesValue(snapshot, series, confidenceInterval.upper)}`;
+  const confidenceIntervalText = formatConfidenceInterval(
+    snapshot,
+    series,
+    point,
+  );
   if (
     point === undefined ||
     (snapshot.temporal?.comparison === undefined &&
@@ -68,6 +85,21 @@ export function formatNativeSeriesValue(
       ? "Unknown"
       : `${(percentage * 100).toFixed(1)}%`
   }`;
+}
+
+function formatConfidenceInterval(
+  snapshot: VisualizationSnapshot,
+  series: TemporalSeries,
+  point: TemporalSeries["points"][number] | undefined,
+): string {
+  const confidenceInterval = point?.evidence.confidenceInterval;
+  return confidenceInterval === null || confidenceInterval === undefined
+    ? ""
+    : ` · 95% CI ${formatSeriesValue(
+        snapshot,
+        series,
+        confidenceInterval.lower,
+      )}–${formatSeriesValue(snapshot, series, confidenceInterval.upper)}`;
 }
 
 export function formatSeriesValue(

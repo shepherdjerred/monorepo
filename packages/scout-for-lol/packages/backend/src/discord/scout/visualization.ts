@@ -13,9 +13,8 @@ import { visualizationSnapshotToImage } from "@scout-for-lol/report";
 import {
   formatAbsoluteDelta,
   formatNativeSeriesValue,
-  formatPreviewValue,
+  formatPreviewValueWithEvidence,
   formatSeriesValue,
-  requireRowValue,
   type NativeRow,
   type NativeRowValue,
 } from "#src/discord/scout/visualization-format.ts";
@@ -276,7 +275,7 @@ function formatTable(
         )
       : previewMetricColumns(source.preview).map((column) =>
           escapeTableCell(
-            formatPreviewValue(column, requireRowValue(row, column.key)),
+            formatPreviewValueWithEvidence(snapshot, column, row),
           ),
         )),
   ]);
@@ -455,10 +454,7 @@ function formatRowValues(
 ): string[] {
   if (preview !== null) {
     return previewMetricColumns(preview).map((column) => {
-      const value = formatPreviewValue(
-        column,
-        requireRowValue(row, column.key),
-      );
+      const value = formatPreviewValueWithEvidence(snapshot, column, row);
       return `${escapeMarkdown(column.label)}: ${escapeMarkdown(value)}`;
     });
   }

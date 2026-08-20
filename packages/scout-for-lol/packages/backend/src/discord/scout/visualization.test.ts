@@ -514,6 +514,12 @@ test("preserves confidence intervals in native temporal rows", () => {
   expect(visualizationToEmbed(snapshot)?.data.description).toContain(
     "95% CI 75.0%–100.0%",
   );
+  expect(
+    visualizationToEmbed(
+      VisualizationSnapshotSchema.parse({ ...snapshot, temporal: null }),
+      preview,
+    )?.data.description,
+  ).toContain("95% CI 75.0%–100.0%");
 });
 
 test("renders percent-stack snapshot values instead of raw preview values", () => {
