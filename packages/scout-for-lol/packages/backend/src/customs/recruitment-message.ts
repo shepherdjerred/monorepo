@@ -36,6 +36,12 @@ const RecruitmentCleanupPayloadSchema = z.object({
   channelId: z.string(),
   replacedMessageId: z.string().nullable(),
 });
+const RecruitmentSendPayloadSchema = z.object({
+  deliveryId: z.uuid(),
+  channelId: z.string(),
+  createdAt: z.iso.datetime(),
+  replacedMessageId: z.string().nullable(),
+});
 
 function isUnknownDiscordMessage(error: unknown): boolean {
   const parsed = DiscordApiErrorSchema.safeParse(error);
@@ -105,6 +111,79 @@ async function cleanupPendingRecruitmentMessages(params: {
   }
 }
 
+async function recoverPendingRecruitmentMessage(params: {
+  prisma: ExtendedPrismaClient;
+  snapshot: CustomNightSnapshot;
+}): Promise<CustomNightSnapshot | null> {
+  const pending = await params.prisma.customAuditEvent.findMany({
+    where: {
+      nightId: params.snapshot.id,
+      action: "RECRUITMENT_MESSAGE_SEND_PENDING",
+    },
+    orderBy: { createdAt: "asc" },
+  });
+  for (const event of pending) {
+    const payload = RecruitmentSendPayloadSchema.parse(
+      JSON.parse(event.payload),
+    );
+    const channel = await customsDiscordClient.channels.fetch(
+      payload.channelId,
+    );
+    if (channel === null || !channel.isTextBased() || channel.isDMBased()) {
+      throw new Error(
+        "Recruitment recovery channel is not a guild text channel",
+      );
+    }
+    const messages = await channel.messages.fetch({ limit: 100 });
+    const message = messages.find(
+      (candidate) => candidate.nonce === payload.deliveryId,
+    );
+    if (message === undefined) {
+      await params.prisma.customAuditEvent.update({
+        where: { id: event.id },
+        data: {
+          action: "RECRUITMENT_MESSAGE_SEND_ABANDONED",
+          payload: JSON.stringify({
+            ...payload,
+            abandonedAt: new Date().toISOString(),
+          }),
+        },
+      });
+      continue;
+    }
+    const mutation = await commitCustomMutation({
+      prisma: params.prisma,
+      nightId: params.snapshot.id,
+      expectedRevision: params.snapshot.revision,
+      actorDiscordId: "SCOUT",
+      action: "RECRUITMENT_MESSAGE_RECOVERED",
+      payload: {
+        messageId: message.id,
+        channelId: payload.channelId,
+        deliveryId: payload.deliveryId,
+      },
+      update: (current) => ({
+        ...current,
+        recruitmentMessageId: message.id,
+      }),
+    });
+    if (!mutation.applied) return mutation.snapshot;
+    await params.prisma.customAuditEvent.update({
+      where: { id: event.id },
+      data: {
+        action: "RECRUITMENT_MESSAGE_SENT",
+        payload: JSON.stringify({
+          ...payload,
+          messageId: message.id,
+          recoveredAt: new Date().toISOString(),
+        }),
+      },
+    });
+    return mutation.snapshot;
+  }
+  return null;
+}
+
 async function syncLatestCustomRecruitmentMessage(params: {
   prisma: ExtendedPrismaClient;
   nightId: string;
@@ -116,6 +195,11 @@ async function syncLatestCustomRecruitmentMessage(params: {
     prisma: params.prisma,
     nightId: params.nightId,
   });
+  const recovered = await recoverPendingRecruitmentMessage({
+    prisma: params.prisma,
+    snapshot,
+  });
+  if (recovered !== null) return recovered;
   const channel = await customsDiscordClient.channels.fetch(
     snapshot.launchChannelId,
   );
@@ -135,13 +219,50 @@ async function syncLatestCustomRecruitmentMessage(params: {
   }
   if (snapshot.state === "ENDED") return snapshot;
   const replacedMessageId = snapshot.recruitmentMessageId;
-  const message = await channel.send({
-    embeds: [recruitmentEmbed(snapshot)],
-  });
-  const mutation = await commitCustomMutation({
+  const deliveryId = globalThis.crypto.randomUUID();
+  const pending = await commitCustomMutation({
     prisma: params.prisma,
     nightId: snapshot.id,
     expectedRevision: snapshot.revision,
+    actorDiscordId: "SCOUT",
+    action: "RECRUITMENT_MESSAGE_SEND_PENDING",
+    payload: {
+      deliveryId,
+      channelId: channel.id,
+      createdAt: new Date().toISOString(),
+      replacedMessageId,
+    },
+    update: (current) => current,
+  });
+  if (!pending.applied) return pending.snapshot;
+  let message;
+  try {
+    message = await channel.send({
+      embeds: [recruitmentEmbed(snapshot)],
+      nonce: deliveryId,
+    });
+  } catch (error) {
+    await params.prisma.customAuditEvent.updateMany({
+      where: {
+        nightId: snapshot.id,
+        action: "RECRUITMENT_MESSAGE_SEND_PENDING",
+        payload: { contains: deliveryId },
+      },
+      data: {
+        action: "RECRUITMENT_MESSAGE_SEND_FAILED",
+        payload: JSON.stringify({
+          deliveryId,
+          channelId: channel.id,
+          failedAt: new Date().toISOString(),
+        }),
+      },
+    });
+    throw error;
+  }
+  const mutation = await commitCustomMutation({
+    prisma: params.prisma,
+    nightId: snapshot.id,
+    expectedRevision: pending.snapshot.revision,
     actorDiscordId: "SCOUT",
     action:
       replacedMessageId === null
@@ -154,7 +275,40 @@ async function syncLatestCustomRecruitmentMessage(params: {
     },
     update: (current) => ({ ...current, recruitmentMessageId: message.id }),
   });
-  if (mutation.applied) return mutation.snapshot;
+  if (mutation.applied) {
+    await params.prisma.customAuditEvent.updateMany({
+      where: {
+        nightId: snapshot.id,
+        action: "RECRUITMENT_MESSAGE_SEND_PENDING",
+        payload: { contains: deliveryId },
+      },
+      data: {
+        action: "RECRUITMENT_MESSAGE_SENT",
+        payload: JSON.stringify({
+          deliveryId,
+          channelId: channel.id,
+          messageId: message.id,
+          sentAt: new Date().toISOString(),
+        }),
+      },
+    });
+    return mutation.snapshot;
+  }
+  await params.prisma.customAuditEvent.updateMany({
+    where: {
+      nightId: snapshot.id,
+      action: "RECRUITMENT_MESSAGE_SEND_PENDING",
+      payload: { contains: deliveryId },
+    },
+    data: {
+      action: "RECRUITMENT_MESSAGE_CLEANUP_PENDING",
+      payload: JSON.stringify({
+        messageId: message.id,
+        channelId: channel.id,
+        replacedMessageId,
+      }),
+    },
+  });
   try {
     await message.delete();
   } catch (error) {

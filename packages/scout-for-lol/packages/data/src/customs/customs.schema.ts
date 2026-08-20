@@ -150,6 +150,8 @@ export const CustomGameSnapshotSchema = z.object({
     .object({
       id: z.uuid(),
       startedAt: z.iso.datetime(),
+      teamAVoiceChannelId: z.string().min(1).nullable().default(null),
+      teamBVoiceChannelId: z.string().min(1).nullable().default(null),
     })
     .nullable()
     .default(null),

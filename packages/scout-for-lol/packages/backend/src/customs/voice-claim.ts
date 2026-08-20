@@ -121,6 +121,8 @@ export async function claimVoiceArrangement(params: {
           voiceArrangementProvisioning: {
             id: claimId,
             startedAt: params.now.toISOString(),
+            teamAVoiceChannelId: null,
+            teamBVoiceChannelId: null,
           },
         },
       });
