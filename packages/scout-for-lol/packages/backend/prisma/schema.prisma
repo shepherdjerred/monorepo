@@ -1175,6 +1175,7 @@ model CustomGame {
   resultDisagreement Boolean   @default(false)
   resultRequestedAt  DateTime?
   importedAt         DateTime?
+  importError        String?
   voiceReady         Boolean   @default(false)
   voiceOverride      Boolean   @default(false)
   voiceError         String?

@@ -15,6 +15,13 @@ import { refreshSnapshot } from "#src/customs/snapshot.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { getChampionDisplayName } from "#src/utils/champion.ts";
 
+export class TerminalCustomMatchImportError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TerminalCustomMatchImportError";
+  }
+}
+
 function enrichedParticipants(
   participants: readonly CustomGameParticipant[],
   matchParticipants: readonly {
@@ -28,7 +35,7 @@ function enrichedParticipants(
       (candidate) => candidate.puuid === participant.puuid,
     );
     if (matchParticipant === undefined)
-      throw new Error(
+      throw new TerminalCustomMatchImportError(
         `${participant.displayName} is absent from Match-V5 data`,
       );
     return {
@@ -75,6 +82,7 @@ async function importHistoricalGame(params: {
       where: { id: params.gameId, importedAt: null },
       data: {
         importedAt: new Date(),
+        importError: null,
         matchSnapshot: JSON.stringify(params.match),
         snapshot: JSON.stringify({
           ...params.gameSnapshot,
@@ -120,7 +128,8 @@ export async function importCustomMatchDetails(params: {
   if (
     row?.riotMatchId === undefined ||
     row.riotMatchId === null ||
-    row.importedAt !== null
+    row.importedAt !== null ||
+    row.importError !== null
   )
     return null;
   const gameSnapshot = CustomGameSnapshotSchema.parse(JSON.parse(row.snapshot));
@@ -133,7 +142,9 @@ export async function importCustomMatchDetails(params: {
     gameSnapshot.tournamentCode !== null &&
     match.info.tournamentCode !== gameSnapshot.tournamentCode
   ) {
-    throw new Error("Match-V5 Tournament code does not match the custom game");
+    throw new TerminalCustomMatchImportError(
+      "Match-V5 Tournament code does not match the custom game",
+    );
   }
   const participants = enrichedParticipants(
     gameSnapshot.participants,
@@ -147,7 +158,12 @@ export async function importCustomMatchDetails(params: {
       },
     },
   });
-  if (previousRow !== null && previousRow.importedAt === null) return null;
+  if (
+    previousRow !== null &&
+    previousRow.importedAt === null &&
+    previousRow.importError === null
+  )
+    return null;
   const previousParticipants =
     previousRow === null
       ? []
@@ -196,10 +212,47 @@ export async function importCustomMatchDetails(params: {
         data: {
           importedAt: new Date(),
           matchSnapshot: JSON.stringify(match),
+          importError: null,
         },
       });
       if (claimed.count !== 1)
         throw new Error("Custom game import was already recorded");
     },
+  });
+}
+
+export async function recordTerminalCustomMatchImportFailure(params: {
+  prisma: ExtendedPrismaClient;
+  gameId: string;
+  error: TerminalCustomMatchImportError;
+}): Promise<void> {
+  const message = params.error.message;
+  await params.prisma.$transaction(async (transaction) => {
+    const game = await transaction.customGame.findUnique({
+      where: { id: params.gameId },
+      select: { nightId: true, night: { select: { revision: true } } },
+    });
+    if (game === null)
+      throw new Error("Custom game not found during import failure recording");
+    const claimed = await transaction.customGame.updateMany({
+      where: {
+        id: params.gameId,
+        importedAt: null,
+        importError: null,
+      },
+      data: { importError: message },
+    });
+    if (claimed.count !== 1) return;
+    await transaction.customAuditEvent.create({
+      data: {
+        nightId: game.nightId,
+        gameId: params.gameId,
+        revision: game.night.revision,
+        actorId: "SCOUT",
+        action: "MATCH_V5_IMPORT_FAILED",
+        payload: JSON.stringify({ error: message }),
+        source: "RIOT",
+      },
+    });
   });
 }

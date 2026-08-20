@@ -3,7 +3,11 @@ import configuration from "#src/configuration.ts";
 import { cleanupCustomVoice } from "#src/customs/voice.ts";
 import { transitionCustomGame } from "#src/customs/game-machine.ts";
 import { transitionCustomNight } from "#src/customs/night-machine.ts";
-import { importCustomMatchDetails } from "#src/customs/match-import.ts";
+import {
+  importCustomMatchDetails,
+  recordTerminalCustomMatchImportFailure,
+  TerminalCustomMatchImportError,
+} from "#src/customs/match-import.ts";
 import {
   commitCustomMutation,
   getCustomNight,
@@ -207,7 +211,7 @@ export async function retryPendingCustomImports(
   importGame: typeof importCustomMatchDetails = importCustomMatchDetails,
 ): Promise<void> {
   const games = await database.customGame.findMany({
-    where: { state: "VERIFIED", importedAt: null },
+    where: { state: "VERIFIED", importedAt: null, importError: null },
     orderBy: [{ completedAt: "asc" }, { sequence: "asc" }],
     select: { id: true, nightId: true },
   });
@@ -219,6 +223,27 @@ export async function retryPendingCustomImports(
       });
       if (mutation?.applied === true) publishCustomSnapshot(mutation.snapshot);
     } catch (error) {
+      if (error instanceof TerminalCustomMatchImportError) {
+        try {
+          await recordTerminalCustomMatchImportFailure({
+            prisma: database,
+            gameId: game.id,
+            error,
+          });
+          logger.warn("Custom game import permanently failed", {
+            error,
+            gameId: game.id,
+            nightId: game.nightId,
+          });
+        } catch (recordingError) {
+          logger.error("Could not record terminal custom game import failure", {
+            error: recordingError,
+            gameId: game.id,
+            nightId: game.nightId,
+          });
+        }
+        continue;
+      }
       logger.error("Custom game import retry failed", {
         error,
         gameId: game.id,

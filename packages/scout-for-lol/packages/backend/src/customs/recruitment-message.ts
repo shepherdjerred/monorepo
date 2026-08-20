@@ -31,10 +31,56 @@ function recruitmentEmbed(snapshot: CustomNightSnapshot): EmbedBuilder {
 
 const recruitmentSyncQueue = new Map<string, Promise<undefined>>();
 const DiscordApiErrorSchema = z.object({ code: z.number() });
+const RecruitmentCleanupPayloadSchema = z.object({
+  messageId: z.string(),
+  channelId: z.string(),
+  replacedMessageId: z.string().nullable(),
+});
 
 function isUnknownDiscordMessage(error: unknown): boolean {
   const parsed = DiscordApiErrorSchema.safeParse(error);
   return parsed.success && parsed.data.code === 10_008;
+}
+
+async function cleanupPendingRecruitmentMessages(params: {
+  prisma: ExtendedPrismaClient;
+  nightId: string;
+}): Promise<void> {
+  const pending = await params.prisma.customAuditEvent.findMany({
+    where: {
+      nightId: params.nightId,
+      action: "RECRUITMENT_MESSAGE_CLEANUP_PENDING",
+    },
+    orderBy: { createdAt: "asc" },
+  });
+  for (const event of pending) {
+    const payload = RecruitmentCleanupPayloadSchema.parse(
+      JSON.parse(event.payload),
+    );
+    const channel = await customsDiscordClient.channels.fetch(
+      payload.channelId,
+    );
+    if (channel === null || !channel.isTextBased() || channel.isDMBased())
+      throw new Error(
+        "Recruitment cleanup channel is not a guild text channel",
+      );
+    try {
+      const message = await channel.messages.fetch(payload.messageId);
+      await message.delete();
+    } catch (error) {
+      if (!isUnknownDiscordMessage(error)) throw error;
+    }
+    await params.prisma.customAuditEvent.update({
+      where: { id: event.id },
+      data: {
+        action: "RECRUITMENT_MESSAGE_CLEANED",
+        payload: JSON.stringify({
+          ...payload,
+          cleanedAt: new Date().toISOString(),
+        }),
+      },
+    });
+  }
 }
 
 async function syncLatestCustomRecruitmentMessage(params: {
@@ -44,6 +90,10 @@ async function syncLatestCustomRecruitmentMessage(params: {
   const snapshot = await getCustomNight(params.prisma, params.nightId);
   if (snapshot === null)
     throw new Error("Custom night disappeared while syncing recruitment");
+  await cleanupPendingRecruitmentMessages({
+    prisma: params.prisma,
+    nightId: params.nightId,
+  });
   const channel = await customsDiscordClient.channels.fetch(
     snapshot.launchChannelId,
   );
@@ -82,7 +132,26 @@ async function syncLatestCustomRecruitmentMessage(params: {
     update: (current) => ({ ...current, recruitmentMessageId: message.id }),
   });
   if (mutation.applied) return mutation.snapshot;
-  await message.delete();
+  try {
+    await message.delete();
+  } catch (error) {
+    if (isUnknownDiscordMessage(error)) return mutation.snapshot;
+    await params.prisma.customAuditEvent.create({
+      data: {
+        nightId: snapshot.id,
+        revision: mutation.snapshot.revision,
+        actorId: "SCOUT",
+        action: "RECRUITMENT_MESSAGE_CLEANUP_PENDING",
+        payload: JSON.stringify({
+          messageId: message.id,
+          channelId: channel.id,
+          replacedMessageId,
+        }),
+        source: "DISCORD",
+      },
+    });
+    throw error;
+  }
   return mutation.snapshot;
 }
 
