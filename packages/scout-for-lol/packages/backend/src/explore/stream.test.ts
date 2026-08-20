@@ -8,6 +8,7 @@ import {
 } from "@scout-for-lol/data";
 import {
   createExploreStreamState,
+  drainExploreStreams,
   emitExploreAnswerSnapshot,
   emitExploreStreamChunk,
 } from "#src/explore/stream.ts";
@@ -171,6 +172,62 @@ describe("explore stream mapping", () => {
     expect(event.message).not.toContain("xxxx");
     // The schema is what would have thrown, so parsing is the real assertion.
     expect(ExploreStreamEventSchema.parse(event)).toEqual(event);
+  });
+
+  test("drains both agent streams concurrently to completion", async () => {
+    let streamStarted = false;
+    let partialOutputStreamStarted = false;
+    let streamCompleted = false;
+    let partialOutputStreamCompleted = false;
+    let resolveStreamStarted: (() => void) | undefined;
+    let resolvePartialOutputStreamStarted: (() => void) | undefined;
+    const streamStartedPromise = new Promise<void>((resolve) => {
+      resolveStreamStarted = resolve;
+    });
+    const partialOutputStreamStartedPromise = new Promise<void>((resolve) => {
+      resolvePartialOutputStreamStarted = resolve;
+    });
+
+    async function* stream(): AsyncGenerator {
+      streamStarted = true;
+      resolveStreamStarted?.();
+      await partialOutputStreamStartedPromise;
+      yield { type: "not-a-real-stream-part" };
+      streamCompleted = true;
+    }
+
+    async function* partialOutputStream(): AsyncGenerator {
+      partialOutputStreamStarted = true;
+      resolvePartialOutputStreamStarted?.();
+      await streamStartedPromise;
+      yield { answer: "Jinx leads." };
+      partialOutputStreamCompleted = true;
+    }
+
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        drainExploreStreams(
+          { stream: stream(), partialOutputStream: partialOutputStream() },
+          () => Promise.resolve(),
+        ),
+        new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(
+            () => reject(new Error("stream drain did not run concurrently")),
+            1000,
+          );
+        }),
+      ]);
+    } finally {
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
+    }
+
+    expect(streamStarted).toBe(true);
+    expect(partialOutputStreamStarted).toBe(true);
+    expect(streamCompleted).toBe(true);
+    expect(partialOutputStreamCompleted).toBe(true);
   });
 
   test("a stream error chunk throws rather than ending the turn quietly", () => {

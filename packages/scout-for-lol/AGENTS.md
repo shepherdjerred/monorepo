@@ -781,16 +781,20 @@ SJ-147.
   Executing a query is deliberately not shared — it is the one operation whose
   meaning depends on scope.
 - **Prose streams from `object` chunks, never `text-delta`.** The agent runs
-  with `structuredOutput`, so a text delta is a fragment of the raw JSON the
-  model is emitting; Mastra parses it as it arrives and emits whole
-  `Partial<OUTPUT>` snapshots on the same `fullStream`. Two things this
+  with `structuredOutput`, so a text delta on `stream.stream` is a fragment of
+  the raw JSON the model is emitting. The AI SDK's `partialOutputStream` is a
+  separate stream that progressively parses that JSON and emits whole
+  `Partial<OUTPUT>` snapshots; the prose the page renders comes from there.
+  Both streams are views over one underlying run and must be drained
+  concurrently to completion — abandoning either stalls the other once its
+  buffer fills, and the turn hangs rather than fails; cancellation goes
+  through the shared `AbortSignal`, not an early `break`. Two things this
   depends on break _silently_ — the page keeps working and simply stops
   streaming — so both are pinned by tests in `explore/stream.test.ts`:
   `answer` must stay the **first** field of `ExploreAnswerSchema` (a snapshot
-  only carries keys the model has emitted so far), and the `fullStream` loop
-  must drain to completion (cancelling calls `removeAllListeners()` on an
-  emitter shared by every consumer of that run). The agent also logs a warning
-  if a turn finishes having streamed nothing while holding an answer.
+  only carries keys the model has emitted so far), and the `partialOutputStream`
+  loop must drain to completion. The agent also logs a warning if a turn
+  finishes having streamed nothing while holding an answer.
 - **Turns are a tree, not a list.** Editing a question or regenerating an
   answer appends a sibling under the same parent; nothing is ever deleted to
   make a version. `ExploreConversation.currentLeafId` says which path is on
