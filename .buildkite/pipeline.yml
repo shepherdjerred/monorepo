@@ -1109,6 +1109,8 @@ steps:
         - "scripts/lib/**"
         - "packages/homelab/src/tofu/**"
         - "packages/homelab/scripts/tofu-stack.ts"
+        - "packages/homelab/scripts/tofu-validation.ts"
+        - "packages/terraform-provider-openrouter-byok/**"
         - "packages/homelab/scripts/helm-release-core.ts"
         - "packages/homelab/scripts/helm-push.ts"
         - "packages/homelab/scripts/argocd.ts"

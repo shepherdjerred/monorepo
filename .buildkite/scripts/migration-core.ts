@@ -359,6 +359,8 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     ...workspacePaths,
     "packages/homelab/src/tofu",
     "packages/homelab/scripts/tofu-stack.ts",
+    "packages/homelab/scripts/tofu-validation.ts",
+    "packages/terraform-provider-openrouter-byok",
     "scripts/lib/run.ts",
     "scripts/lib/transient.ts",
   ],
