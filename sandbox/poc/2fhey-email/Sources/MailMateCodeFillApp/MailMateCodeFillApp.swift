@@ -20,9 +20,10 @@ final class MailMateCodeFillAppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         // The helper launches this app hidden as a short-lived reconciliation broker. If the
-        // setup window is closed, let the process exit so the next helper invocation can launch
-        // a fresh broker instead of finding an idle app with no SetupView observer.
-        true
+        // setup window is closed, let that broker exit after its records are reconciled. A normal
+        // setup app remains alive so the provider's post-consumption notification still reaches
+        // an identity-store owner after the user closes the window.
+        Self.launchedAsBroker
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
