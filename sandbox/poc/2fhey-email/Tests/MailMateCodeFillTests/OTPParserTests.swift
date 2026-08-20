@@ -92,6 +92,7 @@ func rejectsFalsePositives() {
     #expect(OTPParser().parse(body: "Open example.com:8080/482913 to continue.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Open example.xn--p1ai/482913 to continue.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Expires on Aug 20, 2026.", metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "Expires on 20 August 2026.", metadata: metadata) == nil)
     #expect(OTPParser().parse(body: "Open example.com?code=482913 to continue.", metadata: metadata) == nil)
 }
 
