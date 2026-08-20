@@ -9,7 +9,10 @@ import {
   recordPendingCustomRecruitmentSync,
   syncCustomRecruitmentMessage,
 } from "#src/customs/recruitment-message.ts";
-import { publishCustomSnapshot } from "#src/customs/socket.ts";
+import {
+  publishCustomSnapshot,
+  publishCustomSnapshotIfCurrent,
+} from "#src/customs/socket.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -48,7 +51,8 @@ export async function broadcast<
     applied?: boolean;
   },
 >(result: T): Promise<T> {
-  if (result.applied !== false) publishCustomSnapshot(result.snapshot);
+  if (result.applied !== false)
+    publishCustomSnapshotIfCurrent(prisma, result.snapshot);
   if (result.applied === false) return result;
   try {
     const snapshot = await syncCustomRecruitmentMessage({

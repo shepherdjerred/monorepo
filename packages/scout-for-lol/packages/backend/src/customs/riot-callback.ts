@@ -92,7 +92,7 @@ export async function handleCustomRiotCallback(
     if (mutation.applied) {
       const shouldReturnVoicePlayers =
         mutation.snapshot.currentGame?.id === game.id;
-      await publishCustomSnapshotIfCurrent(prisma, mutation.snapshot);
+      publishCustomSnapshotIfCurrent(prisma, mutation.snapshot);
       if (shouldReturnVoicePlayers) {
         void returnCustomResultPlayersToLobby({
           prisma,

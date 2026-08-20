@@ -155,23 +155,20 @@ export function publishCustomSnapshot(snapshot: CustomNightSnapshot): void {
   }
 }
 
-export async function publishCustomSnapshotIfCurrent(
+export function publishCustomSnapshotIfCurrent(
   database: ExtendedPrismaClient,
   snapshot: CustomNightSnapshot,
-): Promise<void> {
-  await Promise.all(
-    [...(socketsByGuild.get(snapshot.guildId) ?? [])].map((socket) => {
-      const previous = snapshotDeliveryQueues.get(socket) ?? Promise.resolve();
-      const delivery = deliverCurrentSnapshotAfter(
-        previous,
-        socket,
-        database,
-        snapshot,
-      );
-      snapshotDeliveryQueues.set(socket, delivery);
-      return delivery;
-    }),
-  );
+): void {
+  for (const socket of socketsByGuild.get(snapshot.guildId) ?? []) {
+    const previous = snapshotDeliveryQueues.get(socket) ?? Promise.resolve();
+    const delivery = deliverCurrentSnapshotAfter(
+      previous,
+      socket,
+      database,
+      snapshot,
+    );
+    snapshotDeliveryQueues.set(socket, delivery);
+  }
 }
 
 export async function shouldPublishCustomSnapshot(

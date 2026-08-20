@@ -491,7 +491,7 @@ export const customsRouter = router({
           teamBVoiceChannelId: null,
         }),
       });
-      if (cleanup.applied) publishCustomSnapshot(cleanup.snapshot);
+      if (cleanup.applied) await broadcast(cleanup);
       return { ...broadcastResult, snapshot: cleanup.snapshot };
     }),
   historyBootstrap: customsHistoryBootstrapProcedure,

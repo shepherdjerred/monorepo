@@ -230,7 +230,7 @@ async function pollResult(
       if (!mutation.applied) continue;
       const shouldReturnVoicePlayers =
         mutation.snapshot.currentGame?.id === game.id;
-      await publishCustomSnapshotIfCurrent(database, mutation.snapshot);
+      publishCustomSnapshotIfCurrent(database, mutation.snapshot);
       if (shouldReturnVoicePlayers) {
         await returnCustomResultPlayersToLobby({
           prisma: database,
@@ -294,7 +294,8 @@ async function reconcileEndedVoiceCleanup(
             teamBVoiceChannelId: null,
           }),
       });
-      if (mutation.applied) publishCustomSnapshot(mutation.snapshot);
+      if (mutation.applied)
+        publishCustomSnapshotIfCurrent(database, mutation.snapshot);
     } catch (error) {
       logger.error("Ended custom night voice cleanup failed", {
         error,
