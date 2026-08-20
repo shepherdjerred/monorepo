@@ -1,12 +1,10 @@
 import {
   ActionRowBuilder,
-  AttachmentBuilder,
   ButtonBuilder,
   ButtonStyle,
   escapeMarkdown,
 } from "discord.js";
 import type { ExploreMessage } from "@scout-for-lol/data";
-import { visualizationSnapshotToImage } from "@scout-for-lol/report";
 import { getExploreConversationUrl } from "#src/discord/commands/links.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import { formatScoutPublishCustomId } from "#src/discord/scout/custom-id.ts";
@@ -28,18 +26,6 @@ export function publicExploreChunks(input: {
     .join("\n");
   return splitMessageIntoChunks(
     `**${escapeMarkdown(input.username)} asked Scout:**\n${quotedQuestion}\n\n${formatAnswer(input.answer)}`,
-  );
-}
-
-export function exploreChartAttachment(
-  message: ExploreMessage,
-): AttachmentBuilder | null {
-  if (message.visualization === null) {
-    return null;
-  }
-  return new AttachmentBuilder(
-    visualizationSnapshotToImage(message.visualization),
-    { name: "scout-explore.png" },
   );
 }
 

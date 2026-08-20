@@ -158,7 +158,9 @@ describe("Scout public publishing", () => {
     expect(publicJson).not.toContain("secret_query");
     expect(publicJson).not.toContain("private trace");
     expect(publicJson).not.toContain("/app/explore/");
-    expect(fake.followUps[0]).toHaveProperty("files");
+    expect(fake.followUps[0]).toHaveProperty("embeds");
+    expect(fake.followUps[0]).not.toHaveProperty("files");
+    expect(publicJson).toContain("Win rates");
     expect(JSON.stringify(fake.edits)).toContain("Posted");
     expect(JSON.stringify(fake.edits)).toContain('"disabled":true');
   });

@@ -16,9 +16,9 @@ import { loadExploreTranscript, startExploreTurn } from "#src/explore/store.ts";
 import {
   exploreActionRow,
   exploreAnswerChunks,
-  exploreChartAttachment,
   NO_GENERATED_MENTIONS,
 } from "#src/discord/scout/messages.ts";
+import { exploreVisualizationPayload } from "#src/discord/scout/visualization.ts";
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
 
 export type ScoutAskInteraction = {
@@ -172,7 +172,7 @@ async function sendPrivateAnswer(
   if (first === undefined) {
     throw new Error("Saved Explore answer had no Discord content.");
   }
-  const chart = exploreChartAttachment(answer);
+  const visualization = exploreVisualizationPayload(answer);
   await interaction.editReply({
     content: first,
     components: [
@@ -183,7 +183,7 @@ async function sendPrivateAnswer(
       }),
     ],
     allowedMentions: NO_GENERATED_MENTIONS,
-    ...(chart === null ? {} : { files: [chart] }),
+    ...visualization,
   });
   for (const content of chunks.slice(1)) {
     await interaction.followUp({
