@@ -273,13 +273,13 @@ async function listMatchJsonKeysForPrefix(
 }
 
 /**
- * Find one raw match by ID near the time its durable retry marker was created.
+ * Find one raw match by ID near the match's game-creation date.
  * Match objects are partitioned by game date, so a small surrounding window
  * handles a midnight boundary without scanning the entire raw store.
  */
 export async function queryMatchById(
   matchId: string,
-  markerCreatedAt: Date,
+  matchCreatedAt: Date,
 ): Promise<RawMatch | undefined> {
   const bucket = configuration.s3BucketName;
   if (bucket === undefined) {
@@ -290,8 +290,8 @@ export async function queryMatchById(
   }
 
   const day = 24 * 60 * 60 * 1000;
-  const startDate = new Date(markerCreatedAt.getTime() - day);
-  const endDate = new Date(markerCreatedAt.getTime() + day);
+  const startDate = new Date(matchCreatedAt.getTime() - day);
+  const endDate = new Date(matchCreatedAt.getTime() + day);
   const client = createS3Client();
 
   for (const prefix of generateDatePrefixes(startDate, endDate)) {

@@ -165,6 +165,7 @@ export async function awardBucksForMatch(
         prismaClient,
         matchId,
         serverId,
+        matchCreatedAt: new Date(matchData.info.gameCreation),
         targets: guildTargets,
         queueType,
         mvpPuuid: mvp?.puuid,
@@ -186,6 +187,7 @@ export async function awardForGuild(input: {
   prismaClient: ExtendedPrismaClient;
   matchId: string;
   serverId: string;
+  matchCreatedAt: Date;
   targets: readonly EarnTarget[];
   queueType: QueueType;
   mvpPuuid: string | undefined;
@@ -199,7 +201,11 @@ export async function awardForGuild(input: {
     where: {
       matchId_serverId: { matchId: input.matchId, serverId },
     },
-    select: { state: true, targetSnapshotJson: true },
+    select: {
+      state: true,
+      targetSnapshotJson: true,
+      matchCreatedAt: true,
+    },
   });
   if (marker?.state === "complete") {
     return [];
@@ -213,8 +219,13 @@ export async function awardForGuild(input: {
           entryCount: 0,
           state: "pending",
           targetSnapshotJson: targetSnapshotJson(input.targets),
+          matchCreatedAt: input.matchCreatedAt,
         },
-        select: { state: true, targetSnapshotJson: true },
+        select: {
+          state: true,
+          targetSnapshotJson: true,
+          matchCreatedAt: true,
+        },
       });
     } catch (error) {
       if (!isUniqueConstraintError(error)) {
@@ -224,7 +235,11 @@ export async function awardForGuild(input: {
         where: {
           matchId_serverId: { matchId: input.matchId, serverId },
         },
-        select: { state: true, targetSnapshotJson: true },
+        select: {
+          state: true,
+          targetSnapshotJson: true,
+          matchCreatedAt: true,
+        },
       });
       if (marker.state === "complete") {
         return [];

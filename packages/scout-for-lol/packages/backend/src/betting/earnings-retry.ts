@@ -30,7 +30,7 @@ const EarnTargetSnapshotSchema = z.array(
 
 type PendingEarningMatchLoader = (
   matchId: string,
-  markerCreatedAt: Date,
+  matchCreatedAt: Date,
 ) => Promise<RawMatch | undefined>;
 
 type PendingEarningMarker = {
@@ -38,6 +38,7 @@ type PendingEarningMarker = {
   serverId: string;
   awardedAt: Date;
   targetSnapshotJson: string;
+  matchCreatedAt: Date;
 };
 
 function queueTypeOf(matchData: RawMatch): QueueType | undefined {
@@ -98,6 +99,7 @@ export async function retryPendingBucksEarnings(
       serverId: true,
       awardedAt: true,
       targetSnapshotJson: true,
+      matchCreatedAt: true,
     },
   });
   const markersByMatch = new Map<string, PendingEarningMarker[]>();
@@ -109,14 +111,14 @@ export async function retryPendingBucksEarnings(
   }
 
   for (const [matchId, markers] of markersByMatch) {
-    const markerCreatedAt = markers[0]?.awardedAt;
-    if (markerCreatedAt === undefined) {
+    const matchCreatedAt = markers[0]?.matchCreatedAt;
+    if (matchCreatedAt === undefined) {
       throw new Error(`Pending Bryan Bucks match ${matchId} has no marker`);
     }
 
     let match: RawMatch | undefined;
     try {
-      match = await loadMatch(matchId, markerCreatedAt);
+      match = await loadMatch(matchId, matchCreatedAt);
     } catch (error) {
       logger.error(`❌ Could not reload Bryan Bucks match ${matchId}:`, error);
       Sentry.captureException(error, {
@@ -154,6 +156,7 @@ export async function retryPendingBucksEarnings(
           prismaClient,
           matchId,
           serverId: marker.serverId,
+          matchCreatedAt: marker.matchCreatedAt,
           targets: targetsFromSnapshot(
             match,
             marker.serverId,

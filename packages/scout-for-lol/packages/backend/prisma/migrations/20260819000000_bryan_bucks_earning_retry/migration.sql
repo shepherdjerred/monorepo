@@ -8,3 +8,9 @@ ADD COLUMN "targetSnapshotJson" TEXT NOT NULL DEFAULT '[]';
 
 ALTER TABLE "BucksMatchEarning"
 ADD COLUMN "retryAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE "BucksMatchEarning"
+ADD COLUMN "matchCreatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+CREATE INDEX "BucksMatchEarning_state_retryAt_idx"
+ON "BucksMatchEarning"("state", "retryAt");

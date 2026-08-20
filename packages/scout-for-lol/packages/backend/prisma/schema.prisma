@@ -990,7 +990,8 @@ model BucksParlayBet {
 // `awardedAt` is refreshed when the pending row completes, so it is the actual
 // award time for completed rows; while pending it is the marker creation time.
 // `retryAt` rotates failed rows out of the bounded recovery batch, and the
-// target snapshot preserves the original guild recipients across config drift.
+// target snapshot preserves the original guild recipients across config drift;
+// matchCreatedAt points S3 recovery at the match's game-date partition.
 //
 // Earnings need their own marker because, unlike settlement, they have no
 // natural per-(match, guild) row to carry the state.
@@ -1006,10 +1007,12 @@ model BucksMatchEarning {
 
   targetSnapshotJson String @default("[]")
   retryAt           DateTime @default(now())
+  matchCreatedAt    DateTime @default(now())
 
   // Number of ledger rows written, so reconciliation is one comparison once
   // the marker is complete.
   entryCount Int
 
   @@id([matchId, serverId])
+  @@index([state, retryAt])
 }
