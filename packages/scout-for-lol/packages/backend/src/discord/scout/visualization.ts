@@ -179,7 +179,8 @@ function formatKpi(snapshot: VisualizationSnapshot): string {
             series,
             point.absoluteDelta ?? null,
           )} · ${
-            point.percentageDelta === null
+            point.percentageDelta === null ||
+            point.percentageDelta === undefined
               ? "Unknown"
               : `${(point.percentageDelta * 100).toFixed(1)}%`
           }`
