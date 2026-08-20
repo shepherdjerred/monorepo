@@ -9,7 +9,10 @@ struct SetupView: View {
     @State private var diagnosticsStatus = ""
     @State private var refreshGeneration = 0
     @State private var expiryRefreshTask: Task<Void, Never>?
+    @State private var refreshRetryTask: Task<Void, Never>?
     @State private var brokerMode = false
+
+    private let maximumRefreshRetries = 3
 
     private let mailMateBundlesURL = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/MailMate/Bundles", isDirectory: true)
@@ -158,7 +161,11 @@ struct SetupView: View {
         )
     }
 
-    private func refreshCredentialIdentities() {
+    private func refreshCredentialIdentities(retryAttempt: Int = 0) {
+        if retryAttempt == 0 {
+            refreshRetryTask?.cancel()
+            refreshRetryTask = nil
+        }
         let startedAt = Date()
         refreshGeneration += 1
         let generation = refreshGeneration
@@ -198,6 +205,7 @@ struct SetupView: View {
                                     }
                                 if success {
                                     CodeFillObservability.appLogger.info("event=identity_refresh outcome=success identity_count=\(identities.count, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
+                                    refreshRetryTask = nil
                                     identityStatus = identities.isEmpty
                                         ? "No unexpired MailMate codes are available yet."
                                         : "Registered \(identities.count) native AutoFill identity entries."
@@ -206,6 +214,10 @@ struct SetupView: View {
                                     let detail = error.map { ": \($0.localizedDescription)" } ?? "."
                                     CodeFillObservability.appLogger.error("event=identity_refresh outcome=error identity_count=\(identities.count, privacy: .public) detail=\(detail, privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
                                     identityStatus = "Could not register AutoFill identities\(detail)"
+                                    scheduleRefreshRetry(after: retryAttempt, reason: "identity_replace")
+                                    if retryAttempt >= maximumRefreshRetries {
+                                        scheduleBrokerShutdownIfNeeded(records: records)
+                                    }
                                 }
                                 }
                             }
@@ -220,8 +232,29 @@ struct SetupView: View {
                     }
                     identityStatus = "Could not read pending MailMate codes: \(error.localizedDescription)"
                     CodeFillObservability.appLogger.error("event=identity_refresh outcome=store_error error=\(CodeFillObservability.errorSummary(error), privacy: .public) duration_ms=\(elapsedMilliseconds(since: startedAt), privacy: .public)")
+                    scheduleRefreshRetry(after: retryAttempt, reason: "store_read")
+                    scheduleBrokerShutdownCheck()
                 }
             }
+        }
+    }
+
+    private func scheduleRefreshRetry(after attempt: Int, reason: String) {
+        guard attempt < maximumRefreshRetries else {
+            CodeFillObservability.appLogger.error("event=identity_refresh outcome=retry_exhausted reason=\(reason, privacy: .public)")
+            return
+        }
+        refreshRetryTask?.cancel()
+        let delay = pow(2, Double(attempt)) * 0.25
+        CodeFillObservability.appLogger.info("event=identity_refresh outcome=retry_scheduled reason=\(reason, privacy: .public) attempt=\(attempt + 1, privacy: .public) delay_ms=\(Int(delay * 1_000), privacy: .public)")
+        refreshRetryTask = Task { @MainActor in
+            do {
+                try await Task.sleep(for: .seconds(delay))
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
+            refreshCredentialIdentities(retryAttempt: attempt + 1)
         }
     }
 
@@ -246,7 +279,12 @@ struct SetupView: View {
     }
 
     private func scheduleBrokerShutdownIfNeeded(records: [OTPRecord]) {
-        guard brokerMode, records.isEmpty, !NSApp.isActive else { return }
+        guard records.isEmpty else { return }
+        scheduleBrokerShutdownCheck()
+    }
+
+    private func scheduleBrokerShutdownCheck() {
+        guard brokerMode, !NSApp.isActive else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             guard brokerMode, !NSApp.isActive else { return }
             Task.detached(priority: .userInitiated) {
