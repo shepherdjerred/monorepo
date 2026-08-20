@@ -7,6 +7,7 @@ import {
   test,
 } from "bun:test";
 import {
+  EXPLORE_STOPPED_CAVEAT,
   DiscordAccountIdSchema,
   type ExploreActiveRun,
   type ExploreStreamEvent,
@@ -15,6 +16,7 @@ import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import {
   ExploreConversationBusyError,
   ExploreRunManager,
+  ExploreRunUnavailableError,
   type ExploreAgentRunner,
 } from "#src/explore/run-manager.ts";
 import {
@@ -90,6 +92,16 @@ function successfulResult(answer: string): ExploreAgentResult {
     visualization: null,
   };
 }
+
+const resolveAfterAbortAgent: ExploreAgentRunner = async (params) => {
+  return await new Promise((resolve) => {
+    params.abortSignal.addEventListener(
+      "abort",
+      () => resolve(successfulResult("Late successful answer")),
+      { once: true },
+    );
+  });
+};
 
 function requiredRun(
   agent: ReturnType<typeof controlledAgent>,
@@ -298,6 +310,32 @@ describe("ExploreRunManager", () => {
     expect(getExploreQuotaStatus({ userId: owner }).activeRun).toBe(false);
   });
 
+  test("a provider resolving after abort cannot turn a stop into success", async () => {
+    const manager = new ExploreRunManager({
+      client: trpc.prisma,
+      runAgent: resolveAfterAbortAgent,
+      timeoutMs: 10_000,
+    });
+    managers.push(manager);
+    const summary = await startNew(manager, "Stop this question");
+    const events: ExploreStreamEvent[] = [];
+    const finished = observeUntilDone(manager, summary, events);
+
+    expect(manager.stop(summary.runId, owner)).toBe(true);
+    expect(await finished).toBe("stopped");
+    const final = events.find((event) => event.type === "final");
+    expect(final?.type === "final" ? final.message.caveats : []).toContain(
+      EXPLORE_STOPPED_CAVEAT,
+    );
+    expect(
+      events.some(
+        (event) =>
+          event.type === "final" &&
+          event.message.content === "Late successful answer",
+      ),
+    ).toBe(false);
+  });
+
   test("graceful shutdown interrupts every active run", async () => {
     const agent = controlledAgent();
     const manager = createManager(agent);
@@ -313,5 +351,17 @@ describe("ExploreRunManager", () => {
     ]);
     expect(manager.list(owner)).toEqual([]);
     expect(getExploreQuotaStatus({ userId: owner }).activeRun).toBe(false);
+  });
+
+  test("graceful shutdown closes admission before draining", async () => {
+    const agent = controlledAgent();
+    const manager = createManager(agent);
+
+    await manager.shutdown();
+
+    expect(startNew(manager, "Too late")).rejects.toBeInstanceOf(
+      ExploreRunUnavailableError,
+    );
+    expect(manager.list(owner)).toEqual([]);
   });
 });

@@ -163,6 +163,7 @@ export async function runPersistedExploreTurn(
         expectedCurrentLeafId: input.started.expectedCurrentLeafId,
         text: streamedAnswer,
         trace,
+        existingMessageId: null,
       });
     } catch (salvageError) {
       logger.error(

@@ -72,6 +72,7 @@ describe("applyStreamEvent", () => {
       runId: RUN_ID,
       conversationId: CONVERSATION,
       questionMessageId: QUESTION_ID,
+      leafIdAtStart: OLD_ANSWER_ID,
       startedAt: "2026-08-18T12:00:00.000Z",
       answer: "Jinx",
       activity: "Querying match data.",
@@ -82,6 +83,7 @@ describe("applyStreamEvent", () => {
     expect(turn.answer).toBe("Jinx wins.");
     expect(turn.activity).toBe("Querying match data.");
     expect(turn.trace).toEqual([]);
+    expect(turn.leafIdAtStart).toBe(OLD_ANSWER_ID);
   });
 
   test("answer deltas accumulate in order", () => {

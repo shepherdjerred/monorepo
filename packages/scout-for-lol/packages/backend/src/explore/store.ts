@@ -76,7 +76,7 @@ type ConversationRow = {
   updatedAt: Date;
 };
 
-type MessageRow = {
+export type MessageRow = {
   id: string;
   parentId: string | null;
   role: string;
@@ -108,7 +108,7 @@ function parseJsonColumn<T>(
   return result.data;
 }
 
-function toMessage(
+export function toMessage(
   row: MessageRow,
   versions: { siblingIds: string[]; index: number; count: number },
 ): ExploreMessage {
@@ -151,7 +151,7 @@ function toConversation(row: ConversationRow): ExploreConversation {
 }
 
 /** Position and sibling ids, derived together so they cannot disagree. */
-function versionsOf(
+export function versionsOf(
   nodes: { id: string; parentId: string | null; createdAt: Date }[],
   messageId: string,
 ): { siblingIds: string[]; index: number; count: number } {

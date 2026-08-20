@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   EXPLORE_RUN_MARKERS_KEY,
   clearSettledExploreRunMarker,
+  createExploreRunMarker,
   loadExploreRunMarkers,
   saveExploreRunMarkers,
   setExploreRunMarker,
@@ -45,6 +46,7 @@ function marker(state: ExploreRunMarker["state"]): ExploreRunMarker {
     runId: RUN_ID,
     conversationId: CONVERSATION_ID,
     questionMessageId: QUESTION_ID,
+    leafIdAtStart: null,
     state,
   };
 }
@@ -60,6 +62,19 @@ describe("Explore run markers", () => {
     expect(raw).not.toContain("prompt");
     expect(raw).not.toContain("answer");
     expect(raw).not.toContain("trace");
+  });
+
+  test("projects active summaries onto the strict local marker shape", () => {
+    const summary = {
+      runId: RUN_ID,
+      conversationId: CONVERSATION_ID,
+      questionMessageId: QUESTION_ID,
+      leafIdAtStart: null,
+      startedAt: "2026-08-20T00:00:00.000Z",
+    };
+    expect(createExploreRunMarker(summary, "running")).toEqual(
+      marker("running"),
+    );
   });
 
   test("invalid or stale storage versions are ignored", () => {
@@ -86,5 +101,29 @@ describe("Explore run markers", () => {
     expect(
       clearSettledExploreRunMarker([marker("running")], CONVERSATION_ID),
     ).toEqual([marker("running")]);
+  });
+
+  test("prunes the oldest settled markers before live markers", () => {
+    const settled = Array.from({ length: 100 }, (_, index) => ({
+      ...marker("completed"),
+      conversationId: `22222222-2222-4222-8222-${index
+        .toString()
+        .padStart(12, "0")}`,
+    }));
+    const live = {
+      ...marker("running"),
+      conversationId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    };
+    const retained = setExploreRunMarker(settled, live);
+
+    expect(retained).toHaveLength(100);
+    expect(retained).toContainEqual(live);
+    expect(retained).not.toContainEqual(settled[0]);
+
+    const storage = new MemoryStorage();
+    expect(() =>
+      saveExploreRunMarkers(storage, [...settled, live]),
+    ).not.toThrow();
+    expect(loadExploreRunMarkers(storage)).toEqual(retained);
   });
 });

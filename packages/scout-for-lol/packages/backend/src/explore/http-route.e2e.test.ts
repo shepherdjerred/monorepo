@@ -22,6 +22,7 @@ import { resetConfigurationForTests } from "#src/configuration.ts";
 const trpc = await createOfflineTrpcHarness("explore-http-e2e");
 const { handleExploreRoute } = await import("#src/explore/http-route.ts");
 const { persistPartialAnswer } = await import("#src/explore/partial-answer.ts");
+const { appendExploreAnswer } = await import("#src/explore/store.ts");
 
 const allowedGuild = DiscordGuildIdSchema.parse("100000000000009401");
 const otherGuild = DiscordGuildIdSchema.parse("100000000000009402");
@@ -302,6 +303,7 @@ describe("explore salvage", () => {
       expectedCurrentLeafId: null,
       text: "",
       trace: [],
+      existingMessageId: null,
     });
 
     expect(salvaged?.content).toMatch(/stopped/i);
@@ -317,6 +319,7 @@ describe("explore salvage", () => {
       expectedCurrentLeafId: null,
       text: "Jinx is ahead so far…",
       trace: [],
+      existingMessageId: null,
     });
 
     expect(salvaged?.parentId).toBe(seeded.questionId);
@@ -336,6 +339,7 @@ describe("explore salvage", () => {
       expectedCurrentLeafId: null,
       text: "Jinx is ahead so far…",
       trace: [],
+      existingMessageId: null,
     });
 
     expect(salvaged?.caveats).toEqual([EXPLORE_INTERRUPTED_CAVEAT]);
@@ -357,10 +361,45 @@ describe("explore salvage", () => {
       expectedCurrentLeafId: null,
       text: "   ",
       trace: [],
+      existingMessageId: null,
     });
 
     expect(salvaged).toBeNull();
     expect(await trpc.prisma.exploreMessage.count()).toBe(1);
+  });
+
+  test("cancellation during persistence replaces the answer instead of adding a sibling", async () => {
+    const seeded = await seedQuestion();
+    const persisted = await appendExploreAnswer(trpc.prisma, {
+      conversationId: seeded.conversationId,
+      parentMessageId: seeded.questionId,
+      answer: {
+        answer: "A late complete answer",
+        title: null,
+        queryText: null,
+        caveats: [],
+        followUps: [],
+      },
+      preview: null,
+      visualization: null,
+      trace: [],
+      expectedCurrentLeafId: null,
+    });
+
+    const salvaged = await persistPartialAnswer(trpc.prisma, {
+      stopped: true,
+      conversationId: seeded.conversationId,
+      parentMessageId: seeded.questionId,
+      expectedCurrentLeafId: null,
+      text: "Partial answer",
+      trace: [],
+      existingMessageId: persisted.id,
+    });
+
+    expect(salvaged?.id).toBe(persisted.id);
+    expect(salvaged?.content).toBe("Partial answer");
+    expect(salvaged?.caveats).toEqual([EXPLORE_STOPPED_CAVEAT]);
+    expect(await trpc.prisma.exploreMessage.count()).toBe(2);
   });
 });
 

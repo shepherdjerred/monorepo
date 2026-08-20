@@ -78,6 +78,7 @@ type ActiveRun = {
 };
 
 export class ExploreConversationBusyError extends Error {}
+export class ExploreRunUnavailableError extends Error {}
 
 export class ExploreRunRateLimitedError extends Error {
   readonly rejection: ExploreRateLimitRejection;
@@ -90,6 +91,7 @@ export class ExploreRunRateLimitedError extends Error {
 
 export type ExploreRunStartError =
   | ExploreConversationBusyError
+  | ExploreRunUnavailableError
   | ExploreRunRateLimitedError
   | ExploreInvalidTurnError
   | ExploreNotFoundError;
@@ -109,6 +111,7 @@ export class ExploreRunManager {
   readonly #runs = new Map<string, ActiveRun>();
   readonly #conversationRuns = new Map<string, string>();
   readonly #reservedConversations = new Set<string>();
+  #acceptingRuns = true;
 
   constructor(
     dependencies: {
@@ -126,6 +129,7 @@ export class ExploreRunManager {
     identity: ExploreRateLimitIdentity,
     request: ExploreTurnRequest,
   ): Promise<ExploreActiveRun> {
+    this.#assertAcceptingRuns();
     const requestedConversationId = request.conversationId;
     if (
       requestedConversationId !== null &&
@@ -157,12 +161,14 @@ export class ExploreRunManager {
       if (transcript === null) {
         throw new ExploreNotFoundError("Conversation not found.");
       }
+      this.#assertAcceptingRuns();
 
       const deferred = createDeferred();
       const summary = ExploreActiveRunSchema.parse({
         runId: ticket.runId,
         conversationId: started.conversationId,
         questionMessageId: started.messageId,
+        leafIdAtStart: started.expectedCurrentLeafId,
         startedAt: new Date().toISOString(),
       });
       const run: ActiveRun = {
@@ -253,6 +259,7 @@ export class ExploreRunManager {
   }
 
   async shutdown(): Promise<void> {
+    this.#acceptingRuns = false;
     const runs = [...this.#runs.values()];
     for (const run of runs) {
       this.#abort(run, "shutdown", "Explore backend is shutting down.");
@@ -272,6 +279,15 @@ export class ExploreRunManager {
     }
     this.#conversationRuns.clear();
     this.#reservedConversations.clear();
+    this.#acceptingRuns = true;
+  }
+
+  #assertAcceptingRuns(): void {
+    if (!this.#acceptingRuns) {
+      throw new ExploreRunUnavailableError(
+        "Explore is shutting down. Try again after it reconnects.",
+      );
+    }
   }
 
   #abort(
@@ -317,6 +333,7 @@ export class ExploreRunManager {
     const startedAt = Date.now();
     let metricStatus = "error";
     let outcome: RunOutcome = "failed";
+    let persistedMessage: ExploreMessage | null = null;
     scoutExploreActiveRuns.inc();
 
     try {
@@ -329,7 +346,8 @@ export class ExploreRunManager {
           this.#record(run, event);
         },
       });
-      const message = await appendExploreAnswer(this.#client, {
+      throwIfTerminated(run);
+      persistedMessage = await appendExploreAnswer(this.#client, {
         conversationId: run.started.conversationId,
         parentMessageId: run.started.messageId,
         answer: result.answer,
@@ -338,6 +356,7 @@ export class ExploreRunManager {
         trace: finalizeExploreTrace(run.trace),
         expectedCurrentLeafId: run.started.expectedCurrentLeafId,
       });
+      throwIfTerminated(run);
       const title =
         result.answer.title === null
           ? run.started.title
@@ -345,11 +364,12 @@ export class ExploreRunManager {
               conversationId: run.started.conversationId,
               title: result.answer.title,
             });
+      throwIfTerminated(run);
       metricStatus = "success";
       outcome = "succeeded";
       this.#broadcast(run, {
         type: "final",
-        message,
+        message: persistedMessage,
         title,
         quota: getExploreQuotaStatus(run.identity, Date.now()).quota,
       });
@@ -383,6 +403,7 @@ export class ExploreRunManager {
           expectedCurrentLeafId: run.started.expectedCurrentLeafId,
           text: run.answer,
           trace: finalizeExploreTrace(run.trace),
+          existingMessageId: persistedMessage?.id ?? null,
         });
       } catch (salvageError) {
         logger.error(
@@ -423,6 +444,12 @@ export class ExploreRunManager {
         .observe((Date.now() - startedAt) / 1000);
       run.resolveSettled(null);
     }
+  }
+}
+
+function throwIfTerminated(run: ActiveRun): void {
+  if (run.termination !== null) {
+    throw new Error(`Explore run terminated: ${run.termination}`);
   }
 }
 

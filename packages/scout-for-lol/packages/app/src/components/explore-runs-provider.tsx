@@ -10,8 +10,6 @@ import * as Sentry from "@sentry/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { matchPath, useLocation } from "react-router";
 import {
-  EXPLORE_INTERRUPTED_CAVEAT,
-  EXPLORE_STOPPED_CAVEAT,
   ExploreActiveRunSchema,
   type ExploreActiveRun,
   type ExploreTranscript,
@@ -28,7 +26,14 @@ import {
   setExploreClientRun,
   type ExploreClientRun,
 } from "#src/lib/explore-client-runs.ts";
-import { setExploreRunMarker } from "#src/lib/explore-run-markers.ts";
+import {
+  exploreRunMarkerState,
+  type ExploreRunOutcome,
+} from "#src/lib/explore-run-completion.ts";
+import {
+  createExploreRunMarker,
+  setExploreRunMarker,
+} from "#src/lib/explore-run-markers.ts";
 import { useExploreRunMarkers } from "#src/hooks/use-explore-run-markers.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import {
@@ -42,7 +47,7 @@ const RECONNECT_DELAYS_MS = [250, 750, 1500, 3000];
 
 type RunIdentity = Pick<
   ExploreActiveRun,
-  "runId" | "conversationId" | "questionMessageId"
+  "runId" | "conversationId" | "questionMessageId" | "leafIdAtStart"
 >;
 
 function conversationKey(conversationId: string | null): string {
@@ -141,10 +146,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
   );
 
   const finishRun = useCallback(
-    async (
-      summary: RunIdentity,
-      outcome: "succeeded" | "failed" | "stopped" | "interrupted",
-    ): Promise<void> => {
+    async (summary: RunIdentity, outcome: ExploreRunOutcome): Promise<void> => {
       if (finishingRef.current.has(summary.runId)) return;
       finishingRef.current.add(summary.runId);
       let transcript: ExploreTranscript | undefined;
@@ -154,20 +156,14 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
         Sentry.captureException(error);
       }
 
-      const answer = transcript?.messages.find(
-        (message) =>
-          message.role === "assistant" &&
-          message.parentId === summary.questionMessageId,
-      );
-      const effectiveState =
-        answer?.caveats.includes(EXPLORE_INTERRUPTED_CAVEAT) === true
-          ? "failed"
-          : outcome === "stopped" ||
-              answer?.caveats.includes(EXPLORE_STOPPED_CAVEAT) === true
-            ? null
-            : outcome === "succeeded" || answer !== undefined
-              ? "completed"
-              : "failed";
+      const clientRun = runsRef.current.get(summary.conversationId);
+      const finalMessageId = clientRun?.turn.finalMessageId ?? null;
+      const effectiveState = exploreRunMarkerState({
+        run: summary,
+        outcome,
+        finalMessageId,
+        messages: transcript?.messages,
+      });
 
       updateRuns((current) => {
         return removeExploreClientRun(current, summary.conversationId);
@@ -186,7 +182,10 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
         );
       } else {
         updateMarkers((current) =>
-          setExploreRunMarker(current, { ...summary, state: effectiveState }),
+          setExploreRunMarker(
+            current,
+            createExploreRunMarker(summary, effectiveState),
+          ),
         );
       }
     },
@@ -202,7 +201,9 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
       void (async () => {
         let attempt = 0;
         while (!observerWasAborted(controller.signal)) {
-          const terminal: { outcome: RunOutcome | null } = { outcome: null };
+          const terminal: { outcome: ExploreRunOutcome | null } = {
+            outcome: null,
+          };
           try {
             await observeExploreRun({
               runId: summary.runId,
@@ -285,7 +286,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
           createPendingTurn({
             conversationId: summary.conversationId,
             question: null,
-            leafIdAtStart: null,
+            leafIdAtStart: summary.leafIdAtStart,
           }),
           {
             type: "started",
@@ -302,7 +303,10 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
         });
       }
       updateMarkers((current) =>
-        setExploreRunMarker(current, { ...summary, state: "running" }),
+        setExploreRunMarker(
+          current,
+          createExploreRunMarker(summary, "running"),
+        ),
       );
       observe(summary);
     }
@@ -375,7 +379,10 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
           });
         });
         updateMarkers((current) =>
-          setExploreRunMarker(current, { ...summary, state: "running" }),
+          setExploreRunMarker(
+            current,
+            createExploreRunMarker(summary, "running"),
+          ),
         );
         observe(summary);
 
@@ -390,6 +397,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
         }
         return summary;
       } catch (error) {
+        stopRequestedRef.current.delete(key);
         updateRuns((current) => {
           return removeExploreClientRun(current, key);
         });
@@ -481,8 +489,6 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
-
-type RunOutcome = "succeeded" | "failed" | "stopped" | "interrupted";
 
 function observerWasAborted(signal: AbortSignal): boolean {
   return signal.aborted;

@@ -387,6 +387,8 @@ export const ExploreActiveRunSchema = z
     runId: ExploreRunIdSchema,
     conversationId: ExploreConversationIdSchema,
     questionMessageId: z.uuid(),
+    /** The branch leaf visible when this run began, for reconnect-safe version detection. */
+    leafIdAtStart: z.uuid().nullable(),
     startedAt: z.iso.datetime(),
   })
   .strict();
@@ -415,6 +417,7 @@ export const ExploreRunSnapshotEventSchema = z
     runId: ExploreRunIdSchema,
     conversationId: ExploreConversationIdSchema,
     questionMessageId: z.uuid(),
+    leafIdAtStart: z.uuid().nullable(),
     startedAt: z.iso.datetime(),
     answer: z.string().max(EXPLORE_ANSWER_MAX_LENGTH).nullable(),
     activity: z.string().trim().min(1).max(500).nullable(),

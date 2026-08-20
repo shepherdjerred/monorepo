@@ -78,6 +78,7 @@ export function applyStreamEvent(
         runId: event.runId,
         conversationId: event.conversationId,
         questionMessageId: event.questionMessageId,
+        leafIdAtStart: event.leafIdAtStart,
         answer: event.answer,
         activity: event.activity,
         trace: event.trace,

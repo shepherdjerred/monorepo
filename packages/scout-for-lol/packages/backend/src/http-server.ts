@@ -50,6 +50,7 @@ const EXPECTED_CLIENT_ERROR_CODES = new Set<string>([
   "UNPROCESSABLE_CONTENT",
   "TOO_MANY_REQUESTS",
   "CLIENT_CLOSED_REQUEST",
+  "SERVICE_UNAVAILABLE",
 ]);
 
 /**
@@ -210,14 +211,21 @@ const server = Bun.serve({
   hostname: configuration.enableDevLogin ? "127.0.0.1" : "0.0.0.0",
   async fetch(request, bunServer) {
     const url = new URL(request.url);
-    // Explore can be quiet while the model reasons between tool calls. Bun's
-    // default 10-second idle timeout applies to streaming responses too, so
-    // disable it for this SSE request and let Explore's own bounded timeout
-    // abort the run instead.
-    if (url.pathname === EXPLORE_STREAM_PATH) {
+    const response = await withHttpMetrics(request, url, () =>
+      dispatch(request, url),
+    );
+    // Keep Bun's normal idle timeout through body parsing and authentication.
+    // Only a successfully authenticated SSE observer may stay quiet while the
+    // model reasons between tool calls; the run itself has a bounded timeout.
+    if (
+      url.pathname === EXPLORE_STREAM_PATH &&
+      response.status === 200 &&
+      response.headers.get("Content-Type")?.startsWith("text/event-stream") ===
+        true
+    ) {
       bunServer.timeout(request, 0);
     }
-    return await withHttpMetrics(request, url, () => dispatch(request, url));
+    return response;
   },
   error(error) {
     logger.error("❌ HTTP server error:", error);

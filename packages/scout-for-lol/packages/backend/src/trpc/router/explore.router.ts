@@ -18,6 +18,7 @@ import { getExploreQuotaStatus } from "#src/explore/rate-limit.ts";
 import {
   ExploreConversationBusyError,
   ExploreRunRateLimitedError,
+  ExploreRunUnavailableError,
   exploreRunManager,
 } from "#src/explore/run-manager.ts";
 import {
@@ -108,6 +109,12 @@ export const exploreRouter = router({
         if (error instanceof ExploreRunRateLimitedError) {
           throw new TRPCError({
             code: "TOO_MANY_REQUESTS",
+            message: error.message,
+          });
+        }
+        if (error instanceof ExploreRunUnavailableError) {
+          throw new TRPCError({
+            code: "SERVICE_UNAVAILABLE",
             message: error.message,
           });
         }
