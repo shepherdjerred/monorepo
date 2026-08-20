@@ -18,6 +18,13 @@ final class MailMateCodeFillAppDelegate: NSObject, NSApplicationDelegate {
 
     static var launchedAsBroker = false
 
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        // The helper launches this app hidden as a short-lived reconciliation broker. If the
+        // setup window is closed, let the process exit so the next helper invocation can launch
+        // a fresh broker instead of finding an idle app with no SetupView observer.
+        true
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         Self.launchedAsBroker = consumeBrokerRequest()
         let version = String(describing: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") ?? "unknown")
