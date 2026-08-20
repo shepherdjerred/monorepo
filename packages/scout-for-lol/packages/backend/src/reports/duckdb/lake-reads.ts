@@ -27,7 +27,13 @@ import {
  * value parameter-bound.
  */
 
-function bindParams(
+/**
+ * Bind a lake query's parameters for one session.
+ *
+ * Exported for `reports/identity.ts`, which runs its own lookups. `execute.ts`
+ * still carries a private copy; collapsing the two is a separate cleanup.
+ */
+export function bindParams(
   session: DuckDBSession,
   params: BoundParam[],
 ): (string | number | ReturnType<DuckDBSession["list"]>)[] {
