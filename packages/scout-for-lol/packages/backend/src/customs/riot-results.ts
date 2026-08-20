@@ -22,6 +22,7 @@ import {
 import {
   createGameTournamentCode,
   createNightTournament,
+  RiotTournamentApiError,
   type RawTournamentGame,
   type TournamentFetch,
 } from "#src/customs/riot-tournament.ts";
@@ -38,6 +39,7 @@ async function claimTournamentProvisioning(params: {
   actorDiscordId: string;
   now: Date;
   expectedRevision: number | undefined;
+  allowAmbiguous: boolean;
 }): Promise<CustomMutationResult & { claimId?: string }> {
   if (
     params.expectedRevision !== undefined &&
@@ -48,7 +50,13 @@ async function claimTournamentProvisioning(params: {
   const game = currentGame(params.snapshot);
   if (game.state !== "CODE_PENDING")
     throw new Error("Custom game is not waiting for a Tournament code");
-  if (hasActiveTournamentCodeProvisioning(game, params.now)) {
+  if (
+    hasActiveTournamentCodeProvisioning(game, params.now) &&
+    !(
+      params.allowAmbiguous &&
+      game.tournamentCodeProvisioning?.ambiguous === true
+    )
+  ) {
     return { applied: false, snapshot: params.snapshot };
   }
   const claimId = globalThis.crypto.randomUUID();
@@ -73,6 +81,7 @@ async function claimTournamentProvisioning(params: {
           tournamentCodeProvisioning: {
             id: claimId,
             startedAt: params.now.toISOString(),
+            ambiguous: false,
           },
         },
       });
@@ -132,6 +141,7 @@ export async function provisionCustomTournamentCode(params: {
   actorDiscordId: string;
   expectedRevision?: number;
   fetcher?: TournamentFetch;
+  allowAmbiguous?: boolean;
 }) {
   const snapshot = await getCustomNight(params.prisma, params.nightId);
   if (snapshot === null) throw new Error("Custom night not found");
@@ -141,6 +151,7 @@ export async function provisionCustomTournamentCode(params: {
     actorDiscordId: params.actorDiscordId,
     expectedRevision: params.expectedRevision,
     now: new Date(),
+    allowAmbiguous: params.allowAmbiguous === true,
   });
   if (!claim.applied || claim.claimId === undefined) return claim;
   const game = currentGame(claim.snapshot);
@@ -200,6 +211,34 @@ export async function provisionCustomTournamentCode(params: {
       throw new Error("Tournament provisioning claim was lost");
     return finalized;
   } catch (error) {
+    if (error instanceof RiotTournamentApiError && error.ambiguous) {
+      await commitClaimedTournamentProvisioning({
+        prisma: params.prisma,
+        snapshot: latest,
+        gameId: game.id,
+        claimId: claim.claimId,
+        actorDiscordId: params.actorDiscordId,
+        action: "TOURNAMENT_CODE_PROVISIONING_AMBIGUOUS",
+        payload: {
+          message: error.message,
+        },
+        update: (current, currentCustomGame) =>
+          CustomNightSnapshotSchema.parse({
+            ...current,
+            currentGame: {
+              ...currentCustomGame,
+              tournamentCodeProvisioning: {
+                id: claim.claimId,
+                startedAt:
+                  currentCustomGame.tournamentCodeProvisioning?.startedAt ??
+                  new Date().toISOString(),
+                ambiguous: true,
+              },
+            },
+          }),
+      });
+      throw error;
+    }
     await commitClaimedTournamentProvisioning({
       prisma: params.prisma,
       snapshot: latest,

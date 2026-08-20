@@ -400,6 +400,7 @@ export const customsRouter = router({
           nightId: input.nightId,
           actorDiscordId: actor.discordId,
           expectedRevision: input.expectedRevision,
+          allowAmbiguous: true,
         }),
       );
     }),

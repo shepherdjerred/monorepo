@@ -230,6 +230,8 @@ async function deliverCurrentSnapshotAfter(
     await sendSnapshotToAuthorizedSocket(socket, envelope);
   } catch (error) {
     logger.error("Customs socket snapshot delivery failed", { error });
+    removeCustomSocket(socket);
+    socket.close(1011, "Customs snapshot delivery failed");
   }
 }
 

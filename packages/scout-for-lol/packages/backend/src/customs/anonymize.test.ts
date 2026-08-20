@@ -7,6 +7,7 @@ import {
   anonymizeNightSnapshot,
   redactCustomValue,
 } from "#src/customs/anonymize.ts";
+import { removeParticipantFromPendingCustomResultVoicePayload } from "#src/customs/result-voice.ts";
 
 const NOW = "2026-08-15T20:00:00.000Z";
 
@@ -105,5 +106,46 @@ describe("custom participant anonymization", () => {
       participantDiscordIds: ["Anonymous player"],
       rosterDiscordIds: ["Anonymous player"],
     });
+  });
+
+  test("supersedes or removes anonymized participants from pending voice work", () => {
+    const payload = JSON.stringify({
+      target: {
+        guildId: "12345678901234567",
+        voiceLobbyChannelId: "22345678901234567",
+        teamAVoiceChannelId: null,
+        teamBVoiceChannelId: null,
+        currentGame: {
+          participants: [
+            { discordId: "12345678901234567", displayName: "Sensitive Name" },
+            { discordId: "98765432109876543", displayName: "Remaining Player" },
+          ],
+        },
+      },
+    });
+    const remaining = removeParticipantFromPendingCustomResultVoicePayload(
+      payload,
+      "12345678901234567",
+    );
+    expect(remaining.action).toBe("VOICE_RESULT_RETURN_PENDING");
+    expect(remaining.payload).toContain("98765432109876543");
+    expect(remaining.payload).not.toContain("Sensitive Name");
+    const superseded = removeParticipantFromPendingCustomResultVoicePayload(
+      JSON.stringify({
+        target: {
+          guildId: "12345678901234567",
+          voiceLobbyChannelId: "22345678901234567",
+          teamAVoiceChannelId: null,
+          teamBVoiceChannelId: null,
+          currentGame: {
+            participants: [
+              { discordId: "12345678901234567", displayName: "Sensitive Name" },
+            ],
+          },
+        },
+      }),
+      "12345678901234567",
+    );
+    expect(superseded.action).toBe("VOICE_RESULT_RETURN_SUPERSEDED");
   });
 });

@@ -12,6 +12,10 @@ const TOURNAMENT_REQUEST_TIMEOUT_MILLISECONDS = 30_000;
 const TOURNAMENT_RETRY_ATTEMPTS = 3;
 const TOURNAMENT_RETRY_DELAY_MILLISECONDS = 250;
 
+function isPostRequest(init: RequestInit): boolean {
+  return init.method?.toUpperCase() === "POST";
+}
+
 export type TournamentFetch = (
   input: string | URL | Request,
   init?: RequestInit,
@@ -56,10 +60,17 @@ export const TournamentMetadataSchema = z.object({
   callbackSecret: z.string().min(32),
 });
 
+type RiotTournamentApiErrorOptions = ErrorOptions & {
+  ambiguous?: boolean;
+};
+
 export class RiotTournamentApiError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
+  readonly ambiguous: boolean;
+
+  constructor(message: string, options?: RiotTournamentApiErrorOptions) {
     super(message, options);
     this.name = "RiotTournamentApiError";
+    this.ambiguous = options?.ambiguous === true;
   }
 }
 
@@ -90,7 +101,7 @@ async function riotRequest(
       ) {
         throw new RiotTournamentApiError(
           "Riot Tournament-V5 request could not be completed",
-          { cause: error },
+          { cause: error, ambiguous: isPostRequest(init) },
         );
       }
       const delay = TOURNAMENT_RETRY_DELAY_MILLISECONDS * 2 ** attempt;
@@ -103,7 +114,7 @@ async function riotRequest(
     } catch (error) {
       throw new RiotTournamentApiError(
         "Riot Tournament-V5 response could not be read",
-        { cause: error },
+        { cause: error, ambiguous: isPostRequest(init) },
       );
     }
     const retryable =
@@ -135,7 +146,10 @@ async function riotRequest(
     } catch (error) {
       throw new RiotTournamentApiError(
         "Riot Tournament-V5 returned invalid JSON",
-        { cause: error },
+        {
+          cause: error,
+          ambiguous: isPostRequest(init),
+        },
       );
     }
   }
@@ -153,8 +167,9 @@ export async function createNightTournament(
   nightId: string,
   fetcher: TournamentFetch = fetch,
 ): Promise<string> {
-  const id = RawTournamentIdSchema.parse(
-    await riotRequest(
+  let response: unknown;
+  try {
+    response = await riotRequest(
       "/tournaments",
       {
         method: "POST",
@@ -164,9 +179,15 @@ export async function createNightTournament(
         }),
       },
       fetcher,
-    ),
-  );
-  return id.toString();
+    );
+    return RawTournamentIdSchema.parse(response).toString();
+  } catch (error) {
+    if (error instanceof RiotTournamentApiError) throw error;
+    throw new RiotTournamentApiError(
+      "Riot Tournament-V5 returned an invalid tournament response",
+      { cause: error, ambiguous: true },
+    );
+  }
 }
 
 export async function createGameTournamentCode(params: {
@@ -182,30 +203,37 @@ export async function createGameTournamentCode(params: {
     .parse(params.tournamentId);
   if (params.game.participants.length !== 10)
     throw new Error("Tournament codes require 10 players");
-  const codes = RawTournamentCodesSchema.parse(
-    await riotRequest(
-      `/codes?tournamentId=${tournamentId.toString()}&count=1`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          allowedParticipants: params.game.participants.map(
-            (participant) => participant.puuid,
-          ),
-          metadata: JSON.stringify({
-            nightId: params.nightId,
-            gameId: params.game.id,
-            callbackSecret: configuration.customs?.callbackSecret,
-          }),
-          teamSize: 5,
-          pickType: riotPickType(params.game.pickMode),
-          mapType: riotMapType(params.game.map),
-          spectatorType: "ALL",
-          enoughPlayers: true,
+  const response = await riotRequest(
+    `/codes?tournamentId=${tournamentId.toString()}&count=1`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        allowedParticipants: params.game.participants.map(
+          (participant) => participant.puuid,
+        ),
+        metadata: JSON.stringify({
+          nightId: params.nightId,
+          gameId: params.game.id,
+          callbackSecret: configuration.customs?.callbackSecret,
         }),
-      },
-      params.fetcher ?? fetch,
-    ),
+        teamSize: 5,
+        pickType: riotPickType(params.game.pickMode),
+        mapType: riotMapType(params.game.map),
+        spectatorType: "ALL",
+        enoughPlayers: true,
+      }),
+    },
+    params.fetcher ?? fetch,
   );
+  let codes: string[];
+  try {
+    codes = RawTournamentCodesSchema.parse(response);
+  } catch (error) {
+    throw new RiotTournamentApiError(
+      "Riot Tournament-V5 returned an invalid Tournament code response",
+      { cause: error, ambiguous: true },
+    );
+  }
   const code = codes[0];
   if (code === undefined) throw new Error("Riot returned no Tournament code");
   return code;

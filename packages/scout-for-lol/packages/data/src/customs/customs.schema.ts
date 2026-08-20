@@ -142,6 +142,7 @@ export const CustomGameSnapshotSchema = z.object({
     .object({
       id: z.uuid(),
       startedAt: z.iso.datetime(),
+      ambiguous: z.boolean().optional(),
     })
     .nullable()
     .default(null),

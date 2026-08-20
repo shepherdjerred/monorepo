@@ -17,6 +17,7 @@ export function hasActiveTournamentCodeProvisioning(
 ): boolean {
   const provisioning = game?.tournamentCodeProvisioning;
   if (provisioning === undefined || provisioning === null) return false;
+  if (provisioning.ambiguous === true) return true;
   return (
     now.getTime() - new Date(provisioning.startedAt).getTime() <
     TOURNAMENT_PROVISIONING_STALE_MS

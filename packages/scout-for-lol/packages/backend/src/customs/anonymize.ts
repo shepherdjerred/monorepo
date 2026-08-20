@@ -10,6 +10,7 @@ import {
 import type { Prisma } from "#generated/prisma/client/index.js";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { recruitmentCounts } from "#src/customs/snapshot.ts";
+import { removeParticipantFromPendingCustomResultVoicePayload } from "#src/customs/result-voice.ts";
 
 const ANONYMIZED_DISCORD_ID = DiscordAccountIdSchema.parse("00000000000000000");
 const ANONYMIZED_TEXT = "Anonymous player";
@@ -359,6 +360,17 @@ export async function anonymizeCustomParticipant(params: {
         });
       }
       for (const audit of night.auditEvents) {
+        let action = audit.action;
+        let payload = JSON.parse(audit.payload);
+        if (audit.action === "VOICE_RESULT_RETURN_PENDING") {
+          const voicePayload =
+            removeParticipantFromPendingCustomResultVoicePayload(
+              audit.payload,
+              discordId,
+            );
+          action = voicePayload.action;
+          payload = JSON.parse(voicePayload.payload);
+        }
         await transaction.customAuditEvent.update({
           where: { id: audit.id },
           data: {
@@ -366,9 +378,8 @@ export async function anonymizeCustomParticipant(params: {
               audit.actorId === discordId
                 ? ANONYMIZED_DISCORD_ID
                 : audit.actorId,
-            payload: JSON.stringify(
-              redactCustomValue(JSON.parse(audit.payload), sensitive),
-            ),
+            action,
+            payload: JSON.stringify(redactCustomValue(payload, sensitive)),
           },
         });
       }
