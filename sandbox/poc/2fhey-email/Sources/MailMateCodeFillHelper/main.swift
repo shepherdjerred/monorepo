@@ -133,7 +133,13 @@ private func requestIdentityReconciliation() {
         }
         completion.signal()
     }
-    if completion.wait(timeout: .now() + 10) == .timedOut {
+    let deadline = Date().addingTimeInterval(10)
+    var completed = completion.wait(timeout: .now()) == .success
+    while !completed, Date() < deadline {
+        RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.05))
+        completed = completion.wait(timeout: .now()) == .success
+    }
+    if !completed {
         removeBrokerRequestMarker(matching: requestToken)
         CodeFillObservability.helperLogger.error("event=identity_reconciliation outcome=timeout")
     }
