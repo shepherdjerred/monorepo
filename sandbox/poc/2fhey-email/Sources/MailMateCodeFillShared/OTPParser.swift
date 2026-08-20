@@ -16,6 +16,9 @@ public struct OTPParser {
     private static let candidatePattern = makeExpression(
         "(?<![\\p{L}\\p{N}])([A-Za-z0-9](?:[ -]?[A-Za-z0-9]){3,7})(?![\\p{L}\\p{N}])"
     )
+    private static let datePattern = makeExpression(
+        "(?<![\\p{L}\\p{N}])(?:\\d{4}[-/](?:0?[1-9]|1[0-2])[-/](?:0?[1-9]|[12]\\d|3[01])|(?:0?[1-9]|1[0-2])[-/](?:0?[1-9]|[12]\\d|3[01])[-/]\\d{2,4})(?![\\p{L}\\p{N}])"
+    )
     private static let urlPattern = makeExpression("(?i)https?://\\S+")
     private static let emailPattern = makeExpression("(?i)[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}")
     private static let senderMailboxPattern = makeExpression("(?i)^[A-Z0-9._%+-]+@([A-Z0-9.-]+)$")
@@ -105,6 +108,9 @@ public struct OTPParser {
         let context = (bodyNSString.substring(with: beforeRange) + bodyNSString.substring(with: NSRange(location: afterStart, length: afterLength))).lowercased()
         let falsePositiveWords = ["phone", "tel", "date", "order", "invoice", "amount", "price", "year", "http", "www", "reference", "ticket"]
         guard !falsePositiveWords.contains(where: context.contains) else { return true }
+        if Self.datePattern.matches(in: body, range: NSRange(body.startIndex..., in: body)).contains(where: { NSIntersectionRange($0.range, range).length > 0 }) {
+            return true
+        }
         if rawCode.contains(" ") || rawCode.contains("-") { return false }
         return Self.overlapsEmailAddress(body: body, range: range)
     }

@@ -31,6 +31,7 @@ func rejectsFalsePositives() {
     let body = "Call 4155550123. Invoice 20260418. Reference 1234567. Visit https://example.test/482913."
 
     #expect(OTPParser().parse(body: body, metadata: metadata) == nil)
+    #expect(OTPParser().parse(body: "Your verification code expires on 2026-08-20.", metadata: metadata) == nil)
 }
 
 @Test("keeps a long code when an unrelated address appears in the body")
