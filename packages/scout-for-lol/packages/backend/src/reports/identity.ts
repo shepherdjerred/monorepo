@@ -119,10 +119,16 @@ async function lookupAccountsByPuuid(
   return await runQuery(
     `WITH scoped AS (
        SELECT * FROM read_parquet(?) WHERE server_id IN (SELECT unnest(?))
-     )
+     ),
+     seed AS (SELECT player_id, discord_id FROM scoped WHERE puuid = ?)
      SELECT DISTINCT puuid, player_id, player_alias, discord_id
        FROM scoped
-      WHERE player_id IN (SELECT player_id FROM scoped WHERE puuid = ?)`,
+      WHERE player_id IN (SELECT player_id FROM seed)
+         -- discord_id is the cross-server key; without this a person tracked
+         -- in two servers keeps two player_ids and stays split here, even
+         -- though the alias path unions them.
+         OR (discord_id IS NOT NULL
+             AND discord_id IN (SELECT discord_id FROM seed WHERE discord_id IS NOT NULL))`,
     [listParam([accountsParquet]), listParam(guildIds), scalarParam(puuid)],
     AccountRowSchema,
   );
@@ -280,6 +286,8 @@ export async function resolvePlayerIdentities(input: {
 export async function resolvePlayerRefsToPuuids(input: {
   playerRefs: string[];
   guildIds: string[];
+  /** False when the caller has no asker, e.g. a scheduled report. */
+  aliasScopeAvailable?: boolean;
   lakeDir?: string | undefined;
 }): Promise<string[]> {
   const puuids: string[] = [];
@@ -291,7 +299,9 @@ export async function resolvePlayerRefsToPuuids(input: {
     });
     if (identities.length === 0) {
       throw new Error(
-        `No player matches "${ref}". Call resolve_player to find the right name.`,
+        input.aliasScopeAvailable === false
+          ? `"${ref}" did not match a Riot ID, and Scout aliases cannot be resolved here — a scheduled report has no asker whose servers would scope them. Use a full Riot ID.`
+          : `No player matches "${ref}". Call resolve_player to find the right name.`,
       );
     }
     if (identities.length > 1) {

@@ -20,21 +20,34 @@ import {
  * only bounds it. A query may have one or the other, never both.
  */
 
-export const ReportQueryWindowSchema = z.discriminatedUnion("kind", [
-  RelativeTemporalWindowSchema,
-  // A timezone only appears here. A relative window is a rolling subtraction of
-  // milliseconds and an all-time window has no edges, so neither has a calendar
-  // day whose boundary a timezone could move.
-  z
-    .object({
-      kind: z.literal("calendar"),
-      startDate: z.iso.date(),
-      endDate: z.iso.date(),
-      timezone: ReportScheduleTimezoneSchema,
-    })
-    .strict(),
-  z.object({ kind: z.literal("all_time") }).strict(),
-]);
+export const ReportQueryWindowSchema = z
+  .discriminatedUnion("kind", [
+    RelativeTemporalWindowSchema,
+    // A timezone only appears here. A relative window is a rolling subtraction of
+    // milliseconds and an all-time window has no edges, so neither has a calendar
+    // day whose boundary a timezone could move.
+    z
+      .object({
+        kind: z.literal("calendar"),
+        startDate: z.iso.date(),
+        endDate: z.iso.date(),
+        timezone: ReportScheduleTimezoneSchema,
+      })
+      .strict(),
+    z.object({ kind: z.literal("all_time") }).strict(),
+  ])
+  .superRefine((window, ctx) => {
+    // Checked here rather than only in the clause parser: a plan built directly
+    // would otherwise carry a reversed range into a BETWEEN predicate that
+    // silently matches nothing.
+    if (window.kind !== "calendar") return;
+    if (parseISO(window.endDate) < parseISO(window.startDate)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "The end date must be on or after the start date.",
+      });
+    }
+  });
 export type ReportQueryWindow = z.infer<typeof ReportQueryWindowSchema>;
 
 /**

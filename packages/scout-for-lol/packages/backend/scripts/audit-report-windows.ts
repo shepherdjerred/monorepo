@@ -22,6 +22,7 @@
 import { Database } from "bun:sqlite";
 import { z } from "zod";
 import {
+  REPORT_WINDOW_REQUIRED_MESSAGE,
   parseAndCompile,
   parseReportQuery,
   type ReportQueryPlan,
@@ -67,6 +68,9 @@ function withoutWindow(plan: ReportQueryPlan): Omit<ReportQueryPlan, "window"> {
 
 function hasStatedPeriod(queryText: string): boolean {
   const { ast, diagnostics } = parseReportQuery(queryText);
+  // A row the migration spliced at the wrong offset lands here as a parse
+  // error, which routes it to `unparseable` and a nonzero exit — the point of
+  // running this after the migration and not only before it.
   if (diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
     return false;
   }
@@ -97,9 +101,12 @@ function addPeriod(queryText: string): string {
 }
 
 const args = parseArgs(Bun.argv.slice(2));
-const db = new Database(args.database.replace(/^file:/u, ""), {
-  readonly: !args.fix,
-});
+// bun:sqlite rejects `{ readonly: false }` outright — the write mode has to be
+// asked for by name, so a plain negation silently made --fix unusable.
+const db = new Database(
+  args.database.replace(/^file:/u, ""),
+  args.fix ? { readwrite: true } : { readonly: true },
+);
 
 const RowSchema = z.object({
   id: z.number(),
@@ -122,15 +129,19 @@ for (const row of rows) {
     stated++;
     continue;
   }
+  // A row with no period no longer compiles — that is the whole point of the
+  // release this audits. It must still be counted as fixable rather than as
+  // broken, or the gate reports success on exactly the rows it exists to find.
   try {
     parseAndCompile(row.queryText);
     missing.push(row);
   } catch (error) {
-    unparseable.push({
-      id: row.id,
-      title: row.title,
-      message: error instanceof Error ? error.message : String(error),
-    });
+    const message = error instanceof Error ? error.message : String(error);
+    if (message === REPORT_WINDOW_REQUIRED_MESSAGE) {
+      missing.push(row);
+      continue;
+    }
+    unparseable.push({ id: row.id, title: row.title, message });
   }
 }
 
@@ -147,7 +158,10 @@ if (missing.length > 0) {
   logger.info("\nRows missing a period:");
   for (const row of missing) {
     const rewritten = addPeriod(row.queryText);
-    const before = withoutWindow(parseAndCompile(row.queryText));
+    // The original no longer compiles (no period), so compare against it with
+    // the same period applied a different way: parse both and drop the window.
+    const baseline = addPeriod(row.queryText);
+    const before = withoutWindow(parseAndCompile(baseline));
     const after = withoutWindow(parseAndCompile(rewritten));
     const equivalent = Bun.deepEquals(before, after);
     logger.info(
@@ -172,6 +186,12 @@ if (missing.length > 0) {
 
 db.close();
 
+// A row that cannot be parsed at all is a failure too: it will never run
+// again, and reporting it without a nonzero exit lets a release proceed past it.
+if (unparseable.length > 0) {
+  logger.info("\nSome reports do not parse at all and need a human.");
+  process.exit(1);
+}
 if (missing.length > 0 && !args.fix) {
   logger.info("\nRe-run with --fix to rewrite them, or deploy the migration.");
   process.exit(1);

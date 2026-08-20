@@ -27,6 +27,16 @@
 -- Rows already carrying a period are skipped: an explicit lookback predicate, a
 -- DURING clause, or an ANALYZE clause (which states its own window, and which
 -- a lookback predicate may not be combined with).
+--
+-- LIMITATION, deliberate and covered by the audit: instr() finds the FIRST
+-- ' group by ', which is the wrong offset for a query whose quoted text
+-- contains that phrase (a chart title, say), and it matches only the
+-- single-spaced form, so `GROUP  BY` or a tab is skipped. Both are rare, and a
+-- skipped row simply stays unmigrated rather than becoming wrong.
+-- scripts/audit-report-windows.ts re-parses every row afterwards with the real
+-- parser, reports anything this missed or mangled, and exits nonzero; its
+-- --fix splices at the parser's own clause span, which has neither weakness.
+-- Run the audit AFTER the migration, not only before it.
 
 UPDATE "Report"
 SET "queryText" =

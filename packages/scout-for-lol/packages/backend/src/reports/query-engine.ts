@@ -142,9 +142,14 @@ async function resolvePlanPlayerRefs(
   plan: ReportQueryPlan,
 ): Promise<string[] | undefined> {
   if (plan.playerRefs.length === 0) return undefined;
+  const guildIds = params.askerGuildIds ?? [];
   return await resolvePlayerRefsToPuuids({
     playerRefs: plan.playerRefs,
-    guildIds: params.askerGuildIds ?? [],
+    guildIds,
+    // A scheduled report has no asker, so it has no alias scope. Say that
+    // plainly rather than letting the lookup fall through to a Riot-ID-only
+    // search and report the alias as an unknown player.
+    aliasScopeAvailable: guildIds.length > 0,
   });
 }
 
