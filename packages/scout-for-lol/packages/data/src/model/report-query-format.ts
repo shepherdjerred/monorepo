@@ -107,11 +107,12 @@ function formatWhereClause(clause: ReportWhereClause): string {
     )
     .with(
       { kind: "champion" },
-      (value) => `champion_id = champion(${quote(value.name)})`,
+      (value) =>
+        `champion_id = champion(${formatReportStringLiteral(value.name)})`,
     )
     .with(
       { kind: "player_ref" },
-      (value) => `player = player(${quote(value.name)})`,
+      (value) => `player = player(${formatReportStringLiteral(value.name)})`,
     )
     .with(
       { kind: "lookback" },
@@ -136,9 +137,12 @@ function formatWhereClause(clause: ReportWhereClause): string {
     .exhaustive();
 }
 
-function quote(value: string): string {
-  const quoteCharacter = value.includes("'") ? '"' : "'";
-  return `${quoteCharacter}${value}${quoteCharacter}`;
+export function formatReportStringLiteral(value: string): string {
+  if (!value.includes("'")) return `'${value}'`;
+  if (!value.includes('"')) return `"${value}"`;
+  throw new Error(
+    "ScoutQL string literals cannot contain both single and double quotes.",
+  );
 }
 
 function formatFilterValue(value: string | number | boolean): string {

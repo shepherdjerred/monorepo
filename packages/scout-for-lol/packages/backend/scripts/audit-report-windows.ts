@@ -2,15 +2,13 @@
 /**
  * Audit every stored report for an explicit ScoutQL time period.
  *
- * Run this against a snapshot of each environment BEFORE deploying the release
- * that requires a period, and again afterwards. It is the acceptance criterion
- * for the backfill migration, because the migration's `instr()` arithmetic
- * cannot tell you what it did to a query's meaning — only a real parse can.
+ * Run this read-only against a snapshot before deploying the release that
+ * requires a period. Backend startup runs it with --fix after Prisma migrations
+ * and before the application starts; it is the parser-aware data migration.
  *
- * The property it checks is the one that matters: for every row the migration
- * rewrote, `parseAndCompile(before)` and `parseAndCompile(after)` must produce
- * the same plan apart from the window. A rewrite that moved a predicate into
- * the wrong clause, or truncated the text, shows up here and nowhere else.
+ * The property it checks is the one that matters: two independently rewritten
+ * forms must produce the same plan apart from the window. A rewrite that moved
+ * a predicate into the wrong clause, or truncated the text, fails startup.
  *
  * Read-only by default. `--fix` rewrites rows the SQL missed, splicing at the
  * parser's own clause span rather than at a string offset — whitespace-proof in
@@ -109,12 +107,21 @@ function addPeriod(queryText: string): string {
 function withDuringClause(queryText: string): string {
   const { ast } = parseReportQuery(queryText);
   const anchor = ast.having ?? ast.groupBy;
-  if (anchor === undefined) {
+  if (anchor === undefined || ast.source === undefined) {
     throw new Error("query has no GROUP BY to splice against");
   }
+  // Rank sources are snapshots/whole-competition leaderboards. Their legacy
+  // timestamp predicate was historically ignored and compiles as ALL TIME for
+  // rollback compatibility, so the independent comparison must state the same
+  // honest window.
+  const period =
+    ast.source.value === "rank_current" ||
+    ast.source.value === "competition_rank"
+      ? "DURING ALL TIME"
+      : "DURING LAST 30 DAYS";
   return (
     queryText.slice(0, anchor.span.end) +
-    " DURING LAST 30 DAYS" +
+    ` ${period}` +
     queryText.slice(anchor.span.end)
   );
 }
@@ -145,7 +152,19 @@ const unparseable: { id: number; title: string; message: string }[] = [];
 
 for (const row of rows) {
   if (hasStatedPeriod(row.queryText)) {
-    stated++;
+    // Presence alone is not acceptance: the parser deliberately retains the
+    // raw DURING/ANALYZE tail, and only compilation validates its grammar and
+    // source compatibility.
+    try {
+      parseAndCompile(row.queryText);
+      stated++;
+    } catch (error) {
+      unparseable.push({
+        id: row.id,
+        title: row.title,
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
     continue;
   }
   // A row with no period no longer compiles — that is the whole point of the

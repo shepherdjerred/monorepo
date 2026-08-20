@@ -18,7 +18,7 @@ const FILTER_DATA: [string, string, string][] = [
   [
     "player",
     'player = "<name>"',
-    "Restrict to one Riot ID exactly as recorded on the match. Matches only games played under that exact name — prefer player('<name>').",
+    "Restrict by the raw player label: a Scout alias in guild reports, or a Riot ID exactly as recorded on the match in global Explore. Matches only that exact label — prefer player('<name>').",
   ],
   [
     "player_call",

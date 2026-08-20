@@ -70,6 +70,11 @@ export type LakeQueryInput = {
   files: LakeFiles;
 };
 
+function groupingTimezone(plan: ReportQueryPlan): string {
+  if (plan.analysis !== undefined) return plan.analysis.timezone;
+  return plan.window.kind === "calendar" ? plan.window.timezone : "UTC";
+}
+
 /**
  * `puuid IN (…)` for a resolved `player('…')` reference.
  *
@@ -363,7 +368,7 @@ export function compileMatchQuery(
   const facts = buildMatchFactsCte(input, matchesSource);
   const grouping = matchGrouping({
     groupBys: input.plan.groupBys,
-    timezone: input.plan.analysis?.timezone ?? "UTC",
+    timezone: groupingTimezone(input.plan),
     scope: input.scope,
   });
   const groupBySql =
@@ -496,7 +501,7 @@ export function compilePrematchQuery(
     champion.sql.length > 0 ? ` WHERE ${champion.sql}` : "";
   const grouping = matchGrouping({
     groupBys: input.plan.groupBys,
-    timezone: input.plan.analysis?.timezone ?? "UTC",
+    timezone: groupingTimezone(input.plan),
     scope: input.scope,
     timeColumn: "observed_at",
     prematch: true,

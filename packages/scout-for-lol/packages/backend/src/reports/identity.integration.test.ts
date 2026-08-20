@@ -16,8 +16,8 @@ import { formatReportQuery } from "@scout-for-lol/data";
  * Identity: one person, several accounts, several names.
  *
  * The fixture reproduces the two fan-outs that compound in production. "Aaron"
- * is one tracked player with two accounts, and his first account was renamed,
- * so his games are spread over three Riot IDs. "Edward" is a second player
+ * is one tracked player with two accounts and several historical Riot IDs.
+ * "Edward" is a second player
  * whose old Riot ID happens to begin with another player's alias — the shape
  * that let one person's stats surface under another person's name.
  */
@@ -31,6 +31,7 @@ const lakeDir = resolveLakeDir();
 const AARON_MAIN = testPuuid("aaron-main");
 const AARON_SMURF = testPuuid("aaron-smurf");
 const EDWARD = testPuuid("edward-main");
+const OTHER_PLAYER = testPuuid("other-player");
 
 function fact(
   overrides: Partial<TestLakeMatchFact> & {
@@ -59,6 +60,7 @@ const matchFacts: TestLakeMatchFact[] = [
     puuid: AARON_MAIN,
     playerId: 1,
     playerAlias: "Aaron",
+    accountAlias: "Old Aaron",
     riotIdGameName: "DarkinBunnygirl",
     gameCreationAt: new Date(Date.UTC(2026, 3, 1)),
   }),
@@ -67,6 +69,7 @@ const matchFacts: TestLakeMatchFact[] = [
     puuid: AARON_MAIN,
     playerId: 1,
     playerAlias: "Aaron",
+    accountAlias: "Old Aaron",
     riotIdGameName: "GexIsAngry",
     gameCreationAt: new Date(Date.UTC(2026, 4, 1)),
   }),
@@ -76,8 +79,32 @@ const matchFacts: TestLakeMatchFact[] = [
     puuid: AARON_SMURF,
     playerId: 1,
     playerAlias: "Aaron",
+    accountAlias: "Old Aaron",
     riotIdGameName: "EddieChavez",
     gameCreationAt: new Date(Date.UTC(2026, 4, 2)),
+  }),
+  // The same bare game name can match two accounts owned by one person. The
+  // resolver must expand the first match, claim both PUUIDs, and not return a
+  // duplicate identity for the second.
+  fact({
+    matchId: "NA1_A4",
+    puuid: AARON_MAIN,
+    playerId: 1,
+    playerAlias: "Aaron",
+    accountAlias: "Old Aaron",
+    riotIdGameName: "SharedName",
+    riotIdTagline: "ONE",
+    gameCreationAt: new Date(Date.UTC(2026, 2, 1)),
+  }),
+  fact({
+    matchId: "NA1_A5",
+    puuid: AARON_SMURF,
+    playerId: 1,
+    playerAlias: "Aaron",
+    accountAlias: "Old Aaron",
+    riotIdGameName: "SharedName",
+    riotIdTagline: "TWO",
+    gameCreationAt: new Date(Date.UTC(2026, 2, 2)),
   }),
   // Edward, whose old name starts with the word "Long".
   fact({
@@ -87,6 +114,18 @@ const matchFacts: TestLakeMatchFact[] = [
     playerAlias: "Edward",
     riotIdGameName: "Long Tentacles",
     gameCreationAt: new Date(Date.UTC(2026, 4, 3)),
+  }),
+  // Player ids are allocated independently per server. This unrelated player
+  // deliberately collides with Aaron's id and must not join to him when the
+  // asker belongs to both servers.
+  fact({
+    matchId: "NA1_O1",
+    puuid: OTHER_PLAYER,
+    playerId: 1,
+    playerAlias: "Other",
+    accountServerIds: [otherServerId],
+    riotIdGameName: "NotAaron",
+    gameCreationAt: new Date(Date.UTC(2026, 4, 4)),
   }),
 ];
 
@@ -116,8 +155,49 @@ describe("player identity resolution", () => {
       "DarkinBunnygirl#NA1",
       "EddieChavez#NA1",
       "GexIsAngry#NA1",
+      "SharedName#ONE",
+      "SharedName#TWO",
     ]);
-    expect(found[0]?.games).toBe(3);
+    expect(found[0]?.games).toBe(5);
+  });
+
+  test("an account alias expands to every account owned by the player", async () => {
+    const found = await resolvePlayerIdentities({
+      query: "Old Aaron",
+      guildIds: [serverId],
+      lakeDir,
+    });
+
+    expect(found).toHaveLength(1);
+    expect(found[0]?.displayName).toBe("Aaron");
+    expect(found[0]?.puuids.toSorted()).toEqual(
+      [AARON_MAIN, AARON_SMURF].toSorted(),
+    );
+    expect(found[0]?.games).toBe(5);
+  });
+
+  test("two matching accounts owned by one player resolve once", async () => {
+    const found = await resolvePlayerIdentities({
+      query: "SharedName",
+      guildIds: [serverId],
+      lakeDir,
+    });
+
+    expect(found).toHaveLength(1);
+    expect(found[0]?.displayName).toBe("Aaron");
+    expect(found[0]?.games).toBe(5);
+  });
+
+  test("same numeric player id on another server stays a different person", async () => {
+    const found = await resolvePlayerIdentities({
+      query: "Aaron",
+      guildIds: [serverId, otherServerId],
+      lakeDir,
+    });
+
+    expect(found).toHaveLength(1);
+    expect(found[0]?.puuids).not.toContain(OTHER_PLAYER);
+    expect(found[0]?.games).toBe(5);
   });
 
   // The bug in one assertion: one of Aaron's names must answer for Aaron, not
@@ -131,7 +211,7 @@ describe("player identity resolution", () => {
 
     expect(found).toHaveLength(1);
     expect(found[0]?.displayName).toBe("Aaron");
-    expect(found[0]?.games).toBe(3);
+    expect(found[0]?.games).toBe(5);
   });
 
   // "Long" is nobody here. Matching it to Edward's "Long Tentacles" would
@@ -234,7 +314,7 @@ describe("player('…') in a query", () => {
       await games(
         "SELECT games FROM match_participants WHERE player = player('Aaron') GROUP BY player DURING ALL TIME",
       ),
-    ).toBe(3);
+    ).toBe(5);
   });
 
   test("a bare Riot ID still finds only that name's games", async () => {
@@ -263,7 +343,6 @@ test("player('…') also works in guild scope", async () => {
   const result = await executeReportQuery({
     prisma,
     scope: guildScope(serverId),
-    askerGuildIds: [serverId],
     queryText:
       "SELECT games FROM match_participants WHERE player = player('Aaron') GROUP BY player DURING ALL TIME",
     now,
@@ -273,5 +352,5 @@ test("player('…') also works in guild scope", async () => {
     (sum, row) => sum + Number(row.values[0]?.value ?? 0),
     0,
   );
-  expect(total).toBe(3);
+  expect(total).toBe(5);
 });

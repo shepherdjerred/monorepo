@@ -65,14 +65,15 @@ from match_participants
 where queue in (solo)
 and games >= 10
 group by player
-during last 30 days
+during all time
 order by win_rate desc
 ```
 
 `games >= <n>` is an aggregate floor, not a raw-row filter — it is the guard
 that stops a 1-0 record topping a win-rate leaderboard.
 
-Scope to a competition's participants and window:
+Scope to a competition's participants. Rank sources are snapshots and therefore
+accept only `DURING ALL TIME`:
 
 ```sql
 select score
@@ -88,7 +89,9 @@ render leaderboard
 
 - Queue values are the ones listed in [Queues and
   regions](/docs/reference/queues-and-regions/).
-- `player = "<alias>"` matches the alias your server uses, not the in-game name.
+- `player = "<name>"` matches the server's Scout alias in guild reports and the
+  recorded Riot ID in global Explore. Prefer `player('<name>')`, which resolves
+  aliases, renames, and linked accounts explicitly.
 - `placement` applies to Arena.
 - Values with spaces must be quoted.
 

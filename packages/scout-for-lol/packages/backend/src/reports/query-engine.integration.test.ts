@@ -667,7 +667,7 @@ describe("executeReportQuery competition rank reports", () => {
     const result = await executeReportQuery({
       prisma,
       scope: guildScope(serverId),
-      queryText: `SELECT player, score FROM competition_rank WHERE competition_id = ${competition.id.toString()} GROUP BY player DURING LAST 30 DAYS ORDER BY score DESC`,
+      queryText: `SELECT player, score FROM competition_rank WHERE competition_id = ${competition.id.toString()} GROUP BY player DURING ALL TIME ORDER BY score DESC`,
       sourceCompetitionId: competition.id,
       now: new Date("2026-06-01T00:00:00Z"),
     });

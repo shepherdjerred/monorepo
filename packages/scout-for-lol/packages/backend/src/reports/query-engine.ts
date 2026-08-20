@@ -118,11 +118,8 @@ export type ExecuteReportQueryParams = {
   now?: Date;
   onPlan?: ((plan: ReportQueryPlan) => void) | undefined;
   rangeOverride?: TemporalRange;
-  /**
-   * The Discord servers the asker belongs to, used only to resolve a
-   * `player('…')` alias. Absent means Riot-ID resolution only, which is the
-   * right default for scheduled reports: they have no asker.
-   */
+  /** The Discord servers a global-scope asker belongs to. Guild-scoped reports
+   * resolve aliases from their own scope, including scheduled reports. */
   askerGuildIds?: string[] | undefined;
 };
 type ReportExecutionParams = Omit<
@@ -138,17 +135,19 @@ type ReportExecutionParams = Omit<
  * from `resolvePlayerRefsToPuuids` rather than matching nothing.
  */
 async function resolvePlanPlayerRefs(
-  params: Pick<ExecuteReportQueryParams, "askerGuildIds">,
+  params: Pick<ExecuteReportQueryParams, "askerGuildIds" | "scope">,
   plan: ReportQueryPlan,
 ): Promise<string[] | undefined> {
   if (plan.playerRefs.length === 0) return undefined;
-  const guildIds = params.askerGuildIds ?? [];
+  const guildIds =
+    params.scope.kind === "guild"
+      ? [params.scope.serverId]
+      : (params.askerGuildIds ?? []);
   return await resolvePlayerRefsToPuuids({
     playerRefs: plan.playerRefs,
     guildIds,
-    // A scheduled report has no asker, so it has no alias scope. Say that
-    // plainly rather than letting the lookup fall through to a Riot-ID-only
-    // search and report the alias as an unknown player.
+    // Global callers without an asker have no permission-bounded alias scope.
+    // A guild report always does: its execution scope is the boundary.
     aliasScopeAvailable: guildIds.length > 0,
   });
 }

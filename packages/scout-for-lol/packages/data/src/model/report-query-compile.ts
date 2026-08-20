@@ -10,7 +10,6 @@ import {
   type ReportGroupSize,
   type ReportHavingClause,
   type ReportMetric,
-  type ReportFilter,
   type ReportQueryAst,
   type ReportQueryPlan,
   type ReportSelectItem,
@@ -31,6 +30,11 @@ import {
   REPORT_WINDOW_REQUIRED_MESSAGE,
   resolveReportQueryWindow,
 } from "#src/model/report-query-window.ts";
+import {
+  validateSourceFilters,
+  validateSourcePlayerRefs,
+  validateSourceWindow,
+} from "#src/model/report-query-source-validation.ts";
 import {
   parseTemporalAnalysisClause,
   resolveTemporalBucket,
@@ -138,6 +142,7 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
 
   const filters = compileReportWhere(ast.where, source);
   validateSourceFilters(source, filters.filters);
+  validateSourcePlayerRefs(source, filters.playerRefs ?? []);
 
   const { orderBy, orderDirection } = compileOrdering(
     ast,
@@ -159,7 +164,7 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
         : undefined
       : PositiveIntSchema.parse(ast.limit.value);
 
-  const window = resolveReportQueryWindow({
+  const resolvedWindow = resolveReportQueryWindow({
     duringClause: ast.during?.value,
     lookbackDays: filters.lookbackDays,
     analysis,
@@ -167,9 +172,20 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
   // Checked before the schema parse so the actionable message wins over a Zod
   // dump. The schema still requires the field — this is the friendly path to
   // the same refusal, not the only one.
-  if (window === undefined) {
+  if (resolvedWindow === undefined) {
     throw new Error(REPORT_WINDOW_REQUIRED_MESSAGE);
   }
+  // Old rank reports stated the otherwise-ignored default as a timestamp
+  // predicate. Preserve those stored queries across rollout/rollback, but make
+  // every newly authored DURING clause honest: rank sources are current or
+  // whole-competition snapshots and only support ALL TIME.
+  const window =
+    (source === "rank_current" || source === "competition_rank") &&
+    filters.lookbackDays !== undefined &&
+    ast.during === undefined
+      ? { kind: "all_time" as const }
+      : resolvedWindow;
+  validateSourceWindow(source, window);
 
   return parseReportQueryPlan({
     source,
@@ -429,30 +445,6 @@ function validateSourceMetrics(
   for (const metric of metrics) {
     if (!allowed.has(metric)) {
       throw new Error(`Metric ${metric} is not available for ${source}.`);
-    }
-  }
-}
-
-function validateSourceFilters(
-  source: ReportQueryPlan["source"],
-  filters: ReportFilter[],
-): void {
-  const prematchFields = new Set([
-    "player",
-    "champion_id",
-    "queue",
-    "game_mode",
-    "game_type",
-    "map_id",
-  ]);
-  for (const filter of filters) {
-    const valid =
-      source === "rank_current" || source === "competition_rank"
-        ? false
-        : source !== "prematch_participants" ||
-          prematchFields.has(filter.field);
-    if (!valid) {
-      throw new Error(`Filter ${filter.field} is not available for ${source}.`);
     }
   }
 }

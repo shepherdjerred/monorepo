@@ -42,6 +42,7 @@ export type ResolvedIdentity = {
 };
 
 const AccountRowSchema = z.object({
+  server_id: z.string(),
   puuid: z.string(),
   player_id: z.union([z.bigint(), z.number()]).transform(Number),
   player_alias: z.string(),
@@ -98,12 +99,12 @@ async function lookupTrackedAccounts(
        SELECT * FROM read_parquet(?) WHERE server_id IN (SELECT unnest(?))
      ),
      seed AS (
-       SELECT player_id, discord_id FROM scoped
+       SELECT server_id, player_id, discord_id FROM scoped
         WHERE lower(player_alias) = ? OR lower(account_alias) = ?
      )
-     SELECT DISTINCT puuid, player_id, player_alias, discord_id
+     SELECT DISTINCT server_id, puuid, player_id, player_alias, discord_id
        FROM scoped
-      WHERE player_id IN (SELECT player_id FROM seed)
+      WHERE (server_id, player_id) IN (SELECT server_id, player_id FROM seed)
          OR (discord_id IS NOT NULL
              AND discord_id IN (SELECT discord_id FROM seed WHERE discord_id IS NOT NULL))`,
     [
@@ -117,32 +118,41 @@ async function lookupTrackedAccounts(
 }
 
 /**
- * Every account belonging to the same tracked person as `puuid`.
+ * Every account belonging to the same tracked people as `puuids`.
  *
  * Two hops: the PUUID identifies a player row, and that player's other
  * accounts come back with it. Restricted to the asker's servers, so this
  * cannot reveal that some other server tracks the account.
  */
-async function lookupAccountsByPuuid(
+async function lookupAccountsByPuuids(
   accountsParquet: string | undefined,
   guildIds: string[],
-  puuid: string,
+  puuids: string[],
 ): Promise<z.infer<typeof AccountRowSchema>[]> {
-  if (accountsParquet === undefined || guildIds.length === 0) return [];
+  if (
+    accountsParquet === undefined ||
+    guildIds.length === 0 ||
+    puuids.length === 0
+  ) {
+    return [];
+  }
   return await runQuery(
     `WITH scoped AS (
        SELECT * FROM read_parquet(?) WHERE server_id IN (SELECT unnest(?))
      ),
-     seed AS (SELECT player_id, discord_id FROM scoped WHERE puuid = ?)
-     SELECT DISTINCT puuid, player_id, player_alias, discord_id
+     seed AS (
+       SELECT server_id, player_id, discord_id FROM scoped
+        WHERE puuid IN (SELECT unnest(?))
+     )
+     SELECT DISTINCT server_id, puuid, player_id, player_alias, discord_id
        FROM scoped
-      WHERE player_id IN (SELECT player_id FROM seed)
+      WHERE (server_id, player_id) IN (SELECT server_id, player_id FROM seed)
          -- discord_id is the cross-server key; without this a person tracked
          -- in two servers keeps two player_ids and stays split here, even
          -- though the alias path unions them.
          OR (discord_id IS NOT NULL
              AND discord_id IN (SELECT discord_id FROM seed WHERE discord_id IS NOT NULL))`,
-    [listParam([accountsParquet]), listParam(guildIds), scalarParam(puuid)],
+    [listParam([accountsParquet]), listParam(guildIds), listParam(puuids)],
     AccountRowSchema,
   );
 }
@@ -181,6 +191,37 @@ async function lookupByRiotId(
     z.object({ puuid: z.string() }),
   );
   return rows.map((row) => row.puuid);
+}
+
+function groupAccountsByPerson(
+  accounts: z.infer<typeof AccountRowSchema>[],
+): Map<string, z.infer<typeof AccountRowSchema>[]> {
+  const groups = new Map<string, z.infer<typeof AccountRowSchema>[]>();
+  for (const account of accounts) {
+    // player_id is server-local; discord_id is the cross-server identity when
+    // linked. The fallback keeps unlinked people distinct.
+    const key =
+      account.discord_id ??
+      `server:${account.server_id}:player:${account.player_id.toString()}`;
+    groups.set(key, [...(groups.get(key) ?? []), account]);
+  }
+  return groups;
+}
+
+type IdentityCandidate = {
+  puuids: string[];
+  matchedBy: ResolvedIdentity["matchedBy"];
+  trackedAlias: string | undefined;
+};
+
+function historyByPuuid(
+  rows: z.infer<typeof IdentityRowSchema>[],
+): Map<string, z.infer<typeof IdentityRowSchema>[]> {
+  const grouped = new Map<string, z.infer<typeof IdentityRowSchema>[]>();
+  for (const row of rows) {
+    grouped.set(row.puuid, [...(grouped.get(row.puuid) ?? []), row]);
+  }
+  return grouped;
 }
 
 function summarise(
@@ -230,7 +271,7 @@ export async function resolvePlayerIdentities(input: {
   const source = buildMatchesSource(files, { sql: "TRUE", params: [] });
   if (source === undefined) return [];
 
-  const identities: ResolvedIdentity[] = [];
+  const candidates: IdentityCandidate[] = [];
 
   // Tracked players first: an alias is an intentional label a server chose,
   // so it outranks an incidental Riot ID collision.
@@ -243,49 +284,67 @@ export async function resolvePlayerIdentities(input: {
   // two of them. `discord_id` is the cross-server key when it is linked; fall
   // back to the per-server id when it is not, which keeps two genuinely
   // different people apart at the cost of possibly splitting one person.
-  const groups = new Map<string, z.infer<typeof AccountRowSchema>[]>();
-  for (const account of accounts) {
-    const key = account.discord_id ?? `player:${account.player_id.toString()}`;
-    groups.set(key, [...(groups.get(key) ?? []), account]);
-  }
-  for (const group of groups.values()) {
-    const rows = await riotIdHistory(
-      source,
-      group.map((account) => account.puuid),
-    );
-    const identity = summarise(rows, "alias", group[0]?.player_alias);
-    if (identity !== undefined) identities.push(identity);
+  for (const group of groupAccountsByPerson(accounts).values()) {
+    candidates.push({
+      puuids: [...new Set(group.map((account) => account.puuid))],
+      matchedBy: "alias",
+      trackedAlias: group[0]?.player_alias,
+    });
   }
 
-  const claimed = new Set(identities.flatMap((identity) => identity.puuids));
+  const claimed = new Set(candidates.flatMap((candidate) => candidate.puuids));
   const riotIdMatches = await lookupByRiotId(source, needle);
-  const byRiotId = riotIdMatches.filter((puuid) => !claimed.has(puuid));
-  for (const puuid of byRiotId) {
+  // Expand every tracked Riot-ID match in one accounts scan. The old loop did
+  // one accounts query and one complete match-history scan per candidate, so a
+  // common bare name made latency grow with the number of matching accounts.
+  const expandedAccounts = await lookupAccountsByPuuids(
+    files.accountsParquet,
+    input.guildIds,
+    riotIdMatches.filter((puuid) => !claimed.has(puuid)),
+  );
+  const ownerByPuuid = new Map<string, z.infer<typeof AccountRowSchema>[]>();
+  for (const group of groupAccountsByPerson(expandedAccounts).values()) {
+    for (const account of group) ownerByPuuid.set(account.puuid, group);
+  }
+
+  for (const puuid of riotIdMatches) {
+    // Re-check after each expansion: two matching accounts may belong to the
+    // same person, and the first one claims the whole account set.
+    if (claimed.has(puuid)) continue;
     // A Riot ID that belongs to a tracked account resolves to the whole
     // person, not that one account. "GexIsAngry" is one of Aaron's three
     // names across two accounts; answering for 160 of his 447 games would be
     // the same under-count by a different route.
-    const owner = await lookupAccountsByPuuid(
-      files.accountsParquet,
-      input.guildIds,
-      puuid,
-    );
-    const group = owner.length > 0 ? owner : undefined;
-    const rows = await riotIdHistory(
-      source,
-      group === undefined ? [puuid] : group.map((account) => account.puuid),
-    );
-    const identity = summarise(
-      rows,
-      group === undefined ? "riot_id" : "alias",
-      group?.[0]?.player_alias,
-    );
-    if (identity === undefined) continue;
-    for (const claimedPuuid of identity.puuids) claimed.add(claimedPuuid);
-    identities.push(identity);
+    const owner = ownerByPuuid.get(puuid);
+    const candidatePuuids =
+      owner === undefined
+        ? [puuid]
+        : [...new Set(owner.map((account) => account.puuid))];
+    for (const claimedPuuid of candidatePuuids) claimed.add(claimedPuuid);
+    candidates.push({
+      puuids: candidatePuuids,
+      matchedBy: owner === undefined ? "riot_id" : "alias",
+      trackedAlias: owner?.[0]?.player_alias,
+    });
   }
 
-  return identities;
+  // One history scan for every candidate, then partition in memory. Resolution
+  // now performs a fixed number of lake reads regardless of how common a bare
+  // Riot game name is.
+  if (candidates.length === 0) return [];
+  const history = historyByPuuid(
+    await riotIdHistory(source, [
+      ...new Set(candidates.flatMap((candidate) => candidate.puuids)),
+    ]),
+  );
+  return candidates.flatMap((candidate) => {
+    const identity = summarise(
+      candidate.puuids.flatMap((puuid) => history.get(puuid) ?? []),
+      candidate.matchedBy,
+      candidate.trackedAlias,
+    );
+    return identity === undefined ? [] : [identity];
+  });
 }
 
 /**

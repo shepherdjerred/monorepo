@@ -7,6 +7,7 @@ import {
   REPORT_RENDER_KINDS,
   REPORT_RENDER_OPTIONS,
   REPORT_SOURCES,
+  REPORT_TIME_PERIODS,
   reportQueueValues,
 } from "@scout-for-lol/data";
 import {
@@ -17,7 +18,7 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 
 const GRAMMAR =
-  "SELECT <metric|expression [AS alias]>, … FROM <source> [WHERE <row filter> AND …] GROUP BY <field>[, <field>] [HAVING <output> <operator> <value>] [ANALYZE LAST <days> DAYS | BETWEEN '<date>' AND '<date>'] [BUCKET BY AUTO|DAY|WEEK|MONTH|PATCH] [COMPARE TO PREVIOUS PERIOD | BETWEEN '<date>' AND '<date>'] [IN TIME ZONE '<IANA zone>'] [ORDER BY <output|label> ASC|DESC] [LIMIT <n>] [RENDER <kind> [WITH (<options>)]]";
+  "SELECT <metric|expression [AS alias]>, … FROM <source> [WHERE <row filter> AND …] GROUP BY <field>[, <field>] [HAVING <output> <operator> <value>] (DURING <period> | ANALYZE LAST <days> DAYS | BETWEEN '<date>' AND '<date>') [BUCKET BY AUTO|DAY|WEEK|MONTH|PATCH] [COMPARE TO PREVIOUS PERIOD | BETWEEN '<date>' AND '<date>'] [IN TIME ZONE '<IANA zone>'] [ORDER BY <output|label> ASC|DESC] [LIMIT <n>] [RENDER <kind> [WITH (<options>)]]";
 
 type DefinitionItem = { term: string; description: string };
 
@@ -64,11 +65,11 @@ export function ReportQueryDocs() {
           <p className="mt-2 text-xs text-scout-subtle">
             Keywords are case-insensitive. WHERE filters raw rows; HAVING
             filters aggregates and aliases. Arithmetic supports parentheses and
-            <span className="font-mono"> + − × ÷</span>. Temporal grouping uses
-            canonical temporal clauses use saved IANA timezones and ISO Monday
-            weeks. A comparison must match the length of the analysis period,
-            and a chart plots at most 2,000 points — a long window needs a
-            coarser bucket.
+            <span className="font-mono"> + − × ÷</span>. Every query states one
+            time period through DURING or ANALYZE. Temporal clauses use saved
+            IANA timezones and ISO Monday weeks. A comparison must match the
+            length of the analysis period, and a chart plots at most 2,000
+            points — a long window needs a coarser bucket.
           </p>
         </CardContent>
       </Card>
@@ -110,6 +111,14 @@ export function ReportQueryDocs() {
         items={REPORT_FILTERS.map((filter) => ({
           term: filter.syntax,
           description: filter.description,
+        }))}
+      />
+
+      <DocsSection
+        title="Time period (required)"
+        items={REPORT_TIME_PERIODS.map((period) => ({
+          term: period.syntax,
+          description: period.description,
         }))}
       />
 

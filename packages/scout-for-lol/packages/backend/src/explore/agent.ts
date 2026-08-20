@@ -8,6 +8,7 @@ import {
   EXPLORE_MAX_TOOL_CALLS,
   ExploreAnswerSchema,
   ExploreAnswerWireSchema,
+  formatReportStringLiteral,
   modelSupportsParameter,
   ReportAiModelPreviewSummarySchema,
   ReportQueryTextSchema,
@@ -258,7 +259,7 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
             found.length === 0
               ? `No player matches "${inputData.query}". Say the data does not cover them rather than guessing at a similar name.`
               : found.length === 1
-                ? `One match. Use player('${found[0]?.displayName ?? inputData.query}') in the query.`
+                ? `One match. Use player(${formatReportStringLiteral(found[0]?.displayName ?? inputData.query)}) in the query.`
                 : `${found.length.toString()} people match. Ask which one they meant before querying.`,
         };
       }),

@@ -324,6 +324,30 @@ describe("player('…') identity references", () => {
       { field: "player", operator: "=", values: ["faker#na1"] },
     ]);
   });
+
+  test("rejects sources that cannot apply resolved PUUIDs", () => {
+    const cases = [
+      { source: "prematch_participants", metric: "prematches" },
+      { source: "competition_match_participants", metric: "games" },
+      { source: "rank_current", metric: "score" },
+      { source: "competition_rank", metric: "score" },
+    ];
+    for (const { source, metric } of cases) {
+      expect(() =>
+        parseAndCompile(
+          `SELECT ${metric} FROM ${source} WHERE player = player('Long') GROUP BY player DURING ALL TIME`,
+        ),
+      ).toThrow(`player('…') is not available for ${source}`);
+    }
+  });
+
+  test("rejects two conjunctive player references instead of unioning them", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT games FROM match_participants WHERE player = player('Long') AND player = player('Edward') GROUP BY player DURING ALL TIME",
+      ),
+    ).toThrow("A query can name one player");
+  });
 });
 
 describe("DURING clause", () => {
@@ -361,6 +385,21 @@ describe("DURING clause", () => {
       endDate: "2026-01-31",
       timezone: "America/Los_Angeles",
     });
+  });
+
+  test("rank snapshots accept only an honest all-time period", () => {
+    for (const source of ["rank_current", "competition_rank"]) {
+      expect(() =>
+        parseAndCompile(
+          `SELECT score FROM ${source} GROUP BY player DURING LAST 30 DAYS`,
+        ),
+      ).toThrow(`${source} supports DURING ALL TIME only`);
+      expect(() =>
+        parseAndCompile(
+          `SELECT score FROM ${source} GROUP BY player DURING ALL TIME`,
+        ),
+      ).not.toThrow();
+    }
   });
 
   test("DURING sits between HAVING and ANALYZE without swallowing clauses", () => {

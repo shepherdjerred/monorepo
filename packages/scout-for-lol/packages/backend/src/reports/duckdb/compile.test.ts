@@ -220,6 +220,21 @@ describe("compile", () => {
     expect(compiled.aggregateSql).toContain("concat_ws(' • '");
   });
 
+  test("uses a DURING calendar timezone for match grouping", () => {
+    const compiled = compileMatchQuery(
+      input(
+        "SELECT games FROM match_participants GROUP BY day DURING BETWEEN '2026-01-01' AND '2026-01-02' IN TIME ZONE 'America/Los_Angeles'",
+      ),
+    );
+    if (compiled === undefined) throw new Error("expected compiled query");
+    expect(compiled.aggregateSql).toContain(
+      "timezone(?, timezone('UTC', game_creation_at))",
+    );
+    expect(paramValues(compiled.aggregateParams)).toContain(
+      "America/Los_Angeles",
+    );
+  });
+
   test("binds string, numeric, and boolean participant filters", () => {
     const compiled = compileMatchQuery(
       input(
