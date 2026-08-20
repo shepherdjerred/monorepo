@@ -53,7 +53,7 @@ export default defineConfig({
           attrs: {
             ...posthogHeadAttrs,
             defer: true,
-            src: "/posthog-bootstrap.js",
+            src: "/docs/posthog-bootstrap.js",
           },
         },
       ],
