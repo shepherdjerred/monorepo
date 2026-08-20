@@ -1,7 +1,6 @@
 import { AttachmentBuilder, Colors, EmbedBuilder } from "discord.js";
 import {
   formatReportDisplayValue,
-  REPORT_AI_PREVIEW_MAX_ROWS,
   REPORT_METRICS,
   type ExploreMessage,
   type ReportAiPreviewSummary,
@@ -83,7 +82,7 @@ function nativeDescription(
   preview: ReportAiPreviewSummary | null,
 ): string | null {
   if (snapshot.series.length === 0) {
-    const hasPreviewRows = preview !== null && preview.rows.length > 0;
+    const hasPreviewRows = preview !== null && previewRows(preview).length > 0;
     if (!hasPreviewRows || snapshot.kind === "KPI_CARD") {
       return "No results found.";
     }
@@ -181,8 +180,7 @@ function formatList(
     preview === null ? alignedRows(snapshot) : previewRows(preview);
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const previewExtra =
-    preview !== null && preview.rows.length >= REPORT_AI_PREVIEW_MAX_ROWS;
+  const previewExtra = hasPreviewRowsBeyondStoredRows(preview, allRows);
   const lines = rows.map((row) => {
     const values = formatRowValues(snapshot, row, preview).join(", ");
     return `- ${escapeMarkdown(row.label)}: ${values}`;
@@ -203,8 +201,7 @@ function formatLeaderboard(
     preview === null ? alignedRows(snapshot) : previewRows(preview);
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const previewExtra =
-    preview !== null && preview.rows.length >= REPORT_AI_PREVIEW_MAX_ROWS;
+  const previewExtra = hasPreviewRowsBeyondStoredRows(preview, allRows);
   const lines = rows.map((row, index) => {
     const values = formatRowValues(snapshot, row, preview).join(" · ");
     return `**${(index + 1).toString()}.** ${escapeMarkdown(row.label)} — ${values}`;
@@ -225,8 +222,7 @@ function formatTable(
     preview === null ? alignedRows(snapshot) : previewRows(preview);
   const rows = allRows.slice(0, MAX_NATIVE_ROWS);
   const extra = allRows.length - rows.length;
-  const previewExtra =
-    preview !== null && preview.rows.length >= REPORT_AI_PREVIEW_MAX_ROWS;
+  const previewExtra = hasPreviewRowsBeyondStoredRows(preview, allRows);
   const headers =
     preview === null
       ? ["", ...snapshot.series.map((series) => series.label)]
@@ -301,10 +297,21 @@ function alignedRows(snapshot: VisualizationSnapshot): NativeRow[] {
 }
 
 function previewRows(preview: ReportAiPreviewSummary): NativeRow[] {
-  return preview.rows.map((row) => ({
+  const rows =
+    preview.visualizationRows.length > 0
+      ? preview.visualizationRows
+      : preview.rows;
+  return rows.map((row) => ({
     label: row.label,
     values: new Map(row.values.map((value) => [value.column, value.value])),
   }));
+}
+
+function hasPreviewRowsBeyondStoredRows(
+  preview: ReportAiPreviewSummary | null,
+  rows: NativeRow[],
+): boolean {
+  return preview !== null && preview.rowsReturned > rows.length;
 }
 
 function previewMetricColumns(preview: ReportAiPreviewSummary) {

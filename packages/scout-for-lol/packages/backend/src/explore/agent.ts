@@ -236,9 +236,9 @@ function createExploreTools(params: ExploreAgentParams, state: RunState) {
         return {
           ok: true,
           message:
-            preview.rows.length === 0
+            preview.rowsReturned === 0
               ? `No rows matched after scanning ${preview.rowsScanned.toString()} rows. The data does not cover this — say so rather than estimating.`
-              : `Returned ${preview.rows.length.toString()} rows after scanning ${preview.rowsScanned.toString()} rows.`,
+              : `Returned ${preview.rowsReturned.toString()} rows after scanning ${preview.rowsScanned.toString()} rows.`,
           formattedQueryText: validation.formattedQueryText,
           preview,
         };

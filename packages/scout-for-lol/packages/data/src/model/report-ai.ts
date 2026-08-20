@@ -12,6 +12,7 @@ export const REPORT_AI_MAX_STEPS = 10;
 export const REPORT_AI_MAX_TOOL_CALLS = 30;
 export const REPORT_AI_MAX_PREVIEW_CALLS = 10;
 export const REPORT_AI_PREVIEW_MAX_ROWS = 10;
+export const REPORT_VISUALIZATION_PREVIEW_MAX_ROWS = 12;
 export const REPORT_AI_TIMEOUT_MS = 180_000;
 export const REPORT_AI_MAX_OUTPUT_TOKENS = 4000;
 export const REPORT_AI_DEFAULT_WEEKLY_LIMIT = 30;
@@ -122,6 +123,20 @@ export const ReportResultColumnSchema = z
   .strict();
 export type ReportResultColumn = z.infer<typeof ReportResultColumnSchema>;
 
+const ReportAiPreviewRowSchema = z
+  .object({
+    label: z.string(),
+    values: z.array(
+      z
+        .object({
+          column: z.string(),
+          value: z.union([z.string(), z.number(), z.null()]),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
+
 export const ReportAiEditStatusSchema = z
   .object({
     enabled: z.boolean(),
@@ -138,23 +153,12 @@ export type ReportAiEditStatus = z.infer<typeof ReportAiEditStatusSchema>;
 export const ReportAiPreviewSummarySchema = z
   .object({
     columns: z.array(ReportResultColumnSchema).max(20),
-    rows: z
-      .array(
-        z
-          .object({
-            label: z.string(),
-            values: z.array(
-              z
-                .object({
-                  column: z.string(),
-                  value: z.union([z.string(), z.number(), z.null()]),
-                })
-                .strict(),
-            ),
-          })
-          .strict(),
-      )
-      .max(REPORT_AI_PREVIEW_MAX_ROWS),
+    rows: z.array(ReportAiPreviewRowSchema).max(REPORT_AI_PREVIEW_MAX_ROWS),
+    visualizationRows: z
+      .array(ReportAiPreviewRowSchema)
+      .max(REPORT_VISUALIZATION_PREVIEW_MAX_ROWS)
+      .default([]),
+    rowsReturned: z.number().int().nonnegative().default(0),
     rowsScanned: z.number().int().nonnegative(),
     renderKind: ReportOutputFormatSchema,
   })

@@ -139,6 +139,44 @@ describe("Scout Discord visualizations", () => {
     expect(payload.embeds?.[0]?.data.description).toBe("No results found.");
   });
 
+  test("renders the stored visualization rows and only claims real overflow", () => {
+    const rows = Array.from({ length: 12 }, (_, index) => ({
+      label: `Champion ${index.toString()}`,
+      values: [
+        { column: "games", value: index + 1 },
+        { column: "win_rate", value: 0.5 },
+      ],
+    }));
+    const extendedPreview = ReportAiPreviewSummarySchema.parse({
+      ...preview,
+      rows: rows.slice(0, 10),
+      visualizationRows: rows,
+      rowsReturned: 13,
+    });
+    const extendedDescription = visualizationToEmbed(
+      scoutTestVisualization,
+      extendedPreview,
+    )?.data.description;
+    expect(extendedDescription).toContain("Champion 11");
+    expect(extendedDescription).toContain(
+      "additional rows omitted from the stored preview",
+    );
+
+    const completePreview = ReportAiPreviewSummarySchema.parse({
+      ...preview,
+      rows: rows.slice(0, 10),
+      visualizationRows: rows.slice(0, 10),
+      rowsReturned: 10,
+    });
+    const completeDescription = visualizationToEmbed(
+      scoutTestVisualization,
+      completePreview,
+    )?.data.description;
+    expect(completeDescription).not.toContain(
+      "additional rows omitted from the stored preview",
+    );
+  });
+
   test("keeps every native description within Discord's limit", () => {
     const longSnapshot = VisualizationSnapshotSchema.parse({
       ...scoutTestVisualization,

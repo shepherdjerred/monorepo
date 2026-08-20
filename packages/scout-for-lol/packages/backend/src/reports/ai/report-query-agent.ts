@@ -196,7 +196,7 @@ function createReportQueryTools(params: ReportQueryAgentParams) {
         await params.emit({ type: "preview", preview });
         return {
           ok: true,
-          message: `Preview returned ${preview.rows.length.toString()} rows after scanning ${preview.rowsScanned.toString()} rows.`,
+          message: `Preview returned ${preview.rowsReturned.toString()} rows after scanning ${preview.rowsScanned.toString()} rows.`,
           formattedQueryText: validation.formattedQueryText,
           preview,
         };
