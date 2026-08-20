@@ -7,9 +7,9 @@
  * Bun script; every credential is a plain env var.
  *
  * Usage:
- *   bun packages/homelab/scripts/tofu-stack.ts <stack> plan|apply [--dry-run]
+ *   bun packages/homelab/scripts/tofu-stack.ts <stack> validate|plan|apply [--dry-run]
  *
- * Env (required):
+ * Env (required for plan/apply):
  *   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY   — S3 backend + provider creds
  *
  * Env (optional — each is wired to its TF var only when present; a
@@ -30,6 +30,7 @@ import {
   type RunOptions,
 } from "@shepherdjerred/root-scripts/lib/run.ts";
 import { runMain } from "@shepherdjerred/root-scripts/lib/transient.ts";
+import { validateTofu, type TofuValidationContext } from "./tofu-validation.ts";
 
 /** homelab package root = two levels up from this script (packages/homelab). */
 function homelabRoot(): string {
@@ -366,7 +367,7 @@ function isolatedRunOptions(
 
 function usage(): never {
   console.error(
-    "Usage: bun packages/homelab/scripts/tofu-stack.ts <stack> plan|apply " +
+    "Usage: bun packages/homelab/scripts/tofu-stack.ts <stack> validate|plan|apply " +
       "[--dry-run]",
   );
   process.exit(1);
@@ -389,8 +390,10 @@ async function main(): Promise<void> {
     console.error("A stack name is required.");
     usage();
   }
-  if (action !== "plan" && action !== "apply") {
-    console.error(`Action must be "plan" or "apply", got: ${String(action)}`);
+  if (action !== "validate" && action !== "plan" && action !== "apply") {
+    console.error(
+      `Action must be "validate", "plan", or "apply", got: ${String(action)}`,
+    );
     usage();
   }
 
@@ -413,7 +416,7 @@ async function main(): Promise<void> {
   const encryptsState = await Bun.file(
     `${stackDir}/state-encryption.tf`,
   ).exists();
-  const env = buildTofuEnv(stack, encryptsState);
+  const env = action === "validate" ? {} : buildTofuEnv(stack, encryptsState);
   if (
     action === "apply" &&
     encryptsState &&
@@ -430,7 +433,14 @@ async function main(): Promise<void> {
     stack === "openrouter" ? await configureLocalOpenRouterProvider(env) : null;
   let tofuError: unknown;
   try {
-    await runTofu(stack, action, root, env);
+    await runSelectedAction({
+      stack,
+      action,
+      root,
+      env,
+      localProviderRoot,
+      runOptions: isolatedRunOptions(env, root),
+    });
   } catch (error) {
     tofuError = error;
   }
@@ -512,6 +522,16 @@ async function runTofu(
     isolatedRunOptions(env, root),
   );
   console.log(`--- applied: ${stack}`);
+}
+
+async function runSelectedAction(
+  context: TofuValidationContext & { action: "validate" | "plan" | "apply" },
+): Promise<void> {
+  if (context.action === "validate") {
+    await validateTofu(context);
+    return;
+  }
+  await runTofu(context.stack, context.action, context.root, context.env);
 }
 
 await runMain(main);

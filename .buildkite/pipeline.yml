@@ -1161,6 +1161,13 @@ steps:
       # verify still covers formatting and static validation for these modules.
       if bun --no-install .buildkite/scripts/ci-changed.ts tofu; then
         tofu fmt -check -recursive packages/homelab/src/tofu
+        # The wrapper also supports credentialed plan/apply, so the static
+        # env-contract check requires these names. Validate uses an empty env,
+        # backend=false, and never contacts the state or cloud APIs.
+        export AWS_ACCESS_KEY_ID=ci-validation AWS_SECRET_ACCESS_KEY=ci-validation
+        for stack in seaweedfs tailscale buildkite arr github cloudflare discord openai anthropic openrouter; do
+          bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" validate
+        done
       fi
       # The remaining deploy rehearsals are credential-free. Site, release,
       # Scout, and version-promotion commands stay in their trusted lanes;
