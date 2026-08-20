@@ -10,9 +10,9 @@ import {
   OpponentPingFieldSchema,
   MatchNumericFieldSchema,
   PARTICIPANT_BOOLEAN_CATALOG,
-  PARTICIPANT_NUMERIC_CATALOG,
+  PERSISTED_PARTICIPANT_NUMERIC_CATALOG,
   ParticipantBooleanFieldSchema,
-  ParticipantNumericFieldSchema,
+  PersistedParticipantNumericFieldSchema,
   TEAM_BOOLEAN_CATALOG,
   TEAM_OBJECTIVE_CATALOG,
   TeamBooleanFieldSchema,
@@ -36,7 +36,7 @@ const SelectedTeamSchema = z.literal("selected");
 const ParticipantNumericConditionSchema = z.strictObject({
   kind: z.literal("participant_numeric"),
   subject: z.string().regex(/^P[1-5]$/),
-  field: ParticipantNumericFieldSchema,
+  field: PersistedParticipantNumericFieldSchema,
   operator: NumericOperatorSchema,
   threshold: z.number().int().nonnegative(),
 });
@@ -177,7 +177,7 @@ function conditionTargetKey(condition: ParlayCondition): string {
 
 function thresholdIssue(condition: ParlayCondition): string | undefined {
   if (condition.kind === "participant_numeric") {
-    const entry = PARTICIPANT_NUMERIC_CATALOG[condition.field];
+    const entry = PERSISTED_PARTICIPANT_NUMERIC_CATALOG[condition.field];
     return condition.threshold < entry.thresholdMin ||
       condition.threshold > entry.thresholdMax
       ? `${condition.field} threshold must be ${entry.thresholdMin.toString()}-${entry.thresholdMax.toString()}`
@@ -330,7 +330,7 @@ export function renderParlayCondition(
 ): string {
   switch (condition.kind) {
     case "participant_numeric":
-      return `${subjectAlias(subjects, condition.subject)} gets ${numericPhrase(condition.operator, condition.threshold)} ${PARTICIPANT_NUMERIC_CATALOG[condition.field].label}`;
+      return `${subjectAlias(subjects, condition.subject)} gets ${numericPhrase(condition.operator, condition.threshold)} ${PERSISTED_PARTICIPANT_NUMERIC_CATALOG[condition.field].label}`;
     case "participant_boolean": {
       const name = subjectAlias(subjects, condition.subject);
       const field = PARTICIPANT_BOOLEAN_CATALOG[condition.field].label;

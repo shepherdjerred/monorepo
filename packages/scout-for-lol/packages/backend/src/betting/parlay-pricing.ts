@@ -3,6 +3,7 @@ import {
   PARLAY_HISTORY_COLUMNS,
   TEAM_OBJECTIVE_HISTORY_COLUMNS,
 } from "#src/betting/parlay-stat-fields.ts";
+import { ParticipantNumericFieldSchema } from "#src/betting/parlay-catalog.ts";
 import type {
   ParlayHistory,
   ParlayHistoryMatch,
@@ -70,7 +71,13 @@ export function conditionHeldInMatch(
       if (condition.subject !== subjectKeyForMatch) {
         return undefined;
       }
-      const column = PARLAY_HISTORY_COLUMNS[condition.field];
+      const participantField = ParticipantNumericFieldSchema.safeParse(
+        condition.field,
+      );
+      if (!participantField.success) {
+        return undefined;
+      }
+      const column = PARLAY_HISTORY_COLUMNS[participantField.data];
       if (column === null) {
         return undefined;
       }

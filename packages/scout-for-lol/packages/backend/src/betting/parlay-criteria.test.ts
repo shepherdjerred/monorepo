@@ -423,7 +423,48 @@ describe("opponent ping conditions", () => {
     const subjects = ParlaySubjectsSchema.parse([
       { key: "P1", puuid: selected[0]?.puuid, alias: "one" },
     ]);
-    const result = GeneratedParlaySchema.safeParse({
+    const result = generatedParlaySchemaFor(subjects).safeParse({
+      version: 1,
+      conditions: [
+        {
+          kind: "participant_numeric",
+          subject: "P1",
+          participantNumericField: "onMyWayPings",
+          participantBooleanField: null,
+          team: null,
+          teamBooleanField: null,
+          objective: null,
+          operator: "gte",
+          threshold: 5,
+          expected: null,
+          matchNumericField: null,
+          opponentPingField: null,
+        },
+        {
+          kind: "participant_numeric",
+          subject: "P1",
+          participantNumericField: "kills",
+          participantBooleanField: null,
+          team: null,
+          teamBooleanField: null,
+          objective: null,
+          operator: "gte",
+          threshold: 1,
+          expected: null,
+          matchNumericField: null,
+          opponentPingField: null,
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+    expect(subjects.length).toBe(1);
+  });
+
+  test("still settles legacy participant ping conditions", () => {
+    const subjects = ParlaySubjectsSchema.parse([
+      { key: "P1", puuid: selected[0]?.puuid, alias: "one" },
+    ]);
+    const condition = GeneratedParlaySchema.parse({
       version: 1,
       yesProbabilityBps: 5000,
       conditions: [
@@ -432,19 +473,25 @@ describe("opponent ping conditions", () => {
           subject: "P1",
           field: "onMyWayPings",
           operator: "gte",
-          threshold: 5,
+          threshold: 0,
         },
         {
           kind: "participant_numeric",
           subject: "P1",
           field: "kills",
           operator: "gte",
-          threshold: 1,
+          threshold: 0,
         },
       ],
     });
-    expect(result.success).toBe(false);
-    expect(subjects.length).toBe(1);
+    const evaluation = evaluateParlay({
+      matchData: fixture,
+      evaluatorVersion: "1",
+      selectedTeamId,
+      subjects,
+      criteria: condition,
+    });
+    expect(evaluation.kind).toBe("evaluated");
   });
 });
 

@@ -123,6 +123,7 @@ type GenerationReady = {
   selectedTeamId: number;
   subjects: readonly ParlaySubject[];
   opponentTrackedAliases: readonly string[];
+  opponentPingsAvailable: boolean;
   context: ParlayGenerationContext;
 };
 
@@ -202,6 +203,9 @@ async function prepareGeneration(
         return alias === undefined ? [] : [alias];
       },
     ),
+    opponentPingsAvailable: input.gameInfo.participants
+      .filter((participant) => participant.teamId !== selected.teamId)
+      .every((participant) => participant.puuid !== null),
     context,
   };
 }
@@ -261,12 +265,24 @@ async function generateAndPersistDefinition(
   // Pass one: which legs, no numbers.
   const proposed = await call(
     parlayProposalSchemaFor(setup.subjects),
-    buildParlayProposalPrompt(setup.context),
+    buildParlayProposalPrompt(setup.context, {
+      opponentPingsAvailable: setup.opponentPingsAvailable,
+    }),
     "bryan_bucks_parlay_proposal",
   );
   const proposal = parlayProposalSchemaFor(setup.subjects).parse(
     proposed.object,
   );
+  if (
+    !setup.opponentPingsAvailable &&
+    proposal.conditions.some(
+      (condition) => condition.kind === "opponent_team_pings",
+    )
+  ) {
+    throw new ParlayUnpriceableError(
+      "an opponent PUUID is unavailable, so opponent ping eligibility cannot be established",
+    );
+  }
   deadline.throwIfAborted();
 
   // The one history snapshot that both the thresholds and the price come from.

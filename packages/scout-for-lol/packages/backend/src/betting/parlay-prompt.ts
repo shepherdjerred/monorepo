@@ -209,6 +209,7 @@ export const PARLAY_SYSTEM_PROMPT = `You create one entertaining but plausible L
  */
 export function buildParlayProposalPrompt(
   context: ParlayGenerationContext,
+  options: { opponentPingsAvailable?: boolean } = {},
 ): string {
   return [
     "Choose 2-6 distinct conditions for one fixed-odds parlay. Do NOT choose any numbers yet.",
@@ -224,6 +225,7 @@ export function buildParlayProposalPrompt(
       promptFieldCatalog({
         participantNumericFields: groundedParticipantFields(),
         teamObjectives: groundedTeamObjectives(),
+        includeOpponentPings: options.opponentPingsAvailable ?? true,
       }),
     )}`,
   ].join("\n\n");

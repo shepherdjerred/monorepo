@@ -1,6 +1,12 @@
 import { cp, mkdir, rm, rename } from "node:fs/promises";
 import path from "node:path";
-import { publishedBuildId, seedLakeDir, seedRoot } from "./dev-lake-seed.ts";
+import {
+  publishedBuildId,
+  resolveBackendStorageDir,
+  seedBaseDir,
+  seedLakeDir,
+  seedRoot,
+} from "./dev-lake-seed.ts";
 
 /**
  * Fill the machine-wide report-lake seed that every checkout copies from.
@@ -79,7 +85,7 @@ async function rebuildIntoSeed(scoutRoot: string): Promise<void> {
       cwd: path.join(scoutRoot, "packages", "backend"),
       env: {
         ...Bun.env,
-        REPORT_LAKE_DIR: seed,
+        REPORT_LAKE_DIR: seedBaseDir(),
         AWS_PROFILE: Bun.env["AWS_PROFILE"] ?? "seaweedfs",
       },
       stdin: "inherit",
@@ -98,11 +104,9 @@ async function rebuildIntoSeed(scoutRoot: string): Promise<void> {
 
 if (import.meta.main) {
   const scoutRoot = import.meta.dir.replace(/\/scripts$/, "");
-  const checkoutLake = path.join(
-    scoutRoot,
-    "packages",
-    "backend",
-    "report-lake",
+  const checkoutLake = resolveBackendStorageDir(
+    path.join(scoutRoot, "packages", "backend"),
+    undefined,
   );
   const flags = parseFlags(Bun.argv.slice(2));
 

@@ -1,5 +1,9 @@
 import path from "node:path";
-import { adoptSeedIfUnseeded, resolveBackendLakeDir } from "./dev-lake-seed.ts";
+import {
+  adoptSeedIfUnseeded,
+  resolveBackendLakeDir,
+  resolveBackendStorageDir,
+} from "./dev-lake-seed.ts";
 import { requireCliValue, unresolvedSecrets } from "./migration-core.ts";
 
 const DEFAULT_BACKEND_PORT = 3000;
@@ -201,7 +205,11 @@ if (import.meta.main) {
     const { options } = parsed;
     const { backendOrigin, webOrigin } = origins(options);
     const backendCwd = path.join(root, "packages", "backend");
-    const lakeDir = resolveBackendLakeDir(
+    const lakeBaseDir = resolveBackendLakeDir(
+      backendCwd,
+      Bun.env["REPORT_LAKE_DIR"],
+    );
+    const lakeDir = resolveBackendStorageDir(
       backendCwd,
       Bun.env["REPORT_LAKE_DIR"],
     );
@@ -219,7 +227,7 @@ if (import.meta.main) {
       ENABLE_BACKGROUND_JOBS: options.discordGatewayEnabled ? "true" : "false",
       ENABLE_DISCORD_GATEWAY: options.discordGatewayEnabled ? "true" : "false",
       WEB_APP_ORIGIN: webOrigin,
-      REPORT_LAKE_DIR: lakeDir,
+      REPORT_LAKE_DIR: lakeBaseDir,
     };
 
     console.log(

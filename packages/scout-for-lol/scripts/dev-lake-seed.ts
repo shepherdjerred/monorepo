@@ -1,6 +1,7 @@
 import { cp, mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { homedir } from "node:os";
+import { lakeSchemaFingerprint } from "../packages/backend/src/report-lake/schema.ts";
 
 /**
  * A machine-wide seed copy of the report lake, shared by every checkout.
@@ -28,8 +29,16 @@ export function seedRoot(): string {
   return path.join(base, "scout-for-lol", "dev-seed");
 }
 
-export function seedLakeDir(): string {
+export function seedBaseDir(): string {
   return path.join(seedRoot(), "report-lake");
+}
+
+export function seedLakeDir(): string {
+  return schemaLakeDir(seedBaseDir());
+}
+
+function schemaLakeDir(baseDir: string): string {
+  return path.join(baseDir, `schema-${lakeSchemaFingerprint()}`);
 }
 
 /**
@@ -55,6 +64,14 @@ export function resolveBackendLakeDir(
       ? configured
       : "./report-lake";
   return path.resolve(backendCwd, value);
+}
+
+/** The schema-specific directory opened by the backend for that base path. */
+export function resolveBackendStorageDir(
+  backendCwd: string,
+  configured: string | undefined,
+): string {
+  return schemaLakeDir(resolveBackendLakeDir(backendCwd, configured));
 }
 
 /**

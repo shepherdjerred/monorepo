@@ -33,8 +33,15 @@ export const MATCHES_STAGING_DIR = "matches-recent";
 export const PREMATCH_STAGING_DIR = "prematch-recent";
 export const COMPETITION_RANK_HISTORY_STAGING_DIR =
   "competition-rank-history-recent";
+const LEGACY_LAKE_ENTRIES = new Set([
+  CURRENT_POINTER,
+  BUILDS_DIR,
+  MATCHES_STAGING_DIR,
+  PREMATCH_STAGING_DIR,
+  COMPETITION_RANK_HISTORY_STAGING_DIR,
+]);
 
-export function resolveLakeDir(): string {
+export function resolveLakeBaseDir(): string {
   // Widened to unknown because Bun's process-wide `mock.module` leakage can
   // hand us a PARTIAL configuration mock missing this field (see the
   // write-up in trpc/auth-web.test.ts); in real runs env-var's .default()
@@ -44,12 +51,37 @@ export function resolveLakeDir(): string {
     typeof configured === "string"
       ? configured
       : (Bun.env["REPORT_LAKE_DIR"] ?? "./report-lake");
+  return baseDir;
+}
+
+export function resolveLakeDir(): string {
+  const baseDir = resolveLakeBaseDir();
   // The schema is part of the storage namespace, not only a manifest check.
   // During a rolling deployment, an old worker can still publish after a new
   // worker rebuilds. Old code writes to the unnamespaced base directory while
   // this binary reads and writes only its fingerprinted directory, so those
   // workers cannot mix parquet files into the live lake.
   return path.join(baseDir, `schema-${lakeSchemaFingerprint()}`);
+}
+
+/** Remove only the obsolete, unnamespaced lake after a replacement publish. */
+export async function removeLegacyLakeNamespace(
+  lakeDir: string,
+): Promise<void> {
+  const baseDir = resolveLakeBaseDir();
+  if (path.resolve(baseDir) === path.resolve(lakeDir)) {
+    return;
+  }
+  const entries = await readdir(baseDir, { withFileTypes: true }).catch(
+    () => [],
+  );
+  if (
+    entries.length === 0 ||
+    entries.some((entry) => !LEGACY_LAKE_ENTRIES.has(entry.name))
+  ) {
+    return;
+  }
+  await rm(baseDir, { recursive: true, force: true });
 }
 
 let buildCounter = 0;

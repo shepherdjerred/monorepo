@@ -151,6 +151,19 @@ export const OpponentPingFieldSchema = z.enum([
 ]);
 export type OpponentPingField = z.infer<typeof OpponentPingFieldSchema>;
 
+/**
+ * Participant ping fields accepted only when reading definitions created by
+ * the original generator. New model proposals use GroundedParticipantFieldSchema
+ * and therefore cannot create these manipulable legs.
+ */
+export const PersistedParticipantNumericFieldSchema = z.union([
+  ParticipantNumericFieldSchema,
+  OpponentPingFieldSchema,
+]);
+export type PersistedParticipantNumericField = z.infer<
+  typeof PersistedParticipantNumericFieldSchema
+>;
+
 const NumericCatalogEntrySchema = z.strictObject({
   label: z.string().min(1),
   thresholdMin: z.number().int().nonnegative(),
@@ -236,7 +249,7 @@ export const TEAM_OBJECTIVE_CATALOG = z
 
 export function participantNumericValue(
   participant: RawParticipant,
-  field: ParticipantNumericField,
+  field: PersistedParticipantNumericField,
 ): number {
   return participant[field];
 }
@@ -413,9 +426,26 @@ export const OPPONENT_PING_CATALOG = z
     ),
   );
 
+export const PERSISTED_PARTICIPANT_NUMERIC_CATALOG = z
+  .record(PersistedParticipantNumericFieldSchema, NumericCatalogEntrySchema)
+  .parse({
+    ...PARTICIPANT_NUMERIC_CATALOG,
+    ...Object.fromEntries(
+      OpponentPingFieldSchema.options.map((field) => [
+        field,
+        {
+          label: label(field),
+          thresholdMin: 0,
+          thresholdMax: 10_000,
+        },
+      ]),
+    ),
+  });
+
 export function promptFieldCatalog(input?: {
   participantNumericFields?: readonly ParticipantNumericField[];
   teamObjectives?: readonly TeamObjective[];
+  includeOpponentPings?: boolean;
 }): object {
   const participantNumericFields =
     input?.participantNumericFields ?? ParticipantNumericFieldSchema.options;
@@ -436,6 +466,8 @@ export function promptFieldCatalog(input?: {
       ]),
     ),
     matchNumeric: MATCH_NUMERIC_CATALOG,
-    opponentPings: OPPONENT_PING_CATALOG,
+    ...(input?.includeOpponentPings === false
+      ? {}
+      : { opponentPings: OPPONENT_PING_CATALOG }),
   };
 }
