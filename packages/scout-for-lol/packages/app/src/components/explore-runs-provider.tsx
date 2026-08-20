@@ -34,10 +34,10 @@ import {
 } from "#src/lib/explore-run-completion.ts";
 import {
   createExploreRunMarker,
-  hasRunningExploreRunMarker,
   setExploreRunMarker,
 } from "#src/lib/explore-run-markers.ts";
 import { useExploreRunMarkers } from "#src/hooks/use-explore-run-markers.ts";
+import { useMarkerDiscovery } from "#src/hooks/use-explore-marker-discovery.ts";
 import { useExploreStartMutation } from "#src/hooks/use-explore-start-mutation.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import {
@@ -72,21 +72,18 @@ function displayedExploreConversation(pathname: string): string | null {
 export function ExploreRunsProvider(props: { children: ReactNode }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const location = useLocation();
-  const displayedConversationId = displayedExploreConversation(
-    location.pathname,
-  );
+  const { pathname } = useLocation();
+  const displayedConversationId = displayedExploreConversation(pathname);
   const displayedConversationRef = useRef(displayedConversationId);
   displayedConversationRef.current = displayedConversationId;
 
-  const { markers, updateMarkers } = useExploreRunMarkers(
-    displayedConversationId,
-  );
+  const { markers, updateMarkers, acknowledgeVisibleAnswer } =
+    useExploreRunMarkers(displayedConversationId);
   const markersRef = useRef(markers);
   markersRef.current = markers;
   const [activated, setActivated] = useState(
     () =>
-      location.pathname.startsWith("/explore") ||
+      pathname.startsWith("/explore") ||
       markers.some((marker) => marker.state === "running"),
   );
   const [runs, setRuns] = useState<Map<string, ExploreClientRun>>(new Map());
@@ -102,7 +99,6 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
     ...trpc.explore.activeRuns.queryOptions(),
     enabled: activated,
   });
-  const refetchActiveRuns = activeRuns.refetch;
 
   const updateRuns = useCallback(
     (
@@ -275,16 +271,10 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    if (location.pathname.startsWith("/explore")) setActivated(true);
-  }, [location.pathname]);
+    if (pathname.startsWith("/explore")) setActivated(true);
+  }, [pathname]);
 
-  useEffect(() => {
-    if (!hasRunningExploreRunMarker(markers)) return;
-    setActivated(true);
-    if (activated) {
-      void refetchActiveRuns();
-    }
-  }, [activated, markers, refetchActiveRuns]);
+  useMarkerDiscovery(activated, markers, setActivated, activeRuns.refetch);
 
   useEffect(() => {
     if (!activeRuns.isSuccess) return;
@@ -474,6 +464,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
           clearExploreClientError(current, conversationKey(conversationId)),
         );
       },
+      acknowledgeVisibleAnswer,
       startTurn,
       stop,
       status: (conversationId) => {
@@ -484,7 +475,16 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
         );
       },
     }),
-    [activated, activeRuns.isSuccess, errors, markers, runs, startTurn, stop],
+    [
+      acknowledgeVisibleAnswer,
+      activated,
+      activeRuns.isSuccess,
+      errors,
+      markers,
+      runs,
+      startTurn,
+      stop,
+    ],
   );
 
   return (

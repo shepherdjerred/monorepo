@@ -11,6 +11,22 @@ export type ExploreRunOutcome =
   | "stopped"
   | "interrupted";
 
+export function findVisibleExploreRunAnswer(input: {
+  run: Pick<ExploreActiveRun, "questionMessageId" | "versionCountAtStart">;
+  finalMessageId: string | null;
+  messages: ExploreMessage[] | undefined;
+}): ExploreMessage | undefined {
+  return input.finalMessageId === null
+    ? input.messages?.find(
+        (message) =>
+          message.role === "assistant" &&
+          message.parentId === input.run.questionMessageId &&
+          message.siblingIds.length > input.run.versionCountAtStart &&
+          message.siblingIds.at(-1) === message.id,
+      )
+    : input.messages?.find((message) => message.id === input.finalMessageId);
+}
+
 export function resolveExploreRunCompletion(input: {
   run: Pick<ExploreActiveRun, "questionMessageId" | "versionCountAtStart">;
   outcome: ExploreRunOutcome;
@@ -20,16 +36,7 @@ export function resolveExploreRunCompletion(input: {
   markerState: "completed" | "failed" | null;
   answerVisible: boolean;
 } {
-  const answer =
-    input.finalMessageId === null
-      ? input.messages?.find(
-          (message) =>
-            message.role === "assistant" &&
-            message.parentId === input.run.questionMessageId &&
-            message.siblingIds.length > input.run.versionCountAtStart &&
-            message.siblingIds.at(-1) === message.id,
-        )
-      : input.messages?.find((message) => message.id === input.finalMessageId);
+  const answer = findVisibleExploreRunAnswer(input);
   if (answer?.caveats.includes(EXPLORE_INTERRUPTED_CAVEAT) === true) {
     return { markerState: "failed", answerVisible: true };
   }

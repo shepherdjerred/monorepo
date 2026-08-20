@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
+import { ExploreMessageSchema } from "@scout-for-lol/data";
 import {
   EXPLORE_RUN_MARKERS_KEY,
-  clearSettledExploreRunMarker,
+  clearFailedExploreRunMarker,
+  clearVisibleExploreRunMarker,
   createExploreRunMarker,
   hasRunningExploreRunMarker,
   loadExploreRunMarkers,
@@ -13,6 +15,8 @@ import {
 const RUN_ID = "11111111-1111-4111-8111-111111111111";
 const CONVERSATION_ID = "22222222-2222-4222-8222-222222222222";
 const QUESTION_ID = "33333333-3333-4333-8333-333333333333";
+const OLD_ANSWER_ID = "44444444-4444-4444-8444-444444444444";
+const NEW_ANSWER_ID = "55555555-5555-4555-8555-555555555555";
 
 class MemoryStorage implements Storage {
   readonly #values = new Map<string, string>();
@@ -97,13 +101,41 @@ describe("Explore run markers", () => {
     expect(setExploreRunMarker(completed, marker("completed"))).toBe(completed);
   });
 
-  test("opening a conversation clears settled markers but keeps running ones", () => {
+  test("opening a conversation clears failures but keeps unread completions", () => {
     expect(
-      clearSettledExploreRunMarker([marker("completed")], CONVERSATION_ID),
+      clearFailedExploreRunMarker([marker("failed")], CONVERSATION_ID),
     ).toEqual([]);
     expect(
-      clearSettledExploreRunMarker([marker("running")], CONVERSATION_ID),
+      clearFailedExploreRunMarker([marker("running")], CONVERSATION_ID),
     ).toEqual([marker("running")]);
+    expect(
+      clearFailedExploreRunMarker([marker("completed")], CONVERSATION_ID),
+    ).toEqual([marker("completed")]);
+  });
+
+  test("clears a completion only when its new answer is visible", () => {
+    const completed = { ...marker("completed"), versionCountAtStart: 1 };
+    const oldAnswer = ExploreMessageSchema.parse({
+      id: OLD_ANSWER_ID,
+      role: "assistant",
+      parentId: QUESTION_ID,
+      content: "Old answer",
+      caveats: [],
+      siblingIds: [OLD_ANSWER_ID, NEW_ANSWER_ID],
+      createdAt: "2026-08-20T00:00:00.000Z",
+    });
+    const newAnswer = ExploreMessageSchema.parse({
+      ...oldAnswer,
+      id: NEW_ANSWER_ID,
+      content: "New answer",
+    });
+
+    expect(
+      clearVisibleExploreRunMarker([completed], CONVERSATION_ID, [oldAnswer]),
+    ).toEqual([completed]);
+    expect(
+      clearVisibleExploreRunMarker([completed], CONVERSATION_ID, [newAnswer]),
+    ).toEqual([]);
   });
 
   test("only running markers require active-run discovery", () => {

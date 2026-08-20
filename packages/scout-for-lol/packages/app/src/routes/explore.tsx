@@ -67,6 +67,11 @@ export function Explore() {
 
   const pendingTurn = runs.pendingTurn(conversationId);
 
+  useEffect(() => {
+    if (conversationId === null) return;
+    runs.acknowledgeVisibleAnswer(conversationId, messages);
+  }, [conversationId, messages, runs]);
+
   const share = useExploreShare({ conversationId, shareToken: shared });
 
   const setLeafMutation = useMutation(trpc.explore.setLeaf.mutationOptions());

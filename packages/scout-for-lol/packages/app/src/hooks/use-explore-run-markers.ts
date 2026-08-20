@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import type { ExploreMessage } from "@scout-for-lol/data";
 import {
   EXPLORE_RUN_MARKERS_KEY,
-  clearSettledExploreRunMarker,
+  clearFailedExploreRunMarker,
+  clearVisibleExploreRunMarker,
   loadExploreRunMarkers,
   saveExploreRunMarkers,
   type ExploreRunMarker,
@@ -19,6 +21,14 @@ export function useExploreRunMarkers(displayedConversationId: string | null) {
       setMarkers((current) => update(current));
     },
     [],
+  );
+  const acknowledgeVisibleAnswer = useCallback(
+    (conversationId: string, messages: ExploreMessage[]): void => {
+      updateMarkers((current) =>
+        clearVisibleExploreRunMarker(current, conversationId, messages),
+      );
+    },
+    [updateMarkers],
   );
 
   useEffect(() => {
@@ -40,9 +50,9 @@ export function useExploreRunMarkers(displayedConversationId: string | null) {
   useEffect(() => {
     if (displayedConversationId === null) return;
     updateMarkers((current) =>
-      clearSettledExploreRunMarker(current, displayedConversationId),
+      clearFailedExploreRunMarker(current, displayedConversationId),
     );
   }, [displayedConversationId, updateMarkers]);
 
-  return { markers, updateMarkers };
+  return { markers, updateMarkers, acknowledgeVisibleAnswer };
 }
