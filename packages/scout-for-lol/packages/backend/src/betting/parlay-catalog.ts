@@ -11,33 +11,21 @@ import type { RawInfo, RawParticipant, RawTeam } from "@scout-for-lol/data";
  */
 
 export const ParticipantNumericFieldSchema = z.enum([
-  // Retained for settlement compatibility with version-1 definitions created
-  // before participant pings were removed from new proposals.
-  "allInPings",
   "assists",
-  "assistMePings",
-  "basicPings",
-  "baitPings",
   "baronKills",
   "champExperience",
   "champLevel",
-  "commandPings",
   "consumablesPurchased",
   "damageDealtToBuildings",
   "damageDealtToObjectives",
   "damageDealtToTurrets",
   "damageSelfMitigated",
   "deaths",
-  "dangerPings",
   "detectorWardsPlaced",
   "doubleKills",
   "dragonKills",
-  "enemyMissingPings",
-  "enemyVisionPings",
   "goldEarned",
   "goldSpent",
-  "getBackPings",
-  "holdPings",
   "inhibitorKills",
   "inhibitorTakedowns",
   "inhibitorsLost",
@@ -52,13 +40,11 @@ export const ParticipantNumericFieldSchema = z.enum([
   "magicDamageDealtToChampions",
   "magicDamageTaken",
   "neutralMinionsKilled",
-  "needVisionPings",
   "nexusKills",
   "nexusLost",
   "nexusTakedowns",
   "objectivesStolen",
   "objectivesStolenAssists",
-  "onMyWayPings",
   "pentaKills",
   "physicalDamageDealt",
   "physicalDamageDealtToChampions",
@@ -94,15 +80,45 @@ export const ParticipantNumericFieldSchema = z.enum([
   "turretsLost",
   "unrealKills",
   "visionScore",
-  "pushPings",
   "visionWardsBoughtInGame",
-  "visionClearedPings",
   "wardsKilled",
   "wardsPlaced",
 ]);
 
 export type ParticipantNumericField = z.infer<
   typeof ParticipantNumericFieldSchema
+>;
+
+/**
+ * Numeric participant fields retained only so version-1 parlays that named a
+ * participant's pings can still be settled. New proposals use the canonical
+ * participant catalog above, which deliberately excludes all pings.
+ */
+export const LegacyParticipantNumericFieldSchema = z.enum([
+  "allInPings",
+  "assistMePings",
+  "basicPings",
+  "baitPings",
+  "commandPings",
+  "dangerPings",
+  "enemyMissingPings",
+  "enemyVisionPings",
+  "getBackPings",
+  "holdPings",
+  "needVisionPings",
+  "onMyWayPings",
+  "pushPings",
+  "visionClearedPings",
+]);
+export type LegacyParticipantNumericField = z.infer<
+  typeof LegacyParticipantNumericFieldSchema
+>;
+export const SettlementParticipantNumericFieldSchema = z.union([
+  ParticipantNumericFieldSchema,
+  LegacyParticipantNumericFieldSchema,
+]);
+export type SettlementParticipantNumericField = z.infer<
+  typeof SettlementParticipantNumericFieldSchema
 >;
 
 export const ParticipantBooleanFieldSchema = z.enum([
@@ -210,6 +226,26 @@ export const PARTICIPANT_NUMERIC_CATALOG = z
     ),
   );
 
+const LEGACY_PARTICIPANT_NUMERIC_CATALOG = z
+  .record(LegacyParticipantNumericFieldSchema, NumericCatalogEntrySchema)
+  .parse(
+    Object.fromEntries(
+      LegacyParticipantNumericFieldSchema.options.map((field) => [
+        field,
+        {
+          label: label(field),
+          thresholdMin: 0,
+          thresholdMax: 10_000,
+        },
+      ]),
+    ),
+  );
+
+export const PARTICIPANT_NUMERIC_SETTLEMENT_CATALOG = {
+  ...PARTICIPANT_NUMERIC_CATALOG,
+  ...LEGACY_PARTICIPANT_NUMERIC_CATALOG,
+};
+
 export const PARTICIPANT_BOOLEAN_CATALOG = z
   .record(ParticipantBooleanFieldSchema, BooleanCatalogEntrySchema)
   .parse(
@@ -252,7 +288,7 @@ export const TEAM_OBJECTIVE_CATALOG = z
 
 export function participantNumericValue(
   participant: RawParticipant,
-  field: ParticipantNumericField,
+  field: SettlementParticipantNumericField,
 ): number | undefined {
   return participant[field];
 }
