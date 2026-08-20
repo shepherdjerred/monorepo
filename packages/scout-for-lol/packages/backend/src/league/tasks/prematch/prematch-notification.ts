@@ -176,62 +176,26 @@ function buildPrematchPayload(input: {
   };
 }
 
-export async function sendPrematchNotification(
-  gameInfo: RawCurrentGameInfo,
-  trackedPlayers: PlayerConfigEntry[],
-): Promise<Map<string, string>> {
-  const sentMessageIds = new Map<string, string>();
-  const gameId = gameInfo.gameId.toString();
-  const aliases = trackedPlayers.map((p) => p.alias);
-  logger.info(
-    `[sendPrematchNotification] 📢 Sending notification for game ${gameId} with ${trackedPlayers.length.toString()} tracked player(s)`,
-  );
-
-  // The authoritative raw spectator payload is written to S3 upstream by the
-  // detection ingest (recordPrematchForReportStore in active-game-detection.ts)
-  // before this runs, so there is no spectator-data S3 write here.
-
-  const puuids: LeaguePuuid[] = trackedPlayers.map(
-    (p) => p.league.leagueAccount.puuid,
-  );
-  const channels = await getChannelsSubscribedToPlayers(puuids);
-
-  if (channels.length === 0) {
-    logger.info(
-      `[sendPrematchNotification] ⚠️  No channels subscribed for game ${gameId}`,
-    );
-    return sentMessageIds;
-  }
-
-  // Apply per-subscription notification filters (queue type, etc.).
-  const queueType = resolveQueueTypeFromGame(
-    gameInfo.gameQueueConfigId,
-    gameInfo.gameMode,
-    gameInfo.gameType,
-  );
-  const deliverChannels = channelsPassingQueueFilter(channels, queueType);
-  if (deliverChannels.length === 0) {
-    logger.info(
-      `[sendPrematchNotification] 🔕 Game ${gameId} filtered out for all channels (queue ${queueType ?? "unknown"})`,
-    );
-    return sentMessageIds;
-  }
-
-  const targetGuildIds: DiscordGuildId[] = uniqueBy(
-    deliverChannels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
-    (id) => id,
-  );
-
-  logger.info(
-    `[sendPrematchNotification] 📺 Sending to ${deliverChannels.length.toString()} channel(s) across ${targetGuildIds.length.toString()} guild(s)`,
-  );
-
-  const prematchMessageContent = formatPrematchMessage(
-    trackedPlayers,
-    queueType,
-    gameInfo.gameMode,
-  );
-
+/**
+ * Render the loading-screen image, or fall back to text.
+ *
+ * Extracted verbatim from sendPrematchNotification: the image path carries its
+ * own metrics, Sentry fingerprinting, and fire-and-forget S3 writes, and inlining
+ * all of that put the caller over the complexity limit. Every failure here is
+ * still non-fatal - the notification degrades to a text embed exactly as before.
+ */
+async function renderPrematchLoadingScreen(input: {
+  gameInfo: RawCurrentGameInfo;
+  trackedPlayers: PlayerConfigEntry[];
+  queueType: QueueType | undefined;
+  gameId: string;
+  aliases: string[];
+}): Promise<{
+  attachment: AttachmentBuilder | undefined;
+  embed: EmbedBuilder | undefined;
+  data: LoadingScreenData | undefined;
+}> {
+  const { gameInfo, trackedPlayers, queueType, gameId, aliases } = input;
   // Generate loading screen image. Preferred delivery: image + short text.
   // If generation fails, we fall back to a rich text embed (buildFallbackPrematchEmbed).
   let loadingScreenAttachment: AttachmentBuilder | undefined;
@@ -359,6 +323,80 @@ export async function sendPrematchNotification(
     }
     // Continue with text-only notification
   }
+
+  return {
+    attachment: loadingScreenAttachment,
+    embed: loadingScreenEmbed,
+    data: loadingScreenData,
+  };
+}
+
+export async function sendPrematchNotification(
+  gameInfo: RawCurrentGameInfo,
+  trackedPlayers: PlayerConfigEntry[],
+): Promise<Map<string, string>> {
+  const sentMessageIds = new Map<string, string>();
+  const gameId = gameInfo.gameId.toString();
+  const aliases = trackedPlayers.map((p) => p.alias);
+  logger.info(
+    `[sendPrematchNotification] 📢 Sending notification for game ${gameId} with ${trackedPlayers.length.toString()} tracked player(s)`,
+  );
+
+  // The authoritative raw spectator payload is written to S3 upstream by the
+  // detection ingest (recordPrematchForReportStore in active-game-detection.ts)
+  // before this runs, so there is no spectator-data S3 write here.
+
+  const puuids: LeaguePuuid[] = trackedPlayers.map(
+    (p) => p.league.leagueAccount.puuid,
+  );
+  const channels = await getChannelsSubscribedToPlayers(puuids);
+
+  if (channels.length === 0) {
+    logger.info(
+      `[sendPrematchNotification] ⚠️  No channels subscribed for game ${gameId}`,
+    );
+    return sentMessageIds;
+  }
+
+  // Apply per-subscription notification filters (queue type, etc.).
+  const queueType = resolveQueueTypeFromGame(
+    gameInfo.gameQueueConfigId,
+    gameInfo.gameMode,
+    gameInfo.gameType,
+  );
+  const deliverChannels = channelsPassingQueueFilter(channels, queueType);
+  if (deliverChannels.length === 0) {
+    logger.info(
+      `[sendPrematchNotification] 🔕 Game ${gameId} filtered out for all channels (queue ${queueType ?? "unknown"})`,
+    );
+    return sentMessageIds;
+  }
+
+  const targetGuildIds: DiscordGuildId[] = uniqueBy(
+    deliverChannels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
+    (id) => id,
+  );
+
+  logger.info(
+    `[sendPrematchNotification] 📺 Sending to ${deliverChannels.length.toString()} channel(s) across ${targetGuildIds.length.toString()} guild(s)`,
+  );
+
+  const prematchMessageContent = formatPrematchMessage(
+    trackedPlayers,
+    queueType,
+    gameInfo.gameMode,
+  );
+
+  const loadingScreen = await renderPrematchLoadingScreen({
+    gameInfo,
+    trackedPlayers,
+    queueType,
+    gameId,
+    aliases,
+  });
+  const loadingScreenAttachment = loadingScreen.attachment;
+  const loadingScreenEmbed = loadingScreen.embed;
+  const loadingScreenData = loadingScreen.data;
 
   // Bryan Bucks: open the markets and build the buttons. Entirely
   // best-effort — on any failure this yields no guilds, no rows, and the
