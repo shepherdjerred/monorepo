@@ -32,7 +32,13 @@ export function parseRiotId(
   return { gameName: riotId.slice(0, hash), tagLine: riotId.slice(hash + 1) };
 }
 
-/** Prefix search over `gameName` (SQLite `LIKE 'q%'`, ASCII case-insensitive). */
+/**
+ * Prefix search over `gameName`. Case-insensitive by contract: SQLite's LIKE
+ * was ASCII-case-insensitive for free; Postgres LIKE is not, so `mode:
+ * "insensitive"` (ILIKE) keeps autocomplete matching differently-cased Riot
+ * IDs. ILIKE cannot use the plain b-tree index — acceptable at this table's
+ * size (thousands of rows, loopback query).
+ */
 export async function searchIndex(
   query: string,
   limit: number,
@@ -40,7 +46,7 @@ export async function searchIndex(
   const trimmed = query.trim();
   if (trimmed.length === 0) return [];
   const rows = await prisma.summonerIndex.findMany({
-    where: { gameName: { startsWith: trimmed } },
+    where: { gameName: { startsWith: trimmed, mode: "insensitive" } },
     orderBy: [{ gameName: "asc" }, { id: "asc" }],
     take: limit,
   });

@@ -87,6 +87,36 @@ async function postgresHasData(prisma: ImportClient): Promise<boolean> {
   return false;
 }
 
+/**
+ * Parents before children for the self-referential ExploreMessage tree: a
+ * chunked createMany checks the parentId FK per statement, so a child must
+ * never land in an earlier chunk than its parent. (A single-statement insert
+ * would tolerate any order; chunking makes order load-bearing.)
+ */
+function topoSortByParent(rows: SqliteRow[]): SqliteRow[] {
+  const remaining = new Map<unknown, SqliteRow>(
+    rows.map((row) => [row["id"], row]),
+  );
+  const sorted: SqliteRow[] = [];
+  const placed = new Set<unknown>();
+  while (remaining.size > 0) {
+    let progressed = false;
+    for (const [id, row] of remaining) {
+      const parent = row["parentId"];
+      if (parent === null || placed.has(parent) || !remaining.has(parent)) {
+        sorted.push(row);
+        placed.add(id);
+        remaining.delete(id);
+        progressed = true;
+      }
+    }
+    if (!progressed) {
+      throw new Error("ExploreMessage parentId cycle detected");
+    }
+  }
+  return sorted;
+}
+
 function readSqliteRows(db: Database, spec: ImportModelSpec): SqliteRow[] {
   const orderBy = spec.idColumns.map((column) => `"${column}"`).join(", ");
   const rows: unknown = db
@@ -167,7 +197,11 @@ export async function runImport(
   try {
     const sourceRows = new Map<string, SqliteRow[]>();
     for (const spec of IMPORT_MODELS) {
-      sourceRows.set(spec.model, readSqliteRows(db, spec));
+      const rows = readSqliteRows(db, spec);
+      sourceRows.set(
+        spec.model,
+        spec.model === "ExploreMessage" ? topoSortByParent(rows) : rows,
+      );
     }
 
     const rowCounts: Record<string, number> = {};

@@ -62,8 +62,10 @@ function subjectAlias(
 
 /**
  * Match one pool exactly once. The guarded pool update is deliberately the
- * transaction's first statement: it owns both the SQLite write lock and the
- * matching idempotency token before any offer or balance is read.
+ * transaction's first statement: it owns both the pool's row lock and the
+ * matching idempotency token before any offer or balance is read — a
+ * concurrent matcher's update re-checks the WHERE on the newest row version
+ * and matches 0 rows.
  */
 async function matchPoolAtClose(input: {
   prismaClient: ExtendedPrismaClient;
