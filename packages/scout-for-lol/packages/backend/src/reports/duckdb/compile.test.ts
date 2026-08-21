@@ -179,7 +179,9 @@ describe("compile", () => {
     expect(compiled.aggregateSql).not.toContain("GROUP BY");
     expect(compiled.aggregateSql).toContain("HAVING COUNT(*) > 0");
   });
+});
 
+describe("compile temporal grouping", () => {
   test("prematch temporal grouping retains the observation timestamp", () => {
     const compiled = compilePrematchQuery(
       input(
