@@ -85,6 +85,7 @@
     "packages/better-skill-capped",
     "packages/birmel",
     "packages/code-review",
+    "packages/config",
     "packages/cooklang-for-obsidian",
     "packages/cooklang-rich-preview",
     "packages/discord-plays-core",
